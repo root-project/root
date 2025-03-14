@@ -173,7 +173,7 @@ public:
       return true;
    }
 
-   void SetNSlots(unsigned int nSlots)
+   void SetNSlots(unsigned int nSlots) final
    {
       fNSlots = nSlots;
       const auto nCols = fColNames.size();

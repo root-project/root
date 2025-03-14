@@ -22,7 +22,6 @@ public:
    RStreamingDS &operator=(RStreamingDS &&) = delete;
    ~RStreamingDS() final = default;
 
-   void SetNSlots(unsigned int nSlots) final { fNSlots = nSlots; }
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
    bool HasColumn(std::string_view name) const final { return std::string(name) == "ans" ? true : false; }
    std::string GetTypeName(std::string_view) const final { return "int"; }

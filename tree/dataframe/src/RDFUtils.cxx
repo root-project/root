@@ -12,6 +12,8 @@
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RSample.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h"
@@ -235,7 +237,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
    if (define) {
       colType = define->GetTypeName();
    } else if (ds && ds->HasColumn(colName)) {
-      colType = ds->GetTypeName(colName);
+      colType = ROOT::Internal::RDF::GetTypeNameWithOpts(*ds, colName, vector2RVec);
    } else if (tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
       if (vector2RVec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
@@ -461,3 +463,47 @@ auto RStringCache::Insert(const std::string &string) -> decltype(fStrings)::cons
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
+
+std::string
+ROOT::Internal::RDF::GetTypeNameWithOpts(const ROOT::RDF::RDataSource &df, std::string_view colName, bool vector2RVec)
+{
+   return df.GetTypeNameWithOpts(colName, vector2RVec);
+}
+
+const std::vector<std::string> &ROOT::Internal::RDF::GetTopLevelFieldNames(const ROOT::RDF::RDataSource &df)
+{
+   return df.GetTopLevelFieldNames();
+}
+
+const std::vector<std::string> &ROOT::Internal::RDF::GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &df)
+{
+   return df.GetColumnNamesNoDuplicates();
+}
+
+void ROOT::Internal::RDF::CallInitializeWithOpts(ROOT::RDF::RDataSource &ds,
+                                                 const std::set<std::string> &suppressErrorsForMissingColumns)
+{
+   ds.InitializeWithOpts(suppressErrorsForMissingColumns);
+}
+
+std::string ROOT::Internal::RDF::DescribeDataset(ROOT::RDF::RDataSource &ds)
+{
+   return ds.DescribeDataset();
+}
+
+ROOT::RDF::RSampleInfo ROOT::Internal::RDF::CreateSampleInfo(
+   const ROOT::RDF::RDataSource &ds,
+   const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap)
+{
+   return ds.CreateSampleInfo(sampleMap);
+}
+
+void ROOT::Internal::RDF::RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun)
+{
+   ds.RunFinalChecks(nodesLeftNotRun);
+}
+
+void ROOT::Internal::RDF::ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm)
+{
+   ds.ProcessMT(lm);
+}

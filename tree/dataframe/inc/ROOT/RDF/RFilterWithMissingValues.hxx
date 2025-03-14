@@ -80,8 +80,6 @@ public:
         fDiscardEntryWithMissingValue(discardEntry)
    {
       fLoopManager->Register(this);
-      // We suppress errors that TTreeReader prints regarding the missing branch
-      fLoopManager->InsertSuppressErrorsForMissingBranch(fColumnNames[0]);
    }
 
    RFilterWithMissingValues(const RFilterWithMissingValues &) = delete;
@@ -125,8 +123,11 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       fValues[slot] =
-         RDFInternal::GetColumnReader(slot, fColRegister.GetReaderUnchecked(slot, fColumnNames[0], fVariation),
-                                      *fLoopManager, r, fColumnNames[0], typeid(void));
+         (r ? RDFInternal::GetColumnReaderForTTreeIMT(
+                 slot, fColRegister.GetReaderUnchecked(slot, fColumnNames[0], fVariation), *fLoopManager, *r,
+                 fColumnNames[0], typeid(void))
+            : RDFInternal::GetColumnReader(slot, fColRegister.GetReaderUnchecked(slot, fColumnNames[0], fVariation),
+                                           *fLoopManager, r, fColumnNames[0], typeid(void)));
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
