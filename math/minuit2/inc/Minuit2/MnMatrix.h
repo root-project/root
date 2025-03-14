@@ -845,7 +845,7 @@ public:
    LAVector(LAVector &&v)
       : fSize(v.size()), fData(v.Data())
    {
-      fData = nullptr;
+      v.fData = nullptr;
    }
 
    LAVector(const LAVector &v) : LAVector{std::span<const double>{v.Data(), v.size()}} {}
