@@ -131,6 +131,11 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
    }
 
    fGout = new TGraph(fNout);
+   // To calculate x coordinates and avoid a rounding issue in last point,
+   // (fMin + (fNout-1)* delta > fMaxX) if fNout is large,
+   // we split the calculation in two loops,
+   // the left half of x points is calculated as min + i*delta
+   // the right half of x points as max - j*delta
    for (Int_t i=0;i<fNout/2;i++) {
       if (xout == nullptr) fGout->SetPoint(i,fMinX + i*delta, 0);
       else           fGout->SetPoint(i,xout[index[i]], 0);
