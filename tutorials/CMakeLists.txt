@@ -275,6 +275,12 @@ endif()
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
 else()
+  #copy input data files
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/tmva_reg_example.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/tmva_multiclass_example.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/Higgs_data.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+
   #---These do not need to run for TMVA
   list(APPEND tmva_veto tmva/createData.C)
   if(MSVC AND NOT win_broken_tests)

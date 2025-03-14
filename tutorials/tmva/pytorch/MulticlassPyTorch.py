@@ -17,7 +17,7 @@
 import torch
 from torch import nn
 
-from ROOT import TMVA, TFile, TTree, TCut, gROOT
+from ROOT import TMVA, TFile, TCut, gROOT
 from os.path import isfile
 
 
