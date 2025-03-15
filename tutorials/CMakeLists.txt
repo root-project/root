@@ -634,6 +634,13 @@ if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
 endif()
 
+# Download open data csv only once from a python tutorial, the C++ ones depend on it
+set(dataframe-df014_CSVDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+set(dataframe-df015_LazyDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+
+# Download the input root file only once from a python tutorial, the C++ one depends on it
+set(hist-th2polyUSA-depends tutorial-hist-th2polyUSA-py)
+
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)
@@ -873,6 +880,12 @@ if(ROOT_pyroot_FOUND)
       set(py_will_fail ${PYTESTS_WILLFAIL})
     endif()
 
+    if(NOT ${${tname}-depends} STREQUAL ${tutorial_name})
+      set(tutorial_dependency ${${tname}-depends})
+    else()
+      set(tutorial_dependency "")
+    endif()
+
     # Test if this tutorial is requiring any fixture
     unset(python_deps)
     foreach(fixtureList ${fixtureLists})
@@ -887,7 +900,7 @@ if(ROOT_pyroot_FOUND)
                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
-                DEPENDS ${${tname}-depends}
+                DEPENDS ${tutorial_dependency}
                 ENVIRONMENT ${ROOT_environ}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
