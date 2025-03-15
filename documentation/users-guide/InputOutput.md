@@ -1768,7 +1768,7 @@ An example of a `GetWebHistogram.C` script is shown below:
 
 ``` {.cpp}
 void GetWebHistogram() {
-   TFile *f=TFile::Open("http://root.cern.ch/files/pippa.root");
+   TFile *f=TFile::Open("http://root-eos.web.cern.ch/files/pippa.root");
    f->cd("DM/CJ");
    TH1 *h6 = (TH1*)gDirectory->Get("h6");
    h6->SetDirectory(0);
@@ -2526,10 +2526,10 @@ In the example below the file is read via a web server through the TDavixFile pl
 ``` {.cpp}
 root[] TFile *f1 = TFile::Open("local/file.root","update")
 root[] TFile *f2 = TFile::Open("root://my.server.org/data/file.root","new")
-root[] TFile *f3 = TFile::Open("http://root.cern.ch/files/hsimple.root")
+root[] TFile *f3 = TFile::Open("http://root-eos.web.cern.ch/files/hsimple.root")
 root[] f3.ls()
-TDavixFile** http://root.cern.ch/files/hsimple.root
-TDavixFile* http://root.cern.ch/files/hsimple.root
+TDavixFile** http://root-eos.web.cern.ch/files/hsimple.root
+TDavixFile* http://root-eos.web.cern.ch/files/hsimple.root
 KEY: TH1F hpx;1 This is the px distribution
 KEY: TH2F hpxpy;1 py vs px
 KEY: TProfile hprof;1 Profile of pz versus px

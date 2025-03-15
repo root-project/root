@@ -101,9 +101,9 @@ Double_t   trackGetP(AliExternalTrackParam* tp);
 
 // Configuration and global variables.
 
-const char* esd_file_name         = "http://root.cern.ch/files/alice_ESDs.root";
-const char* esd_friends_file_name = "http://root.cern.ch/files/alice_ESDfriends.root";
-const char* esd_geom_file_name    = "http://root.cern.ch/files/alice_ESDgeometry.root";
+const char* esd_file_name         = "http://root-eos.web.cern.ch/files/alice_ESDs.root";
+const char* esd_friends_file_name = "http://root-eos.web.cern.ch/files/alice_ESDfriends.root";
+const char* esd_geom_file_name    = "http://root-eos.web.cern.ch/files/alice_ESDgeometry.root";
 
 TFile *esd_file          = nullptr;
 TFile *esd_friends_file  = nullptr;

@@ -43,7 +43,7 @@ lat2 = 50
 p = ROOT.TH2Poly("Lower48", "Lower 48 Population (2009);Latitude;Longitude", lon1, lon2, lat1, lat2)
 
 fileName = "usa.root"
-fileNameUrl = "http://root.cern/files/usa.root"
+fileNameUrl = "http://root-eos.web.cern.ch/files/usa.root"
 if not os.path.isfile(fileName):
     urllib.request.urlretrieve(fileNameUrl, fileName)
 f = ROOT.TFile.Open(fileName)

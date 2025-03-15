@@ -21,9 +21,9 @@
 
 void df028_SQliteIPLocation() {
 
-   auto rdf = ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;");
+   auto rdf = ROOT::RDF::FromSqlite("http://root-eos.web.cern.ch/files/root_download_stats.sqlite", "SELECT * FROM accesslog;");
 
-   auto f = TFile::Open("http://root.cern/files/WM.root");
+   auto f = TFile::Open("http://root-eos.web.cern.ch/files/WM.root");
    auto worldMap = f->Get<TH2Poly>("WMUSA");
 
    auto fillIPLocation = [&worldMap] ( const std::string &sLongitude, const std::string &sLatitude ) {

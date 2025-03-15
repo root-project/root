@@ -165,7 +165,7 @@ a bug.
 
 Added correct treatment of extended term in asymptotically correct method for uncertainty determination in the presence of weights.
 This improvement will allow for extended unbinned maximum likelihood fits to use the asymptotically correct method when using the `RooFit::AsymptoticError()` command argument in [RooAbsPdf::fitTo()](https://root.cern.ch/doc/master/classRooAbsPdf.html#ab0721374836c343a710f5ff92a326ff5).
-See also this [writeup on extended weighted fits](https://root.cern/files/extended_weighted_fits.pdf) that is also linked from the reference guide.
+See also this [writeup on extended weighted fits](https://root-eos.web.cern.ch/files/extended_weighted_fits.pdf) that is also linked from the reference guide.
 The [pull request](https://github.com/root-project/root/pull/14751) that introduced this feature might also be a good reference.
 
 ### Compile your code with memory safe interfaces

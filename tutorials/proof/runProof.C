@@ -506,7 +506,7 @@ void runProof(const char *what = "simple",
 
    // Parse out number of events and  'asyn' option, used almost by every test
    TString aNevt, aFirst, aNwrk, opt, sel, punzip("off"), aCache, aOutFile,
-           aH1Src("http://root.cern/files/h1"),
+           aH1Src("http://root-eos.web.cern.ch/files/h1"),
            aDebug, aDebugEnum, aRateEst, aPerfTree("perftree.root"),
            aFeedback("fb=stats");
    Long64_t suf = 1;
@@ -915,7 +915,7 @@ void runProof(const char *what = "simple",
       // Extract the number of files to process, data source and
       // other parameters controlling the run ...
       Bool_t uneven = kFALSE;
-      TString aFiles, aDataSrc("http://root.cern/files/data"), aPartitions;
+      TString aFiles, aDataSrc("http://root-eos.web.cern.ch/files/data"), aPartitions;
       proof->SetParameter("ProofEventProc_Read", "optimized");
       while (args.Tokenize(tok, from, " ")) {
          // Number of events

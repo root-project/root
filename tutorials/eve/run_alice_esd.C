@@ -99,15 +99,15 @@ Double_t   trackGetP(AliExternalTrackParam* tp);
 
 // Configuration and global variables.
 
-const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
+const char* esd_file_name = "http://root-eos.web.cern.ch/files/alice_ESDs.root";
 // Temporarily disable reading of ESD friend.
 // There seems to be no way to get it working without AliRoot.
 // const char* esd_friends_file_name =
-//       "http://root.cern.ch/files/alice_ESDfriends.root";
+//       "http://root-eos.web.cern.ch/files/alice_ESDfriends.root";
 const char* esd_friends_file_name = nullptr;
 
 const char* esd_geom_file_name =
-   "http://root.cern.ch/files/alice_ESDgeometry.root";
+   "http://root-eos.web.cern.ch/files/alice_ESDgeometry.root";
 
 // For testing
 // const char* esd_file_name         = "AliESDs.root";

@@ -291,7 +291,7 @@ TEST(RNTuple, PageFillingString) {
 #ifdef R__HAS_DAVIX
 TEST(RNTuple, OpenHTTP)
 {
-  std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root"));
+  std::unique_ptr<TFile> file(TFile::Open("http://root-eos.web.cern.ch/files/tutorials/ntpl004_dimuon_v1rc2.root"));
   auto reader = RNTupleReader::Open(file->Get<RNTuple>("Events"));
   reader->LoadEntry(0);
 }

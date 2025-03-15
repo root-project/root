@@ -254,7 +254,7 @@ int main(int argc, const char *argv[])
    bool doTreeStore = false;
    auto backend = RooFit::EvalBackend::Legacy();
 
-   // string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+   // string refFileName = "http://root-eos.web.cern.ch/files/stressRooFit_v534_ref.root" ;
    string refFileName = "stressRooFit_ref.root";
    string minimizerName = "Minuit";
 
@@ -368,7 +368,7 @@ int stressRooFit()
    int dryRun = false;
    bool doDump = false;
    bool doTreeStore = false;
-   // string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+   // string refFileName = "http://root-eos.web.cern.ch/files/stressRooFit_v534_ref.root" ;
    string refFileName = "stressRooFit_ref.root";
 
    // in interpreted mode, the minimizer is hardcoded to Minuit 1

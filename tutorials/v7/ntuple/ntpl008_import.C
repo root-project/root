@@ -26,7 +26,7 @@ using RNTupleImporter = ROOT::Experimental::RNTupleImporter;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 
 // Input and output.
-constexpr char const *kTreeFileName = "http://root.cern.ch/files/HiggsTauTauReduced/GluGluToHToTauTau.root";
+constexpr char const *kTreeFileName = "http://root-eos.web.cern.ch/files/HiggsTauTauReduced/GluGluToHToTauTau.root";
 constexpr char const *kTreeName = "Events";
 constexpr char const *kNTupleFileName = "ntpl008_import.root";
 
