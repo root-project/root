@@ -30,7 +30,7 @@
 // ****************************************************************************
 // *  Starting stressIOPlugins test for protocol http
 // *  Test files will be read from:
-// *  http://root.cern/files/StressIOPluginsTestFiles/
+// *  http://root-eos.web.cern.ch/files/StressIOPluginsTestFiles/
 // ****************************************************************************
 // Test  1 : Check size & compression factor of a Root file........ using stress_2.root
 //         : opened file with plugin class......................... TDavixFile
@@ -161,7 +161,7 @@ int setPath(const char *proto)
       return 0;
    }
    if (p == "http" || p == "https") {
-      gPfx = p + "://root.cern/files/StressIOPluginsTestFiles/";
+      gPfx = p + "://root-eos.web.cern.ch/files/StressIOPluginsTestFiles/";
       return 0;
    }
    return -1;

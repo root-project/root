@@ -17,7 +17,7 @@ static const auto fileNameParsing = "RCsvDS_test_parsing.csv";
 
 // must use http: we cannot use https on macOS until we upgrade to the newest Davix
 // and turn on the macOS SecureTransport layer.
-static const auto url0 = "http://root.cern/files/dataframe_test_datasource.csv";
+static const auto url0 = "http://root-eos.web.cern.ch/files/dataframe_test_datasource.csv";
 
 
 TEST(RCsvDS, ColTypeNames)
