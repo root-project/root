@@ -634,6 +634,13 @@ if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
 endif()
 
+# Download open data csv only once from a python tutorial, the C++ ones depend on it
+set(dataframe-df014_CSVDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+set(dataframe-df015_LazyDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+
+# Download the input root file only once from a python tutorial, the C++ one depends on it
+set(hist-th2polyUSA-depends tutorial-hist-th2polyUSA-py)
+
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)
