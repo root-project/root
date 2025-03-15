@@ -16,7 +16,7 @@ auto fileName3 = "RCsvDS_test_win.csv";
 
 // must use http: we cannot use https on macOS until we upgrade to the newest Davix
 // and turn on the macOS SecureTransport layer.
-auto url0 = "http://root.cern/files/dataframe_test_datasource.csv";
+auto url0 = "http://root-eos.web.cern.ch/files/dataframe_test_datasource.csv";
 
 
 TEST(RCsvDS, ColTypeNames)
