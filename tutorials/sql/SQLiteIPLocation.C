@@ -4,7 +4,7 @@
 ///
 /// This tutorial demonstrates how TSQLServer can be used to create a
 /// connection with a SQlite3 database. It accesses the Sqlite data base.
-/// Download from https://root.cern/files/root_download_stats.sqlite
+/// Download from https://root-eos.web.cern.ch/files/root_download_stats.sqlite
 /// The world map is hold by a TH2Poly histogram which, after filling, will show
 /// the world wide dispersion of ROOT's users.
 /// To histogram filling, is done having as input parameters
@@ -29,7 +29,7 @@ void SQLiteIPLocation() {
 
    TSQLServer *db = TSQLServer::Connect("sqlite://root_download_stats.sqlite", "", "");
 
-   TFile *F = TFile::Open("http://root.cern/files/WM.root");
+   TFile *F = TFile::Open("http://root-eos.web.cern.ch/files/WM.root");
    TH2Poly *WM;
    WM = (TH2Poly*) F->Get("WM");
    const char *location = "SELECT IPLatitude, IPLongitude FROM accesslog;";
