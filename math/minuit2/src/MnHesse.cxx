@@ -9,7 +9,6 @@
 
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnUserParameterState.h"
-#include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FCNBase.h"
 #include "Minuit2/MnPosDef.h"
 #include "Minuit2/HessianGradientCalculator.h"
@@ -50,7 +49,7 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    // interface from MnUserParameterState
    // create a new Minimum state and use that interface
    unsigned int n = state.VariableParameters();
-   MnUserFcn mfcn(fcn, state.Trafo(), state.NFcn());
+   MnFcn mfcn{fcn, state.Trafo(), state.NFcn()};
    MnAlgebraicVector x(n);
    for (unsigned int i = 0; i < n; i++)
       x(i) = state.IntParameters()[i];
@@ -79,7 +78,7 @@ void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int 
    // interface from FunctionMinimum to be used after minimization
    // use last state from the minimization without the need to re-create a new state
    // do not reset function calls and keep updating them
-   MnUserFcn mfcn(fcn, min.UserState().Trafo(), min.NFcn());
+   MnFcn mfcn{fcn, min.UserState().Trafo(), min.NFcn()};
    MinimumState st = (*this)(mfcn, min.State(), min.UserState().Trafo(), maxcalls);
    min.Add(st);
 }

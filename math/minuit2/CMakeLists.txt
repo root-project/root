@@ -150,7 +150,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/MnStrategy.cxx
       src/MnTiny.cxx
       src/MnTraceObject.cxx
-      src/MnUserFcn.cxx
       src/MnUserParameterState.cxx
       src/MnUserParameters.cxx
       src/MnUserTransformation.cxx

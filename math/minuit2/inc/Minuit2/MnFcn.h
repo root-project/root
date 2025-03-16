@@ -10,12 +10,16 @@
 #ifndef ROOT_Minuit2_MnFcn
 #define ROOT_Minuit2_MnFcn
 
-#include "Minuit2/MnConfig.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnMatrix.h"
+
+#include <vector>
 
 namespace ROOT {
 
 namespace Minuit2 {
+
+class MnUserTransformation;
 
 class FCNBase;
 /**
@@ -30,27 +34,44 @@ class FCNBase;
 class MnFcn {
 
 public:
-   /// constructor of
    explicit MnFcn(const FCNBase &fcn, int ncall = 0) : fFCN(fcn), fNumCall(ncall) {}
+   explicit MnFcn(const FCNBase &fcn, const MnUserTransformation &trafo, int ncall = 0)
+      : fFCN(fcn), fNumCall(ncall), fTransform(&trafo)
+   {
+   }
 
-   virtual ~MnFcn();
+   inline double operator()(const MnAlgebraicVector &v) const
+   {
+      return fTransform ? CallWithDoingTrafo(v) : CallWithoutDoingTrafo(v);
+   }
 
-   virtual double operator()(const MnAlgebraicVector &) const;
    unsigned int NumOfCalls() const { return fNumCall; }
 
-   //
-   // forward interface
-   //
-   double ErrorDef() const;
-   double Up() const;
+   double ErrorDef() const
+   {
+      return fFCN.Up();
+   }
+
+   double Up() const
+   {
+      return fFCN.Up();
+   }
 
    const FCNBase &Fcn() const { return fFCN; }
 
-private:
-   const FCNBase &fFCN;
+   // Access the parameter transformations.
+   // For internal use in the Minuit2 implementation.
+   const MnUserTransformation *transform() const { return fTransform; }
 
-protected:
+   double CallWithTransformedParams(std::vector<double> const &vpar) const;
+
+private:
+   double CallWithoutDoingTrafo(const MnAlgebraicVector &) const;
+   double CallWithDoingTrafo(const MnAlgebraicVector &) const;
+
+   const FCNBase &fFCN;
    mutable int fNumCall;
+   const MnUserTransformation *fTransform = nullptr;
 };
 
 } // namespace Minuit2

@@ -1,22 +1,21 @@
 #ifndef ROOT_Minuit2_MnFcnCaller
 #define ROOT_Minuit2_MnFcnCaller
 
-#include "Minuit2/MnUserFcn.h"
+#include "Minuit2/MnFcn.h"
 
 namespace ROOT {
 
 namespace Minuit2 {
 
-// Helper class to call the MnFcn, cashing the transformed parameters in case
-// it is a MnUserFcn that does the parameter transformation when calling.
+// Helper class to call the MnFcn, cashing the transformed parameters if necessary.
 class MnFcnCaller {
 public:
-   MnFcnCaller(const MnFcn &mfcn) : fMfcn{mfcn}, fIsUserFcn{static_cast<bool>(dynamic_cast<MnUserFcn const *>(&mfcn))}
+   MnFcnCaller(const MnFcn &mfcn) : fMfcn{mfcn}, fIsUserFcn{static_cast<bool>(mfcn.transform())}
    {
       if (!fIsUserFcn)
          return;
 
-      MnUserTransformation const &transform = static_cast<MnUserFcn const &>(fMfcn).transform();
+      MnUserTransformation const &transform = *fMfcn.transform();
 
       // get first initial values of parameter (in case some one is fixed)
       fVpar.assign(transform.InitialParValues().begin(), transform.InitialParValues().end());
@@ -27,7 +26,7 @@ public:
       if (!fIsUserFcn)
          return fMfcn(v);
 
-      MnUserTransformation const &transform = static_cast<MnUserFcn const &>(fMfcn).transform();
+      MnUserTransformation const &transform = *fMfcn.transform();
 
       bool firstCall = fLastInput.size() != v.size();
 
@@ -40,7 +39,7 @@ public:
          }
       }
 
-      return static_cast<MnUserFcn const &>(fMfcn).callWithTransformedParams(fVpar);
+      return fMfcn.CallWithTransformedParams(fVpar);
    }
 
 private:
