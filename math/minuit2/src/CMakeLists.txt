@@ -76,7 +76,6 @@ set(MINUIT2_HEADERS
     MnTiny.h
     MnTraceObject.h
     MnUserCovariance.h
-    MnUserFcn.h
     MnUserParameterState.h
     MnUserParameters.h
     MnUserTransformation.h
@@ -139,7 +138,6 @@ set(MINUIT2_SOURCES
     MnStrategy.cxx
     MnTiny.cxx
     MnTraceObject.cxx
-    MnUserFcn.cxx
     MnUserParameterState.cxx
     MnUserParameters.cxx
     MnUserTransformation.cxx
