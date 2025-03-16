@@ -17,6 +17,8 @@
 #include "Minuit2/VariableMetricEDMEstimator.h"
 #include "Minuit2/MnPrint.h"
 
+#include "Math/Util.h"
+
 #include <cmath>
 
 namespace ROOT {
@@ -35,7 +37,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
    MnPrint print("NegativeG2LineSearch");
 
    // Print the runtime on returning from the function
-   MnPrint::TimingScope timingScope(print, "Done after");
+   ROOT::Math::Util::TimingScope timingScope([&print](std::string const& s){ print.Info(s); }, "Done after");
 
    bool negG2 = HasNegativeG2(st.Gradient(), prec);
    if (!negG2)

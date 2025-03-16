@@ -30,6 +30,7 @@ set(MATH_SOURCES
     Minimizer.cxx
     MinimizerOptions.cxx
     ParameterSettings.cxx
+    Util.cxx
     )
 
 copy_standalone(SOURCE ../../../mathcore/inc/Fit DESTINATION ../../inc/Fit

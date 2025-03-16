@@ -23,6 +23,8 @@
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
 
+#include "Math/Util.h"
+
 #include <cmath>
 #include <cassert>
 
@@ -94,7 +96,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
    print.Info("Start iterating until Edm is <", edmval, "with call limit =", maxfcn);
 
    // print time after returning
-   MnPrint::TimingScope timingScope(print, "Stop iterating after");
+   ROOT::Math::Util::TimingScope timingScope([&print](std::string const &s) { print.Info(s); }, "Stop iterating after");
 
    AddResult(result, seed.State());
 
