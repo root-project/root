@@ -880,6 +880,12 @@ if(ROOT_pyroot_FOUND)
       set(py_will_fail ${PYTESTS_WILLFAIL})
     endif()
 
+    if(NOT ${${tname}-depends} STREQUAL ${tutorial_name})
+      set(tutorial_dependency ${${tname}-depends})
+    else()
+      set(tutorial_dependency "")
+    endif()
+
     # Test if this tutorial is requiring any fixture
     unset(python_deps)
     foreach(fixtureList ${fixtureLists})
@@ -894,7 +900,7 @@ if(ROOT_pyroot_FOUND)
                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
-                DEPENDS ${${tname}-depends}
+                DEPENDS ${tutorial_dependency}
                 ENVIRONMENT ${ROOT_environ}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
