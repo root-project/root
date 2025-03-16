@@ -69,7 +69,7 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    // the line search.
    auto timingScope = std::make_unique<ROOT::Math::Util::TimingScope>([&print](std::string const &s) { print.Info(s); },
                                                                       "Evaluated function and gradient in");
-   MinimumParameters pa(x, fcn(x));
+   MinimumParameters pa(x, MnFcnCaller{fcn}(x));
    FunctionGradient dgrad = gc(pa);
    timingScope.reset();
 
@@ -155,10 +155,8 @@ MnSeedGenerator::CallWithAnalyticalGradientCalculator(const MnFcn &fcn, const An
    const MnMachinePrecision &prec = st.Precision();
 
    // initial starting values
-   MnAlgebraicVector x(n);
-   for (unsigned int i = 0; i < n; i++)
-      x(i) = st.IntParameters()[i];
-   double fcnmin = fcn(x);
+   MnAlgebraicVector x(st.IntParameters());
+   double fcnmin = MnFcnCaller{fcn}(x);
    MinimumParameters pa(x, fcnmin);
 
    // compute function gradient

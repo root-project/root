@@ -40,11 +40,6 @@ public:
    {
    }
 
-   inline double operator()(const MnAlgebraicVector &v) const
-   {
-      return fTransform ? CallWithDoingTrafo(v) : CallWithoutDoingTrafo(v);
-   }
-
    unsigned int NumOfCalls() const { return fNumCall; }
 
    double ErrorDef() const
@@ -61,17 +56,29 @@ public:
 
    // Access the parameter transformations.
    // For internal use in the Minuit2 implementation.
-   const MnUserTransformation *transform() const { return fTransform; }
+   const MnUserTransformation *Trafo() const { return fTransform; }
 
    double CallWithTransformedParams(std::vector<double> const &vpar) const;
+   double CallWithoutDoingTrafo(const MnAlgebraicVector &) const;
 
 private:
-   double CallWithoutDoingTrafo(const MnAlgebraicVector &) const;
-   double CallWithDoingTrafo(const MnAlgebraicVector &) const;
-
    const FCNBase &fFCN;
    mutable int fNumCall;
    const MnUserTransformation *fTransform = nullptr;
+};
+
+// Helper class to call the MnFcn, caching the transformed parameters if necessary.
+class MnFcnCaller {
+public:
+   MnFcnCaller(const MnFcn &mfcn);
+
+   double operator()(const MnAlgebraicVector &v);
+
+private:
+   MnFcn const &fMfcn;
+   bool fDoInt2ext = false;
+   std::vector<double> fLastInput;
+   std::vector<double> fVpar;
 };
 
 } // namespace Minuit2
