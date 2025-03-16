@@ -13,9 +13,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-//#pragma link C++ namespace ROOT::Minuit2;
-
-#pragma link C++ class ROOT::Minuit2::GenericFunction;
 #pragma link C++ class ROOT::Minuit2::FCNBase;
 #pragma link C++ class ROOT::Minuit2::FCNGradientBase;
 #pragma link C++ class ROOT::Minuit2::FumiliFCNBase;
