@@ -30,7 +30,6 @@ set(MINUIT2_HEADERS
     FumiliStandardMaximumLikelihoodFCN.h
     FunctionGradient.h
     FunctionMinimum.h
-    GenericFunction.h
     GradientCalculator.h
     HessianGradientCalculator.h
     InitialGradientCalculator.h
