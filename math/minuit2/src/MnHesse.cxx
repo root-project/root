@@ -25,6 +25,8 @@
 
 #include "./MnFcnCaller.h"
 
+#include "Math/Util.h"
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -104,7 +106,7 @@ MinimumState ComputeAnalytical(const FCNBase &fcn, const MinimumState &st, const
    MnAlgebraicSymMatrix vhmat(n);
 
    MnPrint print("MnHesse");
-   MnPrint::TimingScope timingScope(print, "Done after");
+   ROOT::Math::Util::TimingScope timingScope([&print](std::string const& s){ print.Info(s); }, "Done after");
 
    const MnMachinePrecision &prec = trafo.Precision();
 
@@ -176,7 +178,7 @@ MinimumState ComputeNumerical(const MnFcn &mfcn, const MinimumState &st, const M
    // Function who does the real Hessian calculations
    MnPrint print("MnHesse");
 
-   MnPrint::TimingScope timingScope(print, "Done after");
+   ROOT::Math::Util::TimingScope timingScope([&print](std::string const& s){ print.Info(s); }, "Done after");
 
    MnFcnCaller mfcnCaller{mfcn};
 

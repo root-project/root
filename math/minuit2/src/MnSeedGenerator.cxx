@@ -32,6 +32,8 @@
 #include "Minuit2/HessianGradientCalculator.h"
 #include "Minuit2/MnPrint.h"
 
+#include "Math/Util.h"
+
 #include <cmath>
 
 namespace ROOT {
@@ -65,7 +67,8 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    // by default, and we're timing it here. If the G2 is negative, we also have
    // to run a NegativeG2LineSearch later, but this is timed separately inside
    // the line search.
-   auto timingScope = std::make_unique<MnPrint::TimingScope>(print, "Evaluated function and gradient in");
+   auto timingScope = std::make_unique<ROOT::Math::Util::TimingScope>([&print](std::string const &s) { print.Info(s); },
+                                                                      "Evaluated function and gradient in");
    MinimumParameters pa(x, fcn(x));
    FunctionGradient dgrad = gc(pa);
    timingScope.reset();
