@@ -21,7 +21,7 @@
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/FumiliFCNBase.h"
-#include "Minuit2/FCNBase.h"
+#include "Minuit2/MnFcn.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
 
@@ -63,11 +63,8 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase &fcn, const MnUserParame
    }
 
    // compute initial values;
-   const unsigned int n = st.VariableParameters();
-   MnAlgebraicVector x(n);
-   for (unsigned int i = 0; i < n; i++)
-      x(i) = st.IntParameters()[i];
-   double fcnmin = mfcn(x);
+   MnAlgebraicVector x{st.IntParameters()};
+   double fcnmin = MnFcnCaller{mfcn}(x);
    MinimumParameters pa(x, fcnmin);
    FunctionGradient grad = fgc(pa);
    FumiliErrorUpdator errUpdator;

@@ -13,7 +13,6 @@
 #include "Minuit2/MinimumBuilder.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
 #include "Minuit2/FumiliErrorUpdator.h"
-#include "Minuit2/MnFcn.h"
 #include "Minuit2/FunctionMinimum.h"
 
 #include <vector>
@@ -21,6 +20,8 @@
 namespace ROOT {
 
 namespace Minuit2 {
+
+class MnFcn;
 
 /**
 

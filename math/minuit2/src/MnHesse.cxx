@@ -22,7 +22,7 @@
 #include "Minuit2/MnPrint.h"
 
 #include "./MPIProcess.h"
-#include "./MnFcnCaller.h"
+#include "Minuit2/MnFcn.h"
 
 #include "Math/Util.h"
 
@@ -49,11 +49,9 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    // interface from MnUserParameterState
    // create a new Minimum state and use that interface
    unsigned int n = state.VariableParameters();
-   MnFcn mfcn{fcn, state.Trafo(), state.NFcn()};
-   MnAlgebraicVector x(n);
-   for (unsigned int i = 0; i < n; i++)
-      x(i) = state.IntParameters()[i];
-   double amin = mfcn(x);
+   MnFcn mfcn{fcn, state.Trafo(), static_cast<int>(state.NFcn())};
+   MnAlgebraicVector x(state.IntParameters());
+   double amin = MnFcnCaller{mfcn}(x);
    MinimumParameters par(x, amin);
    // check if we can use analytical gradient
    if (fcn.HasGradient()) {
