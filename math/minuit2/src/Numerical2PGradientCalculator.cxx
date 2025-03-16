@@ -54,8 +54,6 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
    //    std::cout<<"position: "<<par.Vec()<<std::endl;
    MnPrint print("Numerical2PGradientCalculator");
 
-   MnFcnCaller mfcnCaller{fFcn};
-
    assert(par.IsValid());
 
    double fcnmin = par.Fval();
@@ -88,6 +86,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 
    // for serial execution this can be outside the loop
    MnAlgebraicVector x = par.Vec();
+   MnFcnCaller mfcnCaller{fFcn};
 
    unsigned int startElementIndex = mpiproc.StartElementIndex();
    unsigned int endElementIndex = mpiproc.EndElementIndex();
@@ -109,6 +108,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 #ifdef _OPENMP
       // create in loop since each thread will use its own copy
       MnAlgebraicVector x = par.Vec();
+      MnFcnCaller mfcnCaller{fFcn};
 #endif
 
       double xtf = x(i);
@@ -139,10 +139,6 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
          }
          gstep(i) = step;
          stepb4 = step;
-         //       MnAlgebraicVector pstep(n);
-         //       pstep(i) = step;
-         //       double fs1 = mfcnCaller(pstate + pstep);
-         //       double fs2 = mfcnCaller(pstate - pstep);
 
          x(i) = xtf + step;
          double fs1 = mfcnCaller(x);
