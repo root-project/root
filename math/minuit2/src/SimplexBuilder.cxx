@@ -28,6 +28,8 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
    // method to find initial simplex is slightly different than in the original Fortran
    // Minuit since has not been proofed that one to be better
 
+    MnFcnCaller mfcnCaller{mfcn};
+
    // synchronize print levels
    MnPrint print("SimplexBuilder", PrintLevel());
 
@@ -41,7 +43,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
 
    // If there are no parameters, we just return a minimum state
    if (n == 0) {
-      MinimumState st(MinimumParameters(MnAlgebraicVector{0}, MnAlgebraicVector{0}, mfcn(x)), 0.0,
+      MinimumState st(MinimumParameters(MnAlgebraicVector{0}, MnAlgebraicVector{0}, mfcnCaller(x)), 0.0,
                       mfcn.NumOfCalls());
       return FunctionMinimum(seed, {&st, 1}, mfcn.Up());
    }
@@ -71,7 +73,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
       if (step(i) < dmin)
          step(i) = dmin;
       x(i) += step(i);
-      double tmp = mfcn(x);
+      double tmp = mfcnCaller(x);
       if (tmp < amin) {
          amin = tmp;
          jl = i + 1;
@@ -123,7 +125,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
       }
 
       MnAlgebraicVector pstar = (1. + alpha) * pbar - alpha * simplex(jh).second;
-      const double ystar = mfcn(pstar);
+      const double ystar = mfcnCaller(pstar);
 
       print.Debug("pbar", pbar, "pstar", pstar, "f(pstar)", ystar);
 
@@ -134,7 +136,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
                continue;
          }
          MnAlgebraicVector pstst = beta * simplex(jh).second + (1. - beta) * pbar;
-         double ystst = mfcn(pstst);
+         double ystst = mfcnCaller(pstst);
 
          print.Debug("Reduced simplex pstst", pstst, "f(pstst)", ystst);
 
@@ -145,7 +147,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
       }
 
       MnAlgebraicVector pstst = gamma * pstar + (1. - gamma) * pbar;
-      double ystst = mfcn(pstst);
+      double ystst = mfcnCaller(pstst);
 
       print.Debug("pstst", pstst, "f(pstst)", ystst);
 
@@ -162,7 +164,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
       if (rho > rhomax)
          rho = rhomax;
       MnAlgebraicVector prho = rho * pbar + (1. - rho) * simplex(jh).second;
-      double yrho = mfcn(prho);
+      double yrho = mfcnCaller(prho);
 
       print.Debug("prho", prho, "f(prho)", yrho);
 
@@ -183,7 +185,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
       }
       if (ystar > simplex(jh).first) {
          pstst = beta * simplex(jh).second + (1. - beta) * pbar;
-         ystst = mfcn(pstst);
+         ystst = mfcnCaller(pstst);
          if (ystst > simplex(jh).first)
             break;
          simplex.Update(ystst, pstst);
@@ -203,7 +205,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
          continue;
       pbar += (wg * simplex(i).second);
    }
-   double ybar = mfcn(pbar);
+   double ybar = mfcnCaller(pbar);
    if (ybar < amin)
       simplex.Update(ybar, pbar);
    else {

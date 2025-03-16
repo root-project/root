@@ -18,7 +18,6 @@
 #include "Minuit2/MnPrint.h"
 
 #include "./MPIProcess.h"
-#include "./MnFcnCaller.h"
 
 #ifdef _OPENMP
 #include <omp.h>

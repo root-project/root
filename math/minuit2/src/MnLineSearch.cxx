@@ -69,6 +69,8 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
    // start as in Fortran from 1 and count all the time we evaluate the function
    int niter = 1;
 
+   MnFcnCaller fcnCaller{fcn};
+
    for (unsigned int i = 0; i < step.size(); i++) {
       if (step(i) == 0)
          continue;
@@ -83,7 +85,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
    slamin *= prec.Eps2();
 
    double f0 = st.Fval();
-   double f1 = fcn(st.Vec() + step);
+   double f1 = fcnCaller(st.Vec() + step);
    niter++;
    double fvmin = st.Fval();
    double xvmin = 0.;
@@ -171,7 +173,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
       //     MnAlgebraicVector tmp = step;
       //     tmp *= slam;
       //     f2 = fcn(st.Vec()+tmp);
-      f2 = fcn(st.Vec() + slam * step);
+      f2 = fcnCaller(st.Vec() + slam * step);
 
       niter++; // do as in Minuit (count all func evalu)
 
@@ -263,7 +265,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
          // take the step
          //       MnAlgebraicVector tmp = step;
          //       tmp *= slam;
-         f3 = fcn(st.Vec() + slam * step);
+         f3 = fcnCaller(st.Vec() + slam * step);
          print.Trace("f3", f3, "f3-p(2-0).Y()", f3 - p2.Y(), f3 - p1.Y(), f3 - p0.Y());
          // if latest point worse than all three previous, cut step
          if (f3 > p0.Y() && f3 > p1.Y() && f3 > p2.Y()) {
