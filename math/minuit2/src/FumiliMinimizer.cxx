@@ -20,7 +20,6 @@
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnUserTransformation.h"
-#include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FumiliFCNBase.h"
 #include "Minuit2/FCNBase.h"
 #include "Minuit2/MnStrategy.h"
@@ -40,7 +39,7 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase &fcn, const MnUserParame
    // Minimize using Fumili. Create seed and Fumili gradient calculator.
    // The FCNBase passed must be a FumiliFCNBase type otherwise method will fail !
 
-   MnUserFcn mfcn(fcn, st.Trafo());
+   MnFcn mfcn{fcn, st.Trafo()};
 
 
    unsigned int npar = st.VariableParameters();

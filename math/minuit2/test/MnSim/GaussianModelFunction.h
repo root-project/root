@@ -14,7 +14,6 @@
 
 #include "Minuit2/ParametricFunction.h"
 
-#include "Minuit2/MnFcn.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnUserParameterState.h"
 
