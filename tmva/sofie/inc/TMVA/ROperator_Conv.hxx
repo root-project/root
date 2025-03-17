@@ -345,10 +345,6 @@ public:
 
       out << "\n//----  operator Conv " << OpName << "\n";
 
-      // create first matrix with convolution kernels
-      if (!fUseSession)
-         out << SP << fType << " tensor_" << fNX << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
-
       // vectorize the (dilated)convolution kernels into a matrix
       // no need to transpose the matrix
       // to fix for 1d and 3d
@@ -401,11 +397,6 @@ public:
       out << SP << "float " << OpName << "_alpha = 1.0;\n";
       out << SP << "float " << OpName << "_beta = 0.0;\n";
 
-      if (!fUseSession) {
-         out << SP << fType << " tensor_" << fNX << "_xcol["
-             << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] * oDepth * oHeight * oWidth
-             << "] = {0};\n";
-      }
 
       // Loop on batch size
       out << SP << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
