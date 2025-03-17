@@ -120,7 +120,7 @@ public:
       model.AddNeededStdLib("algorithm");
    }
 
-   std::string Generate(std::string opName){
+   std::string Generate(std::string opName) override {
       opName = "op_" + opName;
       if (fShapeX.empty() || fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Reduce Op called to Generate without being initialized first");
