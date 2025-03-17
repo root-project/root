@@ -45,14 +45,14 @@ namespace ROOT {
 
 class TSchemaRule;
 
+namespace Detail {
+class RFieldVisitor;
+} // namespace Detail
+
 namespace Experimental {
 
 class REntry;
 class RNTupleCollectionView;
-
-namespace Detail {
-class RFieldVisitor;
-} // namespace Detail
 
 } // namespace Experimental
 
@@ -70,7 +70,7 @@ public:
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
 
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
@@ -205,7 +205,7 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class using ROOT standard streaming
@@ -257,7 +257,7 @@ public:
    size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for an unscoped or scoped enum with dictionary
@@ -284,7 +284,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSubfields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// Classes with dictionaries that can be inspected by TClass
@@ -345,7 +345,7 @@ public:
    RCardinalityField &operator=(RCardinalityField &&other) = default;
    ~RCardinalityField() override = default;
 
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
    const RField<RNTupleCardinality<std::uint32_t>> *As32Bit() const;
    const RField<RNTupleCardinality<std::uint64_t>> *As64Bit() const;
@@ -497,7 +497,7 @@ public:
    size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 // Has to be implemented after the definition of all RField<T> types

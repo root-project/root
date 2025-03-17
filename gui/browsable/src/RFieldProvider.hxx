@@ -39,7 +39,7 @@ using namespace std::string_literals;
 */
 
 class RFieldProvider : public RProvider {
-   class RDrawVisitor : public ROOT::Experimental::Detail::RFieldVisitor {
+   class RDrawVisitor : public ROOT::Detail::RFieldVisitor {
    private:
       std::shared_ptr<ROOT::Experimental::RNTupleReader> fNtplReader;
       std::unique_ptr<TH1> fHist;

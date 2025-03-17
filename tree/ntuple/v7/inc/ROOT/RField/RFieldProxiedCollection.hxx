@@ -36,13 +36,10 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
-
-} // namespace Experimental
 
 /// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
@@ -184,7 +181,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fProxy->Sizeof(); }
    size_t GetAlignment() const final { return alignof(std::max_align_t); }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
    void
    GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
    {

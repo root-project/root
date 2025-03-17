@@ -150,6 +150,8 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleReader::C
 
 void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output) const
 {
+   using namespace ROOT::Internal;
+
    // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out
    // from the terminal.
    char frameSymbol = '*';
@@ -233,7 +235,7 @@ void ROOT::Experimental::RNTupleReader::Show(ROOT::NTupleSize_t index, std::ostr
    output << "{";
    for (auto iValue = entry.begin(); iValue != entry.end();) {
       output << std::endl;
-      RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
+      ROOT::Internal::RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
       iValue->GetField().AcceptVisitor(visitor);
 
       if (++iValue == entry.end()) {

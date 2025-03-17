@@ -67,7 +67,7 @@ public:
    size_t GetValueSize() const final { return fSubfields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
 
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 template <typename ItemT>
@@ -116,7 +116,7 @@ public:
 
    size_t GetValueSize() const final { return kWordSize * ((fN + kBitsPerWord - 1) / kBitsPerWord); }
    size_t GetAlignment() const final { return alignof(Word_t); }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
    /// Get the number of bits in the bitset, i.e. the N in std::bitset<N>
    std::size_t GetN() const { return fN; }
@@ -155,7 +155,7 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +190,7 @@ public:
    RNullableField &operator=(RNullableField &&other) = default;
    ~RNullableField() override = default;
 
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 class ROptionalField : public RNullableField {
@@ -323,7 +323,7 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
