@@ -13,6 +13,7 @@
 #ifndef ROOT_Math_Util
 #define ROOT_Math_Util
 
+#include <chrono>
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -51,7 +52,7 @@ public:
    ~TimingScope();
 
 private:
-   void *fBegin;
+   std::chrono::steady_clock::time_point fBegin;
    std::function<void(std::string const&)> fPrinter;
    const std::string fMessage;
 };

@@ -1,12 +1,8 @@
 #include "Math/Util.h"
 
-#include <chrono>
-
 ROOT::Math::Util::TimingScope::TimingScope(std::function<void(std::string const &)> printer, std::string const &message)
-   : fPrinter{printer}, fMessage{message}
+   : fBegin{std::chrono::steady_clock::now()}, fPrinter{printer}, fMessage{message}
 {
-   using std::chrono::steady_clock;
-   fBegin = new steady_clock::time_point{steady_clock::now()};
 }
 
 namespace {
@@ -59,10 +55,8 @@ std::string printTime(T duration)
 ROOT::Math::Util::TimingScope::~TimingScope()
 {
    using std::chrono::steady_clock;
-   auto *begin = reinterpret_cast<steady_clock::time_point *>(fBegin);
    steady_clock::time_point end = steady_clock::now();
    std::stringstream ss;
-   ss << fMessage << " " << printTime(end - *begin);
+   ss << fMessage << " " << printTime(end - fBegin);
    fPrinter(ss.str());
-   delete begin;
 }
