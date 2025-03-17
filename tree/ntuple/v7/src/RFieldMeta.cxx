@@ -480,7 +480,7 @@ std::uint32_t ROOT::RClassField::GetTypeChecksum() const
    return fClass->GetCheckSum();
 }
 
-void ROOT::RClassField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
 }
@@ -539,7 +539,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::REnumField::SplitValue(const RValue 
    return result;
 }
 
-void ROOT::REnumField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::REnumField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitEnumField(*this);
 }
@@ -762,7 +762,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RProxiedCollectionField::SplitValue(
    return result;
 }
 
-void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitProxiedCollectionField(*this);
 }
@@ -919,7 +919,7 @@ std::uint32_t ROOT::RStreamerField::GetTypeChecksum() const
    return fClass->GetCheckSum();
 }
 
-void ROOT::RStreamerField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RStreamerField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitStreamerField(*this);
 }
@@ -1037,7 +1037,7 @@ size_t ROOT::RField<TObject>::GetAlignment() const
    return alignof(TObject);
 }
 
-void ROOT::RField<TObject>::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RField<TObject>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitTObjectField(*this);
 }

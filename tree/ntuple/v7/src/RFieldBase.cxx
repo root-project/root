@@ -1024,7 +1024,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Experimental::Internal::RPageSour
    fState = EState::kConnectedToSource;
 }
 
-void ROOT::RFieldBase::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RFieldBase::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitField(*this);
 }

@@ -29,13 +29,10 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
-
-} // namespace Experimental
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for C++ std::array and C-style arrays
@@ -81,7 +78,7 @@ public:
    size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 template <typename ItemT, std::size_t N>
@@ -158,7 +155,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
    void
    GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
    {
@@ -242,7 +239,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
    void
    GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
    {
@@ -300,7 +297,7 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
    void
    GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
    {
@@ -361,7 +358,7 @@ public:
    std::size_t GetAlignment() const final;
 
    std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
 namespace Experimental {

@@ -26,13 +26,11 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 namespace Detail {
-
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RFieldVisitor
+\class ROOT::Detail::RFieldVisitor
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
 
@@ -79,10 +77,11 @@ public:
 
 } // namespace Detail
 
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RPrepareVisitor
+\class ROOT::Internal::RPrepareVisitor
 \ingroup NTuple
 \brief Visitor used for a pre-processing run to collect information needed by another visitor class.
 
@@ -103,10 +102,9 @@ public:
    unsigned int GetNumFields() const { return fNumFields; }
 };
 
-
 // clang-format off
 /**
-\class ROOT::Experimental::RPrintSchemaVisitor
+\class ROOT::Internal::RPrintSchemaVisitor
 \ingroup NTuple
 \brief Contains settings for printing and prints a summary of an RField instance.
 
@@ -165,10 +163,9 @@ public:
    }
 };
 
-
 // clang-format off
 /**
-\class ROOT::Experimental::RPrintValueVisitor
+\class ROOT::Internal::RPrintValueVisitor
 \ingroup NTuple
 \brief Renders a JSON value corresponding to the field.
 */
@@ -235,10 +232,9 @@ public:
    void VisitAtomicField(const ROOT::RAtomicField &field) final;
 };
 
-
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleFormatter
+\class ROOT::Internal::RNTupleFormatter
 \ingroup NTuple
 \brief Contains helper functions for RNTupleReader::PrintInfo() and RPrintSchemaVisitor::VisitField()
 
@@ -251,7 +247,7 @@ public:
    static std::string FitString(const std::string &str, int availableSpace);
 };
 
-} // namespace Experimental
+} // namespace Internal
 } // namespace ROOT
 
 #endif
