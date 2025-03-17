@@ -731,6 +731,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fTimer       = 0;
    fApplication = nullptr;
    fColors      = setNameLocked(new TObjArray(1000), "ListOfColors");
+   fColors->SetOwner();
    fTypes       = nullptr;
    fGlobals     = nullptr;
    fGlobalFunctions = nullptr;
