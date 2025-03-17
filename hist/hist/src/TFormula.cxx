@@ -992,16 +992,22 @@ void TFormula::FillVecFunctionsShurtCuts() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    Handling polN
-///    If before 'pol' exist any name, this name will be treated as variable used in polynomial
-///    eg.
-///    varpol2(5) will be replaced with: [5] + [6]*var + [7]*var^2
-///    Empty name is treated like variable x.
-///    Extended format also supports direct variable specification: pol2(x, 0) or pol(x, [A])
-///    Traditional Syntax: polN - Polynomial of degree N
-///          ypol1             [p0]+[p1]*y
-///          pol1(x, 0)        [p0]+[p1]*x
-///          pol2(y, 1)        [p1]+[p2]*y+[p3]*TMath::Sq(y)
+/// \brief Handling Polynomial Notation (polN)
+///
+/// This section describes how polynomials are handled in the code.
+///
+/// - If any name appears before 'pol', it is treated as a variable used in the polynomial.
+///   - Example: `varpol2(5)` will be replaced with `[5] + [6]*var + [7]*var^2`.
+///   - Empty name is treated like variable `x`.
+///
+/// - The extended format allows direct variable specification:
+///   - Example: `pol2(x, 0)` or `pol(x, [A])`.
+///
+/// - Traditional syntax: `polN` represents a polynomial of degree `N`:
+///   - `ypol1` → `[p0] + [p1] * y`
+///   - `pol1(x, 0)` → `[p0] + [p1] * x`
+///   - `pol2(y, 1)` → `[p1] + [p2] * y + [p3] * TMath::Sq(y)`
+////////////////////////////////////////////////////////////////////////////////
 
 void TFormula::HandlePolN(TString &formula)
 {
