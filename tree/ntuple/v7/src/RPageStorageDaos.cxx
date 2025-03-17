@@ -550,7 +550,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::Descrip
 {
    const auto clusterId = localIndex.GetClusterId();
 
-   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   RClusterDescriptor::RPageInfo pageInfo;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
@@ -699,7 +699,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
       PrepareLoadCluster(
          clusterKey, *pageZeroMap,
          [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
-             const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
+             const RClusterDescriptor::RPageInfo &pageInfo) {
             const auto &pageLocator = pageInfo.GetLocator();
             uint32_t position, offset;
             std::tie(position, offset) = DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
