@@ -687,7 +687,7 @@ protected:
    struct RClusterInfo {
       ROOT::DescriptorId_t fClusterId = 0;
       /// Location of the page on disk
-      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
+      RClusterDescriptor::RPageInfoExtended fPageInfo;
       /// The first element number of the page's column in the given cluster
       std::uint64_t fColumnOffset = 0;
    };
@@ -717,8 +717,7 @@ protected:
    /// commonly used as part of `LoadClusters()` in derived classes.
    void PrepareLoadCluster(
       const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-      std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
-         perPageFunc);
+      std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageInfo &)> perPageFunc);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.

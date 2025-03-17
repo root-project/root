@@ -312,8 +312,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
 void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-   std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
-      perPageFunc)
+   std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageInfo &)> perPageFunc)
 {
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
@@ -1010,7 +1009,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
 
-   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   RClusterDescriptor::RPageInfo pageInfo;
    pageInfo.SetNElements(page.GetNElements());
    pageInfo.SetLocator(CommitPageImpl(columnHandle, page));
    pageInfo.SetHasChecksum(GetWriteOptions().GetEnablePageChecksums());
@@ -1022,7 +1021,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::D
 {
    fOpenColumnRanges.at(physicalColumnId).IncrementNElements(sealedPage.GetNElements());
 
-   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   RClusterDescriptor::RPageInfo pageInfo;
    pageInfo.SetNElements(sealedPage.GetNElements());
    pageInfo.SetLocator(CommitSealedPageImpl(physicalColumnId, sealedPage));
    pageInfo.SetHasChecksum(sealedPage.GetHasChecksum());
@@ -1106,7 +1105,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
          fOpenColumnRanges.at(range.fPhysicalColumnId).IncrementNElements(sealedPageIt->GetNElements());
 
-         RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+         RClusterDescriptor::RPageInfo pageInfo;
          pageInfo.SetNElements(sealedPageIt->GetNElements());
          pageInfo.SetLocator(locators[locatorIndexes[i++]]);
          pageInfo.SetHasChecksum(sealedPageIt->GetHasChecksum());
