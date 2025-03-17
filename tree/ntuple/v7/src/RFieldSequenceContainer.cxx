@@ -116,7 +116,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayField::SplitValue(const RValue
    return result;
 }
 
-void ROOT::RArrayField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RArrayField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitArrayField(*this);
 }
@@ -464,7 +464,7 @@ size_t ROOT::RRVecField::GetAlignment() const
    return EvalRVecAlignment(fSubfields[0]->GetAlignment());
 }
 
-void ROOT::RRVecField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitRVecField(*this);
 }
@@ -620,7 +620,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValu
    return result;
 }
 
-void ROOT::RVectorField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorField(*this);
 }
@@ -697,7 +697,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValu
    return result;
 }
 
-void ROOT::RField<std::vector<bool>>::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RField<std::vector<bool>>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorBoolField(*this);
 }
@@ -838,7 +838,7 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsRVecField::SplitValue(const 
    return result;
 }
 
-void ROOT::RArrayAsRVecField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::RArrayAsRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitArrayAsRVecField(*this);
 }

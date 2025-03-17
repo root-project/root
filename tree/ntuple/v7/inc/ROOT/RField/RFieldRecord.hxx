@@ -30,13 +30,10 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
-
-} // namespace Experimental
 
 namespace Internal {
 std::unique_ptr<RFieldBase> CreateEmulatedField(std::string_view fieldName,
@@ -121,7 +118,7 @@ public:
       return std::max<size_t>(1ul, fSize);
    }
    size_t GetAlignment() const final { return fMaxAlignment; }
-   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
    const std::vector<std::size_t> &GetOffsets() const { return fOffsets; }
 };

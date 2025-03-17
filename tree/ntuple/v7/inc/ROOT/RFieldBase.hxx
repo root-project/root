@@ -35,6 +35,10 @@ namespace ROOT {
 class RFieldBase;
 class RClassField;
 
+namespace Detail {
+class RFieldVisitor;
+} // namespace Detail
+
 namespace Experimental {
 
 class RNTupleJoinProcessor;
@@ -43,10 +47,6 @@ namespace Internal {
 class RPageSink;
 class RPageSource;
 } // namespace Internal
-
-namespace Detail {
-class RFieldVisitor;
-} // namespace Detail
 
 } // namespace Experimental
 
@@ -619,7 +619,7 @@ public:
    RConstSchemaIterator cbegin() const;
    RConstSchemaIterator cend() const;
 
-   virtual void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const;
+   virtual void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const;
 }; // class RFieldBase
 
 /// Iterates over the sub tree of fields in depth-first search order

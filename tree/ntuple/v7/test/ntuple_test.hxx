@@ -106,8 +106,8 @@ using RPageSinkFile = ROOT::Experimental::Internal::RPageSinkFile;
 using RPageSource = ROOT::Experimental::Internal::RPageSource;
 using RPageSourceFile = ROOT::Experimental::Internal::RPageSourceFile;
 using RPageStorage = ROOT::Experimental::Internal::RPageStorage;
-using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
-using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
+using RPrepareVisitor = ROOT::Internal::RPrepareVisitor;
+using RPrintSchemaVisitor = ROOT::Internal::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;
 using EContainerFormat = RNTupleFileWriter::EContainerFormat;
 template <typename T>
