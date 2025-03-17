@@ -61,8 +61,7 @@ mark_as_advanced(VDT_FOUND VDT_VERSION VDT_INCLUDE_DIR VDT_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Vdt
-  REQUIRED_VARS VDT_INCLUDE_DIR VDT_LIBRARY
-  VERSION_VAR VDT_VERSION)
+  REQUIRED_VARS VDT_INCLUDE_DIR VERSION_VAR VDT_VERSION)
 
 
 if(VDT_FOUND)
@@ -73,12 +72,7 @@ if(VDT_FOUND)
   endif()
 
   if(NOT TARGET VDT::VDT)
-    add_library(VDT::VDT SHARED IMPORTED)
+    add_library(VDT::VDT INTERFACE IMPORTED)
     target_include_directories(VDT::VDT SYSTEM INTERFACE ${VDT_INCLUDE_DIRS})
-
-    set_target_properties(VDT::VDT
-      PROPERTIES
-        IMPORTED_LOCATION "${VDT_LIBRARY}"
-    )
   endif()
 endif()
