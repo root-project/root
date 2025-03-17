@@ -63,13 +63,15 @@ ROOTTEST_ADD_TEST(LongRootls4
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -l test.root:tof/*
                   OUTREF LongRootls4.ref)
 
-ROOTTEST_ADD_TEST(WebRootls1
-                  COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 http://root.cern.ch/files/pippa.root
-                  OUTREF WebRootls.ref)
+if(NOT MSVC) # Windows cannot yet read https
+    ROOTTEST_ADD_TEST(WebRootls1
+                    COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 http://root.cern.ch/files/pippa.root
+                    OUTREF WebRootls.ref)
 
-ROOTTEST_ADD_TEST(WebRootls2
-                  COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 http://root.cern.ch/files/pippa.root:LL
-                  OUTREF WebRootls2.ref)
+    ROOTTEST_ADD_TEST(WebRootls2
+                    COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 http://root.cern.ch/files/pippa.root:LL
+                    OUTREF WebRootls2.ref)
+endif()
 
 ROOTTEST_ADD_TEST(TreeRootls1
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -t simpleTree.root
