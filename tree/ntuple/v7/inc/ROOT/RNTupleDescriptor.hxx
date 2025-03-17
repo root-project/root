@@ -309,6 +309,68 @@ public:
 
    // clang-format off
    /**
+   \class ROOT::Experimental::RClusterDescriptor::RPageInfo
+   \ingroup NTuple
+   \brief Information about a single page in the context of a cluster's page range.
+   */
+   // clang-format on
+   // NOTE: We do not need to store the element size / uncompressed page size because we know to which column
+   // the page belongs
+   struct RPageInfo {
+   protected:
+      /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
+      std::uint32_t fNElements = std::uint32_t(-1);
+      /// The meaning of fLocator depends on the storage backend.
+      RNTupleLocator fLocator;
+      /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
+      bool fHasChecksum = false;
+
+   public:
+      RPageInfo() = default;
+      RPageInfo(std::uint32_t nElements, const RNTupleLocator &locator, bool hasChecksum)
+         : fNElements(nElements), fLocator(locator), fHasChecksum(hasChecksum)
+      {
+      }
+
+      bool operator==(const RPageInfo &other) const
+      {
+         return fNElements == other.fNElements && fLocator == other.fLocator;
+      }
+
+      std::uint32_t GetNElements() const { return fNElements; }
+      void SetNElements(std::uint32_t n) { fNElements = n; }
+
+      const RNTupleLocator &GetLocator() const { return fLocator; }
+      RNTupleLocator &GetLocator() { return fLocator; }
+      void SetLocator(const RNTupleLocator &locator) { fLocator = locator; }
+
+      bool HasChecksum() const { return fHasChecksum; }
+      void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
+   };
+
+   struct RPageInfoExtended : RPageInfo {
+   private:
+      /// Index (in cluster) of the first element in page.
+      ROOT::NTupleSize_t fFirstElementIndex = 0;
+      /// Page number in the corresponding RPageRange.
+      ROOT::NTupleSize_t fPageNumber = 0;
+
+   public:
+      RPageInfoExtended() = default;
+      RPageInfoExtended(const RPageInfo &pageInfo, ROOT::NTupleSize_t firstElementIndex, ROOT::NTupleSize_t pageNumber)
+         : RPageInfo(pageInfo), fFirstElementIndex(firstElementIndex), fPageNumber(pageNumber)
+      {
+      }
+
+      ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+      void SetFirstElementIndex(ROOT::NTupleSize_t firstInPage) { fFirstElementIndex = firstInPage; }
+
+      ROOT::NTupleSize_t GetPageNumber() const { return fPageNumber; }
+      void SetPageNumber(ROOT::NTupleSize_t pageNumber) { fPageNumber = pageNumber; }
+   };
+
+   // clang-format off
+   /**
    \class ROOT::Experimental::RClusterDescriptor::RPageRange
    \ingroup NTuple
    \brief Records the partition of data into pages for a particular column in a particular cluster
@@ -316,63 +378,6 @@ public:
    // clang-format on
    class RPageRange {
       friend class Internal::RClusterDescriptorBuilder;
-
-   public:
-      /// We do not need to store the element size / uncompressed page size because we know to which column
-      /// the page belongs
-      struct RPageInfo {
-      protected:
-         /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
-         std::uint32_t fNElements = std::uint32_t(-1);
-         /// The meaning of fLocator depends on the storage backend.
-         RNTupleLocator fLocator;
-         /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
-         bool fHasChecksum = false;
-
-      public:
-         RPageInfo() = default;
-         RPageInfo(std::uint32_t nElements, const RNTupleLocator &locator, bool hasChecksum)
-            : fNElements(nElements), fLocator(locator), fHasChecksum(hasChecksum)
-         {
-         }
-
-         bool operator==(const RPageInfo &other) const
-         {
-            return fNElements == other.fNElements && fLocator == other.fLocator;
-         }
-
-         std::uint32_t GetNElements() const { return fNElements; }
-         void SetNElements(std::uint32_t n) { fNElements = n; }
-
-         const RNTupleLocator &GetLocator() const { return fLocator; }
-         RNTupleLocator &GetLocator() { return fLocator; }
-         void SetLocator(const RNTupleLocator &locator) { fLocator = locator; }
-
-         bool HasChecksum() const { return fHasChecksum; }
-         void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
-      };
-
-      struct RPageInfoExtended : RPageInfo {
-      private:
-         /// Index (in cluster) of the first element in page.
-         ROOT::NTupleSize_t fFirstElementIndex = 0;
-         /// Page number in the corresponding RPageRange.
-         ROOT::NTupleSize_t fPageNumber = 0;
-
-      public:
-         RPageInfoExtended() = default;
-         RPageInfoExtended(const RPageInfo &pageInfo, ROOT::NTupleSize_t firstElementIndex,
-                           ROOT::NTupleSize_t pageNumber)
-            : RPageInfo(pageInfo), fFirstElementIndex(firstElementIndex), fPageNumber(pageNumber)
-         {
-         }
-
-         ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
-         void SetFirstElementIndex(ROOT::NTupleSize_t firstInPage) { fFirstElementIndex = firstInPage; }
-
-         ROOT::NTupleSize_t GetPageNumber() const { return fPageNumber; }
-         void SetPageNumber(ROOT::NTupleSize_t pageNumber) { fPageNumber = pageNumber; }
-      };
 
    private:
       /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to

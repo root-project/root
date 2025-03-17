@@ -194,7 +194,7 @@ ROOT::Experimental::RColumnDescriptor ROOT::Experimental::RColumnDescriptor::Clo
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfoExtended
+ROOT::Experimental::RClusterDescriptor::RPageInfoExtended
 ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) const
 {
    const auto N = fCumulativeNElements.size();
