@@ -193,8 +193,7 @@ void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo 
    RFieldBase::Attach(std::move(child));
 }
 
-std::vector<const ROOT::TSchemaRule *>
-ROOT::RClassField::FindRules(const ROOT::Experimental::RFieldDescriptor *fieldDesc)
+std::vector<const ROOT::TSchemaRule *> ROOT::RClassField::FindRules(const ROOT::RFieldDescriptor *fieldDesc)
 {
    ROOT::Detail::TSchemaRuleSet::TMatches rules;
    const auto ruleset = fClass->GetSchemaRules();
@@ -312,8 +311,8 @@ void ROOT::RClassField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to
    }
 }
 
-ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                                     std::string_view memberName, ROOT::DescriptorId_t classFieldId)
+ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName,
+                                                     ROOT::DescriptorId_t classFieldId)
 {
    auto idSourceMember = desc.FindFieldId(memberName, classFieldId);
    if (idSourceMember != ROOT::kInvalidDescriptorId)
@@ -343,8 +342,8 @@ void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned i
 }
 
 void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
-                                           const ROOT::Experimental::RNTupleDescriptor &desc,
-                                           const ROOT::Experimental::RFieldDescriptor &classFieldDesc)
+                                           const ROOT::RNTupleDescriptor &desc,
+                                           const ROOT::RFieldDescriptor &classFieldDesc)
 {
    std::size_t stagingAreaSize = 0;
    for (const auto rule : rules) {
@@ -406,7 +405,7 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Experimental::Internal::RP
          SetStagingClass(GetTypeName(), GetTypeVersion());
    } else {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      const ROOT::Experimental::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
 
       // Check that we have the same type.
@@ -719,7 +718,7 @@ void ROOT::RProxiedCollectionField::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
-void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
@@ -873,7 +872,7 @@ void ROOT::RStreamerField::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>();
 }
 
-void ROOT::RStreamerField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RStreamerField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>(desc);
 }
@@ -889,10 +888,10 @@ void ROOT::RStreamerField::RStreamerFieldDeleter::operator()(void *objPtr, bool 
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
-ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::RStreamerField::GetExtraTypeInfo() const
+ROOT::RExtraTypeInfoDescriptor ROOT::RStreamerField::GetExtraTypeInfo() const
 {
-   ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder extraTypeInfoBuilder;
-   extraTypeInfoBuilder.ContentId(ROOT::Experimental::EExtraTypeInfoIds::kStreamerInfo)
+   ROOT::Internal::RExtraTypeInfoDescriptorBuilder extraTypeInfoBuilder;
+   extraTypeInfoBuilder.ContentId(ROOT::EExtraTypeInfoIds::kStreamerInfo)
       .TypeVersion(GetTypeVersion())
       .TypeName(GetTypeName())
       .Content(ROOT::Experimental::Internal::RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
@@ -1229,7 +1228,7 @@ void ROOT::RVariantField::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnSwitch>();
 }
 
-void ROOT::RVariantField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RVariantField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnSwitch>(desc);
 }

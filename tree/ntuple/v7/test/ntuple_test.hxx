@@ -53,32 +53,32 @@
 #include <variant>
 #include <vector>
 
+using ROOT::EExtraTypeInfoIds;
 using ROOT::RNTupleLocalIndex;
 using ROOT::RNTupleLocator;
 using ROOT::RNTupleLocatorObject64;
-using ROOT::Experimental::EExtraTypeInfoIds;
 using ROOT::Internal::RColumnIndex;
-using RClusterDescriptor = ROOT::Experimental::RClusterDescriptor;
-using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescriptorBuilder;
-using RClusterGroupDescriptorBuilder = ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder;
-using RColumnDescriptorBuilder = ROOT::Experimental::Internal::RColumnDescriptorBuilder;
+using RClusterDescriptor = ROOT::RClusterDescriptor;
+using RClusterDescriptorBuilder = ROOT::Internal::RClusterDescriptorBuilder;
+using RClusterGroupDescriptorBuilder = ROOT::Internal::RClusterGroupDescriptorBuilder;
+using RColumnDescriptorBuilder = ROOT::Internal::RColumnDescriptorBuilder;
 using RColumnElementBase = ROOT::Internal::RColumnElementBase;
 using RColumnSwitch = ROOT::Internal::RColumnSwitch;
-using ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder;
-using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
+using ROOT::Internal::RExtraTypeInfoDescriptorBuilder;
+using RFieldDescriptorBuilder = ROOT::Internal::RFieldDescriptorBuilder;
 template <class T>
 using RField = ROOT::RField<T>;
 using RFieldBase = ROOT::RFieldBase;
-using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
+using RFieldDescriptor = ROOT::RFieldDescriptor;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
 using RNTupleCompressor = ROOT::Internal::RNTupleCompressor;
 using RNTupleDecompressor = ROOT::Internal::RNTupleDecompressor;
-using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
+using RNTupleDescriptor = ROOT::RNTupleDescriptor;
 using RNTupleFillStatus = ROOT::Experimental::RNTupleFillStatus;
-using RNTupleDescriptorBuilder = ROOT::Experimental::Internal::RNTupleDescriptorBuilder;
+using RNTupleDescriptorBuilder = ROOT::Internal::RNTupleDescriptorBuilder;
 using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
 using RNTupleJoinTable = ROOT::Experimental::Internal::RNTupleJoinTable;
 using RNTupleParallelWriter = ROOT::Experimental::RNTupleParallelWriter;

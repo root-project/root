@@ -405,7 +405,7 @@ void ROOT::RRVecField::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
-void ROOT::RRVecField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RRVecField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
@@ -578,7 +578,7 @@ void ROOT::RVectorField::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
-void ROOT::RVectorField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RVectorField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
@@ -677,7 +677,7 @@ void ROOT::RField<std::vector<bool>>::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
-void ROOT::RField<std::vector<bool>>::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RField<std::vector<bool>>::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }

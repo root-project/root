@@ -269,7 +269,7 @@ public:
       ROOT::NTupleSize_t fNEntries = 0;
 
       struct RColumnInfo {
-         RClusterDescriptor::RPageRange fPageRange;
+         ROOT::RClusterDescriptor::RPageRange fPageRange;
          ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
          std::uint32_t fCompressionSettings;
          bool fIsSuppressed = false;
@@ -448,9 +448,9 @@ private:
    /// Used to calculate the number of entries in the current cluster
    ROOT::NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
+   std::vector<ROOT::RClusterDescriptor::RColumnRange> fOpenColumnRanges;
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
-   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+   std::vector<ROOT::RClusterDescriptor::RPageRange> fOpenPageRanges;
 
    /// Union of the streamer info records that are sent from streamer fields to the sink before committing the dataset.
    RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
@@ -462,7 +462,7 @@ protected:
    };
 
    RFeatures fFeatures;
-   Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
+   ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -688,7 +688,7 @@ protected:
    struct RClusterInfo {
       ROOT::DescriptorId_t fClusterId = 0;
       /// Location of the page on disk
-      RClusterDescriptor::RPageInfoExtended fPageInfo;
+      ROOT::RClusterDescriptor::RPageInfoExtended fPageInfo;
       /// The first element number of the page's column in the given cluster
       std::uint64_t fColumnOffset = 0;
    };
@@ -718,7 +718,8 @@ protected:
    /// commonly used as part of `LoadClusters()` in derived classes.
    void PrepareLoadCluster(
       const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-      std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageInfo &)> perPageFunc);
+      std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
+         perPageFunc);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.

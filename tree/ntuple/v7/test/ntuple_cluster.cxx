@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::Internal::RCluster;
 using ROOT::Experimental::Internal::RClusterPool;
 using ROOT::Experimental::Internal::ROnDiskPage;
@@ -50,17 +49,17 @@ public:
 
    RPageSourceMock() : RPageSource("test", RNTupleReadOptions())
    {
-      ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
+      ROOT::Internal::RNTupleDescriptorBuilder descBuilder;
       descBuilder.SetNTuple("ntpl", "");
       for (unsigned i = 0; i <= 5; ++i) {
-         descBuilder.AddCluster(ROOT::Experimental::Internal::RClusterDescriptorBuilder()
+         descBuilder.AddCluster(ROOT::Internal::RClusterDescriptorBuilder()
                                    .ClusterId(i)
                                    .FirstEntryIndex(i)
                                    .NEntries(1)
                                    .MoveDescriptor()
                                    .Unwrap());
       }
-      ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder cgBuilder;
+      ROOT::Internal::RClusterGroupDescriptorBuilder cgBuilder;
       cgBuilder.ClusterGroupId(0).MinEntry(0).EntrySpan(6).NClusters(6);
       cgBuilder.AddSortedClusters({0, 1, 2, 3, 4, 5});
       descBuilder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());

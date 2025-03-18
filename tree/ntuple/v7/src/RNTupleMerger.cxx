@@ -40,6 +40,8 @@
 #include <vector>
 
 using ROOT::ENTupleColumnType;
+using ROOT::RFieldDescriptor;
+using ROOT::RNTupleDescriptor;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RColumnElementBase;
 

@@ -671,11 +671,11 @@ TEST(RNTuple, SerializeFooter)
                         .MakeDescriptor()
                         .Unwrap());
 
-   ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
-   ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RColumnRange columnRange;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    RClusterDescriptorBuilder clusterBuilder;
    clusterBuilder.ClusterId(84).FirstEntryIndex(0).NEntries(100);
-   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
+   ROOT::RClusterDescriptor::RPageRange pageRange;
    pageRange.SetPhysicalColumnId(17);
    // Two pages adding up to 100 elements, one with checksum one without
    pageInfo.SetNElements(40);
@@ -993,8 +993,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .Unwrap());
 
    RClusterDescriptorBuilder clusterBuilder;
-   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageRange pageRange;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    // First cluster
    clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
    clusterBuilder.MarkSuppressedColumnRange(0);
@@ -1189,8 +1189,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .Unwrap());
 
    RClusterDescriptorBuilder clusterBuilder;
-   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageRange pageRange;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    // First cluster
    clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
    clusterBuilder.MarkSuppressedColumnRange(0);
@@ -1314,8 +1314,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                         .Unwrap());
    context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
 
-   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageRange pageRange;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    // Second cluster
    clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
    clusterBuilder.MarkSuppressedColumnRange(1);
@@ -1424,8 +1424,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
 
    // First cluster
    RClusterDescriptorBuilder clusterBuilder;
-   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageRange pageRange;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
    pageRange.SetPhysicalColumnId(0);
    pageInfo.SetNElements(1);
@@ -1557,8 +1557,8 @@ TEST(RNTuple, DeserializeDescriptorModes)
       context = RNTupleSerializer::SerializeHeader(bufHeader.get(), builder.GetDescriptor()).Unwrap();
       sizeHeader = context.GetHeaderSize();
 
-      ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-      ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+      ROOT::RClusterDescriptor::RPageRange pageRange;
+      ROOT::RClusterDescriptor::RPageInfo pageInfo;
 
       // First cluster
       RClusterDescriptorBuilder clusterBuilder;
@@ -1832,8 +1832,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
    clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
    builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
 
-   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageRange pageRange;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    // Second cluster
    clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
    clusterBuilder.MarkSuppressedColumnRange(1);
@@ -1958,8 +1958,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
    clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
    builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
 
-   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   ROOT::Experimental::RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageRange pageRange;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    // Second cluster
    clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
    clusterBuilder.MarkSuppressedColumnRange(1);

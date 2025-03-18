@@ -61,7 +61,7 @@ void CallConnectPageSinkOnField(RFieldBase &, ROOT::Experimental::Internal::RPag
 void CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
-                    const ROOT::Experimental::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+                    const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 } // namespace Internal
 
@@ -92,8 +92,8 @@ class RFieldBase {
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
    friend ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
-                                 const ROOT::RCreateFieldOptions &options,
-                                 const ROOT::Experimental::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+                                 const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
+                                 ROOT::DescriptorId_t fieldId);
 
    using ReadCallback_t = std::function<void(void *)>;
 
@@ -344,7 +344,7 @@ protected:
 
    /// For reading, use the on-disk column list
    template <typename... ColumnCppTs>
-   void GenerateColumnsImpl(const ROOT::Experimental::RNTupleDescriptor &desc)
+   void GenerateColumnsImpl(const ROOT::RNTupleDescriptor &desc)
    {
       std::uint16_t representationIndex = 0;
       do {
@@ -372,15 +372,15 @@ protected:
    /// Implementations in derived classes should create the backing columns corresponsing to the field type for reading.
    /// The default implementation does not attach any columns to the field. The method should check, using the page
    /// source and fOnDiskId, if the column types match and throw if they don't.
-   virtual void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor & /*desc*/) {}
+   virtual void GenerateColumns(const ROOT::RNTupleDescriptor & /*desc*/) {}
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId and the given
    /// representation index. If there are no columns for the given representation index, return an empty
    /// ColumnRepresentation_t list. Otherwise, the returned reference points into the static array returned by
    /// GetColumnRepresentations().
    /// Throws an exception if the types on disk don't match any of the deserialization types from
    /// GetColumnRepresentations().
-   const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                                             std::uint16_t representationIndex) const;
+   const ColumnRepresentation_t &
+   EnsureCompatibleColumnTypes(const ROOT::RNTupleDescriptor &desc, std::uint16_t representationIndex) const;
    /// When connecting a field to a page sink, the field's default column representation is subject
    /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
    /// are changed to their unencoded counterparts.
@@ -476,10 +476,7 @@ protected:
    // The page sink's callback when the data set gets committed will call this method to get the field's extra
    // type information. This has to happen at the end of writing because the type information may change depending
    // on the data that's written, e.g. for polymorphic types in the streamer field.
-   virtual ROOT::Experimental::RExtraTypeInfoDescriptor GetExtraTypeInfo() const
-   {
-      return ROOT::Experimental::RExtraTypeInfoDescriptor();
-   }
+   virtual ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return ROOT::RExtraTypeInfoDescriptor(); }
 
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
@@ -495,7 +492,7 @@ protected:
    /// `desc` and `fieldId` must be passed if `options.fEmulateUnknownTypes` is true, otherwise they can be left blank.
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
-          const ROOT::Experimental::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+          const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
    template <bool IsConstT>

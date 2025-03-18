@@ -674,7 +674,7 @@ TEST(RNTupleDescriptor, CloneSchema)
    EXPECT_NE(desc.GetOnDiskHeaderSize(), 0);
    EXPECT_NE(desc.GetOnDiskFooterSize(), 0);
 
-   const auto descOnlySchema = ROOT::Experimental::Internal::CloneDescriptorSchema(desc);
+   const auto descOnlySchema = ROOT::Internal::CloneDescriptorSchema(desc);
    EXPECT_EQ(descOnlySchema.GetNFields(), 8);
    EXPECT_EQ(descOnlySchema.GetNLogicalColumns(), 7);
    EXPECT_EQ(descOnlySchema.GetNPhysicalColumns(), 4);

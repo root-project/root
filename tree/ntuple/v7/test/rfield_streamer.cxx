@@ -211,7 +211,7 @@ TEST(RField, StreamerMerge)
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &typeInfo = *desc.GetExtraTypeInfoIterable().begin();
-   EXPECT_EQ(ROOT::Experimental::EExtraTypeInfoIds::kStreamerInfo, typeInfo.GetContentId());
+   EXPECT_EQ(ROOT::EExtraTypeInfoIds::kStreamerInfo, typeInfo.GetContentId());
    auto streamerInfoMap = RNTupleSerializer::DeserializeStreamerInfos(typeInfo.GetContent()).Unwrap();
    EXPECT_EQ(4u, streamerInfoMap.size());
    std::array<bool, 4> seenStreamerInfos{false, false, false, false};
@@ -286,7 +286,7 @@ TEST(RField, StreamerMergeIncremental)
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &typeInfo = *desc.GetExtraTypeInfoIterable().begin();
-   EXPECT_EQ(ROOT::Experimental::EExtraTypeInfoIds::kStreamerInfo, typeInfo.GetContentId());
+   EXPECT_EQ(ROOT::EExtraTypeInfoIds::kStreamerInfo, typeInfo.GetContentId());
    auto streamerInfoMap = RNTupleSerializer::DeserializeStreamerInfos(typeInfo.GetContent()).Unwrap();
    EXPECT_EQ(4u, streamerInfoMap.size());
    std::array<bool, 4> seenStreamerInfos{false, false, false, false};

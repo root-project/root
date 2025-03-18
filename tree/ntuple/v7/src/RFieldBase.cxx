@@ -88,8 +88,8 @@ void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Exper
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
-                                    const ROOT::RCreateFieldOptions &options,
-                                    const ROOT::Experimental::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId)
+                                    const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
+                                    ROOT::DescriptorId_t fieldId)
 {
    return RFieldBase::Create(fieldName, typeName, options, desc, fieldId);
 }
@@ -291,7 +291,7 @@ ROOT::RFieldBase::Check(const std::string &fieldName, const std::string &typeNam
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
-                         const ROOT::RCreateFieldOptions &options, const ROOT::Experimental::RNTupleDescriptor *desc,
+                         const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                          ROOT::DescriptorId_t fieldId)
 {
    using ROOT::Internal::ParseArrayType;
@@ -872,7 +872,7 @@ void ROOT::RFieldBase::SetColumnRepresentatives(const RColumnRepresentations::Se
 }
 
 const ROOT::RFieldBase::ColumnRepresentation_t &
-ROOT::RFieldBase::EnsureCompatibleColumnTypes(const ROOT::Experimental::RNTupleDescriptor &desc,
+ROOT::RFieldBase::EnsureCompatibleColumnTypes(const ROOT::RNTupleDescriptor &desc,
                                               std::uint16_t representationIndex) const
 {
    static const ColumnRepresentation_t kEmpty;
@@ -997,7 +997,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Experimental::Internal::RPageSour
    // Do not generate columns nor set fColumnRepresentatives for artificial fields.
    if (!fIsArtificial) {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      const ROOT::Experimental::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
       GenerateColumns(desc);
       if (fColumnRepresentatives.empty()) {
          // If we didn't get columns from the descriptor, ensure that we actually expect a field without columns

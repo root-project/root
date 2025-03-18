@@ -166,22 +166,21 @@ private:
 
    /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
    /// member exist. Looks recursively in base classes.
-   ROOT::DescriptorId_t LookupMember(const ROOT::Experimental::RNTupleDescriptor &desc, std::string_view memberName,
-                                     ROOT::DescriptorId_t classFieldId);
+   ROOT::DescriptorId_t
+   LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName, ROOT::DescriptorId_t classFieldId);
    /// Sets fStagingClass according to the given name and version
    void SetStagingClass(const std::string &className, unsigned int classVersion);
    /// If there are rules with inputs (source members), create the staging area according to the TClass instance
    /// that corresponds to the on-disk field.
-   void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
-                           const ROOT::Experimental::RNTupleDescriptor &desc,
-                           const ROOT::Experimental::RFieldDescriptor &classFieldId);
+   void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const ROOT::RNTupleDescriptor &desc,
+                           const ROOT::RFieldDescriptor &classFieldId);
    /// Register post-read callback corresponding to a ROOT I/O customization rules.
    void AddReadCallbacksFromIORule(const TSchemaRule *rule);
    /// Given the on-disk information from the page source, find all the I/O customization rules that apply
    /// to the class field at hand, to which the fieldDesc descriptor, if provided, must correspond.
    /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
    /// field descriptor is nullptr.
-   std::vector<const TSchemaRule *> FindRules(const ROOT::Experimental::RFieldDescriptor *fieldDesc);
+   std::vector<const TSchemaRule *> FindRules(const ROOT::RFieldDescriptor *fieldDesc);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -233,7 +232,7 @@ protected:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RStreamerFieldDeleter>(fClass); }
@@ -245,7 +244,7 @@ protected:
 
    bool HasExtraTypeInfo() const final { return true; }
    // Returns the list of seen streamer infos
-   ROOT::Experimental::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
+   ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
 public:
    RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
@@ -338,7 +337,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    // Field is only used for reading
    void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
 
 public:
    RCardinalityField(RCardinalityField &&other) = default;
@@ -355,7 +354,7 @@ template <typename T>
 class RSimpleField : public RFieldBase {
 protected:
    void GenerateColumns() override { GenerateColumnsImpl<T>(); }
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 

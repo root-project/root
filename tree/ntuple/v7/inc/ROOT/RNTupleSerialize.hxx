@@ -33,17 +33,20 @@
 class TVirtualStreamerInfo;
 
 namespace ROOT {
-namespace Experimental {
 
-enum class EExtraTypeInfoIds;
-class RClusterDescriptor;
 class RNTupleDescriptor;
+class RClusterDescriptor;
+enum class EExtraTypeInfoIds;
 
 namespace Internal {
 
 class RClusterDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 
+} // namespace Internal
+
+namespace Experimental {
+namespace Internal {
 // clang-format off
 /**
 \class ROOT::Experimental::Internal::RNTupleSerializer
@@ -59,7 +62,7 @@ Deserialization errors throw exceptions. Only when indicated or when passed as a
 */
 // clang-format on
 class RNTupleSerializer {
-   static RResult<std::vector<RClusterDescriptorBuilder>>
+   static RResult<std::vector<ROOT::Internal::RClusterDescriptorBuilder>>
    DeserializePageListRaw(const void *buffer, std::uint64_t bufSize, ROOT::DescriptorId_t clusterGroupId,
                           const RNTupleDescriptor &desc);
 
@@ -225,11 +228,10 @@ public:
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
    static RResult<std::uint32_t> SerializeFieldStructure(ROOT::ENTupleStructure structure, void *buffer);
    static RResult<std::uint32_t> SerializeColumnType(ROOT::ENTupleColumnType type, void *buffer);
-   static RResult<std::uint32_t> SerializeExtraTypeInfoId(ROOT::Experimental::EExtraTypeInfoIds id, void *buffer);
+   static RResult<std::uint32_t> SerializeExtraTypeInfoId(ROOT::EExtraTypeInfoIds id, void *buffer);
    static RResult<std::uint32_t> DeserializeFieldStructure(const void *buffer, ROOT::ENTupleStructure &structure);
    static RResult<std::uint32_t> DeserializeColumnType(const void *buffer, ROOT::ENTupleColumnType &type);
-   static RResult<std::uint32_t>
-   DeserializeExtraTypeInfoId(const void *buffer, ROOT::Experimental::EExtraTypeInfoIds &id);
+   static RResult<std::uint32_t> DeserializeExtraTypeInfoId(const void *buffer, ROOT::EExtraTypeInfoIds &id);
 
    static std::uint32_t SerializeEnvelopePreamble(std::uint16_t envelopeType, void *buffer);
    static RResult<std::uint32_t> SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size);
@@ -272,8 +274,8 @@ public:
    /// fields and columns tagged as part of the header extension (see `RNTupleDescriptorBuilder::BeginHeaderExtension`).
    static RResult<std::uint32_t> SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc,
                                                             const RContext &context, bool forHeaderExtension = false);
-   static RResult<std::uint32_t>
-   DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   static RResult<std::uint32_t> DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize,
+                                                              ROOT::Internal::RNTupleDescriptorBuilder &descBuilder);
 
    static RResult<RContext> SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
    static RResult<std::uint32_t> SerializePageList(void *buffer, const RNTupleDescriptor &desc,
@@ -282,9 +284,9 @@ public:
    static RResult<std::uint32_t> SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
    static RResult<void>
-   DeserializeHeader(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   DeserializeHeader(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RNTupleDescriptorBuilder &descBuilder);
    static RResult<void>
-   DeserializeFooter(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   DeserializeFooter(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RNTupleDescriptorBuilder &descBuilder);
 
    enum class EDescriptorDeserializeMode {
       /// Deserializes the descriptor as-is without performing any additional fixup. The produced descriptor is

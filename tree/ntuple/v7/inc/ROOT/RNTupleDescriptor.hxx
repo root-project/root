@@ -51,8 +51,11 @@ class RColumnElementBase;
 
 namespace Experimental {
 
-class RNTupleDescriptor;
 class RNTupleModel;
+
+}
+
+class RNTupleDescriptor;
 
 namespace Internal {
 class RColumnDescriptorBuilder;
@@ -67,7 +70,7 @@ RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
 
 // clang-format off
 /**
-\class ROOT::Experimental::RFieldDescriptor
+\class ROOT::RFieldDescriptor
 \ingroup NTuple
 \brief Meta-data stored for every field of an ntuple
 */
@@ -151,7 +154,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RColumnDescriptor
+\class ROOT::RColumnDescriptor
 \ingroup NTuple
 \brief Meta-data stored for every column of an ntuple
 */
@@ -223,7 +226,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RClusterDescriptor
+\class ROOT::RClusterDescriptor
 \ingroup NTuple
 \brief Meta-data for a set of ntuple clusters
 
@@ -309,7 +312,7 @@ public:
 
    // clang-format off
    /**
-   \class ROOT::Experimental::RClusterDescriptor::RPageInfo
+   \class ROOT::RClusterDescriptor::RPageInfo
    \ingroup NTuple
    \brief Information about a single page in the context of a cluster's page range.
    */
@@ -371,7 +374,7 @@ public:
 
    // clang-format off
    /**
-   \class ROOT::Experimental::RClusterDescriptor::RPageRange
+   \class ROOT::RClusterDescriptor::RPageRange
    \ingroup NTuple
    \brief Records the partition of data into pages for a particular column in a particular cluster
    */
@@ -503,7 +506,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RClusterGroupDescriptor
+\class ROOT::RClusterGroupDescriptor
 \ingroup NTuple
 \brief Clusters are bundled in cluster groups.
 
@@ -565,7 +568,7 @@ enum class EExtraTypeInfoIds {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RExtraTypeInfoDescriptor
+\class ROOT::RExtraTypeInfoDescriptor
 \ingroup NTuple
 \brief Field specific extra type information from the header / extenstion header
 
@@ -604,7 +607,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptor
+\class ROOT::RNTupleDescriptor
 \ingroup NTuple
 \brief The on-storage meta-data of an ntuple
 
@@ -825,13 +828,14 @@ public:
    void IncGeneration() { fGeneration++; }
 
    /// Re-create the C++ model from the stored meta-data
-   std::unique_ptr<RNTupleModel> CreateModel(const RCreateModelOptions &options = RCreateModelOptions()) const;
+   std::unique_ptr<ROOT::Experimental::RNTupleModel>
+   CreateModel(const RCreateModelOptions &options = RCreateModelOptions()) const;
    void PrintInfo(std::ostream &output) const;
 };
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable
+\class ROOT::RNTupleDescriptor::RColumnDescriptorIterable
 \ingroup NTuple
 \brief Used to loop over a field's associated columns
 */
@@ -885,7 +889,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable
+\class ROOT::RNTupleDescriptor::RFieldDescriptorIterable
 \ingroup NTuple
 \brief Used to loop over a field's child fields
 */
@@ -946,7 +950,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptor::RClusterGroupDescriptorIterable
+\class ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable
 \ingroup NTuple
 \brief Used to loop over all the cluster groups of an ntuple (in unspecified order)
 
@@ -997,7 +1001,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptor::RClusterDescriptorIterable
+\class ROOT::RNTupleDescriptor::RClusterDescriptorIterable
 \ingroup NTuple
 \brief Used to loop over all the clusters of an ntuple (in unspecified order)
 
@@ -1048,7 +1052,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable
+\class ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable
 \ingroup NTuple
 \brief Used to loop over all the extra type info record of an ntuple (in unspecified order)
 */
@@ -1096,7 +1100,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDescriptor::RHeaderExtension
+\class ROOT::RNTupleDescriptor::RHeaderExtension
 \ingroup NTuple
 \brief Summarizes information about fields and the corresponding columns that were added after the header has been serialized
 */
@@ -1171,7 +1175,7 @@ namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RColumnDescriptorBuilder
+\class ROOT::Internal::RColumnDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RColumnDescriptor
 
@@ -1253,7 +1257,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RFieldDescriptorBuilder
+\class ROOT::Internal::RFieldDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RFieldDescriptor
 
@@ -1352,7 +1356,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RClusterDescriptorBuilder
+\class ROOT::Internal::RClusterDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RClusterDescriptor
 
@@ -1413,7 +1417,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder
+\class ROOT::Internal::RClusterGroupDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RClusterGroupDescriptor
 */
@@ -1468,7 +1472,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder
+\class ROOT::Internal::RExtraTypeInfoDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RExtraTypeInfoDescriptor
 */
@@ -1506,7 +1510,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleDescriptorBuilder
+\class ROOT::Internal::RNTupleDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RNTupleDescriptor
 
@@ -1578,7 +1582,7 @@ public:
    void ShiftAliasColumns(std::uint32_t offset);
 
    /// Get the streamer info records for custom classes. Currently requires the corresponding dictionaries to be loaded.
-   RNTupleSerializer::StreamerInfoMap_t BuildStreamerInfos() const;
+   ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t BuildStreamerInfos() const;
 };
 
 inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
@@ -1587,7 +1591,6 @@ inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
 }
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleDescriptor

@@ -128,7 +128,7 @@ private:
       return std::make_unique<RArraySizeField>(fArrayLength);
    }
    void GenerateColumns() final { assert(false && "RArraySizeField fields must only be used for reading"); }
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final {}
+   void GenerateColumns(const ROOT::RNTupleDescriptor &) final {}
    void ReadGlobalImpl(ROOT::NTupleSize_t /*globalIndex*/, void *to) final
    {
       *static_cast<std::size_t *>(to) = fArrayLength;

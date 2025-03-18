@@ -390,7 +390,7 @@ protected:
       fPrincipalColumn = fAvailableColumns[0].get();
    }
 
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final
    {
       std::uint16_t representationIndex = 0;
       do {
