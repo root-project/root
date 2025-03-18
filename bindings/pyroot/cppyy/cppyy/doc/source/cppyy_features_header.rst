@@ -16,7 +16,7 @@ File features.h
     class Abstract {
     public:
         virtual ~Abstract() {}
-        virtual void abstract_method() = 0;
+        virtual std::string abstract_method() = 0;
         virtual void concrete_method() = 0;
     };
 
@@ -30,8 +30,8 @@ File features.h
         Concrete(int n=42) : m_int(n), m_const_int(17) {}
         ~Concrete() {}
 
-        virtual void abstract_method() {
-            std::cout << "called Concrete::abstract_method" << std::endl;
+        virtual std::string abstract_method() {
+            return "called Concrete::abstract_method";
         }
 
         virtual void concrete_method() {

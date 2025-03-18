@@ -628,7 +628,7 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(
 //----------------------------------------------------------------------------
 static inline bool check_scope(const std::string& name)
 {
-    return (bool)Cppyy::GetScope(CPyCppyy::TypeManip::clean_type(name));
+    return (bool)Cppyy::GetScope(CPyCppyy::TypeManip::clean_type(name, false));
 }
 
 void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
