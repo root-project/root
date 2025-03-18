@@ -15,7 +15,7 @@ void merge_gen_input_tuples(const char *fname1 = "test_rntuple_input1.root", con
    using namespace ROOT::Experimental;
 
    {
-      auto model = RNTupleModel::Create();
+      auto model = ROOT::RNTupleModel::Create();
       auto fi = model->MakeField<int>("I");
       auto fl = model->MakeField<long>("L");
       auto opts = ROOT::RNTupleWriteOptions{};
@@ -28,7 +28,7 @@ void merge_gen_input_tuples(const char *fname1 = "test_rntuple_input1.root", con
       }
    }
    {
-      auto model = RNTupleModel::Create();
+      auto model = ROOT::RNTupleModel::Create();
       auto fi = model->MakeField<int>("I");
       auto fl = model->MakeField<long>("L");
       auto opts = ROOT::RNTupleWriteOptions{};

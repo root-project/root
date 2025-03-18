@@ -22,7 +22,7 @@ void hadd_gen_input_files(const char *fnamePrefix = "hadd_input")
          h.Write();
       }
       if (i > 1) {
-         auto model = RNTupleModel::Create();
+         auto model = ROOT::RNTupleModel::Create();
          auto p = model->MakeField<char>("c");
          auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
          *p = 22;

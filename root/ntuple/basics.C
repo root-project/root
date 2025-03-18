@@ -10,14 +10,13 @@
 
 void basics()
 {
-   using ROOT::Experimental::RNTupleModel;
    using ROOT::Experimental::RNTupleWriter;
    using ROOT::Experimental::RNTupleReader;
 
    const std::string kFileName{"test_rntuple_basics.root"s};
 
    {
-      auto model = RNTupleModel::Create();
+      auto model = ROOT::RNTupleModel::Create();
       *model->MakeField<int>("E") = 137;
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", kFileName);
       writer->Fill();
