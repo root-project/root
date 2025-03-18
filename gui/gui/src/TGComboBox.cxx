@@ -705,27 +705,16 @@ void TGComboBox::RemoveAll()
 
 void TGComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground())
-      SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
 
    out << "\n   // combo box\n";
 
-   if (!fTextEntry) {
-      out << "   TGComboBox *" << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
-   } else {
-      out << "   TGComboBox *" << GetName() << " = new TGComboBox(" << fParent->GetName() << ", \""
-          << TString(fTextEntry->GetText()).ReplaceSpecialCppChars() << "\"," << fWidgetId;
-   }
+   out << "   TGComboBox *" << GetName() << " = new TGComboBox(" << fParent->GetName();
+   if (fTextEntry)
+      out << ", \""  << TString(fTextEntry->GetText()).ReplaceSpecialCppChars() << "\"";
+   out << ", " << fWidgetId << extra_args << ");\n";
 
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
-         out << ");\n";
-      } else {
-         out << "," << GetOptionString() << ");\n";
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);\n";
-   }
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 

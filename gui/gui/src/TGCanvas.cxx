@@ -2445,23 +2445,13 @@ void TGCanvas::ClearViewPort()
 
 void TGCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground())
-      SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder);
 
    out << "\n   // canvas widget\n";
 
    out << "   TGCanvas *" << GetName() << " = new TGCanvas(" << fParent->GetName() << "," << GetWidth() << ","
-       << GetHeight();
+       << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out << ");\n";
-      } else {
-         out << "," << GetOptionString() << ");\n";
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);\n";
-   }
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
@@ -2496,27 +2486,18 @@ void TGCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground())
-      SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder);
 
    out << "\n   // canvas container\n";
 
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << "   TGContainer *" << GetName() << " = new TGContainer(" << GetCanvas()->GetName();
-   } else {
-      out << "   TGContainer *" << GetName() << " = new TGContainer(" << fParent->GetName() << "," << GetWidth() << ","
-          << GetHeight();
-   }
+   out << "   TGContainer *" << GetName() << " = new TGContainer(";
+   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class()))
+      out << GetCanvas()->GetName();
+   else
+      out << fParent->GetName() << "," << GetWidth() << "," << GetHeight();
+   out << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out << ");\n";
-      } else {
-         out << "," << GetOptionString() << ");\n";
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);\n";
-   }
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 }

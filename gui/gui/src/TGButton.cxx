@@ -1888,7 +1888,7 @@ void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (fState == kButtonEngaged)
       out << "   " << GetName() << "->SetState(kButtonEngaged);\n";
 
-   if (fBackground != fgDefaultFrameBackground) {
+   if (fBackground != GetDefaultFrameBackground()) {
       SaveUserColor(out, option);
       out << "   " << GetName() << "->ChangeBackground(ucolor);\n";
    }
@@ -1915,7 +1915,7 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
    parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
-   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC) || (GetOptions() != (kRaisedFrame | kDoubleBorder))) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
@@ -1928,8 +1928,6 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          parGC.Form("uGC->GetGC()");
       }
    }
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << "   TGTextButton *" << GetName() << " = new TGTextButton(" << fParent->GetName()
        << ", \"" << outext.ReplaceSpecialCppChars() << "\"";
@@ -1952,13 +1950,12 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");\n";
    }
 
-   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << std::endl;
-   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << std::endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");\n";
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << "," << fMTop << "," << fMBottom
+       << ");\n";
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");\n";
 
-   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
-       << ");" << std::endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight() << ");\n";
 
    TGButton::SavePrimitive(out,option);
 }
