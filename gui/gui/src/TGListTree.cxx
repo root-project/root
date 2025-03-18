@@ -52,6 +52,7 @@ A list tree can generate the following events:
 #include "TGResourcePool.h"
 #include "TGMsgBox.h"
 #include "TError.h"
+#include "TROOT.h"
 #include "TColor.h"
 #include "TSystem.h"
 #include "TString.h"
@@ -2627,8 +2628,6 @@ void TGListTree::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TGListTreeItem *current;
    current = GetFirstItem();
 
-   out << "   const TGPicture *popen;       //used for list tree items" << std::endl;
-   out << "   const TGPicture *pclose;      //used for list tree items" << std::endl;
    out << std::endl;
 
    while (current) {
@@ -2674,79 +2673,56 @@ void TGListTree::SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n)
 
 void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t n)
 {
-   static const TGPicture *oldopen = nullptr;
-   static const TGPicture *oldclose = nullptr;
-   static const TGPicture *oldcheck = nullptr;
-   static const TGPicture *olduncheck = nullptr;
-   static Bool_t makecheck = kTRUE;
-   static Bool_t makeuncheck = kTRUE;
-   static Color_t oldcolor = -1;
+   static const TGPicture *oldopen = nullptr, *oldclose = nullptr, *oldcheck = nullptr, *olduncheck = nullptr;
 
-   char quote = '"';
-   TString s = TString::Format("%d", n);
+   TString prefix = TString::Format("   item%d->", n);
 
    if (!fParent)
-      out << "NULL,";
+      out << "nullptr, ";
    else
-      out << "item" << option << ",";
-   TString text = GetText();
-   text.ReplaceAll('\\', "\\\\");
-   text.ReplaceAll("\"", "\\\"");
-   out << quote << text << quote;
-   out << ");" << std::endl;
+      out << "item" << option << ", ";
+   out << "\"" << TString(GetText()).ReplaceSpecialCppChars() << "\");\n";
 
-   if (oldopen != fOpenPic) {
+   if (!gROOT->ClassSaved(Class())) {
+      oldopen = oldclose = oldcheck = olduncheck = nullptr;
+      out << "   const TGPicture *popen = nullptr, *pclose = nullptr, *pcheck = nullptr, *puncheck = nullptr;\n";
+   }
+
+   if (fOpenPic && (oldopen != fOpenPic)) {
       oldopen = fOpenPic;
       TString picname = gSystem->UnixPathName(fOpenPic->GetName());
       gSystem->ExpandPathName(picname);
-      out << "   popen = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
+      out << "   popen = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
    }
-   if (oldclose != fClosedPic) {
+   if (fClosedPic && (oldclose != fClosedPic)) {
       oldclose = fClosedPic;
       TString picname = gSystem->UnixPathName(fClosedPic->GetName());
       gSystem->ExpandPathName(picname);
-      out << "   pclose = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
+      out << "   pclose = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
    }
-   out << "   item" << s.Data() << "->SetPictures(popen, pclose);" << std::endl;
+   out << prefix << "SetPictures(popen, pclose);\n";
    if (HasCheckBox()) {
-      if (fCheckedPic && makecheck) {
-         out << "   const TGPicture *pcheck;        //used for checked items" << std::endl;
-         makecheck = kFALSE;
-      }
-      if (fUncheckedPic && makeuncheck) {
-         out << "   const TGPicture *puncheck;      //used for unchecked items" << std::endl;
-         makeuncheck = kFALSE;
-      }
-      out << "   item" << s.Data() << "->CheckItem();" << std::endl;
+      out << prefix << "CheckItem();\n";
       if (fCheckedPic && oldcheck != fCheckedPic) {
          oldcheck = fCheckedPic;
          TString picname = gSystem->UnixPathName(fCheckedPic->GetName());
          gSystem->ExpandPathName(picname);
-         out << "   pcheck = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
+         out << "   pcheck = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
       }
       if (fUncheckedPic && olduncheck != fUncheckedPic) {
          olduncheck = fUncheckedPic;
          TString picname = gSystem->UnixPathName(fUncheckedPic->GetName());
          gSystem->ExpandPathName(picname);
-         out << "   puncheck = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
+         out << "   puncheck = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
       }
-      out << "   item" << s.Data() << "->SetCheckBoxPictures(pcheck, puncheck);" << std::endl;
-      out << "   item" << s.Data() << "->SetCheckBox(kTRUE);" << std::endl;
+      out << prefix << "SetCheckBoxPictures(pcheck, puncheck);\n";
+      out << prefix << "SetCheckBox(kTRUE);\n";
    }
-   if (fHasColor) {
-      if (oldcolor != fColor) {
-         oldcolor = fColor;
-         out << "   item" << s.Data() << "->SetColor(" << fColor << ");" << std::endl;
-      }
-   }
-   if (fTipText.Length() > 0) {
-      TString tiptext = GetTipText();
-      tiptext.ReplaceAll('\\', "\\\\");
-      tiptext.ReplaceAll("\n", "\\n");
-      tiptext.ReplaceAll("\"", "\\\"");
-      out << "   item" << s.Data() << "->SetTipText(" << quote
-          << tiptext << quote << ");" << std::endl;
-   }
+   if (fHasColor)
+      out << prefix << "SetColor(" << fColor << ");\n";
+
+   if (fTipText.Length() > 0)
+      out << prefix << "SetTipText(\"" << TString(GetTipText()).ReplaceSpecialCppChars()<< "\");\n";
 
 }
 
