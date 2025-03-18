@@ -2762,7 +2762,7 @@ void TGCompositeFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
        << "," << GetHeight() << extra_args << ");\n";
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    // setting layout manager if it differs from the composite frame type
    // coverity[returned_null]
@@ -3518,43 +3518,35 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
 void TGTransientFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
-   out << std::endl << "   // transient frame" << std::endl;
-   out << "   TGTransientFrame *";
-   out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
-       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << std::endl;
+   out << "\n   // transient frame\n";
+   out << "   TGTransientFrame *" << GetName() << " = new TGTransientFrame(gClient->GetRoot(),0"
+       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");\n";
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    // setting layout manager if it differs from transient frame type
    // coverity[returned_null]
    // coverity[dereference]
-   TGLayoutManager * lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) &&
-       (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
-      ;
-   } else if ((GetOptions() & kVerticalFrame) &&
-              (lm->InheritsFrom(TGVerticalLayout::Class()))) {
-      ;
-   } else {
-      out << "   " << GetName() <<"->SetLayoutManager(";
+   TGLayoutManager *lm = GetLayoutManager();
+   if (!((GetOptions() & kHorizontalFrame) && lm->InheritsFrom(TGHorizontalLayout::Class())) &&
+       !((GetOptions() & kVerticalFrame) && lm->InheritsFrom(TGVerticalLayout::Class()))) {
+      out << "   " << GetName() << "->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
    }
 
    SavePrimitiveSubframes(out, option);
 
    if (fWindowName.Length()) {
-      out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
-          << quote << ");" << std::endl;
+      out << "   " << GetName() << "->SetWindowName(\n"
+          << TString(GetWindowName()).ReplaceSpecialCppChars() << "\");\n";
    }
    if (fIconName.Length()) {
-      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
+      out << "   " << GetName() << "->SetIconName(\"" << TString(GetIconName()).ReplaceSpecialCppChars() << "\");\n";
    }
    if (fIconPixmap.Length()) {
-      out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
-          << quote << ");" << std::endl;
+      out << "   " << GetName() << "->SetIconPixmap(\"" << TString(GetIconPixmap()).ReplaceSpecialCppChars()
+          << "\");\n";
    }
 }

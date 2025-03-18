@@ -2206,25 +2206,19 @@ const TGGC &TGTextEdit::GetCursor1GC()
 
 void TGTextEdit::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out << "   TGTextEdit *";
-   out << GetName() << " = new TGTextEdit(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight()
-       << ");"<< std::endl;
+   out << "   TGTextEdit *" << GetName() << " = new TGTextEdit(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << ");\n";
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   if (IsReadOnly()) {
-      out << "   " << GetName() << "->SetReadOnly(kTRUE);" << std::endl;
-   }
+   if (IsReadOnly())
+      out << "   " << GetName() << "->SetReadOnly(kTRUE);\n";
 
-   if (!IsMenuEnabled()) {
-      out << "   " << GetName() << "->EnableMenu(kFALSE);" << std::endl;
-   }
+   if (!IsMenuEnabled())
+      out << "   " << GetName() << "->EnableMenu(kFALSE);\n";
 
-   if (fCanvas->GetBackground() != TGFrame::fgWhitePixel) {
-      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << std::endl;
-   }
+   if (fCanvas->GetBackground() != TGFrame::fgWhitePixel)
+      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");\n";
 
    TGText *txt = GetText();
    Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
@@ -2235,8 +2229,8 @@ void TGTextEdit::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       fn = gSystem->UnixPathName(filename);
       gSystem->ExpandPathName(fn);
    } else {
-      fn = TString::Format("Txt%s", GetName()+5);
+      fn = TString::Format("Txt%s", GetName() + 5);
       txt->Save(fn.Data());
    }
-   out << "   " << GetName() << "->LoadFile(" << quote << fn.Data() << quote << ");" << std::endl;
+   out << "   " << GetName() << "->LoadFile(\"" << fn.ReplaceSpecialCppChars() << "\");\n";
 }

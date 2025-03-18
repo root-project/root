@@ -2173,20 +2173,16 @@ const TGGC &TGMenuTitle::GetDefaultSelectedGC()
 
 void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
-   out << "   TGPopupMenu *";
-   out << GetName() << " = new TGPopupMenu(gClient->GetDefaultRoot()"
-       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << std::endl;
+   out << "   TGPopupMenu *" << GetName() << " = new TGPopupMenu(gClient->GetDefaultRoot()"
+       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");\n";
 
    Bool_t hasradio = kFALSE;
    Int_t r_first, r_last, r_active;
    r_active = r_first = r_last = -1;
 
-   TGMenuEntry *mentry;
    TIter next(GetListOfEntries());
 
-   while ((mentry = (TGMenuEntry *) next())) {
+   while (auto mentry = static_cast<TGMenuEntry *> (next())) {
       const char *text;
       Int_t i, lentext, hotpos;
       char shortcut[80];
@@ -2217,10 +2213,10 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
             {
                TString entrytext = gSystem->UnixPathName(outext);
                gSystem->ExpandPathName(entrytext);
-               out << "   " << GetName() << "->AddEntry(" << quote
-                   << entrytext // can be a file name
+               out << "   " << GetName() << "->AddEntry(\""
+                   << entrytext.ReplaceSpecialCppChars() // can be a file name
                    << shortcut
-                   << quote << "," << mentry->GetEntryId();
+                   << "\", " << mentry->GetEntryId();
             }
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
@@ -2228,14 +2224,13 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
             if (mentry->fPic) {
                TString picname = gSystem->UnixPathName(mentry->fPic->GetName());
                gSystem->ExpandPathName(picname);
-               out << ",gClient->GetPicture(" << quote << picname << quote << ")";
+               out << ", gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\")";
             }
-            out << ");" << std::endl;
+            out << ");\n";
             delete [] outext;
             break;
          case kMenuPopup:
-            out << std::endl;
-            out << "   // cascaded menu " << quote << mentry->GetName() << quote <<std::endl;
+            out << "\n   // cascaded menu \"" << mentry->GetName() << "\"\n";
             mentry->fPopup->SavePrimitive(out, option);
             text = mentry->GetName();
             lentext = mentry->fLabel->GetLength();
@@ -2252,41 +2247,36 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
             }
             outext[i]=0;
 
-            out << "   " << GetName() << "->AddPopup(" << quote
-                << outext << quote << "," << mentry->fPopup->GetName()
-                << ");" << std::endl;
-            delete [] outext;
+            out << "   " << GetName() << "->AddPopup(\"" << outext << "\", " << mentry->fPopup->GetName() << ");\n";
+            delete[] outext;
             break;
          case kMenuLabel:
-            out << "   " << GetName() << "->AddLabel(" << quote
-                << mentry->GetName() << quote;
+            out << "   " << GetName() << "->AddLabel(\"" << TString(mentry->GetName()).ReplaceSpecialCppChars() << "\"";
             if (mentry->fPic) {
-               out << ",gClient->GetPicture(" << quote
-                   << mentry->fPic->GetName()
-                   << quote << ")";
+               out << ", gClient->GetPicture(\"" << TString(mentry->fPic->GetName()).ReplaceSpecialCppChars() << "\")";
             }
-            out << ");" << std::endl;
+            out << ");\n";
             break;
          case kMenuSeparator:
-            out << "   " << GetName() << "->AddSeparator();" << std::endl;
+            out << "   " << GetName() << "->AddSeparator();\n";
             break;
       }
 
       if (!(mentry->GetStatus() & kMenuEnableMask)) {
          out<< "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId()
-            << ");" << std::endl;
+            << ");\n";
       }
       if (mentry->GetStatus() & kMenuHideMask) {
          out<< "   " << GetName() << "->HideEntry(" << mentry->GetEntryId()
-            << ");" << std::endl;
+            << ");\n";
       }
       if (mentry->GetStatus() & kMenuCheckedMask) {
          out<< "   " << GetName() << "->CheckEntry(" << mentry->GetEntryId()
-            << ");" << std::endl;
+            << ");\n";
       }
       if (mentry->GetStatus() & kMenuDefaultMask) {
          out<< "   "<< GetName() << "->DefaultEntry(" << mentry->GetEntryId()
-            << ");" << std::endl;
+            << ");\n";
       }
       if (mentry->GetStatus() & kMenuRadioEntryMask) {
          if (hasradio) {
@@ -2300,7 +2290,7 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          }
       } else if (hasradio) {
          out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first
-             << "," << r_last << ");" << std::endl;
+             << "," << r_last << ");\n";
          hasradio = kFALSE;
          r_active = r_first = r_last = -1;
       }
@@ -2312,31 +2302,29 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGMenuTitle::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
-   out << std::endl;
-   out << "   // " << quote << fLabel->GetString() << quote <<" menu" << std::endl;
+   out << "\n   // \"" << fLabel->GetString() << "\" menu\n";
 
    fMenu->SavePrimitive(out, option);
 
    const char *text = fLabel->GetString();
    Int_t lentext = fLabel->GetLength();
    Int_t hotpos = fLabel->GetHotPos();
-   char *outext = new char[lentext+2];
-   Int_t i=0;
+   char *outext = new char[lentext + 2];
+   Int_t i = 0;
    while (lentext) {
-      if (i == hotpos-1) {
+      if (i == hotpos - 1) {
          outext[i] = '&';
          i++;
       }
       outext[i] = *text;
-      i++; text++; lentext--;
+      i++;
+      text++;
+      lentext--;
    }
-   outext[i]=0;
-   out << "   " << fParent->GetName() << "->AddPopup(" << quote << outext
-       << quote << "," << fMenu->GetName();
+   outext[i] = 0;
+   out << "   " << fParent->GetName() << "->AddPopup(\"" << outext << "\", " << fMenu->GetName();
 
-   delete [] outext;
+   delete[] outext;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2344,23 +2332,20 @@ void TGMenuTitle::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGMenuBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << std::endl;
-   out << "   // menu bar" << std::endl;
-
-   out << "   TGMenuBar *";
-   out << GetName() << " = new TGMenuBar(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << std::endl;
+   out << "\n   // menu bar\n";
+   out << "   TGMenuBar *" << GetName() << " = new TGMenuBar(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << "," << GetOptionString() << ");\n";
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   if (!fList) return;
+   if (!fList)
+      return;
 
-   TGFrameElement *el;
    TIter next(fList);
 
-   while ((el = (TGFrameElement *)next())) {
+   while (auto el = static_cast<TGFrameElement *>(next())) {
       el->fFrame->SavePrimitive(out, option);
       el->fLayout->SavePrimitive(out, option);
-      out << ");" << std::endl;
+      out << ");\n";
    }
 }

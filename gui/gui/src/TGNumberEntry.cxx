@@ -724,7 +724,7 @@ static char *TranslateToStr(char *text, Long_t l,
    case TGNumberFormat::kNESMinSec:
       return DIntToStr(text, l, kFALSE, ':');
    case TGNumberFormat::kNESMinSecCent:
-      return DIntToStr(text, l % (60 * 6000), ':', '.');       
+      return DIntToStr(text, l % (60 * 6000), ':', '.');
    case TGNumberFormat::kNESHourMin:
       return DIntToStr(text, l % (24 * 60), kFALSE, ':');
    case TGNumberFormat::kNESDayMYear:
@@ -2193,13 +2193,11 @@ void TGNumberEntry::Modified()
 
 void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
    // to calculate the digits parameter
    Int_t w = fNumericEntry->GetWidth();
    Int_t h = fNumericEntry->GetHeight();
-   Int_t charw  = fNumericEntry->GetCharWidth("0123456789");
-   Int_t digits = (30*w - 240 -20*h)/(3*charw) + 3;
+   Int_t charw = fNumericEntry->GetCharWidth("0123456789");
+   Int_t digits = (30 * w - 240 - 20 * h) / (3 * charw) + 3;
 
    // for time format
    Int_t hour, min, sec;
@@ -2209,107 +2207,89 @@ void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    Int_t yy, mm, dd;
    GetDate(yy, mm, dd);
 
-   out << "   TGNumberEntry *";
-   out << GetName() << " = new TGNumberEntry(" << fParent->GetName() << ", (Double_t) ";
-   switch (GetNumStyle()){
-      case kNESInteger:
-         out << GetIntNumber() << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealOne:
-         out << GetNumber() << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealTwo:
-         out << GetNumber() << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealThree:
-         out << GetNumber() << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealFour:
-         out << GetNumber() << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESReal:
-         out << GetNumber() << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESDegree:
-         out << GetIntNumber() << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESMinSec:
-         out << min*60 + sec << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESMinSecCent:
-         //GetTime returns the centisecs in the hour variable
-         out << min*6000 + sec*100 + hour << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESHourMin:
-         out << hour*60 + min << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESHourMinSec:
-         out << hour*3600 + min*60 + sec << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESDayMYear:
-         out << yy << mm << dd << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESMDayYear:
-         out << yy << mm << dd << "," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESHex:
-      {  char hex[256];
-         ULong_t l = GetHexNumber();
-         IntToHexStr(hex, l);
-         std::ios::fmtflags f = out.flags(); // store flags
-         out << "0x" << std::hex << "U," << digits << "," << WidgetId()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         out.flags( f ); // restore flags (reset std::hex)
-         break;
-      }
+   out << "   TGNumberEntry *" << GetName() << " = new TGNumberEntry(" << fParent->GetName() << ", (Double_t) ";
+   switch (GetNumStyle()) {
+   case kNESInteger:
+      out << GetIntNumber() << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESRealOne:
+      out << GetNumber() << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESRealTwo:
+      out << GetNumber() << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESRealThree:
+      out << GetNumber() << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESRealFour:
+      out << GetNumber() << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESReal:
+      out << GetNumber() << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESDegree:
+      out << GetIntNumber() << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESMinSec:
+      out << min * 60 + sec << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESMinSecCent:
+      // GetTime returns the centisecs in the hour variable
+      out << min * 6000 + sec * 100 + hour << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) "
+          << GetNumStyle();
+      break;
+   case kNESHourMin:
+      out << hour * 60 + min << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESHourMinSec:
+      out << hour * 3600 + min * 60 + sec << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) "
+          << GetNumStyle();
+      break;
+   case kNESDayMYear:
+      out << yy << mm << dd << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESMDayYear:
+      out << yy << mm << dd << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESHex: {
+      char hex[256];
+      ULong_t l = GetHexNumber();
+      IntToHexStr(hex, l);
+      std::ios::fmtflags f = out.flags(); // store flags
+      out << "0x" << std::hex << "U," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      out.flags(f); // restore flags (reset std::hex)
+      break;
    }
-   if (GetNumMax() ==1) {
+   }
+   if (GetNumMax() == 1) {
       if (GetNumMin() == 0) {
          if (GetNumLimits() == kNELNoLimits) {
             if (GetNumAttr() == kNEAAnyNumber) {
-               out << ");" << std::endl;
+               out << ");\n";
             } else {
-               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << std::endl;
+               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");\n";
             }
          } else {
-            out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << std::endl;
+            out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+                << ");\n";
          }
       } else {
-         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << ");" << std::endl;
+         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+             << "," << GetNumMin() << ");\n";
       }
    } else {
-         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << "," << GetNumMax() << ");" << std::endl;
+      out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ","
+          << GetNumMin() << "," << GetNumMax() << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
    if (fButtonDown->GetState() == kButtonDisabled)
-      out << "   " << GetName() << "->SetState(kFALSE);" << std::endl;
+      out << "   " << GetName() << "->SetState(kFALSE);\n";
 
    TGToolTip *tip = GetNumberEntry()->GetToolTip();
    if (tip) {
       TString tiptext = tip->GetText()->GetString();
-      tiptext.ReplaceAll("\n", "\\n");
-      out << "   ";
-      out << GetName() << "->GetNumberEntry()->SetToolTipText(" << quote
-          << tiptext << quote << ");"  << std::endl;
+      out << "   " << GetName() << "->GetNumberEntry()->SetToolTipText(\"" << tiptext.ReplaceSpecialCppChars() << "\");\n";
    }
 }
 
@@ -2318,8 +2298,6 @@ void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
    // for time format
    Int_t hour, min, sec;
    GetTime(hour, min, sec);
@@ -2329,109 +2307,65 @@ void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= "
    GetDate(yy, mm, dd);
 
    out << "   TGNumberEntryField *";
-   out << GetName() << " = new TGNumberEntryField(" << fParent->GetName()
-       << ", " << WidgetId() << ", (Double_t) ";
-   switch (GetNumStyle()){
-      case kNESInteger:
-         out << GetIntNumber()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealOne:
-         out << GetNumber()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealTwo:
-         out << GetNumber()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealThree:
-         out << GetNumber()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESRealFour:
-         out << GetNumber()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESReal:
-         out << GetNumber()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESDegree:
-         out << GetIntNumber()
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESMinSec:
-         out << min*60 + sec
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESMinSecCent:
-         //GetTime returns centisec in the hour variable
-         out << min*6000 + sec*100 + hour
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESHourMin:
-         out << hour*60 + min
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESHourMinSec:
-         out << hour*3600 + min*60 + sec
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESDayMYear:
-         out << yy << mm << dd
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESMDayYear:
-         out << yy << mm << dd
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         break;
-      case kNESHex:
-      {  char hex[256];
-         ULong_t l = GetHexNumber();
-         IntToHexStr(hex, l);
-         std::ios::fmtflags f = out.flags(); // store flags
-         out << "0x" << std::hex << "U"
-             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-         out.flags( f ); // restore flags (reset std::hex)
-         break;
-      }
+   out << GetName() << " = new TGNumberEntryField(" << fParent->GetName() << ", " << WidgetId() << ", (Double_t) ";
+   switch (GetNumStyle()) {
+   case kNESInteger: out << GetIntNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESRealOne: out << GetNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESRealTwo: out << GetNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESRealThree: out << GetNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESRealFour: out << GetNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESReal: out << GetNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESDegree: out << GetIntNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESMinSec: out << min * 60 + sec << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESMinSecCent:
+      // GetTime returns centisec in the hour variable
+      out << min * 6000 + sec * 100 + hour << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      break;
+   case kNESHourMin: out << hour * 60 + min << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESHourMinSec: out << hour * 3600 + min * 60 + sec << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESDayMYear: out << yy << mm << dd << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESMDayYear: out << yy << mm << dd << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
+   case kNESHex: {
+      char hex[256];
+      ULong_t l = GetHexNumber();
+      IntToHexStr(hex, l);
+      std::ios::fmtflags f = out.flags(); // store flags
+      out << "0x" << std::hex << "U"
+          << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+      out.flags(f); // restore flags (reset std::hex)
+      break;
    }
-   if (GetNumMax() ==1) {
+   }
+   if (GetNumMax() == 1) {
       if (GetNumMin() == 0) {
          if (GetNumLimits() == kNELNoLimits) {
             if (GetNumAttr() == kNEAAnyNumber) {
-               out << ");" << std::endl;
+               out << ");\n";
             } else {
-               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << std::endl;
+               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");\n";
             }
          } else {
-            out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << std::endl;
+            out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+                << ");\n";
          }
       } else {
-         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << ");" << std::endl;
+         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ",(TGNumberFormat::ELimit) " << GetNumLimits()
+             << "," << GetNumMin() << ");\n";
       }
    } else {
-         out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-             << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << "," << GetNumMax() << ");" << std::endl;
+      out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ","
+          << GetNumMin() << "," << GetNumMax() << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
    if (!IsEnabled())
-      out << "   " << GetName() << "->SetState(kFALSE);" << std::endl;
+      out << "   " << GetName() << "->SetState(kFALSE);\n";
 
-   out << "   " << GetName() << "->Resize("<< GetWidth() << "," << GetName()
-       << "->GetDefaultHeight());" << std::endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetName() << "->GetDefaultHeight());\n";
 
    TGToolTip *tip = GetToolTip();
    if (tip) {
       TString tiptext = tip->GetText()->GetString();
-      tiptext.ReplaceAll("\n", "\\n");
-      out << "   ";
-      out << GetName() << "->SetToolTipText(" << quote
-          << tiptext << quote << ");"  << std::endl;
+      out << "   " << GetName() << "->SetToolTipText(\"" << tiptext.ReplaceSpecialCppChars() << "\");\n";
    }
 }
