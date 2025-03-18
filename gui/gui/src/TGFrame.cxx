@@ -2505,65 +2505,33 @@ void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
 
 TString TGFrame::GetOptionString() const
 {
-   TString options;
+   TString str;
+   auto add = [this, &str](Int_t bit, const char *name) {
+      if (fOptions & bit) {
+         if (str.Length() > 0)
+            str.Append(" | ");
+         str.Append(name);
+      }
+   };
 
    if (!GetOptions()) {
-      options = "kChildFrame";
+      str = "kChildFrame";
    } else {
-      if (fOptions & kMainFrame) {
-         if (options.Length() == 0) options  = "kMainFrame";
-         else                       options += " | kMainFrame";
-      }
-      if (fOptions & kVerticalFrame) {
-         if (options.Length() == 0) options  = "kVerticalFrame";
-         else                       options += " | kVerticalFrame";
-      }
-      if (fOptions & kHorizontalFrame) {
-         if (options.Length() == 0) options  = "kHorizontalFrame";
-         else                       options += " | kHorizontalFrame";
-      }
-      if (fOptions & kSunkenFrame) {
-         if (options.Length() == 0) options  = "kSunkenFrame";
-         else                       options += " | kSunkenFrame";
-      }
-      if (fOptions & kRaisedFrame) {
-         if (options.Length() == 0) options  = "kRaisedFrame";
-         else                       options += " | kRaisedFrame";
-      }
-      if (fOptions & kDoubleBorder) {
-         if (options.Length() == 0) options  = "kDoubleBorder";
-         else                       options += " | kDoubleBorder";
-      }
-      if (fOptions & kFitWidth) {
-         if (options.Length() == 0) options  = "kFitWidth";
-         else                       options += " | kFitWidth";
-      }
-      if (fOptions & kFixedWidth) {
-         if (options.Length() == 0) options  = "kFixedWidth";
-         else                       options += " | kFixedWidth";
-      }
-      if (fOptions & kFitHeight) {
-         if (options.Length() == 0) options  = "kFitHeight";
-         else                       options += " | kFitHeight";
-      }
-      if (fOptions & kFixedHeight) {
-         if (options.Length() == 0) options  = "kFixedHeight";
-         else                       options += " | kFixedHeight";
-      }
-      if (fOptions & kOwnBackground) {
-         if (options.Length() == 0) options  = "kOwnBackground";
-         else                       options += " | kOwnBackground";
-      }
-      if (fOptions & kTransientFrame) {
-         if (options.Length() == 0) options  = "kTransientFrame";
-         else                       options += " | kTransientFrame";
-      }
-      if (fOptions & kTempFrame) {
-         if (options.Length() == 0) options  = "kTempFrame";
-         else                       options += " | kTempFrame";
-      }
+      add(kMainFrame, "kMainFrame");
+      add(kVerticalFrame, "kVerticalFrame");
+      add(kHorizontalFrame, "kHorizontalFrame");
+      add(kSunkenFrame, "kSunkenFrame");
+      add(kRaisedFrame, "kRaisedFrame");
+      add(kDoubleBorder, "kDoubleBorder");
+      add(kFitWidth, "kFitWidth");
+      add(kFixedWidth, "kFixedWidth");
+      add(kFitHeight, "kFitHeight");
+      add(kFixedHeight, "kFixedHeight");
+      add(kOwnBackground, "kOwnBackground");
+      add(kTransientFrame, "kTransientFrame");
+      add(kTempFrame, "kTempFrame");
    }
-   return options;
+   return str;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
