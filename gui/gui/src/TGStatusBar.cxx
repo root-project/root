@@ -376,23 +376,13 @@ TGDimension TGStatusBar::GetDefaultSize() const
 
 void TGStatusBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground())
-      SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kHorizontalFrame);
 
    out << "\n   // status bar\n";
 
    out << "   TGStatusBar *" << GetName() << " = new TGStatusBar(" << fParent->GetName() << "," << GetWidth() << ","
-       << GetHeight();
+       << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kHorizontalFrame)) {
-         out << ");\n";
-      } else {
-         out << "," << GetOptionString() << ");\n";
-      }
-   } else {
-      out << "," << GetOptionString() << ", ucolor);\n";
-   }
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 

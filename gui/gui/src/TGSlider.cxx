@@ -581,6 +581,9 @@ TString TGSlider::GetTypeString() const
          else                     stype += " | kScaleBoth";
       }
    }
+
+   if (stype.Length() == 0)
+      stype = "0";
    return stype;
 }
 
@@ -589,36 +592,26 @@ TString TGSlider::GetTypeString() const
 
 void TGHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   out <<"   TGHSlider *";
-   out << GetName() << " = new TGHSlider(" << fParent->GetName()
-       << "," << GetWidth() << ",";
-   out << GetTypeString() << "," << WidgetId();
+   out <<"   TGHSlider *" << GetName() << " = new TGHSlider(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetTypeString() << "," << WidgetId() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
-      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << std::endl;
+      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");\n";
 
    if (fPos != (Int_t)fWidth/2)
-      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
+      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");\n";
 
    if (fScale != 10)
-      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << std::endl;
+      out << "   " << GetName() <<"->SetScale(" << fScale << ");\n";
 
    if (!IsEnabled())
-      out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
+      out << "   " << GetName() <<"->SetState(kFALSE);\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -626,35 +619,24 @@ void TGHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   out<<"   TGVSlider *";
-   out << GetName() <<" = new TGVSlider("<< fParent->GetName()
-       << "," << GetHeight() << ",";
-   out << GetTypeString() << "," << WidgetId();
+   out << "   TGVSlider *" << GetName() << " = new TGVSlider(" << fParent->GetName() << "," << GetHeight() << ","
+       << GetTypeString() << "," << WidgetId() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-
-      if (!GetOptions()) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
-      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << std::endl;
+      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax << ");\n";
 
-   if (fPos != (Int_t)fHeight/2)
-      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
+   if (fPos != (Int_t)fHeight / 2)
+      out << "   " << GetName() << "->SetPosition(" << GetPosition() << ");\n";
 
    if (fScale != 10)
-      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << std::endl;
+      out << "   " << GetName() << "->SetScale(" << fScale << ");\n";
 
    if (!IsEnabled())
-      out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
+      out << "   " << GetName() << "->SetState(kFALSE);\n";
 }
