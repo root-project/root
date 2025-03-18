@@ -538,22 +538,12 @@ void TRootEmbeddedCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= 
    if (!GetCanvas())
       return;
 
-   if (fBackground != GetDefaultFrameBackground())
-      SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder);
 
-   out << std::endl << "\n   // embedded canvas\n";
+   out << "\n   // embedded canvas\n";
    out << "   TRootEmbeddedCanvas *" << GetName() << " = new TRootEmbeddedCanvas(0" << "," << fParent->GetName() << ","
-       << GetWidth() << "," << GetHeight();
+       << GetWidth() << "," << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out << ");\n";
-      } else {
-         out << "," << GetOptionString() << ");\n";
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);\n";
-   }
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
