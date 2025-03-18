@@ -3066,12 +3066,9 @@ void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       return;
    }
 
-   char quote = '"';
-
-   out << std::endl << "   // main frame" << std::endl;
-   out << "   TGMainFrame *";
-   out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
-       << GetOptionString() << ");" <<std::endl;
+   out << "\n   // main frame\n";
+   out << "   TGMainFrame *" << GetName() << " = new TGMainFrame(gClient->GetRoot(), 5, 5, "   // layout alg.
+       << GetOptionString() << ");\n";
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
@@ -3079,31 +3076,26 @@ void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // coverity[returned_null]
    // coverity[dereference]
    TGLayoutManager * lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) &&
-       (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
-      ;
-   } else if ((GetOptions() & kVerticalFrame) &&
-              (lm->InheritsFrom(TGVerticalLayout::Class()))) {
-      ;
-   } else {
-      out << "   " << GetName() <<"->SetLayoutManager(";
+   if (!((GetOptions() & kHorizontalFrame) && lm->InheritsFrom(TGHorizontalLayout::Class())) &&
+       !((GetOptions() & kVerticalFrame) && lm->InheritsFrom(TGVerticalLayout::Class()))) {
+      out << "   " << GetName() << "->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
    }
 
    SavePrimitiveSubframes(out, option);
 
-   if (fWindowName.Length()) {
-      out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
-          << quote << ");" << std::endl;
-   }
-   if (fIconName.Length()) {
-      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
-   }
-   if (fIconPixmap.Length()) {
-      out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
-          << quote << ");" << std::endl;
-   }
+   if (fWindowName.Length())
+      out << "   " << GetName() << "->SetWindowName(\"" << TString(GetWindowName()).ReplaceSpecialCppChars()
+          << "\");\n";
+   if (fIconName.Length())
+      out << "   " << GetName() << "->SetIconName(\"" << TString(GetIconName()).ReplaceSpecialCppChars() << "\");\n";
+   if (fIconPixmap.Length())
+      out << "   " << GetName() << "->SetIconPixmap(\"" << TString(GetIconPixmap()).ReplaceSpecialCppChars() << "\");\n";
+
+   out << "   " << GetName() << "->MapSubwindows();\n";
+   out << "   " << GetName() << "->Resize({" << GetDefaultWidth() << ", " << GetDefaultHeight() << "});\n";
+   out << "   " << GetName() << "->MapWindow();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
