@@ -31,6 +31,8 @@
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
+#include "ROOT/RTTreeDS.hxx"
+
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
@@ -324,13 +326,13 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
    return {std::move(what), static_cast<ULong64_t>(entryRange.first), end, slot};
 }
 
-auto MakeDatasetColReadersKey(const std::string &colName, const std::type_info &ti)
+auto MakeDatasetColReadersKey(std::string_view colName, const std::type_info &ti)
 {
    // We use a combination of column name and column type name as the key because in some cases we might end up
    // with concrete readers that use different types for the same column, e.g. std::vector and RVec here:
    //    df.Sum<vector<int>>("stdVectorBranch");
    //    df.Sum<RVecI>("stdVectorBranch");
-   return colName + ':' + ti.name();
+   return std::string(colName) + ':' + ti.name();
 }
 } // anonymous namespace
 
@@ -377,25 +379,15 @@ ROOT::Detail::RDF::RLoopManager::RLoopManager(const ROOT::Detail::RDF::ColumnNam
 }
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
-   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})),
-     fDefaultColumns(defaultBranches),
+   : fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
+     fDataSource(std::make_unique<ROOT::Internal::RDF::RTTreeDS>(ROOT::Internal::RDF::MakeAliasedSharedPtr(tree))),
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
      fDatasetColumnReaders(fNSlots)
 {
-}
-
-RLoopManager::RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches)
-   : fTree(std::move(tree)),
-     fDefaultColumns(defaultBranches),
-     fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots),
-     fSampleInfos(fNSlots),
-     fDatasetColumnReaders(fNSlots)
-{
+   fDataSource->SetNSlots(fNSlots);
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
@@ -422,7 +414,7 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    : fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
      fDatasetColumnReaders(fNSlots)
@@ -507,14 +499,11 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
 #endif
       }
    }
-   SetTree(std::move(chain));
-
-   // Create friends from the specification and connect them to the main chain
-   const auto &friendInfo = spec.GetFriendInfo();
-   fFriends = ROOT::Internal::TreeUtils::MakeFriends(friendInfo);
-   for (std::size_t i = 0ul; i < fFriends.size(); i++) {
-      const auto &thisFriendAlias = friendInfo.fFriendNames[i].second;
-      fTree->AddFriend(fFriends[i].get(), thisFriendAlias.c_str());
+   fDataSource = std::make_unique<ROOT::Internal::RDF::RTTreeDS>(std::move(chain), spec.GetFriendInfo());
+   fDataSource->SetNSlots(fNSlots);
+   for (unsigned int slot{}; slot < fNSlots; slot++) {
+      for (auto &v : fDatasetColumnReaders[slot])
+         v.second.reset();
    }
 }
 
@@ -716,7 +705,10 @@ void RLoopManager::RunTreeReader()
 namespace {
 struct DSRunRAII {
    ROOT::RDF::RDataSource &fDS;
-   DSRunRAII(ROOT::RDF::RDataSource &ds) : fDS(ds) { fDS.Initialize(); }
+   DSRunRAII(ROOT::RDF::RDataSource &ds, const std::set<std::string> &suppressErrorsForMissingColumns) : fDS(ds)
+   {
+      ROOT::Internal::RDF::CallInitializeWithOpts(fDS, suppressErrorsForMissingColumns);
+   }
    ~DSRunRAII() { fDS.Finalize(); }
 };
 } // namespace
@@ -739,11 +731,31 @@ struct ROOT::Internal::RDF::RDSRangeRAII {
 void RLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   DSRunRAII _{*fDataSource};
+   // Shortcut if the entry range would result in not reading anything
+   if (fBeginEntry == fEndEntry)
+      return;
+   // Apply global entry range if necessary
+   if (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+      fDataSource->SetGlobalEntryRange(std::make_pair<std::uint64_t, std::uint64_t>(fBeginEntry, fEndEntry));
+   // Initialize data source and book finalization
+   DSRunRAII _{*fDataSource, fSuppressErrorsForMissingBranches};
+   // Ensure cleanup task is always called at the end. Notably, this also resets the column readers for those data
+   // sources that need it (currently only TTree).
    RCallCleanUpTask cleanup(*this);
-   auto ranges = fDataSource->GetEntryRanges();
-   while (!ranges.empty() && fNStopsReceived < fNChildren) {
-      RDSRangeRAII __{*this, 0u, 0ull};
+
+   // Main event loop. We start with an empty vector of ranges because we need to initialize the nodes and the data
+   // source before the first call to GetEntryRanges, since it could trigger reading (currently only happens with
+   // TTree).
+   std::uint64_t processedEntries{};
+   std::vector<std::pair<ULong64_t, ULong64_t>> ranges{};
+   do {
+
+      ROOT::Internal::RDF::RDSRangeRAII __{*this, 0u, 0ull};
+
+      ranges = fDataSource->GetEntryRanges();
+
+      fSampleInfos[0] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, fSampleMap);
+
       try {
          for (const auto &range : ranges) {
             const auto start = range.first;
@@ -753,13 +765,24 @@ void RLoopManager::RunDataSource()
                if (fDataSource->SetEntry(0u, entry)) {
                   RunAndCheckFilters(0u, entry);
                }
+               processedEntries++;
             }
          }
       } catch (...) {
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      ranges = fDataSource->GetEntryRanges();
+
+   } while (!ranges.empty() && fNStopsReceived < fNChildren);
+
+   ROOT::Internal::RDF::RunFinalChecks(*fDataSource, (fNStopsReceived < fNChildren));
+
+   if (fEndEntry != std::numeric_limits<Long64_t>::max() &&
+       static_cast<std::uint64_t>(fEndEntry - fBeginEntry) > processedEntries) {
+      Warning("RDataFrame::Run",
+              "RDataFrame stopped processing after %lu entries, whereas an entry range (begin=%lld,end=%lld) was "
+              "requested. Consider adjusting the end value of the entry range to a maximum of %lld.",
+              processedEntries, fBeginEntry, fEndEntry, fBeginEntry + processedEntries);
    }
 }
 
@@ -768,36 +791,17 @@ void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    assert(fDataSource != nullptr);
-   ROOT::Internal::RSlotStack slotStack(fNSlots);
-   ROOT::TThreadExecutor pool;
+   // Shortcut if the entry range would result in not reading anything
+   if (fBeginEntry == fEndEntry)
+      return;
+   // Apply global entry range if necessary
+   if (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+      fDataSource->SetGlobalEntryRange(std::make_pair<std::uint64_t, std::uint64_t>(fBeginEntry, fEndEntry));
 
-   // Each task works on a subrange of entries
-   auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
-      const auto slot = slotRAII.fSlot;
-      RDSRangeRAII _{*this, slot, range.first};
-      RCallCleanUpTask cleanup(*this, slot);
-      const auto start = range.first;
-      const auto end = range.second;
-      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
-      try {
-         for (auto entry = start; entry < end; ++entry) {
-            if (fDataSource->SetEntry(slot, entry)) {
-               RunAndCheckFilters(slot, entry);
-            }
-         }
-      } catch (...) {
-         std::cerr << "RDataFrame::Run: event loop was interrupted\n";
-         throw;
-      }
-   };
+   DSRunRAII _{*fDataSource, fSuppressErrorsForMissingBranches};
 
-   DSRunRAII _{*fDataSource};
-   auto ranges = fDataSource->GetEntryRanges();
-   while (!ranges.empty()) {
-      pool.Foreach(runOnRange, ranges);
-      ranges = fDataSource->GetEntryRanges();
-   }
+   ROOT::Internal::RDF::ProcessMT(*fDataSource, *this);
+
 #endif // not implemented otherwise (never called)
 }
 
@@ -933,7 +937,7 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
    for (auto *ptr : fBookedDefines)
       ptr->FinalizeSlot(slot);
 
-   if (fLoopType == ELoopType::kROOTFiles || fLoopType == ELoopType::kROOTFilesMT) {
+   if (auto ds = GetDataSource(); ds && ds->GetLabel() == "TTreeDS") {
       // we are reading from a tree/chain and we need to re-create the RTreeColumnReaders at every task
       // because the TTreeReader object changes at every task
       for (auto &v : fDatasetColumnReaders[slot])
@@ -1197,20 +1201,24 @@ const ColumnNames_t &RLoopManager::GetBranchNames()
    if (fValidBranchNames.empty() && fTree) {
       fValidBranchNames = RDFInternal::GetBranchNames(*fTree, /*allowRepetitions=*/true);
    }
+   if (fValidBranchNames.empty() && fDataSource) {
+      fValidBranchNames = fDataSource->GetColumnNames();
+   }
    return fValidBranchNames;
 }
 
 /// Return true if AddDataSourceColumnReaders was called for column name col.
-bool RLoopManager::HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const
+bool RLoopManager::HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const
 {
    const auto key = MakeDatasetColReadersKey(col, ti);
    assert(fDataSource != nullptr);
    // since data source column readers are always added for all slots at the same time,
    // if the reader is present for slot 0 we have it for all other slots as well.
-   return fDatasetColumnReaders[0].find(key) != fDatasetColumnReaders[0].end();
+   auto it = fDatasetColumnReaders[0].find(key);
+   return (it != fDatasetColumnReaders[0].end() && it->second);
 }
 
-void RLoopManager::AddDataSourceColumnReaders(const std::string &col,
+void RLoopManager::AddDataSourceColumnReaders(std::string_view col,
                                               std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
                                               const std::type_info &ti)
 {
@@ -1226,7 +1234,7 @@ void RLoopManager::AddDataSourceColumnReaders(const std::string &col,
 // Differently from AddDataSourceColumnReaders, this can be called from multiple threads concurrently
 /// \brief Register a new RTreeColumnReader with this RLoopManager.
 /// \return A shared pointer to the inserted column reader.
-RColumnReaderBase *RLoopManager::AddTreeColumnReader(unsigned int slot, const std::string &col,
+RColumnReaderBase *RLoopManager::AddTreeColumnReader(unsigned int slot, std::string_view col,
                                                      std::unique_ptr<RColumnReaderBase> &&reader,
                                                      const std::type_info &ti)
 {
@@ -1239,12 +1247,25 @@ RColumnReaderBase *RLoopManager::AddTreeColumnReader(unsigned int slot, const st
    return rptr;
 }
 
+RColumnReaderBase *RLoopManager::AddDataSourceColumnReader(unsigned int slot, std::string_view col,
+                                                           const std::type_info &ti, TTreeReader *treeReader)
+{
+   auto &readers = fDatasetColumnReaders[slot];
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   // if a reader for this column and this slot was already there, we are doing something wrong
+   assert(readers.find(key) == readers.end() || readers[key] == nullptr);
+   assert(fDataSource && "Missing RDataSource to add column reader.");
+
+   readers[key] = ROOT::Internal::RDF::CreateColumnReader(*fDataSource, slot, col, ti, treeReader);
+
+   return readers[key].get();
+}
+
 RColumnReaderBase *
-RLoopManager::GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const
+RLoopManager::GetDatasetColumnReader(unsigned int slot, std::string_view col, const std::type_info &ti) const
 {
    const auto key = MakeDatasetColReadersKey(col, ti);
-   auto it = fDatasetColumnReaders[slot].find(key);
-   if (it != fDatasetColumnReaders[slot].end())
+   if (auto it = fDatasetColumnReaders[slot].find(key); it != fDatasetColumnReaders[slot].end() && it->second)
       return it->second.get();
    else
       return nullptr;
@@ -1327,11 +1348,9 @@ ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, std::string_v
    if (checkFile) {
       OpenFileWithSanityChecks(fileNameGlob);
    }
-   std::string datasetNameInt{datasetName};
-   std::string fileNameGlobInt{fileNameGlob};
-   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(datasetNameInt.c_str());
-   chain->Add(fileNameGlobInt.c_str());
-   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(chain), defaultColumns);
+
+   auto dataSource = std::make_unique<ROOT::Internal::RDF::RTTreeDS>(datasetName, fileNameGlob);
+   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
 
@@ -1347,11 +1366,8 @@ ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, const std::ve
    if (checkFile) {
       OpenFileWithSanityChecks(fileNameGlobs[0]);
    }
-   std::string treeNameInt(datasetName);
-   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(treeNameInt);
-   for (auto &f : fileNameGlobs)
-      chain->Add(f.c_str());
-   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(chain), defaultColumns);
+   auto dataSource = std::make_unique<ROOT::Internal::RDF::RTTreeDS>(datasetName, fileNameGlobs);
+   auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
 
