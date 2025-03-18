@@ -2632,26 +2632,20 @@ TString TGMainFrame::GetMWMinpString() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Auxiliary protected method  used to save subframes.
 
-void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *option /*= ""*/)
+void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *option)
 {
    if (fLayoutBroken)
-      out << "   " << GetName() << "->SetLayoutBroken(kTRUE);" << std::endl;
+      out << "   " << GetName() << "->SetLayoutBroken(kTRUE);\n";
 
-   if (!fList) return;
+   if (!fList)
+      return;
 
-   char quote = '"';
-
-   TGFrameElement *el;
-   static TGHSplitter *hsplit = 0;
-   static TGVSplitter *vsplit = 0;
-   TList *signalslist;
-   TList *connlist;
-   TQConnection *conn;
-   TString signal_name, slot_name;
+   static TGHSplitter *hsplit = nullptr;
+   static TGVSplitter *vsplit = nullptr;
 
    TIter next(fList);
 
-   while ((el = (TGFrameElement *) next())) {
+   while (auto el = static_cast<TGFrameElement *>(next())) {
 
       // Don't save hidden (unmapped) frames having a parent different
       // than this frame. Solves a problem with shared frames
@@ -2665,8 +2659,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
          vsplit = (TGVSplitter *)el->fFrame;
          if (vsplit->GetLeft())
             vsplit = 0;
-      }
-      else if (el->fFrame->InheritsFrom("TGHSplitter")) {
+      } else if (el->fFrame->InheritsFrom("TGHSplitter")) {
          hsplit = (TGHSplitter *)el->fFrame;
          if (hsplit->GetAbove())
             hsplit = 0;
@@ -2674,12 +2667,10 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
       el->fLayout->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
       if (IsLayoutBroken()) {
-         out << "   " << el->fFrame->GetName() << "->MoveResize(";
-         out << el->fFrame->GetX() << "," << el->fFrame->GetY() << ",";
-         out << el->fFrame->GetWidth() << ","  << el->fFrame->GetHeight();
-         out << ");" << std::endl;
+         out << "   " << el->fFrame->GetName() << "->MoveResize(" << el->fFrame->GetX() << "," << el->fFrame->GetY()
+             << "," << el->fFrame->GetWidth() << "," << el->fFrame->GetHeight() << ");\n";
       }
       // TG(H,V)Splitter->SetFrame(theframe) can only be saved _AFTER_
       // having saved "theframe", when "theframe" is either at right
@@ -2688,15 +2679,19 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
       // (aka used before to be created)...
       if (vsplit && el->fFrame == vsplit->GetFrame()) {
          out << "   " << vsplit->GetName() << "->SetFrame(" << vsplit->GetFrame()->GetName();
-         if (vsplit->GetLeft()) out << ",kTRUE);" << std::endl;
-         else                 out << ",kFALSE);"<< std::endl;
-         vsplit = 0;
+         if (vsplit->GetLeft())
+            out << ",kTRUE);\n";
+         else
+            out << ",kFALSE);\n";
+         vsplit = nullptr;
       }
       if (hsplit && el->fFrame == hsplit->GetFrame()) {
          out << "   " << hsplit->GetName() << "->SetFrame(" << hsplit->GetFrame()->GetName();
-         if (hsplit->GetAbove()) out << ",kTRUE);" << std::endl;
-         else                  out << ",kFALSE);"<< std::endl;
-         hsplit = 0;
+         if (hsplit->GetAbove())
+            out << ",kTRUE);\n";
+         else
+            out << ",kFALSE);\n";
+         hsplit = nullptr;
       }
 
       if (!(el->fState & kIsVisible)) {
@@ -2704,20 +2699,24 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
       }
 
       // saving signals/slots
-      signalslist = (TList*)el->fFrame->GetListOfSignals();
-      if (!signalslist)  continue;
-      connlist = (TList*)signalslist->Last();
+      auto signalslist = el->fFrame->GetListOfSignals();
+      if (!signalslist)
+         continue;
+      auto connlist = static_cast<TList *>(signalslist->Last());
       if (connlist) {
-         conn = (TQConnection*)connlist->Last();
+         auto conn = static_cast<TQConnection *>(connlist->Last());
          if (conn) {
-            signal_name = connlist->GetName();
-            slot_name = conn->GetName();
+            TString signal_name = connlist->GetName();
+            TString slot_name = conn->GetName();
             Int_t eq = slot_name.First('=');
             Int_t rb = slot_name.First(')');
             if (eq != -1)
-               slot_name.Remove(eq, rb-eq);
-            out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name
-                << quote << ", 0, 0, " << quote << slot_name << quote << ");" << std::endl;
+               slot_name.Remove(eq, rb - eq);
+            if ((signal_name == "ColorSelected(unsigned long)") && el->fFrame->InheritsFrom("TGColorSelect"))
+               signal_name = "ColorSelected(Pixel_t)";
+
+            out << "   " << el->fFrame->GetName() << "->Connect(\"" << signal_name << "\", 0, 0, \"" << slot_name
+                << "\");\n";
 
             TList *lsl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
             if (lsl) {
@@ -2728,7 +2727,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
          }
       }
    }
-   out << std::endl;
+   out << "   \n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
