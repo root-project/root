@@ -4507,8 +4507,8 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute Quantiles for this histogram
-/// Quantile x_p := Q(p) is defined as the value x_p such that the cumulative
+/// Compute Quantiles for this histogram.
+/// A quantile x_p := Q(p) is defined as the value x_p such that the cumulative
 /// probability distribution Function F of variable X yields:
 ///
 /// ~~~ {.cpp}
@@ -4527,16 +4527,20 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 /// \author Eddy Offermann
 /// code from Eddy Offermann, Renaissance
 ///
-/// \param[in] n maximum size of array xp and size of array p (if given)
+/// \param[in] n maximum size of the arrays xp and p (if given)
 /// \param[out] xp array to be filled with nq quantiles evaluated at (p). Memory has to be preallocated by caller.
-/// If p is null (default value), then xp is actually set to the (first n) histogram bin edges
+///   - If `p == nullptr`, the quantiles are computed at the (first `n`) probabilities p given by the CDF of the histogram;
+///   `n` must thus be smaller or equal Nbins+1, otherwise the extra values of `xp` will not be filled and `nq` will be smaller than `n`.
+///     If all bins have non-zero entries, the quantiles happen to be the bin centres.
+///     Empty bins will, however, be skipped in the quantiles.
+///     If the CDF is e.g. [0., 0., 0.1, ...], the quantiles would be, [3., 3., 3., ...], with the third bin starting
+///     at 3.
 /// \param[in] p array of cumulative probabilities where quantiles should be evaluated.
-///   - if p is null, the CDF of the histogram will be used instead as array, and will
-///     have a size = number of bins + 1 in h. It will correspond to the
-///     quantiles calculated at the lowest edge of the histogram (quantile=0) and
-///     all the upper edges of the bins. (nbins might be > n).
-///   - if p is not null, it is assumed to contain at least n values.
-/// \return value nq (<=n) with the number of quantiles computed
+///   - if `p == nullptr`, the CDF of the histogram will be used to compute the quantiles, and will
+///     have a size of n.
+///   - Otherwise, it is assumed to contain at least n values.
+/// \return number of quantiles computed
+/// \note Unlike in TF1::GetQuantiles, `p` is here an optional argument
 ///
 /// Note that the Integral of the histogram is automatically recomputed
 /// if the number of entries is different of the number of entries when
