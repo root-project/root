@@ -1958,13 +1958,12 @@ Double_t TF1::GetProb() const
    return TMath::Prob(fChisquare, fNDF);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Quantiles for density distribution of this function
 ///
 /// Quantile x_p of a probability distribution Function F is defined as
 /// \f[
-///     F(x_{p}) = \int_{xmin}^{x_{p}} f dx = p with 0 <= p <= 1.
+///     F(x_{p}) = \int_{xmin}^{x_{p}} f dx = p \text{with} 0 <= p <= 1.
 /// \f]
 /// For instance the median \f$ x_{\frac{1}{2}} \f$ of a distribution is defined as that value
 /// of the random variable for which the distribution function equals 0.5:
@@ -1989,7 +1988,6 @@ Double_t TF1::GetProb() const
 /// \author Eddy Offermann
 /// \warning Function leads to undefined behavior if xp or p are null or
 /// their size does not match with n
-
 
 Int_t TF1::GetQuantiles(Int_t n, Double_t *xp, const Double_t *p)
 {
