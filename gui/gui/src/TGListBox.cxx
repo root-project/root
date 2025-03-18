@@ -1681,9 +1681,5 @@ void TGListBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGTextLBEntry::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TString content = GetText()->GetString();
-   content.ReplaceAll('\\', "\\\\");
-   content.ReplaceAll("\"", "\\\"");
-   char quote = '"';
-   out << quote << content << quote << "," << EntryId();
+   out << "\"" << TString(GetText()->GetString()).ReplaceSpecialCppChars() <<  "\", " << EntryId();
 }

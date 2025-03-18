@@ -384,16 +384,15 @@ TGShutterItem::~TGShutterItem()
 
 void TGShutterItem::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    TGTextButton *b = (TGTextButton *)fButton;
    const char *text = b->GetText()->GetString();
    char hotpos = b->GetText()->GetHotPos();
    Int_t lentext = b->GetText()->GetLength();
-   char *outext = new char[lentext+2];       // should be +2 because of \0
-   Int_t i=0;
+   char *outext = new char[lentext + 2]; // should be +2 because of \0
+   Int_t i = 0;
 
    while (lentext) {
-      if (i == hotpos-1) {
+      if (i == hotpos - 1) {
          outext[i] = '&';
          i++;
       }
@@ -402,34 +401,31 @@ void TGShutterItem::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       text++;
       lentext--;
    }
-   outext[i]=0;
+   outext[i] = 0;
 
-   out << std::endl;
-   out << "   // " << quote << outext << quote << " shutter item " << std::endl;
-   out << "   TGShutterItem *";
-   out << GetName() << " = new TGShutterItem(" << fParent->GetName()
-       << ", new TGHotString(" << quote << outext << quote << "),"
-       << fButton->WidgetId() << "," << GetOptionString() << ");" << std::endl;
+   out << "\n   // \"" << outext << "\" shutter item \n";
+   out << "   TGShutterItem *" << GetName() << " = new TGShutterItem(" << fParent->GetName() << ", new TGHotString(\""
+       << TString(outext).ReplaceSpecialCppChars() << "\"), " << fButton->WidgetId() << ", " << GetOptionString()
+       << ");\n";
 
-   delete [] outext;
+   delete[] outext;
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    TList *list = ((TGCompositeFrame *)GetContainer())->GetList();
 
-   if (!list) return;
+   if (!list)
+      return;
 
-   out << "   TGCompositeFrame *" << GetContainer()->GetName()
-       << " = (TGCompositeFrame *)" << GetName() << "->GetContainer();" << std::endl;
+   out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = (TGCompositeFrame *)" << GetName()
+       << "->GetContainer();\n";
 
-   TGFrameElement *el;
    TIter next(list);
-
-   while ((el = (TGFrameElement *) next())) {
+   while (auto el = static_cast<TGFrameElement *>(next())) {
       el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetContainer()->GetName() <<"->AddFrame(" << el->fFrame->GetName();
+      out << "   " << GetContainer()->GetName() << "->AddFrame(" << el->fFrame->GetName();
       el->fLayout->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
    }
 }
 
@@ -438,34 +434,31 @@ void TGShutterItem::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGShutter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << std::endl;
-   out << "   // shutter" << std::endl;
+   out << "\n   // shutter\n";
 
-   out << "   TGShutter *";
-   out << GetName() << " = new TGShutter(" << fParent->GetName() << ","
-       << GetOptionString() << ");" << std::endl;
+   out << "   TGShutter *" << GetName() << " = new TGShutter(" << fParent->GetName() << "," << GetOptionString()
+       << ");\n";
 
    if ((fDefWidth > 0) || (fDefHeight > 0)) {
       out << "   " << GetName() << "->SetDefaultSize(";
-      out << fDefWidth << "," << fDefHeight << ");" << std::endl;
+      out << fDefWidth << "," << fDefHeight << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   if (!fList) return;
+   if (!fList)
+      return;
 
    TGFrameElement *el;
    TIter next(fList);
 
-   while ((el = (TGFrameElement *) next())) {
+   while ((el = (TGFrameElement *)next())) {
       el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() <<"->AddItem(" << el->fFrame->GetName();
-      //el->fLayout->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << "   " << GetName() << "->AddItem(" << el->fFrame->GetName();
+      // el->fLayout->SavePrimitive(out, option);
+      out << ");\n";
    }
 
-   out << "   " << GetName() << "->SetSelectedItem("
-       << GetSelectedItem()->GetName() << ");" << std::endl;
-   out << "   " <<GetName()<< "->Resize("<<GetWidth()<<","<<GetHeight()<<");"<<std::endl;
+   out << "   " << GetName() << "->SetSelectedItem(" << GetSelectedItem()->GetName() << ");\n";
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight() << ");\n";
 }
-
