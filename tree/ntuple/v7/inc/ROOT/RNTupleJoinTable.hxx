@@ -35,7 +35,7 @@ namespace Internal {
 // clang-format on
 class RNTupleJoinTable {
 public:
-   using NTupleJoinValue_t = std::uint64_t;
+   using JoinValue_t = std::uint64_t;
    using PartitionKey_t = std::uint64_t;
    static constexpr PartitionKey_t kDefaultPartitionKey = PartitionKey_t(-1);
 
@@ -52,12 +52,9 @@ private:
       //////////////////////////////////////////////////////////////////////////
       /// Container for the combined hashes of join field values.
       struct RCombinedJoinFieldValue {
-         std::vector<NTupleJoinValue_t> fJoinFieldValues;
+         std::vector<JoinValue_t> fJoinFieldValues;
 
-         RCombinedJoinFieldValue(const std::vector<NTupleJoinValue_t> &joinFieldValues)
-            : fJoinFieldValues(joinFieldValues)
-         {
-         }
+         RCombinedJoinFieldValue(const std::vector<JoinValue_t> &joinFieldValues) : fJoinFieldValues(joinFieldValues) {}
 
          inline bool operator==(const RCombinedJoinFieldValue &other) const
          {

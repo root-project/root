@@ -16,10 +16,9 @@
 #include <ROOT/RNTupleJoinTable.hxx>
 
 namespace {
-ROOT::Experimental::Internal::RNTupleJoinTable::NTupleJoinValue_t
-CastValuePtr(void *valuePtr, std::size_t fieldValueSize)
+ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t CastValuePtr(void *valuePtr, std::size_t fieldValueSize)
 {
-   ROOT::Experimental::Internal::RNTupleJoinTable::NTupleJoinValue_t value;
+   ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t value;
 
    switch (fieldValueSize) {
    case 1: value = *reinterpret_cast<std::uint8_t *>(valuePtr); break;
@@ -69,7 +68,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
       fields.emplace_back(std::move(field));
    }
 
-   std::vector<NTupleJoinValue_t> castJoinValues;
+   std::vector<JoinValue_t> castJoinValues;
    castJoinValues.reserve(fJoinFieldNames.size());
 
    for (unsigned i = 0; i < pageSource.GetNEntries(); ++i) {
@@ -93,7 +92,7 @@ ROOT ::Experimental::Internal::RNTupleJoinTable::REntryMapping::GetEntryIndexes(
    if (valuePtrs.size() != fJoinFieldNames.size())
       throw RException(R__FAIL("number of value pointers must match number of join fields"));
 
-   std::vector<NTupleJoinValue_t> castJoinValues;
+   std::vector<JoinValue_t> castJoinValues;
    castJoinValues.reserve(valuePtrs.size());
 
    for (unsigned i = 0; i < valuePtrs.size(); ++i) {
