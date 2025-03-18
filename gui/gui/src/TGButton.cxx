@@ -1966,7 +1966,7 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    if (!fPic) {
-      Error("SavePrimitive()", "pixmap not found or the file format is not supported for picture button %d ", fWidgetId);
+      Error("SavePrimitive", "pixmap not found or the file format is not supported for picture button %d ", fWidgetId);
       return;
    }
 
@@ -1983,29 +1983,24 @@ void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
       }
    }
 
-   char quote = '"';
    TString picname = gSystem->UnixPathName(fPic->GetName());
    gSystem->ExpandPathName(picname);
 
-   out <<"   TGPictureButton *";
-
-   out << GetName() << " = new TGPictureButton(" << fParent->GetName()
-       << ",gClient->GetPicture(" << quote
-       << picname << quote << ")";
+   out << "   TGPictureButton *" << GetName() << " = new TGPictureButton(" << fParent->GetName()
+       << ", gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\")";
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {
          if (fWidgetId == -1) {
-            out << ");" << std::endl;
+            out << ");\n";
          } else {
-            out << "," << fWidgetId << ");" << std::endl;
+            out << "," << fWidgetId << ");\n";
          }
       } else {
-         out << "," << fWidgetId << "," << parGC.Data() << ");" << std::endl;
+         out << "," << fWidgetId << "," << parGC << ");\n";
       }
    } else {
-      out << "," << fWidgetId << "," << parGC.Data() << "," << GetOptionString()
-          << ");" << std::endl;
+      out << "," << fWidgetId << "," << parGC << "," << GetOptionString() << ");\n";
    }
 
    TGButton::SavePrimitive(out,option);
