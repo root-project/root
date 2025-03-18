@@ -724,9 +724,12 @@ struct DSRunRAII {
 struct ROOT::Internal::RDF::RDSRangeRAII {
    ROOT::Detail::RDF::RLoopManager &fLM;
    unsigned int fSlot;
-   RDSRangeRAII(ROOT::Detail::RDF::RLoopManager &lm, unsigned int slot, ULong64_t firstEntry) : fLM(lm), fSlot(slot)
+   TTreeReader *fTreeReader;
+   RDSRangeRAII(ROOT::Detail::RDF::RLoopManager &lm, unsigned int slot, ULong64_t firstEntry,
+                TTreeReader *treeReader = nullptr)
+      : fLM(lm), fSlot(slot), fTreeReader(treeReader)
    {
-      fLM.InitNodeSlots(nullptr, fSlot);
+      fLM.InitNodeSlots(fTreeReader, fSlot);
       fLM.GetDataSource()->InitSlot(fSlot, firstEntry);
    }
    ~RDSRangeRAII() { fLM.GetDataSource()->FinalizeSlot(fSlot); }
@@ -1419,4 +1422,82 @@ void ROOT::Detail::RDF::RLoopManager::SetDataSource(std::unique_ptr<ROOT::RDF::R
       fDataSource->SetNSlots(fNSlots);
       fLoopType = ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource;
    }
+}
+
+void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange,
+                                                           ROOT::Internal::RSlotStack &slotStack,
+                                                           std::atomic<ULong64_t> &entryCount)
+{
+#ifdef R__USE_IMT
+   ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
+   const auto &slot = slotRAII.fSlot;
+
+   const auto &[start, end] = entryRange;
+   const auto nEntries = end - start;
+   entryCount.fetch_add(nEntries);
+
+   RCallCleanUpTask cleanup(*this, slot);
+   RDSRangeRAII _{*this, slot, start};
+
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
+
+   try {
+      for (auto entry = start; entry < end; ++entry) {
+         if (fDataSource->SetEntry(slot, entry)) {
+            RunAndCheckFilters(slot, entry);
+         }
+      }
+   } catch (...) {
+      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
+      throw;
+   }
+   fDataSource->FinalizeSlot(slot);
+#else
+   (void)entryRange;
+   (void)slotStack;
+   (void)entryCount;
+#endif
+}
+
+void ROOT::Detail::RDF::RLoopManager::TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack,
+                                                      std::atomic<ULong64_t> &entryCount)
+{
+#ifdef R__USE_IMT
+   ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
+   const auto &slot = slotRAII.fSlot;
+
+   const auto entryRange = treeReader.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
+   const auto &[start, end] = entryRange;
+   const auto nEntries = end - start;
+   auto count = entryCount.fetch_add(nEntries);
+
+   RDSRangeRAII _{*this, slot, static_cast<ULong64_t>(start), &treeReader};
+   RCallCleanUpTask cleanup(*this, slot, &treeReader);
+
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(
+      {fDataSource->GetLabel(), static_cast<ULong64_t>(start), static_cast<ULong64_t>(end), slot});
+   try {
+      // recursive call to check filters and conditionally execute actions
+      while (validTTreeReaderRead(treeReader)) {
+         if (fNewSampleNotifier.CheckFlag(slot)) {
+            UpdateSampleInfo(slot, treeReader);
+         }
+         RunAndCheckFilters(slot, count++);
+      }
+   } catch (...) {
+      std::cerr << "RDataFrame::Run: event loop was interrupted\n";
+      throw;
+   }
+   // fNStopsReceived < fNChildren is always true at the moment as we don't support event loop early quitting in
+   // multi-thread runs, but it costs nothing to be safe and future-proof in case we add support for that later.
+   if (treeReader.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
+      // something went wrong in the TTreeReader event loop
+      throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
+                               std::to_string(treeReader.GetEntryStatus()));
+   }
+#else
+   (void)treeReader;
+   (void)slotStack;
+   (void)entryCount;
+#endif
 }
