@@ -43,74 +43,9 @@ unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
 
 std::string ROOT::RDF::RInterfaceBase::DescribeDataset() const
 {
-   // TTree/TChain as input
-   const auto tree = fLoopManager->GetTree();
-   if (tree) {
-      const auto treeName = tree->GetName();
-      const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
-      const auto treeType = isTChain ? "TChain" : "TTree";
-      const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
-      const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
-      const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
-      std::stringstream ss;
-      ss << "Dataframe from " << treeType;
-      if (*treeName != 0) {
-         ss << " " << treeName;
-      }
-      if (isInMemory) {
-         ss << " (in-memory)";
-      } else {
-         const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
-         const auto numFiles = files.size();
-         if (numFiles == 1) {
-            ss << " in file " << files[0];
-         } else {
-            ss << " in files\n";
-            for (auto i = 0u; i < numFiles; i++) {
-               ss << "  " << files[i];
-               if (i < numFiles - 1)
-                  ss << '\n';
-            }
-         }
-      }
-      if (hasFriends) {
-         const auto numFriends = friendInfo.fFriendNames.size();
-         if (numFriends == 1) {
-            ss << "\nwith friend\n";
-         } else {
-            ss << "\nwith friends\n";
-         }
-         for (auto i = 0u; i < numFriends; i++) {
-            const auto nameAlias = friendInfo.fFriendNames[i];
-            const auto files = friendInfo.fFriendFileNames[i];
-            const auto numFiles = files.size();
-            const auto subnames = friendInfo.fFriendChainSubNames[i];
-            ss << "  " << nameAlias.first;
-            if (nameAlias.first != nameAlias.second)
-               ss << " (" << nameAlias.second << ")";
-            // case: TTree as friend
-            if (numFiles == 1) {
-               ss << " " << files[0];
-            }
-            // case: TChain as friend
-            else {
-               ss << '\n';
-               for (auto j = 0u; j < numFiles; j++) {
-                  ss << "    " << subnames[j] << " " << files[j];
-                  if (j < numFiles - 1)
-                     ss << '\n';
-               }
-            }
-            if (i < numFriends - 1)
-               ss << '\n';
-         }
-      }
-      return ss.str();
-   }
    // Datasource as input
-   else if (auto dataSource = GetDataSource()) {
-      const auto datasourceLabel = dataSource->GetLabel();
-      return "Dataframe from datasource " + datasourceLabel;
+   if (auto ds = GetDataSource()) {
+      return ROOT::Internal::RDF::DescribeDataset(*ds);
    }
    // Trivial/empty datasource
    else {
@@ -168,8 +103,8 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
          allColumns.emplace(bName);
    }
 
-   if (auto dataSource = GetDataSource()) {
-      for (const auto &s : dataSource->GetColumnNames()) {
+   if (auto ds = GetDataSource()) {
+      for (const auto &s : ROOT::Internal::RDF::GetColumnNamesNoDuplicates(*ds)) {
          if (s.rfind("R_rdf_sizeof", 0) != 0)
             allColumns.emplace(s);
       }
@@ -361,7 +296,7 @@ bool ROOT::RDF::RInterfaceBase::HasColumn(std::string_view columnName)
          return true;
    }
 
-   if (GetDataSource() && GetDataSource()->HasColumn(columnName))
+   if (auto ds = GetDataSource(); ds->HasColumn(columnName))
       return true;
 
    return false;

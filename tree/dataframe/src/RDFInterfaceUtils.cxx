@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include <ROOT/RDataSource.hxx>
+#include <ROOT/RTTreeDS.hxx>
 #include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDisplay.hxx>
@@ -997,9 +998,12 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
 /// Return copies of colsWithoutAliases and colsWithAliases with size branches for variable-sized array branches added
 /// in the right positions (i.e. before the array branches that need them).
 std::pair<std::vector<std::string>, std::vector<std::string>>
-AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vector<std::string> &&colsWithoutAliases,
-                std::vector<std::string> &&colsWithAliases)
+AddSizeBranches(const std::vector<std::string> &branches, ROOT::RDF::RDataSource *ds,
+                std::vector<std::string> &&colsWithoutAliases, std::vector<std::string> &&colsWithAliases)
 {
+   TTree *tree{};
+   if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(ds))
+      tree = treeDS->GetTree();
    if (!tree) // nothing to do
       return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
 
