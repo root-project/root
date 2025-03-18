@@ -61,21 +61,11 @@ void TGHorizontal3DLine::DrawBorder()
 
 void TGHorizontal3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground())
-      SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out);
 
    out << "   TGHorizontal3DLine *" << GetName() << " = new TGHorizontal3DLine(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+       << "," << GetWidth() << "," << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out << ");\n";
-      } else {
-         out << ", " << GetOptionString() << ");\n";
-      }
-   } else {
-      out << ", " << GetOptionString() << ", ucolor);\n";
-   }
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 }

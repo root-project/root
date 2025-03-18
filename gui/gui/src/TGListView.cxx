@@ -1723,58 +1723,36 @@ const TGGC &TGListView::GetDefaultGC()
 
 void TGListView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and color if necessary
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder);
 
-   out << std::endl << "   // list view" << std::endl;
-   out <<"   TGListView *";
-   out << GetName() << " = new TGListView(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "\n   // list view\n";
+   out << "   TGListView *" << GetName() << " = new TGListView(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    GetContainer()->SavePrimitive(out, option);
 
-   out << std::endl;
-   out << "   " << GetName() << "->SetContainer(" << GetContainer()->GetName()
-                << ");" << std::endl;
+   out << "   \n";
+   out << "   " << GetName() << "->SetContainer(" << GetContainer()->GetName() << ");\n";
    out << "   " << GetName() << "->SetViewMode(";
    switch (fViewMode) {
-      case kLVLargeIcons:
-         out << "kLVLargeIcons";
-         break;
-      case kLVSmallIcons:
-         out << "kLVSmallIcons";
-         break;
-      case kLVList:
-         out << "kLVList";
-         break;
-      case kLVDetails:
-         out << "kLVDetails";
-         break;
+   case kLVLargeIcons: out << "kLVLargeIcons"; break;
+   case kLVSmallIcons: out << "kLVSmallIcons"; break;
+   case kLVList: out << "kLVList"; break;
+   case kLVDetails: out << "kLVDetails"; break;
    }
-   out << ");" << std::endl;
+   out << ");\n";
 
-   out << "   " << GetContainer()->GetName() << "->Resize();" << std::endl;
+   out << "   " << GetContainer()->GetName() << "->Resize();\n";
 
-   if (fHScrollbar && fHScrollbar->IsMapped()) {
-   out << "   " << GetName() << "->SetHsbPosition(" << GetHsbPosition()
-       << ");" << std::endl;
-   }
+   if (fHScrollbar && fHScrollbar->IsMapped())
+      out << "   " << GetName() << "->SetHsbPosition(" << GetHsbPosition() << ");\n";
 
-   if (fVScrollbar && fVScrollbar->IsMapped()) {
-   out << "   " << GetName() << "->SetVsbPosition(" << GetVsbPosition()
-       << ");" << std::endl;
-   }
+   if (fVScrollbar && fVScrollbar->IsMapped())
+      out << "   " << GetName() << "->SetVsbPosition(" << GetVsbPosition() << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1782,26 +1760,17 @@ void TGListView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGLVContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and color if necessary
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder);
 
-   out << std::endl << "   // list view container" << std::endl;
-   out << "   TGLVContainer *";
+   out << "\n   // list view container\n";
+   out << "   TGLVContainer *" << GetName() << " = new TGLVContainer(";
+   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class()))
+      out <<  GetCanvas()->GetName();
+    else
+      out << fParent->GetName() << ", " << GetWidth() << "," << GetHeight();
+   out << extra_args << ");\n";
 
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << GetName() << " = new TGLVContainer(" << GetCanvas()->GetName();
-   } else {
-      out << GetName() << " = new TGLVContainer(" << fParent->GetName();
-      out << "," << GetWidth() << "," << GetHeight();
-   }
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 }

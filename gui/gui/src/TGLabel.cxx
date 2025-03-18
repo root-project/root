@@ -478,30 +478,19 @@ void TGLabel::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   if (fBackground != GetDefaultFrameBackground())
-      SaveUserColor(out, option);
+   // save options and color if necessary
+   auto extra_args = SaveCtorArgs(out);
 
    TString label = GetText()->GetString();
 
    out << "   TGLabel *" << GetName() << " = new TGLabel("<< fParent->GetName()
        << ", \"" << label.ReplaceSpecialCppChars() << "\"";
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         if (fFont->GetFontStruct() == GetDefaultFontStruct()) {
-            if (fNormGC == GetDefaultGC()()) {
-               out <<");\n";
-            } else {
-               out << "," << parGC << ");\n";
-            }
-         } else {
-            out << "," << parGC << "," << parFont << ");\n";
-         }
-      } else {
-         out << "," << parGC << "," << parFont << "," << GetOptionString() <<");\n";
-      }
-   } else {
-      out << "," << parGC << "," << parFont << "," << GetOptionString() << ", ucolor);\n";
-   }
+   if ((extra_args.Length() > 0) || (fFont->GetFontStruct() != GetDefaultFontStruct()))
+      out << "," << parGC << "," << parFont << extra_args;
+   else if (fNormGC != GetDefaultGC()())
+      out << ", " << parGC;
+   out << ");\n";
+
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 

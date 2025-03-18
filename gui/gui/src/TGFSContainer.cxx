@@ -911,33 +911,23 @@ void TGFileContainer::StartRefreshTimer(ULong_t msec)
 
 void TGFileContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and color if necessary
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame);
 
-   char quote = '"';
-   out << std::endl << "   // container frame" << std::endl;
-   out << "   TGFileContainer *";
+   out << "\n   // container frame\n";
+   out << "   TGFileContainer *" << GetName() << " = new TGFileContainer(";
 
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << GetName() << " = new TGFileContainer(" << GetCanvas()->GetName();
-   } else {
-      out << GetName() << " = new TGFileContainer(" << fParent->GetName();
-      out << "," << GetWidth() << "," << GetHeight();
-   }
+   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class()))
+      out << GetCanvas()->GetName();
+   else
+      out << fParent->GetName() << "," << GetWidth() << "," << GetHeight();
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == kSunkenFrame) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
+   out << extra_args << ");\n";
+
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
-   out << "   " << GetCanvas()->GetName() << "->SetContainer("
-                << GetName() << ");" << std::endl;
-   out << "   " << GetName() << "->DisplayDirectory();" << std::endl;
-   out << "   " << GetName() << "->AddFile("<< quote << ".." << quote << ");" << std::endl;
-   out << "   " << GetName() << "->StopRefreshTimer();" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
+   out << "   " << GetCanvas()->GetName() << "->SetContainer(" << GetName() << ");\n";
+   out << "   " << GetName() << "->DisplayDirectory();\n";
+   out << "   " << GetName() << "->AddFile(\"..\");\n";
+   out << "   " << GetName() << "->StopRefreshTimer();\n";
 }
