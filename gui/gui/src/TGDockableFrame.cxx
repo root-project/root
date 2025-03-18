@@ -456,60 +456,55 @@ void TGDockableFrame::SetWindowName(const char *name)
 
 void TGDockableFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
-   out << std::endl << "   // dockable frame" << std::endl;
-   out << "   TGDockableFrame *";
-   out << GetName()<<" = new TGDockableFrame(" << fParent->GetName();
+   out << "\n   // dockable frame\n";
+   out << "   TGDockableFrame *" << GetName()<<" = new TGDockableFrame(" << fParent->GetName();
 
    if (GetOptions() == kHorizontalFrame) {
       if (fWidgetId == -1) {
-         out << ");" << std::endl;
+         out << ");\n";
       } else {
-         out << "," << fWidgetId << ");" << std::endl;
+         out << "," << fWidgetId << ");\n";
       }
    } else {
-      out << "," << fWidgetId << "," << GetOptionString() << ");" << std::endl;
+      out << "," << fWidgetId << "," << GetOptionString() << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (GetContainer()->GetList()->First()) {
       out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = "
-          << GetName() << "->GetContainer();" << std::endl;
+          << GetName() << "->GetContainer();\n";
 
-      TGFrameElement *el;
       TIter next(GetContainer()->GetList());
 
-      while ((el = (TGFrameElement *) next())) {
+      while (auto el = (TGFrameElement *) next()) {
          el->fFrame->SavePrimitive(out, option);
          out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
          el->fLayout->SavePrimitive(out, option);
-         out << ");"<< std::endl;
+         out << ");\n";
       }
    }
-   out << std::endl << "   // next lines belong to the dockable frame widget" << std::endl;
+   out << "\n   // next lines belong to the dockable frame widget\n";
    if (EnableUndock())
-      out << "   " << GetName() << "->EnableUndock(kTRUE);" << std::endl;
+      out << "   " << GetName() << "->EnableUndock(kTRUE);\n";
    else
-      out << "   " << GetName() << "->EnableUndock(kFALSE);" << std::endl;
+      out << "   " << GetName() << "->EnableUndock(kFALSE);\n";
 
    if (EnableHide())
-      out << "   " << GetName() << "->EnableHide(kTRUE);" << std::endl;
+      out << "   " << GetName() << "->EnableHide(kTRUE);\n";
    else
-      out << "   " << GetName() << "->EnableHide(kFALSE);" << std::endl;
+      out << "   " << GetName() << "->EnableHide(kFALSE);\n";
 
-   if (fDockName != "")
-      out << "   " << GetName() << "->SetWindowName(" << quote << fDockName
-          << quote << ");" << std::endl;
+   if (fDockName.Length() > 0)
+      out << "   " << GetName() << "->SetWindowName(\"" << TString(fDockName).ReplaceSpecialCppChars() << "\");\n";
 
    if (IsUndocked())
-      out << "   " << GetName() << "->UndockContainer();" << std::endl;
+      out << "   " << GetName() << "->UndockContainer();\n";
    else
-      out << "   " << GetName() << "->DockContainer();" << std::endl;
+      out << "   " << GetName() << "->DockContainer();\n";
 
    if (IsHidden())
-      out << "   " << GetName() << "->HideContainer();" << std::endl;
+      out << "   " << GetName() << "->HideContainer();\n";
 
-   out << std::endl;
+   out << "   \n";
 }
