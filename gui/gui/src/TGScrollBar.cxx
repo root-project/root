@@ -922,26 +922,17 @@ void TGVScrollBar::SetPosition(Int_t pos)
 
 void TGHScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   out <<"   TGHScrollBar *";
-   out << GetName() << " = new TGHScrollBar(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGHScrollBar *" << GetName() << " = new TGHScrollBar(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << std::endl;
-   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
+   out << "   " << GetName() << "->SetRange(" << GetRange() << "," << GetPageSize() << ");\n";
+   out << "   " << GetName() << "->SetPosition(" << GetPosition() << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -949,25 +940,15 @@ void TGHScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGVScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   out<<"   TGVScrollBar *";
-   out << GetName() <<" = new TGVScrollBar("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGVScrollBar *" << GetName() << " = new TGVScrollBar(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-
-      if (!GetOptions()) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << std::endl;
-   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
+   out << "   " << GetName() << "->SetRange(" << GetRange() << "," << GetPageSize() << ");\n";
+   out << "   " << GetName() << "->SetPosition(" << GetPosition() << ");\n";
 }
