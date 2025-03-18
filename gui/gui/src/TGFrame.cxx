@@ -2785,7 +2785,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 {
    // iteration over all active classes to exclude the base ones
    TString opt = option;
-   TBits *bc = new TBits();
+   TBits bc;
    TClass *c1, *c2, *c3;
    UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
 
@@ -2802,7 +2802,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          else {
             c3 = c2->GetBaseClass(c1);
             if (c3 != 0) {
-               bc->SetBitNumber(k, kTRUE);
+               bc.SetBitNumber(k, kTRUE);
                break;
             }
          }
@@ -2819,9 +2819,9 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    TIter nextdo(gROOT->GetListOfClasses());
    while ((c2 = (TClass *)nextdo())) {
       // for used GUI header files
-      if (bc->TestBitNumber(k) == 0 && c2->InheritsFrom(TGObject::Class()) == 1) {
+      if (bc.TestBitNumber(k) == 0 && c2->InheritsFrom(TGObject::Class()) == 1) {
          // for any used ROOT header files activate the line below, comment the line above
-         //if (bc->TestBitNumber(k) == 0) {
+         //if (bc.TestBitNumber(k) == 0) {
          const char *iname;
          iname = c2->GetDeclFileName();
          if (iname[0] && strstr(iname,".h")) {
@@ -2881,7 +2881,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    }
 
    // writes include files in C++ macro
-   TObjString *inc;
    ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
 
    if (!ilist) {
@@ -2896,22 +2895,16 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    out << std::endl;
 
    TIter nexti(ilist);
-   while((inc = (TObjString *)nexti())) {
-         out << "#ifndef ROOT_" << inc->GetString() << std::endl;
-         out << "#include " << quote << inc->GetString() << ".h" << quote << std::endl;
-         out << "#endif" << std::endl;
-         if (strstr(inc->GetString(),"TRootEmbeddedCanvas")) {
-            out << "#ifndef ROOT_TCanvas" << std::endl;
-            out << "#include " << quote << "TCanvas.h" << quote << std::endl;
-            out << "#endif" << std::endl;
-         }
+   while (auto inc = (TObjString *)nexti()) {
+      out << "#include \"" << inc->GetString() << ".h\"\n";
+      if (strstr(inc->GetString(), "TRootEmbeddedCanvas"))
+         out << "#include \"TCanvas.h\"\n";
    }
-   out << std::endl << "#include " << quote << "Riostream.h" << quote << std::endl;
+   out << "\n#include \"Riostream.h\"\n\n";
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
    delete ilist;
-   delete bc;
 
    // writes the macro entry point equal to the fname
    out << std::endl;
@@ -2965,11 +2958,9 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    out << "   " <<GetName()<< "->MapSubwindows();" << std::endl;
 
    TIter nexth(gListOfHiddenFrames);
-   TGFrame *fhidden;
-   while ((fhidden = (TGFrame*)nexth())) {
-      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << std::endl;
+   while (auto fhidden = static_cast<TGFrame *>(nexth())) {
+      out << "   " << fhidden->GetName() << "->UnmapWindow();" << std::endl;
    }
-
    out << std::endl;
    gListOfHiddenFrames->Clear();
 
@@ -3250,7 +3241,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    // iterate over all active classes to exclude the base ones
 
    TString opt = option;
-   TBits *bc = new TBits();
+   TBits bc;
    TClass *c1, *c2, *c3;
    UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
 
@@ -3266,7 +3257,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          else {
             c3 = c2->GetBaseClass(c1);
             if (c3 != 0) {
-               bc->SetBitNumber(k, kTRUE);
+               bc.SetBitNumber(k, kTRUE);
                break;
             }
          }
@@ -3283,9 +3274,9 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    TIter nextdo(gROOT->GetListOfClasses());
    while ((c2 = (TClass *)nextdo())) {
       // to have only used GUI header files
-      if (bc->TestBitNumber(k) == 0 && c2->InheritsFrom(TGObject::Class()) == 1) {
+      if (bc.TestBitNumber(k) == 0 && c2->InheritsFrom(TGObject::Class()) == 1) {
          // for any used ROOT header files activate the line below, comment the line above
-         //if (bc->TestBitNumber(k) == 0) {
+         //if (bc.TestBitNumber(k) == 0) {
          const char *iname;
          iname = c2->GetDeclFileName();
          if (iname[0] && strstr(iname,".h")) {
@@ -3337,7 +3328,6 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    }
 
    // writes include files in C++ macro
-   TObjString *inc;
    ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
 
    if (!ilist) {
@@ -3354,23 +3344,16 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out << std::endl << std::endl;
 
    TIter nexti(ilist);
-   while((inc = (TObjString *)nexti())) {
-      out <<"#ifndef ROOT_"<< inc->GetString() << std::endl;
-      out <<"#include "<< quote << inc->GetString() <<".h"<< quote << std::endl;
-      out <<"#endif" << std::endl;
-      if (strstr(inc->GetString(),"TRootEmbeddedCanvas")) {
-         out <<"#ifndef ROOT_TCanvas"<< std::endl;
-         out <<"#include "<< quote <<"TCanvas.h"<< quote << std::endl;
-         out <<"#endif" << std::endl;
-      }
+   while(auto inc = (TObjString *)nexti()) {
+      out << "#include \"" << inc->GetString() << ".h\"\n";
+      if (strstr(inc->GetString(), "TRootEmbeddedCanvas"))
+         out << "#include \"TCanvas.h\"\n";
    }
-   out << std::endl << "#include " << quote << "Riostream.h" << quote << std::endl;
-   out << std::endl << std::endl;
+   out << "\n#include \"Riostream.h\"\n\n";
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
    delete ilist;
-   delete bc;
 
    // writes the macro entry point equal to the fname
    out << std::endl;
@@ -3433,10 +3416,8 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out << "   " <<GetName()<< "->MapSubwindows();" << std::endl;
 
    TIter nexth(gListOfHiddenFrames);
-   TGFrame *fhidden;
-   while ((fhidden = (TGFrame*)nexth())) {
-      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << std::endl;
-   }
+   while (auto fhidden = static_cast<TGFrame *>(nexth()))
+      out << "   " << fhidden->GetName() << "->UnmapWindow();" << std::endl;
    out << std::endl;
    gListOfHiddenFrames->Clear();
 
