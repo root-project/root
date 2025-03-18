@@ -401,26 +401,17 @@ void TGFSComboBox::Update(const char *path)
 
 void TGFSComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
+   // store options and color if differ from defauls
+   TString extra_args = SaveCtorArgs(out, kHorizontalFrame | kSunkenFrame | kDoubleBorder, kTRUE);
 
-   out << std::endl << "   // file system combo box" << std::endl;
-   out << "   TGFSComboBox *";
-   out << GetName() << " = new TGFSComboBox(" << fParent->GetName()
-                                          << "," << fWidgetId;
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
+   out << "\n   // file system combo box\n";
+   out << "   TGFSComboBox *" << GetName() << " = new TGFSComboBox(" << fParent->GetName()
+                                          << "," << fWidgetId << extra_args << ");\n";
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
-       << GetHeight() << ");" << std::endl;
-   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
+       << GetHeight() << ");\n";
+   out << "   " << GetName() << "->Select(" << GetSelected() << ");\n";
 
 }

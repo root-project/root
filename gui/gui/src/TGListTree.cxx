@@ -2597,49 +2597,37 @@ const TGPicture *TGListTree::GetUncheckedPic()
 
 void TGListTree::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
+   // store options and color if differ from defaults
+   TString extra_args = SaveCtorArgs(out, kSunkenFrame, kTRUE);
 
-   out << std::endl << "   // list tree" << std::endl;
-   out << "   TGListTree *";
+   out << "\n   // list tree\n";
+   out << "   TGListTree *" << GetName() << " = new TGListTree(";
 
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << GetName() << " = new TGListTree(" << GetCanvas()->GetName();
-   } else {
-      out << GetName() << " = new TGListTree(" << fParent->GetName();
-      out << "," << GetWidth() << "," << GetHeight();
-   }
+   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class()))
+      out << GetCanvas()->GetName();
+   else
+      out << fParent->GetName() << "," << GetWidth() << "," << GetHeight();
+   out << extra_args << ");\n";
 
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == kSunkenFrame) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
-
-   out << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    static Int_t n = 0;
 
-   TGListTreeItem *current;
-   current = GetFirstItem();
+   TGListTreeItem *current = GetFirstItem();
 
-   out << std::endl;
+   out << "   \n";
 
    while (current) {
       out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
       current->SavePrimitive(out, TString::Format("%d",n), n);
       if (current->IsOpen())
-         out << "   " << GetName() << "->OpenItem(item" << n << ");" << std::endl;
+         out << "   " << GetName() << "->OpenItem(item" << n << ");\n";
       else
-         out << "   " << GetName() << "->CloseItem(item" << n << ");" << std::endl;
+         out << "   " << GetName() << "->CloseItem(item" << n << ");\n";
 
       if (current == fSelected)
-         out << "   " << GetName() << "->SetSelected(item" << n << ");" << std::endl;
+         out << "   " << GetName() << "->SetSelected(item" << n << ");\n";
 
       n++;
       if (current->fFirstchild) {
@@ -2648,7 +2636,7 @@ void TGListTree::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       current = current->fNextsibling;
    }
 
-   out << std::endl;
+   out << "   \n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
