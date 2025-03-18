@@ -69,20 +69,21 @@ ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
       fields.emplace_back(std::move(field));
    }
 
-   std::vector<NTupleJoinValue_t> joinFieldValues;
-   joinFieldValues.reserve(fJoinFieldNames.size());
+   std::vector<NTupleJoinValue_t> castJoinValues;
+   castJoinValues.reserve(fJoinFieldNames.size());
 
    for (unsigned i = 0; i < pageSource.GetNEntries(); ++i) {
-      joinFieldValues.clear();
+      castJoinValues.clear();
+
       for (auto &fieldValue : fieldValues) {
          // TODO(fdegeus): use bulk reading
          fieldValue.Read(i);
 
          auto valuePtr = fieldValue.GetPtr<void>();
-         joinFieldValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField().GetValueSize()));
+         castJoinValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField().GetValueSize()));
       }
 
-      fMapping[RCombinedJoinFieldValue(joinFieldValues)].push_back(i);
+      fMapping[RCombinedJoinFieldValue(castJoinValues)].push_back(i);
    }
 }
 
@@ -92,14 +93,14 @@ ROOT ::Experimental::Internal::RNTupleJoinTable::REntryMapping::GetEntryIndexes(
    if (valuePtrs.size() != fJoinFieldNames.size())
       throw RException(R__FAIL("number of value pointers must match number of join fields"));
 
-   std::vector<NTupleJoinValue_t> joinFieldValues;
-   joinFieldValues.reserve(valuePtrs.size());
+   std::vector<NTupleJoinValue_t> castJoinValues;
+   castJoinValues.reserve(valuePtrs.size());
 
    for (unsigned i = 0; i < valuePtrs.size(); ++i) {
-      joinFieldValues.push_back(CastValuePtr(valuePtrs[i], fJoinFieldValueSizes[i]));
+      castJoinValues.push_back(CastValuePtr(valuePtrs[i], fJoinFieldValueSizes[i]));
    }
 
-   if (const auto &entries = fMapping.find(RCombinedJoinFieldValue(joinFieldValues)); entries != fMapping.end()) {
+   if (const auto &entries = fMapping.find(RCombinedJoinFieldValue(castJoinValues)); entries != fMapping.end()) {
       return &entries->second;
    }
 
