@@ -36,9 +36,8 @@ private:
    std::unique_ptr<OperatorsMapImpl> fOperatorsMapImpl;
    // Type of the tensors
    std::unordered_map<std::string, ETensorType> fTensorTypeMap;
-
-   // all model inputs
-   std::map<std::string, int> allInputs;
+   // flag list of fused operators
+   std::vector<bool> fFusedOperators;
 
 
 public:
@@ -67,7 +66,7 @@ public:
 
    // Parse the index'th node from the ONNX graph
    std::unique_ptr<ROperator> ParseOperator(const size_t /*index*/, const onnx::GraphProto & /*graphproto*/,
-                                            const std::vector<size_t> & /*nodes*/);
+                                            const std::vector<size_t> & /*nodes*/, const std::vector<int> & /* children */);
 
    // check a graph for missing operators
    void CheckGraph(const onnx::GraphProto & g, int & level, std::map<std::string, int> & missingOperators);
