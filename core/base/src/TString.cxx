@@ -1113,7 +1113,7 @@ TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
 
 TString &TString::ReplaceSpecialCppChars()
 {
-   return ReplaceAll("\\","\\\\").ReplaceAll("\"","\\\"");
+   return ReplaceAll("\\","\\\\").ReplaceAll("\"","\\\"").ReplaceAll("\n","\\n").ReplaceAll("\t","\\t");
 }
 
 
