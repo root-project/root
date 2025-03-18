@@ -151,6 +151,25 @@ static void GetTypeAsString(QualType QT, string& type_name, ASTContext &C,
    QT.getAsStringInternal(type_name, Policy);
 }
 
+static void GetDeclName(const clang::Decl *D, ASTContext &Context, std::string &name)
+{
+   // Helper to extract a fully qualified name from a Decl
+
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   Policy.SuppressTagKeyword = true;
+   Policy.SuppressUnwrittenScope = true;
+   if (const TypeDecl *TD = dyn_cast<TypeDecl>(D)) {
+      // This is a class, struct, or union member.
+      QualType QT(TD->getTypeForDecl(), 0);
+      GetTypeAsString(QT, name, Context, Policy);
+   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
+      // This is a namespace member.
+      raw_string_ostream stream(name);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      stream.flush();
+   }
+}
+
 void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, std::ostringstream &callbuf,
                                        string &type_name, EReferenceType &refType, bool &isPointer, int indent_level,
                                        bool forArgument)
@@ -530,23 +549,13 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
 {
    const FunctionDecl *FD = GetDecl();
    assert(FD && "generate_wrapper called without a function decl!");
-   ASTContext &Context = FD->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
    //
    //  Get the class or namespace name.
    //
    string class_name;
+   ASTContext &Context = FD->getASTContext();
    const clang::DeclContext *DC = GetDeclContext();
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(DC)) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      GetTypeAsString(QT, class_name, Context, Policy);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(DC)) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
+   GetDeclName(cast<Decl>(DC), Context, class_name);
    //
    //  Check to make sure that we can
    //  instantiate and codegen this function.
@@ -1072,26 +1081,13 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    return (tcling_callfunc_Wrapper_t)F;
 }
 
-// FIXME: Sink in the code duplication from get_wrapper_code.
 static std::string PrepareStructorWrapper(const Decl *D, const char *wrapper_prefix, std::string &class_name)
 {
-   ASTContext &Context = D->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
-   Policy.SuppressTagKeyword = true;
-   Policy.SuppressUnwrittenScope = true;
    //
    //  Get the class or namespace name.
    //
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(D)) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      GetTypeAsString(QT, class_name, Context, Policy);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
+   ASTContext &Context = D->getASTContext();
+   GetDeclName(D, Context, class_name);
 
    //
    //  Make the wrapper name.
