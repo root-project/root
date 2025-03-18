@@ -2491,7 +2491,8 @@ namespace TStreamerInfoActions
       static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
       {
          for(void *iter = start; iter != end; iter = (char*)iter + sizeof(void*) ) {
-            action(buf, *(void**)iter, config);
+            if (*(void**)iter)
+               action(buf, *(void**)iter, config);
          }
          return 0;
       }
