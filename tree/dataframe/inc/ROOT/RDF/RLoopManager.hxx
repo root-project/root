@@ -44,6 +44,7 @@ class RDataSource;
 } // ns RDF
 
 namespace Internal {
+class RSlotStack;
 namespace RDF {
 std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
 
@@ -312,6 +313,13 @@ public:
    {
       return fSuppressErrorsForMissingBranches;
    }
+
+   /// The task run by every thread on the input entry range, for the generic RDataSource.
+   void DataSourceThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange, ROOT::Internal::RSlotStack &slotStack,
+                             std::atomic<ULong64_t> &entryCount);
+   /// The task run by every thread on an entry range (known by the input TTreeReader), for the TTree data source.
+   void
+   TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &entryCount);
 };
 
 /// \brief Create an RLoopManager that reads a TChain.

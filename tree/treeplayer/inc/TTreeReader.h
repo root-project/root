@@ -260,6 +260,11 @@ public:
    /// Return an iterator beyond the last TTree entry.
    Iterator_t end() { return Iterator_t(*this, -1); }
 
+   void SetSuppressErrorsForMissingBranches(const std::set<std::string> &suppressErrorsForMissingBranches)
+   {
+      fSuppressErrorsForMissingBranches = suppressErrorsForMissingBranches;
+   }
+
 protected:
    using NamedProxies_t = std::unordered_map<std::string, std::unique_ptr<ROOT::Internal::TNamedBranchProxy>>;
    void Initialize();
