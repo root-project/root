@@ -1850,33 +1850,19 @@ void TGTextEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   if (fBackground != GetWhitePixel())
-      SaveUserColor(out, option);
+   // store options and color if differ from defauls
+   TString extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder, kTRUE);
 
    out << "   TGTextEntry *" << GetName() << " = new TGTextEntry(" << fParent->GetName() << ", new TGTextBuffer("
        << GetBuffer()->GetBufferLength() << ")";
+   if (!extra_args.IsNull() || (fFontStruct != GetDefaultFontStruct()))
+      out << ", " << fWidgetId << ", " << parGC << ", " << parFont << extra_args;
+   else if (fNormGC() != GetDefaultGC()())
+      out << ", " << fWidgetId << ", " << parGC;
+   else if (fWidgetId != -1)
+      out << ", " << fWidgetId;
+   out << ");\n";
 
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         if (fFontStruct == GetDefaultFontStruct()) {
-            if (fNormGC() == GetDefaultGC()()) {
-               if (fWidgetId == -1) {
-                  out << ");\n";
-               } else {
-                  out << "," << fWidgetId << ");\n";
-               }
-            } else {
-               out << "," << fWidgetId << "," << parGC << ");\n";
-            }
-         } else {
-            out << "," << fWidgetId << "," << parGC << "," << parFont << ");\n";
-         }
-      } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");\n";
-      }
-   } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ",ucolor);\n";
-   }
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
@@ -1895,12 +1881,10 @@ void TGTextEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetName() << "->GetDefaultHeight());\n";
 
-   if ((fDefWidth > 0) || (fDefHeight > 0)) {
+   if ((fDefWidth > 0) || (fDefHeight > 0))
       out << "   " << GetName() << "->SetDefaultSize(" << fDefWidth << "," << fDefHeight << ");\n";
-   }
 
-   if (fTip) {
-      TString tiptext = fTip->GetText()->GetString();
-      out << "   " << GetName() << "->SetToolTipText(\"" << tiptext.ReplaceSpecialCppChars() << "\");\n";
-   }
+   if (fTip)
+      out << "   " << GetName() << "->SetToolTipText(\""
+          << TString(fTip->GetText()->GetString()).ReplaceSpecialCppChars() << "\");\n";
 }
