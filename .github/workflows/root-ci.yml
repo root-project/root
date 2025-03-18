@@ -609,17 +609,22 @@ jobs:
           ccache -s || true
 
       - name: Install
-        if: ${{ success() && !matrix.is_special }}
-        run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
+        id: install
+        run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}
+
+      - name: Check headers
+        if: steps.install.outcome == 'success'
+        run: bash test/PostInstall/check-headers.sh ${{ env.INSTALL_DIR }}/include/
 
       - name: Build post-install test project
-        if: ${{ success() && !matrix.is_special }}
+        id: postInstall
+        if: steps.install.outcome == 'success'
         run: |
           cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
           cmake --build ${{ env.POST_INSTALL_DIR }};
 
       - name: CTest in post-install test project
-        if: ${{ success() && !matrix.is_special }}
+        if: steps.postInstall.outcome == 'success' && matrix.property != 'asan'
         working-directory: ${{ env.POST_INSTALL_DIR }}
         run: ctest --output-on-failure -j $(nproc)
 
