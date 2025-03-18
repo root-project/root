@@ -190,40 +190,26 @@ TString TGMdiFrame::GetMdiHintsString() const
 
 void TGMdiFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out);
 
    TGMdiTitleBar *tb = fMain->GetWindowList()->GetDecorFrame()->GetTitleBar();
 
-   out << std::endl <<"   // MDI frame "<< quote << GetWindowName() << quote << std::endl;
-   out << "   TGMdiFrame *";
-   out << GetName() << " = new TGMdiFrame(" << fMain->GetName()
-       << "," << GetWidth() + GetBorderWidth()*2
-       << "," << GetHeight() + tb->GetHeight() + GetBorderWidth()*2;
+   out << "\n   // MDI frame \"" << GetWindowName() << "\"\n";
+   out << "   TGMdiFrame *" << GetName() << " = new TGMdiFrame(" << fMain->GetName() << ","
+       << GetWidth() + GetBorderWidth() * 2 << "," << GetHeight() + tb->GetHeight() + GetBorderWidth() * 2 << extra_args
+       << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out << ");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    SavePrimitiveSubframes(out, option);
 
-   out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
-       << quote << ");" << std::endl;
-   out << "   " << GetName() << "->SetMdiHints(" << GetMdiHintsString()
-       << ");" << std::endl;
+   out << "   " << GetName() << "->SetWindowName(\"" << TString(GetWindowName()).ReplaceSpecialCppChars() << "\");\n";
+   out << "   " << GetName() << "->SetMdiHints(" << GetMdiHintsString() << ");\n";
    if ((GetX() != 5) && (GetY() != 23))
-      out << "   " << GetName() << "->Move(" << GetX() << "," << GetY()
-          << ");" << std::endl;
+      out << "   " << GetName() << "->Move(" << GetX() << "," << GetY() << ");\n";
 
-   out << "   " << GetName() << "->MapSubwindows();" << std::endl;
-   out << "   " << GetName() << "->Layout();" << std::endl;
+   out << "   " << GetName() << "->MapSubwindows();\n";
+   out << "   " << GetName() << "->Layout();\n";
 }
