@@ -648,26 +648,24 @@ void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGVFileSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   if (fBackground != GetDefaultFrameBackground())
+      SaveUserColor(out, option);
 
-   out << "   TGVFileSplitter *";
-   out << GetName() <<" = new TGVFileSplitter("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGVFileSplitter *" << GetName() << " = new TGVFileSplitter(" << fParent->GetName() << "," << GetWidth()
+       << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << std::endl;
+         out << ");\n";
       } else {
-         out << "," << GetOptionString() <<");" << std::endl;
+         out << "," << GetOptionString() << ");\n";
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
+      out << "," << GetOptionString() << ",ucolor);\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-   if (GetLeft()) out << ",kTRUE);" << std::endl;
-   else           out << ",kFALSE);"<< std::endl;
+   out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName() << ", " << (GetLeft() ? "kTRUE" : "kFALSE")
+       << ");\n";
 }
-

@@ -458,8 +458,6 @@ Bool_t TGLabel::HasOwnFont() const
 
 void TGLabel::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    TString parGC, parFont;
@@ -480,43 +478,40 @@ void TGLabel::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   if (fBackground != GetDefaultFrameBackground())
+      SaveUserColor(out, option);
 
    TString label = GetText()->GetString();
-   label.ReplaceAll("\"","\\\"");
-   label.ReplaceAll("\n","\\n");
 
-   out << "   TGLabel *";
-   out << GetName() << " = new TGLabel("<< fParent->GetName()
-       << "," << quote << label << quote;
+   out << "   TGLabel *" << GetName() << " = new TGLabel("<< fParent->GetName()
+       << ", \"" << label.ReplaceSpecialCppChars() << "\"";
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
          if (fFont->GetFontStruct() == GetDefaultFontStruct()) {
             if (fNormGC == GetDefaultGC()()) {
-               out <<");" << std::endl;
+               out <<");\n";
             } else {
-               out << "," << parGC.Data() << ");" << std::endl;
+               out << "," << parGC << ");\n";
             }
          } else {
-            out << "," << parGC.Data() << "," << parFont.Data() << ");" << std::endl;
+            out << "," << parGC << "," << parFont << ");\n";
          }
       } else {
-         out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() <<");" << std::endl;
+         out << "," << parGC << "," << parFont << "," << GetOptionString() <<");\n";
       }
    } else {
-      out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() << ",ucolor);" << std::endl;
+      out << "," << parGC << "," << parFont << "," << GetOptionString() << ", ucolor);\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (fDisabled)
-      out << "   " << GetName() << "->Disable();" << std::endl;
+      out << "   " << GetName() << "->Disable();\n";
 
-   out << "   " << GetName() << "->SetTextJustify(" <<  GetTextJustify() << ");" << std::endl;
-   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << std::endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
-
+   out << "   " << GetName() << "->SetTextJustify(" << GetTextJustify() << ");\n";
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << "," << fMTop << "," << fMBottom
+       << ");\n";
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
