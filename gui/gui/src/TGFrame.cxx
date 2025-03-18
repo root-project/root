@@ -2747,27 +2747,18 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
 
 void TGCompositeFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   if (!strcmp(GetName(),"")) {
-      SetName(Form("fCompositeframe%d",fgCounter));
+   if (!strcmp(GetName(), "")) {
+      SetName(Form("fCompositeframe%d", fgCounter));
       fgCounter++;
    }
 
-   out << std::endl << "   // composite frame" << std::endl;
-   out << "   TGCompositeFrame *";
-   out << GetName() << " = new TGCompositeFrame(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out << ");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
+   out << "\n   // composite frame\n";
+   out << "   TGCompositeFrame *" << GetName() << " = new TGCompositeFrame(" << fParent->GetName() << "," << GetWidth()
+       << "," << GetHeight() << extra_args << ");\n";
+
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
@@ -2775,16 +2766,11 @@ void TGCompositeFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    // coverity[returned_null]
    // coverity[dereference]
    TGLayoutManager *lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) &&
-       (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
-      ;
-   } else if ((GetOptions() & kVerticalFrame) &&
-              (lm->InheritsFrom(TGVerticalLayout::Class()))) {
-      ;
-   } else {
-      out << "   " << GetName() <<"->SetLayoutManager(";
+   if (!((GetOptions() & kHorizontalFrame) && lm->InheritsFrom(TGHorizontalLayout::Class())) &&
+       !((GetOptions() & kVerticalFrame) && lm->InheritsFrom(TGVerticalLayout::Class()))) {
+      out << "   " << GetName() << "->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
    }
 
    SavePrimitiveSubframes(out, option);
@@ -3114,39 +3100,25 @@ void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGHorizontalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   out << std::endl << "   // horizontal frame" << std::endl;
-   out << "   TGHorizontalFrame *";
-   out << GetName() << " = new TGHorizontalFrame(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "\n   // horizontal frame\n";
+   out << "   TGHorizontalFrame *" << GetName() << " = new TGHorizontalFrame(" << fParent->GetName() << ","
+       << GetWidth() << "," << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out << ");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    // setting layout manager if it differs from the main frame type
    // coverity[returned_null]
    // coverity[dereference]
-   TGLayoutManager * lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) &&
-       (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
-      ;
-   } else if ((GetOptions() & kVerticalFrame) &&
-              (lm->InheritsFrom(TGVerticalLayout::Class()))) {
-      ;
-   } else {
-      out << "   " << GetName() <<"->SetLayoutManager(";
+   TGLayoutManager *lm = GetLayoutManager();
+   if (!((GetOptions() & kHorizontalFrame) && lm->InheritsFrom(TGHorizontalLayout::Class())) &&
+       !((GetOptions() & kVerticalFrame) && lm->InheritsFrom(TGVerticalLayout::Class()))) {
+      out << "   " << GetName() << "->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
    }
 
    SavePrimitiveSubframes(out, option);
@@ -3157,39 +3129,25 @@ void TGHorizontalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""
 
 void TGVerticalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   out << std::endl << "   // vertical frame" << std::endl;
-   out << "   TGVerticalFrame *";
-   out << GetName() << " = new TGVerticalFrame(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "\n   // vertical frame\n";
+   out << "   TGVerticalFrame *" << GetName() << " = new TGVerticalFrame(" << fParent->GetName() << "," << GetWidth()
+       << "," << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    // setting layout manager if it differs from the main frame type
    // coverity[returned_null]
    // coverity[dereference]
-   TGLayoutManager * lm = GetLayoutManager();
-   if ((GetOptions() & kHorizontalFrame) &&
-       (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
-      ;
-   } else if ((GetOptions() & kVerticalFrame) &&
-              (lm->InheritsFrom(TGVerticalLayout::Class()))) {
-      ;
-   } else {
-      out << "   " << GetName() <<"->SetLayoutManager(";
+   TGLayoutManager *lm = GetLayoutManager();
+   if (!((GetOptions() & kHorizontalFrame) && lm->InheritsFrom(TGHorizontalLayout::Class())) &&
+       !((GetOptions() & kVerticalFrame) && lm->InheritsFrom(TGVerticalLayout::Class()))) {
+      out << "   " << GetName() << "->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
    }
 
    SavePrimitiveSubframes(out, option);
@@ -3200,23 +3158,14 @@ void TGVerticalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
 
 void TGFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out);
 
-   out << "   TGFrame *";
-   out << GetName() << " = new TGFrame("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGFrame *" << GetName() << " = new TGFrame("<< fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3224,19 +3173,18 @@ void TGFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGGroupFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
    // font + GC
-   option = GetName()+5;         // unique digit id of the name
+   option = GetName() + 5; // unique digit id of the name
    TString parGC, parFont;
    // coverity[returned_null]
    // coverity[dereference]
-   parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
+   parFont.Form("%s::GetDefaultFontStruct()", IsA()->GetName());
    // coverity[returned_null]
    // coverity[dereference]
-   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
+   parGC.Form("%s::GetDefaultGC()()", IsA()->GetName());
 
-   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC) ||
+       (fBackground != GetDefaultFrameBackground())) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
@@ -3250,53 +3198,48 @@ void TGGroupFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   if (fBackground != GetDefaultFrameBackground())
+      SaveUserColor(out, option);
 
-   out << std::endl << "   // " << quote << GetTitle() << quote << " group frame" << std::endl;
-   out << "   TGGroupFrame *";
-   out << GetName() <<" = new TGGroupFrame("<<fParent->GetName()
-       << "," << quote << GetTitle() << quote;
+   out << "\n   // \"" << GetTitle() << "\" group frame\n";
+   out << "   TGGroupFrame *" << GetName() << " = new TGGroupFrame(" << fParent->GetName() << ", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\"";
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (GetOptions() & kVerticalFrame) {
-               out <<");" << std::endl;
+               out << ");\n";
             } else {
-               out << "," << GetOptionString() <<");" << std::endl;
+               out << "," << GetOptionString() << ");\n";
             }
          } else {
-            out << "," << GetOptionString() << "," << parGC.Data() <<");" << std::endl;
+            out << "," << GetOptionString() << "," << parGC << ");\n";
          }
       } else {
-         out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ");" << std::endl;
+         out << "," << GetOptionString() << "," << parGC << "," << parFont << ");\n";
       }
    } else {
-      out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);"  << std::endl;
+      out << "," << GetOptionString() << "," << parGC << "," << parFont << ", ucolor);\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (GetTitlePos() != -1)
-      out << "   " << GetName() <<"->SetTitlePos(";
-   if (GetTitlePos() == 0)
-      out << "TGGroupFrame::kCenter);" << std::endl;
-   if (GetTitlePos() == 1)
-      out << "TGGroupFrame::kRight);" << std::endl;
+      out << "   " << GetName() << "->SetTitlePos(TGGroupFrame::" << (GetTitlePos() == 0 ? "kCenter" : "kRight")
+          << ");\n";
 
    SavePrimitiveSubframes(out, option);
 
    // setting layout manager
-   out << "   " << GetName() <<"->SetLayoutManager(";
+   out << "   " << GetName() << "->SetLayoutManager(";
    // coverity[returned_null]
    // coverity[dereference]
    GetLayoutManager()->SavePrimitive(out, option);
-   out << ");"<< std::endl;
+   out << ");\n";
 
-   out << "   " << GetName() <<"->Resize(" << GetWidth() << ","
-       << GetHeight() << ");" << std::endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight() << ");\n";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the GUI transient frame widget in a C++ macro file.
