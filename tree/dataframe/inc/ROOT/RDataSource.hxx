@@ -17,6 +17,7 @@
 #include "TString.h"
 
 #include <algorithm> // std::transform
+#include <cassert>
 #include <string>
 #include <typeinfo>
 #include <vector>
@@ -130,7 +131,12 @@ public:
    /// Slots numbers are used to simplify parallel execution: RDataFrame guarantees that different threads will always
    /// pass different slot values when calling methods concurrently.
    // clang-format on
-   virtual void SetNSlots(unsigned int nSlots) = 0;
+   virtual void SetNSlots(unsigned int nSlots)
+   {
+      assert(fNSlots == 0);
+      assert(nSlots > 0);
+      fNSlots = nSlots;
+   };
 
    /// \brief Returns the number of files from which the dataset is constructed
    virtual std::size_t GetNFiles() const { return 0; }

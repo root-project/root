@@ -48,8 +48,6 @@ public:
    RArraysDS &operator=(RArraysDS &&) = delete;
    ~RArraysDS() final = default;
 
-   void SetNSlots(unsigned int) final { }
-
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
 
    bool HasColumn(std::string_view name) const final
