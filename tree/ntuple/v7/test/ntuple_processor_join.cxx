@@ -287,6 +287,53 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
+TEST_F(RNTupleJoinProcessorTest, WithBareModel)
+{
+   auto primaryModel = RNTupleModel::CreateBare();
+   primaryModel->MakeField<int>("i");
+   primaryModel->MakeField<float>("x");
+
+   std::vector<std::unique_ptr<RNTupleModel>> auxModels;
+
+   auxModels.push_back(RNTupleModel::CreateBare());
+   auxModels.back()->MakeField<std::vector<float>>("y");
+
+   auxModels.push_back(RNTupleModel::CreateBare());
+   auxModels.back()->MakeField<float>("z");
+
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]},
+                                            {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
+                                            std::move(primaryModel), std::move(auxModels));
+
+   auto i = proc->GetEntry().GetPtr<int>("i");
+   auto x = proc->GetEntry().GetPtr<float>("x");
+   auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple2.y");
+   auto z = proc->GetEntry().GetPtr<float>("ntuple3.z");
+
+   int nEntries = 0;
+   std::vector<float> yExpected;
+   for (auto &entry : *proc) {
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
+
+      EXPECT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
+
+      EXPECT_FLOAT_EQ(*i * 0.5f, *x);
+
+      yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+      EXPECT_EQ(yExpected, *y);
+      EXPECT_FLOAT_EQ(static_cast<float>(*i * 2.f), *z);
+
+      try {
+         entry.GetPtr<float>("ntuple2.z");
+         FAIL() << "should not be able to access values from fields not present in the provided models";
+      } catch (const ROOT::RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
+      }
+   }
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
 TEST_F(RNTupleJoinProcessorTest, PartialModels)
 {
    {
