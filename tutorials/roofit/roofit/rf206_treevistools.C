@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofit_main
 /// \notebook -nodraw
 /// Addition and convolution: tools for visualization of RooAbsArg expression trees
 ///
