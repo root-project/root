@@ -214,7 +214,6 @@ class RLoopManager : public RNodeBase {
 public:
    RLoopManager(const ColumnNames_t &defaultColumns = {});
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
-   RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
    RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
@@ -255,12 +254,14 @@ public:
    void ToJitExec(const std::string &) const;
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
-   bool HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const;
-   void AddDataSourceColumnReaders(const std::string &col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
+   bool HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const;
+   void AddDataSourceColumnReaders(std::string_view col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
                                    const std::type_info &ti);
-   RColumnReaderBase *AddTreeColumnReader(unsigned int slot, const std::string &col,
+   RColumnReaderBase *AddTreeColumnReader(unsigned int slot, std::string_view col,
                                           std::unique_ptr<RColumnReaderBase> &&reader, const std::type_info &ti);
-   RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
+   RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, std::string_view col, const std::type_info &ti) const;
+   RColumnReaderBase *AddDataSourceColumnReader(unsigned int slot, std::string_view col, const std::type_info &ti,
+                                                TTreeReader *treeReader);
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) final {}
