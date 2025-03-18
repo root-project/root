@@ -566,7 +566,7 @@ TEST_P(RDatasetSpecTest, SaveGraph)
    static const std::string expectedGraph(
       "digraph {\n"
       "\t1 [label=\"Sum\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t0 [label=\"TChain\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
+      "\t0 [label=\"TTreeDS\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
       "\t2 [label=\"Sum\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
       "\t0 -> 1;\n"
       "\t0 -> 2;\n"

@@ -922,7 +922,7 @@ TEST(RDataFrameInterface, PrintValueFromTree)
    TTree t("t", "t");
    RDataFrame df(t);
    auto printValue = cling::printValue(&df);
-   EXPECT_EQ(printValue, "A data frame built on top of the t dataset.");
+   EXPECT_EQ(printValue, "A data frame associated to the data source \"TTree data source\"");
 }
 
 TEST(RDataFrameInterface, PrintValueNoData)
@@ -960,7 +960,10 @@ TEST(RDataFrameInterface, GetNFilesFromTChain)
 {
    std::vector<std::string> filenames{"GetNFilesFromTChain1.root", "GetNFilesFromTChain2.root",
                                       "GetNFilesFromTChain3.root"};
-   TChain c{"chain"};
+   TreeInFileRAII r1{filenames[0]};
+   TreeInFileRAII r2{filenames[1]};
+   TreeInFileRAII r3{filenames[2]};
+   TChain c{"t"};
    for (const auto &fn : filenames)
       c.Add(fn.c_str());
    ROOT::RDataFrame df{c};

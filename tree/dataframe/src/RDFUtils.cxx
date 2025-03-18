@@ -12,6 +12,8 @@
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RSample.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h"
@@ -235,7 +237,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
    if (define) {
       colType = define->GetTypeName();
    } else if (ds && ds->HasColumn(colName)) {
-      colType = ds->GetTypeName(colName);
+      colType = ROOT::Internal::RDF::GetTypeNameWithOpts(*ds, colName, vector2RVec);
    } else if (tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
       if (vector2RVec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {

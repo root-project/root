@@ -358,9 +358,9 @@ TEST(RDFHelpers, SaveGraphRootFromTree)
    t.Write();
    f.Close();
 
-   static const std::string expectedGraph(
-      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=\"t\", "
-      "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
+   static const std::string expectedGraph("digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", "
+                                          "shape=\"box\"];\n\t0 [label=\"TTreeDS\", "
+                                          "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
 
    ROOT::RDataFrame df("t", "savegraphrootfromtree.root");
    auto c = df.Count();
@@ -381,9 +381,9 @@ TEST(RDFHelpers, SaveGraphToFile)
    t.Write();
    f.Close();
 
-   static const std::string expectedGraph(
-      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=\"t\", "
-      "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
+   static const std::string expectedGraph("digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", "
+                                          "shape=\"box\"];\n\t0 [label=\"TTreeDS\", "
+                                          "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
 
    ROOT::RDataFrame df("t", "savegraphtofile.root");
    auto c = df.Count();

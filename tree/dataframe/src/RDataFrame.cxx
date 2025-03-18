@@ -11,6 +11,7 @@
 #include "ROOT/InternalTreeUtils.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
+#include "ROOT/RTTreeDS.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
@@ -1789,19 +1790,9 @@ using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 /// booking of actions or transformations.
 /// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultColumns)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(
+        std::make_unique<ROOT::Internal::RDF::RTTreeDS>(treeName, dirPtr), defaultColumns))
 {
-   if (!dirPtr) {
-      auto msg = "Invalid TDirectory!";
-      throw std::runtime_error(msg);
-   }
-   const std::string treeNameInt(treeName);
-   auto tree = static_cast<TTree *>(dirPtr->Get(treeNameInt.c_str()));
-   if (!tree) {
-      auto msg = "Tree \"" + treeNameInt + "\" cannot be found!";
-      throw std::runtime_error(msg);
-   }
-   GetProxiedPtr()->SetTree(std::shared_ptr<TTree>(tree, [](TTree *) {}));
 }
 
 ////////////////////////////////////////////////////////////////////////////
