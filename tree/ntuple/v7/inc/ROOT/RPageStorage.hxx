@@ -49,14 +49,14 @@ namespace ROOT {
 namespace Internal {
 class RPageAllocator;
 class RColumn;
+struct RNTupleModelChangeset;
 }
-
-namespace Experimental {
 
 class RNTupleModel;
 
+namespace Experimental {
+
 namespace Internal {
-struct RNTupleModelChangeset;
 
 enum class EPageStorageType {
    kSink,
@@ -357,7 +357,7 @@ public:
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
-   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) = 0;
+   virtual void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) = 0;
    /// Adds an extra type information record to schema. The extra type information will be written to the
    /// extension header. The information in the record will be merged with the existing information, e.g.
    /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
@@ -527,7 +527,7 @@ public:
 
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
-   void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder, optionally copying over

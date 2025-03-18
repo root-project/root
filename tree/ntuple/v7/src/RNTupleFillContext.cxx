@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <utility>
 
-ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<RNTupleModel> model,
+ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model,
                                                            std::unique_ptr<Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
@@ -57,7 +57,7 @@ ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
 
 void ROOT::Experimental::RNTupleFillContext::FlushColumns()
 {
-   for (auto &field : Internal::GetFieldZeroOfModel(*fModel)) {
+   for (auto &field : ROOT::Internal::GetFieldZeroOfModel(*fModel)) {
       ROOT::Internal::CallFlushColumnsOnField(field);
    }
 }
@@ -67,7 +67,7 @@ void ROOT::Experimental::RNTupleFillContext::FlushCluster()
    if (fNEntries == fLastFlushed) {
       return;
    }
-   for (auto &field : Internal::GetFieldZeroOfModel(*fModel)) {
+   for (auto &field : ROOT::Internal::GetFieldZeroOfModel(*fModel)) {
       ROOT::Internal::CallCommitClusterOnField(field);
    }
    auto nEntriesInCluster = fNEntries - fLastFlushed;

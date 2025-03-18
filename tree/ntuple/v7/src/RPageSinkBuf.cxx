@@ -86,15 +86,15 @@ const ROOT::RNTupleDescriptor &ROOT::Experimental::Internal::RPageSinkBuf::GetDe
    return fInnerSink->GetDescriptor();
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
+void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(ROOT::RNTupleModel &model)
 {
-   ConnectFields(Internal::GetFieldZeroOfModel(model).GetMutableSubfields(), 0U);
+   ConnectFields(ROOT::Internal::GetFieldZeroOfModel(model).GetMutableSubfields(), 0U);
 
    fInnerModel = model.Clone();
    fInnerSink->Init(*fInnerModel);
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
+void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset,
                                                               ROOT::NTupleSize_t firstEntry)
 {
    ConnectFields(changeset.fAddedFields, firstEntry);
@@ -110,17 +110,17 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModel
    auto cloneAddProjectedField = [&](ROOT::RFieldBase *field) {
       auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
-      auto &projectedFields = Internal::GetProjectedFieldsOfModel(changeset.fModel);
-      Internal::RProjectedFields::FieldMap_t fieldMap;
+      auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(changeset.fModel);
+      ROOT::Internal::RProjectedFields::FieldMap_t fieldMap;
       fieldMap[p] = &fInnerModel->GetConstField(projectedFields.GetSourceField(field)->GetQualifiedFieldName());
       auto targetIt = cloned->begin();
       for (auto &f : *field)
          fieldMap[&(*targetIt++)] =
             &fInnerModel->GetConstField(projectedFields.GetSourceField(&f)->GetQualifiedFieldName());
-      Internal::GetProjectedFieldsOfModel(*fInnerModel).Add(std::move(cloned), fieldMap);
+      ROOT::Internal::GetProjectedFieldsOfModel(*fInnerModel).Add(std::move(cloned), fieldMap);
       return p;
    };
-   RNTupleModelChangeset innerChangeset{*fInnerModel};
+   ROOT::Internal::RNTupleModelChangeset innerChangeset{*fInnerModel};
    fInnerModel->Unfreeze();
    std::transform(changeset.fAddedFields.cbegin(), changeset.fAddedFields.cend(),
                   std::back_inserter(innerChangeset.fAddedFields), cloneAddField);

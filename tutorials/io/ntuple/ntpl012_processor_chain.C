@@ -21,7 +21,7 @@
 #include <TRandom.h>
 
 // Import classes from the `Experimental` namespace for the time being.
-using ROOT::Experimental::RNTupleModel;
+using ROOT::RNTupleModel;
 using ROOT::Experimental::RNTupleOpenSpec;
 using ROOT::Experimental::RNTupleProcessor;
 using ROOT::Experimental::RNTupleWriter;

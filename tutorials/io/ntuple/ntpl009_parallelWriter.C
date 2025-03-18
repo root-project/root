@@ -33,7 +33,7 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using ROOT::Experimental::RNTupleModel;
+using ROOT::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 using ROOT::Experimental::RNTupleReader;
 

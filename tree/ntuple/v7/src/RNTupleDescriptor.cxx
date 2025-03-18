@@ -34,7 +34,6 @@
 #include <set>
 #include <utility>
 
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RNTupleSerializer;
 
 bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
@@ -640,8 +639,7 @@ ROOT::RResult<void> ROOT::RNTupleDescriptor::DropClusterGroupDetails(ROOT::Descr
    return RResult<void>::Success();
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel>
-ROOT::RNTupleDescriptor::CreateModel(const RCreateModelOptions &options) const
+std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const RCreateModelOptions &options) const
 {
    auto fieldZero = std::make_unique<ROOT::RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());

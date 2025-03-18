@@ -67,12 +67,12 @@ public:
          }
       }
    }
-   void InitImpl(RNTupleModel &model) final
+   void InitImpl(ROOT::RNTupleModel &model) final
    {
-      auto &fieldZero = GetFieldZeroOfModel(model);
+      auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(model);
       ConnectFields(fieldZero.GetMutableSubfields(), 0);
    }
-   void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final
    {
       ConnectFields(changeset.fAddedFields, firstEntry);
    }

@@ -149,7 +149,7 @@ protected:
    /// Maps the (qualified) field name to its corresponding field context.
    std::unordered_map<std::string, RFieldContext> fFieldContexts;
 
-   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
    /// interface.
@@ -191,7 +191,7 @@ protected:
    ///
    /// \note Before processing, a model *must* exist. However, this is handled downstream by the RNTupleProcessor's
    /// factory functions (CreateSingle, CreateChain and CreateJoin) and constructors.
-   RNTupleProcessor(std::string_view processorName, std::unique_ptr<RNTupleModel> model)
+   RNTupleProcessor(std::string_view processorName, std::unique_ptr<ROOT::RNTupleModel> model)
       : fProcessorName(processorName), fModel(std::move(model))
    {
    }
@@ -227,7 +227,7 @@ public:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the model used by the processor.
-   const RNTupleModel &GetModel() const { return *fModel; }
+   const ROOT::RNTupleModel &GetModel() const { return *fModel; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a reference to the entry used by the processor.
@@ -302,7 +302,7 @@ public:
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   Create(RNTupleOpenSpec ntuple, std::unique_ptr<RNTupleModel> model = nullptr);
+   Create(RNTupleOpenSpec ntuple, std::unique_ptr<ROOT::RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a single RNTuple.
@@ -316,7 +316,7 @@ public:
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   Create(RNTupleOpenSpec ntuple, std::string_view processorName, std::unique_ptr<RNTupleModel> model = nullptr);
+   Create(RNTupleOpenSpec ntuple, std::string_view processorName, std::unique_ptr<ROOT::RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of RNTuples.
@@ -327,7 +327,7 @@ public:
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
+   CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::unique_ptr<ROOT::RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of RNTuples.
@@ -342,7 +342,7 @@ public:
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor> CreateChain(std::vector<RNTupleOpenSpec> ntuples,
                                                         std::string_view processorName,
-                                                        std::unique_ptr<RNTupleModel> model = nullptr);
+                                                        std::unique_ptr<ROOT::RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of other RNTupleProcessors.
@@ -353,7 +353,7 @@ public:
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor> CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
-                                                        std::unique_ptr<RNTupleModel> model = nullptr);
+                                                        std::unique_ptr<ROOT::RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of other RNTupleProcessors.
@@ -368,7 +368,7 @@ public:
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor> CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
                                                         std::string_view processorName,
-                                                        std::unique_ptr<RNTupleModel> model = nullptr);
+                                                        std::unique_ptr<ROOT::RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
@@ -388,7 +388,7 @@ public:
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
    CreateJoin(RNTupleOpenSpec primaryNTuple, std::vector<RNTupleOpenSpec> auxNTuples,
-              const std::vector<std::string> &joinFields, std::vector<std::unique_ptr<RNTupleModel>> models = {});
+              const std::vector<std::string> &joinFields, std::vector<std::unique_ptr<ROOT::RNTupleModel>> models = {});
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
@@ -412,7 +412,7 @@ public:
    static std::unique_ptr<RNTupleProcessor>
    CreateJoin(RNTupleOpenSpec primaryNTuple, std::vector<RNTupleOpenSpec> auxNTuples,
               const std::vector<std::string> &joinFields, std::string_view processorName,
-              std::vector<std::unique_ptr<RNTupleModel>> models = {});
+              std::vector<std::unique_ptr<ROOT::RNTupleModel>> models = {});
 };
 
 // clang-format off
@@ -458,7 +458,8 @@ private:
    /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::Create, this is
    /// the name of the underlying RNTuple.
    /// \param[in] model The model that specifies which fields should be read by the processor.
-   RNTupleSingleProcessor(RNTupleOpenSpec ntuple, std::string_view processorName, std::unique_ptr<RNTupleModel> model);
+   RNTupleSingleProcessor(RNTupleOpenSpec ntuple, std::string_view processorName,
+                          std::unique_ptr<ROOT::RNTupleModel> model);
 };
 
 // clang-format off
@@ -504,7 +505,7 @@ private:
    ///
    /// RNTuples are processed in the order in which they are specified.
    RNTupleChainProcessor(std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName,
-                         std::unique_ptr<RNTupleModel> model);
+                         std::unique_ptr<ROOT::RNTupleModel> model);
 };
 
 // clang-format off
@@ -556,7 +557,7 @@ private:
    /// each RNTuple specified in `mainNTuple` and `auxNTuple`.
    RNTupleJoinProcessor(RNTupleOpenSpec mainNTuple, std::vector<RNTupleOpenSpec> auxNTuples,
                         const std::vector<std::string> &joinFields, std::string_view processorName,
-                        std::vector<std::unique_ptr<RNTupleModel>> models = {});
+                        std::vector<std::unique_ptr<ROOT::RNTupleModel>> models = {});
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add an auxiliary RNTuple to the processor.
@@ -567,7 +568,7 @@ private:
    /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
    /// specified, it is created from the RNTuple's descriptor.
    void AddAuxiliary(const RNTupleOpenSpec &auxNTuple, const std::vector<std::string> &joinFields,
-                     std::unique_ptr<RNTupleModel> model = nullptr);
+                     std::unique_ptr<ROOT::RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect all fields, once the primary and all auxiliary RNTuples have been added.
