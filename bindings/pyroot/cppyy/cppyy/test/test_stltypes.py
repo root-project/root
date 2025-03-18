@@ -287,7 +287,7 @@ class TestSTLVECTOR:
         v.__destruct__()
 
     def test03_empty_vector_type(self):
-        """Test behavior of empty std::vector<int>"""
+        """Test behavior of empty std::vector<>"""
 
         import cppyy
 
@@ -296,6 +296,9 @@ class TestSTLVECTOR:
         for arg in v:
             pass
         v.__destruct__()
+
+        for x in cppyy.gbl.std.vector["std::string*"]():
+            pass
 
     def test04_vector_iteration(self):
         """Test iteration over an std::vector<int>"""
@@ -1670,6 +1673,7 @@ class TestSTLSTRING_VIEW:
         if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") <= 201402:
             # string_view exists as of C++17
             return
+
         countit = cppyy.gbl.StringViewTest.count
         countit_cr = cppyy.gbl.StringViewTest.count_cr
 
@@ -1687,6 +1691,9 @@ class TestSTLSTRING_VIEW:
         """Life-time management of converted unicode strings"""
 
         import cppyy, gc
+        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") <= 201402:
+            # string_view exists as of C++17
+            return
 
         # view on (converted) unicode
         text = cppyy.gbl.std.string_view('''\

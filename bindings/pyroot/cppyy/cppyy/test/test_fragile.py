@@ -654,6 +654,67 @@ class TestFRAGILE:
         cppyy.cppdef("struct VectorDatamember { std::vector<unsigned> v; };")
         cppyy.gbl.VectorDatamember     # used to crash on Mac arm64
 
+    def test30_two_nested_ambiguity(self):
+        """Nested class ambiguity in older Clangs"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        #include <vector>
+
+        namespace Test {
+        struct Common { std::string name; };
+        struct Family1 {
+            struct Parent : Common {
+                struct Child : Common { };
+                std::vector<Child> children;
+            };
+        };
+
+        struct Family2 {
+            struct Parent : Common {
+                struct Child : Common { };
+                std::vector<Child> children;
+            };
+        }; }""")
+
+        from cppyy.gbl import Test
+
+        p = Test.Family1.Parent()
+        p.children                          # used to crash
+
+    def test31_template_with_class_enum(self):
+        """Template instantiated with class enum"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        enum class ClassEnumA { A, };
+
+        template<ClassEnumA T>
+        struct EnumTemplate {
+          int foo();
+        };
+
+        template<> int EnumTemplate<ClassEnumA::A>::foo() { return 42; }
+        template class EnumTemplate<ClassEnumA::A>;
+
+        namespace ClassEnumNS {
+          enum class ClassEnumA { A, };
+
+          template<ClassEnumA T>
+          struct EnumTemplate {
+            int foo();
+          };
+
+          template<> int EnumTemplate<ClassEnumA::A>::foo() { return 37; }
+          template class EnumTemplate<ClassEnumA::A>;
+        }""")
+
+        for ns, val in [(cppyy.gbl, 42),
+                        (cppyy.gbl.ClassEnumNS, 37)]:
+            assert ns.EnumTemplate[ns.ClassEnumA.A]().foo() == val
+
 
 class TestSIGNALS:
     def setup_class(cls):

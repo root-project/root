@@ -7,7 +7,7 @@
 #include "Dimensions.h"
 
 // Standard
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 #include <cstddef>
 #endif
 
@@ -65,7 +65,7 @@ CPPYY_ARRAY_DECL_EXEC(Void);
 CPPYY_ARRAY_DECL_EXEC(Bool);
 CPPYY_ARRAY_DECL_EXEC(SChar);
 CPPYY_ARRAY_DECL_EXEC(UChar);
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_ARRAY_DECL_EXEC(Byte);
 #endif
 CPPYY_ARRAY_DECL_EXEC(Int8);

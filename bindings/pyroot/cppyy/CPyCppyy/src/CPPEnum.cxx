@@ -204,10 +204,13 @@ CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppSco
                 values_ok = false;
                 break;
             }
-            PyObject* pydname = CPyCppyy_PyText_FromString(Cppyy::GetEnumDataName(etype, idata).c_str());
+            const std::string& dname = Cppyy::GetEnumDataName(etype, idata);
+            PyObject* pydname = CPyCppyy_PyText_FromString(dname.c_str());
             PyObject_SetAttr(pyenum, pydname, val);
-            PyObject_SetAttr(val, PyStrings::gCppName, pydname);
             Py_DECREF(pydname);
+            PyObject* pydcppname = CPyCppyy_PyText_FromString((ename.empty() ? dname : (ename+"::"+dname)).c_str());
+            PyObject_SetAttr(val, PyStrings::gCppName, pydcppname);
+            Py_DECREF(pydcppname);
             Py_DECREF(val);
         }
 
