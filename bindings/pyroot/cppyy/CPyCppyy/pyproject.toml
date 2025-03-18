@@ -1,2 +1,2 @@
 [build-system]
-requires = ["cppyy-cling==6.30.0", "cppyy-backend==1.15.2", "setuptools", "wheel"]
+requires = ["cppyy-cling==6.32.8", "cppyy-backend==1.15.3", "setuptools", "wheel"]

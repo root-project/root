@@ -10,8 +10,20 @@ mv cppyy/CMakeLists.txt cppyy_CMakeLists.txt
 rm -rf CPyCppyy
 rm -rf cppyy
 
-git clone --depth 1 --branch CPyCppyy-1.13.0 https://github.com/wlav/CPyCppyy.git
-git clone --depth 1 --branch cppyy-3.5.0 https://github.com/wlav/cppyy.git
+# If we want to clone specific branches:
+# git clone --depth 1 --branch CPyCppyy-1.13.0 https://github.com/wlav/CPyCppyy.git
+# git clone --depth 1 --branch cppyy-3.5.0 https://github.com/wlav/cppyy.git
+
+git clone https://github.com/wlav/CPyCppyy.git
+git clone https://github.com/wlav/cppyy.git
+
+cd CPyCppyy/
+git reset --hard 519071905e5d6590e924932c20d3a8e4a7eeff13
+cd ../
+
+cd cppyy/
+git reset --hard 48468034cae4f06a1d33c1c3f086c38a6e2e7c3a
+cd ../
 
 rm -rf CPyCppyy/.git
 rm -rf cppyy/.git
@@ -31,7 +43,6 @@ git apply patches/CPyCppyy-Prevent-construction-of-agg-init-for-tuple.patch
 git apply patches/CPyCppyy-Support-conversion-from-str-to-char.patch # https://github.com/wlav/CPyCppyy/pull/21
 git apply patches/CPyCppyy-Perform-function-style-casts.patch # https://github.com/wlav/CPyCppyy/pull/34
 git apply patches/CPyCppyy-Use-PyMapping_GetOptionalItemString-where-necessary.patch # https://github.com/wlav/CPyCppyy/pull/44
-git apply patches/CPyCppyy-Avoid-nullptr-dereferencing.patch # https://github.com/wlav/CPyCppyy/pull/45
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch

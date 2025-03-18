@@ -1339,3 +1339,36 @@ class TestREGRESSION:
             raise # rethrow the exception
         finally:
             cppyy._backend.SetMemoryPolicy(old_memory_policy)
+
+    def test45_typedef_resolution(self):
+        """Typedefs starting with 'c'"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        typedef const int my_custom_type_t;
+        typedef const int cmy_custom_type_t;
+        """)
+
+        assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("my_custom_type_t") == "const int"
+        assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("cmy_custom_type_t") == "const int"
+
+    def test46_exception_narrowing(self):
+        """Exception narrowing to C++ exception of all overloads"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace OverloadThrows {
+        class Foo {
+        public:
+            void bar() { throw std::logic_error("This is fine"); }
+            void bar() const { throw std::logic_error("This is fine"); }
+        }; }""")
+
+        ns = cppyy.gbl.OverloadThrows
+
+        foo = ns.Foo()
+        with raises(cppyy.gbl.std.logic_error):
+            foo.bar()
+

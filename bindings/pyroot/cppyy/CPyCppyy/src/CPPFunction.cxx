@@ -102,6 +102,14 @@ PyObject* CPyCppyy::CPPFunction::Call(CPPInstance*& self,
     return result;
 }
 
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPFunction::GetTypeName()
+{
+    PyObject* cppname = CPyCppyy_PyText_FromString((GetReturnTypeName() + " (*)").c_str());
+    CPyCppyy_PyText_AppendAndDel(&cppname, GetSignature(false /* show_formalargs */));
+    return cppname;
+}
+
 
 //- CPPReverseBinary private helper ---------------------------------------------
 bool CPyCppyy::CPPReverseBinary::ProcessArgs(PyCallArgs& cargs)

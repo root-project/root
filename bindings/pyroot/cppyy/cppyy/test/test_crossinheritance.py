@@ -1768,3 +1768,41 @@ class TestCROSSINHERITANCE:
         assert pysub.f2() == "Python: PySub::f2()"
         assert pysub.f3() == "Python: PySub::f3()"
         assert ns.call_fs(pysub) == pysub.f1() + pysub.f2() + pysub.f3()
+
+    def test38_protected_data(self):
+        """Multiple cross inheritance with protected data"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace multiple_inheritance_with_protected_data {
+        class MyBaseClass {
+        public:
+            virtual ~MyBaseClass() {}
+
+        protected:
+            int x = 0;
+            std::string s = "Hello";
+            int y = 0;
+            std::string t = "World";
+            int z = 0;
+        public:
+            MyBaseClass(int x, int y, int z) : x(x), y(y), z(z) {}
+            int get_x() { return x; }
+            int get_y() { return y; }
+            int get_z() { return z; }
+        }; }""")
+
+        ns = cppyy.gbl.multiple_inheritance_with_protected_data
+
+        class MyDerivedClass(ns.MyBaseClass):
+            def __init__(self, x, y, z):
+                super(MyDerivedClass, self).__init__(x, y, z)
+
+        derived = MyDerivedClass(5, 7, 9)
+        assert derived.get_x() == derived.x
+        assert derived.get_y() == derived.y
+        assert derived.get_z() == derived.z
+        assert derived.s == "Hello"
+        assert derived.t == "World"
+

@@ -6,7 +6,7 @@ cppyy: Python-C++ bindings interface based on Cling/LLVM
 cppyy provides fully automatic, dynamic Python-C++ bindings by leveraging
 the Cling C++ interpreter and LLVM.
 It supports both PyPy (natively), CPython, and C++ language standards
-through C++17 (and parts of C++20).
+through C++20 (and parts of C++13).
 
 Details and performance are described in
 `this paper <http://cern.ch/wlav/Cppyy_LavrijsenDutta_PyHPC16.pdf>`_,

@@ -531,3 +531,32 @@ class TestCPP11FEATURES:
         p2 = c.pget()
         assert p1 is p2
 
+    def test19_smartptr_from_callback(self):
+        """Return a smart pointer from a callback"""
+
+        import cppyy
+
+        cppyy.cppdef(r"""\
+        namespace SmartPtrCallback {
+        struct Dummy {
+            virtual ~Dummy() = default;
+        };
+
+        std::shared_ptr<Dummy> dummy_create() {
+            return std::make_shared<Dummy>();
+        }
+
+        typedef std::shared_ptr<Dummy> (*fff)();
+
+        std::shared_ptr<Dummy> call_creator(fff func) {
+            return func();
+        }}""")
+
+        std = cppyy.gbl.std
+        ns = cppyy.gbl.SmartPtrCallback
+
+        def pyfunc() -> std.shared_ptr[ns.Dummy]:
+             return ns.dummy_create()
+
+        assert ns.call_creator(pyfunc)
+

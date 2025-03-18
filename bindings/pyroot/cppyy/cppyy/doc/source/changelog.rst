@@ -10,6 +10,19 @@ See :doc:`packages <packages>`, for details on the package structure.
 PyPy support lags CPython support.
 
 
+master
+------
+
+* Fix crash when looping over empty ``std::vector`` of pointer types.
+* Fix offsets for protected data members for multiple cross-inheritance
+* Remove string_view compatibility header for C++14
+* Fix for typedefs that are mistaken as const
+* Fix versioning/installation issues on specific platforms
+* Avoid ``nullptr`` dereferencing in ``CPyCppyy::BindCppObjectNoCast``
+* Scope values of class enums for template instantiations
+* Fix true/false default arguments when using keywords
+
+
 2024-12-16: 3.5.0
 -----------------
 

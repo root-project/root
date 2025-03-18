@@ -48,3 +48,11 @@ PyObject* CPyCppyy::CPPClassMethod::Call(CPPInstance*&
 // execute function
     return this->Execute(nullptr, 0, ctxt);
 }
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPClassMethod::GetTypeName()
+{
+    PyObject* cppname = CPyCppyy_PyText_FromString((GetReturnTypeName() + " (*)").c_str());
+    CPyCppyy_PyText_AppendAndDel(&cppname, GetSignature(false /* show_formalargs */));
+    return cppname;
+}

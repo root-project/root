@@ -26,7 +26,7 @@
 #include <regex>
 #include <utility>
 #include <sstream>
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 #include <cstddef>
 #include <string_view>
 #endif
@@ -58,7 +58,7 @@ namespace CPyCppyy {
     extern PyObject* gDefaultObject;
 
 // regular expression for matching function pointer
-    static std::regex s_fnptr("\\(:*\\*&*\\)");
+    static std::regex s_fnptr("\\((\\w*:*)*\\*&*\\)");
 }
 
 #if PY_VERSION_HEX < 0x03000000
@@ -1749,7 +1749,7 @@ bool CPyCppyy::name##ArrayConverter::ToMemory(                               \
 CPPYY_IMPL_ARRAY_CONVERTER(Bool,     c_bool,       bool,                 '?', )
 CPPYY_IMPL_ARRAY_CONVERTER(SChar,    c_char,       signed char,          'b', )
 CPPYY_IMPL_ARRAY_CONVERTER(UChar,    c_ubyte,      unsigned char,        'B', )
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_ARRAY_CONVERTER(Byte,     c_ubyte,      std::byte,            'B', )
 #endif
 CPPYY_IMPL_ARRAY_CONVERTER(Int8,     c_byte,       int8_t,               'b', _i8)
@@ -2001,7 +2001,7 @@ bool CPyCppyy::STLWStringConverter::ToMemory(PyObject* value, void* address, PyO
 }
 
 
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPyCppyy::STLStringViewConverter::STLStringViewConverter(bool keepControl) :
     InstanceConverter(Cppyy::GetScope("std::string_view"), keepControl) {}
 
@@ -2238,7 +2238,11 @@ bool CPyCppyy::InstanceConverter::ToMemory(PyObject* value, void* address, PyObj
 {
 // assign value to C++ instance living at <address> through assignment operator
     PyObject* pyobj = BindCppObjectNoCast(address, fClass);
+#if PY_VERSION_HEX >= 0x03080000
+    PyObject* result = PyObject_CallMethodOneArg(pyobj, PyStrings::gAssign, value);
+#else
     PyObject* result = PyObject_CallMethod(pyobj, (char*)"__assign__", (char*)"O", value);
+#endif
     Py_DECREF(pyobj);
 
     if (result) {
@@ -2957,6 +2961,25 @@ PyObject* CPyCppyy::SmartPtrConverter::FromMemory(void* address)
     return BindCppObjectNoCast(address, fSmartPtrType);
 }
 
+bool CPyCppyy::SmartPtrConverter::ToMemory(PyObject* value, void* address, PyObject*)
+{
+// assign value to C++ instance living at <address> through assignment operator (this
+// is similar to InstanceConverter::ToMemory, but prevents wrapping the smart ptr)
+    PyObject* pyobj = BindCppObjectNoCast(address, fSmartPtrType, CPPInstance::kNoWrapConv);
+#if PY_VERSION_HEX >= 0x03080000
+    PyObject* result = PyObject_CallMethodOneArg(pyobj, PyStrings::gAssign, value);
+#else
+    PyObject* result = PyObject_CallMethod(pyobj, (char*)"__assign__", (char*)"O", value);
+#endif
+    Py_DECREF(pyobj);
+
+    if (result) {
+        Py_DECREF(result);
+        return true;
+    }
+    return false;
+}
+
 
 //----------------------------------------------------------------------------
 namespace {
@@ -3497,7 +3520,7 @@ public:
         gf["SCharAsInt[]"] =                gf["signed char ptr"];
         gf["UCharAsInt*"] =                 gf["unsigned char ptr"];
         gf["UCharAsInt[]"] =                gf["unsigned char ptr"];
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte ptr"] =               (cf_t)+[](cdims_t d) { return new ByteArrayConverter{d}; };
 #endif
         gf["int8_t ptr"] =                  (cf_t)+[](cdims_t d) { return new Int8ArrayConverter{d}; };
@@ -3520,7 +3543,7 @@ public:
     // aliases
         gf["signed char"] =                 gf["char"];
         gf["const signed char&"] =          gf["const char&"];
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte"] =                   gf["uint8_t"];
         gf["byte"] =                        gf["uint8_t"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
@@ -3584,7 +3607,7 @@ public:
         gf["const string&"] =               gf["std::string"];
         gf["std::string&&"] =               (cf_t)+[](cdims_t) { return new STLStringMoveConverter{}; };
         gf["string&&"] =                    gf["std::string&&"];
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::string_view"] =            (cf_t)+[](cdims_t) { return new STLStringViewConverter{}; };
         gf[STRINGVIEW] =                    gf["std::string_view"];
         gf["std::string_view&"] =           gf["std::string_view"];

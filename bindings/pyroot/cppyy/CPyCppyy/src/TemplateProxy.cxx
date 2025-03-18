@@ -110,7 +110,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
 
 #if PY_VERSION_HEX >= 0x03080000
     bool isNS = (((CPPScope*)fTI->fPyClass)->fFlags & CPPScope::kIsNamespace);
-    if (!isNS && !fSelf && CPyCppyy_PyArgs_GET_SIZE(args, nargsf)) {
+    if (!isNS && (!fSelf || fSelf == Py_None) && CPyCppyy_PyArgs_GET_SIZE(args, nargsf)) {
         args   += 1;
         nargsf -= 1;
     }

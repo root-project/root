@@ -1001,7 +1001,7 @@ template<> struct typecode_traits<signed char> {
     static constexpr const char* format = "b"; static constexpr const char* name = "SCharAsInt"; };
 template<> struct typecode_traits<unsigned char> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 template<> struct typecode_traits<std::byte> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
 #endif
@@ -1142,7 +1142,7 @@ PyObject* CPyCppyy::CreateLowLevelView(type** address, cdims_t shape) {     \
 CPPYY_IMPL_VIEW_CREATOR(bool);
 CPPYY_IMPL_VIEW_CREATOR(signed char);
 CPPYY_IMPL_VIEW_CREATOR(unsigned char);
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_VIEW_CREATOR(std::byte);
 #endif
 CPPYY_IMPL_VIEW_CREATOR(short);
