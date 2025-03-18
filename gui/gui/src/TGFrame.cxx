@@ -2478,15 +2478,10 @@ Bool_t TGHeaderFrame::HandleMotion(Event_t* event)
 
 void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
+   //  declare a color variable to reflect required user changes
+   if (!gROOT->ClassSaved(TGFrame::Class()))
+      out << "\n   ULong_t ucolor;        // will reflect user color changes\n";
 
-   if (gROOT->ClassSaved(TGFrame::Class())) {
-      out << std::endl;
-   } else {
-      //  declare a color variable to reflect required user changes
-      out << std::endl;
-      out << "   ULong_t ucolor;        // will reflect user color changes" << std::endl;
-   }
    ULong_t ucolor;
    if (option && !strcmp(option, "slider"))
       ucolor = GetDefaultFrameBackground();
@@ -2494,11 +2489,28 @@ void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
       ucolor = GetBackground();
    if ((ucolor != fgUserColor) || (ucolor == GetWhitePixel())) {
       const char *ucolorname = TColor::PixelAsHexString(ucolor);
-      out << "   gClient->GetColorByName(" << quote << ucolorname << quote
-          << ",ucolor);" << std::endl;
+      out << "   gClient->GetColorByName(\"" << ucolorname << "\", ucolor);\n";
       fgUserColor = ucolor;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return options and custom color as constructor args
+/// Used in the SavePrimitive methods, includes comma "," if any argument is not default
+
+TString TGFrame::SaveCtorArgs(std::ostream &out, UInt_t dflt_options)
+{
+   if (GetBackground() == GetDefaultFrameBackground()) {
+      if (GetOptions() == dflt_options)
+         return "";
+      return TString(", ") + GetOptionString();
+   }
+
+   SaveUserColor(out, "");
+
+   return TString(", ") + GetOptionString() + ", ucolor";
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a frame option string - used in SavePrimitive().

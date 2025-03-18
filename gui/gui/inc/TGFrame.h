@@ -128,6 +128,8 @@ protected:
    // some protected methods use in gui builder
    virtual void StartGuiBuilding(Bool_t on = kTRUE);
 
+   TString SaveCtorArgs(std::ostream &out, UInt_t dflt_options = kChildFrame);
+
 private:
    TGFrame(const TGFrame&) = delete;
    TGFrame& operator=(const TGFrame&) = delete;
