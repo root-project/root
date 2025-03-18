@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <fstream>
 #include <limits>
@@ -4603,16 +4604,17 @@ Int_t TH1::GetQuantiles(Int_t n, Double_t *xp, const Double_t *p)
    if (fIntegral[nbins+1] != fEntries) ComputeIntegral();
 
    Int_t i, ibin;
-   Double_t *prob = (Double_t*)p;
    Int_t nq = n;
+   std::unique_ptr<Double_t[]> localProb;
    if (p == nullptr) {
       nq = nbins+1;
-      prob = new Double_t[nq];
-      prob[0] = 0;
+      localProb.reset(new Double_t[nq]);
+      localProb[0] = 0;
       for (i=1;i<nq;i++) {
-         prob[i] = fIntegral[i]/fIntegral[nbins];
+         localProb[i] = fIntegral[i] / fIntegral[nbins];
       }
    }
+   Double_t const *const prob = p ? p : localProb.get();
 
    for (i = 0; i < nq; i++) {
       ibin = TMath::BinarySearch(nbins,fIntegral,prob[i]);
@@ -4646,7 +4648,6 @@ Int_t TH1::GetQuantiles(Int_t n, Double_t *xp, const Double_t *p)
       }
    }
 
-   if (!p) delete [] prob;
    return nq;
 }
 
