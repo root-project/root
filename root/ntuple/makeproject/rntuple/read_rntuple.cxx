@@ -3,7 +3,6 @@
 #include "librntuplestltest/MySTLEvent.h"
 #include "gtest/gtest.h"
 
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 
 void check_bitset(const std::bitset<16> &a, const std::bitset<16> &b)

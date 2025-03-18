@@ -1,5 +1,4 @@
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageStorageFile.hxx>
