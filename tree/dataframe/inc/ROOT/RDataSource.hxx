@@ -18,13 +18,28 @@
 
 #include <algorithm> // std::transform
 #include <cassert>
+#include <optional>
+#include <set>
 #include <string>
 #include <typeinfo>
+#include <unordered_map>
+#include <variant>
 #include <vector>
+#include <functional>
+
+// Need to fwd-declare TTreeReader for CreateColumnReader
+class TTreeReader;
+namespace ROOT::Detail::RDF {
+class RLoopManager;
+}
 
 namespace ROOT {
 namespace RDF {
 class RDataSource;
+class RSampleInfo;
+namespace Experimental {
+class RSample;
+}
 }
 }
 
@@ -71,6 +86,23 @@ public:
 };
 
 } // ns TDS
+
+namespace RDF {
+std::string GetTypeNameWithOpts(const ROOT::RDF::RDataSource &ds, std::string_view colName, bool vector2RVec);
+const std::vector<std::string> &GetTopLevelFieldNames(const ROOT::RDF::RDataSource &ds);
+const std::vector<std::string> &GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &ds);
+void CallInitializeWithOpts(ROOT::RDF::RDataSource &ds, const std::set<std::string> &suppressErrorsForMissingColumns);
+std::string DescribeDataset(ROOT::RDF::RDataSource &ds);
+ROOT::RDF::RSampleInfo
+CreateSampleInfo(const ROOT::RDF::RDataSource &ds,
+                 const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap);
+void RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun);
+void ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm);
+std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+CreateColumnReader(ROOT::RDF::RDataSource &ds, unsigned int slot, std::string_view col, const std::type_info &tid,
+                   TTreeReader *treeReader);
+} // namespace RDF
+
 } // ns Internal
 
 namespace RDF {
@@ -116,6 +148,57 @@ protected:
    virtual std::string AsString() { return "generic data source"; };
 
    unsigned int fNSlots{};
+
+   std::optional<std::pair<ULong64_t, ULong64_t>> fGlobalEntryRange{};
+
+   friend std::string ROOT::Internal::RDF::GetTypeNameWithOpts(const RDataSource &, std::string_view, bool);
+   virtual std::string GetTypeNameWithOpts(std::string_view colName, bool) const { return GetTypeName(colName); }
+
+   friend const std::vector<std::string> &ROOT::Internal::RDF::GetTopLevelFieldNames(const ROOT::RDF::RDataSource &);
+   virtual const std::vector<std::string> &GetTopLevelFieldNames() const { return GetColumnNames(); }
+
+   friend const std::vector<std::string> &
+   ROOT::Internal::RDF::GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &);
+   virtual const std::vector<std::string> &GetColumnNamesNoDuplicates() const { return GetColumnNames(); }
+
+   friend void ROOT::Internal::RDF::CallInitializeWithOpts(ROOT::RDF::RDataSource &, const std::set<std::string> &);
+   virtual void InitializeWithOpts(const std::set<std::string> &) { Initialize(); }
+
+   friend std::string ROOT::Internal::RDF::DescribeDataset(ROOT::RDF::RDataSource &);
+   virtual std::string DescribeDataset() { return "Dataframe from datasource " + GetLabel(); }
+
+   friend ROOT::RDF::RSampleInfo
+   ROOT::Internal::RDF::CreateSampleInfo(const ROOT::RDF::RDataSource &,
+                                         const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &);
+   virtual ROOT::RDF::RSampleInfo
+   CreateSampleInfo(const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &) const;
+
+   friend void ROOT::Internal::RDF::RunFinalChecks(const ROOT::RDF::RDataSource &, bool);
+   virtual void RunFinalChecks(bool) const {}
+
+   friend void ROOT::Internal::RDF::ProcessMT(RDataSource &, ROOT::Detail::RDF::RLoopManager &);
+   virtual void ProcessMT(ROOT::Detail::RDF::RLoopManager &);
+
+   friend std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   ROOT::Internal::RDF::CreateColumnReader(ROOT::RDF::RDataSource &, unsigned int, std::string_view,
+                                           const std::type_info &, TTreeReader *);
+   /**
+    * \brief Creates a column reader for the requested column
+    *
+    * In the general case, this is just a redirect to the right GetColumnReaders overload. The signature notably also
+    * has a TTreeReader * parameter. This is currently necessary to still allow the TTree-based MT scheduling via
+    * TTreeProcessorMT. We use the TTreeProcessorMT::Process method to launch the same kernel across all threads. In
+    * each thread task, TTreeProcessorMT creates a thread-local instance of a TTreeReader which is going to read the
+    * range of events assigned to that task. That TTreeReader instance is what is passed to this method whenever a
+    * column reader needs to be created in a thread task. In the future this method might be removed by either allowing
+    * to request a handle to the thread-local TTreeReader instance programmatically from the TTreeProcessorMT, or
+    * refactoring the TTreeProcessorMT scheduling into RTTreeDS altogether.
+    */
+   virtual std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   CreateColumnReader(unsigned int slot, std::string_view col, const std::type_info &tid, TTreeReader *)
+   {
+      return GetColumnReaders(slot, col, tid);
+   }
 
 public:
    RDataSource() = default;
@@ -241,6 +324,13 @@ public:
    /// the datasource in the visualization of the computation graph.
    /// Concrete datasources can override the default implementation.
    virtual std::string GetLabel() { return "Custom Datasource"; }
+
+   /// \brief Restrict processing to a [begin, end) range of entries.
+   /// \param entryRange The range of entries to process.
+   virtual void SetGlobalEntryRange(std::pair<ULong64_t, ULong64_t> entryRange)
+   {
+      fGlobalEntryRange = std::move(entryRange);
+   };
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
