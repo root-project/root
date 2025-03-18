@@ -2498,9 +2498,11 @@ void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
 /// Return options and custom color as constructor args
 /// Used in the SavePrimitive methods, includes comma "," if any argument is not default
 
-TString TGFrame::SaveCtorArgs(std::ostream &out, UInt_t dflt_options)
+TString TGFrame::SaveCtorArgs(std::ostream &out, UInt_t dflt_options, Bool_t check_white_pixel)
 {
-   if (GetBackground() == GetDefaultFrameBackground()) {
+   Pixel_t default_color = check_white_pixel ? GetWhitePixel() : GetDefaultFrameBackground();
+
+   if (GetBackground() == default_color) {
       if (GetOptions() == dflt_options)
          return "";
       return TString(", ") + GetOptionString();

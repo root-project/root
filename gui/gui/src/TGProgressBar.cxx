@@ -395,41 +395,35 @@ void TGVProgressBar::DoRedraw()
 
 void TGProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   const char *barcolor;
-   char quote = '"';
    switch (fBarType) {
-      case kFancy:
-         if (GetOptions() != (kSunkenFrame | kDoubleBorder | kOwnBackground))
-            out << "   " << GetName() << "->ChangeOptions(" << GetOptionString()
-                << ");" << std::endl;
-         if (GetBackground() != GetWhitePixel()) {
-            SaveUserColor(out, option);
-            out << "   " << GetName() << "->SetBackgroundColor(ucolor);" << std::endl;
-         }
-         break;
+   case kFancy:
+      if (GetOptions() != (kSunkenFrame | kDoubleBorder | kOwnBackground))
+         out << "   " << GetName() << "->ChangeOptions(" << GetOptionString() << ");\n";
+      if (GetBackground() != GetWhitePixel()) {
+         SaveUserColor(out, option);
+         out << "   " << GetName() << "->SetBackgroundColor(ucolor);\n";
+      }
+      break;
 
-      case kStandard:
-         if (GetOptions() != (kSunkenFrame | kOwnBackground))
-            out << "   " << GetName() << "->ChangeOptions(" << GetOptionString()
-                << ");" << std::endl;
-         if (GetBackground() != GetDefaultFrameBackground()) {
-            SaveUserColor(out, option);
-            out << "   " << GetName() << "->SetBackgroundColor(ucolor);" << std::endl;
-         }
-         break;
+   case kStandard:
+      if (GetOptions() != (kSunkenFrame | kOwnBackground))
+         out << "   " << GetName() << "->ChangeOptions(" << GetOptionString() << ");\n";
+      if (GetBackground() != GetDefaultFrameBackground()) {
+         SaveUserColor(out, option);
+         out << "   " << GetName() << "->SetBackgroundColor(ucolor);\n";
+      }
+      break;
    }
 
    if (fBarColorGC.GetForeground() != GetDefaultSelectedBackground()) {
-      barcolor = TColor::PixelAsHexString(fBarColorGC.GetForeground());
-      out << "   " << GetName() <<"->SetBarColor(" << quote << barcolor << quote
-          << ");"  << std::endl;
+      out << "   " << GetName() << "->SetBarColor(\"" << TColor::PixelAsHexString(fBarColorGC.GetForeground())
+          << "\");\n";
    }
 
    if (fMin != 0 && fMax != 100)
-      out << "   " << GetName() << "->SetRange(" << fMin << "," << fMax << ");" << std::endl;
+      out << "   " << GetName() << "->SetRange(" << fMin << "," << fMax << ");\n";
 
-   out <<"   "<< GetName() <<"->SetPosition("<< fPos <<");"<< std::endl;
-
+   out << "   " << GetName() << "->SetPosition(" << fPos << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
