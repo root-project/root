@@ -196,9 +196,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
-      for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << kIndentString;
-      }
+      indent(typedefbuf, indent_level);
       typedefbuf << "typedef " << fp_typedef_name << ";\n";
       return;
    } else if (QT->isMemberPointerType()) {
@@ -211,9 +209,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
-      for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << kIndentString;
-      }
+      indent(typedefbuf, indent_level);
       typedefbuf << "typedef " << mp_typedef_name << ";\n";
       return;
    } else if (QT->isPointerType()) {
@@ -235,9 +231,7 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
-      for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << kIndentString;
-      }
+      indent(typedefbuf, indent_level);
       typedefbuf << "typedef " << ar_typedef_name << ";\n";
       return;
    }
@@ -301,9 +295,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
             callbuf << ' ';
          } else {
             callbuf << "\n";
-            for (int j = 0; j <= indent_level; ++j) {
-               callbuf << kIndentString;
-            }
+            indent(callbuf, indent_level + 1);
          }
       }
       if (refType != kNotReference) {
@@ -365,9 +357,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
                   callbuf << ' ';
                } else {
                   callbuf << "\n";
-                  for (int j = 0; j <= indent_level; ++j) {
-                     callbuf << kIndentString;
-                  }
+                  indent(callbuf, indent_level + 1);
                }
             }
             const ParmVarDecl *PVD = FD->getParamDecl(i);
@@ -429,9 +419,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
             callbuf << ' ';
          } else {
             callbuf << "\n";
-            for (int j = 0; j <= indent_level; ++j) {
-               callbuf << kIndentString;
-            }
+            indent(callbuf, indent_level + 1);
          }
       }
 
@@ -471,9 +459,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    //    new ClassName(args...);
    // }
    //
-   for (int i = 0; i < indent_level; ++i) {
-      buf << kIndentString;
-   }
+   indent(buf, indent_level);
    buf << "if (ret) {\n";
    ++indent_level;
    {
@@ -482,9 +468,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //
       //  Write the return value assignment part.
       //
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       callbuf << "(*(" << class_name << "**)ret) = ";
       //
       //  Write the actual new expression.
@@ -494,9 +478,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //  End the new expression statement.
       //
       callbuf << ";\n";
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       callbuf << "return;\n";
       //
       //  Output the whole new expression and return statement.
@@ -900,16 +882,12 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
       // We need one function call clause compiled for every
       // possible number of arguments per call.
       for (unsigned N = min_args; N <= num_params; ++N) {
-         for (int i = 0; i < indent_level; ++i) {
-            buf << kIndentString;
-         }
+         indent(buf, indent_level);
          buf << "if (nargs == " << N << ") {\n";
          ++indent_level;
          make_narg_call_with_return(N, class_name, buf, indent_level);
          --indent_level;
-         for (int i = 0; i < indent_level; ++i) {
-            buf << kIndentString;
-         }
+         indent(buf, indent_level);
          buf << "}\n";
       }
    }
@@ -953,20 +931,14 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
    if (QT->isVoidType()) {
       ostringstream typedefbuf;
       ostringstream callbuf;
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       make_narg_call("void", N, typedefbuf, callbuf, class_name, indent_level);
       callbuf << ";\n";
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       callbuf << "return;\n";
       buf << typedefbuf.str() << callbuf.str();
    } else {
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
 
       string type_name;
       EReferenceType refType = kNotReference;
@@ -980,9 +952,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //
          //  Write the placement part of the placement new.
          //
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "new (ret) ";
          collect_type_info(QT, typedefbuf, callbuf, type_name,
                            refType, isPointer, indent_level, false);
@@ -1007,9 +977,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //  End the placement new.
          //
          callbuf << ");\n";
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "return;\n";
          //
          //  Output the whole placement new expression and return statement.
@@ -1017,34 +985,24 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          buf << typedefbuf.str() << callbuf.str();
       }
       --indent_level;
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
       buf << "}\n";
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
       buf << "else {\n";
       ++indent_level;
       {
          ostringstream typedefbuf;
          ostringstream callbuf;
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "(void)(";
          make_narg_call(type_name, N, typedefbuf, callbuf, class_name, indent_level);
          callbuf << ");\n";
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "return;\n";
          buf << typedefbuf.str() << callbuf.str();
       }
       --indent_level;
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
       buf << "}\n";
    }
 }
