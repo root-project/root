@@ -133,7 +133,7 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -217,7 +217,7 @@ protected:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -276,7 +276,7 @@ protected:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final { new (where) std::vector<bool>(); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<std::vector<bool>>>(); }

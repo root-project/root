@@ -156,7 +156,7 @@ struct RDaosContainerNTupleLocator {
    }
 
    int InitNTupleDescriptorBuilder(ROOT::Experimental::Internal::RDaosContainer &cont,
-                                   ROOT::Experimental::Internal::RNTupleDescriptorBuilder &builder)
+                                   ROOT::Internal::RNTupleDescriptorBuilder &builder)
    {
       std::unique_ptr<unsigned char[]> buffer, zipBuffer;
       auto &anchor = fAnchor.emplace();
@@ -197,11 +197,10 @@ struct RDaosContainerNTupleLocator {
       return 0;
    }
 
-   static std::pair<RDaosContainerNTupleLocator, ROOT::Experimental::Internal::RNTupleDescriptorBuilder>
+   static std::pair<RDaosContainerNTupleLocator, ROOT::Internal::RNTupleDescriptorBuilder>
    LocateNTuple(ROOT::Experimental::Internal::RDaosContainer &cont, const std::string &ntupleName)
    {
-      auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName),
-                                   ROOT::Experimental::Internal::RNTupleDescriptorBuilder());
+      auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName), ROOT::Internal::RNTupleDescriptorBuilder());
 
       auto &loc = result.first;
       auto &builder = result.second;
@@ -503,10 +502,10 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
 
 ROOT::Experimental::Internal::RPageSourceDaos::~RPageSourceDaos() = default;
 
-ROOT::Experimental::RNTupleDescriptor
+ROOT::RNTupleDescriptor
 ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
-   ROOT::Experimental::RNTupleDescriptor ntplDesc;
+   ROOT::RNTupleDescriptor ntplDesc;
    std::unique_ptr<unsigned char[]> buffer, zipBuffer;
 
    auto [locator, descBuilder] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
@@ -550,7 +549,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::Descrip
 {
    const auto clusterId = localIndex.GetClusterId();
 
-   RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);

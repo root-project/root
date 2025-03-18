@@ -357,7 +357,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
    }
 }
 
-ROOT::Experimental::RNTupleDescriptor
+ROOT::RNTupleDescriptor
 ROOT::Experimental::Internal::RPageSourceFile::AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
    auto unzipBuf = reinterpret_cast<unsigned char *>(fStructureBuffer.fPtrFooter) + fAnchor->GetNBytesFooter();

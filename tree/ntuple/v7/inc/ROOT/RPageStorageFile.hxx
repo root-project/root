@@ -141,7 +141,7 @@ private:
    /// Takes the fFile to read ntuple blobs from it
    RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
-   RNTupleDescriptorBuilder fDescriptorBuilder;
+   ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()

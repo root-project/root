@@ -102,7 +102,7 @@ protected:
    }
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
    void ConstructValue(void *where) const final { memset(where, 0, GetValueSize()); }
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
@@ -173,7 +173,7 @@ class RNullableField : public RFieldBase {
 protected:
    const RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
 
    std::size_t AppendNull();
    std::size_t AppendValue(const void *from);
@@ -301,7 +301,7 @@ private:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final { new (where) std::string(); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<std::string>>(); }
@@ -377,7 +377,7 @@ protected:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;

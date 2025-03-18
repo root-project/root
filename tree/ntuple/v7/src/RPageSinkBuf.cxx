@@ -81,7 +81,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector
    fBufferedColumns.resize(fNColumns);
 }
 
-const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::Internal::RPageSinkBuf::GetDescriptor() const
+const ROOT::RNTupleDescriptor &ROOT::Experimental::Internal::RPageSinkBuf::GetDescriptor() const
 {
    return fInnerSink->GetDescriptor();
 }
