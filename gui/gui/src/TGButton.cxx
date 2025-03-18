@@ -1915,7 +1915,7 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
    parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
-   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC) || (GetOptions() != (kRaisedFrame | kDoubleBorder))) {
+   if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
