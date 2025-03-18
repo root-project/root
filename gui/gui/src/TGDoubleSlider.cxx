@@ -624,35 +624,29 @@ void TGDoubleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
 {
    SaveUserColor(out, option);
 
-   out <<"   TGDoubleHSlider *";
-   out << GetName() << " = new TGDoubleHSlider(" << fParent->GetName()
-       << "," << GetWidth() << ",";
-   out << GetSString() << "," << WidgetId() << ",";
-   out << GetOptionString() << ",ucolor";
+   out << "   TGDoubleHSlider *" << GetName() << " = new TGDoubleHSlider(" << fParent->GetName() << "," << GetWidth()
+       << ", " << GetSString() << ", " << WidgetId() << ", " << GetOptionString() << ", ucolor";
    if (fMarkEnds) {
       if (fReversedScale)
-         out << ",kTRUE,kTRUE);" << std::endl;
+         out << ", kTRUE, kTRUE);\n";
       else
-         out << ",kFALSE,kTRUE);" << std::endl;
+         out << ", kFALSE, kTRUE);\n";
    } else if (fReversedScale) {
-      out << ",kTRUE);" << std::endl;
+      out << ", kTRUE);\n";
    } else {
-      out << ");" << std::endl;
+      out << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
-      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
-          << ");" << std::endl;
+      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax << ");\n";
 
-   if (fSmin != fWidth/8*3 || fSmax != fWidth/8*5)
-      out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << std::endl;
+   if (fSmin != fWidth / 8 * 3 || fSmax != fWidth / 8 * 5)
+      out << "   " << GetName() << "->SetPosition(" << GetMinPosition() << "," << GetMaxPosition() << ");\n";
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
-
+      out << "   " << GetName() << "->SetScale(" << fScale << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,35 +656,27 @@ void TGDoubleVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
 {
    SaveUserColor(out, option);
 
-   out<<"   TGDoubleVSlider *";
-   out << GetName() << " = new TGDoubleVSlider("<< fParent->GetName()
-       << "," << GetHeight() << ",";
-   out << GetSString() << "," << WidgetId() << ",";
-   out << GetOptionString() << ",ucolor";
+   out << "   TGDoubleVSlider *" << GetName() << " = new TGDoubleVSlider(" << fParent->GetName() << "," << GetHeight()
+       << "," << GetSString() << "," << WidgetId() << "," << GetOptionString() << ", ucolor";
    if (fMarkEnds) {
       if (fReversedScale)
-         out << ",kTRUE,kTRUE);" << std::endl;
+         out << ",kTRUE,kTRUE);\n";
       else
-         out << ",kFALSE,kTRUE);" << std::endl;
+         out << ",kFALSE,kTRUE);\n";
    } else if (fReversedScale) {
-      out << ",kTRUE);" << std::endl;
+      out << ",kTRUE);\n";
    } else {
-      out << ");" << std::endl;
+      out << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
-      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax
-          << ");" << std::endl;
+      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax << ");\n";
 
-
-   if (fSmin != fHeight/8*3 || fSmax != fHeight/8*5)
-      out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << std::endl;
-
+   if (fSmin != fHeight / 8 * 3 || fSmax != fHeight / 8 * 5)
+      out << "   " << GetName() << "->SetPosition(" << GetMinPosition() << "," << GetMaxPosition() << ");\n";
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
-
+      out << "   " << GetName() << "->SetScale(" << fScale << ");\n";
 }
