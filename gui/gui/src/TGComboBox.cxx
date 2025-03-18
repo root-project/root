@@ -705,46 +705,43 @@ void TGComboBox::RemoveAll()
 
 void TGComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   if (fBackground != GetDefaultFrameBackground())
+      SaveUserColor(out, option);
 
-   out << std::endl << "   // combo box" << std::endl;
-   out << "   TGComboBox *";
+   out << "\n   // combo box\n";
 
    if (!fTextEntry) {
-      out << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
+      out << "   TGComboBox *" << GetName() << " = new TGComboBox(" << fParent->GetName() << "," << fWidgetId;
    } else {
-      out << GetName() << " = new TGComboBox(" << fParent->GetName() << ",";
-      out << '\"' <<  fTextEntry->GetText() << '\"' << "," <<fWidgetId;
+      out << "   TGComboBox *" << GetName() << " = new TGComboBox(" << fParent->GetName() << ", \""
+          << TString(fTextEntry->GetText()).ReplaceSpecialCppChars() << "\"," << fWidgetId;
    }
 
    if (fBackground == GetWhitePixel()) {
       if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
-         out <<");" << std::endl;
+         out << ");\n";
       } else {
-         out << "," << GetOptionString() << ");" << std::endl;
+         out << "," << GetOptionString() << ");\n";
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
+      out << "," << GetOptionString() << ",ucolor);\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   TGTextLBEntry *b;
-   TGFrameElement *el;
    TGListBox *lb = GetListBox();
 
    TIter next(((TGLBContainer *)lb->GetContainer())->GetList());
 
-   while ((el = (TGFrameElement *) next())) {
-      b = (TGTextLBEntry *) el->fFrame;
+   while (auto el = (TGFrameElement *)next()) {
+      auto b = (TGTextLBEntry *)el->fFrame;
       out << "   " << GetName() << "->AddEntry(";
       b->SavePrimitive(out, option);
-      out <<  ");" << std::endl;
+      out << ");" << std::endl;
    }
 
-   out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
-       << GetHeight() << ");" << std::endl;
-   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight() << ");\n";
+   out << "   " << GetName() << "->Select(" << GetSelected() << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
