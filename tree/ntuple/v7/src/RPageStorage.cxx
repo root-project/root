@@ -43,8 +43,13 @@
 #include <utility>
 
 using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RClusterDescriptorBuilder;
+using ROOT::Internal::RClusterGroupDescriptorBuilder;
 using ROOT::Internal::RColumn;
+using ROOT::Internal::RColumnDescriptorBuilder;
 using ROOT::Internal::RColumnElementBase;
+using ROOT::Internal::RExtraTypeInfoDescriptorBuilder;
+using ROOT::Internal::RFieldDescriptorBuilder;
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)
    : fMetrics(""), fPageAllocator(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()), fNTupleName(name)

@@ -62,7 +62,7 @@ struct ColumnInfo {
    }
 };
 
-std::string GetFieldName(ROOT::DescriptorId_t fieldId, const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
+std::string GetFieldName(ROOT::DescriptorId_t fieldId, const ROOT::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
    if (fieldDesc.GetParentId() == ROOT::kInvalidDescriptorId)
@@ -70,7 +70,7 @@ std::string GetFieldName(ROOT::DescriptorId_t fieldId, const ROOT::Experimental:
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
 }
 
-std::string GetFieldDescription(ROOT::DescriptorId_t fFieldId, const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
+std::string GetFieldDescription(ROOT::DescriptorId_t fFieldId, const ROOT::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);
    return fieldDesc.GetFieldDescription();
@@ -78,7 +78,7 @@ std::string GetFieldDescription(ROOT::DescriptorId_t fFieldId, const ROOT::Exper
 
 } // anonymous namespace
 
-void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) const
+void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
 {
    std::vector<ColumnInfo> columns;
    std::vector<ClusterInfo> clusters;

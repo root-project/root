@@ -56,7 +56,7 @@ const ROOT::RFieldBase::RColumnRepresentations &ROOT::RCardinalityField::GetColu
    return representations;
 }
 
-void ROOT::RCardinalityField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
@@ -445,7 +445,7 @@ void ROOT::RField<std::string>::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex, char>();
 }
 
-void ROOT::RField<std::string>::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RField<std::string>::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex, char>(desc);
 }
@@ -643,7 +643,7 @@ void ROOT::RBitsetField::GenerateColumns()
    GenerateColumnsImpl<bool>();
 }
 
-void ROOT::RBitsetField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RBitsetField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<bool>(desc);
 }
@@ -716,7 +716,7 @@ void ROOT::RNullableField::GenerateColumns()
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
-void ROOT::RNullableField::GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc)
+void ROOT::RNullableField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }

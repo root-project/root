@@ -42,7 +42,7 @@ protected:
 
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, ROOT::NTupleSize_t) final {}
-   void UpdateExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDescriptor &) final {}
+   void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
    void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final
