@@ -33,6 +33,7 @@
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
+#include <RooFit/Detail/RooNormalizedPdf.h>
 
 #include <ROOT/StringUtils.hxx>
 #include <TROOT.h>
@@ -623,6 +624,26 @@ FactoryTestParams param15{"RecursiveFraction",
                           5e-3,
                           /*randomizeParameters=*/true};
 
+// Test for RooNormalizedPdf.
+FactoryTestParams param16{"NormalizedPdf",
+                          [](RooWorkspace &ws) {
+                             RooRealVar obs = RooRealVar("x", "x", 0, -10, 10);
+                             ws.import(obs);
+                             ws.defineSet("observables", "x");
+                             RooRealVar mean = RooRealVar("mean", "mean", 0, -10, 10);
+                             RooGaussian gauss = RooGaussian("gx", "gx", obs, mean, 1.);
+                             RooArgSet nset(obs);
+                             RooFit::Detail::RooNormalizedPdf npdf(gauss, nset);
+                             npdf.SetName("model");
+                             ws.import(npdf);
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3,
+                          /*randomizeParameters=*/true};
+
 FactoryTestParams makeTestParams(const char *name, std::string const &expr, bool randomizeParameters)
 {
    return FactoryTestParams{name,
@@ -642,7 +663,7 @@ auto testValues = testing::Values(
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    param3,
 #endif
-   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13, param15,
+   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13, param15, param16,
    makeTestParams("RooCBShape",
                   "CBShape::model(x[0., -200., 200.], x0[100., -200., 200.], sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, "
                   "100.], n[1., 1.E-6, 100.])",
