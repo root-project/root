@@ -1778,33 +1778,27 @@ void TCanvas::RunAutoExec()
 void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Write canvas options (in $TROOT or $TStyle)
-   if (gStyle->GetOptFit()) {
-      out<<"   gStyle->SetOptFit(1);"<<std::endl;
-   }
-   if (!gStyle->GetOptStat()) {
-      out<<"   gStyle->SetOptStat(0);"<<std::endl;
-   }
-   if (!gStyle->GetOptTitle()) {
-      out<<"   gStyle->SetOptTitle(0);"<<std::endl;
-   }
-   if (gROOT->GetEditHistograms()) {
-      out<<"   gROOT->SetEditHistograms();"<<std::endl;
-   }
-   if (GetShowEventStatus()) {
-      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<std::endl;
-   }
-   if (GetShowToolTips()) {
-      out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
-   }
-   if (GetShowToolBar()) {
-      out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
-   }
+   out << "   gStyle->SetOptFit(" << gStyle->GetOptFit() << ");\n";
+   out << "   gStyle->SetOptStat(" << gStyle->GetOptStat() << ");\n";
+   out << "   gStyle->SetOptTitle(" << gStyle->GetOptTitle() << ");\n";
+
+   if (gROOT->GetEditHistograms())
+      out << "   gROOT->SetEditHistograms();\n";
+
+   if (GetShowEventStatus())
+      out << "   " << GetName() << "->ToggleEventStatus();\n";
+
+   if (GetShowToolTips())
+      out << "   " << GetName() << "->ToggleToolTips();\n";
+
+   if (GetShowToolBar())
+      out << "   " << GetName() << "->ToggleToolBar();\n";
    if (GetHighLightColor() != 5)
       out << "   " << GetName() << "->SetHighLightColor(" << TColor::SavePrimitiveColor(GetHighLightColor()) << ");\n";
 
    // Now recursively scan all pads of this canvas
    cd();
-   TPad::SavePrimitive(out,option);
+   TPad::SavePrimitive(out, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1904,24 +1898,15 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
          out<<","<<topx<<","<<topy<<","<<w<<","<<h<<");"<<std::endl;
    }
    //   Write canvas options (in $TROOT or $TStyle)
-   if (gStyle->GetOptFit()) {
-      out<<"   gStyle->SetOptFit(1);"<<std::endl;
-   }
-   if (!gStyle->GetOptStat()) {
-      out<<"   gStyle->SetOptStat(0);"<<std::endl;
-   }
-   if (!gStyle->GetOptTitle()) {
-      out<<"   gStyle->SetOptTitle(0);"<<std::endl;
-   }
-   if (gROOT->GetEditHistograms()) {
-      out<<"   gROOT->SetEditHistograms();"<<std::endl;
-   }
-   if (GetShowEventStatus()) {
-      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<std::endl;
-   }
-   if (GetShowToolTips()) {
-      out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
-   }
+   out << "   gStyle->SetOptFit(" << gStyle->GetOptFit() << ");\n";
+   out << "   gStyle->SetOptStat(" << gStyle->GetOptStat() << ");\n";
+   out << "   gStyle->SetOptTitle(" << gStyle->GetOptTitle() << ");\n";
+   if (gROOT->GetEditHistograms())
+      out << "   gROOT->SetEditHistograms();\n";
+   if (GetShowEventStatus())
+      out << "   " << GetName() << "->ToggleEventStatus();\n";
+   if (GetShowToolTips())
+      out << "   " << GetName() << "->ToggleToolTips();\n";
    if (GetHighLightColor() != 5)
       out << "   " << GetName() << "->SetHighLightColor(" << TColor::SavePrimitiveColor(GetHighLightColor()) << ");\n";
 
