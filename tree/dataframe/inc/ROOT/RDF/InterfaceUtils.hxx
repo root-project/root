@@ -161,7 +161,7 @@ std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
             std::shared_ptr<PrevNodeType> prevNode, ActionTags::Histo3D, const RColumnRegister &colRegister)
 {
-   if (RDFInternal::CloneHisto3DState() || nSlots == 1) {
+   if (RDFInternal::NThreadPerTH3() <= 1 || nSlots == 1) {
       using Helper_t = FillHelper<ActionResultType>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
@@ -171,7 +171,8 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
       if constexpr (sizeof...(ColTypes) > 3) {
          h->Sumw2();
       }
-      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+      const auto histoSlots = std::max(nSlots / RDFInternal::NThreadPerTH3(), 1u);
+      return std::make_unique<Action_t>(Helper_t(h, histoSlots), bl, std::move(prevNode), colRegister);
    }
 }
 

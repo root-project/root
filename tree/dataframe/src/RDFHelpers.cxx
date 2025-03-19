@@ -140,9 +140,9 @@ namespace RDF {
 
 namespace Experimental {
 
-void CloneTH3(bool state)
+void ThreadsPerTH3(unsigned int N)
 {
-   ROOT::Internal::RDF::CloneHisto3DState() = state;
+   ROOT::Internal::RDF::NThreadPerTH3() = N;
 }
 
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,

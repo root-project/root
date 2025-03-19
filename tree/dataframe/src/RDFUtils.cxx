@@ -55,10 +55,10 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-bool &CloneHisto3DState()
+unsigned int &NThreadPerTH3()
 {
-   static bool useCloning = true;
-   return useCloning;
+   static unsigned int nThread = 1;
+   return nThread;
 }
 
 /// Return the type_info associated to a name. If the association fails, an
