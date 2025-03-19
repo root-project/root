@@ -594,21 +594,23 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 #endif
 
 // --no-sandbox is required to run chrome with super-user, but only in headless mode
+// --headless=new was used when both old and new were available, but old was removed from chrome 132, see https://developer.chrome.com/blog/removing-headless-old-from-chrome
 
 #ifdef _MSC_VER
-   // here --headless=old required to let normally end of Edge process when --dump-dom is used
-   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=old --no-sandbox $geometry --dump-dom $url");
+   // here --headless=old was used to let normally end of Edge process when --dump-dom is used
+   // while on Windows chrome and edge version not tested, just suppose that newest chrome is used
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox $geometry --dump-dom $url");
    // in interactive headless mode fork used to let stop browser via process id
-   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork:--headless=old --no-sandbox --disable-gpu $geometry \"$url\"");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork:--headless --no-sandbox --disable-gpu $geometry \"$url\"");
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
 #ifdef R__MACOSX
    bool use_normal = true; // mac does not like new flag
 #else
-   bool use_normal = fChromeVersion < 119;
+   bool use_normal = (fChromeVersion < 119) || (fChromeVersion > 131);
 #endif
    if (use_normal) {
-      // old browser with standard headless mode
+      // old or newest browser with standard headless mode
       fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "fork:--headless --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url");
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork:--headless --no-sandbox --disable-extensions --disable-audio-output $geometry $url");
    } else {
