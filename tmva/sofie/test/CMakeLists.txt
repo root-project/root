@@ -60,12 +60,11 @@ add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 
 
 # Creating a Google Test
-if (tmva-cpu)  # we need BLAS for compiling the models
+if (BLAS_FOUND)  # we need BLAS for compiling the models
 ROOT_ADD_GTEST(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
   LIBRARIES
     ROOTTMVASofie
-    ${BLAS_LINKER_FLAGS}
-    ${BLAS_LIBRARIES}
+    BLAS::BLAS
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -103,12 +102,11 @@ COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT
 		USES_TERMINAL )
 
 # Creating a Google Test for Serialisation of RModel
-if (tmva-cpu)
+if (BLAS_FOUND)
 ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
   LIBRARIES
     ROOTTMVASofie
-    ${BLAS_LINKER_FLAGS}
-    ${BLAS_LIBRARIES}
+    BLAS::BLAS
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -126,13 +124,12 @@ if(ROOT_TORCH_FOUND)
   configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
   configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
 
-if (tmva-cpu)
+if (BLAS_FOUND)
   ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
     LIBRARIES
       ROOTTMVASofie
       ROOTTMVASofieParser
-      ${BLAS_LINKER_FLAGS}
-      ${BLAS_LIBRARIES}
+      BLAS::BLAS
     INCLUDE_DIRS
       ${CMAKE_CURRENT_BINARY_DIR}
   )

@@ -1,4 +1,3 @@
-BLA_VENDOR=OpenBLAS
 builtin_nlohmannjson=ON
 builtin_vdt=ON
 ccache=ON
