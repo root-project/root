@@ -585,7 +585,7 @@ void TGVSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // save options and color if not default
    auto extra_args = SaveCtorArgs(out);
 
-   out << "   TGVSplitter *" << GetName() << " = new TGVSplitter(" << fParent->GetName() << "," << GetWidth() << ","
+   out << "   TGVSplitter *" << GetName() << " = new TGVSplitter(" << fParent->GetName() << ", " << GetWidth() << ", "
        << GetHeight() << extra_args << ");\n";
 
    if (option && strstr(option, "keep_names"))
@@ -594,13 +594,8 @@ void TGVSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // if fFrame is the frame on the left (since the frame on the
    // right will only be saved afterwards)... The other case is
    // handled in TGCompositeFrame::SavePrimitiveSubframes()
-   if (GetLeft()) {
-      out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-      if (GetLeft())
-         out << ",kTRUE);n";
-      else
-         out << ",kFALSE);n";
-   }
+   if (GetLeft())
+      out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName() << ", kTRUE);\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -611,7 +606,7 @@ void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // save options and color if not default
    auto extra_args = SaveCtorArgs(out);
 
-   out << "   TGHSplitter *" << GetName() << " = new TGHSplitter(" << fParent->GetName() << "," << GetWidth() << ","
+   out << "   TGHSplitter *" << GetName() << " = new TGHSplitter(" << fParent->GetName() << ", " << GetWidth() << ", "
        << GetHeight() << extra_args << ");\n";
 
    if (option && strstr(option, "keep_names"))
@@ -620,13 +615,8 @@ void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // if fFrame is the frame above (since the frame below will
    // only be saved afterwards)... The other case is handled in
    // TGCompositeFrame::SavePrimitiveSubframes()
-   if (GetAbove()) {
-      out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-      if (GetAbove())
-         out << ",kTRUE);\n";
-      else
-         out << ",kFALSE);\n";
-   }
+   if (GetAbove())
+      out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName() << ", kTRUE);\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
