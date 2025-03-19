@@ -18,6 +18,7 @@
 
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleJoinTable.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -104,13 +105,13 @@ protected:
    private:
       std::unique_ptr<ROOT::RFieldBase> fProtoField;
       std::unique_ptr<ROOT::RFieldBase> fConcreteField;
-      REntry::RFieldToken fToken;
+      RFieldToken fToken;
       // Which RNTuple the field belongs to, in case the field belongs to an auxiliary RNTuple, according to the order
       // in which it was specified. For chained RNTuples, this value will always be 0.
       std::size_t fNTupleIdx;
 
    public:
-      RFieldContext(std::unique_ptr<ROOT::RFieldBase> protoField, REntry::RFieldToken token, std::size_t ntupleIdx = 0)
+      RFieldContext(std::unique_ptr<ROOT::RFieldBase> protoField, RFieldToken token, std::size_t ntupleIdx = 0)
          : fProtoField(std::move(protoField)), fToken(token), fNTupleIdx(ntupleIdx)
       {
       }
@@ -501,7 +502,7 @@ class RNTupleJoinProcessor : public RNTupleProcessor {
 private:
    std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
    /// Tokens representing the join fields present in the main RNTuple
-   std::vector<REntry::RFieldToken> fJoinFieldTokens;
+   std::vector<RFieldToken> fJoinFieldTokens;
    std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinTables;
 
    bool HasJoinTable() const { return fJoinTables.size() > 0; }

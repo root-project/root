@@ -28,6 +28,7 @@
 // Functionality and interface are still subject to changes.
 
 #include <ROOT/REntry.hxx>
+#include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -50,13 +51,14 @@
 
 // Import classes from Experimental namespace for the time being
 using ROOT::Experimental::REntry;
+using ROOT::Experimental::RFieldToken;
 using ROOT::Experimental::RNTupleFillContext;
 using ROOT::Experimental::RNTupleFillStatus;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 using ROOT::Experimental::RNTupleWriter;
 
-using ModelTokensPair = std::pair<std::unique_ptr<RNTupleModel>, std::vector<REntry::RFieldToken>>;
+using ModelTokensPair = std::pair<std::unique_ptr<RNTupleModel>, std::vector<RFieldToken>>;
 
 // A DataProduct associates an arbitrary address to an index in the model.
 struct DataProduct {
@@ -95,7 +97,7 @@ public:
 class ParallelOutputter final : public Outputter {
    FileService &fFileService;
    std::unique_ptr<RNTupleParallelWriter> fParallelWriter;
-   std::vector<REntry::RFieldToken> fTokens;
+   std::vector<RFieldToken> fTokens;
 
    struct SlotData {
       std::shared_ptr<RNTupleFillContext> fillContext;
@@ -162,7 +164,7 @@ class SerializingOutputter final : public Outputter {
    FileService &fFileService;
    std::unique_ptr<RNTupleWriter> fWriter;
    std::mutex fWriterMutex;
-   std::vector<REntry::RFieldToken> fTokens;
+   std::vector<RFieldToken> fTokens;
 
    struct SlotData {
       std::unique_ptr<REntry> entry;
@@ -250,7 +252,7 @@ ModelTokensPair CreateEventModel()
    // We recommend creating a bare model if the default entry is not used.
    auto model = RNTupleModel::CreateBare();
    // For more efficient access, also create field tokens.
-   std::vector<REntry::RFieldToken> tokens;
+   std::vector<RFieldToken> tokens;
 
    model->MakeField<decltype(Event::eventId)>("eventId");
    tokens.push_back(model->GetToken("eventId"));
@@ -274,7 +276,7 @@ ModelTokensPair CreateEventModel()
 std::vector<DataProduct> CreateEventDataProducts(Event &event)
 {
    std::vector<DataProduct> products;
-   // The indices have to match the order of std::vector<REntry::RFieldToken> above.
+   // The indices have to match the order of std::vector<RFieldToken> above.
    products.emplace_back(0, &event.eventId);
    products.emplace_back(1, &event.runId);
    products.emplace_back(2, &event.electrons);
@@ -295,7 +297,7 @@ ModelTokensPair CreateRunModel()
    // We recommend creating a bare model if the default entry is not used.
    auto model = RNTupleModel::CreateBare();
    // For more efficient access, also create field tokens.
-   std::vector<REntry::RFieldToken> tokens;
+   std::vector<RFieldToken> tokens;
 
    model->MakeField<decltype(Run::runId)>("runId");
    tokens.push_back(model->GetToken("runId"));
@@ -310,7 +312,7 @@ ModelTokensPair CreateRunModel()
 std::vector<DataProduct> CreateRunDataProducts(Run &run)
 {
    std::vector<DataProduct> products;
-   // The indices have to match the order of std::vector<REntry::RFieldToken> above.
+   // The indices have to match the order of std::vector<RFieldToken> above.
    products.emplace_back(0, &run.runId);
    products.emplace_back(1, &run.nEvents);
    return products;
