@@ -385,30 +385,16 @@ TGShutterItem::~TGShutterItem()
 void TGShutterItem::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    TGTextButton *b = (TGTextButton *)fButton;
-   const char *text = b->GetText()->GetString();
-   char hotpos = b->GetText()->GetHotPos();
-   Int_t lentext = b->GetText()->GetLength();
-   char *outext = new char[lentext + 2]; // should be +2 because of \0
-   Int_t i = 0;
+   TString outtext = b->GetText()->GetString();
+   Int_t hotpos = b->GetText()->GetHotPos();
+   if ((hotpos > 0) && (hotpos < outtext.Length()))
+      outtext.Insert(hotpos - 1, "&");
 
-   while (lentext) {
-      if (i == hotpos - 1) {
-         outext[i] = '&';
-         i++;
-      }
-      outext[i] = *text;
-      i++;
-      text++;
-      lentext--;
-   }
-   outext[i] = 0;
-
-   out << "\n   // \"" << outext << "\" shutter item \n";
+   out << "\n   // \"" << outtext << "\" shutter item \n";
    out << "   TGShutterItem *" << GetName() << " = new TGShutterItem(" << fParent->GetName() << ", new TGHotString(\""
-       << TString(outext).ReplaceSpecialCppChars() << "\"), " << fButton->WidgetId() << ", " << GetOptionString()
+       << outtext.ReplaceSpecialCppChars() << "\"), " << fButton->WidgetId() << ", " << GetOptionString()
        << ");\n";
 
-   delete[] outext;
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
@@ -449,10 +435,9 @@ void TGShutter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (!fList)
       return;
 
-   TGFrameElement *el;
    TIter next(fList);
 
-   while ((el = (TGFrameElement *)next())) {
+   while (auto el = static_cast<TGFrameElement *>(next())) {
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetName() << "->AddItem(" << el->fFrame->GetName();
       // el->fLayout->SavePrimitive(out, option);

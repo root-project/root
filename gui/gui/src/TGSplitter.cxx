@@ -585,8 +585,8 @@ void TGVSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // save options and color if not default
    auto extra_args = SaveCtorArgs(out);
 
-   out << "   TGVSplitter *" << GetName() <<" = new TGVSplitter("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight() << extra_args << ");\n";
+   out << "   TGVSplitter *" << GetName() << " = new TGVSplitter(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << extra_args << ");\n";
 
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
@@ -596,8 +596,10 @@ void TGVSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // handled in TGCompositeFrame::SavePrimitiveSubframes()
    if (GetLeft()) {
       out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-      if (GetLeft()) out << ",kTRUE);n";
-      else           out << ",kFALSE);n";
+      if (GetLeft())
+         out << ",kTRUE);n";
+      else
+         out << ",kFALSE);n";
    }
 }
 
@@ -609,8 +611,8 @@ void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // save options and color if not default
    auto extra_args = SaveCtorArgs(out);
 
-   out << "   TGHSplitter *" << GetName() <<" = new TGHSplitter("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight() << extra_args << ");\n";
+   out << "   TGHSplitter *" << GetName() << " = new TGHSplitter(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << extra_args << ");\n";
 
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
@@ -620,8 +622,10 @@ void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // TGCompositeFrame::SavePrimitiveSubframes()
    if (GetAbove()) {
       out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-      if (GetAbove()) out << ",kTRUE);\n";
-      else            out << ",kFALSE);\n";
+      if (GetAbove())
+         out << ",kTRUE);\n";
+      else
+         out << ",kFALSE);\n";
    }
 }
 

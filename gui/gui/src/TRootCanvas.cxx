@@ -2099,11 +2099,10 @@ void TRootCanvas::Activated(Int_t id)
 
 void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   out << std::endl << "   // canvas container" << std::endl;
-   out << "   Int_t canvasID = gVirtualX->InitWindow((ULongptr_t)"
-       << GetParent()->GetParent()->GetName() << "->GetId());" << std::endl;
-   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);" << std::endl;
-   out << "   TGCompositeFrame *";
-   out << GetName() << " = new TGCompositeFrame(gClient,winC"
-       << "," << GetParent()->GetName() << ");" << std::endl;
+   out << "\n   // canvas container\n";
+   out << "   Int_t canvasID = gVirtualX->InitWindow((ULongptr_t)" << GetParent()->GetParent()->GetName()
+       << "->GetId());\n";
+   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);\n";
+   out << "   TGCompositeFrame *" << GetName() << " = new TGCompositeFrame(gClient, winC, " << GetParent()->GetName()
+       << ");\n";
 }
