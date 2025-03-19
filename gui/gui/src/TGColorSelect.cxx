@@ -685,7 +685,7 @@ void TGColorSelect::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    out << "\n   // color select widget\n";
    out << "   ULong_t " << cvar << ";\n";
-   out << "   gClient->GetColorByName(\n" << colorname << "\", " << cvar << ");\n";
+   out << "   gClient->GetColorByName(\"" << colorname << "\", " << cvar << ");\n";
 
    out <<"   TGColorSelect *" << GetName() << " = new TGColorSelect(" << fParent->GetName()
        << ", " << cvar << ", " << WidgetId() << ");\n";

@@ -1650,15 +1650,13 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
 
 void TGListBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // store options and color if differ from defauls
+   // store options and color if differ from defaults
    TString extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder, kTRUE);
 
    out << "\n   // list box\n";
    out << "   TGListBox *" << GetName() << " = new TGListBox(" << fParent->GetName();
-   if (!extra_args.IsNull())
-      out << "," << fWidgetId << "," << extra_args;
-   else if (fWidgetId != -1)
-      out << "," << fWidgetId;
+   if (!extra_args.IsNull() || (fWidgetId != -1))
+      out << ", " << fWidgetId << extra_args;
    out << ");\n";
 
    if (option && strstr(option, "keep_names"))

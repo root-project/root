@@ -811,7 +811,7 @@ void TGTab::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   TGTab *" << GetName() << " = new TGTab(" << fParent->GetName() << "," << GetWidth() << "," << GetHeight();
 
    if (!extra_args.IsNull() || (fFontStruct != GetDefaultFontStruct()))
-      out << "," << parGC << "," << parFont << "," << extra_args;
+      out << "," << parGC << "," << parFont << extra_args;
    else if (fNormGC != GetDefaultGC()())
       out << "," << parGC;
    out << ");\n";

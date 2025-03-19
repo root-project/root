@@ -3519,15 +3519,12 @@ void TGTransientFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
 
    SavePrimitiveSubframes(out, option);
 
-   if (fWindowName.Length()) {
-      out << "   " << GetName() << "->SetWindowName(\n"
-          << TString(GetWindowName()).ReplaceSpecialCppChars() << "\");\n";
-   }
-   if (fIconName.Length()) {
+   if (fWindowName.Length())
+      out << "   " << GetName() << "->SetWindowName(\"" << TString(GetWindowName()).ReplaceSpecialCppChars()
+          << "\");\n";
+   if (fIconName.Length())
       out << "   " << GetName() << "->SetIconName(\"" << TString(GetIconName()).ReplaceSpecialCppChars() << "\");\n";
-   }
-   if (fIconPixmap.Length()) {
+   if (fIconPixmap.Length())
       out << "   " << GetName() << "->SetIconPixmap(\"" << TString(GetIconPixmap()).ReplaceSpecialCppChars()
           << "\");\n";
-   }
 }
