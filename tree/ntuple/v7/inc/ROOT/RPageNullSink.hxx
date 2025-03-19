@@ -47,9 +47,9 @@ public:
       return {fNColumns++, &column};
    }
 
-   const RNTupleDescriptor &GetDescriptor() const final
+   const ROOT::RNTupleDescriptor &GetDescriptor() const final
    {
-      static RNTupleDescriptor descriptor;
+      static ROOT::RNTupleDescriptor descriptor;
       return descriptor;
    }
 
@@ -76,7 +76,7 @@ public:
    {
       ConnectFields(changeset.fAddedFields, firstEntry);
    }
-   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final {}
+   void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
 
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitPage(ColumnHandle_t, const ROOT::Internal::RPage &page) final

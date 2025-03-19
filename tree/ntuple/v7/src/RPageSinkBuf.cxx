@@ -130,7 +130,8 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModel
    fInnerSink->UpdateSchema(innerChangeset, firstEntry);
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo)
+void ROOT::Experimental::Internal::RPageSinkBuf::UpdateExtraTypeInfo(
+   const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo)
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
    Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);

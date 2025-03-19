@@ -136,7 +136,8 @@ ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::ToColumnSet()
    return result;
 }
 
-bool ROOT::Experimental::Internal::RPageSource::REntryRange::IntersectsWith(const RClusterDescriptor &clusterDesc) const
+bool ROOT::Experimental::Internal::RPageSource::REntryRange::IntersectsWith(
+   const ROOT::RClusterDescriptor &clusterDesc) const
 {
    if (fFirstEntry == ROOT::kInvalidNTupleIndex) {
       /// Entry range unset, we assume that the entry range covers the complete source
@@ -319,7 +320,8 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
 void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-   std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageInfo &)> perPageFunc)
+   std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
+      perPageFunc)
 {
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
@@ -878,7 +880,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    fOpenColumnRanges.reserve(fOpenColumnRanges.size() + (nColumns - nColumnsBeforeUpdate));
    fOpenPageRanges.reserve(fOpenPageRanges.size() + (nColumns - nColumnsBeforeUpdate));
    for (ROOT::DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
-      RClusterDescriptor::RColumnRange columnRange;
+      ROOT::RClusterDescriptor::RColumnRange columnRange;
       columnRange.SetPhysicalColumnId(i);
       // We set the first element index in the current cluster to the first element that is part of a materialized page
       // (i.e., that is part of a page list). For columns created during late model extension, however, the column range
@@ -887,7 +889,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       columnRange.SetNElements(0);
       columnRange.SetCompressionSettings(GetWriteOptions().GetCompression());
       fOpenColumnRanges.emplace_back(columnRange);
-      RClusterDescriptor::RPageRange pageRange;
+      ROOT::RClusterDescriptor::RPageRange pageRange;
       pageRange.SetPhysicalColumnId(i);
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
@@ -899,7 +901,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
 }
 
 void ROOT::Experimental::Internal::RPagePersistentSink::UpdateExtraTypeInfo(
-   const RExtraTypeInfoDescriptor &extraTypeInfo)
+   const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo)
 {
    if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
       throw RException(R__FAIL("ROOT bug: unexpected type extra info in UpdateExtraTypeInfo()"));
@@ -936,7 +938,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel>
-ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTupleDescriptor &srcDescriptor,
+ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescriptor &srcDescriptor,
                                                                       bool copyClusters)
 {
    // Create new descriptor
@@ -950,13 +952,13 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
    fOpenPageRanges.reserve(nColumns);
    for (ROOT::DescriptorId_t i = 0; i < nColumns; ++i) {
       const auto &column = descriptor.GetColumnDescriptor(i);
-      RClusterDescriptor::RColumnRange columnRange;
+      ROOT::RClusterDescriptor::RColumnRange columnRange;
       columnRange.SetPhysicalColumnId(i);
       columnRange.SetFirstElementIndex(column.GetFirstElementIndex());
       columnRange.SetNElements(0);
       columnRange.SetCompressionSettings(GetWriteOptions().GetCompression());
       fOpenColumnRanges.emplace_back(columnRange);
-      RClusterDescriptor::RPageRange pageRange;
+      ROOT::RClusterDescriptor::RPageRange pageRange;
       pageRange.SetPhysicalColumnId(i);
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
@@ -984,7 +986,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
    }
 
    // Create model
-   auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
+   auto modelOpts = ROOT::RNTupleDescriptor::RCreateModelOptions();
    modelOpts.SetReconstructProjections(true);
    auto model = descriptor.CreateModel(modelOpts);
    if (!copyClusters) {
@@ -1016,7 +1018,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
 
-   RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    pageInfo.SetNElements(page.GetNElements());
    pageInfo.SetLocator(CommitPageImpl(columnHandle, page));
    pageInfo.SetHasChecksum(GetWriteOptions().GetEnablePageChecksums());
@@ -1028,7 +1030,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::D
 {
    fOpenColumnRanges.at(physicalColumnId).IncrementNElements(sealedPage.GetNElements());
 
-   RClusterDescriptor::RPageInfo pageInfo;
+   ROOT::RClusterDescriptor::RPageInfo pageInfo;
    pageInfo.SetNElements(sealedPage.GetNElements());
    pageInfo.SetLocator(CommitSealedPageImpl(physicalColumnId, sealedPage));
    pageInfo.SetHasChecksum(sealedPage.GetHasChecksum());
@@ -1112,7 +1114,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
          fOpenColumnRanges.at(range.fPhysicalColumnId).IncrementNElements(sealedPageIt->GetNElements());
 
-         RClusterDescriptor::RPageInfo pageInfo;
+         ROOT::RClusterDescriptor::RPageInfo pageInfo;
          pageInfo.SetNElements(sealedPageIt->GetNElements());
          pageInfo.SetLocator(locators[locatorIndexes[i++]]);
          pageInfo.SetHasChecksum(sealedPageIt->GetHasChecksum());

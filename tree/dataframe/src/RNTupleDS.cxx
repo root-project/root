@@ -86,7 +86,7 @@ public:
    }
    // Field is only used for reading
    void GenerateColumns() final { assert(false && "Cardinality fields must only be used for reading"); }
-   void GenerateColumns(const RNTupleDescriptor &desc) final
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final
    {
       GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
    }
@@ -239,7 +239,7 @@ public:
 
 RNTupleDS::~RNTupleDS() = default;
 
-void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
+void RNTupleDS::AddField(const ROOT::RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
                          std::vector<RNTupleDS::RFieldInfo> fieldInfos, bool convertToRVec)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple

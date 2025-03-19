@@ -40,8 +40,6 @@
 #include <vector>
 
 using ROOT::ENTupleColumnType;
-using ROOT::RFieldDescriptor;
-using ROOT::RNTupleDescriptor;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RColumnElementBase;
 
@@ -268,15 +266,15 @@ struct RChangeCompressionFunc {
 };
 
 struct RCommonField {
-   const RFieldDescriptor *fSrc;
-   const RFieldDescriptor *fDst;
+   const ROOT::RFieldDescriptor *fSrc;
+   const ROOT::RFieldDescriptor *fDst;
 
-   RCommonField(const RFieldDescriptor *src, const RFieldDescriptor *dst) : fSrc(src), fDst(dst) {}
+   RCommonField(const ROOT::RFieldDescriptor *src, const ROOT::RFieldDescriptor *dst) : fSrc(src), fDst(dst) {}
 };
 
 struct RDescriptorsComparison {
-   std::vector<const RFieldDescriptor *> fExtraDstFields;
-   std::vector<const RFieldDescriptor *> fExtraSrcFields;
+   std::vector<const ROOT::RFieldDescriptor *> fExtraDstFields;
+   std::vector<const ROOT::RFieldDescriptor *> fExtraSrcFields;
    std::vector<RCommonField> fCommonFields;
 };
 
@@ -308,7 +306,7 @@ struct RColumnMergeInfo {
    ENTupleColumnType fColumnType;
    // If nullopt, use the default in-memory type
    std::optional<std::type_index> fInMemoryType;
-   const RFieldDescriptor *fParentField;
+   const ROOT::RFieldDescriptor *fParentField;
 };
 
 // Data related to a single call of RNTupleMerger::Merge()
@@ -316,8 +314,8 @@ struct RNTupleMergeData {
    std::span<RPageSource *> fSources;
    RPageSink &fDestination;
    const RNTupleMergeOptions &fMergeOpts;
-   const RNTupleDescriptor &fDstDescriptor;
-   const RNTupleDescriptor *fSrcDescriptor = nullptr;
+   const ROOT::RNTupleDescriptor &fDstDescriptor;
+   const ROOT::RNTupleDescriptor *fSrcDescriptor = nullptr;
 
    std::vector<RColumnMergeInfo> fColumns;
    ColumnIdMap_t fColumnIdMap;
@@ -338,7 +336,7 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::uint8_t[]>> fBuffers;
 };
 
-std::ostream &operator<<(std::ostream &os, const std::optional<RColumnDescriptor::RValueRange> &x)
+std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
 {
    if (x) {
       os << '(' << x->fMin << ", " << x->fMax << ')';
@@ -380,7 +378,7 @@ static bool IsSplitOrUnsplitVersionOf(ENTupleColumnType a, ENTupleColumnType b)
 /// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
 /// In addition, returns the differences between `dst` and `src`'s structures
 static ROOT::RResult<RDescriptorsComparison>
-CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor &src)
+CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src)
 {
    // Cases:
    // 1. dst == src
@@ -543,7 +541,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
 }
 
 // Applies late model extension to `destination`, adding all `newFields` to it.
-static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields, RNTupleModel &dstModel,
+static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> newFields, RNTupleModel &dstModel,
                                    RNTupleMergeData &mergeData, std::vector<RCommonField> &commonFields)
 {
    assert(newFields.size() > 0); // no point in calling this with 0 new cols
@@ -605,8 +603,9 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
 
 // Generates default (zero) values for the given columns
 static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMergeInfo> columns,
-                                        RSealedPageMergeData &sealedPageData, const RNTupleDescriptor &srcDescriptor,
-                                        const RNTupleDescriptor &dstDescriptor)
+                                        RSealedPageMergeData &sealedPageData,
+                                        const ROOT::RNTupleDescriptor &srcDescriptor,
+                                        const ROOT::RNTupleDescriptor &dstDescriptor)
 {
    if (!nEntriesToGenerate)
       return;
@@ -614,7 +613,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
    for (const auto &column : columns) {
       const auto &columnId = column.fInputId;
       const auto &columnDesc = dstDescriptor.GetColumnDescriptor(columnId);
-      const RFieldDescriptor *field = column.fParentField;
+      const ROOT::RFieldDescriptor *field = column.fParentField;
 
       // Skip all auxiliary columns
       assert(!field->GetLogicalColumnIds().empty());
@@ -626,7 +625,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
       bool skipColumn = false;
       auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
       for (auto parentId = field->GetParentId(); parentId != ROOT::kInvalidDescriptorId;) {
-         const RFieldDescriptor &parent = srcDescriptor.GetFieldDescriptor(parentId);
+         const ROOT::RFieldDescriptor &parent = srcDescriptor.GetFieldDescriptor(parentId);
          if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
              parent.GetStructure() == ROOT::ENTupleStructure::kVariant) {
             skipColumn = true;
@@ -680,7 +679,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
 
 // Merges all columns appearing both in the source and destination RNTuples, just copying them if their
 // compression matches ("fast merge") or by unsealing and resealing them with the proper compression.
-void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RClusterDescriptor &clusterDesc,
+void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
                                        std::span<const RColumnMergeInfo> commonColumns,
                                        const RCluster::ColumnSet_t &commonColumnSet,
                                        std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
@@ -900,9 +899,9 @@ static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldT
 // fields' names and the column index. By this point, since we called `CompareDescriptorStructure()` earlier, we should
 // be guaranteed that two matching columns will have at least compatible representations. NOTE: srcFieldDesc and
 // dstFieldDesc may alias.
-static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RNTupleDescriptor &srcDesc,
-                                RNTupleMergeData &mergeData, const RFieldDescriptor &srcFieldDesc,
-                                const RFieldDescriptor &dstFieldDesc, const std::string &prefix = "")
+static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const ROOT::RNTupleDescriptor &srcDesc,
+                                RNTupleMergeData &mergeData, const ROOT::RFieldDescriptor &srcFieldDesc,
+                                const ROOT::RFieldDescriptor &dstFieldDesc, const std::string &prefix = "")
 {
    std::string name = prefix + '.' + srcFieldDesc.GetFieldName();
 
@@ -975,11 +974,11 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RN
 // Converts the fields comparison data to the corresponding column information.
 // While doing so, it collects such information in `mergeData.fColumnIdMap`, which is used by later calls to this
 // function to map already-seen column names to their chosen outputId, type and so on.
-static RColumnInfoGroup
-GatherColumnInfos(const RDescriptorsComparison &descCmp, const RNTupleDescriptor &srcDesc, RNTupleMergeData &mergeData)
+static RColumnInfoGroup GatherColumnInfos(const RDescriptorsComparison &descCmp, const ROOT::RNTupleDescriptor &srcDesc,
+                                          RNTupleMergeData &mergeData)
 {
    RColumnInfoGroup res;
-   for (const RFieldDescriptor *field : descCmp.fExtraDstFields) {
+   for (const ROOT::RFieldDescriptor *field : descCmp.fExtraDstFields) {
       AddColumnsFromField(res.fExtraDstColumns, mergeData.fDstDescriptor, mergeData, *field, *field);
    }
    for (const auto &[srcField, dstField] : descCmp.fCommonFields) {

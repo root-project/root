@@ -113,7 +113,7 @@ ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, con
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
+ROOT::Experimental::RNTupleReader::Open(const ROOT::RNTupleDescriptor::RCreateModelOptions &createModelOpts,
                                         std::string_view ntupleName, std::string_view storage,
                                         const ROOT::RNTupleReadOptions &options)
 {
@@ -124,7 +124,7 @@ ROOT::Experimental::RNTupleReader::Open(const RNTupleDescriptor::RCreateModelOpt
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
+ROOT::Experimental::RNTupleReader::Open(const ROOT::RNTupleDescriptor::RCreateModelOptions &createModelOpts,
                                         const ROOT::RNTuple &ntuple, const ROOT::RNTupleReadOptions &options)
 {
    auto reader = std::unique_ptr<RNTupleReader>(
@@ -137,7 +137,7 @@ const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetMo
 {
    if (!fModel) {
       fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
-         fCreateModelOptions.value_or(RNTupleDescriptor::RCreateModelOptions{}));
+         fCreateModelOptions.value_or(ROOT::RNTupleDescriptor::RCreateModelOptions{}));
       ConnectModel(*fModel);
    }
    return *fModel;
@@ -169,7 +169,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       {
          auto descriptorGuard = fSource->GetSharedDescriptorGuard();
          name = descriptorGuard->GetName();
-         RNTupleDescriptor::RCreateModelOptions opts;
+         ROOT::RNTupleDescriptor::RCreateModelOptions opts;
          opts.SetCreateBare(true);
          // When printing the schema we always try to reconstruct the whole thing even when we are missing the
          // dictionaries.

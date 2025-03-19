@@ -86,10 +86,10 @@ private:
    /// descriptor.  Using the descriptor's generation number, we know if the cached descriptor is stale.
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
-   std::optional<RNTupleDescriptor> fCachedDescriptor;
+   std::optional<ROOT::RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will used when creating the model
-   std::optional<RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
+   std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
 
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
@@ -164,10 +164,10 @@ public:
                                               const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    /// The caller imposes the way the model is reconstructed
-   static std::unique_ptr<RNTupleReader> Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
+   static std::unique_ptr<RNTupleReader> Open(const ROOT::RNTupleDescriptor::RCreateModelOptions &createModelOpts,
                                               std::string_view ntupleName, std::string_view storage,
                                               const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
-   static std::unique_ptr<RNTupleReader> Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
+   static std::unique_ptr<RNTupleReader> Open(const ROOT::RNTupleDescriptor::RCreateModelOptions &createModelOpts,
                                               const RNTuple &ntuple,
                                               const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
    std::unique_ptr<RNTupleReader> Clone()
@@ -184,7 +184,7 @@ public:
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call
    /// to LoadEntry or to any of the views returned from the reader.
-   const RNTupleDescriptor &GetDescriptor();
+   const ROOT::RNTupleDescriptor &GetDescriptor();
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
    ///
@@ -228,7 +228,7 @@ public:
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
-            fCreateModelOptions.value_or(RNTupleDescriptor::RCreateModelOptions{}));
+            fCreateModelOptions.value_or(ROOT::RNTupleDescriptor::RCreateModelOptions{}));
          ConnectModel(*fModel);
       }
       LoadEntry(index, fModel->GetDefaultEntry());

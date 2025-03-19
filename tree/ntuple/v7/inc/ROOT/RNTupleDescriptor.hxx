@@ -1591,6 +1591,25 @@ inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
 }
 
 } // namespace Internal
+
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RNTupleDescriptor [[deprecated("ROOT::Experimental::RNTupleDescriptor moved to ROOT::RNTupleDescriptor")]] =
+   ROOT::RNTupleDescriptor;
+using RFieldDescriptor [[deprecated("ROOT::Experimental::RFieldDescriptor moved to ROOT::RFieldDescriptor")]] =
+   ROOT::RFieldDescriptor;
+using RColumnDescriptor [[deprecated("ROOT::Experimental::RColumnDescriptor moved to ROOT::RColumnDescriptor")]] =
+   ROOT::RColumnDescriptor;
+using RClusterDescriptor [[deprecated("ROOT::Experimental::RClusterDescriptor moved to ROOT::RClusterDescriptor")]] =
+   ROOT::RClusterDescriptor;
+using RClusterGroupDescriptor
+   [[deprecated("ROOT::Experimental::RClusterGroupDescriptor moved to ROOT::RClusterGroupDescriptor")]] =
+      ROOT::RClusterGroupDescriptor;
+using RExtraTypeInfoDescriptor
+   [[deprecated("ROOT::Experimental::RExtraTypeInfoDescriptor moved to ROOT::RExtraTypeInfoDescriptor")]] =
+      ROOT::RExtraTypeInfoDescriptor;
+} // namespace Experimental
+
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleDescriptor
