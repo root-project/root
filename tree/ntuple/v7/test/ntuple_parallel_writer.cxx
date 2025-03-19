@@ -80,6 +80,77 @@ TEST(RNTupleParallelWriter, Basics)
    }
 }
 
+TEST(RNTupleParallelWriter, RawPtrWriteEntry)
+{
+   FileRaii fileGuard("test_ntuple_parallel_raw_ptr_write_entry.root");
+
+   {
+      auto model = RNTupleModel::CreateBare();
+      model->MakeField<float>("pt");
+
+      auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+
+      // Create two RNTupleFillContext to prepare clusters in parallel.
+      auto c1 = writer->CreateFillContext();
+      auto e1 = c1->CreateRawPtrWriteEntry();
+      float pt1;
+      e1->BindRawPtr("pt", &pt1);
+
+      auto c2 = writer->CreateFillContext();
+      auto e2 = c2->CreateRawPtrWriteEntry();
+      float pt2;
+      e2->BindRawPtr("pt", &pt2);
+
+      // Fill one entry per context and commit a cluster each.
+      pt1 = 1.0;
+      c1->Fill(*e1);
+      c1->FlushCluster();
+
+      pt2 = 2.0;
+      c2->Fill(*e2);
+      c2->FlushCluster();
+
+      // The two contexts should act independently.
+      EXPECT_EQ(c1->GetNEntries(), 1);
+      EXPECT_EQ(c2->GetNEntries(), 1);
+      EXPECT_EQ(c1->GetLastFlushed(), 1);
+      EXPECT_EQ(c2->GetLastFlushed(), 1);
+
+      // Fill another entry per context without explicitly committing a cluster.
+      pt1 = 3.0;
+      c1->Fill(*e1);
+
+      pt2 = 4.0;
+      c2->Fill(*e2);
+
+      EXPECT_EQ(c1->GetNEntries(), 2);
+      EXPECT_EQ(c2->GetNEntries(), 2);
+
+      // Release the contexts (in reverse order).
+      c2.reset();
+      c1.reset();
+
+      // The writer goes out of scope and commits the dataset.
+   }
+
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   const auto &model = reader->GetModel();
+
+   EXPECT_EQ(reader->GetNEntries(), 4);
+   auto pt = model.GetDefaultEntry().GetPtr<float>("pt");
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(*pt, 1.0);
+   reader->LoadEntry(1);
+   EXPECT_EQ(*pt, 2.0);
+
+   // This entry ordering is enforced by the context destruction.
+   reader->LoadEntry(2);
+   EXPECT_EQ(*pt, 4.0);
+   reader->LoadEntry(3);
+   EXPECT_EQ(*pt, 3.0);
+}
+
 TEST(RNTupleParallelWriter, Tokens)
 {
    FileRaii fileGuard("test_ntuple_parallel_tokens.root");
