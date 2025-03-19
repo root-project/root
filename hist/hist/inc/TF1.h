@@ -462,6 +462,7 @@ public:
    template <class T> T EvalPar(const T *x, const Double_t *params = nullptr);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    template <class T> T operator()(const T *x, const Double_t *params = nullptr);
+   Double_t EvalUncertainty(Double_t x, const TMatrixDSym* covMatrix = nullptr);
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void     FixParameter(Int_t ipar, Double_t value);
    /// Return true if function has data in fSave buffer
