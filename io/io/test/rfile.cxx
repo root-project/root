@@ -3,8 +3,10 @@
 
 #include <TFile.h>
 #include <TH1D.h>
+#include <TRandom3.h>
 #include <TROOT.h>
 #include <TSystem.h>
+#include <RZip.h>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
 #include <ROOT/TestSupport.hxx>
@@ -42,6 +44,34 @@ public:
 };
 
 } // anonymous namespace
+
+static std::string JoinKeyNames(const ROOT::Experimental::RFileKeyIterable &iterable)
+{
+   auto beg = iterable.begin();
+   if (beg == iterable.end())
+      return std::string("");
+   return std::accumulate(std::next(beg), iterable.end(), (*beg).GetPath(),
+                          [](const auto &a, const auto &b) { return a + ", " + b.GetPath(); });
+};
+
+TEST(RFile, DecomposePath)
+{
+   using ROOT::Experimental::DecomposePath;
+
+   auto Pair = [](std::string_view a, std::string_view b) { return std::make_pair(a, b); };
+
+   EXPECT_EQ(DecomposePath("/foo/bar/baz"), Pair("/foo/bar/", "baz"));
+   EXPECT_EQ(DecomposePath("/foo/bar/baz/"), Pair("/foo/bar/baz/", ""));
+   EXPECT_EQ(DecomposePath("foo/bar/baz"), Pair("foo/bar/", "baz"));
+   EXPECT_EQ(DecomposePath("foo"), Pair("", "foo"));
+   EXPECT_EQ(DecomposePath("/"), Pair("/", ""));
+   EXPECT_EQ(DecomposePath("////"), Pair("////", ""));
+   EXPECT_EQ(DecomposePath(""), Pair("", ""));
+   EXPECT_EQ(DecomposePath("asd/"), Pair("asd/", ""));
+   EXPECT_EQ(DecomposePath("  "), Pair("", "  "));
+   EXPECT_EQ(DecomposePath("/  "), Pair("/", "  "));
+   EXPECT_EQ(DecomposePath("  /"), Pair("  /", ""));
+}
 
 TEST(RFile, Open)
 {
@@ -323,6 +353,43 @@ TEST(RFile, WriteReadInTFileDir)
    }
 }
 
+TEST(RFile, IterateKeys)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      TH1D a;
+      auto b = std::make_unique<std::string>();
+      std::string c = "0";
+      file->Put("a", a);
+      file->Put("b", *b);
+      file->Put("c", c);
+      file->Put("/foo/bar/c", c);
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      const auto expected = "a,b,c,foo/bar/c,";
+      std::string s = "";
+      for (const auto &key : file->ListKeys()) {
+         s += key.GetPath() + ",";
+      }
+      EXPECT_EQ(expected, s);
+
+      // verify the expected iterator operations work
+      const auto expected2 = "b,c,foo/bar/c,";
+      s = "";
+      auto iterable = file->ListKeys();
+      auto it = iterable.begin();
+      std::advance(it, 1);
+      for (; it != iterable.end(); ++it) {
+         s += (*it).GetPath() + ",";
+      }
+      EXPECT_EQ(expected2, s);
+   }
+}
+
 TEST(RFile, SaneHierarchy)
 {
    // verify that we can't create weird hierarchies like:
@@ -370,6 +437,102 @@ TEST(RFile, RefuseToCreateDirOverLeaf)
    } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.what(), testing::HasSubstr("'a/b'"));
       EXPECT_THAT(ex.what(), testing::HasSubstr("name already taken"));
+   }
+}
+
+TEST(RFile, IterateKeysRecursive)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_recursive.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s;
+      file->Put("a/c", s);
+      file->Put("a/b/d", s);
+      file->Put("e/f", s);
+      file->Put("e/c/g", s);
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->ListKeys()), "a/c, a/b/d, e/f, e/c/g");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a")), "a/c, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b")), "a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c")), "");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e/c")), "e/c/g");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e/f")), "e/f");
+   }
+}
+
+TEST(RFile, IterateKeysNonRecursive)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_nonrecursive.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s;
+      file->Put("h", s);
+      file->Put("a/c", s);
+      file->Put("a/b/d", s);
+      file->Put("e/f", s);
+      file->Put("e/c/g", s);
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("", RFile::kListObjects)), "h");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListObjects)), "a/c");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListObjects)), "a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c", RFile::kListObjects)), "");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListObjects)), "e/f");
+   }
+}
+
+TEST(RFile, IterateKeysOnlyDirs)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_onlydirs.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s;
+      file->Put("h", s);
+      file->Put("a/c", s);
+      file->Put("a/b/d", s);
+      file->Put("e/f", s);
+      file->Put("e/c/g", s);
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("", RFile::kListDirs | RFile::kListRecursive)), "a, a/b, e, e/c");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs | RFile::kListRecursive)), "a, a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs | RFile::kListRecursive)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c", RFile::kListDirs | RFile::kListRecursive)), "");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs | RFile::kListRecursive)), "e, e/c");
+   }
+}
+
+TEST(RFile, IterateKeysOnlyDirsNonRecursive)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_onlydirs_nonrec.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s;
+      file->Put("h", s);
+      file->Put("a/c", s);
+      file->Put("a/b/d", s);
+      file->Put("e/f", s);
+      file->Put("e/c/g", s);
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("", RFile::kListDirs)), "a, e");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a", RFile::kListDirs)), "a, a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b", RFile::kListDirs)), "a/b");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("a/b/c", RFile::kListDirs)), "");
+      EXPECT_EQ(JoinKeyNames(file->ListKeys("e", RFile::kListDirs)), "e, e/c");
    }
 }
 
@@ -431,35 +594,31 @@ TEST(RFile, Closing)
    }
 }
 
+TEST(RFile, GetAfterOverwriteNoBackup)
+{
+   FileRaii fileGuard("test_rfile_getafternobackup.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   std::string s = "foo";
+   file->Put("s", s);
+   s = "bar";
+   file->Overwrite("s", s, false);
+   auto ss = file->Get<std::string>("s");
+   EXPECT_EQ(*ss, s);
+
+   std::vector<ROOT::Experimental::RKeyInfo> keys;
+   for (const auto &key : file->ListKeys())
+      keys.push_back(key);
+
+   ASSERT_EQ(keys.size(), 1);
+}
+
 TEST(RFile, InvalidPaths)
 {
    FileRaii fileGuard("test_rfile_invalidpaths.root");
 
    auto file = RFile::Recreate(fileGuard.GetPath());
-
-   static const char *const kKeyLong = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                                       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                                       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                                       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
    std::string obj = "obj";
-   EXPECT_NO_THROW(file->Put(kKeyLong, obj));
-
-   static const char *const kKeyFragmentLong =
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-   EXPECT_NO_THROW(file->Put(kKeyFragmentLong, obj));
-
-   static const char *const kKeyFragmentOk =
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-   EXPECT_NO_THROW(file->Put(kKeyFragmentOk, obj));
 
    static const char *const kKeyWhitespaces = "my path with spaces/foo";
    EXPECT_THROW(file->Put(kKeyWhitespaces, obj), ROOT::RException);
@@ -481,6 +640,42 @@ TEST(RFile, InvalidPaths)
 
    static const char *const kKeyBackslash = "this\\actually\\works!";
    EXPECT_NO_THROW(file->Put(kKeyBackslash, obj));
+}
+
+TEST(RFile, LongKeyName)
+{
+   FileRaii fileGuard("test_rfile_longkey.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+
+   static const char kKeyLong[] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   static_assert(std::size(kKeyLong) > 256);
+   std::string obj = "obj";
+   EXPECT_NO_THROW(file->Put(kKeyLong, obj));
+
+   auto keys = file->ListKeys();
+   auto it = keys.begin();
+   EXPECT_EQ((*it).GetPath(), kKeyLong);
+
+   static const char *const kKeyFragmentLong =
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   EXPECT_NO_THROW(file->Put(kKeyFragmentLong, obj));
+
+   static const char *const kKeyFragmentOk =
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   EXPECT_NO_THROW(file->Put(kKeyFragmentOk, obj));
 }
 
 TEST(RFile, NormalizedPaths)
