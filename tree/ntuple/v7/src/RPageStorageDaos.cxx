@@ -698,7 +698,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
       PrepareLoadCluster(
          clusterKey, *pageZeroMap,
          [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
-             const RClusterDescriptor::RPageInfo &pageInfo) {
+             const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
             const auto &pageLocator = pageInfo.GetLocator();
             uint32_t position, offset;
             std::tie(position, offset) = DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());

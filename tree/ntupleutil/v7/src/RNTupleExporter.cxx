@@ -32,11 +32,12 @@ ROOT::RLogChannel &RNTupleExporterLog()
 }
 
 struct RColumnExportInfo {
-   const RColumnDescriptor *fColDesc;
-   const RFieldDescriptor *fFieldDesc;
+   const ROOT::RColumnDescriptor *fColDesc;
+   const ROOT::RFieldDescriptor *fFieldDesc;
    std::string fQualifiedName;
 
-   RColumnExportInfo(const RNTupleDescriptor &desc, const RColumnDescriptor &colDesc, const RFieldDescriptor &fieldDesc)
+   RColumnExportInfo(const ROOT::RNTupleDescriptor &desc, const ROOT::RColumnDescriptor &colDesc,
+                     const ROOT::RFieldDescriptor &fieldDesc)
       : fColDesc(&colDesc),
         fFieldDesc(&fieldDesc),
         // NOTE: we don't need to keep the column representation index into account because exactly 1 representation
@@ -64,8 +65,9 @@ bool ItemIsFilteredOut(const RNTupleExporter::RFilter<T> &filter, const T &item)
    return isFiltered;
 }
 
-RAddColumnsResult AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTupleDescriptor &desc,
-                                      const RFieldDescriptor &fieldDesc, const RNTupleExporter::RPagesOptions &options)
+RAddColumnsResult AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const ROOT::RNTupleDescriptor &desc,
+                                      const ROOT::RFieldDescriptor &fieldDesc,
+                                      const RNTupleExporter::RPagesOptions &options)
 {
    R__LOG_DEBUG(1, RNTupleExporterLog()) << "processing field \"" << desc.GetQualifiedFieldName(fieldDesc.GetId())
                                          << "\"";
@@ -89,7 +91,7 @@ RAddColumnsResult AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const
    return res;
 }
 
-int CountPages(const RNTupleDescriptor &desc, std::span<const RColumnExportInfo> columns)
+int CountPages(const ROOT::RNTupleDescriptor &desc, std::span<const RColumnExportInfo> columns)
 {
    int nPages = 0;
    auto clusterId = desc.FindClusterId(0, 0);
