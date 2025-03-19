@@ -20,6 +20,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RRawPtrWriteEntry.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -121,6 +122,20 @@ public:
    /// context's own model.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(ROOT::REntry &entry) { return FillImpl(entry); }
+
+   /// Fill an RRawPtrWriteEntry into this context, but don't commit the cluster. The calling code must pass an
+   /// RNTupleFillStatus and check RNTupleFillStatus::ShouldFlushCluster.
+   ///
+   /// This method will perform a light check whether the entry comes from the context's own model.
+   void FillNoFlush(Detail::RRawPtrWriteEntry &entry, ROOT::RNTupleFillStatus &status)
+   {
+      FillNoFlushImpl(entry, status);
+   }
+   /// Fill an RRawPtrWriteEntry into this context.  This method will perform a light check whether the entry comes from
+   /// the context's own model.
+   /// \return The number of uncompressed bytes written.
+   std::size_t Fill(Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
+
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage.
    void FlushColumns();
@@ -131,6 +146,10 @@ public:
 
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }
    std::unique_ptr<ROOT::REntry> CreateEntry() const { return fModel->CreateEntry(); }
+   std::unique_ptr<Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
+   {
+      return fModel->CreateRawPtrWriteEntry();
+   }
 
    /// Return the entry number that was last flushed in a cluster.
    ROOT::NTupleSize_t GetLastFlushed() const { return fLastFlushed; }
