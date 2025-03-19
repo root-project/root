@@ -974,11 +974,10 @@ TGDimension TGListDetailsLayout::GetDefaultSize() const
 
 void TGLayoutHints::SavePrimitive(std::ostream &out, Option_t * option/*= ""*/)
 {
+   UInt_t pad = GetPadLeft() + GetPadRight() + GetPadTop() + GetPadBottom();
 
-   TString hints;
-   UInt_t pad = GetPadLeft()+GetPadRight()+GetPadTop()+GetPadBottom();
-
-   if (!GetLayoutHints()) return;
+   if (!GetLayoutHints())
+      return;
 
    if ((option == 0) || strcmp(option, "nocoma"))
       out << ", ";
@@ -987,46 +986,29 @@ void TGLayoutHints::SavePrimitive(std::ostream &out, Option_t * option/*= ""*/)
       out << "new TGLayoutHints(kLHintsNormal)";
       return;
    }
-   if (fLayoutHints & kLHintsLeft) {
-      if (hints.Length() == 0) hints  = "kLHintsLeft";
-      else                     hints += " | kLHintsLeft";
-   }
-   if (fLayoutHints & kLHintsCenterX) {
-      if  (hints.Length() == 0) hints  = "kLHintsCenterX";
-      else                      hints += " | kLHintsCenterX";
-   }
-   if (fLayoutHints & kLHintsRight) {
-      if (hints.Length() == 0) hints  = "kLHintsRight";
-      else                     hints += " | kLHintsRight";
-   }
-   if (fLayoutHints & kLHintsTop) {
-      if (hints.Length() == 0) hints  = "kLHintsTop";
-      else                     hints += " | kLHintsTop";
-   }
-   if (fLayoutHints & kLHintsCenterY) {
-      if (hints.Length() == 0) hints  = "kLHintsCenterY";
-      else                     hints += " | kLHintsCenterY";
-   }
-   if (fLayoutHints & kLHintsBottom) {
-      if (hints.Length() == 0) hints  = "kLHintsBottom";
-      else                     hints += " | kLHintsBottom";
-   }
-   if (fLayoutHints & kLHintsExpandX) {
-      if (hints.Length() == 0) hints  = "kLHintsExpandX";
-      else                     hints += " | kLHintsExpandX";
-   }
-   if (fLayoutHints & kLHintsExpandY) {
-      if (hints.Length() == 0) hints  = "kLHintsExpandY";
-      else                     hints += " | kLHintsExpandY";
-   }
+
+   TString hints;
+   auto add = [this, &hints](UInt_t mask, const char *name) {
+      if (fLayoutHints & mask) {
+         if (hints.Length())
+            hints.Append(" | ");
+         hints.Append(name);
+      }
+   };
+   add(kLHintsLeft, "kLHintsLeft");
+   add(kLHintsCenterX, "kLHintsCenterX");
+   add(kLHintsRight, "kLHintsRight");
+   add(kLHintsTop, "kLHintsTop");
+   add(kLHintsCenterY, "kLHintsCenterY");
+   add(kLHintsBottom, "kLHintsBottom");
+   add(kLHintsExpandX, "kLHintsExpandX");
+   add(kLHintsExpandY, "kLHintsExpandY");
 
    out << "new TGLayoutHints(" << hints;
 
-   if (pad) {
-      out << "," << GetPadLeft() << "," << GetPadRight()
-          << "," << GetPadTop()  << "," << GetPadBottom();
-   }
-   out<< ")";
+   if (pad)
+      out << "," << GetPadLeft() << "," << GetPadRight() << "," << GetPadTop() << "," << GetPadBottom();
+   out << ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1034,9 +1016,7 @@ void TGLayoutHints::SavePrimitive(std::ostream &out, Option_t * option/*= ""*/)
 
 void TGVerticalLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-
    out << "new TGVerticalLayout(" << fMain->GetName() << ")";
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1044,7 +1024,6 @@ void TGVerticalLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TGHorizontalLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-
    out << "new TGHorizontalLayout(" << fMain->GetName() << ")";
 }
 
@@ -1054,8 +1033,7 @@ void TGHorizontalLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TGRowLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
-   out << "new TGRowLayout(" << fMain->GetName() << ","
-                             << fSep << ")";
+   out << "new TGRowLayout(" << fMain->GetName() << "," << fSep << ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1064,9 +1042,7 @@ void TGRowLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TGColumnLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
-   out << "new TGColumnLayout(" << fMain->GetName() << ","
-                                << fSep << ")";
-
+   out << "new TGColumnLayout(" << fMain->GetName() << "," << fSep << ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1075,12 +1051,8 @@ void TGColumnLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TGMatrixLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
-   out << "new TGMatrixLayout(" << fMain->GetName() << ","
-                                << fRows << ","
-                                << fColumns << ","
-                                << fSep << ","
-                                << fHints <<")";
-
+   out << "new TGMatrixLayout(" << fMain->GetName() << "," << fRows << "," << fColumns << "," << fSep << "," << fHints
+       << ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1089,9 +1061,7 @@ void TGMatrixLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TGTileLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
-   out << "new TGTileLayout(" << fMain->GetName() << ","
-                              << fSep << ")";
-
+   out << "new TGTileLayout(" << fMain->GetName() << "," << fSep << ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1100,9 +1070,7 @@ void TGTileLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TGListLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
-   out << "new TGListLayout(" << fMain->GetName() << ","
-                              << fSep << ")";
-
+   out << "new TGListLayout(" << fMain->GetName() << "," << fSep << ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1111,7 +1079,5 @@ void TGListLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TGListDetailsLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
-   out << "new TGListDetailsLayout(" << fMain->GetName() << ","
-                                     << fSep << "," << fWidth << ")";
-
+   out << "new TGListDetailsLayout(" << fMain->GetName() << "," << fSep << "," << fWidth << ")";
 }
