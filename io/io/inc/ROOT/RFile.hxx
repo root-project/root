@@ -10,11 +10,14 @@
 
 #include <ROOT/RError.hxx>
 
+#include <deque>
 #include <memory>
+#include <iostream>
 #include <string_view>
 #include <typeinfo>
 
 class TFile;
+class TIterator;
 class TKey;
 
 namespace ROOT {
@@ -28,6 +31,122 @@ namespace Internal {
 ROOT::RLogChannel &RFileLog();
 
 } // namespace Internal
+
+/// Given a "path-like" string (like foo/bar/baz), returns a pair `{ dirName, baseName }`.
+/// `baseName` will be empty if the string ends with '/'.
+/// `dirName` will be empty if the string contains no '/'.
+/// `dirName`, if not empty, always ends with a '/'.
+/// NOTE: this function does no semantic checking or path expansion, nor does it interact with the
+/// filesystem in any way (so it won't follow symlink or anything like that).
+/// Moreover it doesn't trim the path in any way, so any leading or trailing whitespaces will be preserved.
+/// This function does not perform any copy: the returned string_views have the same lifetime as `path`.
+std::pair<std::string_view, std::string_view> DecomposePath(std::string_view path);
+
+class RFileKeyIterable;
+
+/**
+\class ROOT::Experimental::RKeyInfo
+\ingroup RFile
+\brief Information about an RFile object's Key.
+
+Every object inside a ROOT file has an associated "Key" which contains metadata on the object, such as its name, type
+etc.
+Querying this information can be done via RFile::ListKeys(). Reading an object's Key
+doesn't deserialize the full object, so it's a relatively lightweight operation.
+*/
+class RKeyInfo final {
+   friend class ROOT::Experimental::RFileKeyIterable;
+
+public:
+   enum class ECategory : std::uint16_t {
+      kInvalid,
+      kObject,
+      kDirectory
+   };
+
+private:
+   std::string fPath;
+   std::string fTitle;
+   std::string fClassName;
+   std::uint16_t fCycle = 0;
+   ECategory fCategory = ECategory::kInvalid;
+
+public:
+   /// Returns the absolute path of this key, i.e. the directory part plus the object name.
+   const std::string &GetPath() const { return fPath; }
+   /// Returns the base name of this key, i.e. the name of the object without the directory part.
+   std::string GetBaseName() const { return std::string(DecomposePath(fPath).second); }
+   const std::string &GetTitle() const { return fTitle; }
+   const std::string &GetClassName() const { return fClassName; }
+   std::uint16_t GetCycle() const { return fCycle; }
+   ECategory GetCategory() const { return fCategory; }
+};
+
+/// The iterable returned by RFile::ListKeys()
+class RFileKeyIterable final {
+   using Pattern_t = std::string;
+
+   TFile *fFile = nullptr;
+   Pattern_t fPattern;
+   std::uint32_t fFlags = 0;
+
+public:
+   class RIterator {
+      friend class RFileKeyIterable;
+
+      struct RIterStackElem {
+         // This is ugly, but TList returns an (owning) pointer to a polymorphic TIterator...and we need this class
+         // to be copy-constructible.
+         std::shared_ptr<TIterator> fIter;
+         std::string fDirPath;
+
+         // Outlined to avoid including TIterator.h
+         RIterStackElem(TIterator *it, const std::string &path = "");
+         // Outlined to avoid including TIterator.h
+         ~RIterStackElem();
+
+         // fDirPath doesn't need to be compared because it's implied by fIter.
+         bool operator==(const RIterStackElem &other) const { return fIter == other.fIter; }
+      };
+
+      // Using a deque to have pointer stability
+      std::deque<RIterStackElem> fIterStack;
+      Pattern_t fPattern;
+      const TKey *fCurKey = nullptr;
+      std::uint16_t fRootDirNesting = 0;
+      std::uint32_t fFlags = 0;
+
+      void Advance();
+
+      // NOTE: `iter` here is an owning pointer (or null)
+      RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags);
+
+   public:
+      using iterator = RIterator;
+      using iterator_category = std::input_iterator_tag;
+      using difference_type = std::ptrdiff_t;
+      using value_type = RKeyInfo;
+      using pointer = const value_type *;
+      using reference = const value_type &;
+
+      iterator &operator++()
+      {
+         Advance();
+         return *this;
+      }
+      value_type operator*();
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
+      bool operator==(const iterator &rh) const { return fIterStack == rh.fIterStack; }
+   };
+
+   RFileKeyIterable(TFile *file, std::string_view rootDir, std::uint32_t flags)
+      : fFile(file), fPattern(std::string(rootDir)), fFlags(flags)
+   {
+   }
+
+   RIterator begin() const;
+   RIterator end() const;
+};
 
 /**
 \class ROOT::Experimental::RFile
@@ -68,7 +187,7 @@ Even though there is no equivalent of TDirectory in the RFile API, directories a
 (since they are a concept in the ROOT binary format). However they are for now only interacted with indirectly, via the
 use of filesystem-like string-based paths. If you Put an object in an RFile under the path "path/to/object", "object"
 will be stored under directory "to" which is in turn stored under directory "path". This hierarchy is encoded in the
-ROOT file itself and it can provide some optimization and/or conveniencies when querying objects.
+ROOT file itself and it can provide some optimization and/or conveniences when querying objects.
 
 For the most part, it is convenient to think about RFile in terms of a key-value storage where string-based paths are
 used to refer to arbitrary objects. However, given the hierarchical nature of ROOT files, certain filesystem-like
@@ -126,6 +245,12 @@ class RFile final {
    TKey *GetTKey(std::string_view path) const;
 
 public:
+   enum EListKeyFlags {
+      kListObjects = 1 << 0,
+      kListDirs = 1 << 1,
+      kListRecursive = 1 << 2,
+   };
+
    // This is arbitrary, but it's useful to avoid pathological cases
    static constexpr int kMaxPathNesting = 1000;
 
@@ -196,6 +321,40 @@ public:
 
    /// Flushes the RFile if needed and closes it, disallowing any further reading or writing.
    void Close();
+
+   /// Returns an iterable over all keys of objects and/or directories written into this RFile starting at path
+   /// `basePath` (defaulting to include the content of all subdirectories).
+   /// By default, keys referring to directories are not returned: only those referring to leaf objects are.
+   /// If `basePath` is the path of a leaf object, only `basePath` itself will be returned.
+   /// `flags` is a bitmask specifying the listing mode.
+   /// If `(flags & kListObject) != 0`, the listing will include keys of non-directory objects (default);
+   /// If `(flags & kListDirs) != 0`, the listing will include keys of directory objects;
+   /// If `(flags & kListRecursive) != 0`, the listing will recurse on all subdirectories of `basePath` (default),
+   /// otherwise it will only list immediate children of `basePath`.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// for (RKeyInfo key : file->ListKeys()) {
+   ///     /* iterate over all objects in the RFile */
+   ///     cout << key.GetPath() << ";" << key.GetCycle() << " of type " << key.GetClassName() << "\n";
+   /// }
+   /// for (RKeyInfo key : file->ListKeys("", kListDirs|kListObjects|kListRecursive)) {
+   ///     /* iterate over all objects and directories in the RFile */
+   /// }
+   /// for (RKeyInfo key : file->ListKeys("a/b", kListObjects)) {
+   ///     /* iterate over all objects that are immediate children of directory "a/b" */
+   /// }
+   /// for (RKeyInfo key : file->ListKeys("foo", kListDirs|kListRecursive)) {
+   ///     /* iterate over all directories under directory "foo", recursively */
+   /// }
+   /// ~~~
+   RFileKeyIterable ListKeys(std::string_view basePath = "", std::uint32_t flags = kListObjects | kListRecursive) const
+   {
+      return RFileKeyIterable(fFile.get(), basePath, flags);
+   }
+
+   /// Prints the internal structure of this RFile to the given stream.
+   void Print(std::ostream &out = std::cout) const;
 };
 
 } // namespace Experimental
