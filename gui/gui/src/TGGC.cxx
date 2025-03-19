@@ -843,7 +843,7 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
             break;
          case kGCDashList:
             if (GetDashLen() > (Int_t)sizeof(GetDashes()))
-               Warning("TGGC::SavePrimitive", "dash list can have only up to %ld elements",
+               Warning("SavePrimitive", "dash list can have only up to %ld elements",
                        (Long_t)sizeof(GetDashes()));
             out << "   " << valname << ".fDashLen = "
                 << TMath::Min(GetDashLen(),(Int_t)sizeof(GetDashes())) << ";\n";
