@@ -79,18 +79,8 @@ private:
    /// Vector of currently staged clusters.
    std::vector<Internal::RPageSink::RStagedCluster> fStagedClusters;
 
-   RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
-   RNTupleFillContext(const RNTupleFillContext &) = delete;
-   RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
-
-public:
-   ~RNTupleFillContext();
-
-   /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
-   /// and check RNTupleFillStatus::ShouldFlushCluster.
-   ///
-   /// This method will perform a light check whether the entry comes from the context's own model.
-   void FillNoFlush(ROOT::REntry &entry, ROOT::RNTupleFillStatus &status)
+   template <typename Entry>
+   void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
@@ -105,10 +95,8 @@ public:
       status.fShouldFlushCluster =
          (fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst);
    }
-   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
-   /// context's own model.
-   /// \return The number of uncompressed bytes written.
-   std::size_t Fill(ROOT::REntry &entry)
+   template <typename Entry>
+   std::size_t FillImpl(Entry &entry)
    {
       ROOT::RNTupleFillStatus status;
       FillNoFlush(entry, status);
@@ -116,6 +104,23 @@ public:
          FlushCluster();
       return status.GetLastEntrySize();
    }
+
+   RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleFillContext(const RNTupleFillContext &) = delete;
+   RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
+
+public:
+   ~RNTupleFillContext();
+
+   /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
+   /// and check RNTupleFillStatus::ShouldFlushCluster.
+   ///
+   /// This method will perform a light check whether the entry comes from the context's own model.
+   void FillNoFlush(ROOT::REntry &entry, ROOT::RNTupleFillStatus &status) { FillNoFlushImpl(entry, status); }
+   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
+   /// context's own model.
+   /// \return The number of uncompressed bytes written.
+   std::size_t Fill(ROOT::REntry &entry) { return FillImpl(entry); }
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage.
    void FlushColumns();
