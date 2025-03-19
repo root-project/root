@@ -16,13 +16,18 @@
 #ifndef ROOT7_RFieldToken
 #define ROOT7_RFieldToken
 
-#include <cstdint>
+#include <cstddef> // for std::size_t
+#include <cstdint> // for std::uint64_t
 
 namespace ROOT {
 namespace Experimental {
 
 class REntry;
 class RNTupleModel;
+
+namespace Detail {
+class RRawPtrWriteEntry;
+} // namespace Detail
 
 // clang-format off
 /**
@@ -36,8 +41,9 @@ It can be used for fast indexing in REntry's methods, e.g. REntry::BindValue. Th
 class RFieldToken {
    friend class REntry;
    friend class RNTupleModel;
+   friend class Detail::RRawPtrWriteEntry;
 
-   std::size_t fIndex = 0;                      ///< The index in fValues that belongs to the field
+   std::size_t fIndex = 0;                      ///< The index of the top-level field
    std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
    RFieldToken(std::size_t index, std::uint64_t schemaId) : fIndex(index), fSchemaId(schemaId) {}
 

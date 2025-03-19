@@ -54,6 +54,7 @@ HEADERS
   ROOT/RPageSinkBuf.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
+  ROOT/RRawPtrWriteEntry.hxx
 SOURCES
   v7/src/RCluster.cxx
   v7/src/RClusterPool.cxx

@@ -497,6 +497,23 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    return entry;
 }
 
+std::unique_ptr<ROOT::Experimental::Detail::RRawPtrWriteEntry>
+ROOT::Experimental::RNTupleModel::CreateRawPtrWriteEntry() const
+{
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create entry of expired model"));
+   case EState::kFrozen: break;
+   }
+
+   auto entry = std::unique_ptr<Detail::RRawPtrWriteEntry>(new Detail::RRawPtrWriteEntry(fModelId, fSchemaId));
+   for (const auto &f : fFieldZero->GetMutableSubfields()) {
+      entry->AddField(*f);
+   }
+   // fRegisteredSubfields are not relevant for writing
+   return entry;
+}
+
 ROOT::Experimental::RFieldToken ROOT::Experimental::RNTupleModel::GetToken(std::string_view fieldName) const
 {
    const auto &topLevelFields = fFieldZero->GetConstSubfields();
