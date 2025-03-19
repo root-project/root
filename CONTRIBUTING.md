@@ -19,7 +19,8 @@ The primary branch for development is `master`.
 > Please follow the [coding conventions](https://root.cern.ch/coding-conventions), as this is a simple item for
 > reviewers to otherwise get stuck on.
 > To make your (and our own) life easier, we provide a
-> [`clang-format` configuration file](https://github.com/root-project/root/blob/master/.clang-format).
+> [`clang-format` configuration file](https://github.com/root-project/root/blob/master/.clang-format) as well
+> as a [`ruff` configuration file](https://github.com/root-project/root/blob/master/ruff.toml)
 
 By providing code, you agree to transfer your copyright on the code to the "ROOT project".
 Of course you will be duly credited: for sizable contributions your name will appear in the
@@ -117,10 +118,15 @@ ROOT has automated CI tests :cop: that are used for pull requests:
     [project member](https://github.com/orgs/root-project/people) is allowed to initiate this build.
     The results are posted to the pull request.
     Compared to ROOT's nightly builds, PRs are tested with less tests, on less platforms.
-- *Formatting check*: `clang-format` automatically checks that a PR
+- *Linting check*: `ruff` automatically checks that a PR adheres to the project's
+    [style guide](https://github.com/root-project/root/blob/master/.ruff.toml).
+    If any linting violations are found, it provides you with a detailed report that you should address in your PR.
+- *Formatting check*: 
+    - `clang-format`: automatically checks that a PR
     [follows](https://github.com/root-project/root/blob/master/.clang-format) ROOT's
     [coding conventions](https://root.cern/contribute/coding_conventions/).
     If coding violations are found, it provides you with a `patch` output that you likely want to apply to your PR.
+    - `ruff`: ensures Python code in the PR adheres to the project's [style guidelines](https://github.com/root-project/root/blob/master/ruff.toml).
 - *Simple Static Analysis*: PRs are analyzed using [`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/).
 
 Typically, PRs must pass all these tests; we will ask you to fix any issues that may arise.
