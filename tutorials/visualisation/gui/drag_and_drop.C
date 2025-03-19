@@ -183,13 +183,13 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) : TGMainFrame(p, w, 
    fListTree->SetToolTipItem(item, "2D Histogram");
    item->SetDNDSource(kTRUE);
 
-   TString rootsys(gSystem->UnixPathName(gSystem->Getenv("ROOTSYS")));
+   TString link = gROOT->GetTutorialsDir();
 #ifdef R__WIN32
    // remove the drive letter (e.g. "C:/") from $ROOTSYS, if any
-   if (rootsys[1] == ':' && rootsys[2] == '/')
-      rootsys.Remove(0, 3);
+   if (link[1] == ':' && link[2] == '/')
+      link.Remove(0, 3);
 #endif
-   TString link = TString::Format("/%s/tutorials/visualisation/image/rose512.jpg", rootsys.Data());
+   link.Append("/visualisation/image/rose512.jpg");
    if (!gSystem->AccessPathName(link.Data(), kReadPermission)) {
       TImage *img = TImage::Open(link.Data());
       if (img) {
