@@ -633,6 +633,34 @@ TEST(RNTuple, BareEntry)
    EXPECT_EQ(2.0, *ntuple->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 }
 
+TEST(RNTuple, RawPtrWriteEntry)
+{
+   auto m = RNTupleModel::CreateBare();
+   m->MakeField<float>("pt");
+
+   FileRaii fileGuard("test_ntuple_raw_ptr_write_entry.root");
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
+
+      auto e1 = writer->CreateRawPtrWriteEntry();
+      float pt1 = 1.0;
+      e1->BindRawPtr("pt", &pt1);
+      auto e2 = writer->CreateRawPtrWriteEntry();
+      float pt2 = 2.0;
+      e2->BindRawPtr("pt", &pt2);
+
+      writer->Fill(*e1);
+      writer->Fill(*e2);
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(1.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
+   reader->LoadEntry(1);
+   EXPECT_EQ(2.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
+}
+
 namespace ROOT::Internal {
 struct RFieldCallbackInjector {
    template <typename FieldT>
@@ -791,6 +819,39 @@ TEST(REntry, Basics)
    // Tokens are standalone and can be used after model destruction
    model.reset();
    EXPECT_EQ(ptrPt, e->GetPtr<float>("pt"));
+}
+
+TEST(RRawPtrWriteEntry, Basics)
+{
+   auto model = RNTupleModel::Create();
+   EXPECT_FALSE(model->IsBare());
+   model->MakeField<float>("pt");
+   model->Freeze();
+
+   auto e = model->CreateRawPtrWriteEntry();
+   EXPECT_EQ(e->GetModelId(), model->GetModelId());
+   EXPECT_EQ(e->GetSchemaId(), model->GetSchemaId());
+
+   EXPECT_THROW(e->GetToken(""), ROOT::RException);
+   EXPECT_THROW(e->GetToken("eta"), ROOT::RException);
+
+   const float pt = 42.0;
+   e->BindRawPtr("pt", &pt);
+   e->BindRawPtr(model->GetToken("pt"), &pt);
+
+   // Using tokens across frozen clones works
+   auto clone = model->Clone();
+   e->BindRawPtr(clone->GetToken("pt"), &pt);
+
+   // Tokens from a new model are incompatible
+   auto model2 = RNTupleModel::Create();
+   model2->MakeField<float>("pt");
+   model2->Freeze();
+   EXPECT_THROW(e->BindRawPtr(model2->GetToken("pt"), &pt), ROOT::RException);
+
+   // Default constructed tokens cannot be used
+   ROOT::RFieldToken token;
+   EXPECT_THROW(e->BindRawPtr(token, &pt), ROOT::RException);
 }
 
 TEST(RFieldBase, CreateObject)
