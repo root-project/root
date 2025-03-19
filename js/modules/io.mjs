@@ -656,6 +656,35 @@ function getTypeId(typname, norecursion) {
    return -1;
 }
 
+/** @summary Create streamer info for pair object
+  * @private */
+function createPairStreamer(typename, file) {
+   let si = file.findStreamerInfo(typename);
+   if (si)
+      return si;
+   let p1 = typename.indexOf('<');
+   const p2 = typename.lastIndexOf('>');
+   function getNextName() {
+      let res = '', p = p1 + 1, cnt = 0;
+      while ((p < p2) && (cnt >= 0)) {
+         switch (typename[p]) {
+            case '<': cnt++; break;
+            case ',': if (cnt === 0) cnt--; break;
+            case '>': cnt--; break;
+         }
+         if (cnt >= 0) res += typename[p];
+         p++;
+      }
+      p1 = p - 1;
+      return res.trim();
+   }
+   si = { _typename: 'TStreamerInfo', fClassVersion: 0, fName: typename, fElements: create(clTList) };
+   si.fElements.Add(createStreamerElement('first', getNextName(), file));
+   si.fElements.Add(createStreamerElement('second', getNextName(), file));
+   file.fStreamerInfos.arr.push(si);
+   return si;
+}
+
 /** @summary create element of the streamer
   * @private  */
 function createStreamerElement(name, typename, file) {
@@ -674,7 +703,8 @@ function createStreamerElement(name, typename, file) {
       typename = elem.fTypeName = BasicTypeNames[elem.fType] || 'int';
    }
 
-   if (elem.fType > 0) return elem; // basic type
+   if (elem.fType > 0)
+      return elem; // basic type
 
    // check if there are STL containers
    const pos = typename.indexOf('<');
@@ -695,6 +725,9 @@ function createStreamerElement(name, typename, file) {
       return elem;
    }
 
+   if ((pos > 0) && (typename.slice(0, pos) === 'pair') && file)
+      createPairStreamer(typename, file);
+
    const isptr = (typename.lastIndexOf('*') === typename.length - 1);
 
    if (isptr)
@@ -714,33 +747,8 @@ function createStreamerElement(name, typename, file) {
 /** @summary Function creates streamer for std::pair object
   * @private */
 function getPairStreamer(si, typname, file) {
-   if (!si) {
-      if (typname.indexOf('pair') !== 0) return null;
-
-      si = file.findStreamerInfo(typname);
-
-      if (!si) {
-         let p1 = typname.indexOf('<');
-         const p2 = typname.lastIndexOf('>');
-         function GetNextName() {
-            let res = '', p = p1 + 1, cnt = 0;
-            while ((p < p2) && (cnt >= 0)) {
-               switch (typname[p]) {
-                  case '<': cnt++; break;
-                  case ',': if (cnt === 0) cnt--; break;
-                  case '>': cnt--; break;
-               }
-               if (cnt >= 0) res += typname[p];
-               p++;
-            }
-            p1 = p - 1;
-            return res.trim();
-         }
-         si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: create(clTList) };
-         si.fElements.Add(createStreamerElement('first', GetNextName(), file));
-         si.fElements.Add(createStreamerElement('second', GetNextName(), file));
-      }
-   }
+   if (!si)
+      si = createPairStreamer(typname, file);
 
    const streamer = file.getStreamer(typname, null, si);
    if (!streamer) return null;
@@ -1144,7 +1152,7 @@ function createMemberStreamer(element, file) {
                member.readelem = readVectorElement;
 
                if (!member.isptr && (member.arrkind < 0)) {
-                  const subelem = createStreamerElement('temp', member.conttype);
+                  const subelem = createStreamerElement('temp', member.conttype, file);
                   if (subelem.fType === kStreamer) {
                      subelem.$fictional = true;
                      member.submember = createMemberStreamer(subelem, file);
@@ -3296,7 +3304,8 @@ class TFile {
      * @param {number} [checksum] - streamer info checksum, have to match when specified
      * @private */
    findStreamerInfo(clname, clversion, checksum) {
-      if (!this.fStreamerInfos) return null;
+      if (!this.fStreamerInfos)
+         return null;
 
       const arr = this.fStreamerInfos.arr, len = arr.length;
 
@@ -3304,20 +3313,25 @@ class TFile {
          let cache = this.fStreamerInfos.cache;
          if (!cache) cache = this.fStreamerInfos.cache = {};
          let si = cache[checksum];
-         if (si !== undefined) return si;
+         if (si && (!clname || (si.fName === clname)))
+            return si;
 
          for (let i = 0; i < len; ++i) {
             si = arr[i];
             if (si.fCheckSum === checksum) {
                cache[checksum] = si;
-               return si;
+               if (!clname || (si.fName === clname))
+                  return si;
             }
          }
          cache[checksum] = null; // checksum did not found, do not try again
-      } else {
+      }
+
+      if (clname) {
          for (let i = 0; i < len; ++i) {
             const si = arr[i];
-            if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined))) return si;
+            if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined)))
+               return si;
          }
       }
 
@@ -3359,7 +3373,8 @@ class TFile {
       }
 
       // check element in streamer infos, one can have special cases
-      if (!s_i) s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
+      if (!s_i)
+         s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
 
       if (!s_i) {
          delete this.fStreamers[fullname];
@@ -3554,17 +3569,13 @@ function readMapElement(buf) {
 
    if (this.member_wise) {
       // when member-wise streaming is used, version is written
-      const ver = this.stl_version;
+      const si = buf.fFile.findStreamerInfo(this.pairtype, this.stl_version.val , this.stl_version.checksum);
 
-      if (this.si) {
-         const si = buf.fFile.findStreamerInfo(this.pairtype, ver.val, ver.checksum);
-
-         if (this.si !== si) {
-            streamer = getPairStreamer(si, this.pairtype, buf.fFile);
-            if (!streamer || streamer.length !== 2) {
-               console.log(`Fail to produce streamer for ${this.pairtype}`);
-               return null;
-            }
+      if (si && (this.si !== si)) {
+         streamer = getPairStreamer(si, this.pairtype, buf.fFile);
+         if (streamer?.length !== 2) {
+            console.log(`Fail to produce streamer for ${this.pairtype}`);
+            return null;
          }
       }
    }

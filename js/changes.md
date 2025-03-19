@@ -2,6 +2,8 @@
 
 ## Changes in 7.8.x
 1. Fix - hidden canvas in Jupyter Lab, https://root-forum.cern.ch/t/63097/
+2. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
+3. Fix - correctly read `std::pair<>` without dictionary, https://root-forum.cern.ch/t/63114/
 
 
 ## Changes in 7.8.1
