@@ -11,10 +11,12 @@
 #include <ROOT/RError.hxx>
 
 #include <memory>
+#include <iostream>
 #include <string_view>
 #include <typeinfo>
 
 class TFile;
+class TIterator;
 class TKey;
 
 namespace ROOT {
@@ -28,6 +30,95 @@ namespace Internal {
 ROOT::RLogChannel &RFileLog();
 
 } // namespace Internal
+
+/**
+\class ROOT::Experimental::RKeyInfo
+\ingroup RFile
+\brief Information about an RFile object's Key.
+
+Every object inside a ROOT file has an associated "Key" which contains metadata on the object, such as its name, type
+etc.
+Querying this information can be done via RFile::ListKeys(). Reading an object's Key
+doesn't deserialize the full object, so it's a relatively lightweight operation.
+*/
+struct RKeyInfo {
+   enum class ECategory : std::uint16_t {
+      kInvalid,
+      kObject,
+      kDirectory
+   };
+
+   std::string fName;
+   std::string fTitle;
+   std::string fClassName;
+   std::uint16_t fCycle = 0;
+   ECategory fCategory = ECategory::kInvalid;
+};
+
+/// The iterable returned by RFile::ListKeys()
+class RFileKeyIterable final {
+   using Pattern_t = std::string;
+
+   TFile *fFile = nullptr;
+   Pattern_t fPattern;
+   std::uint32_t fFlags = 0;
+
+public:
+   class RIterator {
+      friend class RFileKeyIterable;
+
+      struct RIterStackElem {
+         // This is ugly, but TList returns an (owning) pointer to a polymorphic TIterator...and we need this class
+         // to be copy-constructible.
+         std::shared_ptr<TIterator> fIter;
+         std::string fDirPath;
+
+         // Outlined to avoid including TIterator.h
+         RIterStackElem(TIterator *it, const std::string &path = "");
+         // Outlined to avoid including TIterator.h
+         ~RIterStackElem();
+
+         // fDirPath doesn't need to be compared because it's implied by fIter.
+         bool operator==(const RIterStackElem &other) const { return fIter == other.fIter; }
+      };
+
+      std::vector<RIterStackElem> fIterStack;
+      Pattern_t fPattern;
+      const TKey *fCurKey = nullptr;
+      std::uint16_t fRootDirNesting = 0;
+      std::uint32_t fFlags = 0;
+
+      void Advance();
+
+      // NOTE: `iter` here is an owning pointer (or null)
+      RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags);
+
+   public:
+      using iterator = RIterator;
+      using iterator_category = std::forward_iterator_tag;
+      using difference_type = std::ptrdiff_t;
+      using value_type = RKeyInfo;
+      using pointer = const value_type *;
+      using reference = const value_type &;
+
+      iterator &operator++()
+      {
+         Advance();
+         return *this;
+      }
+      value_type operator*();
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
+      bool operator==(const iterator &rh) const { return fIterStack == rh.fIterStack; }
+   };
+
+   RFileKeyIterable(TFile *file, std::string_view rootDir, std::uint32_t flags)
+      : fFile(file), fPattern(std::string(rootDir)), fFlags(flags)
+   {
+   }
+
+   RIterator begin() const;
+   RIterator end() const;
+};
 
 /**
 \class ROOT::Experimental::RFile
@@ -126,6 +217,12 @@ class RFile final {
    TKey *GetTKey(std::string_view path) const;
 
 public:
+   enum EListKeyFlags {
+      kListObjects = 1 << 0,
+      kListDirs = 1 << 1,
+      kListRecursive = 1 << 2,
+   };
+
    // This is arbitrary, but it's useful to avoid pathological cases
    static constexpr int kMaxPathNesting = 1000;
 
@@ -196,6 +293,23 @@ public:
 
    /// Flushes the RFile if needed and closes it, disallowing any further reading or writing.
    void Close();
+
+   /// Returns an iterable over all paths of objects written into this RFile starting at path "rootPath".
+   /// The returned paths are always "absolute" paths: they are not relative to `rootPath`.
+   /// Keys relative to directories are not returned: only those relative to leaf objects are.
+   /// If `rootPath` is the path of a leaf object, only `rootPath` itself will be returned.
+   /// `flags` is a bitmask specifying the listing mode.
+   /// If `(flags & kListObject) != 0`, the listing will include keys of non-directory objects (default);
+   /// If `(flags & kListDirs) != 0`, the listing will include keys of directory objects;
+   /// If `(flags & kListRecursive) != 0`, the listing will recurse on all subdirectories of `rootPath` (default),
+   /// otherwise it will only list immediate children of `rootPath`.
+   RFileKeyIterable ListKeys(std::string_view rootPath = "", std::uint32_t flags = kListObjects | kListRecursive) const
+   {
+      return RFileKeyIterable(fFile.get(), rootPath, flags);
+   }
+
+   /// Prints the internal structure of this RFile to the given stream.
+   void Print(std::ostream &out = std::cout) const;
 };
 
 } // namespace Experimental
