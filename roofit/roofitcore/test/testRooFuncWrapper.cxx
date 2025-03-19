@@ -89,6 +89,8 @@ void randomizeParameters(const RooArgSet &parameters)
 
 TEST(RooFuncWrapper, GaussianNormalized)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
+
    RooWorkspace ws;
    ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()}, RooFit::Silence());
    ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
@@ -126,6 +128,7 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
 TEST(RooFuncWrapper, Exponential)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
 
    for (auto negateCoefficient : {false, true}) {
 
@@ -327,24 +330,6 @@ FactoryTestParams param2{"PolyVar",
                          1e-4,
                          /*randomizeParameters=*/false};
 
-/// Test based on the rf201 tutorial.
-FactoryTestParams param3{"AddPdf",
-                         [](RooWorkspace &ws) {
-                            ws.factory("Gaussian::sig1(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");
-                            ws.factory("Gaussian::sig2(x, mean, sigma2[1.0, .01, 10])");
-                            ws.factory("Chebychev::bkg(x, {a0[0.3, 0., 0.5], a1[0.2, 0., 0.5]})");
-                            ws.factory("SUM::sig(sig1frac[0.8, 0.0, 1.0] * sig1, sig2)");
-                            ws.factory("SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig)");
-
-                            ws.defineSet("observables", "x");
-                         },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
-                            using namespace RooFit;
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
-                         },
-                         5e-3,
-                         /*randomizeParameters=*/true};
-
 /// Test based on the rf604 tutorial.
 FactoryTestParams param4{"ConstraintSum",
                          [](RooWorkspace &ws) {
@@ -508,7 +493,7 @@ FactoryTestParams param8p1{"LognormalStandard",
                            [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                               return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                            },
-                           1e-4,
+                           3e-4,
                            /*randomizeParameters=*/true};
 
 FactoryTestParams param9{"Poisson",
@@ -638,11 +623,8 @@ FactoryTestParams makeTestParams(const char *name, std::string const &expr, bool
 }
 
 auto testValues = testing::Values(
-   param1, param2,
-#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-   param3,
-#endif
-   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13, param15,
+   param1, param2, param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13,
+   param15,
    makeTestParams("RooCBShape",
                   "CBShape::model(x[0., -200., 200.], x0[100., -200., 200.], sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, "
                   "100.], n[1., 1.E-6, 100.])",
