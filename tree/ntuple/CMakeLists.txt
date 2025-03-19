@@ -22,6 +22,7 @@ HEADERS
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldBase.hxx
+  ROOT/RFieldToken.hxx
   ROOT/RFieldUtils.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
