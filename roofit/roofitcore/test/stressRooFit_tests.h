@@ -79,6 +79,14 @@
 
 #include <iomanip>
 
+// Check if any of the codegen backend is used, to disable tests that are not
+// supported by it yet.
+bool useCodegenBackend()
+{
+   auto backend = RooFit::EvalBackend::defaultValue();
+   return backend == RooFit::EvalBackend::Value::Codegen || backend == RooFit::EvalBackend::Value::CodegenNoGrad;
+}
+
 using namespace RooFit;
 
 // Fitting, plotting, toy data generation on one-dimensional p.d.f
@@ -283,6 +291,7 @@ public:
       : RooUnitTest("Interpreted expression p.d.f.", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -369,6 +378,7 @@ public:
       : RooUnitTest("C++ function binding operator p.d.f", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -933,6 +943,7 @@ public:
       : RooUnitTest("Basic fitting and plotting in ranges", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -996,6 +1007,7 @@ public:
       : RooUnitTest("Extended ML fit in sub range", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -1159,6 +1171,10 @@ public:
 
    bool isTestAvailable() override
    {
+      if (useCodegenBackend()) {
+         return false;
+      }
+
       // only if ROOT was build with fftw3 enabled
       TString conffeatures = gROOT->GetConfigFeatures();
       if (conffeatures.Contains("fftw3")) {
@@ -1660,6 +1676,7 @@ public:
       : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -1738,6 +1755,7 @@ public:
       : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -2037,6 +2055,7 @@ public:
       : RooUnitTest("Fit in multiple rectangular ranges", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -2200,6 +2219,7 @@ public:
       : RooUnitTest("Fit with non-rectangular observable boundaries", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -2258,6 +2278,7 @@ public:
       : RooUnitTest("P.d.f. marginalization through integration", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -2507,6 +2528,7 @@ public:
       : RooUnitTest("Fits with weighted datasets", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -3251,6 +3273,7 @@ public:
       : RooUnitTest("Auxiliary observable constraints", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -3319,6 +3342,7 @@ public:
       : RooUnitTest("Profile Likelihood operator", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -3402,6 +3426,7 @@ public:
       : RooUnitTest("NLL error handling", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -3464,6 +3489,7 @@ public:
       : RooUnitTest("Fit Result functionality", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -3765,6 +3791,7 @@ public:
       : RooUnitTest("Efficiency product operator p.d.f", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -3831,6 +3858,7 @@ public:
       : RooUnitTest("Amplitude sum operator p.d.f", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -3913,6 +3941,7 @@ public:
       : RooUnitTest("Linear morph operator p.d.f.", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -4348,6 +4377,7 @@ public:
       : RooUnitTest("Automated MC studies", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
@@ -4519,6 +4549,7 @@ public:
       : RooUnitTest("MC Study with param rand. and Z calc", refFile, writeRef, verbose)
    {
    }
+   bool isTestAvailable() override { return !useCodegenBackend(); }
    bool testCode() override
    {
 
