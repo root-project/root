@@ -2612,27 +2612,23 @@ void TGListTree::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   static Int_t n = 0;
-
    TGListTreeItem *current = GetFirstItem();
 
    out << "   \n";
 
    while (current) {
-      out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
-      current->SavePrimitive(out, TString::Format("%d",n), n);
+      TString var_name = current->SaveTreeItem(out, GetName(), "nullptr");
       if (current->IsOpen())
-         out << "   " << GetName() << "->OpenItem(item" << n << ");\n";
+         out << "   " << GetName() << "->OpenItem(" << var_name << ");\n";
       else
-         out << "   " << GetName() << "->CloseItem(item" << n << ");\n";
+         out << "   " << GetName() << "->CloseItem(" << var_name << ");\n";
 
       if (current == fSelected)
-         out << "   " << GetName() << "->SetSelected(item" << n << ");\n";
+         out << "   " << GetName() << "->SetSelected(" << var_name << ");\n";
 
-      n++;
-      if (current->fFirstchild) {
-         SaveChildren(out, current->fFirstchild, n);
-      }
+      if (current->fFirstchild)
+         SaveChildren(out, var_name, current->fFirstchild);
+
       current = current->fNextsibling;
    }
 
@@ -2642,16 +2638,17 @@ void TGListTree::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save child items as a C++ statements on output stream out.
 
-void TGListTree::SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n)
+void TGListTree::SaveChildren(std::ostream &out, const char *parent_var_name, TGListTreeItem *item)
 {
-   Int_t p = n-1;
    while (item) {
-      out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
-      item->SavePrimitive(out, TString::Format("%d",p),n);
-      n++;
-      if (item->fFirstchild) {
-         SaveChildren(out, item->fFirstchild, n);
-      }
+      TString var_name = item->SaveTreeItem(out, GetName(), parent_var_name);
+
+      if (item == fSelected)
+         out << "   " << GetName() << "->SetSelected(" << var_name << ");\n";
+
+      if (item->fFirstchild)
+         SaveChildren(out, var_name, item->fFirstchild);
+
       item = item->fNextsibling;
    }
 }
@@ -2659,59 +2656,64 @@ void TGListTree::SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a list tree item attributes as a C++ statements on output stream.
 
-void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t n)
+TString TGListTreeItemStd::SaveTreeItem(std::ostream &out, const char *tree_var_name, const char *parent_var_name)
 {
    static const TGPicture *oldopen = nullptr, *oldclose = nullptr, *oldcheck = nullptr, *olduncheck = nullptr;
-
-   TString prefix = TString::Format("   item%d->", n);
-
-   if (!fParent)
-      out << "nullptr, ";
-   else
-      out << "item" << option << ", ";
-   out << "\"" << TString(GetText()).ReplaceSpecialCppChars() << "\");\n";
+   static int item_cnt = 0;
 
    if (!gROOT->ClassSaved(Class())) {
       oldopen = oldclose = oldcheck = olduncheck = nullptr;
-      out << "   const TGPicture *popen = nullptr, *pclose = nullptr, *pcheck = nullptr, *puncheck = nullptr;\n";
+      item_cnt = 0;
+      out << "   const TGPicture *pic_litem_open = nullptr, *pic_litem_close = nullptr, *pic_litem_check = nullptr, "
+             "*pic_litem_uncheck = nullptr;\n";
    }
+
+   TString var_name = TString::Format("list_tree_item%d", item_cnt++);
 
    if (fOpenPic && (oldopen != fOpenPic)) {
       oldopen = fOpenPic;
       TString picname = gSystem->UnixPathName(fOpenPic->GetName());
       gSystem->ExpandPathName(picname);
-      out << "   popen = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
+      out << "   pic_litem_open = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
    }
    if (fClosedPic && (oldclose != fClosedPic)) {
       oldclose = fClosedPic;
       TString picname = gSystem->UnixPathName(fClosedPic->GetName());
       gSystem->ExpandPathName(picname);
-      out << "   pclose = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
+      out << "   pic_litem_close = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
    }
-   out << prefix << "SetPictures(popen, pclose);\n";
+
+   out << "   TGListTreeItem *" << var_name << " = " << tree_var_name << "->AddItem(" << parent_var_name << ", \""
+       << TString(GetText()).ReplaceSpecialCppChars() << "\", " << (fOpenPic ? "pic_litem_open" : "nullptr") << ", "
+       << (fClosedPic ? "pic_litem_close" : "nullptr");
+   if (HasCheckBox())
+      out << ", kTRUE";
+   out << ");\n";
+
    if (HasCheckBox()) {
-      out << prefix << "CheckItem();\n";
+      out << "   " << var_name << "->CheckItem();\n";
       if (fCheckedPic && oldcheck != fCheckedPic) {
          oldcheck = fCheckedPic;
          TString picname = gSystem->UnixPathName(fCheckedPic->GetName());
          gSystem->ExpandPathName(picname);
-         out << "   pcheck = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
+         out << "   pic_litem_check = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
       }
       if (fUncheckedPic && olduncheck != fUncheckedPic) {
          olduncheck = fUncheckedPic;
          TString picname = gSystem->UnixPathName(fUncheckedPic->GetName());
          gSystem->ExpandPathName(picname);
-         out << "   puncheck = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
+         out << "   pic_litem_uncheck = gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\");\n";
       }
-      out << prefix << "SetCheckBoxPictures(pcheck, puncheck);\n";
-      out << prefix << "SetCheckBox(kTRUE);\n";
+      out << "   " << var_name << "->SetCheckBoxPictures(" << (fCheckedPic ? "pic_litem_check" : "nullptr") << ", "
+          << (fUncheckedPic ? "pic_litem_uncheck" : "nullptr") << ");\n";
    }
    if (fHasColor)
-      out << prefix << "SetColor(" << fColor << ");\n";
+      out << "   " << var_name << "->SetColor(" << fColor << ");\n";
 
    if (fTipText.Length() > 0)
-      out << prefix << "SetTipText(\"" << TString(GetTipText()).ReplaceSpecialCppChars()<< "\");\n";
+      out << "   " << var_name << "->SetTipText(\"" << TString(GetTipText()).ReplaceSpecialCppChars() << "\");\n";
 
+   return var_name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
