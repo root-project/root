@@ -2183,114 +2183,61 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TIter next(GetListOfEntries());
 
    while (auto mentry = static_cast<TGMenuEntry *> (next())) {
-      const char *text;
-      Int_t i, lentext, hotpos;
-      char shortcut[80];
-      char *outext;
+      Int_t hotpos = mentry->fLabel ? mentry->fLabel->GetHotPos() : 0;
+      TString outtext = mentry->GetName(), pic_prefix;
+      if ((hotpos > 0) && (hotpos < outtext.Length()))
+         outtext.Insert(hotpos - 1, "&");
+      if (mentry->fShortcut) {
+         outtext.Append("\t");
+         outtext.Append(mentry->fShortcut->GetString());
+      }
+      outtext.ReplaceSpecialCppChars();
 
       switch (mentry->GetType()) {
-         case kMenuEntry:
-            text = mentry->GetName();
-            lentext = mentry->fLabel->GetLength();
-            hotpos = mentry->fLabel->GetHotPos();
-            outext = new char[lentext+2];
-            i=0;
-            while (text && lentext) {
-               if (i == hotpos-1) {
-                  outext[i] = '&';
-                  i++;
-               }
-               outext[i] = *text;
-               i++; text++; lentext--;
-            }
-            outext[i]=0;
-            if (mentry->fShortcut) {
-               snprintf(shortcut, 80, "\\t%s", mentry->GetShortcutText());
-            } else {
-               memset(shortcut, 0, 80);
-            }
+      case kMenuEntry:
+         out << "   " << GetName() << "->AddEntry(\"" << outtext << "\", " << mentry->GetEntryId();
+         pic_prefix = ", nullptr, ";
+         break;
+      case kMenuPopup:
+         out << "\n   // cascaded menu \"" << mentry->GetName() << "\"\n";
+         mentry->fPopup->SavePrimitive(out, option);
+         out << "   " << GetName() << "->AddPopup(\"" << outtext << "\", " << mentry->fPopup->GetName();
+         pic_prefix = ", nullptr, ";
+         break;
+      case kMenuLabel:
+         out << "   " << GetName() << "->AddLabel(\"" << outtext << "\"";
+         pic_prefix = ", ";
+         break;
+      case kMenuSeparator: out << "   " << GetName() << "->AddSeparator("; break;
+      }
+      if (pic_prefix.Length() && mentry->fPic) {
+         TString picname = gSystem->UnixPathName(mentry->fPic->GetName());
+         gSystem->ExpandPathName(picname);
+         out << pic_prefix << "gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\")";
+      }
+      out << ");\n";
 
-            {
-               TString entrytext = gSystem->UnixPathName(outext);
-               gSystem->ExpandPathName(entrytext);
-               out << "   " << GetName() << "->AddEntry(\""
-                   << entrytext.ReplaceSpecialCppChars() // can be a file name
-                   << shortcut
-                   << "\", " << mentry->GetEntryId();
-            }
-            if (mentry->fUserData) {
-               out << "," << mentry->fUserData;
-            }
-            if (mentry->fPic) {
-               TString picname = gSystem->UnixPathName(mentry->fPic->GetName());
-               gSystem->ExpandPathName(picname);
-               out << ", gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\")";
-            }
-            out << ");\n";
-            delete [] outext;
-            break;
-         case kMenuPopup:
-            out << "\n   // cascaded menu \"" << mentry->GetName() << "\"\n";
-            mentry->fPopup->SavePrimitive(out, option);
-            text = mentry->GetName();
-            lentext = mentry->fLabel->GetLength();
-            hotpos = mentry->fLabel->GetHotPos();
-            outext = new char[lentext+2];
-            i=0;
-            while (text && lentext) {
-               if (i == hotpos-1) {
-                  outext[i] = '&';
-                  i++;
-               }
-               outext[i] = *text;
-               i++; text++; lentext--;
-            }
-            outext[i]=0;
-
-            out << "   " << GetName() << "->AddPopup(\"" << outext << "\", " << mentry->fPopup->GetName() << ");\n";
-            delete[] outext;
-            break;
-         case kMenuLabel:
-            out << "   " << GetName() << "->AddLabel(\"" << TString(mentry->GetName()).ReplaceSpecialCppChars() << "\"";
-            if (mentry->fPic) {
-               out << ", gClient->GetPicture(\"" << TString(mentry->fPic->GetName()).ReplaceSpecialCppChars() << "\")";
-            }
-            out << ");\n";
-            break;
-         case kMenuSeparator:
-            out << "   " << GetName() << "->AddSeparator();\n";
-            break;
-      }
-
-      if (!(mentry->GetStatus() & kMenuEnableMask)) {
-         out<< "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId()
-            << ");\n";
-      }
-      if (mentry->GetStatus() & kMenuHideMask) {
-         out<< "   " << GetName() << "->HideEntry(" << mentry->GetEntryId()
-            << ");\n";
-      }
-      if (mentry->GetStatus() & kMenuCheckedMask) {
-         out<< "   " << GetName() << "->CheckEntry(" << mentry->GetEntryId()
-            << ");\n";
-      }
-      if (mentry->GetStatus() & kMenuDefaultMask) {
-         out<< "   "<< GetName() << "->DefaultEntry(" << mentry->GetEntryId()
-            << ");\n";
-      }
+      if (!(mentry->GetStatus() & kMenuEnableMask))
+         out << "   " << GetName() << "->DisableEntry(" << mentry->GetEntryId() << ");\n";
+      if (mentry->GetStatus() & kMenuHideMask)
+         out << "   " << GetName() << "->HideEntry(" << mentry->GetEntryId() << ");\n";
+      if (mentry->GetStatus() & kMenuCheckedMask)
+         out << "   " << GetName() << "->CheckEntry(" << mentry->GetEntryId() << ");\n";
+      if (mentry->GetStatus() & kMenuDefaultMask)
+         out << "   " << GetName() << "->DefaultEntry(" << mentry->GetEntryId() << ");\n";
       if (mentry->GetStatus() & kMenuRadioEntryMask) {
          if (hasradio) {
             r_last = mentry->GetEntryId();
-            if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
-         }
-         else {
+            if (IsEntryRChecked(mentry->GetEntryId()))
+               r_active = mentry->GetEntryId();
+         } else {
             r_first = mentry->GetEntryId();
             hasradio = kTRUE;
-            if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
+            if (IsEntryRChecked(mentry->GetEntryId()))
+               r_active = mentry->GetEntryId();
          }
       } else if (hasradio) {
-         out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first
-             << "," << r_last << ");\n";
+         out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first << "," << r_last << ");\n";
          hasradio = kFALSE;
          r_active = r_first = r_last = -1;
       }
@@ -2306,25 +2253,12 @@ void TGMenuTitle::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    fMenu->SavePrimitive(out, option);
 
-   const char *text = fLabel->GetString();
-   Int_t lentext = fLabel->GetLength();
+   TString outtext = fLabel->GetString();
    Int_t hotpos = fLabel->GetHotPos();
-   char *outext = new char[lentext + 2];
-   Int_t i = 0;
-   while (lentext) {
-      if (i == hotpos - 1) {
-         outext[i] = '&';
-         i++;
-      }
-      outext[i] = *text;
-      i++;
-      text++;
-      lentext--;
-   }
-   outext[i] = 0;
-   out << "   " << fParent->GetName() << "->AddPopup(\"" << outext << "\", " << fMenu->GetName();
-
-   delete[] outext;
+   if (hotpos > 0)
+      outtext.Insert(hotpos - 1, "&");
+   out << "   " << fParent->GetName() << "->AddPopup(\"" << outtext.ReplaceSpecialCppChars() << "\", "
+       << fMenu->GetName();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
