@@ -125,7 +125,7 @@ public:
    void CommitStagedClusters();
 
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }
-   std::unique_ptr<ROOT::REntry> CreateEntry() { return fModel->CreateEntry(); }
+   std::unique_ptr<ROOT::REntry> CreateEntry() const { return fModel->CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.
    ROOT::NTupleSize_t GetLastFlushed() const { return fLastFlushed; }

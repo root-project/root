@@ -127,7 +127,7 @@ public:
    /// and model updating fail.
    void CommitDataset();
 
-   std::unique_ptr<ROOT::REntry> CreateEntry() { return fFillContext.CreateEntry(); }
+   std::unique_ptr<ROOT::REntry> CreateEntry() const { return fFillContext.CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.
    ROOT::NTupleSize_t GetLastFlushed() const { return fFillContext.GetLastFlushed(); }
