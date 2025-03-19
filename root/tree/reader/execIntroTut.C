@@ -58,10 +58,11 @@ bool checkLeaf2(TFile* file) {
 int execIntroTut()
 {
    // open the file
-   TFile *file = TFile::Open("http://root.cern/files/introtutorials/eventdata.root");
+   const auto fname = "root://eospublic.cern.ch//eos/root-eos/testfiles/eventdata.root";
+   TFile *file = TFile::Open(fname);
    if (file == 0) {
       // if we cannot open the file, print an error message and return immediatly
-      printf("Error: cannot open http://root.cern/files/introtutorials/eventdata.root!\n");
+      printf("Error: cannot open %s!\n", fname);
       return 42;
    }
 

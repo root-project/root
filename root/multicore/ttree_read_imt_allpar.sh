@@ -3,7 +3,7 @@
 TESTNAME=ttree_read_imt_allpar
 NTHREADS=4
 NENTRIES=500
-INPUTFILE=http://root.cern/files/ttree_read_imt.root
+INPUTFILE=./ttree_read_imt.root
 
 if ROOTDEBUG=1 ./$TESTNAME $NTHREADS $NENTRIES $INPUTFILE 1>${TESTNAME}.out 2>${TESTNAME}.err ; then
    :

@@ -3,7 +3,7 @@
 TESTNAME=ttree_read_imt
 NTHREADS=4
 NENTRIES=500
-INPUTFILE=http://root.cern/files/ttree_read_imt.root
+INPUTFILE="root://eospublic.cern.ch//eos/root-eos/testfiles/ttree_read_imt.root"
 
 #ROOTDEBUG=1 ./$TESTNAME $NTHREADS $NENTRIES $INPUTFILE 1>${TESTNAME}.out 2>${TESTNAME}.err
 

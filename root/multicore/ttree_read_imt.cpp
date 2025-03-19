@@ -9,7 +9,7 @@
 #include <iostream>
 
 
-const std::string kDefaultFileName("http://root.cern/files/ttree_read_imt.root");
+const std::string kDefaultFileName("./ttree_read_imt.root");
 
 void printHelp(const char* iName, int nThreads, int nEntries)
 {
