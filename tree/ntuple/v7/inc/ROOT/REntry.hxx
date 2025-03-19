@@ -18,6 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldToken.hxx>
 #include <string_view>
 
 #include <TError.h>
@@ -62,19 +63,8 @@ class REntry {
    friend class Experimental::RNTupleJoinProcessor;
 
 public:
-   /// The field token identifies a (sub)field in this entry. It can be used for fast indexing in REntry's methods, e.g.
-   /// BindValue(). The field token can also be created by the model.
-   class RFieldToken {
-      friend class REntry;
-      friend class RNTupleModel;
-
-      std::size_t fIndex = 0;                      ///< The index in `fValues` that belongs to the field
-      std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
-      RFieldToken(std::size_t index, std::uint64_t schemaId) : fIndex(index), fSchemaId(schemaId) {}
-
-   public:
-      RFieldToken() = default; // The default constructed token cannot be used by any entry
-   };
+   // TODO: remove before branching ROOT v6.36
+   using RFieldToken [[deprecated("REntry::RFieldToken moved to ROOT::RFieldToken")]] = ROOT::RFieldToken;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID
@@ -112,11 +102,17 @@ private:
 
    /// Update the RValue for a field in the entry. To be used when its underlying ROOT::RFieldBase changes, which
    /// typically happens when the page source from which the field values are read changes.
-   void UpdateValue(RFieldToken token, ROOT::RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
-   void UpdateValue(RFieldToken token, ROOT::RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
+   void UpdateValue(ROOT::RFieldToken token, ROOT::RFieldBase::RValue &&value)
+   {
+      std::swap(fValues.at(token.fIndex), value);
+   }
+   void UpdateValue(ROOT::RFieldToken token, ROOT::RFieldBase::RValue &value)
+   {
+      std::swap(fValues.at(token.fIndex), value);
+   }
 
    /// Return the RValue currently bound to the provided field.
-   ROOT::RFieldBase::RValue &GetValue(RFieldToken token) { return fValues.at(token.fIndex); }
+   ROOT::RFieldBase::RValue &GetValue(ROOT::RFieldToken token) { return fValues.at(token.fIndex); }
    ROOT::RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
 
    void Read(ROOT::NTupleSize_t index)
@@ -135,7 +131,7 @@ private:
       return bytesWritten;
    }
 
-   void EnsureMatchingModel(RFieldToken token) const
+   void EnsureMatchingModel(ROOT::RFieldToken token) const
    {
       if (fSchemaId != token.fSchemaId) {
          throw RException(R__FAIL("invalid token for this entry, "
@@ -144,7 +140,7 @@ private:
    }
 
    /// This function has linear complexity, only use it for more helpful error messages!
-   const std::string &FindFieldName(RFieldToken token) const
+   const std::string &FindFieldName(ROOT::RFieldToken token) const
    {
       for (const auto &[fieldName, index] : fFieldName2Token) {
          if (index == token.fIndex) {
@@ -157,7 +153,7 @@ private:
    }
 
    template <typename T>
-   void EnsureMatchingType(RFieldToken token [[maybe_unused]]) const
+   void EnsureMatchingType(ROOT::RFieldToken token [[maybe_unused]]) const
    {
       if constexpr (!std::is_void_v<T>) {
          if (fFieldTypes[token.fIndex] != ROOT::RField<T>::TypeName()) {
@@ -177,16 +173,16 @@ public:
    ~REntry() = default;
 
    /// The ordinal of the (sub)field fieldName; can be used in other methods to address the corresponding value
-   RFieldToken GetToken(std::string_view fieldName) const
+   ROOT::RFieldToken GetToken(std::string_view fieldName) const
    {
       auto it = fFieldName2Token.find(std::string(fieldName));
       if (it == fFieldName2Token.end()) {
          throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
       }
-      return RFieldToken(it->second, fSchemaId);
+      return ROOT::RFieldToken(it->second, fSchemaId);
    }
 
-   void EmplaceNewValue(RFieldToken token)
+   void EmplaceNewValue(ROOT::RFieldToken token)
    {
       EnsureMatchingModel(token);
       fValues[token.fIndex].EmplaceNew();
@@ -195,7 +191,7 @@ public:
    void EmplaceNewValue(std::string_view fieldName) { EmplaceNewValue(GetToken(fieldName)); }
 
    template <typename T>
-   void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
+   void BindValue(ROOT::RFieldToken token, std::shared_ptr<T> objPtr)
    {
       EnsureMatchingModel(token);
       EnsureMatchingType<T>(token);
@@ -209,7 +205,7 @@ public:
    }
 
    template <typename T>
-   void BindRawPtr(RFieldToken token, T *rawPtr)
+   void BindRawPtr(ROOT::RFieldToken token, T *rawPtr)
    {
       EnsureMatchingModel(token);
       EnsureMatchingType<T>(token);
@@ -223,7 +219,7 @@ public:
    }
 
    template <typename T>
-   std::shared_ptr<T> GetPtr(RFieldToken token) const
+   std::shared_ptr<T> GetPtr(ROOT::RFieldToken token) const
    {
       EnsureMatchingModel(token);
       EnsureMatchingType<T>(token);
@@ -236,7 +232,7 @@ public:
       return GetPtr<T>(GetToken(fieldName));
    }
 
-   const std::string &GetTypeName(RFieldToken token) const
+   const std::string &GetTypeName(ROOT::RFieldToken token) const
    {
       EnsureMatchingModel(token);
       return fFieldTypes[token.fIndex];
