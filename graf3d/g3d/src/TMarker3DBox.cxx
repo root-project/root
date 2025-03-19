@@ -350,25 +350,13 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
 
 void TMarker3DBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMarker3DBox::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TMarker3DBox *";
-   }
-   out<<"marker3DBox = new TMarker3DBox("<<fX<<","
-                                         <<fY<<","
-                                         <<fZ<<","
-                                         <<fDx<<","
-                                         <<fDy<<","
-                                         <<fDz<<","
-                                         <<fTheta<<","
-                                         <<fPhi<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "marker3DBox",
+                            TString::Format("%g, %g, %g, %g, %g, %g, %g, %g", fX, fY, fZ, fDx, fDy, fDz, fTheta, fPhi));
 
-   SaveLineAttributes(out,"marker3DBox",1,1,1);
-   SaveFillAttributes(out,"marker3DBox",1,0);
+   SaveLineAttributes(out, "marker3DBox", 1, 1, 1);
+   SaveFillAttributes(out, "marker3DBox", 1, 0);
 
-   out<<"   marker3DBox->Draw();"<<std::endl;
+   out << "   marker3DBox->Draw();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
