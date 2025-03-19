@@ -2252,12 +2252,9 @@ void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << yy << mm << dd << "," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
       break;
    case kNESHex: {
-      char hex[256];
-      ULong_t l = GetHexNumber();
-      IntToHexStr(hex, l);
-      std::ios::fmtflags f = out.flags(); // store flags
-      out << "0x" << std::hex << "U," << digits << "," << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-      out.flags(f); // restore flags (reset std::hex)
+      char hexstr[256];
+      IntToHexStr(hexstr, GetHexNumber());
+      out << "0x" << hexstr << "U, " << digits << ", " << WidgetId() << ",(TGNumberFormat::EStyle) " << GetNumStyle();
       break;
    }
    }
@@ -2306,8 +2303,7 @@ void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= "
    Int_t yy, mm, dd;
    GetDate(yy, mm, dd);
 
-   out << "   TGNumberEntryField *";
-   out << GetName() << " = new TGNumberEntryField(" << fParent->GetName() << ", " << WidgetId() << ", (Double_t) ";
+   out << "   TGNumberEntryField *" << GetName() << " = new TGNumberEntryField(" << fParent->GetName() << ", " << WidgetId() << ", (Double_t) ";
    switch (GetNumStyle()) {
    case kNESInteger: out << GetIntNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
    case kNESRealOne: out << GetNumber() << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
@@ -2326,13 +2322,9 @@ void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= "
    case kNESDayMYear: out << yy << mm << dd << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
    case kNESMDayYear: out << yy << mm << dd << ",(TGNumberFormat::EStyle) " << GetNumStyle(); break;
    case kNESHex: {
-      char hex[256];
-      ULong_t l = GetHexNumber();
-      IntToHexStr(hex, l);
-      std::ios::fmtflags f = out.flags(); // store flags
-      out << "0x" << std::hex << "U"
-          << ",(TGNumberFormat::EStyle) " << GetNumStyle();
-      out.flags(f); // restore flags (reset std::hex)
+      char hexstr[256];
+      IntToHexStr(hexstr, GetHexNumber());
+      out << "0x" << hexstr << "U, (TGNumberFormat::EStyle) " << GetNumStyle();
       break;
    }
    }
