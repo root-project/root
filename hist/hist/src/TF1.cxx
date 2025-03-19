@@ -31,6 +31,7 @@
 #include "TF1Helper.h"
 #include "TF1NormSum.h"
 #include "TF1Convolution.h"
+#include "TVectorD.h"
 #include "TVirtualMutex.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
