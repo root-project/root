@@ -1,4 +1,4 @@
-name: clang-tools code analysis
+name: code analysis
 
 on: pull_request
   # push:
@@ -30,3 +30,44 @@ jobs:
       run: sudo apt-get install -y clang-format
     - name: run clang-format script
       run: .ci/format_script.sh
+
+  ruff:
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get the list of changed files
+      id: diff
+      run: |
+        git fetch --depth=1 origin $GITHUB_BASE_REF 
+        git diff --name-only origin/$GITHUB_BASE_REF > changed_files.txt
+
+    - name: Install ruff
+      uses: astral-sh/ruff-action@v3
+      with:
+        args: "--version"
+
+    - name: Lint code
+      run: |
+        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        if [ -n "$files" ]; then
+          echo "$files" | xargs ruff check --diff || true
+          echo "$files" | xargs ruff check
+        else
+          echo "No python files to lint"
+        fi
+
+    - name: Format code
+      if: always()
+      run: |
+        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        if [ -n "$files" ]; then
+          echo "$files" | xargs ruff format --diff
+        else
+          echo "No python files to format"
+        fi
