@@ -43,6 +43,7 @@ class TF1;
 class TH1;
 class TAxis;
 class TRandom;
+class TMatrixDSym;
 
 namespace ROOT {
    namespace Fit {
