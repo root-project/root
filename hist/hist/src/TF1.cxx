@@ -1528,6 +1528,26 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    return result;
 }
 
+/// Evaluate the uncertainty in the function value at x due to the parameter
+/// uncertainties. If covMatrix is NULL, assumes uncorrelated uncertainties,
+/// otherwise the input covariance matrix (e.g. from a fit performed with
+/// option "S") is used. Implemented for 1-d only.
+/// @note to obtain confidence intervals of a fit result for drawing purposes,
+/// see instead ROOT::Fit::FitResult::GetConfidenceInterval()
+Double_t TF1::EvalUncertainty(Double_t x, const TMatrixDSym* covMatrix)
+{
+   TVectorD grad(GetNpar());
+   GradientPar(&x, grad.GetMatrixArray());
+   if (!covMatrix) {
+      Double_t variance = 0;
+      for(Int_t iPar = 0; iPar < GetNpar(); iPar++) {
+         variance += grad(iPar)*grad(iPar)*GetParError(iPar)*GetParError(iPar);
+      }
+      return std::sqrt(variance);
+   }
+   return std::sqrt(covMatrix->Similarity(grad));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
