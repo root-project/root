@@ -131,13 +131,13 @@ public:
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) final;
 
-   const RNTupleDescriptor &GetDescriptor() const final;
+   const ROOT::RNTupleDescriptor &GetDescriptor() const final;
 
    ROOT::NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
 
    void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
-   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
+   void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;

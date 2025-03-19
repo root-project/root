@@ -315,7 +315,7 @@ public:
    bool IsInitialized() const { return fIsInitialized; }
 
    /// Return the RNTupleDescriptor being constructed.
-   virtual const RNTupleDescriptor &GetDescriptor() const = 0;
+   virtual const ROOT::RNTupleDescriptor &GetDescriptor() const = 0;
 
    virtual ROOT::NTupleSize_t GetNEntries() const = 0;
 
@@ -362,7 +362,7 @@ public:
    /// extension header. The information in the record will be merged with the existing information, e.g.
    /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
    /// registered by specific fields (e.g., streamer field) and during merging.
-   virtual void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
+   virtual void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
 
    /// Commits a suppressed column for the current cluster. Can be called anytime before CommitCluster().
    /// For any given column and cluster, there must be no calls to both CommitSuppressedColumn() and page commits.
@@ -521,21 +521,21 @@ public:
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) final;
 
-   const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
+   const ROOT::RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
    ROOT::NTupleSize_t GetNEntries() const final { return fPrevClusterNEntries; }
 
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
-   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
+   void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder, optionally copying over
    /// the descriptor's clusters to this sink's descriptor.
    /// \return The model created from the new sink's descriptor. This model should be kept alive
    /// for at least as long as the sink.
    [[nodiscard]] std::unique_ptr<RNTupleModel>
-   InitFromDescriptor(const RNTupleDescriptor &descriptor, bool copyClusters);
+   InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters);
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
@@ -566,16 +566,17 @@ public:
       ROOT::NTupleSize_t fNEntries = 0;
 
       /// Returns true if the given cluster has entries within the entry range
-      bool IntersectsWith(const RClusterDescriptor &clusterDesc) const;
+      bool IntersectsWith(const ROOT::RClusterDescriptor &clusterDesc) const;
    };
 
    /// An RAII wrapper used for the read-only access to `RPageSource::fDescriptor`. See `GetExclDescriptorGuard()``.
    class RSharedDescriptorGuard {
-      const RNTupleDescriptor &fDescriptor;
+      const ROOT::RNTupleDescriptor &fDescriptor;
       std::shared_mutex &fLock;
 
    public:
-      RSharedDescriptorGuard(const RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(desc), fLock(lock)
+      RSharedDescriptorGuard(const ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock)
+         : fDescriptor(desc), fLock(lock)
       {
          fLock.lock_shared();
       }
@@ -584,17 +585,17 @@ public:
       RSharedDescriptorGuard(RSharedDescriptorGuard &&) = delete;
       RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = delete;
       ~RSharedDescriptorGuard() { fLock.unlock_shared(); }
-      const RNTupleDescriptor *operator->() const { return &fDescriptor; }
-      const RNTupleDescriptor &GetRef() const { return fDescriptor; }
+      const ROOT::RNTupleDescriptor *operator->() const { return &fDescriptor; }
+      const ROOT::RNTupleDescriptor &GetRef() const { return fDescriptor; }
    };
 
    /// An RAII wrapper used for the writable access to `RPageSource::fDescriptor`. See `GetSharedDescriptorGuard()`.
    class RExclDescriptorGuard {
-      RNTupleDescriptor &fDescriptor;
+      ROOT::RNTupleDescriptor &fDescriptor;
       std::shared_mutex &fLock;
 
    public:
-      RExclDescriptorGuard(RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(desc), fLock(lock)
+      RExclDescriptorGuard(ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(desc), fLock(lock)
       {
          fLock.lock();
       }
@@ -607,12 +608,12 @@ public:
          fDescriptor.IncGeneration();
          fLock.unlock();
       }
-      RNTupleDescriptor *operator->() const { return &fDescriptor; }
-      void MoveIn(RNTupleDescriptor desc) { fDescriptor = std::move(desc); }
+      ROOT::RNTupleDescriptor *operator->() const { return &fDescriptor; }
+      void MoveIn(ROOT::RNTupleDescriptor desc) { fDescriptor = std::move(desc); }
    };
 
 private:
-   RNTupleDescriptor fDescriptor;
+   ROOT::RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
    REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
    bool fHasStructure = false; ///< Set to true once `LoadStructure()` is called
@@ -704,7 +705,7 @@ protected:
 
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
-   virtual RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
+   virtual ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
    /// Returns a new, unattached page source for the same data set
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.

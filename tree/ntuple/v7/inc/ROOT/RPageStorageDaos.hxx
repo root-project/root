@@ -166,7 +166,7 @@ private:
 
 protected:
    void LoadStructureImpl() final {}
-   RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
+   ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
    /// The cloned page source creates a new connection to the pool/container.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 

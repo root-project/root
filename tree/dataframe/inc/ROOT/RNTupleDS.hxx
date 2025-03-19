@@ -56,7 +56,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    };
 
    /// A clone of the first pages source's descriptor.
-   RNTupleDescriptor fPrincipalDescriptor;
+   ROOT::RNTupleDescriptor fPrincipalDescriptor;
 
    /// The data source may be constructed with an ntuple name and a list of files
    std::string fNTupleName;
@@ -149,7 +149,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// column is added as a `ROOT::VecOps::RVec`. Otherwise, the collection field's on-disk type is used. Note, however,
    /// that inner record members of such collections will still be added as `ROOT::VecOps::RVec` (e.g., `std::set<Jet>
    /// will be added as a `std::set`, but `Jet.[pt|eta] will be added as `ROOT::VecOps::RVec<float>).
-   void AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
+   void AddField(const ROOT::RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
                  std::vector<RFieldInfo> fieldInfos, bool convertToRVec = true);
 
    /// The main function of the fThreadStaging background thread

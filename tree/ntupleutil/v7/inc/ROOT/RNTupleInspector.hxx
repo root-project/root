@@ -83,21 +83,21 @@ public:
    /// RColumnInspector that belongs to this field.
    class RColumnInspector {
    private:
-      const RColumnDescriptor &fColumnDescriptor;
+      const ROOT::RColumnDescriptor &fColumnDescriptor;
       const std::vector<std::uint64_t> fCompressedPageSizes = {};
       std::uint32_t fElementSize = 0;
       std::uint64_t fNElements = 0;
 
    public:
-      RColumnInspector(const RColumnDescriptor &colDesc, const std::vector<std::uint64_t> &compressedPageSizes,
+      RColumnInspector(const ROOT::RColumnDescriptor &colDesc, const std::vector<std::uint64_t> &compressedPageSizes,
                        std::uint32_t elemSize, std::uint64_t nElems)
          : fColumnDescriptor(colDesc),
            fCompressedPageSizes(compressedPageSizes),
            fElementSize(elemSize),
-           fNElements(nElems){};
+           fNElements(nElems) {};
       ~RColumnInspector() = default;
 
-      const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
+      const ROOT::RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
       const std::vector<std::uint64_t> &GetCompressedPageSizes() const { return fCompressedPageSizes; }
       std::uint64_t GetNPages() const { return fCompressedPageSizes.size(); }
       std::uint64_t GetCompressedSize() const
@@ -118,23 +118,23 @@ public:
    /// the RFieldDescriptor that belongs to this field.
    class RFieldTreeInspector {
    private:
-      const RFieldDescriptor &fRootFieldDescriptor;
+      const ROOT::RFieldDescriptor &fRootFieldDescriptor;
       std::uint64_t fCompressedSize = 0;
       std::uint64_t fUncompressedSize = 0;
 
    public:
-      RFieldTreeInspector(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
-         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
+      RFieldTreeInspector(const ROOT::RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
+         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize) {};
       ~RFieldTreeInspector() = default;
 
-      const RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
+      const ROOT::RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
       std::uint64_t GetCompressedSize() const { return fCompressedSize; }
       std::uint64_t GetUncompressedSize() const { return fUncompressedSize; }
    };
 
 private:
    std::unique_ptr<Internal::RPageSource> fPageSource;
-   RNTupleDescriptor fDescriptor;
+   ROOT::RNTupleDescriptor fDescriptor;
    std::optional<std::uint32_t> fCompressionSettings; ///< The compression settings are unknown for an empty ntuple
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
@@ -202,8 +202,8 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the descriptor for the RNTuple being inspected.
    ///
-   /// \return A static copy of the RNTupleDescriptor belonging to the inspected RNTuple.
-   const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
+   /// \return A static copy of the ROOT::RNTupleDescriptor belonging to the inspected RNTuple.
+   const ROOT::RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the compression settings of the RNTuple being inspected.
