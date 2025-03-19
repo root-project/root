@@ -22,10 +22,10 @@
 static std::string logfile = "tProcessExecutorH1Test-pool.log";
 static RedirectHandle_t gRH;
 
-const char *fh1[] = {"http://root.cern.ch/files/h1/dstarmb.root",
-                     "http://root.cern.ch/files/h1/dstarp1a.root",
-                     "http://root.cern.ch/files/h1/dstarp1b.root",
-                     "http://root.cern.ch/files/h1/dstarp2.root"};
+const char *fh1[] = {"root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root",
+                     "root://eospublic.cern.ch//eos/root-eos/h1/dstarp1a.root",
+                     "root://eospublic.cern.ch//eos/root-eos/h1/dstarp1b.root",
+                     "root://eospublic.cern.ch//eos/root-eos/h1/dstarp2.root"};
 
 int main() {
    

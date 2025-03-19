@@ -17,7 +17,7 @@ void printHelp(const char* iName, int nThreads, int nEntries)
             << "If no arguments are given " << nThreads << " threads, " << nEntries << " entries will be used." << std::endl;
 }
 
-const std::string kDefaultFileName("http://root.cern/files/ttree_read_imt.root");
+const std::string kDefaultFileName("./ttree_read_imt.root");
 
 std::tuple<int,int,std::string> parseOptions(int argc, char** argv)
 {
