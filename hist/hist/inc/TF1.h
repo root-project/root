@@ -34,6 +34,7 @@
 #include "TAttMarker.h"
 #include "TF1AbsComposition.h"
 #include "TMath.h"
+#include "TMatrixDSym.h"
 #include "Math/Types.h"
 #include "Math/ParamFunctor.h"
 
@@ -43,7 +44,6 @@ class TF1;
 class TH1;
 class TAxis;
 class TRandom;
-class TMatrixDSym;
 
 namespace ROOT {
    namespace Fit {
