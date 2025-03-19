@@ -23,7 +23,7 @@ This class calls functions from `RooBatchCompute` library to provide faster
 computation times.
 **/
 
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #include <RooHistPdf.h>
 #include <RooBatchCompute.h>
@@ -45,6 +45,11 @@ computation times.
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+
+ClassImp(RooFit::Detail::RooNLLVarNew);
+
+namespace RooFit {
+namespace Detail {
 
 // Declare constexpr static members to make them available if odr-used in C++14.
 constexpr const char *RooNLLVarNew::weightVarName;
@@ -372,5 +377,7 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
       ctx.addToCodeBody(resName + " += " + expected + " - " + weightSumName + " * std::log(" + expected + ");\n");
    }
 }
+} // namespace Detail
+} // namespace RooFit
 
 /// \endcond

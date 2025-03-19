@@ -42,7 +42,7 @@
 #include "ConstraintHelpers.h"
 #include "RooEvaluatorWrapper.h"
 #include "RooFitImplHelpers.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooChi2Var.h"
@@ -347,15 +347,15 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
          // are extended. Therefore, we have to make sure that we don't request
          // extended NLL objects for channels that can't be extended.
          const bool isPdfExtended = isSimPdfExtended && pdf->extendMode() != RooAbsPdf::CanNotBeExtended;
-         auto nll =
-            std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, *observables, isPdfExtended, offset);
+         auto nll = std::make_unique<RooFit::Detail::RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, *observables,
+                                                                   isPdfExtended, offset);
          // Rename the special variables
          nll->setPrefix(std::string("_") + catName + "_");
          nllTerms.addOwned(std::move(nll));
       }
    }
 
-   for (auto *nll : static_range_cast<RooNLLVarNew *>(nllTerms)) {
+   for (auto *nll : static_range_cast<RooFit::Detail::RooNLLVarNew *>(nllTerms)) {
       nll->setSimCount(nllTerms.size());
    }
 
@@ -400,8 +400,8 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
       simPdf->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
       nllTerms.addOwned(createSimultaneousNLL(*simPdf, isExtended, rangeName, offset));
    } else {
-      nllTerms.addOwned(
-         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, isExtended, offset));
+      nllTerms.addOwned(std::make_unique<RooFit::Detail::RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf,
+                                                                       observables, isExtended, offset));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));

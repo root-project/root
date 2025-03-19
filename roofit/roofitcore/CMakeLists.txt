@@ -120,6 +120,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/Detail/CodeSquashContext.h
     RooFit/Detail/MathFuncs.h
     RooFit/Detail/NormalizationHelpers.h
+    RooFit/Detail/RooNLLVarNew.h
+    RooFit/Detail/RooNormalizedPdf.h
     RooFit/EvalContext.h
     RooFit/Evaluator.h
     RooFit/Floats.h

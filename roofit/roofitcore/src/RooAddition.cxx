@@ -33,7 +33,7 @@ in the two sets.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
 #include "RooFuncWrapper.h"
@@ -169,7 +169,7 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
    std::size_t i = 0;
    for (auto *component : static_range_cast<RooAbsReal *>(_set)) {
 
-      if (!dynamic_cast<RooNLLVarNew *>(component) || _set.size() == 1) {
+      if (!dynamic_cast<RooFit::Detail::RooNLLVarNew *>(component) || _set.size() == 1) {
          result += ctx.getResult(*component);
          ++i;
          if (i < _set.size()) result += '+';
@@ -202,7 +202,7 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVarNew*>(arg)) {
+    if (dynamic_cast<RooFit::Detail::RooNLLVarNew*>(arg)) {
       nllArg = static_cast<RooAbsReal*>(arg) ;
     }
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
