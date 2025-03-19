@@ -1,4 +1,3 @@
-BLA_VENDOR=OpenBLAS
 builtin_cppzmq=OFF
 builtin_nlohmannjson=ON
 builtin_unuran=OFF

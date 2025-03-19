@@ -20,7 +20,7 @@
 
 #include <iostream>
 
-#ifndef DNN_USE_CBLAS
+#ifndef R__USE_CBLAS
 // External Library Routines
 //____________________________________________________________________________
 extern "C" void saxpy_(const int * n, const float * alpha, const float * x,
@@ -97,7 +97,7 @@ inline void Ger(const int * m, const int * n, const AReal * alpha,
 
 // Specializations
 //____________________________________________________________________________
-#ifndef DNN_USE_CBLAS
+#ifndef R__USE_CBLAS
 
 template<>
 inline void Axpy<double>(const int * n, const double * alpha,
