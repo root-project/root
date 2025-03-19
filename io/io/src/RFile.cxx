@@ -13,7 +13,9 @@
 #include <Byteswap.h>
 #include <TError.h>
 #include <TFile.h>
+#include <TIterator.h>
 #include <TKey.h>
+#include <TList.h>
 #include <TROOT.h>
 
 #include <algorithm>
@@ -167,21 +169,32 @@ static std::string ValidateAndNormalizePath(std::string &path)
    return "";
 }
 
+static void EnsureFileOpenAndBinary(const TFile *tfile, std::string_view path)
+{
+   if (!tfile || tfile->IsZombie())
+      throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for reading"));
+
+   if (tfile->IsRaw() || !tfile->IsBinary() || tfile->IsArchive())
+      throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT binary file"));
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string_view, std::string_view> ROOT::Experimental::DecomposePath(std::string_view path)
+{
+   auto lastSlashIdx = path.rfind('/');
+   if (lastSlashIdx == std::string_view::npos)
+      return {{}, path};
 
-RFile::RFile(std::unique_ptr<TFile> file) : fFile(std::move(file)) {}
-
-RFile::~RFile() = default;
+   auto dirName = path.substr(0, lastSlashIdx + 1);
+   auto pathName = path.substr(lastSlashIdx + 1);
+   return {dirName, pathName};
+}
 
 std::unique_ptr<RFile> RFile::Open(std::string_view path)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
-   if (!tfile || tfile->IsZombie())
-      throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for reading"));
-
-   if (tfile->IsRaw())
-      throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT file"));
+   EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
@@ -191,11 +204,7 @@ std::unique_ptr<RFile> RFile::Update(std::string_view path)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
-   if (!tfile || tfile->IsZombie())
-      throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for updating"));
-
-   if (tfile->IsRaw())
-      throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT file"));
+   EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
@@ -205,15 +214,15 @@ std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION"));
-   if (!tfile || tfile->IsZombie())
-      throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for writing"));
-
-   if (tfile->IsRaw())
-      throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT file"));
+   EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
+
+RFile::RFile(std::unique_ptr<TFile> file) : fFile(std::move(file)) {}
+
+RFile::~RFile() = default;
 
 TKey *RFile::GetTKey(std::string_view path) const
 {
@@ -282,9 +291,9 @@ void *RFile::GetUntyped(std::string_view pathSV, const std::type_info &type) con
       if (auto autoAddFunc = cls->GetDirectoryAutoAdd(); autoAddFunc) {
          autoAddFunc(obj, nullptr);
       }
-   } else if (key && !GetROOT()->IsBatch()) {
-      R__LOG_WARNING(RFileLog()) << "Tried to get object '" << path << "' of type " << cls->GetName()
-                                 << " but that path contains an object of type " << key->GetClassName();
+   } else if (key) {
+      R__LOG_INFO(RFileLog()) << "Tried to get object '" << path << "' of type " << cls->GetName()
+                              << " but that path contains an object of type " << key->GetClassName();
    }
 
    return obj;
@@ -358,6 +367,139 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
 
    if (!success) {
       throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
+   }
+}
+
+ROOT::Experimental::RFileKeyIterable::RIterator::RIterStackElem::RIterStackElem(TIterator *it, const std::string &path)
+   : fIter(it), fDirPath(path)
+{
+}
+
+ROOT::Experimental::RFileKeyIterable::RIterator::RIterStackElem::~RIterStackElem() = default;
+
+ROOT::Experimental::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags)
+   : fPattern(pattern), fFlags(flags)
+{
+   if (iter) {
+      fIterStack.emplace_back(iter);
+
+      if (!pattern.empty()) {
+         fRootDirNesting = std::count(pattern.begin(), pattern.end(), '/');
+         // `pattern` may or may not end with '/', but we consider it a directory regardless.
+         // In other words, like in virtually all filesystem operations, "dir" and "dir/" are equivalent.
+         fRootDirNesting += pattern.back() != '/';
+      }
+
+      // Advance the iterator to skip the first key, which is always the TFile key.
+      // This will also skip keys until we reach the first correct key we want to return.
+      Advance();
+   }
+}
+
+ROOT::Experimental::RFileKeyIterable::RIterator ROOT::Experimental::RFileKeyIterable::begin() const
+{
+   return {fFile->GetListOfKeys()->MakeIterator(), fPattern, fFlags};
+}
+
+ROOT::Experimental::RFileKeyIterable::RIterator ROOT::Experimental::RFileKeyIterable::end() const
+{
+   return {nullptr, fPattern, fFlags};
+}
+
+void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
+{
+   fCurKey = nullptr;
+
+   const bool recursive = fFlags & RFile::kListRecursive;
+   const bool includeObj = fFlags & RFile::kListObjects;
+   const bool includeDirs = fFlags & RFile::kListDirs;
+
+   // We only want to return keys that refer to user objects, not internal ones, therefore we skip
+   // all keys that have internal class names.
+   while (!fIterStack.empty()) {
+      auto &[iter, dirPath] = fIterStack.back();
+      assert(iter);
+      TObject *keyObj = iter->Next();
+      if (!keyObj) {
+         // reached end of the iteration
+         fIterStack.pop_back();
+         continue;
+      }
+
+      assert(keyObj->IsA() == TClass::GetClass<TKey>());
+      auto key = static_cast<TKey *>(keyObj);
+
+      const std::string dirSep = (dirPath.empty() ? "" : "/");
+      const bool isDir = TClass::GetClass(key->GetClassName())->InheritsFrom(TDirectory::Class());
+
+      if (isDir) {
+         TDirectory *dir = key->ReadObject<TDirectory>();
+         TIterator *innerIter = dir->GetListOfKeys()->MakeIterator();
+         assert(innerIter);
+         fIterStack.emplace_back(innerIter, dirPath + dirSep + dir->GetName());
+         if (!includeDirs)
+            continue;
+      } else if (!includeObj) {
+         continue;
+      }
+
+      // Reconstruct the full path of the key
+      const std::string &fullPath = dirPath + dirSep + key->GetName();
+      assert(!fIterStack.empty());
+      const std::size_t nesting = fIterStack.size() - 1;
+
+      // Skip key if it's not a child of root dir
+      if (!ROOT::StartsWith(fullPath, fPattern))
+         continue;
+
+      // Check that we are in the same directory as "rootDir".
+      // Note that for directories we list both the root dir and the immediate children (in non-recursive mode).
+      if (!recursive && nesting != fRootDirNesting &&
+          (!isDir || nesting != static_cast<std::size_t>(fRootDirNesting + 1)))
+         continue;
+
+      // All checks passed: return this key.
+      assert(!fullPath.empty());
+      fCurKey = key;
+      break;
+   }
+}
+
+ROOT::Experimental::RKeyInfo ROOT::Experimental::RFileKeyIterable::RIterator::operator*()
+{
+   if (fIterStack.empty())
+      throw ROOT::RException(R__FAIL("tried to dereference an invalid iterator"));
+
+   const TKey *key = fCurKey;
+   if (!key)
+      throw ROOT::RException(R__FAIL("tried to dereference an invalid iterator"));
+
+   const bool isDir =
+      strcmp(key->GetClassName(), "TDirectory") == 0 || strcmp(key->GetClassName(), "TDirectoryFile") == 0;
+   const auto &dirPath = fIterStack.back().fDirPath;
+
+   RKeyInfo keyInfo;
+   keyInfo.fCategory = isDir ? RKeyInfo::ECategory::kDirectory : RKeyInfo::ECategory::kObject;
+   keyInfo.fPath = dirPath;
+   if (!isDir)
+      keyInfo.fPath += std::string(dirPath.empty() ? "" : "/") + key->GetName();
+   keyInfo.fClassName = key->GetClassName();
+   keyInfo.fCycle = key->GetCycle();
+   keyInfo.fTitle = key->GetTitle();
+   return keyInfo;
+}
+
+void RFile::Print(std::ostream &out) const
+{
+   std::vector<RKeyInfo> keys;
+   auto keysIter = ListKeys();
+   for (const auto &key : keysIter) {
+      keys.emplace_back(key);
+   }
+
+   std::sort(keys.begin(), keys.end(), [](const auto &a, const auto &b) { return a.GetPath() < b.GetPath(); });
+   for (const auto &key : keys) {
+      out << key.GetClassName() << " " << key.GetPath() << ";" << key.GetCycle() << ": \"" << key.GetTitle() << "\"\n";
    }
 }
 
