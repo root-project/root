@@ -1814,7 +1814,6 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    // Reset the ClassSaved status of all classes
    gROOT->ResetClassSaved();
 
-   char quote = '"';
    TString cname0 = GetName();
    Bool_t invalid = kFALSE;
 
@@ -1886,16 +1885,13 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 
    //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()
-         <<quote<<", "<<quote<<GetTitle()<<quote<<","<<w<<","<<h<<");"<<std::endl;
+      out << "   " << ClassName() << " *" << cname << " = new " << ClassName() << "(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << w << ", " << h << ");\n";
    } else {
-   //   Write canvas parameters (TCanvas case)
-      out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-         <<quote;
-      if (!HasMenuBar())
-         out<<",-"<<topx<<","<<topy<<","<<w<<","<<h<<");"<<std::endl;
-      else
-         out<<","<<topx<<","<<topy<<","<<w<<","<<h<<");"<<std::endl;
+      //   Write canvas parameters (TCanvas case)
+      out << "   TCanvas *" << cname << " = new TCanvas(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << (HasMenuBar() ? topx : -topx) << ", " << topy
+          << ", " << w << ", " << h << ");\n";
    }
    //   Write canvas options (in $TROOT or $TStyle)
    out << "   gStyle->SetOptFit(" << gStyle->GetOptFit() << ");\n";
@@ -1918,13 +1914,13 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    TPad::SavePrimitive(out,"toplevel");
 
    //   Write canvas options related to pad editor
-   out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<std::endl;
-   if (GetShowToolBar()) {
-      out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
-   }
-   if (invalid) fName = cname0;
+   out << "   " << GetName() << "->SetSelected(" << GetName() << ");\n";
+   if (GetShowToolBar())
+      out << "   " << GetName() << "->ToggleToolBar();\n";
+   if (invalid)
+      fName = cname0;
 
-   out <<"}"<<std::endl;
+   out <<"}\n";
    out.close();
    Info("SaveSource","C++ Macro file: %s has been generated", fname.Data());
 
