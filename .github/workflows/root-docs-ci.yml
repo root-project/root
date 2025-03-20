@@ -141,7 +141,7 @@ jobs:
       shell: bash
       run: |
         ls ROOT-CI/build/bin/
-#        source ROOT-CI/build/bin/thisroot.sh
+        source ROOT-CI/build/bin/thisroot.sh
         export DOXYGEN_OUTPUT_DIRECTORY=/github/home/${DOC_DIR}
         cd ROOT-CI/src/documentation/doxygen
         pwd
@@ -150,7 +150,7 @@ jobs:
         which doxygen
         echo $ROOTSYS
         nproc --all
-#        make -j `nproc --all`
+        make -j `nproc --all`
 
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
