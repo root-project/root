@@ -433,7 +433,7 @@ if(builtin_afterimage)
     if(GIF_FOUND)
        set(_gifinclude  --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
     else()
-       set(_gifinclude)
+       set(_gifinclude  --with-builtin-ungif)
     endif()
     if(PNG_FOUND)
       set(_pnginclude  --with-png-includes=${PNG_INCLUDE_DIR})
@@ -445,11 +445,10 @@ if(builtin_afterimage)
     else()
       set(_tiffinclude --with-tiff=no)
     endif()
-    if(cocoa)
-      set(_jpeginclude --without-x --with-builtin-jpeg)
-      set(_gifinclude  --with-builtin-ungif)
-      set(_pnginclude  --with-builtin-png)
-      set(_tiffinclude --with-tiff=no)
+    if(x11)
+      set(_xinclude --with-x)
+    else()
+      set(_xinclude --without-x)
     endif()
     if(builtin_freetype)
       set(_ttf_include --with-ttf-includes=-I${FREETYPE_INCLUDE_DIR})
@@ -471,6 +470,7 @@ if(builtin_afterimage)
                         --without-svg --disable-glx ${_after_mmx}
                         ${_gifinclude} --with-jpeg ${_jpeginclude}
                         --with-png ${_pnginclude} ${_tiffinclude}
+                        ${_xinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
