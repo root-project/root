@@ -1530,8 +1530,8 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    return result;
 }
 
-/// Evaluate the uncertainty in the function value at x due to the parameter
-/// uncertainties. If covMatrix is NULL, assumes uncorrelated uncertainties,
+/// Evaluate the uncertainty of the function at location x due to the parameter
+/// uncertainties. If covMatrix is nullptr, assumes uncorrelated uncertainties,
 /// otherwise the input covariance matrix (e.g. from a fit performed with
 /// option "S") is used. Implemented for 1-d only.
 /// @note to obtain confidence intervals of a fit result for drawing purposes,
