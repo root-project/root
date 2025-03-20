@@ -173,11 +173,34 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TF12::SavePrimitive(std::ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
+void TF12::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   Error("SavePrimitive","Function not yet implemented");
-}
+   thread_local Int_t save_f2_id = 9000;
 
+   fF2->SavePrimitive(out, TString::Format("nodraw#%d", ++save_f2_id));
+
+   TString f2Name = gInterpreter->MapCppName(TString::Format("%s%d", fF2->GetName(), save_f2_id));
+
+   TString f12Name = TF1::ProvideSaveName(option);
+
+   out << "   \n";
+   out << "   TF12 *" << f12Name << " = new TF12(\"" << "*" << GetName() << "\", " << f2Name << ", " << fXY << ", "
+       << (fCase ? "\"y\"" : "\"x\"") << ");\n";
+
+   SavePrimitiveNameTitle(out, f12Name);
+
+   SaveFillAttributes(out, f12Name, -1, 0);
+   SaveMarkerAttributes(out, f12Name, -1, -1, -1);
+   SaveLineAttributes(out, f12Name, -1, -1, -1);
+
+   if (fHistogram && !strstr(option, "same")) {
+      GetXaxis()->SaveAttributes(out, f12Name, "->GetXaxis()");
+      GetYaxis()->SaveAttributes(out, f12Name, "->GetYaxis()");
+   }
+
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << f12Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the value of the constant for the TF2
