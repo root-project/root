@@ -321,6 +321,8 @@
 #include "Split_1_FromONNX.hxx"
 #include "Split_2_FromONNX.hxx"
 
+#include "ScatterElements_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -3190,5 +3192,25 @@ TEST(ONNX, Split_2)
       for (size_t j = 0; j < output[i].size(); ++j) {
          EXPECT_LE(std::abs(output[i][j] - correct_output[i][j]), DEFAULT_TOLERANCE);
       }
+   }
+}
+
+TEST(ONNX, ScatterElements)
+{
+   // test scatter elements (similar test as in ONNX doc)
+   std::vector<float> input(9, 0.);    // input tensor shape is (3.3)
+   std::vector<int64_t> indices = { 1, 0, 2, 0, 2, 1};
+   std::vector<float> updates = { 1, 1.1, 1.2, 2, 2.1, 2.2};
+   std::vector<float> correct_output = {2, 1.1, 0., 1., 0., 2.2, 0., 2.1, 1.2 };
+
+   TMVA_SOFIE_ScatterElements::Session s("ScatterElements_FromONNX.dat");
+
+   auto output = s.infer(input.data(), indices.data(), updates.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
    }
 }

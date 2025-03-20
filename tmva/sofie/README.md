@@ -135,6 +135,7 @@ std::vector<std::string> supportedOperators = parser.GetRegisteredOperators();
 - [x] ReduceSumSquare
 - [x] Relu
 - [x] Reshape
+- [x] ScatterElements
 - [x] Selu
 - [x] Shape
 - [x] Sigmoid
