@@ -575,13 +575,18 @@ double RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return average curve value in [xFirst,xLast] by integrating curve between points
 /// and dividing by xLast-xFirst
+/// If xFirst > xLast, it prints an error and returns 0.
+/// If xFirst == xLast, it returns the y interpolated value at xFirst.
 
 double RooCurve::average(double xFirst, double xLast) const
 {
-  if (xFirst>=xLast) {
+  if (xFirst>xLast) {
     coutE(InputArguments) << "RooCurve::average(" << GetName()
            << ") invalid range (" << xFirst << "," << xLast << ")" << std::endl ;
     return 0 ;
+  }
+  else if (xFirst == xLast) {
+     return interpolate(xFirst,1e-10);
   }
 
   // Find Y values and begin and end points
