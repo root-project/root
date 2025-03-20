@@ -34,7 +34,7 @@
 #include "TAttMarker.h"
 #include "TF1AbsComposition.h"
 #include "TMath.h"
-#include "TMatrixDSym.h"
+#include "TMatrixDSymfwd.h"
 #include "Math/Types.h"
 #include "Math/ParamFunctor.h"
 
