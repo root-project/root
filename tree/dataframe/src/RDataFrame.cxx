@@ -990,9 +990,14 @@ As pointed out before in this document, RDataFrame can transparently perform mul
 the execution of its actions. Users have to call ROOT::EnableImplicitMT() *before* constructing the RDataFrame
 object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
 subset of entries**, and their partial results are merged before returning the final values to the user.
-There are no guarantees on the order in which threads will process the batches of entries.
+
+\warning There are no guarantees on the order in which threads will process the batches of entries.
 In particular, note that this means that, for multi-thread event loops, there is no
-guarantee on the order in which Snapshot() will _write_ entries: they could be scrambled with respect to the input dataset. The values of the special `rdfentry_` column will also not correspond to the entry numbers in the input dataset (e.g. TChain) in multi-thread runs.
+guarantee on the order in which Snapshot() will _write_ entries: they could be scrambled with respect to the input dataset.
+The values of the special `rdfentry_` column will also not correspond to the entry numbers in the input dataset (e.g. TChain) in multi-thread runs.
+Likewise, and perhaps counterintuitively, Take(), AsNumpy(), ... do not preserve the original ordering.
+
+\see https://github.com/root-project/root/issues/18014
 
 \warning By default, RDataFrame will use as many threads as the hardware supports, using up **all** the resources on
 a machine. This might be undesirable on shared computing resources such as a batch cluster. Therefore, when running on shared computing resources, use
