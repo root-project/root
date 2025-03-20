@@ -5848,13 +5848,12 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 {
    TContext ctxt(this, kFALSE); // not interactive
 
-   char quote = '"';
-
    TString padName = GetName();
 
    // check for space in the pad name
    auto p = padName.Index(" ");
-   if (p != kNPOS) padName.Resize(p);
+   if (p != kNPOS)
+      padName.Resize(p);
 
    TString opt = option;
    if (!opt.Contains("toplevel")) {
@@ -5876,137 +5875,103 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 
    //   Write pad parameters
    if (this != gPad->GetCanvas()) {
-      out <<"  "<<std::endl;
-      out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
-
-      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
-      <<","<<fXlowNDC
-      <<","<<fYlowNDC
-      <<","<<fXlowNDC+fWNDC
-      <<","<<fYlowNDC+fHNDC
-      <<");"<<std::endl;
-      out<<"   "<<cname<<"->Draw();"<<std::endl;
-      out<<"   "<<cname<<"->cd();"<<std::endl;
+      out << "   \n";
+      out << "// ------------>Primitives in pad: " << GetName() << "\n";
+      out << "   TPad *" << cname << " = new TPad(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fXlowNDC << ", " << fYlowNDC << ", "
+          << fXlowNDC + fWNDC << ", " << fYlowNDC + fHNDC << ");\n";
+      out << "   " << cname << "->Draw();\n";
+      out << "   " << cname << "->cd();\n";
    }
-   out<<"   "<<cname<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   out << "   " << cname << "->Range(" << fX1 << "," << fY1 << "," << fX2 << "," << fY2 << ");\n";
    TView *view = GetView();
    if (view) {
       Double_t rmin[3], rmax[3];
       view->GetRange(rmin, rmax);
-      static Int_t viewNumber = 0;
-      out<<"   TView *view"<<++viewNumber<<" = TView::CreateView(1);"<<std::endl;
-      out<<"   view"<<viewNumber<<"->SetRange("<<rmin[0]<<","<<rmin[1]<<","<<rmin[2]<<","
-                               <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<std::endl;
+      out << "   TView::CreateView(1)->SetRange(" << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ", " << rmax[0]
+          << ", " << rmax[1] << ", " << rmax[2] << ");\n";
    }
 
    SaveFillAttributes(out, cname, 19, 1001);
 
-   if (GetBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
-   }
-   if (GetBorderSize() != 4) {
-      out<<"   "<<cname<<"->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
-   }
-   if (GetLogx()) {
-      out<<"   "<<cname<<"->SetLogx();"<<std::endl;
-   }
-   if (GetLogy()) {
-      out<<"   "<<cname<<"->SetLogy();"<<std::endl;
-   }
-   if (GetLogz()) {
-      out<<"   "<<cname<<"->SetLogz();"<<std::endl;
-   }
-   if (GetGridx()) {
-      out<<"   "<<cname<<"->SetGridx();"<<std::endl;
-   }
-   if (GetGridy()) {
-      out<<"   "<<cname<<"->SetGridy();"<<std::endl;
-   }
-   if (GetTickx()) {
-      out<<"   "<<cname<<"->SetTickx("<<GetTickx()<<");"<<std::endl;
-   }
-   if (GetTicky()) {
-      out<<"   "<<cname<<"->SetTicky("<<GetTicky()<<");"<<std::endl;
-   }
-   if (GetTheta() != 30) {
-      out<<"   "<<cname<<"->SetTheta("<<GetTheta()<<");"<<std::endl;
-   }
-   if (GetPhi() != 30) {
-      out<<"   "<<cname<<"->SetPhi("<<GetPhi()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fLeftMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetLeftMargin("<<GetLeftMargin()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fRightMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetRightMargin("<<GetRightMargin()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fTopMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetTopMargin("<<GetTopMargin()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fBottomMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<std::endl;
-   }
+   if (GetBorderMode() != 1)
+      out << "   " << cname << "->SetBorderMode(" << GetBorderMode() << ");\n";
+   if (GetBorderSize() != 4)
+      out << "   " << cname << "->SetBorderSize(" << GetBorderSize() << ");\n";
+   if (GetLogx())
+      out << "   " << cname << "->SetLogx();\n";
+   if (GetLogy())
+      out << "   " << cname << "->SetLogy();\n";
+   if (GetLogz())
+      out << "   " << cname << "->SetLogz();\n";
+   if (GetGridx())
+      out << "   " << cname << "->SetGridx();\n";
+   if (GetGridy())
+      out << "   " << cname << "->SetGridy();\n";
+   if (GetTickx())
+      out << "   " << cname << "->SetTickx(" << GetTickx() << ");\n";
+   if (GetTicky())
+      out << "   " << cname << "->SetTicky(" << GetTicky() << ");\n";
+   if (GetTheta() != 30)
+      out << "   " << cname << "->SetTheta(" << GetTheta() << ");\n";
+   if (GetPhi() != 30)
+      out << "   " << cname << "->SetPhi(" << GetPhi() << ");\n";
+   if (TMath::Abs(fLeftMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetLeftMargin(" << GetLeftMargin() << ");\n";
+   if (TMath::Abs(fRightMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetRightMargin(" << GetRightMargin() << ");\n";
+   if (TMath::Abs(fTopMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetTopMargin(" << GetTopMargin() << ");\n";
+   if (TMath::Abs(fBottomMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetBottomMargin(" << GetBottomMargin() << ");\n";
 
    if (GetFrameFillColor() != GetFillColor())
       out << "   " << cname << "->SetFrameFillColor(" << TColor::SavePrimitiveColor(GetFrameFillColor()) << ");\n";
-   if (GetFrameFillStyle() != 1001) {
-      out<<"   "<<cname<<"->SetFrameFillStyle("<<GetFrameFillStyle()<<");"<<std::endl;
-   }
-   if (GetFrameLineStyle() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineStyle("<<GetFrameLineStyle()<<");"<<std::endl;
-   }
+   if (GetFrameFillStyle() != 1001)
+      out << "   " << cname << "->SetFrameFillStyle(" << GetFrameFillStyle() << ");\n";
+   if (GetFrameLineStyle() != 1)
+      out << "   " << cname << "->SetFrameLineStyle(" << GetFrameLineStyle() << ");\n";
    if (GetFrameLineColor() != 1)
       out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(GetFrameLineColor()) << ");\n";
-   if (GetFrameLineWidth() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineWidth("<<GetFrameLineWidth()<<");"<<std::endl;
-   }
-   if (GetFrameBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetFrameBorderMode("<<GetFrameBorderMode()<<");"<<std::endl;
-   }
-   if (GetFrameBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<GetFrameBorderSize()<<");"<<std::endl;
-   }
+   if (GetFrameLineWidth() != 1)
+      out << "   " << cname << "->SetFrameLineWidth(" << GetFrameLineWidth() << ");\n";
+   if (GetFrameBorderMode() != 1)
+      out << "   " << cname << "->SetFrameBorderMode(" << GetFrameBorderMode() << ");\n";
+   if (GetFrameBorderSize() != 1)
+      out << "   " << cname << "->SetFrameBorderSize(" << GetFrameBorderSize() << ");\n";
 
    TFrame *frame = fFrame;
-   if (!frame) frame = (TFrame*)GetPrimitive("TFrame");
+   if (!frame)
+      frame = (TFrame *)GetPrimitive("TFrame");
    if (frame) {
       if (frame->GetFillColor() != GetFillColor())
          out << "   " << cname << "->SetFrameFillColor(" << TColor::SavePrimitiveColor(frame->GetFillColor()) << ");\n";
-      if (frame->GetFillStyle() != 1001) {
-         out<<"   "<<cname<<"->SetFrameFillStyle("<<frame->GetFillStyle()<<");"<<std::endl;
-      }
-      if (frame->GetLineStyle() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineStyle("<<frame->GetLineStyle()<<");"<<std::endl;
-      }
+      if (frame->GetFillStyle() != 1001)
+         out << "   " << cname << "->SetFrameFillStyle(" << frame->GetFillStyle() << ");\n";
+      if (frame->GetLineStyle() != 1)
+         out << "   " << cname << "->SetFrameLineStyle(" << frame->GetLineStyle() << ");\n";
       if (frame->GetLineColor() != 1)
          out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(frame->GetLineColor()) << ");\n";
-      if (frame->GetLineWidth() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineWidth("<<frame->GetLineWidth()<<");"<<std::endl;
-      }
-      if (frame->GetBorderMode() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderMode("<<frame->GetBorderMode()<<");"<<std::endl;
-      }
-      if (frame->GetBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<frame->GetBorderSize()<<");"<<std::endl;
-      }
+      if (frame->GetLineWidth() != 1)
+         out << "   " << cname << "->SetFrameLineWidth(" << frame->GetLineWidth() << ");\n";
+      if (frame->GetBorderMode() != 1)
+         out << "   " << cname << "->SetFrameBorderMode(" << frame->GetBorderMode() << ");\n";
+      if (frame->GetBorderSize() != 1)
+         out << "   " << cname << "->SetFrameBorderSize(" << frame->GetBorderSize() << ");\n";
    }
 
    TIter next(GetListOfPrimitives());
-   Int_t grnum = 0;
 
    while (auto obj = next()) {
-      if (obj->InheritsFrom(TGraph::Class()))
-         if (!strcmp(obj->GetName(),"Graph"))
-            ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
       if (obj->InheritsFrom(TPad::Class())) {
          if (opt.Contains("toplevel"))
-            out<<"   "<<pname<<"->cd();"<<std::endl;
+            out << "   " << pname << "->cd();\n";
          else
-            out<<"   "<<cname<<"->cd();"<<std::endl;
+            out << "   " << cname << "->cd();\n";
       }
    }
-   out<<"   "<<cname<<"->Modified();"<<std::endl;
+   out << "   " << cname << "->Modified();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
