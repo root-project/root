@@ -9,10 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(cocoa)  # Not needed to locate PNG, JPG, TIFF libraries
-  set(ASEXTRA_LIBRARIES)
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
   NO_INSTALL_HEADERS
   HEADERS
