@@ -62,18 +62,32 @@ private:
          }
       };
 
-      //////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////
       /// Hash combining the individual join field value hashes from RCombinedJoinFieldValue. Uses the implementation
-      /// from `boost::hash_combine` (see
-      /// https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine).
+      /// from `boost::hash_combine`. See
+      /// https://www.boost.org/doc/libs/1_87_0/libs/container_hash/doc/html/hash.html#notes_hash_combine for more
+      /// background. In particular, it mentions: "Several improvements of the 64 bit function have been subsequently
+      /// proposed, by [David Stafford](https://zimbry.blogspot.com/2011/09/better-bit-mixing-improving-on.html), [Pelle
+      /// Evensen](https://mostlymangling.blogspot.com/2019/12/stronger-better-morer-moremur-better.html), and [Jon
+      /// Maiga](http://jonkagstrom.com/mx3/mx3_rev2.html). We currently use Jon Maiga’s function."
       struct RCombinedJoinFieldValueHash {
-         inline std::size_t operator()(const RCombinedJoinFieldValue &joinFieldValue) const
+         inline std::size_t operator()(const RCombinedJoinFieldValue &joinFieldVal) const
          {
-            std::size_t combinedHash = 0;
-            for (const auto &fieldVal : joinFieldValue.fJoinFieldValues) {
-               combinedHash ^= fieldVal + 0x9e3779b9 + (fieldVal << 6) + (fieldVal >> 2);
+            std::size_t seed = 0;
+            for (const auto &fieldVal : joinFieldVal.fJoinFieldValues) {
+               seed ^= mix(seed + 0x9e3779b9 + fieldVal);
             }
-            return combinedHash;
+            return seed;
+         }
+
+         inline std::size_t mix(std::size_t init) const
+         {
+            init ^= init >> 32;
+            init *= 0xe9846af9b1a615d;
+            init ^= init >> 32;
+            init *= 0xe9846af9b1a615d;
+            init ^= init >> 28;
+            return init;
          }
       };
 
