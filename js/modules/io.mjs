@@ -638,6 +638,7 @@ function getArrayKind(type_name) {
    return type_name === 'TArrayL64' ? kLong64 : -1;
 }
 
+// eslint-disable-next-line  prefer-const
 let createPairStreamer;
 
 /** @summary create element of the streamer
@@ -680,7 +681,7 @@ function createStreamerElement(name, typename, file) {
       return elem;
    }
 
-   if ((pos > 0) && (typename.slice(0, pos) == 'pair') && file && isFunc(createPairStreamer))
+   if ((pos > 0) && (typename.slice(0, pos) === 'pair') && file && isFunc(createPairStreamer))
       createPairStreamer(typename, file);
 
    const isptr = typename.at(-1) === '*';
@@ -792,7 +793,7 @@ createPairStreamer = function(typename, file) {
    si.fElements.Add(createStreamerElement('second', getNextName(), file));
    file.fStreamerInfos.arr.push(si);
    return si;
-}
+};
 
 /** @summary Function creates streamer for std::pair object
   * @private */
@@ -1266,7 +1267,6 @@ function createMemberStreamer(element, file) {
                }
             }
          } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
-
             const p1 = member.typename.indexOf('<'),
                   p2 = member.typename.lastIndexOf('>');
 

@@ -29,6 +29,8 @@
 1. Fix - hidden canvas in Jupyter Lab, https://root-forum.cern.ch/t/63097/
 1. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
 1. Fix - correctly read std::pair<> without dictionary, https://root-forum.cern.ch/t/63114/
+1. Fix - TF3 painting error
+1. Fix - correct axis range in TScatter drawing
 
 
 ## Changes in 7.8.1

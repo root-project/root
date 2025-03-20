@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '13/03/2025',
+version_date = '20/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1631,7 +1631,7 @@ function getMethods(typename, obj) {
       };
    }
 
-   if ((typename.indexOf(clTF1) === 0) || (typename === clTF12) || (typename === clTF2)) {
+   if ((typename.indexOf(clTF1) === 0) || (typename === clTF12) || (typename === clTF2) || (typename === clTF3)) {
       m.addFormula = function(formula) {
          if (!formula) return;
          if (this.formulas === undefined)
@@ -109691,6 +109691,7 @@ function getArrayKind(type_name) {
    return type_name === 'TArrayL64' ? kLong64 : -1;
 }
 
+// eslint-disable-next-line  prefer-const
 let createPairStreamer;
 
 /** @summary create element of the streamer
@@ -109733,7 +109734,7 @@ function createStreamerElement(name, typename, file) {
       return elem;
    }
 
-   if ((pos > 0) && (typename.slice(0, pos) == 'pair') && file && isFunc(createPairStreamer))
+   if ((pos > 0) && (typename.slice(0, pos) === 'pair') && file && isFunc(createPairStreamer))
       createPairStreamer(typename, file);
 
    const isptr = typename.at(-1) === '*';
@@ -110319,7 +110320,6 @@ function createMemberStreamer(element, file) {
                }
             }
          } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
-
             const p1 = member.typename.indexOf('<'),
                   p2 = member.typename.lastIndexOf('>');
 
@@ -163758,7 +163758,8 @@ class TScatterPainter extends TGraphPainter$1 {
   /** @summary Draw axis histogram
     * @private */
    async drawAxisHisto() {
-      const histo = this.createHistogram();
+      const need_histo = !this.getHistogram(),
+            histo = this.createHistogram(need_histo, need_histo);
       return TH2Painter$2.draw(this.getDrawDom(), histo, this.options.Axis + ';IGNORE_PALETTE');
    }
 

@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '13/03/2025',
+version_date = '20/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1623,7 +1623,7 @@ function getMethods(typename, obj) {
       };
    }
 
-   if ((typename.indexOf(clTF1) === 0) || (typename === clTF12) || (typename === clTF2)) {
+   if ((typename.indexOf(clTF1) === 0) || (typename === clTF12) || (typename === clTF2) || (typename === clTF3)) {
       m.addFormula = function(formula) {
          if (!formula) return;
          if (this.formulas === undefined)
