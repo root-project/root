@@ -2001,50 +2001,37 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    TString ff = filename && *filename ? filename : "Rootstyl.C";
 
    // Computes the main method name.
-   const char *fname = gSystem->BaseName(ff);
-   Int_t lenfname = strlen(fname);
-   char *sname = new char[lenfname + 1];
-   Int_t i = 0;
-   while ((i < lenfname) && (fname[i] != '.')) {
-      sname[i] = fname[i];
-      i++;
-   }
-   if (i == lenfname) ff += ".C";
-   sname[i] = 0;
+   TString sname, fname = gSystem->BaseName(ff);
+   auto pos = fname.First('.');
+
+   if (pos == kNPOS) {
+      sname = fname;
+      ff.Append(".C");
+   } else
+      sname = fname(0, pos);
 
    // Tries to open the file.
    std::ofstream out;
    out.open(ff.Data(), std::ios::out);
    if (!out.good()) {
-      delete [] sname;
       Error("SaveSource", "cannot open file: %s", ff.Data());
       return;
    }
 
    // Writes macro header, date/time stamp as string, and the used Root version
-   TDatime t;
-   out <<"// Mainframe macro generated from application: " << gApplication->Argv(0) << std::endl;
-   out <<"// By ROOT version " << gROOT->GetVersion() << " on " << t.AsSQLString() << std::endl;
-   out << std::endl;
-
-   char quote = '"';
+   out << "// Macro generated from application: " << gApplication->Argv(0) << "\n";
+   out << "// By ROOT version " << gROOT->GetVersion() << " on " << TDatime().AsSQLString() << "\n\n";
 
    // Writes include.
-   out << std::endl << std::endl;
-   out << "#ifndef ROOT_TStyle" << std::endl;
-   out << "#include " << quote << "TStyle.h" << quote << std::endl;
-   out << "#endif" << std::endl;
-   out << std::endl << std::endl;
+   out << "#include \"TStyle.h\"\n\n";
 
    // Writes the macro entry point equal to the fname
-   out << std::endl;
-   out << "void " << sname << "()" << std::endl;
-   out << "{" << std::endl;
-   delete [] sname;
+   out << "void " << sname << "()\n";
+   out << "{\n";
 
    TStyle::SavePrimitive(out, option);
 
-   out << "}" << std::endl;
+   out << "}\n";
    out.close();
 
    printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff));
