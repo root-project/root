@@ -21,6 +21,7 @@
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TButton.h"
+#include "TSlider.h"
 #include "TFrame.h"
 #include "TPaveText.h"
 #include "TPaveStats.h"
@@ -323,6 +324,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TPave", true},
                             {"TGaxis"},
                             {"TPave", true},
+                            {"TButton", true},
+                            {"TSlider", true},
                             {"TArrow"},
                             {"TBox", false, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TWbox"}, // some extra calls which cannot be handled via TWebPainter
@@ -927,7 +930,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       pad_status._has_specials = false;
 
    while ((obj = iter()) != nullptr) {
-      if (obj->InheritsFrom(TPad::Class())) {
+      if (obj->IsA() == TPad::Class()) {
          flush_master();
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (!process_primitives) {
@@ -2286,7 +2289,7 @@ void TWebCanvas::CheckPadModified(TPad *pad)
 
    TIter iter(pad->GetListOfPrimitives());
    while (auto obj = iter()) {
-      if (obj->InheritsFrom(TPad::Class()))
+      if (obj->IsA() == TPad::Class())
          CheckPadModified(static_cast<TPad *>(obj));
    }
 }
@@ -2799,7 +2802,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
       if (!obj) continue;
 
       if (!search_hist && (TString::Hash(&obj, sizeof(obj)) != id)) {
-         if (obj->InheritsFrom(TPad::Class())) {
+         if (obj->IsA() == TPad::Class()) {
             obj = FindPrimitive(sid, idcnt, (TPad *)obj, objlnk, objpad);
             if (objpad && !*objpad)
                *objpad = pad;
