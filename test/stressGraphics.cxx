@@ -46,6 +46,7 @@
 #include <TDatime.h>
 #include <TFile.h>
 #include <TF1.h>
+#include <TF12.h>
 #include <TF2.h>
 #include <TF3.h>
 #include <TH2.h>
@@ -2245,9 +2246,9 @@ void tgraph2d2()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraph2DErros Test
+/// TGraph2DErrors
 
-void graph2derr_test()
+void tgraph2derr()
 {
   auto C = StartTest(600, 600);
 
@@ -2285,9 +2286,9 @@ void graph2derr_test()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraph2DAsymmErros Test
+/// TGraph2DAsymmErrors
 
-void graph2dassym_test()
+void tgraph2dassym()
 {
   auto C = StartTest(600, 600);
 
@@ -2332,25 +2333,23 @@ void graph2dassym_test()
 ////////////////////////////////////////////////////////////////////////////////
 /// TProfile3D Test
 
-
-void profile3d_test()
+void tprofile3d()
 {
-  auto C = StartTest(700, 500);
-  auto hprof3d = new TProfile3D("hprof3d", "Profile of pt versus px, py and pz", 40, -4, 4, 40, -4, 4, 40, 0, 20);
-  hprof3d->SetDirectory(nullptr);
-  Double_t px, py, pz, pt;
-  TRandom r;
-  r.SetSeed(2000);
-  for (Int_t i = 0; i < 25000; i++) {
-    r.Rannor(px, py);
-    pz = px * px + py * py;
-    pt = r.Landau(0, 1);
-    hprof3d->Fill(px, py, pz, pt, 1);
-  }
-  hprof3d->Draw();
-  TestReport(C, "TProfile3D");
+   auto C = StartTest(700, 500);
+   auto hprof3d = new TProfile3D("hprof3d", "Profile of pt versus px, py and pz", 40, -4, 4, 40, -4, 4, 40, 0, 20);
+   hprof3d->SetDirectory(nullptr);
+   Double_t px, py, pz, pt;
+   TRandom r;
+   r.SetSeed(2000);
+   for (Int_t i = 0; i < 25000; i++) {
+      r.Rannor(px, py);
+      pz = px * px + py * py;
+      pt = r.Landau(0, 1);
+      hprof3d->Fill(px, py, pz, pt, 1);
+   }
+   hprof3d->Draw();
+   TestReport(C, "TProfile3D");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 3rd TGraph2D Test
@@ -2383,6 +2382,22 @@ void tgraph2d3()
    delete dt;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// TF3 Test
+
+void tf3()
+{
+   TCanvas *C = StartTest(600, 600);
+
+   TF3 *f3 = new TF3("f3", "[0] * sin(x) + [1] * cos(y) + [2] * z", 0, 10, 0, 10, 0, 10);
+   f3->SetParameters(2, 2, 0.5);
+   f3->SetLineColor(kBlue);
+   f3->SetFillColor(kGreen);
+   f3->Draw();
+
+   TestReport(C, "TF3");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 1st complex drawing and TPad test
@@ -2853,9 +2868,25 @@ void waves()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TF12
+
+void tf12()
+{
+   auto C = StartTest(600, 600);
+
+   auto f2 = new TF2("f2", "sin(x)*sin(y)/(x*y)", 0, 5, 0, 5);
+   auto f12 = new TF12("f12", f2, 0.1, "y");
+   f12->SetLineColor(kGreen);
+   f12->SetLineWidth(3);
+   f12->Draw();
+
+   TestReport(C, "TF12");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// TSpline3 / TSpline5
 
-void splines_test()
+void tspline()
 {
   auto C = StartTest(800, 600);
 
@@ -3204,7 +3235,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    if (!gVerbose)
       gErrorIgnoreLevel = 0;
 
-   const char *ref_name = "stressGraphics.ref", *ref_kind = "   ";
+   const char *ref_name = "stressGraphics.ref", *ref_kind = "    ";
    if (gWebMode) {
       ref_name = "stressGraphics_web.ref";
       ref_kind = " WEB";
@@ -3270,7 +3301,8 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tmultigraph1  ();
    tmultigraph2  ();
    waves         ();
-   splines_test  ();
+   tf12          ();
+   tspline       ();
    scatter_test  ();
    efficiency_test();
    profile_2d    ();
@@ -3289,13 +3321,14 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    }
    earth         ();
    if (gSkip3D) {
-      gTestNum += 5;
+      gTestNum += 6;
    } else {
       tgraph2d1  ();
       tgraph2d2  ();
-      graph2derr_test();
-      graph2dassym_test();
-      profile3d_test();
+      tgraph2derr();
+      tgraph2dassym();
+      tprofile3d ();
+      tf3        ();
    }
    tgraph2d3     ();
    print_reports ();
