@@ -18,16 +18,18 @@ class StringView(unittest.TestCase):
 
     def test_rdataframe(self):
         # Create file.root to avoid errors in the RDF constructor
-        treename = "tree"
-        filename = "string_view_backport_test_file.root"
+        try:
+            treename = "tree"
+            filename = "string_view_backport_test_file.root"
 
-        with ROOT.TFile(filename, "recreate") as f:
-            t = ROOT.TTree(treename, treename)
-            f.WriteObject(t, treename)
+            with ROOT.TFile(filename, "recreate") as f:
+                t = ROOT.TTree(treename, treename)
+                f.WriteObject(t, treename)
 
-        df = ROOT.RDataFrame(treename, filename)
-        self.assertEqual(df.GetNRuns(), 0)
-        os.remove(filename)
+            df = ROOT.RDataFrame(treename, filename)
+            self.assertEqual(df.GetNRuns(), 0)
+        finally:
+            os.remove(filename)
 
     def test_17497(self):
         """Regression test for https://github.com/root-project/root/issues/17497"""
