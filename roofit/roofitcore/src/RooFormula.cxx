@@ -331,6 +331,21 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
   return internalRepr;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// From the internal representation, construct a null-formula by replacing all
+//  index place holders with zeroes
+std::string RooFormula::reconstructNullFormula(std::string internalRepr) const {
+   for (unsigned int i = 0; i < _origList.size(); ++i) {
+      std::stringstream regexStr;
+      regexStr << "x\\[" << i << "\\]|@" << i;
+      std::regex regex(regexStr.str());
+
+      std::string replacement = "1e-18";
+      internalRepr = std::regex_replace(internalRepr, regex, replacement);
+   }
+
+   return internalRepr;
+}
 
 void RooFormula::dump() const
 {
@@ -512,21 +527,19 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
     throw std::runtime_error(msg.str());
   }
 
-  if (theFormula && theFormula->GetNdim() != 1) {
-    // TFormula thinks that we have a multi-dimensional formula, e.g. with variables x,y,z,t.
-    // We have to check now that this is not the case, as RooFit only uses the syntax x[0], x[1], x[2], ...
-    bool haveProblem = false;
-    std::stringstream msg;
-    msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim() << "-dimensional with the variable(s) {";
-    for (int i=1; i < theFormula->GetNdim(); ++i) {
-      const TString varName = theFormula->GetVarName(i);
-      if (varName.BeginsWith("x[") && varName[varName.Length()-1] == ']')
-        continue;
-
-      haveProblem = true;
-      msg << theFormula->GetVarName(i) << ",";
-    }
-    if (haveProblem) {
+  if (theFormula && theFormula->GetNdim() != 0) {
+    auto theNullFormula = std::make_unique<TFormula>((std::string(GetName()) + "0").c_str(), reconstructNullFormula(processedFormula).c_str());
+    if (theNullFormula && theNullFormula->GetNdim() != 0) {
+      // TFormula thinks that we have an n-dimensional formula (n>0), but it shouldn't, as
+      // these vars should have been replaced by zeroes in reconstructNullFormula
+      // since RooFit only uses the syntax x[0], x[1], x[2], ...
+      // This can happen e.g. with variables x,y,z,t that were not supplied in arglist.
+      std::stringstream msg;
+      msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim()+theNullFormula->GetNdim() << "-dimensional with undefined variable(s) {";
+      for (int i=0; i < theNullFormula->GetNdim(); ++i) {
+        const TString varName = theNullFormula->GetVarName(i);
+        msg << theNullFormula->GetVarName(i) << ",";
+      }
       msg << "}, which could not be supplied by RooFit."
           << "\nThe formula must be modified, or those variables must be supplied in the list of variables." << std::endl;
       coutF(InputArguments) << msg.str();
