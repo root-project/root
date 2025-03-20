@@ -97,6 +97,11 @@ namespace ROOT {
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetThreadPoolSize();
+   namespace Experimental {
+   void EnableObjectAutoRegistration();
+   void DisableObjectAutoRegistration();
+   bool ObjectAutoRegistrationEnabled();
+   } // namespace Experimental
 }
 
 namespace ROOT::Deprecated::Internal {

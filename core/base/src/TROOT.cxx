@@ -71,9 +71,11 @@ of a main program creating an interactive version is shown below:
 #include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
+#include <atomic>
 #include <filesystem>
 #include <string>
 #include <map>
+#include <sstream>
 #include <set>
 #include <cstdlib>
 #ifdef WIN32
@@ -298,6 +300,75 @@ namespace {
       static std::vector<ModuleHeaderInfo_t> moduleHeaderInfoBuffer;
       return moduleHeaderInfoBuffer;
    }
+
+   enum class AutoReg : unsigned char {
+      kNotInitialised = 0,
+      kOn,
+      kOff,
+   };
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Test if various objects (such as TH1-derived classes) should automatically register
+   /// themselves (ROOT 6 mode) or not (ROOT 7 mode).
+   /// A default can be set in a .rootrc using e.g. "Root.ObjectAutoRegistration: 1" or setting
+   /// the environment variable "ROOT_OBJECT_AUTO_REGISTRATION=0".
+   AutoReg &ObjectAutoRegistrationEnabledImpl()
+   {
+      static constexpr auto rcName = "Root.ObjectAutoRegistration";    // Update the docs if this is changed
+      static constexpr auto envName = "ROOT_OBJECT_AUTO_REGISTRATION"; // Update the docs if this is changed
+      thread_local static AutoReg tlsState = AutoReg::kNotInitialised;
+
+      static const AutoReg defaultState = []() {
+         AutoReg autoReg = AutoReg::kOn; // ROOT 6 default
+         std::stringstream infoMessage;
+
+         if (gEnv) {
+            const auto desiredValue = gEnv->GetValue(rcName, -1);
+            if (desiredValue == 0) {
+               autoReg = AutoReg::kOff;
+               infoMessage << "disabled in " << gEnv->GetRcName();
+            } else if (desiredValue == 1) {
+               autoReg = AutoReg::kOn;
+               infoMessage << "enabled in " << gEnv->GetRcName();
+            } else if (desiredValue != -1) {
+               Error("TROOT", "%s should be 0 or 1", rcName);
+            }
+         }
+
+         if (const auto env = gSystem->Getenv(envName); env) {
+            int desiredValue = -1;
+            try {
+               desiredValue = std::stoi(env);
+            } catch (std::invalid_argument &e) {
+               Error("TROOT", "%s should be 0 or 1", envName);
+            }
+            if (desiredValue == 0) {
+               autoReg = AutoReg::kOff;
+               infoMessage << (infoMessage.str().empty() ? "" : " and ") << "disabled using the environment variable "
+                           << envName;
+            } else if (desiredValue == 1) {
+               autoReg = AutoReg::kOn;
+               infoMessage << (infoMessage.str().empty() ? "" : " and ") << "enabled using the environment variable "
+                           << envName;
+            } else {
+               Error("TROOT", "%s should be 0 or 1", envName);
+            }
+         }
+
+         if (!infoMessage.str().empty()) {
+            Info("TROOT", "Object auto registration %s\n", infoMessage.str().c_str());
+         }
+
+         return autoReg;
+      }();
+
+      if (tlsState == AutoReg::kNotInitialised) {
+         assert(defaultState != AutoReg::kNotInitialised);
+         tlsState = defaultState;
+      }
+
+      return tlsState;
+   }
 }
 
 Int_t  TROOT::fgDirLevel = 0;
@@ -475,7 +546,6 @@ namespace Internal {
       static Bool_t isImplicitMTEnabled = kFALSE;
       return isImplicitMTEnabled;
    }
-
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -621,6 +691,87 @@ namespace Internal {
       return 0;
 #endif
    }
+
+   /// Namespace for ROOT features in testing.
+   /// The API might change without notice until moved out of this namespace.
+   namespace Experimental {
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Enable automatic registration of objects for the current thread (ROOT 6 default).
+   ///
+   /// In ROOT 6 mode, ROOT will implicitly assign ownership of histograms or TTrees
+   /// to the current \ref gDirectory, for example to the last TFile that was opened.
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// TTree* tree = new TTree(...);
+   /// TH1D* histo = new TH1D(...);
+   /// file.Write(); // Both tree and histogram are in the file now
+   /// \endcode
+   ///
+   /// On the path to ROOT 7, the auto registration of most objects will be phased out, so
+   /// they are fully owned by the user. To write these to files, the user needs to do
+   /// one of the following:
+   /// - Manage the object, and write it explicitly:
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// std::unique_ptr<TH1D> histo{new TH1D(...)};
+   /// file.WriteObject(histo.get(), "HistogramName");
+   /// // histo remains valid even if the file is closed
+   /// \endcode
+   /// - Explicitly transfer ownership to the file using `SetDirectory()`:
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// TH1x* histogram = new TH1x(...);
+   /// histogram->SetDirectory(&file);
+   /// \endcode
+   ///
+   /// ### Objects covered by this mode
+   ///
+   /// |                       | Honours `DisableObjectAutoRegistration()`? | Could this be disabled previously? |
+   /// | --------------------- | ------------------------------------------ | ---------------------------------- |
+   /// | TH1 and derived       | Yes                                        | TH1::AddDirectoryStatus()          |
+   /// | TGraph2D              | Yes                                        | TH1::AddDirectoryStatus()          |
+   /// | RooPlot               | Yes                                        | RooPlot::addDirectoryStatus()      |
+   /// | TEfficiency           | Yes                                        | No                                 |
+   /// | TProfile2D            | Yes                                        | TH1::AddDirectoryStatus()          |
+   /// | TEntryList            | No, but planned for 6.42                   | No                                 |
+   /// | TEventList            | No, but planned for 6.42                   | No                                 |
+   /// | TFunction             | No, but work in progress                   | No                                 |
+   ///
+   /// ## Setting defaults
+   ///
+   /// A default can be set in a .rootrc using e.g. `Root.ObjectAutoRegistration: 1` or setting
+   /// the environment variable `ROOT_OBJECT_AUTO_REGISTRATION=0`. Note that this default affects
+   /// all the threads that get started.
+   /// When a default is set using one of these methods, ROOT will notify with an Info message.
+   ///
+   /// ## Difference to TH1::AddDirectoryStatus()
+   ///
+   /// For classes deriving from TH1, both ObjectAutoRegistrationEnabled() and TH1::AddDirectoryStatus()
+   /// need to be true for auto-registration to take effect. The former should be preferred over the latter, however,
+   /// because it is thread local and extends to more objects such as TGraph2D, TEfficiency, RooPlot.
+   void EnableObjectAutoRegistration()
+   {
+      ObjectAutoRegistrationEnabledImpl() = AutoReg::kOn;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Disable automatic registration of objects for the current thread (ROOT 7 default).
+   /// \copydetails ROOT::Experimental::EnableObjectAutoRegistration()
+   void DisableObjectAutoRegistration()
+   {
+      ObjectAutoRegistrationEnabledImpl() = AutoReg::kOff;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Test whether objects in this thread auto-register themselves, e.g. to the current ROOT directory.
+   /// \copydetails ROOT::Experimental::EnableObjectAutoRegistration()
+   bool ObjectAutoRegistrationEnabled()
+   {
+      const auto state = ObjectAutoRegistrationEnabledImpl();
+      assert(state != AutoReg::kNotInitialised);
+      return state == AutoReg::kOn;
+   }
+   } // namespace Experimental
 } // end of ROOT namespace
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
