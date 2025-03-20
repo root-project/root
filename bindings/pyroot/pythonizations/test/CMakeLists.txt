@@ -21,6 +21,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(uhi_plotting uhi_plotting.py GENERIC PYTHON_DEPS uhi numpy)
+ROOT_ADD_PYUNITTEST(uhi_indexing uhi_indexing.py GENERIC PYTHON_DEPS uhi numpy)
 
 # STL containers pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
