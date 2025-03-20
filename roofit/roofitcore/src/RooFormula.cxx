@@ -336,12 +336,11 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
 //  index place holders with zeroes
 std::string RooFormula::reconstructNullFormula(std::string internalRepr) const {
    for (unsigned int i = 0; i < _origList.size(); ++i) {
-      const auto& var = _origList[i];
       std::stringstream regexStr;
       regexStr << "x\\[" << i << "\\]|@" << i;
       std::regex regex(regexStr.str());
 
-      std::string replacement = "0";
+      std::string replacement = "1e-18";
       internalRepr = std::regex_replace(internalRepr, regex, replacement);
    }
 

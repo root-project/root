@@ -87,5 +87,5 @@ TEST(RooFormula, UndefinedVariables)
    
    ASSERT_ANY_THROW(RooFormulaVar f1("f1", "r + B + x", {r, B}))  << "Formulae with missing x in arg list cannot work.";
    ASSERT_ANY_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B}))  << "Formulae with missing (x,)y in arg list cannot work.";
-   ASSERT_ANY_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B, y})) << "Formulae with missing implicit (x,) in arg list cannot work since TFormula assumes that when y is specified, x exists too."; // Very similar to TestInvalidFormulae
+   ASSERT_NO_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B, y})) << "Formula with specified y must work.";
 }
