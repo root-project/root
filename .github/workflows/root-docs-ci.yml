@@ -140,6 +140,7 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
+        set -x
         ls ROOT-CI/build/bin/
         source ROOT-CI/build/bin/thisroot.sh
         export DOXYGEN_OUTPUT_DIRECTORY=/github/home/${DOC_DIR}
