@@ -71,6 +71,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseWhere.cxx
     src/ParseEinsum.cxx
     src/ParseRandom.cxx
+    src/ParseScatterElements.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf
