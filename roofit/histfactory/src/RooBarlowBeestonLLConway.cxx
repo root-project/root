@@ -23,7 +23,7 @@
 // does not account for weighted templates in the asymptotic limit,
 // and does not explain how to use the scaled Poisson distribution (SPD) approximation. It
 // is inferior to the exact computation by Barlow-Beeston.
-// \see https://doi.org/10.5170/CERN-2011-006.115, https://doi.org/10.1140/epjc/s10052-022-11019-z
+// \see https://doi.org/10.5170/CERN-2011-006.115, https://doi.org/10.1140/epjc/s10052-022-11019-z, https://doi.org/10.1016/j.nima.2014.02.021
 */
 
 #include <stdexcept>
