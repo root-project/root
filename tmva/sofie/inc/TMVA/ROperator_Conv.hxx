@@ -300,29 +300,6 @@ public:
       return out.str();
    }
 
-   // Generate code for Session data members (e.g. internal vectors)
-   virtual std::string GenerateSessionMembersCode(std::string opName) override {
-
-      size_t outputChannelSize = fShapeY[2];  // size/channel = D * H * W
-      size_t kernelSize = fAttrKernelShape[0];
-      for (size_t i = 1; i < fDim; i++) {
-         outputChannelSize *= fShapeY[2 + i];
-         kernelSize *= fAttrKernelShape[i];
-      }
-
-      opName = "op_" + opName;
-      std::stringstream out;
-      // matrix with convolution kernels
-      // out << "std::vector<" << fType << "> fVec_" << opName << "_f = std::vector<" << fType << ">("
-      //     << fShapeW[0] * fShapeW[1] * kernelSize << ");\n";
-      // // output matrix of im2col
-      // out << "std::vector<" << fType << "> fVec_" << opName << "_xcol = std::vector<" << fType << ">("
-      //     << fShapeW[1] * kernelSize * outputChannelSize << ");\n";
-      // out << "\n";
-
-      return out.str();
-   }
-
    std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
 
