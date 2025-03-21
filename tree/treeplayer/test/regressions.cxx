@@ -5,6 +5,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TROOT.h"
+#include "TH1.h"
 
 #include "gtest/gtest.h"
 
