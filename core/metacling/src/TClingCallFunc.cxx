@@ -1013,6 +1013,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
+   // Forward to JitCall's version of make_wrapper
    const Decl *D = GetFunctionOrShadowDecl();
 
    auto I = gWrapperStore.find(D);
@@ -1545,6 +1546,7 @@ template <typename T>
 T TClingCallFunc::ExecT(void *address)
 {
    IFacePtr();
+   // These checks should be similarly done, with a JitCall API checking if it is valid
    if (!fWrapper) {
       ::Error("TClingCallFunc::ExecT",
             "Called with no wrapper, not implemented!");
