@@ -13,12 +13,14 @@
 
 #include "ROOT/RSpan.hxx"
 #include <string_view>
+#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "Rtypes.h"
 
 #include <array>
 #include <deque>
+#include <fstream>
 #include <functional>
 #include <memory>
 #include <new> // std::hardware_destructive_interference_size
@@ -314,6 +316,16 @@ struct CallGuaranteedOrder {
       f(std::forward<Args>(args)...);
    }
 };
+
+/**
+ * \brief Function to retrieve RDatasetSpec from JSON file provided
+ * \param[in] jsonFile Path to the dataset specification JSON file.
+ *
+ * This function allows us to have access to an RDatasetSpec which needs to
+ * be created when we use the FromSpec factory function.
+ */
+ROOT::RDF::Experimental::RDatasetSpec RetrieveSpecFromJson(const std::string &jsonFile);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
