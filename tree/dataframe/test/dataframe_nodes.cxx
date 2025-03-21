@@ -4,6 +4,7 @@
 #include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
+#include <chrono>
 #include <thread>
 #include <stdexcept> // std::runtime_error
 
@@ -14,21 +15,23 @@
 
 TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
 {
-   auto theTest = []() {
-      unsigned int n(2);
-      ROOT::Internal::RSlotStack s(n);
+   using namespace std::chrono_literals;
 
-      std::vector<std::thread> ts;
+   constexpr unsigned int NSlot = 2;
+   ROOT::Internal::RSlotStack s(NSlot);
+   std::vector<std::thread> ts;
 
-      for (unsigned int i = 0; i < 3; ++i) {
-         ts.emplace_back([&s]() { s.GetSlot(); });
-      }
+   for (unsigned int i = 0; i < NSlot + 1; ++i) {
+      ts.emplace_back([&s, NSlot]() {
+         const auto slot = s.GetSlot();
+         EXPECT_LT(slot, NSlot);
+         std::this_thread::sleep_for(10ms);
+         s.ReturnSlot(slot);
+      });
+   }
 
-      for (auto &&t : ts)
-         t.join();
-   };
-
-   EXPECT_DEATH(theTest(), "Trying to pop a slot from an empty stack!");
+   for (auto &&t : ts)
+      t.join();
 }
 
 TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
@@ -38,9 +41,38 @@ TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
       s.ReturnSlot(0);
    };
 
-   EXPECT_DEATH(theTest(), "Trying to put back a slot to a full stack!");
+   EXPECT_THROW(theTest(), std::logic_error);
 }
 
+TEST(RDataFrameNodes, RSlotStackUnique)
+{
+   constexpr unsigned int N = 8;
+   ROOT::Internal::RSlotStack s(N);
+   std::vector<unsigned int> slots{N};
+
+   auto slotTask = [&](unsigned int threadId) {
+      ROOT::Internal::RSlotStackRAII slot{s};
+      slots[threadId] = slot.fSlot;
+   };
+
+   auto runThreads = [&slotTask]() {
+      std::vector<std::thread> ts;
+      for (unsigned int i = 0; i < N; ++i) {
+         ts.emplace_back(slotTask, i);
+      }
+      for (auto &&t : ts)
+         t.join();
+   };
+
+   runThreads();
+   auto slots2{slots};
+   runThreads();
+
+   std::sort(slots.begin(), slots.end());
+   std::sort(slots2.begin(), slots2.end());
+   EXPECT_EQ(std::unique(slots.begin(), slots.end()), slots.end()) << "Slots are not unique.";
+   EXPECT_EQ(slots, slots2);
+}
 #endif
 
 TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
