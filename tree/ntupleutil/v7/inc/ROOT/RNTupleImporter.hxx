@@ -223,7 +223,7 @@ private:
    FieldModifier_t fFieldModifier;
 
    std::unique_ptr<ROOT::RNTupleModel> fModel;
-   std::unique_ptr<REntry> fEntry;
+   std::unique_ptr<ROOT::REntry> fEntry;
    std::vector<RImportBranch> fImportBranches;
    std::vector<RImportField> fImportFields;
    /// Maps the count leaf to the information about the corresponding untyped collection

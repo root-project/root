@@ -181,7 +181,7 @@ public:
 
    ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
    const ROOT::RNTupleModel &GetModel();
-   std::unique_ptr<REntry> CreateEntry();
+   std::unique_ptr<ROOT::REntry> CreateEntry();
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call
    /// to LoadEntry() or to any of the views returned from the reader.
@@ -235,7 +235,7 @@ public:
       LoadEntry(index, fModel->GetDefaultEntry());
    }
    /// Fills a user provided entry after checking that the entry has been instantiated from the RNTuple model
-   void LoadEntry(ROOT::NTupleSize_t index, REntry &entry)
+   void LoadEntry(ROOT::NTupleSize_t index, ROOT::REntry &entry)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));

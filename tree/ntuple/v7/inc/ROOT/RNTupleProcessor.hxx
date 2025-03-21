@@ -124,13 +124,14 @@ protected:
    private:
       std::unique_ptr<ROOT::RFieldBase> fProtoField;
       std::unique_ptr<ROOT::RFieldBase> fConcreteField;
-      REntry::RFieldToken fToken;
+      ROOT::REntry::RFieldToken fToken;
       // Which RNTuple the field belongs to, in case the field belongs to an auxiliary RNTuple, according to the order
       // in which it was specified. For chained RNTuples, this value will always be 0.
       std::size_t fNTupleIdx;
 
    public:
-      RFieldContext(std::unique_ptr<ROOT::RFieldBase> protoField, REntry::RFieldToken token, std::size_t ntupleIdx = 0)
+      RFieldContext(std::unique_ptr<ROOT::RFieldBase> protoField, ROOT::REntry::RFieldToken token,
+                    std::size_t ntupleIdx = 0)
          : fProtoField(std::move(protoField)), fToken(token), fNTupleIdx(ntupleIdx)
       {
       }
@@ -144,7 +145,7 @@ protected:
 
    std::string fProcessorName;
    std::vector<RNTupleOpenSpec> fNTuples;
-   std::unique_ptr<REntry> fEntry;
+   std::unique_ptr<ROOT::REntry> fEntry;
    std::unique_ptr<Internal::RPageSource> fPageSource;
    /// Maps the (qualified) field name to its corresponding field context.
    std::unordered_map<std::string, RFieldContext> fFieldContexts;
@@ -161,7 +162,7 @@ protected:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create and connect a concrete field to the current page source, based on its proto field.
-   void ConnectField(RFieldContext &fieldContext, Internal::RPageSource &pageSource, REntry &entry);
+   void ConnectField(RFieldContext &fieldContext, Internal::RPageSource &pageSource, ROOT::REntry &entry);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number.
@@ -175,7 +176,7 @@ protected:
    /// \brief Point the entry's field values of the processor to the pointers from the provided entry.
    ///
    /// \param[in] entry The entry whose field values to use.
-   virtual void SetEntryPointers(const REntry &entry) = 0;
+   virtual void SetEntryPointers(const ROOT::REntry &entry) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
@@ -233,7 +234,7 @@ public:
    /// \brief Get a reference to the entry used by the processor.
    ///
    /// \return A reference to the entry used by the processor.
-   const REntry &GetEntry() const { return *fEntry; }
+   const ROOT::REntry &GetEntry() const { return *fEntry; }
 
    // clang-format off
    /**
@@ -250,10 +251,10 @@ public:
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
-      using value_type = REntry;
+      using value_type = ROOT::REntry;
       using difference_type = std::ptrdiff_t;
-      using pointer = REntry *;
-      using reference = const REntry &;
+      using pointer = ROOT::REntry *;
+      using reference = const ROOT::REntry &;
 
       RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
          : fProcessor(processor), fCurrentEntryNumber(entryNumber)
@@ -451,7 +452,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
-   void SetEntryPointers(const REntry &entry) final;
+   void SetEntryPointers(const ROOT::REntry &entry) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
@@ -495,7 +496,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
-   void SetEntryPointers(const REntry &) final;
+   void SetEntryPointers(const ROOT::REntry &) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
@@ -531,7 +532,7 @@ class RNTupleJoinProcessor : public RNTupleProcessor {
 private:
    std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
    /// Tokens representing the join fields present in the main RNTuple
-   std::vector<REntry::RFieldToken> fJoinFieldTokens;
+   std::vector<ROOT::REntry::RFieldToken> fJoinFieldTokens;
    std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinTables;
    bool fJoinTablesAreBuilt = false;
 
@@ -545,7 +546,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
-   void SetEntryPointers(const REntry &) final;
+   void SetEntryPointers(const ROOT::REntry &) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.

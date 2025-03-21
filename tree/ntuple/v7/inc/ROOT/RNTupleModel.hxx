@@ -145,7 +145,7 @@ private:
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<ROOT::RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields, as well as registered subfields
-   std::unique_ptr<ROOT::Experimental::REntry> fDefaultEntry;
+   std::unique_ptr<ROOT::REntry> fDefaultEntry;
    /// Keeps track of which field names are taken, including projected field names.
    std::unordered_set<std::string> fFieldNames;
    /// Free text set by the user
@@ -178,7 +178,7 @@ private:
 
    /// Add a subfield to the provided entry. If `initializeValue` is false, a nullptr will be bound to the entry value
    /// (used in bare models).
-   void AddSubfield(std::string_view fieldName, ROOT::Experimental::REntry &entry, bool initializeValue = true) const;
+   void AddSubfield(std::string_view fieldName, ROOT::REntry &entry, bool initializeValue = true) const;
 
    RNTupleModel(std::unique_ptr<ROOT::RFieldZero> fieldZero);
 
@@ -305,17 +305,17 @@ public:
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
 
-   std::unique_ptr<ROOT::Experimental::REntry> CreateEntry() const;
+   std::unique_ptr<ROOT::REntry> CreateEntry() const;
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
-   std::unique_ptr<ROOT::Experimental::REntry> CreateBareEntry() const;
+   std::unique_ptr<ROOT::REntry> CreateBareEntry() const;
    /// Creates a token to be used in REntry methods to address a field present in the entry
-   ROOT::Experimental::REntry::RFieldToken GetToken(std::string_view fieldName) const;
+   ROOT::REntry::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
    ROOT::RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 
-   ROOT::Experimental::REntry &GetDefaultEntry();
-   const ROOT::Experimental::REntry &GetDefaultEntry() const;
+   ROOT::REntry &GetDefaultEntry();
+   const ROOT::REntry &GetDefaultEntry() const;
 
    /// Mutable access to the root field is used to make adjustments to the fields.
    ROOT::RFieldZero &GetMutableFieldZero();
