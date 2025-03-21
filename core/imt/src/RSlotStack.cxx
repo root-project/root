@@ -8,31 +8,43 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/TSeq.hxx>
 #include <ROOT/RSlotStack.hxx>
 
-#include <cassert>
-#include <mutex> // std::lock_guard
+#include <mutex>
+#include <stdexcept>
+#include <string>
 
-ROOT::Internal::RSlotStack::RSlotStack(unsigned int size) : fSize(size)
-{
-   for (auto i : ROOT::TSeqU(size))
-      fStack.push(i);
-}
+ROOT::Internal::RSlotStack::RSlotStack(unsigned int size) : fSlots(size) {}
 
 void ROOT::Internal::RSlotStack::ReturnSlot(unsigned int slot)
 {
-   std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-   assert(fStack.size() < fSize && "Trying to put back a slot to a full stack!");
-   (void)fSize;
-   fStack.push(slot);
+   std::shared_lock lock{fMutex};
+   if (slot >= fSlots.size())
+      throw std::invalid_argument("RSlotStack: A slot that is larger than the number of slots was returned :" +
+                                  std::to_string(slot));
+   bool expected = true;
+   if (!fSlots[slot].fAtomic.compare_exchange_strong(expected, false))
+      throw std::logic_error("RSlotStack: A slot that is not assigned was returned: " + std::to_string(slot));
 }
 
 unsigned int ROOT::Internal::RSlotStack::GetSlot()
 {
-   std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-   assert(!fStack.empty() && "Trying to pop a slot from an empty stack!");
-   const auto slot = fStack.top();
-   fStack.pop();
-   return slot;
+   while (true) {
+      std::shared_lock lock{fMutex};
+      for (unsigned int i = 0; i < fSlots.size(); ++i) {
+         // test if a slot is available (assigned == false)
+         bool expectedState = false;
+         if (fSlots[i].fAtomic.compare_exchange_strong(expectedState, true)) {
+            return i;
+         }
+      }
+   }
+}
+
+void ROOT::Internal::RSlotStack::SetMinimumSize(unsigned int nSlot)
+{
+   if (fSlots.size() < nSlot) {
+      std::scoped_lock lock{fMutex};
+      fSlots.resize(nSlot);
+   }
 }
