@@ -1962,8 +1962,7 @@ namespace Experimental {
 ///~~~
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
-   RDatasetSpec spec = ROOT::Internal::RDF::RetrieveSpecFromJson(jsonFile);
-   return ROOT::RDataFrame(spec);
+   return ROOT::RDataFrame(ROOT::Internal::RDF::RetrieveSpecFromJson(jsonFile));
 }
 
 } // namespace Experimental

@@ -13,14 +13,12 @@
 
 #include "ROOT/RSpan.hxx"
 #include <string_view>
-#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "Rtypes.h"
 
 #include <array>
 #include <deque>
-#include <fstream>
 #include <functional>
 #include <memory>
 #include <new> // std::hardware_destructive_interference_size
@@ -33,7 +31,9 @@
 class TTree;
 class TTreeReader;
 
-
+namespace ROOT::RDF::Experimental {
+class RDatasetSpec;
+}
 namespace ROOT {
 namespace RDF {
 using ColumnNames_t = std::vector<std::string>;

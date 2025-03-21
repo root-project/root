@@ -10,7 +10,6 @@
 
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
-#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
@@ -27,6 +26,7 @@
 #include "TROOT.h" // IsImplicitMTEnabled, GetThreadPoolSize
 #include "TTree.h"
 
+#include <fstream>
 #include <nlohmann/json.hpp> // nlohmann::json::parse
 #include <stdexcept>
 #include <string>
