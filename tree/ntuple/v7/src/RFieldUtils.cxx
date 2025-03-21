@@ -463,3 +463,8 @@ std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templ
    result.push_back(std::string(typeBegin, typeCursor - typeBegin));
    return result;
 }
+
+std::string ROOT::Internal::GetRenormalizedDemangledTypeName(const std::type_info &ti)
+{
+   return ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::GetDemangledTypeName(ti));
+}
