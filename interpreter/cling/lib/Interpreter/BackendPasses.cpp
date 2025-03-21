@@ -29,6 +29,12 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils.h"
 
+#ifdef CLING_WITH_ADAPTIVECPP
+#include "hipSYCL/compiler/GlobalsPruningPass.hpp"
+#include "hipSYCL/compiler/SMCPCompatPass.hpp"
+#include "hipSYCL/compiler/sscp/TargetSeparationPass.hpp"
+#endif
+
 //#include "clang/Basic/LangOptions.h"
 //#include "clang/Basic/TargetOptions.h"
 #include "clang/Basic/CharInfo.h"
@@ -510,6 +516,19 @@ void BackendPasses::CreatePasses(int OptLevel, llvm::ModulePassManager& MPM,
   PipelineTuningOptions PTO;
   std::optional<PGOOptions> PGOOpt;
   PassBuilder PB(&m_TM, PTO, PGOOpt, &PIC);
+
+#ifdef CLING_WITH_ADAPTIVECPP
+  PB.registerOptimizerLastEPCallback(
+      [](llvm::ModulePassManager& MPM, OptimizationLevel) {
+        MPM.addPass(hipsycl::compiler::SMCPCompatPass{});
+        MPM.addPass(hipsycl::compiler::GlobalsPruningPass{});
+      });
+
+  PB.registerPipelineStartEPCallback(
+      [&](llvm::ModulePassManager& MPM, OptimizationLevel Level) {
+        MPM.addPass(hipsycl::compiler::TargetSeparationPass{""});
+      });
+#endif
 
   // Attempt to load pass plugins and register their callbacks with PB.
   for (auto& PluginFN : m_CGOpts.PassPlugins) {
