@@ -31,16 +31,19 @@
 #include <unordered_map>
 
 namespace ROOT {
-namespace Experimental {
 
+namespace Experimental {
+class RNTupleReader;
+class RNTupleFillContext;
 class RNTupleProcessor;
 class RNTupleSingleProcessor;
 class RNTupleChainProcessor;
 class RNTupleJoinProcessor;
+} // namespace Experimental
 
 // clang-format off
 /**
-\class ROOT::Experimental::REntry
+\class ROOT::REntry
 \ingroup NTuple
 \brief The REntry is a collection of values in an ntuple corresponding to a complete row in the data set.
 
@@ -49,20 +52,20 @@ with values are managed through shared pointers.
 */
 // clang-format on
 class REntry {
-   friend class ROOT::RNTupleModel;
-   friend class RNTupleReader;
-   friend class RNTupleFillContext;
-   friend class RNTupleProcessor;
-   friend class RNTupleSingleProcessor;
-   friend class RNTupleChainProcessor;
-   friend class RNTupleJoinProcessor;
+   friend class RNTupleModel;
+   friend class Experimental::RNTupleReader;
+   friend class Experimental::RNTupleFillContext;
+   friend class Experimental::RNTupleProcessor;
+   friend class Experimental::RNTupleSingleProcessor;
+   friend class Experimental::RNTupleChainProcessor;
+   friend class Experimental::RNTupleJoinProcessor;
 
 public:
    /// The field token identifies a (sub)field in this entry. It can be used for fast indexing in REntry's methods, e.g.
    /// BindValue(). The field token can also be created by the model.
    class RFieldToken {
       friend class REntry;
-      friend class ROOT::RNTupleModel;
+      friend class RNTupleModel;
 
       std::size_t fIndex = 0;                      ///< The index in `fValues` that belongs to the field
       std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
@@ -247,6 +250,9 @@ public:
    ConstIterator_t end() const { return fValues.cend(); }
 };
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using REntry [[deprecated("ROOT::Experimental::REntry moved to ROOT::REntry")]] = ROOT::REntry;
 } // namespace Experimental
 } // namespace ROOT
 

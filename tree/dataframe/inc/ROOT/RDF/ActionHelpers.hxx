@@ -1931,7 +1931,7 @@ void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::s
 
 /// Helper function to update the value of an RNTuple's field in the provided entry.
 template <typename T>
-void SetFieldsHelper(T &value, std::string_view fieldName, ROOT::Experimental::REntry *entry)
+void SetFieldsHelper(T &value, std::string_view fieldName, ROOT::REntry *entry)
 {
    entry->BindRawPtr(fieldName, &value);
 }
@@ -1951,7 +1951,7 @@ class R__CLING_PTRCHECK(off) SnapshotRNTupleHelper : public RActionImpl<Snapshot
    ColumnNames_t fOutputFieldNames;
    std::unique_ptr<ROOT::Experimental::RNTupleWriter> fWriter{nullptr};
 
-   ROOT::Experimental::REntry *fOutputEntry;
+   ROOT::REntry *fOutputEntry;
 
    std::vector<bool> fIsDefine;
 

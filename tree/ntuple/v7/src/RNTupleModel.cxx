@@ -24,8 +24,6 @@
 #include <memory>
 #include <utility>
 
-using ROOT::Experimental::REntry;
-
 namespace {
 std::uint64_t GetNewModelId()
 {
@@ -274,7 +272,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::Create()
 std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::Create(std::unique_ptr<ROOT::RFieldZero> fieldZero)
 {
    auto model = CreateBare(std::move(fieldZero));
-   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry(model->fModelId, model->fSchemaId));
+   model->fDefaultEntry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(model->fModelId, model->fSchemaId));
    return model;
 }
 
@@ -296,7 +294,8 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::Clone() const
    cloneModel->fProjectedFields = fProjectedFields->Clone(*cloneModel);
    cloneModel->fRegisteredSubfields = fRegisteredSubfields;
    if (fDefaultEntry) {
-      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId, cloneModel->fSchemaId));
+      cloneModel->fDefaultEntry =
+         std::unique_ptr<ROOT::REntry>(new ROOT::REntry(cloneModel->fModelId, cloneModel->fSchemaId));
       for (const auto &f : cloneModel->fFieldZero->GetMutableSubfields()) {
          cloneModel->fDefaultEntry->AddValue(f->CreateValue());
       }
@@ -341,7 +340,8 @@ void ROOT::RNTupleModel::AddField(std::unique_ptr<ROOT::RFieldBase> field)
    fFieldZero->Attach(std::move(field));
 }
 
-void ROOT::RNTupleModel::AddSubfield(std::string_view qualifiedFieldName, REntry &entry, bool initializeValue) const
+void ROOT::RNTupleModel::AddSubfield(std::string_view qualifiedFieldName, ROOT::REntry &entry,
+                                     bool initializeValue) const
 {
    auto field = FindField(qualifiedFieldName);
    if (initializeValue)
@@ -441,13 +441,13 @@ const ROOT::RFieldBase &ROOT::RNTupleModel::GetConstField(std::string_view field
    return *f;
 }
 
-REntry &ROOT::RNTupleModel::GetDefaultEntry()
+ROOT::REntry &ROOT::RNTupleModel::GetDefaultEntry()
 {
    EnsureNotBare();
    return *fDefaultEntry;
 }
 
-const REntry &ROOT::RNTupleModel::GetDefaultEntry() const
+const ROOT::REntry &ROOT::RNTupleModel::GetDefaultEntry() const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
@@ -455,7 +455,7 @@ const REntry &ROOT::RNTupleModel::GetDefaultEntry() const
    return *fDefaultEntry;
 }
 
-std::unique_ptr<REntry> ROOT::RNTupleModel::CreateEntry() const
+std::unique_ptr<ROOT::REntry> ROOT::RNTupleModel::CreateEntry() const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
@@ -463,7 +463,7 @@ std::unique_ptr<REntry> ROOT::RNTupleModel::CreateEntry() const
    case EState::kFrozen: break;
    }
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
+   auto entry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetMutableSubfields()) {
       entry->AddValue(f->CreateValue());
    }
@@ -473,7 +473,7 @@ std::unique_ptr<REntry> ROOT::RNTupleModel::CreateEntry() const
    return entry;
 }
 
-std::unique_ptr<REntry> ROOT::RNTupleModel::CreateBareEntry() const
+std::unique_ptr<ROOT::REntry> ROOT::RNTupleModel::CreateBareEntry() const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
@@ -481,7 +481,7 @@ std::unique_ptr<REntry> ROOT::RNTupleModel::CreateBareEntry() const
    case EState::kFrozen: break;
    }
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
+   auto entry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetMutableSubfields()) {
       entry->AddValue(f->BindValue(nullptr));
    }
@@ -491,7 +491,7 @@ std::unique_ptr<REntry> ROOT::RNTupleModel::CreateBareEntry() const
    return entry;
 }
 
-REntry::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldName) const
+ROOT::REntry::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldName) const
 {
    const auto &topLevelFields = fFieldZero->GetConstSubfields();
    auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
@@ -500,7 +500,7 @@ REntry::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldName) con
    if (it == topLevelFields.end()) {
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
-   return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
+   return ROOT::REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
 }
 
 ROOT::RFieldBase::RBulk ROOT::RNTupleModel::CreateBulk(std::string_view fieldName) const

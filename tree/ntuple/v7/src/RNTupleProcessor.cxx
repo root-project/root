@@ -157,7 +157,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleProcessor> ROOT::Experimental::RNTupl
 }
 
 void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldContext, Internal::RPageSource &pageSource,
-                                                        REntry &entry)
+                                                        ROOT::REntry &entry)
 {
    pageSource.Attach();
    auto desc = pageSource.GetSharedDescriptorGuard();
@@ -224,7 +224,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
    return entryNumber;
 }
 
-void ROOT::Experimental::RNTupleSingleProcessor::SetEntryPointers(const REntry &entry)
+void ROOT::Experimental::RNTupleSingleProcessor::SetEntryPointers(const ROOT::REntry &entry)
 {
    for (const auto &value : *fEntry) {
       auto &field = value.GetField();
@@ -297,7 +297,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
    return fNEntries;
 }
 
-void ROOT::Experimental::RNTupleChainProcessor::SetEntryPointers(const REntry &entry)
+void ROOT::Experimental::RNTupleChainProcessor::SetEntryPointers(const ROOT::REntry &entry)
 {
    for (const auto &value : *fEntry) {
       auto &field = value.GetField();
@@ -464,7 +464,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::ConnectFields()
    }
 }
 
-void ROOT::Experimental::RNTupleJoinProcessor::SetEntryPointers(const REntry &entry)
+void ROOT::Experimental::RNTupleJoinProcessor::SetEntryPointers(const ROOT::REntry &entry)
 {
    for (const auto &[_, fieldContext] : fFieldContexts) {
       auto fieldName = fieldContext.GetProtoField().GetQualifiedFieldName();

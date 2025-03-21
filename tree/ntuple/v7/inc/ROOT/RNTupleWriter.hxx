@@ -106,10 +106,10 @@ public:
    /// Multiple entries can have been instantiated from the ntuple model.  This method will perform
    /// a light check whether the entry comes from the ntuple's own model.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill(REntry &entry) { return fFillContext.Fill(entry); }
+   std::size_t Fill(ROOT::REntry &entry) { return fFillContext.Fill(entry); }
    /// Fill an entry into this ntuple, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
    /// and check RNTupleFillStatus::ShouldFlushCluster.
-   void FillNoFlush(REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoFlush(entry, status); }
+   void FillNoFlush(ROOT::REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoFlush(entry, status); }
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage (unless buffered writing is turned off).
    void FlushColumns() { fFillContext.FlushColumns(); }
@@ -127,7 +127,7 @@ public:
    /// and model updating fail.
    void CommitDataset();
 
-   std::unique_ptr<REntry> CreateEntry() { return fFillContext.CreateEntry(); }
+   std::unique_ptr<ROOT::REntry> CreateEntry() { return fFillContext.CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.
    ROOT::NTupleSize_t GetLastFlushed() const { return fFillContext.GetLastFlushed(); }

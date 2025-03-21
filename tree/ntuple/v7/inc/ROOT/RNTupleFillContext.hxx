@@ -90,7 +90,7 @@ public:
    /// and check RNTupleFillStatus::ShouldFlushCluster.
    ///
    /// This method will perform a light check whether the entry comes from the context's own model.
-   void FillNoFlush(REntry &entry, RNTupleFillStatus &status)
+   void FillNoFlush(ROOT::REntry &entry, RNTupleFillStatus &status)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
@@ -108,7 +108,7 @@ public:
    /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
    /// context's own model.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill(REntry &entry)
+   std::size_t Fill(ROOT::REntry &entry)
    {
       RNTupleFillStatus status;
       FillNoFlush(entry, status);
@@ -125,7 +125,7 @@ public:
    void CommitStagedClusters();
 
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }
-   std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
+   std::unique_ptr<ROOT::REntry> CreateEntry() { return fModel->CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.
    ROOT::NTupleSize_t GetLastFlushed() const { return fLastFlushed; }

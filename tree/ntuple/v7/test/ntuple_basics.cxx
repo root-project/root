@@ -777,7 +777,7 @@ TEST(REntry, Basics)
    EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::RException);
 
    // Default constructed tokens cannot be used
-   ROOT::Experimental::REntry::RFieldToken token;
+   ROOT::REntry::RFieldToken token;
    EXPECT_THROW(e->GetPtr<void>(token), ROOT::RException);
 
    float pt;
