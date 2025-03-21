@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '20/03/2025',
+version_date = '21/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1142,7 +1142,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
-      clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
+      clTH1 = 'TH1', clTH1I = 'TH1I', clTH1F = 'TH1F', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH2D = 'TH2D', clTH3 = 'TH3',
       clTF1 = 'TF1', clTF12 = 'TF12', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
@@ -1994,8 +1994,10 @@ clTGraphPolargram: clTGraphPolargram,
 clTGraphTime: clTGraphTime,
 clTH1: clTH1,
 clTH1D: clTH1D,
+clTH1F: clTH1F,
 clTH1I: clTH1I,
 clTH2: clTH2,
+clTH2D: clTH2D,
 clTH2F: clTH2F,
 clTH2I: clTH2I,
 clTH3: clTH3,
@@ -94504,7 +94506,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       }
 
       if (!histo) {
-         histo = this._is_scatter ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
+         histo = this._is_scatter ? createHistogram(clTH2F, 30, 30) : createHistogram(clTH1F, 100);
          histo.fName = graph.fName + '_h';
          histo.fBits |= kNoStats;
          this._own_histogram = true;
@@ -160253,14 +160255,14 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
             numhistos = histos ? histos.arr.length : 0;
 
       if (!numhistos) {
-         const histo = createHistogram(clTH1I, 100);
+         const histo = createHistogram(clTH1F, 100);
          setHistogramTitle(histo, stack.fTitle);
          histo.fBits |= kNoStats;
          return histo;
       }
 
       const h0 = histos.arr[0],
-            histo = createHistogram((this.options.ndim === 1) ? clTH1I : clTH2I, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+            histo = createHistogram((this.options.ndim === 1) ? clTH1F : clTH2F, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
       histo.fName = 'axis_hist';
       histo.fBits |= kNoStats;
       Object.assign(histo.fXaxis, h0.fXaxis);
@@ -161938,7 +161940,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       this._own_histogram = true; // when histogram created on client side
 
-      const histo = createHistogram(clTH2F, graph.fNpx, graph.fNpy);
+      const histo = createHistogram(clTH2D, graph.fNpx, graph.fNpy);
       histo.fName = graph.fName + '_h';
       setHistogramTitle(histo, graph.fTitle);
       histo.fXaxis.fXmin = uxmin;
@@ -164440,7 +164442,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       if (!histo || reset_histo || dummy_histo) {
          let xaxis, yaxis;
          if (this._3d) {
-            histo = createHistogram(clTH2I, graphs.arr.length, 10);
+            histo = createHistogram(clTH2F, graphs.arr.length, 10);
             xaxis = histo.fXaxis;
             xaxis.fXmin = 0;
             xaxis.fXmax = graphs.arr.length;
@@ -164454,7 +164456,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
             xaxis = histo.fYaxis;
             yaxis = histo.fZaxis;
          } else {
-            histo = createHistogram(clTH1I, 10);
+            histo = createHistogram(clTH1F, 10);
             xaxis = histo.fXaxis;
             yaxis = histo.fYaxis;
          }
@@ -176813,8 +176815,10 @@ exports.clTGraphPolargram = clTGraphPolargram;
 exports.clTGraphTime = clTGraphTime;
 exports.clTH1 = clTH1;
 exports.clTH1D = clTH1D;
+exports.clTH1F = clTH1F;
 exports.clTH1I = clTH1I;
 exports.clTH2 = clTH2;
+exports.clTH2D = clTH2D;
 exports.clTH2F = clTH2F;
 exports.clTH2I = clTH2I;
 exports.clTH3 = clTH3;

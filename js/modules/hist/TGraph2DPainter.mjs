@@ -1,5 +1,5 @@
 import { settings, createHistogram, setHistogramTitle, kNoZoom,
-         clTH2F, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
+         clTH2D, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
 import { buildSvgCurve, DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
@@ -1170,7 +1170,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       this._own_histogram = true; // when histogram created on client side
 
-      const histo = createHistogram(clTH2F, graph.fNpx, graph.fNpy);
+      const histo = createHistogram(clTH2D, graph.fNpx, graph.fNpy);
       histo.fName = graph.fName + '_h';
       setHistogramTitle(histo, graph.fTitle);
       histo.fXaxis.fXmin = uxmin;

@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFunc, isStr,
-         clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, clTPad, kNoZoom, kNoStats } from '../core.mjs';
+         clTPaveStats, clTCutG, clTH1F, clTH2F, clTF1, clTF2, clTPad, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter, kAxisNormal } from '../base/ObjectPainter.mjs';
@@ -333,7 +333,7 @@ class TGraphPainter extends ObjectPainter {
       }
 
       if (!histo) {
-         histo = this._is_scatter ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
+         histo = this._is_scatter ? createHistogram(clTH2F, 30, 30) : createHistogram(clTH1F, 100);
          histo.fName = graph.fName + '_h';
          histo.fBits |= kNoStats;
          this._own_histogram = true;
