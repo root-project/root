@@ -282,65 +282,65 @@ public:
    /// }
    /// ~~~
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName)
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName)
    {
       return GetView<T>(RetrieveFieldId(fieldName));
    }
 
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), objPtr);
    }
 
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
    }
 
    template <typename T>
-   RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId)
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId)
    {
-      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
-      auto range = Internal::GetFieldRange(*field, *fSource);
-      return RNTupleView<T>(std::move(field), range);
+      auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
+      return ROOT::RNTupleView<T>(std::move(field), range);
    }
 
    template <typename T>
-   RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
-      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
-      auto range = Internal::GetFieldRange(*field, *fSource);
-      return RNTupleView<T>(std::move(field), range, objPtr);
+      auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
+      return ROOT::RNTupleView<T>(std::move(field), range, objPtr);
    }
 
    template <typename T>
-   RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
    {
-      auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
-      auto range = Internal::GetFieldRange(*field, *fSource);
-      return RNTupleView<T>(std::move(field), range, rawPtr);
+      auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
+      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
+      return ROOT::RNTupleView<T>(std::move(field), range, rawPtr);
    }
 
    template <typename T>
-   RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
+   ROOT::RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
    {
       return GetDirectAccessView<T>(RetrieveFieldId(fieldName));
    }
 
    template <typename T>
-   RNTupleDirectAccessView<T> GetDirectAccessView(ROOT::DescriptorId_t fieldId)
+   ROOT::RNTupleDirectAccessView<T> GetDirectAccessView(ROOT::DescriptorId_t fieldId)
    {
-      auto field = RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource);
-      auto range = Internal::GetFieldRange(field, *fSource);
-      return RNTupleDirectAccessView<T>(std::move(field), range);
+      auto field = ROOT::RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource);
+      auto range = ROOT::Internal::GetFieldRange(field, *fSource);
+      return ROOT::RNTupleDirectAccessView<T>(std::move(field), range);
    }
 
    /// Raises an exception if:
    /// * there is no field with the given name or,
    /// * the field is not a collection
-   RNTupleCollectionView GetCollectionView(std::string_view fieldName)
+   ROOT::RNTupleCollectionView GetCollectionView(std::string_view fieldName)
    {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
       if (fieldId == ROOT::kInvalidDescriptorId) {
@@ -350,9 +350,9 @@ public:
       return GetCollectionView(fieldId);
    }
 
-   RNTupleCollectionView GetCollectionView(ROOT::DescriptorId_t fieldId)
+   ROOT::RNTupleCollectionView GetCollectionView(ROOT::DescriptorId_t fieldId)
    {
-      return RNTupleCollectionView::Create(fieldId, fSource.get());
+      return ROOT::RNTupleCollectionView::Create(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }

@@ -45,17 +45,11 @@ class TVirtualStreamerInfo;
 namespace ROOT {
 
 class TSchemaRule;
-class REntry;
+class RNTupleCollectionView;
 
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
-
-namespace Experimental {
-
-class RNTupleCollectionView;
-
-} // namespace Experimental
 
 /// The container field for an ntuple model, which itself has no physical representation.
 /// Therefore, the zero field must not be connected to a page source or sink.
@@ -317,7 +311,7 @@ public:
 /// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
 /// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
 class RCardinalityField : public RFieldBase {
-   friend class ROOT::Experimental::RNTupleCollectionView; // to access GetCollectionInfo()
+   friend class ROOT::RNTupleCollectionView; // to access GetCollectionInfo()
 
 private:
    void GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size)

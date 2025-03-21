@@ -425,9 +425,9 @@ TEST(RNTuple, ViewFrameworkUse)
    auto reader = RNTupleReader::Open(*ntpl);
    reader->EnableMetrics();
 
-   std::optional<ROOT::Experimental::RNTupleView<void>> viewPx;
-   std::optional<ROOT::Experimental::RNTupleView<void>> viewPy;
-   std::optional<ROOT::Experimental::RNTupleView<void>> viewPz;
+   std::optional<ROOT::RNTupleView<void>> viewPx;
+   std::optional<ROOT::RNTupleView<void>> viewPy;
+   std::optional<ROOT::RNTupleView<void>> viewPz;
 
    float px = 0, py = 0, pz = 0;
    for (auto i : reader->GetEntryRange()) {
