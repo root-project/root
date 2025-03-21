@@ -3632,8 +3632,8 @@ class TFile {
   * @return {object} - created JavaScript object
   * @example
   *
-  * import { httpRequest } from 'http://localhost:8080/jsrootsys/modules/core.mjs';
-  * import { reconstructObject } from 'http://localhost:8080/jsrootsys/modules/io.mjs';
+  * import { httpRequest } from 'jsroot/core';
+  * import { reconstructObject } from 'jsroot/io';
   *
   * const obj_data = await httpRequest('http://localhost:8080/Files/job1.root/hpx/root.bin', 'buf');
   * const si_data = await httpRequest('http://localhost:8080/StreamerInfo/root.bin', 'buf');
