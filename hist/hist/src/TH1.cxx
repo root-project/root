@@ -3941,7 +3941,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///   "C"  | In case of linear fitting, do no calculate the chisquare (saves CPU time).
 ///   "G"  | Uses the gradient implemented in `TF1::GradientPar` for the minimization. This allows to use Automatic Differentiation when it is supported by the provided TF1 function.
 ///   "WIDTH" | Scales the histogran bin content by the bin width (useful for variable bins histograms)
-///   "SERIAL" | Runs in serial mode. By defult if ROOT is built with MT support and MT is enables, the fit is perfomed in multi-thread     - "E"  Perform better Errors estimation using Minos technique
+///   "SERIAL" | Runs in serial mode. By default if ROOT is built with MT support and MT is enables, the fit is perfomed in multi-thread     - "E"  Perform better Errors estimation using Minos technique
 ///   "MULTITHREAD" | Forces usage of multi-thread execution whenever possible
 ///
 /// The default fitting of an histogram (when no option is given) is perfomed as following:
