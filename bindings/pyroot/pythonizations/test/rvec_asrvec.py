@@ -26,7 +26,7 @@ class AsRVec(unittest.TestCase):
 
     # Helpers
     dtypes = [
-        "int32", "int64", "uint32", "uint64", "float32", "float64"
+        "int32", "int64", "uint32", "uint64", "float32", "float64", "bool"
     ]
 
     def check_memory_adoption(self, root_obj, np_obj):
