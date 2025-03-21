@@ -29,7 +29,10 @@
 #include <unordered_map>
 
 namespace ROOT {
+
 namespace Experimental {
+class RNTupleReader;
+} // namespace Experimental
 
 namespace Internal {
 
@@ -38,13 +41,14 @@ namespace Internal {
 /// by the number of elements of the first principal column found in the subfields searched by BFS.
 /// If the field hierarchy is empty on columns, the returned field range is invalid (start and end set to
 /// kInvalidNTupleIndex). An attempt to use such a field range in RNTupleViewBase::GetFieldRange will throw.
-ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, const RPageSource &pageSource);
+ROOT::RNTupleGlobalRange
+GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Experimental::Internal::RPageSource &pageSource);
 
 } // namespace Internal
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleViewBase
+\class ROOT::RNTupleViewBase
 \ingroup NTuple
 \brief An RNTupleView provides read-only access to a single field of an RNTuple
 
@@ -86,7 +90,8 @@ protected:
    ROOT::RNTupleGlobalRange fFieldRange;
    ROOT::RFieldBase::RValue fValue;
 
-   static std::unique_ptr<ROOT::RFieldBase> CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource)
+   static std::unique_ptr<ROOT::RFieldBase>
+   CreateField(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSource &pageSource)
    {
       std::unique_ptr<ROOT::RFieldBase> field;
       {
@@ -151,14 +156,14 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleView
+\class ROOT::RNTupleView
 \ingroup NTuple
 \brief An RNTupleView for a known type. See RNTupleViewBase.
 */
 // clang-format on
 template <typename T>
 class RNTupleView : public RNTupleViewBase<T> {
-   friend class RNTupleReader;
+   friend class ROOT::Experimental::RNTupleReader;
    friend class RNTupleCollectionView;
 
 protected:
@@ -202,14 +207,14 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleView
+\class ROOT::RNTupleView
 \ingroup NTuple
 \brief An RNTupleView that can be used when the type is unknown at compile time. See RNTupleViewBase.
 */
 // clang-format on
 template <>
 class RNTupleView<void> final : public RNTupleViewBase<void> {
-   friend class RNTupleReader;
+   friend class ROOT::Experimental::RNTupleReader;
    friend class RNTupleCollectionView;
 
 protected:
@@ -243,21 +248,22 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleDirectAccessView
+\class ROOT::RNTupleDirectAccessView
 \ingroup NTuple
 \brief A view variant that provides direct access to the I/O buffers. Only works for mappable fields.
 */
 // clang-format on
 template <typename T>
 class RNTupleDirectAccessView {
-   friend class RNTupleReader;
+   friend class ROOT::Experimental::RNTupleReader;
    friend class RNTupleCollectionView;
 
 protected:
    ROOT::RField<T> fField;
    ROOT::RNTupleGlobalRange fFieldRange;
 
-   static ROOT::RField<T> CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource)
+   static ROOT::RField<T>
+   CreateField(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSource &pageSource)
    {
       const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
@@ -295,27 +301,28 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleCollectionView
+\class ROOT::RNTupleCollectionView
 \ingroup NTuple
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
 */
 // clang-format on
 class RNTupleCollectionView {
-   friend class RNTupleReader;
+   friend class ROOT::Experimental::RNTupleReader;
 
 private:
-   Internal::RPageSource *fSource;
+   ROOT::Experimental::Internal::RPageSource *fSource;
    ROOT::RField<RNTupleCardinality<std::uint64_t>> fField;
    ROOT::RFieldBase::RValue fValue;
 
-   RNTupleCollectionView(ROOT::DescriptorId_t fieldId, const std::string &fieldName, Internal::RPageSource *source)
+   RNTupleCollectionView(ROOT::DescriptorId_t fieldId, const std::string &fieldName,
+                         ROOT::Experimental::Internal::RPageSource *source)
       : fSource(source), fField(fieldName), fValue(fField.CreateValue())
    {
       fField.SetOnDiskId(fieldId);
       ROOT::Internal::CallConnectPageSourceOnField(fField, *source);
    }
 
-   static RNTupleCollectionView Create(ROOT::DescriptorId_t fieldId, Internal::RPageSource *source)
+   static RNTupleCollectionView Create(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSource *source)
    {
       std::string fieldName;
       {
@@ -405,6 +412,20 @@ public:
    }
 };
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+template <typename T>
+using RNTupleViewBase [[deprecated("ROOT::Experimental::RNTupleViewBase moved to ROOT::RNTupleViewBase")]] =
+   ROOT::RNTupleViewBase<T>;
+template <typename T>
+using RNTupleView [[deprecated("ROOT::Experimental::RNTupleView moved to ROOT::RNTupleView")]] = ROOT::RNTupleView<T>;
+template <typename T>
+using RNTupleDirectAccessView
+   [[deprecated("ROOT::Experimental::RNTupleDirectAccessView moved to ROOT::RNTupleDirectAccessView")]] =
+      ROOT::RNTupleDirectAccessView<T>;
+using RNTupleCollectionView
+   [[deprecated("ROOT::Experimental::RNTupleCollectionView moved to ROOT::RNTupleCollectionView")]] =
+      ROOT::RNTupleCollectionView;
 } // namespace Experimental
 } // namespace ROOT
 
