@@ -55,7 +55,7 @@ void Functor()
 {
    ROOT::R::TRInterface &r=ROOT::R::TRInterface::Instance();
 
-   // Creating functor with deafult function TMath::BesselY1
+   // Creating functor with default function TMath::BesselY1
    // and status false from R's environment
    // Loading module into R's enviornment
    r["MyFunctorModule"]<<LOAD_ROOTR_MODULE(MyFunctorModule);
