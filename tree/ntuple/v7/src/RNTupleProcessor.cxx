@@ -398,6 +398,13 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
          return fieldName.substr(0, n.fNTupleName.size()) == n.fNTupleName;
       });
 
+      // If the current field name does not begin with the name of one of the auxiliary ntuples, we are dealing with a
+      // field from the primary ntuple, so it can be added as a field context. Otherwise, if it does begin with the
+      // name, but is not equal to just the name (e.g. it is a subfield of `auxNTupleName`, which means it is a proper
+      // field in the corresponding auxiliary ntuple) we also need to add it as a field context. If it is exactly equal
+      // to an auxiliary ntuple name, it is the untyped record field containing the auxiliary fields itself. This one we
+      // don't want to add as a field context, because there is nothing to read from.
+      // TODO(fdegeus) handle the case where a primary field has the name of an auxiliary ntuple.
       if (auxNTupleName == auxNTuples.end()) {
          fFieldContexts.try_emplace(fieldName, field.Clone(field.GetFieldName()), fEntry->GetToken(fieldName));
       } else if (fieldName != auxNTupleName->fNTupleName) {
