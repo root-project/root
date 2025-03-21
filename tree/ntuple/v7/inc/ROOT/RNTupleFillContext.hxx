@@ -55,7 +55,7 @@ class RNTupleFillContext {
 private:
    std::unique_ptr<Internal::RPageSink> fSink;
    /// Needs to be destructed before fSink
-   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    Detail::RNTupleMetrics fMetrics;
 
@@ -79,7 +79,7 @@ private:
    /// Vector of currently staged clusters.
    std::vector<Internal::RPageSink::RStagedCluster> fStagedClusters;
 
-   RNTupleFillContext(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;
    RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
 
@@ -124,7 +124,7 @@ public:
    /// Logically append staged clusters to the RNTuple.
    void CommitStagedClusters();
 
-   const RNTupleModel &GetModel() const { return *fModel; }
+   const ROOT::RNTupleModel &GetModel() const { return *fModel; }
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.

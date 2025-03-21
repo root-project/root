@@ -49,7 +49,7 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
-   friend class RNTupleModel;
+   friend class ROOT::RNTupleModel;
    friend class RNTupleReader;
    friend class RNTupleFillContext;
    friend class RNTupleProcessor;
@@ -62,7 +62,7 @@ public:
    /// BindValue. The field token can also be created by the model.
    class RFieldToken {
       friend class REntry;
-      friend class RNTupleModel;
+      friend class ROOT::RNTupleModel;
 
       std::size_t fIndex = 0;                      ///< The index in fValues that belongs to the field
       std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used

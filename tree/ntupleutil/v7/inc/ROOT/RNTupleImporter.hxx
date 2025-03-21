@@ -222,7 +222,7 @@ private:
    std::unique_ptr<RProgressCallback> fProgressCallback;
    FieldModifier_t fFieldModifier;
 
-   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
    std::unique_ptr<REntry> fEntry;
    std::vector<RImportBranch> fImportBranches;
    std::vector<RImportField> fImportFields;

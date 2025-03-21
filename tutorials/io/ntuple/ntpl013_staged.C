@@ -25,7 +25,7 @@
 #include <vector>
 
 // Import classes from experimental namespace for the time being
-using ROOT::Experimental::RNTupleModel;
+using ROOT::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 
 // Where to store the ntuple of this example

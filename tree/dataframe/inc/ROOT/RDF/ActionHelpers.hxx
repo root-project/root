@@ -1964,7 +1964,7 @@ public:
    {
       using ind_t = std::index_sequence_for<ColTypes...>;
 
-      auto model = ROOT::Experimental::RNTupleModel::Create();
+      auto model = ROOT::RNTupleModel::Create();
       MakeFields(*model, ind_t{});
       fOutputEntry = &model->GetDefaultEntry();
 
@@ -1989,7 +1989,7 @@ public:
    }
 
    template <std::size_t... S>
-   void MakeFields(ROOT::Experimental::RNTupleModel &model, std::index_sequence<S...> /*dummy*/)
+   void MakeFields(ROOT::RNTupleModel &model, std::index_sequence<S...> /*dummy*/)
    {
       int expander[] = {(model.MakeField<ColTypes>(fOutputFieldNames[S]), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers (gcc 14.1)

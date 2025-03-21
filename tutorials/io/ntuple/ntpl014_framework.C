@@ -49,10 +49,10 @@
 #include <vector>
 
 // Import classes from Experimental namespace for the time being
+using ROOT::RNTupleModel;
 using ROOT::Experimental::REntry;
 using ROOT::Experimental::RNTupleFillContext;
 using ROOT::Experimental::RNTupleFillStatus;
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 using ROOT::Experimental::RNTupleWriter;
 

@@ -24,6 +24,8 @@
 #include <memory>
 #include <utility>
 
+using ROOT::Experimental::REntry;
+
 namespace {
 std::uint64_t GetNewModelId()
 {
@@ -32,7 +34,7 @@ std::uint64_t GetNewModelId()
 }
 } // anonymous namespace
 
-ROOT::RFieldZero &ROOT::Experimental::Internal::GetFieldZeroOfModel(ROOT::Experimental::RNTupleModel &model)
+ROOT::RFieldZero &ROOT::Internal::GetFieldZeroOfModel(ROOT::RNTupleModel &model)
 {
    if (model.IsExpired()) {
       throw RException(R__FAIL("invalid use of expired model"));
@@ -40,8 +42,7 @@ ROOT::RFieldZero &ROOT::Experimental::Internal::GetFieldZeroOfModel(ROOT::Experi
    return *model.fFieldZero;
 }
 
-ROOT::Experimental::Internal::RProjectedFields &
-ROOT::Experimental::Internal::GetProjectedFieldsOfModel(ROOT::Experimental::RNTupleModel &model)
+ROOT::Internal::RProjectedFields &ROOT::Internal::GetProjectedFieldsOfModel(ROOT::RNTupleModel &model)
 {
    if (model.IsExpired()) {
       throw RException(R__FAIL("invalid use of expired model"));
@@ -51,8 +52,8 @@ ROOT::Experimental::Internal::GetProjectedFieldsOfModel(ROOT::Experimental::RNTu
 
 //------------------------------------------------------------------------------
 
-ROOT::RResult<void> ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const ROOT::RFieldBase *target,
-                                                                                       const FieldMap_t &fieldMap)
+ROOT::RResult<void>
+ROOT::Internal::RProjectedFields::EnsureValidMapping(const ROOT::RFieldBase *target, const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
    const bool hasCompatibleStructure = (source->GetStructure() == target->GetStructure()) ||
@@ -126,7 +127,7 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RProjectedFields::EnsureValidM
 }
 
 ROOT::RResult<void>
-ROOT::Experimental::Internal::RProjectedFields::Add(std::unique_ptr<ROOT::RFieldBase> field, const FieldMap_t &fieldMap)
+ROOT::Internal::RProjectedFields::Add(std::unique_ptr<ROOT::RFieldBase> field, const FieldMap_t &fieldMap)
 {
    auto result = EnsureValidMapping(field.get(), fieldMap);
    if (!result)
@@ -142,16 +143,15 @@ ROOT::Experimental::Internal::RProjectedFields::Add(std::unique_ptr<ROOT::RField
    return RResult<void>::Success();
 }
 
-const ROOT::RFieldBase *
-ROOT::Experimental::Internal::RProjectedFields::GetSourceField(const ROOT::RFieldBase *target) const
+const ROOT::RFieldBase *ROOT::Internal::RProjectedFields::GetSourceField(const ROOT::RFieldBase *target) const
 {
    if (auto it = fFieldMap.find(target); it != fFieldMap.end())
       return it->second;
    return nullptr;
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RProjectedFields>
-ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newModel) const
+std::unique_ptr<ROOT::Internal::RProjectedFields>
+ROOT::Internal::RProjectedFields::Clone(const RNTupleModel &newModel) const
 {
    auto cloneFieldZero =
       std::unique_ptr<ROOT::RFieldZero>(static_cast<ROOT::RFieldZero *>(fFieldZero->Clone("").release()));
@@ -170,12 +170,12 @@ ROOT::Experimental::Internal::RProjectedFields::Clone(const RNTupleModel &newMod
    return clone;
 }
 
-ROOT::Experimental::RNTupleModel::RUpdater::RUpdater(RNTupleWriter &writer)
+ROOT::RNTupleModel::RUpdater::RUpdater(ROOT::Experimental::RNTupleWriter &writer)
    : fWriter(writer), fOpenChangeset(fWriter.GetUpdatableModel())
 {
 }
 
-void ROOT::Experimental::RNTupleModel::RUpdater::BeginUpdate()
+void ROOT::RNTupleModel::RUpdater::BeginUpdate()
 {
    fOpenChangeset.fModel.Unfreeze();
    // We set the model ID to zero until CommitUpdate(). That prevents calls to RNTupleWriter::Fill() in the middle
@@ -183,7 +183,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::BeginUpdate()
    std::swap(fOpenChangeset.fModel.fModelId, fNewModelId);
 }
 
-void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
+void ROOT::RNTupleModel::RUpdater::CommitUpdate()
 {
    fOpenChangeset.fModel.Freeze();
    std::swap(fOpenChangeset.fModel.fModelId, fNewModelId);
@@ -195,21 +195,20 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());
 }
 
-void ROOT::Experimental::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<ROOT::RFieldBase> field)
+void ROOT::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<ROOT::RFieldBase> field)
 {
    auto fieldp = field.get();
    fModel.AddField(std::move(field));
    fAddedFields.emplace_back(fieldp);
 }
 
-void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<ROOT::RFieldBase> field)
+void ROOT::RNTupleModel::RUpdater::AddField(std::unique_ptr<ROOT::RFieldBase> field)
 {
    fOpenChangeset.AddField(std::move(field));
 }
 
-ROOT::RResult<void>
-ROOT::Experimental::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,
-                                                                       RNTupleModel::FieldMappingFunc_t mapping)
+ROOT::RResult<void> ROOT::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,
+                                                                             RNTupleModel::FieldMappingFunc_t mapping)
 {
    auto fieldp = field.get();
    auto result = fModel.AddProjectedField(std::move(field), mapping);
@@ -219,13 +218,12 @@ ROOT::Experimental::Internal::RNTupleModelChangeset::AddProjectedField(std::uniq
 }
 
 ROOT::RResult<void>
-ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,
-                                                              FieldMappingFunc_t mapping)
+ROOT::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping)
 {
    return R__FORWARD_RESULT(fOpenChangeset.AddProjectedField(std::move(field), std::move(mapping)));
 }
 
-void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
+void ROOT::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
    RResult<void> nameValid = ROOT::Internal::EnsureValidNameForRNTuple(fieldName, "Field");
    if (!nameValid) {
@@ -239,50 +237,48 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
       throw RException(R__FAIL("field name '" + fieldNameStr + "' already exists in NTuple model"));
 }
 
-void ROOT::Experimental::RNTupleModel::EnsureNotFrozen() const
+void ROOT::RNTupleModel::EnsureNotFrozen() const
 {
    if (IsFrozen())
       throw RException(R__FAIL("invalid attempt to modify frozen model"));
 }
 
-void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
+void ROOT::RNTupleModel::EnsureNotBare() const
 {
    if (IsBare())
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
 }
 
-ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<ROOT::RFieldZero> fieldZero)
+ROOT::RNTupleModel::RNTupleModel(std::unique_ptr<ROOT::RFieldZero> fieldZero)
    : fFieldZero(std::move(fieldZero)), fModelId(GetNewModelId()), fSchemaId(fModelId)
 {
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
+std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::CreateBare()
 {
    return CreateBare(std::make_unique<ROOT::RFieldZero>());
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel>
-ROOT::Experimental::RNTupleModel::CreateBare(std::unique_ptr<ROOT::RFieldZero> fieldZero)
+std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::CreateBare(std::unique_ptr<ROOT::RFieldZero> fieldZero)
 {
    auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel(std::move(fieldZero)));
    model->fProjectedFields = std::make_unique<Internal::RProjectedFields>(*model);
    return model;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
+std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::Create()
 {
    return Create(std::make_unique<ROOT::RFieldZero>());
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel>
-ROOT::Experimental::RNTupleModel::Create(std::unique_ptr<ROOT::RFieldZero> fieldZero)
+std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::Create(std::unique_ptr<ROOT::RFieldZero> fieldZero)
 {
    auto model = CreateBare(std::move(fieldZero));
    model->fDefaultEntry = std::unique_ptr<REntry>(new REntry(model->fModelId, model->fSchemaId));
    return model;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Clone() const
+std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleModel::Clone() const
 {
    auto cloneModel = std::unique_ptr<RNTupleModel>(new RNTupleModel(
       std::unique_ptr<ROOT::RFieldZero>(static_cast<ROOT::RFieldZero *>(fFieldZero->Clone("").release()))));
@@ -311,7 +307,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    return cloneModel;
 }
 
-ROOT::RFieldBase *ROOT::Experimental::RNTupleModel::FindField(std::string_view fieldName) const
+ROOT::RFieldBase *ROOT::RNTupleModel::FindField(std::string_view fieldName) const
 {
    if (fieldName.empty())
       return nullptr;
@@ -332,7 +328,7 @@ ROOT::RFieldBase *ROOT::Experimental::RNTupleModel::FindField(std::string_view f
    return field;
 }
 
-void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<ROOT::RFieldBase> field)
+void ROOT::RNTupleModel::AddField(std::unique_ptr<ROOT::RFieldBase> field)
 {
    EnsureNotFrozen();
    if (!field)
@@ -345,8 +341,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<ROOT::RFieldBase
    fFieldZero->Attach(std::move(field));
 }
 
-void ROOT::Experimental::RNTupleModel::AddSubfield(std::string_view qualifiedFieldName, REntry &entry,
-                                                   bool initializeValue) const
+void ROOT::RNTupleModel::AddSubfield(std::string_view qualifiedFieldName, REntry &entry, bool initializeValue) const
 {
    auto field = FindField(qualifiedFieldName);
    if (initializeValue)
@@ -355,7 +350,7 @@ void ROOT::Experimental::RNTupleModel::AddSubfield(std::string_view qualifiedFie
       entry.AddValue(field->BindValue(nullptr));
 }
 
-void ROOT::Experimental::RNTupleModel::RegisterSubfield(std::string_view qualifiedFieldName)
+void ROOT::RNTupleModel::RegisterSubfield(std::string_view qualifiedFieldName)
 {
    if (qualifiedFieldName.empty())
       throw RException(R__FAIL("no field name provided"));
@@ -391,7 +386,7 @@ void ROOT::Experimental::RNTupleModel::RegisterSubfield(std::string_view qualifi
 }
 
 ROOT::RResult<void>
-ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping)
+ROOT::RNTupleModel::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping)
 {
    EnsureNotFrozen();
    if (!field)
@@ -419,14 +414,14 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<ROOT::RField
    return RResult<void>::Success();
 }
 
-ROOT::RFieldZero &ROOT::Experimental::RNTupleModel::GetMutableFieldZero()
+ROOT::RFieldZero &ROOT::RNTupleModel::GetMutableFieldZero()
 {
    if (IsFrozen())
       throw RException(R__FAIL("invalid attempt to get mutable zero field of frozen model"));
    return *fFieldZero;
 }
 
-ROOT::RFieldBase &ROOT::Experimental::RNTupleModel::GetMutableField(std::string_view fieldName)
+ROOT::RFieldBase &ROOT::RNTupleModel::GetMutableField(std::string_view fieldName)
 {
    if (IsFrozen())
       throw RException(R__FAIL("invalid attempt to get mutable field of frozen model"));
@@ -437,7 +432,7 @@ ROOT::RFieldBase &ROOT::Experimental::RNTupleModel::GetMutableField(std::string_
    return *f;
 }
 
-const ROOT::RFieldBase &ROOT::Experimental::RNTupleModel::GetConstField(std::string_view fieldName) const
+const ROOT::RFieldBase &ROOT::RNTupleModel::GetConstField(std::string_view fieldName) const
 {
    auto f = FindField(fieldName);
    if (!f)
@@ -446,13 +441,13 @@ const ROOT::RFieldBase &ROOT::Experimental::RNTupleModel::GetConstField(std::str
    return *f;
 }
 
-ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEntry()
+REntry &ROOT::RNTupleModel::GetDefaultEntry()
 {
    EnsureNotBare();
    return *fDefaultEntry;
 }
 
-const ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
+const REntry &ROOT::RNTupleModel::GetDefaultEntry() const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
@@ -460,7 +455,7 @@ const ROOT::Experimental::REntry &ROOT::Experimental::RNTupleModel::GetDefaultEn
    return *fDefaultEntry;
 }
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry() const
+std::unique_ptr<REntry> ROOT::RNTupleModel::CreateEntry() const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
@@ -478,7 +473,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    return entry;
 }
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateBareEntry() const
+std::unique_ptr<REntry> ROOT::RNTupleModel::CreateBareEntry() const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
@@ -496,7 +491,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    return entry;
 }
 
-ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetToken(std::string_view fieldName) const
+REntry::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldName) const
 {
    const auto &topLevelFields = fFieldZero->GetConstSubfields();
    auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
@@ -508,7 +503,7 @@ ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetTok
    return REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
 }
 
-ROOT::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string_view fieldName) const
+ROOT::RFieldBase::RBulk ROOT::RNTupleModel::CreateBulk(std::string_view fieldName) const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
@@ -522,7 +517,7 @@ ROOT::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::CreateBulk(std::string
    return f->CreateBulk();
 }
 
-void ROOT::Experimental::RNTupleModel::Expire()
+void ROOT::RNTupleModel::Expire()
 {
    switch (fModelState) {
    case EState::kExpired: return;
@@ -535,7 +530,7 @@ void ROOT::Experimental::RNTupleModel::Expire()
    fModelState = EState::kExpired;
 }
 
-void ROOT::Experimental::RNTupleModel::Unfreeze()
+void ROOT::RNTupleModel::Unfreeze()
 {
    switch (fModelState) {
    case EState::kBuilding: return;
@@ -552,7 +547,7 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
    fModelState = EState::kBuilding;
 }
 
-void ROOT::Experimental::RNTupleModel::Freeze()
+void ROOT::RNTupleModel::Freeze()
 {
    if (fModelState == EState::kExpired)
       throw RException(R__FAIL("invalid attempt to freeze expired model"));
@@ -560,13 +555,13 @@ void ROOT::Experimental::RNTupleModel::Freeze()
    fModelState = EState::kFrozen;
 }
 
-void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
+void ROOT::RNTupleModel::SetDescription(std::string_view description)
 {
    EnsureNotFrozen();
    fDescription = std::string(description);
 }
 
-std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const ROOT::RNTupleWriteOptions &options) const
+std::size_t ROOT::RNTupleModel::EstimateWriteMemoryUsage(const ROOT::RNTupleWriteOptions &options) const
 {
    std::size_t bytes = 0;
    std::size_t minPageBufferSize = 0;

@@ -28,7 +28,7 @@
 
 // Import classes from experimental namespace for the time being
 using ENTupleInfo = ROOT::Experimental::ENTupleInfo;
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
+using RNTupleModel = ROOT::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
