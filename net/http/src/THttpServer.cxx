@@ -937,7 +937,8 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const s
          {"jsroot", "main.mjs"}, {"jsroot/core", "core.mjs"},
          {"jsroot/io", "io.mjs"}, {"jsroot/tree", "tree.mjs"},
          {"jsroot/draw", "draw.mjs"}, {"jsroot/gui", "gui.mjs"},
-         {"jsroot/three", "three.mjs"}, {"jsroot/geom", "geom/TGeoPainter.mjs"},
+         {"jsroot/d3", "d3.mjs"}, {"jsroot/three", "three.mjs"}, {"jsroot/three_addons", "three_addons.mjs"},
+         {"jsroot/geom", "geom/TGeoPainter.mjs"}, {"jsroot/hpainter", "gui/HierarchyPainter.mjs"},
          {"jsroot/webwindow", "webwindow.mjs"}
       };
 
