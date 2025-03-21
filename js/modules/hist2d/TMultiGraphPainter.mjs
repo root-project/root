@@ -1,4 +1,4 @@
-import { create, createHistogram, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats, BIT } from '../core.mjs';
+import { create, createHistogram, clTH1F, clTH2F, clTObjString, clTHashList, kNoZoom, kNoStats, BIT } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
@@ -175,7 +175,7 @@ class TMultiGraphPainter extends ObjectPainter {
       if (!histo || reset_histo || dummy_histo) {
          let xaxis, yaxis;
          if (this._3d) {
-            histo = createHistogram(clTH2I, graphs.arr.length, 10);
+            histo = createHistogram(clTH2F, graphs.arr.length, 10);
             xaxis = histo.fXaxis;
             xaxis.fXmin = 0;
             xaxis.fXmax = graphs.arr.length;
@@ -189,7 +189,7 @@ class TMultiGraphPainter extends ObjectPainter {
             xaxis = histo.fYaxis;
             yaxis = histo.fZaxis;
          } else {
-            histo = createHistogram(clTH1I, 10);
+            histo = createHistogram(clTH1F, 10);
             xaxis = histo.fXaxis;
             yaxis = histo.fYaxis;
          }

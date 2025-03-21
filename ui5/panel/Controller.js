@@ -5,12 +5,12 @@ sap.ui.define([
 
    return Controller.extend("rootui5.panel.Controller", {
 
-      // one could define in derived classes followin methods
+      // one could define in derived classes following methods
       //   onPanelInit: function() {},
       //   onPanelReceive: function(msg, offset) {},
       //   onPanelExit: function(),
 
-      onInit: function() {
+      onInit() {
          let data = this.getView().getViewData();
 
          this.websocket = data?.handle;
@@ -38,37 +38,37 @@ sap.ui.define([
             this.onPanelInit();
       },
 
-      onWebsocketOpened: function(handle) {
+      onWebsocketOpened(handle) {
          console.log('Connection established - should never happen');
       },
 
-      onWebsocketMsg: function(handle, msg, offset) {
+      onWebsocketMsg(handle, msg, offset) {
          if (typeof this.onPanelReceive == 'function')
             this.onPanelReceive(msg, offset);
          else
             console.log('GuiPanel Get message ' + msg);
       },
 
-      onWebsocketClosed: function(handle) {
+      onWebsocketClosed(handle) {
           console.log('GuiPanel closed');
           if (window) window.open('','_self').close(); // window.close();
           delete this.websocket; // remove reference on websocket
       },
 
-      setPanelTitle: function(title) {
+      setPanelTitle(title) {
          if (!this.masterPanel && document)
             document.title = title;
       },
 
-      panelSend: function(msg) {
+      panelSend(msg) {
          if (this.websocket)
             this.websocket.send(msg);
          else
             console.error('No connection available to send message');
       },
 
-      onExit: function() {
-         if (typeof this.onPanelExit == 'function')
+      onExit() {
+         if (typeof this.onPanelExit === 'function')
             this.onPanelExit();
          if (this.websocket) {
             this.websocket.close();

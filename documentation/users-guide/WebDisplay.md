@@ -86,32 +86,33 @@ The minimal HTML/JavaScript code, which establish connection with the server, lo
 ``` {.html}
 <!DOCTYPE HTML>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>RWebWindow Example</title>
-    </head>
+   <head>
+      <meta charset="utf-8">
+      <title>RWebWindow Example</title>
+      <!--jsroot_importmap-->
+   </head>
    <body>
-     <div id="main"></div>
-     <script type="module">
-       import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
-       connectWebWindow({
-          receiver: {
-              onWebsocketOpened(handle) {
-                  console.log('Connected');
-                  handle.send('Init msg from client');
-              },
-              onWebsocketMsg(handle, msg) {
-                  console.log('Get message ' + msg);
-                  document.getElementById('main').innerHTML = msg;
-              },
-              onWebsocketClosed(handle) {
-                 // when connection closed, close panel as well
-                 if (window) window.close();
-              }
-          }
-       });
-   </script>
+      <div id="main"></div>
    </body>
+   <script type="module">
+      import { connectWebWindow } from 'jsroot/webwindow';
+      connectWebWindow({
+         receiver: {
+            onWebsocketOpened(handle) {
+                console.log('Connected');
+                handle.send('Init msg from client');
+            },
+            onWebsocketMsg(handle, msg) {
+                console.log('Get message ' + msg);
+                document.getElementById('main').innerHTML = msg;
+            },
+            onWebsocketClosed(handle) {
+               // when connection closed, close panel as well
+               window?.close();
+            }
+         }
+      });
+   </script>
 </html>
 
 ```

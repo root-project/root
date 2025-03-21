@@ -7,19 +7,14 @@
       <link rel="shortcut icon" href="jsrootsys/img/RootIcon.ico"/>
       <!--jsroot_importmap-->
    </head>
-
    <body>
       <div id="onlineGUI">
          loading ...
       </div>
    </body>
-
    <script type="module">
-      import { buildGUI, internals } from 'jsrootsys/modules/gui.mjs';
-
+      import { buildGUI, internals } from 'jsroot/gui';
       internals.getCachedHierarchy = function() { return "$$$h.json$$$"; }
-
       buildGUI('onlineGUI', 'online');
    </script>
-
 </html>

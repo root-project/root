@@ -3,7 +3,6 @@
 <head>
    <meta charset="utf-8">
    <title>Custom HTML page for THttpServer</title>
-
    <style>
      table, td {
         border: 1px solid black;
@@ -14,7 +13,7 @@
         height: 400px;
      }
    </style>
-
+   <!--jsroot_importmap-->
 </head>
 
 <body>
@@ -51,7 +50,7 @@
 
 <script type='module'>
 
-   import { httpRequest, redraw, cleanup } from './jsrootsys/modules/main.mjs';
+   import { httpRequest, redraw, cleanup } from 'jsroot';
 
    document.getElementById('btn_hpx').onclick = function() {
       httpRequest("hpx/root.json", 'object')
