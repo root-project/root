@@ -20,6 +20,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RRawPtrWriteEntry.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -79,18 +80,8 @@ private:
    /// Vector of currently staged clusters.
    std::vector<Internal::RPageSink::RStagedCluster> fStagedClusters;
 
-   RNTupleFillContext(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
-   RNTupleFillContext(const RNTupleFillContext &) = delete;
-   RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
-
-public:
-   ~RNTupleFillContext();
-
-   /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
-   /// and check RNTupleFillStatus::ShouldFlushCluster.
-   ///
-   /// This method will perform a light check whether the entry comes from the context's own model.
-   void FillNoFlush(REntry &entry, RNTupleFillStatus &status)
+   template <typename Entry>
+   void FillNoFlushImpl(Entry &entry, RNTupleFillStatus &status)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
@@ -105,10 +96,8 @@ public:
       status.fShouldFlushCluster =
          (fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst);
    }
-   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
-   /// context's own model.
-   /// \return The number of uncompressed bytes written.
-   std::size_t Fill(REntry &entry)
+   template <typename Entry>
+   std::size_t FillImpl(Entry &entry)
    {
       RNTupleFillStatus status;
       FillNoFlush(entry, status);
@@ -116,6 +105,34 @@ public:
          FlushCluster();
       return status.GetLastEntrySize();
    }
+
+   RNTupleFillContext(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleFillContext(const RNTupleFillContext &) = delete;
+   RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
+
+public:
+   ~RNTupleFillContext();
+
+   /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
+   /// and check RNTupleFillStatus::ShouldFlushCluster.
+   ///
+   /// This method will perform a light check whether the entry comes from the context's own model.
+   void FillNoFlush(REntry &entry, RNTupleFillStatus &status) { FillNoFlushImpl(entry, status); }
+   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
+   /// context's own model.
+   /// \return The number of uncompressed bytes written.
+   std::size_t Fill(REntry &entry) { return FillImpl(entry); }
+
+   /// Fill an RRawPtrWriteEntry into this context, but don't commit the cluster. The calling code must pass an
+   /// RNTupleFillStatus and check RNTupleFillStatus::ShouldFlushCluster.
+   ///
+   /// This method will perform a light check whether the entry comes from the context's own model.
+   void FillNoFlush(Detail::RRawPtrWriteEntry &entry, RNTupleFillStatus &status) { FillNoFlushImpl(entry, status); }
+   /// Fill an RRawPtrWriteEntry into this context.  This method will perform a light check whether the entry comes from
+   /// the context's own model.
+   /// \return The number of uncompressed bytes written.
+   std::size_t Fill(Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
+
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage.
    void FlushColumns();
@@ -125,7 +142,11 @@ public:
    void CommitStagedClusters();
 
    const RNTupleModel &GetModel() const { return *fModel; }
-   std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
+   std::unique_ptr<REntry> CreateEntry() const { return fModel->CreateEntry(); }
+   std::unique_ptr<Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
+   {
+      return fModel->CreateRawPtrWriteEntry();
+   }
 
    /// Return the entry number that was last flushed in a cluster.
    ROOT::NTupleSize_t GetLastFlushed() const { return fLastFlushed; }

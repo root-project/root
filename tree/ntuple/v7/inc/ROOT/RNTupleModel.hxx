@@ -19,6 +19,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <string_view>
 
@@ -38,6 +39,10 @@ namespace Experimental {
 
 class RNTupleModel;
 class RNTupleWriter;
+
+namespace Detail {
+class RRawPtrWriteEntry;
+} // namespace Detail
 
 namespace Internal {
 class RProjectedFields;
@@ -320,8 +325,10 @@ public:
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
    std::unique_ptr<REntry> CreateBareEntry() const;
+   std::unique_ptr<Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const;
+
    /// Creates a token to be used in REntry methods to address a field present in the entry
-   REntry::RFieldToken GetToken(std::string_view fieldName) const;
+   RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
    ROOT::RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 

@@ -22,6 +22,7 @@ HEADERS
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldBase.hxx
+  ROOT/RFieldToken.hxx
   ROOT/RFieldUtils.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
@@ -53,6 +54,7 @@ HEADERS
   ROOT/RPageSinkBuf.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
+  ROOT/RRawPtrWriteEntry.hxx
 SOURCES
   v7/src/RCluster.cxx
   v7/src/RClusterPool.cxx
