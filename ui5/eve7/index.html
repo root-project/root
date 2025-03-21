@@ -3,6 +3,7 @@
    <head>
       <meta charset="utf-8">
       <title>Eve7</title>
+      <!--jsroot_importmap-->
       <style>
          html { height: 100%; }
          body { min-height: 100%; margin: 0; overflow: hidden }
@@ -15,7 +16,6 @@
             padding: 1
          }
        </style>
-
    </head>
 
    <body>
@@ -25,9 +25,9 @@
 
    <script type='module'>
 
-      import { source_dir } from './jsrootsys/modules/core.mjs';
-      import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
-      import { initEVE } from './rootui5sys/eve7/eve.mjs';
+      import { source_dir } from 'jsroot/core';
+      import { connectWebWindow } from 'jsroot/webwindow';
+      import { initEVE } from 'rootui5sys/eve7/eve.mjs';
 
       initEVE(source_dir).then(() => connectWebWindow({
          // socket_kind: "file",  // used for offline
@@ -44,7 +44,6 @@
          if (mode_mm && mode_mm.length >= 0)
              manifestPath = "rootui5sys/eve7/manifest-mini.json";
 
-         
          sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
             new ComponentContainer({
                name: "rootui5.eve7",
