@@ -286,8 +286,7 @@ void TSelectorDraw::Begin(TTree *tree)
                       && !((j > 0 && varexp[j-1] == ':') || varexp[j+1] == ':')
                      ) {
                      ncols++;
-                  }
-                  else if (varexp[j] == '?') {
+                  } else if (varexp[j] == '?') {
                      ncols--;
                      // We substract to compensate the later `:` of the ternary operator
                   }

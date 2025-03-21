@@ -180,5 +180,5 @@ TEST(TSelectorDrawRegressions, TernaryOperator)
    TTree t;
    t.Fill();
    t.Draw("(1?1:1)>>h1(12345,0,20)");
-   ASSERT_EQ(gROOT->Get<TH1>("h1")->GetXaxis()->GetNbins(), 12345); // was ignored before and set to the default 100 
+   ASSERT_EQ(gROOT->Get<TH1>("h1")->GetXaxis()->GetNbins(), 12345); // was ignored before and set to the default 100
 }
