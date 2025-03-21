@@ -18,7 +18,11 @@
 // (which are all parameters except for those listed in the constructor) minus
 // the -log(L) of the best fit. Note that this function is slow to evaluate
 // as a MIGRAD minimization step is executed for each function evaluation
-// \note This class uses the Conway approximation, unlike RooStats::HistFactory::RooBarlowBeestonLL
+// \note This class uses the Conway approximation, only asymptotically equivalent to Barlow-Beeston,
+// unlike RooStats::HistFactory::RooBarlowBeestonLL. This approximation
+// does not account for weighted templates in the asymptotic limit,
+// and does not explain how to use the scaled Poisson distribution (SPD) approximation. It
+// is inferior to the exact computation by Barlow-Beeston.
 // \see https://doi.org/10.5170/CERN-2011-006.115, https://doi.org/10.1140/epjc/s10052-022-11019-z
 */
 
