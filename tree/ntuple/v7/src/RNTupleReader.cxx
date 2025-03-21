@@ -143,7 +143,7 @@ const ROOT::RNTupleModel &ROOT::Experimental::RNTupleReader::GetModel()
    return *fModel;
 }
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleReader::CreateEntry()
+std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleReader::CreateEntry()
 {
    return GetModel().CreateEntry();
 }

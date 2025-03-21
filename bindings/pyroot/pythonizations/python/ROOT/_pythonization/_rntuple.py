@@ -18,7 +18,7 @@ def _REntry_GetPtr(self, key):
 
 def _REntry_CallGetPtr(self, key):
     # key can be either a RFieldToken already or a string. In the latter case, get a token to use it twice.
-    if not hasattr(type(key), "__cpp_name__") or type(key).__cpp_name__ != "ROOT::Experimental::REntry::RFieldToken":
+    if not hasattr(type(key), "__cpp_name__") or type(key).__cpp_name__ != "ROOT::REntry::RFieldToken":
         key = self.GetToken(key)
     fieldType = self.GetTypeName(key)
     return self._GetPtr[fieldType](key)
@@ -41,7 +41,7 @@ def _REntry_setitem(self, key, value):
         ptr_proxy.__assign__(value)
 
 
-@pythonization("REntry", ns="ROOT::Experimental")
+@pythonization("REntry", ns="ROOT")
 def pythonize_REntry(klass):
     klass._GetPtr = klass.GetPtr
     klass.GetPtr = _REntry_GetPtr

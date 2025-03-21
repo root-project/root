@@ -44,6 +44,7 @@ class TVirtualStreamerInfo;
 namespace ROOT {
 
 class TSchemaRule;
+class REntry;
 
 namespace Detail {
 class RFieldVisitor;
@@ -51,7 +52,6 @@ class RFieldVisitor;
 
 namespace Experimental {
 
-class REntry;
 class RNTupleCollectionView;
 
 } // namespace Experimental
