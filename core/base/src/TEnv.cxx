@@ -79,9 +79,7 @@ into the local file by default.
 #include "THashList.h"
 #include "TError.h"
 
-
-TEnv *gEnv;  // main environment created in TROOT
-
+TEnv *gEnv = nullptr; // main environment created in TROOT
 
 static struct BoolNameTable_t {
    const char *fName;
