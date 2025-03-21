@@ -1,5 +1,5 @@
 import { clone, create, createHistogram, setHistogramTitle, BIT,
-         gStyle, clTH1I, clTH2, clTH2I, clTObjArray, kNoZoom, kNoStats } from '../core.mjs';
+         gStyle, clTH1F, clTH2, clTH2F, clTObjArray, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
@@ -313,14 +313,14 @@ class THStackPainter extends ObjectPainter {
             numhistos = histos ? histos.arr.length : 0;
 
       if (!numhistos) {
-         const histo = createHistogram(clTH1I, 100);
+         const histo = createHistogram(clTH1F, 100);
          setHistogramTitle(histo, stack.fTitle);
          histo.fBits |= kNoStats;
          return histo;
       }
 
       const h0 = histos.arr[0],
-            histo = createHistogram((this.options.ndim === 1) ? clTH1I : clTH2I, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+            histo = createHistogram((this.options.ndim === 1) ? clTH1F : clTH2F, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
       histo.fName = 'axis_hist';
       histo.fBits |= kNoStats;
       Object.assign(histo.fXaxis, h0.fXaxis);
