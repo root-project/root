@@ -187,8 +187,8 @@ void TSelectorDraw::Begin(TTree *tree)
    //   hname     - name of new or old histogram
    //   hkeep     - flag if to keep new histogram
    //   hnameplus - flag if to add to current histo
-   //   i         - length of variable expression stipped of everything including/after ">>"
-   //   varexp    - variable expression stipped of everything including/after ">>"
+   //   i         - length of variable expression stripped of everything including/after ">>"
+   //   varexp    - variable expression stripped of everything including/after ">>"
    //   fOldHistogram     - pointer to hist hname
    //   elist     - pointer to selection list of hname
 
