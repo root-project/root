@@ -30,7 +30,6 @@ set(MINUIT2_HEADERS
     FumiliStandardMaximumLikelihoodFCN.h
     FunctionGradient.h
     FunctionMinimum.h
-    GenericFunction.h
     GradientCalculator.h
     HessianGradientCalculator.h
     InitialGradientCalculator.h
@@ -76,7 +75,6 @@ set(MINUIT2_HEADERS
     MnTiny.h
     MnTraceObject.h
     MnUserCovariance.h
-    MnUserFcn.h
     MnUserParameterState.h
     MnUserParameters.h
     MnUserTransformation.h
@@ -139,7 +137,6 @@ set(MINUIT2_SOURCES
     MnStrategy.cxx
     MnTiny.cxx
     MnTraceObject.cxx
-    MnUserFcn.cxx
     MnUserParameterState.cxx
     MnUserParameters.cxx
     MnUserTransformation.cxx

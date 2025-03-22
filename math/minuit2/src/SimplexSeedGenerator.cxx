@@ -28,10 +28,8 @@ operator()(const MnFcn &fcn, const GradientCalculator &, const MnUserParameterSt
    const MnMachinePrecision &prec = st.Precision();
 
    // initial starting values
-   MnAlgebraicVector x(n);
-   for (unsigned int i = 0; i < n; i++)
-      x(i) = st.IntParameters()[i];
-   double fcnmin = fcn(x);
+   MnAlgebraicVector x(st.IntParameters());
+   double fcnmin = MnFcnCaller{fcn}(x);
    MinimumParameters pa(x, fcnmin);
    InitialGradientCalculator igc(fcn, st.Trafo());
    FunctionGradient dgrad = igc(pa);

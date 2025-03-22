@@ -40,7 +40,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/FumiliStandardMaximumLikelihoodFCN.h
       Minuit2/FunctionGradient.h
       Minuit2/FunctionMinimum.h
-      Minuit2/GenericFunction.h
       Minuit2/GradientCalculator.h
       Minuit2/HessianGradientCalculator.h
       Minuit2/InitialGradientCalculator.h
@@ -150,7 +149,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/MnStrategy.cxx
       src/MnTiny.cxx
       src/MnTraceObject.cxx
-      src/MnUserFcn.cxx
       src/MnUserParameterState.cxx
       src/MnUserParameters.cxx
       src/MnUserTransformation.cxx

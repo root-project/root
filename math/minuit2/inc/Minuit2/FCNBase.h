@@ -12,8 +12,6 @@
 
 #include "Minuit2/MnConfig.h"
 
-#include "Minuit2/GenericFunction.h"
-
 #include <ROOT/RSpan.hxx>
 
 #include <vector>
@@ -48,9 +46,11 @@ Interface (abstract class) defining the function to be minimized, which has to b
 
  */
 
-class FCNBase : public GenericFunction {
+class FCNBase {
 
 public:
+
+   virtual ~FCNBase() = default;
 
    /**
 
@@ -74,7 +74,7 @@ public:
 
    */
 
-   double operator()(std::vector<double> const &v) const override = 0;
+   virtual double operator()(std::vector<double> const &v) const = 0;
 
    /**
 

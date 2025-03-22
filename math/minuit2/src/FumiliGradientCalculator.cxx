@@ -17,7 +17,7 @@
 #include "Minuit2/MnPrint.h"
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/MnStrategy.h"
-#include "Minuit2/MnUserFcn.h"
+#include "Minuit2/MnFcn.h"
 
 namespace ROOT {
 
@@ -76,7 +76,7 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &p
       // compare Fumili with Minuit gradient
       os << "Comparison of Fumili Gradient and standard (numerical) Minuit Gradient (done only when debugging enabled)" << std::endl;
       int plevel = MnPrint::SetGlobalLevel(MnPrint::GlobalLevel()-1);
-      Numerical2PGradientCalculator gc(MnUserFcn(fFcn, fTransformation), fTransformation, MnStrategy(1));
+      Numerical2PGradientCalculator gc(MnFcn{fFcn, fTransformation}, fTransformation, MnStrategy(1));
       FunctionGradient grd2 = gc(par);
       os << "Fumili Gradient:" << v << std::endl;
       os << "Minuit Gradient" << grd2.Vec() << std::endl;
