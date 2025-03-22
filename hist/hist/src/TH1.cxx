@@ -6837,7 +6837,7 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
             const double tmp1 = zz[ii + 2] - zz[ii];
             if  (tmp0 * tmp1 <= 0) continue;
             int jk = 1;
-            if  ( std::abs(tmp0) > std::abs(tmp0) ) jk = -1;
+            if  ( std::abs(tmp1) > std::abs(tmp0) ) jk = -1;
             yy[ii] = -0.5*zz[ii - 2*jk] + zz[ii]/0.75 + zz[ii + 2*jk] /6.;
             yy[ii + jk] = 0.5*(zz[ii + 2*jk] - zz[ii - 2*jk]) + zz[ii];
          }
