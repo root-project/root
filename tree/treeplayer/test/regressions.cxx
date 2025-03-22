@@ -4,6 +4,8 @@
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
+#include "TROOT.h"
+#include "TH1.h"
 
 #include "gtest/gtest.h"
 
@@ -172,4 +174,15 @@ TEST(TTreeReaderRegressions, IndexedFriend)
    }
 
    gSystem->Unlink(fname);
+}
+
+// https://github.com/root-project/root/issues/18066
+TEST(TSelectorDrawRegressions, TernaryOperator)
+{
+   TTree t;
+   t.Fill();
+   t.Draw("(1?2:3)>>h1(12345,0,20)");
+   auto h = gROOT->Get<TH1>("h1");
+   ASSERT_EQ(h->GetXaxis()->GetNbins(), 12345); // was ignored before and set to the default 100
+   ASSERT_EQ(h->GetBinContent(1235), 1); // FindBin(2) is at 1235
 }
