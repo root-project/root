@@ -94,7 +94,7 @@ public:
       fDeclFileName(rhs.fDeclFileName), fOffsetCache(rhs.fOffsetCache)
    {}
    explicit TClingClassInfo(cling::Interpreter *, Bool_t all = kTRUE);
-   explicit TClingClassInfo(cling::Interpreter *, const char *classname, bool intantiateTemplate = kTRUE);
+   explicit TClingClassInfo(cling::Interpreter *, const char *classname, bool instantiateTemplate = kTRUE);
    explicit TClingClassInfo(cling::Interpreter *interp, const clang::Type &tag);
    explicit TClingClassInfo(cling::Interpreter *interp, const clang::Decl *D);
    TClingClassInfo &operator=(const TClingClassInfo &rhs)
