@@ -2388,6 +2388,8 @@ Bool_t TWebCanvas::PerformUpdate(Bool_t async)
 
    if (!fProcessingData && !IsAsyncMode() && !async)
       WaitWhenCanvasPainted(fCanvVersion);
+   else if (fWindow)
+      fWindow->Sync();
 
    return kTRUE;
 }
