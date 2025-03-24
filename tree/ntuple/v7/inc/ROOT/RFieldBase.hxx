@@ -547,9 +547,11 @@ public:
 
    /// Generates an object of the field type and allocates new initialized memory according to the type.
    /// Implemented at the end of this header because the implementation is using RField<T>::TypeName()
-   /// The returned object can be released with `delete`, i.e. it is valid to call
+   /// The returned object can be released with `delete`, i.e. it is valid to call:
+   /// ~~~{.cpp}
    ///    auto ptr = field->CreateObject();
    ///    delete ptr.release();
+   /// ~~~
    ///
    /// Note that CreateObject<void>() is supported. The returned `unique_ptr` has a custom deleter that reports an error
    /// if it is called. The intended use of the returned `unique_ptr<void>` is to call `release()`. In this way, the
