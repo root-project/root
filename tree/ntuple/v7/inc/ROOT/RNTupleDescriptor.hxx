@@ -233,8 +233,7 @@ public:
 The cluster descriptor is built in two phases.  In a first phase, the descriptor has only an ID.
 In a second phase, the event range, column group, page locations and column ranges are added.
 Both phases are populated by the RClusterDescriptorBuilder.
-Clusters usually span across all available columns but in some cases they can describe only a subset of the columns,
-for instance when describing friend ntuples.
+Clusters span across all available columns in the ntuple.
 */
 // clang-format on
 class RClusterDescriptor final {
@@ -393,9 +392,11 @@ public:
       friend class Internal::RClusterDescriptorBuilder;
 
    private:
-      /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to
-      /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
-      /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
+      /// \brief Extend this RPageRange to fit the given RColumnRange.
+      ///
+      /// To do so, prepend as many synthetic RPageInfos as needed to cover the range in `columnRange`.
+      /// `RPageInfo`s are constructed to contain as many elements of type `element` given a page size
+      /// limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
       /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
       /// \return The number of column elements covered by the synthesized RPageInfos
       std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange,
@@ -441,9 +442,8 @@ public:
 
 private:
    ROOT::DescriptorId_t fClusterId = ROOT::kInvalidDescriptorId;
-   /// Clusters can be swapped by adjusting the entry offsets
+   /// Clusters can be swapped by adjusting the entry offsets of the cluster and all ranges
    ROOT::NTupleSize_t fFirstEntryIndex = ROOT::kInvalidNTupleIndex;
-   // TODO(jblomer): change to std::uint64_t
    ROOT::NTupleSize_t fNEntries = ROOT::kInvalidNTupleIndex;
 
    std::unordered_map<ROOT::DescriptorId_t, RColumnRange> fColumnRanges;
@@ -520,10 +520,9 @@ public:
 \ingroup NTuple
 \brief Clusters are bundled in cluster groups.
 
-Very large ntuples or combined ntuples (chains, friends) contain multiple cluster groups. The cluster groups
-may contain sharded clusters.
-Every ntuple has at least one cluster group.  The clusters in a cluster group are ordered corresponding to
-the order of page locations in the page list envelope that belongs to the cluster group (see format specification)
+Very large ntuples can contain multiple cluster groups to organize cluster metadata.
+Every ntuple has at least one cluster group.  The clusters in a cluster group are ordered
+corresponding to their first entry number.
 */
 // clang-format on
 class RClusterGroupDescriptor final {
@@ -553,7 +552,7 @@ public:
    RClusterGroupDescriptor &operator=(RClusterGroupDescriptor &&other) = default;
 
    RClusterGroupDescriptor Clone() const;
-   // Creates a clone without the cluster IDs
+   /// Creates a clone without the cluster IDs
    RClusterGroupDescriptor CloneSummary() const;
 
    bool operator==(const RClusterGroupDescriptor &other) const;
@@ -621,18 +620,21 @@ public:
 \ingroup NTuple
 \brief The on-storage metadata of an ntuple
 
-Represents the on-disk (on storage) information about an ntuple. The metadata consists of a header and one or
-several footers. The header carries the ntuple schema, i.e. the fields and the associated columns and their
-relationships. The footer(s) carry information about one or several clusters. For every cluster, a footer stores
-its location and size, and for every column the range of element indexes as well as a list of pages and page
+Represents the on-disk (on storage) information about an ntuple. The metadata consists of a header, a footer, and
+potentially multiple page lists.
+The header carries the ntuple schema, i.e. the fields and the associated columns and their relationships.
+The footer carries information about one or several cluster groups and links to their page lists.
+For every cluster group, a page list envelope stores cluster summaries and page locations.
+For every cluster, it stores for every column the range of element indexes as well as a list of pages and page
 locations.
 
-The descriptor provide machine-independent (de-)serialization of headers and footers, and it provides lookup routines
+The descriptor provides machine-independent (de-)serialization of headers and footers, and it provides lookup routines
 for ntuple objects (pages, clusters, ...).  It is supposed to be usable by all RPageStorage implementations.
 
 The serialization does not use standard ROOT streamers in order to not let it depend on libCore. The serialization uses
-the concept of frames: header, footer, and substructures have a preamble with version numbers and the size of the
-written struct. This allows for forward and backward compatibility when the metadata evolves.
+the concept of envelopes and frames: header, footer, and page list envelopes have a preamble with a type ID and length.
+Substructures are serialized in frames and have a size and number of items (for list frames). This allows for forward
+and backward compatibility when the metadata evolves.
 */
 // clang-format on
 class RNTupleDescriptor final {
@@ -669,13 +671,13 @@ private:
    std::uint64_t fNEntries = 0;  ///< Updated by the descriptor builder when the cluster groups are added
    std::uint64_t fNClusters = 0; ///< Updated by the descriptor builder when the cluster groups are added
 
-   /**
-    * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
-    * active the page locations.  During the lifetime of the descriptor, page location information for clusters
-    * can be added or removed.  When this happens, the generation should be increased, so that users of the
-    * descriptor know that the information changed.  The generation is increased, e.g., by the page source's
-    * exclusive lock guard around the descriptor.  It is used, e.g., by the descriptor cache in RNTupleReader.
-    */
+   /// \brief The generation of the descriptor
+   ///
+   /// Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for the set of
+   /// active page locations.  During the lifetime of the descriptor, page location information for clusters
+   /// can be added or removed.  When this happens, the generation should be increased, so that users of the
+   /// descriptor know that the information changed.  The generation is increased, e.g., by the page source's
+   /// exclusive lock guard around the descriptor.  It is used, e.g., by the descriptor cache in RNTupleReader.
    std::uint64_t fGeneration = 0;
 
    std::unordered_map<ROOT::DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
@@ -683,8 +685,7 @@ private:
    /// Note that this list is empty during the descriptor building process and will only be
    /// created when the final descriptor is extracted from the builder.
    std::vector<ROOT::DescriptorId_t> fSortedClusterGroupIds;
-   /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
-   /// from a chain of files
+   /// Potentially a subset of all the available clusters
    std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
@@ -710,9 +711,9 @@ public:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
-      /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type.
       /// If this option is enabled, the model will be created and all fields containing unknown data (directly
       /// or indirectly) will be skipped instead.
+      /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type.
       bool fForwardCompatible = false;
       /// If true, the model will be created without a default entry (bare model).
       bool fCreateBare = false;
@@ -908,7 +909,7 @@ class RNTupleDescriptor::RFieldDescriptorIterable {
 private:
    /// The associated NTuple for this range.
    const RNTupleDescriptor &fNTuple;
-   /// The descriptor ids of the child fields. These may be sorted using
+   /// The descriptor IDs of the child fields. These may be sorted using
    /// a comparison function.
    std::vector<ROOT::DescriptorId_t> fFieldChildren = {};
 
@@ -964,8 +965,7 @@ public:
 \ingroup NTuple
 \brief Used to loop over all the cluster groups of an ntuple (in unspecified order)
 
-Enumerate all cluster group IDs from the cluster group descriptor.  No specific order can be assumed, use
-FindNextClusterGroupId and FindPrevClusterGroupId to traverse clusters groups by entry number.
+Enumerate all cluster group IDs from the descriptor.  No specific order can be assumed.
 */
 // clang-format on
 class RNTupleDescriptor::RClusterGroupDescriptorIterable {
@@ -1015,8 +1015,9 @@ public:
 \ingroup NTuple
 \brief Used to loop over all the clusters of an ntuple (in unspecified order)
 
-Enumerate all cluster IDs from the cluster descriptor.  No specific order can be assumed, use
-FindNextClusterId and FindPrevClusterId to travers clusters by entry number.
+Enumerate all cluster IDs from all cluster descriptors.  No specific order can be assumed, use
+RNTupleDescriptor::FindNextClusterId() and RNTupleDescriptor::FindPrevClusterId() to traverse
+clusters by entry number.
 */
 // clang-format on
 class RNTupleDescriptor::RClusterDescriptorIterable {
@@ -1574,6 +1575,8 @@ public:
    /// annotated as begin part of the header extension.
    void BeginHeaderExtension();
 
+   /// \brief Shift column IDs of alias columns by `offset`
+   ///
    /// If the descriptor is constructed in pieces consisting of physical and alias columns
    /// (regular and projected fields), the natural column order would be
    ///   - Physical and alias columns of piece one
