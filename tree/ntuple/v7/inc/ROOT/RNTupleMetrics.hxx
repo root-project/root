@@ -201,7 +201,7 @@ public:
 /**
 \class ROOT::Experimental::Detail::RNTupleTickCounter
 \ingroup NTuple
-\brief An either thread-safe or non thread safe counter for CPU ticks
+\brief An either thread-safe or non thread safe (depending on `BaseCounterT`, see `RNTuplePlainCounter` and `RNTupleAtomicCounter`) counter for CPU ticks
 
 On print, the value is converted from ticks to ns.
 */
@@ -279,7 +279,7 @@ using RNTupleAtomicTimer = RNTupleTimer<RNTupleAtomicCounter, RNTupleTickCounter
 \ingroup NTuple
 \brief A collection of Counter objects with a name, a unit, and a description.
 
-The class owns the counters; on registration of a new
+The class owns the counters.
 */
 // clang-format on
 class RNTupleMetrics {
