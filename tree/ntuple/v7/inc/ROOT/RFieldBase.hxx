@@ -238,14 +238,14 @@ private:
          func(target);
    }
 
-   /// Translate an entry index to a column element index of the principal column and viceversa.  These functions
+   /// Translate an entry index to a column element index of the principal column and vice versa. These functions
    /// take into account the role and number of repetitions on each level of the field hierarchy as follows:
    /// - Top level fields: element index == entry index
    /// - Record fields propagate their principal column index to the principal columns of direct descendant fields
-   /// - Collection and variant fields set the principal column index of their childs to 0
+   /// - Collection and variant fields set the principal column index of their children to 0
    ///
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
-   /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
+   /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the innermost field.
    ROOT::NTupleSize_t EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const;
 
    /// Flushes data from active columns
