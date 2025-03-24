@@ -1346,6 +1346,9 @@ void TWebCanvas::Show()
    if (gROOT->IsWebDisplayBatch())
       return;
 
+   if (fWindow && !fWindow->HasConnection(0))
+      fLastDrawVersion = 0;
+
    ROOT::RWebDisplayArgs args;
    args.SetWidgetKind("TCanvas");
    args.SetSize(Canvas()->GetWindowWidth(), Canvas()->GetWindowHeight());
