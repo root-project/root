@@ -129,17 +129,6 @@ public:
    /// field and the subfields.  It should return the qualified field names used as a mapping source.
    using FieldMappingFunc_t = std::function<std::string(const std::string &)>;
 
-   /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
-   struct NameWithDescription_t {
-      NameWithDescription_t(const char *name) : fName(name) {}
-      NameWithDescription_t(const std::string &name) : fName(name) {}
-      NameWithDescription_t(std::string_view name) : fName(name) {}
-      NameWithDescription_t(std::string_view name, std::string_view descr) : fName(name), fDescription(descr) {}
-
-      std::string_view fName;
-      std::string_view fDescription = "";
-   };
-
    class RUpdater;
 
 private:
@@ -236,17 +225,17 @@ public:
    /// using ROOT::Experimental::RNTupleModel;
    ///
    /// auto model = RNTupleModel::Create();
-   /// auto hadronFlavour = model->MakeField<float>({
+   /// auto hadronFlavour = model->MakeField<float>(
    ///    "hadronFlavour", "flavour from hadron ghost clustering"
-   /// });
+   /// );
    /// ~~~
    template <typename T>
-   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc)
+   std::shared_ptr<T> MakeField(std::string_view name, std::string_view description = "")
    {
       EnsureNotFrozen();
-      EnsureValidFieldName(fieldNameDesc.fName);
-      auto field = std::make_unique<ROOT::RField<T>>(fieldNameDesc.fName);
-      field->SetDescription(fieldNameDesc.fDescription);
+      EnsureValidFieldName(name);
+      auto field = std::make_unique<ROOT::RField<T>>(name);
+      field->SetDescription(description);
       std::shared_ptr<T> ptr;
       if (fDefaultEntry)
          ptr = fDefaultEntry->AddValue<T>(*field);
@@ -404,12 +393,12 @@ public:
    void CommitUpdate();
 
    template <typename T>
-   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc)
+   std::shared_ptr<T> MakeField(std::string_view name, std::string_view description = "")
    {
-      auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc);
+      auto objPtr = fOpenChangeset.fModel.MakeField<T>(name, description);
       auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
-      auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
-                             [&](const auto &f) { return f.GetFieldName() == fieldNameDesc.fName; });
+      auto it =
+         std::find_if(fieldZero->begin(), fieldZero->end(), [&](const auto &f) { return f.GetFieldName() == name; });
       R__ASSERT(it != fieldZero->end());
       fOpenChangeset.fAddedFields.emplace_back(&(*it));
       return objPtr;

@@ -243,7 +243,7 @@ TEST(RNTuple, StdPair)
    FileRaii fileGuard("test_ntuple_rfield_stdpair.root");
    {
       auto model = RNTupleModel::Create();
-      auto pair_field = model->MakeField<std::pair<double, std::string>>({"myPair", "a very cool field"});
+      auto pair_field = model->MakeField<std::pair<double, std::string>>("myPair", "a very cool field");
       auto myPair2 = RFieldBase::Create("myPair2", "std::pair<double, std::string>").Unwrap();
       model->AddField(std::move(myPair2));
 
@@ -298,7 +298,7 @@ TEST(RNTuple, StdTuple)
    FileRaii fileGuard("test_ntuple_rfield_stdtuple.root");
    {
       auto model = RNTupleModel::Create();
-      auto tuple_field = model->MakeField<std::tuple<char, float, std::string, char>>({"myTuple", "4-tuple"});
+      auto tuple_field = model->MakeField<std::tuple<char, float, std::string, char>>("myTuple", "4-tuple");
       auto myTuple2 = RFieldBase::Create("myTuple2", "std::tuple<char, float, std::string, char>").Unwrap();
       auto myTuple3 = RFieldBase::Create("myTuple3", "std::tuple<int32_t, std::tuple<std::string, char>>").Unwrap();
       model->AddField(std::move(myTuple2));
@@ -358,8 +358,8 @@ TEST(RNTuple, StdSet)
    FileRaii fileGuard("test_ntuple_rfield_stdset.root");
    {
       auto model = RNTupleModel::Create();
-      auto set_field = model->MakeField<std::set<float>>({"mySet", "float set"});
-      auto set_field2 = model->MakeField<std::set<std::tuple<int, char, CustomStruct>>>({"mySet2"});
+      auto set_field = model->MakeField<std::set<float>>("mySet", "float set");
+      auto set_field2 = model->MakeField<std::set<std::tuple<int, char, CustomStruct>>>("mySet2");
 
       auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
       auto mySet4 = RFieldBase::Create("mySet4", "std::set<std::set<char>>").Unwrap();
@@ -431,8 +431,8 @@ TEST(RNTuple, StdUnorderedSet)
    FileRaii fileGuard("test_ntuple_rfield_stdunorderedset.root");
    {
       auto model = RNTupleModel::Create();
-      auto set_field = model->MakeField<std::unordered_set<float>>({"mySet", "unordered float set"});
-      auto set_field2 = model->MakeField<std::unordered_set<CustomStruct>>({"mySet2"});
+      auto set_field = model->MakeField<std::unordered_set<float>>("mySet", "unordered float set");
+      auto set_field2 = model->MakeField<std::unordered_set<CustomStruct>>("mySet2");
 
       auto mySet3 = RFieldBase::Create("mySet3", "std::unordered_set<std::string>").Unwrap();
       auto mySet4 = RFieldBase::Create("mySet4", "std::unordered_set<std::vector<bool>>").Unwrap();
@@ -492,7 +492,7 @@ TEST(RNTuple, StdMultiSet)
    FileRaii fileGuard("test_ntuple_rfield_stdmultiset.root");
    {
       auto model = RNTupleModel::Create();
-      auto set_field = model->MakeField<std::multiset<float>>({"mySet", "multi float set"});
+      auto set_field = model->MakeField<std::multiset<float>>("mySet", "multi float set");
       auto mySet2 = RFieldBase::Create("mySet2", "std::multiset<CustomStruct>").Unwrap();
 
       model->AddField(std::move(mySet2));
@@ -537,7 +537,7 @@ TEST(RNTuple, StdUnorderedMultiSet)
    FileRaii fileGuard("test_ntuple_rfield_stdmultiset.root");
    {
       auto model = RNTupleModel::Create();
-      auto set_field = model->MakeField<std::unordered_multiset<float>>({"mySet", "multi float set"});
+      auto set_field = model->MakeField<std::unordered_multiset<float>>("mySet", "multi float set");
       auto mySet2 = RFieldBase::Create("mySet2", "std::unordered_multiset<CustomStruct>").Unwrap();
 
       model->AddField(std::move(mySet2));
@@ -592,8 +592,8 @@ TEST(RNTuple, StdMap)
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
    {
       auto model = RNTupleModel::Create();
-      auto map_field = model->MakeField<std::map<std::string, float>>({"myMap", "string to float map"});
-      auto map_field2 = model->MakeField<std::map<int, std::vector<CustomStruct>>>({"myMap2"});
+      auto map_field = model->MakeField<std::map<std::string, float>>("myMap", "string to float map");
+      auto map_field2 = model->MakeField<std::map<int, std::vector<CustomStruct>>>("myMap2");
 
       auto myMap3 = RFieldBase::Create("myMap3", "std::map<int, std::string>").Unwrap();
       auto myMap4 = RFieldBase::Create("myMap4", "std::map<std::int32_t, std::string>").Unwrap();
@@ -683,8 +683,8 @@ TEST(RNTuple, StdUnorderedMap)
    {
       auto model = RNTupleModel::Create();
       auto map_field =
-         model->MakeField<std::unordered_map<std::string, float>>({"myMap", "unordered string to float map"});
-      auto map_field2 = model->MakeField<std::unordered_map<int, CustomStruct>>({"myMap2"});
+         model->MakeField<std::unordered_map<std::string, float>>("myMap", "unordered string to float map");
+      auto map_field2 = model->MakeField<std::unordered_map<int, CustomStruct>>("myMap2");
 
       auto myMap3 = RFieldBase::Create("myMap3", "std::unordered_map<char, std::string>").Unwrap();
       auto myMap4 = RFieldBase::Create("myMap4", "std::unordered_map<float, std::vector<bool>>").Unwrap();
@@ -756,7 +756,7 @@ TEST(RNTuple, StdMultiMap)
    FileRaii fileGuard("test_ntuple_rfield_stdmultimap.root");
    {
       auto model = RNTupleModel::Create();
-      auto map_field = model->MakeField<std::multimap<std::string, float>>({"myMap", "string to float multimap"});
+      auto map_field = model->MakeField<std::multimap<std::string, float>>("myMap", "string to float multimap");
 
       auto myMap2 = RFieldBase::Create("myMap2", "std::multimap<int, CustomStruct>").Unwrap();
 
@@ -810,7 +810,7 @@ TEST(RNTuple, StdUnorderedMultiMap)
    {
       auto model = RNTupleModel::Create();
       auto map_field =
-         model->MakeField<std::unordered_multimap<std::string, float>>({"myMap", "string to float unordered_multimap"});
+         model->MakeField<std::unordered_multimap<std::string, float>>("myMap", "string to float unordered_multimap");
 
       auto myMap2 = RFieldBase::Create("myMap2", "std::unordered_multimap<int, CustomStruct>").Unwrap();
 
