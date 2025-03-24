@@ -94,8 +94,7 @@ class RNTupleBasics(unittest.TestCase):
         model = ROOT.RNTupleModel.Create()
         model.MakeField["std::string"]("mystr")
 
-        class WrongClass:
-            ...
+        class WrongClass: ...
 
         with RNTupleWriter.Recreate(model, "ntpl", "test_ntuple_py_test_forbid_writing_wrong_type.root") as writer:
             entry = writer.CreateEntry()
