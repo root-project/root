@@ -338,7 +338,7 @@ TEST(RNTuple, ClusterEntries)
 {
    FileRaii fileGuard("test_ntuple_cluster_entries.root");
    auto model = RNTupleModel::Create();
-   *model->MakeField<float>({"pt", "transverse momentum"}) = 42.0;
+   *model->MakeField<float>("pt", "transverse momentum") = 42.0;
 
    {
       RNTupleWriteOptions opt;
@@ -359,7 +359,7 @@ TEST(RNTuple, ClusterEntriesAuto)
 {
    FileRaii fileGuard("test_ntuple_cluster_entries_auto.root");
    auto model = RNTupleModel::Create();
-   model->MakeField<float>({"pt", "transverse momentum"});
+   model->MakeField<float>("pt", "transverse momentum");
 
    {
       RNTupleWriteOptions options;
@@ -383,7 +383,7 @@ TEST(RNTuple, ClusterEntriesAutoStatus)
    FileRaii fileGuard("test_ntuple_cluster_entries_auto_status.root");
    {
       auto model = RNTupleModel::CreateBare();
-      model->MakeField<float>({"pt", "transverse momentum"});
+      model->MakeField<float>("pt", "transverse momentum");
 
       int FlushClusterCalled = 0;
       RNTupleFillStatus status;
@@ -414,7 +414,7 @@ TEST(RNTuple, PageSize)
 {
    FileRaii fileGuard("test_ntuple_elements_per_page.root");
    auto model = RNTupleModel::Create();
-   *model->MakeField<float>({"pt", "transverse momentum"}) = 42.0;
+   *model->MakeField<float>("pt", "transverse momentum") = 42.0;
 
    {
       RNTupleWriteOptions opt;

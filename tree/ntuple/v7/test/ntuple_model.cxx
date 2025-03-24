@@ -42,7 +42,7 @@ TEST(RNTupleModel, FieldDescriptions)
    FileRaii fileGuard("test_ntuple_field_descriptions.root");
    auto model = RNTupleModel::Create();
 
-   model->MakeField<float>({"pt", "transverse momentum"});
+   model->MakeField<float>("pt", "transverse momentum");
 
    auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
    charge->SetDescription("electric charge");
