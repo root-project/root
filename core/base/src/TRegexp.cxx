@@ -144,6 +144,7 @@ void TRegexp::CopyPattern(const TRegexp& r)
 /// character, except "/"'s) and all .'s are escaped (so *.ps is different
 /// from *.eps). The special treatment of "/" allows the easy matching of
 /// pathnames, e.g. "*.root" will match "aap.root", but not "pipo/aap.root".
+/// +s are escaped as well.
 
 const char *TRegexp::MakeWildcard(const char *re)
 {
@@ -176,7 +177,7 @@ const char *TRegexp::MakeWildcard(const char *re)
          s += strlen(wc);
          slen += strlen(wc);
       }
-      if (re[i] == '.') {
+      if (re[i] == '.' || re[i] == '+') {
          *s++ = '\\';
          slen++;
       }
