@@ -141,12 +141,12 @@ For instance, there is no API in the page sink to write an entry, but only to wr
 The higher-level APIs, e.g. `RField`, `REntry`, `RNTupleWriter`, take care of presenting the available data as entries where necessary.
 
 The page source also gives access to an `RNTupleDescriptor` through a read/write lock guard.
-The `RNTupleDescriptor` owned by the page source changes only when new cluster meta-data are loaded.
+The `RNTupleDescriptor` owned by the page source changes only when new cluster metadata are loaded.
 The header and the cluster group summary information is stable throughout its lifetime (cf. format specification).
 
 ### R{NTuple,Field,Column,Cluster,...}Descriptor
-The descriptor classes provide read-only access to the on-disk meta-data of an RNTuple.
-The meta-data include the schema (fields and columns), information about clusters and the page locations.
+The descriptor classes provide read-only access to the on-disk metadata of an RNTuple.
+The metadata includes the schema (fields and columns), information about clusters and the page locations.
 The descriptor classes are closely related to the format specification.
 
 For normal read and write tasks, access to the descriptor is not necessary.
@@ -154,7 +154,7 @@ One notable exception is bulk reading, where the descriptor can be used to deter
 The descriptors are used internally, e.g. to build an RNTupleModel from the on-disk information.
 The descriptors are also useful for inspection purposes.
 
-The descriptor classes contain a copy of the meta-data; they are not linked to an open page source.
+The descriptor classes contain a copy of the metadata; they are not linked to an open page source.
 A descriptor can be used after its originating page source has been deleted.
 
 ### RField<T>
@@ -220,7 +220,7 @@ Unless a model is created as "bare model", it owns a default entry that is used 
 A model can add _projected fields_.
 Projected fields map existing physical fields to a different type.
 For instance, a `std::vector<Event>` can be projected onto a `std::vector<float>` for a float member of `Event`.
-Projected fields are stored as header meta-data.
+Projected fields are stored as header metadata.
 
 Fields can be added to a model after the writing process has started (cf. `RNTupleWriter::CreateModelUpdater()`).
 This is called _late model extension_.
@@ -447,7 +447,7 @@ The parallel writer offers the most scalable parallel writing interface.
 Multiple _fill contexts_ can concurrently serialize and compress data.
 Every fill context prepares a set of entire clusters in the final on-disk layout.
 When a fill context flushes data,
-a brief serialization point handles the RNTuple meta-data updates and the reservation of disk space to write into.
+a brief serialization point handles the RNTuple metadata updates and the reservation of disk space to write into.
 
 Low precision float types
 --------------------------
@@ -517,7 +517,7 @@ The following features are planned for after the first RNTuple production versio
   - RNTupleProcessor: advanced RNTupleReader that allows for free combination of chains and (indexed/unaligned) friends
   - Horizontal merging: persistified friends, analogous to a classical merge being a persistified chain
   - An interface for bulk writing
-  - Meta-data: RNTuple-specific and user-provided meta-data storage, such as file provenance, scale factors, or varied columns
+  - Attributes: RNTuple-specific and user-provided metadata storage, such as file provenance, scale factors, or varied columns
   - C library interface
   - S3 storage backend (page source / page sink)
 

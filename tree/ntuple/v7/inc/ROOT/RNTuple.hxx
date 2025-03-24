@@ -89,7 +89,7 @@ private:
    /// bit in the feature flag of the RNTuple header.
    /// For the pre-release epoch 0, indicates the release candidate number
    std::uint16_t fVersionMajor = kVersionMajor;
-   /// Changing the minor version indicates new optional fields added to the RNTuple meta-data
+   /// Changing the minor version indicates new optional fields added to the RNTuple metadata
    std::uint16_t fVersionMinor = kVersionMinor;
    /// Changing the patch version indicates new backported features from newer binary format versions
    std::uint16_t fVersionPatch = kVersionPatch;

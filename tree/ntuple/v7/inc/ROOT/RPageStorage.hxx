@@ -185,7 +185,7 @@ public:
    /// The column handle identifies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;
 
-   /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
+   /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the metadata.
    /// When writing, every column can only be attached once.
    virtual ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) = 0;
    /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
@@ -381,7 +381,7 @@ public:
    /// Commit staged clusters, logically appending them to the ntuple descriptor.
    virtual void CommitStagedClusters(std::span<RStagedCluster> clusters) = 0;
    /// Finalize the current cluster and create a new one for the following data.
-   /// Returns the number of bytes written to storage (excluding meta-data).
+   /// Returns the number of bytes written to storage (excluding metadata).
    virtual std::uint64_t CommitCluster(ROOT::NTupleSize_t nNewEntries)
    {
       RStagedCluster stagedClusters[] = {StageCluster(nNewEntries)};
@@ -555,7 +555,7 @@ public:
 
 The page source is initialized with the columns of interest. Alias columns from projected fields are mapped to the
 corresponding physical columns. Pages from the columns of interest can then be mapped into memory.
-The page source also gives access to the ntuple's meta-data.
+The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
@@ -774,8 +774,8 @@ public:
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
    /// a file in the background. The method is idempotent and it is called as a first step in `Attach()`.
-   /// Pages sources may or may not make use of splitting loading and processing meta-data.
-   /// Therefore, `LoadStructure()` may do nothing and defer loading the meta-data to `Attach()`.
+   /// Pages sources may or may not make use of splitting loading and processing metadata.
+   /// Therefore, `LoadStructure()` may do nothing and defer loading the metadata to `Attach()`.
    void LoadStructure();
    /// Open the physical storage container and deserialize header and footer
    void Attach(

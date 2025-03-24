@@ -158,7 +158,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
           << "\n";
    output << "  Footer size:      " << footerSize << " B"
           << "\n";
-   output << "  Meta-data / data: " << std::fixed << std::setprecision(3)
+   output << "  Metadata / data:  " << std::fixed << std::setprecision(3)
           << float(headerSize + footerSize) / float(nBytesOnStorage) << "\n";
    output << "------------------------------------------------------------\n";
    output << "CLUSTER DETAILS\n";

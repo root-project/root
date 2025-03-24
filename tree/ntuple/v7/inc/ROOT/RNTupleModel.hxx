@@ -52,7 +52,7 @@ RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
 \brief The projected fields of a `RNTupleModel`
 
 Projected fields are fields whose columns are reused from existing fields. Projected fields are not attached
-to the models zero field.  Only the real source fields are written to, projected fields are stored as meta-data
+to the models zero field.  Only the real source fields are written to, projected fields are stored as metadata
 (header) information only.  Only top-level projected fields are supported because otherwise the layout of types
 could be altered in unexpected ways.
 All projected fields and the source fields used to back them are kept in this class.

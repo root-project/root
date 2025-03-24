@@ -72,7 +72,7 @@ RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
 /**
 \class ROOT::RFieldDescriptor
 \ingroup NTuple
-\brief Meta-data stored for every field of an ntuple
+\brief Metadata stored for every field of an ntuple
 */
 // clang-format on
 class RFieldDescriptor final {
@@ -156,7 +156,7 @@ public:
 /**
 \class ROOT::RColumnDescriptor
 \ingroup NTuple
-\brief Meta-data stored for every column of an ntuple
+\brief Metadata stored for every column of an ntuple
 */
 // clang-format on
 class RColumnDescriptor final {
@@ -228,7 +228,7 @@ public:
 /**
 \class ROOT::RClusterDescriptor
 \ingroup NTuple
-\brief Meta-data for a set of ntuple clusters
+\brief Metadata for a set of ntuple clusters
 
 The cluster descriptor is built in two phases.  In a first phase, the descriptor has only an ID.
 In a second phase, the event range, column group, page locations and column ranges are added.
@@ -609,9 +609,9 @@ public:
 /**
 \class ROOT::RNTupleDescriptor
 \ingroup NTuple
-\brief The on-storage meta-data of an ntuple
+\brief The on-storage metadata of an ntuple
 
-Represents the on-disk (on storage) information about an ntuple. The meta-data consists of a header and one or
+Represents the on-disk (on storage) information about an ntuple. The metadata consists of a header and one or
 several footers. The header carries the ntuple schema, i.e. the fields and the associated columns and their
 relationships. The footer(s) carry information about one or several clusters. For every cluster, a footer stores
 its location and size, and for every column the range of element indexes as well as a list of pages and page
@@ -622,7 +622,7 @@ for ntuple objects (pages, clusters, ...).  It is supposed to be usable by all R
 
 The serialization does not use standard ROOT streamers in order to not let it depend on libCore. The serialization uses
 the concept of frames: header, footer, and substructures have a preamble with version numbers and the size of the
-writte struct. This allows for forward and backward compatibility when the meta-data evolves.
+written struct. This allows for forward and backward compatibility when the metadata evolves.
 */
 // clang-format on
 class RNTupleDescriptor final {
@@ -827,7 +827,7 @@ public:
    std::uint64_t GetGeneration() const { return fGeneration; }
    void IncGeneration() { fGeneration++; }
 
-   /// Re-create the C++ model from the stored meta-data
+   /// Re-create the C++ model from the stored metadata
    std::unique_ptr<ROOT::Experimental::RNTupleModel>
    CreateModel(const RCreateModelOptions &options = RCreateModelOptions()) const;
    void PrintInfo(std::ostream &output) const;
