@@ -169,12 +169,20 @@ public:
       kConnectedToSource
    };
 
-   /// Some fields have multiple possible column representations, e.g. with or without split encoding.
-   /// All column representations supported for writing also need to be supported for reading. In addition,
-   /// fields can support extra column representations for reading only, e.g. a 64bit integer reading from a
-   /// 32bit column.
-   /// The defined column representations must be supported by corresponding column packing/unpacking implementations,
-   /// i.e. for the example above, the unpacking of 32bit ints to 64bit pages must be implemented in RColumnElement.hxx
+   // clang-format off
+   /**
+   \class ROOT::RFieldBase::RColumnRepresentations
+   \ingroup NTuple
+   \brief The list of column representations a field can have.
+
+   Some fields have multiple possible column representations, e.g. with or without split encoding.
+   All column representations supported for writing also need to be supported for reading. In addition,
+   fields can support extra column representations for reading only, e.g. a 64bit integer reading from a
+   32bit column.
+   The defined column representations must be supported by corresponding column packing/unpacking implementations,
+   i.e. for the example above, the unpacking of 32bit ints to 64bit pages must be implemented in RColumnElement.hxx
+   */
+   // clang-format on
    class RColumnRepresentations {
    public:
       /// A list of column representations
