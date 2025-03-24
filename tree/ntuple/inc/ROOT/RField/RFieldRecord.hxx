@@ -39,7 +39,7 @@ std::unique_ptr<RFieldBase> CreateEmulatedField(std::string_view fieldName,
                                                 std::string_view emulatedFromType);
 }
 
-/// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
+/// The field for an untyped record. The subfields are stored consecutively in a memory block, i.e.
 /// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public RFieldBase {
    friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedField(std::string_view fieldName,
