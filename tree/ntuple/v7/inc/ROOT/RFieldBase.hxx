@@ -374,10 +374,10 @@ protected:
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
    virtual const RColumnRepresentations &GetColumnRepresentations() const;
-   /// Implementations in derived classes should create the backing columns corresponsing to the field type for
+   /// Implementations in derived classes should create the backing columns corresponding to the field type for
    /// writing. The default implementation does not attach any columns to the field.
    virtual void GenerateColumns() {}
-   /// Implementations in derived classes should create the backing columns corresponsing to the field type for reading.
+   /// Implementations in derived classes should create the backing columns corresponding to the field type for reading.
    /// The default implementation does not attach any columns to the field. The method should check, using the page
    /// source and `fOnDiskId`, if the column types match and throw if they don't.
    virtual void GenerateColumns(const ROOT::RNTupleDescriptor & /*desc*/) {}
