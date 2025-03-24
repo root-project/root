@@ -42,10 +42,10 @@ class RNTupleJoinProcessor;
 /**
 \class ROOT::Experimental::REntry
 \ingroup NTuple
-\brief The REntry is a collection of values in an ntuple corresponding to a complete row in the data set
+\brief The REntry is a collection of values in an ntuple corresponding to a complete row in the data set.
 
-The entry provides a memory-managed binder for a set of values. Through shared pointers, the memory locations
-that are associated to values are managed.
+The entry provides a memory-managed binder for a set of values read from fields in an RNTuple. The memory locations that are associated
+with values are managed through shared pointers.
 */
 // clang-format on
 class REntry {
@@ -59,12 +59,12 @@ class REntry {
 
 public:
    /// The field token identifies a (sub)field in this entry. It can be used for fast indexing in REntry's methods, e.g.
-   /// BindValue. The field token can also be created by the model.
+   /// BindValue(). The field token can also be created by the model.
    class RFieldToken {
       friend class REntry;
       friend class RNTupleModel;
 
-      std::size_t fIndex = 0;                      ///< The index in fValues that belongs to the field
+      std::size_t fIndex = 0;                      ///< The index in `fValues` that belongs to the field
       std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
       RFieldToken(std::size_t index, std::uint64_t schemaId) : fIndex(index), fSchemaId(schemaId) {}
 
@@ -84,8 +84,7 @@ private:
    /// To ensure that the entry is standalone, a copy of all field types
    std::vector<std::string> fFieldTypes;
 
-   // Creation of entries is done by the RNTupleModel class
-
+   /// Creation of entries can be done by the RNTupleModel, the RNTupleReader, or the RNTupleWriter.
    REntry() = default;
    explicit REntry(std::uint64_t modelId, std::uint64_t schemaId) : fModelId(modelId), fSchemaId(schemaId) {}
 
@@ -96,7 +95,7 @@ private:
       fValues.emplace_back(std::move(value));
    }
 
-   /// While building the entry, adds a new value to the list and return the value's shared pointer
+   /// While building the entry, adds a new value for the field and returns the value's shared pointer
    template <typename T>
    std::shared_ptr<T> AddValue(ROOT::RField<T> &field)
    {
@@ -108,7 +107,7 @@ private:
    }
 
    /// Update the RValue for a field in the entry. To be used when its underlying ROOT::RFieldBase changes, which
-   /// typically happens when page source the field values are read from changes.
+   /// typically happens when the page source from which the field values are read changes.
    void UpdateValue(RFieldToken token, ROOT::RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
    void UpdateValue(RFieldToken token, ROOT::RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
 
@@ -140,7 +139,7 @@ private:
       }
    }
 
-   /// This function has linear complexity, only use for more helpful error messages!
+   /// This function has linear complexity, only use it for more helpful error messages!
    const std::string &FindFieldName(RFieldToken token) const
    {
       for (const auto &[fieldName, index] : fFieldName2Token) {
