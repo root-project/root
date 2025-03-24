@@ -334,6 +334,9 @@ RBrowser::RBrowser(bool use_rcanvas)
          if (catched && (catched->fWindow == &win))
             catched->fWindow = nullptr;
       }
+
+      if (fWebWindow)
+         CheckWidgtesModified(0);
    });
 
    Show();
