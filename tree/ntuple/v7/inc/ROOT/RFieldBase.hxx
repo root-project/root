@@ -144,7 +144,7 @@ public:
       kTraitMappable = 0x04,
       /// The TClass checksum is set and valid
       kTraitTypeChecksum = 0x08,
-      /// This field is an instance of RInvalidField and can be safely static_cast to it
+      /// This field is an instance of RInvalidField and can be safely `static_cast` to it
       kTraitInvalidField = 0x10,
       /// This field is a user defined type that was missing dictionaries and was reconstructed from the on-disk
       /// information
@@ -191,7 +191,7 @@ public:
       RColumnRepresentations();
       RColumnRepresentations(const Selection_t &serializationTypes, const Selection_t &deserializationExtraTypes);
 
-      /// The first column list from fSerializationTypes is the default for writing.
+      /// The first column list from `fSerializationTypes` is the default for writing.
       const ColumnRepresentation_t &GetSerializationDefault() const { return fSerializationTypes[0]; }
       const Selection_t &GetSerializationTypes() const { return fSerializationTypes; }
       const Selection_t &GetDeserializationTypes() const { return fDeserializationTypes; }
@@ -278,15 +278,15 @@ protected:
    std::vector<std::unique_ptr<RFieldBase>> fSubfields;
    /// Subfields point to their mother field
    RFieldBase *fParent;
-   /// All fields that have columns have a distinct main column. E.g., for simple fields (float, int, ...), the
+   /// All fields that have columns have a distinct main column. E.g., for simple fields (`float`, `int`, ...), the
    /// principal column corresponds to the field type. For collection fields except fixed-sized arrays,
    /// the main column is the offset field.  Class fields have no column of their own.
    /// When reading, points to any column of the column team of the active representation. Usually, this is just
    /// the first column.
    /// When writing, points to the first column index of the currently active (not suppressed) column representation.
    ROOT::Internal::RColumn *fPrincipalColumn = nullptr;
-   /// Some fields have a second column in its column representation. In this case, fAuxiliaryColumn points into
-   /// fAvailableColumns to the column that immediately follows the column fPrincipalColumn points to.
+   /// Some fields have a second column in its column representation. In this case, `fAuxiliaryColumn` points into
+   /// `fAvailableColumns` to the column that immediately follows the column `fPrincipalColumn` points to.
    ROOT::Internal::RColumn *fAuxiliaryColumn = nullptr;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    /// Contains all columns of all representations in order of representation and column index.
@@ -379,9 +379,9 @@ protected:
    virtual void GenerateColumns() {}
    /// Implementations in derived classes should create the backing columns corresponsing to the field type for reading.
    /// The default implementation does not attach any columns to the field. The method should check, using the page
-   /// source and fOnDiskId, if the column types match and throw if they don't.
+   /// source and `fOnDiskId`, if the column types match and throw if they don't.
    virtual void GenerateColumns(const ROOT::RNTupleDescriptor & /*desc*/) {}
-   /// Returns the on-disk column types found in the provided descriptor for fOnDiskId and the given
+   /// Returns the on-disk column types found in the provided descriptor for `fOnDiskId` and the given
    /// representation index. If there are no columns for the given representation index, return an empty
    /// ColumnRepresentation_t list. Otherwise, the returned reference points into the static array returned by
    /// GetColumnRepresentations().
@@ -455,7 +455,7 @@ protected:
    /// See ReadBulk() for the return value.
    virtual std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec);
 
-   /// Returns the number of newly available values, that is the number of bools in bulkSpec.fMaskAvail that
+   /// Returns the number of newly available values, that is the number of bools in `bulkSpec.fMaskAvail` that
    /// flipped from false to true. As a special return value, kAllSet can be used if all values are read
    /// independent from the masks.
    std::size_t ReadBulk(const RBulkSpec &bulkSpec);
@@ -551,8 +551,8 @@ public:
    ///    auto ptr = field->CreateObject();
    ///    delete ptr.release();
    ///
-   /// Note that CreateObject<void> is supported. The returned unique_ptr has a custom deleter that reports an error
-   /// if it is called. The intended use of the returned unique_ptr<void> is to call release(). In this way, the
+   /// Note that CreateObject<void> is supported. The returned `unique_ptr` has a custom deleter that reports an error
+   /// if it is called. The intended use of the returned `unique_ptr<void>` is to call `release()`. In this way, the
    /// transfer of pointer ownership is explicit.
    template <typename T>
    std::unique_ptr<T, typename RCreateObjectDeleter<T>::deleter> CreateObject() const;
@@ -578,7 +578,7 @@ public:
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
    const std::string &GetFieldName() const { return fName; }
-   /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
+   /// Returns the field name and parent field names separated by dots (`grandparent.parent.child`)
    std::string GetQualifiedFieldName() const;
    const std::string &GetTypeName() const { return fType; }
    const std::string &GetTypeAlias() const { return fTypeAlias; }
@@ -597,7 +597,7 @@ public:
    ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(ROOT::DescriptorId_t id);
 
-   /// Returns the fColumnRepresentative pointee or, if unset (always the case for artificial fields), the field's
+   /// Returns the `fColumnRepresentative` pointee or, if unset (always the case for artificial fields), the field's
    /// default representative
    RColumnRepresentations::Selection_t GetColumnRepresentatives() const;
    /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
@@ -611,7 +611,7 @@ public:
    virtual std::uint32_t GetFieldVersion() const { return 0; }
    /// Indicates an evolution of the C++ type itself
    virtual std::uint32_t GetTypeVersion() const { return 0; }
-   /// Return the current TClass reported checksum of this class. Only valid if kTraitTypeChecksum is set.
+   /// Return the current TClass reported checksum of this class. Only valid if `kTraitTypeChecksum` is set.
    virtual std::uint32_t GetTypeChecksum() const { return 0; }
    /// Return the C++ type version stored in the field descriptor; only valid after a call to ConnectPageSource()
    std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
