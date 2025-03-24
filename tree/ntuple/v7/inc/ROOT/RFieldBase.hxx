@@ -139,7 +139,7 @@ public:
       kTraitTriviallyConstructible = 0x01,
       /// The type is cleaned up just by freeing its memory. I.e. the destructor performs a no-op.
       kTraitTriviallyDestructible = 0x02,
-      /// A field of a fundamental type that can be directly mapped via `RField<T>::Map()`, i.e. maps as-is to a single
+      /// A field of a fundamental type that can be directly mapped via RField<T>::Map(), i.e. maps as-is to a single
       /// column
       kTraitMappable = 0x04,
       /// The TClass checksum is set and valid
@@ -297,9 +297,9 @@ protected:
    std::string fTypeAlias;
    /// List of functions to be called after reading a value
    std::vector<ReadCallback_t> fReadCallbacks;
-   /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
+   /// C++ type version cached from the descriptor after a call to ConnectPageSource()
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
-   /// TClass checksum cached from the descriptor after a call to `ConnectPageSource()`. Only set
+   /// TClass checksum cached from the descriptor after a call to ConnectPageSource(). Only set
    /// for classes with dictionaries.
    std::uint32_t fOnDiskTypeChecksum = 0;
    /// Pointers into the static vector GetColumnRepresentations().GetSerializationTypes() when
@@ -489,10 +489,10 @@ protected:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by `ConnectPageSource()` before connecting; derived classes may override this as appropriate
+   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
    virtual void BeforeConnectPageSource(ROOT::Experimental::Internal::RPageSource &) {}
 
-   /// Called by `ConnectPageSource()` once connected; derived classes may override this as appropriate
+   /// Called by ConnectPageSource() once connected; derived classes may override this as appropriate
    virtual void AfterConnectPageSource() {}
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
@@ -552,7 +552,7 @@ public:
    ///    delete ptr.release();
    ///
    /// Note that CreateObject<void> is supported. The returned unique_ptr has a custom deleter that reports an error
-   /// if it is called. The intended use of the returned unique_ptr<void> is to call `release()`. In this way, the
+   /// if it is called. The intended use of the returned unique_ptr<void> is to call release(). In this way, the
    /// transfer of pointer ownership is explicit.
    template <typename T>
    std::unique_ptr<T, typename RCreateObjectDeleter<T>::deleter> CreateObject() const;
@@ -613,9 +613,9 @@ public:
    virtual std::uint32_t GetTypeVersion() const { return 0; }
    /// Return the current TClass reported checksum of this class. Only valid if kTraitTypeChecksum is set.
    virtual std::uint32_t GetTypeChecksum() const { return 0; }
-   /// Return the C++ type version stored in the field descriptor; only valid after a call to `ConnectPageSource()`
+   /// Return the C++ type version stored in the field descriptor; only valid after a call to ConnectPageSource()
    std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
-   /// Return checksum stored in the field descriptor; only valid after a call to `ConnectPageSource()`,
+   /// Return checksum stored in the field descriptor; only valid after a call to ConnectPageSource(),
    /// if the field stored a type checksum
    std::uint32_t GetOnDiskTypeChecksum() const { return fOnDiskTypeChecksum; }
 
