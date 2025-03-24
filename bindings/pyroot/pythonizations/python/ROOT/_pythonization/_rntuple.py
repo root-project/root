@@ -18,10 +18,7 @@ def _REntry_GetPtr(self, key):
 
 def _REntry_CallGetPtr(self, key):
     # key can be either a RFieldToken already or a string. In the latter case, get a token to use it twice.
-    if (
-        not hasattr(type(key), "__cpp_name__")
-        or type(key).__cpp_name__ != "ROOT::Experimental::REntry::RFieldToken"
-    ):
+    if not hasattr(type(key), "__cpp_name__") or type(key).__cpp_name__ != "ROOT::Experimental::REntry::RFieldToken":
         key = self.GetToken(key)
     fieldType = self.GetTypeName(key)
     return self._GetPtr[fieldType](key)
@@ -69,9 +66,7 @@ def _RNTupleModel_CreateEntry(self):
 
 
 def _RNTupleModel_GetDefaultEntry(self):
-    raise RuntimeError(
-        "default entries are not supported in Python, call CreateEntry on the reader or writer"
-    )
+    raise RuntimeError("default entries are not supported in Python, call CreateEntry on the reader or writer")
 
 
 class _RNTupleModel_MakeField(MethodTemplateWrapper):
@@ -96,10 +91,7 @@ def pythonize_RNTupleModel(klass):
 
 
 def _RNTupleReader_Open(maybe_model, *args):
-    if (
-        hasattr(type(maybe_model), "__cpp_name__")
-        and type(maybe_model).__cpp_name__ == "ROOT::RNTupleModel"
-    ):
+    if hasattr(type(maybe_model), "__cpp_name__") and type(maybe_model).__cpp_name__ == "ROOT::RNTupleModel":
         # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
         maybe_model = maybe_model.Clone()
     import ROOT
@@ -109,9 +101,7 @@ def _RNTupleReader_Open(maybe_model, *args):
 
 def _RNTupleReader_LoadEntry(self, *args):
     if len(args) < 2:
-        raise ValueError(
-            "default entries are not supported in Python, pass explicit entry"
-        )
+        raise ValueError("default entries are not supported in Python, pass explicit entry")
     return self._LoadEntry(*args)
 
 
@@ -133,10 +123,7 @@ def _RNTupleWriter_Append(model, *args):
 
 
 def _RNTupleWriter_Recreate(model_or_fields, *args):
-    if (
-        hasattr(type(model_or_fields), "__cpp_name__")
-        and type(model_or_fields).__cpp_name__ == "ROOT::RNTupleModel"
-    ):
+    if hasattr(type(model_or_fields), "__cpp_name__") and type(model_or_fields).__cpp_name__ == "ROOT::RNTupleModel":
         # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
         model_or_fields = model_or_fields.Clone()
     import ROOT
@@ -146,9 +133,7 @@ def _RNTupleWriter_Recreate(model_or_fields, *args):
 
 def _RNTupleWriter_Fill(self, *args):
     if len(args) < 1:
-        raise ValueError(
-            "default entries are not supported in Python, pass explicit entry"
-        )
+        raise ValueError("default entries are not supported in Python, pass explicit entry")
     return self._Fill(*args)
 
 
