@@ -387,7 +387,8 @@ class ObjectPainter extends BasePainter {
          pad_name = this.pad_name;
 
       let c = this.getCanvSvg();
-      if (!pad_name || c.empty()) return c;
+      if (!pad_name || c.empty())
+         return c;
 
       const cp = c.property('pad_painter');
       if (cp?.pads_cache && cp.pads_cache[pad_name])
@@ -395,7 +396,8 @@ class ObjectPainter extends BasePainter {
 
       c = c.select('.primitives_layer .__root_pad_' + pad_name);
       if (cp) {
-         if (!cp.pads_cache) cp.pads_cache = {};
+         if (!cp.pads_cache)
+            cp.pads_cache = {};
          cp.pads_cache[pad_name] = c.node();
       }
       return c;
@@ -1002,11 +1004,8 @@ class ObjectPainter extends BasePainter {
    /** @summary Analyze if all text draw operations are completed
      * @private */
    #checkAllTextDrawing(draw_g, resolveFunc, try_optimize) {
-      let all_args = draw_g.property('all_args'), missing = 0;
-      if (!all_args) {
-         console.log('Text drawing is finished - why calling #checkAllTextDrawing?????');
-         all_args = [];
-      }
+      const all_args = draw_g.property('all_args') || [];
+      let missing = 0;
 
       all_args.forEach(arg => { if (!arg.ready) missing++; });
 

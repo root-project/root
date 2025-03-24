@@ -106,7 +106,7 @@ class RObjectPainter extends ObjectPainter {
 
          if ((val[pos] === '-') || (val[pos] === '+')) {
             if (operand) {
-               console.log('Fail to parse RPadLength ' + value);
+               console.log(`Fail to parse RPadLength ${value}`);
                return dflt;
             }
             operand = (val[pos] === '-') ? -1 : 1;

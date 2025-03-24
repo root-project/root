@@ -442,7 +442,8 @@ class PolygonsCreator {
       this.reduce = reduce;
 
       if (this.multi) {
-         if (reduce !== 2) console.error('polygon not supported for not-reduced faces');
+         if (reduce !== 2)
+            console.error('polygon not supported for not-reduced faces');
 
          let polygon;
 
@@ -464,15 +465,12 @@ class PolygonsCreator {
          const first = this.mnormal ? polygon.vertices[0] : polygon.vertices.at(-1),
                next = this.mnormal ? this.v3 : this.v2;
 
-         if (next.diff(first) < 1e-12) {
-            // console.log(`polygon closed!!! nvertices = ${polygon.vertices.length}`);
+         if (next.diff(first) < 1e-12)
             this.multi = 0;
-         } else
-         if (this.mnormal)
+         else if (this.mnormal)
             polygon.vertices.push(this.v3);
           else
             polygon.vertices.unshift(this.v2);
-
 
          return;
       }
@@ -1247,7 +1245,6 @@ function createPolygonBuffer(shape, faces_limit) {
          }
       } else {
          // let three.js calculate our faces
-         // console.log(`triangulate polygon ${shape.fShapeId}`);
          cut_faces = THREE.ShapeUtils.triangulateShape(pnts, []);
       }
       numfaces += cut_faces.length*2;
@@ -3518,7 +3515,6 @@ class ClonedNodes {
          return result;
       }
 
-      // console.log(`Volume boundary ${currNode.vol}  cnt=${cnt}  faces=${facecnt}`);
       result.max = maxNode.vol;
       result.min = currNode.vol;
       result.sortidcut = currNode.sortid; // latest node is not included
@@ -3610,8 +3606,6 @@ class ClonedNodes {
                 camVol = 0;
 
              camFact = maxVol / ((camVol > 0) ? (camVol > 0) : minVol);
-
-             // console.log(`Limit for camera ${camVol}  faces in camera view ${arg.totalcam}`);
          }
       }
 

@@ -402,8 +402,6 @@ class RCanvasPainter extends RPadPainter {
          this._submreq[req.reqid] = req; // fast access to submitted requests
       }
 
-      // console.log('Sending request ', msg.slice(0,60));
-
       this.sendWebsocket('REQ:' + msg);
       return req;
    }
