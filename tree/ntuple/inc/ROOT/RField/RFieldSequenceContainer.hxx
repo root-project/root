@@ -186,7 +186,7 @@ public:
 /// Template specializations for C++ std::vector
 ////////////////////////////////////////////////////////////////////////////////
 
-/// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
+/// The generic field for a (nested) `std::vector<Type>` except for `std::vector<bool>`
 /// The field can be constructed as untyped collection through CreateUntyped().
 class RVectorField : public RFieldBase {
 private:
@@ -260,7 +260,7 @@ public:
    ~RField() final = default;
 };
 
-// std::vector<bool> is a template specialization and needs special treatment
+// `std::vector<bool>` is a template specialization and needs special treatment
 template <>
 class RField<std::vector<bool>> final : public RFieldBase {
 private:
@@ -317,7 +317,7 @@ public:
 \brief A field for fixed-size arrays that are represented as RVecs in memory.
 \ingroup NTuple
 This class is used only for reading. In particular, it helps exposing
-arbitrarily-nested std::array on-disk fields as RVecs for usage in RDataFrame.
+arbitrarily-nested `std::array` on-disk fields as RVecs for usage in RDataFrame.
 */
 class RArrayAsRVecField final : public RFieldBase {
 private:
@@ -341,7 +341,7 @@ protected:
 
 public:
    /**
-      Constructor of the field. The itemField argument represents the inner
+      Constructor of the field. The `itemField` argument represents the inner
       item of the on-disk array, i.e. for an `std::array<float>` it is the `float`
       field and not the `std::array` itself.
    */
