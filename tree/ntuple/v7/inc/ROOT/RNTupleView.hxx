@@ -46,15 +46,37 @@ ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, const RPag
 /**
 \class ROOT::Experimental::RNTupleViewBase
 \ingroup NTuple
-\brief An RNTupleView provides read-only access to a single field of the ntuple
+\brief An RNTupleView provides read-only access to a single field of an RNTuple
 
 \tparam T The type of the object that will be read by the view; can be void if unknown at compile time.
 
 The view owns a field and its underlying columns in order to fill an RField::RValue object with data. Data can be
 accessed by index. For top-level fields, the index refers to the entry number. Fields that are part of
-nested collections have global index numbers that are derived from their parent indexes.
+nested collections have global index numbers that are derived from their parent indexes (\see GetFieldRange()).
 
 View can only be created by a reader or by a collection view.
+
+**Example: read an RNTuple's field with a view**
+~~~ {.cpp}
+auto reader = RNTupleReader::Open("myNtuple", "myntuple.root");
+auto viewFoo = reader->GetView<float>("foo");
+for (auto idx : reader->GetEntryRange()) {
+   float foo = viewFoo(idx); // read field "foo" of the `idx`-th entry
+   std::cout << foo << "\n";
+}
+~~~
+
+**Example: read an RNTuple's collection subfield with a view**
+~~~ {.cpp}
+auto reader = RNTupleReader::Open("myNtuple", "myntuple.root");
+// Assuming "v" is a std::vector<int>:
+auto view = reader->GetView<int>("v._0");
+// Effectively flattens all fields "v" in all entries and reads their elements.
+for (auto idx : view.GetFieldRange()) {
+   int x = view(idx);
+   std::cout << x << "\n";
+}
+~~~
 */
 // clang-format on
 template <typename T>
@@ -109,6 +131,11 @@ public:
    ROOT::RFieldBase::RBulk CreateBulk() { return fField->CreateBulk(); }
 
    const ROOT::RFieldBase::RValue &GetValue() const { return fValue; }
+   /// Returns the global field range of this view.
+   /// This may differ from the RNTuple's entry range in case of subfields and can be used to iterate
+   /// over all the concatenated elements of the subfield without caring which entry they belong to.
+   /// Throws an RException if the underlying field of this view is empty, i.e. if it's a class or
+   /// record field with no associated columns.
    ROOT::RNTupleGlobalRange GetFieldRange() const
    {
       if (!fFieldRange.IsValid()) {
@@ -157,12 +184,15 @@ public:
    RNTupleView &operator=(RNTupleView &&other) = default;
    ~RNTupleView() = default;
 
+   /// Reads the value of this view for the entry with global index `globalIndex`.
    const T &operator()(ROOT::NTupleSize_t globalIndex)
    {
       RNTupleViewBase<T>::fValue.Read(globalIndex);
       return RNTupleViewBase<T>::fValue.template GetRef<T>();
    }
 
+   /// Reads the value of this view for the entry with local index `localIndex`.
+   /// See RNTupleLocalIndex for more details.
    const T &operator()(RNTupleLocalIndex localIndex)
    {
       RNTupleViewBase<T>::fValue.Read(localIndex);
@@ -205,7 +235,9 @@ public:
    RNTupleView &operator=(RNTupleView &&other) = default;
    ~RNTupleView() = default;
 
+   /// \see RNTupleView::operator()(ROOT::NTupleSize_t)
    void operator()(ROOT::NTupleSize_t globalIndex) { fValue.Read(globalIndex); }
+   /// \see RNTupleView::operator()(RNTupleLocalIndex)
    void operator()(RNTupleLocalIndex localIndex) { fValue.Read(localIndex); }
 };
 
@@ -252,9 +284,12 @@ public:
    ~RNTupleDirectAccessView() = default;
 
    const ROOT::RFieldBase &GetField() const { return fField; }
+   /// \see RNTupleView::GetFieldRange()
    ROOT::RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
 
+   /// \see RNTupleView::operator()(ROOT::NTupleSize_t)
    const T &operator()(ROOT::NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   /// \see RNTupleView::operator()(RNTupleLocalIndex)
    const T &operator()(RNTupleLocalIndex localIndex) { return *fField.Map(localIndex); }
 };
 
@@ -355,12 +390,14 @@ public:
       return RNTupleCollectionView::Create(GetFieldId(fieldName), fSource);
    }
 
+   /// \see RNTupleView::operator()(ROOT::NTupleSize_t)
    std::uint64_t operator()(ROOT::NTupleSize_t globalIndex)
    {
       fValue.Read(globalIndex);
       return fValue.GetRef<std::uint64_t>();
    }
 
+   /// \see RNTupleView::operator()(RNTupleLocalIndex)
    std::uint64_t operator()(RNTupleLocalIndex localIndex)
    {
       fValue.Read(localIndex);
