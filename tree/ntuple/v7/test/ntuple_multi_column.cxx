@@ -101,7 +101,7 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
                                                    "  Compression rate: .*\n"
                                                    "  Header size:      .* B\n"
                                                    "  Footer size:      .* B\n"
-                                                   "  Meta-data / data: .*\n"
+                                                   "  Metadata / data:  .*\n"
                                                    "------------------------------------------------------------\n"
                                                    "CLUSTER DETAILS\n"
                                                    "------------------------------------------------------------\n"

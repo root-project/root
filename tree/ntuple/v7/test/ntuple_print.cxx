@@ -47,7 +47,7 @@ TEST(RNtuplePrint, FullString)
        "  Compression rate: 1.00\n"
        "  Header size:      .* B\n"
        "  Footer size:      .* B\n"
-       "  Meta-data / data: .*\n"
+       "  Metadata / data:  .*\n"
        "------------------------------------------------------------\n"
        "CLUSTER DETAILS\n"
        "------------------------------------------------------------\n"
