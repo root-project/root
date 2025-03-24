@@ -98,7 +98,7 @@ class RFieldBase {
    using ReadCallback_t = std::function<void(void *)>;
 
 protected:
-   /// A functor to release the memory acquired by CreateValue (memory and constructor).
+   /// A functor to release the memory acquired by CreateValue() (memory and constructor).
    /// This implementation works for types with a trivial destructor. More complex fields implement a derived deleter.
    /// The deleter is operational without the field object and thus can be used to destruct/release a value after
    /// the field has been destructed.
@@ -199,7 +199,7 @@ public:
    private:
       Selection_t fSerializationTypes;
       /// The union of the serialization types and the deserialization extra types passed during construction.
-      /// Duplicates the serialization types list but the benefit is that GetDeserializationTypes does not need to
+      /// Duplicates the serialization types list but the benefit is that GetDeserializationTypes() does not need to
       /// compile the list.
       Selection_t fDeserializationTypes;
    }; // class RColumnRepresentations
@@ -250,7 +250,7 @@ private:
 
    /// Flushes data from active columns
    void FlushColumns();
-   /// Flushes data from active columns to disk and calls CommitClusterImpl
+   /// Flushes data from active columns to disk and calls CommitClusterImpl()
    void CommitCluster();
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
@@ -400,7 +400,7 @@ protected:
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' CreateValue().
    virtual void ConstructValue(void *where) const = 0;
    virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(); }
-   /// Allow derived classes to call ConstructValue(void *) and GetDeleter on other (sub)fields.
+   /// Allow derived classes to call ConstructValue(void *) and GetDeleter() on other (sub)fields.
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
 
@@ -456,17 +456,17 @@ protected:
    virtual std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec);
 
    /// Returns the number of newly available values, that is the number of bools in `bulkSpec.fMaskAvail` that
-   /// flipped from false to true. As a special return value, kAllSet can be used if all values are read
+   /// flipped from false to true. As a special return value, `kAllSet` can be used if all values are read
    /// independent from the masks.
    std::size_t ReadBulk(const RBulkSpec &bulkSpec);
 
-   /// Allow derived classes to call Append and Read on other (sub)fields.
+   /// Allow derived classes to call Append() and Read() on other (sub)fields.
    static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
    static void CallReadOn(RFieldBase &other, RNTupleLocalIndex localIndex, void *to) { other.Read(localIndex, to); }
    static void CallReadOn(RFieldBase &other, ROOT::NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
    static void *CallCreateObjectRawPtrOn(RFieldBase &other) { return other.CreateObjectRawPtr(); }
 
-   /// Fields may need direct access to the principal column of their subfields, e.g. in RRVecField::ReadBulk
+   /// Fields may need direct access to the principal column of their subfields, e.g. in RRVecField::ReadBulk()
    static ROOT::Internal::RColumn *GetPrincipalColumnOf(const RFieldBase &other) { return other.fPrincipalColumn; }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
@@ -508,7 +508,7 @@ public:
    using RSchemaIterator = RSchemaIteratorTemplate<false>;
    using RConstSchemaIterator = RSchemaIteratorTemplate<true>;
 
-   // This is used in CreateObject and is specialized for void
+   // This is used in CreateObject() and is specialized for void
    template <typename T>
    struct RCreateObjectDeleter {
       using deleter = std::default_delete<T>;
@@ -551,7 +551,7 @@ public:
    ///    auto ptr = field->CreateObject();
    ///    delete ptr.release();
    ///
-   /// Note that CreateObject<void> is supported. The returned `unique_ptr` has a custom deleter that reports an error
+   /// Note that CreateObject<void>() is supported. The returned `unique_ptr` has a custom deleter that reports an error
    /// if it is called. The intended use of the returned `unique_ptr<void>` is to call `release()`. In this way, the
    /// transfer of pointer ownership is explicit.
    template <typename T>
@@ -601,7 +601,7 @@ public:
    /// default representative
    RColumnRepresentations::Selection_t GetColumnRepresentatives() const;
    /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
-   /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
+   /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations(),
    /// an exception is thrown
    void SetColumnRepresentatives(const RColumnRepresentations::Selection_t &representatives);
    /// Whether or not an explicit column representative was set
