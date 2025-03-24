@@ -367,7 +367,7 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
          stagingItem.fField->SetOnDiskId(memberFieldDesc.GetId());
 
          stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
-         // Since we successfully looked up the source member in the RNTuple on-disk meta-data, we expect it
+         // Since we successfully looked up the source member in the RNTuple on-disk metadata, we expect it
          // to be present in the TClass instance, too.
          R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
          stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->GetValueSize());

@@ -752,7 +752,7 @@ Note that the page size stored in the locator does _not_ include the checksum.
 Note that we do not need to store the uncompressed size of the page
 because the uncompressed size is given by the number of elements in the page and the element size.
 We do need, however, the per-column and per-cluster element offset in order to read a certain entry range
-without inspecting the meta-data of all the previous clusters.
+without inspecting the metadata of all the previous clusters.
 
 The hierarchical structure of the frames in the page list envelope is as follows:
 
@@ -890,7 +890,7 @@ Implementations should also be able to parse the shorter alias `ROOT::Vec<T>`.
 
 Fixed-sized arrays are stored as two fields:
   - A repetitive field of type `std::array<T, N>` with no attached columns.
-    The array size `N` is stored in the field meta-data.
+    The array size `N` is stored in the field metadata.
   - Child field of type `T` named `_0`, which must be a type with RNTuple I/O support.
 
 Note that T can itself be an array type, which implies support for multidimensional C-style arrays.
@@ -922,7 +922,7 @@ The child fields are named `_0`, `_1`, ...
 #### std::bitset\<N\>
 
 A bitset is stored as a repetitive leaf field with an attached `Bit` column.
-The bitset size `N` is stored as repetition parameter in the field meta-data.
+The bitset size `N` is stored as repetition parameter in the field metadata.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
 
 #### std::unique_ptr\<T\>, std::optional\<T\>
@@ -1047,13 +1047,13 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 | Maximum number of column types                 | 64k                          | 16bit for column type                                  |
 | Maximum envelope size                          | 2^48B (~280TB)               | Envelope header encoding                               |
 | Maximum frame size                             | 2^62B, 4B items (list frame) | Frame preamble encoding                                |
-| Maximum field / type version                   | 4B                           | Field meta-data encoding                               |
+| Maximum field / type version                   | 4B                           | Field metadata encoding                                |
 | Maximum number of fields, columns              | 4B (foreseen: <10M)          | 32bit column / field IDs, list frame limit             |
 | Maximum number of cluster groups               | 4B (foreseen: <10k)          | List frame limits                                      |
 | Maximum number of clusters per group           | 4B (foreseen: <10k)          | List frame limits, cluster group summary encoding      |
 | Maximum number of pages per cluster per column | 4B                           | List frame limits                                      |
 | Maximum number of entries per cluster          | 2^56                         | Cluster summary encoding                               |
-| Maximum string length (meta-data)              | 4GB                          | String encoding                                        |
+| Maximum string length (metadata)               | 4GB                          | String encoding                                        |
 | Maximum RBlob size                             | 128 PiB                      | 1GiB / 8B * 1GiB (with maxKeySize=1GiB, offsetSize=8B) |
 
 ## Naming specification
@@ -1100,7 +1100,7 @@ Some column types allow setting the bit lengths within specific limits (e.g. for
 
 ### Envelope
 
-An envelope is a data block with RNTuple meta-data, such as the header and the footer.
+An envelope is a data block with RNTuple metadata, such as the header and the footer.
 
 ### Field
 
