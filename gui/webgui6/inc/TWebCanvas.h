@@ -89,6 +89,7 @@ protected:
 
    Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
+   Long64_t fLastDrawVersion{0};   ///<! last draw version
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
    std::vector<TPad *> fAllPads;   ///<! list of all pads recognized during streaming
    std::map<TObject *,bool> fUsedObjs; ///<! map of used objects during streaming
