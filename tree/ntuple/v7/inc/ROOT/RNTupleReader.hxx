@@ -41,7 +41,7 @@ namespace Experimental {
 
 /// Listing of the different options that can be printed by RNTupleReader::GetInfo()
 enum class ENTupleInfo {
-   kSummary,        // The ntuple name, description, number of entries
+   kSummary,        // The RNTuple name, description, number of entries
    kStorageDetails, // size on storage, page sizes, compression factor, etc.
    kMetrics,        // internals performance counters, requires that EnableMetrics() was called
 };
@@ -50,11 +50,12 @@ enum class ENTupleInfo {
 /**
 \class ROOT::Experimental::RNTupleReader
 \ingroup NTuple
-\brief An RNTuple that is used to read data from storage
+\brief Reads RNTuple data from storage
 
-An input ntuple provides data from storage as C++ objects. The ntuple model can be created from the data on storage
-or it can be imposed by the user. The latter case allows users to read into a specialized ntuple model that covers
-only a subset of the fields in the ntuple. The ntuple model is used when reading complete entries.
+The RNTupleReader provides access to data stored in the RNTuple binary format as C++ objects, using an RNTupleModel. 
+It infers this model from the RNTuple's on-disk metadata, or uses a model imposed by the user.
+The latter case allows users to read into a specialized RNTuple model that covers
+only a subset of the fields in the RNTuple. The RNTuple model is used when reading complete entries through LoadEntry().
 Individual fields can be read as well by instantiating a tree view.
 
 ~~~ {.cpp}
@@ -63,37 +64,37 @@ using ROOT::Experimental::RNTupleReader;
 
 #include <iostream>
 
-auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
-std::cout << "myNTuple has " << ntuple->GetNEntries() << " entries\n";
+auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 ~~~
 */
 // clang-format on
 class RNTupleReader {
 private:
-   /// Set as the page source's scheduler for parallel page decompression if IMT is on
-   /// Needs to be destructed after the pages source is destructed (an thus be declared before)
+   /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
+   /// Needs to be destructed after the page source is destructed (and thus be declared before)
    std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
 
    std::unique_ptr<Internal::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<RNTupleModel> fModel;
-   /// We use a dedicated on-demand reader for Show() and Scan(). Printing data uses all the fields
+   /// We use a dedicated on-demand reader for Show(). Printing data uses all the fields
    /// from the full model even if the analysis code uses only a subset of fields. The display reader
    /// is a clone of the original reader.
    std::unique_ptr<RNTupleReader> fDisplayReader;
-   /// The ntuple descriptor in the page source is protected by a read-write lock. We don't expose that to the
+   /// The RNTuple descriptor in the page source is protected by a read-write lock. We don't expose that to the
    /// users of RNTupleReader::GetDescriptor().  Instead, if descriptor information is needed, we clone the
    /// descriptor.  Using the descriptor's generation number, we know if the cached descriptor is stale.
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
    std::optional<ROOT::RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
-   /// If not nullopt, these will used when creating the model
+   /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
 
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
-   /// The model is generated from the ntuple metadata on storage.
+   /// The model is generated from the RNTuple metadata on storage.
    explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
 
    void ConnectModel(RNTupleModel &model);
@@ -148,8 +149,8 @@ public:
    ///
    /// #include <iostream>
    ///
-   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
-   /// std::cout << "myNTuple has " << ntuple->GetNEntries() << " entries\n";
+   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
    /// ~~~
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage,
                                               const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
@@ -183,10 +184,10 @@ public:
    std::unique_ptr<REntry> CreateEntry();
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call
-   /// to LoadEntry or to any of the views returned from the reader.
+   /// to LoadEntry() or to any of the views returned from the reader.
    const ROOT::RNTupleDescriptor &GetDescriptor();
 
-   /// Prints a detailed summary of the ntuple, including a list of fields.
+   /// Prints a detailed summary of the RNTuple, including a list of fields.
    ///
    /// **Example: print summary information to stdout**
    /// ~~~ {.cpp}
@@ -196,10 +197,10 @@ public:
    ///
    /// #include <iostream>
    ///
-   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
-   /// ntuple->PrintInfo();
+   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// reader->PrintInfo();
    /// // or, equivalently:
-   /// ntuple->PrintInfo(ENTupleInfo::kSummary, std::cout);
+   /// reader->PrintInfo(ENTupleInfo::kSummary, std::cout);
    /// ~~~
    /// **Example: print detailed column storage data to stderr**
    /// ~~~ {.cpp}
@@ -209,8 +210,8 @@ public:
    ///
    /// #include <iostream>
    ///
-   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
-   /// ntuple->PrintInfo(ENTupleInfo::kStorageDetails, std::cerr);
+   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// reader->PrintInfo(ENTupleInfo::kStorageDetails, std::cerr);
    /// ~~~
    ///
    /// For use of ENTupleInfo::kMetrics, see #EnableMetrics.
@@ -221,8 +222,8 @@ public:
    /// Uses the visitor pattern to traverse through each field of the given entry.
    void Show(ROOT::NTupleSize_t index, std::ostream &output = std::cout);
 
-   /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
-   /// On I/O errors, raises an exception.
+   /// Fills the default entry of the model.
+   /// Raises an exception when `index` is greater than the number of entries present in the RNTuple
    void LoadEntry(ROOT::NTupleSize_t index)
    {
       // TODO(jblomer): can be templated depending on the factory method / constructor
@@ -233,7 +234,7 @@ public:
       }
       LoadEntry(index, fModel->GetDefaultEntry());
    }
-   /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
+   /// Fills a user provided entry after checking that the entry has been instantiated from the RNTuple model
    void LoadEntry(ROOT::NTupleSize_t index, REntry &entry)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
@@ -252,16 +253,17 @@ public:
    ///
    /// #include <iostream>
    ///
-   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
    /// for (auto i : ntuple->GetEntryRange()) {
-   ///    ntuple->Show(i);
+   ///    reader->Show(i);
    /// }
    /// ~~~
    ROOT::RNTupleGlobalRange GetEntryRange() { return ROOT::RNTupleGlobalRange(0, GetNEntries()); }
 
-   /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
-   /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
-   /// field of a collection itself, like GetView<ROOT::NTupleSize_t>("particle").
+   /// Provides access to an individual (sub)field,
+   /// e.g. `GetView<Particle>("particle")`, `GetView<double>("particle.pt")` or `GetView<std::vector<Particle>>("particles")`.
+   /// It is possible to directly get the size of a collection (without reading the collection itself)
+   /// using RNTupleCardinality: `GetView<ROOT::RNTupleCardinality<std::uint64_t>>("particles")`.
    ///
    /// Raises an exception if there is no field with the given name.
    ///
@@ -272,10 +274,10 @@ public:
    ///
    /// #include <iostream>
    ///
-   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
-   /// auto pt = ntuple->GetView<float>("pt");
+   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto pt = reader->GetView<float>("pt");
    ///
-   /// for (auto i : ntuple->GetEntryRange()) {
+   /// for (auto i : reader->GetEntryRange()) {
    ///    std::cout << i << ": " << pt(i) << "\n";
    /// }
    /// ~~~
@@ -368,12 +370,12 @@ public:
    ///
    /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
    /// // metrics must be turned on beforehand
-   /// ntuple->EnableMetrics();
+   /// reader->EnableMetrics();
    ///
    /// for (auto i : ntuple->GetEntryRange()) {
-   ///    ntuple->LoadEntry(i);
+   ///    reader->LoadEntry(i);
    /// }
-   /// ntuple->PrintInfo(ENTupleInfo::kMetrics);
+   /// reader->PrintInfo(ENTupleInfo::kMetrics);
    /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
