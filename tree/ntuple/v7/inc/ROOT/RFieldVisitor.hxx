@@ -34,8 +34,27 @@ namespace Detail {
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
 
-RFieldVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor(). VisitField() is inherited for instance
-by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit from it will be visited.
+RFieldVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor().
+
+**Example: creating a custom field visitor**
+~~~ {.cpp}
+// 1. Define your visitor:
+class MyVisitor : public RFieldVisitor {
+public:
+   // This is the only method you need to define. The others will default to calling this.
+   // Only implement other methods if you need special logic for a specific field type.
+   void VisitField(const ROOT::RFieldBase &field) final {
+      // ... do custom logic here ...
+   }
+};
+
+// 2. Use it:
+const auto &field = reader->GetModel().GetConstFieldZero();
+MyVisitor visitor;
+visitor.VisitField(field);
+~~~
+
+As an example of a concrete use case, see Internal::RPrintSchemaVisitor.
 */
 // clang-format on
 class RFieldVisitor {
@@ -85,7 +104,7 @@ namespace Internal {
 \ingroup NTuple
 \brief Visitor used for a pre-processing run to collect information needed by another visitor class.
 
- Currently used for RPrintSchemaVisitor in RNTupleReader::Print() to collect information about levels, max depth etc.
+ Currently used for RPrintSchemaVisitor in RNTupleReader::PrintInfo() to collect information about levels, max depth etc.
 */
 // clang-format on
 class RPrepareVisitor : public Detail::RFieldVisitor {
@@ -108,7 +127,7 @@ public:
 \ingroup NTuple
 \brief Contains settings for printing and prints a summary of an RField instance.
 
-This visitor is used by RNTupleReader::Print()
+This visitor is used by RNTupleReader::PrintInfo()
 */
 // clang-format on
 class RPrintSchemaVisitor : public Detail::RFieldVisitor {
