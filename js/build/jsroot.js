@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '21/03/2025',
+version_date = '24/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -12623,7 +12623,8 @@ class ObjectPainter extends BasePainter {
          pad_name = this.pad_name;
 
       let c = this.getCanvSvg();
-      if (!pad_name || c.empty()) return c;
+      if (!pad_name || c.empty())
+         return c;
 
       const cp = c.property('pad_painter');
       if (cp?.pads_cache && cp.pads_cache[pad_name])
@@ -12631,7 +12632,8 @@ class ObjectPainter extends BasePainter {
 
       c = c.select('.primitives_layer .__root_pad_' + pad_name);
       if (cp) {
-         if (!cp.pads_cache) cp.pads_cache = {};
+         if (!cp.pads_cache)
+            cp.pads_cache = {};
          cp.pads_cache[pad_name] = c.node();
       }
       return c;
@@ -13238,11 +13240,8 @@ class ObjectPainter extends BasePainter {
    /** @summary Analyze if all text draw operations are completed
      * @private */
    #checkAllTextDrawing(draw_g, resolveFunc, try_optimize) {
-      let all_args = draw_g.property('all_args'), missing = 0;
-      if (!all_args) {
-         console.log('Text drawing is finished - why calling #checkAllTextDrawing?????');
-         all_args = [];
-      }
+      const all_args = draw_g.property('all_args') || [];
+      let missing = 0;
 
       all_args.forEach(arg => { if (!arg.ready) missing++; });
 
@@ -77983,7 +77982,8 @@ class TPadPainter extends ObjectPainter {
 
       delete this.main_painter_ref;
       delete this.frame_painter_ref;
-      delete this.pads_cache;
+      const cp = this.iscan || !this.has_canvas ? this : this.getCanvPainter();
+      if (cp) delete cp.pads_cache;
       this.#pad_x = this.#pad_y = this.#pad_width = this.#pad_height = undefined;
       this.#doing_draw = undefined;
       delete this._interactively_changed;
@@ -78077,22 +78077,15 @@ class TPadPainter extends ObjectPainter {
       if (!isFunc(selector))
          return false;
 
-      let pad_cleanup = false, is_any = false;
+      let is_any = false;
 
       for (let k = this.painters.length - 1; k >= 0; --k) {
          const subp = this.painters[k];
          if (selector(subp)) {
-            if (isPadPainter(subp))
-               pad_cleanup = true;
             subp.cleanup();
             this.painters.splice(k, 1);
             is_any = true;
          }
-      }
-
-      if (pad_cleanup) {
-         const cp = this.getCanvPainter();
-         if (cp) delete cp.pads_cache;
       }
 
       return is_any;
@@ -79491,7 +79484,7 @@ class TPadPainter extends ObjectPainter {
       if (!lst || (indx >= lst.length))
          return this;
 
-      const snap = lst[indx];
+      const snap = lst[indx], is_subpad = (snap.fKind === webSnapIds.kSubPad);
 
       // gStyle object
       if (snap.fKind === webSnapIds.kStyle) {
@@ -79506,36 +79499,31 @@ class TPadPainter extends ObjectPainter {
       }
 
       // try to locate existing object painter, only allowed when redrawing pad snap
-      let objpainter = null;
-      if ((pindx !== undefined) && (pindx < this.painters.length)) {
-         while ((pindx < this.painters.length) && (!this.painters[pindx].snapid || this.painters[pindx].isSecondary()))
-            pindx++;
+      let objpainter, promise;
 
-         const subp = pindx < this.painters.length ? this.painters[pindx++] : null;
-         if (subp && (subp.snapid === snap.fObjectID))
+      while ((pindx !== undefined) && (pindx < this.painters.length)) {
+         const subp = this.painters[pindx++];
+         if (subp.snapid === snap.fObjectID) {
             objpainter = subp;
-         else
-            console.warn(`Mismatch in snapid between painter ${subp?.snapid} and primitive ${snap.fObjectID} kind ${snap.fKind}`);
+            break;
+         } else if (subp.snapid && !subp.isSecondary() && !is_subpad) {
+            console.warn(`Mismatch in snapid between painter ${subp?.snapid} secondary: ${subp?.isSecondary()} type: ${subp?.getClassName()} and primitive ${snap.fObjectID} kind ${snap.fKind} type ${snap.fSnapshot?._typename}`);
+            break;
+         }
       }
 
       if (objpainter) {
-         if (snap.fKind === webSnapIds.kSubPad) // sub-pad
-            return objpainter.redrawPadSnap(snap).then(() => this.drawNextSnap(lst, pindx, indx));
-
-         let promise;
-
-         if (snap.fKind === webSnapIds.kObject) { // object itself
+         // painter exists - try to update drawing
+         if (is_subpad)
+            promise = objpainter.redrawPadSnap(snap);
+         else if (snap.fKind === webSnapIds.kObject) { // object itself
             if (objpainter.updateObject(snap.fSnapshot, snap.fOption, true))
                promise = objpainter.redraw();
          } else if (snap.fKind === webSnapIds.kSVG) { // update SVG
             if (objpainter.updateObject(snap.fSnapshot))
                promise = objpainter.redraw();
          }
-
-         return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
-      }
-
-      if (snap.fKind === webSnapIds.kSubPad) { // sub-pad
+      } else if (is_subpad) {
          const subpad = snap.fSnapshot;
 
          subpad.fPrimitives = null; // clear primitives, they just because of I/O
@@ -79560,21 +79548,13 @@ class TPadPainter extends ObjectPainter {
             padpainter.addPadButtons(true);
 
          // we select current pad, where all drawing is performed
-         return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
-            padpainter.addPadInteractive();
-            return this.drawNextSnap(lst, pindx, indx); // call next
-         });
+         promise = padpainter.drawNextSnap(snap.fPrimitives).then(() => padpainter.addPadInteractive());
+      } else if (((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG)) && (snap.fOption !== '__ignore_drawing__')) {
+         // here the case of normal drawing
+         promise = this.drawObject(this, snap.fSnapshot, snap.fOption).then(objp => this.addObjectPainter(objp, lst, indx));
       }
 
-      // here the case of normal drawing, will be handled in promise
-      if (((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG)) && (snap.fOption !== '__ignore_drawing__')) {
-         return this.drawObject(this, snap.fSnapshot, snap.fOption).then(objpainter2 => {
-            this.addObjectPainter(objpainter2, lst, indx);
-            return this.drawNextSnap(lst, pindx, indx);
-         });
-      }
-
-      return this.drawNextSnap(lst, pindx, indx);
+      return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
    }
 
    /** @summary Return painter with specified id
@@ -79732,8 +79712,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       if (missmatch) {
-         delete this.pads_cache;
-
+         delete this.pads_cache; // invalidate pads cache
          const old_painters = this.painters;
          this.painters = [];
          old_painters.forEach(objp => objp.cleanup());
@@ -82580,7 +82559,6 @@ class TPavePainter extends ObjectPainter {
          else
             opt = opt.slice(0, parc) + opt.slice(parc + 3);
          this.setPaveDrawOption(opt);
-         console.log('Exec', `exec:${set_opt}("${opt}")`);
          this.interactiveRedraw(true, `exec:${set_opt}("${opt}")`);
       }, 'Usage of ARC draw option');
       menu.addSizeMenu('radius', 0, 0.2, 0.02, pave.fCornerRadius, val => {
@@ -97111,7 +97089,8 @@ class PolygonsCreator {
       this.reduce = reduce;
 
       if (this.multi) {
-         if (reduce !== 2) console.error('polygon not supported for not-reduced faces');
+         if (reduce !== 2)
+            console.error('polygon not supported for not-reduced faces');
 
          let polygon;
 
@@ -97133,15 +97112,12 @@ class PolygonsCreator {
          const first = this.mnormal ? polygon.vertices[0] : polygon.vertices.at(-1),
                next = this.mnormal ? this.v3 : this.v2;
 
-         if (next.diff(first) < 1e-12) {
-            // console.log(`polygon closed!!! nvertices = ${polygon.vertices.length}`);
+         if (next.diff(first) < 1e-12)
             this.multi = 0;
-         } else
-         if (this.mnormal)
+         else if (this.mnormal)
             polygon.vertices.push(this.v3);
           else
             polygon.vertices.unshift(this.v2);
-
 
          return;
       }
@@ -97916,7 +97892,6 @@ function createPolygonBuffer(shape, faces_limit) {
          }
       } else {
          // let three.js calculate our faces
-         // console.log(`triangulate polygon ${shape.fShapeId}`);
          cut_faces = THREE.ShapeUtils.triangulateShape(pnts, []);
       }
       numfaces += cut_faces.length*2;
@@ -100172,7 +100147,6 @@ class ClonedNodes {
          return result;
       }
 
-      // console.log(`Volume boundary ${currNode.vol}  cnt=${cnt}  faces=${facecnt}`);
       result.max = maxNode.vol;
       result.min = currNode.vol;
       result.sortidcut = currNode.sortid; // latest node is not included
@@ -100264,8 +100238,6 @@ class ClonedNodes {
                 camVol = 0;
 
              camFact = maxVol / ((camVol > 0) ? (camVol > 0) : minVol);
-
-             // console.log(`Limit for camera ${camVol}  faces in camera view ${arg.totalcam}`);
          }
       }
 
@@ -166353,9 +166325,9 @@ class TASImagePainter extends ObjectPainter {
       if (d.check('CONST')) {
          this.options.constRatio = true;
          if (obj) obj.fConstRatio = true;
-         console.log('use const');
       }
-      if (d.check('Z')) this.options.Zscale = true;
+      if (d.check('Z'))
+         this.options.Zscale = true;
    }
 
    /** @summary Create RGBA buffers */
@@ -166869,7 +166841,7 @@ class RObjectPainter extends ObjectPainter {
 
          if ((val[pos] === '-') || (val[pos] === '+')) {
             if (operand) {
-               console.log('Fail to parse RPadLength ' + value);
+               console.log(`Fail to parse RPadLength ${value}`);
                return dflt;
             }
             operand = (val[pos] === '-') ? -1 : 1;
@@ -169494,9 +169466,11 @@ class RPadPainter extends RObjectPainter {
          if (!this.iscan) svg_p.remove();
       }
 
+      const cp = this.iscan || !this.has_canvas ? this : this.getCanvPainter();
+      if (cp) delete cp.pads_cache;
+
       delete this.main_painter_ref;
       delete this.frame_painter_ref;
-      delete this.pads_cache;
       this.#pad_x = this.#pad_y = this.#pad_width = this.#pad_height = undefined;
       this.#doing_draw = undefined;
       delete this._dfltRFont;
@@ -169573,14 +169547,20 @@ class RPadPainter extends RObjectPainter {
          selector = () => true;
 
       if (!isFunc(selector))
-         return;
+         return false;
+
+      let is_any = false;
 
       for (let k = this.painters.length - 1; k >= 0; --k) {
-         if (selector(this.painters[k])) {
-            this.painters[k].cleanup();
+         const subp = this.painters[k];
+         if (selector(subp)) {
+            subp.cleanup();
             this.painters.splice(k, 1);
+            is_any = true;
          }
       }
+
+      return is_any;
    }
 
    /** @summary Divide pad on sub-pads */
@@ -170446,7 +170426,7 @@ class RPadPainter extends RObjectPainter {
          return this;
       }
 
-      const snap = lst[indx];
+      const snap = lst[indx], is_subpad = snap._typename === `${nsREX}RPadDisplayItem`;
 
       // empty object, no need to do something, take next
       if (snap.fDummy)
@@ -170495,35 +170475,26 @@ class RPadPainter extends RObjectPainter {
       }
 
       // try to locate existing object painter, only allowed when redrawing pad snap
-      let objpainter = null;
-      if ((pindx !== undefined) && (pindx < this.painters.length)) {
-         while ((pindx < this.painters.length) && (!this.painters[pindx].snapid || this.painters[pindx].isSecondary()))
-            pindx++;
-         const subp = pindx < this.painters.length ? this.painters[pindx++] : null;
-         if (subp && (subp.snapid === snap.fObjectID))
+      let objpainter, promise;
+
+      while ((pindx !== undefined) && (pindx < this.painters.length)) {
+         const subp = this.painters[pindx++];
+
+         if (subp.snapid === snap.fObjectID) {
             objpainter = subp;
-         else
-            console.warn(`Mismatch in snapid between painter ${subp?.snapid} and primitive ${snap.fObjectID}`);
+            break;
+         } else if (subp.snapid && !subp.isSecondary() && !is_subpad) {
+            console.warn(`Mismatch in snapid between painter ${subp?.snapid} secondary: ${subp?.isSecondary()} type: ${subp?.getClassName()} and primitive ${snap.fObjectID} kind ${snap.fKind} type ${snap.fDrawable?._typename}`);
+            break;
+         }
       }
 
       if (objpainter) {
-         if (snap._typename === `${nsREX}RPadDisplayItem`) {
-            // sub-pad
-            return objpainter.redrawPadSnap(snap).then(ppainter => {
-               this.addObjectPainter(ppainter, lst, indx);
-               return this.drawNextSnap(lst, pindx, indx);
-            });
-         }
-
-         let promise;
-
-         if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || '', true))
+         if (is_subpad)
+            promise = objpainter.redrawPadSnap(snap);
+         else if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || '', true))
             promise = objpainter.redraw();
-
-         return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
-      }
-
-      if (snap._typename === `${nsREX}RPadDisplayItem`) { // sub-pad
+      } else if (is_subpad) {
          const subpad = snap, // not sub-pad, but just attributes
                padpainter = new RPadPainter(this, subpad, false);
          padpainter.decodeOptions('');
@@ -170536,20 +170507,16 @@ class RPadPainter extends RObjectPainter {
          if (snap.fPrimitives?.length)
             padpainter.addPadButtons();
 
-         return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
-            padpainter.addPadInteractive();
-            return this.drawNextSnap(lst, pindx, indx);
-         });
+         promise = padpainter.drawNextSnap(snap.fPrimitives).then(() => padpainter.addPadInteractive());
+      } else {
+         // will be used in addToPadPrimitives to assign style to sub-painters
+         this.next_rstyle = snap.fStyle || this.rstyle;
+
+         // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
+         promise = this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '')
+                       .then(objp => this.addObjectPainter(objp, lst, indx));
       }
-
-      // will be used in addToPadPrimitives to assign style to sub-painters
-      this.next_rstyle = snap.fStyle || this.rstyle;
-
-      // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
-      return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objp => {
-         this.addObjectPainter(objp, lst, indx);
-         return this.drawNextSnap(lst, pindx, indx);
-      });
+      return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
    }
 
    /** @summary Search painter with specified snapid, also sub-pads are checked
@@ -170630,7 +170597,6 @@ class RPadPainter extends RObjectPainter {
          this.createCanvasSvg(2);
        else
          this.createPadSvg(true);
-
 
       let missmatch = false, i = 0, k = 0;
 
@@ -171499,8 +171465,6 @@ class RCanvasPainter extends RPadPainter {
          if (!this._submreq) this._submreq = {};
          this._submreq[req.reqid] = req; // fast access to submitted requests
       }
-
-      // console.log('Sending request ', msg.slice(0,60));
 
       this.sendWebsocket('REQ:' + msg);
       return req;

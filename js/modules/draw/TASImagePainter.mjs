@@ -25,9 +25,9 @@ class TASImagePainter extends ObjectPainter {
       if (d.check('CONST')) {
          this.options.constRatio = true;
          if (obj) obj.fConstRatio = true;
-         console.log('use const');
       }
-      if (d.check('Z')) this.options.Zscale = true;
+      if (d.check('Z'))
+         this.options.Zscale = true;
    }
 
    /** @summary Create RGBA buffers */

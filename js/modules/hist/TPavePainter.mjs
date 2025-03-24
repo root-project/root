@@ -1250,7 +1250,6 @@ class TPavePainter extends ObjectPainter {
          else
             opt = opt.slice(0, parc) + opt.slice(parc + 3);
          this.setPaveDrawOption(opt);
-         console.log('Exec', `exec:${set_opt}("${opt}")`);
          this.interactiveRedraw(true, `exec:${set_opt}("${opt}")`);
       }, 'Usage of ARC draw option');
       menu.addSizeMenu('radius', 0, 0.2, 0.02, pave.fCornerRadius, val => {
