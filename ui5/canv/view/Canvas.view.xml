@@ -99,7 +99,7 @@
                </menu>
             </MenuButton>
             <ToolbarSpacer />
-            <Button icon="sap-icon://message-warning" visible="{/ErrorVisible}" type="Critical" press="onShowConsoleErrors" tooltip="{/ErrorTooltip}"/>
+            <Button icon="sap-icon://message-warning" visible="{/ErrorVisible}" type="Reject" press="onShowConsoleErrors" tooltip="{/ErrorTooltip}"/>
             <MenuButton text="Help" type="Transparent">
                <menu>
                   <Menu itemSelected="onHelpMenuAction">
