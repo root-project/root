@@ -310,6 +310,9 @@ RBrowser::RBrowser(bool use_rcanvas)
       if (!fWebWindow || !fCatchWindowShow || kind.empty())
          return false;
 
+      // before create new widget check if other disappear
+      CheckWidgtesModified(0);
+
       auto widget = RBrowserWidgetProvider::DetectCatchedWindow(kind, win);
       if (widget) {
          widget->fBrowser = this;
