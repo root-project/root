@@ -431,7 +431,7 @@ public:
 
    /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits:
    /// 1 sign bit, 5 exponent bits, 10 mantissa bits) on disk.
-   /// This is mutually exclusive with `SetTruncated` and `SetQuantized` and supersedes them if called after them.
+   /// This is mutually exclusive with SetTruncated() and SetQuantized() and supersedes them if called after them.
    void SetHalfPrecision() { SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}}); }
 
    /// Set the on-disk representation of this field to a single-precision float truncated to `nBits`.
@@ -439,7 +439,7 @@ public:
    /// `nBits` must be $10 <= nBits <= 31$ (this means that at least 1 bit
    /// of mantissa is always preserved). Note that this effectively rounds the number towards 0.
    /// For a double-precision field, this implies first a cast to single-precision, then the truncation.
-   /// This is mutually exclusive with `SetHalfPrecision` and `SetQuantized` and supersedes them if called after them.
+   /// This is mutually exclusive with SetHalfPrecision() and SetQuantized() and supersedes them if called after them.
    void SetTruncated(std::size_t nBits)
    {
       const auto &[minBits, maxBits] =
@@ -455,12 +455,12 @@ public:
 
    /// Sets this field to use a quantized integer representation using `nBits` per value.
    /// It must be $1 <= nBits <= 32$.
-   /// `minValue` and `maxValue` must not be infinity, NaN or denormal floats, and they must be representable by the
-   /// type T.
+   /// `minValue` and `maxValue` must not be infinity, `NaN` or denormal floats, and they must be representable by the
+   /// type `T`.
    /// Calling this function establishes a promise by the caller to RNTuple that this field will only contain values
    /// contained in `[minValue, maxValue]` inclusive. If a value outside this range is assigned to this field, the
    /// behavior is undefined.
-   /// This is mutually exclusive with `SetTruncated` and `SetHalfPrecision` and supersedes them if called after them.
+   /// This is mutually exclusive with SetTruncated() and SetHalfPrecision() and supersedes them if called after them.
    void SetQuantized(double minValue, double maxValue, std::size_t nBits)
    {
       const auto &[minBits, maxBits] =
@@ -514,7 +514,7 @@ public:
 
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
-   // Set the column representation to 32 bit floating point and the type alias to Double32_t
+   // Set the column representation to 32 bit floating point and the type alias to `Double32_t`
    void SetDouble32();
 };
 
