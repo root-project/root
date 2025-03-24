@@ -39,19 +39,19 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
-/// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
+/// The field for a class representing a collection of elements via TVirtualCollectionProxy.
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
-/// `TVirtualCollectionProxy`. For STL collections, these proxies are provided. Custom classes need to implement the
-/// corresponding member functions in `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an
-/// implementation for the following functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`,
-/// `GetValueClass()`, `GetType()`, `PushProxy()`, `PopProxy()`, `GetFunctionCreateIterators()`, `GetFunctionNext()`,
-/// and `GetFunctionDeleteTwoIterators()`.
+/// TVirtualCollectionProxy. For STL collections, these proxies are provided. Custom classes need to implement the
+/// corresponding member functions in TVirtualCollectionProxy. At a bare minimum, the user is required to provide an
+/// implementation for the following functions in TVirtualCollectionProxy: HasPointers(), GetProperties(),
+/// GetValueClass(), GetType(), PushProxy(), PopProxy(), GetFunctionCreateIterators(), GetFunctionNext(),
+/// and GetFunctionDeleteTwoIterators().
 ///
-/// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
+/// The collection proxy for a given class can be set via TClass::CopyCollectionProxy().
 class RProxiedCollectionField : public RFieldBase {
 protected:
    /// Allows for iterating over the elements of a proxied collection. RCollectionIterableOnce avoids an additional
-   /// iterator copy (see `TVirtualCollectionProxy::GetFunctionCopyIterator`) and thus can only be iterated once.
+   /// iterator copy (see TVirtualCollectionProxy::GetFunctionCopyIterator) and thus can only be iterated once.
    class RCollectionIterableOnce {
    public:
       struct RIteratorFuncs {
@@ -70,7 +70,7 @@ protected:
          void Advance()
          {
             auto fnNext_Contig = [&]() {
-               // Array-backed collections (e.g. kSTLvector) directly use the pointer-to-iterator-data as a
+               // Array-backed collections (e.g. `kSTLvector`) directly use the pointer-to-iterator-data as a
                // pointer-to-element, thus saving an indirection level (see documentation for TVirtualCollectionProxy)
                auto &iter = reinterpret_cast<unsigned char *&>(fIterator), p = iter;
                iter += fOwner.fStride;
@@ -105,7 +105,7 @@ protected:
       void *fEnd = &fEndSmallBuf;
 
    public:
-      /// Construct a `RCollectionIterableOnce` that iterates over `collection`.  If elements are guaranteed to be
+      /// Construct a RCollectionIterableOnce that iterates over `collection`.  If elements are guaranteed to be
       /// contiguous in memory (e.g. a vector), `stride` can be provided for faster iteration, i.e. the address of each
       /// element is known given the base pointer.
       RCollectionIterableOnce(void *collection, const RIteratorFuncs &ifuncs, TVirtualCollectionProxy *proxy,
@@ -152,7 +152,7 @@ protected:
    /// Constructor used when the value type of the collection is not known in advance, i.e. in the case of custom
    /// collections.
    RProxiedCollectionField(std::string_view fieldName, TClass *classp);
-   /// Constructor used when the value type of the collection is known in advance, e.g. in `RSetField`.
+   /// Constructor used when the value type of the collection is known in advance, e.g. in RSetField.
    RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
                            std::unique_ptr<RFieldBase> itemField);
 
@@ -208,7 +208,7 @@ struct HasCollectionProxyMemberType<
 /// The point here is that we can only tell at run time if a class has an associated collection proxy.
 /// For compile time, in the first iteration of this PR we had an extra template argument that acted as a "tag" to
 /// differentiate the RField specialization for classes with an associated collection proxy (inherits
-/// `RProxiedCollectionField`) from the RField primary template definition (`RClassField`-derived), as in:
+/// RProxiedCollectionField) from the RField primary template definition (RClassField-derived), as in:
 /// ```
 /// auto field = std::make_unique<RField<MyClass>>("klass");
 /// // vs
@@ -223,7 +223,7 @@ struct HasCollectionProxyMemberType<
 /// ```
 /// auto field = std::make_unique<RField<RProxiedCollection<MyClass>>>("klass"); // Using collection proxy
 /// ```
-/// - A helper `IsCollectionProxy<T>` type, that can be used in a similar way to those in the `<type_traits>` header.
+/// - A helper IsCollectionProxy<T> type, that can be used in a similar way to those in the `<type_traits>` header.
 /// We found this more convenient and is the implemented thing below.  Here, classes can be marked as a
 /// collection proxy with either of the following two forms (whichever is more convenient for the user):
 /// ```
@@ -238,7 +238,7 @@ struct HasCollectionProxyMemberType<
 /// };
 /// ```
 ///
-/// Of course, there is another possible solution which is to have a single `RClassField` that implements both
+/// Of course, there is another possible solution which is to have a single RClassField that implements both
 /// the regular-class and the collection-proxy behaviors, and always chooses appropriately at run time.
 /// We found that less clean and probably has more overhead, as most probably it involves an additional branch + call
 /// in each of the member functions.
@@ -246,7 +246,7 @@ template <typename T, typename = void>
 struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 };
 
-/// Classes behaving as a collection of elements that can be queried via the `TVirtualCollectionProxy` interface
+/// Classes behaving as a collection of elements that can be queried via the TVirtualCollectionProxy interface
 /// The use of a collection proxy for a particular class can be enabled via:
 /// ```
 /// namespace ROOT::Experimental {
@@ -277,7 +277,7 @@ public:
 /// Template specializations for C++ std::[unordered_][multi]map
 ////////////////////////////////////////////////////////////////////////////////
 
-/// The generic field for a std::map<KeyType, ValueType> and std::unordered_map<KeyType, ValueType>
+/// The generic field for a `std::map<KeyType, ValueType>` and `std::unordered_map<KeyType, ValueType>`
 class RMapField : public RProxiedCollectionField {
 public:
    RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
@@ -358,7 +358,7 @@ public:
 /// Template specializations for C++ std::[unordered_][multi]set
 ////////////////////////////////////////////////////////////////////////////////
 
-/// The generic field for a std::set<Type> and std::unordered_set<Type>
+/// The generic field for a `std::set<Type>` and `std::unordered_set<Type>`
 class RSetField : public RProxiedCollectionField {
 public:
    RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);

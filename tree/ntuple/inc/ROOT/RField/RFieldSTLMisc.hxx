@@ -82,7 +82,7 @@ public:
 /// Template specializations for C++ std::bitset
 ////////////////////////////////////////////////////////////////////////////////
 
-/// The generic field an std::bitset<N>. All compilers we care about store the bits in an array of unsigned long.
+/// The generic field an `std::bitset<N>`. All compilers we care about store the bits in an array of unsigned long.
 /// TODO(jblomer): reading and writing efficiency should be improved; currently it is one bit at a time
 /// with an array of bools on the page level.
 class RBitsetField : public RFieldBase {
@@ -116,7 +116,7 @@ public:
    size_t GetAlignment() const final { return alignof(Word_t); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
-   /// Get the number of bits in the bitset, i.e. the N in std::bitset<N>
+   /// Get the number of bits in the bitset, i.e. the `N` in `std::bitset<N>`
    std::size_t GetN() const { return fN; }
 };
 
@@ -163,7 +163,7 @@ public:
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
 /// optional field. A nullable field cannot be instantiated itself but only its descendants.
 /// The RNullableField takes care of the on-disk representation. Child classes are responsible for the in-memory
-/// representation.  Nullable fields use a (Split)Index[64|32] column to point to the available items.
+/// representation.  Nullable fields use a `(Split)Index[64|32]` column to point to the available items.
 class RNullableField : public RFieldBase {
    /// The number of written non-null items in this cluster
    ROOT::Internal::RColumnIndex fNWritten{0};
@@ -178,7 +178,7 @@ protected:
    void CommitClusterImpl() final { fNWritten = 0; }
 
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
-   /// if it is null, returns kInvalidNTupleIndex
+   /// if it is null, returns `kInvalidNTupleIndex`
    RNTupleLocalIndex GetItemIndex(ROOT::NTupleSize_t globalIndex);
 
    RNullableField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
@@ -205,8 +205,8 @@ class ROptionalField : public RNullableField {
 
    std::unique_ptr<RDeleter> fItemDeleter;
 
-   /// Given a pointer to an std::optional<T> in `optionalPtr`, extract a pointer to the engagement boolean.
-   /// Assumes that an std::optional<T> is stored as `struct { T t; bool engagement; };`
+   /// Given a pointer to an `std::optional<T>` in `optionalPtr`, extract a pointer to the engagement boolean.
+   /// Assumes that an `std::optional<T>` is stored as `struct { T t; bool engagement; };`
    const bool *GetEngagementPtr(const void *optionalPtr) const;
    bool *GetEngagementPtr(void *optionalPtr) const;
    std::size_t GetEngagementPtrOffset() const;
@@ -354,14 +354,14 @@ private:
 
    size_t fMaxItemSize = 0;
    size_t fMaxAlignment = 1;
-   /// In the std::variant memory layout, at which byte number is the index stored
+   /// In the `std::variant` memory layout, at which byte number is the index stored
    size_t fTagOffset = 0;
-   /// In the std::variant memory layout, the actual union of types may start at an offset > 0
+   /// In the `std::variant` memory layout, the actual union of types may start at an offset > 0
    size_t fVariantOffset = 0;
    std::vector<ROOT::Internal::RColumnIndex::ValueType> fNWritten;
 
    static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
-   /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
+   /// Extracts the index from an `std::variant` and transforms it into the 1-based index used for the switch column
    /// The implementation supports two memory layouts that are in use: a trailing unsigned byte, zero-indexed,
    /// having the exception caused empty state encoded by the max tag value,
    /// or a trailing unsigned int instead of a char.
