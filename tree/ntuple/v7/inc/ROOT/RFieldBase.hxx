@@ -302,8 +302,8 @@ protected:
    /// TClass checksum cached from the descriptor after a call to ConnectPageSource(). Only set
    /// for classes with dictionaries.
    std::uint32_t fOnDiskTypeChecksum = 0;
-   /// Pointers into the static vector GetColumnRepresentations().GetSerializationTypes() when
-   /// SetColumnRepresentatives is called.  Otherwise (if empty) GetColumnRepresentatives() returns a vector
+   /// Pointers into the static vector returned by RColumnRepresentations::GetSerializationTypes() when
+   /// SetColumnRepresentatives() is called. Otherwise (if empty) GetColumnRepresentatives() returns a vector
    /// with a single element, the default representation.  Always empty for artificial fields.
    std::vector<std::reference_wrapper<const ColumnRepresentation_t>> fColumnRepresentatives;
 
