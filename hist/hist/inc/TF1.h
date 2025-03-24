@@ -567,6 +567,10 @@ public:
       return (fFormula) ? fFormula->GetParNumber(name) : fParams->GetParNumber(name);
    }
    virtual Double_t GetParError(Int_t ipar) const;
+   virtual Double_t GetParError(const char *name) const
+   {
+      return GetParError(GetParNumber(name));
+   }
    virtual const Double_t *GetParErrors() const
    {
       return fParErrors.data();
