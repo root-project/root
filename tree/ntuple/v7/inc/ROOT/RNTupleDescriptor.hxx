@@ -247,7 +247,7 @@ public:
    \brief The window of element indexes of a particular column in a particular cluster
    */
    // clang-format on
-   class RColumnRange {
+   class RColumnRange final {
       ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
       /// The global index of the first column element in the cluster
       ROOT::NTupleSize_t fFirstElementIndex = ROOT::kInvalidNTupleIndex;
@@ -360,7 +360,7 @@ public:
    and we don't need to keep it in memory because it can be easily recomputed.
    */
    // clang-format on
-   struct RPageInfoExtended : RPageInfo {
+   struct RPageInfoExtended final : RPageInfo {
    private:
       /// Index (in cluster) of the first element in page.
       ROOT::NTupleSize_t fFirstElementIndex = 0;
@@ -388,7 +388,7 @@ public:
    \brief Records the partition of data into pages for a particular column in a particular cluster
    */
    // clang-format on
-   class RPageRange {
+   class RPageRange final {
       friend class Internal::RClusterDescriptorBuilder;
 
    private:
@@ -476,12 +476,12 @@ public:
    std::uint64_t GetNBytesOnStorage() const;
 };
 
-class RClusterDescriptor::RColumnRangeIterable {
+class RClusterDescriptor::RColumnRangeIterable final {
 private:
    const RClusterDescriptor &fDesc;
 
 public:
-   class RIterator {
+   class RIterator final {
    private:
       using Iter_t = std::unordered_map<ROOT::DescriptorId_t, RColumnRange>::const_iterator;
       /// The wrapped map iterator
@@ -851,7 +851,7 @@ public:
 \brief Used to loop over a field's associated columns
 */
 // clang-format on
-class RNTupleDescriptor::RColumnDescriptorIterable {
+class RNTupleDescriptor::RColumnDescriptorIterable final {
 private:
    /// The associated NTuple for this range.
    const RNTupleDescriptor &fNTuple;
@@ -859,7 +859,7 @@ private:
    std::vector<ROOT::DescriptorId_t> fColumns = {};
 
 public:
-   class RIterator {
+   class RIterator final {
    private:
       /// The enclosing range's NTuple.
       const RNTupleDescriptor &fNTuple;
@@ -905,7 +905,7 @@ public:
 \brief Used to loop over a field's child fields
 */
 // clang-format on
-class RNTupleDescriptor::RFieldDescriptorIterable {
+class RNTupleDescriptor::RFieldDescriptorIterable final {
 private:
    /// The associated NTuple for this range.
    const RNTupleDescriptor &fNTuple;
@@ -914,7 +914,7 @@ private:
    std::vector<ROOT::DescriptorId_t> fFieldChildren = {};
 
 public:
-   class RIterator {
+   class RIterator final {
    private:
       /// The enclosing range's NTuple.
       const RNTupleDescriptor &fNTuple;
@@ -968,13 +968,13 @@ public:
 Enumerate all cluster group IDs from the descriptor.  No specific order can be assumed.
 */
 // clang-format on
-class RNTupleDescriptor::RClusterGroupDescriptorIterable {
+class RNTupleDescriptor::RClusterGroupDescriptorIterable final {
 private:
    /// The associated NTuple for this range.
    const RNTupleDescriptor &fNTuple;
 
 public:
-   class RIterator {
+   class RIterator final {
    private:
       /// The enclosing range's NTuple.
       const RNTupleDescriptor &fNTuple;
@@ -1020,13 +1020,13 @@ RNTupleDescriptor::FindNextClusterId() and RNTupleDescriptor::FindPrevClusterId(
 clusters by entry number.
 */
 // clang-format on
-class RNTupleDescriptor::RClusterDescriptorIterable {
+class RNTupleDescriptor::RClusterDescriptorIterable final {
 private:
    /// The associated NTuple for this range.
    const RNTupleDescriptor &fNTuple;
 
 public:
-   class RIterator {
+   class RIterator final {
    private:
       /// The enclosing range's NTuple.
       const RNTupleDescriptor &fNTuple;
@@ -1068,13 +1068,13 @@ public:
 \brief Used to loop over all the extra type info record of an ntuple (in unspecified order)
 */
 // clang-format on
-class RNTupleDescriptor::RExtraTypeInfoDescriptorIterable {
+class RNTupleDescriptor::RExtraTypeInfoDescriptorIterable final {
 private:
    /// The associated NTuple for this range.
    const RNTupleDescriptor &fNTuple;
 
 public:
-   class RIterator {
+   class RIterator final {
    private:
       /// The enclosing range's NTuple.
       const RNTupleDescriptor &fNTuple;
@@ -1116,7 +1116,7 @@ public:
 \brief Summarizes information about fields and the corresponding columns that were added after the header has been serialized
 */
 // clang-format on
-class RNTupleDescriptor::RHeaderExtension {
+class RNTupleDescriptor::RHeaderExtension final {
    friend class Internal::RNTupleDescriptorBuilder;
 
 private:
@@ -1194,7 +1194,7 @@ Dangling column descriptors can become actual descriptors when added to an
 RNTupleDescriptorBuilder instance and then linked to their fields.
 */
 // clang-format on
-class RColumnDescriptorBuilder {
+class RColumnDescriptorBuilder final {
 private:
    RColumnDescriptor fColumn = RColumnDescriptor();
 
@@ -1280,7 +1280,7 @@ Dangling field descriptors can only become actual descriptors when added to an
 RNTupleDescriptorBuilder instance and then linked to other fields.
 */
 // clang-format on
-class RFieldDescriptorBuilder {
+class RFieldDescriptorBuilder final {
 private:
    RFieldDescriptor fField = RFieldDescriptor();
 
@@ -1375,7 +1375,7 @@ The cluster descriptor builder starts from a summary-only cluster descriptor and
 piecewise addition of page locations.
 */
 // clang-format on
-class RClusterDescriptorBuilder {
+class RClusterDescriptorBuilder final {
 private:
    RClusterDescriptor fCluster;
 
@@ -1433,7 +1433,7 @@ public:
 \brief A helper class for piece-wise construction of an RClusterGroupDescriptor
 */
 // clang-format on
-class RClusterGroupDescriptorBuilder {
+class RClusterGroupDescriptorBuilder final {
 private:
    RClusterGroupDescriptor fClusterGroup;
 
@@ -1488,7 +1488,7 @@ public:
 \brief A helper class for piece-wise construction of an RExtraTypeInfoDescriptor
 */
 // clang-format on
-class RExtraTypeInfoDescriptorBuilder {
+class RExtraTypeInfoDescriptorBuilder final {
 private:
    RExtraTypeInfoDescriptor fExtraTypeInfo;
 
@@ -1528,7 +1528,7 @@ public:
 Used by RPageStorage implementations in order to construct the RNTupleDescriptor from the various header parts.
 */
 // clang-format on
-class RNTupleDescriptorBuilder {
+class RNTupleDescriptorBuilder final {
 private:
    RNTupleDescriptor fDescriptor;
    RResult<void> EnsureFieldExists(ROOT::DescriptorId_t fieldId) const;
