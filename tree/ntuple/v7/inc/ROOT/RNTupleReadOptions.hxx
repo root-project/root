@@ -37,21 +37,56 @@ public:
 \brief Common user-tunable settings for reading ntuples
 
 All page source classes need to support the common options.
+
+<table>
+<tr>
+<th>Option name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td>`ClusterCache`</td>
+<td>EClusterCache</td>
+<td>EClusterCache::kDefault</td>
+<td>
+Controls if the prefetcher (including the prefetcher thread) is used
+</td>
+</tr>
+
+<tr>
+<td>`UseImplicitMT`</td>
+<td>EImplicitMT</td>
+<td>EImplicitMT::kDefault</td>
+<td>
+Allows to disable parallel page compression and decompression even if ROOT uses implicit MT.
+This is useful, e.g., in the context of RDataFrame where the threads are fully managed by RDataFrame.
+</td>
+</tr>
+
+<tr>
+<td>`EnableMetrics`</td>
+<td>`bool`</td>
+<td>`false`</td>
+<td>
+If `true`, the RNTupleReader will track metrics straight from its construction, as
+if calling RNTupleReader::EnableMetrics() before having created the object.
+</td>
+</tr>
+</table>
 */
 // clang-format on
 class RNTupleReadOptions {
    friend class Internal::RNTupleReadOptionsManip;
 
 public:
-   /// Controls if the prefetcher (including the prefetcher thread) is used
    enum class EClusterCache {
       kOff,
       kOn,
       kDefault = kOn,
    };
 
-   /// Allows to disable parallel page compression and decompression even if ROOT uses implicit MT.
-   /// This is useful, e.g., in the context of RDataFrame where the threads are fully managed by RDataFrame.
    enum class EImplicitMT {
       kOff,
       kDefault,
@@ -63,8 +98,6 @@ private:
    /// by an option that allows to control the amount of memory that the prefetcher uses.
    unsigned int fClusterBunchSize = 1;
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
-   /// If true, the RNTupleReader will track metrics straight from its construction, as
-   /// if calling `RNTupleReader::EnableMetrics()` before having created the object.
    bool fEnableMetrics = false;
 
 public:
