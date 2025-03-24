@@ -314,7 +314,10 @@ RBrowser::RBrowser(bool use_rcanvas)
       else if (args.GetWidgetKind() == "RTreeViewer")
          kind = "tree";
 
-      if (!fWebWindow || !fCatchWindowShow || kind.empty()) return false;
+      if (!fWebWindow || !fCatchWindowShow || kind.empty())
+         return false;
+
+      CheckWidgtesModified(0);
 
       auto widget = AddCatchedWidget(&win, kind);
 
