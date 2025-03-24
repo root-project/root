@@ -346,6 +346,16 @@ public:
       void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
    };
 
+   // clang-format off
+   /**
+   \class ROOT::RClusterDescriptor::RPageInfoExtended
+   \ingroup NTuple
+   \brief Additional information about a page in an in-memory RPageRange.
+
+   Used by RPageRange::Find() to return information relative to the RPageRange.  This information is not stored on disk
+   and we don't need to keep it in memory because it can be easily recomputed.
+   */
+   // clang-format on
    struct RPageInfoExtended : RPageInfo {
    private:
       /// Index (in cluster) of the first element in page.
