@@ -556,8 +556,8 @@ public:
    /// transfer of pointer ownership is explicit.
    template <typename T>
    std::unique_ptr<T, typename RCreateObjectDeleter<T>::deleter> CreateObject() const;
-   /// Generates an object of the field type and wraps the created object in a shared pointer and returns it an RValue
-   /// connected to the field.
+   /// Generates an object of the field's type, wraps it in a shared pointer and returns it as an RValue connected to
+   /// the field.
    RValue CreateValue();
    /// Creates a new, initially empty bulk.
    /// RBulk::ReadBulk() will construct the array of values. The memory of the value array is managed by the RBulk
@@ -565,8 +565,8 @@ public:
    RBulk CreateBulk();
    /// Creates a value from a memory location with an already constructed object
    RValue BindValue(std::shared_ptr<void> objPtr);
-   /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
-   /// correct variant or all the elements of a collection.  The default implementation assumes no subvalues
+   /// Creates the list of direct child values given an existing value for this field. E.g. a single value for the
+   /// correct `std::variant` or all the elements of a collection. The default implementation assumes no subvalues
    /// and returns an empty vector.
    virtual std::vector<RValue> SplitValue(const RValue &value) const;
    /// The number of bytes taken by a value of the appropriate type
@@ -696,14 +696,15 @@ public:
 };
 
 /// Points to an object with RNTuple I/O support and keeps a pointer to the corresponding field.
-/// Only fields can create RValue objects through generation, binding or splitting.
+/// Fields can create RValue objects through RFieldBase::CreateValue(), RFieldBase::BindValue()) or
+/// RFieldBase::SplitValue().
 class RFieldBase::RValue {
    friend class RFieldBase;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue
-   std::shared_ptr<void> fObjPtr; ///< Set by Bind() or by RFieldBase::CreateValue(), SplitValue() or BindValue()
-
+   /// Set by Bind() or by RFieldBase::CreateValue(), RFieldBase::SplitValue() or RFieldBase::BindValue()
+   std::shared_ptr<void> fObjPtr;
    RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
 
 public:
