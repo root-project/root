@@ -71,7 +71,7 @@ CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, c
 \ingroup NTuple
 \brief A field translates read and write calls from/to underlying columns to/from tree values
 
-A field is a serializable C++ type or a container for a collection of sub fields. The RFieldBase and its
+A field is a serializable C++ type or a container for a collection of subfields. The RFieldBase and its
 type-safe descendants provide the object to column mapper. They map C++ objects to primitive columns.  The
 mapping is trivial for simple types such as 'double'. Complex types resolve to multiple primitive columns.
 The field knows based on its type and the field name the type(s) and name(s) of the columns.
@@ -256,10 +256,10 @@ private:
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
    /// \param firstEntry The global index of the first entry with on-disk data for the connected field
    void ConnectPageSink(ROOT::Experimental::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry = 0);
-   /// Connects the field and its sub field tree to the given page source. Once connected, data can be read.
+   /// Connects the field and its subfield tree to the given page source. Once connected, data can be read.
    /// Only unconnected fields may be connected, i.e. the method is not idempotent. The field ID has to be set prior to
-   /// calling this function. For sub fields, a field ID may or may not be set. If the field ID is unset, it will be
-   /// determined using the page source descriptor, based on the parent field ID and the sub field name.
+   /// calling this function. For subfields, a field ID may or may not be set. If the field ID is unset, it will be
+   /// determined using the page source descriptor, based on the parent field ID and the subfield name.
    void ConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource);
 
    void SetArtificial()
@@ -275,9 +275,9 @@ protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
    struct RBulkSpec;
 
-   /// Collections and classes own sub fields
+   /// Collections and classes own subfields
    std::vector<std::unique_ptr<RFieldBase>> fSubfields;
-   /// Sub fields point to their mother field
+   /// Subfields point to their mother field
    RFieldBase *fParent;
    /// All fields that have columns have a distinct main column. E.g., for simple fields (float, int, ...), the
    /// principal column corresponds to the field type. For collection fields except fixed-sized arrays,
@@ -401,7 +401,7 @@ protected:
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' CreateValue().
    virtual void ConstructValue(void *where) const = 0;
    virtual std::unique_ptr<RDeleter> GetDeleter() const { return std::make_unique<RDeleter>(); }
-   /// Allow derived classes to call ConstructValue(void *) and GetDeleter on other (sub) fields.
+   /// Allow derived classes to call ConstructValue(void *) and GetDeleter on other (sub)fields.
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
 
@@ -461,13 +461,13 @@ protected:
    /// independent from the masks.
    std::size_t ReadBulk(const RBulkSpec &bulkSpec);
 
-   /// Allow derived classes to call Append and Read on other (sub) fields.
+   /// Allow derived classes to call Append and Read on other (sub)fields.
    static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
    static void CallReadOn(RFieldBase &other, RNTupleLocalIndex localIndex, void *to) { other.Read(localIndex, to); }
    static void CallReadOn(RFieldBase &other, ROOT::NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
    static void *CallCreateObjectRawPtrOn(RFieldBase &other) { return other.CreateObjectRawPtr(); }
 
-   /// Fields may need direct access to the principal column of their sub fields, e.g. in RRVecField::ReadBulk
+   /// Fields may need direct access to the principal column of their subfields, e.g. in RRVecField::ReadBulk
    static ROOT::Internal::RColumn *GetPrincipalColumnOf(const RFieldBase &other) { return other.fPrincipalColumn; }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
@@ -518,7 +518,7 @@ public:
    /// Used in the return value of the Check() method
    struct RCheckResult {
       std::string fFieldName; ///< Qualified field name causing the error
-      std::string fTypeName;  ///< Type name corresponding to the (sub) field
+      std::string fTypeName;  ///< Type name corresponding to the (sub)field
       std::string fErrMsg;    ///< Cause of the failure, e.g. unsupported type
    };
 
@@ -533,7 +533,7 @@ public:
    RFieldBase &operator=(RFieldBase &&) = default;
    virtual ~RFieldBase() = default;
 
-   /// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
+   /// Copies the field and its subfields using a possibly new name and a new, unconnected set of columns
    std::unique_ptr<RFieldBase> Clone(std::string_view newName) const;
 
    /// Factory method to create a field from a certain type given as string.
@@ -543,7 +543,7 @@ public:
    Create(const std::string &fieldName, const std::string &typeName);
 
    /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
-   /// Otherwise there is an error record for each failing sub field (sub type).
+   /// Otherwise there is an error record for each failing subfield (subtype).
    static std::vector<RCheckResult> Check(const std::string &fieldName, const std::string &typeName);
 
    /// Generates an object of the field type and allocates new initialized memory according to the type.
@@ -565,7 +565,7 @@ public:
    /// Creates a value from a memory location with an already constructed object
    RValue BindValue(std::shared_ptr<void> objPtr);
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
-   /// correct variant or all the elements of a collection.  The default implementation assumes no sub values
+   /// correct variant or all the elements of a collection.  The default implementation assumes no subvalues
    /// and returns an empty vector.
    virtual std::vector<RValue> SplitValue(const RValue &value) const;
    /// The number of bytes taken by a value of the appropriate type
@@ -628,7 +628,7 @@ public:
    virtual void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const;
 }; // class RFieldBase
 
-/// Iterates over the sub tree of fields in depth-first search order
+/// Iterates over the subtree of fields in depth-first search order
 template <bool IsConstT>
 class RFieldBase::RSchemaIteratorTemplate {
 private:
@@ -816,7 +816,7 @@ public:
       if (!ContainsRange(firstIndex, size))
          Reset(firstIndex, size);
 
-      // We may read a sub range of the currently available range
+      // We may read a subrange of the currently available range
       auto offset = firstIndex.GetIndexInCluster() - fFirstIndex.GetIndexInCluster();
 
       if (fNValidValues == fSize)
