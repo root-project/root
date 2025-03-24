@@ -272,7 +272,6 @@ private:
    }
 
 protected:
-   /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
    struct RBulkSpec;
 
    /// Collections and classes own subfields
@@ -560,7 +559,9 @@ public:
    /// Generates an object of the field type and wraps the created object in a shared pointer and returns it an RValue
    /// connected to the field.
    RValue CreateValue();
-   /// The returned bulk is initially empty; RBulk::ReadBulk will construct the array of values
+   /// Creates a new, initially empty bulk.
+   /// RBulk::ReadBulk() will construct the array of values. The memory of the value array is managed by the RBulk
+   /// class.
    RBulk CreateBulk();
    /// Creates a value from a memory location with an already constructed object
    RValue BindValue(std::shared_ptr<void> objPtr);
@@ -735,28 +736,39 @@ public:
    const RFieldBase &GetField() const { return *fField; }
 };
 
+/// Input parameter to RFieldBase::ReadBulk() and RFieldBase::ReadBulkImpl().
+//  See the RBulk class documentation for more information.
 struct RFieldBase::RBulkSpec {
-   /// As a return value of ReadBulk and ReadBulkImpl(), indicates that the full bulk range was read
-   /// independent of the provided masks.
+   /// Possible return value of ReadBulk() and ReadBulkImpl(), which indicates that the full bulk range was read
+   /// independently of the provided masks.
    static const std::size_t kAllSet = std::size_t(-1);
 
    RNTupleLocalIndex fFirstIndex; ///< Start of the bulk range
-   std::size_t fCount = 0;    ///< Size of the bulk range
+   std::size_t fCount = 0;        ///< Size of the bulk range
    /// A bool array of size fCount, indicating the required values in the requested range
    const bool *fMaskReq = nullptr;
-   bool *fMaskAvail = nullptr; ///< A bool array of size fCount, indicating the valid values in fValues
-   /// The destination area, which has to be a big enough array of valid objects of the correct type
+   bool *fMaskAvail = nullptr; ///< A bool array of size `fCount`, indicating the valid values in fValues
+   /// The destination area, which has to be an array of valid objects of the correct type large enough to hold the bulk
+   /// range.
    void *fValues = nullptr;
-   /// Reference to memory owned by the RBulk class. The field implementing BulkReadImpl may use fAuxData
-   /// as memory that stays persistent between calls.
+   /// Reference to memory owned by the RBulk class. The field implementing BulkReadImpl() may use `fAuxData` as memory
+   /// that stays persistent between calls.
    std::vector<unsigned char> *fAuxData = nullptr;
 };
 
-/// Similar to RValue but manages an array of consecutive values. Bulks have to come from the same cluster.
-/// Bulk I/O works with two bit masks: the mask of all the available entries in the current bulk and the mask
-/// of the required entries in a bulk read. The idea is that a single bulk may serve multiple read operations
-/// on the same range, where in each read operation a different subset of values is required.
-/// The memory of the value array is managed by the RBulk class.
+// clang-format off
+/**
+\class ROOT::RFieldBase::RBulk
+\ingroup NTuple
+\brief Points to an array of objects with RNTuple I/O support, used for bulk reading.
+
+Similar to RValue, but manages an array of consecutive values. Bulks have to come from the same cluster.
+Bulk I/O works with two bit masks: the mask of all the available entries in the current bulk and the mask
+of the required entries in a bulk read. The idea is that a single bulk may serve multiple read operations
+on the same range, where in each read operation a different subset of values is required.
+The memory of the value array is managed by the RBulk class.
+*/
+// clang-format on
 class RFieldBase::RBulk {
 private:
    friend class RFieldBase;
@@ -764,7 +776,7 @@ private:
    RFieldBase *fField = nullptr;                   ///< The field that created the array of values
    std::unique_ptr<RFieldBase::RDeleter> fDeleter; /// Cached deleter of fField
    void *fValues = nullptr;                        ///< Pointer to the start of the array
-   std::size_t fValueSize = 0;                     ///< Cached copy of fField->GetValueSize()
+   std::size_t fValueSize = 0;                     ///< Cached copy of RFieldBase::GetValueSize()
    std::size_t fCapacity = 0;                      ///< The size of the array memory block in number of values
    std::size_t fSize = 0;              ///< The number of available values in the array (provided their mask is set)
    bool fIsAdopted = false;            ///< True if the user provides the memory buffer for fValues
@@ -772,12 +784,12 @@ private:
    std::size_t fNValidValues = 0;      ///< The sum of non-zero elements in the fMask
    RNTupleLocalIndex fFirstIndex;      ///< Index of the first value of the array
    /// Reading arrays of complex values may require additional memory, for instance for the elements of
-   /// arrays of vectors. A pointer to the fAuxData array is passed to the field's BulkRead method.
+   /// arrays of vectors. A pointer to the `fAuxData` array is passed to the field's BulkRead method.
    /// The RBulk class does not modify the array in-between calls to the field's BulkRead method.
    std::vector<unsigned char> fAuxData;
 
    void ReleaseValues();
-   /// Sets a new range for the bulk. If there is enough capacity, the fValues array will be reused.
+   /// Sets a new range for the bulk. If there is enough capacity, the `fValues` array will be reused.
    /// Otherwise a new array is allocated. After reset, fMaskAvail is false for all values.
    void Reset(RNTupleLocalIndex firstIndex, std::size_t size);
    void CountValidValues();
@@ -803,14 +815,14 @@ public:
    RBulk(RBulk &&other);
    RBulk &operator=(RBulk &&other);
 
-   // Sets fValues and fSize/fCapacity to the given values. The capacity is specified in number of values.
+   // Sets `fValues` and `fSize`/`fCapacity` to the given values. The capacity is specified in number of values.
    // Once a buffer is adopted, an attempt to read more values then available throws an exception.
    void AdoptBuffer(void *buf, std::size_t capacity);
 
-   /// Reads 'size' values from the associated field, starting from 'firstIndex'. Note that the index is given
+   /// Reads `size` values from the associated field, starting from `firstIndex`. Note that the index is given
    /// relative to a certain cluster. The return value points to the array of read objects.
-   /// The 'maskReq' parameter is a bool array of at least 'size' elements. Only objects for which the mask is
-   /// true are guaranteed to be read in the returned value array. A 'nullptr' means to read all elements.
+   /// The `maskReq` parameter is a bool array of at least `size` elements. Only objects for which the mask is
+   /// true are guaranteed to be read in the returned value array. A `nullptr` means to read all elements.
    void *ReadBulk(RNTupleLocalIndex firstIndex, const bool *maskReq, std::size_t size)
    {
       if (!ContainsRange(firstIndex, size))
