@@ -1838,6 +1838,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
                CheckCanvasModified();
       }
 
+      if (indx == 1)
+         fLastDrawVersion = fWebConn[indx].fDrawVersion;
+
    } else if (arg == "RELOAD") {
 
       // trigger reload of canvas data
@@ -2364,6 +2367,9 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
 
    while (cnt++ < cnt_limit) {
 
+      // handle send operations, check connection timeouts
+      fWindow->Sync();
+
       if (!fWindow->HasConnection(0, false)) {
          if (gDebug > 2)
             Info("WaitWhenCanvasPainted", "no connections - abort");
@@ -2373,6 +2379,12 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
       if ((fWebConn.size() > 1) && (fWebConn[1].fDrawVersion >= ver)) {
          if (gDebug > 2)
             Info("WaitWhenCanvasPainted", "ver %ld got painted", (long)ver);
+         return kTRUE;
+      }
+
+      if (!fWindow->HasConnection(0) && (fLastDrawVersion > 0)) {
+         if (gDebug > 2)
+            Info("WaitWhenCanvasPainted", "ver %ld got painted before client disconnected", (long)fLastDrawVersion);
          return kTRUE;
       }
 
