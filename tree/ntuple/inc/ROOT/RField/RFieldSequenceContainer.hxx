@@ -341,7 +341,7 @@ protected:
 
 public:
    /**
-      Constructor of the field. the \p itemField argument represents the inner
+      Constructor of the field. The itemField argument represents the inner
       item of the on-disk array, i.e. for an `std::array<float>` it is the `float`
       field and not the `std::array` itself.
    */
