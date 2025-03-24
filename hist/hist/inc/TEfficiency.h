@@ -138,7 +138,7 @@ public:
       void          SetConfidenceLevel(Double_t level);
       void          SetDirectory(TDirectory* dir);
       void          SetName(const char* name) override;
-      Bool_t        SetPassedEvents(Int_t bin,Int_t events);
+      Bool_t        SetPassedEvents(Int_t bin, Double_t events);
       Bool_t        SetPassedHistogram(const TH1& rPassed,Option_t* opt);
       void          SetPosteriorMode(Bool_t on = true) { SetBit(kPosteriorMode,on); SetShortestInterval(on); }
       void          SetPosteriorAverage(Bool_t on = true) { SetBit(kPosteriorMode,!on); }
