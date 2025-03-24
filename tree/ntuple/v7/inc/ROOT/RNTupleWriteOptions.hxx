@@ -42,6 +42,136 @@ public:
 \brief Common user-tunable settings for storing ntuples
 
 All page sink classes need to support the common options.
+
+<table>
+<tr>
+<th>Option name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+
+<tr>
+<td>`Compression`</td>
+<td>`std::uint32_t`</td>
+<td>RCompressionSetting::EDefaults::kUseGeneralPurpose</td>
+<td>
+The compression settings for this ntuple
+</td>
+</tr>
+
+<tr>
+<td>`ApproxZippedClusterSize`</td>
+<td>`std::size_t`</td>
+<td>128 MiB</td>
+<td>
+Approximation of the target compressed cluster size
+</td>
+</tr>
+
+<tr>
+<td>`MaxUnzippedClusterSize`</td>
+<td>`std::size_t`</td>
+<td>1280 MiB</td>
+<td>
+Memory limit for committing a cluster: with very high compression ratio, we need a limit
+on how large the I/O buffer can grow during writing.
+</td>
+</tr>
+
+<tr>
+<td>`InitialUnzippedPageSize`</td>
+<td>`std::size_t`</td>
+<td>256</td>
+<td>
+Initially, columns start with a page of this size. The default value is chosen to accomodate at least 32 elements
+of 64 bits, or 64 elements of 32 bits. If more elements are needed, pages are increased up until the byte limit
+given by the option `MaxUnzippedPageSize` or until the total page buffer limit is reached (as a sum of all page buffers).
+The total write buffer limit needs to be large enough to hold the initial pages of all columns.
+</td>
+</tr>
+
+<tr>
+<td>`MaxUnzippedPageSize`</td>
+<td>`std::size_t`</td>
+<td>1 MiB</td>
+<td>
+Pages can grow only to the given limit in bytes.
+</td>
+</tr>
+
+<tr>
+<td>`PageBufferBudget`</td>
+<td>`std::size_t`</td>
+<td>0 / auto</td>
+<td>
+The maximum size that the sum of all page buffers used for writing into a persistent sink are allowed to use.
+If set to zero, RNTuple will auto-adjust the budget based on the value of `ApproxZippedClusterSize`.
+If set manually, the size needs to be large enough to hold all initial page buffers.
+The total amount of memory for writing is larger, e.g. for the additional compressed buffers etc.
+Use RNTupleModel::EstimateWriteMemoryUsage() for the total estimated memory use for writing.
+The default values are tuned for a total write memory of around 400 MiB per fill context.
+</td>
+</tr>
+
+<tr>
+<td>`UseBufferedWrite`</td>
+<td>`bool`</td>
+<td>`true`</td>
+<td>
+Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
+to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
+</td>
+</tr>
+
+<tr>
+<td>`UseDirectIO`</td>
+<td>`bool`</td>
+<td>`false`</td>
+<td>
+Whether to use Direct I/O for writing. Note that this introduces alignment requirements that may very between
+filesystems and platforms.
+</td>
+</tr>
+
+<tr>
+<td>`WriteBufferSize`</td>
+<td>`std::size_t`</td>
+<td>4 MiB</td>
+<td>
+Buffer size to use for writing to files, must be a multiple of 4096 bytes. Testing suggests that 4MiB gives best
+performance (with Direct I/O) at a reasonable memory consumption.
+</td>
+</tr>
+
+<tr>
+<td>`UseImplicitMT`</td>
+<td>EImplicitMT</td>
+<td>EImplicitMT::kDefault</td>
+<td>
+Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
+</td>
+</tr>
+
+<tr>
+<td>`EnablePageChecksums`</td>
+<td>`bool`</td>
+<td>`true`</td>
+<td>
+If set, checksums will be calculated and written for every page.
+</td>
+</tr>
+
+<tr>
+<td>`EnableSamePageMerging`</td>
+<td>`bool`</td>
+<td>`true`</td>
+<td>
+If set, identical pages are deduplicated and aliased on disk. Requires page checksums.
+</td>
+</tr>
+
+</table>
 */
 // clang-format on
 class RNTupleWriteOptions {
@@ -53,45 +183,22 @@ public:
 
    // clang-format off
    static constexpr std::uint64_t kDefaultMaxKeySize = 0x4000'0000; // 1 GiB
+   // clang-format on
 
    friend Internal::RNTupleWriteOptionsManip;
-   // clang-format on
 
 protected:
    std::uint32_t fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
-   /// Approximation of the target compressed cluster size
    std::size_t fApproxZippedClusterSize = 128 * 1024 * 1024;
-   /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
-   /// on how large the I/O buffer can grow during writing.
    std::size_t fMaxUnzippedClusterSize = 10 * fApproxZippedClusterSize;
-   /// Initially, columns start with a page of this size. The default value is chosen to accomodate at least 32 elements
-   /// of 64 bits, or 64 elements of 32 bits. If more elements are needed, pages are increased up until the byte limit
-   /// given by fMaxUnzippedPageSize or until the total page buffer limit is reached (as a sum of all page buffers).
-   /// The total write buffer limit needs to be large enough to hold the initial pages of all columns.
    std::size_t fInitialUnzippedPageSize = 256;
-   /// Pages can grow only to the given limit in bytes.
    std::size_t fMaxUnzippedPageSize = 1024 * 1024;
-   /// The maximum size that the sum of all page buffers used for writing into a persistent sink are allowed to use.
-   /// If set to zero, RNTuple will auto-adjust the budget based on the value of fApproxZippedClusterSize.
-   /// If set manually, the size needs to be large enough to hold all initial page buffers.
-   /// The total amount of memory for writing is larger, e.g. for the additional compressed buffers etc.
-   /// Use RNTupleModel::EstimateWriteMemoryUsage() for the total estimated memory use for writing.
-   /// The default values are tuned for a total write memory of around 300 MB per fill context.
    std::size_t fPageBufferBudget = 0;
-   /// Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
-   /// to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
    bool fUseBufferedWrite = true;
-   /// Whether to use Direct I/O for writing. Note that this introduces alignment requirements that may very between
-   /// filesystems and platforms.
    bool fUseDirectIO = false;
-   /// Buffer size to use for writing to files, must be a multiple of 4096 bytes. Testing suggests that 4MiB gives best
-   /// performance (with Direct I/O) at a reasonable memory consumption.
    std::size_t fWriteBufferSize = 4 * 1024 * 1024;
-   /// Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
-   /// If set, checksums will be calculated and written for every page.
    bool fEnablePageChecksums = true;
-   /// If set, identical pages are deduplicated and aliased on disk. Requires page checksums.
    bool fEnableSamePageMerging = true;
    /// Specifies the max size of a payload storeable into a single TKey. When writing an RNTuple to a ROOT file,
    /// any payload whose size exceeds this will be split into multiple keys.
