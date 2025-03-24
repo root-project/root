@@ -315,7 +315,7 @@ public:
    // NOTE: We do not need to store the element size / uncompressed page size because we know to which column
    // the page belongs
    struct RPageInfo {
-   protected:
+   private:
       /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
       std::uint32_t fNElements = std::uint32_t(-1);
       /// The meaning of fLocator depends on the storage backend.
