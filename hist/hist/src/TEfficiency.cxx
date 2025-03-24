@@ -3519,14 +3519,14 @@ void TEfficiency::SetName(const char* name)
 ///
 /// Note: - requires: 0 <= events <= fTotalHistogram->GetBinContent(bin)
 
-Bool_t TEfficiency::SetPassedEvents(Int_t bin,Int_t events)
+Bool_t TEfficiency::SetPassedEvents(Int_t bin, Double_t events)
 {
    if(events <= fTotalHistogram->GetBinContent(bin)) {
       fPassedHistogram->SetBinContent(bin,events);
       return true;
    }
    else {
-      Error("SetPassedEvents(Int_t,Int_t)","total number of events (%.1lf) in bin %i is less than given number of passed events %i",fTotalHistogram->GetBinContent(bin),bin,events);
+      Error("SetPassedEvents(Int_t,Double_t)","total number of events (%.1lf) in bin %i is less than given number of passed events %.1lf",fTotalHistogram->GetBinContent(bin),bin,events);
       return false;
    }
 }
