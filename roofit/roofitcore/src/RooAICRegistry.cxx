@@ -96,7 +96,7 @@ RooAICRegistry::~RooAICRegistry()
 ////////////////////////////////////////////////////////////////////////////////
 /// Get size of _clArr vector
 
-size_t RooAICRegistry::getSize() const
+size_t RooAICRegistry::size() const
 {
   return _clArr.size();
 }
