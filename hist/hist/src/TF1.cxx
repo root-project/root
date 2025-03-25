@@ -1536,7 +1536,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 /// option "S") is used. Implemented for 1-d only.
 /// @note to obtain confidence intervals of a fit result for drawing purposes,
 /// see instead ROOT::Fit::FitResult::GetConfidenceInterval()
-Double_t TF1::EvalUncertainty(Double_t x, const TMatrixDSym* covMatrix)
+Double_t TF1::EvalUncertainty(Double_t x, const TMatrixDSym *covMatrix) const
 {
    TVectorD grad(GetNpar());
    GradientPar(&x, grad.GetMatrixArray());
@@ -2462,7 +2462,7 @@ TAxis *TF1::GetZaxis() const
 ///
 /// If a parameter is fixed, the gradient on this parameter = 0
 
-Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
+Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps) const
 {
    return GradientParTempl<Double_t>(ipar, x, eps);
 }
@@ -2485,7 +2485,7 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 ///
 /// If a parameter is fixed, the gradient on this parameter = 0
 
-void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
+void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps) const
 {
    if (fFormula && fFormula->HasGeneratedGradient()) {
       // need to zero the gradient buffer
