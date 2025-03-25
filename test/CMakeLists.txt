@@ -180,6 +180,7 @@ if(ROOT_opengl_FOUND)
   ROOT_ADD_TEST(test-stressgraphics-interpreted
                 COMMAND ${ROOT_root_CMD} -b --web=off -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
                 FAILREGEX "FAILED|Error in"
+                LABELS longtest
                 DEPENDS test-stressgraphics)
   if(CHROME_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-chrome
@@ -204,7 +205,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.5.18.00.root ${CMAKE_
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.cxx
-              FAILREGEX "FAILED|Error in")
+              FAILREGEX "FAILED|Error in" LABELS longtest)
 
 #--stressGUI---------------------------------------------------------------------------------------
 if(ROOT_asimage_FOUND)
@@ -230,7 +231,7 @@ if(ROOT_mathmore_FOUND)
   ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore Smatrix)
   ROOT_ADD_TEST(test-stressmathmore COMMAND stressMathMore FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressmathmore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathMore.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressmathmore TIMEOUT 1800)
+                FAILREGEX "FAILED|Error in" DEPENDS test-stressmathmore TIMEOUT 1800 LABELS longtest)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
@@ -248,13 +249,13 @@ endif()
 ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
+              FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore LABELS longtest)
 
 #--stressFit---------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressFit stressFit.cxx LIBRARIES MathCore Matrix)
 ROOT_ADD_TEST(test-stressfit COMMAND stressFit FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stressfit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressFit.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressfit)
+              FAILREGEX "FAILED|Error in" DEPENDS test-stressfit LABELS longtest)
 
 #--stressHistoFit-----------------------------------------------------------------------------
 if(ROOT_unuran_FOUND)
@@ -262,7 +263,7 @@ if(ROOT_unuran_FOUND)
   ROOT_ADD_TEST(test-stresshistofit COMMAND stressHistoFit FAILREGEX "FAILED|Error in" LABELS longtest)
   if(NOT MSVC OR llvm13_broken_tests)
     ROOT_ADD_TEST(test-stresshistofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistoFit.cxx
-                  FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit )
+                  FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit LABELS longtest)
   endif()
 endif()
 
