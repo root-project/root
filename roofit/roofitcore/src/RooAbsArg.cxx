@@ -2524,7 +2524,7 @@ void RooAbsArg::setDataToken(std::size_t index)
       std::stringstream errMsg;
       errMsg << "The data token for \"" << GetName() << "\" is already set!"
              << " Are you trying to evaluate the same object by multiple RooFit::Evaluator instances?"
-             << " This is not allowed.";
+             << " This is not allowed. Or is it?";
       throw std::runtime_error(errMsg.str());
    }
    _dataToken = index;
