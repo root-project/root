@@ -377,7 +377,7 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
   if (code==0) {
     return getVal(normSet) ;
   }
-  if (code < 0 || (code-1) >= static_cast<int>(_anaReg.getSize())) {
+  if (code < 0 || (code-1) >= static_cast<int>(_anaReg.size())) {
     coutE(Integration) << "RooAbsCachedPdf::analyticalIntegralWN(" << GetName()
     << "): analytical integration registry is empty for code: " << code << "."
     << " RooWorkspace is not prepared to store integrals to functions when these inherit from RooAbsCachedPdf."
