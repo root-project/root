@@ -205,6 +205,12 @@ namespace cling {
 
     if (getTransaction()->getIssuedDiags() == Transaction::kErrors)
       return true;
+    
+    for (Decl *D : DGR)
+      if (auto *TSD = llvm::dyn_cast<TopLevelStmtDecl>(D);
+          TSD && TSD->isSemiMissing())
+            if (auto *synthesizer = m_IncrParser->GetSynthesizer())
+        TSD->setStmt(synthesizer->SynthesizeSVRInit(cast<Expr>(TSD->getStmt())));
 
     if (comesFromASTReader(DGR)) {
       for (DeclGroupRef::iterator DI = DGR.begin(), DE = DGR.end();
