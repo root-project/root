@@ -154,14 +154,20 @@ inline std::string defaultGammaName(std::string const &sysname, std::size_t i)
 
 /// Export the names of the gamma parameters to the modifier struct if the
 /// names don't match the default gamma parameter names, which is gamma_<sysname>_bin_<i>
-void optionallyExportGammaParameters(JSONNode &mod, std::string const &sysname,
-                                     std::vector<std::string> const &paramNames)
+void optionallyExportGammaParameters(JSONNode &mod, std::string const &sysname, std::vector<RooAbsReal *> const &params,
+                                     bool forceExport = true)
 {
-   for (std::size_t i = 0; i < paramNames.size(); ++i) {
-      if (paramNames[i] != defaultGammaName(sysname, i)) {
-         mod["parameters"].fill_seq(paramNames);
-         return;
+   std::vector<std::string> paramNames;
+   bool needExport = forceExport;
+   for (std::size_t i = 0; i < params.size(); ++i) {
+      std::string name(params[i]->GetName());
+      paramNames.push_back(name);
+      if (name != defaultGammaName(sysname, i)) {
+         needExport = true;
       }
+   }
+   if (needExport) {
+      mod["parameters"].fill_seq(paramNames);
    }
 }
 
@@ -601,9 +607,9 @@ void collectElements(RooArgSet &elems, RooAbsArg *arg)
 
 struct NormFactor {
    std::string name;
-   RooAbsArg const *param = nullptr;
+   RooAbsReal const *param = nullptr;
    RooAbsPdf const *constraint = nullptr;
-   NormFactor(RooAbsArg const &par, RooAbsPdf const *constr = nullptr)
+   NormFactor(RooAbsReal const &par, RooAbsPdf const *constr = nullptr)
       : name{par.GetName()}, param{&par}, constraint{constr}
    {
    }
@@ -611,22 +617,22 @@ struct NormFactor {
 
 struct NormSys {
    std::string name;
-   RooAbsArg const *param = nullptr;
+   RooAbsReal const *param = nullptr;
    double low;
    double high;
    TClass *constraint = RooGaussian::Class();
-   NormSys(const std::string &n, RooAbsArg *const p, double h, double l, TClass *c)
+   NormSys(const std::string &n, RooAbsReal *const p, double h, double l, TClass *c)
       : name(n), param(p), low(l), high(h), constraint(c)
    {
    }
 };
 struct HistoSys {
    std::string name;
-   RooAbsArg const *param = nullptr;
+   RooAbsReal const *param = nullptr;
    std::vector<double> low;
    std::vector<double> high;
    TClass *constraint = RooGaussian::Class();
-   HistoSys(const std::string &n, RooAbsArg *const p, RooHistFunc *l, RooHistFunc *h, TClass *c)
+   HistoSys(const std::string &n, RooAbsReal *const p, RooHistFunc *l, RooHistFunc *h, TClass *c)
       : name(n), param(p), constraint(c)
    {
       low.assign(l->dataHist().weightArray(), l->dataHist().weightArray() + l->dataHist().numEntries());
@@ -636,7 +642,7 @@ struct HistoSys {
 struct ShapeSys {
    std::string name;
    std::vector<double> constraints;
-   std::vector<std::string> parameters;
+   std::vector<RooAbsReal *> parameters;
    TClass *constraint = nullptr;
    ShapeSys(const std::string &n) : name{n} {}
 };
@@ -650,7 +656,7 @@ struct Sample {
    std::vector<ShapeSys> shapesys;
    std::vector<RooAbsReal *> otherElements;
    bool useBarlowBeestonLight = false;
-   std::vector<std::string> staterrorParameters;
+   std::vector<RooAbsReal *> staterrorParameters;
    TClass *barlowBeestonLightConstraint = RooPoisson::Class();
    Sample(const std::string &n) : name{n} {}
 };
@@ -734,7 +740,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
             // name.
          } else if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
             if (constVar->getVal() != 1.) {
-               sample.normfactors.emplace_back(*e);
+               sample.normfactors.emplace_back(*constVar);
             }
          } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
             addNormFactor(par, sample, ws);
@@ -765,7 +771,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
       // sort and configure the normsys
       for (auto *fip : fips) {
          for (size_t i = 0; i < fip->variables().size(); ++i) {
-            RooAbsArg *var = fip->variables().at(i);
+            RooAbsReal *var = static_cast<RooAbsReal *>(fip->variables().at(i));
             std::string sysname(var->GetName());
             erasePrefix(sysname, "alpha_");
             const auto *constraint = findConstraint(var);
@@ -782,7 +788,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
       // sort and configure the histosys
       if (pip) {
          for (size_t i = 0; i < pip->paramList().size(); ++i) {
-            RooAbsArg *var = pip->paramList().at(i);
+            RooAbsReal *var = static_cast<RooAbsReal *>(pip->paramList().at(i));
             std::string sysname(var->GetName());
             erasePrefix(sysname, "alpha_");
             if (auto lo = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
@@ -803,7 +809,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
          if (startsWith(std::string(phf->GetName()), "mc_stat_")) { // MC stat uncertainty
             int idx = 0;
             for (const auto &g : phf->paramList()) {
-               sample.staterrorParameters.push_back(g->GetName());
+               sample.staterrorParameters.push_back(static_cast<RooRealVar *>(g));
                ++idx;
                RooAbsPdf *constraint = findConstraint(g);
                if (channel.tot_yield.find(idx) == channel.tot_yield.end()) {
@@ -834,7 +840,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
             bool isshapefactor = eraseSuffix(sys.name, "_ShapeFactor") || eraseSuffix(sys.name, "_shapeFactor");
 
             for (const auto &g : phf->paramList()) {
-               sys.parameters.push_back(g->GetName());
+               sys.parameters.push_back(static_cast<RooRealVar *>(g));
                RooAbsPdf *constraint = nullptr;
                if (isshapesys) {
                   constraint = findConstraint(g);
@@ -1015,8 +1021,52 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
    return true;
 }
 
+std::vector<RooAbsPdf *> findLostConstraints(const Channel &channel, const std::vector<RooAbsPdf *> &constraints)
+{
+   // collect all the vars that are used by the model
+   std::set<const RooAbsReal *> vars;
+   for (const auto &sample : channel.samples) {
+      for (const auto &nf : sample.normfactors) {
+         vars.insert(nf.param);
+      }
+      for (const auto &sys : sample.normsys) {
+         vars.insert(sys.param);
+      }
+
+      for (const auto &sys : sample.histosys) {
+         vars.insert(sys.param);
+      }
+      for (const auto &sys : sample.shapesys) {
+         for (const auto &par : sys.parameters) {
+            vars.insert(par);
+         }
+      }
+      if (sample.useBarlowBeestonLight) {
+         for (const auto &par : sample.staterrorParameters) {
+            vars.insert(par);
+         }
+      }
+   }
+
+   // check if there is any constraint present that is unrelated to these vars
+   std::vector<RooAbsPdf *> lostConstraints;
+   for (auto *pdf : constraints) {
+      bool related = false;
+      for (const auto *var : vars) {
+         if (pdf->dependsOn(*var)) {
+            related = true;
+         }
+      }
+      if (!related) {
+         lostConstraints.push_back(pdf);
+      }
+   }
+   // return the constraints that would be "lost" when exporting the model
+   return lostConstraints;
+}
+
 bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
-                          JSONNode &elem)
+                          std::vector<RooAbsPdf *> constraints, JSONNode &elem)
 {
    // some preliminary checks
    if (!sumpdf) {
@@ -1049,6 +1099,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    // stat error handling
    configureStatError(channel);
 
+   findLostConstraints(channel, constraints);
+
    // Export all the custom modifiers
    for (const auto &sample : channel.samples) {
       for (RooAbsArg *modifier : sample.otherElements) {
@@ -1067,42 +1119,6 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    }
 
    return exportChannel(tool, channel, elem);
-}
-
-std::vector<RooAbsPdf *>
-findLostConstraints(RooJSONFactoryWSTool *tool, const std::vector<RooAbsPdf *> &constraints, const JSONNode &elem)
-{
-   // collect all the vars that are used by the model
-   std::set<RooRealVar *> vars;
-   for (const auto &sample : elem["samples"].children()) {
-      for (const auto &modifier : sample["modifiers"].children()) {
-         if (modifier.has_child("parameter")) {
-            std::string par(modifier["parameter"].val());
-            auto *var = tool->workspace()->var(par);
-            vars.insert(var);
-         } else if (modifier.has_child("parameters")) {
-            for (auto &par : modifier["parameters"].children()) {
-               auto *var = tool->workspace()->var(par.val());
-               vars.insert(var);
-            }
-         }
-      }
-   }
-   // check if there is any constraint present that is unrelated to these vars
-   std::vector<RooAbsPdf *> lostConstraints;
-   for (auto *pdf : constraints) {
-      bool related = false;
-      for (const auto *var : vars) {
-         if (pdf->dependsOn(*var)) {
-            related = true;
-         }
-      }
-      if (!related) {
-         lostConstraints.push_back(pdf);
-      }
-   }
-   // return the constraints that would be "lost" when exporting the model
-   return lostConstraints;
 }
 
 class HistFactoryStreamer_ProdPdf : public RooFit::JSONIO::Exporter {
@@ -1127,8 +1143,7 @@ public:
       if (!sumpdf)
          return false;
 
-      bool ok = tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, elem);
-      findLostConstraints(tool, constraints, elem);
+      bool ok = tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, constraints, elem);
       return ok;
    }
    std::string const &key() const override
@@ -1147,7 +1162,8 @@ public:
    bool autoExportDependants() const override { return false; }
    bool tryExport(RooJSONFactoryWSTool *tool, const RooRealSumPdf *sumpdf, JSONNode &elem) const
    {
-      return tryExportHistFactory(tool, sumpdf->GetName(), sumpdf, elem);
+      std::vector<RooAbsPdf *> constraints;
+      return tryExportHistFactory(tool, sumpdf->GetName(), sumpdf, constraints, elem);
    }
    std::string const &key() const override
    {
