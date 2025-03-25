@@ -181,6 +181,7 @@ endif()
 
 if(NOT xrootd)
   set(xrootd_veto analysis/dataframe/df101_h1Analysis.C
+                  analysis/dataframe/df101_h1Analysis.py
                   analysis/dataframe/df102_NanoAODDimuonAnalysis.C
                   analysis/dataframe/df103_NanoAODHiggsAnalysis.C
                   analysis/dataframe/df106_HiggsToFourLeptons.C
