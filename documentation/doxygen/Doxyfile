@@ -1080,7 +1080,6 @@ EXCLUDE_PATTERNS       = */G__* \
                          */gui/cefdisplay/* \
                          */gui/qt5webdisplay/* \
                          */gui/qt6webdisplay/* \
-                         */tutorials/machine_learning/* \
                          */tutorials/visualisation/webgui/qt5web/* \
                          */math/mathcore/src/CDT*
 
