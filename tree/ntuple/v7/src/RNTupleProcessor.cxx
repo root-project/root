@@ -534,6 +534,15 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    if (!HasJoinTable())
       return entryNumber;
 
+   // First build the join tables if this hasn't been done yet.
+   if (!fJoinTablesAreBuilt) {
+      for (unsigned i = 0; i < fJoinTables.size(); ++i) {
+         fJoinTables[i]->Add(*fAuxiliaryPageSources[i]);
+      }
+
+      fJoinTablesAreBuilt = true;
+   }
+
    // Collect the values of the join fields for this entry.
    std::vector<void *> valPtrs;
    valPtrs.reserve(fJoinFieldTokens.size());
@@ -545,11 +554,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    // Find the entry index corresponding to the join field values for each auxiliary ntuple.
    std::vector<ROOT::NTupleSize_t> auxEntryIdxs;
    auxEntryIdxs.reserve(fJoinTables.size());
-   for (unsigned i = 0; i < fJoinTables.size(); ++i) {
-      auto &joinTable = fJoinTables[i];
-      if (!fJoinTablesAreBuilt)
-         joinTable->Add(*fAuxiliaryPageSources[i]);
-
+   for (const auto &joinTable : fJoinTables) {
       auto entryIdxs = joinTable->GetEntryIndexes(valPtrs);
 
       if (entryIdxs.empty())
