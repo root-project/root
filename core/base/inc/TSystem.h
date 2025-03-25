@@ -411,7 +411,7 @@ public:
    virtual Int_t           Exec(const char *shellcmd);
    virtual FILE           *OpenPipe(const char *command, const char *mode);
    virtual int             ClosePipe(FILE *pipe);
-   virtual TString         GetFromPipe(const char *command);
+   virtual TString         GetFromPipe(const char *command, int *ret = nullptr, bool redirectStderr = false);
    virtual int             GetPid();
    virtual void            StackTrace();
 
