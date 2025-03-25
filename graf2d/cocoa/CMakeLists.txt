@@ -42,7 +42,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     GLEW::GLEW
 )
 
-target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
+target_include_directories(GCocoa PRIVATE ${ROOT_MAIN_SOURCE_DIR}/graf3d/gl/inc)
 
 # We know GL is deprecated on macOS. And our answer is WebGUI/Graphics.
 target_compile_options(GCocoa PRIVATE -ObjC++ -Wno-deprecated-declarations)

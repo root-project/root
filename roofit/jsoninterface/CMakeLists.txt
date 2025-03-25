@@ -48,7 +48,7 @@ if(${RYML_FOUND})
 endif()
 
 if(builtin_nlohmannjson)
-  target_include_directories(RooFitJSONInterface PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
+  target_include_directories(RooFitJSONInterface PRIVATE ${ROOT_MAIN_SOURCE_DIR}/builtins)
 else()
   target_link_libraries(RooFitJSONInterface PRIVATE nlohmann_json::nlohmann_json)
 endif()

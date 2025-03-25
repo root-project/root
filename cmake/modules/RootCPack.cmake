@@ -33,7 +33,7 @@ string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*$" "\\2" CXX_MINOR ${CMAKE_CXX_COMPI
 #---Resource Files-----------------------------------------------------------------------------------
 configure_file(LICENSE LICENSE.txt COPYONLY)
 configure_file(LGPL2_1.txt LGPL2_1.txt COPYONLY)
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
+set(CPACK_RESOURCE_FILE_LICENSE "${ROOT_MAIN_BINARY_DIR}/LICENSE.txt")
 if (APPLE)
   # Apple productbuild cannot handle .md files as CPACK_PACKAGE_DESCRIPTION_FILE;
   # convert to HTML instead.
@@ -41,14 +41,14 @@ if (APPLE)
   if (NOT CONVERTER)
     message(STATUS "The textutil executable was not found: CPACK_PACKAGE_DESCRIPTION_FILE and CPACK_RESOURCE_FILE_README will not be set")
   else()
-    execute_process(COMMAND ${CONVERTER} -convert html "${CMAKE_SOURCE_DIR}/README.md" -output "${CMAKE_BINARY_DIR}/README.html")
-    set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.html")
-    set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.html")
+    execute_process(COMMAND ${CONVERTER} -convert html "${ROOT_MAIN_SOURCE_DIR}/README.md" -output "${ROOT_MAIN_BINARY_DIR}/README.html")
+    set(CPACK_PACKAGE_DESCRIPTION_FILE "${ROOT_MAIN_BINARY_DIR}/README.html")
+    set(CPACK_RESOURCE_FILE_README "${ROOT_MAIN_BINARY_DIR}/README.html")
   endif()
 else()
   configure_file(README.md README.md COPYONLY)
-  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.md")
-  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.md")
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${ROOT_MAIN_BINARY_DIR}/README.md")
+  set(CPACK_RESOURCE_FILE_README "${ROOT_MAIN_BINARY_DIR}/README.md")
 endif()
 
 #---Source package settings--------------------------------------------------------------------------
@@ -160,7 +160,7 @@ endif()
 # base CPack configuration.
 #
 configure_file(cmake/scripts/CMakeCPackOptions.cmake.in CMakeCPackOptions.cmake @ONLY)
-set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/CMakeCPackOptions.cmake)
+set(CPACK_PROJECT_CONFIG_FILE ${ROOT_MAIN_BINARY_DIR}/CMakeCPackOptions.cmake)
 include(CPack)
 
 #----------------------------------------------------------------------------------------------------

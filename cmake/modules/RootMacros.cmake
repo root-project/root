@@ -311,7 +311,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           # check that dir not a empty dir like $<BUILD_INTERFACE:>
           if(NOT ${dir} MATCHES "^[$]")
             list(APPEND incdirs ${dir})
-            string(FIND ${dir} "${CMAKE_SOURCE_DIR}" src_dir_in_dir)
+            string(FIND ${dir} "${ROOT_MAIN_SOURCE_DIR}" src_dir_in_dir)
             if(${src_dir_in_dir} EQUAL 0)
               list(APPEND headerdirs ${dir})
             endif()
@@ -329,14 +329,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     # Remove all source dirs also while they preserved in root dictionaries and
     # ends in the gInterpreter->GetIncludePath()
 
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}")
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/ginclude")
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/builtins")
-    list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
+    list(FILTER incdirs EXCLUDE REGEX "^${ROOT_MAIN_SOURCE_DIR}")
+    list(FILTER incdirs EXCLUDE REGEX "^${ROOT_MAIN_BINARY_DIR}/ginclude")
+    list(FILTER incdirs EXCLUDE REGEX "^${ROOT_MAIN_BINARY_DIR}/externals")
+    list(FILTER incdirs EXCLUDE REGEX "^${ROOT_MAIN_BINARY_DIR}/builtins")
+    list(INSERT incdirs 0 ${ROOT_MAIN_BINARY_DIR}/include)
 
     # this instruct rootcling do not store such paths in dictionary
-    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
+    set(excludepaths ${ROOT_MAIN_SOURCE_DIR} ${ROOT_MAIN_BINARY_DIR}/ginclude ${ROOT_MAIN_BINARY_DIR}/externals ${ROOT_MAIN_BINARY_DIR}/builtins)
 
     set(headerfiles)
     set(_list_of_header_dependencies)
@@ -421,8 +421,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           set(incdirs_in_build)
           set(incdirs_in_prefix ${headerdirs_dflt})
           foreach(incdir ${incdirs})
-            string(FIND ${incdir} "${CMAKE_SOURCE_DIR}" src_dir_in_dir)
-            string(FIND ${incdir} "${CMAKE_BINARY_DIR}" bin_dir_in_dir)
+            string(FIND ${incdir} "${ROOT_MAIN_SOURCE_DIR}" src_dir_in_dir)
+            string(FIND ${incdir} "${ROOT_MAIN_BINARY_DIR}" bin_dir_in_dir)
             string(FIND ${incdir} "${CMAKE_CURRENT_BINARY_DIR}" cur_dir_in_dir)
             if(NOT IS_ABSOLUTE ${incdir}
                OR ${src_dir_in_dir} EQUAL 0
@@ -467,10 +467,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
 
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-      list(APPEND incdirs ${CMAKE_BINARY_DIR}/include)
-      list(APPEND incdirs ${CMAKE_BINARY_DIR}/etc/cling) # This is for the RuntimeUniverse
-      # list(APPEND incdirs ${CMAKE_SOURCE_DIR})
-      set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+      list(APPEND incdirs ${ROOT_MAIN_BINARY_DIR}/include)
+      list(APPEND incdirs ${ROOT_MAIN_BINARY_DIR}/etc/cling) # This is for the RuntimeUniverse
+      # list(APPEND incdirs ${ROOT_MAIN_SOURCE_DIR})
+      set(excludepaths ${ROOT_MAIN_SOURCE_DIR} ${ROOT_MAIN_BINARY_DIR})
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
       list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     endif()
@@ -556,7 +556,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
         # The module depends on its modulemap file.
         if (cpp_module_file AND CMAKE_PROJECT_NAME STREQUAL ROOT)
-		set (runtime_cxxmodule_dependencies copymodulemap "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
+		set (runtime_cxxmodule_dependencies copymodulemap "${ROOT_MAIN_BINARY_DIR}/include/ROOT.modulemap")
         endif()
       endif(cpp_module)
     endif()
@@ -602,18 +602,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
     if(MSVC AND CMAKE_ROOTTEST_DICT)
-      set(command ${CMAKE_COMMAND} -E ${CMAKE_BINARY_DIR}/bin/rootcling_stage1.exe)
+      set(command ${CMAKE_COMMAND} -E ${ROOT_MAIN_BINARY_DIR}/bin/rootcling_stage1.exe)
     else()
-      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
+      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_MAIN_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
     endif()
     set(ROOTCINTDEP rconfigure)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       if(MSVC AND CMAKE_ROOTTEST_DICT)
-        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe)
+        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${ROOT_MAIN_BINARY_DIR}/bin/rootcling.exe)
       else()
-        set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
+        set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_MAIN_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
                     "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
         # Modules need RConfigure.h copied into include/.
         set(ROOTCINTDEP rootcling rconfigure)
@@ -1246,7 +1246,7 @@ function(ROOT_INSTALL_HEADERS)
     list(APPEND include_files ${globbed_files})
   endforeach()
 
-  string(REPLACE ${CMAKE_SOURCE_DIR} "" target_name ${CMAKE_CURRENT_SOURCE_DIR})
+  string(REPLACE ${ROOT_MAIN_SOURCE_DIR} "" target_name ${CMAKE_CURRENT_SOURCE_DIR})
   string(REPLACE / _ target_name "copy_header_${target_name}")
   string(REGEX REPLACE "_$" "" target_name ${target_name})
 
@@ -1262,7 +1262,7 @@ function(ROOT_INSTALL_HEADERS)
     string(REGEX REPLACE ".*/*inc/" "" destination ${subdir})
 
     list(TRANSFORM input_files  PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
-    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination}")
+    list(TRANSFORM output_files REPLACE ".*/" "${ROOT_MAIN_BINARY_DIR}/include/${destination}")
 
     set(destination destination_${destination})
 
@@ -1283,7 +1283,7 @@ macro(ROOT_CREATE_HEADER_COPY_TARGETS)
     get_property(inputs  GLOBAL PROPERTY ROOT_HEADER_INPUT_${copy_list})
     get_property(outputs GLOBAL PROPERTY ROOT_HEADER_OUTPUT_${copy_list})
 
-    string(REPLACE "destination_" "${CMAKE_BINARY_DIR}/include/" destination ${copy_list})
+    string(REPLACE "destination_" "${ROOT_MAIN_BINARY_DIR}/include/" destination ${copy_list})
 
     list(LENGTH inputs LIST_LENGTH)
     # Windows doesn't support long command lines, so split them in packs:
@@ -1445,7 +1445,7 @@ function(ROOT_EXECUTABLE executable)
   endif()
   if(NOT (PROJECT_NAME STREQUAL "ROOT"))
     # only for non-ROOT executable use $ROOTSYS/include
-    include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
+    include_directories(BEFORE ${ROOT_MAIN_BINARY_DIR}/include)
   elseif(MSVC)
     set(exe_srcs ${exe_srcs} ${ROOT_RC_SCRIPT})
   endif()
@@ -1734,7 +1734,7 @@ function(ROOT_ADD_TEST test)
       --build-config $<CONFIGURATION>
       --build-noclean
       --test-command ${_command} )
-    set_property(TEST ${test} PROPERTY ENVIRONMENT ROOT_DIR=${CMAKE_BINARY_DIR})
+    set_property(TEST ${test} PROPERTY ENVIRONMENT ROOT_DIR=${ROOT_MAIN_BINARY_DIR})
   else()
     add_test(NAME ${test} COMMAND ${_command})
     if (gnuinstall)
@@ -1827,7 +1827,7 @@ function(ROOT_PATH_TO_STRING resultvar path)
   get_filename_component(realfp ${path} ABSOLUTE)
   get_filename_component(filename_we ${path} NAME_WE)
 
-  string(REPLACE "${CMAKE_SOURCE_DIR}" "" relativepath ${realfp})
+  string(REPLACE "${ROOT_MAIN_SOURCE_DIR}" "" relativepath ${realfp})
   string(REPLACE "${path}" "" relativepath ${relativepath})
 
   string(MAKE_C_IDENTIFIER ${relativepath}${filename_we} mangledname)
@@ -1921,7 +1921,7 @@ endfunction()
 # ROOT_ADD_TEST_SUBDIRECTORY( <name> )
 #----------------------------------------------------------------------------
 function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
-  file(RELATIVE_PATH subdir ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
+  file(RELATIVE_PATH subdir ${ROOT_MAIN_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
 endfunction()
 
@@ -2091,9 +2091,9 @@ function(generateHeader target input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
+      ${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
   target_sources(${target} PRIVATE ${output})
 endfunction()
@@ -2111,9 +2111,9 @@ function(generateManual name input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
+      ${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
