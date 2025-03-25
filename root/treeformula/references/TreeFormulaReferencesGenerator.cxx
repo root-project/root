@@ -133,7 +133,6 @@ int main(int argc, char **argv)
    if (split < 0) {branchStyle = 0; split = -1-split;}
 
    TFile *hfile;
-   TTree *tree;
    Event *event = 0;
 
    // Fill event, header and tracks with some random numbers
@@ -158,7 +157,7 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
       } else
          hfile = new TFile(filename);
-      tree = (TTree*)hfile->Get("T");
+      TTree *tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
