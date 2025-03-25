@@ -217,21 +217,21 @@ if (spectrum)
   ROOT_EXECUTABLE(stressSpectrum stressSpectrum.cxx LIBRARIES Hist Spectrum Gpad)
   ROOT_ADD_TEST(test-stressspectrum COMMAND stressSpectrum -b FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressspectrum-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressSpectrum.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressspectrum LABELS longtest)
+                FAILREGEX "FAILED|Error in" LABELS longtest)
 endif()
 
 #--stressVector------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
 ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressvector-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressVector.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressvector)
+              FAILREGEX "FAILED|Error in")
 
 #--stressMathMore----------------------------------------------------------------------------------
 if(ROOT_mathmore_FOUND)
   ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore Smatrix)
   ROOT_ADD_TEST(test-stressmathmore COMMAND stressMathMore FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressmathmore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathMore.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressmathmore TIMEOUT 1800 LABELS longtest)
+                FAILREGEX "FAILED|Error in" TIMEOUT 1800 LABELS longtest)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
@@ -255,7 +255,7 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
 ROOT_EXECUTABLE(stressFit stressFit.cxx LIBRARIES MathCore Matrix)
 ROOT_ADD_TEST(test-stressfit COMMAND stressFit FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stressfit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressFit.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressfit LABELS longtest)
+              FAILREGEX "FAILED|Error in" LABELS longtest)
 
 #--stressHistoFit-----------------------------------------------------------------------------
 if(ROOT_unuran_FOUND)
@@ -263,7 +263,7 @@ if(ROOT_unuran_FOUND)
   ROOT_ADD_TEST(test-stresshistofit COMMAND stressHistoFit FAILREGEX "FAILED|Error in" LABELS longtest)
   if(NOT MSVC OR llvm13_broken_tests)
     ROOT_ADD_TEST(test-stresshistofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistoFit.cxx
-                  FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit LABELS longtest)
+                  FAILREGEX "FAILED|Error in" LABELS longtest)
   endif()
 endif()
 
@@ -271,13 +271,13 @@ endif()
 ROOT_EXECUTABLE(stressEntryList stressEntryList.cxx LIBRARIES MathCore Tree Hist)
 ROOT_ADD_TEST(test-stressentrylist COMMAND stressEntryList -b FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressentrylist-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressEntryList.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressentrylist)
+              FAILREGEX "FAILED|Error in")
 
 #--stressIterators---------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressIterators stressIterators.cxx LIBRARIES Core)
 ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressiterators-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressIterators.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stressiterators)
+              FAILREGEX "FAILED|Error in")
 
 #--stressInterpreter-------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
@@ -290,10 +290,6 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
               FAILREGEX Error|FAILED)
-
-#--stressHepix-------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
-#ROOT_ADD_TEST(test-stressHepix COMMAND stressHepix FAILREGEX "FAILED|Error in")
 
 #--stressProof-------------------------------------------------------------------------------
 if(proof AND NOT WIN32)
@@ -318,10 +314,6 @@ ROOT_ADD_TEST(test-ctorture COMMAND ctorture)
 #--qprandom----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(QpRandomDriver QpRandomDriver.cxx LIBRARIES Quadp)
 ROOT_ADD_TEST(test-qprandom COMMAND QpRandomDriver 10 2 2)
-
-#--threads----------------------------------------------------------------------------------
-ROOT_EXECUTABLE(threads threads.cxx LIBRARIES Thread Hist Gpad)
-#ROOT_ADD_TEST(test-threads COMMAND threads)
 
 #--stressIOPlugins--------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressIOPlugins stressIOPlugins.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)

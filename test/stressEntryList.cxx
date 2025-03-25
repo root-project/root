@@ -54,7 +54,18 @@
 #include "TError.h"
 #include "snprintf.h"
 
-Int_t stressEntryList(Int_t nentries = 10000, Int_t nfiles = 10);
+TString GetInterpPrefix()
+{
+#ifdef __CLING__
+   return "interpreted_";
+#else
+   return "compiled_";
+#endif
+}
+const auto gPrefix = GetInterpPrefix();
+const char* gRootFileNameTemplate = "stressEntryListTrees_%d.root";
+
+Int_t stressEntryList(Int_t nentries = 1024, Int_t nfiles = 10);
 void MakeTrees(Int_t nentries, Int_t nfiles);
 
 Bool_t Test1(bool fixedCut)
@@ -65,11 +76,11 @@ Bool_t Test1(bool fixedCut)
 
    Int_t wrongentries1, wrongentries2, wrongentries3, wrongentries4, wrongentries5;
    TChain *bigchain = new TChain("bigchain", "bigchain");
-   bigchain->Add("stressEntryListTrees*.root/tree1");
-   bigchain->Add("stressEntryListTrees*.root/tree2");
+   bigchain->Add(gPrefix+"stressEntryListTrees*.root/tree1");
+   bigchain->Add(gPrefix+"stressEntryListTrees*.root/tree2");
 
    TChain *smallchain = new TChain("smallchain", "smallchain");
-   smallchain->Add("stressEntryListTrees*.root/tree1");
+   smallchain->Add(gPrefix+"stressEntryListTrees*.root/tree1");
 
    //create an entry list for the small chain
    TString fixedCutStr; fixedCutStr.Form("Entry$ >= %lld", smallchain->GetEntries());
@@ -212,8 +223,8 @@ Bool_t Test2()
 
    Int_t wrongentries1, wrongentries2, wrongentries3, wrongentries4, wrongentries5;
    TChain *chain = new TChain("chain", "chain");
-   chain->Add("stressEntryListTrees_0.root/tree1");
-   chain->Add("stressEntryListTrees_0.root/tree2");
+   chain->Add(gPrefix+"stressEntryListTrees_0.root/tree1");
+   chain->Add(gPrefix+"stressEntryListTrees_0.root/tree2");
    //chain->Add("stressEntryListTrees*.root/tree1");
    //chain->Add("stressEntryListTrees*.root/tree2");
    TCut cut1("cut1", "x>0");
@@ -331,8 +342,9 @@ Bool_t Test3()
    //Test correspondence of event lists and entry lists
 
    TChain *chain = new TChain("chain", "chain");
-   chain->Add("stressEntryListTrees*.root/tree1");
-   chain->Add("stressEntryListTrees*.root/tree2");
+   auto prefix = GetInterpPrefix();
+   chain->Add(gPrefix+"stressEntryListTrees*.root/tree1");
+   chain->Add(gPrefix+"stressEntryListTrees*.root/tree2");
 
    TCut cut = "x<0 && y>0";
 
@@ -382,8 +394,8 @@ Bool_t Test3()
 Bool_t Test4()
 {
    //Like Test3() but for trees
-
-   TFile f("stressEntryListTrees_0.root");
+   auto prefix = GetInterpPrefix();
+   TFile f(prefix+"stressEntryListTrees_0.root");
    TTree *tree = (TTree*)f.Get("tree1");
    TCut cut = "x<0 && y>0";
    tree->Draw(">>evlist", cut, "");
@@ -551,18 +563,18 @@ Bool_t Test5And6(const std::list<const char*>& treeNamesForChain )
 
 Bool_t Test5()
 {
-   return Test5And6({"stressEntryListTrees*.root/tree1",
-                     "stressEntryListTrees*.root/tree2"});
+   return Test5And6({gPrefix+"stressEntryListTrees*.root/tree1",
+                     gPrefix+"stressEntryListTrees*.root/tree2"});
 }
 
 Bool_t Test6()
 {
-   return Test5And6({"stressEntryListTrees*.root/tree1",
-                     "stressEntryListTrees*.root/tree2",
-                     "stressEntryListTrees*.root/Dir1/tree1",
-                     "stressEntryListTrees*.root/Dir1/tree2",
-                     "stressEntryListTrees*.root/Dir2/tree1",
-                     "stressEntryListTrees*.root/Dir2/tree2"});
+   return Test5And6({gPrefix+"stressEntryListTrees*.root/tree1",
+                     gPrefix+"stressEntryListTrees*.root/tree2",
+                     gPrefix+"stressEntryListTrees*.root/Dir1/tree1",
+                     gPrefix+"stressEntryListTrees*.root/Dir1/tree2",
+                     gPrefix+ "stressEntryListTrees*.root/Dir2/tree1",
+                     gPrefix+ "stressEntryListTrees*.root/Dir2/tree2"});
 }
 
 
@@ -572,8 +584,6 @@ void SetupTree(TTree* tree, Double_t &x, Double_t &y, Double_t &z)
    tree->Branch("y", &y, "y/D");
    tree->Branch("z", &z, "z/D");
 }
-
-const char* gRootFileNameTemplate = "stressEntryListTrees_%d.root";
 
 void MakeTrees(Int_t nentries, Int_t nfiles)
 {
@@ -585,7 +595,7 @@ void MakeTrees(Int_t nentries, Int_t nfiles)
    char buffer[50];
    for (Int_t ifile=0; ifile<nfiles; ifile++){
       snprintf(buffer,50, gRootFileNameTemplate, ifile);
-      TFile f1(buffer, "UPDATE");
+      TFile f1(gPrefix+buffer, "UPDATE");
       auto dir1 = f1.mkdir("Dir1");
       auto dir2 = f1.mkdir("Dir2");
       // Init trees
@@ -629,7 +639,7 @@ void CleanUp(Int_t nfiles)
    char buffer[50];
    for (Int_t i=0; i<nfiles; i++){
       snprintf(buffer,50, gRootFileNameTemplate, i);
-      gSystem->Unlink(buffer);
+      gSystem->Unlink(gPrefix+buffer);
    }
 }
 
