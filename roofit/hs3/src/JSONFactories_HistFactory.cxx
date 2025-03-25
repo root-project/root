@@ -26,10 +26,13 @@
 #include <RooBinWidthFunction.h>
 #include <RooProdPdf.h>
 #include <RooPoisson.h>
+#include <RooFormulaVar.h>
 #include <RooLognormal.h>
 #include <RooGaussian.h>
 #include <RooProduct.h>
 #include <RooWorkspace.h>
+
+#include <regex>
 
 #include "static_execute.h"
 #include "JSONIOUtils.h"
@@ -118,6 +121,7 @@ T *findClient(RooAbsArg *gamma)
 
 RooAbsPdf *findConstraint(RooAbsArg *g)
 {
+   if(!g) return nullptr;
    RooPoisson *constraint_p = findClient<RooPoisson>(g);
    if (constraint_p)
       return constraint_p;
@@ -278,6 +282,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
       RooArgList overall_nps;
       std::vector<double> overall_low;
       std::vector<double> overall_high;
+      std::vector<int> overall_interp;      
 
       RooArgList histNps;
       RooArgList histoLo;
@@ -309,14 +314,24 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             createNominal(ws, parname, 0.0, -10, 10);
             overall_nps.add(getOrCreate<RooRealVar>(ws, parname, 0., -5, 5));
             auto &data = mod["data"];
-            // the below contains a a hack to cut off variations that go below 0
-            // this is needed because with interpolation code 4, which is the default, interpolation is done in
-            // log-space. hence, values <= 0 result in NaN which propagate throughout the model and cause evaluations to
+	    int interp = 4;
+	    if(mod.has_child("interpolation")){
+	      interp = mod["interpolation"].val_int();
+	    }
+	    double low = data["lo"].val_double();
+	    double high = data["hi"].val_double();	    
+
+	    // the below contains a a hack to cut off variations that go below 0
+	    // this is needed because with interpolation code 4, which is the default, interpolation is done in
+	    // log-space. hence, values <= 0 result in NaN which propagate throughout the model and cause evaluations to
             // fail if you know a nicer way to solve this, please go ahead and fix the lines below
-            overall_low.push_back(data["lo"].val_double() > 0 ? data["lo"].val_double()
-                                                              : std::numeric_limits<double>::epsilon());
-            overall_high.push_back(data["hi"].val_double() > 0 ? data["hi"].val_double()
-                                                               : std::numeric_limits<double>::epsilon());
+	    if(interp == 4 && low<= 0) low = std::numeric_limits<double>::epsilon();
+	    if(interp == 4 && high<= 0) high = std::numeric_limits<double>::epsilon();	 
+	 
+	    overall_low.push_back(low);
+	    overall_high.push_back(high);
+	    overall_interp.push_back(interp);	    
+	    
             constraints.add(getConstraint(ws, parname));
          } else if (modtype == "histosys") {
             auto *parameter = mod.find("parameter");
@@ -365,9 +380,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
 
       std::string interpName = sampleName + "_" + channelName + "_epsilon";
       if (!overall_nps.empty()) {
-         auto &v = tool.wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(interpName, overall_nps, 1., overall_low,
-                                                                            overall_high);
-         v.setAllInterpCodes(4); // default HistFactory interpCode
+ 	 auto &v = tool.wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(interpName, overall_nps, 1., overall_low, overall_high, overall_interp);
          normElems.add(v);
       }
       if (!histNps.empty()) {
@@ -594,17 +607,6 @@ public:
    }
 };
 
-void collectElements(RooArgSet &elems, RooAbsArg *arg)
-{
-   if (auto prod = dynamic_cast<RooProduct *>(arg)) {
-      for (const auto &e : prod->components()) {
-         collectElements(elems, e);
-      }
-   } else {
-      elems.add(*arg);
-   }
-}
-
 struct NormFactor {
    std::string name;
    RooAbsReal const *param = nullptr;
@@ -616,16 +618,19 @@ struct NormFactor {
 };
 
 struct NormSys {
-   std::string name;
+   std::string name = "";
    RooAbsReal const *param = nullptr;
-   double low;
-   double high;
+   double low = 1.;
+   double high = 1.;
+   int interpolationCode = 4;
    TClass *constraint = RooGaussian::Class();
-   NormSys(const std::string &n, RooAbsReal *const p, double h, double l, TClass *c)
-      : name(n), param(p), low(l), high(h), constraint(c)
+   NormSys() {};
+   NormSys(const std::string &n, RooAbsReal *const p, double h, double l, int i, TClass *c)
+      : name(n), param(p), low(l), high(h), interpolationCode(i), constraint(c)
    {
    }
 };
+
 struct HistoSys {
    std::string name;
    RooAbsReal const *param = nullptr;
@@ -646,6 +651,139 @@ struct ShapeSys {
    TClass *constraint = nullptr;
    ShapeSys(const std::string &n) : name{n} {}
 };
+
+struct GenericElement {
+   std::string name;
+   RooAbsReal* function = nullptr;
+   GenericElement(RooAbsReal* e) : name(e->GetName()), function(e) {};
+};
+
+std::string stripOuterParens(const std::string& s) {
+  size_t start = 0;
+  size_t end = s.size();
+  
+  while (start < end && s[start] == '(' && s[end - 1] == ')') {
+    int depth = 0;
+    bool balanced = true;
+    for (size_t i = start; i < end - 1; ++i) {
+      if (s[i] == '(') ++depth;
+      else if (s[i] == ')') --depth;
+      if (depth == 0 && i < end - 1) {
+	balanced = false;
+	break;
+      }
+    }
+    if (balanced) {
+      ++start;
+      --end;
+    } else {
+      break;
+    }
+  }
+  return s.substr(start, end - start);
+}
+
+std::vector<std::string> splitTopLevelProduct(const std::string& expr) {
+    std::vector<std::string> parts;
+    int depth = 0;
+    size_t start = 0;
+    bool foundTopLevelStar = false;
+
+    for (size_t i = 0; i < expr.size(); ++i) {
+        char c = expr[i];
+        if (c == '(') {
+            ++depth;
+        } else if (c == ')') {
+            --depth;
+        } else if (c == '*' && depth == 0) {
+            foundTopLevelStar = true;
+            std::string sub = expr.substr(start, i - start);
+            parts.push_back(stripOuterParens(sub));
+            start = i + 1;
+        }
+    }
+
+    if (!foundTopLevelStar) {
+        return {}; // Not a top-level product
+    }
+
+    std::string sub = expr.substr(start);
+    parts.push_back(stripOuterParens(sub));
+    return parts;
+}
+
+#include <regex>
+#include <string>
+#include <cctype>
+#include <cstdlib>
+#include <iostream>
+
+NormSys parseOverallModifierFormula(const std::string& s, RooFormulaVar* formula) {
+    static const std::regex pattern(
+        R"(^\s*1(?:\.0)?\s*([\+\-])\s*([a-zA-Z_][a-zA-Z0-9_]*|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*\*\s*([a-zA-Z_][a-zA-Z0-9_]*|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*$)"
+    );
+
+    NormSys sys;
+    double sign = 1.0;
+
+    std::smatch match;
+    if (std::regex_match(s, match, pattern)) {
+        if (match[1].str() == "-") {
+            sign = -1.0;
+        }
+
+        std::string token2 = match[2].str();
+        std::string token3 = match[4].str();
+
+        RooAbsReal* p2 = static_cast<RooAbsReal*>(formula->getParameter(token2.c_str()));
+        RooAbsReal* p3 = static_cast<RooAbsReal*>(formula->getParameter(token3.c_str()));
+        RooRealVar* v2 = dynamic_cast<RooRealVar*>(p2);
+        RooRealVar* v3 = dynamic_cast<RooRealVar*>(p3);	
+
+	auto* constr2 = findConstraint(v2);
+	auto* constr3 = findConstraint(v3);
+	
+        if (constr2 && !p3) {
+            sys.name = p2->GetName();
+            sys.param = p2;
+            sys.high = sign * std::stod(token3);
+            sys.low = -sign * std::stod(token3);
+        } else if (!p2 && constr3) {
+            sys.name = p3->GetName();
+            sys.param = p3;
+            sys.high = sign * std::stod(token2);
+            sys.low = -sign * std::stod(token2);
+        } else if (constr2 && p3 && !constr3) {
+            sys.name = v2->GetName();
+            sys.param = v2;
+            sys.high = sign * p3->getVal();
+            sys.low = -sign * p3->getVal();
+        } else if (p2 && !constr2 && constr3) {	    
+            sys.name = v3->GetName();
+            sys.param = v3;
+            sys.high = sign * p2->getVal();
+            sys.low = -sign * p2->getVal();
+        }
+
+	// interpolation code 1 means linear, which is what we have here
+	sys.interpolationCode = 1;
+	
+	erasePrefix(sys.name, "alpha_");
+    }
+    return sys;
+}
+
+void collectElements(RooArgSet &elems, RooAbsArg *arg)
+{
+   if (auto prod = dynamic_cast<RooProduct *>(arg)) {
+      for (const auto &e : prod->components()) {
+         collectElements(elems, e);
+      }
+   } else {
+      elems.add(*arg);
+   }
+}
+
 struct Sample {
    std::string name;
    std::vector<double> hist;
@@ -654,7 +792,8 @@ struct Sample {
    std::vector<NormSys> normsys;
    std::vector<HistoSys> histosys;
    std::vector<ShapeSys> shapesys;
-   std::vector<RooAbsReal *> otherElements;
+   std::vector<GenericElement> tmpElements;
+   std::vector<GenericElement> otherElements;
    bool useBarlowBeestonLight = false;
    std::vector<RooAbsReal *> staterrorParameters;
    TClass *barlowBeestonLightConstraint = RooPoisson::Class();
@@ -705,7 +844,6 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
 
    for (size_t sampleidx = 0; sampleidx < sumpdf->funcList().size(); ++sampleidx) {
       PiecewiseInterpolation *pip = nullptr;
-      std::vector<RooStats::HistFactory::FlexibleInterpVar *> fips;
       std::vector<ParamHistFunc *> phfs;
 
       const auto func = sumpdf->funcList().at(sampleidx);
@@ -714,9 +852,6 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
       eraseSuffix(sample.name, "_shapes");
       eraseSuffix(sample.name, "_" + channel.name);
       erasePrefix(sample.name, pdfname + "_");
-      RooArgSet elems;
-      collectElements(elems, func);
-      collectElements(elems, sumpdf->coefList().at(sampleidx));
 
       auto updateObservables = [&](RooDataHist const &dataHist) {
          if (channel.varSet == nullptr) {
@@ -728,9 +863,9 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
             sample.hist.assign(w, w + dataHist.numEntries());
          }
       };
-
-      for (RooAbsArg *e : elems) {
-         if (TString(e->GetName()).Contains("binWidth")) {
+      auto processElements = [&](const auto& elements, auto&& self) -> void {
+	for (RooAbsArg *e : elements) {
+	  if (TString(e->GetName()).Contains("binWidth")) {
             // The bin width modifiers are handled separately. We can't just
             // check for the RooBinWidthFunction type here, because prior to
             // ROOT 6.26, the multiplication with the inverse bin width was
@@ -738,26 +873,82 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
             // but it was stored in the dataset).
             // Fortunately, the name was similar, so we can match the modifier
             // name.
-         } else if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
+	  } else if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
             if (constVar->getVal() != 1.) {
-               sample.normfactors.emplace_back(*constVar);
+	      sample.normfactors.emplace_back(*constVar);
             }
-         } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
+	  } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
             addNormFactor(par, sample, ws);
-         } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
+	  } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
             updateObservables(hf->dataHist());
-         } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
+	  } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
             phfs.push_back(phf);
-         } else if (auto fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e)) {
+	  } else if (auto fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e)) {
             // some (modified) histfactory models have several instances of FlexibleInterpVar
-            // we collect and merge them here
-            fips.push_back(fip);
-         } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
-         } else if (auto real = dynamic_cast<RooAbsReal *>(e)) {
+            // we collect and merge them
+	    for (size_t i = 0; i < fip->variables().size(); ++i) {
+	      RooAbsReal *var = static_cast<RooAbsReal*>(fip->variables().at(i));
+	      std::string sysname(var->GetName());
+	      erasePrefix(sysname, "alpha_");
+	      const auto *constraint = findConstraint(var);
+	      if (!constraint && !var->isConstant()) {
+		RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
+	      } else {
+		sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i], fip->interpolationCodes()[i], constraint ? constraint->IsA() : nullptr);
+	      }
+	    }
+	  } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
+            // nothing to do here, already assigned
+	  } else if(RooFormulaVar* formula = dynamic_cast<RooFormulaVar*>(e)){
+	    // people do a lot of fancy stuff with RooFormulaVar, like including NormSys via explicit formulae.
+	    // let's try to decompose it into building blocks
+	    TString expression(formula->expression());
+	    for (size_t i = formula->nParameters(); i--;) {
+	      const RooAbsArg *p = formula->getParameter(i);
+	      expression.ReplaceAll(("x[" + std::to_string(i) + "]").c_str(), p->GetName());
+	      expression.ReplaceAll(("@" + std::to_string(i)).c_str(), p->GetName());
+	    }
+	    auto components = splitTopLevelProduct(expression.Data());
+	    if(components.size() == 0){
+	      // it's not a product, let's just treat it as an unknown element
+	      sample.otherElements.push_back(formula);
+	    } else {
+	      // it is a prododuct, we can try to handle the elements separately
+	      std::vector<RooAbsArg*> realComponents;
+	      int idx = 0;
+	      for(auto& comp:components){
+		// check if this is a trivial element of a product, we can treat it as its own modifier
+		auto* part = formula->getParameter(comp.c_str());
+		if(part){
+		  realComponents.push_back(part);
+		  continue;
+		}
+		// check if this is an attempt at explicitly encoding an overallSys
+		auto normsys = parseOverallModifierFormula(comp,formula);
+		if(normsys.param){
+		  sample.normsys.emplace_back(std::move(normsys));
+		  continue;
+		}
+		
+		// this is something non-trivial, let's deal with it separately
+		std::string name = std::string(formula->GetName())+"_part"+std::to_string(idx);
+		++idx;
+		auto * var = new RooFormulaVar(name.c_str(),name.c_str(),comp.c_str(),formula->dependents());
+		sample.tmpElements.push_back({var});
+	      }
+	      self(realComponents, self);
+	    }
+	  } else if (auto real = dynamic_cast<RooAbsReal *>(e)) {
             sample.otherElements.push_back(real);
-         }
-      }
+	  }
+	}
+      };
 
+      RooArgSet elems;
+      collectElements(elems, func);
+      collectElements(elems, sumpdf->coefList().at(sampleidx));
+      processElements(elems, processElements);
+      
       // see if we can get the observables
       if (pip) {
          if (auto nh = dynamic_cast<RooHistFunc const *>(pip->nominalHist())) {
@@ -767,22 +958,6 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
 
       // sort and configure norms
       sortByName(sample.normfactors);
-
-      // sort and configure the normsys
-      for (auto *fip : fips) {
-         for (size_t i = 0; i < fip->variables().size(); ++i) {
-            RooAbsReal *var = static_cast<RooAbsReal *>(fip->variables().at(i));
-            std::string sysname(var->GetName());
-            erasePrefix(sysname, "alpha_");
-            const auto *constraint = findConstraint(var);
-            if (!constraint && !var->isConstant()) {
-               RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
-            } else {
-               sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i],
-                                           constraint ? constraint->IsA() : nullptr);
-            }
-         }
-      }
       sortByName(sample.normsys);
 
       // sort and configure the histosys
@@ -929,6 +1104,9 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
          mod["name"] << sys.name;
          mod["type"] << "normsys";
          mod["parameter"] << sys.param->GetName();
+	 if(sys.interpolationCode != 4){
+	   mod["interpolation"] << sys.interpolationCode;
+	 }
          mod["constraint"] << toString(sys.constraint);
          auto &data = mod["data"].set_map();
          data["lo"] << sys.low;
@@ -975,9 +1153,15 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       for (const auto &other : sample.otherElements) {
          auto &mod = modifiers.append_child();
          mod.set_map();
-         mod["name"] << other->GetName();
+         mod["name"] << other.name;
          mod["type"] << "custom";
       }
+      for (const auto &other : sample.tmpElements) {
+         auto &mod = modifiers.append_child();
+         mod.set_map();
+         mod["name"] << other.name;
+         mod["type"] << "custom";
+      }      
 
       if (sample.useBarlowBeestonLight) {
          auto &mod = modifiers.append_child();
@@ -1099,13 +1283,21 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    // stat error handling
    configureStatError(channel);
 
-   findLostConstraints(channel, constraints);
-
+   auto lostConstraints = findLostConstraints(channel,constraints);
    // Export all the custom modifiers
-   for (const auto &sample : channel.samples) {
-      for (RooAbsArg *modifier : sample.otherElements) {
-         tool->queueExport(*modifier);
-      }
+   for(const auto* constraint: lostConstraints){
+     RooJSONFactoryWSTool::warning("losing constraint term '" + std::string(constraint->GetName()) + "', implicit constraints are not supported by HS3 yet! The term will appear in the HS3 file, but will not be picked up when creating a likelihood from it! You will have to add it manually as an external constraint.");     
+     tool->queueExport(*constraint);
+   }
+   
+   // Export all the custom modifiers
+   for(const auto& sample: channel.samples){
+     for (auto& modifier : sample.otherElements) {
+       tool->queueExport(*modifier.function);
+     }
+     for (auto& modifier : sample.tmpElements) {
+       tool->queueExportTemporary(modifier.function);
+     }     
    }
 
    // Export all model parameters
