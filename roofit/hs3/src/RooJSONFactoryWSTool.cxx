@@ -1077,6 +1077,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    if (it != exporters.end()) { // check if we have a specific exporter available
       for (auto &exp : it->second) {
          _serversToExport.clear();
+         _serversToDelete.clear();
          if (!exp->exportObject(this, &func, elem)) {
             // The exporter might have messed with the content of the node
             // before failing. That's why we clear it and only reset the name.
@@ -1091,6 +1092,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             exportObjects(func.servers(), exportedObjectNames);
          } else {
             exportObjects(_serversToExport, exportedObjectNames);
+         }
+         for (auto &s : _serversToDelete) {
+            delete s;
          }
          return;
       }
