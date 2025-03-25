@@ -677,39 +677,25 @@ bool verbose = false;
 
 }
 
-bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
-                          JSONNode &elem)
-{
-   RooWorkspace *ws = tool->workspace();
-   RooArgSet customModifiers;
-
-   if (!sumpdf) {
-      if (verbose) {
-         std::cout << pdfname << " is not a sumpdf" << std::endl;
-      }
-      return false;
-   }
-
-   std::string channelName = pdfname;
-   erasePrefix(channelName, "model_");
-   eraseSuffix(channelName, "_model");
-
-   for (RooAbsArg *sample : sumpdf->funcList()) {
-      if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
-         if (verbose)
-            std::cout << "sample " << sample->GetName() << " is no RooProduct or RooRealSumPdf in " << pdfname
-                      << std::endl;
-         return false;
-      }
-   }
-
+struct Channel {
+   std::string name;
+   std::vector<Sample> samples;
    std::map<int, double> tot_yield;
    std::map<int, double> tot_yield2;
    std::map<int, double> rel_errors;
    RooArgSet const *varSet = nullptr;
    long unsigned int nBins = 0;
+};
 
-   std::vector<Sample> samples;
+Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf)
+{
+   Channel channel;
+
+   RooWorkspace *ws = tool->workspace();
+
+   channel.name = pdfname;
+   erasePrefix(channel.name, "model_");
+   eraseSuffix(channel.name, "_model");
 
    for (size_t sampleidx = 0; sampleidx < sumpdf->funcList().size(); ++sampleidx) {
       PiecewiseInterpolation *pip = nullptr;
@@ -720,16 +706,16 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       Sample sample(func->GetName());
       erasePrefix(sample.name, "L_x_");
       eraseSuffix(sample.name, "_shapes");
-      eraseSuffix(sample.name, "_" + channelName);
+      eraseSuffix(sample.name, "_" + channel.name);
       erasePrefix(sample.name, pdfname + "_");
       RooArgSet elems;
       collectElements(elems, func);
       collectElements(elems, sumpdf->coefList().at(sampleidx));
 
       auto updateObservables = [&](RooDataHist const &dataHist) {
-         if (varSet == nullptr) {
-            varSet = dataHist.get();
-            nBins = dataHist.numEntries();
+         if (channel.varSet == nullptr) {
+            channel.varSet = dataHist.get();
+            channel.nBins = dataHist.numEntries();
          }
          if (sample.hist.empty()) {
             auto *w = dataHist.weightArray();
@@ -820,20 +806,20 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                sample.staterrorParameters.push_back(g->GetName());
                ++idx;
                RooAbsPdf *constraint = findConstraint(g);
-               if (tot_yield.find(idx) == tot_yield.end()) {
-                  tot_yield[idx] = 0;
-                  tot_yield2[idx] = 0;
+               if (channel.tot_yield.find(idx) == channel.tot_yield.end()) {
+                  channel.tot_yield[idx] = 0;
+                  channel.tot_yield2[idx] = 0;
                }
-               tot_yield[idx] += sample.hist[idx - 1];
-               tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
+               channel.tot_yield[idx] += sample.hist[idx - 1];
+               channel.tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
                if (constraint) {
                   sample.barlowBeestonLightConstraint = constraint->IsA();
                   if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                      double erel = 1. / std::sqrt(constraint_p->getX().getVal());
-                     rel_errors[idx] = erel;
+                     channel.rel_errors[idx] = erel;
                   } else if (RooGaussian *constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
                      double erel = constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
-                     rel_errors[idx] = erel;
+                     channel.rel_errors[idx] = erel;
                   } else {
                      RooJSONFactoryWSTool::error(
                         "currently, only RooPoisson and RooGaussian are supported as constraint types");
@@ -843,7 +829,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             sample.useBarlowBeestonLight = true;
          } else { // other ShapeSys
             ShapeSys sys(phf->GetName());
-            erasePrefix(sys.name, channelName + "_");
+            erasePrefix(sys.name, channel.name + "_");
             bool isshapesys = eraseSuffix(sys.name, "_ShapeSys") || eraseSuffix(sys.name, "_shapeSys");
             bool isshapefactor = eraseSuffix(sys.name, "_ShapeFactor") || eraseSuffix(sys.name, "_shapeFactor");
 
@@ -880,18 +866,19 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       sortByName(sample.shapesys);
 
       // add the sample
-      samples.emplace_back(std::move(sample));
+      channel.samples.emplace_back(std::move(sample));
    }
 
-   sortByName(samples);
+   sortByName(channel.samples);
+   return channel;
+}
 
-   for (auto &sample : samples) {
-      if (sample.hist.empty()) {
-         return false;
-      }
+void configureStatError(Channel &channel)
+{
+   for (auto &sample : channel.samples) {
       if (sample.useBarlowBeestonLight) {
          sample.histError.resize(sample.hist.size());
-         for (auto bin : rel_errors) {
+         for (auto bin : channel.rel_errors) {
             // reverse engineering the correct partial error
             // the (arbitrary) convention used here is that all samples should have the same relative error
             const int i = bin.first;
@@ -899,13 +886,17 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             const double count = sample.hist[i - 1];
             // this reconstruction is inherently imprecise, so we truncate it at some decimal places to make sure that
             // we don't carry around too many useless digits
-            sample.histError[i - 1] = round_prec(relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count, 7);
+            sample.histError[i - 1] =
+               round_prec(relerr_tot * channel.tot_yield[i] / std::sqrt(channel.tot_yield2[i]) * count, 7);
          }
       }
    }
+}
 
+bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode &elem)
+{
    bool observablesWritten = false;
-   for (const auto &sample : samples) {
+   for (const auto &sample : channel.samples) {
 
       elem["type"] << "histfactory_dist";
 
@@ -946,14 +937,14 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod["parameter"] << sys.param->GetName();
          mod["constraint"] << toString(sys.constraint);
          auto &data = mod["data"].set_map();
-         if (nBins != sys.low.size() || nBins != sys.high.size()) {
+         if (channel.nBins != sys.low.size() || channel.nBins != sys.high.size()) {
             std::stringstream ss;
-            ss << "inconsistent binning: " << nBins << " bins expected, but " << sys.low.size() << "/"
+            ss << "inconsistent binning: " << channel.nBins << " bins expected, but " << sys.low.size() << "/"
                << sys.high.size() << " found in nominal histogram errors!";
             RooJSONFactoryWSTool::error(ss.str().c_str());
          }
-         RooJSONFactoryWSTool::exportArray(nBins, sys.low.data(), data["lo"].set_map()["contents"]);
-         RooJSONFactoryWSTool::exportArray(nBins, sys.high.data(), data["hi"].set_map()["contents"]);
+         RooJSONFactoryWSTool::exportArray(channel.nBins, sys.low.data(), data["lo"].set_map()["contents"]);
+         RooJSONFactoryWSTool::exportArray(channel.nBins, sys.high.data(), data["hi"].set_map()["contents"]);
       }
 
       for (const auto &sys : sample.shapesys) {
@@ -979,7 +970,6 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          auto &mod = modifiers.append_child();
          mod.set_map();
          mod["name"] << other->GetName();
-         customModifiers.add(*other);
          mod["type"] << "custom";
       }
 
@@ -988,13 +978,13 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod.set_map();
          mod["name"] << ::Literals::staterror;
          mod["type"] << ::Literals::staterror;
-         optionallyExportGammaParameters(mod, "stat_" + channelName, sample.staterrorParameters);
+         optionallyExportGammaParameters(mod, "stat_" + channel.name, sample.staterrorParameters);
          mod["constraint"] << toString(sample.barlowBeestonLightConstraint);
       }
 
       if (!observablesWritten) {
          auto &output = elem["axes"].set_seq();
-         for (auto *obs : static_range_cast<RooRealVar *>(*varSet)) {
+         for (auto *obs : static_range_cast<RooRealVar *>(*channel.varSet)) {
             auto &out = output.append_child().set_map();
             std::string name = obs->GetName();
             RooJSONFactoryWSTool::testValidName(name, false);
@@ -1004,32 +994,71 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          observablesWritten = true;
       }
       auto &dataNode = s["data"].set_map();
-      if (nBins != sample.hist.size()) {
+      if (channel.nBins != sample.hist.size()) {
          std::stringstream ss;
-         ss << "inconsistent binning: " << nBins << " bins expected, but " << sample.hist.size()
+         ss << "inconsistent binning: " << channel.nBins << " bins expected, but " << sample.hist.size()
             << " found in nominal histogram!";
          RooJSONFactoryWSTool::error(ss.str().c_str());
       }
-      RooJSONFactoryWSTool::exportArray(nBins, sample.hist.data(), dataNode["contents"]);
+      RooJSONFactoryWSTool::exportArray(channel.nBins, sample.hist.data(), dataNode["contents"]);
       if (!sample.histError.empty()) {
-         if (nBins != sample.histError.size()) {
+         if (channel.nBins != sample.histError.size()) {
             std::stringstream ss;
-            ss << "inconsistent binning: " << nBins << " bins expected, but " << sample.histError.size()
+            ss << "inconsistent binning: " << channel.nBins << " bins expected, but " << sample.histError.size()
                << " found in nominal histogram errors!";
             RooJSONFactoryWSTool::error(ss.str().c_str());
          }
-         RooJSONFactoryWSTool::exportArray(nBins, sample.histError.data(), dataNode["errors"]);
+         RooJSONFactoryWSTool::exportArray(channel.nBins, sample.histError.data(), dataNode["errors"]);
       }
    }
 
+   return true;
+}
+
+bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
+                          JSONNode &elem)
+{
+   // some preliminary checks
+   if (!sumpdf) {
+      if (verbose) {
+         std::cout << pdfname << " is not a sumpdf" << std::endl;
+      }
+      return false;
+   }
+
+   for (RooAbsArg *sample : sumpdf->funcList()) {
+      if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
+         if (verbose)
+            std::cout << "sample " << sample->GetName() << " is no RooProduct or RooRealSumPdf in " << pdfname
+                      << std::endl;
+         return false;
+      }
+   }
+
+   auto channel = readChannel(tool, pdfname, sumpdf);
+
+   // sanity checks
+   if (channel.samples.size() == 0)
+      return false;
+   for (auto &sample : channel.samples) {
+      if (sample.hist.empty()) {
+         return false;
+      }
+   }
+
+   // stat error handling
+   configureStatError(channel);
+
    // Export all the custom modifiers
-   for (RooAbsArg *modifier : customModifiers) {
-      tool->queueExport(*modifier);
+   for (const auto &sample : channel.samples) {
+      for (RooAbsArg *modifier : sample.otherElements) {
+         tool->queueExport(*modifier);
+      }
    }
 
    // Export all model parameters
    RooArgSet parameters;
-   sumpdf->getParameters(varSet, parameters);
+   sumpdf->getParameters(channel.varSet, parameters);
    for (RooAbsArg *param : parameters) {
       // This should exclude the global observables
       if (!startsWith(std::string{param->GetName()}, "nom_")) {
@@ -1037,7 +1066,43 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
    }
 
-   return true;
+   return exportChannel(tool, channel, elem);
+}
+
+std::vector<RooAbsPdf *>
+findLostConstraints(RooJSONFactoryWSTool *tool, const std::vector<RooAbsPdf *> &constraints, const JSONNode &elem)
+{
+   // collect all the vars that are used by the model
+   std::set<RooRealVar *> vars;
+   for (const auto &sample : elem["samples"].children()) {
+      for (const auto &modifier : sample["modifiers"].children()) {
+         if (modifier.has_child("parameter")) {
+            std::string par(modifier["parameter"].val());
+            auto *var = tool->workspace()->var(par);
+            vars.insert(var);
+         } else if (modifier.has_child("parameters")) {
+            for (auto &par : modifier["parameters"].children()) {
+               auto *var = tool->workspace()->var(par.val());
+               vars.insert(var);
+            }
+         }
+      }
+   }
+   // check if there is any constraint present that is unrelated to these vars
+   std::vector<RooAbsPdf *> lostConstraints;
+   for (auto *pdf : constraints) {
+      bool related = false;
+      for (const auto *var : vars) {
+         if (pdf->dependsOn(*var)) {
+            related = true;
+         }
+      }
+      if (!related) {
+         lostConstraints.push_back(pdf);
+      }
+   }
+   // return the constraints that would be "lost" when exporting the model
+   return lostConstraints;
 }
 
 class HistFactoryStreamer_ProdPdf : public RooFit::JSONIO::Exporter {
@@ -1045,20 +1110,26 @@ public:
    bool autoExportDependants() const override { return false; }
    bool tryExport(RooJSONFactoryWSTool *tool, const RooProdPdf *prodpdf, JSONNode &elem) const
    {
+      std::vector<RooAbsPdf *> constraints;
       RooRealSumPdf *sumpdf = nullptr;
       for (RooAbsArg *v : prodpdf->pdfList()) {
-         auto thispdf = dynamic_cast<RooRealSumPdf *>(v);
+         RooAbsPdf *pdf = static_cast<RooAbsPdf *>(v);
+         auto thispdf = dynamic_cast<RooRealSumPdf *>(pdf);
          if (thispdf) {
             if (!sumpdf)
                sumpdf = thispdf;
             else
                return false;
+         } else {
+            constraints.push_back(pdf);
          }
       }
       if (!sumpdf)
          return false;
 
-      return tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, elem);
+      bool ok = tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, elem);
+      findLostConstraints(tool, constraints, elem);
+      return ok;
    }
    std::string const &key() const override
    {
