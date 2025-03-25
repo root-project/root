@@ -34,6 +34,7 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <atomic>
 
 #include "Math/InterpolationTypes.h"
 
