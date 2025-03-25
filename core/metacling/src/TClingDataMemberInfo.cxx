@@ -43,6 +43,8 @@ from the Clang C++ compiler, not CINT.
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 
+#include "clang/Interpreter/CppInterOp.h"
+
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ADT/APSInt.h"
@@ -554,14 +556,7 @@ int TClingDataMemberInfo::TypeSize() const
       // Error, was not a data member, variable, or enumerator.
       return -1;
    }
-   clang::QualType qt = vd->getType();
-   if (qt->isIncompleteType()) {
-      // We cannot determine the size of forward-declared types.
-      return -1;
-   }
-   clang::ASTContext &context = GetDecl()->getASTContext();
-   // Truncate cast to fit to cint interface.
-   return static_cast<int>(context.getTypeSizeInChars(qt).getQuantity());
+   return Cpp::GetSizeOfType(vd->getType().getAsOpaquePtr());
 }
 
 const char *TClingDataMemberInfo::TypeName() const
