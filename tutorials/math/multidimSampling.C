@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example of sampling a multi-dim distribution using the DistSampler class
+/// Example of random number generation by sampling a multi-dim distribution using the DistSampler class.
+///
 /// NOTE: This tutorial must be run with ACLIC
 ///
 /// \macro_image

@@ -2,6 +2,7 @@
 /// \ingroup tutorial_math
 /// \notebook -nodraw
 /// Example macro testing available methods and operation of the GenVector classes.
+///
 /// The results are compared and check at the
 /// numerical precision levels.
 /// Some small discrepancy can appear when the macro

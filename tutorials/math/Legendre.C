@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example of first few Legendre Polynomials
+/// Example of first few Legendre Polynomials.
 ///
 /// Draws a graph.
 ///
