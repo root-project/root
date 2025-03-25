@@ -130,6 +130,15 @@ extern "C" {
 #endif
 #endif
 
+TString GetInterpPrefix()
+{
+#ifdef __CLING__
+   return "interpreted_";
+#else
+   return "compiled_";
+#endif
+}
+
 #include "Riostream.h"
 using std::string, std::vector, std::cout, std::endl;
 
@@ -1412,7 +1421,7 @@ int stressHistoFit()
 
    TFile * fout = nullptr;
    if (__WRITE__)
-      fout = TFile::Open("stressHistoFit.root","RECREATE");
+      fout = TFile::Open(GetInterpPrefix()+"stressHistoFit.root","RECREATE");
 
    TBenchmark bm;
    bm.Start("stressHistoFit");
