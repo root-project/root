@@ -134,7 +134,7 @@ Explore the tutorials below to discover the main features of RooFit. A more inde
 | rf702_efficiencyfit_2D.C| rf702_efficiencyfit_2D.py | Unbinned maximum likelihood fit of an efficiency eff(x) function to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function of x should be described by eff(x).|
 | rf703_effpdfprod.C| rf703_effpdfprod.py | Using a product of an (acceptance) efficiency and a pdf as pdf.|
 | rf704_amplitudefit.C| rf704_amplitudefit.py | Using a pdf defined by a sum of real-valued amplitude components.|
-| rf705_linearmorp.C| rf705_linearmorp.py | Linear interpolation between pdf shapes using the 'Alex Read' algorithm.|
+| rf705_linearmorph.C| rf705_linearmorph.py | Linear interpolation between pdf shapes using the 'Alex Read' algorithm.|
 | rf706_histpdf.C| rf706_histpdf.py | Histogram-based pdfs and functions.|
 | rf707_kernelestimation.C| rf707_kernelestimation.py | Using non-parametric (multi-dimensional) kernel estimation pdfs.|
 | rf708_bphysics.C| rf708_bphysics.py | Special decay pdf for B physics with mixing and/or CP violation.|
@@ -169,7 +169,7 @@ Explore the tutorials below to discover the main features of RooFit. A more inde
 | rf204b_extendedLikelihood_rangedFit.C| rf204b_extendedLikelihood_rangedFit.py | This macro demonstrates how to set up a fit in two ranges for plain likelihoods and extended likelihoods.|
 | rf212_plottingInRanges_blinding.C| rf212_plottingInRanges_blinding.py | Plot a PDF in disjunct ranges, and get normalisation right.|
 | rf408_RDataFrameToRooFit.C| rf408_RDataFrameToRooFit.py | Fill RooDataSet/RooDataHist in RDataFrame.|
-| rf409_NumPyPandasToRooFit.C| rf409_NumPyPandasToRooFit.py | Convert between NumPy arrays or Pandas DataFrames and RooDataSets.|
+| | rf409_NumPyPandasToRooFit.py | Convert between NumPy arrays or Pandas DataFrames and RooDataSets.|
 | rf514_RooCustomizer.C| rf514_RooCustomizer.py | Using the RooCustomizer to create multiple PDFs that share a lot of properties, but have unique parameters for each category. As an extra complication, some of the new parameters need to be functions of a mass parameter.|
 | | rf515_hfJSON.py | With the HS3 standard, it is possible to code RooFit-Models of any kind as JSON files. In this tutorial, you can see how to code up a (simple) HistFactory-based model in JSON and import it into a RooWorkspace.|
 | rf613_global_observables.C| rf613_global_observables.py | This tutorial explains the concept of global observables in RooFit, and showcases how their values can be stored either in the model or in the dataset.|

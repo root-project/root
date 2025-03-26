@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_analysis_parallel
+/// \notebook
 /// Fill histogram in parallel with a multithreaded approach
 /// using TThreadExecutor and TExecutor::MapReduce.
 ///
