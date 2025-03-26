@@ -8,6 +8,7 @@
 ## \author Olivier Couet, Jamie Gooding
 
 import ROOT
+from ctypes import c_double
 
 c1 = ROOT.TCanvas("c1")
 
@@ -24,6 +25,8 @@ dte = ROOT.TGraph2DErrors(nd)
 # Fill the 2D graph. It was created only specifying the number of points, so all
 # elements are empty. We now "fill" the values and errors with SetPoint and SetPointError.
 # Note that the first point has index zero
+x = c_double()
+y = c_double()
 zmax = 0
 for i in range(nd):
    f2.GetRandom2(x,y)
@@ -46,7 +49,7 @@ dte.Fit(f2)
 fit2 = dte.FindObject("f2")
 fit2.SetTitle("Minuit fit result on the Graph2DErrors points")
 fit2.SetMaximum(zmax)
-gStyle.SetHistTopMargin(0)
+ROOT.gStyle.SetHistTopMargin(0)
 fit2.SetLineColor(1)
 fit2.SetLineWidth(1)
 fit2.Draw("surf1")

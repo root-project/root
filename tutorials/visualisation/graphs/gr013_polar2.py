@@ -15,21 +15,20 @@
 ## \author Olivier Couet, Jamie Gooding
 
 import ROOT
-import math
+import numpy as np
 
 CPol = ROOT.TCanvas("CPol","TGraphPolar Example",500,500)
 
-theta = []
-radius = []
-etheta = []
-eradius = []
+theta = np.array([])
+radius = np.array([])
+etheta = np.array([])
+eradius = np.array([])
 
 for i in range(8):
-   theta.append((i+1)*(math.pi/4.))
-   radius.append((i+1)*0.05)
-   etheta.append(math.pi/8.)
-   eradius.append(0.05)
-
+   theta = np.append(theta, (i+1)*(np.pi/4.))
+   radius = np.append(radius, (i+1)*0.05)
+   etheta = np.append(etheta, np.pi/8.)
+   eradius = np.append(eradius, 0.05)
 
 grP1 = ROOT.TGraphPolar(8, theta, radius, etheta, eradius)
 grP1.SetTitle("")

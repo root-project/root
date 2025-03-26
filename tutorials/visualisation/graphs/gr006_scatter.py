@@ -10,25 +10,26 @@
 ## \author Olivier Couet, Jamie Gooding
 
 import ROOT
+import numpy as np
 
 canvas = ROOT.TCanvas()
 canvas.SetRightMargin(0.14)
-gStyle.SetPalette(kBird, 0, 0.6) # define a transparent palette
+ROOT.gStyle.SetPalette(ROOT.kBird, 0, 0.6) # define a transparent palette
 
 n = 175
 
-x = []
-y = []
-c = []
-s = []
+x = np.array([])
+y = np.array([])
+c = np.array([])
+s = np.array([])
 
 # Define four random data sets
 r = ROOT.TRandom()
 for i in range(n):
-   x.append(100*r.Rndm(i))
-   y.append(200*r.Rndm(i))
-   c.append(300*r.Rndm(i))
-   s.append(400*r.Rndm(i))
+   x = np.append(x, 100*r.Rndm(i))
+   y = np.append(y, 200*r.Rndm(i))
+   c = np.append(c, 300*r.Rndm(i))
+   s = np.append(s, 400*r.Rndm(i))
 
 scatter = ROOT.TScatter(n, x, y, c, s)
 scatter.SetMarkerStyle(20)

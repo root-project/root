@@ -17,6 +17,7 @@
 
 import ROOT
 import math
+import numpy as np
 
 CPol = ROOT.TCanvas("CPol","TGraphPolar Examples",1200,600)
 CPol.Divide(2,1)
@@ -26,16 +27,16 @@ CPol.cd(1)
 xmin=0
 xmax=math.pi*2
 
-x = []
-y = []
-xval1 = []
-yval1 = []
+x = np.array([])
+y = np.array([])
+xval1 = np.array([])
+yval1 = np.array([])
 
 # Graph 1 to be drawn with line and fill
 fplot = ROOT.TF1("fplot","cos(2*x)*cos(20*x)",xmin,xmax)
 for ipt in range(1000):
-   x.append(ipt*(xmax-xmin)/1000 + xmin)
-   y.append(fplot.Eval(x[ipt]))
+   x = np.append(x, ipt*(xmax-xmin)/1000 + xmin)
+   y = np.append(y, fplot.Eval(x[ipt]))
 
 grP = ROOT.TGraphPolar(1000,x,y)
 grP.SetLineColor(2)
@@ -46,8 +47,8 @@ grP.Draw("AFL")
 
 # Graph 2 to be drawn superposed over graph 1, with curve and polymarker
 for ipt in range(20):
-   xval1.append(x[1000/20*ipt])
-   yval1.append(y[1000/20*ipt])
+   xval1 = np.append(xval1, x[math.floor(1000/20*ipt)])
+   yval1 = np.append(yval1, y[math.floor(1000/20*ipt)])
 
 grP1 = ROOT.TGraphPolar(20,xval1,yval1)
 grP1.SetMarkerStyle(29)
@@ -68,15 +69,15 @@ if grP1.GetPolargram():
 
 # Right-side pad. One graph with errors
 CPol.cd(2)
-x2 = []
-y2 = []
-ex = []
-ey = []
+x2 = np.array([])
+y2 = np.array([])
+ex = np.array([])
+ey = np.array([])
 for ipt in range(30):
-   x2.append(math.floor(x[1000/30*ipt]))
-   y2.append(1.2 + 0.4*math.sin(math.pi*2*ipt/30))
-   ex.append(0.2+0.1*math.cos(2*math.pi/30*ipt))
-   ey.append(0.2)
+   x2 = np.append(x2, x[math.floor(1000/30*ipt)])
+   y2 = np.append(y2, 1.2 + 0.4*math.sin(math.pi*2*ipt/30))
+   ex = np.append(ex, 0.2+0.1*math.cos(2*math.pi/30*ipt))
+   ey = np.append(ey, 0.2)
 
 # Grah to be drawn with polymarker and errors
 grPE = ROOT.TGraphPolar(30,x2,y2,ex,ey)

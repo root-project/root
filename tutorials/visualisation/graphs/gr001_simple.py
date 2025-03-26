@@ -11,7 +11,8 @@
 ## \author Rene Brun, Jamie Gooding
 
 import ROOT
-import numpy
+import numpy as np
+import re
 
 c1 = ROOT.TCanvas("c1","Two simple graphs",200,10,700,500)
 c1.Divide(2,1) # Dividing the canvas in subpads for distinguishing the two examples, [See documentation](https://root.cern/doc/master/classTCanvas.html)
@@ -20,9 +21,10 @@ c1.Divide(2,1) # Dividing the canvas in subpads for distinguishing the two examp
 c1.cd(1)
 
 n = 20
-x = np.arange(0, n)
+x = np.linspace(0, n-1, n)
 y = 10*np.sin(x+0.2)
-gr1 = R.TGraph(n,x,y) # Create a TGraph object, storing the number of data n and the x, y variables
+
+gr1 = ROOT.TGraph(n,x,y) # Create a TGraph object, storing the number of data n and the x, y variables
 
 # Set the color, width and style for the markers and line
 
@@ -44,15 +46,15 @@ gr1.Draw("ACP") # "A" draw axes, "C" = draw a smooth line through the markers (o
 # SECOND EXAMPLE (Data stored in a text file)
 c1.cd(2)
 
-w = []
-z = []
+w = np.array([])
+z = np.array([])
 
 # Open the data file
-with open(ROOT.gROOT.GetTutorialDir() + "/visualisation/graphs/data_basic.txt") as file: # Open the data file
+with open(f"{ROOT.gROOT.GetTutorialDir()}/visualisation/graphs/data_basic.txt") as file: # Open the data file
     for line in file:
-        w_str, z_str re.split(r'\s+', line)
-        w.append(float(w_str))
-        z.append(float(z_str))
+        w_str, z_str = re.split(r'\s+', line)[:2]
+        w = np.append(w, float(w_str))
+        z = np.append(z, float(z_str))
 
 m = len(w)
 

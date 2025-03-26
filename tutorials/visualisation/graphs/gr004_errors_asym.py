@@ -11,18 +11,19 @@
 ## \author Miro Helbich, Jamie Gooding
 
 import ROOT
+import numpy as np
 
 c2 = ROOT.TCanvas("c2","", 700, 500)
 
 c2.SetGrid()
-npoints=3
-xaxis = (1.,2.,3.)
-yaxis = (10.,20.,30.)
+npoints = 3
+xaxis = np.array([1.,2.,3.])
+yaxis = np.array([10.,20.,30.])
 
-exl = (0.5,0.2,0.1) # Lower x errors
-exh = (0.5,0.3,0.4) # Higher x errors
-eyl = (3.,5.,4.) # Lower y errors
-eyh = (3.,5.,4.) # Higher y errors
+exl = np.array([0.5,0.2,0.1]) # Lower x errors
+exh = np.array([0.5,0.3,0.4]) # Higher x errors
+eyl = np.array([3.,5.,4.]) # Lower y errors
+eyh = np.array([3.,5.,4.]) # Higher y errors
 
 gr = ROOT.TGraphAsymmErrors(npoints,xaxis,yaxis,exl,exh,eyl,eyh) # Create the TGraphAsymmErrors object with data and asymmetrical errors
 

@@ -14,10 +14,11 @@
 ## \author Miro Helbich, Jamie Gooding
 
 import ROOT
+import numpy as np
 
-npoints=3
-xaxis = (1.,2.,3.)
-yaxis = (10.,20.,30.)
+npoints = 3
+xaxis = np.array([1.,2.,3.])
+yaxis = np.array([10.,20.,30.])
 
 gr1 = ROOT.TGraph(npoints,xaxis,yaxis)
 ff = ROOT.TF2("ff","-1./y") # Defining the function `f`

@@ -13,17 +13,19 @@
 
 import ROOT
 import math
+import numpy as np
+
 CPol = ROOT.TCanvas("CPol","TGraphPolar Examples",500,500)
 
 rmin = 0
 rmax = math.pi*2
-r[1000]
-theta[1000]
+r = np.array([])
+theta = np.array([])
 
 fp1 = ROOT.TF1("fplot","cos(x)",rmin,rmax)
 for ipt in range(1000):
-   r[ipt] = ipt*(rmax-rmin)/1000+rmin
-   theta[ipt] = fp1.Eval(r[ipt])
+   r = np.append(r, ipt*(rmax-rmin)/1000+rmin)
+   theta = np.append(theta, fp1.Eval(r[ipt]))
 
 grP1 = ROOT.TGraphPolar(1000, r, theta)
 grP1.SetTitle("")

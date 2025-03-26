@@ -9,26 +9,27 @@
 ## \macro_code
 ## \author Christian Stratowa, Jamie Gooding
 
-from ctypes import c_double
 import ROOT
+from ctypes import c_double
+import numpy as np
 
-vC1 = R.TCanvas()
-grxy = R.TGraph()
-grin = R.TGraph()
-grout = R.TGraph()
+# vC1 = ROOT.TCanvas()
+# # grxy = ROOT.TGraph()
+# grin = ROOT.TGraph()
+# grout = ROOT.TGraph()
 
-def DrawSmooth(pad, title, xt, yt)
+def DrawSmooth(pad, title, xt, yt):
   vC1.cd(pad)
   vFrame = ROOT.gPad.DrawFrame(0,0,15,150)
   vFrame.SetTitle(title)
   vFrame.SetTitleSize(0.2)
   vFrame.SetXTitle(xt)
   vFrame.SetYTitle(yt)
-  grxy.SetMarkerColor(kBlue)
+  grxy.SetMarkerColor(ROOT.kBlue)
   grxy.SetMarkerStyle(21)
   grxy.SetMarkerSize(0.5)
   grxy.Draw("P")
-  grin.SetMarkerColor(kRed)
+  grin.SetMarkerColor(ROOT.kRed)
   grin.SetMarkerStyle(5)
   grin.SetMarkerSize(0.7)
   grin.Draw("P")
@@ -37,13 +38,14 @@ def DrawSmooth(pad, title, xt, yt)
 
 # Test data (square)
 n = 11
-x = (1,2,3,4,5,6,6,6,8,9,10)
-y = (1,4,9,16,25,25,36,49,64,81,100)
+x = np.array([1.,2.,3.,4.,5.,6.,6.,6.,8.,9.,10.])
+y = np.array([1.,4.,9.,16.,25.,25.,36.,49.,64.,81.,100.])
+
 grxy = ROOT.TGraph(n,x,y)
 
 # X values, for which y values should be interpolated
 nout = 14
-xout = (1.2,1.7,2.5,3.2,4.4,5.2,5.7,6.5,7.6,8.3,9.7,10.4,11.3,13)
+xout = np.array([1.2,1.7,2.5,3.2,4.4,5.2,5.7,6.5,7.6,8.3,9.7,10.4,11.3,13])
 
 # Create Canvas
 vC1 = ROOT.TCanvas("vC1","square",200,10,700,700)
@@ -67,10 +69,10 @@ DrawSmooth(2,"Approx: ties = mean","","")
 vNout = grout.GetN()
 vXout = c_double()
 vYout = c_double()
-for k in range(vNoutk): 
+for k in range(vNout): 
    grout.GetPoint(k, vXout, vYout)
    print(f"k= {k}  vXout[k]= {vXout.value}  vYout[k]= {vYout.value}")
-
+  
 # Re-initialize graph with data
 grin = ROOT.TGraph(n,x,y)
 # Interpolate at equidistant points (use min for tied x-values)
@@ -83,6 +85,3 @@ grin = ROOT.TGraph(n,x,y)
 # Interpolate at equidistant points (use max for tied x-values)
 grout = gs.Approx(grin,"linear", 14, xout, 0, 0, 2, 0, "max")
 DrawSmooth(4,"Approx: ties = max","","")
-
-# Cleanup
-gs.Delete()
