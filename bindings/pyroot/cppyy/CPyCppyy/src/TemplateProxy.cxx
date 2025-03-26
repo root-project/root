@@ -437,8 +437,7 @@ static int tpp_doc_set(TemplateProxy* pytmpl, PyObject *val, void *)
 //= CPyCppyy template proxy callable behavior ================================
 
 #define TPPCALL_RETURN                                                       \
-{ if (!errors.empty())                                                       \
-      std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);\
+{ errors.clear();                                                            \
   return result; }
 
 static inline std::string targs2str(TemplateProxy* pytmpl)
@@ -645,7 +644,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
         PyObject* topmsg = CPyCppyy_PyText_FromFormat(
             "Could not find \"%s\" (set cppyy.set_debug() for C++ errors):", CPyCppyy_PyText_AsString(pyfullname));
         Py_DECREF(pyfullname);
-        Utility::SetDetailedException(errors, topmsg /* steals */, PyExc_TypeError /* default error */);
+        Utility::SetDetailedException(std::move(errors), topmsg /* steals */, PyExc_TypeError /* default error */);
 
         return nullptr;
     }
@@ -686,7 +685,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
 // error reporting is fraud, given the numerous steps taken, but more details seems better
     if (!errors.empty()) {
         PyObject* topmsg = CPyCppyy_PyText_FromString("Template method resolution failed:");
-        Utility::SetDetailedException(errors, topmsg /* steals */, PyExc_TypeError /* default error */);
+        Utility::SetDetailedException(std::move(errors), topmsg /* steals */, PyExc_TypeError /* default error */);
     } else {
         PyErr_Format(PyExc_TypeError, "cannot resolve method template call for \'%s\'",
             pytmpl->fTI->fCppName.c_str());
@@ -853,17 +852,11 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
     }
 
 // else attempt instantiation
-    PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
-    PyErr_Fetch(&pytype, &pyvalue, &pytrace);
-
     if (!cppmeth) {
-        PyErr_Restore(pytype, pyvalue, pytrace);
         return nullptr;
     }
 
-    Py_XDECREF(pytype);
-    Py_XDECREF(pyvalue);
-    Py_XDECREF(pytrace);
+    PyErr_Clear();
 
     // TODO: the next step should be consolidated with Instantiate()
     PyCallable* meth = nullptr;
