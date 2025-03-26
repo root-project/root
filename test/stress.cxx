@@ -129,7 +129,7 @@ int main(int argc, char **argv)
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
-   Int_t nevent = 1000;      // by default create 1000 events
+   Int_t nevent = 100;      // by default create 1000 events
    if (argc > 1)  nevent = atoi(argv[1]);
    Int_t style  = 1;        // by default the new branch style
    if (argc > 2) style  = atoi(argv[2]);
