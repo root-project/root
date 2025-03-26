@@ -40,24 +40,10 @@ def select(rdf):
         .Filter("Numba::ipi_nlhpi_cut(ipi, nlhpi)")\
         .Filter("Numba::ipis_nlhpi_cut(ipis, nlhpi)")\
 
-dxbin = (0.17 - 0.13) / 40 # Bin-width
 
-def fdm5(xx, par):
-    x = xx[0]
-    if x <= 0.13957:
-        return 0
-    xp3 = (x - par[3]) ** 2
-    res = dxbin * (par[0] * (x - 0.13957) ** par[1]) + par[2] / 2.5066 / par[4] * math.exp(-xp3 / 2 / par[4] ** 2)
-    return res
-
-def fdm2(xx, par):
-    sigma = 0.0012
-    x = xx[0]
-    if x <= 0.13957:
-        return 0
-    xp3 = (x - 0.1454) ** 2
-    res = dxbin * (par[0] * (x - 0.13957) ** 0.25) + par[1] / 2.5066 / sigma * math.exp(-xp3 / 2 / sigma **2)
-    return res
+dxbin = (0.17 - 0.13) / 40
+condition = "x > 0.13957"
+xp3 = "(x - [3]) * (x - [3])"
 
 def FitAndPlotHdmd(hdmd: ROOT.TH1):
     ROOT.gStyle.SetOptFit()
@@ -68,12 +54,12 @@ def FitAndPlotHdmd(hdmd: ROOT.TH1):
     hdraw = hdmd.DrawClone()
 
     # Fit histogram hdmd with function f5 using the loglikelihood option
-    f5 = ROOT.TF1("f5", fdm5, 0.139, 0.17, 5)
+    formula = f"{dxbin} * ([0] * pow(x - 0.13957, [1]) + [2] / 2.5066 / [4] * exp(-{xp3} / 2 / [4] / [4]))"
+    f5 = ROOT.TF1("f5", f"{condition} ? {formula} : 0", 0.139, 0.17, 5)
     f5.SetParameters(1000000, .25, 2000, .1454, .001)
-    hdraw.Fit("f5", "lr")
+    hdraw.Fit(f5, "lr")
 
     return 
-
 
 def FitAndPlotH2(h2: ROOT.TH2):
 
@@ -87,8 +73,11 @@ def FitAndPlotH2(h2: ROOT.TH2):
     # with function f2 and make a histogram for each fit parameter
     # Note that the generated histograms are added to the list of objects
     # in the current directory.
-    
-    f2 = ROOT.TF1("f2", fdm2, 0.139, 0.17, 2)
+    sigma = 0.0012
+    formula = f"{dxbin} * ([0] * pow(x - 0.13957, 0.25) + [1] / 2.5066 / {sigma} * exp(-{xp3} / 2 / {sigma} / {sigma}))"
+    print(f"TWO: {condition} ? {formula} : 0")
+
+    f2 = ROOT.TF1("f2", f"{condition} ? {formula} : 0", 0.139, 0.17, 2)
     f2.SetParameters(10000, 10)
     h2.FitSlicesX(f2, 0, -1, 1, "qln")
 
@@ -101,11 +90,10 @@ def FitAndPlotH2(h2: ROOT.TH2):
 
     c2.Update()
     
-    line = ROOT.Tline(0, 0, 0, c2.GetUymax())
+    line = ROOT.TLine(0, 0, 0, c2.GetUymax())
     line.Draw()
 
     return
-
 
 chain = ROOT.TChain("h42")
 chain.Add("root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root")
