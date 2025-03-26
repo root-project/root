@@ -3,6 +3,7 @@
 
 // Standard
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -85,22 +86,23 @@ PyObject* PyErr_Occurred_WithGIL();
 
 // helpers for collecting/maintaining python exception data
 struct PyError_t {
-    PyError_t(bool is_cpp = false) : fIsCpp(is_cpp) { fType = fValue = fTrace = 0; }
-
-    static void Clear(PyError_t& e)
-    {
-    // Remove exception information.
-        Py_XDECREF(e.fType); Py_XDECREF(e.fValue); Py_XDECREF(e.fTrace);
-        e.fType = e.fValue = e.fTrace = 0;
-    }
-
-    PyObject *fType, *fValue, *fTrace;
-    bool fIsCpp;
+   struct PyObjectDeleter {
+      void operator()(PyObject *obj) { Py_XDECREF(obj); }
+   };
+#if PY_VERSION_HEX < 0x030c0000
+   std::unique_ptr<PyObject, PyObjectDeleter> fType;
+   std::unique_ptr<PyObject, PyObjectDeleter> fTrace;
+#endif
+   std::unique_ptr<PyObject, PyObjectDeleter> fValue;
+   bool fIsCpp = false;
 };
+
+PyError_t FetchPyError();
+void RestorePyError(PyError_t &error);
 
 size_t FetchError(std::vector<PyError_t>&, bool is_cpp = false);
 void SetDetailedException(
-    std::vector<PyError_t>& errors /* clears */, PyObject* topmsg /* steals ref */, PyObject* defexc);
+    std::vector<PyError_t>&& errors /* clears */, PyObject* topmsg /* steals ref */, PyObject* defexc);
 
 // setup Python API for callbacks
 bool IncludePython();
