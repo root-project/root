@@ -251,21 +251,21 @@ if(NOT GRAPHVIZ_FOUND)
 endif()
 
 if(NOT TBB_FOUND AND NOT builtin_tbb)
-  set(tbb_veto  analysis/mtbb*.C io/tree/mtbb*.C)
+  set(tbb_veto  analysis/parallel/mtbb*.C io/tree/mtbb*.C)
 endif()
 
 if(NOT ROOT_imt_FOUND)
-  set(imt_veto io/tree/imt*.C io/tree/mt*.C analysis/mt*.C)
+  set(imt_veto io/tree/imt*.C io/tree/mt*.C analysis/parallel/mt*.C)
 endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
-  set(imt_veto ${imt_veto} analysis/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/parallel/mtbb_parallelHistoFill.C)
+  set(imt_veto ${imt_veto} analysis/parallel/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/parallel/mtbb_parallelHistoFill.C)
   #---XRootD is not supported on Windows
   set(imt_veto ${imt_veto} io/tree/imt_parTreeProcessing.C)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
-  set(classic_veto legacy/multicore/mp_*.C analysis/mp_*.C io/tree/mp_*.C)
+  set(classic_veto legacy/multicore/mp_*.C analysis/parallel/mp_*.C io/tree/mp_*.C)
 endif()
 
 if(NOT gdml)
