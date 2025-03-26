@@ -82,6 +82,16 @@ ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 
+ROOT_ADD_GTEST(ntuple_double32imt ntuple_double32imt.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+if(NOT MSVC OR win_broken_tests)
+  ROOT_ADD_GTEST(ntuple_largefile1 ntuple_largefile1.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+  ROOT_ADD_GTEST(ntuple_largefile2 ntuple_largefile2.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+endif()
+ROOT_ADD_GTEST(ntuple_largepages ntuple_largepages.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_multicolumnexpansion ntuple_multicolumnexpansion.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_randomaccess ntuple_randomaccess.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_realworld1 ntuple_realworld1.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+
 ROOT_ADD_GTEST(ntuple_parallel_writer ntuple_parallel_writer.cxx LIBRARIES ROOTNTuple)
 
 ROOT_ADD_GTEST(ntuple_limits ntuple_limits.cxx LIBRARIES ROOTNTuple)
