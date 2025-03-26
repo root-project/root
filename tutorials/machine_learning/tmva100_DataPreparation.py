@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tmva
+## \ingroup tutorial_ml
 ## \notebook -nodraw
 ## This tutorial illustrates how to prepare ROOT datasets to be nicely readable
 ## by most machine learning methods. This requires filtering the initial complex
