@@ -535,10 +535,9 @@ bool CPyCppyy::Converter::ToMemory(PyObject*, void*, PyObject* /* ctxt */)
     if (val == (type)-1 && PyErr_Occurred()) {                               \
         static PyTypeObject* ctypes_type = nullptr;                          \
         if (!ctypes_type) {                                                  \
-            PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;                \
-            PyErr_Fetch(&pytype, &pyvalue, &pytrace);                        \
+            auto error = CPyCppyy::Utility::FetchPyError();                  \
             ctypes_type = GetCTypesType(ct_##ctype);                         \
-            PyErr_Restore(pytype, pyvalue, pytrace);                         \
+            CPyCppyy::Utility::RestorePyError(error);                        \
         }                                                                    \
         if (Py_TYPE(pyobject) == ctypes_type) {                              \
             PyErr_Clear();                                                   \
@@ -1258,16 +1257,14 @@ bool CPyCppyy::CStringConverter::SetArg(
     const char* cstr = CPyCppyy_PyText_AsStringAndSize(pyobject, &len);
     if (!cstr) {
     // special case: allow ctypes c_char_p
-        PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
-        PyErr_Fetch(&pytype, &pyvalue, &pytrace);
+        auto error = CPyCppyy::Utility::FetchPyError();
         if (Py_TYPE(pyobject) == GetCTypesType(ct_c_char_p)) {
             SetLifeLine(ctxt->fPyContext, pyobject, (intptr_t)this);
             para.fValue.fVoidp = (void*)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;
             para.fTypeCode = 'V';
-            Py_XDECREF(pytype); Py_XDECREF(pyvalue); Py_XDECREF(pytrace);
             return true;
         }
-        PyErr_Restore(pytype, pyvalue, pytrace);
+        CPyCppyy::Utility::RestorePyError(error);
         return false;
     }
 
