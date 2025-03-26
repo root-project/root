@@ -217,9 +217,10 @@ passed events.
 In Bayesian statistics a likelihood-function (how probable is it to get the
 observed data assuming a true efficiency) and a prior probability (what is the
 probability that a certain true efficiency is actually realised) are used to
-determine a posterior probability by using Bayes theorem. At the moment, only
-beta distributions (have 2 free parameters) are supported as prior
-probabilities.
+determine a posterior probability by using Bayes theorem. At the moment,
+only beta distributions (with 2 free parameters) are supported as prior
+probabilities, as explained in D. Casadei, Estimating the selection efficiency,
+2012 JINST 7 P08021, https://doi.org/10.1088/1748-0221/7/08/P08021 (https://arxiv.org/abs/0908.0130).
 
 \f{eqnarray*}{
  P(\epsilon | k ; N) &=& \frac{1}{norm} \times P(k | \epsilon ; N) \times Prior(\epsilon) \\
