@@ -1,3 +1,6 @@
+\addtogroup tutorial_math
+
+@{
 ## Table of contents
 - [Basic features of MathCore](\ref mathcore)
 - [Basic features of MathMore (GSL binding)](\ref mathmore)
@@ -80,6 +83,8 @@ Examples showing usage of ROOT minimizers.
 | **Tutorial** || **Description** |
 |------|--------|-----------------|
 | NumericalMinimization.C |  | Example on how to use the Minimizer class in ROOT. |
+
+}@
 
 \defgroup tutorial_fft Fast Fourier Transforms tutorials
 \ingroup tutorial_math
