@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example describing the usage of different kinds of Associate Legendre Polynomials
+/// Example describing the usage of different kinds of Associate Legendre Polynomials.
+///
 /// To execute the macro type in:
 ///
 /// ~~~{.cpp}
@@ -10,8 +11,8 @@
 ///
 /// It draws common graphs for first 5
 /// Associate Legendre Polynomials
-/// and Spherical Associate Legendre Polynomials
-/// Their integrals on the range [-1, 1] are calculated
+/// and Spherical Associate Legendre Polynomials.
+/// Their integrals on the range [-1, 1] are calculated.
 ///
 /// \macro_image
 /// \macro_output

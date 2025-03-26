@@ -1,8 +1,9 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Tutorial illustrating the use of TMath::Permute
-/// can be run with:
+/// Tutorial illustrating the use of TMath::Permute for computing all permutations of n natural numbers.
+///
+/// It can be run with:
 ///
 /// ~~~{.cpp}
 /// root > .x permute.C

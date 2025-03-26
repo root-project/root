@@ -1,11 +1,11 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// GoFTest tutorial macro
+/// Example showing usage of goodness of fit tests.
 ///
-/// Using Anderson-Darling and Kolmogorov-Smirnov goodness of fit tests
-/// 1 sample test is performed comparing data with a log-normal distribution
-/// and a 2 sample test is done comparing two gaussian data sets.
+/// Using Anderson-Darling and Kolmogorov-Smirnov goodness of fit tests,
+/// 1st sample test is performed comparing data with a log-normal distribution
+/// and a 2nd sample test is done comparing two gaussian data sets.
 ///
 /// \macro_image
 /// \macro_output

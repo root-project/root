@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -js
-/// Example of generating quasi-random numbers
+/// Example of quasi-random numbers generation.
 ///
 /// \macro_image
 /// \macro_output

@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Tutorial illustrating how creating a TF1 class using functor or class member functions
+/// Tutorial illustrating how to create a TF1 class using C++ functors or class member functions.
 ///
-/// can be run with:
+/// Can be run with:
 ///
 /// ~~~{.cpp}
 ///  root > .x exampleFunctor.C
@@ -70,7 +70,7 @@ void exampleFunctor() {
    f2->Draw("same");
 
 
-   // integral function
+   // Integral function
    // example to create a TF1 using a member function of a user class
 
    // in order to work with interpreter the function object must be created and lived all time for all time

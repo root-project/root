@@ -1,8 +1,8 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebooks
-/// This program demonstrates the computation of 95 % confidence level (CL) limits.
-/// It uses a set of randomly created histograms.
+/// This example shows random number generation for filling histograms. 
+/// It demonstrates the computation of 95 % confidence level (CL) limits.
 ///
 /// \macro_image
 /// \macro_output

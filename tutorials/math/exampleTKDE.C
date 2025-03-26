@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example of using the TKDE class (kernel density estimator)
+/// Example of using the TKDE class (kernel density estimator).
 ///
 /// \macro_image
 /// \macro_code

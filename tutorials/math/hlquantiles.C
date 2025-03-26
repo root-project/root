@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_math
-/// Demo for quantiles (with highlight mode)
+/// Demo for quantiles (with highlight mode).
 ///
 /// \macro_image
 /// \macro_code
