@@ -61,7 +61,7 @@ std::shared_ptr<TH1D> GetDrawableHist(ROOT::RDF::RResultPtr<TH1D> &h)
 // https://www.kaggle.com/berkeleyearth/climate-change-earth-surface-temperature-data
 // The original data set is from http://berkeleyearth.org/archive/data/
 // License CC BY-NC-SA 4.0
-constexpr const char *kRawDataUrl = "http://root.cern./files/tutorials/GlobalLandTemperaturesByCity.csv";
+constexpr const char *kRawDataUrl = "http://root.cern/files/tutorials/GlobalLandTemperaturesByCity.csv";
 constexpr const char *kNTupleFileName = "GlobalLandTemperaturesByCity.root";
 
 void Ingest()
