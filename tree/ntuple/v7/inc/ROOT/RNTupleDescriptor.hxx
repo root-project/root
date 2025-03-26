@@ -67,7 +67,7 @@ RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
 /**
 \class ROOT::RFieldDescriptor
 \ingroup NTuple
-\brief Metadata stored for every field of an ntuple
+\brief Metadata stored for every field of an RNTuple
 */
 // clang-format on
 class RFieldDescriptor final {
@@ -121,7 +121,7 @@ public:
    RFieldDescriptor Clone() const;
 
    /// In general, we create a field simply from the C++ type name. For untyped fields, however, we potentially need
-   /// access to sub fields, which is provided by the ntuple descriptor argument.
+   /// access to sub fields, which is provided by the RNTupleDescriptor argument.
    std::unique_ptr<ROOT::RFieldBase>
    CreateField(const RNTupleDescriptor &ntplDesc, const ROOT::RCreateFieldOptions &options = {}) const;
 
@@ -151,7 +151,7 @@ public:
 /**
 \class ROOT::RColumnDescriptor
 \ingroup NTuple
-\brief Metadata stored for every column of an ntuple
+\brief Metadata stored for every column of an RNTuple
 */
 // clang-format on
 class RColumnDescriptor final {
@@ -223,12 +223,12 @@ public:
 /**
 \class ROOT::RClusterDescriptor
 \ingroup NTuple
-\brief Metadata for a set of ntuple clusters
+\brief Metadata for RNTuple clusters
 
 The cluster descriptor is built in two phases.  In a first phase, the descriptor has only an ID.
 In a second phase, the event range, column group, page locations and column ranges are added.
 Both phases are populated by the RClusterDescriptorBuilder.
-Clusters span across all available columns in the ntuple.
+Clusters span across all available columns in the RNTuple.
 */
 // clang-format on
 class RClusterDescriptor final {
@@ -515,8 +515,8 @@ public:
 \ingroup NTuple
 \brief Clusters are bundled in cluster groups.
 
-Very large ntuples can contain multiple cluster groups to organize cluster metadata.
-Every ntuple has at least one cluster group.  The clusters in a cluster group are ordered
+Very large RNTuples can contain multiple cluster groups to organize cluster metadata.
+Every RNTuple has at least one cluster group.  The clusters in a cluster group are ordered
 corresponding to their first entry number.
 */
 // clang-format on
@@ -613,18 +613,18 @@ public:
 /**
 \class ROOT::RNTupleDescriptor
 \ingroup NTuple
-\brief The on-storage metadata of an ntuple
+\brief The on-storage metadata of an RNTuple
 
-Represents the on-disk (on storage) information about an ntuple. The metadata consists of a header, a footer, and
+Represents the on-disk (on storage) information about an RNTuple. The metadata consists of a header, a footer, and
 potentially multiple page lists.
-The header carries the ntuple schema, i.e. the fields and the associated columns and their relationships.
+The header carries the RNTuple schema, i.e. the fields and the associated columns and their relationships.
 The footer carries information about one or several cluster groups and links to their page lists.
 For every cluster group, a page list envelope stores cluster summaries and page locations.
 For every cluster, it stores for every column the range of element indexes as well as a list of pages and page
 locations.
 
 The descriptor provides machine-independent (de-)serialization of headers and footers, and it provides lookup routines
-for ntuple objects (pages, clusters, ...).  It is supposed to be usable by all RPageStorage implementations.
+for RNTuple objects (pages, clusters, ...).  It is supposed to be usable by all RPageStorage implementations.
 
 The serialization does not use standard ROOT streamers in order to not let it depend on libCore. The serialization uses
 the concept of envelopes and frames: header, footer, and page list envelopes have a preamble with a type ID and length.
@@ -640,7 +640,7 @@ public:
    class RHeaderExtension;
 
 private:
-   /// The ntuple name needs to be unique in a given storage location (file)
+   /// The RNTuple name needs to be unique in a given storage location (file)
    std::string fName;
    /// Free text from the user
    std::string fDescription;
@@ -801,7 +801,7 @@ public:
    ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
 
-   /// Returns the logical parent of all top-level NTuple data fields.
+   /// Returns the logical parent of all top-level RNTuple data fields.
    ROOT::DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }
    const RFieldDescriptor &GetFieldZero() const { return GetFieldDescriptor(GetFieldZeroId()); }
    ROOT::DescriptorId_t FindFieldId(std::string_view fieldName, ROOT::DescriptorId_t parentId) const;
@@ -847,7 +847,7 @@ public:
 // clang-format on
 class RNTupleDescriptor::RColumnDescriptorIterable final {
 private:
-   /// The associated NTuple for this range.
+   /// The associated RNTuple for this range.
    const RNTupleDescriptor &fNTuple;
    /// The descriptor ids of the columns ordered by field, representation, and column index
    std::vector<ROOT::DescriptorId_t> fColumns = {};
@@ -855,7 +855,7 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's NTuple.
+      /// The enclosing range's RNTuple.
       const RNTupleDescriptor &fNTuple;
       /// The enclosing range's descriptor id list.
       const std::vector<ROOT::DescriptorId_t> &fColumns;
@@ -901,7 +901,7 @@ public:
 // clang-format on
 class RNTupleDescriptor::RFieldDescriptorIterable final {
 private:
-   /// The associated NTuple for this range.
+   /// The associated RNTuple for this range.
    const RNTupleDescriptor &fNTuple;
    /// The descriptor IDs of the child fields. These may be sorted using
    /// a comparison function.
@@ -910,7 +910,7 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's NTuple.
+      /// The enclosing range's RNTuple.
       const RNTupleDescriptor &fNTuple;
       /// The enclosing range's descriptor id list.
       const std::vector<ROOT::DescriptorId_t> &fFieldChildren;
@@ -957,20 +957,20 @@ public:
 /**
 \class ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable
 \ingroup NTuple
-\brief Used to loop over all the cluster groups of an ntuple (in unspecified order)
+\brief Used to loop over all the cluster groups of an RNTuple (in unspecified order)
 
 Enumerate all cluster group IDs from the descriptor.  No specific order can be assumed.
 */
 // clang-format on
 class RNTupleDescriptor::RClusterGroupDescriptorIterable final {
 private:
-   /// The associated NTuple for this range.
+   /// The associated RNTuple for this range.
    const RNTupleDescriptor &fNTuple;
 
 public:
    class RIterator final {
    private:
-      /// The enclosing range's NTuple.
+      /// The enclosing range's RNTuple.
       const RNTupleDescriptor &fNTuple;
       std::size_t fIndex = 0;
 
@@ -1007,7 +1007,7 @@ public:
 /**
 \class ROOT::RNTupleDescriptor::RClusterDescriptorIterable
 \ingroup NTuple
-\brief Used to loop over all the clusters of an ntuple (in unspecified order)
+\brief Used to loop over all the clusters of an RNTuple (in unspecified order)
 
 Enumerate all cluster IDs from all cluster descriptors.  No specific order can be assumed, use
 RNTupleDescriptor::FindNextClusterId() and RNTupleDescriptor::FindPrevClusterId() to traverse
@@ -1016,13 +1016,13 @@ clusters by entry number.
 // clang-format on
 class RNTupleDescriptor::RClusterDescriptorIterable final {
 private:
-   /// The associated NTuple for this range.
+   /// The associated RNTuple for this range.
    const RNTupleDescriptor &fNTuple;
 
 public:
    class RIterator final {
    private:
-      /// The enclosing range's NTuple.
+      /// The enclosing range's RNTuple.
       const RNTupleDescriptor &fNTuple;
       std::size_t fIndex = 0;
 
@@ -1059,18 +1059,18 @@ public:
 /**
 \class ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable
 \ingroup NTuple
-\brief Used to loop over all the extra type info record of an ntuple (in unspecified order)
+\brief Used to loop over all the extra type info record of an RNTuple (in unspecified order)
 */
 // clang-format on
 class RNTupleDescriptor::RExtraTypeInfoDescriptorIterable final {
 private:
-   /// The associated NTuple for this range.
+   /// The associated RNTuple for this range.
    const RNTupleDescriptor &fNTuple;
 
 public:
    class RIterator final {
    private:
-      /// The enclosing range's NTuple.
+      /// The enclosing range's RNTuple.
       const RNTupleDescriptor &fNTuple;
       std::size_t fIndex = 0;
 
@@ -1268,7 +1268,7 @@ public:
 
 Dangling field descriptors describe a single field in isolation. They are
 missing the necessary relationship information (parent field, any child fields)
-required to describe a real NTuple field.
+required to describe a real RNTuple field.
 
 Dangling field descriptors can only become actual descriptors when added to an
 RNTupleDescriptorBuilder instance and then linked to other fields.
@@ -1290,7 +1290,7 @@ public:
    /// These properties must be set using RNTupleDescriptorBuilder::AddFieldLink().
    explicit RFieldDescriptorBuilder(const RFieldDescriptor &fieldDesc);
 
-   /// Make a new RFieldDescriptorBuilder based off a live NTuple field.
+   /// Make a new RFieldDescriptorBuilder based off a live RNTuple field.
    static RFieldDescriptorBuilder FromField(const ROOT::RFieldBase &field);
 
    RFieldDescriptorBuilder &FieldId(ROOT::DescriptorId_t fieldId)
@@ -1529,7 +1529,7 @@ private:
 
 public:
    /// Checks whether invariants hold:
-   /// * NTuple name is valid
+   /// * RNTuple name is valid
    /// * Fields have valid parents
    /// * Number of columns is constant across column representations
    RResult<void> EnsureValidDescriptor() const;
@@ -1562,7 +1562,7 @@ public:
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
    void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
-   /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
+   /// Clears so-far stored clusters, fields, and columns and return to a pristine RNTupleDescriptor
    void Reset();
 
    /// Mark the beginning of the header extension; any fields and columns added after a call to this function are
