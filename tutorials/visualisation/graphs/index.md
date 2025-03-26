@@ -45,7 +45,7 @@ These examples showcase the creation of different types of graphs and basic ways
 | gr005_apply.C             | gr005_apply.py                | Demonstrate the functionality of the TGraph::Apply() method. |
 | gr006_scatter.C           | gr006_scatter.py              | Scatter plot for 4 variables, mapped to: x, y, marker color and marker size. |
 | gr007_multigraph.C        | gr007_multigraph.py           | Create and draw a TMultiGraph (several graphs superposed). |
-| gr008_multierrors.C       | gr008_multierrors.py          | Graph with multiple y errors in each bin. |
+| gr008_multierrors.C       |                               | Graph with multiple y errors in each bin. |
 | gr009_bent_err.C          | gr009_bent_err.py             | Graph with bent (non-vertical/non-horizontal) error bars. |
 | gr010_approx_smooth.C     | gr010_approx_smooth.py        | Create a TGraphSmooth and show the usage of the interpolation function Approx. |
 | gr011_graph2d_errorsfit.C | gr011_graph2d_errorsfit.py    | Create, draw and fit a TGraph2DErrors. |
@@ -53,7 +53,7 @@ These examples showcase the creation of different types of graphs and basic ways
 | gr013_polar2.C            | gr013_polar2.py               | Polar graph with errors and polar axis in radians (PI fractions). |
 | gr014_polar3.C            | gr014_polar3.py               | Create a polar graph using a TF1 and draw it with PI axis. |
 | gr015_smooth.C            |                               | Show scatter plot smoothers: ksmooth, lowess, supsmu |
-| gr016_struct.C            | gr016_struct.py               | Draw a simple graph structure. |
+| gr016_struct.C            |                               | Draw a simple graph structure. |
 | gr017_time.C              |                               | Example of TGraphTime. |
 | gr018_time2.C             |                               | TGraphTime to visualize a set of particles with their time stamp in a MonteCarlo program. |
 
