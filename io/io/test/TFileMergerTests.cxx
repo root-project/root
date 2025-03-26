@@ -5,8 +5,11 @@
 #include "TBranch.h"
 
 #include "TMemFile.h"
+#include "TFile.h"
 #include "TTree.h"
 #include "TH1.h"
+
+#include <memory>
 
 static void CreateATuple(TMemFile &file, const char *name, double value)
 {
@@ -161,37 +164,30 @@ TEST(TFileMerger, MergeBranches)
    file3->Write();
 }
 
-
-#include <memory>
-#include <TFile.h>
-#include <TFileMerger.h>
-#include <TTree.h>
-
 // https://github.com/root-project/root/issues/6640
 TEST(TFileMerger, ChangeFile)
 {
    {
       TFile f{"file6640mergerinput.root", "RECREATE"};
-   
+
       TTree t{"T", "SetMaxTreeSize(1000)", 99, &f};
       int x;
       auto nentries = 20000;
-   
+
       t.Branch("x", &x, "x/I");
-   
+
       // Call function to forcedly trigger TTree::ChangeFile.
       // This will produce in total 3 files:
       // * file6640mergerinput.root
       // * file6640mergerinput_1.root
       // * file6640mergerinput_2.root
       TTree::SetMaxTreeSize(1000);
-   
-      for (auto i = 0; i < nentries; i++)
-      {
-        x = i;
-        t.Fill();
+
+      for (auto i = 0; i < nentries; i++) {
+         x = i;
+         t.Fill();
       }
-   
+
       // Write last file to disk
       auto cf = t.GetCurrentFile();
       cf->Write();

@@ -2791,7 +2791,7 @@ TFile* TTree::ChangeFile(TFile* file)
          break;
       }
       ++nus;
-      Warning("ChangeFile", "file %s already exists, trying with %d underscores", fname, nus+1);
+      Warning("ChangeFile", "file %s already exists, trying with %d underscores", fname, nus + 1);
    }
    Int_t compress = file->GetCompressionSettings();
    TFile* newfile = TFile::Open(fname, "recreate", "chain files", compress);
