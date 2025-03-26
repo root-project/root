@@ -5,7 +5,7 @@
 ##
 ## \macro_image
 ## \macro_code
-## \author Olivier Couet
+## \author Olivier Couet, Jamie Gooding
 
 import ROOT
 
