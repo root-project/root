@@ -159,6 +159,7 @@ Whether to use implicit multi-threading to compress pages. Only has an effect if
 <td>`true`</td>
 <td>
 If set, checksums will be calculated and written for every page.
+If turned off, will also turn off `EnableSamePageMerging`.
 </td>
 </tr>
 
@@ -167,7 +168,8 @@ If set, checksums will be calculated and written for every page.
 <td>`bool`</td>
 <td>`true`</td>
 <td>
-If set, identical pages are deduplicated and aliased on disk. Requires page checksums.
+If set, identical pages are deduplicated and aliased on disk.
+Requires `EnablePageChecksums` and will throw if previously disabled.
 </td>
 </tr>
 
