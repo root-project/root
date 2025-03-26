@@ -11,8 +11,8 @@
 /// - Package   : TMVA
 /// - Root Macro: TMVACrossValidationApplication
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 /// \author Kim Albertsson (adapted from code originally by Andreas Hoecker)
 
 #include <cstdlib>

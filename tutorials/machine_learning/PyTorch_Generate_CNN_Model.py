@@ -1,3 +1,13 @@
+## \file
+## \ingroup tutorial_ml
+## \notebook
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \author Harshal Shende
+
 import torch
 from torch import nn
 

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tmva
+## \ingroup tutorial_ml
 ## \notebook -nodraw
 ## This tutorial illustrates how you can test a trained BDT model using the fast
 ## tree inference engine offered by TMVA and external tools such as scikit-learn.

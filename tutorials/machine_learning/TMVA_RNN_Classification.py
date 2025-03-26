@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tmva
+## \ingroup tutorial_ml
 ## \notebook
 ##  TMVA Classification Example Using a Recurrent Neural Network
 ##

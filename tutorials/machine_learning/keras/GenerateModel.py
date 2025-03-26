@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## \file
 ## \ingroup tutorial_tmva_keras
 ## \notebook -nodraw
