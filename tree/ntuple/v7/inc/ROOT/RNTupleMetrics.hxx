@@ -201,9 +201,11 @@ public:
 /**
 \class ROOT::Experimental::Detail::RNTupleTickCounter
 \ingroup NTuple
-\brief An either thread-safe or non thread safe (depending on `BaseCounterT`, see `RNTuplePlainCounter` and `RNTupleAtomicCounter`) counter for CPU ticks
+\brief A counter for CPU ticks.
 
-On print, the value is converted from ticks to ns.
+Whether this counter is thread-safe depends on BaseCounterT, see RNTuplePlainCounter and RNTupleAtomicCounter.
+
+When printing, the value is converted from ticks to nanoseconds.
 */
 // clang-format on
 template <typename BaseCounterT>
