@@ -160,3 +160,65 @@ TEST(TFileMerger, MergeBranches)
    EXPECT_EQ(a0tree.FindBranch("a")->GetEntries(), 2);
    file3->Write();
 }
+
+
+#include <memory>
+#include <TFile.h>
+#include <TFileMerger.h>
+#include <TTree.h>
+
+// https://github.com/root-project/root/issues/6640
+TEST(TFileMerger, ChangeFile)
+{
+   {
+      TFile f{"file6640mergerinput.root", "RECREATE"};
+   
+      TTree t{"T", "SetMaxTreeSize(1000)", 99, &f};
+      int x;
+      auto nentries = 20000;
+   
+      t.Branch("x", &x, "x/I");
+   
+      // Call function to forcedly trigger TTree::ChangeFile.
+      // This will produce in total 3 files:
+      // * file6640mergerinput.root
+      // * file6640mergerinput_1.root
+      // * file6640mergerinput_2.root
+      TTree::SetMaxTreeSize(1000);
+   
+      for (auto i = 0; i < nentries; i++)
+      {
+        x = i;
+        t.Fill();
+      }
+   
+      // Write last file to disk
+      auto cf = t.GetCurrentFile();
+      cf->Write();
+      cf->Close();
+   }
+   {
+      TFileMerger filemerger{false, false};
+      filemerger.OutputFile(std::unique_ptr<TFile>{TFile::Open("file6640mergeroutput.root", "RECREATE")});
+
+      TFile fin{"file6640mergerinput.root", "READ"};
+      TFile fin1{"file6640mergerinput_1.root", "READ"};
+      TFile fin2{"file6640mergerinput_2.root", "READ"};
+
+      filemerger.AddAdoptFile(&fin);
+      filemerger.AddAdoptFile(&fin1);
+      filemerger.AddAdoptFile(&fin2);
+
+      // Before the fix, TTree::ChangeFile was called during Merge
+      // in the end deleting the TFileMerger's output file and leading to a crash.
+      filemerger.Merge();
+   }
+   {
+      TFile fout{"file6640mergeroutput.root", "READ"};
+      EXPECT_EQ(fout.Get<TTree>("T")->GetEntries(), 20000);
+   }
+   gSystem->Unlink("file6640mergerinput.root");
+   gSystem->Unlink("file6640mergerinput_1.root");
+   gSystem->Unlink("file6640mergerinput_2.root");
+   gSystem->Unlink("file6640mergeroutput.root");
+}
