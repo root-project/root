@@ -10,8 +10,10 @@
 ##
 ## \author Rene Brun, Jamie Gooding
 
+import ROOT
+
 gStyle.SetOptFit()
-auto c1 = ROOT.TCanvas("c1","multigraph",700,500)
+c1 = ROOT.TCanvas("c1","multigraph",700,500)
 c1.SetGrid()
 
 # Initialize a TMultiGraph to hold multiple graphs

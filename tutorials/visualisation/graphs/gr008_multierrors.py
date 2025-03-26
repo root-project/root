@@ -9,6 +9,8 @@
 ## 
 ## \author Simon Spies, Jamie Gooding
 
+import ROOT
+
 c1 = ROOT.TCanvas("c1", "A Simple Graph with multiple y-errors", 200, 10, 700, 500)
 c1.SetGrid()
 c1.GetFrame().SetBorderSize(12)

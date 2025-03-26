@@ -13,7 +13,9 @@
 ##
 ## \author Miro Helbich, Jamie Gooding
 
-const Int_t npoints=3
+import ROOT
+
+npoints=3
 xaxis = (1.,2.,3.)
 yaxis = (10.,20.,30.)
 

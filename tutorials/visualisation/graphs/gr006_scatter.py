@@ -9,11 +9,13 @@
 ## \macro_code
 ## \author Olivier Couet, Jamie Gooding
 
+import ROOT
+
 canvas = ROOT.TCanvas()
 canvas.SetRightMargin(0.14)
 gStyle.SetPalette(kBird, 0, 0.6) # define a transparent palette
 
-const int n = 175
+n = 175
 
 x = []
 y = []

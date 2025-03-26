@@ -10,6 +10,8 @@
 ## 
 ## \author Miro Helbich, Jamie Gooding
 
+import ROOT
+
 c2 = ROOT.TCanvas("c2","", 700, 500)
 
 c2.SetGrid()
