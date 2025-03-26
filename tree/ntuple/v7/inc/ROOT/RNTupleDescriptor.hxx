@@ -320,9 +320,9 @@ public:
    // the page belongs
    struct RPageInfo {
    private:
-      /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
+      /// The sum of the elements of all the pages must match the corresponding `fNElements` field in `fColumnRanges`
       std::uint32_t fNElements = std::uint32_t(-1);
-      /// The meaning of fLocator depends on the storage backend.
+      /// The meaning of `fLocator` depends on the storage backend.
       RNTupleLocator fLocator;
       /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
       bool fHasChecksum = false;
@@ -395,9 +395,9 @@ public:
       /// \brief Extend this RPageRange to fit the given RColumnRange.
       ///
       /// To do so, prepend as many synthetic RPageInfos as needed to cover the range in `columnRange`.
-      /// `RPageInfo`s are constructed to contain as many elements of type `element` given a page size
+      /// RPageInfos are constructed to contain as many elements of type `element` given a page size
       /// limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
-      /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
+      /// This function is used to make up RPageRanges for clusters that contain deferred columns.
       /// \return The number of column elements covered by the synthesized RPageInfos
       std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange,
                                          const ROOT::Internal::RColumnElementBase &element, std::size_t pageSize);
@@ -705,7 +705,7 @@ public:
    class RClusterDescriptorIterable;
    class RExtraTypeInfoDescriptorIterable;
 
-   /// Modifiers passed to `CreateModel`
+   /// Modifiers passed to CreateModel()
    struct RCreateModelOptions {
    private:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
@@ -1413,7 +1413,7 @@ public:
 
    /// Add column and page ranges for columns created during late model extension missing in this cluster.  The locator
    /// type for the synthesized page ranges is `kTypePageZero`.  All the page sources must be able to populate the
-   /// 'zero' page from such locator. Any call to `CommitColumnRange()` and `CommitSuppressedColumnRanges()`
+   /// 'zero' page from such locator. Any call to CommitColumnRange() and CommitSuppressedColumnRanges()
    /// should happen before calling this function.
    RClusterDescriptorBuilder &AddExtendedColumnRanges(const RNTupleDescriptor &desc);
 
