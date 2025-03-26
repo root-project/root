@@ -15,33 +15,25 @@ If you have never used ROOT before and don’t know where to start, we recommend
 
 The `$ROOTSYS/tutorials` directory includes several sub-directories:
 
-\defgroup tutorial_hist Histograms tutorials
-\ingroup Tutorials
-\brief Examples showing the "histograms' classes" usage.
-
 \defgroup tutorial_analysis Data analysis tutorials
 \ingroup Tutorials
 \brief Various examples of data analysis workflows.
-
-\defgroup tutorial_visualisation Visualisation tutorials
-\ingroup Tutorials
-\brief All examples related to visually representing the data, including graphs, event displays, web graphics, GUIs and more. 
-
-\defgroup tutorial_exp Experimental API tutorials
-\ingroup Tutorials
-\brief Various examples showing the experimental API.
 
 \defgroup tutorial_evegen Event generation tutorials
 \ingroup Tutorials
 \brief Examples showing event generation with pythia and Monte Carlo.
 
-\defgroup tutorial_geom Geometry tutorials
+\defgroup tutorial_exp Experimental API tutorials
 \ingroup Tutorials
-\brief Various ROOT geometry package examples.
+\brief Various examples showing the experimental API.
 
-\defgroup tutorial_roofit RooFit packages tutorials
+\defgroup tutorial_geometry Geometry tutorials
 \ingroup Tutorials
-\brief These tutorials illustrate the main features of RooFit, HistFactory and RooStats.
+\brief Examples showing how to make use of geometry classes in ROOT.
+
+\defgroup tutorial_hist Histograms tutorials
+\ingroup Tutorials
+\brief Examples showing the "histograms' classes" usage.
 
 \defgroup tutorial_http HTTP tutorials
 \ingroup Tutorials
@@ -51,17 +43,21 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief These tutorials illustrate some of the capabilities of the ROOT IO subsystem, including TTree, RNTuple, SQL and XML.
 
-\defgroup tutorial_math Math tutorials
-\ingroup Tutorials
-\brief Examples showing the Math classes.
-
 \defgroup tutorial_ml Machine Learning tutorials
 \ingroup Tutorials
 \brief Examples showing how to use Machine Learning from ROOT. 
 
-\defgroup tutorial_geometry Geometry tutorials
+\defgroup tutorial_math Math tutorials
 \ingroup Tutorials
-\brief Examples showing how to make use of geometry classes in ROOT.
+\brief Examples showing the Math classes.
+
+\defgroup tutorial_roofit RooFit packages tutorials
+\ingroup Tutorials
+\brief These tutorials illustrate the main features of RooFit, HistFactory and RooStats.
+
+\defgroup tutorial_visualisation Visualisation tutorials
+\ingroup Tutorials
+\brief All examples related to visually representing the data, including graphs, event displays, web graphics, GUIs and more. 
 
 \defgroup tutorial_legacy Legacy tutorials
 \ingroup Tutorials
