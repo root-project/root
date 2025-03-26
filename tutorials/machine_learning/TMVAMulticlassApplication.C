@@ -7,8 +7,8 @@
 /// - Package   : TMVA
 /// - Root Macro: TMVAMulticlassApplication
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 /// \author Andreas Hoecker
 
 

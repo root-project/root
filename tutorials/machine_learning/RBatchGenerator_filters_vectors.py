@@ -1,3 +1,11 @@
+### \file
+### \ingroup tutorial_ml
+### \notebook -nodraw
+###
+### \macro_code
+### \macro_output
+### \author Dante Niewenhuis
+
 ##################################################
 # This tutorial shows the usage of filters and vectors
 # when using RBatchGenerator

@@ -1,5 +1,5 @@
 ### \file
-### \ingroup tutorial_tmva
+### \ingroup tutorial_ml
 ### \notebook -nodraw
 ### Example of inference with SOFIE and RDataFrame, of a model trained with Keras.
 ### First, generate the input model by running `TMVA_Higgs_Classification.C`.

@@ -8,8 +8,8 @@
 ///  - Package   : TMVA
 ///  - Executable: TMVARegressionApplication
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 /// \author Andreas Hoecker
 
 #include <cstdlib>

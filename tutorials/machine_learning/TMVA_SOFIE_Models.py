@@ -1,5 +1,5 @@
 ### \file
-### \ingroup tutorial_tmva
+### \ingroup tutorial_ml
 ### \notebook -nodraw
 ### Example of inference with SOFIE using a set of models trained with Keras.
 ### This tutorial shows how to store several models in a single header file and
