@@ -30,13 +30,9 @@ void mathcoreSpecFunc() {
    TCanvas *c1 = new TCanvas("c1","c1",800,600);
 
    f1a->SetLineColor(kBlue);
-   f1b->SetLineColor(kBlue);
    f2a->SetLineColor(kBlue);
-   f2b->SetLineColor(kBlue);
    f3a->SetLineColor(kBlue);
-   f3b->SetLineColor(kBlue);
    f4a->SetLineColor(kBlue);
-   f4b->SetLineColor(kBlue);
 
    c1->Divide(2,2);
 
