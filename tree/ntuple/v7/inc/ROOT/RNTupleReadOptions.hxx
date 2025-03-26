@@ -34,7 +34,7 @@ public:
 /**
 \class ROOT::RNTupleReadOptions
 \ingroup NTuple
-\brief Common user-tunable settings for reading ntuples
+\brief Common user-tunable settings for reading RNTuples
 
 All page source classes need to support the common options.
 

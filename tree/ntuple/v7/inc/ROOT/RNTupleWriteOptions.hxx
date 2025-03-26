@@ -39,7 +39,7 @@ public:
 /**
 \class ROOT::RNTupleWriteOptions
 \ingroup NTuple
-\brief Common user-tunable settings for storing ntuples
+\brief Common user-tunable settings for storing RNTuples
 
 All page sink classes need to support the common options.
 
@@ -56,7 +56,7 @@ All page sink classes need to support the common options.
 <td>`std::uint32_t`</td>
 <td>RCompressionSetting::EDefaults::kUseGeneralPurpose</td>
 <td>
-The compression settings for this ntuple
+The compression settings for this RNTuple
 </td>
 </tr>
 
