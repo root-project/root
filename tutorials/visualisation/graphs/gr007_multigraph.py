@@ -10,8 +10,8 @@
 ##
 ## \author Rene Brun, Jamie Gooding
 
-import ROOT
 import numpy as np
+import ROOT
 
 ROOT.gStyle.SetOptFit()
 c1 = ROOT.TCanvas("c1","multigraph",700,500)

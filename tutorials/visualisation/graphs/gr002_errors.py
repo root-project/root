@@ -10,8 +10,8 @@
 ## \macro_code
 ## \author Rene Brun, Jamie Gooding
 
-import ROOT
 import numpy as np
+import ROOT
 
 c1 = ROOT.TCanvas("c1","A Simple Graph with error bars",200,10,700,500)
 

@@ -15,9 +15,10 @@
 
 # Illustrates how to use TGraphPolar
 
-import ROOT
 import math
+
 import numpy as np
+import ROOT
 
 CPol = ROOT.TCanvas("CPol","TGraphPolar Examples",1200,600)
 CPol.Divide(2,1)

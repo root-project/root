@@ -10,9 +10,10 @@
 ## 
 ## \author Rene Brun, Jamie Gooding
 
-import ROOT
-import numpy as np
 import re
+
+import numpy as np
+import ROOT
 
 c1 = ROOT.TCanvas("c1","Two simple graphs",200,10,700,500)
 c1.Divide(2,1) # Dividing the canvas in subpads for distinguishing the two examples, [See documentation](https://root.cern/doc/master/classTCanvas.html)

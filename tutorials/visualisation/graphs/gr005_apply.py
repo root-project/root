@@ -13,8 +13,8 @@
 ##
 ## \author Miro Helbich, Jamie Gooding
 
-import ROOT
 import numpy as np
+import ROOT
 
 npoints = 3
 xaxis = np.array([1.,2.,3.])

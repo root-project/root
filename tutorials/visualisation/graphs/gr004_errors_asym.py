@@ -10,8 +10,8 @@
 ## 
 ## \author Miro Helbich, Jamie Gooding
 
-import ROOT
 import numpy as np
+import ROOT
 
 c2 = ROOT.TCanvas("c2","", 700, 500)
 

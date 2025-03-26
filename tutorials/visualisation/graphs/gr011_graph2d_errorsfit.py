@@ -7,8 +7,9 @@
 ## \macro_code
 ## \author Olivier Couet, Jamie Gooding
 
-import ROOT
 from ctypes import c_double
+
+import ROOT
 
 c1 = ROOT.TCanvas("c1")
 

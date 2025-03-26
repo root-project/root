@@ -9,9 +9,10 @@
 ## \macro_code
 ## \author Christian Stratowa, Jamie Gooding
 
-import ROOT
 from ctypes import c_double
+
 import numpy as np
+import ROOT
 
 # vC1 = ROOT.TCanvas()
 # # grxy = ROOT.TGraph()

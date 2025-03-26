@@ -11,9 +11,10 @@
 ## \macro_code
 ## \author Olivier Couet, Jamie Gooding
 
-import ROOT
 import math
+
 import numpy as np
+import ROOT
 
 CPol = ROOT.TCanvas("CPol","TGraphPolar Examples",500,500)
 
