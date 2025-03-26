@@ -2742,6 +2742,10 @@ bool TTree::EnableCache()
 
 TFile* TTree::ChangeFile(TFile* file)
 {
+   // Changing file clashes with the design of TMemFile and derivates, see #6523.
+   // as well as with TFileMerger operations, see #6640
+   if ((dynamic_cast<TMemFile *>(file)) || file->TestBit(TFile::kCannotChange))
+      return file;
    file->cd();
    Write();
    Reset();
@@ -2787,7 +2791,7 @@ TFile* TTree::ChangeFile(TFile* file)
          break;
       }
       ++nus;
-      Warning("ChangeFile", "file %s already exist, trying with %d underscores", fname, nus+1);
+      Warning("ChangeFile", "file %s already exists, trying with %d underscores", fname, nus+1);
    }
    Int_t compress = file->GetCompressionSettings();
    TFile* newfile = TFile::Open(fname, "recreate", "chain files", compress);
@@ -4779,9 +4783,7 @@ Int_t TTree::Fill()
    if (fDirectory)
       if (TFile *file = fDirectory->GetFile())
          if (static_cast<TDirectory *>(file) == fDirectory && (file->GetEND() > fgMaxTreeSize))
-            // Changing file clashes with the design of TMemFile and derivates, see #6523.
-            if (!(dynamic_cast<TMemFile *>(file)))
-               ChangeFile(file);
+            ChangeFile(file);
 
    return nerror == 0 ? nbytes : -1;
 }
