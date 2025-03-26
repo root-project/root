@@ -1,9 +1,8 @@
 # JSROOT changelog
 
-## Changes in 7.8.x
+## Changes in 7.8.2
 1. Fix - hidden canvas in Jupyter Lab, https://root-forum.cern.ch/t/63097/
-2. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
-3. Fix - correctly read `std::pair<>` without dictionary, https://root-forum.cern.ch/t/63114/
+2. Fix - repair small bug in `TF3` painting
 
 
 ## Changes in 7.8.1
@@ -54,6 +53,13 @@
 37. Fix - unzooming on log scale was extending range forever
 38. Fix - display empty hist bin if fSumw2 not zero
 39. Fix - geometry display on android devices
+
+
+## Changes in 7.7.6
+1. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
+2. Fix - correctly read std::pair<> without dictionary, https://root-forum.cern.ch/t/63114/
+3. Fix - chromium in mobile device emulation mode, https://root-forum.cern.ch/t/63201/
+4. Fix - files remap for root.cern site using fallback URL
 
 
 ## Changes in 7.7.5
