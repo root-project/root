@@ -9,3 +9,7 @@
 \defgroup tutorial_unfold TUnfold tutorials
 \ingroup tutorial_analysis
 \brief Test programs for the classes TUnfold and related
+
+\defgroup tutorial_analysis_parallel Parallel analysis tutorials
+\ingroup tutorial_analysis
+\brief These examples show data analyses with explicit multithreading and multiprocessing

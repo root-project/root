@@ -1,8 +1,7 @@
 /// \file
-/// \ingroup tutorial_analysis
-/// Parallel fill of a histogram.
-/// This tutorial shows how a histogram can be filled in parallel
-/// with a multiprocess approach.
+/// \ingroup tutorial_analysis_parallel
+/// Fill histogram in parallel with a multithreaded approach
+/// using TThreadExecutor and TExecutor::MapReduce.
 ///
 /// \macro_image
 /// \macro_code

@@ -1,8 +1,8 @@
 /// \file
-/// \ingroup tutorial_analysis
+/// \ingroup tutorial_analysis_parallel
 /// \notebook -nodraw
-/// Illustrate the usage of the multiproc TSelector interfaces with the h1 analysis
-/// example.
+/// Illustrate the usage of the multiprocessing TTreeProcessorMP
+/// and TSelector interfaces with the h1analysis.C example.
 ///
 /// \macro_code
 ///

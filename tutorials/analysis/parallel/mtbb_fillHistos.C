@@ -1,9 +1,9 @@
 /// \file
-/// \ingroup tutorial_analysis
+/// \ingroup tutorial_analysis_parallel
 /// \notebook
-/// Fill histograms in parallel and write them on file.
-/// This example expresses the parallelism of the mt001_fillHistos.C tutorial
-/// with multiprocessing techniques.
+/// Fill histograms in parallel and write them on file
+/// with a multithreaded approach using
+/// TThreadExecutor and TExecutor::Map.
 ///
 /// \macro_code
 ///
