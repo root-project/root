@@ -1,10 +1,10 @@
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.8.x',
+const version_id = '7.8.2',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '12/03/2025',
+version_date = '26/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -98,7 +98,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
       browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
       browser.isChrome = !!window.chrome;
       browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
-      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
+      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? (navigator.userAgent.indexOf('Chrom') > 0 ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 134) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    }
    browser.android = /android/i.test(navigator.userAgent);
@@ -294,7 +294,15 @@ settings = {
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
-  /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
+   /** @summary File read timeout in ms
+    * @desc Configures timeout for each http operation for reading ROOT files
+    * @default 0 */
+   FilesTimeout: 0,
+   /** @summary Default remap object for files loading
+       * @desc Allows to retry files reading if original URL fails
+       * @private */
+   FilesRemap: { 'https://root.cern/': 'https://root-eos.web.cern.ch/' },
+   /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
    WithCredentials: false,
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
@@ -1571,7 +1579,7 @@ function getMethods(typename, obj) {
       };
    }
 
-   if ((typename.indexOf(clTF1) === 0) || (typename === clTF2)) {
+   if ((typename.indexOf(clTF1) === 0) || (typename === clTF2) || (typename === clTF3)) {
       m.addFormula = function(obj) {
          if (!obj) return;
          if (this.formulas === undefined) this.formulas = [];
