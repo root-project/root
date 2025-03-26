@@ -37,6 +37,7 @@ public:
   const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const ;
   const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1,
                                       pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const ;
+  size_t size() const;
 
 protected:
 
