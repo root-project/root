@@ -273,7 +273,11 @@ public:
       kWriteError    = BIT(14),
       kBinaryFile    = BIT(15),
       kRedirected    = BIT(16),
-      kReproducible  = BIT(17)
+      kReproducible  = BIT(17),
+      // Set this bit to block an unwanted automatic call to TTree::ChangeFile
+      // e.g. during TFileMerger operations (bypassing any set MaxTreeSize)
+      // This is a transient bit and has no relevance for I/O.
+      kCannotChange  = BIT(18)
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
