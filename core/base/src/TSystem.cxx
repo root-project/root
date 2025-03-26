@@ -683,7 +683,7 @@ int TSystem::ClosePipe(FILE*)
 /// @param redirectStderr if true, stderr will be redirected to stdout
 /// @return the stdout of the command as TString (from the p-opened FILE stream)
 
-TString TSystem::GetFromPipe(const char *command, int *ret, bool redirectStderr)
+TString TSystem::GetFromPipe(const char *command, Int_t *ret, Bool_t redirectStderr)
 {
    TString out;
    TString scommand = command;
