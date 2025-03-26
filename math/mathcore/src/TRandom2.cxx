@@ -5,7 +5,7 @@
 
 \class TRandom2
 
-Random number generator class based on the maximally quidistributed combined
+Random number generator class based on the maximally equidistributed combined
 Tausworthe generator by L'Ecuyer.
 
 The period of the generator is 2**88 (about 10**26) and it uses only 3 words
