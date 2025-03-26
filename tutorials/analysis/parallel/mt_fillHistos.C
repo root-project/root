@@ -1,8 +1,10 @@
 /// \file
-/// \ingroup tutorial_analysis
+/// \ingroup tutorial_analysis_parallel
 /// \notebook
-/// Fill histograms in parallel and write them on file.
-/// The simplest meaningful possible example which shows ROOT thread awareness.
+/// Fill histograms in parallel and write them on file
+/// with a multithreaded approach using std::thread.
+/// This is the simplest meaningful example which shows 
+/// ROOT thread awareness.
 ///
 /// \macro_code
 ///

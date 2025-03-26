@@ -1,14 +1,17 @@
 /// \file
-/// \ingroup tutorial_analysis
+/// \ingroup tutorial_analysis_parallel
 /// \notebook
-/// Parallel fill of a histogram.
-/// This tutorial shows how a histogram can be filled in parallel
-/// with a multithreaded approach. The difference with the multiprocess case,
-/// see mp201, is that here we cannot count on the copy-on-write mechanism, but
-/// we rather need to protect the histogram resource with a TThreadedObject
-/// class. The result of the filling is monitored with the *SnapshotMerge*
-/// method. This method is not thread safe: in presence of ROOT histograms, the
-/// system will not crash but the result is not uniquely defined.
+/// Fill histogram in parallel with a multithreaded approach
+/// using TThreadedObject and TThreadedObject::SnapshotMerge.
+///
+/// The difference with the multiprocessing case,
+/// see mp_parallelHistoFill, is that we cannot count on 
+/// the copy-on-write mechanism here. Instead, we need to protect 
+/// the histogram resource with a TThreadedObject class. 
+/// The result of the filling is monitored with the *SnapshotMerge*
+/// method. This method is not thread safe: in the presence of 
+/// ROOT histograms, the system will not crash but the result 
+/// is not uniquely defined.
 ///
 /// \macro_image
 /// \macro_code
