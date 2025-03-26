@@ -1,13 +1,14 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Principal Components Analysis (PCA) example
+/// Principal Components Analysis (PCA) example.
 ///
 /// Example of using TPrincipal as a stand alone class.
 ///
 /// We create n-dimensional data points, where c = trunc(n / 5) + 1
 /// are  correlated with the rest n - c randomly distributed variables.
 ///
+/// \macro_image
 /// \macro_output
 /// \macro_code
 ///

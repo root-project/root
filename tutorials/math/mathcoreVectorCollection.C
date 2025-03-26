@@ -2,6 +2,7 @@
 /// \ingroup tutorial_math
 /// \notebook -js
 /// Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree.
+///
 /// In the write() function a variable number of track Vectors is generated
 /// according to a Poisson distribution with random momentum uniformly distributed
 /// in phi and eta.

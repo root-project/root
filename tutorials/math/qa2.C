@@ -1,7 +1,7 @@
 /// \file
-/// \ingroup tutorial_fit
+/// \ingroup tutorial_math
 /// \notebook -js
-/// Test generation of random numbers distributed according to a function defined by the user
+/// Test generation of random numbers distributed according to a function defined by the user.
 ///
 /// \macro_image
 /// \macro_output

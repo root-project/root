@@ -1,8 +1,12 @@
 ## \file
 ## \ingroup tutorial_math
 ## \notebook
-## Example of using Python functions and input to numerical algorithm
-## using the ROOT Functor class 
+## Example of using Python functions as inputs to numerical algorithms
+## using the ROOT Functor class. 
+##
+## \macro_image
+## \macro_output
+## \macro_code
 ##
 ## \author Lorenzo Moneta
 

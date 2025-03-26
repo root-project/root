@@ -1,8 +1,9 @@
 /// \file
-/// \ingroup tutorial_fit
+/// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Example on how to use the new Minimizer class in ROOT
-///  Show usage with all the possible minimizers.
+/// Example on how to use the Minimizer class in ROOT.
+///
+/// Show usage with all the possible minimizers.
 /// Minimize the Rosenbrock function (a 2D -function)
 ///
 /// input : minimizer name + algorithm name

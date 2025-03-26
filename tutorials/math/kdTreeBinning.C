@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// kdTreeBinning tutorial: bin the data in cells of equal content using a kd-tree
+/// Example binning the data in cells of equal content using a kd-tree.
 ///
 /// Using TKDTree wrapper class as a data binning structure
-///  Plot the 2D data using the TH2Poly class
+/// Plot the 2D data using the TH2Poly class
 ///
 /// \macro_image
 /// \macro_output

@@ -19,7 +19,7 @@ needed to integrate Minuit2 in the %ROOT framework.
 A new class has been introduced, ROOT::Minuit2::Minuit2Minimizer, which implements
 the interface ROOT::Math::Minimizer. Within %ROOT, it can be instantiates also using
 the %ROOT plug-in manager. This class provides a convenient entry point for using Minuit2\.
-An example of using this interface is the %ROOT tutorial _tutorials/fit/NumericalMinimization.C_
+An example of using this interface is the %ROOT tutorial _tutorials/math/NumericalMinimization.C_
 or the Minuit2 test program
 [<tt>testMinimize.cxx</tt>](https://github.com/cxx-hep/root-cern/blob/master/math/minuit2/test/testMinimize.cxx).
 

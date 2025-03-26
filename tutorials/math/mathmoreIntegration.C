@@ -1,8 +1,9 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Example on the  usage of the adaptive 1D integration algorithm of MathMore
-/// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
+/// Example on the  usage of the adaptive 1D integration algorithm of MathMore.
+///
+/// It calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
 /// to execute the macro type it (you need to compile with AClic)
 ///
 /// ~~~{.cpp}

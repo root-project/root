@@ -113,7 +113,7 @@ namespace ROOT {
    - The interface to retrieve the result of minimization ( minimum X values, function value, gradient, error on the minimum, etc...)
    - The interface to perform a Scan, Hesse or a Contour plot (for the minimizers that support this, i.e. Minuit and Minuit2)
 
-   An example on how to use this interface is the tutorial NumericalMinimization.C in the tutorials/fit directory.
+   An example on how to use this interface is the tutorial NumericalMinimization.C in the tutorials/math directory.
 
    @ingroup MultiMin
 */

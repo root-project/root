@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_math
 ## \notebook
-## Principal Components Analysis (PCA) example
+## Principal Components Analysis (PCA) example.
 ##
 ## Example of using TPrincipal as a stand alone class.
 ##
@@ -10,6 +10,7 @@
 ##
 ## Based on principal.C by Rene Brun and Christian Holm Christensen
 ##
+## \macro_image
 ## \macro_output
 ## \macro_code
 ##
