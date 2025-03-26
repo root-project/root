@@ -94,6 +94,14 @@ RooAICRegistry::~RooAICRegistry()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get size of _clArr vector
+
+size_t RooAICRegistry::size() const
+{
+  return _clArr.size();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Store given arrays of integer codes, and up to four RooArgSets in
 /// the registry (each setX pointer may be null). The registry
 /// clones all RooArgSets internally so the RooArgSets passed as
