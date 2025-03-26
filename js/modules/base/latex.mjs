@@ -720,7 +720,8 @@ function parseLatex(node, arg, label, curr) {
          }
 
          if (pos_up) {
-            if (!pos_low) yup = Math.min(yup, curr.rect.last_y1);
+            if (!pos_low && curr.rect)
+               yup = Math.min(yup, curr.rect.last_y1);
             positionGNode(pos_up, x+dx, yup - pos_up.rect.y1 - curr.fsize*0.1);
             w1 = pos_up.rect.width;
          }

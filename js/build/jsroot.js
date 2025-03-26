@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.7.5
+// https://root.cern/js/ v7.7.6
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -8,11 +8,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.7.5',
+const version_id = '7.7.6',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '31/10/2024',
+version_date = '26/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -96,7 +96,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
       browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
       browser.isChrome = !!window.chrome;
       browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
-      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
+      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? (navigator.userAgent.indexOf('Chrom') > 0 ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 134) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    }
    browser.touches = ('ontouchend' in document); // identify if touch events are supported
@@ -279,13 +279,21 @@ settings = {
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
      * In such case browser will be forced to load file content disregards of server cache settings
      * Can be disabled by providing &usestamp=false in URL or via Settings/Files sub-menu
-     * @default true */
-   UseStamp: true,
+     * Disabled by default on node.js, enabled in the web browsers */
+   UseStamp: !nodejs,
    /** @summary Maximal number of bytes ranges in http 'Range' header
      * @desc Some http server has limitations for number of bytes rannges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
-  /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
+   /** @summary File read timeout in ms
+    * @desc Configures timeout for each http operation for reading ROOT files
+    * @default 0 */
+   FilesTimeout: 0,
+   /** @summary Default remap object for files loading
+       * @desc Allows to retry files reading if original URL fails
+       * @private */
+   FilesRemap: { 'https://root.cern/': 'https://root-eos.web.cern.ch/' },
+   /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
    WithCredentials: false,
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
@@ -2603,7 +2611,7 @@ function compareValue(compare) {
 }
 
 function chord() {
-  return chord$1(false, false);
+  return chord$1(false);
 }
 
 function chord$1(directed, transpose) {
@@ -2620,9 +2628,7 @@ function chord$1(directed, transpose) {
         groups = new Array(n),
         k = 0, dx;
 
-    matrix = Float64Array.from({length: n * n}, transpose
-        ? (_, i) => matrix[i % n][i / n | 0]
-        : (_, i) => matrix[i / n | 0][i % n]);
+    matrix = Float64Array.from({length: n * n}, (_, i) => matrix[i / n | 0][i % n]);
 
     // Compute the scaling factor from value to angle in [0, 2pi].
     for (let i = 0; i < n; ++i) {
@@ -2639,20 +2645,7 @@ function chord$1(directed, transpose) {
       if (sortGroups) groupIndex.sort((a, b) => sortGroups(groupSums[a], groupSums[b]));
       for (const i of groupIndex) {
         const x0 = x;
-        if (directed) {
-          const subgroupIndex = range$1(~n + 1, n).filter(j => j < 0 ? matrix[~j * n + i] : matrix[i * n + j]);
-          if (sortSubgroups) subgroupIndex.sort((a, b) => sortSubgroups(a < 0 ? -matrix[~a * n + i] : matrix[i * n + a], b < 0 ? -matrix[~b * n + i] : matrix[i * n + b]));
-          for (const j of subgroupIndex) {
-            if (j < 0) {
-              const chord = chords[~j * n + i] || (chords[~j * n + i] = {source: null, target: null});
-              chord.target = {index: i, startAngle: x, endAngle: x += matrix[~j * n + i] * k, value: matrix[~j * n + i]};
-            } else {
-              const chord = chords[i * n + j] || (chords[i * n + j] = {source: null, target: null});
-              chord.source = {index: i, startAngle: x, endAngle: x += matrix[i * n + j] * k, value: matrix[i * n + j]};
-            }
-          }
-          groups[i] = {index: i, startAngle: x0, endAngle: x, value: groupSums[i]};
-        } else {
+        {
           const subgroupIndex = range$1(0, n).filter(j => matrix[i * n + j] || matrix[j * n + i]);
           if (sortSubgroups) subgroupIndex.sort((a, b) => sortSubgroups(matrix[i * n + a], matrix[i * n + b]));
           for (const j of subgroupIndex) {
@@ -2922,12 +2915,7 @@ function ribbon(headRadius) {
     context.moveTo(sr * cos$1(sa0), sr * sin$1(sa0));
     context.arc(0, 0, sr, sa0, sa1);
     if (sa0 !== ta0 || sa1 !== ta1) {
-      if (headRadius) {
-        var hr = +headRadius.apply(this, arguments), tr2 = tr - hr, ta2 = (ta0 + ta1) / 2;
-        context.quadraticCurveTo(0, 0, tr2 * cos$1(ta0), tr2 * sin$1(ta0));
-        context.lineTo(tr * cos$1(ta2), tr * sin$1(ta2));
-        context.lineTo(tr2 * cos$1(ta1), tr2 * sin$1(ta1));
-      } else {
+      {
         context.quadraticCurveTo(0, 0, tr * cos$1(ta0), tr * sin$1(ta0));
         context.arc(0, 0, tr, ta0, ta1);
       }
@@ -2937,10 +2925,6 @@ function ribbon(headRadius) {
 
     if (buffer) return context = null, buffer + "" || null;
   }
-
-  if (headRadius) ribbon.headRadius = function(_) {
-    return arguments.length ? (headRadius = typeof _ === "function" ? _ : constant$4(+_), ribbon) : headRadius;
-  };
 
   ribbon.radius = function(_) {
     return arguments.length ? (sourceRadius = targetRadius = typeof _ === "function" ? _ : constant$4(+_), ribbon) : sourceRadius;
@@ -8881,7 +8865,8 @@ function parseLatex(node, arg, label, curr) {
          }
 
          if (pos_up) {
-            if (!pos_low) yup = Math.min(yup, curr.rect.last_y1);
+            if (!pos_low && curr.rect)
+               yup = Math.min(yup, curr.rect.last_y1);
             positionGNode(pos_up, x+dx, yup - pos_up.rect.y1 - curr.fsize*0.1);
             w1 = pos_up.rect.width;
          }
@@ -9829,7 +9814,7 @@ function createDefaultPalette(grayscale) {
       if (t < 2 / 3) return p + (q - p) * (2/3 - t) * 6;
       return p;
    }, HLStoRGB = (h, l, s) => {
-      const q = (l < 0.5) ? l * (1 + s) : l + s - l * s,
+      const q = l + s - l * s,
             p = 2 * l - q,
             r = hue2rgb(p, q, h + 1/3),
             g = hue2rgb(p, q, h),
@@ -56041,13 +56026,6 @@ function getMaterialArgs(color$1, args) {
 }
 
 function createSVGRenderer(as_is, precision, doc) {
-   if (as_is) {
-      if (doc !== undefined)
-         globalThis.docuemnt = doc;
-      const rndr = new SVGRenderer();
-      rndr.setPrecision(precision);
-      return rndr;
-   }
 
    const excl_style1 = ';stroke-opacity:1;stroke-width:1;stroke-linecap:round',
          excl_style2 = ';fill-opacity:1',
@@ -56451,7 +56429,7 @@ async function createRender3D(width, height, render3d, args) {
 
    if (render3d === rc.SVG) {
       // SVG rendering
-      const r = createSVGRenderer(false, 0, doc);
+      const r = createSVGRenderer(false, 0);
       r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
       promise = Promise.resolve(r);
    } else if (isNodeJs()) {
@@ -61713,14 +61691,14 @@ class StandaloneMenu extends JSRootMenu {
   * menu.addchk(flag, 'Checked', arg => console.log(`Now flag is ${arg}`));
   * menu.show(); */
 function createMenu(evnt, handler, menuname) {
-   const menu = new StandaloneMenu(handler, menuname || 'root_ctx_menu', evnt);
+   const menu = new StandaloneMenu(handler, 'root_ctx_menu', evnt);
    return menu.load();
 }
 
 /** @summary Close previousely created and shown JSROOT menu
   * @param {string} [menuname] - optional menu name */
 function closeMenu(menuname) {
-   const element = getDocument().getElementById(menuname || 'root_ctx_menu');
+   const element = getDocument().getElementById('root_ctx_menu');
    element?.remove();
    return !!element;
 }
@@ -79041,7 +79019,7 @@ function render3D(tmout) {
    if (tmout === -1111) {
       // special handling for direct SVG renderer
       const doc = getDocument(),
-          rrr = createSVGRenderer(false, 0, doc);
+          rrr = createSVGRenderer(false, 0);
       rrr.setSize(this.scene_width, this.scene_height);
       rrr.render(this.scene, this.camera);
       if (rrr.makeOuterHTML) {
@@ -97076,6 +97054,35 @@ function getTypeId(typname, norecursion) {
    return -1;
 }
 
+/** @summary Create streamer info for pair object
+  * @private */
+function createPairStreamer(typename, file) {
+   let si = file.findStreamerInfo(typename);
+   if (si)
+      return si;
+   let p1 = typename.indexOf('<');
+   const p2 = typename.lastIndexOf('>');
+   function getNextName() {
+      let res = '', p = p1 + 1, cnt = 0;
+      while ((p < p2) && (cnt >= 0)) {
+         switch (typename[p]) {
+            case '<': cnt++; break;
+            case ',': if (cnt === 0) cnt--; break;
+            case '>': cnt--; break;
+         }
+         if (cnt >= 0) res += typename[p];
+         p++;
+      }
+      p1 = p - 1;
+      return res.trim();
+   }
+   si = { _typename: 'TStreamerInfo', fClassVersion: 0, fName: typename, fElements: create$1(clTList) };
+   si.fElements.Add(createStreamerElement('first', getNextName(), file));
+   si.fElements.Add(createStreamerElement('second', getNextName(), file));
+   file.fStreamerInfos.arr.push(si);
+   return si;
+}
+
 /** @summary create element of the streamer
   * @private  */
 function createStreamerElement(name, typename, file) {
@@ -97094,7 +97101,8 @@ function createStreamerElement(name, typename, file) {
       typename = elem.fTypeName = BasicTypeNames[elem.fType] || 'int';
    }
 
-   if (elem.fType > 0) return elem; // basic type
+   if (elem.fType > 0)
+      return elem; // basic type
 
    // check if there are STL containers
    const pos = typename.indexOf('<');
@@ -97115,6 +97123,9 @@ function createStreamerElement(name, typename, file) {
       return elem;
    }
 
+   if ((pos > 0) && (typename.slice(0, pos) === 'pair') && file)
+      createPairStreamer(typename, file);
+
    const isptr = (typename.lastIndexOf('*') === typename.length - 1);
 
    if (isptr)
@@ -97134,33 +97145,8 @@ function createStreamerElement(name, typename, file) {
 /** @summary Function creates streamer for std::pair object
   * @private */
 function getPairStreamer(si, typname, file) {
-   if (!si) {
-      if (typname.indexOf('pair') !== 0) return null;
-
-      si = file.findStreamerInfo(typname);
-
-      if (!si) {
-         let p1 = typname.indexOf('<');
-         const p2 = typname.lastIndexOf('>');
-         function GetNextName() {
-            let res = '', p = p1 + 1, cnt = 0;
-            while ((p < p2) && (cnt >= 0)) {
-               switch (typname[p]) {
-                  case '<': cnt++; break;
-                  case ',': if (cnt === 0) cnt--; break;
-                  case '>': cnt--; break;
-               }
-               if (cnt >= 0) res += typname[p];
-               p++;
-            }
-            p1 = p - 1;
-            return res.trim();
-         }
-         si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: create$1(clTList) };
-         si.fElements.Add(createStreamerElement('first', GetNextName(), file));
-         si.fElements.Add(createStreamerElement('second', GetNextName(), file));
-      }
-   }
+   if (!si)
+      si = createPairStreamer(typname, file);
 
    const streamer = file.getStreamer(typname, null, si);
    if (!streamer) return null;
@@ -97565,7 +97551,7 @@ function createMemberStreamer(element, file) {
                member.readelem = readVectorElement;
 
                if (!member.isptr && (member.arrkind < 0)) {
-                  const subelem = createStreamerElement('temp', member.conttype);
+                  const subelem = createStreamerElement('temp', member.conttype, file);
                   if (subelem.fType === kStreamer) {
                      subelem.$fictional = true;
                      member.submember = createMemberStreamer(subelem, file);
@@ -99060,6 +99046,7 @@ class TFile {
       this.fStreamers = 0;
       this.fStreamerInfos = null;
       this.fFileName = '';
+      this.fTimeout = settings.FilesTimeout ?? 0;
       this.fStreamers = [];
       this.fBasicTypes = {}; // custom basic types, in most case enumerations
 
@@ -99085,8 +99072,33 @@ class TFile {
          this.fAcceptRanges = false;
       }
 
+      if (isNodeJs())
+         this.fUseStampPar = false;
+
       const pos = Math.max(this.fURL.lastIndexOf('/'), this.fURL.lastIndexOf('\\'));
       this.fFileName = pos >= 0 ? this.fURL.slice(pos + 1) : this.fURL;
+   }
+
+   /** @summary Set timeout for File instance
+     * @desc Timeout used when submitting http requests to the server */
+   setTimeout(v) {
+      this.fTimeout = v;
+   }
+
+   /** @summary Assign remap for web servers
+    * @desc Allows to specify fallback server if main server fails
+    * @param {Object} remap - looks like { 'https://original.server/': 'https://fallback.server/' } */
+   assignRemap(remap) {
+      if (!remap && !isObject(remap))
+         return;
+
+      for (const key in remap) {
+         if (this.fURL.indexOf(key) === 0) {
+            this.fURL2 = remap[key] + this.fURL.slice(key.length);
+            if (!this.fTimeout)
+               this.fTimeout = 10000;
+         }
+      }
    }
 
    /** @summary Assign BufferArray with file contentOpen file
@@ -99116,15 +99128,23 @@ class TFile {
             blobs = [], // array of requested segments
             promise = new Promise((resolve, reject) => { resolveFunc = resolve; rejectFunc = reject; });
 
-      let fileurl = file.fURL,
-          first = 0, last = 0,
+      let fileurl, first = 0, last = 0,
           // eslint-disable-next-line prefer-const
           read_callback, first_req,
           first_block_retry = false;
 
-      if (isStr(filename) && filename) {
-         const pos = fileurl.lastIndexOf('/');
-         fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
+      function setFileUrl(use_second) {
+         if (use_second) {
+            console.log('Failure - try to repait with URL2', file.fURL2);
+            file.fURL = file.fURL2;
+            delete file.fURL2;
+         }
+
+         fileurl = file.fURL;
+         if (isStr(filename) && filename) {
+            const pos = fileurl.lastIndexOf('/');
+            fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
+         }
       }
 
       function send_new_request(increment) {
@@ -99155,6 +99175,9 @@ class TFile {
                xhr.setRequestHeader('Range', ranges);
                xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
+
+            if (file.fTimeout)
+               xhr.timeout = file.fTimeout;
 
             if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
                let sum1 = 0, sum2 = 0, sum_total = 0;
@@ -99195,6 +99218,10 @@ class TFile {
                file.fUseStampPar = false;
                return send_new_request();
             }
+            if (file.fURL2) {
+               setFileUrl(true);
+               return send_new_request();
+            }
             if (file.fAcceptRanges) {
                file.fAcceptRanges = false;
                first_block_retry = true;
@@ -99229,9 +99256,13 @@ class TFile {
          }
 
          if (!res) {
+            if (file.fURL2) {
+               setFileUrl(true);
+               return send_new_request();
+            }
+
             if ((first === 0) && (last > 2) && (file.fMaxRanges > 1)) {
                // server return no response with multi request - try to decrease ranges count or fail
-
                if (last / 2 > 200)
                   file.fMaxRanges = 200;
                else if (last / 2 > 50)
@@ -99247,7 +99278,7 @@ class TFile {
                return send_new_request();
             }
 
-            return rejectFunc(Error('Fail to read with several ranges'));
+            return rejectFunc(Error(`Fail to read with ${last/2} ranges`));
          }
 
          // if only single segment requested, return result as is
@@ -99392,6 +99423,8 @@ class TFile {
 
          send_new_request(true);
       };
+
+      setFileUrl();
 
       return send_new_request(true).then(() => promise);
    }
@@ -99718,7 +99751,8 @@ class TFile {
      * @param {number} [checksum] - streamer info checksum, have to match when specified
      * @private */
    findStreamerInfo(clname, clversion, checksum) {
-      if (!this.fStreamerInfos) return null;
+      if (!this.fStreamerInfos)
+         return null;
 
       const arr = this.fStreamerInfos.arr, len = arr.length;
 
@@ -99726,20 +99760,25 @@ class TFile {
          let cache = this.fStreamerInfos.cache;
          if (!cache) cache = this.fStreamerInfos.cache = {};
          let si = cache[checksum];
-         if (si !== undefined) return si;
+         if (si && (!clname || (si.fName === clname)))
+            return si;
 
          for (let i = 0; i < len; ++i) {
             si = arr[i];
             if (si.fCheckSum === checksum) {
                cache[checksum] = si;
-               return si;
+               if (!clname || (si.fName === clname))
+                  return si;
             }
          }
-         cache[checksum] = null; // checksum didnot found, do not try again
-      } else {
+         cache[checksum] = null; // checksum did not found, do not try again
+      }
+
+      if (clname) {
          for (let i = 0; i < len; ++i) {
             const si = arr[i];
-            if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined))) return si;
+            if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined)))
+               return si;
          }
       }
 
@@ -99781,7 +99820,8 @@ class TFile {
       }
 
       // check element in streamer infos, one can have special cases
-      if (!s_i) s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
+      if (!s_i)
+         s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
 
       if (!s_i) {
          delete this.fStreamers[fullname];
@@ -99935,17 +99975,13 @@ function readMapElement(buf) {
 
    if (this.member_wise) {
       // when member-wise streaming is used, version is written
-      const ver = this.stl_version;
+      const si = buf.fFile.findStreamerInfo(this.pairtype, this.stl_version.val, this.stl_version.checksum);
 
-      if (this.si) {
-         const si = buf.fFile.findStreamerInfo(this.pairtype, ver.val, ver.checksum);
-
-         if (this.si !== si) {
-            streamer = getPairStreamer(si, this.pairtype, buf.fFile);
-            if (!streamer || streamer.length !== 2) {
-               console.log(`Fail to produce streamer for ${this.pairtype}`);
-               return null;
-            }
+      if (si && (this.si !== si)) {
+         streamer = getPairStreamer(si, this.pairtype, buf.fFile);
+         if (streamer?.length !== 2) {
+            console.log(`Fail to produce streamer for ${this.pairtype}`);
+            return null;
          }
       }
    }
@@ -100218,8 +100254,10 @@ function openFile(arg) {
    if (!file && isObject(arg) && arg.size && arg.name)
       file = new TLocalFile(arg);
 
-   if (!file)
+   if (!file) {
       file = new TFile(arg);
+      file.assignRemap(settings.FilesRemap);
+   }
 
    return file._open();
 }
@@ -103073,6 +103111,7 @@ drawFuncs = { lst: [
    { name: clTCutG, sameas: clTGraph },
    { name: /^RooHist/, sameas: clTGraph },
    { name: /^RooCurve/, sameas: clTGraph },
+   { name: /^RooEllipse/, sameas: clTGraph },
    { name: 'TScatter', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TScatterPainter$1; }).then(h => h.TScatterPainter), opt: ';A' },
    { name: 'RooPlot', icon: 'img_canvas', func: drawRooPlot },
    { name: 'TRatioPlot', icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TRatioPlotPainter$1; }).then(h => h.TRatioPlotPainter), opt: '' },
@@ -120941,7 +120980,7 @@ class Sha256 {
 function sha256(message, as_hex) {
   const m = new Sha256(false);
   m.update(message);
-  return as_hex ? m.hex() : m.digest();
+  return m.digest();
 }
 
 function sha256_2(message, arr, as_hex) {

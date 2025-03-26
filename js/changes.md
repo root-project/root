@@ -1,5 +1,12 @@
 # JSROOT changelog
 
+## Changes in 7.7.6
+1. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
+2. Fix - correctly read std::pair<> without dictionary, https://root-forum.cern.ch/t/63114/
+3. Fix - chromium in mobile device emulation mode, https://root-forum.cern.ch/t/63201/
+4. Fix - files remap for root.cern site using fallback URL
+
+
 ## Changes in 7.7.5
 1. Fix - can enable exponent only for log10 axis scale
 2. Fix - proper set custom font size in latex
