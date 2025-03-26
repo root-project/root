@@ -374,10 +374,9 @@ endif()
 
 if(root7)
   set(root7_veto analysis/dataframe/df013_InspectAnalysis.C
-                 experimental/browser.cxx
-                 experimental/filedialog.cxx
-                 experimental/fitpanel.cxx
-                 experimental/fitpanel6.cxx
+                 tutorials/visualisation/webgui/browserv7/browser.cxx
+                 tutorials/visualisation/webgui/browserv7/filedialog.cxx
+                 tutorials/visualisation/webgui/fitpanelv7/fitpanel6.cxx
       )
   if(NOT davix)
     list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
@@ -401,7 +400,7 @@ else()
   if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto analysis/dataframe/df013_InspectAnalysis.C)
   endif()
-  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ experimental/*.py experimental/*.cxx experimental/*/*.cxx experimental/*.C experimental/*/*.C experimental/rcanvas/*.py experimental/rcanvas/*.cxx)
+  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ tutorials/visualisation/webgui/browserv7/*.cxx tutorials/visualisation/webgui/fitpanelv7/*.cxx experimental/rcanvas/*.py experimental/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
   # This depends on ntupleutil
   list(APPEND root7_veto io/ntuple/ntpl008_import.C)
@@ -512,7 +511,7 @@ if(webgui)
   list(APPEND tutorials ${visualisation/tutorials_webcanv})
 endif()
 if(root7 AND webgui)
-  file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} experimental/*.cxx)
+  file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} experimental/*.cxx tutorials/visualisation/webgui/browserv7/*.cxx tutorials/visualisation/webgui/fitpanelv7/*.cxx)
   list(APPEND tutorials ${tutorials_exp})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})

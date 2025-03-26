@@ -1,10 +1,10 @@
 /// \file
-/// \ingroup tutorial_exp
+/// \ingroup tutorial_webgui
 ///
+/// Example showing how RFileDialog can be used in sync and async modes.
 /// \macro_code
 ///
 /// \date 2019-11-01
-/// \warning This is part of the experimental API, which might change in the future. Feedback is welcome!
 /// \author Sergey Linev <S.Linev@gsi.de>
 
 /*************************************************************************
@@ -15,11 +15,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// Show how RFileDialog can be used in sync and async modes
-// Normally file dialogs will be used inside other widgets as ui5 dialogs
+
+// Normally file dialogs will be used inside other widgets as ui5 dialogs.
 // By default, dialog starts in async mode - means macro immediately returns to command line
 // To start OpenFile dialog in sync mode, call `root "filedialog.cxx(1)" -q`.
-// Once file is selected, root execution will be stopped
+// Once file is selected, root execution will be stopped.
 
 
 // macro must be here to let macro work on Windows

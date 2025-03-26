@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_exp
+/// \ingroup tutorial_webgui
 ///
 /// \macro_code
 ///
