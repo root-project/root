@@ -19,8 +19,8 @@
 /// - Package   : TMVA
 /// - Root Macro: TMVAMinimalClassification.C
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 /// \author Kim Albertsson
 
 #include "TMVA/DataLoader.h"

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tmva
+## \ingroup tutorial_ml
 ## \notebook -nodraw
 ## This tutorial show how you can train a machine learning model with any package
 ## reading the training data directly from ROOT files. Using XGBoost, we illustrate

@@ -1,5 +1,5 @@
 ### \file
-### \ingroup tutorial_tmva
+### \ingroup tutorial_ml
 ### \notebook -nodraw
 ### This macro provides an example of using a trained model with Keras
 ### and make inference using SOFIE directly from Numpy
