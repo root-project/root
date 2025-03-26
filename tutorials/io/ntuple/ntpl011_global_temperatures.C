@@ -88,7 +88,7 @@ void Ingest()
 
    // Hand-over the data model to a newly created ntuple of name "globalTempData", stored in kNTupleFileName.
    // In return, get a unique pointer to a fillable ntuple (first compress the file).
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName);
 
    // Download data in 4MB blocks
    RRawFile::ROptions options;
@@ -117,7 +117,7 @@ void Ingest()
       *fieldCountry = country;
       *fieldCity = city;
 
-      ntuple->Fill();
+      writer->Fill();
 
       if (++nRecords % 1000000 == 0)
          std::cout << "  ... converted " << nRecords << " records" << std::endl;

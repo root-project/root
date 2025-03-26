@@ -41,17 +41,17 @@ void WriteMain(std::string_view ntupleName, std::string_view ntupleFileName)
    auto fldI = model->MakeField<std::uint32_t>("i");
    auto fldVpx = model->MakeField<float>("vpx");
 
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
 
    // The main ntuple only contains a subset of the entries present in the auxiliary ntuple.
    for (int i = 0; i < kNEvents; i += 5) {
       *fldI = i;
       *fldVpx = gRandom->Gaus();
 
-      ntuple->Fill();
+      writer->Fill();
    }
 
-   std::cout << "Wrote " << ntuple->GetNEntries() << " to the main RNTuple" << std::endl;
+   std::cout << "Wrote " << writer->GetNEntries() << " to the main RNTuple" << std::endl;
 }
 
 void WriteAux(std::string_view ntupleName, std::string_view ntupleFileName)
@@ -61,16 +61,16 @@ void WriteAux(std::string_view ntupleName, std::string_view ntupleFileName)
    auto fldI = model->MakeField<std::uint32_t>("i");
    auto fldVpy = model->MakeField<float>("vpy");
 
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
 
    for (int i = 0; i < kNEvents; ++i) {
       *fldI = i;
       *fldVpy = gRandom->Gaus();
 
-      ntuple->Fill();
+      writer->Fill();
    }
 
-   std::cout << "Wrote " << ntuple->GetNEntries() << " to the auxiliary RNTuple" << std::endl;
+   std::cout << "Wrote " << writer->GetNEntries() << " to the auxiliary RNTuple" << std::endl;
 }
 
 void Read()

@@ -49,7 +49,7 @@ constexpr int kNEventsPerThread = 25000;
 
 // Thread function to generate and write events
 void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *writer) {
-   // Protect the ntuple->Fill() call
+   // Protect the writer->Fill() call
    static std::mutex gLock;
 
    static std::atomic<std::uint32_t> gThreadId;

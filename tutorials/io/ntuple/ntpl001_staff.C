@@ -63,14 +63,14 @@ void Ingest() {
 
    // We hand-over the data model to a newly created ntuple of name "Staff", stored in kNTupleFileName
    // In return, we get a unique pointer to an ntuple that we can fill
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName);
 
    std::string record;
    while (std::getline(fin, record)) {
       std::istringstream iss(record);
       iss >> *fldCategory >> *fldFlag >> *fldAge >> *fldService >> *fldChildren >> *fldGrade >> *fldStep >> *fldHrweek
           >> *fldCost >> *fldDivision >> *fldNation;
-      ntuple->Fill();
+      writer->Fill();
    }
 
    // The ntuple unique pointer goes out of scope here.  On destruction, the ntuple flushes unwritten data to disk
@@ -85,22 +85,22 @@ void Analyze() {
    std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
 
    // Create an ntuple and attach the read model to it
-   auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
+   auto reader = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
 
    // Quick overview of the ntuple and list of fields.
-   ntuple->PrintInfo();
+   reader->PrintInfo();
 
    std::cout << "The first entry in JSON format:" << std::endl;
-   ntuple->Show(0);
+   reader->Show(0);
    // In a future version of RNTuple, there will be support for ntuple->Scan()
 
    auto c = new TCanvas("c", "", 200, 10, 700, 500);
    TH1I h("h", "Age Distribution CERN, 1988", 100, 0, 100);
    h.SetFillColor(48);
 
-   for (auto entryId : *ntuple) {
+   for (auto entryId : *reader) {
       // Populate fldAge
-      ntuple->LoadEntry(entryId);
+      reader->LoadEntry(entryId);
       h.Fill(*fldAge);
    }
 

@@ -56,7 +56,7 @@ void Write()
 
    // We hand-over the data model to a newly created ntuple of name "F", stored in kNTupleFileName
    // In return, we get a unique pointer to an ntuple that we can fill
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "F", kNTupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "F", kNTupleFileName);
 
    TH1F hpx("hpx", "This is the px distribution", 100, -4, 4);
    hpx.SetFillColor(48);
@@ -96,7 +96,7 @@ void Write()
             break;
       }
 
-      ntuple->Fill();
+      writer->Fill();
    }
 
    hpx.DrawCopy();
@@ -117,13 +117,13 @@ void Read()
 
    // Create an ntuple without imposing a specific data model.  We could generate the data model from the ntuple
    // but here we prefer the view because we only want to access a single field
-   auto ntuple = RNTupleReader::Open(std::move(model), "F", kNTupleFileName);
+   auto reader = RNTupleReader::Open(std::move(model), "F", kNTupleFileName);
 
    // Quick overview of the ntuple's key meta-data
-   ntuple->PrintInfo();
+   reader->PrintInfo();
 
    std::cout << "Entry number 42 in JSON format:" << std::endl;
-   ntuple->Show(41);
+   reader->Show(41);
    // In a future version of RNTuple, there will be support for ntuple->Scan()
 
    TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
@@ -131,8 +131,8 @@ void Read()
    h.SetFillColor(48);
 
    // Iterate through all the events using i as event number and as an index for accessing the view
-   for (auto entryId : *ntuple) {
-      ntuple->LoadEntry(entryId);
+   for (auto entryId : *reader) {
+      reader->LoadEntry(entryId);
 
       for (auto px : *fldVpx) {
          h.Fill(px);
