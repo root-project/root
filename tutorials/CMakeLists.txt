@@ -259,7 +259,7 @@ if(NOT ROOT_imt_FOUND)
 endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
-  set(imt_veto ${imt_veto} analysis/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/mtbb_parallelHistoFill.C)
+  set(imt_veto ${imt_veto} analysis/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/parallel/mtbb_parallelHistoFill.C)
   #---XRootD is not supported on Windows
   set(imt_veto ${imt_veto} io/tree/imt_parTreeProcessing.C)
 endif()
@@ -622,7 +622,7 @@ endif()
 #--List long-running tutorials to label them as "longtest"
 set (long_running
      analysis/dataframe/df10[2-7]*
-     analysis/mp_processSelector.C)
+     analysis/parallel/mp_processSelector.C)
 file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 #--List multithreaded tutorials to run them serially
 set(NProcessors 4)
@@ -632,7 +632,7 @@ set (multithreaded_all_cores
     )
 set (multithreaded
      ${multithreaded_all_cores}
-     analysis/mp_processSelector.C
+     analysis/parallel/mp_processSelector.C
      machine_learning/TMVAMulticlass.C
      machine_learning/TMVA_CNN_Classification.C
      machine_learning/TMVA_Higgs_Classification.C
