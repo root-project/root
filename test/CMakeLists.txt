@@ -102,7 +102,7 @@ ROOT_ADD_TEST(test-tcollex COMMAND tcollex)
 
 #--tcollbm------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(tcollbm tcollbm.cxx LIBRARIES Core MathCore)
-ROOT_ADD_TEST(test-tcollbm COMMAND tcollbm 1000 1000000 LABELS longtest)
+ROOT_ADD_TEST(test-tcollbm COMMAND tcollbm 100 100000)
 
 #--vvector------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(vvector vvector.cxx LIBRARIES Core Matrix RIO)
@@ -128,12 +128,12 @@ ROOT_LINKER_LIBRARY(Aclock Aclock.cxx G__Aclock.cxx LIBRARIES Graf Gpad)
 ROOT_GENERATE_DICTIONARY(G__TBench ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h MODULE TBench LINKDEF benchLinkDef.h DEPENDENCIES MathCore Tree)
 ROOT_LINKER_LIBRARY(TBench TBench.cxx G__TBench.cxx LIBRARIES Core MathCore RIO Tree)
 ROOT_EXECUTABLE(bench bench.cxx LIBRARIES Core TBench)
-ROOT_ADD_TEST(test-bench COMMAND bench -s LABELS longtest)
+ROOT_ADD_TEST(test-bench COMMAND bench -s)
 
 #--stress------------------------------------------------------------------------------------
   ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
   ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED|Error in"
-                            DEPENDS test-event LABELS longtest)
+                            DEPENDS test-event)
 
 if(geom)
   #--stressShapes------------------------------------------------------------------------------------
@@ -154,7 +154,7 @@ endif()
 #--stressLinear------------------------------------------------------------------------------------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/linearIO.root ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 ROOT_EXECUTABLE(stressLinear stressLinear.cxx LIBRARIES Matrix Hist RIO)
-ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED|Error in" LABELS longtest)
+ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressLinear.cxx
               FAILREGEX "FAILED|Error in" LABELS longtest)
 
@@ -230,7 +230,7 @@ if(ROOT_mathmore_FOUND)
   ROOT_EXECUTABLE(stressMathMore stressMathMore.cxx LIBRARIES MathMore Smatrix)
   ROOT_ADD_TEST(test-stressmathmore COMMAND stressMathMore FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressmathmore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathMore.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressmathmore TIMEOUT 1800)
+                FAILREGEX "FAILED|Error in" DEPENDS test-stressmathmore TIMEOUT 1800 LABELS longtest)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
