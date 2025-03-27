@@ -12,10 +12,9 @@
       </div>
    </body>
 
-
    <script type='module'>
 
-      import { parse, browser, decodeUrl, toJSON, source_dir } from 'jsroot';
+      import { parse, browser, decodeUrl, toJSON } from 'jsroot';
 
       import { connectWebWindow } from 'jsroot/webwindow';
 
@@ -29,7 +28,7 @@
                XMLView.create({
                   id: "TopBrowserId",
                   viewName: "rootui5.browser.view.Browser",
-                  viewData: { conn_handle: handle, jsroot: { parse, browser, decodeUrl, toJSON, source_dir, connectWebWindow } }
+                  viewData: { conn_handle: handle, jsroot: { parse, browser, decodeUrl, toJSON, connectWebWindow } }
                }).then(oView => oView.placeAt("BrowserDiv"));
          });
       });
