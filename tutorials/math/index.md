@@ -8,7 +8,7 @@
 - [Fitting](\ref tutorial_fit)
 - [Histogramming related features](\ref histograms)
 - [Linear algebra](\ref tutorial_matrix)
-- [Minimizer features] (\ref minimization)
+- [Minimizer features](\ref minimization)
 - [Physics vectors](\ref genvector)
 - [R binding](\ref tutorial_r)
 - [Random number generation with Unuran](\ref tutorial_unuran)
@@ -41,9 +41,9 @@ To get started these examples show some of the basic features of the MathMore li
 
 | **Tutorial** || **Description** |
 |------|--------|-----------------|
-| exampleMultiRoot.C |  | Example of using multiroot finder based on GSL algorithm. |
-| Legendre.C | Legendre.Py | Example of first few Legendre Polynomials. |
-| LegendreAssoc.C |  | Example describing the usage of different kinds of Associate Legendre Polynomials. |
+| exampleMultiRoot.C | | Example of using multiroot finder based on GSL algorithm. |
+| Legendre.C | Legendre.py | Example of first few Legendre Polynomials. |
+| LegendreAssoc.C| | Example describing the usage of different kinds of Associate Legendre Polynomials. |
 | mathmoreIntegration.C |  | Example on the  usage of the adaptive 1D integration algorithm of MathMore.|
 | mathmoreIntegrationMultidim.C |  | Example on the usage of the multidimensional integration algorithm of MathMore.|
 | quasirandom.C |  | Example of quasi-random numbers generation.|
@@ -53,12 +53,12 @@ To get started these examples show some of the basic features of the MathMore li
 
 Examples showing usage of the GenVector library, generic class templates for modeling vectors in 2, 3 and 4 dimensions (relativistic vectors) and their rotation and transformation algorithms. 
 
-| **Tutorial** || **Description** |
-|------|--------|-----------------|
-| mathcoreGenVector.C |  | Example macro testing available methods and operation of the GenVector classes. |
-| mathcoreVectorCollection.C |  | Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree. |
-| mathcoreVectorFloatIO.C |  | Macro illustrating  I/O with Lorentz Vectors of floats. |
-| mathcoreVectorIO.C |  | Example of  I/O of a GenVector Lorentz Vectors in a Tree and comparison with legacy TLorentzVector.|
+| **Tutorial** | **Description** |
+|--------------|-----------------|
+| mathcoreGenVector.C | Example macro testing available methods and operation of the GenVector classes. |
+| mathcoreVectorCollection.C | Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree. |
+| mathcoreVectorFloatIO.C | Macro illustrating  I/O with Lorentz Vectors of floats. |
+| mathcoreVectorIO.C | Example of  I/O of a GenVector Lorentz Vectors in a Tree and comparison with legacy TLorentzVector.|
 
 
 \anchor histograms
@@ -80,11 +80,10 @@ Examples showing usage of mathematical features for histigrams.
 
 Examples showing usage of ROOT minimizers.
 
-| **Tutorial** || **Description** |
-|------|--------|-----------------|
-| NumericalMinimization.C |  | Example on how to use the Minimizer class in ROOT. |
-
-}@
+| **Tutorial** | **Description** |
+|--------------|-----------------|
+| NumericalMinimization.C |  Example on how to use the Minimizer class in ROOT. |
+@}
 
 \defgroup tutorial_fft Fast Fourier Transforms tutorials
 \ingroup tutorial_math
