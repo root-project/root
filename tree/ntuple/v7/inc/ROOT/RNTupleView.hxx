@@ -184,14 +184,14 @@ public:
    RNTupleView &operator=(RNTupleView &&other) = default;
    ~RNTupleView() = default;
 
-   /// Reads the value of this view for the entry with global index `globalIndex`.
+   /// Reads the value of this view for the entry with the provided `globalIndex`.
    const T &operator()(ROOT::NTupleSize_t globalIndex)
    {
       RNTupleViewBase<T>::fValue.Read(globalIndex);
       return RNTupleViewBase<T>::fValue.template GetRef<T>();
    }
 
-   /// Reads the value of this view for the entry with local index `localIndex`.
+   /// Reads the value of this view for the entry with the provided `localIndex`.
    /// See RNTupleLocalIndex for more details.
    const T &operator()(RNTupleLocalIndex localIndex)
    {
