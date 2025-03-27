@@ -76,6 +76,9 @@ def main():
         **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
     }
 
+    if args.clingtests_only:
+        options_dict['clingtest'] = "ON"
+
     options = build_utils.cmake_options_from_dict(options_dict)
 
     if WINDOWS:
@@ -155,7 +158,7 @@ def main():
     if args.coverage:
         create_coverage_xml()
 
-    if testing and ctest_returncode != 0:
+    if testing and not args.clingtests_only and ctest_returncode != 0:
         handle_test_failure(ctest_returncode)
 
     print_trace()
