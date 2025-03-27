@@ -332,6 +332,15 @@ auto MakeDatasetColReadersKey(const std::string &colName, const std::type_info &
    //    df.Sum<RVecI>("stdVectorBranch");
    return colName + ':' + ti.name();
 }
+
+/// Get an instance to a shared slot stack for all RLoopManager instances.
+/// When RunGraphs() is used, slots could otherwise be assigned in parallel.
+ROOT::Internal::RSlotStack &GetSharedSlotStack(unsigned int minNumberOfSlots)
+{
+   static ROOT::Internal::RSlotStack slotStack{minNumberOfSlots};
+   slotStack.SetMinimumSize(minNumberOfSlots);
+   return slotStack;
+}
 } // anonymous namespace
 
 namespace ROOT {
@@ -522,7 +531,7 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
 void RLoopManager::RunEmptySourceMT()
 {
 #ifdef R__USE_IMT
-   ROOT::Internal::RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack &slotStack = GetSharedSlotStack(fNSlots);
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
    const auto nEmptyEntries = GetNEmptyEntries();
@@ -615,7 +624,7 @@ void RLoopManager::RunTreeProcessorMT()
 #ifdef R__USE_IMT
    if (fEndEntry == fBeginEntry) // empty range => no work needed
       return;
-   ROOT::Internal::RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack &slotStack = GetSharedSlotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp =
       (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
@@ -765,7 +774,7 @@ void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    assert(fDataSource != nullptr);
-   ROOT::Internal::RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack &slotStack = GetSharedSlotStack(fNSlots);
    ROOT::TThreadExecutor pool;
 
    // Each task works on a subrange of entries
