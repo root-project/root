@@ -214,23 +214,13 @@ static PyTypeObject PyDefault_t_Type = {
 
 namespace {
 
-PyObject _CPyCppyy_NullPtrStruct = {_PyObject_EXTRA_INIT
-// In 3.12.0-beta this field was changed from a ssize_t to a union
-#if PY_VERSION_HEX >= 0x30c00b1
-                                    {1},
-#else
-                                    1,
-#endif
-                                    &PyNullPtr_t_Type};
+struct {
+   PyObject_HEAD
+} _CPyCppyy_NullPtrStruct{PyObject_HEAD_INIT(&PyNullPtr_t_Type)};
 
-PyObject _CPyCppyy_DefaultStruct = {_PyObject_EXTRA_INIT
-// In 3.12.0-beta this field was changed from a ssize_t to a union
-#if PY_VERSION_HEX >= 0x30c00b1
-                                    {1},
-#else
-                                    1,
-#endif
-                                    &PyDefault_t_Type};
+struct {
+   PyObject_HEAD
+} _CPyCppyy_DefaultStruct{PyObject_HEAD_INIT(&PyDefault_t_Type)};
 
 // TODO: refactor with Converters.cxx
 struct CPyCppyy_tagCDataObject {       // non-public (but stable)
@@ -779,7 +769,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
 
 // not a pre-existing object; get the address and bind
     void* addr = nullptr;
-    if (arg0 != &_CPyCppyy_NullPtrStruct) {
+    if (arg0 != gNullPtrObject) {
         addr = CPyCppyy_PyCapsule_GetPointer(arg0, nullptr);
         if (PyErr_Occurred()) {
             PyErr_Clear();
