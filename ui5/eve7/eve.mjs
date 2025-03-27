@@ -1,21 +1,19 @@
 // initialization of EVE
 
-function initEVE(source_dir) {
+function initEVE() {
    if (globalThis.EVE)
       return Promise.resolve(globalThis.EVE);
 
-   let mpath = source_dir + 'modules/';
-
-   return Promise.all([import(mpath+'three.mjs'),
-                       import(mpath+'three_addons.mjs'),
-                       import(mpath+'core.mjs'),
-                       import(mpath+'draw.mjs'),
-                       import(mpath+'base/TAttLineHandler.mjs'),
-                       import(mpath+'gui/menu.mjs'),
-                       import(mpath+'base/colors.mjs'),
-                       import(mpath+'base/base3d.mjs'),
-                       import(mpath+'geom/geobase.mjs'),
-                       import(mpath+'geom/TGeoPainter.mjs')])
+   return Promise.all([import('jsrootsys/modules/three.mjs'),
+                       import('jsrootsys/modules/three_addons.mjs'),
+                       import('jsrootsys/modules/core.mjs'),
+                       import('jsrootsys/modules/draw.mjs'),
+                       import('jsrootsys/modules/base/TAttLineHandler.mjs'),
+                       import('jsrootsys/modules/gui/menu.mjs'),
+                       import('jsrootsys/modules/base/colors.mjs'),
+                       import('jsrootsys/modules/base/base3d.mjs'),
+                       import('jsrootsys/modules/geom/geobase.mjs'),
+                       import('jsrootsys/modules/geom/TGeoPainter.mjs')])
     .then(arr => {
        globalThis.THREE = Object.assign({}, arr.shift(), arr.shift());
 
