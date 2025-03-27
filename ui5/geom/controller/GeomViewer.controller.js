@@ -60,10 +60,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.websocket.connect(viewData.conn_href);
 
-         if (this.jsroot?.browser?.qt5)
-            ResizeHandler.register(this.getView(), () => {
-               this.getView().rerender();
-            });
+         if (this.jsroot?.browser?.qt5 || this.jsroot?.browser?.qt6)
+            ResizeHandler.register(this.getView(), () => this.getView().rerender());
 
          Promise.all([import(this.jsroot.source_dir + 'modules/geom/geobase.mjs'), import(this.jsroot.source_dir + 'modules/geom/TGeoPainter.mjs')]).then(arr => {
             this.geo = Object.assign({}, arr[0], arr[1]);
