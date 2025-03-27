@@ -172,13 +172,13 @@ if(roofit)
 endif()
 
 if (dataframe)
-    # std::string_view in CPyCppyy
-    ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
     if(NOT MSVC OR win_broken_tests)
         # Test wrapping Python callables for use in C++ using numba
         ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
         ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
         ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
+        # std::string_view in CPyCppyy
+        ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
     endif()
 endif()
 
