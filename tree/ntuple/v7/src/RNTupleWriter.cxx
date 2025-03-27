@@ -30,7 +30,7 @@
 
 #include <utility>
 
-ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
+ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
                                                  std::unique_ptr<ROOT::Experimental::Internal::RPageSink> sink)
    : fFillContext(std::move(model), std::move(sink)), fMetrics("RNTupleWriter")
 {
@@ -55,7 +55,7 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
-ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model,
+ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<ROOT::RNTupleModel> model,
                                           std::unique_ptr<Internal::RPageSink> sink,
                                           const ROOT::RNTupleWriteOptions &options)
 {
@@ -74,7 +74,7 @@ ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model,
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
-ROOT::Experimental::RNTupleWriter::Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
+ROOT::Experimental::RNTupleWriter::Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                             std::string_view storage, const ROOT::RNTupleWriteOptions &options)
 {
    auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
@@ -87,7 +87,7 @@ ROOT::Experimental::RNTupleWriter::Recreate(std::initializer_list<std::pair<std:
                                             const ROOT::RNTupleWriteOptions &options)
 {
    auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
    for (const auto &fieldDesc : fields) {
       std::string typeName(fieldDesc.first);
       std::string fieldName(fieldDesc.second);
@@ -98,7 +98,7 @@ ROOT::Experimental::RNTupleWriter::Recreate(std::initializer_list<std::pair<std:
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
-ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
+ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                           TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options)
 {
    auto file = fileOrDirectory.GetFile();
@@ -123,7 +123,7 @@ void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
    fLastCommittedClusterGroup = GetNEntries();
 }
 
-ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleWriter::GetUpdatableModel()
+ROOT::RNTupleModel &ROOT::Experimental::RNTupleWriter::GetUpdatableModel()
 {
    if (fFillContext.fModel->IsExpired()) {
       throw RException(R__FAIL("invalid attempt to update expired model"));
@@ -142,7 +142,7 @@ void ROOT::Experimental::RNTupleWriter::CommitDataset()
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
-ROOT::Experimental::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
+ROOT::Experimental::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
                                                   std::unique_ptr<ROOT::Experimental::Internal::RPageSink> sink)
 {
    return std::unique_ptr<ROOT::Experimental::RNTupleWriter>(

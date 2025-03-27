@@ -27,6 +27,9 @@
 class TDirectory;
 
 namespace ROOT {
+
+class RNTupleModel;
+
 namespace Experimental {
 
 namespace Internal {
@@ -34,7 +37,6 @@ class RPageSink;
 } // namespace Internal
 
 class RNTupleFillContext;
-class RNTupleModel;
 
 /**
 \class ROOT::Experimental::RNTupleParallelWriter
@@ -70,23 +72,23 @@ private:
    /// The final RPageSink that represents the synchronization point.
    std::unique_ptr<Internal::RPageSink> fSink;
    /// The original RNTupleModel connected to fSink; needs to be destructed before it.
-   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
    /// List of all created helpers. They must be destroyed before this RNTupleParallelWriter is destructed.
    std::vector<std::weak_ptr<RNTupleFillContext>> fFillContexts;
 
-   RNTupleParallelWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
    RNTupleParallelWriter(const RNTupleParallelWriter &) = delete;
    RNTupleParallelWriter &operator=(const RNTupleParallelWriter &) = delete;
 
 public:
    /// Recreate a new file and return a writer to write an ntuple.
    static std::unique_ptr<RNTupleParallelWriter>
-   Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
+   Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
             const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    /// Append an ntuple to the existing file, which must not be accessed while data is filled into any created context.
    static std::unique_ptr<RNTupleParallelWriter>
-   Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, TDirectory &fileOrDirectory,
+   Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName, TDirectory &fileOrDirectory,
           const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
    ~RNTupleParallelWriter();

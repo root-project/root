@@ -44,15 +44,10 @@
 namespace ROOT {
 
 class RFieldBase;
+class RNTupleModel;
 
 namespace Internal {
 class RColumnElementBase;
-}
-
-namespace Experimental {
-
-class RNTupleModel;
-
 }
 
 class RNTupleDescriptor;
@@ -828,8 +823,7 @@ public:
    void IncGeneration() { fGeneration++; }
 
    /// Re-create the C++ model from the stored metadata
-   std::unique_ptr<ROOT::Experimental::RNTupleModel>
-   CreateModel(const RCreateModelOptions &options = RCreateModelOptions()) const;
+   std::unique_ptr<ROOT::RNTupleModel> CreateModel(const RCreateModelOptions &options = RCreateModelOptions()) const;
    void PrintInfo(std::ostream &output) const;
 };
 

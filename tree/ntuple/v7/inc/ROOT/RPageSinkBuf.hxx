@@ -110,7 +110,7 @@ private:
    std::unique_ptr<RPageSink> fInnerSink;
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
    /// For the unbuffered case, the RNTupleModel is instead managed by a RNTupleWriter.
-   std::unique_ptr<RNTupleModel> fInnerModel;
+   std::unique_ptr<ROOT::RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
    /// Columns committed as suppressed are stored and passed to the inner sink at cluster commit
@@ -135,8 +135,8 @@ public:
 
    ROOT::NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
 
-   void InitImpl(RNTupleModel &model) final;
-   void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+   void InitImpl(ROOT::RNTupleModel &model) final;
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;

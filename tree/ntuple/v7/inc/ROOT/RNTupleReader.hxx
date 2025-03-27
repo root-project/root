@@ -77,7 +77,7 @@ private:
 
    std::unique_ptr<Internal::RPageSource> fSource;
    /// Needs to be destructed before fSource
-   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
    /// We use a dedicated on-demand reader for Show(). Printing data uses all the fields
    /// from the full model even if the analysis code uses only a subset of fields. The display reader
    /// is a clone of the original reader.
@@ -92,12 +92,12 @@ private:
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
 
-   RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
+   RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
    /// The model is generated from the RNTuple metadata on storage.
    explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
 
-   void ConnectModel(RNTupleModel &model);
+   void ConnectModel(ROOT::RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
    void InitPageSource(bool enableMetrics);
 
@@ -158,10 +158,10 @@ public:
    Open(const RNTuple &ntuple, const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    /// The caller imposes a model, which must be compatible with the model found in the data on storage.
-   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
+   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                               std::string_view storage,
                                               const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
-   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, const RNTuple &ntuple,
+   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<ROOT::RNTupleModel> model, const RNTuple &ntuple,
                                               const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    /// The caller imposes the way the model is reconstructed
@@ -180,7 +180,7 @@ public:
    ~RNTupleReader();
 
    ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
-   const RNTupleModel &GetModel();
+   const ROOT::RNTupleModel &GetModel();
    std::unique_ptr<REntry> CreateEntry();
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call

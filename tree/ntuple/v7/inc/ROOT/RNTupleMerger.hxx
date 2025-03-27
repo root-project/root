@@ -93,7 +93,7 @@ class RNTupleMerger final {
    std::unique_ptr<RPagePersistentSink> fDestination;
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
-   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    void MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
                            std::span<const RColumnMergeInfo> commonColumns,
@@ -106,7 +106,7 @@ class RNTupleMerger final {
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
    /// (i.e. in case of incremental merging).
-   RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination, std::unique_ptr<RNTupleModel> model);
+   RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination, std::unique_ptr<ROOT::RNTupleModel> model);
 
 public:
    /// Creates a RNTupleMerger with the given destination.

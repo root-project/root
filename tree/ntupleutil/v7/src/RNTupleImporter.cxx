@@ -143,7 +143,7 @@ void ROOT::Experimental::RNTupleImporter::ReportSchema()
    for (const auto &f : fImportFields) {
       std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << "]\n";
    }
-   for (const auto &f : Internal::GetProjectedFieldsOfModel(*fModel).GetFieldZero().GetConstSubfields()) {
+   for (const auto &f : ROOT::Internal::GetProjectedFieldsOfModel(*fModel).GetFieldZero().GetConstSubfields()) {
       std::cout << "Importing (projected) '" << f->GetFieldName() << "' [" << f->GetTypeName() << "]\n";
    }
 }
@@ -154,7 +154,7 @@ void ROOT::Experimental::RNTupleImporter::ResetSchema()
    fImportFields.clear();
    fLeafCountCollections.clear();
    fImportTransformations.clear();
-   fModel = RNTupleModel::CreateBare();
+   fModel = ROOT::RNTupleModel::CreateBare();
    fEntry = nullptr;
 }
 

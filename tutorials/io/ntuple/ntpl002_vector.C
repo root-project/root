@@ -28,7 +28,6 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
@@ -45,7 +44,7 @@ constexpr int kNEvents = 25000;
 void Write()
 {
    // We create a unique pointer to an empty data model
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    // Creating fields of std::vector is the same as creating fields of simple types.  As a result, we get
    // shared pointers of the given type
@@ -110,7 +109,7 @@ void Write()
 void Read()
 {
    // Get a unique pointer to an empty RNTuple model
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
    auto fldVpx = model->MakeField<std::vector<float>>("vpx");

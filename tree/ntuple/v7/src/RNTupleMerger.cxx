@@ -40,6 +40,9 @@
 #include <vector>
 
 using ROOT::ENTupleColumnType;
+using ROOT::RFieldDescriptor;
+using ROOT::RNTupleDescriptor;
+using ROOT::RNTupleModel;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RColumnElementBase;
 
@@ -202,7 +205,7 @@ try {
    assert(compression);
    writeOpts.SetCompression(*compression);
    auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
-   std::unique_ptr<RNTupleModel> model;
+   std::unique_ptr<ROOT::RNTupleModel> model;
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
@@ -541,13 +544,13 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
 }
 
 // Applies late model extension to `destination`, adding all `newFields` to it.
-static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> newFields, RNTupleModel &dstModel,
+static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> newFields, ROOT::RNTupleModel &dstModel,
                                    RNTupleMergeData &mergeData, std::vector<RCommonField> &commonFields)
 {
    assert(newFields.size() > 0); // no point in calling this with 0 new cols
 
    dstModel.Unfreeze();
-   RNTupleModelChangeset changeset{dstModel};
+   ROOT::Internal::RNTupleModelChangeset changeset{dstModel};
 
    if (mergeData.fMergeOpts.fExtraVerbose) {
       std::string msg = "destination doesn't contain field";
@@ -574,7 +577,7 @@ static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> new
       if (!fieldDesc->IsProjectedField())
          continue;
 
-      Internal::RProjectedFields::FieldMap_t fieldMap;
+      ROOT::Internal::RProjectedFields::FieldMap_t fieldMap;
       auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
       const auto sourceId = fieldDesc->GetProjectionSourceId();
       const auto &sourceField = dstModel.GetConstField(mergeData.fSrcDescriptor->GetQualifiedFieldName(sourceId));
@@ -588,7 +591,7 @@ static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> new
          fieldMap[&subfield] = &subSourceField;
       }
       changeset.fAddedProjectedFields.emplace_back(field.get());
-      Internal::GetProjectedFieldsOfModel(dstModel).Add(std::move(field), fieldMap);
+      ROOT::Internal::GetProjectedFieldsOfModel(dstModel).Add(std::move(field), fieldMap);
    }
    dstModel.Freeze();
    mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
@@ -993,7 +996,8 @@ static RColumnInfoGroup GatherColumnInfos(const RDescriptorsComparison &descCmp,
    return res;
 }
 
-RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination, std::unique_ptr<RNTupleModel> model)
+RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination,
+                             std::unique_ptr<ROOT::RNTupleModel> model)
    // TODO(gparolini): consider using an arena allocator instead, since we know the precise lifetime
    // of the RNTuples we are going to handle (e.g. we can reset the arena at every source)
    : fDestination(std::move(destination)),
@@ -1036,7 +1040,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    if (!!fModel != fDestination->IsInitialized()) {
       return R__FAIL(
          "passing an already-initialized destination to RNTupleMerger::Merge (i.e. trying to do incremental "
-         "merging) can only be done by providing a valid RNTupleModel when constructing the RNTupleMerger.");
+         "merging) can only be done by providing a valid ROOT::RNTupleModel when constructing the RNTupleMerger.");
    }
 
    RNTupleMergeData mergeData{sources, *fDestination, mergeOpts};

@@ -42,7 +42,7 @@ namespace Experimental {
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
 std::unique_ptr<RNTupleWriter>
-CreateRNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 } // namespace Internal
 
 // clang-format off
@@ -58,9 +58,9 @@ triggered by FlushCluster() or by destructing the writer.  On I/O errors, an exc
 */
 // clang-format on
 class RNTupleWriter {
-   friend RNTupleModel::RUpdater;
+   friend ROOT::RNTupleModel::RUpdater;
    friend std::unique_ptr<RNTupleWriter>
-      Internal::CreateRNTupleWriter(std::unique_ptr<RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
+      Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
@@ -71,29 +71,29 @@ private:
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
-   RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
-   RNTupleModel &GetUpdatableModel();
+   ROOT::RNTupleModel &GetUpdatableModel();
    Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
 
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
-   static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<RNTupleModel> model,
+   static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,
                                                 std::unique_ptr<Internal::RPageSink> sink,
                                                 const ROOT::RNTupleWriteOptions &options);
 
 public:
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter>
-   Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
+   Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
             const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    static std::unique_ptr<RNTupleWriter>
    Recreate(std::initializer_list<std::pair<std::string_view, std::string_view>> fields, std::string_view ntupleName,
             std::string_view storage, const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    /// Throws an exception if the model is null.
-   static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
+   static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                                 TDirectory &fileOrDirectory,
                                                 const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    RNTupleWriter(const RNTupleWriter &) = delete;
@@ -141,18 +141,17 @@ public:
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   const RNTupleModel &GetModel() const { return *fFillContext.fModel; }
+   const ROOT::RNTupleModel &GetModel() const { return *fFillContext.fModel; }
 
-   /// Get a `RNTupleModel::RUpdater` that provides limited support for incremental updates to the underlying
+   /// Get a RNTupleModel::RUpdater that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.
    ///
    /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTuple.hxx>
-   /// using ROOT::Experimental::RNTupleModel;
    /// using ROOT::Experimental::RNTupleWriter;
    ///
-   /// auto model = RNTupleModel::Create();
+   /// auto model = ROOT::RNTupleModel::Create();
    /// auto fldFloat = model->MakeField<float>("fldFloat");
    /// auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
    /// auto updater = writer->CreateModelUpdater();
@@ -162,9 +161,9 @@ public:
    ///
    /// // ...
    /// ~~~
-   std::unique_ptr<RNTupleModel::RUpdater> CreateModelUpdater()
+   std::unique_ptr<ROOT::RNTupleModel::RUpdater> CreateModelUpdater()
    {
-      return std::make_unique<RNTupleModel::RUpdater>(*this);
+      return std::make_unique<ROOT::RNTupleModel::RUpdater>(*this);
    }
 }; // class RNTupleWriter
 

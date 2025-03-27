@@ -35,7 +35,7 @@ enum : bool {
 
 void CreateExportRNTuple(std::string_view fileName, bool checksums)
 {
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
    auto pFlt = model->MakeField<float>("flt");
    auto pVec = model->MakeField<std::vector<int>>("vec");
 
@@ -209,7 +209,7 @@ TEST(RNTupleExporter, ExportToFilesManyPages)
 
    // Create RNTuple to export
    {
-      auto model = RNTupleModel::Create();
+      auto model = ROOT::RNTupleModel::Create();
       auto pFlt = model->MakeField<float>("flt");
       auto pVec = model->MakeField<std::vector<int>>("vec");
 
@@ -238,7 +238,7 @@ TEST(RNTupleExporter, EmptySource)
 {
    FileRaii fileGuard("ntuple_exporter_empty.root");
    {
-      auto model = RNTupleModel::Create();
+      auto model = ROOT::RNTupleModel::Create();
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
@@ -254,7 +254,7 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
 
    // Create RNTuple to export
    {
-      auto model = RNTupleModel::Create();
+      auto model = ROOT::RNTupleModel::Create();
       auto pFlt = model->MakeField<float>("flt");
       auto pVec = model->MakeField<std::vector<int>>("vec");
 
