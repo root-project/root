@@ -31,7 +31,9 @@
 class TTree;
 class TTreeReader;
 
-
+namespace ROOT::RDF::Experimental {
+class RDatasetSpec;
+}
 namespace ROOT {
 namespace RDF {
 using ColumnNames_t = std::vector<std::string>;
@@ -314,6 +316,16 @@ struct CallGuaranteedOrder {
       f(std::forward<Args>(args)...);
    }
 };
+
+/**
+ * \brief Function to retrieve RDatasetSpec from JSON file provided
+ * \param[in] jsonFile Path to the dataset specification JSON file.
+ *
+ * This function allows us to have access to an RDatasetSpec which needs to
+ * be created when we use the FromSpec factory function.
+ */
+ROOT::RDF::Experimental::RDatasetSpec RetrieveSpecFromJson(const std::string &jsonFile);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
