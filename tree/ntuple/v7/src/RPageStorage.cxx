@@ -811,8 +811,8 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_
    return ColumnHandle_t{columnId, &column};
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTupleModelChangeset &changeset,
-                                                                     ROOT::NTupleSize_t firstEntry)
+void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(
+   const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -843,7 +843,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    };
    auto addProjectedField = [&](ROOT::RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
-      auto sourceFieldId = GetProjectedFieldsOfModel(changeset.fModel).GetSourceField(&f)->GetOnDiskId();
+      auto sourceFieldId =
+         ROOT::Internal::GetProjectedFieldsOfModel(changeset.fModel).GetSourceField(&f)->GetOnDiskId();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       fDescriptorBuilder.AddFieldProjection(sourceFieldId, fieldId);
@@ -909,18 +910,18 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateExtraTypeInfo(
    fStreamerInfos.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &model)
+void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(ROOT::RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   auto &fieldZero = Internal::GetFieldZeroOfModel(model);
+   auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(model);
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
-   auto &projectedFields = GetProjectedFieldsOfModel(model);
+   auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(model);
    projectedFields.GetFieldZero().SetOnDiskId(0);
 
-   RNTupleModelChangeset initialChangeset{model};
+   ROOT::Internal::RNTupleModelChangeset initialChangeset{model};
    initialChangeset.fAddedFields.reserve(fieldZero.GetMutableSubfields().size());
    for (auto f : fieldZero.GetMutableSubfields())
       initialChangeset.fAddedFields.emplace_back(f);
@@ -937,7 +938,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    fDescriptorBuilder.BeginHeaderExtension();
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel>
+std::unique_ptr<ROOT::RNTupleModel>
 ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescriptor &srcDescriptor,
                                                                       bool copyClusters)
 {
@@ -990,7 +991,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT
    modelOpts.SetReconstructProjections(true);
    auto model = descriptor.CreateModel(modelOpts);
    if (!copyClusters) {
-      auto &projectedFields = GetProjectedFieldsOfModel(*model);
+      auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(*model);
       projectedFields.GetFieldZero().SetOnDiskId(model->GetConstFieldZero().GetOnDiskId());
    }
 

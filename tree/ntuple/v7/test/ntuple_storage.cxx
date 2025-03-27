@@ -41,7 +41,7 @@ protected:
    ROOT::NTupleSize_t GetNEntries() const final { return 0; }
 
    void InitImpl(RNTupleModel &) final {}
-   void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, ROOT::NTupleSize_t) final {}
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &, ROOT::NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
@@ -679,7 +679,7 @@ TEST(RPageSinkBuf, ParallelZipIMT)
          filename += ".root";
          FileRaii fileGuard(filename);
 
-         auto model = ROOT::Experimental::RNTupleModel::Create();
+         auto model = ROOT::RNTupleModel::Create();
          *model->MakeField<float>("pt") = 42.0;
 
          RNTupleWriteOptions options;

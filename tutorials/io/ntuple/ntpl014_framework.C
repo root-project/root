@@ -52,11 +52,10 @@
 using ROOT::Experimental::REntry;
 using ROOT::Experimental::RNTupleFillContext;
 using ROOT::Experimental::RNTupleFillStatus;
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 using ROOT::Experimental::RNTupleWriter;
 
-using ModelTokensPair = std::pair<std::unique_ptr<RNTupleModel>, std::vector<REntry::RFieldToken>>;
+using ModelTokensPair = std::pair<std::unique_ptr<ROOT::RNTupleModel>, std::vector<REntry::RFieldToken>>;
 
 // A DataProduct associates an arbitrary address to an index in the model.
 struct DataProduct {
@@ -248,7 +247,7 @@ struct Event {
 ModelTokensPair CreateEventModel()
 {
    // We recommend creating a bare model if the default entry is not used.
-   auto model = RNTupleModel::CreateBare();
+   auto model = ROOT::RNTupleModel::CreateBare();
    // For more efficient access, also create field tokens.
    std::vector<REntry::RFieldToken> tokens;
 
@@ -293,7 +292,7 @@ struct Run {
 ModelTokensPair CreateRunModel()
 {
    // We recommend creating a bare model if the default entry is not used.
-   auto model = RNTupleModel::CreateBare();
+   auto model = ROOT::RNTupleModel::CreateBare();
    // For more efficient access, also create field tokens.
    std::vector<REntry::RFieldToken> tokens;
 

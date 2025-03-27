@@ -32,7 +32,7 @@ std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::R
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::unique_ptr<RNTupleModel> model)
+ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::unique_ptr<ROOT::RNTupleModel> model)
 {
    auto processorName = ntuple.fNTupleName;
    return Create(std::move(ntuple), processorName, std::move(model));
@@ -40,7 +40,7 @@ ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::unique
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::string_view processorName,
-                                             std::unique_ptr<RNTupleModel> model)
+                                             std::unique_ptr<ROOT::RNTupleModel> model)
 {
    return std::unique_ptr<RNTupleSingleProcessor>(
       new RNTupleSingleProcessor(std::move(ntuple), processorName, std::move(model)));
@@ -48,7 +48,7 @@ ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::string
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> ntuples,
-                                                  std::unique_ptr<RNTupleModel> model)
+                                                  std::unique_ptr<ROOT::RNTupleModel> model)
 {
    if (ntuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
@@ -59,7 +59,7 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> n
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::string_view processorName,
-                                                  std::unique_ptr<RNTupleModel> model)
+                                                  std::unique_ptr<ROOT::RNTupleModel> model)
 {
    if (ntuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
@@ -83,7 +83,7 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> n
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
-                                                  std::unique_ptr<RNTupleModel> model)
+                                                  std::unique_ptr<ROOT::RNTupleModel> model)
 {
    if (innerProcessors.empty())
       throw RException(R__FAIL("at least one inner processor must be provided"));
@@ -94,7 +94,8 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
-                                                  std::string_view processorName, std::unique_ptr<RNTupleModel> model)
+                                                  std::string_view processorName,
+                                                  std::unique_ptr<ROOT::RNTupleModel> model)
 {
    if (innerProcessors.empty())
       throw RException(R__FAIL("at least one inner processor must be provided"));
@@ -112,8 +113,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryNTuple,
                                                  const std::vector<RNTupleOpenSpec> &auxNTuples,
                                                  const std::vector<std::string> &joinFields,
-                                                 std::unique_ptr<RNTupleModel> primaryModel,
-                                                 std::vector<std::unique_ptr<RNTupleModel>> auxModels)
+                                                 std::unique_ptr<ROOT::RNTupleModel> primaryModel,
+                                                 std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels)
 {
    return CreateJoin(primaryNTuple, auxNTuples, joinFields, primaryNTuple.fNTupleName, std::move(primaryModel),
                      std::move(auxModels));
@@ -122,7 +123,7 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryN
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor> ROOT::Experimental::RNTupleProcessor::CreateJoin(
    const RNTupleOpenSpec &primaryNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
    const std::vector<std::string> &joinFields, std::string_view processorName,
-   std::unique_ptr<RNTupleModel> primaryModel, std::vector<std::unique_ptr<RNTupleModel>> auxModels)
+   std::unique_ptr<ROOT::RNTupleModel> primaryModel, std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels)
 {
    if (!auxModels.empty() && auxModels.size() != auxNTuples.size())
       throw RException(R__FAIL("number of auxiliary models and auxiliary RNTuples does not match"));
@@ -180,7 +181,7 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
 
 ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSpec ntuple,
                                                                    std::string_view processorName,
-                                                                   std::unique_ptr<RNTupleModel> model)
+                                                                   std::unique_ptr<ROOT::RNTupleModel> model)
    : RNTupleProcessor(processorName, std::move(model)), fNTupleSpec(std::move(ntuple))
 {
    if (!fModel) {
@@ -197,8 +198,8 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSp
       auto token = fEntry->GetToken(field.GetFieldName());
 
       // If the model has a default entry, use the value pointers from the entry in the entry managed by the
-      // processor. This way, the pointers returned by RNTupleModel::MakeField can be used in the processor loop to
-      // access the corresponding field values.
+      // processor. This way, the pointers returned by RNTupleModel::MakeField can be used in the processor loop
+      // to access the corresponding field values.
       if (!fModel->IsBare()) {
          auto valuePtr = fModel->GetDefaultEntry().GetPtr<void>(token);
          fEntry->BindValue(token, valuePtr);
@@ -253,7 +254,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
 
 ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
    std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName,
-   std::unique_ptr<RNTupleModel> model)
+   std::unique_ptr<ROOT::RNTupleModel> model)
    : RNTupleProcessor(processorName, std::move(model)), fInnerProcessors(std::move(processors))
 {
    fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
@@ -266,8 +267,8 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
       auto token = fEntry->GetToken(field.GetQualifiedFieldName());
 
       // If the model has a default entry, use the value pointers from the entry in the entry managed by the
-      // processor. This way, the pointers returned by RNTupleModel::MakeField can be used in the processor loop to
-      // access the corresponding field values.
+      // processor. This way, the pointers returned by RNTupleModel::MakeField can be used in the processor loop
+      // to access the corresponding field values.
       if (!fModel->IsBare()) {
          auto valuePtr = fModel->GetDefaultEntry().GetPtr<void>(token);
          fEntry->BindValue(token, valuePtr);
@@ -339,12 +340,10 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple,
-                                                               const std::vector<RNTupleOpenSpec> &auxNTuples,
-                                                               const std::vector<std::string> &joinFields,
-                                                               std::string_view processorName,
-                                                               std::unique_ptr<RNTupleModel> primaryModel,
-                                                               std::vector<std::unique_ptr<RNTupleModel>> auxModels)
+ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(
+   const RNTupleOpenSpec &mainNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
+   const std::vector<std::string> &joinFields, std::string_view processorName,
+   std::unique_ptr<ROOT::RNTupleModel> primaryModel, std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels)
    : RNTupleProcessor(processorName, nullptr)
 {
    fNTuples.emplace_back(mainNTuple);
@@ -416,8 +415,8 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
    }
 }
 
-void ROOT::Experimental::RNTupleJoinProcessor::SetModel(std::unique_ptr<RNTupleModel> primaryModel,
-                                                        std::vector<std::unique_ptr<RNTupleModel>> auxModels)
+void ROOT::Experimental::RNTupleJoinProcessor::SetModel(std::unique_ptr<ROOT::RNTupleModel> primaryModel,
+                                                        std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels)
 {
    fModel = std::move(primaryModel);
    fModel->Unfreeze();

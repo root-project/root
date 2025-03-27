@@ -2,7 +2,6 @@ import unittest
 
 import ROOT
 
-RNTupleModel = ROOT.Experimental.RNTupleModel
 RNTupleReader = ROOT.Experimental.RNTupleReader
 RNTupleWriter = ROOT.Experimental.RNTupleWriter
 
@@ -13,7 +12,7 @@ class RNTupleBasics(unittest.TestCase):
     def test_write_read(self):
         """Can write and read a basic RNTuple."""
 
-        model = RNTupleModel.Create()
+        model = ROOT.RNTupleModel.Create()
         model.MakeField["int"]("f")
         model.MakeField["std::string"]("mystr")
 
@@ -51,7 +50,7 @@ class RNTupleBasics(unittest.TestCase):
     def test_append_open(self):
         """Can append to existing TFile and open from RNTuple key."""
 
-        model = RNTupleModel.Create()
+        model = ROOT.RNTupleModel.Create()
         model.MakeField["int"]("f")
 
         with ROOT.TFile.Open("test_ntuple_py_append.root", "RECREATE") as f:
@@ -72,7 +71,7 @@ class RNTupleBasics(unittest.TestCase):
     def test_read_model(self):
         """Can impose a model when reading."""
 
-        write_model = RNTupleModel.Create()
+        write_model = ROOT.RNTupleModel.Create()
         write_model.MakeField["int"]("f1")
         write_model.MakeField["int"]("f2")
 
@@ -80,7 +79,7 @@ class RNTupleBasics(unittest.TestCase):
             entry = writer.CreateEntry()
             writer.Fill(entry)
 
-        read_model = RNTupleModel.Create()
+        read_model = ROOT.RNTupleModel.Create()
         read_model.MakeField["int"]("f1")
 
         reader = RNTupleReader.Open(read_model, "ntpl", "test_ntuple_py_read_model.root")
@@ -92,7 +91,7 @@ class RNTupleBasics(unittest.TestCase):
     def test_forbid_writing_wrong_type(self):
         """Forbid writing the wrong type into an RNTuple field."""
 
-        model = RNTupleModel.Create()
+        model = ROOT.RNTupleModel.Create()
         model.MakeField["std::string"]("mystr")
 
         class WrongClass:

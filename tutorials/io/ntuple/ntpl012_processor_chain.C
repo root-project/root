@@ -21,7 +21,6 @@
 #include <TRandom.h>
 
 // Import classes from the `Experimental` namespace for the time being.
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleOpenSpec;
 using ROOT::Experimental::RNTupleProcessor;
 using ROOT::Experimental::RNTupleWriter;
@@ -31,7 +30,7 @@ constexpr int kNEvents = 10000;
 
 void Write(std::string_view ntupleName, std::string_view fileName)
 {
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    auto fldVpx = model->MakeField<std::vector<float>>("vpx");
    auto fldVpy = model->MakeField<std::vector<float>>("vpy");
@@ -66,7 +65,7 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    TH1F hPx("h", "This is the px distribution", 100, -4, 4);
    hPx.SetFillColor(48);
 
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
    auto ptrPx = model->MakeField<std::vector<float>>("vpx");
 
    // By passing a model to the processor, we can use the pointers to field values created upon model creation during

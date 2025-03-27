@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-using ROOT::Experimental::RNTupleModel;
+using ROOT::RNTupleModel;
 using ROOT::Experimental::RNTupleWriter;
 
 class UnifiedConstructor : public ::testing::Test {

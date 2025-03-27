@@ -21,7 +21,6 @@
 #include <TRandom.h>
 
 // Import classes from the `Experimental` namespace for the time being.
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleOpenSpec;
 using ROOT::Experimental::RNTupleProcessor;
 using ROOT::Experimental::RNTupleWriter;
@@ -36,7 +35,7 @@ constexpr int kNEvents = 10000;
 
 void WriteMain(std::string_view ntupleName, std::string_view ntupleFileName)
 {
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    auto fldI = model->MakeField<std::uint32_t>("i");
    auto fldVpx = model->MakeField<float>("vpx");
@@ -56,7 +55,7 @@ void WriteMain(std::string_view ntupleName, std::string_view ntupleFileName)
 
 void WriteAux(std::string_view ntupleName, std::string_view ntupleFileName)
 {
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    auto fldI = model->MakeField<std::uint32_t>("i");
    auto fldVpy = model->MakeField<float>("vpy");

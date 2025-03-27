@@ -25,7 +25,6 @@
 #include <vector>
 
 // Import classes from experimental namespace for the time being
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 
 // Where to store the ntuple of this example
@@ -88,7 +87,7 @@ void Write()
    std::cout << " === Writing with staged cluster committing ===" << std::endl;
 
    // Create the data model
-   auto model = RNTupleModel::CreateBare();
+   auto model = ROOT::RNTupleModel::CreateBare();
    model->MakeField<std::uint32_t>("eventId");
    model->MakeField<float>("rndm");
 
@@ -177,7 +176,7 @@ void WriteInBlocks()
    std::cout << "\n === ... with sequencing in blocks of " << kNEventsPerBlock << " events ===" << std::endl;
 
    // Create the data model
-   auto model = RNTupleModel::CreateBare();
+   auto model = ROOT::RNTupleModel::CreateBare();
    model->MakeField<std::uint32_t>("eventId");
    model->MakeField<float>("rndm");
 

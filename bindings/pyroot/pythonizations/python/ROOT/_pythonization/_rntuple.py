@@ -59,7 +59,7 @@ def _RNTupleModel_CreateBare(*args):
         raise ValueError("no support for passing explicit RFieldZero")
     import ROOT
 
-    return ROOT.Experimental.RNTupleModel._CreateBare()
+    return ROOT.RNTupleModel._CreateBare()
 
 
 def _RNTupleModel_CreateEntry(self):
@@ -81,7 +81,7 @@ class _RNTupleModel_MakeField(MethodTemplateWrapper):
         return
 
 
-@pythonization("RNTupleModel", ns="ROOT::Experimental")
+@pythonization("RNTupleModel", ns="ROOT")
 def pythonize_RNTupleModel(klass):
     # We do not support default entries in Python, so always create a bare model.
     klass.Create = _RNTupleModel_CreateBare
@@ -98,7 +98,7 @@ def pythonize_RNTupleModel(klass):
 def _RNTupleReader_Open(maybe_model, *args):
     if (
         hasattr(type(maybe_model), "__cpp_name__")
-        and type(maybe_model).__cpp_name__ == "ROOT::Experimental::RNTupleModel"
+        and type(maybe_model).__cpp_name__ == "ROOT::RNTupleModel"
     ):
         # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
         maybe_model = maybe_model.Clone()
@@ -135,7 +135,7 @@ def _RNTupleWriter_Append(model, *args):
 def _RNTupleWriter_Recreate(model_or_fields, *args):
     if (
         hasattr(type(model_or_fields), "__cpp_name__")
-        and type(model_or_fields).__cpp_name__ == "ROOT::Experimental::RNTupleModel"
+        and type(model_or_fields).__cpp_name__ == "ROOT::RNTupleModel"
     ):
         # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
         model_or_fields = model_or_fields.Clone()
