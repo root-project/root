@@ -362,12 +362,14 @@ class ROOTFacade(types.ModuleType):
 
             try:
                 # Inject Pythonizations to interact between local and distributed RDF package
-                from ._pythonization._rdf_namespace import _create_distributed_module, _rungraphs, _variationsfor
+                from ._pythonization._rdf_namespace import _create_distributed_module, _rungraphs, _variationsfor, _fromspec
                 ns.Experimental.Distributed = _create_distributed_module(ns.Experimental)
                 ns.RunGraphs = _rungraphs(ns.Experimental.Distributed.RunGraphs, ns.RunGraphs)
                 ns.Experimental.VariationsFor = _variationsfor(ns.Experimental.Distributed.VariationsFor, ns.Experimental.VariationsFor)
+                ns.Experimental.FromSpec = _fromspec(ns.Experimental.Distributed.FromSpec, ns.Experimental.FromSpec)
             except ImportError:
                 pass
+                
         except:
             raise Exception("Failed to pythonize the namespace RDF")
         del type(self).RDF
@@ -386,6 +388,7 @@ class ROOTFacade(types.ModuleType):
             return _rdataframe(local_rdf, DistRDF.RDataFrame)
         except ImportError:
             return local_rdf
+        
 
 
     # Overload RooFit namespace

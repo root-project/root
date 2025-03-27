@@ -68,6 +68,22 @@ def _variationsfor(distrdf_variationsfor, rdf_variationsfor):
 
     return variationsfor
 
+def _fromspec(distributed_fromspec, local_fromspec):
+    """
+    Create a callable that correctly dispatches either to the local or
+    distributed FromSpec version of the function, depending on whether the "executor"
+    keyword argument is absent or not.
+    """
+
+    def fromspec(jsonfile, *args, **kwargs):
+        
+        if kwargs.get("executor", None) is not None:
+            return distributed_fromspec(jsonfile, *args, **kwargs)
+        else:
+            return local_fromspec(jsonfile, *args, **kwargs)
+
+    return fromspec
+
 
 def _rdataframe(local_rdf, distributed_rdf):
     """
@@ -94,3 +110,5 @@ def _rdataframe(local_rdf, distributed_rdf):
         return rdf
 
     return rdataframe
+
+
