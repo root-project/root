@@ -255,7 +255,7 @@ public:
    }
 
    /// Get a pointer to the encapsulated object.
-   /// \note: Ownership is not transferred to the caller.
+   /// \note Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    T *operator->()
    {
