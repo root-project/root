@@ -1,29 +1,13 @@
 \addtogroup tutorial_io
-
-\defgroup tutorial_ntuple RNTuple tutorials
-\ingroup tutorial_io
-\brief Various examples demonstrating ROOT's RNTuple columnar I/O subsystem.
-
-\defgroup tutorial_tree TTree tutorials
-\ingroup tutorial_io
-\brief Example code which illustrates how to use ROOT trees and ntuples.
-
-\defgroup tutorial_FITS FITS files interface tutorials
-\ingroup tutorial_io
-\brief Examples showing the FITS file interface.
-
-\defgroup tutorial_sql SQL tutorials
-\ingroup tutorial_io
-\brief Examples showing the SQL classes.
-
-\defgroup tutorial_xml XML tutorials
-\ingroup tutorial_io
-\brief XML examples.
-
-
-## Remaining topics - table of contents
+@{
+## Table of contents
+- [RNTuple](\ref tutorial_ntuple)
+- [TTree](\ref tutorial_tree)
 - [ROOT File](\ref file)
 - [Merging multiple ROOT files](\ref merging)
+- [FITS files](\ref tutorial_FITS)
+- [SQL](\ref tutorial_sql)
+- [XML](\ref tutorial_xml)
 - [Various I/O related topics](\ref miscl)
 
 \anchor file
@@ -58,3 +42,25 @@ The following tutorials illustrate various useful ROOT I/O features.
 | testTMPIFile.C |  |  Usage of TMPIFile to simulate event reconstruction and merging them in parallel.|
 |  | tcontext_context_manager.py |  Usage of the TContext class as a Python context manager. |
 | |  tfile_context_manager.py |  Usage of TFile class as a Python context manager.|
+@}
+
+
+\defgroup tutorial_ntuple RNTuple tutorials
+\ingroup tutorial_io
+\brief Various examples demonstrating ROOT's RNTuple columnar I/O subsystem.
+
+\defgroup tutorial_tree TTree tutorials
+\ingroup tutorial_io
+\brief Example code which illustrates how to use ROOT trees and ntuples.
+
+\defgroup tutorial_FITS FITS files interface tutorials
+\ingroup tutorial_io
+\brief Examples showing the FITS file interface.
+
+\defgroup tutorial_sql SQL tutorials
+\ingroup tutorial_io
+\brief Examples showing the SQL classes.
+
+\defgroup tutorial_xml XML tutorials
+\ingroup tutorial_io
+\brief XML examples.
