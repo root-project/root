@@ -390,17 +390,23 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Initial fill of list of LValue branches
   RooArgSet exclLVBranches("exclLVBranches") ;
   RooArgSet branchList;
-  RooArgSet branchListVD;
   function.branchNodeServerList(&branchList) ;
+
+  RooArgList branchListVDAll;
+  function.treeNodeServerList(&branchListVDAll,nullptr,true,false,/*valueOnly=*/true);
+  // The branchListVD is similar to branchList but considers only value
+  // dependence, and we want to exclude the function itself
+  RooArgSet branchListVD;
+  branchListVD.reserve(branchListVDAll.size());
+  for (RooAbsArg *branch : branchListVDAll) {
+    if (branch != &function) branchListVD.add(*branch);
+  }
 
   for (auto branch: branchList) {
     RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(branch) ;
     RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(branch) ;
     if ((realArgLV && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
       exclLVBranches.add(*branch) ;
-    }
-    if (branch != &function && function.dependsOnValue(*branch)) {
-      branchListVD.add(*branch) ;
     }
   }
   exclLVBranches.remove(depList,true,true) ;
