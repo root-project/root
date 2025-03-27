@@ -183,6 +183,14 @@ protected:
    virtual ROOT::NTupleSize_t GetNEntries() = 0;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add the entry mappings for this processor to the provided join table.
+   ///
+   /// \param[in] joinTable the join table to map the entries to.
+   /// \param[in] entryOffset In case the entry mapping is added from a chain, the offset of the entry indexes to use
+   /// with respect to the processor's position in the chain.
+   virtual void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new base RNTupleProcessor.
    ///
    /// \param[in] processorName Name of the processor. By default, this is the name of the underlying RNTuple for
@@ -463,6 +471,12 @@ private:
    }
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add the entry mappings for this processor to the provided join table.
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
+   void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) final;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Construct a new RNTupleProcessor for processing a single RNTuple.
    ///
    /// \param[in] ntuple The source specification (name and storage location) for the RNTuple to process.
@@ -503,6 +517,12 @@ private:
    ///
    /// \note This requires opening all underlying RNTuples being processed in the chain, and could become costly!
    ROOT::NTupleSize_t GetNEntries() final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add the entry mappings for this processor to the provided join table.
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
+   void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Construct a new RNTupleChainProcessor.
@@ -551,6 +571,12 @@ private:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
    ROOT::NTupleSize_t GetNEntries() final { return fNEntries; }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add the entry mappings for this processor to the provided join table.
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
+   void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Set fModel by combining the primary and auxiliary models.
