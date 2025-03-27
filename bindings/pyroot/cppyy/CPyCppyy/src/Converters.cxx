@@ -2094,7 +2094,7 @@ bool CPyCppyy::STLStringMoveConverter::SetArg(
         if (pyobj->fFlags & CPPInstance::kIsRValue) {
             pyobj->fFlags &= ~CPPInstance::kIsRValue;
             moveit_reason = 2;
-        } else if (pyobject->ob_refcnt <= MOVE_REFCOUNT_CUTOFF) {
+        } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
             moveit_reason = 1;
         } else
             moveit_reason = 0;
@@ -2331,7 +2331,7 @@ bool CPyCppyy::InstanceMoveConverter::SetArg(
     if (pyobj->fFlags & CPPInstance::kIsRValue) {
         pyobj->fFlags &= ~CPPInstance::kIsRValue;
         moveit_reason = 2;
-    } else if (pyobject->ob_refcnt <= MOVE_REFCOUNT_CUTOFF) {
+    } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
         moveit_reason = 1;
     }
 
