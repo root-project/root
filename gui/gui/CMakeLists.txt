@@ -206,4 +206,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     MathCore
 )
 
-target_include_directories(Gui PRIVATE ${CMAKE_SOURCE_DIR}/gui/ged/inc)
+target_include_directories(Gui PRIVATE ${ROOT_MAIN_SOURCE_DIR}/gui/ged/inc)

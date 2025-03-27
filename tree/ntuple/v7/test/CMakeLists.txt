@@ -42,7 +42,7 @@ if(NOT MSVC)
   ROOT_ADD_GTEST(ntuple_emulated ntuple_emulated.cxx LIBRARIES ROOTNTuple)
 endif()
 ROOT_ADD_GTEST(ntuple_join_table ntuple_join_table.cxx LIBRARIES ROOTNTuple)
-ROOT_ADD_GTEST(ntuple_merger ntuple_merger.cxx LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB Tree INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tree/tree/inc)
+ROOT_ADD_GTEST(ntuple_merger ntuple_merger.cxx LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB Tree INCLUDE_DIRS ${ROOT_MAIN_SOURCE_DIR}/tree/tree/inc)
 ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_model ntuple_model.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_multi_column ntuple_multi_column.cxx LIBRARIES ROOTNTuple)
@@ -92,11 +92,11 @@ ROOT_GENERATE_DICTIONARY(StreamerFieldDict ${CMAKE_CURRENT_SOURCE_DIR}/StreamerF
                          DEPENDENCIES RIO)
 
 if(MSVC)
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex.exe)
+  set(genreflex ${ROOT_MAIN_BINARY_DIR}/bin/genreflex.exe)
   set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${genreflex})
 else()
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex)
-  set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
+  set(genreflex ${ROOT_MAIN_BINARY_DIR}/bin/genreflex)
+  set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_MAIN_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
               "ROOTIGNOREPREFIX=1" ${genreflex})
 endif()
 

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # If we are not building as a part of LLVM, build Cling as an
 # standalone project, using LLVM as an external library:
-if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
+if( ROOT_MAIN_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   project(Cling)
 
   # See <https://llvm.org/docs/CMake.html#embedding-llvm-in-your-project>.
@@ -130,7 +130,7 @@ if(DEFINED CLING_ROOT_BUILD)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LLVM_TOOLS_BINARY_DIR}")
 endif()
 
-if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
+if( ROOT_MAIN_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
   message(FATAL_ERROR "In-source builds are not allowed. CMake would overwrite "
 "the makefiles distributed with LLVM. Please create a directory and run cmake "
 "from there, passing the path to this source directory as the last argument. "

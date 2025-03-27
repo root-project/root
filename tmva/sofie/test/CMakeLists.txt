@@ -10,7 +10,7 @@
 ############################################################################
 
 
-set(SOFIE_PARSERS_DIR ${CMAKE_SOURCE_DIR}/tmva/sofie_parsers)
+set(SOFIE_PARSERS_DIR ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie_parsers)
 
 if (NOT ONNX_MODELS_DIR)
   set(ONNX_MODELS_DIR input_models)
@@ -38,9 +38,9 @@ add_executable(emitFromONNX
    EmitFromONNX_all.cxx
 )
 target_include_directories(emitFromONNX PRIVATE
-   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/inc
    ${SOFIE_PARSERS_DIR}/inc
-   ${CMAKE_SOURCE_DIR}/tmva/inc
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
 )
 
@@ -78,9 +78,9 @@ add_executable(emitFromROOT
    EmitFromRoot_all.cxx
 )
 target_include_directories(emitFromROOT PRIVATE
-   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/inc
    ${SOFIE_PARSERS_DIR}/inc
-   ${CMAKE_SOURCE_DIR}/tmva/inc
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}
 )
 target_link_libraries(emitFromROOT protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser)
@@ -138,14 +138,14 @@ endif()
 
 add_executable(emitGNN
               GNN/EmitGNN.cxx
-              ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel_GNN.cxx
-              ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
+              ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/src/RModel_GNN.cxx
+              ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
 )
 target_include_directories(emitGNN PRIVATE
-   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
-   ${CMAKE_SOURCE_DIR}/tmva/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/inc
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/foundation/inc
+   ${ROOT_MAIN_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 target_link_libraries(emitGNN ROOTTMVASofie)
 set_target_properties(emitGNN PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
@@ -155,14 +155,14 @@ target_compile_options(emitGNN PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
 add_executable(emitGraphIndependent
               GNN/EmitGraphIndependent.cxx
-              ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel_GraphIndependent.cxx
-              ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
+              ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/src/RModel_GraphIndependent.cxx
+              ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
 )
 target_include_directories(emitGraphIndependent PRIVATE
-   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
-   ${CMAKE_SOURCE_DIR}/tmva/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/sofie/inc
+   ${ROOT_MAIN_SOURCE_DIR}/tmva/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/foundation/inc
+   ${ROOT_MAIN_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 target_link_libraries(emitGraphIndependent ROOTTMVASofie)
 set_target_properties(emitGraphIndependent PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

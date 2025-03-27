@@ -26,7 +26,7 @@ find_package(ROOT REQUIRED COMPONENTS Tree TreePlayer ROOTDataFrame)
 include(${ROOT_USE_FILE})
 
 #---Add include directory of ROOT to the build
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${ROOT_MAIN_SOURCE_DIR})
 
 # CMake function provided by ROOT, used to generate the dictionary file, G__data2Tree.cxx
 #     See this link for further details:

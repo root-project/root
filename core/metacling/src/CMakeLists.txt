@@ -55,18 +55,18 @@ target_include_directories(MetaCling SYSTEM PRIVATE
 
 target_include_directories(MetaCling PRIVATE
    ${CLING_INCLUDE_DIRS}
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/clingutils/res
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/metacling/res
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/zip/inc
-   ${CMAKE_SOURCE_DIR}/io/io/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${ROOT_MAIN_SOURCE_DIR}/core/base/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/clib/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/clingutils/res
+   ${ROOT_MAIN_SOURCE_DIR}/core/cont/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/foundation/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/foundation/res
+   ${ROOT_MAIN_SOURCE_DIR}/core/meta/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/metacling/res
+   ${ROOT_MAIN_SOURCE_DIR}/core/thread/inc
+   ${ROOT_MAIN_SOURCE_DIR}/core/zip/inc
+   ${ROOT_MAIN_SOURCE_DIR}/io/io/inc
+   ${ROOT_MAIN_BINARY_DIR}/ginclude
 )
 
 set_target_properties(MetaCling PROPERTIES
@@ -76,7 +76,7 @@ set_target_properties(MetaCling PROPERTIES
 
 if(MSVC)
    target_include_directories(MetaCling PRIVATE
-      ${CMAKE_SOURCE_DIR}/core/winnt/inc
+      ${ROOT_MAIN_SOURCE_DIR}/core/winnt/inc
    )
    set_source_files_properties(TCling.cxx COMPILE_FLAGS /bigobj)
 endif()

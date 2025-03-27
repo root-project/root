@@ -10,25 +10,25 @@
 
 include(SetROOTVersion)
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
+set_source_files_properties(${ROOT_MAIN_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
+add_custom_command(OUTPUT ${ROOT_MAIN_BINARY_DIR}/include/RConfigure.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
-    ${CMAKE_BINARY_DIR}/include/RConfigure.h
+    ${ROOT_MAIN_BINARY_DIR}/ginclude/RConfigure.h
+    ${ROOT_MAIN_BINARY_DIR}/include/RConfigure.h
   DEPENDS
-    ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
+    ${ROOT_MAIN_BINARY_DIR}/ginclude/RConfigure.h
 )
 
-add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
+add_custom_target(rconfigure ALL DEPENDS ${ROOT_MAIN_BINARY_DIR}/include/RConfigure.h)
 
 ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
 
 generateHeader(Core
-  ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
+  ${ROOT_MAIN_SOURCE_DIR}/core/base/src/root-argparse.py
+  ${ROOT_MAIN_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
 )
 
 add_dependencies(Core CLING rconfigure)
@@ -45,7 +45,7 @@ if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
 endif()
 
 target_include_directories(Core PUBLIC
-   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
+   $<BUILD_INTERFACE:${ROOT_MAIN_BINARY_DIR}/ginclude>
 )
 
 # Must be first because it defines ROOTStaticSanitizerConfig which needs

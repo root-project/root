@@ -93,7 +93,7 @@ target_include_directories(${libname}
 
 target_include_directories(${libname}
     PRIVATE
-      ${CMAKE_BINARY_DIR}/ginclude
+      ${ROOT_MAIN_BINARY_DIR}/ginclude
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
@@ -112,7 +112,7 @@ if (NOT MSVC AND NOT CMAKE_INSTALL_LIBDIR STREQUAL CMAKE_INSTALL_PYTHONDIR)
     \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_PYTHONDIR}/${LIB_FILE_NAME} SYMBOLIC)")
 endif()
 
-file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include/CPyCppyy)
+file(COPY ${headers} DESTINATION ${ROOT_MAIN_BINARY_DIR}/include/CPyCppyy)
 install(FILES ${headers}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy
         COMPONENT headers)
