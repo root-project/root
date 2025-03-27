@@ -96,15 +96,19 @@ namespace RDFInternal = ROOT::Internal::RDF;
 namespace RDFDetail = ROOT::Detail::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
-/// Smart pointer for the return type of actions
+/// Smart pointer for the return type of actions.
 /**
 \class ROOT::RDF::RResultPtr
 \ingroup dataframe
 \brief A wrapper around the result of RDataFrame actions able to trigger calculations lazily.
 \tparam T Type of the action result
 
-A smart pointer which allows to access the result of a RDataFrame action. The
-methods of the encapsulated object can be accessed via the arrow operator.
+A wrapper around a shared_ptr which allows to access the result of RDataFrame actions.
+The underlying object can be accessed by dereferencing the RResultPtr:
+~~~{.cpp}
+ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(...);
+histo->Draw(); // Starts running the event loop
+~~~
 Upon invocation of the arrow operator or dereferencing (`operator*`), the
 loop on the events and calculations of all scheduled actions are executed
 if needed.
@@ -114,12 +118,17 @@ for (auto& myItem : myResultProxy) { ... };
 ~~~
 If iteration is not supported by the type of the proxied object, a compilation error is thrown.
 
+When shared ownership to the result is desired, a copy of the underlying shared_ptr can be obtained:
+~~~{.cpp}
+std::shared_ptr<TH1D> ProduceResult(const char *columnname) {
+   auto ht = rdf.Histo1D(*h, columname);
+   return ht.GetSharedPtr();
+}
+~~~
+Note that this will run the event loop. If this is not desired, the RResultPtr can be copied.
 */
 template <typename T>
 class RResultPtr {
-   // private using declarations
-   using SPT_t = std::shared_ptr<T>;
-
    // friend declarations
    template <typename T1>
    friend class RResultPtr;
@@ -172,23 +181,13 @@ class RResultPtr {
    /// Non-owning pointer to the RLoopManager at the root of this computation graph.
    /// The RLoopManager is guaranteed to be always in scope if fLoopManager is not a nullptr.
    RDFDetail::RLoopManager *fLoopManager = nullptr;
-   SPT_t fObjPtr; ///< Shared pointer encapsulating the wrapped result
+   std::shared_ptr<T> fObjPtr; ///< Shared pointer encapsulating the wrapped result
    /// Owning pointer to the action that will produce this result.
    /// Ownership is shared with other copies of this ResultPtr.
    std::shared_ptr<RDFInternal::RActionBase> fActionPtr;
 
    /// Triggers the event loop in the RLoopManager
    void TriggerRun();
-
-   /// Get the pointer to the encapsulated result.
-   /// Ownership is not transferred to the caller.
-   /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T *Get()
-   {
-      if (fActionPtr != nullptr && !fActionPtr->HasRun())
-         TriggerRun();
-      return fObjPtr.get();
-   }
 
    void ThrowIfNull()
    {
@@ -223,33 +222,45 @@ public:
    {
    }
 
+   /// Produce the encapsulated result, and return a shared pointer to it.
+   /// If RDataFrame hasn't produced the result yet, triggers the event loop and execution
+   /// of all actions booked in the associated RLoopManager.
+   /// \note To share a "lazy" handle to the result without running the event loop, copy the RResultPtr.
+   std::shared_ptr<T> GetSharedPtr()
+   {
+      if (fActionPtr != nullptr && !fActionPtr->HasRun())
+         TriggerRun();
+      return fObjPtr;
+   }
+
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    const T &GetValue()
    {
       ThrowIfNull();
-      return *Get();
+      return *GetSharedPtr();
    }
 
    /// Get the pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T *GetPtr() { return Get(); }
+   /// \note Ownership is not transferred to the caller.
+   T *GetPtr() { return GetSharedPtr().get(); }
 
-   /// Get a pointer to the encapsulated object.
+   /// Get a reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    T &operator*()
    {
       ThrowIfNull();
-      return *Get();
+      return *GetSharedPtr();
    }
 
    /// Get a pointer to the encapsulated object.
-   /// Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
+   /// \note Ownership is not transferred to the caller.
    T *operator->()
    {
       ThrowIfNull();
-      return Get();
+      return GetSharedPtr().get();
    }
 
    /// Return an iterator to the beginning of the contained object if this makes
