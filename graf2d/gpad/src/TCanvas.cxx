@@ -2157,6 +2157,30 @@ void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set canvas implementation
+/// If web-based implementation provided, some internal fields also initialized
+
+void TCanvas::SetCanvasImp(TCanvasImp *imp)
+{
+   Bool_t was_web = IsWeb();
+
+   fCanvasImp = imp;
+
+   if (!was_web && IsWeb()) {
+      fCanvasID = fCanvasImp->InitWindow();
+      fPixmapID = 0;
+      fMother = this;
+      if (!fCw) fCw = 800;
+      if (!fCh) fCh = 600;
+   } else if (was_web && !imp) {
+      fCanvasID = -1;
+      fPixmapID = -1;
+      fMother = nullptr;
+      fCw = fCh = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the canvas scale in centimeters.
 ///
 /// This information is used by PostScript to set the page size.
