@@ -39,8 +39,6 @@ class RFieldVisitor;
 
 namespace Experimental {
 
-class RNTupleJoinProcessor;
-
 namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
@@ -82,7 +80,6 @@ This is and can only be partially enforced through C++.
 // clang-format on
 class RFieldBase {
    friend class ROOT::RClassField;                             // to mark members as artificial
-   friend class ROOT::Experimental::RNTupleJoinProcessor;      // needs ConstructValue
    friend class ROOT::Experimental::Detail::RRawPtrWriteEntry; // to call Append()
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
