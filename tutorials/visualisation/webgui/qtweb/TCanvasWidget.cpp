@@ -33,22 +33,11 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 
    static int wincnt = 1;
 
-   fCanvas = new TCanvas(kFALSE);
-   fCanvas->SetName(Form("Canvas%d", wincnt++));
-   fCanvas->SetTitle("title");
-   fCanvas->ResetBit(TCanvas::kShowEditor);
-   fCanvas->SetCanvas(fCanvas);
-   fCanvas->SetBatch(kTRUE); // mark canvas as batch
+   auto name = TString::Format("Canvas%d", wincnt++);
 
-   gPad = fCanvas;
+   fCanvas = TWebCanvas::CreateWebCanvas(name, name);
 
-   bool read_only = gEnv->GetValue("WebGui.FullCanvas", (Int_t)1) == 0;
-
-   TWebCanvas *web = new TWebCanvas(fCanvas, "title", 0, 0, 800, 600, read_only);
-
-   fCanvas->SetCanvasImp(web);
-
-   SetPrivateCanvasFields(true);
+   auto web = static_cast<TWebCanvas *> (fCanvas->GetCanvasImp());
 
    web->SetCanCreateObjects(kFALSE); // not yet create objects on server side
 
@@ -77,34 +66,13 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 TCanvasWidget::~TCanvasWidget()
 {
    if (fCanvas) {
-      SetPrivateCanvasFields(false);
-
       gROOT->GetListOfCanvases()->Remove(fCanvas);
+
+      fCanvas->SetCanvasImp(nullptr);
 
       fCanvas->Close();
       delete fCanvas;
       fCanvas = nullptr;
-   }
-}
-
-void TCanvasWidget::SetPrivateCanvasFields(bool on_init)
-{
-   Long_t offset = TCanvas::Class()->GetDataMemberOffset("fCanvasID");
-   if (offset > 0) {
-      Int_t *id = (Int_t *)((char *)fCanvas + offset);
-      if (*id == fCanvas->GetCanvasID())
-         *id = on_init ? 111222333 : -1;
-   } else {
-      printf("ERROR: Cannot modify fCanvasID data member\n");
-   }
-
-   offset = TCanvas::Class()->GetDataMemberOffset("fMother");
-   if (offset > 0) {
-      TPad **moth = (TPad **)((char *)fCanvas + offset);
-      if (*moth == fCanvas->GetMother())
-         *moth = on_init ? fCanvas : nullptr;
-   } else {
-      printf("ERROR: Cannot set fMother data member in canvas\n");
    }
 }
 
