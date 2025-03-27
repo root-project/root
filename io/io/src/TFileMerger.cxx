@@ -978,7 +978,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
    }
 
    fOutputFile->SetBit(kMustCleanup);
-   fOutputFile->SetBit(TFile::kCannotChange);
+   fOutputFile->SetBit(TFile::kCancelTTreeChangeRequest);
 
    TDirectory::TContext ctxt;
 
@@ -1040,7 +1040,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       Clear();
    } else {
       fOutputFile->ResetBit(kMustCleanup);
-      fOutputFile->ResetBit(TFile::kCannotChange);
+      fOutputFile->ResetBit(TFile::kCancelTTreeChangeRequest);
       SafeDelete(fOutputFile);
    }
    return result;
