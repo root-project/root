@@ -23,7 +23,7 @@ sap.ui.define([
                this.websocket.send("PANEL_READY");
          }
 
-         // assign several core methods which are used like: parse, toJSON, source_dir
+         // assign several core methods which are used like: parse, toJSON
          this.jsroot = data?.jsroot;
 
          // TODO: use more specific API between Canvas and Panel

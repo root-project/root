@@ -46,7 +46,7 @@
    <script type='module'>
 
      import { connectWebWindow } from 'jsroot/webwindow';
-     import { parse, decodeUrl, toJSON, source_dir, browser } from 'jsroot/core';
+     import { parse, decodeUrl, toJSON, browser } from 'jsroot/core';
 
      connectWebWindow({
         ui5: true,
@@ -59,7 +59,7 @@
          sap.ui.require(['sap/ui/core/mvc/XMLView'], XMLView => {
              XMLView.create({
                 viewName: is_hierarchy ? 'rootui5.geom.view.GeomHierarchy' : 'rootui5.geom.view.GeomViewer',
-                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir, browser } }
+                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, browser } }
              }).then(oView => oView.placeAt("GeomDiv"));
           });
      });
