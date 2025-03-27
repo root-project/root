@@ -35,13 +35,25 @@ static PyMappingMethods CPyCppyy_NoneType_mapping = {
 //-----------------------------------------------------------------------------
 namespace {
 
+// Py_SET_REFCNT was only introduced in Python 3.9
+#if PY_VERSION_HEX < 0x03090000
+inline void Py_SET_REFCNT(PyObject *ob, Py_ssize_t refcnt) {
+    assert(refcnt >= 0);
+#if SIZEOF_VOID_P > 4
+    ob->ob_refcnt = (PY_UINT32_T)refcnt;
+#else
+    ob->ob_refcnt = refcnt;
+#endif
+}
+#endif
+
 struct InitCPyCppyy_NoneType_t {
     InitCPyCppyy_NoneType_t() {
     // create a CPyCppyy NoneType (for references that went dodo) from NoneType
         memset(&CPyCppyy_NoneType, 0, sizeof(CPyCppyy_NoneType));
 
         ((PyObject&)CPyCppyy_NoneType).ob_type    = &PyType_Type;
-        ((PyObject&)CPyCppyy_NoneType).ob_refcnt  = 1;
+        Py_SET_REFCNT((PyObject*)&CPyCppyy_NoneType, 1);
         ((PyVarObject&)CPyCppyy_NoneType).ob_size = 0;
 
         CPyCppyy_NoneType.tp_name        = const_cast<char*>("CPyCppyy_NoneType");
@@ -147,10 +159,10 @@ bool CPyCppyy::MemoryRegulator::RecursiveRemove(
         }
 
     // notify any other weak referents by playing dead
-        Py_ssize_t refcnt = ((PyObject*)pyobj)->ob_refcnt;
-        ((PyObject*)pyobj)->ob_refcnt = 0;
+        Py_ssize_t refcnt = Py_REFCNT((PyObject*)pyobj);
+        Py_SET_REFCNT((PyObject*)pyobj, 0);
         PyObject_ClearWeakRefs((PyObject*)pyobj);
-        ((PyObject*)pyobj)->ob_refcnt = refcnt;
+        Py_SET_REFCNT((PyObject*)pyobj, refcnt);
 
     // cleanup object internals
         pyobj->CppOwns();              // held object is out of scope now anyway

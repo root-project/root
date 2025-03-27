@@ -226,7 +226,7 @@ bool CPyCppyy::Instance_IsLively(PyObject* pyobject)
 
 // the instance fails the lively test if it owns the C++ object while having a
 // reference count of 1 (meaning: it could delete the C++ instance any moment)
-    if (pyobject->ob_refcnt <= 1 && (((CPPInstance*)pyobject)->fFlags & CPPInstance::kIsOwner))
+    if (Py_REFCNT(pyobject) <= 1 && (((CPPInstance*)pyobject)->fFlags & CPPInstance::kIsOwner))
         return false;
 
     return true;
