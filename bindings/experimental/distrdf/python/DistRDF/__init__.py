@@ -151,7 +151,6 @@ def RunGraphs(proxies: Iterable) -> int:
 
     return len(uniqueproxies)
 
-
 def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
     """
     Equivalent of ROOT.RDF.Experimental.VariationsFor in distributed mode.
@@ -159,6 +158,39 @@ def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
     # similar to resPtr.fActionPtr->MakeVariedAction()
     return actionproxy.create_variations()
 
+def FromSpec(jsonfile : str, *args, **kwargs) -> RDataFrame:
+    """
+    Equivalent of ROOT.RDF.Experimental.FromSpec in distributed mode.
+    """     
+    import ROOT
+    spec = ROOT.Internal.RDF.RetrieveSpecFromJson(jsonfile)
+    
+    executor = kwargs.get("executor", None)
+    if executor is None:        
+        raise ValueError(
+            "Missing keyword argument 'executor'. Please provide a connection object "
+            "to one of the schedulers supported by distributed RDataFrame."
+        )
+    # Try to dispatch to the correct distributed scheduler implementation
+    try:
+        from distributed import Client
+        from DistRDF.Backends.Dask import RDataFrame
+        if isinstance(executor, Client):
+            return RDataFrame(spec, *args, **kwargs)
+    except ImportError:
+        pass
+
+    try:
+        from pyspark import SparkContext
+        from DistRDF.Backends.Spark import RDataFrame
+        if isinstance(executor, SparkContext):
+            return RDataFrame(spec, *args, **kwargs)
+    except ImportError:
+        pass
+
+    raise TypeError(
+        f"The client object of type '{type(executor)}' is not a supported "
+        "connection type for distributed RDataFrame.")
 
 def create_distributed_module(parentmodule):
     """
@@ -187,9 +219,9 @@ def create_distributed_module(parentmodule):
     distributed.DistributeFiles = DistributeFiles
     distributed.DistributeSharedLibs = DistributeSharedLibs
     distributed.DistributeCppCode = DistributeCppCode
+    distributed.FromSpec = FromSpec
     
     return distributed
-
 
 def RDataFrame(*args, **kwargs):
     executor = kwargs.get("executor", None)
@@ -218,4 +250,4 @@ def RDataFrame(*args, **kwargs):
 
     raise TypeError(
         f"The client object of type '{type(executor)}' is not a supported "
-        "connection type for distributed RDataFrame.")
+        "connection type for distributed RDataFrame.")    
