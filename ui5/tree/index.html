@@ -31,7 +31,7 @@
    <script type='module'>
 
      import { connectWebWindow } from 'jsroot/webwindow';
-     import { parse, decodeUrl, toJSON, source_dir } from 'jsroot/core';
+     import { parse, decodeUrl, toJSON } from 'jsroot/core';
 
      connectWebWindow({
         ui5: true,
@@ -40,7 +40,7 @@
          sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
              XMLView.create({
                 viewName: "rootui5.tree.view.TreeViewer",
-                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
+                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON } }
              }).then(oView => oView.placeAt("ViewerDiv"));
           });
      });
