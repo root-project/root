@@ -49,13 +49,14 @@ RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
 /**
 \class ROOT::Experimental::Internal::RProjectedFields
 \ingroup NTuple
-\brief The projected fields of a `RNTupleModel`
+\brief Container for the projected fields of an RNTupleModel
 
 Projected fields are fields whose columns are reused from existing fields. Projected fields are not attached
-to the models zero field.  Only the real source fields are written to, projected fields are stored as metadata
-(header) information only.  Only top-level projected fields are supported because otherwise the layout of types
+to the model's zero field but form a separate hierarchy with their own zero field (which is stored in this class).
+Only the real source fields are written to: projected fields are stored as metadata
+(header) information only. Only top-level projected fields are supported because otherwise the layout of types
 could be altered in unexpected ways.
-All projected fields and the source fields used to back them are kept in this class.
+This class owns the hierarchy of projected fields and keeps the mapping between them and their backing source fields.
 */
 // clang-format on
 class RProjectedFields {
@@ -88,7 +89,8 @@ public:
    RProjectedFields &operator=(RProjectedFields &&) = default;
    ~RProjectedFields() = default;
 
-   /// The new model needs to be a clone of fModel
+   /// Clones this container and all the projected fields it owns. `newModel` must be a clone of the model
+   /// that this RProjectedFields was constructed with.
    std::unique_ptr<RProjectedFields> Clone(const RNTupleModel &newModel) const;
 
    ROOT::RFieldZero &GetFieldZero() { return *fFieldZero; }
@@ -105,18 +107,31 @@ public:
 /**
 \class ROOT::Experimental::RNTupleModel
 \ingroup NTuple
-\brief The RNTupleModel encapulates the schema of an ntuple.
+\brief The RNTupleModel encapulates the schema of an RNTuple.
 
-The ntuple model comprises a collection of hierarchically organized fields. From a model, "entries"
-can be extracted. For convenience, the model provides a default entry unless it is created as a "bare model".
-Models have a unique model identifier that faciliates checking whether entries are compatible with it
+The RNTupleModel comprises a collection of hierarchically organized fields. From a model, "entries"
+can be extracted or created. For convenience, the RNTupleModel provides a default entry unless it is created as a "bare model".
+Models have a unique model identifier that facilitates checking whether entries are compatible with it
 (i.e.: have been extracted from that model).
 
-A model is subject to a state transition during its lifetime: it starts in a building state, in which fields can be
-added and modified.  Once the schema is finalized, the model gets frozen.  Only frozen models can create entries.
-From frozen, models move into a expired state.  In this state, the model is only partially usable: it can be cloned
+A model is subject to state transitions during its lifetime: it starts in a *building* state, in which fields can be
+added and modified.  Once the schema is finalized, the model gets *frozen*.  Only frozen models can create entries.
+From frozen, models move into an *expired* state. In this state, the model is only partially usable: it can be cloned
 and queried, but it can't be unfrozen anymore and no new entries can be created.  This state is used for models
 that were used for writing and are no longer connected to a page sink.
+
+```
+(Model gets created)
+     |
+     |       (passed to a Sink            (detached from
+ ____v______  or explicitly    __________  Sink after     ___________
+|           | frozen)         |          | writing)      |           |
+| Building  |---------------->|  Frozen  |-------------->|  Expired  |
+|___________|<----------------|__________|               |___________|
+             (explicitly
+              unfrozen)
+```
+
 */
 // clang-format on
 class RNTupleModel {
@@ -124,9 +139,10 @@ class RNTupleModel {
    friend Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(RNTupleModel &);
 
 public:
-   /// User provided function that describes the mapping of existing source fields to projected fields in terms
+   /// User-provided function that describes the mapping of existing source fields to projected fields in terms
    /// of fully qualified field names. The mapping function is called with the qualified field names of the provided
-   /// field and the subfields.  It should return the qualified field names used as a mapping source.
+   /// field and the subfields. It should return the qualified field names used as a mapping source.
+   /// See AddProjectedFields() for more details.
    using FieldMappingFunc_t = std::function<std::string(const std::string &)>;
 
    /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
@@ -143,8 +159,9 @@ public:
    class RUpdater;
 
 private:
-   // The states a model can be in. Possible transitions are between kBuilding and kFrozen
-   // and from kFrozen to kExpired.
+   /// The states a model can be in. Possible transitions are between kBuilding and kFrozen
+   /// and from kFrozen to kExpired.
+   /// See RNTupleModel for the state transition graph.
    enum class EState {
       kBuilding,
       kFrozen,
@@ -171,7 +188,7 @@ private:
    /// Changed by Freeze() / Unfreeze() and by the RUpdater.
    EState fModelState = EState::kBuilding;
 
-   /// Checks that user-provided field names are valid in the context of this RNTuple model.
+   /// Checks that user-provided field names are valid in the context of this RNTupleModel.
    /// Throws an RException for invalid names, empty names (which is reserved for the zero field) and duplicate field
    /// names.
    void EnsureValidFieldName(std::string_view fieldName);
@@ -199,8 +216,9 @@ public:
    std::unique_ptr<RNTupleModel> Clone() const;
    static std::unique_ptr<RNTupleModel> Create();
    static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<ROOT::RFieldZero> fieldZero);
-   /// A bare model has no default entry
+   /// Creates a "bare model", i.e. a RNTupleModel with no default entry
    static std::unique_ptr<RNTupleModel> CreateBare();
+   /// Creates a "bare model", i.e. a RNTupleModel with no default entry, with the given field zero.
    static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<ROOT::RFieldZero> fieldZero);
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
@@ -255,20 +273,21 @@ public:
       return ptr;
    }
 
-   /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
+   /// Adds a field whose type is not known at compile time. No shared pointer is returned in this case:
+   /// pointers should be retrieved or bound via REntry.
    ///
-   /// Throws an exception if the field is null.
+   /// Throws an RException if the field is null.
    void AddField(std::unique_ptr<ROOT::RFieldBase> field);
 
    /// Register a subfield so it can be accessed directly from entries belonging to the model. Because registering a
    /// subfield does not fundamentally change the model, previously created entries will not be invalidated, nor
    /// modified in any way; a registered subfield is merely an accessor added to the default entry (if present) and any
-   /// entries created afterwards.
+   /// entries created afterwards. Note that previously created entries won't have this subfield added to them.
    ///
    /// Using models with registered subfields for writing is not allowed. Attempting to do so will result in an
    /// exception.
    ///
-   /// Throws an exception if the provided subfield could not be found in the model.
+   /// Throws an RException if the provided subfield could not be found in the model.
    void RegisterSubfield(std::string_view qualifiedFieldName);
 
    /// Adds a top-level field based on existing fields.
@@ -307,37 +326,67 @@ public:
    /// Creating projections for fields containing `std::variant` or fixed-size arrays is unsupported.
    RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
 
+   /// Transitions a RNTupleModel from the Building state to the Frozen state, disabling adding additional fields and enabling
+   /// creating entries from it.
+   /// Freezing an already-frozen model is a no-op.
+   /// Throws an RException if the model is in the Expired state.
+   /// See RNTupleModel for more explanation on the state transitions.
    void Freeze();
+   /// Transitions a RNTupleModel from the Frozen state back to the Building state, invalidating all previously created entries,
+   /// re-enabling adding additional fields and disabling creating entries from it.
+   /// Unfreezing a model that is already in the Building state is a no-op.
+   /// Throws an RException if the model is in the Expired state.
+   /// See RNTupleModel for more explanations on the state transitions.
    void Unfreeze();
+   /// Transitions a RNTupleModel from the Frozen state to the Expired state, invalidating all previously created entries,
+   /// disabling creating new entries from it and disabling further state transitions.
+   /// Expiring a model that is already expired is a no-op.
+   /// Throws an RException if the model is in the Building state.
+   /// See RNTupleModel for more explanations on the state transitions.
    void Expire();
+   /// \see Expire()
    bool IsExpired() const { return fModelState == EState::kExpired; }
+   /// \see Freeze()
    bool IsFrozen() const { return (fModelState == EState::kFrozen) || (fModelState == EState::kExpired); }
+   /// \see CreateBare()
    bool IsBare() const { return !fDefaultEntry; }
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
 
+   /// Creates a new entry with default values for each field.
    std::unique_ptr<REntry> CreateEntry() const;
-   /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
-   /// set memory addresses to be serialized / deserialized
+   /// Creates a "bare entry", i.e. a entry with all null values. The user needs to explicitly call BindValue() or
+   /// BindRawPtr() to set memory addresses before serializing / deserializing the entry.
    std::unique_ptr<REntry> CreateBareEntry() const;
    /// Creates a token to be used in REntry methods to address a field present in the entry
    REntry::RFieldToken GetToken(std::string_view fieldName) const;
-   /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
+   /// Calls the given field's CreateBulk() method. Throws an RException if no field with the given name exists.
    ROOT::RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 
+   /// Retrieves the default entry of this model.
+   /// Throws an RException if this is a bare model (i.e. if it was created with CreateBare()).
    REntry &GetDefaultEntry();
+   /// \see GetDefaultEntry()
    const REntry &GetDefaultEntry() const;
 
-   /// Mutable access to the root field is used to make adjustments to the fields.
+   /// Retrieves the field zero of this model, i.e. the root of the field hierarchy.
+   /// This may be used to make adjustments on the field hierarchy before the model is frozen.
    ROOT::RFieldZero &GetMutableFieldZero();
+   /// Retrieves the field zero of this model, i.e. the root of the field hierarchy.
    const ROOT::RFieldZero &GetConstFieldZero() const { return *fFieldZero; }
+   /// Retrieves the field with fully-qualified name `fieldName`.
+   /// Dot-separated names are used to walk down the field hierarchy: e.g. `"parent.child"` should
+   /// be used to retrieve a field with name `"child"` whose parent is the top-level field with name `"parent"`.
+   /// Throws an RException if no field is found with the given name.
    ROOT::RFieldBase &GetMutableField(std::string_view fieldName);
+   /// \see GetMutableField()
    const ROOT::RFieldBase &GetConstField(std::string_view fieldName) const;
 
    const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
 
-   /// Get the (qualified) names of subfields that have been registered to be included in entries from this model.
+   /// Get the (qualified) names of subfields that have been registered (via RegisterSubfield()) to be included in
+   /// entries from this model.
    const std::unordered_set<std::string> &GetRegisteredSubfieldNames() const { return fRegisteredSubfields; }
 
    /// Estimate the memory usage for this model during writing
@@ -372,6 +421,8 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 
    void AddField(std::unique_ptr<ROOT::RFieldBase> field);
+
+   /// \see RNTupleModel::AddProjectedField()
    ROOT::RResult<void>
    AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, RNTupleModel::FieldMappingFunc_t mapping);
 };
@@ -414,6 +465,7 @@ public:
 
    void AddField(std::unique_ptr<ROOT::RFieldBase> field);
 
+   /// \see RNTupleModel::AddProjectedField()
    RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
 };
 
