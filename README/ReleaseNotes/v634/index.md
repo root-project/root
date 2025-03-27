@@ -1,4 +1,4 @@
-% ROOT Version 6.34 Release Notes
+gi% ROOT Version 6.34 Release Notes
 % 2024-11
 <a name="TopOfPage"></a>
 
@@ -687,5 +687,20 @@ Moreover, the items listed below were addressed:
 * [[#17442](https://github.com/root-project/root/issues/17442)] - [Python] Regression in `std::bytes` support with cppyy inside ROOT
 * [[#17444](https://github.com/root-project/root/issues/17444)] - ROOT doesn't compile with gcc-15
 * [[#17472](https://github.com/root-project/root/issues/17472)] - RooEllipse not drawn in notebooks with `%jsroot on`
+
+## Release 6.34.06
+
+Published on March 27, 2025
+
+### Items addressed in this release
+
+This branch includes minor bugfixes and changes in the code to adapt it to the evolving ROOT's testing infrastructure. Notable examples are the reduced dependency on the webserver of ROOT's tests or changes required by ATLAS FastFrames framework. JSRoot has been updated to version [[7.8.2](https://github.com/root-project/jsroot/releases/tag/7.8.2)].
+
+The following items were addressed:
+
+* [[#10096](https://github.com/root-project/root/issues/10096)] - heap-use-after-free in ~TTreeReader
+* [[#17456](https://github.com/root-project/root/issues/17456)] - Test failures when compiling ROOT with gcc 15
+* [[#17753](https://github.com/root-project/root/issues/17753)] - Race condition in TClass::fStreamerImpl value for emulated classes.
+* [[#17992](https://github.com/root-project/root/issues/17992)] - Spurrious auto parsing when looking up a TClass
 
 ## HEAD of the v6-34-00-patches branch
