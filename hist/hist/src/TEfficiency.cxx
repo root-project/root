@@ -1272,7 +1272,10 @@ Double_t TEfficiency::MidPInterval(Double_t total,Double_t passed,Double_t level
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
-Calculates the boundaries for a Bayesian confidence interval (shortest or central interval depending on the option)
+Calculates the boundaries for a Bayesian confidence interval (shortest or central
+interval depending on the option)  as explained in D. Casadei, Estimating the selection efficiency,
+2012 JINST 7 P08021, https://doi.org/10.1088/1748-0221/7/08/P08021 (https://arxiv.org/abs/0908.0130).
+
 
 \param[in] total number of total events
 \param[in] passed 0 <= number of passed events <= total
