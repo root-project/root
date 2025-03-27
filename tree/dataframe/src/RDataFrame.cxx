@@ -86,7 +86,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
    - [Creating an RDataFrame from a dataset specification file](\ref rdf-from-spec)
    - [Adding a progress bar](\ref progressbar)
    - [Working with missing values in the dataset](\ref missing-values)
-- [Python interface](classROOT_1_1RDataFrame.html#python) 
+- [Python interface](classROOT_1_1RDataFrame.html#python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
 \anchor cheatsheet
@@ -633,8 +633,36 @@ are lazy, the others are instant.
 ### Return type of a lazy action
 
 When a lazy action is called, it returns a \link ROOT::RDF::RResultPtr ROOT::RDF::RResultPtr<T>\endlink, where T is the
-type of the result of the action. The final result will be stored in the `RResultPtr` and can be retrieved by
-dereferencing it or via its `GetValue` method.
+type of the result of the action. The final result will be stored in the `RResultPtr`, and can be retrieved by
+dereferencing it or via its `GetValue` method. Retrieving the result also starts the event loop if the result
+hasn't been produced yet.
+
+The RResultPtr shares ownership of the result object. To directly access result, use:
+~~~{.cpp}
+ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(...);
+histo->Draw(); // Starts running the event loop
+~~~
+
+To return results from functions, a copy of the underlying shared_ptr can be obtained:
+~~~{.cpp}
+std::shared_ptr<TH1D> ProduceResult(const char *columnname) {
+   ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(*h, columname);
+   return histo.GetSharedPtr(); // Runs the event loop
+}
+~~~
+If the result had been returned by reference or bare pointer, it would have gotten destroyed
+when the function exits.
+
+To share ownership but not produce the result ("keep it lazy"), copy the RResultPtr:
+~~~{.cpp}
+std::vector<RResultPtr<TH1D>> allHistograms;
+ROOT::RDF::RResultPtr<TH1D> BookHistogram(const char *columnname) {
+   ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(*h, columname);
+   allHistograms.push_back(histo); // Will not produce the result yet
+   return histo;
+}
+~~~
+
 
 ### Actions that return collections
 
