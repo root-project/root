@@ -250,6 +250,13 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
    }
 }
 
+void ROOT::Experimental::RNTupleSingleProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
+                                                                       ROOT::NTupleSize_t entryOffset)
+{
+   Connect();
+   joinTable.Add(*fPageSource, Internal::RNTupleJoinTable::kDefaultPartitionKey, entryOffset);
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
@@ -336,6 +343,16 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
    fNEntriesProcessed++;
    fCurrentEntryNumber = entryNumber;
    return entryNumber;
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
+                                                                      ROOT::NTupleSize_t entryOffset)
+{
+   for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
+      const auto &innerProc = fInnerProcessors[i];
+      innerProc->AddEntriesToJoinTable(joinTable, entryOffset);
+      entryOffset += innerProc->GetNEntries();
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -543,4 +560,10 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    }
 
    return entryNumber;
+}
+
+void ROOT::Experimental::RNTupleJoinProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
+                                                                     ROOT::NTupleSize_t entryOffset)
+{
+   joinTable.Add(*fPageSource, Internal::RNTupleJoinTable::kDefaultPartitionKey, entryOffset);
 }
