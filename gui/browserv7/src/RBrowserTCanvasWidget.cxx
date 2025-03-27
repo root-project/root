@@ -48,120 +48,72 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
       return false;
    }
 
-   void SetPrivateCanvasFields(bool on_init)
-   {
-      Long_t offset = TCanvas::Class()->GetDataMemberOffset("fCanvasID");
-      if (offset > 0) {
-         Int_t *id = (Int_t *)((char *) fCanvas + offset);
-         if (*id == fCanvas->GetCanvasID()) *id = on_init ? 111222333 : -1;
-      } else {
-         printf("ERROR: Cannot modify TCanvas::fCanvasID data member\n");
-      }
-
-      offset = TCanvas::Class()->GetDataMemberOffset("fPixmapID");
-      if (offset > 0) {
-         Int_t *id = (Int_t *)((char *) fCanvas + offset);
-         if (*id == fCanvas->GetPixmapID()) *id = on_init ? 332211 : -1;
-      } else {
-         printf("ERROR: Cannot modify TCanvas::fPixmapID data member\n");
-      }
-
-      offset = TCanvas::Class()->GetDataMemberOffset("fMother");
-      if (offset > 0) {
-         TPad **moth = (TPad **)((char *) fCanvas + offset);
-         if (*moth == fCanvas->GetMother()) *moth = on_init ? fCanvas : nullptr;
-      } else {
-         printf("ERROR: Cannot set TCanvas::fMother data member\n");
-      }
-
-      offset = TCanvas::Class()->GetDataMemberOffset("fCw");
-      if (offset > 0) {
-         UInt_t *cw = (UInt_t *)((char *) fCanvas + offset);
-         if (*cw == fCanvas->GetWw()) *cw = on_init ? 800 : 0;
-      } else {
-         printf("ERROR: Cannot set TCanvas::fCw data member\n");
-      }
-
-      offset = TCanvas::Class()->GetDataMemberOffset("fCh");
-      if (offset > 0) {
-         UInt_t *ch = (UInt_t *)((char *) fCanvas + offset);
-         if (*ch == fCanvas->GetWh()) *ch = on_init ? 600 : 0;
-      } else {
-         printf("ERROR: Cannot set TCanvas::fCw data member\n");
-      }
-   }
-
-   void RegisterCanvasInGlobalLists()
+   void RegisterCanvasInGlobalLists(bool add_canvas)
    {
       R__LOCKGUARD(gROOTMutex);
       auto l1 = gROOT->GetListOfCleanups();
-      if (!l1->FindObject(fCanvas))
-         l1->Add(fCanvas);
+      if (l1) {
+         if (!add_canvas)
+            l1->Remove(fCanvas);
+         else if (!l1->FindObject(fCanvas))
+            l1->Add(fCanvas);
+      }
       auto l2 = gROOT->GetListOfCanvases();
-      if (!l2->FindObject(fCanvas))
-         l2->Add(fCanvas);
+      if (l2) {
+         if (!add_canvas)
+            l2->Remove(fCanvas);
+         else if (!l2->FindObject(fCanvas))
+            l2->Add(fCanvas);
+      }
    }
 
 public:
 
+   // constructor when new canvas should be created
    RBrowserTCanvasWidget(const std::string &name) : RBrowserWidget(name)
    {
       fCanvasName = name.c_str();
 
-      fCanvas = new TCanvas(kFALSE);
-      fCanvas->SetName(fCanvasName);
-      fCanvas->SetTitle(fCanvasName);
+      // create canvas with web display
+      fCanvas = TWebCanvas::CreateWebCanvas(fCanvasName, fCanvasName);
+
       fCanvas->ResetBit(TCanvas::kShowEditor);
       fCanvas->ResetBit(TCanvas::kShowToolBar);
       fCanvas->SetBit(TCanvas::kMenuBar, kTRUE);
-      fCanvas->SetCanvas(fCanvas);
-      fCanvas->SetBatch(kTRUE); // mark canvas as batch
-      fCanvas->SetEditable(kTRUE); // ensure fPrimitives are created
 
-      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
-
-      // create implementation
-      fWebCanvas = new TWebCanvas(fCanvas, "title", 0, 0, 800, 600, readonly);
+      // get implementation
+      fWebCanvas = static_cast<TWebCanvas *> (fCanvas->GetCanvasImp());
 
       // use async mode to prevent blocking inside qt5/qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
 
-      // assign implementation
-      fCanvas->SetCanvasImp(fWebCanvas);
-      SetPrivateCanvasFields(true);
-      fCanvas->cd();
-
-      RegisterCanvasInGlobalLists();
-
-      // ensure creation of web window
-      fWebCanvas->ShowWebWindow("embed");
+      RegisterCanvasInGlobalLists(true);
    }
 
+   // constructor when widget for existing canvas should be created
    RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
    {
       fCanvas = canv.release();
       fCanvasName = fCanvas->GetName();
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
 
-      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
-
       // create implementation
-      fWebCanvas = new TWebCanvas(fCanvas, "title", 0, 0, 800, 600, readonly);
+      fWebCanvas = static_cast<TWebCanvas *> (TWebCanvas::NewCanvas(fCanvas, "title", 0, 0, 800, 600));
 
       // use async mode to prevent blocking inside qt5/qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
-      SetPrivateCanvasFields(true);
       fCanvas->cd();
 
-      RegisterCanvasInGlobalLists();
-
       // ensure creation of web window
-      fWebCanvas->ShowWebWindow("embed");
+      fWebCanvas->CreateWebWindow();
+
+      RegisterCanvasInGlobalLists(true);
    }
 
+   // constructor when canvas already displayed and just integrated into RBrowser
    RBrowserTCanvasWidget(const std::string &name, TCanvas *canv, TWebCanvas *webcanv) : RBrowserWidget(name)
    {
       fCanvas = canv;
@@ -171,9 +123,6 @@ public:
       fWebCanvas = webcanv;
       // use async mode to prevent blocking inside qt5/qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
-
-      // assign implementation
-      SetPrivateCanvasFields(true);
    }
 
    virtual ~RBrowserTCanvasWidget()
@@ -181,16 +130,9 @@ public:
       if (!fCanvas || !gROOT->GetListOfCanvases()->FindObject(fCanvas))
          return;
 
-      {
-         R__LOCKGUARD(gROOTMutex);
-         gROOT->GetListOfCleanups()->Remove(fCanvas);
-      }
+      RegisterCanvasInGlobalLists(false);
 
-      SetPrivateCanvasFields(false);
-
-      gROOT->GetListOfCanvases()->Remove(fCanvas);
-
-      if ((fCanvas->GetCanvasID() == -1) && (fCanvas->GetCanvasImp() == fWebCanvas)) {
+      if (fCanvas->GetCanvasImp() == fWebCanvas) {
          fCanvas->SetCanvasImp(nullptr);
          delete fWebCanvas;
       }
