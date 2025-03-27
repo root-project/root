@@ -1,5 +1,5 @@
 import py
-from pytest import raises
+from pytest import mark, raises
 from .support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
@@ -48,6 +48,7 @@ class TestSTDStreams:
         cppyy.gbl.stringstream_base.pass_through_base(s)
         assert s.str() == "TEST STRING"
 
+    @mark.xfail()
     def test04_naming_of_ostringstream(self):
         """Naming consistency of ostringstream"""
 

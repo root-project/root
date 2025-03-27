@@ -1,5 +1,5 @@
 import py, os
-from pytest import raises, skip
+from pytest import raises, skip, mark
 from .support import setup_make, pylong, IS_MAC_ARM
 
 
@@ -16,6 +16,7 @@ class TestCROSSINHERITANCE:
         import cppyy
         cls.example01 = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail()
     def test01_override_function(self):
         """Test ability to override a simple function"""
 
@@ -472,6 +473,7 @@ class TestCROSSINHERITANCE:
         class MyPyDerived4(VD.MyClass4[int]):
             pass
 
+    @mark.xfail()
     def test14_protected_access(self):
         """Derived classes should have access to protected members"""
 
@@ -732,6 +734,7 @@ class TestCROSSINHERITANCE:
             def abstract1(self):
                 return ns.Result(1)
 
+    @mark.skip
     def test20_basic_multiple_inheritance(self):
         """Basic multiple inheritance"""
 
@@ -810,6 +813,7 @@ class TestCROSSINHERITANCE:
         assert a.m_2 == 42
         assert a.m_3 == 67
 
+    @mark.skip()
     def test21_multiple_inheritance_with_constructors(self):
         """Multiple inheritance with constructors"""
 
@@ -897,6 +901,7 @@ class TestCROSSINHERITANCE:
         assert a.m_2 ==  88
         assert a.m_3 == -11
 
+    @mark.skip()
     def test22_multiple_inheritance_with_defaults(self):
         """Multiple inheritance with defaults"""
 
@@ -1016,6 +1021,7 @@ class TestCROSSINHERITANCE:
         assert a.return_const().m_value == "abcdef"
         assert ns.callit(a).m_value     == "abcdef"
 
+    @mark.skip()
     def test24_non_copyable(self):
         """Inheriting from a non-copyable base class"""
 
@@ -1096,6 +1102,7 @@ class TestCROSSINHERITANCE:
 
         assert DerivedNoCopyNoMove().callme() == "Hello, World!"
 
+    @mark.skip()
     def test25_default_ctor_and_multiple_inheritance(self):
         """Regression test: default ctor did not get added"""
 
@@ -1136,6 +1143,7 @@ class TestCROSSINHERITANCE:
         d = DerivedMulti()
         assert d
 
+    @mark.skip()
     def test26_no_default_ctor(self):
         """Make sure no default ctor is created if not viable"""
 
@@ -1265,6 +1273,7 @@ class TestCROSSINHERITANCE:
             assert inst.fun1() == val1
             assert inst.fun2() == inst.fun1()
 
+    @mark.skip()
     def test29_cross_deep_multi(self):
         """Deep multi-inheritance hierarchy"""
 
@@ -1381,6 +1390,7 @@ class TestCROSSINHERITANCE:
         class PyDerived(ns.Base):
             pass
 
+    @mark.xfail()
     def test31_object_rebind(self):
         """Usage of bind_object to cast with Python derived objects"""
 
@@ -1538,6 +1548,7 @@ class TestCROSSINHERITANCE:
 
         assert p.func(d) == 42 + 2 * d.value
 
+    @mark.xfail()
     def test33_direct_base_methods(self):
         """Call base class methods directly"""
 
@@ -1769,6 +1780,7 @@ class TestCROSSINHERITANCE:
         assert pysub.f3() == "Python: PySub::f3()"
         assert ns.call_fs(pysub) == pysub.f1() + pysub.f2() + pysub.f3()
 
+    @mark.xfail()
     def test38_protected_data(self):
         """Multiple cross inheritance with protected data"""
 

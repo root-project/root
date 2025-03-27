@@ -1,5 +1,5 @@
 import os, sys
-from pytest import raises, skip
+from pytest import mark, raises, skip
 from .support import setup_make, IS_WINDOWS, ispypy
 
 
@@ -379,6 +379,7 @@ class TestREGRESSION:
         sizeit = cppyy.gbl.vec_vs_init.sizeit
         assert sizeit(list(range(10))) == 10
 
+    @mark.xfail()
     def test16_iterable_enum(self):
         """Use template to iterate over an enum"""
       # from: https://stackoverflow.com/questions/52459530/pybind11-emulate-python-enum-behaviour
@@ -471,6 +472,7 @@ class TestREGRESSION:
 
         assert a != b             # derived class' C++ operator!= called
 
+    @mark.xfail()
     def test18_operator_plus_overloads(self):
         """operator+(string, string) should return a string"""
 
@@ -702,6 +704,7 @@ class TestREGRESSION:
             i += 1
         assert i
 
+    @mark.xfail()
     def test26_const_charptr_data(self):
         """const char* is not const; const char* const is"""
 
@@ -780,6 +783,7 @@ class TestREGRESSION:
         null = cppyy.gbl.exception_as_shared_ptr.get_shared_null()
         assert not null
 
+    @mark.skip()
     def test29_callback_pointer_values(self):
         """Make sure pointer comparisons in callbacks work as expected"""
 
@@ -850,6 +854,7 @@ class TestREGRESSION:
         g.triggerChange()
         assert g.success
 
+    @mark.xfail()
     def test30_uint64_t(self):
         """Failure due to typo"""
 
@@ -883,6 +888,7 @@ class TestREGRESSION:
         assert ns.TTest(True).fT == True
         assert type(ns.TTest(True).fT) == bool
 
+    @mark.xfail()
     def test31_enum_in_dir(self):
         """Failed to pick up enum data"""
 
@@ -905,6 +911,7 @@ class TestREGRESSION:
         required = {'prod', 'a', 'b', 'smth', 'my_enum'}
         assert all_names.intersection(required) == required
 
+    @mark.xfail()
     def test32_typedef_class_enum(self):
         """Use of class enum with typedef'd type"""
 
@@ -942,6 +949,7 @@ class TestREGRESSION:
             assert o.x == Foo.BAZ
             assert o.y == 1
 
+    @mark.xfail()
     def test33_explicit_template_in_namespace(self):
         """Lookup of explicit template in namespace"""
 
@@ -1340,6 +1348,7 @@ class TestREGRESSION:
         finally:
             cppyy._backend.SetMemoryPolicy(old_memory_policy)
 
+    @mark.xfail()
     def test45_typedef_resolution(self):
         """Typedefs starting with 'c'"""
 

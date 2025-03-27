@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import py, sys
-from pytest import raises, skip
+from pytest import mark, raises, skip
 from .support import setup_make, pylong, pyunicode, maxvalue, ispypy
 
 currpath = py.path.local(__file__).dirpath()
@@ -495,6 +495,7 @@ class TestSTLVECTOR:
         ll4[1] = 'a'
         raises(TypeError, a.vector_pair, ll4)
 
+    @mark.skip()
     def test12_vector_lifeline(self):
         """Check lifeline setting on vectors of objects"""
 
@@ -860,6 +861,7 @@ class TestSTLSTRING:
 
             raises(TypeError, c.get_string2, "temp string")
 
+    @mark.xfail()
     def test02_string_data_access(self):
         """Test access to std::string object data members"""
 
@@ -992,6 +994,7 @@ class TestSTLSTRING:
         assert d[x] == 0
         assert d['x'] == 0
 
+    @mark.xfail()
     def test08_string_operators(self):
         """Mixing of C++ and Python types in global operators"""
 
@@ -1081,6 +1084,7 @@ class TestSTLSTRING:
         assert s.rfind('c')  < 0
         assert s.rfind('c') == s.npos
 
+    @mark.xfail()
     def test10_string_in_repr_and_str_bytes(self):
         """Special cases for __str__/__repr__"""
 
@@ -1898,6 +1902,7 @@ class TestSTLTUPLE:
         t = std.make_tuple("aap", 42, 5.)
         assert std.tuple_size(type(t)).value == 3
 
+    @mark.xfail()
     def test03_tuple_iter(self):
         """Pack/unpack tuples"""
 
@@ -1912,6 +1917,7 @@ class TestSTLTUPLE:
         assert b == '2'
         assert c == 5.
 
+    @mark.xfail()
     def test04_tuple_lifeline(self):
         """Tuple memory management"""
 

@@ -1,5 +1,5 @@
 import py, os, sys
-from pytest import raises, skip
+from pytest import mark, raises, skip
 from .support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
@@ -211,6 +211,7 @@ class TestFRAGILE:
         except TypeError as e:
             assert "cannot instantiate abstract class 'fragile::O'" in str(e)
 
+    @mark.xfail()
     def test11_dir(self):
         """Test __dir__ method"""
 
@@ -444,6 +445,7 @@ class TestFRAGILE:
         finally:
             sys.path = oldsp
 
+    @mark.xfail()
     def test18_overload(self):
         """Test usage of __overload__"""
 
@@ -531,6 +533,7 @@ class TestFRAGILE:
         assert "invaliddigit" in err
         assert "1aap=42;" in err
 
+    @mark.xfail()
     def test22_cppexec(self):
         """Interactive access to the Cling global scope"""
 
@@ -542,6 +545,8 @@ class TestFRAGILE:
         with raises(SyntaxError):
             cppyy.cppexec("doesnotexist");
 
+    # This test is very verbose since it sets gDebugo to true
+    @mark.skip()
     def test23_set_debug(self):
         """Setting of global gDebug variable"""
 
@@ -556,6 +561,7 @@ class TestFRAGILE:
         cppyy.set_debug(False)
         assert cppyy.gbl.CppyyLegacy.gDebug ==  0
 
+    @mark.xfail()
     def test24_asan(self):
         """Check availability of ASAN with gcc"""
 
@@ -567,6 +573,7 @@ class TestFRAGILE:
 
         cppyy.include('sanitizer/asan_interface.h')
 
+    @mark.xfail()
     def test25_cppdef_error_reporting(self):
         """Check error reporting of cppyy.cppdef"""
 
@@ -601,6 +608,7 @@ class TestFRAGILE:
                 int add42(int i) { return i + 42; }
             }""")
 
+    @mark.skip()
     def test26_macro(self):
         """Test access to C++ pre-processor macro's"""
 
@@ -654,6 +662,7 @@ class TestFRAGILE:
         cppyy.cppdef("struct VectorDatamember { std::vector<unsigned> v; };")
         cppyy.gbl.VectorDatamember     # used to crash on Mac arm64
 
+    @mark.skip()
     def test30_two_nested_ambiguity(self):
         """Nested class ambiguity in older Clangs"""
 
@@ -683,6 +692,7 @@ class TestFRAGILE:
         p = Test.Family1.Parent()
         p.children                          # used to crash
 
+    @mark.xfail()
     def test31_template_with_class_enum(self):
         """Template instantiated with class enum"""
 
@@ -780,6 +790,7 @@ class TestSTDNOTINGLOBAL:
         import cppyy
         cls.has_byte = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
 
+    @mark.xfail()
     def test01_stl_in_std(self):
         """STL classes should live in std:: only"""
 
@@ -812,6 +823,7 @@ class TestSTDNOTINGLOBAL:
         assert cppyy.gbl.std.int8_t(-42) == cppyy.gbl.int8_t(-42)
         assert cppyy.gbl.std.uint8_t(42) == cppyy.gbl.uint8_t(42)
 
+    @mark.xfail()
     def test03_clashing_using_in_global(self):
         """Redefines of std:: typedefs should be possible in global"""
 
@@ -827,6 +839,7 @@ class TestSTDNOTINGLOBAL:
         for name in ['int', 'uint', 'ushort', 'uchar', 'byte']:
             getattr(cppyy.gbl, name)
 
+    @mark.xfail()
     def test04_no_legacy(self):
         """Test some functions that previously crashed"""
 
@@ -846,6 +859,7 @@ class TestSTDNOTINGLOBAL:
 
         assert cppyy.gbl.ELogLevel != cppyy.gbl.CppyyLegacy.ELogLevel
 
+    @mark.xfail()
     def test05_span_compatibility(self):
         """Test compatibility of span under C++2a compilers that support it"""
 

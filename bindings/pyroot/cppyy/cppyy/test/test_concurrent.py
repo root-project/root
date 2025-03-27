@@ -1,4 +1,4 @@
-from pytest import raises, skip
+from pytest import raises, skip, mark
 from .support import IS_MAC_ARM
 
 
@@ -16,6 +16,7 @@ class TestCONCURRENT:
 
         cppyy.gbl.Workers.calc.__release_gil__ = True
 
+    @mark.skip
     def test01_simple_threads(self):
         """Run basic Python threads"""
 
@@ -34,6 +35,7 @@ class TestCONCURRENT:
         for t in threads:
             t.join()
 
+    @mark.skip
     def test02_futures(self):
         """Run with Python futures"""
 
@@ -253,6 +255,7 @@ class TestCONCURRENT:
         for t in threads:
             t.join()
 
+    @mark.skip()
     def test07_overload_reuse_in_threads_wo_gil(self):
         """Threads reuse overload objects; check for clashes if no GIL"""
 

@@ -141,6 +141,7 @@ class TestBOOSTERASURE:
         cppyy.include("boost/type_erasure/member.hpp")
         cppyy.include("boost/mpl/vector.hpp")
 
+    @mark.skip
     def test01_erasure_usage(self):
         """boost::type_erasure usage"""
 

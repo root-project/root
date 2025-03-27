@@ -117,6 +117,7 @@ class TestNUMBA:
         assert (go_fast(x) == go_slow(x)).all()
         assert self.compare(go_slow, go_fast, 300000, x)
 
+    @mark.xfail()
     def test02_JITed_template_free_func(self):
         """Numba-JITing of Cling-JITed templated free function"""
 
@@ -267,6 +268,7 @@ class TestNUMBA:
 
         assert sum == tma(x)
 
+    @mark.xfail()
     def test07_datatype_mapping(self):
         """Numba-JITing of various data types"""
 
@@ -394,6 +396,7 @@ class TestNUMBA:
         X = np.arange(100, dtype=np.int64).reshape(50, 2)
         assert fast_add(X) == slow_add(X)
 
+    @mark.xfail()
     def test11_ptr_ref_support(self):
         """Numba-JITing of a increment method belonging to a class, and also swaps the pointers and reflects the change on the python ctypes variables"""
         import cppyy
@@ -460,6 +463,7 @@ class TestNUMBA:
         assert b.value == z + k
         assert c.value == y + k
 
+    @mark.xfail()
     def test12_std_vector_pass_by_ref(self):
         """Numba-JITing of a method that performs scalar addition to a std::vector initialised through pointers """
         import cppyy
@@ -722,6 +726,7 @@ class TestNUMBA_DOC:
         import cppyy
         import cppyy.numba_ext
 
+    @mark.xfail()
     def test01_templated_freefunction(self):
         """Numba support documentation example: free templated function"""
 

@@ -46,3 +46,4 @@ git apply patches/CPyCppyy-Use-PyMapping_GetOptionalItemString-where-necessary.p
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch
+git apply patches/cppyy-Enable-testsuite.patch
