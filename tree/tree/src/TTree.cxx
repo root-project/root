@@ -2744,7 +2744,7 @@ TFile* TTree::ChangeFile(TFile* file)
 {
    // Changing file clashes with the design of TMemFile and derivates, see #6523,
    // as well as with TFileMerger operations, see #6640.
-   if ((dynamic_cast<TMemFile *>(file)) || file->TestBit(TFile::kCannotChange))
+   if ((dynamic_cast<TMemFile *>(file)) || file->TestBit(TFile::kCancelTTreeChangeRequest))
       return file;
    file->cd();
    Write();
