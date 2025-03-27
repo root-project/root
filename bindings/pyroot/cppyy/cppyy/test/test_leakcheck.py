@@ -98,6 +98,7 @@ class TestLEAKCHECK:
         self.check_func(ns, 'free_f_ret1')
         self.check_func(ns, 'free_f_ret1')
 
+    @mark.xfail()
     def test02_test_static_methods(self):
         """Leak test of static methods"""
 

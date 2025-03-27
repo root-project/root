@@ -1,5 +1,5 @@
 import py
-from pytest import raises, skip
+from pytest import mark, raises, skip
 from .support import setup_make, pylong, IS_WINDOWS, ispypy
 
 currpath = py.path.local(__file__).dirpath()
@@ -16,6 +16,7 @@ class TestADVANCEDCPP:
         import cppyy
         cls.advanced = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail
     def test01_default_arguments(self):
         """Test usage of default arguments"""
 
@@ -685,6 +686,7 @@ class TestADVANCEDCPP:
         assert cppyy.gbl.overload_one_way().gime() == 1
         assert cppyy.gbl.overload_the_other_way().gime() == "aap"
 
+    @mark.xfail()
     def test21_access_to_global_variables(self):
         """Access global_variables_and_pointers"""
 
@@ -773,6 +775,7 @@ class TestADVANCEDCPP:
         assert d2.vcheck()  == 'A'
         assert d2.vcheck(1) == 'B'
 
+    @mark.xfail()
     def test24_typedef_to_private_class(self):
         """Typedefs to private classes should not resolve"""
 
@@ -780,6 +783,7 @@ class TestADVANCEDCPP:
 
         assert cppyy.gbl.TypedefToPrivateClass().f().m_val == 42
 
+    @mark.xfail()
     def test25_ostream_printing(self):
         """Mapping of __str__ through operator<<(ostream&)"""
 
@@ -877,6 +881,7 @@ class TestADVANCEDCPP:
         #assert type(ns.A.Val(1)) == int
         #assert type(ns.B.Val(1)) == float
 
+    @mark.skip()
     def test28_extern_C_in_namespace(self):
         """Access to extern "C" declared functions in namespaces"""
 

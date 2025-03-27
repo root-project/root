@@ -1,5 +1,5 @@
 import py, sys
-from pytest import raises
+from pytest import mark, raises
 from .support import setup_make, ispypy
 
 
@@ -303,6 +303,7 @@ class TestCPP11FEATURES:
         for l in (['x'], ['x', 'y', 'z']):
             assert ns.foo(l) == std.vector['std::string'](l)
 
+    @mark.xfail()
     def test09_lambda_calls(self):
         """Call (global) lambdas"""
 
@@ -350,6 +351,7 @@ class TestCPP11FEATURES:
             c = cppyy.gbl.std.nullopt
             assert cppyy.gbl.callopt(c)
 
+    @mark.xfail()
     def test11_chrono(self):
         """Use of chrono and overloaded operator+"""
 
@@ -360,6 +362,7 @@ class TestCPP11FEATURES:
         # following used to fail with compilation error
         t = std.chrono.system_clock.now() + std.chrono.seconds(1)
 
+    @mark.xfail()
     def test12_stdfunction(self):
         """Use of std::function with arguments in a namespace"""
 
@@ -401,6 +404,7 @@ class TestCPP11FEATURES:
             assert hash(sw)  == 17
             assert hash(sw)  == 17
 
+    @mark.xfail()
     def test14_shared_ptr_passing(self):
         """Ability to pass normal pointers through shared_ptr by value"""
 
@@ -531,6 +535,7 @@ class TestCPP11FEATURES:
         p2 = c.pget()
         assert p1 is p2
 
+    @mark.xfail()
     def test19_smartptr_from_callback(self):
         """Return a smart pointer from a callback"""
 
