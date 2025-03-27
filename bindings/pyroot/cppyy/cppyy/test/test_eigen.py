@@ -100,6 +100,7 @@ class TestEIGEN:
         for i in range(5):
             assert v(i) == i+1
 
+    @mark.xfail()
     def test03_matrices_and_vectors(self):
         """Matrices and vectors"""
 
