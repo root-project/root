@@ -259,13 +259,13 @@ if(NOT ROOT_imt_FOUND)
 endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
-  set(imt_veto ${imt_veto} analysis/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/parallel/mtbb_parallelHistoFill.C)
+  set(imt_veto ${imt_veto} analysis/parallel/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/parallel/mtbb_parallelHistoFill.C)
   #---XRootD is not supported on Windows
   set(imt_veto ${imt_veto} io/tree/imt_parTreeProcessing.C)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
-  set(classic_veto legacy/multicore/mp_*.C analysis/mp_*.C io/tree/mp_*.C)
+  set(classic_veto legacy/multicore/mp_*.C analysis/parallel/mp_*.C io/tree/mp_*.C)
 endif()
 
 if(NOT gdml)
