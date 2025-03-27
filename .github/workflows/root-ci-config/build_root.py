@@ -102,6 +102,9 @@ def main():
         ctest_custom_flags = options_dict['ROOT_CTEST_CUSTOM_FLAGS']
         options_dict.pop('ROOT_CTEST_CUSTOM_FLAGS') # we do not want a -D called like that
 
+    if args.clingtests_only:
+        options_dict['clingtest'] = "ON"
+
     options = build_utils.cmake_options_from_dict(options_dict)
     print("Full build options")
     for key, val in sorted(options_dict.items()):
@@ -191,7 +194,7 @@ def main():
     if args.coverage:
         create_coverage_xml()
 
-    if testing and ctest_returncode != 0:
+    if testing and not args.clingtests_only and ctest_returncode != 0:
         handle_test_failure(ctest_returncode)
 
     print_trace()
