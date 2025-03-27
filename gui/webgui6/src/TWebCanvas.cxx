@@ -1344,55 +1344,63 @@ void TWebCanvas::Close()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Create web window for the canvas
+
+void TWebCanvas::CreateWebWindow()
+{
+   if (fWindow)
+      return;
+
+   fWindow = ROOT::RWebWindow::Create();
+
+   fWindow->SetConnLimit(0); // configure connections limit
+
+   fWindow->SetDefaultPage("file:rootui5sys/canv/canvas6.html");
+
+   fWindow->SetCallBacks(
+      // connection
+      [this](unsigned connid) {
+         if (fWindow->GetConnectionId(0) == connid)
+            fWebConn.emplace(fWebConn.begin() + 1, connid);
+         else
+            fWebConn.emplace_back(connid);
+         CheckDataToSend(connid);
+      },
+      // data
+      [this](unsigned connid, const std::string &arg) {
+         ProcessData(connid, arg);
+         CheckDataToSend();
+      },
+      // disconnect
+      [this](unsigned connid) {
+         unsigned indx = 0;
+         for (auto &c : fWebConn) {
+            if (c.fConnId == connid) {
+               fWebConn.erase(fWebConn.begin() + indx);
+               break;
+            }
+            indx++;
+         }
+      });
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Show canvas in specified place.
 /// If parameter args not specified, default ROOT web display will be used
 
 void TWebCanvas::ShowWebWindow(const ROOT::RWebDisplayArgs &args)
 {
-   if (!fWindow) {
-      fWindow = ROOT::RWebWindow::Create();
+   CreateWebWindow();
 
-      fWindow->SetConnLimit(0); // configure connections limit
-
-      fWindow->SetDefaultPage("file:rootui5sys/canv/canvas6.html");
-
-      fWindow->SetCallBacks(
-         // connection
-         [this](unsigned connid) {
-            if (fWindow->GetConnectionId(0) == connid)
-               fWebConn.emplace(fWebConn.begin() + 1, connid);
-            else
-               fWebConn.emplace_back(connid);
-            CheckDataToSend(connid);
-         },
-         // data
-         [this](unsigned connid, const std::string &arg) {
-            ProcessData(connid, arg);
-            CheckDataToSend();
-         },
-         // disconnect
-         [this](unsigned connid) {
-            unsigned indx = 0;
-            for (auto &c : fWebConn) {
-               if (c.fConnId == connid) {
-                  fWebConn.erase(fWebConn.begin() + indx);
-                  break;
-               }
-               indx++;
-            }
-         });
-   }
+   if ((args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt5) ||
+       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt6) || (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kCEF))
+      SetLongerPolling(kTRUE);
 
    auto w = Canvas()->GetWindowWidth(), h = Canvas()->GetWindowHeight();
    if ((w > 0) && (w < 50000) && (h > 0) && (h < 30000))
       fWindow->SetGeometry(w, h);
 
-   if ((args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt5) ||
-       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt6) ||
-       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kCEF))
-      SetLongerPolling(kTRUE);
-
-   fWindow->Show(args);
+   ROOT::RWebWindow::ShowWindow(fWindow, args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2962,3 +2970,41 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
    return imp;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Create TCanvas and assign TWebCanvas implementation to it
+/// Canvas is not displayed automatically, therefore canv->Show() method must be called
+/// Or canvas can be embed in other widgets.
+
+TCanvas *TWebCanvas::CreateWebCanvas(const char *name, const char *title, UInt_t width, UInt_t height)
+{
+   auto canvas = new TCanvas(kFALSE);
+   canvas->SetName(name);
+   canvas->SetTitle(title);
+   canvas->ResetBit(TCanvas::kShowEditor);
+   canvas->ResetBit(TCanvas::kShowToolBar);
+   canvas->SetBit(TCanvas::kMenuBar, kTRUE);
+   canvas->SetCanvas(canvas);
+   canvas->SetBatch(kTRUE); // mark canvas as batch
+   canvas->SetEditable(kTRUE); // ensure fPrimitives are created
+
+   auto imp = static_cast<TWebCanvas *> (NewCanvas(canvas, name, 0, 0, width, height));
+
+   canvas->SetCanvasImp(imp);
+
+   canvas->cd();
+
+   {
+      R__LOCKGUARD(gROOTMutex);
+      auto l1 = gROOT->GetListOfCleanups();
+      if (!l1->FindObject(canvas))
+         l1->Add(canvas);
+      auto l2 = gROOT->GetListOfCanvases();
+      if (!l2->FindObject(canvas))
+         l2->Add(canvas);
+   }
+
+   // ensure creation of web window
+   imp->CreateWebWindow();
+
+   return canvas;
+}
