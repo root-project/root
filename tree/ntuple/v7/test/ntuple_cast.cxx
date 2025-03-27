@@ -4,8 +4,7 @@
 #include <utility>
 
 template <typename T>
-static std::shared_ptr<T>
-MakeField(std::string_view name, ROOT::ENTupleColumnType colType, ROOT::Experimental::RNTupleModel &model)
+static std::shared_ptr<T> MakeField(std::string_view name, ROOT::ENTupleColumnType colType, ROOT::RNTupleModel &model)
 {
    auto field = std::make_unique<RField<T>>(name);
    field->SetColumnRepresentatives({{colType}});

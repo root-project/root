@@ -28,7 +28,6 @@
 
 // Import classes from experimental namespace for the time being
 using ENTupleInfo = ROOT::Experimental::ENTupleInfo;
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
@@ -56,7 +55,7 @@ public:
 
 void Generate()
 {
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
    auto fldVector3 = model->MakeField<Vector3>("v3");
 
    // Explicitly enforce a certain compression algorithm

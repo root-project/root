@@ -33,7 +33,6 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 using ROOT::Experimental::RNTupleReader;
 
@@ -89,7 +88,7 @@ void FillData(RNTupleParallelWriter *writer)
 void Write()
 {
    // Create the data model
-   auto model = RNTupleModel::CreateBare();
+   auto model = ROOT::RNTupleModel::CreateBare();
    model->MakeField<std::uint32_t>("id");
    model->MakeField<std::vector<float>>("vpx");
    model->MakeField<std::vector<float>>("vpy");

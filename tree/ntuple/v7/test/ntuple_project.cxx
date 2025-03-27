@@ -58,7 +58,7 @@ TEST(RNTupleProjection, Basics)
    EXPECT_EQ("vec", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ("vec._0", (++itrFields)->GetQualifiedFieldName());
    EXPECT_EQ(reconstructedModel->GetConstFieldZero().cend(), ++itrFields);
-   auto &projectedFields = ROOT::Experimental::Internal::GetProjectedFieldsOfModel(*reconstructedModel);
+   auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(*reconstructedModel);
    auto itrProjectedFields = projectedFields.GetFieldZero().cbegin();
    EXPECT_EQ("missingE", itrProjectedFields->GetQualifiedFieldName());
    EXPECT_EQ("number", (++itrProjectedFields)->GetQualifiedFieldName());

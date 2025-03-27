@@ -23,7 +23,7 @@
 using ROOT::ENTupleColumnType;
 using ROOT::NTupleSize_t;
 using ROOT::RNTupleDescriptor;
-using ROOT::Experimental::RNTupleModel;
+using ROOT::RNTupleModel;
 using ROOT::Experimental::Internal::RCluster;
 using ROOT::Experimental::Internal::RPageSink;
 using ROOT::Experimental::Internal::RPageSource;
@@ -50,7 +50,7 @@ protected:
    NTupleSize_t GetNEntries() const final { return 0; }
 
    void InitImpl(RNTupleModel &) final {}
-   void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final {}

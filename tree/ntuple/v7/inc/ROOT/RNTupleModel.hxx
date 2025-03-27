@@ -33,11 +33,13 @@
 namespace ROOT {
 
 class RNTupleWriteOptions;
+class RNTupleModel;
 
 namespace Experimental {
 
-class RNTupleModel;
 class RNTupleWriter;
+
+}
 
 namespace Internal {
 class RProjectedFields;
@@ -47,7 +49,7 @@ RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RProjectedFields
+\class ROOT::Internal::RProjectedFields
 \ingroup NTuple
 \brief The projected fields of a `RNTupleModel`
 
@@ -103,7 +105,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleModel
+\class ROOT::RNTupleModel
 \ingroup NTuple
 \brief The RNTupleModel encapulates the schema of an ntuple.
 
@@ -143,7 +145,7 @@ private:
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<ROOT::RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields, as well as registered subfields
-   std::unique_ptr<REntry> fDefaultEntry;
+   std::unique_ptr<ROOT::Experimental::REntry> fDefaultEntry;
    /// Keeps track of which field names are taken, including projected field names.
    std::unordered_set<std::string> fFieldNames;
    /// Free text set by the user
@@ -176,7 +178,7 @@ private:
 
    /// Add a subfield to the provided entry. If `initializeValue` is false, a nullptr will be bound to the entry value
    /// (used in bare models).
-   void AddSubfield(std::string_view fieldName, REntry &entry, bool initializeValue = true) const;
+   void AddSubfield(std::string_view fieldName, ROOT::Experimental::REntry &entry, bool initializeValue = true) const;
 
    RNTupleModel(std::unique_ptr<ROOT::RFieldZero> fieldZero);
 
@@ -199,12 +201,11 @@ public:
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleModel.hxx>
    /// #include <ROOT/RNTupleWriter.hxx>
-   /// using ROOT::Experimental::RNTupleModel;
    /// using ROOT::Experimental::RNTupleWriter;
    ///
    /// #include <vector>
    ///
-   /// auto model = RNTupleModel::Create();
+   /// auto model = ROOT::RNTupleModel::Create();
    /// auto pt = model->MakeField<float>("pt");
    /// auto vec = model->MakeField<std::vector<int>>("vec");
    ///
@@ -222,9 +223,8 @@ public:
    /// **Example: create a field with a description**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleModel.hxx>
-   /// using ROOT::Experimental::RNTupleModel;
    ///
-   /// auto model = RNTupleModel::Create();
+   /// auto model = ROOT::RNTupleModel::Create();
    /// auto hadronFlavour = model->MakeField<float>(
    ///    "hadronFlavour", "flavour from hadron ghost clustering"
    /// );
@@ -305,17 +305,17 @@ public:
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
 
-   std::unique_ptr<REntry> CreateEntry() const;
+   std::unique_ptr<ROOT::Experimental::REntry> CreateEntry() const;
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
-   std::unique_ptr<REntry> CreateBareEntry() const;
+   std::unique_ptr<ROOT::Experimental::REntry> CreateBareEntry() const;
    /// Creates a token to be used in REntry methods to address a field present in the entry
-   REntry::RFieldToken GetToken(std::string_view fieldName) const;
+   ROOT::Experimental::REntry::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
    ROOT::RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 
-   REntry &GetDefaultEntry();
-   const REntry &GetDefaultEntry() const;
+   ROOT::Experimental::REntry &GetDefaultEntry();
+   const ROOT::Experimental::REntry &GetDefaultEntry() const;
 
    /// Mutable access to the root field is used to make adjustments to the fields.
    ROOT::RFieldZero &GetMutableFieldZero();
@@ -344,7 +344,7 @@ namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleModelChangeset
+\class ROOT::Internal::RNTupleModelChangeset
 \ingroup NTuple
 \brief The incremental changes to a `RNTupleModel`
 
@@ -377,19 +377,19 @@ struct RNTupleModelChangeset {
 /// See `RNTupleWriter::CreateModelUpdater()` for an example.
 class RNTupleModel::RUpdater {
 private:
-   RNTupleWriter &fWriter;
+   ROOT::Experimental::RNTupleWriter &fWriter;
    Internal::RNTupleModelChangeset fOpenChangeset;
    std::uint64_t fNewModelId = 0; ///< The model ID after committing
 
 public:
-   explicit RUpdater(RNTupleWriter &writer);
+   explicit RUpdater(ROOT::Experimental::RNTupleWriter &writer);
    ~RUpdater() { CommitUpdate(); }
-   /// Begin a new set of alterations to the underlying model. As a side effect, all `REntry` instances related to
-   /// the model are invalidated.
+   /// Begin a new set of alterations to the underlying model. As a side effect, all REntry
+   /// instances related to the model are invalidated.
    void BeginUpdate();
-   /// Commit changes since the last call to `BeginUpdate()`. All the invalidated `REntry`s remain invalid.
-   /// `CreateEntry()` or `CreateBareEntry()` can be used to create an `REntry` that matching the new model.
-   /// Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
+   /// Commit changes since the last call to `BeginUpdate()`. All the invalidated REntries remain
+   /// invalid. `CreateEntry()` or `CreateBareEntry()` can be used to create an REntry that
+   /// matches the new model. Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
    void CommitUpdate();
 
    template <typename T>
@@ -409,7 +409,11 @@ public:
    RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
 };
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RNTupleModel [[deprecated("ROOT::Experimental::RNTupleModel moved to ROOT::RNTupleModel")]] = ROOT::RNTupleModel;
 } // namespace Experimental
+
 } // namespace ROOT
 
 #endif

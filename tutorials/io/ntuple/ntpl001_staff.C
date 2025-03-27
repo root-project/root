@@ -33,7 +33,6 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
@@ -45,7 +44,7 @@ void Ingest() {
    assert(fin.is_open());
 
    // We create a unique pointer to an empty data model
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    // To define the data model, we create fields with a given C++ type and name.  Fields are roughly TTree branches.
    // MakeField returns a shared pointer to a memory location that we can populate to fill the ntuple with data
@@ -79,7 +78,7 @@ void Ingest() {
 
 void Analyze() {
    // Get a unique pointer to an empty RNTuple model
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
    std::shared_ptr<int> fldAge = model->MakeField<int>("Age");

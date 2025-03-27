@@ -23,7 +23,6 @@
 #include <cstdint>
 
 // Import classes from experimental namespace for the time being.
-using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleReader;
 using ROOT::Experimental::RNTupleWriter;
 
@@ -36,7 +35,7 @@ constexpr int kNEvents = 25000;
 
 static void Write()
 {
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
 
    auto fldVpx = model->MakeField<std::vector<float>>("vpx");
    auto fldVpy = model->MakeField<std::vector<float>>("vpy");
@@ -73,7 +72,7 @@ void ntpl010_skim()
 
    auto reader = RNTupleReader::Open(kNTupleInputName, kNTupleInputFileName);
 
-   auto skimModel = RNTupleModel::Create();
+   auto skimModel = ROOT::RNTupleModel::Create();
    // Loop through the top-level fields of the input RNTuple
    for (const auto &value : reader->GetModel().GetDefaultEntry()) {
       // Drop "n" field from skimmed dataset
