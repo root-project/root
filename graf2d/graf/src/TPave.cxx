@@ -637,7 +637,7 @@ TString TPave::GetSavePaveArgs(const char *extra_arg, Bool_t save_option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TPave::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPave::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "pave", GetSavePaveArgs(TString::Format("%d", fBorderSize)));
    SaveFillAttributes(out, "pave", 19, 1001);
@@ -646,7 +646,7 @@ void TPave::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out << "   pave->SetName(\"" << GetName() << "\");\n";
    if (fCornerRadius)
       out << "   pave->SetCornerRadius(" << fCornerRadius << ");\n";
-   out << "   pave->Draw();\n";
+   SavePrimitiveDraw(out, "pave", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

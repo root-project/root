@@ -198,7 +198,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TPaveLabel::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPaveLabel::SavePrimitive(std::ostream &out, Option_t *option)
 {
    TString lbl_arg = TString::Format("\"%s\"", TString(fLabel).ReplaceSpecialCppChars().Data());
    SavePrimitiveConstructor(out, Class(), "pavelabel", GetSavePaveArgs(lbl_arg));
@@ -211,5 +211,5 @@ void TPaveLabel::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out, "pavelabel", 1, 1, 1);
    SaveTextAttributes(out, "pavelabel", 22, 0, 1, 62, 0);
 
-   out << "   pavelabel->Draw();\n";
+   SavePrimitiveDraw(out, "pavelabel", option);
 }

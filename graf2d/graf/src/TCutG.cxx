@@ -383,8 +383,7 @@ void TCutG::SavePrimitive(std::ostream &out, Option_t *option)
    SaveLineAttributes(out, "cutg", 1, 1, 1);
    SaveMarkerAttributes(out, "cutg", 1, 1, 1);
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   cutg->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "cutg", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1030,7 +1030,7 @@ void TLegend::RecursiveRemove(TObject *obj)
 /// Save this legend as C++ statements on output stream out
 /// to be used with the SaveAs .C option.
 
-void TLegend::SavePrimitive(std::ostream &out, Option_t* )
+void TLegend::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "leg", GetSavePaveArgs("nullptr"));
 
@@ -1046,7 +1046,8 @@ void TLegend::SavePrimitive(std::ostream &out, Option_t* )
       while (auto entry = static_cast<TLegendEntry *>(next()))
          entry->SaveEntry(out, "leg");
    }
-   out << "   leg->Draw();\n";
+
+   SavePrimitiveDraw(out, "leg", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

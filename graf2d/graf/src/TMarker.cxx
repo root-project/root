@@ -348,13 +348,13 @@ void TMarker::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TMarker::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TMarker::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "marker", TString::Format("%g, %g, %d", fX, fY, fMarkerStyle), kFALSE);
 
    SaveMarkerAttributes(out, "marker", 1, 1, 1);
 
-   out << "   marker->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "marker", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

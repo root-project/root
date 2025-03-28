@@ -204,12 +204,12 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TWbox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TWbox::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "wbox", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2), kFALSE);
 
    SaveFillAttributes(out, "wbox", 0, 1001);
    SaveLineAttributes(out, "wbox", 1, 1, 1);
 
-   out << "   wbox->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "wbox", option);
 }
