@@ -750,7 +750,7 @@ void TTreeCloner::WriteBaskets()
                from->GetBasketBytes()[index] = len;
             }
 
-            const Bool_t load_ok = basket->LoadBasketBuffers(pos,len,fromfile,fFromTree) == 0;
+            const Bool_t load_ok = basket->LoadBasketBuffers(pos, len, fromfile, fFromTree) == 0;
             if (!load_ok) {
                fWarningMsg.Form("Error in LoadBasketBuffers at index %u.", j);
                if (!(fOptions & kNoWarnings)) {
@@ -776,7 +776,7 @@ void TTreeCloner::WriteBaskets()
          }
          Int_t len = from->GetBasketBytes()[index];
 
-         const Bool_t load_ok = basket->LoadBasketBuffers(pos,len,fromfile,fFromTree) == 0;
+         const Bool_t load_ok = basket->LoadBasketBuffers(pos, len, fromfile, fFromTree) == 0;
          if (!load_ok) {
             fWarningMsg.Form("Error in LoadBasketBuffers at index %u.", j);
             if (!(fOptions & kNoWarnings)) {
