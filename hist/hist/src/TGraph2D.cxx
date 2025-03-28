@@ -1490,12 +1490,12 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 
 void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   TString arrx = SavePrimitiveArray(out, "graph2d_x", fNpoints, fX, kTRUE);
-   TString arry = SavePrimitiveArray(out, "graph2d_y", fNpoints, fY);
-   TString arrz = SavePrimitiveArray(out, "graph2d_z", fNpoints, fZ);
+   TString arrx = SavePrimitiveVector(out, "graph2d_x", fNpoints, fX, kTRUE);
+   TString arry = SavePrimitiveVector(out, "graph2d_y", fNpoints, fY);
+   TString arrz = SavePrimitiveVector(out, "graph2d_z", fNpoints, fZ);
 
    SavePrimitiveConstructor(out, Class(), "graph2d",
-                            TString::Format("%d, %s, %s, %s", fNpoints, arrx.Data(), arry.Data(), arrz.Data()), kFALSE);
+                            TString::Format("%d, %s.data(), %s.data(), %s.data()", fNpoints, arrx.Data(), arry.Data(), arrz.Data()), kFALSE);
 
    if (strcmp(GetName(), "Graph2D"))
       out << "   graph2d->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
