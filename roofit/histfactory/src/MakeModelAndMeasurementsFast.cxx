@@ -83,7 +83,9 @@ RooFit::OwningPtr<RooWorkspace>
 RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measurement &measurement,
                                                    HistoToWorkspaceFactoryFast::Configuration const &cfg)
 {
+  TDirectory::TContext dirContext;
   std::unique_ptr<TFile> outFile;
+  gDirectory = nullptr; // Disable global registration of histograms this file. HistFactory places them explicitly later.
 
   auto& msgSvc = RooMsgService::instance();
   msgSvc.getStream(1).removeTopic(RooFit::ObjectHandling);
