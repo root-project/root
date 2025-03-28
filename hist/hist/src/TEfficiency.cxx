@@ -3190,31 +3190,31 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* option)
    // Check if the histogram has equidistant X bins or not.  If not, we
    // create an array holding the bins.
    if (fTotalHistogram->GetXaxis()->GetXbins()->fN && fTotalHistogram->GetXaxis()->GetXbins()->fArray)
-      sxaxis = SavePrimitiveArray(out, name + "_x", fTotalHistogram->GetXaxis()->GetXbins()->fN, fTotalHistogram->GetXaxis()->GetXbins()->fArray);
+      sxaxis = SavePrimitiveVector(out, name + "_x", fTotalHistogram->GetXaxis()->GetXbins()->fN, fTotalHistogram->GetXaxis()->GetXbins()->fArray);
    // If the histogram is 2 or 3 dimensional, check if the histogram
    // has equidistant Y bins or not.  If not, we create an array
    // holding the bins.
    if (GetDimension() > 1 && fTotalHistogram->GetYaxis()->GetXbins()->fN && fTotalHistogram->GetYaxis()->GetXbins()->fArray)
-      syaxis = SavePrimitiveArray(out, name + "_y", fTotalHistogram->GetYaxis()->GetXbins()->fN, fTotalHistogram->GetYaxis()->GetXbins()->fArray);
+      syaxis = SavePrimitiveVector(out, name + "_y", fTotalHistogram->GetYaxis()->GetXbins()->fN, fTotalHistogram->GetYaxis()->GetXbins()->fArray);
    // IF the histogram is 3 dimensional, check if the histogram
    // has equidistant Z bins or not.  If not, we create an array
    // holding the bins.
    if (GetDimension() > 2 && fTotalHistogram->GetZaxis()->GetXbins()->fN && fTotalHistogram->GetZaxis()->GetXbins()->fArray)
-      szaxis = SavePrimitiveArray(out, name + "_z", fTotalHistogram->GetZaxis()->GetXbins()->fN, fTotalHistogram->GetZaxis()->GetXbins()->fArray);
+      szaxis = SavePrimitiveVector(out, name + "_z", fTotalHistogram->GetZaxis()->GetXbins()->fN, fTotalHistogram->GetZaxis()->GetXbins()->fArray);
 
    out << "   " << ClassName() << " *" << name << " = new " << ClassName() << "(\"" << GetName() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\"";
    // X dimentsion args
    out << ", " << fTotalHistogram->GetXaxis()->GetNbins() << ", ";
    if (!sxaxis.IsNull())
-      out << sxaxis;
+      out << sxaxis << ".data()";
    else
       out << fTotalHistogram->GetXaxis()->GetXmin() << "," << fTotalHistogram->GetXaxis()->GetXmax();
 
    if (GetDimension() > 1) {
       out << ", " << fTotalHistogram->GetYaxis()->GetNbins() << ", ";
       if (!syaxis.IsNull())
-         out << syaxis;
+         out << syaxis << ".data()";
       else
          out << fTotalHistogram->GetYaxis()->GetXmin() << ", " << fTotalHistogram->GetYaxis()->GetXmax();
    }
@@ -3222,7 +3222,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* option)
    if (GetDimension() > 2) {
       out << ", " << fTotalHistogram->GetZaxis()->GetNbins() << ", ";
       if (!szaxis.IsNull())
-         out << szaxis;
+         out << szaxis << ".data()";
       else
          out << fTotalHistogram->GetZaxis()->GetXmin() << ", " << fTotalHistogram->GetZaxis()->GetXmax();
    }
