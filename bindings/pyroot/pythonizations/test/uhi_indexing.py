@@ -73,8 +73,10 @@ class TestTH1Indexing:
     def test_access_with_ellipsis(self, hist_setup):
         import numpy as np
 
-        expected = np.array([hist_setup.GetBinContent(i) for i in range(np.prod(_shape(hist_setup)))])
-        assert all(hist_setup[...].flatten() == expected)
+        if special_setting(hist_setup):
+            pytest.skip("Accessing with ellipsis cannot be tested here")
+
+        assert np.allclose(hist_setup[...], hist_setup)
 
     def test_setting_with_bin_number(self, hist_setup):
         if special_setting(hist_setup):
@@ -106,7 +108,15 @@ class TestTH1Indexing:
         expected = np.array([3] * np.prod(_shape(hist_setup)))
         expected = expected.reshape(_shape(hist_setup))
         hist_setup[...] = expected
-        assert np.allclose(hist_setup[...], expected), hist_setup[...]
+        assert np.allclose(hist_setup[...], expected.flatten())
+
+    def setting_with_scalar(self, hist_setup):
+        import numpy as np
+
+        if special_setting(hist_setup):
+            pytest.skip("Setting cannot be tested here")
+        hist_setup[...] = 3
+        assert all(hist_setup[...] == 3)
 
 
 if __name__ == "__main__":
