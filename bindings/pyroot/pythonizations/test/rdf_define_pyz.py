@@ -1,6 +1,12 @@
 import unittest
-import ROOT
+
+import numba  # noqa: F401
 import numpy as np
+import ROOT
+
+# numba is not used directly, but tests can crash when ROOT is built with
+# builtin_llvm=OFF and numba is not imported at the beginning
+
 
 class PyDefine(unittest.TestCase):
     """
