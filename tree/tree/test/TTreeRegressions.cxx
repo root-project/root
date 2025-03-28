@@ -146,6 +146,34 @@ TEST(TTreeRegressions, LeafLongString)
    EXPECT_EQ(strlen(s), 999);
 }
 
+//https://github.com/root-project/root/issues/9319
+TEST(TTreeRegressions, PrintClustersRounding)
+{
+   TMemFile file("tree9319_clusters.root", "RECREATE");
+   TTree t("t", "t");
+   t.SetAutoFlush(5966);
+   int x = 0;
+   t.Branch("x", &x);
+   for(auto i = 0; i<10000; ++i) {
+      t.Fill();
+   }
+
+   testing::internal::CaptureStdout();
+   
+   t.Print("clusters");
+
+   const std::string output = testing::internal::GetCapturedStdout();
+   const auto ref = "******************************************************************************\n"
+                    "*Tree    :t         : t                                                      *\n"
+                    "*Entries :    10000 : Total =           40973 bytes  File  Size =        202 *\n"
+                    "*        :          : Tree compression factor = 118.46                       *\n"
+                    "******************************************************************************\n"
+                    "Cluster Range #  Entry Start      Last Entry           Size   Number of clusters\n"
+                    "0                0                9999                 5966          2\n"
+                    "Total number of clusters: 2"; // This was 1 before the fix
+   EXPECT_EQ(output, ref);
+}
+
 // Issue ROOT-9961
 TEST(TTreeRegressions, PrintTopOnly)
 {
@@ -194,3 +222,4 @@ TEST(TTreeRegressions, PrintTopOnlySplit)
                     "branch: ev                           0\n";
    EXPECT_EQ(output, ref);
 }
+

@@ -7346,7 +7346,7 @@ void TTree::Print(Option_t* option) const
       auto printer = [this, &totalClusters, &estimated, &unknown](Int_t ind, Long64_t start, Long64_t end, Long64_t recordedSize) {
             Long64_t nclusters = 0;
             if (recordedSize > 0) {
-               nclusters = (1 + end - start) / recordedSize;
+               nclusters = TMath::Ceil(static_cast<double>(1 + end - start) / recordedSize);
                Printf("%-16d %-16lld %-16lld %8lld %10lld",
                       ind, start, end, recordedSize, nclusters);
             } else {
@@ -7355,7 +7355,7 @@ void TTree::Print(Option_t* option) const
                iter.Next();
                auto estimated_size = iter.GetNextEntry() - start;
                if (estimated_size > 0) {
-                  nclusters = (1 + end - start) / estimated_size;
+                  nclusters = TMath::Ceil(static_cast<double>(1 + end - start) / estimated_size);
                   Printf("%-16d %-16lld %-16lld %8lld %10lld (estimated)",
                       ind, start, end, recordedSize, nclusters);
                   estimated = true;
