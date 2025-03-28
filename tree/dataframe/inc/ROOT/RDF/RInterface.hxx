@@ -1270,14 +1270,13 @@ public:
    /// sub-directory `subdir` of file `f.root` (creating file and sub-directory as needed).
    ///
    /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
-   /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled with
-   /// respect to the input TTree. Using such "shuffled" TTrees as friends of the original trees would result in wrong
-   /// associations between entries in the main TTree and entries in the "shuffled" friend. Since v6.22, ROOT will
+   /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled
+   /// with respect to the input TTree. Using such "shuffled" TTrees as friends of the original trees would result in
+   /// wrong associations between entries in the main TTree and entries in the "shuffled" friend. Since v6.22, ROOT will
    /// error out if such a "shuffled" TTree is used in a friendship.
    ///
-   /// \note In case no events are written out (e.g. because no event passes all filters) the behavior of Snapshot in
-   /// single-thread and multi-thread runs is different: in single-thread runs, Snapshot will write out a TTree with
-   /// the specified name and zero entries; in multi-thread runs, no TTree object will be written out to disk.
+   /// \note In case no events are written out (e.g. because no event passes all filters), Snapshot will still write the
+   /// requested output TTree to the file, with all the branches requested to preserve the dataset schema.
    ///
    /// \note Snapshot will refuse to process columns with names of the form `#columnname`. These are special columns
    /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are

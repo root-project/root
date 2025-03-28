@@ -48,7 +48,14 @@ if(MSVC)
 endif()
 
 if(NOT (MSVC OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)) OR win_broken_tests OR M1_BROKEN_TESTS)
-  ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame)
+  ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame GenVector)
+endif()
+
+if(NOT MSVC OR win_broken_tests)
+ROOT_ADD_GTEST(dataframe_snapshot_emptyoutput dataframe_snapshot_emptyoutput.cxx LIBRARIES ROOTDataFrame GenVector)
+ROOT_GENERATE_DICTIONARY(DummyDict ${CMAKE_CURRENT_SOURCE_DIR}/DummyHeader.hxx
+                         MODULE dataframe_snapshot_emptyoutput LINKDEF DummyHeaderLinkDef.hxx OPTIONS -inlineInputHeader
+                         DEPENDENCIES ROOTVecOps GenVector)
 endif()
 
 ROOT_ADD_GTEST(dataframe_datasetspec dataframe_datasetspec.cxx LIBRARIES ROOTDataFrame)
