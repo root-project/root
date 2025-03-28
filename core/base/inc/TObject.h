@@ -57,6 +57,8 @@ protected:
 
    static TString SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line = kFALSE);
 
+   static void SavePrimitiveDraw(std::ostream &out, const char *variable_name, Option_t *option = nullptr);
+
 public:
    //----- Global bits (can be set for any object and should not be reused).
    //----- Bits 0 - 13 are reserved as global bits. Bits 14 - 23 can be used
