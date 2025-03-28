@@ -106,7 +106,7 @@ TEST(TChain, GetMinMaxEntryList)
 // https://its.cern.ch/jira/browse/ROOT-8112
 TEST(TChain, UncommonFileExtension)
 {
-   const auto dirname = "hsimple8112.root"
+   const auto dirname = "hsimple8112.root";
    const auto filename = "hsimple8112.root/hsimple8112.root.2";
    gSystem->mkdir(dirname);
    const auto treename = "tree";
