@@ -1,3 +1,4 @@
+adaptivecpp=OFF
 builtin_cfitsio=ON
 builtin_freetype=ON
 builtin_ftgl=ON
