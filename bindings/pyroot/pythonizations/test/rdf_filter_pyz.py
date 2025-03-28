@@ -2,6 +2,10 @@ import unittest
 import ROOT
 import numpy as np
 
+# not used directly, but tests can crash when ROOT is built with
+# builtin_llvm=OFF and numba is not imported at the beginning:
+import numba
+
 import os
 from rdf_filter_pyz_helper import CreateData, TYPE_TO_SYMBOL, filter_dict
 
