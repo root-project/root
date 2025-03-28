@@ -15,6 +15,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
@@ -491,7 +492,24 @@ std::unique_ptr<ROOT::REntry> ROOT::RNTupleModel::CreateBareEntry() const
    return entry;
 }
 
-ROOT::REntry::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldName) const
+std::unique_ptr<ROOT::Experimental::Detail::RRawPtrWriteEntry> ROOT::RNTupleModel::CreateRawPtrWriteEntry() const
+{
+   switch (fModelState) {
+   case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+   case EState::kExpired: throw RException(R__FAIL("invalid attempt to create entry of expired model"));
+   case EState::kFrozen: break;
+   }
+
+   auto entry = std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry>(
+      new Experimental::Detail::RRawPtrWriteEntry(fModelId, fSchemaId));
+   for (const auto &f : fFieldZero->GetMutableSubfields()) {
+      entry->AddField(*f);
+   }
+   // fRegisteredSubfields are not relevant for writing
+   return entry;
+}
+
+ROOT::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldName) const
 {
    const auto &topLevelFields = fFieldZero->GetConstSubfields();
    auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
@@ -500,7 +518,7 @@ ROOT::REntry::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldNam
    if (it == topLevelFields.end()) {
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
-   return ROOT::REntry::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
+   return ROOT::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
 }
 
 ROOT::RFieldBase::RBulk ROOT::RNTupleModel::CreateBulk(std::string_view fieldName) const
