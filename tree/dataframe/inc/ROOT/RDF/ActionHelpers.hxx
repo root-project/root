@@ -1503,6 +1503,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    }
 }
 
+void SetEmptyBranchesHelper(TTree *inputTree, TTree &outputTree, RBranchSet &outputBranches,
+                            const std::string &inputBranchName, const std::string &outputBranchName,
+                            const std::type_info &typeInfo, int basketSize);
+
 /// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
 /// TFile can be opened in the mode specified in `opts`, deleting any existing TTrees in case
 /// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
@@ -1619,6 +1623,18 @@ public:
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
+   template <std::size_t... S>
+   void SetEmptyBranches(TTree *inputTree, TTree &outputTree, std::index_sequence<S...>)
+   {
+      RBranchSet outputBranches{};
+      // We use the expander trick rather than a fold expression to avoid incurring in the bracket depth limit of clang
+      int expander[] = {(SetEmptyBranchesHelper(inputTree, outputTree, outputBranches, fInputBranchNames[S],
+                                                fOutputBranchNames[S], typeid(ColTypes), fOptions.fBasketSize),
+                         0)...,
+                        0};
+      (void)expander;
+   }
+
    void Initialize()
    {
       fOutputFile.reset(
@@ -1649,6 +1665,12 @@ public:
       assert(fOutputTree != nullptr);
       assert(fOutputFile != nullptr);
 
+      // There were no entries to fill the TTree with (either the input TTree was empty or no event passed after
+      // filtering). We have already created an empty TTree, now also create the branches to preserve the schema
+      if (fOutputTree->GetEntries() == 0) {
+         using ind_t = std::index_sequence_for<ColTypes...>;
+         SetEmptyBranches(fInputTree, *fOutputTree, ind_t{});
+      }
       // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
       fOutputTree->AutoSave("flushbaskets");
       // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
@@ -1716,6 +1738,7 @@ class R__CLING_PTRCHECK(off) SnapshotTTreeHelperMT : public RActionImpl<Snapshot
    std::vector<bool> fIsDefine;
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ROOT::RDF::RDataSource *fInputDataSource;
+   TFile *fOutputFile; // Non-owning view on the output file
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
@@ -1848,31 +1871,63 @@ public:
       (void)expander; // avoid unused parameter warnings (gcc 12.1)
    }
 
+   template <std::size_t... S>
+   void SetEmptyBranches(TTree *inputTree, TTree &outputTree, std::index_sequence<S...>)
+   {
+      RBranchSet outputBranches{};
+      // We use the expander trick rather than a fold expression to avoid incurring in the bracket depth limit of clang
+      int expander[] = {(SetEmptyBranchesHelper(inputTree, outputTree, outputBranches, fInputBranchNames[S],
+                                                fOutputBranchNames[S], typeid(ColTypes), fOptions.fBasketSize),
+                         0)...,
+                        0};
+      (void)expander;
+   }
+
    void Initialize()
    {
       const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
-      auto out_file = TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(), cs);
-      if(!out_file)
+      auto outFile = std::unique_ptr<TFile>{
+         TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(), cs)};
+      if (!outFile)
          throw std::runtime_error("Snapshot: could not create output file " + fFileName);
-      fMerger = std::make_unique<ROOT::TBufferMerger>(std::unique_ptr<TFile>(out_file));
+      fOutputFile = outFile.get();
+      fMerger = std::make_unique<ROOT::TBufferMerger>(std::move(outFile));
    }
 
    void Finalize()
    {
       assert(std::any_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &ptr) { return ptr != nullptr; }));
 
-      auto fileWritten = false;
       for (auto &file : fOutputFiles) {
          if (file) {
             file->Write();
             file->Close();
-            fileWritten = true;
          }
       }
 
-      if (!fileWritten) {
-         Warning("Snapshot",
-                 "No input entries (input TTree was empty or no entry passed the Filters). Output TTree is empty.");
+      // If there were no entries to fill the TTree with (either the input TTree was empty or no event passed after
+      // filtering), create an empty TTree in the output file and create the branches to preserve the schema
+      auto fullTreeName = fDirName.empty() ? fTreeName : fDirName + '/' + fTreeName;
+      assert(fOutputFile && "Missing output file in Snapshot finalization.");
+      if (!fOutputFile->Get(fullTreeName.c_str())) {
+
+         // First find in which directory we need to write the output TTree
+         TDirectory *treeDirectory = fOutputFile;
+         if (!fDirName.empty()) {
+            treeDirectory = fOutputFile->mkdir(fDirName.c_str(), "", true);
+         }
+         ::TDirectory::TContext c{treeDirectory};
+
+         // Create the output TTree and create the user-requested branches
+         auto outTree =
+            std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
+         TTree *inputTree{nullptr};
+         if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputDataSource))
+            inputTree = treeDS->GetTree();
+         using ind_t = std::index_sequence_for<ColTypes...>;
+         SetEmptyBranches(inputTree, *outTree, ind_t{});
+
+         fOutputFile->Write();
       }
 
       // flush all buffers to disk by destroying the TBufferMerger
@@ -1880,7 +1935,6 @@ public:
       fMerger.reset();
 
       // Now connect the data source to the loop manager so it can be used for further processing
-      auto fullTreeName = fDirName.empty() ? fTreeName : fDirName + '/' + fTreeName;
       fOutputLoopManager->SetDataSource(std::make_unique<ROOT::Internal::RDF::RTTreeDS>(fullTreeName, fFileName));
    }
 
