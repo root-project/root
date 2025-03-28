@@ -35,7 +35,6 @@
 // Import classes from experimental namespace for the time being
 using ROOT::Experimental::REntry;
 using ROOT::Experimental::RNTupleReader;
-using ROOT::Experimental::RNTupleWriter;
 
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl007_mtFill.root";
@@ -47,7 +46,7 @@ constexpr int kNWriterThreads = 4;
 constexpr int kNEventsPerThread = 25000;
 
 // Thread function to generate and write events
-void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *writer) {
+void FillData(std::unique_ptr<REntry> entry, ROOT::RNTupleWriter *writer) {
    // Protect the writer->Fill() call
    static std::mutex gLock;
 
@@ -96,7 +95,7 @@ void Write()
    model->MakeField<std::vector<float>>("vpz");
 
    // We hand-over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
-   auto writer = RNTupleWriter::Recreate(std::move(model), "NTuple", kNTupleFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "NTuple", kNTupleFileName);
 
    std::vector<std::unique_ptr<REntry>> entries;
    std::vector<std::thread> threads;

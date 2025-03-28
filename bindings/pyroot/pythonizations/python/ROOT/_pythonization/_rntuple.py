@@ -119,7 +119,7 @@ def _RNTupleWriter_Append(model, *args):
     model = model.Clone()
     import ROOT
 
-    return ROOT.Experimental.RNTupleWriter._Append(model, *args)
+    return ROOT.RNTupleWriter._Append(model, *args)
 
 
 def _RNTupleWriter_Recreate(model_or_fields, *args):
@@ -128,7 +128,7 @@ def _RNTupleWriter_Recreate(model_or_fields, *args):
         model_or_fields = model_or_fields.Clone()
     import ROOT
 
-    return ROOT.Experimental.RNTupleWriter._Recreate(model_or_fields, *args)
+    return ROOT.RNTupleWriter._Recreate(model_or_fields, *args)
 
 
 def _RNTupleWriter_Fill(self, *args):
@@ -142,7 +142,7 @@ def _RNTupleWriter_exit(self, *args):
     return False
 
 
-@pythonization("RNTupleWriter", ns="ROOT::Experimental")
+@pythonization("RNTupleWriter", ns="ROOT")
 def pythonize_RNTupleWriter(klass):
     klass._Append = klass.Append
     klass.Append = _RNTupleWriter_Append

@@ -23,7 +23,6 @@
 // Import classes from the `Experimental` namespace for the time being.
 using ROOT::Experimental::RNTupleOpenSpec;
 using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleWriter;
 
 const std::string kMainNTupleName = "mainNTuple";
 const std::string kMainNTuplePath = "main_ntuple.root";
@@ -40,7 +39,7 @@ void WriteMain(std::string_view ntupleName, std::string_view ntupleFileName)
    auto fldI = model->MakeField<std::uint32_t>("i");
    auto fldVpx = model->MakeField<float>("vpx");
 
-   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
 
    // The main ntuple only contains a subset of the entries present in the auxiliary ntuple.
    for (int i = 0; i < kNEvents; i += 5) {
@@ -60,7 +59,7 @@ void WriteAux(std::string_view ntupleName, std::string_view ntupleFileName)
    auto fldI = model->MakeField<std::uint32_t>("i");
    auto fldVpy = model->MakeField<float>("vpy");
 
-   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
 
    for (int i = 0; i < kNEvents; ++i) {
       *fldI = i;
