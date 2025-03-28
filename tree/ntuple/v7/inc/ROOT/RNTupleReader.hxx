@@ -279,9 +279,21 @@ public:
    }
 
    template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr, std::string_view typeName)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), objPtr, typeName);
+   }
+
+   template <typename T>
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr, std::string_view typeName)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), rawPtr, typeName);
    }
 
    template <typename T>
@@ -301,11 +313,29 @@ public:
    }
 
    template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr, std::string_view typeName)
+   {
+      static_assert(std::is_void_v<T>, "calling GetView with a type name string is only allowed for [T = void]");
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource, typeName);
+      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, objPtr);
+   }
+
+   template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
    {
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range, rawPtr);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr, std::string_view typeName)
+   {
+      static_assert(std::is_void_v<T>, "calling GetView with a type name string is only allowed for [T = void]");
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource, typeName);
+      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, rawPtr);
    }
 
    template <typename T>
