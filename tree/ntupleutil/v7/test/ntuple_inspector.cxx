@@ -15,8 +15,8 @@ using ROOT::RFieldBase;
 using ROOT::RNTuple;
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriteOptions;
+using ROOT::RNTupleWriter;
 using ROOT::Experimental::RNTupleInspector;
-using ROOT::Experimental::RNTupleWriter;
 
 TEST(RNTupleInspector, CreateFromPointer)
 {

@@ -21,11 +21,14 @@
 #include <cstddef>
 
 namespace ROOT {
+
 namespace Experimental {
+class RNTupleFillContext;
+}
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleFillStatus
+\class ROOT::RNTupleFillStatus
 \ingroup NTuple
 \brief A status object after filling an entry
 
@@ -34,7 +37,7 @@ ShouldFlushCluster and call RNTupleWriter::FlushCluster or RNTupleFillContext::F
 */
 // clang-format on
 class RNTupleFillStatus {
-   friend class RNTupleFillContext;
+   friend class Experimental::RNTupleFillContext;
 
 private:
    /// Number of entries written into the current cluster
@@ -56,6 +59,10 @@ public:
    bool ShouldFlushCluster() const { return fShouldFlushCluster; }
 }; // class RNTupleFillContext
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RNTupleFillStatus [[deprecated("ROOT::Experimental::RNTupleFillStatus moved to ROOT::RNTupleFillStatus")]] =
+   ROOT::RNTupleFillStatus;
 } // namespace Experimental
 } // namespace ROOT
 

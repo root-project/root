@@ -168,7 +168,7 @@ ROOT::Internal::RProjectedFields::Clone(const RNTupleModel &newModel) const
    return clone;
 }
 
-ROOT::RNTupleModel::RUpdater::RUpdater(ROOT::Experimental::RNTupleWriter &writer)
+ROOT::RNTupleModel::RUpdater::RUpdater(ROOT::RNTupleWriter &writer)
    : fWriter(writer), fOpenChangeset(fWriter.GetUpdatableModel())
 {
 }

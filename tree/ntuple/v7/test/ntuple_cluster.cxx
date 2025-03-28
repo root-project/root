@@ -314,7 +314,7 @@ TEST(PageStorageFile, LoadClusters)
    auto wrTag = modelWrite->MakeField<std::int32_t>("tag");
 
    {
-      auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
       *wrPt = 42.0;
       writer->Fill();
       writer->CommitCluster();
@@ -373,7 +373,7 @@ TEST(PageStorageFile, LoadClustersIMT)
       auto model = ROOT::RNTupleModel::Create();
       *model->MakeField<float>("pt") = 42.0;
 
-      auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       writer->Fill();
    }
 
