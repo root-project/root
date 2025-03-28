@@ -75,18 +75,13 @@ def _setbin(self, index, *value):
 
 def _getitem(self, index):
     if index is Ellipsis:
-        import numpy as np
-
-        shape = _shape(self)
-        histogram_as_array = np.array([self.GetBinContent(i) for i in range(np.prod(shape))])
-        return histogram_as_array.reshape(shape)
+        return self.Clone()
     if isinstance(index, slice):
         raise NotImplementedError("Slices not currently supported")
     elif not isinstance(index, tuple):
         return self.GetBinContent(_getbin(self, index))
 
     return self.GetBinContent(*(_getbin(self, idx) for idx in index))
-
 
 def _setitem(self, index, value):
     import numpy as np
@@ -106,15 +101,16 @@ def _setitem(self, index, value):
             for i, val in enumerate(value.flatten()):
                 self.SetBinContent(i, val)
             self.SetEntries(np.sum(value))
+        elif np.isscalar(value):
+            for i in range(self.GetNcells()):
+                self.SetBinContent(i, value)
+            self.SetEntries(self.GetNcells() * value)
         else:
             raise TypeError(f"Unsupported value type: {type(value).__name__}")
-
     elif isinstance(index, slice):
         raise NotImplementedError("Slices not currently supported")
-
     elif isinstance(index, tuple):
         _setbin(self, *(_getbin(self, idx) for idx in index), value)
-
     else:
         _setbin(self, _getbin(self, index), value)
 
