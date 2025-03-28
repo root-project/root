@@ -16,12 +16,12 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/ExternalASTSource.h"
+#include "clang/AST/ODRHash.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
-#include "clang/AST/ODRHash.h"
-#include "clang/AST/ExprCXX.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/LLVM.h"
@@ -334,59 +334,56 @@ RedeclarableTemplateDecl::CommonBase *RedeclarableTemplateDecl::getCommonPtr() c
 }
 
 void RedeclarableTemplateDecl::loadLazySpecializationsImpl(
-                                             bool OnlyPartial/*=false*/) const {
-  // Grab the most recent declaration to ensure we've loaded any lazy
-  // redeclarations of this template.
-  CommonBase *CommonBasePtr = getMostRecentDecl()->getCommonPtr();
-  if (auto *Specs = CommonBasePtr->LazySpecializations) {
-    if (!OnlyPartial)
-      CommonBasePtr->LazySpecializations = nullptr;
-    for (uint32_t I = 0, N = Specs[0].DeclID; I != N; ++I) {
-      // Skip over already loaded specializations.
-      if (!Specs[I+1].ODRHash)
-        continue;
-      if (!OnlyPartial || Specs[I+1].IsPartial)
-        (void)loadLazySpecializationImpl(Specs[I+1]);
-    }
-  }
+    bool OnlyPartial /*=false*/) const {
+  auto *ExternalSource = getASTContext().getExternalSource();
+  if (!ExternalSource)
+    return;
+
+  ExternalSource->LoadExternalSpecializations(this->getCanonicalDecl(),
+                                              OnlyPartial);
+  return;
 }
 
-Decl *RedeclarableTemplateDecl::loadLazySpecializationImpl(
-                                   LazySpecializationInfo &LazySpecInfo) const {
-  uint32_t ID = LazySpecInfo.DeclID;
-  assert(ID && "Loading already loaded specialization!");
-  // Note that we loaded the specialization.
-  LazySpecInfo.DeclID = LazySpecInfo.ODRHash = LazySpecInfo.IsPartial = 0;
-  return getASTContext().getExternalSource()->GetExternalDecl(ID);
+bool RedeclarableTemplateDecl::loadLazySpecializationsImpl(
+    ArrayRef<TemplateArgument> Args, TemplateParameterList *TPL) const {
+  auto *ExternalSource = getASTContext().getExternalSource();
+  if (!ExternalSource)
+    return false;
+
+  return ExternalSource->LoadExternalSpecializations(this->getCanonicalDecl(),
+                                                     Args);
 }
 
-void
-RedeclarableTemplateDecl::loadLazySpecializationsImpl(ArrayRef<TemplateArgument>
-                                                      Args,
-                                                      TemplateParameterList *TPL) const {
-  CommonBase *CommonBasePtr = getMostRecentDecl()->getCommonPtr();
-  if (auto *Specs = CommonBasePtr->LazySpecializations) {
-    unsigned Hash = TemplateArgumentList::ComputeODRHash(Args);
-    for (uint32_t I = 0, N = Specs[0].DeclID; I != N; ++I)
-      if (Specs[I+1].ODRHash && Specs[I+1].ODRHash == Hash)
-        (void)loadLazySpecializationImpl(Specs[I+1]);
-  }
-}
-
-template<class EntryType, typename... ProfileArguments>
+template <class EntryType, typename... ProfileArguments>
 typename RedeclarableTemplateDecl::SpecEntryTraits<EntryType>::DeclType *
-RedeclarableTemplateDecl::findSpecializationImpl(
+RedeclarableTemplateDecl::findSpecializationLocally(
     llvm::FoldingSetVector<EntryType> &Specs, void *&InsertPos,
-    ProfileArguments&&... ProfileArgs) {
-  using SETraits = SpecEntryTraits<EntryType>;
-
-  loadLazySpecializationsImpl(std::forward<ProfileArguments>(ProfileArgs)...);
+    ProfileArguments &&...ProfileArgs) {
+  using SETraits = RedeclarableTemplateDecl::SpecEntryTraits<EntryType>;
 
   llvm::FoldingSetNodeID ID;
   EntryType::Profile(ID, std::forward<ProfileArguments>(ProfileArgs)...,
                      getASTContext());
   EntryType *Entry = Specs.FindNodeOrInsertPos(ID, InsertPos);
   return Entry ? SETraits::getDecl(Entry)->getMostRecentDecl() : nullptr;
+}
+
+template <class EntryType, typename... ProfileArguments>
+typename RedeclarableTemplateDecl::SpecEntryTraits<EntryType>::DeclType *
+RedeclarableTemplateDecl::findSpecializationImpl(
+    llvm::FoldingSetVector<EntryType> &Specs, void *&InsertPos,
+    ProfileArguments &&...ProfileArgs) {
+
+  if (auto *Found = findSpecializationLocally(
+          Specs, InsertPos, std::forward<ProfileArguments>(ProfileArgs)...))
+    return Found;
+
+  if (!loadLazySpecializationsImpl(
+          std::forward<ProfileArguments>(ProfileArgs)...))
+    return nullptr;
+
+  return findSpecializationLocally(
+      Specs, InsertPos, std::forward<ProfileArguments>(ProfileArgs)...);
 }
 
 template<class Derived, class EntryType>
@@ -546,7 +543,7 @@ ClassTemplateDecl *ClassTemplateDecl::CreateDeserialized(ASTContext &C,
 }
 
 void ClassTemplateDecl::LoadLazySpecializations(
-                                             bool OnlyPartial/*=false*/) const {
+    bool OnlyPartial /*=false*/) const {
   loadLazySpecializationsImpl(OnlyPartial);
 }
 
@@ -925,14 +922,6 @@ TemplateArgumentList::CreateCopy(ASTContext &Context,
   return new (Mem) TemplateArgumentList(Args);
 }
 
-unsigned TemplateArgumentList::ComputeODRHash(ArrayRef<TemplateArgument> Args) {
-  ODRHash Hasher;
-  for (TemplateArgument TA : Args)
-    Hasher.AddTemplateArgument(TA);
-
-  return Hasher.CalculateHash();
-}
-
 FunctionTemplateSpecializationInfo *FunctionTemplateSpecializationInfo::Create(
     ASTContext &C, FunctionDecl *FD, FunctionTemplateDecl *Template,
     TemplateSpecializationKind TSK, const TemplateArgumentList *TemplateArgs,
@@ -1276,7 +1265,7 @@ VarTemplateDecl *VarTemplateDecl::CreateDeserialized(ASTContext &C,
 }
 
 void VarTemplateDecl::LoadLazySpecializations(
-                                             bool OnlyPartial/*=false*/) const {
+    bool OnlyPartial /*=false*/) const {
   loadLazySpecializationsImpl(OnlyPartial);
 }
 
