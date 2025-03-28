@@ -49,7 +49,7 @@ with other statistical frameworks, and also ease of manipulation, it
 may be useful to store statistical models in text form.
 
 The RooJSONFactoryWSTool is a helper class to achieve exactly this,
-exporting to and importing from JSON and YML.
+exporting to and importing from JSON.
 
 In order to import a workspace from a JSON file, you can do
 
@@ -86,11 +86,6 @@ tool.exportJSON("myjson.json");
 ~~~
 
 For more details, consult the tutorial <a href="rf515__hfJSON_8py.html">rf515_hfJSON</a>.
-
-In order to import and export YML files, `ROOT` needs to be compiled
-with the external dependency <a
-href="https://github.com/biojppm/rapidyaml">RapidYAML</a>, which needs
-to be installed on your system when building `ROOT`.
 
 The RooJSONFactoryWSTool only knows about a limited set of classes for
 import and export. If import or export of a class you're interested in
