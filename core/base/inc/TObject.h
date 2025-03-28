@@ -55,8 +55,6 @@ protected:
 
    static void SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs = "", Bool_t empty_line = kTRUE);
 
-   static TString SavePrimitiveArray(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line = kFALSE);
-
    static TString SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line = kFALSE);
 
 public:
