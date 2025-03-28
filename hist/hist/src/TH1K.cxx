@@ -162,9 +162,9 @@ void TH1K::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       for (int i = 0; i < fNIn; i++)
          content[i] = fArray[i];
 
-      TString arrname = SavePrimitiveArray(out, hname, fNIn, content.data());
+      TString vectname = SavePrimitiveVector(out, hname, fNIn, content.data());
       out << "   for(Int_t i = 0; i < " << fNIn << "; i++)\n";
-      out << "      " << hname << "->Fill(" << arrname << "[i]);\n";
+      out << "      " << hname << "->Fill(" << vectname << "[i]);\n";
    }
 
    TH1::SavePrimitiveHelp(out, hname, option);

@@ -1622,12 +1622,12 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // Check if the profile has equidistant X bins or not.  If not, we
    // create an array holding the bins.
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray)
-      sxaxis = SavePrimitiveArray(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
+      sxaxis = SavePrimitiveVector(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
 
    out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins() << ", ";
    if (!sxaxis.IsNull())
-      out << sxaxis;
+      out << sxaxis << ".data()";
    else
       out << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
    out << ", \"" << TString(GetErrorOption()).ReplaceSpecialCppChars() << "\");\n";
@@ -1667,22 +1667,22 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          }
    } else {
       if (numentries > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, entries.data());
+         TString vect = SavePrimitiveVector(out, hname, fNcells, entries.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinEntries(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vect << "[bin])\n";
+         out << "         " << hname << "->SetBinEntries(bin, " << vect << "[bin]);\n";
       }
       if (numcontent > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, content.data());
+         TString vect = SavePrimitiveVector(out, hname, fNcells, content.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinContent(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vect << "[bin])\n";
+         out << "         " << hname << "->SetBinContent(bin, " << vect << "[bin]);\n";
       }
       if (numerrors > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, errors.data());
+         TString vect = SavePrimitiveVector(out, hname, fNcells, errors.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinError(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vect << "[bin])\n";
+         out << "         " << hname << "->SetBinError(bin, " << vect << "[bin]);\n";
       }
    }
 
