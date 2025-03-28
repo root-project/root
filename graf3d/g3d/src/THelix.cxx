@@ -274,7 +274,7 @@ void THelix::Print(Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void THelix::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void THelix::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "helix",
                             TString::Format("%g, %g, %g, %g, %g, %g, %g", fX0, fY0, fZ0, fVt * TMath::Cos(fPhi0),
@@ -290,7 +290,7 @@ void THelix::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    SaveLineAttributes(out, "helix", 1, 1, 1);
 
-   out << "   helix->Draw();\n";
+   SavePrimitiveDraw(out, "helix", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

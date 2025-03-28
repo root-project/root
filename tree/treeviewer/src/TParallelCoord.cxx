@@ -813,11 +813,8 @@ void TParallelCoord::SaveEntryLists(const char* filename, bool overwrite)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the TParallelCoord in a macro.
 
-void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
+void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* option)
 {
-   TString opt = options;
-   opt.ToLower();
-   // bool overwrite = opt.Contains("overwrite"); // Is there a way to specify "options" when saving ?
    //  Save the entrylists.
    TString filename = TString::Format("%s_parallelcoord_entries.root", fTree->GetName());
    SaveEntryLists(filename, true); // FIXME overwriting by default.
@@ -887,7 +884,7 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
    if (TestBit(kGlobalLogScale))
       out << "   para->SetGlobalLogScale(true);\n";
    out << "   \n";
-   out << "   para->Draw();\n";
+   SavePrimitiveDraw(out, "para", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

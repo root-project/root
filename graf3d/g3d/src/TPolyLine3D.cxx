@@ -572,9 +572,7 @@ void TPolyLine3D::SavePrimitive(std::ostream &out, Option_t *option)
       arrarg.IsNull());
 
    SaveLineAttributes(out, "pline3D", 1, 1, 1);
-
-   if (!option || !strstr(option, "nodraw"))
-      out << "   pline3D->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "pline3D", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
