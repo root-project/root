@@ -108,6 +108,11 @@ Specific drawing options can be used to paint a TGraph2D:
 | "LINE"   | Draw a 3D polyline. |
 | "CONT5"  | Draw a contour plot using Delaunay triangles.|
 
+The Delaunay triangulation algorithm assumes that each (x, y) coordinate corresponds to a unique z value,
+meaning duplicate (x, y) points are not allowed. Consequently, when using drawing options that rely on this
+algorithm (e.g., TRI, SURF, etc.), a warning may appear instructing you to remove duplicates
+(see RemoveDuplicates()).
+
 A TGraph2D can be also drawn with any options valid to draw a 2D histogram
 (like `COL`, `SURF`, `LEGO`, `CONT` etc..).
 
@@ -1414,6 +1419,37 @@ TH1 *TGraph2D::Project(Option_t *option) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Deletes duplicated points.
+///
+/// The Delaunay triangulation algorithm assumes that each (x, y) coordinate corresponds to a unique z value,
+/// meaning duplicate (x, y) points are not allowed. Consequently, when using drawing options that rely on this
+/// algorithm (e.g., TRI, SURF, etc.), a warning may appear instructing you to remove duplicates.
+/// This function provides a way to handle such duplicates.
+///
+/// Example:
+/// ~~~ {.cpp}
+/// g->RemoveDuplicates();
+/// g->Draw("TRI1");
+/// ~~~
+
+Int_t TGraph2D::RemoveDuplicates()
+{
+   for (int i = 0; i < fNpoints; i++) {
+      double x = fX[i];
+      double y = fY[i];
+      for (int j = i + 1; j < fNpoints; j++) {
+         if (x == fX[j] && y == fY[j]) {
+            RemovePoint(j);
+            j--;
+         }
+      }
+   }
+
+   return fNpoints;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Recursively remove object from the list of functions
 
 void TGraph2D::RecursiveRemove(TObject *obj)
@@ -1426,6 +1462,7 @@ void TGraph2D::RecursiveRemove(TObject *obj)
       fHistogram = nullptr;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Deletes point number ipoint
 
@@ -1433,26 +1470,12 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 {
    if (ipoint < 0) return -1;
    if (ipoint >= fNpoints) return -1;
-
-   fNpoints--;
-   Double_t *newX = new Double_t[fNpoints];
-   Double_t *newY = new Double_t[fNpoints];
-   Double_t *newZ = new Double_t[fNpoints];
-   Int_t j = -1;
-   for (Int_t i = 0; i < fNpoints + 1; i++) {
-      if (i == ipoint) continue;
-      j++;
-      newX[j] = fX[i];
-      newY[j] = fY[i];
-      newZ[j] = fZ[i];
+   for (Int_t i = ipoint; i < fNpoints - 1; i++) {
+      fX[i] = fX[i+1];
+      fY[i] = fY[i+1];
+      fZ[i] = fZ[i+1];
    }
-   delete [] fX;
-   delete [] fY;
-   delete [] fZ;
-   fX = newX;
-   fY = newY;
-   fZ = newZ;
-   fSize = fNpoints;
+   fNpoints--;
    if (fHistogram) {
       delete fHistogram;
       fHistogram = nullptr;
