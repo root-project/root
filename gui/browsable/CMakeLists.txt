@@ -40,18 +40,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     Hist
 )
 
-# provider for drawing of v7 histograms on RCanvas
-
-if(root7)
-  ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
-       src/RHistDraw7Provider.cxx
-    DEPENDENCIES
-       ROOTBrowsable
-       ROOTGpadv7
-       ROOTHistDraw
-  )
-endif()
-
 # provider for generic drawing of TObject on TCanvas
 
 ROOT_LINKER_LIBRARY(ROOTObjectDraw6Provider

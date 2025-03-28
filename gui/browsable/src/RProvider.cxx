@@ -509,10 +509,6 @@ public:
    RDefaultProvider()
    {
       // TODO: let read from rootrc or any other files
-      RegisterClass("ROOT::Experimental::RH1D", "sap-icon://bar-chart", "", "", "libROOTHistDrawProvider");
-      RegisterClass("ROOT::Experimental::RH2D", "sap-icon://pixelate", "", "", "libROOTHistDrawProvider");
-      RegisterClass("ROOT::Experimental::RH3D", "sap-icon://product", "", "", "libROOTHistDrawProvider");
-      RegisterClass("ROOT::Experimental::RCanvas", "sap-icon://business-objects-experience", "", "", "libROOTHistDrawProvider");
       RegisterClass("ROOT::RNTuple", "sap-icon://table-chart", "libROOTNTupleBrowseProvider",
                     "libROOTNTupleDraw6Provider", "libROOTNTupleDraw7Provider");
    }
