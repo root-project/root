@@ -1,19 +1,20 @@
-From 24b94cde0a5fa6b46be05359b7218af9bb295d87 Mon Sep 17 00:00:00 2001
+From 039221ce3b4122e41fd2b07cc1274e0af1be648c Mon Sep 17 00:00:00 2001
 From: Jonas Rembser <jonas.rembser@cern.ch>
-Date: Tue, 12 Mar 2024 01:59:37 +0100
+Date: Fri, 28 Mar 2025 15:37:19 +0100
 Subject: [PATCH 1/2] [CPyCppyy] Adapt to no `std::` in ROOT
 
+This reverts commit e44748ee03467a37d9faf8feabc01bc1c6e6be0a.
 ---
- .../pyroot/cppyy/CPyCppyy/src/Converters.cxx  | 20 +++++++++++--------
- .../pyroot/cppyy/CPyCppyy/src/Executors.cxx   |  2 ++
- .../pyroot/cppyy/CPyCppyy/src/Pythonize.cxx   |  8 ++++----
- 3 files changed, 18 insertions(+), 12 deletions(-)
+ .../pyroot/cppyy/CPyCppyy/src/Converters.cxx  | 23 ++++++++++++-------
+ .../pyroot/cppyy/CPyCppyy/src/Executors.cxx   |  7 ++++++
+ .../pyroot/cppyy/CPyCppyy/src/Pythonize.cxx   |  8 +++----
+ 3 files changed, 26 insertions(+), 12 deletions(-)
 
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-index efd404aebe..4ac294745c 100644
+index ad67ccf19b..4cef37e74e 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-@@ -3164,7 +3164,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
+@@ -3270,7 +3270,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
      }
  
  //-- special case: initializer list
@@ -22,7 +23,7 @@ index efd404aebe..4ac294745c 100644
      // get the type of the list and create a converter (TODO: get hold of value_type?)
          auto pos = realType.find('<');
          std::string value_type = realType.substr(pos+1, realType.size()-pos-2);
-@@ -3175,8 +3175,9 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
+@@ -3281,8 +3281,9 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
      bool control = cpd == "&" || isConst;
  
  //-- special case: std::function
@@ -34,7 +35,7 @@ index efd404aebe..4ac294745c 100644
  
      // get actual converter for normal passing
          Converter* cnv = selectInstanceCnv(
-@@ -3184,14 +3185,14 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
+@@ -3290,14 +3291,14 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
  
          if (cnv) {
          // get the type of the underlying (TODO: use target_type?)
@@ -53,7 +54,7 @@ index efd404aebe..4ac294745c 100644
              } else if (cnv->HasState())
                  delete cnv;
          }
-@@ -3301,7 +3302,7 @@ std::string::size_type dims2stringsz(cdims_t d) {
+@@ -3424,7 +3425,7 @@ std::string::size_type dims2stringsz(cdims_t d) {
      return (d && d.ndim() != UNKNOWN_SIZE) ? d[0] : std::string::npos;
  }
  
@@ -62,7 +63,19 @@ index efd404aebe..4ac294745c 100644
  #define WSTRING1 "std::basic_string<wchar_t>"
  #define WSTRING2 "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t>>"
  
-@@ -3484,7 +3485,10 @@ public:
+@@ -3541,8 +3542,11 @@ public:
+         gf["const signed char&"] =          gf["const char&"];
+ #if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
+         gf["std::byte"] =                   gf["uint8_t"];
++        gf["byte"] =                        gf["uint8_t"];
+         gf["const std::byte&"] =            gf["const uint8_t&"];
++        gf["const byte&"] =                 gf["const uint8_t&"];
+         gf["std::byte&"] =                  gf["uint8_t&"];
++        gf["byte&"] =                       gf["uint8_t&"];
+ #endif
+         gf["std::int8_t"] =                 gf["int8_t"];
+         gf["const std::int8_t&"] =          gf["const int8_t&"];
+@@ -3596,7 +3600,10 @@ public:
          gf["char ptr"] =                    gf["char*[]"];
          gf["std::string"] =                 (cf_t)+[](cdims_t) { return new STLStringConverter{}; };
          gf["const std::string&"] =          gf["std::string"];
@@ -70,14 +83,35 @@ index efd404aebe..4ac294745c 100644
 +        gf["const string&"] =               gf["std::string"];
          gf["std::string&&"] =               (cf_t)+[](cdims_t) { return new STLStringMoveConverter{}; };
 +        gf["string&&"] =                    gf["std::string&&"];
- #if __cplusplus > 201402L
+ #if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
          gf["std::string_view"] =            (cf_t)+[](cdims_t) { return new STLStringViewConverter{}; };
          gf[STRINGVIEW] =                    gf["std::string_view"];
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
-index 9692fc8535..70d8f72596 100644
+index 483df5d3fb..954be57848 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
-@@ -1088,7 +1088,9 @@ public:
+@@ -1022,6 +1022,8 @@ public:
+ #if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
+         gf["std::byte ptr"] =               (ef_t)+[](cdims_t d) { return new ByteArrayExecutor{d};     };
+         gf["const std::byte ptr"] =         gf["std::byte ptr"];
++        gf["byte ptr"] =                    gf["std::byte ptr"];
++        gf["const byte ptr"] =              gf["std::byte ptr"];
+ #endif
+         gf["int8_t ptr"] =                  (ef_t)+[](cdims_t d) { return new Int8ArrayExecutor{d};    };
+         gf["uint8_t ptr"] =                 (ef_t)+[](cdims_t d) { return new UInt8ArrayExecutor{d};   };
+@@ -1046,8 +1048,11 @@ public:
+         gf["internal_enum_type_t ptr"] =    gf["int ptr"];
+ #if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
+         gf["std::byte"] =                   gf["uint8_t"];
++        gf["byte"] =                        gf["uint8_t"];
+         gf["std::byte&"] =                  gf["uint8_t&"];
++        gf["byte&"] =                       gf["uint8_t&"];
+         gf["const std::byte&"] =            gf["const uint8_t&"];
++        gf["const byte&"] =                 gf["const uint8_t&"];
+ #endif
+         gf["std::int8_t"] =                 gf["int8_t"];
+         gf["std::int8_t&"] =                gf["int8_t&"];
+@@ -1082,7 +1087,9 @@ public:
          gf["char16_t*"] =                   (ef_t)+[](cdims_t) { static CString16Executor e{};   return &e;};
          gf["char32_t*"] =                   (ef_t)+[](cdims_t) { static CString32Executor e{};   return &e;};
          gf["std::string"] =                 (ef_t)+[](cdims_t) { static STLStringExecutor e{};   return &e; };
@@ -88,7 +122,7 @@ index 9692fc8535..70d8f72596 100644
          gf[WSTRING1] =                      gf["std::wstring"];
          gf[WSTRING2] =                      gf["std::wstring"];
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
-index c1720cf3f2..ae0e31cac8 100644
+index dd63ceb40c..9b87905bab 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
 @@ -67,7 +67,7 @@ PyObject* GetAttrDirect(PyObject* pyclass, PyObject* pyname) {
@@ -100,7 +134,7 @@ index c1720cf3f2..ae0e31cac8 100644
  }
  
  // to prevent compiler warnings about const char* -> char*
-@@ -1873,7 +1873,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+@@ -1882,7 +1882,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
          Utility::AddToClass(pyclass, "__iter__", (PyCFunction)PyObject_SelfIter, METH_NOARGS);
      }
  
@@ -109,7 +143,7 @@ index c1720cf3f2..ae0e31cac8 100644
          Utility::AddToClass(pyclass, "__repr__",      (PyCFunction)STLStringRepr,       METH_NOARGS);
          Utility::AddToClass(pyclass, "__str__",       (PyCFunction)STLStringStr,        METH_NOARGS);
          Utility::AddToClass(pyclass, "__bytes__",     (PyCFunction)STLStringBytes,      METH_NOARGS);
-@@ -1894,12 +1894,12 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
+@@ -1903,12 +1903,12 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
          ((PyTypeObject*)pyclass)->tp_hash = (hashfunc)STLStringHash;
      }
  
@@ -125,60 +159,5 @@ index c1720cf3f2..ae0e31cac8 100644
          Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLWStringStr,        METH_NOARGS);
          Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLWStringBytes,      METH_NOARGS);
 -- 
-2.44.0
-
-From ef0836c23c850ce3113d5a7ff5787dee9e094099 Mon Sep 17 00:00:00 2001
-From: Aaron Jomy <aaron.jomy@cern.ch>
-Date: Tue, 21 Jan 2025 14:09:03 +0100
-Subject: [PATCH 2/2] [PyROOT] Add executors and converters for `std::byte`
-
-Fixes issue: https://github.com/root-project/root/issues/17442
----
- bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx | 3 +++
- bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx  | 5 +++++
- 2 files changed, 8 insertions(+)
-
-diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-index c127604a6e..21d3d4aa73 100644
---- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-+++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-@@ -3522,8 +3522,11 @@ public:
-         gf["const signed char&"] =          gf["const char&"];
- #if __cplusplus > 201402L
-         gf["std::byte"] =                   gf["uint8_t"];
-+        gf["byte"] =                        gf["uint8_t"];
-         gf["const std::byte&"] =            gf["const uint8_t&"];
-+        gf["const byte&"] =                 gf["const uint8_t&"];
-         gf["std::byte&"] =                  gf["uint8_t&"];
-+        gf["byte&"] =                       gf["uint8_t&"];
- #endif
-         gf["std::int8_t"] =                 gf["int8_t"];
-         gf["const std::int8_t&"] =          gf["const int8_t&"];
-diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
-index 5e94846771..edefcf5b5b 100644
---- a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
-+++ b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
-@@ -1022,6 +1022,8 @@ public:
- #if __cplusplus > 201402L
-         gf["std::byte ptr"] =               (ef_t)+[](cdims_t d) { return new ByteArrayExecutor{d};     };
-         gf["const std::byte ptr"] =         gf["std::byte ptr"];
-+        gf["byte ptr"] =                    gf["std::byte ptr"];
-+        gf["const byte ptr"] =              gf["std::byte ptr"];
- #endif
-         gf["int8_t ptr"] =                  (ef_t)+[](cdims_t d) { return new Int8ArrayExecutor{d};    };
-         gf["uint8_t ptr"] =                 (ef_t)+[](cdims_t d) { return new UInt8ArrayExecutor{d};   };
-@@ -1046,8 +1048,11 @@ public:
-         gf["internal_enum_type_t ptr"] =    gf["int ptr"];
- #if __cplusplus > 201402L
-         gf["std::byte"] =                   gf["uint8_t"];
-+        gf["byte"] =                        gf["uint8_t"];
-         gf["std::byte&"] =                  gf["uint8_t&"];
-+        gf["byte&"] =                       gf["uint8_t&"];
-         gf["const std::byte&"] =            gf["const uint8_t&"];
-+        gf["const byte&"] =                 gf["const uint8_t&"];
- #endif
-         gf["std::int8_t"] =                 gf["int8_t"];
-         gf["std::int8_t&"] =                gf["int8_t&"];
--- 
-2.43.0
+2.48.1
 

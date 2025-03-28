@@ -1,6 +1,6 @@
-From 1e235725934294f6c85197d07103f0b48ce55f83 Mon Sep 17 00:00:00 2001
+From cd89b6f484be55cdea7cdf677a9fe60ff89468e4 Mon Sep 17 00:00:00 2001
 From: Jonas Rembser <jonas.rembser@cern.ch>
-Date: Sat, 10 Aug 2024 15:44:23 +0200
+Date: Fri, 28 Mar 2025 15:34:10 +0100
 Subject: [PATCH] [CPyCppyy] Add `TString` converters
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH] [CPyCppyy] Add `TString` converters
  2 files changed, 8 insertions(+)
 
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-index dd1752ff629..0a8bce36923 100644
+index 7f7a49ed3b..ad67ccf19b 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-@@ -1889,6 +1889,7 @@ bool CPyCppyy::name##Converter::ToMemory(                                    \
+@@ -1931,6 +1931,7 @@ bool CPyCppyy::name##Converter::ToMemory(                                    \
      return InstanceConverter::ToMemory(value, address, ctxt);                \
  }
  
@@ -20,7 +20,7 @@ index dd1752ff629..0a8bce36923 100644
  CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
  
  
-@@ -3503,6 +3504,9 @@ public:
+@@ -3569,6 +3570,9 @@ public:
          gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
  
      // factories for special cases
@@ -31,7 +31,7 @@ index dd1752ff629..0a8bce36923 100644
          gf["const char*"] =                 (cf_t)+[](cdims_t) { return new CStringConverter{}; };
          gf["const signed char*"] =          gf["const char*"];
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
-index 5fab4ad6ebf..609e130e2fc 100644
+index 3edf4b281a..b3a4246045 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 @@ -9,6 +9,9 @@
@@ -44,14 +44,14 @@ index 5fab4ad6ebf..609e130e2fc 100644
  
  namespace CPyCppyy {
  
-@@ -365,6 +368,7 @@ protected:                                                                   \
+@@ -370,6 +373,7 @@ protected:                                                                   \
      strtype fBuffer;                                                         \
  }
  
 +CPPYY_DECLARE_STRING_CONVERTER(TString, TString);
  CPPYY_DECLARE_STRING_CONVERTER(STLString, std::string);
  CPPYY_DECLARE_STRING_CONVERTER(STLWString, std::wstring);
- #if __cplusplus > 201402L
+ #if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 -- 
-2.46.0
+2.48.1
 
