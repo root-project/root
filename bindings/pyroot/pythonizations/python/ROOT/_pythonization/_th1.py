@@ -229,9 +229,10 @@ for klass in _th1_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
 
     from ROOT._pythonization._uhi import add_plotting_features
-    
+
     # Add UHI plotting features
     pythonization(klass)(add_plotting_features)
+
 
 @pythonization('TH1')
 def pythonize_th1(klass):
