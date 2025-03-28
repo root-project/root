@@ -26,7 +26,6 @@
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/RColor.hxx>
-#include <ROOT/RHistDrawable.hxx>
 #include <ROOT/TObjectDrawable.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <TH1D.h>
