@@ -7418,8 +7418,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    fYaxis.SaveAttributes(out, hname, "->GetYaxis()");
    fZaxis.SaveAttributes(out, hname, "->GetZaxis()");
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   " << hname << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, hname, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

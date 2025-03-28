@@ -926,8 +926,7 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       GetZaxis()->SaveAttributes(out, f2Name, "->GetZaxis()");
    }
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   " << f2Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, f2Name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

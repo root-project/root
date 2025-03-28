@@ -3271,9 +3271,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* option)
    SaveLineAttributes(out, name);
    SaveMarkerAttributes(out, name);
 
-   //draw TEfficiency object
-   if (!option || !strstr(option, "nodraw"))
-      out << "   " << name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

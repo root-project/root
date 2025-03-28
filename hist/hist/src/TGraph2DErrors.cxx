@@ -485,8 +485,7 @@ void TGraph2DErrors::SavePrimitive(std::ostream &out, Option_t *option)
 
    TH1::SavePrimitiveFunctions(out, "gr2derr", fFunctions);
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   gr2derr->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "gr2derr", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
