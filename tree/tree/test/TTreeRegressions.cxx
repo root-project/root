@@ -154,7 +154,7 @@ TEST(TTreeRegressions, PrintClustersRounding)
    t.SetAutoFlush(5966);
    int x = 0;
    t.Branch("x", &x);
-   for (auto i = 0; i<10000; ++i) {
+   for (auto i = 0; i < 10000; ++i) {
       t.Fill();
    }
 
@@ -170,7 +170,7 @@ TEST(TTreeRegressions, PrintClustersRounding)
                     "******************************************************************************\n"
                     "Cluster Range #  Entry Start      Last Entry           Size   Number of clusters\n"
                     "0                0                9999                 5966          2\n"
-                    "Total number of clusters: 2"; // This was 1 before the fix
+                    "Total number of clusters: 2 \n"; // This was 1 before the fix
    EXPECT_EQ(output, ref);
 }
 
