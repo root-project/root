@@ -5,7 +5,7 @@
 \brief Guide on how to add JSON IO for you RooFit classes.
 
 ## RooFitHS3 Library
-_Contains facilities to serialize and deserialize RooWorkspaces to and from JSON and YML._
+_Contains facilities to serialize and deserialize RooWorkspaces to and from JSON._
 #### Note: This library is still at an experimental stage.
 
 ### Purpose
@@ -14,21 +14,20 @@ When using `RooFit`, statistical models can be conveniently handled and
 stored as a `RooWorkspace`. However, for the sake of interoperability
 with other statistical frameworks, and also ease of manipulation, it
 may be useful to store statistical models in text form. This library
-sets out to achieve exactly that, exporting to and importing from JSON
-and YML.
+sets out to achieve exactly that, exporting to and importing from JSON.
 
 ### Backend
 
 The default backend for this is the `nlohmann` JSON implementation,
 which ships with ROOT as a builtin dependency and will import from and
-export to JSON. Alternatively, the RapidYAML (`RYML`) implementation
-can be used to also import from and export to YML. This implementation
-can be selected at compile time with the `cmake` flag
-`roofit_hs3_ryml`.
+export to JSON.
+In the past, RapidYAML (`RYML`) was supported, but the effort to keep
+this implementation up to date was too high. YML users could use YML to
+JSON converters to migrate.
 
 ### Usage
 
-The main class providing import from and export to JSON and YML is the
+The main class providing import from and export to JSON is the
 RooJSONFactoryWSTool.
 
 ### Open-world philosophy
@@ -41,7 +40,7 @@ number of different pre-implemented functions and pdfs. What is more,
 you can easily create your own `RooFit` function by inheriting from
 `RooAbsReal` or your own `RooFit` pdf by inheriting from
 `RooAbsPdf`. This means that feature-complete serialization and
-deserialization to and from JSON and YML will probably never be fully
+deserialization to and from JSON will probably never be fully
 achieved. However, this may not impede your usage of this library, as
 it was written in such a way as to allow users (that is, people like
 you) to easily add missing importers and exporters for existing
