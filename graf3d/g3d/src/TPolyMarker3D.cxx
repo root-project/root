@@ -490,10 +490,10 @@ void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    for (Int_t i = 0; i < Size() * 3; i++)
       arr[i] = fP[i];
 
-   TString arrname = SavePrimitiveArray(out, "pmarker3D", Size() * 3, arr.data(), kTRUE);
+   TString vectname = SavePrimitiveVector(out, "pmarker3D", Size() * 3, arr.data(), kTRUE);
 
    SavePrimitiveConstructor(out, Class(), "pmarker3D",
-                            TString::Format("%d, %s, %d, \"%s\"", Size(), arrname.Data(), GetMarkerStyle(),
+                            TString::Format("%d, %s.data(), %d, \"%s\"", Size(), vectname.Data(), GetMarkerStyle(),
                                             TString(fOption).ReplaceSpecialCppChars().Data()),
                             kFALSE);
 
