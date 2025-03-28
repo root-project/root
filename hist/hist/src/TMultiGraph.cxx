@@ -1593,7 +1593,7 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "multigraph");
    SavePrimitiveNameTitle(out, "multigraph");
@@ -1604,11 +1604,11 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       g->SavePrimitive(out, TString::Format("multigraph%s", iter.GetOption()).Data());
 
    const char *l = strstr(option, "th2poly");
-   if (l) {
+   if (l)
       out << "   " << l + 7 << "->AddBin(multigraph);\n";
-   } else {
-      out << "   multigraph->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
-   }
+   else
+      SavePrimitiveDraw(out, "multigraph", option);
+
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();
 

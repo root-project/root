@@ -1032,7 +1032,7 @@ void THStack::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void THStack::SavePrimitive(std::ostream &out, Option_t *option)
 {
    TString name = gInterpreter->MapCppName(GetName());
 
@@ -1068,8 +1068,7 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   " << name << "->Draw(\n" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

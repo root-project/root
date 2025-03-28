@@ -256,7 +256,7 @@ void TScatter::SetMargin(Double_t margin)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TScatter::SavePrimitive(std::ostream &out, Option_t *option)
 {
    TString arr_x = SavePrimitiveVector(out, "scat_x", fNpoints, fGraph->GetX(), kTRUE);
    TString arr_y = SavePrimitiveVector(out, "scat_y", fNpoints, fGraph->GetY());
@@ -287,5 +287,5 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       fHistogram->SetName(hname);
    }
 
-   out << "   scat->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "scat", option);
 }

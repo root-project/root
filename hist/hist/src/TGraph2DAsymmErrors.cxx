@@ -616,8 +616,7 @@ void TGraph2DAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option)
 
    TH1::SavePrimitiveFunctions(out, "gr2daerr", fFunctions);
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   gr2daerr->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "gr2daerr", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
