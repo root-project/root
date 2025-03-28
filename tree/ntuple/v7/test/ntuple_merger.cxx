@@ -8,6 +8,9 @@
 #include <zlib.h>
 #include "gmock/gmock.h"
 #include <TTree.h>
+#include <TRandom3.h>
+#include <TBranch.h>
+#include <TLeaf.h>
 
 using ROOT::TestSupport::CheckDiagsRAII;
 
@@ -2996,4 +2999,220 @@ TEST(RNTupleMerger, MergeSecondEmptySchema)
          EXPECT_FALSE(bool(res));
       }
    }
+}
+
+TEST(RNTupleMerger, MergeStaggeredIncremental)
+{
+   // Minimal repro of ATLAS example:
+   // https://gitlab.cern.ch/amete/rootparallelmerger/-/tree/master-rntuple-prototype
+
+   constexpr auto kNEvents = 5;
+
+   std::array<FileRaii, 4> fileGuardsIn{
+      FileRaii("test_ntuple_merge_staggered_in1.root"),
+      FileRaii("test_ntuple_merge_staggered_in2.root"),
+      FileRaii("test_ntuple_merge_staggered_in3.root"),
+      FileRaii("test_ntuple_merge_staggered_in4.root"),
+   };
+   FileRaii fileGuardMerged("test_ntuple_merge_staggered_merged.root");
+
+   // Produce input files.
+   // Evenly numbered files have only field "foo", oddly numbered have only "bar".
+   for (unsigned fileIdx = 0; fileIdx < fileGuardsIn.size(); ++fileIdx) {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardsIn[fileIdx].GetPath().c_str(), "RECREATE"));
+      const auto fieldName = (fileIdx % 2) == 0 ? "foo" : "bar";
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>(fieldName);
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
+      auto pVal = writer->GetModel().GetDefaultEntry().GetPtr<float>(fieldName);
+
+      for (int i = 0; i < kNEvents; ++i) {
+         *pVal = fileIdx * kNEvents + i;
+         writer->Fill();
+      }
+      file->Write();
+   }
+
+   // Merge the files
+   TFileMerger merger(false, false);
+   merger.OutputFile(fileGuardMerged.GetPath().c_str(), "RECREATE", 505);
+   merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+   for (const auto &f : fileGuardsIn) {
+      auto file = std::unique_ptr<TFile>(TFile::Open(f.GetPath().c_str(), "UPDATE"));
+      merger.AddFile(file.get());
+      bool ok = merger.PartialMerge(TFileMerger::kAllIncremental | TFileMerger::kKeepCompression);
+      EXPECT_TRUE(ok);
+   }
+
+   // Verify values match.
+   // We expect that "foo" and "bar" alternate having values or being 0 (each having kNEvents consecutively)
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardMerged.GetPath().c_str(), "READ"));
+      auto ntuple = file->Get<ROOT::RNTuple>("ntuple");
+      ASSERT_NE(ntuple, nullptr);
+
+      auto reader = RNTupleReader::Open(*ntuple);
+      EXPECT_EQ(reader->GetNEntries(), kNEvents * fileGuardsIn.size());
+
+      auto pnFoo = reader->GetModel().GetDefaultEntry().GetPtr<float>("foo");
+      auto pnBar = reader->GetModel().GetDefaultEntry().GetPtr<float>("bar");
+      for (auto idx : reader->GetEntryRange()) {
+         reader->LoadEntry(idx);
+         float expFoo = (idx / kNEvents) % 2 == 0 ? idx : 0;
+         float expBar = (idx / kNEvents) % 2 == 1 ? idx : 0;
+         EXPECT_FLOAT_EQ(*pnFoo, expFoo);
+         EXPECT_FLOAT_EQ(*pnBar, expBar);
+      }
+   }
+
+   fileGuardMerged.PreserveFile();
+}
+
+namespace {
+// Adapted from ATLAS example: https://gitlab.cern.ch/amete/rootparallelmerger/-/tree/master-rntuple-prototype
+struct BranchDesc {
+public:
+   TClass *clazz;
+   using dummy_ptr_t = std::unique_ptr<void, std::function<void(void *)>>;
+   std::unique_ptr<void, std::function<void(void *)>> dummyptr;
+   void *dummy = 0;
+
+   explicit BranchDesc(TClass *cl) : clazz(cl) {}
+
+   void *dummyAddr()
+   {
+      if (clazz) {
+         void (TClass::*dxtor)(void *, Bool_t) = &TClass::Destructor;
+         std::function<void(void *)> del = std::bind(dxtor, clazz, std::placeholders::_1, false);
+         dummyptr = std::unique_ptr<void, std::function<void(void *)>>(clazz->New(), std::move(del));
+         dummy = dummyptr.get();
+         return &dummy;
+      }
+      return nullptr;
+   }
+};
+} // namespace
+
+// Adapted from ATLAS example: https://gitlab.cern.ch/amete/rootparallelmerger/-/tree/master-rntuple-prototype
+static bool SyncBranches(TTree *fromTree, TTree *toTree)
+{
+   bool updated = false;
+   const TObjArray *fromBranches = fromTree->GetListOfBranches();
+   const TObjArray *toBranches = toTree->GetListOfBranches();
+   int nBranches = fromBranches->GetEntriesFast();
+   for (int k = 0; k < nBranches; ++k) {
+      TBranch *branch = static_cast<TBranch *>(fromBranches->UncheckedAt(k));
+      if (!toBranches->FindObject(branch->GetName())) {
+         TBranch *newBranch = nullptr;
+         TClass *cl = TClass::GetClass(branch->GetClassName());
+         BranchDesc desc(cl);
+         void *empty = desc.dummyAddr();
+         if (strlen(branch->GetClassName()) > 0) {
+            newBranch = toTree->Branch(branch->GetName(), branch->GetClassName(), nullptr, branch->GetBasketSize(),
+                                       branch->GetSplitLevel());
+            newBranch->SetAddress(empty);
+         } else {
+            TObjArray *outLeaves = branch->GetListOfLeaves();
+            TLeaf *leaf = static_cast<TLeaf *>(outLeaves->UncheckedAt(0));
+            std::string type = leaf->GetTypeName();
+            std::string attr = leaf->GetName();
+            if (type == "Float_t")
+               type = attr + "/F";
+            newBranch = toTree->Branch(branch->GetName(), static_cast<void *>(nullptr), type.c_str(), 2048);
+         }
+         int nEntries = toTree->GetEntries();
+         for (int m = 0; m < nEntries; ++m) {
+            newBranch->BackFill();
+         }
+         updated = true;
+      }
+   }
+   return updated;
+}
+
+TEST(RNTupleMerger, MixedTreeNTuple)
+{
+   // Adapted from ATLAS example: https://gitlab.cern.ch/amete/rootparallelmerger/-/tree/master-rntuple-prototype
+
+   constexpr auto kNEvents = 5;
+
+   std::array<FileRaii, 4> fileGuardsIn{
+      FileRaii("test_ntuple_merge_mix_in1.root"),
+      FileRaii("test_ntuple_merge_mix_in2.root"),
+      FileRaii("test_ntuple_merge_mix_in3.root"),
+      FileRaii("test_ntuple_merge_mix_in4.root"),
+   };
+   FileRaii fileGuardMerged("test_ntuple_merge_mix_merged.root");
+
+   TRandom3 rng;
+
+   // Produce input files.
+   // Evenly numbered files have only field/branch "foo", oddly numbered have only "bar".
+   for (unsigned fileIdx = 0; fileIdx < fileGuardsIn.size(); ++fileIdx) {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardsIn[fileIdx].GetPath().c_str(), "RECREATE"));
+      const auto fieldName = (fileIdx % 2) == 0 ? "foo" : "bar";
+      auto tree = std::make_unique<TTree>("tree", "tree");
+      float treeVal;
+      tree->Branch(fieldName, &treeVal);
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>(fieldName);
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
+      auto pVal = writer->GetModel().GetDefaultEntry().GetPtr<float>(fieldName);
+
+      for (int i = 0; i < kNEvents; ++i) {
+         treeVal = rng.Rndm();
+         *pVal = treeVal;
+         tree->Fill();
+         writer->Fill();
+      }
+      file->Write();
+   }
+
+   // Merge the files
+   TFileMerger merger(false, false);
+   merger.OutputFile(fileGuardMerged.GetPath().c_str(), "RECREATE");
+   merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+   for (const auto &f : fileGuardsIn) {
+      auto file = std::unique_ptr<TFile>(TFile::Open(f.GetPath().c_str(), "UPDATE"));
+      merger.AddFile(file.get());
+
+      // First sync the branches between the trees if needed
+      TTree *outCollTree = merger.GetOutputFile()->Get<TTree>("tree");
+      TTree *inCollTree = file->Get<TTree>("tree");
+      if (inCollTree != nullptr && outCollTree != nullptr) {
+         if (SyncBranches(outCollTree, inCollTree)) {
+            file->Write();
+         }
+         SyncBranches(inCollTree, outCollTree);
+      }
+
+      bool ok = merger.PartialMerge(TFileMerger::kAllIncremental | TFileMerger::kKeepCompression);
+      EXPECT_TRUE(ok);
+   }
+
+   // Verify TTree and RNTuple values match
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardMerged.GetPath().c_str(), "READ"));
+      auto tree = file->Get<TTree>("tree");
+      auto ntuple = file->Get<ROOT::RNTuple>("ntuple");
+      ASSERT_NE(tree, nullptr);
+      ASSERT_NE(ntuple, nullptr);
+
+      auto reader = RNTupleReader::Open(*ntuple);
+      EXPECT_EQ(reader->GetNEntries(), tree->GetEntries());
+
+      auto pnFoo = reader->GetModel().GetDefaultEntry().GetPtr<float>("foo");
+      auto pnBar = reader->GetModel().GetDefaultEntry().GetPtr<float>("bar");
+      float ptFoo, ptBar;
+      tree->SetBranchAddress("foo", &ptFoo);
+      tree->SetBranchAddress("bar", &ptBar);
+      for (auto idx : reader->GetEntryRange()) {
+         tree->GetEntry(idx);
+         reader->LoadEntry(idx);
+         EXPECT_FLOAT_EQ(*pnFoo, ptFoo);
+         EXPECT_FLOAT_EQ(*pnBar, ptBar);
+      }
+   }
+
+   fileGuardMerged.PreserveFile();
 }
