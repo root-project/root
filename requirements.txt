@@ -12,7 +12,7 @@ onnx
 # TMVA: PyMVA interfaces
 scikit-learn
 tensorflow<2.16 ; python_version < "3.12"
-torch<2.5 ; python_version < "3.13" # no torch version that fullfills version constraint available for Python 3.13
+torch
 xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
