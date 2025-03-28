@@ -19,8 +19,8 @@
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 
-ROOT::RNTupleGlobalRange
-ROOT::Experimental::Internal::GetFieldRange(const ROOT::RFieldBase &field, const RPageSource &pageSource)
+ROOT::RNTupleGlobalRange ROOT::Internal::GetFieldRange(const ROOT::RFieldBase &field,
+                                                       const ROOT::Experimental::Internal::RPageSource &pageSource)
 {
    const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
 
