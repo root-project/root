@@ -7283,17 +7283,17 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // Check if the histogram has equidistant X bins or not.  If not, we
    // create an array holding the bins.
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray)
-      sxaxis = SavePrimitiveArray(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
+      sxaxis = SavePrimitiveVector(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
    // If the histogram is 2 or 3 dimensional, check if the histogram
    // has equidistant Y bins or not.  If not, we create an array
    // holding the bins.
    if (fDimension > 1 && GetYaxis()->GetXbins()->fN && GetYaxis()->GetXbins()->fArray)
-      syaxis = SavePrimitiveArray(out, hname + "_y", GetYaxis()->GetXbins()->fN, GetYaxis()->GetXbins()->fArray);
+      syaxis = SavePrimitiveVector(out, hname + "_y", GetYaxis()->GetXbins()->fN, GetYaxis()->GetXbins()->fArray);
    // IF the histogram is 3 dimensional, check if the histogram
    // has equidistant Z bins or not.  If not, we create an array
    // holding the bins.
    if (fDimension > 2 && GetZaxis()->GetXbins()->fN && GetZaxis()->GetXbins()->fArray)
-      szaxis = SavePrimitiveArray(out, hname + "_z", GetZaxis()->GetXbins()->fN, GetZaxis()->GetXbins()->fArray);
+      szaxis = SavePrimitiveVector(out, hname + "_z", GetZaxis()->GetXbins()->fN, GetZaxis()->GetXbins()->fArray);
 
    const auto old_precision{out.precision()};
    constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
@@ -7302,20 +7302,20 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins();
    if (!sxaxis.IsNull())
-      out << ", " << sxaxis;
+      out << ", " << sxaxis << ".data()";
    else
       out << ", " << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
    if (fDimension > 1) {
       out << ", " << GetYaxis()->GetNbins();
       if (!syaxis.IsNull())
-         out << ", " << syaxis;
+         out << ", " << syaxis << ".data()";
       else
          out << ", " << GetYaxis()->GetXmin() << ", " << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
       out << ", " << GetZaxis()->GetNbins();
       if (!szaxis.IsNull())
-         out << ", " << szaxis;
+         out << ", " << szaxis << ".data()";
       else
          out << ", " << GetZaxis()->GetXmin() << ", " << GetZaxis()->GetXmax();
    }
@@ -7349,16 +7349,16 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          }
    } else {
       if (numbins > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, content.data());
+         TString vectname = SavePrimitiveVector(out, hname, fNcells, content.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinContent(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vectname << "[bin])\n";
+         out << "         " << hname << "->SetBinContent(bin, " << vectname << "[bin]);\n";
       }
       if (numerrors > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, errors.data());
+         TString vectname = SavePrimitiveVector(out, hname, fNcells, errors.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinError(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vectname << "[bin])\n";
+         out << "         " << hname << "->SetBinError(bin, " << vectname << "[bin]);\n";
       }
    }
 
@@ -7395,16 +7395,16 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
-      TString arrname;
+      TString vectname;
       if (TestBit(kUserContour)) {
          std::vector<Double_t> levels(ncontours);
          for (Int_t bin = 0; bin < ncontours; bin++)
             levels[bin] = GetContourLevel(bin);
-         arrname = SavePrimitiveArray(out, hname, ncontours, levels.data());
+         vectname = SavePrimitiveVector(out, hname, ncontours, levels.data());
       }
       out << "   " << hname << "->SetContour(" << ncontours;
-      if (!arrname.IsNull())
-         out << ", " << arrname;
+      if (!vectname.IsNull())
+         out << ", " << vectname << ".data()";
       out << ");\n";
    }
 
