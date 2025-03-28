@@ -19,6 +19,22 @@ git clone https://github.com/wlav/cppyy.git
 
 cd CPyCppyy/
 git reset --hard 519071905e5d6590e924932c20d3a8e4a7eeff13
+
+
+cd CPyCppyy
+
+git remote rename origin wlav
+git remote add guitargeek https://github.com/guitargeek/CPyCppyy.git
+git fetch guitargeek
+
+git checkout -b sync
+
+rebase_topic () {
+  git rebase sync $1 && git branch -D sync && git checkout -b sync
+}
+
+rebase_topic guitargeek/py_errors
+
 cd ../
 
 cd cppyy/
