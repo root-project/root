@@ -267,7 +267,7 @@ void TCrown::Paint(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TCrown::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TCrown::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "crown",
                             TString::Format("%g, %g, %g, %g, %g, %g", fX1, fY1, fR1, fR2, fPhimin, fPhimax));
@@ -276,10 +276,10 @@ void TCrown::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out, "crown", 1, 1, 1);
 
    if (GetNoEdges())
-      out << "   crown->SetNoEdges();" << std::endl;
+      out << "   crown->SetNoEdges();\n";
 
    if (fYXRatio != 1)
-      out << "   crown->SetYXRatio(" << fYXRatio << ");" << std::endl;
+      out << "   crown->SetYXRatio(" << fYXRatio << ");\n";
 
-   out << "   crown->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "crown", option);
 }

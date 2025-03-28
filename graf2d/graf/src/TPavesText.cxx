@@ -117,7 +117,7 @@ void TPavesText::Paint(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPavesText::SavePrimitive(std::ostream &out, Option_t *option)
 {
    if (!strcmp(GetName(), "stats") || !strcmp(GetName(), "title"))
       return;
@@ -134,5 +134,5 @@ void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out, "pst", 1, 1, 1);
    SaveTextAttributes(out, "pst", 22, 0, 1, 62, 0);
    SaveLines(out, "pst", kTRUE);
-   out << "   pst->Draw();\n";
+   SavePrimitiveDraw(out, "pst", option);
 }

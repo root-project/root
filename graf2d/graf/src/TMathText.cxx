@@ -674,17 +674,17 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TMathText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TMathText::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(
       out, Class(), "mathtex",
       TString::Format("%g, %g, \"%s\"", fX, fY, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
 
    if (TestBit(kTextNDC))
-      out << "mathtex->SetNDC();" << std::endl;
+      out << "   mathtex->SetNDC();\n";
 
    SaveTextAttributes(out, "mathtex", 11, 0, 1, 42, 0.05);
    SaveFillAttributes(out, "mathtex", 0, 1001);
 
-   out << "   mathtex->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "mathtex", option);
 }

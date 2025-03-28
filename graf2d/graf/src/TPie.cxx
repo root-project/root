@@ -1121,12 +1121,12 @@ void TPie::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "pie", TString::Format("\"%s\", \"%s\", %d", GetName(), TString(GetTitle()).ReplaceSpecialCppChars().Data(), fNvals));
 
-   out << "   pie->SetCircle(" << fX << ", " << fY << ", " << fRadius << ");" << std::endl;
-   out << "   pie->SetValueFormat(\"" << GetValueFormat() << "\");" << std::endl;
-   out << "   pie->SetLabelFormat(\"" << GetLabelFormat() << "\");" << std::endl;
-   out << "   pie->SetPercentFormat(\"" << GetPercentFormat() << "\");" << std::endl;
-   out << "   pie->SetLabelsOffset(" << GetLabelsOffset() << ");" << std::endl;
-   out << "   pie->SetAngularOffset(" << GetAngularOffset() << ");" << std::endl;
+   out << "   pie->SetCircle(" << fX << ", " << fY << ", " << fRadius << ");\n";
+   out << "   pie->SetValueFormat(\"" << GetValueFormat() << "\");\n";
+   out << "   pie->SetLabelFormat(\"" << GetLabelFormat() << "\");\n";
+   out << "   pie->SetPercentFormat(\"" << GetPercentFormat() << "\");\n";
+   out << "   pie->SetLabelsOffset(" << GetLabelsOffset() << ");\n";
+   out << "   pie->SetAngularOffset(" << GetAngularOffset() << ");\n";
 
    SaveTextAttributes(out, "pie", 11, 0, 1, 62, 0.05);
 
@@ -1136,7 +1136,7 @@ void TPie::SavePrimitive(std::ostream &out, Option_t *option)
       fPieSlices[i]->SavePrimitive(out, slice_name.Data());
    }
 
-   out << "   pie->Draw(\"" << option << "\");" << std::endl;
+   SavePrimitiveDraw(out, "pie", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

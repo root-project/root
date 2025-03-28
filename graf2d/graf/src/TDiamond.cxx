@@ -458,7 +458,7 @@ void TDiamond::Paint(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TDiamond::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TDiamond::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "diamond", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2));
 
@@ -467,5 +467,6 @@ void TDiamond::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveTextAttributes(out, "diamond", 11, 0, 1, 62, 0.05);
 
    SaveLines(out, "diamond", kTRUE);
-   out << "   diamond->Draw();" << std::endl;
+
+   SavePrimitiveDraw(out, "diamond", option);
 }
