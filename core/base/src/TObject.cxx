@@ -815,6 +815,19 @@ TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_
    return vectame;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save invocation of primitive Draw() method
+/// Skipped if option contains "nodraw" string
+
+void TObject::SavePrimitiveDraw(std::ostream &out, const char *variable_name, Option_t *option)
+{
+   if (!option || !strstr(option, "nodraw")) {
+      out << "   " << variable_name << "->Draw(";
+      if (option && *option)
+         out << "\"" << TString(option).ReplaceSpecialCppChars() << "\"";
+      out << ");\n";
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a primitive as a C++ statement(s) on output stream "out".
