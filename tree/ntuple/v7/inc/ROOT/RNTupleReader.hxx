@@ -296,6 +296,12 @@ public:
       return GetView<T>(RetrieveFieldId(fieldName), objPtr);
    }
 
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr, std::string_view typeName)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), objPtr, typeName);
+   }
+
    /// Provides access to an individual (sub)field, reading its values into `rawPtr`.
    ///
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
@@ -303,6 +309,12 @@ public:
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr, std::string_view typeName)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), rawPtr, typeName);
    }
 
    /// Provides access to an individual (sub)field from its on-disk ID.
@@ -327,6 +339,15 @@ public:
       return ROOT::RNTupleView<T>(std::move(field), range, objPtr);
    }
 
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr, std::string_view typeName)
+   {
+      static_assert(std::is_void_v<T>, "calling GetView with a type name string is only allowed for [T = void]");
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource, typeName);
+      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, objPtr);
+   }
+
    /// Provides access to an individual (sub)field from its on-disk ID, reading its values into `rawPtr`.
    ///
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
@@ -336,6 +357,15 @@ public:
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range, rawPtr);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr, std::string_view typeName)
+   {
+      static_assert(std::is_void_v<T>, "calling GetView with a type name string is only allowed for [T = void]");
+      auto field = RNTupleView<T>::CreateField(fieldId, *fSource, typeName);
+      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
+      return RNTupleView<T>(std::move(field), range, rawPtr);
    }
 
    /// Provides direct access to the I/O buffers of a **mappable** (sub)field.
