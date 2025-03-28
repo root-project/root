@@ -1434,11 +1434,14 @@ TH1 *TGraph2D::Project(Option_t *option) const
 
 Int_t TGraph2D::RemoveDuplicates()
 {
-   for (int i=0; i<fNpoints; i++) {
+   for (int i = 0; i < fNpoints; i++) {
       double x = fX[i];
       double y = fY[i];
-      for (int j=i+1; j<fNpoints; j++) {
-         if (x==fX[j] && y==fY[j]) {RemovePoint(j); j--;}
+      for (int j = i + 1; j < fNpoints; j++) {
+         if (x == fX[j] && y == fY[j]) {
+            RemovePoint(j);
+            j--;
+         }
       }
    }
 
