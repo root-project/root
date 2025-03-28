@@ -146,7 +146,7 @@ TEST(TTreeRegressions, LeafLongString)
    EXPECT_EQ(strlen(s), 999);
 }
 
-//https://github.com/root-project/root/issues/9319
+// https://github.com/root-project/root/issues/9319
 TEST(TTreeRegressions, PrintClustersRounding)
 {
    TMemFile file("tree9319_clusters.root", "RECREATE");
@@ -154,12 +154,12 @@ TEST(TTreeRegressions, PrintClustersRounding)
    t.SetAutoFlush(5966);
    int x = 0;
    t.Branch("x", &x);
-   for(auto i = 0; i<10000; ++i) {
+   for (auto i = 0; i<10000; ++i) {
       t.Fill();
    }
 
    testing::internal::CaptureStdout();
-   
+
    t.Print("clusters");
 
    const std::string output = testing::internal::GetCapturedStdout();
