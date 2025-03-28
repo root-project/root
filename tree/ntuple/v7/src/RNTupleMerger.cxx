@@ -996,6 +996,25 @@ static RColumnInfoGroup GatherColumnInfos(const RDescriptorsComparison &descCmp,
    return res;
 }
 
+static void PrefillColumnMap(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &fieldDesc,
+                             ColumnIdMap_t &colIdMap, const std::string &prefix = "")
+{
+   std::string name = prefix + '.' + fieldDesc.GetFieldName();
+   for (const auto &colId : fieldDesc.GetLogicalColumnIds()) {
+      const auto &colDesc = desc.GetColumnDescriptor(colId);
+      RColumnOutInfo info{};
+      const auto colName = name + '.' + std::to_string(colDesc.GetIndex());
+      info.fColumnId = colDesc.GetLogicalId();
+      info.fColumnType = colDesc.GetType();
+      colIdMap[colName] = info;
+   }
+
+   for (const auto &subId : fieldDesc.GetLinkIds()) {
+      const auto &subfield = desc.GetFieldDescriptor(subId);
+      PrefillColumnMap(desc, subfield, colIdMap, name);
+   }
+}
+
 RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination,
                              std::unique_ptr<ROOT::RNTupleModel> model)
    // TODO(gparolini): consider using an arena allocator instead, since we know the precise lifetime
@@ -1045,6 +1064,14 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    RNTupleMergeData mergeData{sources, *fDestination, mergeOpts};
    mergeData.fNumDstEntries = mergeData.fDestination.GetNEntries();
+
+   if (fModel) {
+      // If this is an incremental merging, pre-fill the column id map with the existing destination ids.
+      // Otherwise we would generate new output ids that may not match the ones in the destination!
+      for (const auto &field : mergeData.fDstDescriptor.GetTopLevelFields()) {
+         PrefillColumnMap(fDestination->GetDescriptor(), field, mergeData.fColumnIdMap);
+      }
+   }
 
 #define SKIP_OR_ABORT(errMsg)                                                        \
    do {                                                                              \
