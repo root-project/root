@@ -7,6 +7,7 @@
 //------------------------------------------------------------------------------
 
 // RUN: cat %s | %cling -I%p  | FileCheck %s
+// UNSUPPORTED: system-darwin, system-windows, system-linux
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
