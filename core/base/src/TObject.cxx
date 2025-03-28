@@ -811,6 +811,41 @@ TString TObject::SavePrimitiveArray(std::ostream &out, const char *prefix, Int_t
    return arrname;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save array in the output stream "out" as vector.
+/// Create unique variable name based on prefix value
+/// Returns name of vector which can be used in constructor or in other places of C++ code
+
+TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line)
+{
+   thread_local int vectid = 0;
+
+   TString vectame = TString::Format("%s_vect%d", prefix, vectid++);
+
+   if (empty_line)
+      out << "   \n";
+
+   out << "   std::vector<Double_t> " << vectame;
+   if (len > 0) {
+      const auto old_precision{out.precision()};
+      constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+      out << std::setprecision(max_precision);
+      Bool_t use_new_lines = len > 15;
+
+      out << "{";
+      for (Int_t i = 0; i < len; i++) {
+         out << (((i % 10 == 0) && use_new_lines) ? "\n      " : " ") << arr[i];
+         if (i < len - 1)
+            out << ",";
+      }
+      out << (use_new_lines ? "\n   }" : " }");
+
+      out << std::setprecision(old_precision);
+   }
+   out << ";\n";
+   return vectame;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a primitive as a C++ statement(s) on output stream "out".
