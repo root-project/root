@@ -579,21 +579,23 @@ void TGraph2DAsymmErrors::SetPoint(Int_t i, Double_t x, Double_t y, Double_t z)
 
 void TGraph2DAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   TString arrx = SavePrimitiveArray(out, "gr2daerr_x", fNpoints, fX, kTRUE);
-   TString arry = SavePrimitiveArray(out, "gr2daerr_y", fNpoints, fY);
-   TString arrz = SavePrimitiveArray(out, "gr2daerr_z", fNpoints, fZ);
-   TString arrexl = SavePrimitiveArray(out, "gr2daerr_exl", fNpoints, fEXlow);
-   TString arrexh = SavePrimitiveArray(out, "gr2daerr_exh", fNpoints, fEXhigh);
-   TString arreyl = SavePrimitiveArray(out, "gr2daerr_eyl", fNpoints, fEYlow);
-   TString arreyh = SavePrimitiveArray(out, "gr2daerr_eyh", fNpoints, fEYhigh);
-   TString arrezl = SavePrimitiveArray(out, "gr2daerr_ezl", fNpoints, fEZlow);
-   TString arrezh = SavePrimitiveArray(out, "gr2daerr_ezh", fNpoints, fEZhigh);
+   TString arrx = SavePrimitiveVector(out, "gr2daerr_x", fNpoints, fX, kTRUE);
+   TString arry = SavePrimitiveVector(out, "gr2daerr_y", fNpoints, fY);
+   TString arrz = SavePrimitiveVector(out, "gr2daerr_z", fNpoints, fZ);
+   TString arrexl = SavePrimitiveVector(out, "gr2daerr_exl", fNpoints, fEXlow);
+   TString arrexh = SavePrimitiveVector(out, "gr2daerr_exh", fNpoints, fEXhigh);
+   TString arreyl = SavePrimitiveVector(out, "gr2daerr_eyl", fNpoints, fEYlow);
+   TString arreyh = SavePrimitiveVector(out, "gr2daerr_eyh", fNpoints, fEYhigh);
+   TString arrezl = SavePrimitiveVector(out, "gr2daerr_ezl", fNpoints, fEZlow);
+   TString arrezh = SavePrimitiveVector(out, "gr2daerr_ezh", fNpoints, fEZhigh);
 
-   SavePrimitiveConstructor(out, Class(), "gr2daerr",
-                            TString::Format("%d, %s, %s, %s, %s, %s, %s, %s, %s, %s", fNpoints, arrx.Data(),
-                                            arry.Data(), arrz.Data(), arrexl.Data(), arrexh.Data(), arreyl.Data(),
-                                            arreyh.Data(), arrezl.Data(), arrezh.Data()),
-                            kFALSE);
+   SavePrimitiveConstructor(
+      out, Class(), "gr2daerr",
+      TString::Format(
+         "%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+         fNpoints, arrx.Data(), arry.Data(), arrz.Data(), arrexl.Data(), arrexh.Data(), arreyl.Data(), arreyh.Data(),
+         arrezl.Data(), arrezh.Data()),
+      kFALSE);
 
    if (strcmp(GetName(), "Graph2D"))
       out << "   gr2daerr->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
