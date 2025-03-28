@@ -453,16 +453,17 @@ void TGraph2DErrors::SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t e
 
 void TGraph2DErrors::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   TString arrx = SavePrimitiveArray(out, "gr2derr_x", fNpoints, fX, kTRUE);
-   TString arry = SavePrimitiveArray(out, "gr2derr_y", fNpoints, fY);
-   TString arrz = SavePrimitiveArray(out, "gr2derr_z", fNpoints, fZ);
-   TString arrex = SavePrimitiveArray(out, "gr2derr_ex", fNpoints, fEX);
-   TString arrey = SavePrimitiveArray(out, "gr2derr_ey", fNpoints, fEY);
-   TString arrez = SavePrimitiveArray(out, "gr2derr_ez", fNpoints, fEZ);
+   TString arrx = SavePrimitiveVector(out, "gr2derr_x", fNpoints, fX, kTRUE);
+   TString arry = SavePrimitiveVector(out, "gr2derr_y", fNpoints, fY);
+   TString arrz = SavePrimitiveVector(out, "gr2derr_z", fNpoints, fZ);
+   TString arrex = SavePrimitiveVector(out, "gr2derr_ex", fNpoints, fEX);
+   TString arrey = SavePrimitiveVector(out, "gr2derr_ey", fNpoints, fEY);
+   TString arrez = SavePrimitiveVector(out, "gr2derr_ez", fNpoints, fEZ);
 
    SavePrimitiveConstructor(out, Class(), "gr2derr",
-                            TString::Format("%d, %s, %s, %s, %s, %s, %s", fNpoints, arrx.Data(), arry.Data(),
-                                            arrz.Data(), arrex.Data(), arrey.Data(), arrez.Data()),
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+                                            fNpoints, arrx.Data(), arry.Data(), arrz.Data(), arrex.Data(), arrey.Data(),
+                                            arrez.Data()),
                             kFALSE);
 
    if (strcmp(GetName(), "Graph2D"))

@@ -3324,9 +3324,9 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          Save(fXmin, fXmax, 0, 0, 0, 0);
       }
       if (!fSave.empty()) {
-         TString arrs = SavePrimitiveArray(out, f1Name, fSave.size(), fSave.data());
+         TString vect = SavePrimitiveVector(out, f1Name, fSave.size(), fSave.data());
          out << "   for (int n = 0; n < " << fSave.size() << "; n++)\n";
-         out << "      " << f1Name << "->SetSavedPoint(n, "  << arrs << "[n]);\n";
+         out << "      " << f1Name << "->SetSavedPoint(n, "  << vect << "[n]);\n";
       }
 
       if (saved)
