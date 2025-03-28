@@ -1516,8 +1516,7 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option)
 
    TH1::SavePrimitiveFunctions(out, "graph2d", fFunctions);
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   graph2d->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "graph2d", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
