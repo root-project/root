@@ -86,14 +86,18 @@ protected:
    ROOT::RNTupleGlobalRange fFieldRange;
    ROOT::RFieldBase::RValue fValue;
 
-   static std::unique_ptr<ROOT::RFieldBase> CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource)
+   static std::unique_ptr<ROOT::RFieldBase>
+   CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource, std::string_view typeName = "")
    {
       std::unique_ptr<ROOT::RFieldBase> field;
       {
          const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if constexpr (std::is_void_v<T>) {
-            field = fieldDesc.CreateField(desc);
+            if (typeName.empty())
+               field = fieldDesc.CreateField(desc);
+            else
+               field = ROOT::RFieldBase::Create(fieldDesc.GetFieldName(), std::string(typeName)).Unwrap();
          } else {
             field = std::make_unique<ROOT::RField<T>>(fieldDesc.GetFieldName());
          }
