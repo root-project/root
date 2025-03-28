@@ -53,7 +53,6 @@ using ROOT::Experimental::REntry;
 using ROOT::Experimental::RNTupleFillContext;
 using ROOT::Experimental::RNTupleFillStatus;
 using ROOT::Experimental::RNTupleParallelWriter;
-using ROOT::Experimental::RNTupleWriter;
 
 using ModelTokensPair = std::pair<std::unique_ptr<ROOT::RNTupleModel>, std::vector<REntry::RFieldToken>>;
 
@@ -159,7 +158,7 @@ public:
 // in the critical section by executing its tasks. See also the note at the top of the file.
 class SerializingOutputter final : public Outputter {
    FileService &fFileService;
-   std::unique_ptr<RNTupleWriter> fWriter;
+   std::unique_ptr<ROOT::RNTupleWriter> fWriter;
    std::mutex fWriterMutex;
    std::vector<REntry::RFieldToken> fTokens;
 
@@ -176,7 +175,7 @@ public:
       auto &model = modelTokens.first;
 
       std::lock_guard g(fileService.GetMutex());
-      fWriter = RNTupleWriter::Append(std::move(model), ntupleName, fileService.GetFile(), options);
+      fWriter = ROOT::RNTupleWriter::Append(std::move(model), ntupleName, fileService.GetFile(), options);
    }
 
    void InitSlot(unsigned slot) final

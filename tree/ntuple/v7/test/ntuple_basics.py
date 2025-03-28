@@ -3,8 +3,6 @@ import unittest
 import ROOT
 
 RNTupleReader = ROOT.Experimental.RNTupleReader
-RNTupleWriter = ROOT.Experimental.RNTupleWriter
-
 
 class RNTupleBasics(unittest.TestCase):
     """Basic tests of using RNTuple from Python"""
@@ -16,7 +14,7 @@ class RNTupleBasics(unittest.TestCase):
         model.MakeField["int"]("f")
         model.MakeField["std::string"]("mystr")
 
-        with RNTupleWriter.Recreate(model, "ntpl", "test_ntuple_py_write_read.root") as writer:
+        with ROOT.RNTupleWriter.Recreate(model, "ntpl", "test_ntuple_py_write_read.root") as writer:
             entry = writer.CreateEntry()
             entry["f"] = 42
             entry["mystr"] = "string stored in RNTuple"
@@ -36,7 +34,7 @@ class RNTupleBasics(unittest.TestCase):
 
         # FIXME: This should work without make_pair...
         fields = [ROOT.std.make_pair("int", "f")]
-        with RNTupleWriter.Recreate(fields, "ntpl", "test_ntuple_py_write_fields.root") as writer:
+        with ROOT.RNTupleWriter.Recreate(fields, "ntpl", "test_ntuple_py_write_fields.root") as writer:
             entry = writer.CreateEntry()
             entry["f"] = 42
             writer.Fill(entry)
@@ -54,7 +52,7 @@ class RNTupleBasics(unittest.TestCase):
         model.MakeField["int"]("f")
 
         with ROOT.TFile.Open("test_ntuple_py_append.root", "RECREATE") as f:
-            with RNTupleWriter.Append(model, "ntpl", f) as writer:
+            with ROOT.RNTupleWriter.Append(model, "ntpl", f) as writer:
                 entry = writer.CreateEntry()
                 entry["f"] = 42
                 writer.Fill(entry)
@@ -75,7 +73,7 @@ class RNTupleBasics(unittest.TestCase):
         write_model.MakeField["int"]("f1")
         write_model.MakeField["int"]("f2")
 
-        with RNTupleWriter.Recreate(write_model, "ntpl", "test_ntuple_py_read_model.root") as writer:
+        with ROOT.RNTupleWriter.Recreate(write_model, "ntpl", "test_ntuple_py_read_model.root") as writer:
             entry = writer.CreateEntry()
             writer.Fill(entry)
 
@@ -96,7 +94,7 @@ class RNTupleBasics(unittest.TestCase):
 
         class WrongClass: ...
 
-        with RNTupleWriter.Recreate(model, "ntpl", "test_ntuple_py_test_forbid_writing_wrong_type.root") as writer:
+        with ROOT.RNTupleWriter.Recreate(model, "ntpl", "test_ntuple_py_test_forbid_writing_wrong_type.root") as writer:
             entry = writer.CreateEntry()
             with self.assertRaises(TypeError):
                 entry["mystr"] = WrongClass()

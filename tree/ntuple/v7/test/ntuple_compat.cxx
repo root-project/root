@@ -395,7 +395,7 @@ TEST(RNTupleCompat, UnknownLocatorType)
       auto fieldPt = model->MakeField<float>("pt");
       auto wopts = RNTupleWriteOptions();
       auto sink = std::make_unique<RPageSinkTestLocator>("ntpl", fileGuard.GetPath(), wopts);
-      auto writer = CreateRNTupleWriter(std::move(model), std::move(sink));
+      auto writer = ROOT::Internal::CreateRNTupleWriter(std::move(model), std::move(sink));
       *fieldPt = 33.f;
       writer->Fill();
    }

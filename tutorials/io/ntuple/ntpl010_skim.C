@@ -24,7 +24,6 @@
 
 // Import classes from experimental namespace for the time being.
 using ROOT::Experimental::RNTupleReader;
-using ROOT::Experimental::RNTupleWriter;
 
 // Input and output.
 constexpr char const *kNTupleInputName = "ntpl";
@@ -42,7 +41,7 @@ static void Write()
    auto fldVpz = model->MakeField<std::vector<float>>("vpz");
    auto fldN = model->MakeField<float>("n");
 
-   auto writer = RNTupleWriter::Recreate(std::move(model), kNTupleInputName, kNTupleInputFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), kNTupleInputName, kNTupleInputFileName);
 
    gRandom->SetSeed();
    for (int i = 0; i < kNEvents; i++) {
@@ -89,7 +88,7 @@ void ntpl010_skim()
    // Add an additional field to the skimmed dataset
    auto ptrSkip = skimModel->MakeField<std::uint16_t>("skip");
 
-   auto writer = RNTupleWriter::Recreate(std::move(skimModel), kNTupleOutputName, kNTupleOutputFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(skimModel), kNTupleOutputName, kNTupleOutputFileName);
 
    auto hSkip = new TH1F("h", "distribution of skipped entries", 10, 0, 10);
    auto ptrN = reader->GetModel().GetDefaultEntry().GetPtr<float>("n");

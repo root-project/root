@@ -38,16 +38,15 @@ namespace ROOT {
 
 class RNTupleWriteOptions;
 
-namespace Experimental {
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
 std::unique_ptr<RNTupleWriter>
-CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Experimental::Internal::RPageSink> sink);
 } // namespace Internal
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleWriter
+\class ROOT::RNTupleWriter
 \ingroup NTuple
 \brief An RNTuple that gets filled with entries (data) and writes them to storage
 
@@ -60,28 +59,29 @@ triggered by FlushCluster() or by destructing the writer.  On I/O errors, an exc
 class RNTupleWriter {
    friend ROOT::RNTupleModel::RUpdater;
    friend std::unique_ptr<RNTupleWriter>
-      Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
+      Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>,
+                                    std::unique_ptr<Experimental::Internal::RPageSink>);
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
    /// Needs to be destructed after the page sink (in the fill context) is destructed and so declared before.
-   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fZipTasks;
-   RNTupleFillContext fFillContext;
-   Detail::RNTupleMetrics fMetrics;
+   std::unique_ptr<Experimental::Internal::RPageStorage::RTaskScheduler> fZipTasks;
+   Experimental::RNTupleFillContext fFillContext;
+   Experimental::Detail::RNTupleMetrics fMetrics;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
-   RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Experimental::Internal::RPageSink> sink);
 
    ROOT::RNTupleModel &GetUpdatableModel();
-   Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
+   Experimental::Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
 
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                std::unique_ptr<Internal::RPageSink> sink,
+                                                std::unique_ptr<Experimental::Internal::RPageSink> sink,
                                                 const ROOT::RNTupleWriteOptions &options);
 
 public:
@@ -139,7 +139,7 @@ public:
    ROOT::NTupleSize_t GetNEntries() const { return fFillContext.GetNEntries(); }
 
    void EnableMetrics() { fMetrics.Enable(); }
-   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+   const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
    const ROOT::RNTupleModel &GetModel() const { return *fFillContext.fModel; }
 
@@ -149,11 +149,10 @@ public:
    /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTuple.hxx>
-   /// using ROOT::Experimental::RNTupleWriter;
    ///
    /// auto model = ROOT::RNTupleModel::Create();
    /// auto fldFloat = model->MakeField<float>("fldFloat");
-   /// auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
+   /// auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
    /// auto updater = writer->CreateModelUpdater();
    /// updater->BeginUpdate();
    /// updater->AddField(std::make_unique<RField<float>>("pt"));
@@ -167,6 +166,10 @@ public:
    }
 }; // class RNTupleWriter
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RNTupleWriter [[deprecated("ROOT::Experimental::RNTupleWriter moved to ROOT::RNTupleWriter")]] =
+   ROOT::RNTupleWriter;
 } // namespace Experimental
 } // namespace ROOT
 

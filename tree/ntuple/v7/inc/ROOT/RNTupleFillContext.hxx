@@ -49,7 +49,7 @@ sequential writing, please refer to RNTupleWriter.
 */
 // clang-format on
 class RNTupleFillContext {
-   friend class RNTupleWriter;
+   friend class ROOT::RNTupleWriter;
    friend class RNTupleParallelWriter;
 
 private:
@@ -90,7 +90,7 @@ public:
    /// and check RNTupleFillStatus::ShouldFlushCluster.
    ///
    /// This method will perform a light check whether the entry comes from the context's own model.
-   void FillNoFlush(ROOT::REntry &entry, RNTupleFillStatus &status)
+   void FillNoFlush(ROOT::REntry &entry, ROOT::RNTupleFillStatus &status)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
@@ -110,7 +110,7 @@ public:
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(ROOT::REntry &entry)
    {
-      RNTupleFillStatus status;
+      ROOT::RNTupleFillStatus status;
       FillNoFlush(entry, status);
       if (status.ShouldFlushCluster())
          FlushCluster();

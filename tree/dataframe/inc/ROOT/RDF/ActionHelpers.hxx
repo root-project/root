@@ -1949,7 +1949,7 @@ class R__CLING_PTRCHECK(off) SnapshotRNTupleHelper : public RActionImpl<Snapshot
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ColumnNames_t fInputFieldNames; // This contains the resolved aliases
    ColumnNames_t fOutputFieldNames;
-   std::unique_ptr<ROOT::Experimental::RNTupleWriter> fWriter{nullptr};
+   std::unique_ptr<ROOT::RNTupleWriter> fWriter{nullptr};
 
    ROOT::REntry *fOutputEntry;
 
@@ -2024,7 +2024,7 @@ public:
             outputDir = fOutputFile->mkdir(fDirName.c_str());
       }
 
-      fWriter = ROOT::Experimental::RNTupleWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+      fWriter = ROOT::RNTupleWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
    }
 
    template <std::size_t... S>

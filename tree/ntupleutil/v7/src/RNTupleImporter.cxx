@@ -385,7 +385,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
       sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
    }
 
-   auto ntplWriter = Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
+   auto ntplWriter = ROOT::Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
    // The guard needs to be destructed before the writer goes out of scope
    RImportGuard importGuard(*this);
 

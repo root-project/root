@@ -16,8 +16,8 @@
 #include <limits>
 
 using ROOT::RNTupleModel;
+using ROOT::RNTupleWriter;
 using ROOT::Experimental::RNTupleDS;
-using ROOT::Experimental::RNTupleWriter;
 using ROOT::Experimental::Internal::RPageSource;
 
 namespace {

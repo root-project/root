@@ -42,7 +42,7 @@ void CreateExportRNTuple(std::string_view fileName, bool checksums)
    auto opts = ROOT::RNTupleWriteOptions();
    opts.SetCompression(0);
    opts.SetEnablePageChecksums(checksums);
-   auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileName, opts);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileName, opts);
    for (int i = 0; i < 10; ++i) {
       *pFlt = i;
       pVec->clear();
@@ -215,7 +215,7 @@ TEST(RNTupleExporter, ExportToFilesManyPages)
 
       auto opts = ROOT::RNTupleWriteOptions();
       opts.SetCompression(0);
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
       for (int i = 0; i < 1000; ++i) {
          *pFlt = i;
          for (int j = -3; j < 3; ++j)
@@ -239,7 +239,7 @@ TEST(RNTupleExporter, EmptySource)
    FileRaii fileGuard("ntuple_exporter_empty.root");
    {
       auto model = ROOT::RNTupleModel::Create();
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
@@ -260,7 +260,7 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
 
       auto opts = ROOT::RNTupleWriteOptions();
       opts.SetCompression(505);
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
       for (int i = 0; i < 100; ++i) {
          *pFlt = i;
          pVec->clear();

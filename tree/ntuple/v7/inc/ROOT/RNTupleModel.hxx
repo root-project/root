@@ -34,12 +34,7 @@ namespace ROOT {
 
 class RNTupleWriteOptions;
 class RNTupleModel;
-
-namespace Experimental {
-
 class RNTupleWriter;
-
-}
 
 namespace Internal {
 class RProjectedFields;
@@ -201,7 +196,7 @@ public:
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleModel.hxx>
    /// #include <ROOT/RNTupleWriter.hxx>
-   /// using ROOT::Experimental::RNTupleWriter;
+   /// using ROOT::RNTupleWriter;
    ///
    /// #include <vector>
    ///
@@ -377,12 +372,12 @@ struct RNTupleModelChangeset {
 /// See `RNTupleWriter::CreateModelUpdater()` for an example.
 class RNTupleModel::RUpdater {
 private:
-   ROOT::Experimental::RNTupleWriter &fWriter;
+   ROOT::RNTupleWriter &fWriter;
    Internal::RNTupleModelChangeset fOpenChangeset;
    std::uint64_t fNewModelId = 0; ///< The model ID after committing
 
 public:
-   explicit RUpdater(ROOT::Experimental::RNTupleWriter &writer);
+   explicit RUpdater(ROOT::RNTupleWriter &writer);
    ~RUpdater() { CommitUpdate(); }
    /// Begin a new set of alterations to the underlying model. As a side effect, all REntry
    /// instances related to the model are invalidated.

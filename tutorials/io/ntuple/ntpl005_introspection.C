@@ -29,7 +29,6 @@
 // Import classes from experimental namespace for the time being
 using ENTupleInfo = ROOT::Experimental::ENTupleInfo;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 constexpr char const* kNTupleFileName = "ntpl005_introspection.root";
 
@@ -62,7 +61,7 @@ void Generate()
    ROOT::RNTupleWriteOptions options;
    options.SetCompression(ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
 
-   auto writer = RNTupleWriter::Recreate(std::move(model), "Vector3", kNTupleFileName, options);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "Vector3", kNTupleFileName, options);
    TRandom r;
    for (unsigned int i = 0; i < 500000; ++i) {
       fldVector3->SetXYZ(r.Gaus(0,1), r.Landau(0,1), r.Gaus(100,10));

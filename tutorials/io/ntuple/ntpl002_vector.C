@@ -29,7 +29,6 @@
 
 // Import classes from experimental namespace for the time being
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 // Where to store the ntuple of this example
 constexpr char const* kNTupleFileName = "ntpl002_vector.root";
@@ -55,7 +54,7 @@ void Write()
 
    // We hand-over the data model to a newly created ntuple of name "F", stored in kNTupleFileName
    // In return, we get a unique pointer to an ntuple that we can fill
-   auto writer = RNTupleWriter::Recreate(std::move(model), "F", kNTupleFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "F", kNTupleFileName);
 
    TH1F hpx("hpx", "This is the px distribution", 100, -4, 4);
    hpx.SetFillColor(48);
