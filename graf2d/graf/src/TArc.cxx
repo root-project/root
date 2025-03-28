@@ -89,7 +89,7 @@ TArc *TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TArc::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "arc",
                             TString::Format("%g, %g, %g, %g, %g", fX1, fY1, fR1, fPhimin, fPhimax));
@@ -98,7 +98,7 @@ void TArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out, "arc", 1, 1, 1);
 
    if (GetNoEdges())
-      out << "   arc->SetNoEdges();" << std::endl;
+      out << "   arc->SetNoEdges();\n";
 
-   out << "   arc->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "arc", option);
 }

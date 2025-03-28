@@ -621,7 +621,7 @@ void TEllipse::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TEllipse::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TEllipse::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(
       out, Class(), "ellipse",
@@ -631,9 +631,9 @@ void TEllipse::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out, "ellipse", 1, 1, 1);
 
    if (GetNoEdges())
-      out << "   ellipse->SetNoEdges();" << std::endl;
+      out << "   ellipse->SetNoEdges();\n";
 
-   out << "   ellipse->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "ellipse", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
