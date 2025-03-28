@@ -1242,17 +1242,18 @@ void TGraphAsymmErrors::Print(Option_t *) const
 
 void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   auto xname  = SavePrimitiveArray(out, "grae_fx", fNpoints, fX, kTRUE);
-   auto yname  = SavePrimitiveArray(out, "grae_fy", fNpoints, fY);
-   auto exlname = SavePrimitiveArray(out, "grae_fexl", fNpoints, fEXlow);
-   auto exhname = SavePrimitiveArray(out, "grae_fexh", fNpoints, fEXhigh);
-   auto eylname = SavePrimitiveArray(out, "grae_feyl", fNpoints, fEYlow);
-   auto eyhname = SavePrimitiveArray(out, "grae_feyh", fNpoints, fEYhigh);
+   auto xname  = SavePrimitiveVector(out, "grae_fx", fNpoints, fX, kTRUE);
+   auto yname  = SavePrimitiveVector(out, "grae_fy", fNpoints, fY);
+   auto exlname = SavePrimitiveVector(out, "grae_fexl", fNpoints, fEXlow);
+   auto exhname = SavePrimitiveVector(out, "grae_fexh", fNpoints, fEXhigh);
+   auto eylname = SavePrimitiveVector(out, "grae_feyl", fNpoints, fEYlow);
+   auto eyhname = SavePrimitiveVector(out, "grae_feyh", fNpoints, fEYhigh);
 
-   SavePrimitiveConstructor(
-      out, Class(), "grae",
-      TString::Format("%d, %s, %s, %s, %s, %s, %s", fNpoints,
-         xname.Data(), yname.Data(), exlname.Data(), exhname.Data(), eylname.Data(), eyhname.Data()), kFALSE);
+   SavePrimitiveConstructor(out, Class(), "grae",
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+                                            fNpoints, xname.Data(), yname.Data(), exlname.Data(), exhname.Data(),
+                                            eylname.Data(), eyhname.Data()),
+                            kFALSE);
 
    SaveHistogramAndFunctions(out, "grae", option);
 }
