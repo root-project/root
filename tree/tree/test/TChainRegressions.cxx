@@ -102,3 +102,28 @@ TEST(TChain, GetMinMaxEntryList)
    gSystem->Unlink("t1_7067.root");
    gSystem->Unlink("t2_7067.root");
 }
+
+// https://its.cern.ch/jira/browse/ROOT-8112
+TEST(TChain, UncommonFileExtension)
+{
+   const auto dirname = "hsimple8112.root"
+   const auto filename = "hsimple8112.root/hsimple8112.root.2";
+   gSystem->mkdir(dirname);
+   const auto treename = "tree";
+   {
+      TFile f(filename, "recreate");
+      ASSERT_FALSE(f.IsZombie());
+      TTree t(treename, treename);
+      t.Fill();
+      t.Fill();
+      t.Write();
+      f.Close();
+   }
+   {
+      TChain chain(treename);
+      chain.AddFile(filename);
+      EXPECT_EQ(chain.GetEntries(), 2);
+   }
+   gSystem->Unlink(filename);
+   gSystem->Unlink(dirname);
+}
