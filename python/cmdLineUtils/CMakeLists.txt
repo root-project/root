@@ -6,19 +6,27 @@ configure_file(multipleNameCycles.root . COPYONLY)
 configure_file(MakeNameCyclesRootmvInput.C . COPYONLY)
 configure_file(subdirs.root . COPYONLY)
 
+# We compare the output of some tests against ref. files, and we don't want to
+# get noise for Python warnings (for example the warning that the GIL is
+# activated because the ROOT Python bindings don't support free threading yet).
+set(test_env PYTHONWARNINGS=ignore)
+
 ############################## PATTERN TESTS ############################
 set (TESTPATTERN_EXE ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
 ROOTTEST_ADD_TEST(SimplePattern1
                   COMMAND ${TESTPATTERN_EXE} test.root
-                  OUTREF SimplePattern.ref)
+                  OUTREF SimplePattern.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimplePattern2
                   COMMAND ${TESTPATTERN_EXE} test.root:tof
-                  OUTREF SimplePattern2.ref)
+                  OUTREF SimplePattern2.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimplePattern3
                   COMMAND ${TESTPATTERN_EXE} test.root:*
-                  OUTREF SimplePattern3.ref)
+                  OUTREF SimplePattern3.ref
+                  ENVIRONMENT ${test_env})
 #########################################################################
 
 if(MSVC)
@@ -33,57 +41,70 @@ endif()
 ############################## ROOLS TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootls1
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 test.root
-                  OUTREF SimpleRootls.ref)
+                  OUTREF SimpleRootls.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootls2
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 test.root:*
-                  OUTREF SimpleRootls2.ref)
+                  OUTREF SimpleRootls2.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootls3
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 test.root:tof
-                  OUTREF SimpleRootls3.ref)
+                  OUTREF SimpleRootls3.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootls4
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 test.root:tof/*
-                  OUTREF SimpleRootls4.ref)
+                  OUTREF SimpleRootls4.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(LongRootls1
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -l test.root
-                  OUTREF LongRootls.ref)
+                  OUTREF LongRootls.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(LongRootls2
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -l test.root:*
-                  OUTREF LongRootls2.ref)
+                  OUTREF LongRootls2.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(LongRootls3
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -l test.root:tof
-                  OUTREF LongRootls3.ref)
+                  OUTREF LongRootls3.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(LongRootls4
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -l test.root:tof/*
-                  OUTREF LongRootls4.ref)
+                  OUTREF LongRootls4.ref
+                  ENVIRONMENT ${test_env})
 
 if(NOT MSVC) # Windows cannot yet read https
     ROOTTEST_ADD_TEST(WebRootls1
                     COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 http://root.cern.ch/files/pippa.root
-                    OUTREF WebRootls.ref)
+                    OUTREF WebRootls.ref
+                    ENVIRONMENT ${test_env})
 
     ROOTTEST_ADD_TEST(WebRootls2
                     COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 http://root.cern.ch/files/pippa.root:LL
-                    OUTREF WebRootls2.ref)
+                    OUTREF WebRootls2.ref
+                    ENVIRONMENT ${test_env})
 endif()
 
 ROOTTEST_ADD_TEST(TreeRootls1
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -t simpleTree.root
-                  OUTREF TreeRootls.ref)
+                  OUTREF TreeRootls.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(NameCyclesRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -t multipleNameCycles.root:tree
-                  OUTREF MultipleNameCyclesRootls.ref)
+                  OUTREF MultipleNameCyclesRootls.ref
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(RecursiveRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -lr subdirs.root
-                  OUTREF RecursiveRootls.ref)
+                  OUTREF RecursiveRootls.ref
+                  ENVIRONMENT ${test_env})
 
 #########################################################################
 
@@ -99,7 +120,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm1
 ROOTTEST_ADD_TEST(SimpleRootrm1CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 victim1.root
                   OUTREF SimpleRootrm.ref
-                  DEPENDS SimpleRootrm1)
+                  DEPENDS SimpleRootrm1
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootrm1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r victim1.root
@@ -117,7 +139,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm2
 ROOTTEST_ADD_TEST(SimpleRootrm2CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 victim2.root
                   OUTREF SimpleRootrm2.ref
-                  DEPENDS SimpleRootrm2)
+                  DEPENDS SimpleRootrm2
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootrm2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r victim2.root
@@ -135,7 +158,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm3
 ROOTTEST_ADD_TEST(SimpleRootrm3CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 victim3.root:tof
                   OUTREF SimpleRootrm3.ref
-                  DEPENDS SimpleRootrm3)
+                  DEPENDS SimpleRootrm3
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootrm3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r victim3.root
@@ -153,7 +177,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir1
 ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 target1.root
                   OUTREF SimpleRootmkdir.ref
-                  DEPENDS SimpleRootmkdir1)
+                  DEPENDS SimpleRootmkdir1
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r target1.root
@@ -171,7 +196,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir2
 ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 target2.root
                   OUTREF SimpleRootmkdir2.ref
-                  DEPENDS SimpleRootmkdir2)
+                  DEPENDS SimpleRootmkdir2
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r target2.root
@@ -189,7 +215,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3
 ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 target3.root:aa/bb
                   OUTREF SimpleRootmkdir3.ref
-                  DEPENDS SimpleRootmkdir3)
+                  DEPENDS SimpleRootmkdir3
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r target3.root
@@ -207,7 +234,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp1
 ROOTTEST_ADD_TEST(SimpleRootcp1CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 copy1.root
                   OUTREF SimpleRootcp.ref
-                  DEPENDS SimpleRootcp1)
+                  DEPENDS SimpleRootcp1
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r copy1.root
@@ -225,7 +253,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp2
 ROOTTEST_ADD_TEST(SimpleRootcp2CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 copy2.root
                   OUTREF SimpleRootcp2.ref
-                  DEPENDS SimpleRootcp2)
+                  DEPENDS SimpleRootcp2
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r copy2.root
@@ -243,7 +272,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp3
 ROOTTEST_ADD_TEST(SimpleRootcp3CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 copy3.root
                   OUTREF SimpleRootcp3.ref
-                  DEPENDS SimpleRootcp3)
+                  DEPENDS SimpleRootcp3
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r copy3.root
@@ -259,7 +289,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp4
 ROOTTEST_ADD_TEST(SimpleRootcp4CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 copy4.root:dir
                   OUTREF SimpleRootcp4.ref
-                  DEPENDS SimpleRootcp4)
+                  DEPENDS SimpleRootcp4
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp4Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r copy4.root
@@ -277,7 +308,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp5
 ROOTTEST_ADD_TEST(SimpleRootcp5CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 copy5.root:dir
                   OUTREF SimpleRootcp5.ref
-                  DEPENDS SimpleRootcp5)
+                  DEPENDS SimpleRootcp5
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp5Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r copy5.root
@@ -295,7 +327,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv1
 ROOTTEST_ADD_TEST(SimpleRootmv1CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 move1.root
                   OUTREF SimpleRootmv.ref
-                  DEPENDS SimpleRootmv1)
+                  DEPENDS SimpleRootmv1
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv1Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r move1.root
@@ -313,7 +346,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv2
 ROOTTEST_ADD_TEST(SimpleRootmv2CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 move2.root
                   OUTREF SimpleRootmv2.ref
-                  DEPENDS SimpleRootmv2)
+                  DEPENDS SimpleRootmv2
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv2Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r move2.root
@@ -331,7 +365,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv3
 ROOTTEST_ADD_TEST(SimpleRootmv3CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 move3.root
                   OUTREF SimpleRootmv3.ref
-                  DEPENDS SimpleRootmv3)
+                  DEPENDS SimpleRootmv3
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r move3.root
@@ -347,7 +382,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv4
 ROOTTEST_ADD_TEST(SimpleRootmv4CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 move4.root:*
                   OUTREF SimpleRootmv4.ref
-                  DEPENDS SimpleRootmv4)
+                  DEPENDS SimpleRootmv4
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv4Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r move4.root
@@ -363,7 +399,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv5
 ROOTTEST_ADD_TEST(SimpleRootmv5CheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 move5.root:*
                   OUTREF SimpleRootmv5.ref
-                  DEPENDS SimpleRootmv5)
+                  DEPENDS SimpleRootmv5
+                  ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv5Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${pyext} -r move5.root
@@ -380,11 +417,13 @@ ROOTTEST_ADD_TEST(NameCyclesRootmv
 ROOTTEST_ADD_TEST(NameCyclesRootmvCheckOutput
                   COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 nameCyclesRootmvOutput.root
                   OUTREF NameCyclesRootmvCheckOutput.ref
-                  DEPENDS NameCyclesRootmv)
+                  DEPENDS NameCyclesRootmv
+                  ENVIRONMENT ${test_env})
 #########################################################################
 
 ROOTTEST_ADD_TEST(ROOT_8197
                   MACRO ROOT_8197.C
-                  OUTREF ROOT_8197.ref)
+                  OUTREF ROOT_8197.ref
+                  ENVIRONMENT ${test_env})
 
 endif() # these tests are not run with the classic build
