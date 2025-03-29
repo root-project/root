@@ -109,7 +109,7 @@ public:
    CachedPyString &operator=(CachedPyString const &) = delete;
    CachedPyString &operator=(CachedPyString &&) = delete;
 
-   ~CachedPyString() { Py_DECREF(fObj); }
+   ~CachedPyString() { Py_DecRef(fObj); }
 
    PyObject *obj() { return fObj; }
 
@@ -215,7 +215,7 @@ Bool_t TPython::Initialize()
 
          // retrieve the main dictionary
          gMainDict = PyModule_GetDict(PyImport_AddModule(const_cast<char *>("__main__")));
-         // The gMainDict is borrowed, i.e. we are not calling Py_INCREF(gMainDict).
+         // The gMainDict is borrowed, i.e. we are not calling Py_IncRef(gMainDict).
          // Like this, we avoid unexpectedly affecting how long __main__ is kept
          // alive. The gMainDict is only used in Exec(), ExecScript(), and Eval(),
          // which should not be called after __main__ is garbage collected anyway.
@@ -261,7 +261,7 @@ Bool_t TPython::Import(const char *mod_name)
    PyObject *values = PyDict_Values(dct);
    for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
       PyObject *value = PyList_GET_ITEM(values, i);
-      Py_INCREF(value);
+      Py_IncRef(value);
 
       // collect classes
       if (PyType_Check(value) || PyObject_HasAttr(value, basesStr.obj())) {
@@ -282,15 +282,15 @@ Bool_t TPython::Import(const char *mod_name)
          // force class creation (this will eventually call TPyClassGenerator)
          TClass::GetClass(fullname.c_str(), kTRUE);
 
-         Py_XDECREF(pyClName);
+         Py_DecRef(pyClName);
       }
 
-      Py_DECREF(value);
+      Py_DecRef(value);
    }
 
-   Py_DECREF(values);
-   Py_DECREF(mod);
-   Py_DECREF(modNameObj);
+   Py_DecRef(values);
+   Py_DecRef(mod);
+   Py_DecRef(modNameObj);
 
    if (PyErr_Occurred())
       return kFALSE;
@@ -334,7 +334,7 @@ void TPython::LoadMacro(const char *name)
    // create Cling classes for all new python classes
    for (int i = 0; i < PyList_GET_SIZE(current); ++i) {
       PyObject *value = PyList_GET_ITEM(current, i);
-      Py_INCREF(value);
+      Py_IncRef(value);
 
       if (!PySequence_Contains(old, value)) {
          // collect classes
@@ -359,16 +359,16 @@ void TPython::LoadMacro(const char *name)
                TClass::GetClass(fullname.c_str(), kTRUE);
             }
 
-            Py_XDECREF(pyClName);
-            Py_XDECREF(pyModName);
+            Py_DecRef(pyClName);
+            Py_DecRef(pyModName);
          }
       }
 
-      Py_DECREF(value);
+      Py_DecRef(value);
    }
 
-   Py_DECREF(current);
-   Py_DECREF(old);
+   Py_DecRef(current);
+   Py_DecRef(old);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -445,7 +445,7 @@ Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resul
 
    // test for error
    if (pyObjectResult) {
-      Py_DECREF(pyObjectResult);
+      Py_DecRef(pyObjectResult);
       return kTRUE;
    }
 
@@ -471,7 +471,7 @@ Bool_t TPython::Bind(TObject *object, const char *label)
 
       if (bound) {
          Bool_t bOk = PyDict_SetItemString(gMainDict, const_cast<char *>(label), bound) == 0;
-         Py_DECREF(bound);
+         Py_DecRef(bound);
 
          return bOk;
       }

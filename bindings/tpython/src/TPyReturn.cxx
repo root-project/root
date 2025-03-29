@@ -57,7 +57,7 @@ TPyReturn::TPyReturn()
    PyGILRAII gilRaii;
 
    // Construct a TPyReturn object from Py_None.
-   Py_INCREF(Py_None);
+   Py_IncRef(Py_None);
    fPyObject = Py_None;
 }
 
@@ -70,7 +70,7 @@ TPyReturn::TPyReturn(PyObject *pyobject)
    PyGILRAII gilRaii;
 
    if (!pyobject) {
-      Py_INCREF(Py_None);
+      Py_IncRef(Py_None);
       fPyObject = Py_None;
    } else
       fPyObject = pyobject; // steals reference
@@ -83,7 +83,7 @@ TPyReturn::TPyReturn(const TPyReturn &other)
 {
    PyGILRAII gilRaii;
 
-   Py_INCREF(other.fPyObject);
+   Py_IncRef(other.fPyObject);
    fPyObject = other.fPyObject;
 }
 
@@ -95,8 +95,8 @@ TPyReturn &TPyReturn::operator=(const TPyReturn &other)
    PyGILRAII gilRaii;
 
    if (this != &other) {
-      Py_INCREF(other.fPyObject);
-      Py_DECREF(fPyObject);
+      Py_IncRef(other.fPyObject);
+      Py_DecRef(fPyObject);
       fPyObject = other.fPyObject;
    }
 
@@ -110,7 +110,7 @@ TPyReturn::~TPyReturn()
 {
    PyGILRAII gilRaii;
 
-   Py_DECREF(fPyObject);
+   Py_DecRef(fPyObject);
 }
 
 //- public members -----------------------------------------------------------
@@ -224,6 +224,6 @@ TPyReturn::operator PyObject *() const
    if (fPyObject == Py_None)
       return 0;
 
-   Py_INCREF(fPyObject);
+   Py_IncRef(fPyObject);
    return fPyObject;
 }
