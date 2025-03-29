@@ -28,9 +28,9 @@
 #
 # \author Lorenzo Moneta (C++ version), and P. P. (Python translation)
 
+import array
 from warnings import warn
 from gc import collect
-import numpy as np
 
 import ROOT
 
@@ -396,8 +396,8 @@ def StandardHypoTestDemo(
         htExp = ROOT.RooStats.HypoTestResult("Expected Result")
         htExp.Append(htr)
         # find quantiles in alt (S+B) distribution
-        p = np.array([i for i in range(5)], dtype=float)
-        q = np.array([0.5 for i in range(5)], dtype=float)
+        p = array.array('d', [i for i in range(5)])
+        q = array.array('d', [0.5 for i in range(5)])
         for i in range(5):
             sig = -2 + i
             p[i] = ROOT.Math.normal_cdf(sig, 1)
