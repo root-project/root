@@ -229,7 +229,6 @@ def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
     """
 
     import ROOT
-    import numpy as np
 
     # use the C++ version if dealing with C++ function
     if "cppyy" in repr(type(func)):
@@ -245,10 +244,13 @@ def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
             super(RooPyBindDerived, self).__init__(name, title, ROOT.RooArgList(*variables))
 
         def evaluate(self):
+            import numpy as np
+
             inputs = [np.array([v.getVal()]) for v in self.varlist()]
             return func(*inputs)[0]
 
         def doEvalPy(self, ctx):
+            import numpy as np
 
             def span_to_numpy(sp):
                 return np.frombuffer(sp.data(), dtype=np.float64, count=sp.size())

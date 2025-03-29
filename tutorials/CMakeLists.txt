@@ -890,10 +890,16 @@ if(ROOT_pyroot_FOUND)
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py
       analysis/dataframe/df032_RDFFromNumpy.py
-      math/fit/combinedFit.py
-      math/fit/multifit.py
       math/fit/NumericalMinimization.py
-      roofit/roofit/rf409_NumPyPandasToRooFit.py)
+      math/fit/combinedFit.py
+      math/fit/fitConvolution.py
+      math/fit/multifit.py
+      math/pdf/pdf012_tStudent.py
+      roofit/roofit/rf102_dataimport.py
+      roofit/roofit/rf401_importttreethx.py
+      roofit/roofit/rf409_NumPyPandasToRooFit.py
+      roofit/roofit/rf617_simulation_based_inference_multidimensional.py
+  )
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/df038_NumbaDeclare.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py

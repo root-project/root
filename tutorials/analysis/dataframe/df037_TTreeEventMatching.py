@@ -13,9 +13,10 @@
 #
 # \date September 2024
 # \author Vincenzo Eduardo Padulano (CERN)
+import array
 import os
+
 import ROOT
-import numpy
 
 
 class DatasetContext:
@@ -31,8 +32,8 @@ class DatasetContext:
     def __init__(self):
         with ROOT.TFile(self.main_file, "RECREATE") as f:
             main_tree = ROOT.TTree(self.main_tree_name, self.main_tree_name)
-            idx = numpy.array([0], dtype=int)
-            x = numpy.array([0], dtype=int)
+            idx = array.array('i', [0]) # any array can also be a numpy array
+            x = array.array('i', [0])
             main_tree.Branch("idx", idx, "idx/I")
             main_tree.Branch("x", x, "x/I")
 
@@ -51,8 +52,8 @@ class DatasetContext:
         # The first auxiliary file has matching indices 1 and 2, but not 3
         with ROOT.TFile(self.aux_file_1, "RECREATE") as f:
             aux_tree_1 = ROOT.TTree(self.aux_tree_name_1, self.aux_tree_name_1)
-            idx = numpy.array([0], dtype=int)
-            y = numpy.array([0], dtype=int)
+            idx = array.array('i', [0]) # any array can also be a numpy array
+            y = array.array('i', [0])
             aux_tree_1.Branch("idx", idx, "idx/I")
             aux_tree_1.Branch("y", y, "y/I")
 
@@ -68,8 +69,8 @@ class DatasetContext:
         # The second auxiliary file has matching indices 1 and 3, but not 2
         with ROOT.TFile(self.aux_file_2, "RECREATE") as f:
             aux_tree_2 = ROOT.TTree(self.aux_tree_name_2, self.aux_tree_name_2)
-            idx = numpy.array([0], dtype=int)
-            z = numpy.array([0], dtype=int)
+            idx = array.array('i', [0]) # any array can also be a numpy array
+            z = array.array('i', [0])
             aux_tree_2.Branch("idx", idx, "idx/I")
             aux_tree_2.Branch("z", z, "z/I")
 
