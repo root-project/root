@@ -237,7 +237,7 @@ public:
    virtual Int_t       GetNdim() const {return fNdim;}
    virtual Int_t       GetNpar() const {return fNpar;}
    virtual Int_t       GetNumber() const {return fNumber;}
-   virtual TString     GetExpFormula(Option_t *option="") const;
+   virtual TString     GetExpFormula(Option_t *option = "", const char *fl_format = "%g") const;
    Double_t            GetParameter(Int_t ipar) const;
    Double_t            GetParameter(const char *name) const;
    virtual Double_t   *GetParameters() const {return fParams;}
