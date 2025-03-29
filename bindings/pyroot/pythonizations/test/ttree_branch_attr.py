@@ -2,8 +2,6 @@ import unittest
 
 import ROOT
 
-import numpy as np
-
 
 class TTreeBranchAttr(unittest.TestCase):
     """

@@ -12,9 +12,10 @@
 #
 # \date September 2024
 # \author Vincenzo Eduardo Padulano (CERN)
+import array
 import os
+
 import ROOT
-import numpy
 
 
 class DatasetContext:
@@ -31,8 +32,8 @@ class DatasetContext:
     def __init__(self):
         with ROOT.TFile(self.filenames[0], "RECREATE") as f:
             t = ROOT.TTree(self.treenames[0], self.treenames[0])
-            x = numpy.array([0], dtype=int)
-            y = numpy.array([0], dtype=int)
+            x = array.array('i', [0]) # any array can also be a numpy array
+            y = array.array('i', [0])
             t.Branch("x", x, "x/I")
             t.Branch("y", y, "y/I")
 
@@ -45,7 +46,7 @@ class DatasetContext:
 
         with ROOT.TFile(self.filenames[1], "RECREATE") as f:
             t = ROOT.TTree(self.treenames[1], self.treenames[1])
-            y = numpy.array([0], dtype=int)
+            y = array.array('i', [0]) # any array can also be a numpy array
             t.Branch("y", y, "y/I")
 
             for i in range(1, self.nentries + 1):
@@ -56,7 +57,7 @@ class DatasetContext:
 
         with ROOT.TFile(self.filenames[2], "RECREATE") as f:
             t = ROOT.TTree(self.treenames[2], self.treenames[2])
-            x = numpy.array([0], dtype=int)
+            x = array.array('i', [0]) # any array can also be a numpy array
             t.Branch("x", x, "x/I")
 
             for i in range(1, self.nentries + 1):

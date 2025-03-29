@@ -1,10 +1,10 @@
-import cppyy
+import array
+import os
 import platform
 import unittest
-import numpy
-import os
 
 import ROOT
+
 
 class DatasetContext:
     """A helper class to create the dataset for the tutorial below."""
@@ -22,8 +22,8 @@ class DatasetContext:
             with ROOT.TFile(filename, "RECREATE") as f:
                 t = ROOT.TTree(self.treename, self.treename)
 
-                x = numpy.array([0], dtype=int)
-                y = numpy.array([0], dtype=int)
+                x = array.array("i", [0])
+                y = array.array("i", [0])
                 t.Branch("x", x, "x/I")
                 t.Branch("y", y, "y/I")
 
@@ -69,7 +69,7 @@ class RDataFrameMisc(unittest.TestCase):
 
             # When passing explicitly the vector of strings, type dispatching will not be necessary
             # and the real C++ exception will immediately surface
-            with self.assertRaisesRegex(cppyy.gbl.std.invalid_argument, "RDataFrame: empty list of input files."):
+            with self.assertRaisesRegex(ROOT.std.invalid_argument, "RDataFrame: empty list of input files."):
                 ROOT.RDataFrame("events", ROOT.std.vector[ROOT.std.string]())
 
             with self.assertRaisesRegex(TypeError, "RDataFrame: empty list of input files."):
@@ -110,6 +110,8 @@ class RDataFrameMisc(unittest.TestCase):
             return
 
         with DatasetContext() as dataset:
+            import numpy
+
             rdf = self._get_rdf(dataset)
 
             npy_dict = rdf.AsNumpy()

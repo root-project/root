@@ -1,7 +1,8 @@
-import unittest
-import ROOT
+import array
 import random
-import numpy as np
+import unittest
+
+import ROOT
 
 
 class STL_vector(unittest.TestCase):
@@ -55,9 +56,7 @@ class STL_vector(unittest.TestCase):
         tree = ROOT.TTree("tree", "Tree with std::vector")
 
         # list of random arrays with lengths between 0 and 5 (0 is always included)
-        entries_to_fill = [
-            np.array([random.uniform(10, 20) for _ in range(n % 5)]) for n in range(100)
-        ]
+        entries_to_fill = [array.array("f", [random.uniform(10, 20) for _ in range(n % 5)]) for n in range(100)]
 
         # Create variables to store std::vector elements
         entry_root = ROOT.std.vector(float)()
@@ -76,12 +75,14 @@ class STL_vector(unittest.TestCase):
 
         for i in range(tree.GetEntries()):
             tree.GetEntry(i)
-            entry_numpy = entries_to_fill[i]
-            entry_python_list = list(entry_root)
+            entry_array = entries_to_fill[i]
 
-            self.assertEqual(len(entry_numpy), len(entry_root))
-            self.assertEqual(bool(entry_python_list), bool(entry_root))  # numpy arrays cannot be converted to bool
-            np.testing.assert_allclose(entry_numpy, np.array(entry_root), rtol=1e-5)
+            self.assertEqual(len(entry_array), len(entry_root))
+
+            self.assertEqual(bool(list(entry_root)), bool(entry_root))  # numpy arrays cannot be converted to bool
+
+            for entry_array_i, entry_root_i in zip(entry_array, entry_root):
+                self.assertEqual(entry_array_i, entry_root_i)
 
 
 if __name__ == '__main__':

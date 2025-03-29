@@ -27,7 +27,8 @@
 #
 # \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
-import numpy as np
+import array
+
 import ROOT
 
 
@@ -68,9 +69,9 @@ def rs_numberCountingCombination_expected():
     #          alternatively you can use cppyy:
     #          cppyy.cppdef("double s[2]";")
     #          s_c = cppyy.gbl.s
-    s = np.array([20.0, 10.0])  # expected signal
-    b = np.array([100.0, 100.0])  # expected background
-    db = np.array([0.0100, 0.0100])  # fractional background uncertainty
+    s = array.array('d', [20.0, 10.0])  # expected signal
+    b = array.array('d', [100.0, 100.0])  # expected background
+    db = array.array('d', [0.0100, 0.0100])  # fractional background uncertainty
 
     # Step 2, use a RooStats factory to build a PDF for a
     # number counting combination and add it to the workspace.

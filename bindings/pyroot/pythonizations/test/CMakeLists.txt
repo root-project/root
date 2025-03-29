@@ -117,7 +117,7 @@ endif()
 if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_rdfdescription rdfdescription.py)
 
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_misc rdataframe_misc.py)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_misc rdataframe_misc.py PYTHON_DEPS numpy)
 endif()
 
 # SOFIE-GNN pythonizations
@@ -139,7 +139,7 @@ if (tmva AND dataframe)
 endif()
 
 # Passing Python callables to ROOT.TF
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py PYTHON_DEPS numpy)
 
 if(roofit)
 

@@ -199,6 +199,13 @@ def _FillWithNumpyArray(self, *args):
     Raises:
     - ValueError: If weights length doesn't match data length
     """
+    import collections.abc
+
+    # If the first argument has no len() method, we don't even need to consider
+    # the array code path.
+    if not isinstance(args[0], collections.abc.Sized):
+       return self._Fill(*args)
+
     import numpy as np
 
     if args and isinstance(args[0], np.ndarray):
