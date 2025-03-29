@@ -56,8 +56,8 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
    PyObject *pyname = PyUnicode_FromString(name);
    PyObject *keys = PyDict_Keys(modules);
    Bool_t isModule = PySequence_Contains(keys, pyname);
-   Py_DECREF(keys);
-   Py_DECREF(pyname);
+   Py_DecRef(keys);
+   Py_DecRef(pyname);
 
    if (isModule) {
       // the normal TClass::GetClass mechanism doesn't allow direct returns, so
@@ -77,10 +77,10 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
       for (int i = 0; i < PyList_GET_SIZE(keys); ++i) {
          PyObject *key = PyList_GET_ITEM(keys, i);
-         Py_INCREF(key);
+         Py_IncRef(key);
 
          PyObject *attr = PyDict_GetItem(dct, key);
-         Py_INCREF(attr);
+         Py_IncRef(attr);
 
          // TODO: refactor the code below with the class method code
          if (PyCallable_Check(attr) && !(PyType_Check(attr) || PyObject_HasAttr(attr, bases))) {
@@ -97,8 +97,8 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
             int nVars = var_names ? PyTuple_GET_SIZE(var_names) : 0 /* TODO: probably large number, all default? */;
             if (nVars < 0)
                nVars = 0;
-            Py_XDECREF(var_names);
-            Py_XDECREF(func_code);
+            Py_DecRef(var_names);
+            Py_DecRef(func_code);
 
             nsCode << " TPyReturn " << func_name << "(";
             for (int ivar = 0; ivar < nVars; ++ivar) {
@@ -117,12 +117,12 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
             nsCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << std::showbase << (uintptr_t)attr << ", v)); }\n";
          }
 
-         Py_DECREF(attr);
-         Py_DECREF(key);
+         Py_DecRef(attr);
+         Py_DecRef(key);
       }
 
-      Py_DECREF(keys);
-      Py_DECREF(bases);
+      Py_DecRef(keys);
+      Py_DecRef(bases);
 
       nsCode << " }";
 
@@ -161,10 +161,10 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
       return 0; // module apparently disappeared
    }
 
-   Py_INCREF(mod);
+   Py_IncRef(mod);
    PyObject *pyclass = PyDict_GetItemString(PyModule_GetDict(mod), const_cast<char *>(clName.c_str()));
-   Py_XINCREF(pyclass);
-   Py_DECREF(mod);
+   Py_IncRef(pyclass);
+   Py_DecRef(mod);
 
    if (!pyclass) {
       PyErr_Clear(); // the class is no longer available?!
@@ -175,7 +175,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
    PyObject *attrs = PyObject_Dir(pyclass);
    if (!attrs) {
       PyErr_Clear();
-      Py_DECREF(pyclass);
+      Py_DecRef(pyclass);
       return 0;
    }
 
@@ -189,7 +189,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
    Bool_t hasConstructor = kFALSE, hasDestructor = kFALSE;
    for (int i = 0; i < PyList_GET_SIZE(attrs); ++i) {
       PyObject *label = PyList_GET_ITEM(attrs, i);
-      Py_INCREF(label);
+      Py_IncRef(label);
       PyObject *attr = PyObject_GetAttr(pyclass, label);
 
       // collect only member functions (i.e. callable elements in __dict__)
@@ -221,10 +221,10 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
             var_names ? PyTuple_GET_SIZE(var_names) - 1 /* self */ : 0 /* TODO: probably large number, all default? */;
          if (nVars < 0)
             nVars = 0;
-         Py_XDECREF(var_names);
-         Py_XDECREF(func_code);
+         Py_DecRef(var_names);
+         Py_DecRef(func_code);
 #if PY_VERSION_HEX < 0x03000000
-         Py_XDECREF(im_func);
+         Py_DecRef(im_func);
 #endif
 
          // method declaration as appropriate
@@ -258,7 +258,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
       }
 
       // no decref of attr for now (b/c of hard-wired ptr); need cleanup somehow
-      Py_DECREF(label);
+      Py_DecRef(label);
    }
 
    // special case if no constructor or destructor
@@ -278,9 +278,9 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
    if (useNS)
       proxyCode << " }";
 
-   Py_DECREF(attrs);
+   Py_DecRef(attrs);
    // done with pyclass, decref here, assuming module is kept
-   Py_DECREF(pyclass);
+   Py_DecRef(pyclass);
 
    // body compilation
    if (!gInterpreter->LoadText(proxyCode.str().c_str()))
