@@ -3599,8 +3599,12 @@ void TFormula::ReInitializeEvalMethod() {
 ///  - If option = "P" replace the parameter names with their values
 ///  - If option = "CLING" return the actual expression used to build the function  passed to cling
 ///  - If option = "CLINGP" replace in the CLING expression the parameter with their values
+///  @param fl_format specifies the printf floating point precision when option
+///  contains "p". Default is `%g` (6 decimals). If you need more precision,
+///  change e.g. to `%.9f`, or `%a` for a lossless representation. 
+///  @see https://cplusplus.com/reference/cstdio/printf/
 
-TString TFormula::GetExpFormula(Option_t *option) const
+TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
 {
    TString opt(option);
    if (opt.IsNull() || TestBit(TFormula::kLambda) ) return fFormula;
@@ -3636,7 +3640,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
             TString parNumbName = clingFormula(i+2,j-i-2);
             int parNumber = parNumbName.Atoi();
             assert(parNumber < fNpar);
-            TString replacement = TString::Format("%f",GetParameter(parNumber));
+            TString replacement = TString::Format(fl_format,GetParameter(parNumber));
             clingFormula.Replace(i,j-i+1, replacement );
             i += replacement.Length();
          }
@@ -3658,7 +3662,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
                return expFormula;
             }
             TString parName = expFormula(i+1,j-i-1);
-            TString replacement = TString::Format("%g",GetParameter(parName));
+            TString replacement = TString::Format(fl_format, GetParameter(parName));
             expFormula.Replace(i,j-i+1, replacement );
             i += replacement.Length();
          }
