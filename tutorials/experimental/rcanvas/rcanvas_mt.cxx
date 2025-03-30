@@ -92,7 +92,7 @@ void draw_canvas(const std::string &title, Int_t col1)
    canvas->Remove();
 }
 
-void rcanvas_mt(bool block_main_thread = true)
+void rcanvas_mt(bool block_main_thread = false)
 {
    TH1::AddDirectory(false);
 

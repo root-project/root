@@ -90,6 +90,9 @@ protected:
 
    static std::unique_ptr<ROOT::RFieldBase>
    CreateField(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSource &pageSource)
+   static std::unique_ptr<ROOT::RFieldBase> CreateField(ROOT::DescriptorId_t fieldId,
+                                                        Experimental::Internal::RPageSource &pageSource,
+                                                        std::string_view typeName = "")
    {
       std::unique_ptr<ROOT::RFieldBase> field;
       {
