@@ -18,7 +18,7 @@ import os
 import sys
 from time import sleep
 from itertools import zip_longest
-
+import cppyy
 
 def fileno(file_or_fd):
     """
@@ -198,6 +198,9 @@ def isDirectoryKey(key):
     """
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
+    if cl == cppyy.nullptr:
+        logging.warning("Unknown class to ROOT: " + classname)
+        return False
     return cl.InheritsFrom(ROOT.TDirectory.Class())
 
 
@@ -207,6 +210,9 @@ def isTreeKey(key):
     """
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
+    if cl == cppyy.nullptr:
+        logging.warning("Unknown class to ROOT: " + classname)
+        return False
     return cl.InheritsFrom(ROOT.TTree.Class())
 
 
@@ -216,6 +222,9 @@ def isTHnSparseKey(key):
     """
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
+    if cl == cppyy.nullptr:
+        logging.warning("Unknown class to ROOT: " + classname)
+        return False
     return cl.InheritsFrom(ROOT.THnSparse.Class())
 
 
