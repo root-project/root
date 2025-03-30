@@ -3020,7 +3020,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 ///   "(3.25*(x>+4.01))+(4.44*exp(+0.04*x))"
 ///  @param fl_format specifies the printf floating point precision when option
 ///  contains "p". Default is `%g` (6 decimals). If you need more precision,
-///  change e.g. to `%.9f`, or `%a` for a lossless representation. 
+///  change e.g. to `%.9f`, or `%a` for a lossless representation.
 ///  @see https://cplusplus.com/reference/cstdio/printf/
 
 TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
