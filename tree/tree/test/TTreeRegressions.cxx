@@ -222,4 +222,3 @@ TEST(TTreeRegressions, PrintTopOnlySplit)
                     "branch: ev                           0\n";
    EXPECT_EQ(output, ref);
 }
-
