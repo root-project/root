@@ -646,12 +646,12 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method check for treat the case where expression contains $Atl and load up
-/// both fAliases and fExpr.
+/// This method check for treat the case where expression contains `Alt$(`
+/// and load up both fAliases and fExpr. It also checks for `MinIf$(` and `MaxIf$(`
 /// We return:
 /// -  -1 in case of failure
-/// -  0 in case we did not find $Alt
-/// -  the action number in case of success.
+/// -  0 in case we did not find any of `Alt$(`, `MinIf$(`, or `MaxIf$(`
+/// -  the action number in case of success. (kAlternate, kMinIf or kMaxIf)
 
 Int_t TTreeFormula::DefineAlternate(const char *expression)
 {
