@@ -3242,6 +3242,91 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
    return ret;
 }
 
+/// Produce RVec with N evenly-spaced entries from start to end inclusive
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// cout << linSpace(-1, 5, 5) << "\n";
+/// // { -1, 0.5, 2, 3.5, 5 }
+/// cout << linSpace(3, 12, 5) << "\n";
+/// // { 3, 5.25, 7.5, 9.75, 12 }
+/// cout << linSpace(1.4, 13.66, 5) << "\n";
+/// // { 1.4, 4.465, 7.53, 10.595, 13.66 }
+/// ~~~
+inline RVec<double> linSpace(double start, double end, unsigned long long N = 100)
+{
+    RVec<double> temp;
+    if (!N || (N > LLONG_MAX)) //Works for checking if N <= 0 on some machines
+    {
+        return temp;
+    }
+    double step = static_cast<double>(end-start)/(N-1);
+    temp.reserve(N);
+    temp.push_back(start);
+    for (unsigned long long i = 1; i < N; i++)
+    {
+        temp.push_back(start+i*step);
+    }
+    return temp;
+}
+
+/// Produce RVec with N log-spaced entries from base^{start} to base^{end} inclusive
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// cout << logSpace(4, 10, 12) << '\n';
+/// // { 10000, 35111.9, 123285, 432876, 1.51991e+06, 5.3367e+06, 1.87382e+07, 6.57933e+07, 2.31013e+08, 8.11131e+08, 2.84804e+09, 1e+10 }
+/// cout << logSpace(0, 0, 50) << '\n';
+/// // { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+/// cout << logSpace(0, 0, 0) << '\n';
+/// // {  }
+/// ~~~
+inline RVec<double> logSpace(double start, double end, unsigned long long N = 100, double base = 10.0)
+{
+    RVec<double> temp;
+    if (!N || (N > LLONG_MAX)) //Works for checking if N <= 0 on some machines
+    {
+        return temp;
+    }
+    double step = static_cast<double>(end-start)/(N-1);
+
+    temp.reserve(N);
+    temp.push_back(std::pow(base, start));
+    for (unsigned long long i = 1; i < N; i++)
+    {
+        temp.push_back(std::pow(base, start + i*step));
+    }
+    return temp;
+}
+
+/// Produce RVec with entries in the range [start, end) in increments of step
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// cout << arange(0, 0, 5) << '\n';
+/// // {  }
+/// cout << arange(-7, 20, 4) << '\n';
+/// // { -7, -3, 1, 5, 9, 13, 17 }
+/// cout << arange(1, 13, 5) << '\n';
+/// // { 1, 6, 11 }
+/// ~~~
+inline RVec<double> arange(double start, double end, double step)
+{
+    RVec<double> temp;
+    unsigned long long N = std::ceil((end-start)/step);
+    if (!N || (N > LLONG_MAX)) //Works for checking if N <= 0 on some machines
+    {
+        return temp;
+    }
+    temp.reserve(N);
+    temp.push_back(start);
+    for (unsigned long long i = 1; i < N; i++)
+    {
+        temp.push_back(start+i*step);
+    }
+    return temp;
+}
+
 /// Produce RVec with entries starting from 0, and incrementing by 1 until a user-specified N is reached.
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
@@ -3308,6 +3393,8 @@ inline RVec<long long int> Range(long long int begin, long long int end, long lo
    }
    return ret;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
