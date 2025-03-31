@@ -43,6 +43,7 @@ git apply patches/CPyCppyy-Prevent-construction-of-agg-init-for-tuple.patch
 git apply patches/CPyCppyy-Support-conversion-from-str-to-char.patch # https://github.com/wlav/CPyCppyy/pull/21
 git apply patches/CPyCppyy-Perform-function-style-casts.patch # https://github.com/wlav/CPyCppyy/pull/34
 git apply patches/CPyCppyy-Use-PyMapping_GetOptionalItemString-where-necessary.patch # https://github.com/wlav/CPyCppyy/pull/44
+git apply patches/CPyCppyy-Disable_std-vector-numpy-array-pythonization.patch
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch
