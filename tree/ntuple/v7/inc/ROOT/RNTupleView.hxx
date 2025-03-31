@@ -314,7 +314,7 @@ private:
    ROOT::RField<RNTupleCardinality<std::uint64_t>> fField;
    ROOT::RFieldBase::RValue fValue;
 
-   RNTupleCollectionView(ROOT::DescriptorId_t fieldId, const std::string &fieldName,
+   RNTupleCollectionView(ROOT::DescriptorId_t fieldId, std::string_view fieldName,
                          ROOT::Experimental::Internal::RPageSource *source)
       : fSource(source), fField(fieldName), fValue(fField.CreateValue())
    {
