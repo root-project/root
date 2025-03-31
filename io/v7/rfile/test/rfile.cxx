@@ -3,8 +3,10 @@
 #include <TFile.h>
 #include <TH1D.h>
 #include <TROOT.h>
+#include <TTree.h>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
+#include <numeric>
 
 using ROOT::Experimental::RFile;
 
@@ -136,10 +138,77 @@ TEST(RFile, WriteReadInTFileDir)
       auto *d = file.mkdir("a/b");
       d->WriteObject(hist.get(), "hist");
    }
-   fileGuard.PreserveFile();
 
    {
       auto file = RFile::OpenForReading(fileGuard.GetPath());
       EXPECT_TRUE(file->Get<TH1D>("a/b/hist"));
+   }
+}
+
+TEST(RFile, IterateKeys)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      TH1D a;
+      auto b = std::make_unique<TTree>();
+      std::string c = "0";
+      file->Put("a", a);
+      file->Put("b", *b);
+      file->Put("c", c);
+   }
+
+   {
+      auto file = RFile::OpenForReading(fileGuard.GetPath());
+      const auto expected = "a,b,c,";
+      std::string s = "";
+      for (const auto &key : file->GetKeys()) {
+         s += key + ",";
+      }
+      EXPECT_EQ(expected, s);
+
+      // verify the expected iterator operations work
+      const auto expected2 = "b,c,";
+      s = "";
+      auto iterable = file->GetKeys();
+      auto it = iterable.begin();
+      std::advance(it, 1);
+      for (; it != iterable.end(); ++it) {
+         s += *it + ",";
+      }
+      EXPECT_EQ(expected2, s);
+   }
+}
+
+TEST(RFile, IterateKeysPattern)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_pat.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string a, b, c, d, e, f, g;
+      file->Put("a", a);
+      file->Put("a/b", b);
+      file->Put("a/c", c);
+      file->Put("a/b/d", d);
+      file->Put("e", e);
+      file->Put("e/f", f);
+      file->Put("e/c/g", g);
+   }
+
+   const auto JoinKeyNames = [] (const auto &iterable) {
+      auto beg = iterable.begin();
+      if (beg == iterable.end()) return std::string("");
+      return std::accumulate(std::next(beg), iterable.end(), *beg,
+                             [](const auto &a, const auto &b) { return a + ", " + b; });
+   };
+
+   {
+      auto file = RFile::OpenForReading(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->GetKeys()), "a, a/b, a/c, a/b/d, e, e/f, e/c/g");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a")), "a, a/b, a/c, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b")), "a/b, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b/c")), "");
    }
 }
