@@ -71,9 +71,9 @@ Double_t RooGaussExpTails::evaluate() const
    Double_t t=(x_-x0_)/sigma_;
 
    if (t<=-kL_)
-      return exp(kL_*kL_/2.+kL_*t);
+      return exp(0.5*kL_*kL_+kL_*t);
    else if (t>kH_)
-      return exp(kH_*kH_/2.-kH_*t);
+      return exp(0.5*kH_*kH_-kH_*t);
    else
       return exp(-0.5*t*t);
 }
