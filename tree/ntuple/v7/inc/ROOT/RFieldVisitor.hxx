@@ -263,7 +263,7 @@ The functions in this class format strings which are displayed by RNTupleReader:
 class RNTupleFormatter {
 public:
    // Can abbreviate long strings, e.g. ("ExampleString" , space= 8) => "Examp..."
-   static std::string FitString(const std::string &str, int availableSpace);
+   static std::string FitString(std::string_view str, int availableSpace);
 };
 
 } // namespace Internal
