@@ -290,3 +290,102 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
    EXPECT_EQ(nEntries, 10);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
+
+TEST_F(RNTupleProcessorTest, JoinedChain)
+{
+   auto primaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
+
+   std::vector<std::unique_ptr<RNTupleProcessor>> auxiliaryChain;
+   auxiliaryChain.emplace_back(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}}));
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+
+   int nEntries = 0;
+
+   auto x = proc->GetEntry().GetPtr<float>("x");
+
+   for (const auto &entry [[maybe_unused]] : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*entry.GetPtr<int>("i"), proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*entry.GetPtr<int>("i")), *x);
+      EXPECT_EQ(*x * 2, *entry.GetPtr<float>("ntuple_aux.z"));
+   }
+   EXPECT_EQ(nEntries, 10);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
+{
+   auto primaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
+
+   std::vector<std::unique_ptr<RNTupleProcessor>> auxiliaryChain;
+   auxiliaryChain.emplace_back(
+      RNTupleProcessor::CreateChain({{fNTupleNames[2], fFileNames[2]}, {fNTupleNames[2], fFileNames[2]}}));
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
+
+   int nEntries = 0;
+
+   auto x = proc->GetEntry().GetPtr<float>("x");
+
+   for (const auto &entry [[maybe_unused]] : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*entry.GetPtr<int>("i"), proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*entry.GetPtr<int>("i")), *x);
+      EXPECT_EQ(*x * 2, *entry.GetPtr<float>("ntuple_aux.z"));
+   }
+   EXPECT_EQ(nEntries, 10);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
+{
+   auto primaryProc =
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {});
+
+   std::vector<std::unique_ptr<RNTupleProcessor>> auxProcs;
+   auxProcs.emplace_back(RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2"));
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProcs), {"i"});
+
+   int nEntries = 0;
+
+   auto x = proc->GetEntry().GetPtr<float>("x");
+
+   for (const auto &entry [[maybe_unused]] : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*entry.GetPtr<int>("i"), proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*entry.GetPtr<int>("i")), *x);
+      EXPECT_EQ(*x * 2, *entry.GetPtr<float>("ntuple_aux.z"));
+      EXPECT_EQ(*entry.GetPtr<float>("ntuple_aux.z"), *entry.GetPtr<float>("ntuple_aux2.z"));
+   }
+   EXPECT_EQ(nEntries, 5);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
+{
+   auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   std::vector<std::unique_ptr<RNTupleProcessor>> auxProcsIntermediate;
+   auxProcsIntermediate.emplace_back(RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2"));
+
+   std::vector<std::unique_ptr<RNTupleProcessor>> auxProcs;
+   auxProcs.emplace_back(RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
+                                                      std::move(auxProcsIntermediate), {"i"}));
+
+   try {
+      auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProcs), {});
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("auxiliary RNTupleJoinProcessors are currently not supported"));
+   }
+}
