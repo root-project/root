@@ -123,7 +123,7 @@ if(clingtest)
   endif()
   ROOT_ADD_TEST(clingtest-check-cling COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target check-cling
                                        ENVIRONMENT ${CLINGTEST_EXECUTABLE})
-elseif(NOT adaptivecpp) # AdaptiveCPP needs hipsycl::rt symbols to be exposed
+elseif()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   set(CMAKE_C_VISIBILITY_PRESET hidden)
