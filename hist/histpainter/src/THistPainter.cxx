@@ -10878,8 +10878,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    Float_t y   = gPad->PadtoY(upy);
    Int_t biny1 = fH->GetYaxis()->FindBin(y);
    Int_t biny2 = TMath::Min(biny1+nbins-1, fH->GetYaxis()->GetNbins());
-   Int_t py1   = gPad->YtoAbsPixel(fH->GetYaxis()->GetBinLowEdge(biny1));
-   Int_t py2   = gPad->YtoAbsPixel(fH->GetYaxis()->GetBinUpEdge(biny2));
+   Int_t py1   = gPad->YtoAbsPixel(gPad->GetLogy() ? TMath::Log10(fH->GetYaxis()->GetBinLowEdge(biny1)) : fH->GetYaxis()->GetBinLowEdge(biny1));
+   Int_t py2   = gPad->YtoAbsPixel(gPad->GetLogy() ? TMath::Log10(fH->GetYaxis()->GetBinUpEdge(biny2)) : fH->GetYaxis()->GetBinUpEdge(biny2));
 
    if (pyold1 || pyold2) gVirtualX->DrawBox(pxmin,pyold1,pxmax,pyold2,TVirtualX::kFilled);
    gVirtualX->DrawBox(pxmin,py1,pxmax,py2,TVirtualX::kFilled);
@@ -10963,8 +10963,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    Float_t x   = gPad->PadtoX(upx);
    Int_t binx1 = fH->GetXaxis()->FindBin(x);
    Int_t binx2 = TMath::Min(binx1+nbins-1, fH->GetXaxis()->GetNbins());
-   Int_t px1   = gPad->XtoAbsPixel(fH->GetXaxis()->GetBinLowEdge(binx1));
-   Int_t px2   = gPad->XtoAbsPixel(fH->GetXaxis()->GetBinUpEdge(binx2));
+   Int_t px1   = gPad->XtoAbsPixel(gPad->GetLogx() ? TMath::Log10(fH->GetXaxis()->GetBinLowEdge(binx1)) : fH->GetXaxis()->GetBinLowEdge(binx1));
+   Int_t px2   = gPad->XtoAbsPixel(gPad->GetLogx() ? TMath::Log10(fH->GetXaxis()->GetBinUpEdge(binx2)) : fH->GetXaxis()->GetBinUpEdge(binx2));
 
    if (pxold1 || pxold2) gVirtualX->DrawBox(pxold1,pymin,pxold2,pymax,TVirtualX::kFilled);
    gVirtualX->DrawBox(px1,pymin,px2,pymax,TVirtualX::kFilled);
