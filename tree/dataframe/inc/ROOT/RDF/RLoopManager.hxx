@@ -180,6 +180,8 @@ class RLoopManager : public RNodeBase {
    ColumnNames_t fValidBranchNames;
 
    ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
+   /// Pointer to a shared slot stack in case this instance runs concurrently with others:
+   std::weak_ptr<ROOT::Internal::RSlotStack> fSlotStack;
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -196,6 +198,7 @@ class RLoopManager : public RNodeBase {
    void SetupSampleCallbacks(TTreeReader *r, unsigned int slot);
    void UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
    void UpdateSampleInfo(unsigned int slot, TTreeReader &r);
+   std::shared_ptr<ROOT::Internal::RSlotStack> SlotStack() const;
 
    // List of branches for which we want to suppress the printed error about
    // missing branch when switching to a new tree. This is modified by readers,
@@ -299,6 +302,9 @@ public:
    }
 
    void SetTTreeLifeline(std::any lifeline);
+   /// Register a slot stack to be used by this RLoopManager. This allows for sharing RDataFrame helpers safely in the
+   /// context of RunGraphs(). Note that the loop manager only stores a weak_ptr, in between runs.
+   void SetSlotStack(const std::shared_ptr<ROOT::Internal::RSlotStack> &slotStack) { fSlotStack = slotStack; }
 
    void SetDataSource(std::unique_ptr<ROOT::RDF::RDataSource> dataSource);
 
