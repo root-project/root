@@ -166,7 +166,7 @@ struct RTFString {
    unsigned char fLName{0};
    char fData[255];
    RTFString() = default;
-   RTFString(const std::string &str)
+   RTFString(std::string_view str)
    {
       // The length of strings with 255 characters and longer are encoded with a 32-bit integer following the first
       // byte. This is currently not handled.
@@ -1037,7 +1037,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(const v
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::WriteKey(
    const void *buffer, std::size_t nbytes, std::size_t len, std::int64_t offset, std::uint64_t directoryOffset,
-   const std::string &className, const std::string &objectName, const std::string &title)
+   std::string_view className, std::string_view objectName, std::string_view title)
 {
    if (offset > 0)
       fKeyOffset = offset;
