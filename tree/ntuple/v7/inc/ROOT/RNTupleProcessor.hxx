@@ -59,7 +59,7 @@ private:
 
 public:
    RNTupleOpenSpec(std::string_view n, TDirectory *s) : fNTupleName(n), fStorage(s) {}
-   RNTupleOpenSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
+   RNTupleOpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s.data()) {}
 
    std::unique_ptr<Internal::RPageSource> CreatePageSource() const;
 };
