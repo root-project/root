@@ -337,8 +337,9 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
          RooJSONFactoryWSTool::error(errMsg.str());
       } else if (p[k].is_seq()) {
          bool firstInner = true;
+         expression << "{";
          for (RooAbsArg *arg : tool->requestArgList<RooAbsReal>(p, k)) {
-            expression << (firstInner ? "{" : ",") << arg->GetName();
+            expression << (firstInner ? "" : ",") << arg->GetName();
             firstInner = false;
          }
          expression << "}";
