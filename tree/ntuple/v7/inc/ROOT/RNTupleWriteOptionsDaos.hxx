@@ -50,7 +50,7 @@ public:
    /// Set the object class used to generate OIDs that relate to user data. Any
    /// `OC_xxx` constant defined in `daos_obj_class.h` may be used here without
    /// the OC_ prefix.
-   void SetObjectClass(const std::string &val) { fObjectClass = val; }
+   void SetObjectClass(std::string_view val) { fObjectClass = val; }
 
    uint32_t GetMaxCageSize() const { return fMaxCageSize; }
    /// Set the upper bound for page concatenation into cages, in bytes. It is assumed
