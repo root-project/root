@@ -330,11 +330,11 @@ ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescript
    return ROOT::kInvalidDescriptorId;
 }
 
-void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
+void ROOT::RClassField::SetStagingClass(const std::string_view className, unsigned int classVersion)
 {
-   TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
+   TClass::GetClass(className.data())->GetStreamerInfo(classVersion);
    if (classVersion != GetTypeVersion()) {
-      fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
+      fStagingClass = TClass::GetClass((std::string(className) + "@@" + std::to_string(classVersion)).c_str());
    } else {
       fStagingClass = fClass;
    }

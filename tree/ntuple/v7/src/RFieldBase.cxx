@@ -54,11 +54,11 @@ public:
       fCreateContext.fContinueOnError = fOriginalContinueOnError;
    }
 
-   void AddClassToStack(const std::string &cl)
+   void AddClassToStack(std::string_view cl)
    {
       if (std::find(fCreateContext.fClassesOnStack.begin(), fCreateContext.fClassesOnStack.end(), cl) !=
           fCreateContext.fClassesOnStack.end()) {
-         throw ROOT::RException(R__FAIL("cyclic class definition: " + cl));
+         throw ROOT::RException(R__FAIL("cyclic class definition: " + std::string(cl)));
       }
       fCreateContext.fClassesOnStack.emplace_back(cl);
    }
@@ -87,7 +87,7 @@ void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Exper
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
+ROOT::Internal::CallFieldBaseCreate(std::string_view fieldName, std::string_view typeName,
                                     const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                                     ROOT::DescriptorId_t fieldId)
 {
@@ -261,14 +261,14 @@ std::string ROOT::RFieldBase::GetQualifiedFieldName() const
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
+ROOT::RFieldBase::Create(std::string_view fieldName, std::string_view typeName)
 {
    return R__FORWARD_RESULT(
       RFieldBase::Create(fieldName, typeName, ROOT::RCreateFieldOptions{}, nullptr, ROOT::kInvalidDescriptorId));
 }
 
 std::vector<ROOT::RFieldBase::RCheckResult>
-ROOT::RFieldBase::Check(const std::string &fieldName, const std::string &typeName)
+ROOT::RFieldBase::Check(std::string_view fieldName, std::string_view typeName)
 {
    RFieldZero fieldZero;
    ROOT::RCreateFieldOptions cfOpts{};
@@ -290,7 +290,7 @@ ROOT::RFieldBase::Check(const std::string &fieldName, const std::string &typeNam
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
+ROOT::RFieldBase::Create(std::string_view fieldName, std::string_view typeName,
                          const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                          ROOT::DescriptorId_t fieldId)
 {
@@ -298,7 +298,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
    using ROOT::Internal::ParseUIntTypeToken;
    using ROOT::Internal::TokenizeTypeList;
 
-   const auto resolvedType = ROOT::Internal::GetCanonicalTypePrefix(TClassEdit::ResolveTypedef(typeName.c_str()));
+   const auto resolvedType = ROOT::Internal::GetCanonicalTypePrefix(TClassEdit::ResolveTypedef(typeName.data()));
 
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
@@ -306,7 +306,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       createContextGuard.SetContinueOnError(true);
 
    auto fnFail = [&fieldName,
-                  &resolvedType](const std::string &errMsg,
+                  &resolvedType](std::string_view errMsg,
                                  RInvalidField::RCategory cat =
                                     RInvalidField::RCategory::kTypeError) -> RResult<std::unique_ptr<RFieldBase>> {
       if (createContext.GetContinueOnError()) {
@@ -317,7 +317,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
    };
 
    if (resolvedType.empty())
-      return R__FORWARD_RESULT(fnFail("no type name specified for field '" + fieldName + "'"));
+      return R__FORWARD_RESULT(fnFail("no type name specified for field '" + std::string(fieldName) + "'"));
 
    std::unique_ptr<ROOT::RFieldBase> result;
 
@@ -555,7 +555,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
 
       if (!result) {
-         auto cl = TClass::GetClass(typeName.c_str());
+         auto cl = TClass::GetClass(typeName.data());
          // NOTE: if the class is not at least "Interpreted" we currently don't try to construct
          // the RClassField, as in that case we'd need to fetch the information from the StreamerInfo
          // rather than from TClass. This might be desirable in the future, but for now in this
@@ -615,7 +615,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
       return result;
    }
-   return R__FORWARD_RESULT(fnFail("unknown type: " + typeName, RInvalidField::RCategory::kUnknownType));
+   return R__FORWARD_RESULT(fnFail("unknown type: " + std::string(typeName), RInvalidField::RCategory::kUnknownType));
 }
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RFieldBase::GetColumnRepresentations() const

@@ -60,7 +60,7 @@ void CallConnectPageSinkOnField(RFieldBase &, ROOT::Experimental::Internal::RPag
                                 ROOT::NTupleSize_t firstEntry = 0);
 void CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
+CallFieldBaseCreate(std::string_view fieldName, std::string_view typeName, const ROOT::RCreateFieldOptions &options,
                     const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 } // namespace Internal
@@ -91,7 +91,7 @@ class RFieldBase {
    Internal::CallConnectPageSinkOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSink &, ROOT::NTupleSize_t);
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
    friend ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
-   Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
+   Internal::CallFieldBaseCreate(std::string_view fieldName, std::string_view typeName,
                                  const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                                  ROOT::DescriptorId_t fieldId);
 
@@ -499,7 +499,7 @@ protected:
    /// normalized type name and type alias.
    /// `desc` and `fieldId` must be passed if `options.fEmulateUnknownTypes` is true, otherwise they can be left blank.
    static RResult<std::unique_ptr<RFieldBase>>
-   Create(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
+   Create(std::string_view fieldName, std::string_view typeName, const ROOT::RCreateFieldOptions &options,
           const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
@@ -538,12 +538,11 @@ public:
    /// Factory method to create a field from a certain type given as string.
    /// Note that the provided type name must be a valid C++ type name. Template arguments of templated types
    /// must be type names or integers (e.g., no expressions).
-   static RResult<std::unique_ptr<RFieldBase>>
-   Create(const std::string &fieldName, const std::string &typeName);
+   static RResult<std::unique_ptr<RFieldBase>> Create(std::string_view fieldName, std::string_view typeName);
 
    /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
    /// Otherwise there is an error record for each failing subfield (subtype).
-   static std::vector<RCheckResult> Check(const std::string &fieldName, const std::string &typeName);
+   static std::vector<RCheckResult> Check(std::string_view fieldName, std::string_view typeName);
 
    /// Generates an object of the field type and allocates new initialized memory according to the type.
    /// Implemented at the end of this header because the implementation is using RField<T>::TypeName()
