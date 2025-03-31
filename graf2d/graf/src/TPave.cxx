@@ -617,11 +617,21 @@ void TPave::Print(Option_t *option) const
 
 TString TPave::GetSavePaveArgs(const char *extra_arg, Bool_t save_option)
 {
-   TString args;
-   if (fOption.Contains("NDC") && fInit)
-      args.Form("%g, %g, %g, %g", fX1NDC, fY1NDC, fX2NDC, fY2NDC);
-   else
-      args.Form("%g, %g, %g, %g", fX1, fY1, fX2, fY2);
+   Double_t x1 = fX1, y1 = fY1, x2 = fX2, y2 = fY2;
+   if (fOption.Contains("NDC")) {
+      // in some cases coordinates may not be initialized but were already set via direct call
+      // then one should store such modified coordinates
+      if (fInit || fX1NDC != 0.)
+         x1 = fX1NDC;
+      if (fInit || fY1NDC != 0.)
+         y1 = fY1NDC;
+      if (fInit || fX2NDC != 0.)
+         x2 = fX2NDC;
+      if (fInit || fY2NDC != 0.)
+         y2 = fY2NDC;
+   }
+
+   TString args = TString::Format("%g, %g, %g, %g", x1, y1, x2, y2);
    if (extra_arg && *extra_arg) {
       args.Append(", ");
       args.Append(extra_arg);
