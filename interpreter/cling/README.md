@@ -38,6 +38,8 @@ Our nightly binary snapshots are currently unavailable.
 
 ### Building from Source
 
+See also the instructions [on the webpage](https://root.cern/cling/cling_build_instructions/).
+
 #### Building Cling as a Standalone Project
 
 If Clang and LLVM (cling-latest version) are not installed, you need to build them first:
@@ -83,7 +85,13 @@ cmake -DLLVM_EXTERNAL_PROJECTS=cling -DLLVM_EXTERNAL_CLING_SOURCE_DIR=../cling/ 
 cmake --build . --target clang cling
 ```
 
-See also the instructions [on the webpage](https://root.cern/cling/cling_build_instructions/).
+#### Jupyter notebooks
+
+To enable support for cling in Jupyter notebooks, after building cling, run:
+
+```bash
+cmake --build . --target libclingJupyter
+```
 
 Usage
 -----
