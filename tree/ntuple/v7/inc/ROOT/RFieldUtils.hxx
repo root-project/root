@@ -22,24 +22,24 @@ namespace Internal {
 /// Applies RNTuple specific type name normalization rules (see specs) that help the string parsing in
 /// RFieldBase::Create(). The normalization of templated types does not include full normalization of the
 /// template arguments (hence "Prefix").
-std::string GetCanonicalTypePrefix(const std::string &typeName);
+std::string GetCanonicalTypePrefix(std::string_view typeName);
 
 /// Given a type name normalized by ROOT meta, renormalize it for RNTuple. E.g., insert std::prefix.
-std::string GetRenormalizedTypeName(const std::string &metaNormalizedName);
+std::string GetRenormalizedTypeName(std::string_view metaNormalizedName);
 
 /// Given a type info ask ROOT meta to demangle it, then renormalize the resulting type name for RNTuple. Useful to
 /// ensure that e.g. fundamental types are normalized to the type used by RNTuple (e.g. int -> std::int32_t).
 std::string GetRenormalizedDemangledTypeName(const std::type_info &ti);
 
 /// Applies all RNTuple type normalization rules except typedef resolution.
-std::string GetNormalizedUnresolvedTypeName(const std::string &origName);
+std::string GetNormalizedUnresolvedTypeName(std::string_view origName);
 
 /// Appends 'll' or 'ull' to the where necessary and strips the suffix if not needed.
-std::string GetNormalizedInteger(const std::string &intTemplateArg);
+std::string GetNormalizedInteger(std::string_view intTemplateArg);
 std::string GetNormalizedInteger(long long val);
 std::string GetNormalizedInteger(unsigned long long val);
-long long ParseIntTypeToken(const std::string &intToken);
-unsigned long long ParseUIntTypeToken(const std::string &uintToken);
+long long ParseIntTypeToken(std::string_view intToken);
+unsigned long long ParseUIntTypeToken(std::string_view uintToken);
 
 /// Possible settings for the "rntuple.streamerMode" class attribute in the dictionary.
 enum class ERNTupleSerializationMode {
@@ -55,7 +55,7 @@ ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
 /// `{"unsigned char", {1, 2, 3}}`. Extra whitespace in `typeName` should be removed before calling this function.
 ///
 /// If `typeName` is not an array type, it returns a tuple `{T, {}}`. On error, it returns a default-constructed tuple.
-std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(const std::string &typeName);
+std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(std::string_view typeName);
 
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
