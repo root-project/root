@@ -698,7 +698,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::DeserializeUInt64
    return DeserializeInt64(buffer, *reinterpret_cast<std::int64_t *>(&val));
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeString(const std::string &val, void *buffer)
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeString(std::string_view val, void *buffer)
 {
    if (buffer) {
       auto pos = reinterpret_cast<unsigned char *>(buffer);
@@ -2156,7 +2156,7 @@ std::string ROOT::Experimental::Internal::RNTupleSerializer::SerializeStreamerIn
 }
 
 ROOT::RResult<ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializeStreamerInfos(const std::string &extraTypeInfoContent)
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeStreamerInfos(std::string_view extraTypeInfoContent)
 {
    StreamerInfoMap_t infoMap;
 
