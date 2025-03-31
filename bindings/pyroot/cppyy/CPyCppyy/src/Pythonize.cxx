@@ -527,6 +527,13 @@ PyObject* VectorData(PyObject* self, PyObject*)
 }
 
 
+// This function implements __array__, added to std::vector python proxies and causes
+// a bug (see explanation at Utility::AddToClass(pyclass, "__array__"...) in CPyCppyy::Pythonize)
+// The recursive nature of this function, passes each subarray (pydata) to the next call and only
+// the final buffer is cast to a lowlevel view and resized (in VectorData), resulting in only the
+// first 1D array to be returned. See https://github.com/root-project/root/issues/17729
+// It is temporarily removed to prevent errors due to -Wunused-function, since it is no longer added.
+#if 0
 //---------------------------------------------------------------------------
 PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
 {
@@ -537,7 +544,7 @@ PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
     Py_DECREF(pydata);
     return newarr;
 }
-
+#endif
 
 //-----------------------------------------------------------------------------
 static PyObject* vector_iter(PyObject* v) {
@@ -1810,8 +1817,15 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
             Utility::AddToClass(pyclass, "__real_data", "data");
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
+        // The addition of the __array__ utility to std::vector Python proxies causes a
+        // bug where the resulting array is a single dimension, causing loss of data when
+        // converting to numpy arrays, for >1dim vectors. Since this C++ pythonization
+        // was added with the upgrade in 6.32, and is only defined and used recursively,
+        // the safe option is to disable this function and no longer add it.
+#if 0
         // numpy array conversion
             Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
+#endif
 
         // checked getitem
             if (HasAttrDirect(pyclass, PyStrings::gLen)) {
