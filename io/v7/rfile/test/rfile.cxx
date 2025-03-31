@@ -82,6 +82,22 @@ TEST(RFile, OpenForWriting)
    EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
+TEST(RFile, WriteInvalidPaths)
+{
+   FileRaii fileGuard("test_rfile_write_invalid.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   std::string a;
+   EXPECT_THROW(file->Put("", a), ROOT::RException);
+   EXPECT_THROW(file->Put("..", a), ROOT::RException);
+   EXPECT_THROW(file->Put(" a", a), ROOT::RException);
+   EXPECT_THROW(file->Put("a\n", a), ROOT::RException);
+   EXPECT_THROW(file->Put(".", a), ROOT::RException);
+   EXPECT_THROW(file->Put("\0", a), ROOT::RException);
+   EXPECT_NO_THROW(file->Put(".a", a));
+   EXPECT_NO_THROW(file->Put("a..", a));
+}
+
 TEST(RFile, OpenForUpdating)
 {
    FileRaii fileGuard("test_rfile_update.root");
@@ -207,8 +223,41 @@ TEST(RFile, IterateKeysPattern)
    {
       auto file = RFile::OpenForReading(fileGuard.GetPath());
       EXPECT_EQ(JoinKeyNames(file->GetKeys()), "a, a/b, a/c, a/b/d, e, e/f, e/c/g");
-      EXPECT_EQ(JoinKeyNames(file->GetKeys("a")), "a, a/b, a/c, a/b/d");
-      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b")), "a/b, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a")), "a/b, a/c, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b")), "a/b/d");
       EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b/c")), "");
+   }
+}
+
+TEST(RFile, IterateKeysPatternNonRecursive)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_pat_nonrecursive.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string a, b, c, d, e, f, g;
+      file->Put("a", a);
+      file->Put("a/b", b);
+      file->Put("a/c", c);
+      file->Put("a/b/d", d);
+      file->Put("e", e);
+      file->Put("e/f", f);
+      file->Put("e/c/g", g);
+   }
+   fileGuard.PreserveFile();
+
+   const auto JoinKeyNames = [] (const auto &iterable) {
+      auto beg = iterable.begin();
+      if (beg == iterable.end()) return std::string("");
+      return std::accumulate(std::next(beg), iterable.end(), *beg,
+                             [](const auto &a, const auto &b) { return a + ", " + b; });
+   };
+
+   {
+      auto file = RFile::OpenForReading(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive()), "a, e");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a")), "a/b, a/c");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a/b")), "a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a/b/c")), "");
    }
 }

@@ -23,18 +23,59 @@
 #include <TKey.h>
 
 using ROOT::Experimental::RFile;
-// using ROOT::Experimental::RFileRef;
 
-static void CheckExtension(std::string_view path)
+static bool HasPrefix(std::string_view str, std::string_view prefix)
+{
+   if (prefix.empty())
+      return true;
+
+   if (str.size() < prefix.size())
+      return false;
+
+   return str.compare(0, prefix.size(), prefix) == 0;
+}
+
+static bool IsInternalKey(const char *className)
+{
+   static constexpr const char *fInternalKeyClassNames[] = {"TFile", "FreeSegments", "StreamerInfo", "KeysList"};
+
+   if (strlen(className) == 0)
+      return true;
+   for (const char *k : fInternalKeyClassNames)
+      if (strcmp(className, k) == 0)
+         return true;
+   return false;
+}
+
+static void ThrowIfExtensionIsNotRoot(std::string_view path)
 {
    if (path.size() < 5 || path.compare(path.size() - 5, 5, ".root") != 0) {
       throw ROOT::RException(R__FAIL(std::string("Only .root files are supported.")));
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool RFile::IsValidPath(std::string_view path)
+{
+   if (path.empty())
+      return false;
+
+   if (path == "." || path == "..")
+      return false;
+
+   for (char ch : path) {
+      // Disallow control characters, tabs, newlines and whitespace
+      if (ch < 33)
+         return false;
+   }
+
+   return true;
+}
+
 std::unique_ptr<RFile> RFile::OpenForReading(std::string_view path)
 {
-   CheckExtension(path);
+   ThrowIfExtensionIsNotRoot(path);
 
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -43,7 +84,7 @@ std::unique_ptr<RFile> RFile::OpenForReading(std::string_view path)
 
 std::unique_ptr<RFile> RFile::OpenForUpdate(std::string_view path)
 {
-   CheckExtension(path);
+   ThrowIfExtensionIsNotRoot(path);
 
    // NOTE: "UPDATE_WITHOUT_GLOBALREGISTRATION" is undocumented but works.
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
@@ -53,7 +94,7 @@ std::unique_ptr<RFile> RFile::OpenForUpdate(std::string_view path)
 
 std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
 {
-   CheckExtension(path);
+   ThrowIfExtensionIsNotRoot(path);
 
    // NOTE: "RECREATE_WITHOUT_GLOBALREGISTRATION" is undocumented but works.
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION"));
@@ -64,10 +105,7 @@ std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
 void *RFile::GetUntyped(const char *path, const TClass *type) const
 {
    assert(path);
-
-   if (!type) {
-      throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + path));
-   }
+   assert(type);
 
    // First try getting the object from the top-level directory.
    // Don't use GetObjectChecked or similar because they don't handle slashes in paths correctly
@@ -115,9 +153,9 @@ void *RFile::GetUntyped(const char *path, const TClass *type) const
 
 void RFile::PutUntyped(const char *path, const TClass *type, void *obj)
 {
-   if (!type) {
-      throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + path));
-   }
+   assert(path);
+   assert(type);
+   
    if (!fFile->IsWritable()) {
       throw ROOT::RException(R__FAIL("File is not writable"));
    }
@@ -126,5 +164,42 @@ void RFile::PutUntyped(const char *path, const TClass *type, void *obj)
 
    if (!success) {
       throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
+   }
+}
+
+void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
+{
+   // We only want to return keys that refer to user objects, not internal ones, therefore we skip
+   // all keys that have internal class names.
+   while (1) {
+      ++fIter;
+
+      if (!fIter.operator->()) {
+         // reached end of the iteration
+         break;
+      }
+
+      if (IsInternalKey(fIter->fClassName.c_str()))
+         continue;
+
+      // skip the root dir itself
+      if (fIter->fKeyName == fRootDir)
+         continue;
+
+      // skip key if it's not a child of root dir
+      if (!HasPrefix(fIter->fKeyName, fRootDir))
+         continue;
+
+      if (!fRecursive) {
+         // check that we are in the same directory as "rootDir".
+         // TODO: this could be optimized by computing nesting during MatchesPattern.
+         const auto nesting = std::count(fIter->fKeyName.begin(), fIter->fKeyName.end(), '/');
+         if (nesting != fRootDirNesting) {
+            continue;
+         }
+      }
+
+      // All checks passed: return this key.
+      break;
    }
 }
