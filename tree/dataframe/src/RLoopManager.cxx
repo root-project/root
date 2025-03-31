@@ -511,7 +511,7 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
 void RLoopManager::RunEmptySourceMT()
 {
 #ifdef R__USE_IMT
-   ROOT::Internal::RSlotStack slotStack(fNSlots);
+   std::shared_ptr<ROOT::Internal::RSlotStack> slotStack = SlotStack();
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
    const auto nEmptyEntries = GetNEmptyEntries();
@@ -531,7 +531,7 @@ void RLoopManager::RunEmptySourceMT()
 
    // Each task will generate a subrange of entries
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(*slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot);
       InitNodeSlots(nullptr, slot);
@@ -604,7 +604,7 @@ void RLoopManager::RunTreeProcessorMT()
 #ifdef R__USE_IMT
    if (fEndEntry == fBeginEntry) // empty range => no work needed
       return;
-   ROOT::Internal::RSlotStack slotStack(fNSlots);
+   std::shared_ptr<ROOT::Internal::RSlotStack> slotStack = SlotStack();
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp =
       (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
@@ -615,7 +615,7 @@ void RLoopManager::RunTreeProcessorMT()
    std::atomic<ULong64_t> entryCount(0ull);
 
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
-      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(*slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot, &r);
       InitNodeSlots(&r, slot);
@@ -891,6 +891,24 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
          throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
       fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id]);
    }
+}
+
+/// Create a slot stack with the desired number of slots or reuse a shared instance.
+/// When a LoopManager runs in isolation, it will create its own slot stack from the
+/// number of slots. When it runs as part of RunGraphs(), each loop manager will be
+/// assigned a shared slot stack, so dataframe helpers can be shared in a thread-safe
+/// manner.
+std::shared_ptr<ROOT::Internal::RSlotStack> RLoopManager::SlotStack() const
+{
+#ifdef R__USE_IMT
+   if (auto shared = fSlotStack.lock(); shared) {
+      return shared;
+   } else {
+      return std::make_shared<ROOT::Internal::RSlotStack>(fNSlots);
+   }
+#else
+   return nullptr;
+#endif
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
