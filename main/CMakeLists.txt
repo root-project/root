@@ -38,6 +38,11 @@ else()
   if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
     target_link_libraries(hadd stdc++fs)
   endif()
+  # New name: root-merge, `rm` for short
+  # TODO: Implement clean command line interface
+  add_custom_command(TARGET hadd POST_BUILD
+                     COMMAND ln -f hadd rm
+                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core CMAKENOEXPORT)
 
