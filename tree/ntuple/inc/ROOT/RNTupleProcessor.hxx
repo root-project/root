@@ -104,51 +104,9 @@ class RNTupleProcessor {
    friend class RNTupleJoinProcessor;
 
 protected:
-   // clang-format off
-   /**
-   \class ROOT::Experimental::RNTupleProcessor::RFieldContext
-   \ingroup NTuple
-   \brief Manager for a field as part of the RNTupleProcessor.
-
-   An RFieldContext contains two fields: a proto-field which is not connected to any page source but serves as the
-   blueprint for this particular field, and a concrete field that is connected to the page source currently connected
-   to the RNTupleProcessor for reading. When a new page source is connected, the current concrete field gets reset. A
-   new concrete field that is connected to this new page source is subsequently created from the proto-field.
-   */
-   // clang-format on
-   class RFieldContext {
-      friend class RNTupleProcessor;
-      friend class RNTupleSingleProcessor;
-      friend class RNTupleChainProcessor;
-      friend class RNTupleJoinProcessor;
-
-   private:
-      std::unique_ptr<ROOT::RFieldBase> fProtoField;
-      std::unique_ptr<ROOT::RFieldBase> fConcreteField;
-      ROOT::RFieldToken fToken;
-      // Which RNTuple the field belongs to, in case the field belongs to an auxiliary RNTuple, according to the order
-      // in which it was specified. For chained RNTuples, this value will always be 0.
-      std::size_t fNTupleIdx;
-
-   public:
-      RFieldContext(std::unique_ptr<ROOT::RFieldBase> protoField, ROOT::RFieldToken token, std::size_t ntupleIdx = 0)
-         : fProtoField(std::move(protoField)), fToken(token), fNTupleIdx(ntupleIdx)
-      {
-      }
-
-      const ROOT::RFieldBase &GetProtoField() const { return *fProtoField; }
-      /// Concrete pages need to be reset explicitly before the page source they belong to is destroyed.
-      void ResetConcreteField() { fConcreteField.reset(); }
-      void SetConcreteField() { fConcreteField = fProtoField->Clone(fProtoField->GetFieldName()); }
-      bool IsAuxiliary() const { return fNTupleIdx > 0; }
-   };
-
    std::string fProcessorName;
    std::unique_ptr<ROOT::REntry> fEntry;
    std::unique_ptr<ROOT::Internal::RPageSource> fPageSource;
-   /// Maps the (qualified) field name to its corresponding field context.
-   std::unordered_map<std::string, RFieldContext> fFieldContexts;
-
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public

@@ -181,7 +181,7 @@ TEST_F(RNTupleChainProcessorTest, MissingFields)
       entry++;
       FAIL() << "having missing fields in subsequent ntuples should throw";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field \"y\" not found in current RNTuple"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("field \"y\" not found in the current RNTuple"));
    }
 }
 
