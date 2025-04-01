@@ -84,7 +84,7 @@ public:
       // get implementation
       fWebCanvas = static_cast<TWebCanvas *> (fCanvas->GetCanvasImp());
 
-      // use async mode to prevent blocking inside qt5/qt6/cef
+      // use async mode to prevent blocking inside qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
 
       RegisterCanvasInGlobalLists(true);
@@ -100,7 +100,7 @@ public:
       // create implementation
       fWebCanvas = static_cast<TWebCanvas *> (TWebCanvas::NewCanvas(fCanvas, "title", 0, 0, 800, 600));
 
-      // use async mode to prevent blocking inside qt5/qt6/cef
+      // use async mode to prevent blocking inside qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
 
       // assign implementation
@@ -121,7 +121,7 @@ public:
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
 
       fWebCanvas = webcanv;
-      // use async mode to prevent blocking inside qt5/qt6/cef
+      // use async mode to prevent blocking inside qt6/cef
       fWebCanvas->SetAsyncMode(kTRUE);
    }
 

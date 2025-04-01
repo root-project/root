@@ -778,7 +778,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       std::lock_guard<std::mutex> grd(fConnMutex);
 
       if (is_longpoll && !is_remote  && ntry == "1"s) {
-         // special workaround for local displays like qt5/qt6
+         // special workaround for local displays like qt6/cef
          // they are not disconnected regularly when page reload is invoked
          // therefore try to detect if new key is applied
          for (unsigned indx = 0; indx < fConn.size(); indx++) {
