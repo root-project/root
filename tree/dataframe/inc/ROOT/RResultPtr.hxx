@@ -318,10 +318,13 @@ public:
    /// When implicit multi-threading is enabled, the callback:
    /// - will never be executed by multiple threads concurrently: it needs not be thread-safe. For example the snippet
    ///   above that draws the partial histogram on a canvas works seamlessly in multi-thread event loops.
-   /// - will always be executed "everyNEvents": partial results will "contain" that number of events more from
-   ///   one call to the next
+   /// - will be executed by the first worker that arrives at the callback, and then only be executed when the same result
+   ///   is updated. For example, if dataframe uses N internal copies of a result, it will always be the `i`th < N object
+   ///   that is passed into the callback.
+   /// - will always be executed "everyNEvents": the partial result passed into the callback will have accumulated N more
+   ///   events, irrespective of the progress that other worker threads make.
    /// - might be executed by a different worker thread at different times: the value of `std::this_thread::get_id()`
-   ///   might change between calls
+   ///   might change between calls.
    ///
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one can use
    /// OnPartialResultSlot().
@@ -329,11 +332,18 @@ public:
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
       ThrowIfNull();
-      const auto nSlots = fLoopManager->GetNSlots();
       auto actionPtr = fActionPtr;
-      auto c = [nSlots, actionPtr, callback](unsigned int slot) {
-         if (slot != nSlots - 1)
+      constexpr auto kUninit = std::numeric_limits<unsigned int>::max();
+      auto activeSlot = std::make_shared<std::atomic_uint>(kUninit);
+      auto c = [=](unsigned int slot) {
+         if (activeSlot->load() == kUninit) {
+            // Try to grab the right to run the callback for our slot:
+            unsigned int expected = kUninit;
+            activeSlot->compare_exchange_strong(expected, slot);
+         }
+         if (activeSlot->load() != slot)
             return;
+
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(*partialResult);
       };
