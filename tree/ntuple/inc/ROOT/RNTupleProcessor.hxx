@@ -160,10 +160,6 @@ protected:
    std::size_t fCurrentProcessorNumber = 0;    //< Number of the currently open inner processor
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create and connect a concrete field to the current page source, based on its proto field.
-   void ConnectField(RFieldContext &fieldContext, ROOT::Internal::RPageSource &pageSource, ROOT::REntry &entry);
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number.
    ///
    /// \param[in] entryNumber Entry number to load
