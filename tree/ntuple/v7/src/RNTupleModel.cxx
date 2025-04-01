@@ -54,6 +54,20 @@ ROOT::RResult<void>
 ROOT::Internal::RProjectedFields::EnsureValidMapping(const ROOT::RFieldBase *target, const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
+
+   if (!target->GetColumnRepresentatives()[0].empty()) {
+      const auto representative = target->GetColumnRepresentatives()[0][0];
+      // If the user is trying to add a projected field upon which they called SetTruncated() or SetQuantized(),
+      // they probably have the wrong expectations about what should happen. Warn them about it.
+      if (representative == ENTupleColumnType::kReal32Trunc || representative == ENTupleColumnType::kReal32Quant) {
+         R__LOG_WARNING(ROOT::Internal::NTupleLog())
+            << "calling SetQuantized() or SetTruncated() on a projected field has no effect, as the on-disk "
+               "representation of the value is decided by the projection source field. Reading back the field will "
+               "yield the correct values, but the value range and bits of precision you set on the projected field "
+               "will be ignored.";
+      }
+   }
+
    const bool hasCompatibleStructure = (source->GetStructure() == target->GetStructure()) ||
                                        ((source->GetStructure() == ROOT::ENTupleStructure::kCollection) &&
                                         dynamic_cast<const ROOT::RCardinalityField *>(target));
