@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '24/03/2025',
+version_date = '1/04/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -138,7 +138,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
       browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
       browser.isChrome = Boolean(window.chrome);
       browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
-      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
+      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? (navigator.userAgent.indexOf('Chrom') > 0 ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 134) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    }
    browser.android = /android/i.test(navigator.userAgent);
@@ -328,7 +328,7 @@ settings = {
    HandleWrongHttpResponse: false,
    /** @summary Tweak browser caching with stamp URL parameter
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
-     * In such case browser will be forced to load file content disregards of server cache settings
+     * In such case browser will be forced to load file content disregards of browser or server cache settings
      * Can be disabled by providing &usestamp=false in URL or via Settings/Files sub-menu
      * Disabled by default on node.js, enabled in the web browsers */
    UseStamp: !nodejs,
@@ -336,7 +336,15 @@ settings = {
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
-  /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
+   /** @summary File read timeout in ms
+     * @desc Configures timeout for each http operation for reading ROOT files
+     * @default 0 */
+   FilesTimeout: 0,
+   /** @summary Default remap object for files loading
+     * @desc Allows to retry files reading if original URL fails
+     * @private */
+   FilesRemap: { 'https://root.cern/': 'https://root-eos.web.cern.ch/' },
+   /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
    WithCredentials: false,
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
@@ -891,7 +899,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
 
          if (this.readyState !== 4) return;
 
-         if ((this.status !== 200) && (this.status !== 206) && !browser.qt5 &&
+         if ((this.status !== 200) && (this.status !== 206) && !browser.qt6 &&
              // in these special cases browsers not always set status
              !((this.status === 0) && ((url.indexOf('file://') === 0) || (url.indexOf('blob:') === 0))))
                return this.error_callback(Error(`Fail to load url ${url}`), this.status);
@@ -8270,17 +8278,19 @@ function createGrayPalette() {
    return new ColorPalette(palette);
 }
 
-/* eslint-disable @stylistic/js/comma-spacing */
-
 /** @summary Create color palette
   * @private */
 function getColorPalette(id, grayscale) {
    id = id || settings.Palette;
-   if ((id > 0) && (id < 10)) return createGrayPalette();
-   if (id < 51) return createDefaultPalette(grayscale);
-   if (id > 113) id = 57;
-   const stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
+   if ((id > 0) && (id < 10))
+      return createGrayPalette();
+   if (id < 51)
+      return createDefaultPalette(grayscale);
+   if (id > 113)
+      id = 57;
+   const stops = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
    let rgb;
+   /* eslint-disable @stylistic/js/comma-spacing */
    switch (id) {
       // Deep Sea
       case 51: rgb = [[0,9,13,17,24,32,27,25,29],[0,0,0,2,37,74,113,160,221],[28,42,59,78,98,129,154,184,221]]; break;
@@ -8410,6 +8420,7 @@ function getColorPalette(id, grayscale) {
       case 113: rgb = [[0,5,65,97,124,156,189,224,255],[32,54,77,100,123,148,175,203,234],[77,110,107,111,120,119,111,94,70]]; break;
       default: return createDefaultPalette();
    }
+   /* eslint-enable @stylistic/js/comma-spacing */
 
    const NColors = 255, Red = rgb[0], Green = rgb[1], Blue = rgb[2], palette = [];
 
@@ -69138,7 +69149,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/' + (browser.qt5 ? '1.108.35/' : '1.128.0/'),
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.128.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -69152,7 +69163,7 @@ async function loadOpenui5(args) {
    } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0) && !browser.qt5)
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
       openui5_sources.push(openui5_root);
    if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
       openui5_sources.push(openui5_dflt);
@@ -69213,6 +69224,10 @@ const ToolbarIcons = {
             'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z '+
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
+
+   /* eslint-enable @stylistic/js/key-spacing */
+   /* eslint-enable @stylistic/js/comma-spacing */
+   /* eslint-enable @stylistic/js/object-curly-spacing */
 
    createSVG(group, btn, size, title, arg) {
       const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
@@ -79546,11 +79561,11 @@ class TPadPainter extends ObjectPainter {
 
          if (padpainter.matchObjectType(clTPad) && (snap.fPrimitives.length > 0))
             padpainter.addPadButtons(true);
-
-         // we select current pad, where all drawing is performed
+         pindx++; // new painter will be add
          promise = padpainter.drawNextSnap(snap.fPrimitives).then(() => padpainter.addPadInteractive());
       } else if (((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG)) && (snap.fOption !== '__ignore_drawing__')) {
          // here the case of normal drawing
+         pindx++; // new painter will be add
          promise = this.drawObject(this, snap.fSnapshot, snap.fOption).then(objp => this.addObjectPainter(objp, lst, indx));
       }
 
@@ -79949,7 +79964,7 @@ class TPadPainter extends ObjectPainter {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         if ((browser.qt5 || browser.qt6 || browser.cef3) && this.snapid) {
+         if ((browser.qt6 || browser.cef3) && this.snapid) {
             console.warn(`sending file ${filename} to server`);
             let res = imgdata;
             if (kind !== 'svg') {
@@ -81194,8 +81209,8 @@ class TCanvasPainter extends TPadPainter {
       if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
 
-      // workaround for qt5-based display where inner window size is used
-      if ((browser.qt5 || browser.qt6) && fullW > 100 && fullH > 60) {
+      // workaround for qt-based display where inner window size is used
+      if (browser.qt6 && fullW > 100 && fullH > 60) {
          fullW -= 3;
          fullH -= 30;
       }
@@ -111822,6 +111837,7 @@ class TFile {
       this.fStreamers = 0;
       this.fStreamerInfos = null;
       this.fFileName = '';
+      this.fTimeout = settings.FilesTimeout ?? 0;
       this.fStreamers = [];
       this.fBasicTypes = {}; // custom basic types, in most case enumerations
 
@@ -111852,6 +111868,28 @@ class TFile {
       this.fFileName = pos >= 0 ? this.fURL.slice(pos + 1) : this.fURL;
    }
 
+   /** @summary Set timeout for File instance
+    * @desc Timeout used when submitting http requests to the server */
+   setTimeout(v) {
+      this.fTimeout = v;
+   }
+
+   /** @summary Assign remap for web servers
+    * @desc Allows to specify fallback server if main server fails
+    * @param {Object} remap - looks like { 'https://original.server/': 'https://fallback.server/' } */
+   assignRemap(remap) {
+      if (!remap && !isObject(remap))
+         return;
+
+      for (const key in remap) {
+         if (this.fURL.indexOf(key) === 0) {
+            this.fURL2 = remap[key] + this.fURL.slice(key.length);
+            if (!this.fTimeout)
+               this.fTimeout = 10000;
+         }
+      }
+   }
+
    /** @summary Assign BufferArray with file contentOpen file
      * @private */
    assignFileContent(bufArray) {
@@ -111879,22 +111917,31 @@ class TFile {
             blobs = [], // array of requested segments
             promise = new Promise((resolve, reject) => { resolveFunc = resolve; rejectFunc = reject; });
 
-      let fileurl = file.fURL,
-          first = 0, last = 0,
+      let fileurl, first = 0, last = 0,
           // eslint-disable-next-line prefer-const
           read_callback, first_req,
           first_block_retry = false;
 
-      if (isStr(filename) && filename) {
-         const pos = fileurl.lastIndexOf('/');
-         fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
+      function setFileUrl(use_second) {
+         if (use_second) {
+            console.log('Failure - try to repait with URL2', file.fURL2);
+            file.fURL = file.fURL2;
+            delete file.fURL2;
+         }
+
+         fileurl = file.fURL;
+         if (isStr(filename) && filename) {
+            const pos = fileurl.lastIndexOf('/');
+            fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
+         }
       }
 
       function send_new_request(increment) {
          if (increment) {
             first = last;
             last = Math.min(first + file.fMaxRanges * 2, place.length);
-            if (first >= place.length) return resolveFunc(blobs);
+            if (first >= place.length)
+               return resolveFunc(blobs);
          }
 
          let fullurl = fileurl, ranges = 'bytes', totalsz = 0;
@@ -111918,6 +111965,9 @@ class TFile {
                xhr.setRequestHeader('Range', ranges);
                xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
+
+            if (file.fTimeout)
+               xhr.timeout = file.fTimeout;
 
             if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
                let sum1 = 0, sum2 = 0, sum_total = 0;
@@ -111958,6 +112008,10 @@ class TFile {
                file.fUseStampPar = false;
                return send_new_request();
             }
+            if (file.fURL2) {
+               setFileUrl(true);
+               return send_new_request();
+            }
             if (file.fAcceptRanges) {
                file.fAcceptRanges = false;
                first_block_retry = true;
@@ -111992,9 +112046,12 @@ class TFile {
          }
 
          if (!res) {
+            if (file.fURL2) {
+               setFileUrl(true);
+               return send_new_request();
+            }
             if ((first === 0) && (last > 2) && (file.fMaxRanges > 1)) {
                // server return no response with multi request - try to decrease ranges count or fail
-
                if (last / 2 > 200)
                   file.fMaxRanges = 200;
                else if (last / 2 > 50)
@@ -112006,11 +112063,9 @@ class TFile {
                else
                   file.fMaxRanges = 1;
                last = Math.min(last, file.fMaxRanges * 2);
-               // console.log(`Change maxranges to ${file.fMaxRanges} last ${last}`);
                return send_new_request();
             }
-
-            return rejectFunc(Error('Fail to read with several ranges'));
+            return rejectFunc(Error(`Fail to read with ${place.length/2} ranges max = ${file.fMaxRanges}`));
          }
 
          // if only single segment requested, return result as is
@@ -112155,6 +112210,8 @@ class TFile {
 
          send_new_request(true);
       };
+
+      setFileUrl();
 
       return send_new_request(true).then(() => promise);
    }
@@ -112860,14 +112917,17 @@ class TProxyFile extends TFile {
   *  - [ArrayBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer} instance with complete file content
   *  - [FileProxy]{@link FileProxy} let access arbitrary files via tiny proxy API
   * @param {string|object} arg - argument for file open like url, see details
+  * @param {object} [opts] - extra arguments
+  * @param {Number} [opts.timeout=0] - read timeout for http requests in ms
+  * @param {Object} [opts.remap={}] - http server remap to fallback when main server fails, like { 'https://original.server/': 'https://fallback.server/' }
   * @return {object} - Promise with {@link TFile} instance when file is opened
   * @example
   *
   * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
   * let f = await openFile('https://root.cern/js/files/hsimple.root');
   * console.log(`Open file ${f.getFileName()}`); */
-function openFile(arg) {
-   let file;
+function openFile(arg, opts) {
+   let file, plain_file;
 
    if (isNodeJs() && isStr(arg)) {
       if (arg.indexOf('file://') === 0)
@@ -112887,8 +112947,18 @@ function openFile(arg) {
    if (!file && isObject(arg) && arg.size && arg.name)
       file = new TLocalFile(arg);
 
-   if (!file)
+   if (!file) {
       file = new TFile(arg);
+      plain_file = true;
+      file.assignRemap(settings.FilesRemap);
+   }
+
+   if (opts && isObject(opts)) {
+      if (opts.timeout)
+         file.setTimeout(opts.timeout);
+      if (plain_file && opts.remap)
+         file.assignRemap(opts.remap);
+   }
 
    return file._open();
 }
@@ -158606,7 +158676,7 @@ async function drawInspector(dom, obj, opt) {
          this.selectDom().remove();
       };
 
-      if (!browser.qt5 && !browser.qt6 && !browser.cef3) {
+      if (!browser.qt6 && !browser.cef3) {
          painter.storeAsJson = function() {
             const json = toJSON(obj, 2),
                   fname = obj.fName || 'file';
@@ -170507,10 +170577,12 @@ class RPadPainter extends RObjectPainter {
          if (snap.fPrimitives?.length)
             padpainter.addPadButtons();
 
+         pindx++; // new painter will be add
          promise = padpainter.drawNextSnap(snap.fPrimitives).then(() => padpainter.addPadInteractive());
       } else {
          // will be used in addToPadPrimitives to assign style to sub-painters
          this.next_rstyle = snap.fStyle || this.rstyle;
+         pindx++; // new painter will be add
 
          // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
          promise = this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '')
@@ -170724,7 +170796,7 @@ class RPadPainter extends RObjectPainter {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         if ((browser.qt5 || browser.qt6 || browser.cef3) && this.snapid) {
+         if ((browser.qt6 || browser.cef3) && this.snapid) {
             console.warn(`sending file ${filename} to server`);
             let res = imgdata;
             if (kind !== 'svg') {

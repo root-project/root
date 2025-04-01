@@ -6,6 +6,8 @@
 1. Only 'col7' draw option uses bar offset and width for color `TH2` drawing
 1. Interactive zooming and context menu on 'chord' `TH2` drawing
 1. Implement 'box1' for `TH3` with negative bins
+1. Introduce `settings.FilesTimeout` to configure global timeout for file reading operations
+1. Introduce `settings.FilesRemap` to let provide fallback address for http server, used for `root.cern`
 1. Adjust histogram title drawing with native implementation
 1. Improve float to string conversion when 'g' is specified
 1. Support 'same' option for first histogram, draw directly on pad
@@ -20,17 +22,19 @@
 1. Support `TLink` and `TButton` object, used in `TInspectCanvas`
 1. Support `TF12` - projection of `TF2`
 1. Upgrade three.js r168 -> r174
+1. Remove support of qt5 webengine, only qt6web is supported
 1. Internals - use private members and methods
 1. Internals - use `WeakRef` class for cross-referencing of painters
 1. Internals - use negative indexes in arrays and Strings
 1. Fix - handle `TPave` NDC position also when fInit is not set
 1. Fix - properly handle image sizes in svg2pdf
 1. Fix - drawing `TPaveText` with zero text size
+1. Fix - correct axis range in `TScatter` drawing
+
+
+## Changes in 7.8.2
 1. Fix - hidden canvas in Jupyter Lab, https://root-forum.cern.ch/t/63097/
-1. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
-1. Fix - correctly read std::pair<> without dictionary, https://root-forum.cern.ch/t/63114/
-1. Fix - TF3 painting error
-1. Fix - correct axis range in TScatter drawing
+2. Fix - repair small bug in `TF3` painting
 
 
 ## Changes in 7.8.1
@@ -81,6 +85,13 @@
 37. Fix - unzooming on log scale was extending range forever
 38. Fix - display empty hist bin if fSumw2 not zero
 39. Fix - geometry display on android devices
+
+
+## Changes in 7.7.6
+1. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
+2. Fix - correctly read std::pair<> without dictionary, https://root-forum.cern.ch/t/63114/
+3. Fix - chromium in mobile device emulation mode, https://root-forum.cern.ch/t/63201/
+4. Fix - files remap for root.cern site using fallback URL
 
 
 ## Changes in 7.7.5

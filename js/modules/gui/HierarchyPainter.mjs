@@ -4000,7 +4000,7 @@ async function drawInspector(dom, obj, opt) {
          this.selectDom().remove();
       };
 
-      if (!browser.qt5 && !browser.qt6 && !browser.cef3) {
+      if (!browser.qt6 && !browser.cef3) {
          painter.storeAsJson = function() {
             const json = toJSON(obj, 2),
                   fname = obj.fName || 'file';

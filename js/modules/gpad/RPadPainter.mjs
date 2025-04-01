@@ -1146,10 +1146,12 @@ class RPadPainter extends RObjectPainter {
          if (snap.fPrimitives?.length)
             padpainter.addPadButtons();
 
+         pindx++; // new painter will be add
          promise = padpainter.drawNextSnap(snap.fPrimitives).then(() => padpainter.addPadInteractive());
       } else {
          // will be used in addToPadPrimitives to assign style to sub-painters
          this.next_rstyle = snap.fStyle || this.rstyle;
+         pindx++; // new painter will be add
 
          // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
          promise = this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '')
@@ -1364,7 +1366,7 @@ class RPadPainter extends RObjectPainter {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         if ((browser.qt5 || browser.qt6 || browser.cef3) && this.snapid) {
+         if ((browser.qt6 || browser.cef3) && this.snapid) {
             console.warn(`sending file ${filename} to server`);
             let res = imgdata;
             if (kind !== 'svg') {

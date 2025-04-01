@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '24/03/2025',
+version_date = '1/04/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -130,7 +130,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
       browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
       browser.isChrome = Boolean(window.chrome);
       browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
-      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
+      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? (navigator.userAgent.indexOf('Chrom') > 0 ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 134) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    }
    browser.android = /android/i.test(navigator.userAgent);
@@ -320,7 +320,7 @@ settings = {
    HandleWrongHttpResponse: false,
    /** @summary Tweak browser caching with stamp URL parameter
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
-     * In such case browser will be forced to load file content disregards of server cache settings
+     * In such case browser will be forced to load file content disregards of browser or server cache settings
      * Can be disabled by providing &usestamp=false in URL or via Settings/Files sub-menu
      * Disabled by default on node.js, enabled in the web browsers */
    UseStamp: !nodejs,
@@ -328,7 +328,15 @@ settings = {
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
-  /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
+   /** @summary File read timeout in ms
+     * @desc Configures timeout for each http operation for reading ROOT files
+     * @default 0 */
+   FilesTimeout: 0,
+   /** @summary Default remap object for files loading
+     * @desc Allows to retry files reading if original URL fails
+     * @private */
+   FilesRemap: { 'https://root.cern/': 'https://root-eos.web.cern.ch/' },
+   /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
    WithCredentials: false,
    /** @summary Skip streamer infos from the GUI */
    SkipStreamerInfos: false,
@@ -883,7 +891,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
 
          if (this.readyState !== 4) return;
 
-         if ((this.status !== 200) && (this.status !== 206) && !browser.qt5 &&
+         if ((this.status !== 200) && (this.status !== 206) && !browser.qt6 &&
              // in these special cases browsers not always set status
              !((this.status === 0) && ((url.indexOf('file://') === 0) || (url.indexOf('blob:') === 0))))
                return this.error_callback(Error(`Fail to load url ${url}`), this.status);

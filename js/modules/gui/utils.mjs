@@ -143,7 +143,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/' + (browser.qt5 ? '1.108.35/' : '1.128.0/'),
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.128.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -157,7 +157,7 @@ async function loadOpenui5(args) {
    } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0) && !browser.qt5)
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
       openui5_sources.push(openui5_root);
    if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
       openui5_sources.push(openui5_dflt);
@@ -218,6 +218,10 @@ const ToolbarIcons = {
             'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z '+
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
+
+   /* eslint-enable @stylistic/js/key-spacing */
+   /* eslint-enable @stylistic/js/comma-spacing */
+   /* eslint-enable @stylistic/js/object-curly-spacing */
 
    createSVG(group, btn, size, title, arg) {
       const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
