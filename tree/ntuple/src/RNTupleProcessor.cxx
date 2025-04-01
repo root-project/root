@@ -232,9 +232,6 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSp
          auto valuePtr = fModel->GetDefaultEntry().GetPtr<void>(token);
          fEntry->BindValue(token, valuePtr);
       }
-
-      auto fieldContext = RFieldContext(field.Clone(field.GetFieldName()), token);
-      fFieldContexts.try_emplace(field.GetFieldName(), std::move(fieldContext));
    }
 }
 
@@ -276,21 +273,23 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
    fNEntries = fPageSource->GetNEntries();
 
    auto desc = fPageSource->GetSharedDescriptorGuard();
-   for (auto &[_, fieldContext] : fFieldContexts) {
+   auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(*fModel);
+   auto fieldZeroId = desc->GetFieldZeroId();
+   fieldZero.SetOnDiskId(fieldZeroId);
 
-      const auto fieldId = desc->FindFieldId(fieldContext.GetProtoField().GetFieldName());
-      if (fieldId == ROOT::kInvalidDescriptorId) {
-         throw RException(
-            R__FAIL("field \"" + fieldContext.GetProtoField().GetFieldName() + "\" not found in current RNTuple"));
+   for (auto &field : fieldZero.GetMutableSubfields()) {
+      auto onDiskId = desc->FindFieldId(field->GetQualifiedFieldName(), fieldZeroId);
+      // The field we are trying to connect is not present in the ntuple
+      if (onDiskId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("field \"" + field->GetQualifiedFieldName() + "\" not found in the current RNTuple"));
       }
 
-      fieldContext.SetConcreteField();
-      fieldContext.fConcreteField->SetOnDiskId(fieldId);
-      ROOT::Internal::CallConnectPageSourceOnField(*fieldContext.fConcreteField, *fPageSource);
+      // The field will already have an on-disk ID when the model was inferred from the page source because the user
+      // didn't provide a model themselves.
+      if (field->GetOnDiskId() == kInvalidDescriptorId)
+         field->SetOnDiskId(onDiskId);
 
-      auto valuePtr = fEntry->GetPtr<void>(fieldContext.fToken);
-      auto value = fieldContext.fConcreteField->BindValue(valuePtr);
-      fEntry->UpdateValue(fieldContext.fToken, value);
+      ROOT::Internal::CallConnectPageSourceOnField(*field, *fPageSource);
    }
 }
 
