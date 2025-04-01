@@ -37,7 +37,11 @@ if tf_spec is None:
     useKerasCNN = False
     print("TMVA_CNN_Classificaton","Skip using Keras since tensorflow is not installed")
 else:
-    import tensorflow
+    try:
+      import tensorflow
+    except:
+      ROOT.Warning("TMVA_CNN_Classification", "Skip using Keras since tensorflow cannot be imported")
+      useKerasCNN = False
 
 # PyTorch has to be imported before ROOT to avoid crashes because of clashing
 # std::regexp symbols that are exported by cppyy.
@@ -47,7 +51,11 @@ if torch_spec is None:
     usePyTorchCNN = False
     print("TMVA_CNN_Classificaton","Skip using PyTorch since torch is not installed")
 else:
-    import torch
+    try:
+      import torch
+    except:
+      ROOT.Warning("TMVA_CNN_Classification", "Skip using PyTorch since it cannot be imported")
+      usePyTorchCNN = False
 
 
 import ROOT
