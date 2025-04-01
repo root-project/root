@@ -1,19 +1,18 @@
 int hadd_check_cms(const char *merged, const char *reference)
 {
-  using namespace ROOT::Experimental;
+   auto mergedNtpl = ROOT::RNTupleReader::Open("Events", merged);
+   auto refNtpl = ROOT::RNTupleReader::Open("Events", reference);
 
-  auto mergedNtpl = RNTupleReader::Open("Events", merged);
-  auto refNtpl = RNTupleReader::Open("Events", reference);
+   const auto &mergedDesc = mergedNtpl->GetDescriptor();
+   const auto &refDesc = refNtpl->GetDescriptor();
 
-  const auto &mergedDesc = mergedNtpl->GetDescriptor();
-  const auto &refDesc = refNtpl->GetDescriptor();
-
-  struct Defer {
-    ~Defer() {
-      gSystem->Unlink(merg);
-      gSystem->Unlink(ref);
-    }
-    const char *merg, *ref;
+   struct Defer {
+      ~Defer()
+      {
+         gSystem->Unlink(merg);
+         gSystem->Unlink(ref);
+      }
+      const char *merg, *ref;
   } defer { merged, reference };
 
   if (mergedDesc.GetNEntries() != refDesc.GetNEntries()) {

@@ -10,8 +10,6 @@
 
 void basics()
 {
-   using ROOT::Experimental::RNTupleReader;
-
    const std::string kFileName{"test_rntuple_basics.root"s};
 
    {
@@ -21,7 +19,7 @@ void basics()
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("ntpl", kFileName);
+   auto reader = ROOT::RNTupleReader::Open("ntpl", kFileName);
    reader->Show(0);
 
    gSystem->Unlink(kFileName.c_str());

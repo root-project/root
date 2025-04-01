@@ -3,8 +3,6 @@
 #include "librntuplestltest/MySTLEvent.h"
 #include "gtest/gtest.h"
 
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
-
 void check_bitset(const std::bitset<16> &a, const std::bitset<16> &b)
 {
    EXPECT_EQ(a, b);
@@ -36,7 +34,7 @@ void check_unordered_multimap(const std::unordered_multimap<std::string, std::ve
 
 TEST(RNTupleMakeProject, ReadBackRNTuple)
 {
-   auto ntuple = RNTupleReader::Open("events", "ntuple_makeproject_stl_example_rntuple.root");
+   auto ntuple = ROOT::RNTupleReader::Open("events", "ntuple_makeproject_stl_example_rntuple.root");
 
 #ifdef _MSC_VER
    // The Microsoft linker uses an optimization such that a library is not going
