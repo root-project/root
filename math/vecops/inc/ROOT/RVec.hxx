@@ -3242,87 +3242,199 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
    return ret;
 }
 
-/// Produce RVec with N evenly-spaced entries from start to end inclusive
-/// Example code, at the ROOT prompt:
-/// ~~~{.cpp}
-/// using namespace ROOT::VecOps;
-/// cout << linSpace(-1, 5, 5) << "\n";
-/// // { -1, 0.5, 2, 3.5, 5 }
-/// cout << linSpace(3, 12, 5) << "\n";
-/// // { 3, 5.25, 7.5, 9.75, 12 }
-/// cout << linSpace(1.4, 13.66, 5) << "\n";
-/// // { 1.4, 4.465, 7.53, 10.595, 13.66 }
-/// ~~~
-inline RVec<double> linSpace(double start, double end, unsigned long long N = 100)
+/**
+ * @brief Produce RVec with N evenly-spaced entries from start to end inclusive.
+ *
+ * This function generates a vector of evenly spaced values, starting at @p start and ending at @p end,
+ * with exactly @p n elements. The spacing is computed as
+ * \f$\text{step} = \frac{\text{end} - \text{start}}{n-1}\f$, so that the vector includes both endpoints.
+ *
+ * The function is templated to allow for different arithmetic types. The deduced type @c Common_t is
+ * determined as follows: if the common type of @p T1, @p T2, and @p T3 is a floating point type, that type is used;
+ * otherwise, the arithmetic is performed using @c double.
+ *
+ * @tparam T1 Type of the start value. Default is double.
+ * @tparam T2 Type of the end value. Default is double.
+ * @tparam T3 Auxiliary type used for deducing the common type. Default is double.
+ * @tparam Common_t Deduced type used for arithmetic, which is std::common_type_t<T1, T2, T3> if that is a
+ * floating point type, or double otherwise.
+ *
+ * @param start The first value in the sequence.
+ * @param end The last value in the sequence.
+ * @param n The number of evenly spaced entries to produce (must be greater than 0).
+ *
+ * @return A vector (RVec<Common_t>) containing @p n evenly spaced values from @p start to @p end inclusive.
+ *
+ * @note If @p n is 1, the resulting vector will contain only the value @p start.
+ * @note The check `if (!n || (n > LLONG_MAX))` is used to ensure that:
+ *   - n is nonzero, and
+ *   - n does not exceed LLONG_MAX, which would indicate that a negative range (or other arithmetic issue)
+ *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
+ *     amount of memory.
+ *
+ * @par Example code, at the ROOT prompt:
+ * ~~~{.cpp}
+ * using namespace ROOT::VecOps;
+ * cout << LinSpace(-1, 5, 5) << "\n";
+ * // { -1, 0.5, 2, 3.5, 5 }
+ * cout << LinSpace(3, 12, 5) << "\n";
+ * // { 3, 5.25, 7.5, 9.75, 12 }
+ * cout << LinSpace(1.4, 13.66, 5) << "\n";
+ * // { 1.4, 4.465, 7.53, 10.595, 13.66 }
+ * ~~~
+ */
+template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
+inline RVec<Common_t> LinSpace(T1 start, T2 end, unsigned long long n = 128)
 {
-    RVec<double> temp;
-    if (!N || (N > LLONG_MAX)) //Works for checking if N <= 0 on some machines
+    RVec<Common_t> temp;
+    
+    if (!n || (n > LLONG_MAX)) // Check for invalid or absurd n.
     {
         return temp;
     }
-    double step = static_cast<double>(end-start)/(N-1);
-    temp.reserve(N);
-    temp.push_back(start);
-    for (unsigned long long i = 1; i < N; i++)
+    
+    Common_t step = (static_cast<Common_t>(end) - static_cast<Common_t>(start)) / static_cast<Common_t>(n - 1);
+    temp.reserve(n);
+    temp.push_back(static_cast<Common_t>(start));
+    for (unsigned long long i = 1; i < n; i++)
     {
-        temp.push_back(start+i*step);
+        temp.push_back(static_cast<Common_t>(start) + static_cast<Common_t>(i) * step);
     }
     return temp;
 }
 
-/// Produce RVec with N log-spaced entries from base^{start} to base^{end} inclusive
-/// Example code, at the ROOT prompt:
-/// ~~~{.cpp}
-/// using namespace ROOT::VecOps;
-/// cout << logSpace(4, 10, 12) << '\n';
-/// // { 10000, 35111.9, 123285, 432876, 1.51991e+06, 5.3367e+06, 1.87382e+07, 6.57933e+07, 2.31013e+08, 8.11131e+08, 2.84804e+09, 1e+10 }
-/// cout << logSpace(0, 0, 50) << '\n';
-/// // { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
-/// cout << logSpace(0, 0, 0) << '\n';
-/// // {  }
-/// ~~~
-inline RVec<double> logSpace(double start, double end, unsigned long long N = 100, double base = 10.0)
+/**
+ * @brief Produce RVec with n log-spaced entries from base^{start} to base^{end} inclusive.
+ *
+ * This function generates a vector of values where the exponents are evenly spaced,
+ * and then returns the corresponding values of base raised to these exponents.
+ * More specifically, it creates a vector with n entries where the first element is
+ * \f$base^{start}\f$ and the last element is \f$base^{end}\f$, with the intermediate
+ * values computed such that the exponents are evenly spaced between start and end.
+ *
+ * The function is templated to allow for different arithmetic types. The deduced type
+ * @c Common_t is determined as follows: if the common type of @p T1, @p T2, and @p T3 is a
+ * floating point type, that type is used; otherwise, the arithmetic is performed using @c double.
+ *
+ * @tparam T1 Type of the start exponent. Default is double.
+ * @tparam T2 Type of the end exponent. Default is double.
+ * @tparam T3 Type of the base (and auxiliary type for deducing common type). Default is double.
+ * @tparam Common_t Deduced type used for arithmetic, which is
+ * std::common_type_t<T1, T2, T3> if that is a floating point type, or double otherwise.
+ *
+ * @param start The exponent corresponding to the first element (\f$base^{start}\f$).
+ * @param end The exponent corresponding to the last element (\f$base^{end}\f$).
+ * @param n The number of log-spaced entries to produce.
+ * @param base The base to be used in the exponentiation (default is 10.0).
+ *
+ * @return A vector (RVec<Common_t>) containing n values, where the i-th element is
+ * computed as \f$base^{(start + i \cdot \text{step})}\f$, with \f$\text{step} = \frac{end - start}{n - 1}\f$.
+ *
+ * @note If @p n is 1, the resulting vector will contain only the value \f$base^{start}\f$.
+ * @note The check `if (!n || (n > LLONG_MAX))` is used to ensure that:
+ *   - n is nonzero, and
+ *   - n does not exceed LLONG_MAX, which would indicate that a negative range (or other arithmetic issue)
+ *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
+ *     amount of memory.
+ *
+ * @par Example code, at the ROOT prompt:
+ * ~~~{.cpp}
+ * using namespace ROOT::VecOps;
+ * cout << LogSpace(4, 10, 12) << '\n';
+ * // { 10000, 35111.9, 123285, 432876, 1.51991e+06, 5.3367e+06, 1.87382e+07, 6.57933e+07, 2.31013e+08, 8.11131e+08, 2.84804e+09, 1e+10 }
+ * cout << LogSpace(0, 0, 50) << '\n';
+ * // { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+ * cout << LogSpace(0, 0, 0) << '\n';
+ * // {  }
+ * ~~~
+ */
+template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
+inline RVec<Common_t> LogSpace(T1 start, T2 end, unsigned long long n = 128, T3 base = 10.0)
 {
-    RVec<double> temp;
-    if (!N || (N > LLONG_MAX)) //Works for checking if N <= 0 on some machines
+    RVec<Common_t> temp;
+    
+    if (!n || (n > LLONG_MAX)) // Check for invalid or absurd n.
     {
         return temp;
     }
-    double step = static_cast<double>(end-start)/(N-1);
-
-    temp.reserve(N);
-    temp.push_back(std::pow(base, start));
-    for (unsigned long long i = 1; i < N; i++)
+    
+    Common_t start_c = static_cast<Common_t>(start);
+    Common_t end_c   = static_cast<Common_t>(end);
+    Common_t base_c  = static_cast<Common_t>(base);
+    Common_t step = static_cast<Common_t>(end_c-start_c)/static_cast<Common_t>(n-1);
+    temp.reserve(n);
+    temp.push_back(static_cast<Common_t>(std::pow(base_c, start_c)));
+    for (unsigned long long i = 1; i < n; i++)
     {
-        temp.push_back(std::pow(base, start + i*step));
+        Common_t exponent = start_c + i * step;
+        temp.push_back(static_cast<Common_t>(std::pow(base_c, exponent)));
     }
     return temp;
 }
 
-/// Produce RVec with entries in the range [start, end) in increments of step
-/// Example code, at the ROOT prompt:
-/// ~~~{.cpp}
-/// using namespace ROOT::VecOps;
-/// cout << arange(0, 0, 5) << '\n';
-/// // {  }
-/// cout << arange(-7, 20, 4) << '\n';
-/// // { -7, -3, 1, 5, 9, 13, 17 }
-/// cout << arange(1, 13, 5) << '\n';
-/// // { 1, 6, 11 }
-/// ~~~
-inline RVec<double> arange(double start, double end, double step)
+/**
+ * @brief Produce RVec with entries in the range [start, end) in increments of step.
+ *
+ * This function generates a vector of values starting at @p start and incremented by @p step,
+ * continuing until the values reach or exceed @p end (the interval is half-open: [start, end)).
+ * The number of elements is computed as:
+ * \f[
+ * n = \lceil \frac{\text{end} - \text{start}}{\text{step}} \rceil
+ * \f]
+ * ensuring that the arithmetic is performed in a floating-point context when needed.
+ *
+ * The function is templated to allow for different arithmetic types. The deduced type @c Common_t is
+ * determined as follows: if the common type of @p T1, @p T2, and @p T3 is a floating point type, that type is used;
+ * otherwise, the arithmetic is performed using @c double.
+ *
+ * @tparam T1 Type of the start value. Default is double.
+ * @tparam T2 Type of the end value. Default is double.
+ * @tparam T3 Type of the step value. Default is double.
+ * @tparam Common_t Deduced type used for arithmetic, which is
+ * std::common_type_t<T1, T2, T3> if that is a floating point type, or double otherwise.
+ *
+ * @param start The first value in the range.
+ * @param end The end of the range (exclusive).
+ * @param step The increment between consecutive values.
+ *
+ * @return A vector (RVec<Common_t>) containing values starting at @p start, each incremented by @p step,
+ *         up to but not including any value equal to or greater than @p end.
+ *
+ * @note The check `if (!n || (n > LLONG_MAX))` is used to ensure that:
+ *   - n is nonzero, and
+ *   - n does not exceed LLONG_MAX, which would indicate that a negative range (or other arithmetic issue)
+ *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
+ *     amount of memory.
+ *
+ * @par Example code, at the ROOT prompt:
+ * ~~~{.cpp}
+ * using namespace ROOT::VecOps;
+ * cout << Arange(0, 0, 5) << '\n';
+ * // {  }
+ * cout << Arange(-7, 20, 4) << '\n';
+ * // { -7, -3, 1, 5, 9, 13, 17 }
+ * cout << Arange(1, 13, 5) << '\n';
+ * // { 1, 6, 11 }
+ * ~~~
+ */
+template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
+inline RVec<Common_t> Arange(T1 start, T2 end, T3 step)
 {
-    RVec<double> temp;
-    unsigned long long N = std::ceil((end-start)/step);
-    if (!N || (N > LLONG_MAX)) //Works for checking if N <= 0 on some machines
+    RVec<Common_t> temp;
+    unsigned long long n = std::ceil(static_cast<Common_t>(end-start)/static_cast<Common_t>(step)); // Ensure floating-point division.
+    
+    if (!n || (n > LLONG_MAX)) // Check for invalid or absurd n.
     {
         return temp;
     }
-    temp.reserve(N);
-    temp.push_back(start);
-    for (unsigned long long i = 1; i < N; i++)
+    
+    Common_t start_c = static_cast<Common_t>(start);
+    Common_t step_c = static_cast<Common_t>(step);
+    temp.reserve(n);
+    temp.push_back(start_c);
+    for (unsigned long long i = 1; i < n; i++)
     {
-        temp.push_back(start+i*step);
+        temp.push_back(start_c + i * step_c);
     }
     return temp;
 }
