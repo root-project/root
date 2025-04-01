@@ -49,12 +49,11 @@
 #include <vector>
 
 // Import classes from Experimental namespace for the time being
-using ROOT::Experimental::REntry;
 using ROOT::Experimental::RNTupleFillContext;
 using ROOT::Experimental::RNTupleFillStatus;
 using ROOT::Experimental::RNTupleParallelWriter;
 
-using ModelTokensPair = std::pair<std::unique_ptr<ROOT::RNTupleModel>, std::vector<REntry::RFieldToken>>;
+using ModelTokensPair = std::pair<std::unique_ptr<ROOT::RNTupleModel>, std::vector<ROOT::REntry::RFieldToken>>;
 
 // A DataProduct associates an arbitrary address to an index in the model.
 struct DataProduct {
@@ -93,11 +92,11 @@ public:
 class ParallelOutputter final : public Outputter {
    FileService &fFileService;
    std::unique_ptr<RNTupleParallelWriter> fParallelWriter;
-   std::vector<REntry::RFieldToken> fTokens;
+   std::vector<ROOT::REntry::RFieldToken> fTokens;
 
    struct SlotData {
       std::shared_ptr<RNTupleFillContext> fillContext;
-      std::unique_ptr<REntry> entry;
+      std::unique_ptr<ROOT::REntry> entry;
    };
    std::vector<SlotData> fSlots;
 
@@ -160,10 +159,10 @@ class SerializingOutputter final : public Outputter {
    FileService &fFileService;
    std::unique_ptr<ROOT::RNTupleWriter> fWriter;
    std::mutex fWriterMutex;
-   std::vector<REntry::RFieldToken> fTokens;
+   std::vector<ROOT::REntry::RFieldToken> fTokens;
 
    struct SlotData {
-      std::unique_ptr<REntry> entry;
+      std::unique_ptr<ROOT::REntry> entry;
    };
    std::vector<SlotData> fSlots;
 
@@ -248,7 +247,7 @@ ModelTokensPair CreateEventModel()
    // We recommend creating a bare model if the default entry is not used.
    auto model = ROOT::RNTupleModel::CreateBare();
    // For more efficient access, also create field tokens.
-   std::vector<REntry::RFieldToken> tokens;
+   std::vector<ROOT::REntry::RFieldToken> tokens;
 
    model->MakeField<decltype(Event::eventId)>("eventId");
    tokens.push_back(model->GetToken("eventId"));
@@ -293,7 +292,7 @@ ModelTokensPair CreateRunModel()
    // We recommend creating a bare model if the default entry is not used.
    auto model = ROOT::RNTupleModel::CreateBare();
    // For more efficient access, also create field tokens.
-   std::vector<REntry::RFieldToken> tokens;
+   std::vector<ROOT::REntry::RFieldToken> tokens;
 
    model->MakeField<decltype(Run::runId)>("runId");
    tokens.push_back(model->GetToken("runId"));

@@ -32,10 +32,6 @@
 #include <vector>
 #include <utility>
 
-// Import classes from experimental namespace for the time being
-using ROOT::Experimental::REntry;
-using ROOT::Experimental::RNTupleReader;
-
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl007_mtFill.root";
 
@@ -46,7 +42,8 @@ constexpr int kNWriterThreads = 4;
 constexpr int kNEventsPerThread = 25000;
 
 // Thread function to generate and write events
-void FillData(std::unique_ptr<REntry> entry, ROOT::RNTupleWriter *writer) {
+void FillData(std::unique_ptr<ROOT::REntry> entry, ROOT::RNTupleWriter *writer)
+{
    // Protect the writer->Fill() call
    static std::mutex gLock;
 
@@ -97,7 +94,7 @@ void Write()
    // We hand-over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
    auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "NTuple", kNTupleFileName);
 
-   std::vector<std::unique_ptr<REntry>> entries;
+   std::vector<std::unique_ptr<ROOT::REntry>> entries;
    std::vector<std::thread> threads;
    for (int i = 0; i < kNWriterThreads; ++i)
       entries.emplace_back(writer->CreateEntry());
@@ -114,7 +111,7 @@ void Write()
 // For all of the events, histogram only one of the written vectors
 void Read()
 {
-   auto reader = RNTupleReader::Open("NTuple", kNTupleFileName);
+   auto reader = ROOT::RNTupleReader::Open("NTuple", kNTupleFileName);
    auto viewVpx = reader->GetView<float>("vpx._0");
 
    gStyle->SetOptStat(0);

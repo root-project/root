@@ -382,7 +382,7 @@ TEST(RNTupleShow, Collections)
    EXPECT_EQ(outputData, osData.str());
 
    std::ostringstream osFields;
-   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   reader->PrintInfo(ROOT::ENTupleInfo::kSummary, osFields);
    // clang-format off
    std::string outputFields{ std::string("")
       + "************************************ NTUPLE ************************************\n"

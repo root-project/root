@@ -380,7 +380,7 @@ TEST(PageStorageFile, LoadClustersIMT)
    ROOT::TThreadExecutor ex(2);
    ex.Foreach(
       [&]() {
-         auto reader = ROOT::Experimental::RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+         auto reader = ROOT::RNTupleReader::Open("myNTuple", fileGuard.GetPath());
          reader->LoadEntry(0);
       },
       2);

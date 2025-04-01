@@ -32,9 +32,6 @@
 #include <sstream>
 #include <utility>
 
-// Import classes from experimental namespace for the time being
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
-
 constexpr char const* kNTupleFileName = "ntpl001_staff.root";
 
 void Ingest() {
@@ -83,7 +80,7 @@ void Analyze() {
    std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
 
    // Create an ntuple and attach the read model to it
-   auto reader = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
+   auto reader = ROOT::RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
 
    // Quick overview of the ntuple and list of fields.
    reader->PrintInfo();

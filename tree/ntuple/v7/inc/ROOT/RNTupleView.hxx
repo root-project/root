@@ -30,9 +30,7 @@
 
 namespace ROOT {
 
-namespace Experimental {
 class RNTupleReader;
-} // namespace Experimental
 
 namespace Internal {
 
@@ -163,7 +161,7 @@ public:
 // clang-format on
 template <typename T>
 class RNTupleView : public RNTupleViewBase<T> {
-   friend class ROOT::Experimental::RNTupleReader;
+   friend class ROOT::RNTupleReader;
    friend class RNTupleCollectionView;
 
 protected:
@@ -214,7 +212,7 @@ public:
 // clang-format on
 template <>
 class RNTupleView<void> final : public RNTupleViewBase<void> {
-   friend class ROOT::Experimental::RNTupleReader;
+   friend class ROOT::RNTupleReader;
    friend class RNTupleCollectionView;
 
 protected:
@@ -255,7 +253,7 @@ public:
 // clang-format on
 template <typename T>
 class RNTupleDirectAccessView {
-   friend class ROOT::Experimental::RNTupleReader;
+   friend class ROOT::RNTupleReader;
    friend class RNTupleCollectionView;
 
 protected:
@@ -307,7 +305,7 @@ public:
 */
 // clang-format on
 class RNTupleCollectionView {
-   friend class ROOT::Experimental::RNTupleReader;
+   friend class ROOT::RNTupleReader;
 
 private:
    ROOT::Experimental::Internal::RPageSource *fSource;
