@@ -823,8 +823,7 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
 bool RWebDisplayHandle::NeedHttpServer(const RWebDisplayArgs &args)
 {
    if ((args.GetBrowserKind() == RWebDisplayArgs::kOff) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF) ||
-       (args.GetBrowserKind() == RWebDisplayArgs::kQt5) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6) ||
-       (args.GetBrowserKind() == RWebDisplayArgs::kLocal))
+       (args.GetBrowserKind() == RWebDisplayArgs::kQt6) || (args.GetBrowserKind() == RWebDisplayArgs::kLocal))
       return false;
 
    if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)) {
@@ -832,11 +831,6 @@ bool RWebDisplayHandle::NeedHttpServer(const RWebDisplayArgs &args)
 #ifdef WITH_QT6WEB
       auto &qt6 = FindCreator("qt6", "libROOTQt6WebDisplay");
       if (qt6 && qt6->IsActive())
-         return false;
-#endif
-#ifdef WITH_QT5WEB
-      auto &qt5 = FindCreator("qt5", "libROOTQt5WebDisplay");
-      if (qt5 && qt5->IsActive())
          return false;
 #endif
 #ifdef WITH_CEFWEB
@@ -872,11 +866,7 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
 
    bool handleAsLocal = (args.GetBrowserKind() == RWebDisplayArgs::kLocal) ||
                         (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)),
-        has_qt5web = false, has_qt6web = false, has_cefweb = false;
-
-#ifdef WITH_QT5WEB
-   has_qt5web = true;
-#endif
+        has_qt6web = false, has_cefweb = false;
 
 #ifdef WITH_QT6WEB
    has_qt6web = true;
@@ -888,12 +878,6 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
 
    if ((handleAsLocal && has_qt6web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
       if (try_creator(FindCreator("qt6", "libROOTQt6WebDisplay")))
-         return handle;
-   }
-
-   // qt5 uses older chromium therefore do not invoke by default
-   if (has_qt5web && (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
-      if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay")))
          return handle;
    }
 
@@ -980,7 +964,7 @@ bool RWebDisplayHandle::CheckIfCanProduceImages(RWebDisplayArgs &args)
 {
    if ((args.GetBrowserKind() != RWebDisplayArgs::kFirefox) && (args.GetBrowserKind() != RWebDisplayArgs::kEdge) &&
        (args.GetBrowserKind() != RWebDisplayArgs::kChrome) && (args.GetBrowserKind() != RWebDisplayArgs::kCEF) &&
-       (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6)) {
+       (args.GetBrowserKind() != RWebDisplayArgs::kQt6)) {
       bool detected = false;
 
       auto &h1 = FindCreator("chrome", "ChromeCreator");
@@ -1283,7 +1267,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
 
 try_again:
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
       args.SetUrl(""s);
       args.SetPageContent(filecont);
 

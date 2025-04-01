@@ -1392,8 +1392,7 @@ void TWebCanvas::ShowWebWindow(const ROOT::RWebDisplayArgs &args)
 {
    CreateWebWindow();
 
-   if ((args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt5) ||
-       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt6) || (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kCEF))
+   if ((args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt6) || (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kCEF))
       SetLongerPolling(kTRUE);
 
    auto w = Canvas()->GetWindowWidth(), h = Canvas()->GetWindowHeight();
