@@ -1039,6 +1039,9 @@ void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t la
 ///  If `last > fNbins`, the overflow bin is included in the range and will be displayed during drawing.
 ///  If `first < 1`, the underflow bin is included in the range and will be displayed during drawing.
 ///
+///  In the special case that `first == 1` and `last == fNbins`, the kAxisRange bit is also reset,
+///  and the functions TAxis::GetFirst() and TAxis::GetLast() will return 1 and fNbins.
+///
 ///  \note For historical reasons, SetRange(0,0) resets the range even though bin 0 is
 ///       technically reserved for the underflow; in order to set the range of the axis
 ///       so that it only includes the underflow, use `SetRange(-1,0)`.
@@ -1051,7 +1054,8 @@ void TAxis::SetRange(Int_t first, Int_t last)
 
    // special reset range cases
    if (last < first || (first < 0 && last < 0) ||
-         (first > nCells && last > nCells) || (first == 0 && last == 0)
+         (first > nCells && last > nCells) || (first == 0 && last == 0) ||
+         (first == 1 && last == fNbins)
    ) {
       fFirst = 1;
       fLast = fNbins;
