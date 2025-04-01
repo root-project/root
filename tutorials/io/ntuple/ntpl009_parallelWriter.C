@@ -34,7 +34,6 @@
 
 // Import classes from experimental namespace for the time being
 using ROOT::Experimental::RNTupleParallelWriter;
-using ROOT::Experimental::RNTupleReader;
 
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl009_parallelWriter.root";
@@ -115,7 +114,7 @@ void Write()
 // For all of the events, histogram only one of the written vectors
 void Read()
 {
-   auto reader = RNTupleReader::Open("NTuple", kNTupleFileName);
+   auto reader = ROOT::RNTupleReader::Open("NTuple", kNTupleFileName);
    auto viewVpx = reader->GetView<float>("vpx._0");
 
    gStyle->SetOptStat(0);

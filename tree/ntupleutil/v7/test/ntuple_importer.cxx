@@ -13,8 +13,8 @@
 #include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
 
+using ROOT::RNTupleReader;
 using ROOT::Experimental::RNTupleImporter;
-using ROOT::Experimental::RNTupleReader;
 
 TEST(RNTupleImporter, Empty)
 {

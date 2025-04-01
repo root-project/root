@@ -32,8 +32,9 @@
 
 namespace ROOT {
 
-namespace Experimental {
 class RNTupleReader;
+
+namespace Experimental {
 class RNTupleFillContext;
 class RNTupleProcessor;
 class RNTupleSingleProcessor;
@@ -53,7 +54,7 @@ with values are managed through shared pointers.
 // clang-format on
 class REntry {
    friend class RNTupleModel;
-   friend class Experimental::RNTupleReader;
+   friend class RNTupleReader;
    friend class Experimental::RNTupleFillContext;
    friend class Experimental::RNTupleProcessor;
    friend class Experimental::RNTupleSingleProcessor;

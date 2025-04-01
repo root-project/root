@@ -18,7 +18,7 @@ TEST(RNtuplePrint, FullString)
    }
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    std::ostringstream osSummary;
-   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osSummary);
+   reader->PrintInfo(ROOT::ENTupleInfo::kSummary, osSummary);
    std::string reference{std::string("")
        + "************************************ NTUPLE ************************************\n"
        + "* N-Tuple : ntpl                                                               *\n"
@@ -31,7 +31,7 @@ TEST(RNtuplePrint, FullString)
    EXPECT_EQ(reference, osSummary.str());
 
    std::ostringstream osDetails;
-   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, osDetails);
+   reader->PrintInfo(ROOT::ENTupleInfo::kStorageDetails, osDetails);
    reference = "============================================================\n"
                "NTUPLE:      ntpl\n"
                "Compression: 0\n"
@@ -175,7 +175,7 @@ FileRaii fileGuard("test.root");
 }
 auto ntuple2 = RNTupleReader::Open("Staff", "test.root");
 std::ostringstream os;
-ntuple2->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, os, '+', 29);
+ntuple2->PrintInfo(ROOT::ENTupleInfo::kSummary, os, '+', 29);
 std::string fString{"The width is too small! Should be at least 30.\n"};
 EXPECT_EQ(fString, os.str());
 }
