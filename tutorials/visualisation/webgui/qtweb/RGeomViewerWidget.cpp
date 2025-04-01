@@ -30,7 +30,7 @@ RGeomViewerWidget::RGeomViewerWidget(QWidget *parent) : QWidget(parent)
 
    fGeomViewer->SetShowHierarchy(false);
 
-   auto where = ROOT::RWebDisplayArgs::GetQt5EmbedQualifier(this, "", QT_VERSION);
+   auto where = ROOT::RWebDisplayArgs::GetQtEmbedQualifier(this, "", QT_VERSION);
 
    fGeomViewer->Show(where);
 

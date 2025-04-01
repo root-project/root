@@ -49,7 +49,7 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 
    web->SetPadDblClickedHandler([this](TPad *pad, int x, int y) { emit PadDblClicked(pad, x, y); });
 
-   auto where = ROOT::RWebDisplayArgs::GetQt5EmbedQualifier(this, "noopenui", QT_VERSION);
+   auto where = ROOT::RWebDisplayArgs::GetQtEmbedQualifier(this, "noopenui", QT_VERSION);
 
    web->ShowWebWindow(where);
 
