@@ -67,7 +67,6 @@ mpi=OFF
 opengl=ON
 pyroot=ON
 pythia8=ON
-qt5web=OFF
 qt6web=OFF
 r=OFF
 roofit=ON
