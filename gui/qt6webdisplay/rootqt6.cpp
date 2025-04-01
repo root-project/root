@@ -30,9 +30,9 @@
 #include "THttpServer.h"
 #include "TSystem.h"
 
-#include "../qt5webdisplay/rootwebview.h"
-#include "../qt5webdisplay/rootwebpage.h"
-#include "../qt5webdisplay/rooturlschemehandler.h"
+#include "rootwebview.h"
+#include "rootwebpage.h"
+#include "rooturlschemehandler.h"
 
 #include <memory>
 
