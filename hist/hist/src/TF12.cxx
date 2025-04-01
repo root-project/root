@@ -198,8 +198,7 @@ void TF12::SavePrimitive(std::ostream &out, Option_t *option)
       GetYaxis()->SaveAttributes(out, f12Name, "->GetYaxis()");
    }
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   " << f12Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, f12Name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

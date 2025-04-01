@@ -731,7 +731,7 @@ void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TPaveText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPaveText::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "pt", GetSavePaveArgs());
 
@@ -745,7 +745,7 @@ void TPaveText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out, "pt", 1, 1, 1);
    SaveTextAttributes(out, "pt", 22, 0, 1, 62, 0);
    SaveLines(out, "pt", kTRUE);
-   out << "   pt->Draw();\n";
+   SavePrimitiveDraw(out, "pt", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

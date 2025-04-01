@@ -678,5 +678,5 @@ void TTreePerfStats::SavePrimitive(std::ostream &out, Option_t *option)
    fGraphTime->SavePrimitive(out, "nodraw");
    out << "   perfstats->SetGraphTime(gre);\n";
 
-   out << "   perfstats->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "perfstats", option);
 }

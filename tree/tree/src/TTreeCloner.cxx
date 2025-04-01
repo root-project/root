@@ -750,9 +750,21 @@ void TTreeCloner::WriteBaskets()
                from->GetBasketBytes()[index] = len;
             }
 
-            basket->LoadBasketBuffers(pos,len,fromfile,fFromTree);
+            const bool load_ok = (basket->LoadBasketBuffers(pos, len, fromfile, fFromTree) == 0);
+            if (!load_ok) {
+               fWarningMsg.Form("Error in LoadBasketBuffers at index %u.", j);
+               if (!(fOptions & kNoWarnings)) {
+                  Warning("TTreeCloner::WriteBaskets", "%s", fWarningMsg.Data());
+               }
+            }
             basket->IncrementPidOffset(fPidOffset);
-            basket->CopyTo(tofile);
+            const bool copy_ok = (basket->CopyTo(tofile) != -1);
+            if (!copy_ok) {
+               fWarningMsg.Form("Error in CopyTo at index %u.", j);
+               if (!(fOptions & kNoWarnings)) {
+                  Warning("TTreeCloner::WriteBaskets", "%s", fWarningMsg.Data());
+               }
+            }
             to->fBasketSeek[index] = basket->GetSeekKey();
          }
       } else if (pos!=0) {
@@ -764,9 +776,21 @@ void TTreeCloner::WriteBaskets()
          }
          Int_t len = from->GetBasketBytes()[index];
 
-         basket->LoadBasketBuffers(pos,len,fromfile,fFromTree);
+         const bool load_ok = (basket->LoadBasketBuffers(pos, len, fromfile, fFromTree) == 0);
+         if (!load_ok) {
+            fWarningMsg.Form("Error in LoadBasketBuffers at index %u.", j);
+            if (!(fOptions & kNoWarnings)) {
+               Warning("TTreeCloner::WriteBaskets", "%s", fWarningMsg.Data());
+            }
+         }
          basket->IncrementPidOffset(fPidOffset);
-         basket->CopyTo(tofile);
+         const bool copy_ok = (basket->CopyTo(tofile) != -1);
+         if (!copy_ok) {
+            fWarningMsg.Form("Error in CopyTo at index %u.", j);
+            if (!(fOptions & kNoWarnings)) {
+               Warning("TTreeCloner::WriteBaskets", "%s", fWarningMsg.Data());
+            }
+         }
          to->AddBasket(*basket,true,fToStartEntries + from->GetBasketEntry()[index]);
       } else {
          TBasket *frombasket = from->GetBasket( index );

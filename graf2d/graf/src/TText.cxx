@@ -797,7 +797,7 @@ void TText::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TText::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(
       out, Class(), "text",
@@ -806,9 +806,9 @@ void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveTextAttributes(out, "text", 11, 0, 1, 62, 0.05);
 
    if (TestBit(kTextNDC))
-      out << "   text->SetNDC();" << std::endl;
+      out << "   text->SetNDC();\n";
 
-   out << "   text->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "text", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

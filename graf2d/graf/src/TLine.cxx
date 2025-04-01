@@ -428,22 +428,22 @@ void TLine::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TLine::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "line", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2), kFALSE);
 
    SaveLineAttributes(out, "line", 1, 1, 1);
 
    if (TestBit(kLineNDC))
-      out << "   line->SetNDC();" << std::endl;
+      out << "   line->SetNDC();\n";
 
    if (TestBit(kVertical))
-      out << "   line->SetBit(TLine::kVertical);" << std::endl;
+      out << "   line->SetBit(TLine::kVertical);\n";
 
    if (TestBit(kHorizontal))
-      out << "   line->SetBit(TLine::kHorizontal);" << std::endl;
+      out << "   line->SetBit(TLine::kHorizontal);\n";
 
-   out << "   line->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "line", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

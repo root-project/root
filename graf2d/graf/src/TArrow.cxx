@@ -361,7 +361,7 @@ void TArrow::PaintArrowNDC(Double_t u1, Double_t v1,Double_t u2 ,Double_t v2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TArrow::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "arrow",
                             TString::Format("%g, %g, %g, %g, %g, \"%s\"", fX1, fY1, fX2, fY2, fArrowSize,
@@ -376,7 +376,7 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    if (GetAngle() != 60)
       out << "   arrow->SetAngle(" << GetAngle() << ");\n";
 
-   out << "   arrow->Draw();\n";
+   SavePrimitiveDraw(out, "arrow", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -111,7 +111,7 @@ using RPrintSchemaVisitor = ROOT::Internal::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;
 using EContainerFormat = RNTupleFileWriter::EContainerFormat;
 template <typename T>
-using RNTupleView = ROOT::Experimental::RNTupleView<T>;
+using RNTupleView = ROOT::RNTupleView<T>;
 
 using ROOT::Internal::MakeUninitArray;
 

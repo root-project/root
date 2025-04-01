@@ -484,23 +484,23 @@ void TPolyMarker3D::Print(Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream.
 
-void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t *option)
 {
    std::vector<Double_t> arr(Size() * 3);
    for (Int_t i = 0; i < Size() * 3; i++)
       arr[i] = fP[i];
 
-   TString arrname = SavePrimitiveArray(out, "pmarker3D", Size() * 3, arr.data(), kTRUE);
+   TString vectname = SavePrimitiveVector(out, "pmarker3D", Size() * 3, arr.data(), kTRUE);
 
    SavePrimitiveConstructor(out, Class(), "pmarker3D",
-                            TString::Format("%d, %s, %d, \"%s\"", Size(), arrname.Data(), GetMarkerStyle(),
+                            TString::Format("%d, %s.data(), %d, \"%s\"", Size(), vectname.Data(), GetMarkerStyle(),
                                             TString(fOption).ReplaceSpecialCppChars().Data()),
                             kFALSE);
 
    out << "   pmarker3D->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
    SaveMarkerAttributes(out, "pmarker3D", 1, 1, 1);
-   out << "   pmarker3D->Draw();\n";
+   SavePrimitiveDraw(out, "pmarker3D", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

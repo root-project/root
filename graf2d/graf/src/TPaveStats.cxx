@@ -523,7 +523,7 @@ void TPaveStats::Paint(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPaveStats::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "ptstats", GetSavePaveArgs());
 
@@ -538,7 +538,8 @@ void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLines(out, "ptstats", kTRUE);
    out << "   ptstats->SetOptStat(" << GetOptStat() << ");\n";
    out << "   ptstats->SetOptFit(" << GetOptFit() << ");\n";
-   out << "   ptstats->Draw();\n";
+
+   SavePrimitiveDraw(out, "ptstats", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

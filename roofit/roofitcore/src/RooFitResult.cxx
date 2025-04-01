@@ -658,6 +658,8 @@ void RooFitResult::fillLegacyCorrMatrix() const
     }
   }
 
+  if (!_GC) return ;
+
   for (unsigned int i = 0; i < static_cast<unsigned int>(_corrMatrix.GetSize()) ; ++i) {
 
     // Find the next global correlation slot to fill, skipping fixed parameters

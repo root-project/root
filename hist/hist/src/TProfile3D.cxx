@@ -1227,27 +1227,27 @@ void TProfile3D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // Check if custom X/Y/Z axes are configured.
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray && GetYaxis()->GetXbins()->fN &&
        GetYaxis()->GetXbins()->fArray && GetZaxis()->GetXbins()->fN && GetZaxis()->GetXbins()->fArray) {
-      sxaxis = SavePrimitiveArray(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
-      syaxis = SavePrimitiveArray(out, hname + "_y", GetYaxis()->GetXbins()->fN, GetYaxis()->GetXbins()->fArray);
-      szaxis = SavePrimitiveArray(out, hname + "_z", GetZaxis()->GetXbins()->fN, GetZaxis()->GetXbins()->fArray);
+      sxaxis = SavePrimitiveVector(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
+      syaxis = SavePrimitiveVector(out, hname + "_y", GetYaxis()->GetXbins()->fN, GetYaxis()->GetXbins()->fArray);
+      szaxis = SavePrimitiveVector(out, hname + "_z", GetZaxis()->GetXbins()->fN, GetZaxis()->GetXbins()->fArray);
    }
 
    out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins() << ", ";
    if (!sxaxis.IsNull())
-      out << sxaxis;
+      out << sxaxis << ".data()";
    else
       out << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
 
    out << ", " << GetYaxis()->GetNbins() << ", ";
    if (!syaxis.IsNull())
-      out << syaxis;
+      out << syaxis << ".data()";
    else
       out << GetYaxis()->GetXmin() << ", " << GetYaxis()->GetXmax();
 
    out << ", " << GetZaxis()->GetNbins() << ", ";
    if (!szaxis.IsNull())
-      out << szaxis;
+      out << szaxis << ".data()";
    else
       out << GetZaxis()->GetXmin() << ", " << GetZaxis()->GetXmax();
 
@@ -1288,22 +1288,22 @@ void TProfile3D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          }
    } else {
       if (numentries > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, entries.data());
+         TString vect = SavePrimitiveVector(out, hname, fNcells, entries.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinEntries(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vect << "[bin])\n";
+         out << "         " << hname << "->SetBinEntries(bin, " << vect << "[bin]);\n";
       }
       if (numcontent > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, content.data());
+         TString vect = SavePrimitiveVector(out, hname, fNcells, content.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinContent(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vect << "[bin])\n";
+         out << "         " << hname << "->SetBinContent(bin, " << vect << "[bin]);\n";
       }
       if (numerrors > 0) {
-         TString arr = SavePrimitiveArray(out, hname, fNcells, errors.data());
+         TString vect = SavePrimitiveVector(out, hname, fNcells, errors.data());
          out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
-         out << "      if (" << arr << "[bin])\n";
-         out << "         " << hname << "->SetBinError(bin, " << arr << "[bin]);\n";
+         out << "      if (" << vect << "[bin])\n";
+         out << "         " << hname << "->SetBinError(bin, " << vect << "[bin]);\n";
       }
    }
 

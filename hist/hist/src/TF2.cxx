@@ -898,21 +898,21 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    if (!fSave.empty()) {
-      TString arrs = SavePrimitiveArray(out, f2Name, fSave.size(), fSave.data());
+      TString vect = SavePrimitiveVector(out, f2Name, fSave.size(), fSave.data());
       out << "   for (int n = 0; n < " << fSave.size() << "; n++)\n";
-      out << "      " << f2Name << "->SetSavedPoint(n, " << arrs << "[n]);\n";
+      out << "      " << f2Name << "->SetSavedPoint(n, " << vect << "[n]);\n";
    }
 
    if (saved)
       fSave.clear();
 
    if (fContour.fN > 0) {
-      TString arrname;
+      TString vectname;
       if (fContour.fArray[0] != -9999)
-         arrname = SavePrimitiveArray(out, f2Name, fContour.fN, fContour.GetArray());
+         vectname = SavePrimitiveVector(out, f2Name, fContour.fN, fContour.GetArray());
       out << "   " << f2Name << "->SetContour(" << fContour.fN;
-      if (!arrname.IsNull())
-         out << ", " << arrname;
+      if (!vectname.IsNull())
+         out << ", " << vectname << ".data()";
       out << ");\n";
    }
 
@@ -926,8 +926,7 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       GetZaxis()->SaveAttributes(out, f2Name, "->GetZaxis()");
    }
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   " << f2Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, f2Name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

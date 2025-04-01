@@ -2552,7 +2552,7 @@ void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TGaxis::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "gaxis",
                             TString::Format("%g, %g, %g, %g, %14.12g, %14.12g, %d, \"%s\", %g", fX1, fY1, fX2, fY2,
@@ -2596,7 +2596,7 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       }
    }
 
-   out << "   gaxis->Draw();\n";
+   SavePrimitiveDraw(out, "gaxis", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

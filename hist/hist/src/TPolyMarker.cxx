@@ -299,13 +299,13 @@ void TPolyMarker::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option)
 {
    TString args;
    if (Size() > 0) {
-      TString arrxname = SavePrimitiveArray(out, "pmarker", Size(), fX, kTRUE);
-      TString arryname = SavePrimitiveArray(out, "pmarker", Size(), fY);
-      args.Form("%d, %s, %s, \"", Size(), arrxname.Data(), arryname.Data());
+      TString arrxname = SavePrimitiveVector(out, "pmarker", Size(), fX, kTRUE);
+      TString arryname = SavePrimitiveVector(out, "pmarker", Size(), fY);
+      args.Form("%d, %s.data(), %s.data(), \"", Size(), arrxname.Data(), arryname.Data());
    } else
       args = "0, \"";
    args.Append(TString(fOption).ReplaceSpecialCppChars() + "\"");
@@ -314,8 +314,7 @@ void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SaveMarkerAttributes(out, "pmarker", 1, 1, 1);
 
-   if (!option || !strstr(option, "nodraw"))
-      out << "   pmarker->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "pmarker", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

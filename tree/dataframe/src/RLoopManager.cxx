@@ -779,10 +779,17 @@ void RLoopManager::RunDataSource()
 
    if (fEndEntry != std::numeric_limits<Long64_t>::max() &&
        static_cast<std::uint64_t>(fEndEntry - fBeginEntry) > processedEntries) {
-      Warning("RDataFrame::Run",
-              "RDataFrame stopped processing after %lu entries, whereas an entry range (begin=%lld,end=%lld) was "
-              "requested. Consider adjusting the end value of the entry range to a maximum of %lld.",
-              processedEntries, fBeginEntry, fEndEntry, fBeginEntry + processedEntries);
+      std::ostringstream buf{};
+      buf << "RDataFrame stopped processing after ";
+      buf << processedEntries;
+      buf << " entries, whereas an entry range (begin=";
+      buf << fBeginEntry;
+      buf << ",end=";
+      buf << fEndEntry;
+      buf << ") was requested. Consider adjusting the end value of the entry range to a maximum of ";
+      buf << (fBeginEntry + processedEntries);
+      buf << ".";
+      Warning("RDataFrame::Run", "%s", buf.str().c_str());
    }
 }
 

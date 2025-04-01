@@ -963,7 +963,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TSpline3::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "spline3",
                             TString::Format("\"%s\", %g, %g, (TF1 *)nullptr, %d, \"\", %g, %g",
@@ -983,7 +983,8 @@ void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   spline3->SetPointCoeff(" << i << "," << fPoly[i].B() << "," << fPoly[i].C() << "," << fPoly[i].D()
           << ");\n";
    }
-   out << "   spline3->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+
+   SavePrimitiveDraw(out, "spline3", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1767,7 +1768,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TSpline5::SavePrimitive(std::ostream &out, Option_t *option)
 {
    Double_t b1 = fPoly[1].Y();
    Double_t e1 = fPoly[fNp - 1].Y();
@@ -1793,7 +1794,7 @@ void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
           << "," << fPoly[i].E() << "," << fPoly[i].F() << ");\n";
    }
 
-   out << "   spline5->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   SavePrimitiveDraw(out, "spline5", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

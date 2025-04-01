@@ -336,7 +336,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TCurlyLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TCurlyLine::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "curlyline",
                             TString::Format("%g, %g, %g, %g, %g, %g", fX1, fY1, fX2, fY2, fWaveLength, fAmplitude));
@@ -344,9 +344,9 @@ void TCurlyLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out, "curlyline", 1, 1, 1);
 
    if (!fIsCurly)
-      out << "   curlyline->SetWavy();" << std::endl;
+      out << "   curlyline->SetWavy();\n";
 
-   out << "   curlyline->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "curlyline", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

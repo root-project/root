@@ -368,22 +368,22 @@ Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TCutG::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   TString arrx = SavePrimitiveArray(out, "cutg", fNpoints, fX, kTRUE);
-   TString arry = SavePrimitiveArray(out, "cutg", fNpoints, fY);
-   SavePrimitiveConstructor(out, Class(), "cutg",
-                            TString::Format("\"%s\", %d, %s, %s", GetName(), fNpoints, arrx.Data(), arry.Data()),
-                            kFALSE);
-   out << "   cutg->SetVarX(\"" << GetVarX() << "\");" << std::endl;
-   out << "   cutg->SetVarY(\"" << GetVarY() << "\");" << std::endl;
-   out << "   cutg->SetTitle(\"" << TString(GetTitle()).ReplaceSpecialCppChars() << "\");" << std::endl;
+   TString arrx = SavePrimitiveVector(out, "cutg", fNpoints, fX, kTRUE);
+   TString arry = SavePrimitiveVector(out, "cutg", fNpoints, fY);
+   SavePrimitiveConstructor(
+      out, Class(), "cutg",
+      TString::Format("\"%s\", %d, %s.data(), %s.data()", GetName(), fNpoints, arrx.Data(), arry.Data()), kFALSE);
+   out << "   cutg->SetVarX(\"" << GetVarX() << "\");\n";
+   out << "   cutg->SetVarY(\"" << GetVarY() << "\");\n";
+   out << "   cutg->SetTitle(\"" << TString(GetTitle()).ReplaceSpecialCppChars() << "\");\n";
 
    SaveFillAttributes(out, "cutg", 0, 1001);
    SaveLineAttributes(out, "cutg", 1, 1, 1);
    SaveMarkerAttributes(out, "cutg", 1, 1, 1);
 
-   out << "   cutg->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");" << std::endl;
+   SavePrimitiveDraw(out, "cutg", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

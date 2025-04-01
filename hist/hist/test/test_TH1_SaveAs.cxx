@@ -152,7 +152,7 @@ struct TestSaveAs {
                          "   h__1->GetZaxis()->SetLabelFont(42);",
                          "   h__1->GetZaxis()->SetTitleOffset(1);",
                          "   h__1->GetZaxis()->SetTitleFont(42);",
-                         "   h__1->Draw(\"\");",
+                         "   h__1->Draw();",
                          "}"};
       std::string line;
       while (std::getline(infile, line)) {
