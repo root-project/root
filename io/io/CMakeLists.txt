@@ -72,11 +72,6 @@ else()
    target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
 endif()
 
-if(root7)
-  set(RIO_EXTRA_HEADERS ROOT/RFile.hxx)
-  target_sources(RIO PRIVATE v7/src/RFile.cxx)
-endif()
-
 if(uring)
   target_link_libraries(RIO PUBLIC ${LIBURING_LIBRARY})
   target_include_directories(RIO PRIVATE ${LIBURING_INCLUDE_DIR})
@@ -116,7 +111,6 @@ ROOT_GENERATE_DICTIONARY(G__RIO
   TVirtualCollectionIterators.h
   TStreamerInfo.h
   TZIPFile.h
-  ${RIO_EXTRA_HEADERS}
   STAGE1
   MODULE
     RIO
