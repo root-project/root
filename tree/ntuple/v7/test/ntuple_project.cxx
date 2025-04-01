@@ -183,3 +183,176 @@ TEST(RNTupleProjection, CatchReaderWithProjectedFields)
       EXPECT_THAT(err.what(), testing::HasSubstr("model has projected fields"));
    }
 }
+
+TEST(RNTupleProjection, AliasQuantDiffPrec)
+{
+   // Try creating alias columns of Real32Quant columns with a different precision
+
+   FileRaii fileGuard("test_ntuple_projection_quant_diff_prec.root");
+
+   auto model = RNTupleModel::Create();
+
+   auto field = std::make_unique<RField<float>>("q");
+   field->SetQuantized(0, 1, 20); // Set quantized with 20 bits of precision
+   model->AddField(std::move(field));
+
+   auto modelRead = model->Clone();
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
+
+      auto projField = std::make_unique<RField<float>>("projq");
+      projField->SetQuantized(0, 1, 30); // Set quantized with 30 bits of precision
+      model->AddProjectedField(std::move(projField), [](const auto &) { return "q"; });
+   }
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto pq = writer->GetModel().GetDefaultEntry().GetPtr<float>("q");
+      for (int i = 0; i < 10; ++i) {
+         *pq = i * 0.05f;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto vq = reader->GetView<float>("q");
+   auto vpq = reader->GetView<float>("projq");
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_FLOAT_EQ(vq(i), vpq(i));
+   }
+}
+
+TEST(RNTupleProjection, AliasQuantDiffRange)
+{
+   // Try creating alias columns of Real32Quant columns with a different range
+
+   FileRaii fileGuard("test_ntuple_projection_quant_diff_range.root");
+
+   auto model = RNTupleModel::Create();
+
+   auto field = std::make_unique<RField<float>>("q");
+   field->SetQuantized(0, 1, 20);
+   model->AddField(std::move(field));
+
+   auto modelRead = model->Clone();
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
+
+      auto projField = std::make_unique<RField<float>>("projq");
+      projField->SetQuantized(0, 2, 20);
+      model->AddProjectedField(std::move(projField), [](const auto &) { return "q"; });
+   }
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto pq = writer->GetModel().GetDefaultEntry().GetPtr<float>("q");
+      for (int i = 0; i < 10; ++i) {
+         *pq = i * 0.05f;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto pq = reader->GetModel().GetDefaultEntry().GetPtr<float>("q");
+   auto ppq = reader->GetModel().GetDefaultEntry().GetPtr<float>("projq");
+   for (int i = 0; i < 10; ++i) {
+      reader->LoadEntry(i);
+      EXPECT_FLOAT_EQ(*pq, *ppq);
+   }
+}
+
+TEST(RNTupleProjection, AliasTruncDiffPrec)
+{
+   // Try creating alias columns of Real32Trunc columns with a different precision
+
+   FileRaii fileGuard("test_ntuple_projection_quant_diff_prec.root");
+
+   auto model = RNTupleModel::Create();
+
+   auto field = std::make_unique<RField<float>>("q");
+   field->SetTruncated(20);
+   model->AddField(std::move(field));
+
+   auto modelRead = model->Clone();
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
+
+      auto projField = std::make_unique<RField<float>>("projq");
+      projField->SetTruncated(20);
+      model->AddProjectedField(std::move(projField), [](const auto &) { return "q"; });
+   }
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto pq = writer->GetModel().GetDefaultEntry().GetPtr<float>("q");
+      for (int i = 0; i < 10; ++i) {
+         *pq = i * 0.05f;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto vq = reader->GetView<float>("q");
+   auto vpq = reader->GetView<float>("projq");
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_FLOAT_EQ(vq(i), vpq(i));
+   }
+}
+
+TEST(RNTupleProjection, AliasTruncQuantProj)
+{
+   // Try creating alias columns mixing Real32Trunc and Real32Quant columns
+
+   FileRaii fileGuard("test_ntuple_projection_trunc_quant.root");
+
+   auto model = RNTupleModel::Create();
+
+   auto fTrunc = std::make_unique<RField<float>>("trunc");
+   fTrunc->SetTruncated(20);
+   model->AddField(std::move(fTrunc));
+   auto fQuant = std::make_unique<RField<float>>("quant");
+   fQuant->SetQuantized(-1, 1, 30);
+   model->AddField(std::move(fQuant));
+
+   auto modelRead = model->Clone();
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
+
+      auto projTruncToQuant = std::make_unique<RField<float>>("truncToQuant");
+      projTruncToQuant->SetQuantized(0, 10, 20);
+      model->AddProjectedField(std::move(projTruncToQuant), [](const auto &) { return "trunc"; });
+
+      auto projQuantToTrunc = std::make_unique<RField<float>>("quantToTrunc");
+      projQuantToTrunc->SetTruncated(10);
+      model->AddProjectedField(std::move(projQuantToTrunc), [](const auto &) { return "quant"; });
+   }
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto pQuant = writer->GetModel().GetDefaultEntry().GetPtr<float>("quant");
+      auto pTrunc = writer->GetModel().GetDefaultEntry().GetPtr<float>("trunc");
+      for (int i = 0; i < 10; ++i) {
+         *pQuant = i * 0.05f;
+         *pTrunc = i * 2.f;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto vq = reader->GetView<double>("quant");
+   auto vqt = reader->GetView<double>("quantToTrunc");
+   auto vt = reader->GetView<double>("trunc");
+   auto vtq = reader->GetView<double>("truncToQuant");
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_FLOAT_EQ(vq(i), vqt(i));
+      EXPECT_FLOAT_EQ(vt(i), vtq(i));
+   }
+}
