@@ -1493,13 +1493,19 @@ TEST(RDFSnapshotMore, LazyTriggeredMT)
 
 TEST(RDFSnapshotMore, EmptyBuffersMT)
 {
+   // Test that a tree gets created when only one worker yields events
    const auto fname = "emptybuffersmt.root";
    const auto treename = "t";
    const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
    ROOT::EnableImplicitMT(nslots);
    ROOT::RDataFrame d(10);
-   auto dd = d.DefineSlot("x", [&](unsigned int s) {
-                 return s == nslots - 1 ? 0 : 1;
+   std::atomic_bool firstWorker{true};
+   auto dd = d.DefineSlot("x", [&](unsigned int) {
+                 bool expected = true;
+                 if (firstWorker.compare_exchange_strong(expected, false)) {
+                    return 0;
+                 }
+                 return 1;
               }).Filter([](int x) { return x == 0; }, {"x"}, "f");
    auto r = dd.Report();
    dd.Snapshot<int>(treename, fname, {"x"});

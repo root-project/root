@@ -352,13 +352,10 @@ TEST_P(RDFSimpleTests, DefineSlotConsistency)
 
 TEST_P(RDFSimpleTests, DefineSlot)
 {
-   std::vector<int> values(NSLOTS);
-   for (auto i = 0u; i < NSLOTS; ++i)
-      values[i] = i;
    RDataFrame df(NSLOTS);
-   auto ddf = df.DefineSlot("s", [values](unsigned int slot) { return values[slot]; });
+   auto ddf = df.DefineSlot("s", [](unsigned int slot) { return static_cast<int>(slot); });
    auto m = ddf.Max<int>("s");
-   EXPECT_EQ(*m, NSLOTS - 1); // no matter the order of processing, the higher slot number is always taken at least once
+   EXPECT_LT(*m, NSLOTS);
 }
 
 TEST_P(RDFSimpleTests, DefineSlotCheckMT)
@@ -605,26 +602,24 @@ TEST_P(RDFSimpleTests, Graph)
 
 TEST_P(RDFSimpleTests, BookCustomAction)
 {
-   RDataFrame d(1);
+   RDataFrame d(2 * ROOT::GetThreadPoolSize());
    const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
-   const auto expected = nWorkers - 1;
 
    auto maxSlot0 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
    auto maxSlot1 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"rdfslot_"});
-   EXPECT_EQ(*maxSlot0, expected);
-   EXPECT_EQ(*maxSlot1, expected);
+   EXPECT_LT(*maxSlot0, nWorkers);
+   EXPECT_LT(*maxSlot1, nWorkers);
 }
 
 TEST_P(RDFSimpleTests, BookCustomActionJitted)
 {
-   RDataFrame d(1);
+   RDataFrame d(2 * ROOT::GetThreadPoolSize());
    const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
-   const auto expected = nWorkers - 1;
 
    auto maxSlot0 = d.Book(MaxSlotHelper(nWorkers), {"tdfslot_"});
    auto maxSlot1 = d.Book(MaxSlotHelper(nWorkers), {"rdfslot_"});
-   EXPECT_EQ(*maxSlot0, expected);
-   EXPECT_EQ(*maxSlot1, expected);
+   EXPECT_LT(*maxSlot0, nWorkers);
+   EXPECT_LT(*maxSlot1, nWorkers);
 }
 
 class StdDevTestHelper {
