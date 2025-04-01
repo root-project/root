@@ -191,6 +191,6 @@ ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 # rbatchgenerator tests
 # TODO: We currently do not support TensorFlow for Python >= 3.12 (see requirements.txt)
 # Update here once that is fixed.
-if (NOT MSVC AND Python3_VERSION VERSION_LESS 3.12)
+if (NOT MSVC AND tmva)
   ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy tensorflow torch)
 endif()
