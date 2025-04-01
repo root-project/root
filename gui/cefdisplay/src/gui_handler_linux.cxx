@@ -53,10 +53,12 @@ bool GuiHandler::PlatformInit()
    // install custom X11 error handler to avoid application exit in case of X11 failure
    XSetErrorHandler( x11_errhandler );
 
-   return false; // do not use view framework
+   #if CEF_VERSION_MAJOR > 130
+   return true; // use CEF view framework
+   #else
+   return false; // do not use CEF view framework
+   #endif
 }
-
-
 
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
