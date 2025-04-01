@@ -210,7 +210,10 @@ public:
    /// [internal] returns web-driver data, used to start window
    void *GetDriverData() const { return fDriverData; }
 
-   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x50000);
+   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x60000);
+
+   static std::string GetQtEmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x60000);
+
 };
 
 } // namespace ROOT
