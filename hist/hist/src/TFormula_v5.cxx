@@ -3018,12 +3018,11 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 ///  if expression in formula is: "[0]*(x>-[1])+[2]*exp(-[3]*x)"
 ///  and parameters are 3.25,-4.01,4.44,-0.04, GetExpFormula("p") will return:
 ///   "(3.25*(x>+4.01))+(4.44*exp(+0.04*x))"
-///  @param fl_format specifies the printf floating point precision when option
-///  contains "p". Default is `%g` (6 decimals). If you need more precision,
-///  change e.g. to `%.9f`, or `%a` for a lossless representation.
+///  @note Floats are printed with `%g` (6 decimals). If you need more precision,
+///  use instead the non v5 version of this class.
 ///  @see https://cplusplus.com/reference/cstdio/printf/
 
-TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
+TString TFormula::GetExpFormula(Option_t *option) const
 {
    if (fNoper>0) {
       TString* tab=new TString[fNoper];
@@ -3197,7 +3196,7 @@ TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
          char pbv[100];
          for (j=0;j<fNpar;j++) {
             snprintf(pb,sizeof(pb),"[%d]",j);
-            snprintf(pbv, 100, fl_format, fParams[j]);
+            snprintf(pbv, 100, "%g", fParams[j]);
             ret.ReplaceAll(pb,pbv);
          }
          ret.ReplaceAll("--","+");
