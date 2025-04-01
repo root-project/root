@@ -198,6 +198,15 @@ public:
                          ROOT::NTupleSize_t entryOffset = 0);
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get an entry index (if it exists) for the given join field (values), from any partition
+   ///
+   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
+   ///
+   /// \return An entry number that corresponds to `valuePtrs`. When there are no corresponding entries,
+   /// `kInvalidNTupleIndex` is returned.
+   ROOT::NTupleSize_t GetEntryIndex(const std::vector<void *> &valuePtrs) const;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all entry indexes for the given join field value(s) within a partition.
    ///
    /// \param[in] valuePtrs A vector of pointers to the join field values to look up.

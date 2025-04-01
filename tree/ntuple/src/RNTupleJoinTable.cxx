@@ -125,6 +125,22 @@ ROOT::Experimental::Internal::RNTupleJoinTable::Add(ROOT::Internal::RPageSource 
    return *this;
 }
 
+ROOT::NTupleSize_t
+ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndex(const std::vector<void *> &valuePtrs) const
+{
+
+   for (const auto &partition : fPartitions) {
+      for (const auto &joinMapping : partition.second) {
+         auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
+         if (entriesForMapping) {
+            return (*entriesForMapping)[0];
+         }
+      }
+   }
+
+   return kInvalidNTupleIndex;
+}
+
 std::vector<ROOT::NTupleSize_t>
 ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vector<void *> &valuePtrs,
                                                                 PartitionKey_t partitionKey) const
