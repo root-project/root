@@ -1542,7 +1542,7 @@ void TProfile2D::ExtendAxis(Double_t x, TAxis *axis)
 ///                                                  // merging 5 bins of hpxpy along the yaxis in one bin
 /// ~~~
 ///
-///  \note : If `nxgroup`/`nygroup` is not an exact divider of the number of bins,
+///  \note If `nxgroup`/`nygroup` is not an exact divider of the number of bins,
 ///         along the xaxis/yaxis the top limit(s) of the rebinned profile
 ///         is changed to the upper edge of the xbin=newxbins*nxgroup resp.
 ///          ybin=newybins*nygroup and the remaining bins are added to

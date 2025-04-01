@@ -1644,7 +1644,7 @@ TH2 *TH2::Rebin(Int_t ngroup, const char *newname, const Double_t *xbins)
 ///                                          // merging 5 bins of h1 along the yaxis in one bin
 /// ~~~
 ///
-///   \note : If `nxgroup`/`nygroup` is not an exact divider of the number of bins,
+///   \note If `nxgroup`/`nygroup` is not an exact divider of the number of bins,
 ///          along the xaxis/yaxis the top limit(s) of the rebinned histogram
 ///          is changed to the upper edge of the xbin=newxbins*nxgroup resp.
 ///          ybin=newybins*nygroup and the corresponding bins are added to
@@ -1702,11 +1702,11 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname, const Doubl
       return nullptr;
    }
    if (!newname && xbins) {
-       Error("Rebin","if xbins is specified, newname must be given");
+       Error("Rebin2D","if xbins is specified, newname must be given");
        return 0;
     }
    if (!newname && ybins) {
-       Error("Rebin","if ybins is specified, newname must be given");
+       Error("Rebin2D","if ybins is specified, newname must be given");
        return 0;
     }
 
