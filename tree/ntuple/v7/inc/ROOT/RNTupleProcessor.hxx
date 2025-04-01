@@ -105,7 +105,6 @@ class RNTupleProcessor {
 protected:
    std::string fProcessorName;
    std::unique_ptr<ROOT::REntry> fEntry;
-   std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
@@ -450,6 +449,7 @@ class RNTupleSingleProcessor : public RNTupleProcessor {
 
 private:
    RNTupleOpenSpec fNTupleSpec;
+   std::unique_ptr<Internal::RPageSource> fPageSource;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
@@ -489,6 +489,13 @@ private:
    /// \param[in] model The model that specifies which fields should be read by the processor.
    RNTupleSingleProcessor(RNTupleOpenSpec ntuple, std::string_view processorName,
                           std::unique_ptr<ROOT::RNTupleModel> model);
+
+public:
+   RNTupleSingleProcessor(const RNTupleSingleProcessor &) = delete;
+   RNTupleSingleProcessor(RNTupleSingleProcessor &&) = delete;
+   RNTupleSingleProcessor &operator=(const RNTupleSingleProcessor &) = delete;
+   RNTupleSingleProcessor &operator=(RNTupleSingleProcessor &&) = delete;
+   virtual ~RNTupleSingleProcessor() { fModel.release(); };
 };
 
 // clang-format off
