@@ -86,7 +86,7 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
    EXPECT_FLOAT_EQ(3.0, viewPx(2));
 
    std::ostringstream osDetails;
-   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kStorageDetails, osDetails);
+   reader->PrintInfo(ROOT::ENTupleInfo::kStorageDetails, osDetails);
    const std::string reference = std::string("") + "============================================================\n"
                                                    "NTUPLE:      ntpl\n"
                                                    "Compression: 0\n"

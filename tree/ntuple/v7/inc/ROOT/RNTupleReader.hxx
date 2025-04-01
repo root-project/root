@@ -37,8 +37,6 @@
 namespace ROOT {
 class RNTuple;
 
-namespace Experimental {
-
 /// Listing of the different options that can be printed by RNTupleReader::GetInfo()
 enum class ENTupleInfo {
    kSummary,        // The RNTuple name, description, number of entries
@@ -48,7 +46,7 @@ enum class ENTupleInfo {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleReader
+\class ROOT::RNTupleReader
 \ingroup NTuple
 \brief Reads RNTuple data from storage
 
@@ -60,11 +58,9 @@ Individual fields can be read as well by instantiating a tree view.
 
 ~~~ {.cpp}
 #include <ROOT/RNTupleReader.hxx>
-using ROOT::Experimental::RNTupleReader;
-
 #include <iostream>
 
-auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+auto reader = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
 std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 ~~~
 */
@@ -73,9 +69,9 @@ class RNTupleReader {
 private:
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
-   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
+   std::unique_ptr<Experimental::Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
 
-   std::unique_ptr<Internal::RPageSource> fSource;
+   std::unique_ptr<Experimental::Internal::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<ROOT::RNTupleModel> fModel;
    /// We use a dedicated on-demand reader for Show(). Printing data uses all the fields
@@ -88,14 +84,15 @@ private:
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
    std::optional<ROOT::RNTupleDescriptor> fCachedDescriptor;
-   Detail::RNTupleMetrics fMetrics;
+   Experimental::Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
 
-   RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
+   RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Experimental::Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
    /// The model is generated from the RNTuple metadata on storage.
-   explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
+   explicit RNTupleReader(std::unique_ptr<Experimental::Internal::RPageSource> source,
+                          const ROOT::RNTupleReadOptions &options);
 
    void ConnectModel(ROOT::RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
@@ -145,11 +142,9 @@ public:
    /// **Example: open an RNTuple and print the number of entries**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleReader.hxx>
-   /// using ROOT::Experimental::RNTupleReader;
-   ///
    /// #include <iostream>
    ///
-   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto reader = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
    /// std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
    /// ~~~
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage,
@@ -192,26 +187,20 @@ public:
    /// **Example: print summary information to stdout**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleReader.hxx>
-   /// using ROOT::Experimental::ENTupleInfo;
-   /// using ROOT::Experimental::RNTupleReader;
-   ///
    /// #include <iostream>
    ///
-   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto reader = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
    /// reader->PrintInfo();
    /// // or, equivalently:
-   /// reader->PrintInfo(ENTupleInfo::kSummary, std::cout);
+   /// reader->PrintInfo(ROOT::ENTupleInfo::kSummary, std::cout);
    /// ~~~
    /// **Example: print detailed column storage data to stderr**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleReader.hxx>
-   /// using ROOT::Experimental::ENTupleInfo;
-   /// using ROOT::Experimental::RNTupleReader;
-   ///
    /// #include <iostream>
    ///
-   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
-   /// reader->PrintInfo(ENTupleInfo::kStorageDetails, std::cerr);
+   /// auto reader = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
+   /// reader->PrintInfo(ROOT::ENTupleInfo::kStorageDetails, std::cerr);
    /// ~~~
    ///
    /// For use of ENTupleInfo::kMetrics, see #EnableMetrics.
@@ -248,12 +237,9 @@ public:
    /// **Example: iterate over all entries and print each entry in JSON format**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleReader.hxx>
-   /// using ROOT::Experimental::ENTupleShowFormat;
-   /// using ROOT::Experimental::RNTupleReader;
-   ///
    /// #include <iostream>
    ///
-   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto reader = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
    /// for (auto i : ntuple->GetEntryRange()) {
    ///    reader->Show(i);
    /// }
@@ -261,20 +247,19 @@ public:
    ROOT::RNTupleGlobalRange GetEntryRange() { return ROOT::RNTupleGlobalRange(0, GetNEntries()); }
 
    /// Provides access to an individual (sub)field,
-   /// e.g. `GetView<Particle>("particle")`, `GetView<double>("particle.pt")` or `GetView<std::vector<Particle>>("particles")`.
-   /// It is possible to directly get the size of a collection (without reading the collection itself)
-   /// using RNTupleCardinality: `GetView<ROOT::RNTupleCardinality<std::uint64_t>>("particles")`.
+   /// e.g. `GetView<Particle>("particle")`, `GetView<double>("particle.pt")` or
+   /// `GetView<std::vector<Particle>>("particles")`. It is possible to directly get the size of a collection (without
+   /// reading the collection itself) using RNTupleCardinality:
+   /// `GetView<ROOT::RNTupleCardinality<std::uint64_t>>("particles")`.
    ///
    /// Raises an exception if there is no field with the given name.
    ///
    /// **Example: iterate over a field named "pt" of type `float`**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleReader.hxx>
-   /// using ROOT::Experimental::RNTupleReader;
-   ///
    /// #include <iostream>
    ///
-   /// auto reader = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto reader = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
    /// auto pt = reader->GetView<float>("pt");
    ///
    /// for (auto i : reader->GetEntryRange()) {
@@ -363,24 +348,24 @@ public:
    /// **Example: inspect the reader metrics after loading every entry**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTupleReader.hxx>
-   /// using ROOT::Experimental::ENTupleInfo;
-   /// using ROOT::Experimental::RNTupleReader;
-   ///
    /// #include <iostream>
    ///
-   /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto ntuple = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
    /// // metrics must be turned on beforehand
    /// reader->EnableMetrics();
    ///
    /// for (auto i : ntuple->GetEntryRange()) {
    ///    reader->LoadEntry(i);
    /// }
-   /// reader->PrintInfo(ENTupleInfo::kMetrics);
+   /// reader->PrintInfo(ROOT::ENTupleInfo::kMetrics);
    /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
-   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+   const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 }; // class RNTupleReader
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RNTupleReader [[deprecated("ROOT::RNTupleReader moved to ROOT::RNTupleReader")]] = ROOT::RNTupleReader;
 } // namespace Experimental
 } // namespace ROOT
 

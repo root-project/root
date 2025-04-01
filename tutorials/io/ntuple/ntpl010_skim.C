@@ -22,9 +22,6 @@
 
 #include <cstdint>
 
-// Import classes from experimental namespace for the time being.
-using ROOT::Experimental::RNTupleReader;
-
 // Input and output.
 constexpr char const *kNTupleInputName = "ntpl";
 constexpr char const *kNTupleInputFileName = "ntpl010_input.root";
@@ -69,7 +66,7 @@ void ntpl010_skim()
 {
    Write();
 
-   auto reader = RNTupleReader::Open(kNTupleInputName, kNTupleInputFileName);
+   auto reader = ROOT::RNTupleReader::Open(kNTupleInputName, kNTupleInputFileName);
 
    auto skimModel = ROOT::RNTupleModel::Create();
    // Loop through the top-level fields of the input RNTuple

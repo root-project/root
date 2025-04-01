@@ -26,10 +26,6 @@
 
 #include <cassert>
 
-// Import classes from experimental namespace for the time being
-using ENTupleInfo = ROOT::Experimental::ENTupleInfo;
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
-
 constexpr char const* kNTupleFileName = "ntpl005_introspection.root";
 
 // Store entries of type Vector3 in the ntuple
@@ -73,13 +69,13 @@ void Generate()
 void ntpl005_introspection() {
    Generate();
 
-   auto reader = RNTupleReader::Open("Vector3", kNTupleFileName);
+   auto reader = ROOT::RNTupleReader::Open("Vector3", kNTupleFileName);
 
    // Display the schema of the ntuple
    reader->PrintInfo();
 
    // Display information about the storage layout of the data
-   reader->PrintInfo(ENTupleInfo::kStorageDetails);
+   reader->PrintInfo(ROOT::ENTupleInfo::kStorageDetails);
 
    // Display the first entry
    reader->Show(0);
@@ -112,7 +108,7 @@ void ntpl005_introspection() {
    h2.DrawCopy();
 
    // Display the I/O operation statistics performed by the RNTuple reader
-   reader->PrintInfo(ENTupleInfo::kMetrics);
+   reader->PrintInfo(ROOT::ENTupleInfo::kMetrics);
 
    // We read 2 out of the 3 Vector3 members and thus should have requested approximately 2/3 of the file
    FileStat_t fileStat;

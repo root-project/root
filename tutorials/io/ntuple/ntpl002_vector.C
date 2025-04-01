@@ -27,9 +27,6 @@
 #include <vector>
 #include <utility>
 
-// Import classes from experimental namespace for the time being
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
-
 // Where to store the ntuple of this example
 constexpr char const* kNTupleFileName = "ntpl002_vector.root";
 
@@ -115,7 +112,7 @@ void Read()
 
    // Create an ntuple without imposing a specific data model.  We could generate the data model from the ntuple
    // but here we prefer the view because we only want to access a single field
-   auto reader = RNTupleReader::Open(std::move(model), "F", kNTupleFileName);
+   auto reader = ROOT::RNTupleReader::Open(std::move(model), "F", kNTupleFileName);
 
    // Quick overview of the ntuple's key meta-data
    reader->PrintInfo();

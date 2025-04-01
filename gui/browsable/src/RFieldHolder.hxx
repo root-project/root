@@ -25,13 +25,13 @@ class RPageSource;
 }
 
 class RFieldHolder : public ROOT::Browsable::RHolder {
-   std::shared_ptr<ROOT::Experimental::RNTupleReader> fNtplReader;
+   std::shared_ptr<ROOT::RNTupleReader> fNtplReader;
    std::string fParentName;
 
    ROOT::DescriptorId_t fFieldId;
 
 public:
-   RFieldHolder(std::shared_ptr<ROOT::Experimental::RNTupleReader> ntplReader, const std::string &parent_name,
+   RFieldHolder(std::shared_ptr<ROOT::RNTupleReader> ntplReader, const std::string &parent_name,
                 ROOT::DescriptorId_t id)
       : fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id)
    {

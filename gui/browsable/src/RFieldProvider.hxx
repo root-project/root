@@ -41,7 +41,7 @@ using namespace std::string_literals;
 class RFieldProvider : public RProvider {
    class RDrawVisitor : public ROOT::Detail::RFieldVisitor {
    private:
-      std::shared_ptr<ROOT::Experimental::RNTupleReader> fNtplReader;
+      std::shared_ptr<ROOT::RNTupleReader> fNtplReader;
       std::unique_ptr<TH1> fHist;
 
       /** Test collected entries if it looks like integer values and one can use better binning */
@@ -149,7 +149,7 @@ class RFieldProvider : public RProvider {
       }
 
    public:
-      explicit RDrawVisitor(std::shared_ptr<ROOT::Experimental::RNTupleReader> ntplReader) : fNtplReader(ntplReader) {}
+      explicit RDrawVisitor(std::shared_ptr<ROOT::RNTupleReader> ntplReader) : fNtplReader(ntplReader) {}
 
       TH1 *MoveHist() {
          return fHist.release();
