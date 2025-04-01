@@ -40,8 +40,8 @@ private:
    std::string fNBroadcastedB;
    std::string fNY;
 
-   std::string convK;
-   std::string imcol;
+   std::string fConvK;
+   std::string fImcol;
 
    std::vector<size_t> fShapeX;
    std::vector<size_t> fShapeW;

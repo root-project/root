@@ -189,10 +189,10 @@ void ROperator_ConvTranspose<T>::Initialize(RModel& model){
    std::vector<size_t> shape2 = {fShapeW[1], kernelSize, inputSize};
    model.AddIntermediateTensor(fNX +"_f", ConvertStringToType(fType), shape1 );
    model.AddIntermediateTensor(fNX +"_xcol", ConvertStringToType(fType), shape2 );
-   convK = fNX +"_f";
-   imcol = fNX +"_xcol";
-   fOutputTensorNames.emplace_back(convK);
-   fOutputTensorNames.emplace_back(imcol);
+   fConvK = fNX +"_f";
+   fImcol = fNX +"_xcol";
+   fOutputTensorNames.emplace_back(fConvK);
+   fOutputTensorNames.emplace_back(fImcol);
 }
 
 template <typename T>
