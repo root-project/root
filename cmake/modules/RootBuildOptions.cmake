@@ -148,7 +148,6 @@ ROOT_BUILD_OPTION(pgsql OFF "Enable support for PostgreSQL (deprecated)")
 ROOT_BUILD_OPTION(proof OFF "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
-ROOT_BUILD_OPTION(qt5web OFF "Enable support for Qt5 web-based display (deprecated, requires Qt5::WebEngine and Qt5::WebEngineWidgets)")
 ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires Qt6::WebEngineCore and Qt6::WebEngineWidgets)")
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
@@ -379,7 +378,6 @@ if(NOT http AND webgui)
 endif()
 
 if(NOT webgui)
-   set(qt5web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
    set(qt6web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
    set(cefweb OFF CACHE BOOL "Disabled because webgui not build" FORCE)
 endif()
@@ -389,7 +387,7 @@ endif()
 foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
         cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
-        pythia6 pythia6_nolink python qt qtgsi rfio ruby sapdb srp table
+        pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
         tcmalloc vmc xproofd)
   if(${opt})
     message(FATAL_ERROR ">>> '${opt}' is no longer part of ROOT ${ROOT_VERSION} build options.")
@@ -397,7 +395,7 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt mysql odbc pgsql qt5web)
+foreach(opt mysql odbc pgsql)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()

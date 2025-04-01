@@ -47,7 +47,7 @@
 #@useimt@ R__USE_IMT   /**/
 #@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
 #@hascefweb@ R__HAS_CEFWEB  /**/
-#@hasqt5webengine@ R__HAS_QT5WEB  /**/
+#@hasqt6webengine@ R__HAS_QT6WEB  /**/
 #@hasdavix@ R__HAS_DAVIX  /**/
 #@hasdataframe@ R__HAS_DATAFRAME /**/
 #@hasroot7@ R__HAS_ROOT7 /**/
