@@ -33,15 +33,20 @@ public:
    class RIterator {
       friend class RFileKeyIterable;
 
+      TFile *fFile;
       ROOT::Detail::TKeyMapIterable::TIterator fIter;
       std::string_view fRootDir;
+      std::string fCurKeyName;
       int fRootDirNesting = 0;
       bool fRecursive;
 
+      ROOT::RResult<std::pair<std::string, int>>
+      ReconstructFullKeyPath(ROOT::Detail::TKeyMapIterable::TIterator &iter) const;
+
       void Advance();
 
-      RIterator(ROOT::Detail::TKeyMapIterable::TIterator iter, std::string_view rootDir, bool recursive)
-         : fIter(iter), fRootDir(rootDir), fRecursive(recursive)
+      RIterator(TFile *file, ROOT::Detail::TKeyMapIterable::TIterator iter, std::string_view rootDir, bool recursive)
+         : fFile(file), fIter(iter), fRootDir(rootDir), fRecursive(recursive)
       {
          if (!rootDir.empty()) {
             fRootDirNesting = std::count(rootDir.begin(), rootDir.end(), '/');
@@ -68,8 +73,8 @@ public:
          Advance();
          return *this;
       }
-      reference operator*() { return fIter->fKeyName; }
-      pointer operator->() { return &fIter->fKeyName; }
+      reference operator*() { return fCurKeyName; }
+      pointer operator->() { return &fCurKeyName; }
       bool operator!=(const iterator &rh) const { return !(*this == rh); }
       bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
@@ -79,8 +84,8 @@ public:
    {
    }
 
-   RIterator begin() const { return {fFile->WalkTKeys().begin(), fRootDir, fRecursive}; }
-   RIterator end() const { return {fFile->WalkTKeys().end(), fRootDir, fRecursive}; }
+   RIterator begin() const { return {fFile, fFile->WalkTKeys().begin(), fRootDir, fRecursive}; }
+   RIterator end() const { return {fFile, fFile->WalkTKeys().end(), fRootDir, fRecursive}; }
 };
 
 class RFile final {
@@ -108,7 +113,7 @@ public:
    /// Opens the file for updating
    static std::unique_ptr<RFile> OpenForUpdate(std::string_view path);
 
-   ///// Utility methods /////   
+   ///// Utility methods /////
 
    /// Returns true if `path` is a suitable path to store an object into a RFile.
    /// Passing an invalid path to Put will cause it to throw an exception, and
@@ -153,7 +158,7 @@ public:
 
    /// Returns an iterable over all paths of objects written into this RFile starting at directory "rootDir".
    /// The returned paths are always "absolute" paths: they are not relative to `rootDir`.
-   /// The key for `rootDir` itself is not returned.
+   /// Keys relative to directories are not returned.
    /// This recurses on all the subdirectories of `rootDir`. If you only want the immediate children of `rootDir`,
    /// use GetKeysNonRecursive().
    RFileKeyIterable GetKeys(std::string_view rootDir = "") const
@@ -163,7 +168,7 @@ public:
 
    /// Returns an iterable over all paths of objects written into this RFile contained in the directory "rootDir".
    /// The returned paths are always "absolute" paths: they are not relative to `rootDir`.
-   /// The key for `rootDir` itself is not returned.
+   /// Keys relative to directories are not returned.
    /// This only returns the immediate children of `rootDir`. If you want to recurse into the subdirectories of
    /// `rootDir`, use GetKeys().
    RFileKeyIterable GetKeysNonRecursive(std::string_view rootDir = "") const

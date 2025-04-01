@@ -197,54 +197,51 @@ TEST(RFile, IterateKeys)
    }
 }
 
-TEST(RFile, IterateKeysPattern)
+TEST(RFile, SaneHierarchy)
 {
-   FileRaii fileGuard("test_rfile_iteratekeys_pat.root");
+   // verify that we can't create weird hierarchies like:
+   //
+   // (root)
+   //   `--- "a/b": object
+   //   |
+   //   `--- "a": dir
+   //         |
+   //         `--- "b": object
+   //
+   // (who should "a/b" be in this case??)
+   //
+
+   FileRaii fileGuard("test_rfile_sane_hierarchy.root");
 
    {
       auto file = RFile::Recreate(fileGuard.GetPath());
-      std::string a, b, c, d, e, f, g;
-      file->Put("a", a);
-      file->Put("a/b", b);
-      file->Put("a/c", c);
-      file->Put("a/b/d", d);
-      file->Put("e", e);
-      file->Put("e/f", f);
-      file->Put("e/c/g", g);
-   }
+      std::string s;
+      file->Put("a", s);
+      EXPECT_THROW(file->Put("a/b", s), ROOT::RException);
+      file->Put("b/c", s);
+      file->Put("b/d", s);
+      EXPECT_THROW(file->Put("b/c/d", s), ROOT::RException);
 
-   const auto JoinKeyNames = [] (const auto &iterable) {
-      auto beg = iterable.begin();
-      if (beg == iterable.end()) return std::string("");
-      return std::accumulate(std::next(beg), iterable.end(), *beg,
-                             [](const auto &a, const auto &b) { return a + ", " + b; });
-   };
-
-   {
-      auto file = RFile::OpenForReading(fileGuard.GetPath());
-      EXPECT_EQ(JoinKeyNames(file->GetKeys()), "a, a/b, a/c, a/b/d, e, e/f, e/c/g");
-      EXPECT_EQ(JoinKeyNames(file->GetKeys("a")), "a/b, a/c, a/b/d");
-      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b")), "a/b/d");
-      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b/c")), "");
+      EXPECT_NE(file->Get<std::string>("a"), nullptr);
+      EXPECT_EQ(file->Get<std::string>("a/b"), nullptr);
+      EXPECT_NE(file->Get<std::string>("b/c"), nullptr);
+      EXPECT_NE(file->Get<std::string>("b/d"), nullptr);
+      EXPECT_EQ(file->Get<std::string>("b/c/d"), nullptr);
    }
 }
 
-TEST(RFile, IterateKeysPatternNonRecursive)
+TEST(RFile, IterateKeysRecursive)
 {
-   FileRaii fileGuard("test_rfile_iteratekeys_pat_nonrecursive.root");
+   FileRaii fileGuard("test_rfile_iteratekeys_recursive.root");
 
    {
       auto file = RFile::Recreate(fileGuard.GetPath());
-      std::string a, b, c, d, e, f, g;
-      file->Put("a", a);
-      file->Put("a/b", b);
-      file->Put("a/c", c);
-      file->Put("a/b/d", d);
-      file->Put("e", e);
-      file->Put("e/f", f);
-      file->Put("e/c/g", g);
+      std::string s;
+      file->Put("a/c", s);
+      file->Put("a/b/d", s);
+      file->Put("e/f", s);
+      file->Put("e/c/g", s);
    }
-   fileGuard.PreserveFile();
 
    const auto JoinKeyNames = [] (const auto &iterable) {
       auto beg = iterable.begin();
@@ -255,9 +252,41 @@ TEST(RFile, IterateKeysPatternNonRecursive)
 
    {
       auto file = RFile::OpenForReading(fileGuard.GetPath());
-      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive()), "a, e");
-      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a")), "a/b, a/c");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys()), "a/c, a/b/d, e/f, e/c/g");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a")), "a/c, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b")), "a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b/c")), "");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("e/c")), "e/c/g");
+   }
+}
+
+TEST(RFile, IterateKeysNonRecursive)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_nonrecursive.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s;
+      file->Put("h", s);
+      file->Put("a/c", s);
+      file->Put("a/b/d", s);
+      file->Put("e/f", s);
+      file->Put("e/c/g", s);
+   }
+
+   const auto JoinKeyNames = [] (const auto &iterable) {
+      auto beg = iterable.begin();
+      if (beg == iterable.end()) return std::string("");
+      return std::accumulate(std::next(beg), iterable.end(), *beg,
+                             [](const auto &a, const auto &b) { return a + ", " + b; });
+   };
+
+   {
+      auto file = RFile::OpenForReading(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive()), "h");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a")), "a/c");
       EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a/b")), "a/b/d");
       EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a/b/c")), "");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("e")), "e/f");
    }
 }

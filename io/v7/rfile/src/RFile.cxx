@@ -17,10 +17,13 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/StringUtils.hxx>
+#include <Byteswap.h>
 #include <TTree.h>
 #include <TGraph2D.h>
 #include <TH1.h>
 #include <TKey.h>
+
+#include <iostream>
 
 using ROOT::Experimental::RFile;
 
@@ -52,6 +55,98 @@ static void ThrowIfExtensionIsNotRoot(std::string_view path)
    if (path.size() < 5 || path.compare(path.size() - 5, 5, ".root") != 0) {
       throw ROOT::RException(R__FAIL(std::string("Only .root files are supported.")));
    }
+}
+
+namespace {
+
+#pragma pack(push, 1)
+struct RTFileKeyHeader {
+   std::uint32_t fNBytes;
+   std::uint16_t fVersion;
+   std::uint32_t fObjLen;
+   std::uint32_t fDatetime;
+   std::uint16_t fKeyLen;
+   std::uint16_t fCycle;
+};
+
+/// Contains stripped-down information about a TKey on disk
+struct RTFileKey : RTFileKeyHeader {
+   union {
+      struct {
+         std::uint32_t fSeekKey;
+         std::uint32_t fSeekPdir;
+      } fShort;
+      struct {
+         std::uint64_t fSeekKey;
+         std::uint64_t fSeekPdir;
+      } fLong;
+   };
+
+   char fObjName[256];
+   std::uint8_t fObjNameLen;
+
+   bool IsLong() const { return RByteSwap<sizeof(fVersion)>::bswap(fVersion) >= 1000; }
+   std::uint64_t SeekPdir() const
+   {
+      if (IsLong()) {
+         return RByteSwap<sizeof(std::uint64_t)>::bswap(fLong.fSeekPdir);
+      } else {
+         return RByteSwap<sizeof(std::uint32_t)>::bswap(fShort.fSeekPdir);
+      }
+   }
+};
+#pragma pack(pop)
+static_assert(std::is_trivial_v<RTFileKey>);
+
+} // namespace
+
+static ROOT::RResult<RTFileKey> ReadKeyFromFile(TFile *file, std::uint64_t keyAddr)
+{
+   // This is quite ugly, as we need to move the file's internal cursor to retrieve the parent keys.
+   // Luckily it is not a problem because our internal iterator saves the last visited address and is
+   // therefore resilient to the file pointer being moved in between calls to operator++.
+   file->Seek(keyAddr);
+
+   // We know the key is at least this big. Start reading it.
+   char keyHeadBuf[sizeof(RTFileKeyHeader)];
+   bool failed = file->ReadBuffer(keyHeadBuf, sizeof(keyHeadBuf));
+   if (failed) {
+      return R__FAIL("Corrupted key data");
+   }
+   RTFileKey key{};
+   memcpy(&key, keyHeadBuf, sizeof(RTFileKeyHeader));
+
+   // Now read the seek key/pdir
+   char buf[sizeof(RTFileKey{}.fLong)];
+   std::size_t bufSize = key.IsLong() ? sizeof(RTFileKey{}.fLong) : sizeof(RTFileKey{}.fShort);
+   failed = file->ReadBuffer(buf, bufSize);
+   if (failed) {
+      return R__FAIL("Corrupted key data");
+   }
+   if (key.IsLong()) {
+      memcpy(reinterpret_cast<char *>(&key) + sizeof(RTFileKeyHeader), buf, bufSize);
+   } else {
+      memcpy(&key.fShort.fSeekKey, buf, sizeof(std::uint32_t));
+      memcpy(&key.fShort.fSeekPdir, buf + sizeof(std::uint32_t), sizeof(std::uint32_t));
+   }
+
+   // Skip the class name
+   char classNameLen;
+   failed = file->ReadBuffer(&classNameLen, sizeof(classNameLen));
+   if (failed) {
+      return R__FAIL("Corrupted key data");
+   }
+   file->Seek(classNameLen, TFile::kCur);
+
+   // Read the object name
+   failed = file->ReadBuffer(reinterpret_cast<char *>(&key.fObjNameLen), sizeof(key.fObjNameLen));
+   if (failed) {
+      return R__FAIL("Corrupted key data");
+   }
+   file->ReadBuffer(key.fObjName, key.fObjNameLen);
+   key.fObjName[key.fObjNameLen] = 0;
+
+   return key;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +213,7 @@ void *RFile::GetUntyped(const char *path, const TClass *type) const
 
    // If we didn't find the object, try in subdirectories.
    if (!obj) {
-      auto tokens = ROOT::Split(path, "/");
+      const auto tokens = ROOT::Split(path, "/");
       if (tokens.size() > 1) {
          TDirectory *dir = fFile.get();
          for (auto tokenIdx = 0u; tokenIdx < tokens.size() - 1; ++tokenIdx) {
@@ -155,20 +250,74 @@ void RFile::PutUntyped(const char *path, const TClass *type, void *obj)
 {
    assert(path);
    assert(type);
-   
+
    if (!fFile->IsWritable()) {
       throw ROOT::RException(R__FAIL("File is not writable"));
    }
 
-   int success = fFile->WriteObjectAny(obj, type, path);
+   // If `path` refers to a subdirectory, make sure we always write in an actual TDirectory,
+   // otherwise we may have a mix of top-level objects called "a/b/c" and actual directory
+   // structures.
+   // Very sadly, TFile does nothing to prevent this and will happily write "a/b" even if there
+   // is already a directory "a" containing an object "b". We don't want any of that ambiguity here.
+   const auto tokens = ROOT::Split(path, "/");
+   TDirectory *dir = fFile.get();
+   std::string fullPathSoFar = "";
+   for (auto tokIdx = 0u; tokIdx < tokens.size() - 1; ++tokIdx) {
+      fullPathSoFar += tokens[tokIdx];
+      // Alas, not only does mkdir not fail if the file already contains an object "a/b" and you try
+      // to create dir "a", but even when it does fail it doesn't tell you why.
+      // We obviously don't want to allow the coexistence of regular object named "a/b" and the directory
+      // named "a", so we manually check if each level of nesting doesn't exist already as a non-directory.
+      const TKey *existing = dir->GetKey(tokens[tokIdx].c_str());
+      if (existing && strcmp(existing->GetClassName(), "TDirectory") != 0 &&
+          strcmp(existing->GetClassName(), "TDirectoryFile") != 0) {
+         throw ROOT::RException(R__FAIL(std::string("failed to create directory ") + fullPathSoFar +
+                                        ": name already taken by an object of type " + existing->GetClassName()));
+      }
+      dir = dir->mkdir(tokens[tokIdx].c_str(), "", true);
+      if (!dir) {
+         throw ROOT::RException(R__FAIL(std::string("failed to create directory ") + fullPathSoFar));
+      }
+   }
+
+   int success = dir->WriteObjectAny(obj, type, tokens[tokens.size() - 1].c_str());
 
    if (!success) {
       throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
    }
 }
 
+// Returns {fullPath, nestingLevel}
+ROOT::RResult<std::pair<std::string, int>> ROOT::Experimental::RFileKeyIterable::RIterator::ReconstructFullKeyPath(
+   ROOT::Detail::TKeyMapIterable::TIterator &iter) const
+{
+   auto seekPdir = iter->fSeekPdir;
+   int nesting = 0;
+   // We need to accumulate the dir names and append them in reverse.
+   std::vector<std::string> dirNames;
+   while (seekPdir != 0x64) { // XXX: hardcoded TFile kBEGIN
+      auto keyRes = ReadKeyFromFile(fFile, seekPdir);
+      if (!keyRes)
+         return R__FORWARD_ERROR(keyRes);
+      RTFileKey key = keyRes.Unwrap();
+      dirNames.push_back(key.fObjName);
+      seekPdir = key.SeekPdir();
+      ++nesting;
+   }
+
+   std::string fullName;
+   for (int i = static_cast<int>(dirNames.size()) - 1; i >= 0; --i) {
+      fullName += dirNames[i] + "/";
+   }
+   fullName += iter->fKeyName;
+   return std::make_pair(fullName, nesting);
+}
+
 void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
 {
+   fCurKeyName = "";
+   
    // We only want to return keys that refer to user objects, not internal ones, therefore we skip
    // all keys that have internal class names.
    while (1) {
@@ -182,24 +331,24 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
       if (IsInternalKey(fIter->fClassName.c_str()))
          continue;
 
-      // skip the root dir itself
-      if (fIter->fKeyName == fRootDir)
+      // skip all directories
+      if (fIter->fClassName == "TDirectory" || fIter->fClassName == "TDirectoryFile")
          continue;
+
+      // Reconstruct the full path of the key
+      // TODO: better error handling
+      const auto [fullPath, nesting] = ReconstructFullKeyPath(fIter).Unwrap();
 
       // skip key if it's not a child of root dir
-      if (!HasPrefix(fIter->fKeyName, fRootDir))
+      if (!HasPrefix(fullPath, fRootDir))
          continue;
 
-      if (!fRecursive) {
-         // check that we are in the same directory as "rootDir".
-         // TODO: this could be optimized by computing nesting during MatchesPattern.
-         const auto nesting = std::count(fIter->fKeyName.begin(), fIter->fKeyName.end(), '/');
-         if (nesting != fRootDirNesting) {
-            continue;
-         }
-      }
+      // check that we are in the same directory as "rootDir".
+      if (!fRecursive && nesting != fRootDirNesting)
+         continue;
 
       // All checks passed: return this key.
+      fCurKeyName = fullPath;
       break;
    }
 }
