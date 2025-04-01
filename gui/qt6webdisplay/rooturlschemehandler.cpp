@@ -88,11 +88,7 @@ public:
    /** provide WS platform */
    const char *GetWSPlatform() const override
    {
-      #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
       return "qt6";
-      #else
-      return "qt5";
-      #endif
    }
 
    void SendFile(const char *fname)
