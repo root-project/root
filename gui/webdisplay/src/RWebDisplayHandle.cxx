@@ -25,6 +25,7 @@
 #include "TROOT.h"
 #include "TBase64.h"
 #include "TBufferJSON.h"
+#include "RWebWindowWSHandler.hxx"
 
 #include <fstream>
 #include <iostream>
@@ -740,7 +741,7 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
 
    const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile", "");
    const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath", "");
-   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", (Int_t) 1);
+   Int_t ff_randomprofile = RWebWindowWSHandler::GetBoolEnv("WebGui.FirefoxRandomProfile", 1);
    if (ff_profile && *ff_profile) {
       profile_arg = "-P "s + ff_profile;
    } else if (ff_profilepath && *ff_profilepath) {
