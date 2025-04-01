@@ -300,11 +300,7 @@ void ExampleWidget::GeoCanvasButton_clicked()
 
 void ExampleWidget::StandaloneBtn_clicked()
 {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-   gROOT->SetWebDisplay("qt5");
-#else
    gROOT->SetWebDisplay("qt6");
-#endif
 
    auto h1 = new TH1F("gaus_standalone", "Example of standalone TCanvas", 100, -5, 5);
    h1->FillRandom("gaus", 10000);
