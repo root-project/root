@@ -23,7 +23,6 @@
 // Import classes from the `Experimental` namespace for the time being.
 using ROOT::Experimental::RNTupleOpenSpec;
 using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleWriter;
 
 // Number of events to generate for each ntuple.
 constexpr int kNEvents = 10000;
@@ -37,7 +36,7 @@ void Write(std::string_view ntupleName, std::string_view fileName)
    auto fldVpz = model->MakeField<std::vector<float>>("vpz");
    auto fldN = model->MakeField<std::uint64_t>("vn");
 
-   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, fileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), ntupleName, fileName);
 
    for (int i = 0; i < kNEvents; ++i) {
       fldVpx->clear();

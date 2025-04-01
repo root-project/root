@@ -686,8 +686,7 @@ TEST(RPageSinkBuf, ParallelZipIMT)
          options.SetInitialUnzippedPageSize(4);
          options.SetMaxUnzippedPageSize(8);
          options.SetUseBufferedWrite(true);
-         auto writer =
-            ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
+         auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
          for (int c = 0; c < 2; c++) {
             writer->Fill();
             writer->Fill();
@@ -719,8 +718,8 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       auto u64Field = model->MakeField<std::uint64_t>("u64");
       auto u32Field = model->MakeField<std::uint16_t>("u32");
       auto strField = model->MakeField<std::string>("str");
-      auto ntuple = ROOT::Experimental::Internal::CreateRNTupleWriter(std::move(model),
-                                                                      std::make_unique<RPageSinkBuf>(std::move(sink)));
+      auto ntuple =
+         ROOT::Internal::CreateRNTupleWriter(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
       ntuple->Fill();
       ntuple->Fill();
       ntuple->Fill();
@@ -741,8 +740,8 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       auto u64Field = model->MakeField<std::uint64_t>("u64");
       auto u32Field = model->MakeField<std::uint32_t>("u32");
       auto strField = model->MakeField<std::string>("str");
-      auto ntuple = ROOT::Experimental::Internal::CreateRNTupleWriter(std::move(model),
-                                                                      std::make_unique<RPageSinkBuf>(std::move(sink)));
+      auto ntuple =
+         ROOT::Internal::CreateRNTupleWriter(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
       ntuple->Fill();
       ntuple->Fill();
       ntuple->CommitCluster();
@@ -814,7 +813,7 @@ TEST(RPageNullSink, Basics)
    auto wrPt = model->MakeField<float>("pt");
 
    auto sink = std::make_unique<RPageNullSink>("null", RNTupleWriteOptions());
-   auto ntuple = ROOT::Experimental::Internal::CreateRNTupleWriter(std::move(model), std::move(sink));
+   auto ntuple = ROOT::Internal::CreateRNTupleWriter(std::move(model), std::move(sink));
 
    *wrPt = 42.0;
    ntuple->Fill();

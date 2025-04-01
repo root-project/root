@@ -6,9 +6,6 @@
 
 #include <gtest/gtest.h>
 
-using ROOT::RNTupleModel;
-using ROOT::Experimental::RNTupleWriter;
-
 class UnifiedConstructor : public ::testing::Test {
 protected:
    std::vector<std::string> fFileNames{"dataframe_unified_constructor_0.root", "dataframe_unified_constructor_1.root"};
@@ -19,9 +16,9 @@ protected:
    {
       for (const auto &fName : fFileNames) {
          {
-            auto modelWrite = RNTupleModel::Create();
+            auto modelWrite = ROOT::RNTupleModel::Create();
             *modelWrite->MakeField<float>("ntuple_pt") = 11.f;
-            auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), fNTupleName, fName);
+            auto ntuple = ROOT::RNTupleWriter::Recreate(std::move(modelWrite), fNTupleName, fName);
             ntuple->Fill();
          }
          {

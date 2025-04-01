@@ -34,7 +34,6 @@
 
 // Import classes from experimental namespace for the time being
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 constexpr char const* kNTupleFileName = "ntpl001_staff.root";
 
@@ -62,7 +61,7 @@ void Ingest() {
 
    // We hand-over the data model to a newly created ntuple of name "Staff", stored in kNTupleFileName
    // In return, we get a unique pointer to an ntuple that we can fill
-   auto writer = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName);
 
    std::string record;
    while (std::getline(fin, record)) {

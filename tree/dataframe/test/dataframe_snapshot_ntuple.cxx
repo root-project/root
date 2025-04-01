@@ -15,9 +15,9 @@
 #include "NTupleStruct.hxx"
 
 using ROOT::RNTupleModel;
+using ROOT::RNTupleWriter;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleReader;
-using ROOT::Experimental::RNTupleWriter;
 
 using namespace ROOT::RDF;
 

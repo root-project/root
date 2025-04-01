@@ -25,11 +25,10 @@
 
    <script type='module'>
 
-      import { source_dir } from 'jsroot/core';
       import { connectWebWindow } from 'jsroot/webwindow';
       import { initEVE } from 'rootui5sys/eve7/eve.mjs';
 
-      initEVE(source_dir).then(() => connectWebWindow({
+      initEVE().then(() => connectWebWindow({
          // socket_kind: "file",  // used for offline
          ui5: true,
          //  openui5src: "https://openui5.hana.ondemand.com/1.128.0/",
