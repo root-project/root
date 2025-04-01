@@ -181,7 +181,7 @@ public:
    bool Empty() const { return fArr.empty(); }
 
    /// Add two `RPadLength`s.
-   friend RPadLength operator+(RPadLength lhs, const RPadLength &rhs)
+   friend RPadLength operator+(const RPadLength &lhs, const RPadLength &rhs)
    {
       RPadLength res;
       if (lhs.HasUser() || rhs.HasUser())
@@ -194,7 +194,7 @@ public:
    }
 
    /// Subtract two `RPadLength`s.
-   friend RPadLength operator-(RPadLength lhs, const RPadLength &rhs)
+   friend RPadLength operator-(const RPadLength &lhs, const RPadLength &rhs)
    {
       RPadLength res;
       if (lhs.HasUser() || rhs.HasUser())
