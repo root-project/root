@@ -776,6 +776,8 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.FirefoxProfilePath: file path to Firefox profile
 ///      WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for headless mode (dflt), 1 - always
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
+///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
+///      WebGui.CefUseViews: 1 - enable / 0 - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
 ///      WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
 ///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
