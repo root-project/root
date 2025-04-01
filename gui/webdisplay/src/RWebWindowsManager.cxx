@@ -649,7 +649,7 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
 
    auto wshandler = win->CreateWSHandler(Instance(), ++fIdCnt, dflt_tmout);
 
-   if (gEnv->GetValue("WebGui.RecordData", 0) > 0) {
+   if (RWebWindowWSHandler::GetBoolEnv("WebGui.RecordData") > 0) {
       std::string fname, prefix;
       if (fIdCnt > 1) {
          prefix = std::string("f") + std::to_string(fIdCnt) + "_";
@@ -774,14 +774,14 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.FirefoxInteractive: command to start Firefox in interactive mode, like "$prog --private-window \'$url\' &"
 ///      WebGui.FirefoxProfile: name of Firefox profile to use
 ///      WebGui.FirefoxProfilePath: file path to Firefox profile
-///      WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for headless mode (dflt), 1 - always
+///      WebGui.FirefoxRandomProfile: usage of random Firefox profile "no" - disabled, "yes" - enabled (default)
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
-///      WebGui.CefUseViews: 1 - enable / 0 - disable usage of CEF views frameworks (default is platform/version dependent)
+///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
-///      WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
+///      WebGui.RecordData: if specified enables data recording for each web window; "yes" or "no" (default)
 ///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
-///      WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
+///      WebGui.ForceHttp: "no" (default), "yes" - always create real http server to run web window
 ///      WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
 ///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.128.0/
@@ -823,7 +823,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    }
 
    bool normal_http = RWebDisplayHandle::NeedHttpServer(args);
-   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
+   if (!normal_http && (RWebWindowWSHandler::GetBoolEnv("WebGui.ForceHttp") > 0))
       normal_http = true;
 
    std::string key;
