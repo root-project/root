@@ -264,17 +264,19 @@ function createGrayPalette() {
    return new ColorPalette(palette);
 }
 
-/* eslint-disable @stylistic/js/comma-spacing */
-
 /** @summary Create color palette
   * @private */
 function getColorPalette(id, grayscale) {
    id = id || settings.Palette;
-   if ((id > 0) && (id < 10)) return createGrayPalette();
-   if (id < 51) return createDefaultPalette(grayscale);
-   if (id > 113) id = 57;
-   const stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
+   if ((id > 0) && (id < 10))
+      return createGrayPalette();
+   if (id < 51)
+      return createDefaultPalette(grayscale);
+   if (id > 113)
+      id = 57;
+   const stops = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
    let rgb;
+   /* eslint-disable @stylistic/js/comma-spacing */
    switch (id) {
       // Deep Sea
       case 51: rgb = [[0,9,13,17,24,32,27,25,29],[0,0,0,2,37,74,113,160,221],[28,42,59,78,98,129,154,184,221]]; break;
@@ -404,6 +406,7 @@ function getColorPalette(id, grayscale) {
       case 113: rgb = [[0,5,65,97,124,156,189,224,255],[32,54,77,100,123,148,175,203,234],[77,110,107,111,120,119,111,94,70]]; break;
       default: return createDefaultPalette();
    }
+   /* eslint-enable @stylistic/js/comma-spacing */
 
    const NColors = 255, Red = rgb[0], Green = rgb[1], Blue = rgb[2], palette = [];
 
