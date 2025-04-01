@@ -62,7 +62,7 @@ class LongPollSocket {
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
-         if (!browser.qt5 && !browser.qt6) console.error('No connection');
+         if (!browser.qt6) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
          if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
@@ -98,7 +98,7 @@ class LongPollSocket {
             const u8Arr = new Uint8Array(res);
             let str = '', i = 0, offset = u8Arr.length;
             if (offset < 4) {
-               if (!browser.qt5 && !browser.qt6) console.error(`longpoll got short message in raw mode ${offset}`);
+               if (!browser.qt6) console.error(`longpoll got short message in raw mode ${offset}`);
                return this.handle.processRequest(null);
             }
 
@@ -496,7 +496,7 @@ class WebWindowHandle {
    /** @summary Request server to resize window
      * @desc For local displays like CEF or qt5 only server can do this */
    resizeWindow(w, h) {
-      if (browser.qt5 || browser.qt6 || browser.cef3)
+      if (browser.qt6 || browser.cef3)
          this.send(`RESIZE=${w},${h}`, 0);
       else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
          window.resizeTo(w, h);
@@ -914,9 +914,7 @@ async function connectWebWindow(arg) {
       if (!arg.platform)
          arg.platform = d.get('platform');
 
-      if (arg.platform === 'qt5')
-         browser.qt5 = true;
-      else if (arg.platform === 'qt6')
+      if (arg.platform === 'qt6')
          browser.qt6 = true;
       else if (arg.platform === 'cef3')
          browser.cef3 = true;
@@ -938,7 +936,7 @@ async function connectWebWindow(arg) {
    }
 
    if (!arg.socket_kind) {
-      if (browser.qt5 || browser.qt6)
+      if (browser.qt6)
          arg.socket_kind = 'rawlongpoll';
       else if (browser.cef3)
          arg.socket_kind = 'longpoll';
@@ -965,7 +963,7 @@ async function connectWebWindow(arg) {
 
       if (typeof window !== 'undefined') {
          window.onbeforeunload = () => handle.close(true);
-         if (browser.qt5 || browser.qt6)
+         if (browser.qt6)
             window.onqt5unload = window.onbeforeunload;
       }
 

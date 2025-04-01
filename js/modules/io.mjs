@@ -2795,6 +2795,7 @@ class TFile {
       this.fStreamers = 0;
       this.fStreamerInfos = null;
       this.fFileName = '';
+      this.fTimeout = settings.FilesTimeout ?? 0;
       this.fStreamers = [];
       this.fBasicTypes = {}; // custom basic types, in most case enumerations
 
@@ -2825,6 +2826,28 @@ class TFile {
       this.fFileName = pos >= 0 ? this.fURL.slice(pos + 1) : this.fURL;
    }
 
+   /** @summary Set timeout for File instance
+    * @desc Timeout used when submitting http requests to the server */
+   setTimeout(v) {
+      this.fTimeout = v;
+   }
+
+   /** @summary Assign remap for web servers
+    * @desc Allows to specify fallback server if main server fails
+    * @param {Object} remap - looks like { 'https://original.server/': 'https://fallback.server/' } */
+   assignRemap(remap) {
+      if (!remap && !isObject(remap))
+         return;
+
+      for (const key in remap) {
+         if (this.fURL.indexOf(key) === 0) {
+            this.fURL2 = remap[key] + this.fURL.slice(key.length);
+            if (!this.fTimeout)
+               this.fTimeout = 10000;
+         }
+      }
+   }
+
    /** @summary Assign BufferArray with file contentOpen file
      * @private */
    assignFileContent(bufArray) {
@@ -2852,22 +2875,31 @@ class TFile {
             blobs = [], // array of requested segments
             promise = new Promise((resolve, reject) => { resolveFunc = resolve; rejectFunc = reject; });
 
-      let fileurl = file.fURL,
-          first = 0, last = 0,
+      let fileurl, first = 0, last = 0,
           // eslint-disable-next-line prefer-const
           read_callback, first_req,
           first_block_retry = false;
 
-      if (isStr(filename) && filename) {
-         const pos = fileurl.lastIndexOf('/');
-         fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
+      function setFileUrl(use_second) {
+         if (use_second) {
+            console.log('Failure - try to repait with URL2', file.fURL2);
+            file.fURL = file.fURL2;
+            delete file.fURL2;
+         }
+
+         fileurl = file.fURL;
+         if (isStr(filename) && filename) {
+            const pos = fileurl.lastIndexOf('/');
+            fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
+         }
       }
 
       function send_new_request(increment) {
          if (increment) {
             first = last;
             last = Math.min(first + file.fMaxRanges * 2, place.length);
-            if (first >= place.length) return resolveFunc(blobs);
+            if (first >= place.length)
+               return resolveFunc(blobs);
          }
 
          let fullurl = fileurl, ranges = 'bytes', totalsz = 0;
@@ -2891,6 +2923,9 @@ class TFile {
                xhr.setRequestHeader('Range', ranges);
                xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
+
+            if (file.fTimeout)
+               xhr.timeout = file.fTimeout;
 
             if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
                let sum1 = 0, sum2 = 0, sum_total = 0;
@@ -2931,6 +2966,10 @@ class TFile {
                file.fUseStampPar = false;
                return send_new_request();
             }
+            if (file.fURL2) {
+               setFileUrl(true);
+               return send_new_request();
+            }
             if (file.fAcceptRanges) {
                file.fAcceptRanges = false;
                first_block_retry = true;
@@ -2965,9 +3004,12 @@ class TFile {
          }
 
          if (!res) {
+            if (file.fURL2) {
+               setFileUrl(true);
+               return send_new_request();
+            }
             if ((first === 0) && (last > 2) && (file.fMaxRanges > 1)) {
                // server return no response with multi request - try to decrease ranges count or fail
-
                if (last / 2 > 200)
                   file.fMaxRanges = 200;
                else if (last / 2 > 50)
@@ -2979,11 +3021,9 @@ class TFile {
                else
                   file.fMaxRanges = 1;
                last = Math.min(last, file.fMaxRanges * 2);
-               // console.log(`Change maxranges to ${file.fMaxRanges} last ${last}`);
                return send_new_request();
             }
-
-            return rejectFunc(Error('Fail to read with several ranges'));
+            return rejectFunc(Error(`Fail to read with ${place.length/2} ranges max = ${file.fMaxRanges}`));
          }
 
          // if only single segment requested, return result as is
@@ -3128,6 +3168,8 @@ class TFile {
 
          send_new_request(true);
       };
+
+      setFileUrl();
 
       return send_new_request(true).then(() => promise);
    }
@@ -3874,14 +3916,17 @@ class TProxyFile extends TFile {
   *  - [ArrayBuffer]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer} instance with complete file content
   *  - [FileProxy]{@link FileProxy} let access arbitrary files via tiny proxy API
   * @param {string|object} arg - argument for file open like url, see details
+  * @param {object} [opts] - extra arguments
+  * @param {Number} [opts.timeout=0] - read timeout for http requests in ms
+  * @param {Object} [opts.remap={}] - http server remap to fallback when main server fails, like { 'https://original.server/': 'https://fallback.server/' }
   * @return {object} - Promise with {@link TFile} instance when file is opened
   * @example
   *
   * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
   * let f = await openFile('https://root.cern/js/files/hsimple.root');
   * console.log(`Open file ${f.getFileName()}`); */
-function openFile(arg) {
-   let file;
+function openFile(arg, opts) {
+   let file, plain_file;
 
    if (isNodeJs() && isStr(arg)) {
       if (arg.indexOf('file://') === 0)
@@ -3901,8 +3946,18 @@ function openFile(arg) {
    if (!file && isObject(arg) && arg.size && arg.name)
       file = new TLocalFile(arg);
 
-   if (!file)
+   if (!file) {
       file = new TFile(arg);
+      plain_file = true;
+      file.assignRemap(settings.FilesRemap);
+   }
+
+   if (opts && isObject(opts)) {
+      if (opts.timeout)
+         file.setTimeout(opts.timeout);
+      if (plain_file && opts.remap)
+         file.assignRemap(opts.remap);
+   }
 
    return file._open();
 }
