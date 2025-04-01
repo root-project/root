@@ -3018,8 +3018,8 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 ///  if expression in formula is: "[0]*(x>-[1])+[2]*exp(-[3]*x)"
 ///  and parameters are 3.25,-4.01,4.44,-0.04, GetExpFormula("p") will return:
 ///   "(3.25*(x>+4.01))+(4.44*exp(+0.04*x))"
-///  @note Floats are printed with `%g` (6 decimals). If you need more precision,
-///  use instead the non v5 version of this class.
+///  @note Floats when option contains "p" are printed with `%g` (6 decimals);
+///  if you need more precision, use instead the non-v5 version of this class.
 ///  @see https://cplusplus.com/reference/cstdio/printf/
 
 TString TFormula::GetExpFormula(Option_t *option) const
