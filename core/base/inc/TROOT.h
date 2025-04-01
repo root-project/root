@@ -124,7 +124,7 @@ protected:
    std::atomic<TApplication*> fApplication; ///< Pointer to current application
    TInterpreter    *fInterpreter;           ///< Command interpreter
    Bool_t          fBatch;                  ///< True if session without graphics
-   TString         fWebDisplay;             ///< If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
+   TString         fWebDisplay;             ///< If not empty it defines where web graphics should be rendered (cef, qt6, browser...)
    Bool_t          fIsWebDisplay;           ///< True if session uses web widgets
    Bool_t          fIsWebDisplayBatch;      ///< True if web widgets are not displayed
    Bool_t          fEditHistograms;         ///< True if histograms can be edited with the mouse
