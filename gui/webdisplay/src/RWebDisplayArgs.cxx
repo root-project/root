@@ -149,9 +149,8 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 ///      native - either chrome/edge or firefox, only these browsers support batch (headless) mode
 ///     default - default system web-browser, no batch mode
 ///         cef - Chromium Embeded Framework, local display, local communication
-///         qt5 - Qt5 QWebEngine, local display, local communication
 ///         qt6 - Qt6 QWebEngineCore, local display, local communication
-///       local - either cef or qt5 or qt6
+///       local - either cef or qt6
 ///         off - disable web display
 ///          on - first try "local", then "native", then "default" (default option)
 ///    `<prog>` - any program name which will be started to open widget URL, like "/usr/bin/opera"
@@ -192,8 +191,8 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       if ((pos > 0) && (kind[pos-1] == ';')) kind.resize(pos-1);
    }
 
-   // very special handling of qt5/qt6 which can specify pointer as a string
-   if ((kind.find("qt5:") == 0) || (kind.find("qt6:") == 0)) {
+   // very special handling of qt6 which can specify pointer as a string
+   if (kind.find("qt6:") == 0) {
       SetDriverData((void *) std::stoull(kind.substr(4)));
       kind.resize(3);
    }
@@ -346,22 +345,38 @@ std::string RWebDisplayArgs::GetCustomExec() const
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Returns string which can be used as argument in RWebWindow::Show() method
-/// to display web window in provided Qt5 QWidget.
+/// to display web window in provided Qt6 QWidget.
+///
+/// Kept for backward compatibility, use GetQtEmbedQualifier instead
+
+std::string RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt, unsigned qtversion)
+{
+   return GetQtEmbedQualifier(qparent, urlopt, qtversion);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Returns string which can be used as argument in RWebWindow::Show() method
+/// to display web window in provided Qt6 QWidget.
 ///
 /// After RWebWindow is displayed created QWebEngineView can be found with the command:
 ///
 ///     auto view = qparent->findChild<QWebEngineView*>("RootWebView");
 
-std::string RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt, unsigned qtversion)
+std::string RWebDisplayArgs::GetQtEmbedQualifier(const void *qparent, const std::string &urlopt, unsigned qtversion)
 {
-   std::string where = (qtversion >= 0x60000) ? "qt6" : "qt5";
-   if (qparent) {
-      where.append(":");
-      where.append(std::to_string((uintptr_t) qparent));
-   }
-   if (!urlopt.empty()) {
-      where.append("?");
-      where.append(urlopt);
+   std::string where;
+   if (qtversion < 0x60000) {
+      R__LOG_ERROR(WebGUILog()) << "GetQtEmbedQualifier no longer support Qt5";
+   } else {
+      where = "qt6";
+      if (qparent) {
+         where.append(":");
+         where.append(std::to_string((uintptr_t)qparent));
+      }
+      if (!urlopt.empty()) {
+         where.append("?");
+         where.append(urlopt);
+      }
    }
    return where;
 }
