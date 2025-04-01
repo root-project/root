@@ -39,7 +39,7 @@ The following people have contributed to this new version:
 * The ROOT splash screen was removed for Linux and macOS
 * Proof support has been completely removed form RooFit and RooStats, after it was already not working anymore for several releases
 * The build options `mysql`, `odbc`, `pgsql` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
-* The build options `html` and `qt5web` has been removed.
+* The build options `html` and `qt5web` have been removed.
 * The ClassImp macro and derived macros have no effect now and will be deprecated in ROOT 6.38.
 * The default TTreeFormula constructor (without arguments) is now deleted, since it lead to an unusable and unsafe object. Instead, this implementation has been reserved now for ROOT I/O exclusively via the TRootIOCtor argument tag.
 * The `RooStats::HLFactory` class was deprecated will be removed in ROOT 6.38. It provided little advantage over using the RooWorkspace directly or any of the other higher-level frameworks that exist in the RooFit ecosystem.
