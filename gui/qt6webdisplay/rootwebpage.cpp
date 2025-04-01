@@ -24,7 +24,7 @@ ROOT::RLogChannel &QtWebDisplayLog()
 }
 
 /** \class RootWebPage
-\ingroup qt5webdisplay
+\ingroup qt6webdisplay
 */
 
 

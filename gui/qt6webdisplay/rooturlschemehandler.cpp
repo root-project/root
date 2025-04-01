@@ -28,7 +28,7 @@
 #include "TBase64.h"
 
 /** \class UrlRequestJobHolder
-\ingroup qt5webdisplay
+\ingroup qt6webdisplay
 
 Class UrlRequestJobHolder
 Required to monitor state of QWebEngineUrlRequestJob
