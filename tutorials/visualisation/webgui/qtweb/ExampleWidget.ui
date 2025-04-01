@@ -19,7 +19,7 @@
       <item row="0" column="0" >
         <widget class="QLabel" name="textLabel1" >
           <property name="text" >
-            <string>This is an example of using ROOT qt5web/qt6web components. &lt;br>It shows some default Qt widgets plus RCanvas and TCanvas with graphics inside</string>
+            <string>This is an example of using ROOT qt6web components. &lt;br>It shows some default Qt widgets plus RCanvas and TCanvas with graphics inside</string>
           </property>
           <property name="wordWrap" >
             <bool>false</bool>
@@ -84,7 +84,7 @@
                         <string>Standalone</string>
                       </property>
                       <property name="toolTip" >
-                         <string>Start standalone TCanvas qt5web widget</string>
+                         <string>Start standalone TCanvas qtweb widget</string>
                       </property>
                     </widget>
                   </item>

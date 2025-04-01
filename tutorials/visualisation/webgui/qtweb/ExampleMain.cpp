@@ -16,17 +16,9 @@
 
 #include "ExampleWidget.h"
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QtWebEngine>
-#endif
 
 int main(int argc, char **argv)
 {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-   // must be called before creating QApplication, from Qt 5.13, not needed for Qt6
-   QtWebEngine::initialize();
-#endif
-
    argc = 1;                             // hide all additional parameters from ROOT and Qt
    TApplication app("uno", &argc, argv); // ROOT application
 
