@@ -2818,7 +2818,6 @@ void TROOT::SetBatch(Bool_t batch)
 ///  - "chrome": select Google Chrome browser for interactive web display
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
-///  - "qt5": uses QWebEngine from Qt5, no real http server started (requires `qt5web` component build for ROOT)
 ///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
 ///  - "cef": uses Chromium Embeded Framework, no real http server started (requires `cefweb` component build for ROOT)
 ///  - "local": select on of available local (without http server) engines like qt5/qt6/cef
