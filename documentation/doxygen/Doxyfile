@@ -1078,9 +1078,8 @@ EXCLUDE_PATTERNS       = */G__* \
                          *.dtd \
                          */graf3d/eve7/glu/* \
                          */gui/cefdisplay/* \
-                         */gui/qt5webdisplay/* \
                          */gui/qt6webdisplay/* \
-                         */tutorials/visualisation/webgui/qt5web/* \
+                         */tutorials/visualisation/webgui/qtweb/* \
                          */math/mathcore/src/CDT*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names

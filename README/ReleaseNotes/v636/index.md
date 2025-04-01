@@ -38,8 +38,8 @@ The following people have contributed to this new version:
 * The `RooDataSet` constructors to construct a dataset from a part of an existing dataset are deprecated and will be removed in ROOT 6.38. This is to avoid interface duplication. Please use `RooAbsData::reduce()` instead, or if you need to change the weight column, use the universal constructor with the `Import()`, `Cut()`, and `WeightVar()` arguments.
 * The ROOT splash screen was removed for Linux and macOS
 * Proof support has been completely removed form RooFit and RooStats, after it was already not working anymore for several releases
-* The build options `mysql`, `odbc`, `pgsql` and `qt5web` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
-* The build option `html` has been removed.
+* The build options `mysql`, `odbc`, `pgsql` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
+* The build options `html` and `qt5web` has been removed.
 * The ClassImp macro and derived macros have no effect now and will be deprecated in ROOT 6.38.
 * The default TTreeFormula constructor (without arguments) is now deleted, since it lead to an unusable and unsafe object. Instead, this implementation has been reserved now for ROOT I/O exclusively via the TRootIOCtor argument tag.
 * The `RooStats::HLFactory` class was deprecated will be removed in ROOT 6.38. It provided little advantage over using the RooWorkspace directly or any of the other higher-level frameworks that exist in the RooFit ecosystem.
