@@ -101,6 +101,12 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
 
    bool use_views = GuiHandler::PlatformInit();
 
+   TString env_use_views = gEnv->GetValue("WebGui.CefUseViews", "");
+   if ((env_use_views == "yes") || (env_use_views == "1"))
+      use_views = true;
+   else if ((env_use_views == "no") || (env_use_views == "0"))
+      use_views = false;
+
 #ifdef OS_WIN
    CefMainArgs main_args(GetModuleHandle(nullptr));
 #else
