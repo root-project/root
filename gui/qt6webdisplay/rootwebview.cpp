@@ -18,7 +18,7 @@
 #include <QDropEvent>
 
 /** \class RootWebView
-\ingroup qt5webdisplay
+\ingroup qt6webdisplay
 */
 
 RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height, int x, int y) :
