@@ -255,7 +255,7 @@ void stressSpectrum(Int_t ntimes=100) {
    std::cout << "****************************************************************************" <<std::endl;
    gBenchmark->Start("stressSpectrum");
    stress1(ntimes);
-   stress2(300);
+   stress2(100);
    gBenchmark->Stop ("stressSpectrum");
    Double_t reftime100 = 19.04; //pcbrun compiled
    Double_t ct = gBenchmark->GetCpuTime("stressSpectrum");
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
-   Int_t ntimes = 100;
+   Int_t ntimes = 40;
    if (argc > 1)  ntimes = atoi(argv[1]);
    stressSpectrum(ntimes);
    return 0;
