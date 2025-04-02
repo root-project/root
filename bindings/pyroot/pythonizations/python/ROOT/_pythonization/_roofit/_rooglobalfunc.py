@@ -37,7 +37,7 @@ ROOT.RooMCStudy(model, ROOT.RooArgSet(x), FitOptions=dict(Save=True, PrintEvalEr
 */
 """
 
-from ._utils import _kwargs_to_roocmdargs, _dict_to_flat_map, cpp_signature
+from ._utils import _dict_to_flat_map, _kwargs_to_roocmdargs, cpp_signature
 
 
 @cpp_signature(
