@@ -302,6 +302,12 @@ public:
       return GetView<T>(RetrieveFieldId(fieldName), objPtr, typeName);
    }
 
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr, const std::type_info &ti)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), objPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+   }
+
    /// Provides access to an individual (sub)field, reading its values into `rawPtr`.
    ///
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
@@ -315,6 +321,12 @@ public:
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr, std::string_view typeName)
    {
       return GetView<T>(RetrieveFieldId(fieldName), rawPtr, typeName);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr, const std::type_info &ti)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
    }
 
    /// Provides access to an individual (sub)field from its on-disk ID.
@@ -348,6 +360,12 @@ public:
       return RNTupleView<T>(std::move(field), range, objPtr);
    }
 
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr, const std::type_info &ti)
+   {
+      return GetView<T>(fieldId, objPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+   }
+
    /// Provides access to an individual (sub)field from its on-disk ID, reading its values into `rawPtr`.
    ///
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
@@ -366,6 +384,12 @@ public:
       auto field = RNTupleView<T>::CreateField(fieldId, *fSource, typeName);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return RNTupleView<T>(std::move(field), range, rawPtr);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr, const std::type_info &ti)
+   {
+      return GetView<T>(fieldId, rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
    }
 
    /// Provides direct access to the I/O buffers of a **mappable** (sub)field.
