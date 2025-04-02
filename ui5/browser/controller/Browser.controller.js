@@ -1027,7 +1027,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       assignRowHandlers() {
          let rows = this.byId("treeTable").getRows();
          for (let k = 0; k < rows.length; ++k) {
-            rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
+            rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]))
+                       .css('user-select', 'none');
          }
       },
 
