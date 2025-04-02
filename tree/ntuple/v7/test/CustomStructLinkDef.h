@@ -106,6 +106,14 @@
    "CoordinatesWithIORules" target = "fPhi,fR" include = "cmath" code =                                         \
       "{ fR = sqrt(onfile.fX * onfile.fX + onfile.fY * onfile.fY); fPhi = atan2(onfile.fY, onfile.fX); }"
 
+#pragma link C++ options = version(3) class LowPrecisionFloatWithIORules + ;
+
+#pragma read sourceClass = "LowPrecisionFloatWithIORules" source = "float fLast8BitsZero;" version =       \
+   "[3]" targetClass = "LowPrecisionFloatWithIORules" target = "fLast8BitsZero" include = "cstring,cstdint" code = \
+      "{ std::uint32_t bits; std::memcpy(&bits, &onfile.fLast8BitsZero, sizeof(bits)); \
+         bits |= 137; /* placeholder for randomizing the 8 LSBs */ \
+         std::memcpy(&fLast8BitsZero, &bits, sizeof(fLast8BitsZero)); }"
+
 #pragma link C++ class Cyclic + ;
 #pragma link C++ class CyclicCollectionProxy + ;
 #pragma link C++ class Unsupported + ;

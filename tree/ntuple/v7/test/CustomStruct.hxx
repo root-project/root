@@ -266,6 +266,11 @@ struct CoordinatesWithIORules {
    float fPhi; //!
 };
 
+struct LowPrecisionFloatWithIORules {
+   float fFoo;
+   float fLast8BitsZero; // the I/O rule will "randomize" the last 8 bits
+};
+
 struct Cyclic {
    std::vector<Cyclic> fMember;
 };
