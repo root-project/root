@@ -30,10 +30,10 @@ class DatasetContext:
     aux_tree_name_2 = "auxdata_2"
 
     def __init__(self):
-        with ROOT.TFile(self.main_file, "RECREATE") as f:
+        with ROOT.TFile(self.main_file, "RECREATE"):
             main_tree = ROOT.TTree(self.main_tree_name, self.main_tree_name)
-            idx = array.array('i', [0]) # any array can also be a numpy array
-            x = array.array('i', [0])
+            idx = array.array("i", [0])  # any array can also be a numpy array
+            x = array.array("i", [0])
             main_tree.Branch("idx", idx, "idx/I")
             main_tree.Branch("x", x, "x/I")
 
@@ -50,10 +50,10 @@ class DatasetContext:
             main_tree.Write()
 
         # The first auxiliary file has matching indices 1 and 2, but not 3
-        with ROOT.TFile(self.aux_file_1, "RECREATE") as f:
+        with ROOT.TFile(self.aux_file_1, "RECREATE"):
             aux_tree_1 = ROOT.TTree(self.aux_tree_name_1, self.aux_tree_name_1)
-            idx = array.array('i', [0]) # any array can also be a numpy array
-            y = array.array('i', [0])
+            idx = array.array("i", [0])  # any array can also be a numpy array
+            y = array.array("i", [0])
             aux_tree_1.Branch("idx", idx, "idx/I")
             aux_tree_1.Branch("y", y, "y/I")
 
@@ -67,10 +67,10 @@ class DatasetContext:
             aux_tree_1.Write()
 
         # The second auxiliary file has matching indices 1 and 3, but not 2
-        with ROOT.TFile(self.aux_file_2, "RECREATE") as f:
+        with ROOT.TFile(self.aux_file_2, "RECREATE"):
             aux_tree_2 = ROOT.TTree(self.aux_tree_name_2, self.aux_tree_name_2)
-            idx = array.array('i', [0]) # any array can also be a numpy array
-            z = array.array('i', [0])
+            idx = array.array("i", [0])  # any array can also be a numpy array
+            z = array.array("i", [0])
             aux_tree_2.Branch("idx", idx, "idx/I")
             aux_tree_2.Branch("z", z, "z/I")
 
@@ -132,8 +132,7 @@ def df037_TTreeEventMatching(dataset: DatasetContext):
         .DefaultValueFor(aux_tree_1_coly, default_value)
         .DefaultValueFor(aux_tree_2_colidx, default_value)
         .DefaultValueFor(aux_tree_2_colz, default_value)
-        .Display(
-            ("idx", aux_tree_1_colidx, aux_tree_2_colidx, "x", aux_tree_1_coly, aux_tree_2_colz))
+        .Display(("idx", aux_tree_1_colidx, aux_tree_2_colidx, "x", aux_tree_1_coly, aux_tree_2_colz))
     )
 
     # Example 2: skip the entire entry when there was no match for a column
@@ -143,12 +142,11 @@ def df037_TTreeEventMatching(dataset: DatasetContext):
         df.DefaultValueFor(aux_tree_2_colidx, default_value)
         .DefaultValueFor(aux_tree_2_colz, default_value)
         .FilterAvailable(aux_tree_1_coly)
-        .Display(
-                ("idx", aux_tree_1_colidx, aux_tree_2_colidx, "x", aux_tree_1_coly, aux_tree_2_colz))
+        .Display(("idx", aux_tree_1_colidx, aux_tree_2_colidx, "x", aux_tree_1_coly, aux_tree_2_colz))
     )
 
-   # Example 3: Keep entries from the main tree for which there is no
-   # corresponding match in entries of the first auxiliary tree
+    # Example 3: Keep entries from the main tree for which there is no
+    # corresponding match in entries of the first auxiliary tree
     display_3 = df.FilterMissing(aux_tree_1_colidx).Display(("idx", "x"))
 
     print("Example 1: provide default values for all columns")
