@@ -696,18 +696,10 @@ namespace {
 #elif __APPLE__
     if (Triple.isMacOSX())
       if (CI.getTarget().getSDKVersion() >= VersionTuple(14, 4)) {
-        if (CI.getTarget().getSDKVersion() < VersionTuple(15, 4)) {
-          maybeAppendOverlayEntry(stdIncLoc.str(),
-                                  "std_darwin.MacOSX15.2.sdk.modulemap",
-                                  clingIncLoc.str().str(), MOverlay,
-                                  /*RegisterModuleMap=*/true,
-                                  /*AllowModulemapOverride=*/false);
-        } else {
-          maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.modulemap",
-                                  clingIncLoc.str().str(), MOverlay,
-                                  /*RegisterModuleMap=*/true,
-                                  /*AllowModulemapOverride=*/false);
-        }
+        maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.modulemap",
+                                clingIncLoc.str().str(), MOverlay,
+                                /*RegisterModuleMap=*/true,
+                                /*AllowModulemapOverride=*/false);
       }
 #else
     maybeAppendOverlayEntry(cIncLoc.str(), "libc.modulemap",
