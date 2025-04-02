@@ -102,7 +102,7 @@ Transformations are a way to manipulate the data.
 | DefaultValueFor() | If the value of the input column is missing, provide a default value instead. |
 | Define() | Create a new column in the dataset. Example usages include adding a column that contains the invariant mass of a particle, or a selection of elements of an array (e.g. only the `pt`s of "good" muons). |
 | DefinePerSample() | Define a new column that is updated when the input sample changes, e.g. when switching tree being processed in a chain. |
-| DefineSlot() | Same as Define(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe Define() transformation when using RDataFrame after ROOT::EnableImplicitMT(). DefineSlot() works just as well with single-thread execution: in that case `slot` will always be `0`.  |
+| DefineSlot() | Same as Define(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, in the range [0, nThread-1], for each thread of execution. This is meant as a helper in writing thread-safe Define() transformations when using RDataFrame after ROOT::EnableImplicitMT(). DefineSlot() works just as well with single-thread execution: in that case `slot` will always be `0`.  |
 | DefineSlotEntry() | Same as DefineSlot(), but the entry number is passed in addition to the slot number. This is meant as a helper in case the expression depends on the entry number. For details about entry numbers in multi-threaded runs, see [here](\ref helper-cols). |
 | Filter() | Filter rows based on user-defined conditions. |
 | FilterAvailable() | Specialized Filter. If the value of the input column is available, keep the entry, otherwise discard it. |
@@ -1017,9 +1017,9 @@ which eliminates all risks of race conditions.
 In order to facilitate writing of thread-safe operations, some RDataFrame features such as Foreach(), Define() or \link ROOT::RDF::RResultPtr::OnPartialResult OnPartialResult()\endlink
 offer thread-aware counterparts (ForeachSlot(), DefineSlot(), \link ROOT::RDF::RResultPtr::OnPartialResultSlot OnPartialResultSlot()\endlink): their only difference is that they
 will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
-concurrently, RDataFrame guarantees that different threads will employ different values of the `slot` parameter,
-where `slot` will be a number between 0 and `GetNSlots() - 1`.
-In other words, within a slot, computation runs sequentially and events are processed sequentially.
+concurrently, RDataFrame guarantees that different threads will see different values of the `slot` parameter,
+where `slot` will be a number between 0 and `GetNSlots() - 1`. Note that not all slot numbers may be reached, or some slots may be reached more often depending on how computation tasks are scheduled.
+In other words, within a slot, computations run sequentially, and events are processed sequentially.
 Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
 will never receive the same slot at the same time.
 This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different

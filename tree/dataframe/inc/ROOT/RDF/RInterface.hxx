@@ -462,6 +462,7 @@ public:
    /// of the columns that the expression takes as input. The first parameter is reserved for an unsigned integer
    /// representing a "slot number". RDataFrame guarantees that different threads will invoke the expression with
    /// different slot numbers - slot numbers will range from zero to ROOT::GetThreadPoolSize()-1.
+   /// Note that there is no guarantee as to how often each slot will be reached during the event loop.
    ///
    /// The following two calls are equivalent, although `DefineSlot` is slightly more performant:
    /// ~~~{.cpp}
@@ -490,8 +491,9 @@ public:
    /// columns. The expression must be a callable of signature R(unsigned int, ULong64_t, T1, T2, ...) where `T1, T2...`
    /// are the types of the columns that the expression takes as input. The first parameter is reserved for an unsigned
    /// integer representing a "slot number". RDataFrame guarantees that different threads will invoke the expression with
-   /// different slot numbers - slot numbers will range from zero to ROOT::GetThreadPoolSize()-1. The second parameter
-   /// is reserved for a `ULong64_t` representing the current entry being processed by the current thread.
+   /// different slot numbers - slot numbers will range from zero to ROOT::GetThreadPoolSize()-1.
+   /// Note that there is no guarantee as to how often each slot will be reached during the event loop.
+   /// The second parameter is reserved for a `ULong64_t` representing the current entry being processed by the current thread.
    ///
    /// The following two `Define`s are equivalent, although `DefineSlotEntry` is slightly more performant:
    /// ~~~{.cpp}
