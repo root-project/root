@@ -832,7 +832,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  *                                                  \f]
  * <tr><td> `Range(double lo, double hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
  * <tr><td> `SumCoefRange(const char* name)`  <td> Set the range in which to interpret the coefficients of RooAddPdf components
- * <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on num CPUs
+ * <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on num CPUs. (Currently, this setting is ignored with the **cpu** Backend.)
  *   <table>
  *   <tr><th> Strategy   <th> Effect
  *   <tr><td> 0 = RooFit::BulkPartition - *default* <td> Divide events in N equal chunks
@@ -851,10 +851,10 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * <tr><td> `EvalBackend(std::string const&)` <td> Choose a likelihood evaluation backend:
  *   <table>
  *   <tr><th> Backend <th> Description
- *   <tr><td> **cpu** - *default* <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation.
+ *   <tr><td> **cpu** - *default* <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation (currently on a single thread).
  *                         Since ROOT 6.23, this is the default if `EvalBackend()` is not passed, succeeding the **legacy** backend.
  *                         If all RooAbsArg objects in the model support vectorized evaluation,
- *                         likelihood computations are 2 to 10 times faster than with the **legacy** backend
+ *                         likelihood computations are 2 to 10 times faster than with the **legacy** backend (each on a single thread).
  *                         - unless your dataset is so small that the vectorization is not worth it.
  *                         The relative difference of the single log-likelihoods with respect to the legacy mode is usually better than \f$10^{-12}\f$,
  *                         and for fit parameters it's usually better than \f$10^{-6}\f$. In past ROOT releases, this backend could be activated with the now deprecated `BatchMode()` option.
@@ -864,6 +864,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  *                          This backend can drastically speed up the fit if all RooAbsArg object in the model support it.
  *   <tr><td> **legacy** <td> The original likelihood evaluation method.
  *                            Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
+ *                            It supports multi-threading, but you might need more than 20 threads to maybe see about 10% performance gain over the default cpu-backend (that runs currently only on a single thread).
  *   <tr><td> **codegen** <td> **Experimental** - Generates and compiles minimal C++ code for the NLL on-the-fly and wraps it in the returned RooAbsReal.
  *                             Also generates and compiles the code for the gradient using Automatic Differentiation (AD) with [Clad](https://github.com/vgvassilev/clad).
  *                             This analytic gradient is passed to the minimizer, which can result in significant speedups for many-parameter fits,
