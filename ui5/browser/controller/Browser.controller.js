@@ -15,6 +15,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/ProgressIndicator',
                'sap/m/Page',
                'sap/ui/core/mvc/XMLView',
+               'sap/ui/core/dnd/DropInfo',
                'sap/ui/core/Icon',
                'sap/m/Button',
                'sap/m/library',
@@ -44,6 +45,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            mProgressIndicator,
            mPage,
            XMLView,
+           DropInfo,
            CoreIcon,
            Button,
            mLibrary,
@@ -276,6 +278,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          t.attachEvent("columnResize", {}, evnt => {
             this._columnResized++;
          }, this);
+
+         this.byId("tabContainer").addDragDropConfig(new DropInfo({
+            drop: event => this.onDrop(event)
+         }));
       },
 
       /* =========================================== */
@@ -1032,6 +1038,32 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
+      onDragStart(oEvent) {
+         const oDraggedRow = oEvent.getParameter("target"),
+               oDragSession = oEvent.getParameter("dragSession"),
+               ctxt = oDraggedRow.getBindingContext(),
+               prop = ctxt?.getProperty(ctxt?.getPath());
+
+         // do not support dragging of folders or elements without path
+         if (!prop?.isLeaf || !prop?.path)
+            return oEvent.preventDefault();
+
+         oDragSession.setComplexData("item_property", prop);
+
+         console.log('start dragging ', prop.path);
+      },
+
+      onDrop(oEvent) {
+         const oDragSession = oEvent.getParameter("dragSession"),
+               prop = oDragSession.getComplexData("item_property");
+
+         console.log('handle drop', prop.path);
+
+         this.websocket.send("DROP:" + JSON.stringify(prop.path));
+
+         this.invokeWarning("Processing drop of: " + prop.name, 1000);
+      },
+
       /** @summary Double-click event handler */
       onRowDblClick(row) {
          let ctxt = row.getBindingContext(),
@@ -1047,7 +1079,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this._oSettingsModel.getProperty("/DBLCLKRun"))
             exec = "exec";
 
-         let args = prop.path.slice(); // make copy of array
+         const args = prop.path.slice(); // make copy of array
          args.push(opt, exec);
 
          this.websocket.send("DBLCLK:" + JSON.stringify(args));
