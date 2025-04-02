@@ -3266,29 +3266,29 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * @return A vector (RVec<Common_t>) containing @p n evenly spaced values from @p start to @p end inclusive.
  *
  * @note If @p n is 1, the resulting vector will contain only the value @p start.
- * @note The check `if (!n || (n > LLONG_MAX))` is used to ensure that:
+ * @note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
  *   - n is nonzero, and
- *   - n does not exceed LLONG_MAX, which would indicate that a negative range (or other arithmetic issue)
+ *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
  *
  * @par Example code, at the ROOT prompt:
  * ~~~{.cpp}
  * using namespace ROOT::VecOps;
- * cout << LinSpace(-1, 5, 5) << "\n";
+ * cout << Linspace(-1, 5, 5) << "\n";
  * // { -1, 0.5, 2, 3.5, 5 }
- * cout << LinSpace(3, 12, 5) << "\n";
+ * cout << Linspace(3, 12, 5) << "\n";
  * // { 3, 5.25, 7.5, 9.75, 12 }
- * cout << LinSpace(1.4, 13.66, 5) << "\n";
+ * cout << Linspace(1.4, 13.66, 5) << "\n";
  * // { 1.4, 4.465, 7.53, 10.595, 13.66 }
  * ~~~
  */
 template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
-inline RVec<Common_t> LinSpace(T1 start, T2 end, unsigned long long n = 128)
+inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128)
 {
     RVec<Common_t> temp;
     
-    if (!n || (n > LLONG_MAX)) // Check for invalid or absurd n.
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
         return temp;
     }
@@ -3331,29 +3331,29 @@ inline RVec<Common_t> LinSpace(T1 start, T2 end, unsigned long long n = 128)
  * computed as \f$base^{(start + i \cdot \text{step})}\f$, with \f$\text{step} = \frac{end - start}{n - 1}\f$.
  *
  * @note If @p n is 1, the resulting vector will contain only the value \f$base^{start}\f$.
- * @note The check `if (!n || (n > LLONG_MAX))` is used to ensure that:
+ * @note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
  *   - n is nonzero, and
- *   - n does not exceed LLONG_MAX, which would indicate that a negative range (or other arithmetic issue)
+ *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
  *
  * @par Example code, at the ROOT prompt:
  * ~~~{.cpp}
  * using namespace ROOT::VecOps;
- * cout << LogSpace(4, 10, 12) << '\n';
+ * cout << Logspace(4, 10, 12) << '\n';
  * // { 10000, 35111.9, 123285, 432876, 1.51991e+06, 5.3367e+06, 1.87382e+07, 6.57933e+07, 2.31013e+08, 8.11131e+08, 2.84804e+09, 1e+10 }
- * cout << LogSpace(0, 0, 50) << '\n';
+ * cout << Logspace(0, 0, 50) << '\n';
  * // { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
- * cout << LogSpace(0, 0, 0) << '\n';
+ * cout << Logspace(0, 0, 0) << '\n';
  * // {  }
  * ~~~
  */
 template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
-inline RVec<Common_t> LogSpace(T1 start, T2 end, unsigned long long n = 128, T3 base = 10.0)
+inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, T3 base = 10.0)
 {
     RVec<Common_t> temp;
     
-    if (!n || (n > LLONG_MAX)) // Check for invalid or absurd n.
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
         return temp;
     }
@@ -3400,9 +3400,9 @@ inline RVec<Common_t> LogSpace(T1 start, T2 end, unsigned long long n = 128, T3 
  * @return A vector (RVec<Common_t>) containing values starting at @p start, each incremented by @p step,
  *         up to but not including any value equal to or greater than @p end.
  *
- * @note The check `if (!n || (n > LLONG_MAX))` is used to ensure that:
+ * @note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
  *   - n is nonzero, and
- *   - n does not exceed LLONG_MAX, which would indicate that a negative range (or other arithmetic issue)
+ *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
  *
@@ -3423,7 +3423,7 @@ inline RVec<Common_t> Arange(T1 start, T2 end, T3 step)
     RVec<Common_t> temp;
     unsigned long long n = std::ceil(static_cast<Common_t>(end-start)/static_cast<Common_t>(step)); // Ensure floating-point division.
     
-    if (!n || (n > LLONG_MAX)) // Check for invalid or absurd n.
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
         return temp;
     }
