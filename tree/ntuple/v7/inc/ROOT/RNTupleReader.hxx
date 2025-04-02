@@ -285,6 +285,12 @@ public:
    }
 
    template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr, const std::type_info &ti)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), objPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+   }
+
+   template <typename T>
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
@@ -294,6 +300,12 @@ public:
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr, std::string_view typeName)
    {
       return GetView<T>(RetrieveFieldId(fieldName), rawPtr, typeName);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr, const std::type_info &ti)
+   {
+      return GetView<T>(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
    }
 
    template <typename T>
@@ -322,6 +334,12 @@ public:
    }
 
    template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr, const std::type_info &ti)
+   {
+      return GetView<T>(fieldId, objPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+   }
+
+   template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
    {
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
@@ -336,6 +354,12 @@ public:
       auto field = RNTupleView<T>::CreateField(fieldId, *fSource, typeName);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return RNTupleView<T>(std::move(field), range, rawPtr);
+   }
+
+   template <typename T>
+   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr, const std::type_info &ti)
+   {
+      return GetView<T>(fieldId, rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
    }
 
    template <typename T>

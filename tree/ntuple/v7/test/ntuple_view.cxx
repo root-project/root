@@ -557,7 +557,7 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
    // Read "foo" as std::int32_t (instead of its on-disk type std::uint64_t)
    auto int32SharedPtr = std::make_shared<std::int32_t>();
 
-   // Raw pointer interface
+   // Raw pointer interface from type name string
    {
       auto viewFoo = reader->GetView<void>("foo", int32SharedPtr.get(), "std::int32_t");
       viewFoo(0);
@@ -565,9 +565,25 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
       EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
    }
 
-   // Shared pointer interface
+   // Raw pointer interface from std::type_info
+   {
+      auto viewFoo = reader->GetView<void>("foo", int32SharedPtr.get(), typeid(std::int32_t));
+      viewFoo(0);
+      EXPECT_EQ(42, *int32SharedPtr);
+      EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
+   }
+
+   // Shared pointer interface from type name string
    {
       auto viewFoo = reader->GetView<void>("foo", int32SharedPtr, "std::int32_t");
+      viewFoo(0);
+      EXPECT_EQ(42, *int32SharedPtr);
+      EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
+   }
+
+   // Shared pointer interface from std::type_info
+   {
+      auto viewFoo = reader->GetView<void>("foo", int32SharedPtr, typeid(std::int32_t));
       viewFoo(0);
       EXPECT_EQ(42, *int32SharedPtr);
       EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
@@ -584,13 +600,25 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
    // Read "baz" as std::vector<double> (instead of its on-disk type std::vector<float>)
    std::vector<double> doubleVec;
    void *doubleVecPtr = &doubleVec;
-
    std::vector<double> expDoubleVec{1., 2., 3.};
-   auto viewBaz = reader->GetView<void>("baz", doubleVecPtr, "std::vector<double>");
-   viewBaz(0);
-   EXPECT_EQ(expDoubleVec, viewBaz.GetValue().GetRef<std::vector<double>>());
-   EXPECT_STREQ("baz", viewBaz.GetField().GetFieldName().c_str());
-   EXPECT_STREQ("std::vector<double>", viewBaz.GetField().GetTypeName().c_str());
+
+   // From type name string
+   {
+      auto viewBaz = reader->GetView<void>("baz", doubleVecPtr, "std::vector<double>");
+      viewBaz(0);
+      EXPECT_EQ(expDoubleVec, viewBaz.GetValue().GetRef<std::vector<double>>());
+      EXPECT_STREQ("baz", viewBaz.GetField().GetFieldName().c_str());
+      EXPECT_STREQ("std::vector<double>", viewBaz.GetField().GetTypeName().c_str());
+   }
+
+   // From std::type_info
+   {
+      auto viewBaz = reader->GetView<void>("baz", doubleVecPtr, typeid(std::vector<double>));
+      viewBaz(0);
+      EXPECT_EQ(expDoubleVec, viewBaz.GetValue().GetRef<std::vector<double>>());
+      EXPECT_STREQ("baz", viewBaz.GetField().GetFieldName().c_str());
+      EXPECT_STREQ("std::vector<double>", viewBaz.GetField().GetTypeName().c_str());
+   }
 
    try {
       std::vector<int> intVec;
