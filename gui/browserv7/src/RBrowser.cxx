@@ -508,6 +508,34 @@ std::string RBrowser::ProcessDblClick(unsigned connid, std::vector<std::string> 
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Process drop of item in the current tab
+
+std::string RBrowser::ProcessDrop(unsigned connid, std::vector<std::string> &args)
+{
+   auto path = fBrowsable.GetWorkingPath();
+   path.insert(path.end(), args.begin(), args.end());
+
+   R__LOG_DEBUG(0, BrowserLog()) << "DoubleClick " << Browsable::RElement::GetPathAsString(path);
+
+   auto elem = fBrowsable.GetSubElement(path);
+   if (!elem) return ""s;
+
+   fLastProgressSend = 0;
+   Browsable::RProvider::ProgressHandle handle(elem.get(), [this, connid](float progress, void *) {
+      SendProgress(connid, progress);
+   });
+
+   auto widget = GetActiveWidget();
+   if (widget && widget->DrawElement(elem, "<append>")) {
+      widget->SetPath(path);
+      return widget->SendWidgetContent();
+   }
+
+   return ""s;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Show or update RBrowser in web window
 /// If web window already started - just refresh it like "reload" button does
 /// If no web window exists or \param always_start_new_browser configured, starts new window
@@ -794,6 +822,9 @@ void RBrowser::ProcessPostponedRequests()
    if (kind == "DBLCLK") {
       reply = ProcessDblClick(connid, arr);
       if (reply.empty()) reply = "NOPE";
+   } else if (kind == "DROP") {
+      reply = ProcessDrop(connid, arr);
+      if (reply.empty()) reply = "NOPE";
    }
 
    if (!reply.empty())
@@ -830,6 +861,19 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
       if (arr && (arr->size() > 2)) {
+         arr->push_back(kind);
+         arr->push_back(std::to_string(connid));
+         fPostponed.push_back(*arr);
+         if (fPostponed.size() == 1)
+            fTimer->TurnOn();
+      } else {
+         fWebWindow->Send(connid, "NOPE");
+      }
+
+   } else if (kind == "DROP") {
+
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
+      if (arr && arr->size()) {
          arr->push_back(kind);
          arr->push_back(std::to_string(connid));
          fPostponed.push_back(*arr);
