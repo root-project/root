@@ -457,7 +457,7 @@ const char *TAxis::GetBinLabel(Int_t bin) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return first bin on the axis
 /// i.e. 1 if no range defined
-/// NOTE: in some cases a zero is returned (see TAxis::SetRange)
+/// \note in some cases a zero is returned (see TAxis::SetRange)
 
 Int_t TAxis::GetFirst() const
 {
@@ -468,7 +468,7 @@ Int_t TAxis::GetFirst() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return last bin on the axis
 /// i.e. fNbins if no range defined
-/// NOTE: in some cases a zero is returned (see TAxis::SetRange)
+/// \note in some cases a zero is returned (see TAxis::SetRange)
 
 Int_t TAxis::GetLast() const
 {
