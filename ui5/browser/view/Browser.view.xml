@@ -4,6 +4,7 @@
           xmlns:mvc="sap.ui.core.mvc"
           xmlns:t="sap.ui.table"
           xmlns:core="sap.ui.core"
+          xmlns:dnd="sap.ui.core.dnd"
           xmlns:l="sap.ui.layout"
           xmlns:tnt="sap.tnt">
   <Page showSubHeader="false" showHeader="false" showFooter="false">
@@ -54,6 +55,9 @@
                     <t:layoutData>
                       <FlexItemData growFactor="1"/>
                     </t:layoutData>
+                    <t:dragDropConfig>
+                      <dnd:DragDropInfo  sourceAggregation="rows" dragStart="onDragStart"/>
+                    </t:dragDropConfig>
                   </t:TreeTable>
                 </ScrollContainer>
               </content>
