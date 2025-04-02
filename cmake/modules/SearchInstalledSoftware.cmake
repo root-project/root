@@ -54,7 +54,7 @@ endmacro()
 # stop the configuration with a FATAL_ERROR in case of fail-on-missing=ON.
 #----------------------------------------------------------------------------
 macro(ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION option_name)
-  ROOT_CHECK_CONNECTION("$(option_name)=OFF")
+  ROOT_CHECK_CONNECTION("${option_name}=OFF")
   if(NO_CONNECTION)
     message(STATUS "No internet connection, disabling '${option_name}' option")
     set(${option_name} OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
