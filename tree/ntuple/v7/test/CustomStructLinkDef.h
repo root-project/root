@@ -72,10 +72,7 @@
 
 #pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[1-99]" targetClass = \
    "StructWithIORulesBase" target = "b" code = "{ b = onfile.a + 1.0f; }"
-// Including a non-transient member in `target` should issue a warning and ignore the rule; thus, `a` remains unchanged
-// in the test
-#pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[1-]" targetClass = \
-   "StructWithIORulesBase" target = "a" code = "{ a = 0.0f; }"
+
 // This rule is ignored due to type version mismatch
 #pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[100-]" targetClass = \
    "StructWithIORulesBase" target = "b" code = "{ b = 0.0f; }"
