@@ -676,9 +676,6 @@ private:
   /// files.
   llvm::DenseSet<LoadedMacroInfo> LoadedUndefs;
 
-  /// \Token literal data loaded and owned by us.
-  std::vector<std::string *> TokenLiteralDataLoaded;
-
   using GlobalMacroMapType =
       ContinuousRangeMap<serialization::MacroID, ModuleFile *, 4>;
 
