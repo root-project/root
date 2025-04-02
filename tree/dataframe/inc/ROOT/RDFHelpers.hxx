@@ -161,15 +161,19 @@ RNode AsRNode(NodeType node)
 }
 
 // clang-format off
-/// Trigger the event loop of multiple RDataFrames concurrently
-/// \param[in] handles A vector of RResultHandles
-/// \return The number of distinct computation graphs that have been processed
+/// Run the event loops of multiple RDataFrames concurrently.
+/// \param[in] handles A vector of RResultHandles whose event loops should be run.
+/// \return The number of distinct computation graphs that have been processed.
 ///
 /// This function triggers the event loop of all computation graphs which relate to the
 /// given RResultHandles. The advantage compared to running the event loop implicitly by accessing the
 /// RResultPtr is that the event loops will run concurrently. Therefore, the overall
-/// computation of all results is generally more efficient.
+/// computation of all results can be scheduled more efficiently.
 /// It should be noted that user-defined operations (e.g., Filters and Defines) of the different RDataFrame graphs are assumed to be safe to call concurrently.
+/// RDataFrame will pass slot numbers in the range [0, NThread-1] to all helpers used in nodes such as DefineSlot. NThread is the number of threads ROOT was
+/// configured with in EnableImplicitMT().
+/// Slot numbers are unique across all graphs, so no two tasks with the same slot number will run concurrently. Note that it is not guaranteed that each slot
+/// number will be reached in every graph.
 ///
 /// ~~~{.cpp}
 /// ROOT::RDataFrame df1("tree1", "file1.root");
