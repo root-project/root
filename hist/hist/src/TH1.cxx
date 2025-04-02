@@ -7889,7 +7889,7 @@ void TH1::PutStats(Double_t *stats)
 /// The number of entries is set to the total bin content or (in case of weighted histogram)
 /// to number of effective entries
 ///
-/// Note that, by default, before calling this function, statistics are those
+/// \note By default, before calling this function, statistics are those
 /// computed at fill time, which are unbinned. See TH1::GetStats.
 
 void TH1::ResetStats()
@@ -7905,7 +7905,29 @@ void TH1::ResetStats()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the sum of all weights including under/overflows.
+/// \note Different from GetSumOfWeights, that excludes those
+
+Double_t TH1::GetSumOfAllWeights() const
+{
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
+
+   Int_t bin,binx,biny,binz;
+   Double_t sum =0;
+   for(binz=0; binz<=fZaxis.GetNbins()+1; binz++) {
+      for(biny=0; biny<=fYaxis.GetNbins()+1; biny++) {
+         for(binx=0; binx<=fXaxis.GetNbins()+1; binx++) {
+            bin = GetBin(binx,biny,binz);
+            sum += RetrieveBinContent(bin);
+         }
+      }
+   }
+   return sum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the sum of weights excluding under/overflows.
+/// \note Different from GetSumOfAllWeights, that includes those
 
 Double_t TH1::GetSumOfWeights() const
 {
