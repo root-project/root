@@ -166,8 +166,13 @@ Further examples can be found in the tutorials:
 \endpythondoc
 """
 
+from ROOT._pythonization._memory_utils import (
+    _SetDirectory_SetOwnership,
+    inject_clone_releasing_ownership,
+    inject_constructor_releasing_ownership,
+)
+
 from . import pythonization
-from ROOT._pythonization._memory_utils import inject_constructor_releasing_ownership, inject_clone_releasing_ownership, _SetDirectory_SetOwnership
 
 # Multiplication by constant
 
@@ -204,7 +209,7 @@ def _FillWithNumpyArray(self, *args):
     # If the first argument has no len() method, we don't even need to consider
     # the array code path.
     if not isinstance(args[0], collections.abc.Sized):
-       return self._Fill(*args)
+        return self._Fill(*args)
 
     import numpy as np
 

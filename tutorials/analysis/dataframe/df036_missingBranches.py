@@ -24,16 +24,16 @@ class DatasetContext:
     filenames = [
         "df036_missingBranches_py_file_1.root",
         "df036_missingBranches_py_file_2.root",
-        "df036_missingBranches_py_file_3.root"
+        "df036_missingBranches_py_file_3.root",
     ]
     treenames = ["tree_1", "tree_2", "tree_3"]
     nentries = 5
 
     def __init__(self):
-        with ROOT.TFile(self.filenames[0], "RECREATE") as f:
+        with ROOT.TFile(self.filenames[0], "RECREATE"):
             t = ROOT.TTree(self.treenames[0], self.treenames[0])
-            x = array.array('i', [0]) # any array can also be a numpy array
-            y = array.array('i', [0])
+            x = array.array("i", [0])  # any array can also be a numpy array
+            y = array.array("i", [0])
             t.Branch("x", x, "x/I")
             t.Branch("y", y, "y/I")
 
@@ -44,9 +44,9 @@ class DatasetContext:
 
             t.Write()
 
-        with ROOT.TFile(self.filenames[1], "RECREATE") as f:
+        with ROOT.TFile(self.filenames[1], "RECREATE"):
             t = ROOT.TTree(self.treenames[1], self.treenames[1])
-            y = array.array('i', [0]) # any array can also be a numpy array
+            y = array.array("i", [0])  # any array can also be a numpy array
             t.Branch("y", y, "y/I")
 
             for i in range(1, self.nentries + 1):
@@ -55,9 +55,9 @@ class DatasetContext:
 
             t.Write()
 
-        with ROOT.TFile(self.filenames[2], "RECREATE") as f:
+        with ROOT.TFile(self.filenames[2], "RECREATE"):
             t = ROOT.TTree(self.treenames[2], self.treenames[2])
-            x = array.array('i', [0]) # any array can also be a numpy array
+            x = array.array("i", [0])  # any array can also be a numpy array
             t.Branch("x", x, "x/I")
 
             for i in range(1, self.nentries + 1):
@@ -101,11 +101,7 @@ def df036_missingBranches(dataset: DatasetContext):
 
     # Example 2: provide a default value for branch y, but skip events where
     # branch x is missing
-    display_2 = (
-        df.DefaultValueFor("y", default_value)
-        .FilterAvailable("x")
-        .Display(columnList=("x", "y"), nRows=15)
-    )
+    display_2 = df.DefaultValueFor("y", default_value).FilterAvailable("x").Display(columnList=("x", "y"), nRows=15)
 
     # Example 3: only keep events where branch y is missing and display values for branch x
     display_3 = df.FilterMissing("y").Display(columnList=("x",), nRows=15)
