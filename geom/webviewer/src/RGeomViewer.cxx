@@ -412,40 +412,40 @@ void RGeomViewer::SaveAsMacro(const std::string &fname)
       return;
    std::string prefix = "   ";
 
+   fs << "std::shared_ptr<ROOT::RGeomViewer> rgeom_viewer;\n\n";
+
    auto p = fname.find('.');
-   if (p > 0) {
-      fs << "void " << fname.substr(0, p) << "() { " << std::endl;
-   } else {
-      fs << "{" << std::endl;
-   }
+   if (p > 0)
+      fs << "void " << fname.substr(0, p) << "()\n";
+   fs << "{\n";
 
    if ((fDesc.GetNumNodes() < 2000) && fGeoManager) {
       fGeoManager->GetTopVolume()->SavePrimitive(fs);
-      fs << prefix << "gGeoManager->SetVisLevel(" << fGeoManager->GetVisLevel() << ");" << std::endl;
+      fs << prefix << "gGeoManager->SetVisLevel(" << fGeoManager->GetVisLevel() << ");\n";
    } else {
-      fs << prefix << "// geometry is too large, please provide import like:" << std::endl << std::endl;
-      fs << prefix << "// TGeoManager::Import(\"filename.root\");" << std::endl;
+      fs << prefix << "// geometry is too large, please provide import like:\n";
+      fs << prefix << "// TGeoManager::Import(\"filename.root\");\n";
    }
 
-   fs << std::endl;
+   fs << prefix << "\n";
 
-   fs << prefix << "auto viewer = std::make_shared<ROOT::RGeomViewer>(gGeoManager";
+   fs << prefix << "rgeom_viewer = std::make_shared<ROOT::RGeomViewer>(gGeoManager";
    if (!fSelectedVolume.empty())
       fs << ", \"" << fSelectedVolume << "\"";
-   fs << ");" << std::endl;
+   fs << ");\n";
 
-   fDesc.SavePrimitive(fs, "viewer->Description().");
+   fDesc.SavePrimitive(fs, "rgeom_viewer->Description().");
 
-   fs << prefix << "viewer->SetShowHierarchy(" << (fShowHierarchy ? "true" : "false") << ");" << std::endl;
-   fs << prefix << "viewer->SetShowColumns(" << (fShowColumns ? "true" : "false") << ");" << std::endl;
+   fs << prefix << "rgeom_viewer->SetShowHierarchy(" << (fShowHierarchy ? "true" : "false") << ");\n";
+   fs << prefix << "rgeom_viewer->SetShowColumns(" << (fShowColumns ? "true" : "false") << ");\n";
 
-   fs << std::endl;
+   fs << prefix << "\n";
 
-   fs << prefix << "viewer->Show();" << std::endl << std::endl;
+   fs << prefix << "rgeom_viewer->Show();\n";
 
-   fs << prefix << "ROOT::Experimental::RDirectory::Heap().Add(\"geom_viewer\", viewer);" << std::endl;
+   fs << "}\n";
 
-   fs << "}" << std::endl;
+   printf("Macro %s has been created\n", fname.c_str());
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
