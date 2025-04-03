@@ -836,12 +836,17 @@ namespace Cpp {
     return false;
   }
 
-  TCppFunction_t GetDefaultConstructor(TCppScope_t scope) {
+  TCppFunction_t GetDefaultConstructor(compat::Interpreter& interp,
+                                       TCppScope_t scope) {
     if (!HasDefaultConstructor(scope))
       return nullptr;
 
     auto *CXXRD = (clang::CXXRecordDecl*)scope;
-    return getSema().LookupDefaultConstructor(CXXRD);
+    return interp.getCI()->getSema().LookupDefaultConstructor(CXXRD);
+  }
+
+  TCppFunction_t GetDefaultConstructor(TCppScope_t scope) {
+    return GetDefaultConstructor(getInterp(), scope);
   }
 
   TCppFunction_t GetDestructor(TCppScope_t scope) {
@@ -958,29 +963,35 @@ namespace Cpp {
       return "<unknown>";
 
     auto *D = (clang::Decl *) func;
-    if (auto *FD = llvm::dyn_cast<FunctionDecl>(D)) {
-      std::string Signature;
-      raw_string_ostream SS(Signature);
-      PrintingPolicy Policy = getASTContext().getPrintingPolicy();
-      // Skip printing the body
-      Policy.TerseOutput = true;
-      Policy.FullyQualifiedName = true;
-      Policy.SuppressDefaultTemplateArgs = false;
-      FD->print(SS, Policy);
-      SS.flush();
-      return Signature;
-    }
+    clang::FunctionDecl* FD;
 
-    return "<unknown>";
+    if (llvm::dyn_cast<FunctionDecl>(D))
+      FD = llvm::dyn_cast<FunctionDecl>(D);
+    else if (auto* FTD = llvm::dyn_cast<clang::FunctionTemplateDecl>(D))
+      FD = FTD->getTemplatedDecl();
+    else
+      return "<unknown>";
+
+    std::string Signature;
+    raw_string_ostream SS(Signature);
+    PrintingPolicy Policy = getASTContext().getPrintingPolicy();
+    // Skip printing the body
+    Policy.TerseOutput = true;
+    Policy.FullyQualifiedName = true;
+    Policy.SuppressDefaultTemplateArgs = false;
+    FD->print(SS, Policy);
+    SS.flush();
+    return Signature;
   }
 
   // Internal functions that are not needed outside the library are
   // encompassed in an anonymous namespace as follows.
   namespace {
     bool IsTemplatedFunction(Decl *D) {
-      if (llvm::isa_and_nonnull<FunctionTemplateDecl>(D))
-        return true;
+      return llvm::isa_and_nonnull<FunctionTemplateDecl>(D);
+    }
 
+    bool IsTemplateInstantiationOrSpecialization(Decl* D) {
       if (auto *FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
         auto TK = FD->getTemplatedKind();
         return TK == FunctionDecl::TemplatedKind::
@@ -1003,9 +1014,12 @@ namespace Cpp {
   bool IsTemplatedFunction(TCppFunction_t func)
   {
     auto *D = (Decl *) func;
-    return IsTemplatedFunction(D);
+    return IsTemplatedFunction(D) || IsTemplateInstantiationOrSpecialization(D);
   }
 
+  // FIXME: This lookup is broken, and should no longer be used in favour of
+  // `GetClassTemplatedMethods` If the candidate set returned is =1, that means
+  // the template function exists and >1 means overloads
   bool ExistsFunctionTemplate(const std::string& name,
           TCppScope_t parent)
   {
@@ -1021,38 +1035,70 @@ namespace Cpp {
       return false;
 
     if ((intptr_t) ND != (intptr_t) -1)
-      return IsTemplatedFunction(ND);
+      return IsTemplatedFunction(ND) ||
+             IsTemplateInstantiationOrSpecialization(ND);
 
     // FIXME: Cycle through the Decls and check if there is a templated function
     return true;
   }
 
-  void GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
-                                std::vector<TCppFunction_t>& funcs) {
-
+  // Looks up all constructors in the current DeclContext
+  void LookupConstructors(const std::string& name, TCppScope_t parent,
+                          std::vector<TCppFunction_t>& funcs) {
     auto* D = (Decl*)parent;
 
-    if (!parent || name.empty())
-      return;
+    if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
+      getSema().ForceDeclarationOfImplicitMembers(CXXRD);
+      DeclContextLookupResult Result = getSema().LookupConstructors(CXXRD);
+      // Obtaining all constructors when we intend to lookup a method under a
+      // scope can lead to crashes. We avoid that by accumulating constructors
+      // only if the Decl matches the lookup name.
+      for (auto* i : Result)
+        if (GetName(i) == name)
+          funcs.push_back(i);
+    }
+  }
 
-    D = GetUnderlyingScope(D);
+  bool GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
+                                std::vector<TCppFunction_t>& funcs) {
+    auto* D = (Decl*)parent;
+    if (!D && name.empty())
+      return false;
 
-    llvm::StringRef Name(name);
+    // Accumulate constructors
+    LookupConstructors(name, parent, funcs);
     auto& S = getSema();
+    D = GetUnderlyingScope(D);
+    llvm::StringRef Name(name);
     DeclarationName DName = &getASTContext().Idents.get(name);
     clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                           For_Visible_Redeclaration);
+    auto* DC = clang::Decl::castToDeclContext(D);
+    Cpp_utils::Lookup::Named(&S, R, DC);
 
-    Cpp_utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
+    if (R.getResultKind() == clang::LookupResult::NotFound && funcs.empty())
+      return false;
 
-    if (R.empty())
-      return;
+    // Distinct match, single Decl
+    else if (R.getResultKind() == clang::LookupResult::Found) {
+      if (IsTemplatedFunction(R.getFoundDecl()))
+        funcs.push_back(R.getFoundDecl());
+    }
+    // Loop over overload set
+    else if (R.getResultKind() == clang::LookupResult::FoundOverloaded) {
+      for (auto* Found : R)
+        if (IsTemplatedFunction(Found))
+          funcs.push_back(Found);
+    }
 
-    R.resolveKind();
-
-    for (auto* Found : R)
-      if (llvm::isa<FunctionTemplateDecl>(Found))
-        funcs.push_back(Found);
+    // TODO: Handle ambiguously found LookupResult
+    // else if (R.getResultKind() == clang::LookupResult::Ambiguous) {
+    //  auto kind = R.getAmbiguityKind();
+    //  ...
+    //  Produce a diagnostic describing the ambiguity that resulted
+    //  from name lookup as done in Sema::DiagnoseAmbiguousLookup
+    //
+    return !funcs.empty();
   }
 
   // Adapted from inner workings of Sema::BuildCallExpr
@@ -1175,6 +1221,8 @@ namespace Cpp {
   bool IsConstructor(TCppConstFunction_t method)
   {
     const auto* D = static_cast<const Decl*>(method);
+    if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+      return IsConstructor(FTD->getTemplatedDecl());
     return llvm::isa_and_nonnull<CXXConstructorDecl>(D);
   }
 
@@ -3039,15 +3087,17 @@ namespace Cpp {
   };
   } // namespace
 
-  int Declare(const char* code, bool silent) {
-    auto& I = getInterp();
-
+  int Declare(compat::Interpreter& I, const char* code, bool silent) {
     if (silent) {
       clangSilent diagSuppr(I.getSema().getDiagnostics());
       return I.declare(code);
     }
 
     return I.declare(code);
+  }
+
+  int Declare(const char* code, bool silent) {
+    return Declare(getInterp(), code, silent);
   }
 
   int Process(const char *code) {
@@ -3533,7 +3583,7 @@ namespace Cpp {
     if (!HasDefaultConstructor(Class))
       return nullptr;
 
-    auto* const Ctor = GetDefaultConstructor(Class);
+    auto* const Ctor = GetDefaultConstructor(interp, Class);
     if (JitCall JC = MakeFunctionCallable(&interp, Ctor)) {
       if (arena) {
         JC.Invoke(&arena, {}, (void*)~0); // Tell Invoke to use placement new.
@@ -3670,6 +3720,17 @@ namespace Cpp {
                     unsigned complete_column /* = 1U */) {
     compat::codeComplete(Results, getInterp(), code, complete_line,
                          complete_column);
+  }
+
+  int Undo(unsigned N) {
+#ifdef CPPINTEROP_USE_CLING
+    auto& I = getInterp();
+    cling::Interpreter::PushTransactionRAII RAII(&I);
+    I.unload(N);
+    return compat::Interpreter::kSuccess;
+#else
+    return getInterp().undo(N);
+#endif
   }
 
   } // end namespace Cpp

@@ -13,13 +13,20 @@ if(WIN32)
     -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
     -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=${_gtest_byproduct_binary_dir}/lib/
     -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
-    -Dgtest_force_shared_crt=ON
-    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG>)
+    -Dgtest_force_shared_crt=ON)
 elseif(APPLE)
   set(EXTRA_GTEST_OPTS -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
 endif()
 
 include(ExternalProject)
+if (EMSCRIPTEN)
+  set(config_cmd emcmake cmake)
+  set(build_cmd emmake make)
+else()
+  set(config_cmd ${CMAKE_COMMAND})
+  set(build_cmd ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest-build/ --config $<CONFIG>)
+endif()
+
 ExternalProject_Add(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
@@ -31,7 +38,9 @@ ExternalProject_Add(
   # CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
   #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
   #            -Dgtest_force_shared_crt=ON
-  CMAKE_ARGS -G ${CMAKE_GENERATOR}
+  CONFIGURE_COMMAND ${config_cmd} -G ${CMAKE_GENERATOR}
+  		-S ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest/
+		-B ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest-build/
                 -DCMAKE_BUILD_TYPE=$<CONFIG>
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -40,6 +49,7 @@ ExternalProject_Add(
                 -DCMAKE_AR=${CMAKE_AR}
                 -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                 ${EXTRA_GTEST_OPTS}
+  BUILD_COMMAND ${build_cmd}
   # Disable install step
   INSTALL_COMMAND ""
   BUILD_BYPRODUCTS ${_gtest_byproducts}

@@ -15,6 +15,8 @@
 
 #include "llvm/Support/Valgrind.h"
 
+#include "clang-c/CXCppInterOp.h"
+
 #include "gtest/gtest.h"
 
 #include <string>
@@ -99,14 +101,14 @@ TEST(ScopeReflectionTest, IsClassPolymorphic) {
   std::vector<Decl*> Decls;
   GetAllTopLevelDecls(R"(
     namespace N {}
-    
+
     class C{};
-    
+
     class C2 {
     public:
       virtual ~C2() {}
     };
-    
+
     int I;
   )",
                       Decls);
@@ -575,7 +577,7 @@ TEST(ScopeReflectionTest, GetScopeFromType) {
     N::S s;
 
     int i;
-    
+
     N::T t;
 
     N::E e;
@@ -816,7 +818,7 @@ TEST(ScopeReflectionTest, InstantiateNNTPClassTemplate) {
                                        /*type_size*/ args1.size()));
 
   // C API
-  auto I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
   CXTemplateArgInfo Args1[] = {{IntTy, "5"}};
   auto C_API_SHIM = [&](auto Decl) {
     return clang_instantiateTemplate(make_scope(Decl, I), Args1, 1).data[0];

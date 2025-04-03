@@ -8,3 +8,4 @@ dependencies:
   - xeus
   - cpp-argparse
   - pugixml
+  - doctest

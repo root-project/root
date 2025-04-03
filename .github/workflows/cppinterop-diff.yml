@@ -12,11 +12,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: root
+      - name: Determine tag that CppInterOp in ROOT is based
+        id: determine-tag
+        run: |
+          tag_file=root/interpreter/CppInterOp/cppinterop-version.tag
+          echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
+          rm $tag_file
       - name: Check out CppInterOp
         uses: actions/checkout@v4
         with:
           repository: compiler-research/CppInterOp
-          ref: 33bfa391c9322bd7cb79f954e54eedef486c999a
+          ref: ${{ steps.determine-tag.outputs.tag }}
           path: CppInterOp
       - name: Drop directories that are not added to ROOT
         working-directory: CppInterOp

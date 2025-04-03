@@ -246,9 +246,9 @@ endif()
       message(fatal "LLVM/CppInterOp requires c++14 or later")
     endif()
   endif()
-  
+
   ## Find supported Cling
-  
+
   if (CPPINTEROP_USE_CLING)
     if (NOT Cling_FOUND AND DEFINED Cling_DIR)
       find_package(Cling REQUIRED CONFIG ${cling_extra_hints} NO_DEFAULT_PATH)
@@ -307,13 +307,6 @@ include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
-if (CPPINTEROP_USE_CLING)
-  message(STATUS "CLING_INCLUDE_DIRS: ${CLING_INCLUDE_DIRS}")
-endif(CPPINTEROP_USE_CLING)
-message(STATUS "CLANG_INCLUDE_DIRS: ${CLANG_INCLUDE_DIRS}")
-message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
-message(STATUS "LLVM_DEFINITIONS_LIST: ${LLVM_DEFINITIONS_LIST}")
-
 # If the llvm sources are present add them with higher priority.
 if (LLVM_BUILD_MAIN_SRC_DIR)
   # LLVM_INCLUDE_DIRS contains the include paths to both LLVM's source and
@@ -361,7 +354,7 @@ endif()
 
 # Add appropriate flags for GCC
 if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
-  if (APPLE)
+  if (APPLE OR EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-common -Woverloaded-virtual -Wcast-qual -fno-strict-aliasing -Wno-long-long -Wall -W -Wno-unused-parameter -Wwrite-strings")
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-common -Woverloaded-virtual -Wcast-qual -fno-strict-aliasing -pedantic -Wno-long-long -Wall -W -Wno-unused-parameter -Wwrite-strings")
@@ -450,11 +443,6 @@ option(CPPINTEROP_INCLUDE_DOCS "Generate build targets for the CppInterOp docs."
 option(CPPINTEROP_ENABLE_DOXYGEN "Use doxygen to generate CppInterOp interal API documentation.")
 option(CPPINTEROP_ENABLE_SPHINX "Use sphinx to generage CppInterOp user documentation")
 
-
-if(EMSCRIPTEN)
-    message("Build with emscripten")
-    set(CPPINTEROP_ENABLE_TESTING OFF)
-endif()
 
 if(MSVC)
 
