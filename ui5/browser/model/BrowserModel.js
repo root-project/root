@@ -28,6 +28,7 @@ sap.ui.define([
          this.itemsFilter = '';
          this.showHidden = false;
          this.appendToCanvas = false;
+         this.handleDoubleClick = true;
          this.onlyLastCycle = 0; // 0 - not changed, -1 off , +1 on
 
          this.threshold = 100; // default threshold to prefetch items
@@ -53,8 +54,14 @@ sap.ui.define([
       /** @summary Set show hidden flag */
       setAppendToCanvas(flag) { this.appendToCanvas = flag; },
 
-      /** @summary Is show hidden flag set */
+      /** @summary Is append to canvas when double click set */
       isAppendToCanvas() { return this.appendToCanvas; },
+
+      /** @summary Set double click handler */
+      setHandleDoubleClick(flag) { this.handleDoubleClick = flag; },
+
+      /** @summary Is double-click handler activated */
+      isHandleDoubleClick() { return this.handleDoubleClick; },
 
       getOnlyLastCycle() { return this.onlyLastCycle; },
 

@@ -51,6 +51,7 @@
                           selectionMode="Single"
                           visibleRowCountMode="Auto"
                           showColumnVisibilityMenu="true"
+                          cellClick="onCellClick"
                           rows="{/nodes}" >
                     <t:layoutData>
                       <FlexItemData growFactor="1"/>
