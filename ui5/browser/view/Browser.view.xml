@@ -50,8 +50,9 @@
                           selectionBehavior="RowOnly"
                           selectionMode="Single"
                           visibleRowCountMode="Auto"
-                          showColumnVisibilityMenu="true"
+                          showColumnVisibilityMenu="false"
                           cellClick="onCellClick"
+                          cellContextmenu="onCellContextMenu"
                           rows="{/nodes}" >
                     <t:layoutData>
                       <FlexItemData growFactor="1"/>
