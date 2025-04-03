@@ -47,8 +47,7 @@ public:
    }
 
 
-   std::string Generate(std::string OpName) override {
-      OpName = "op_" + OpName;
+   std::string Generate(std::string opName) override {
       if (fShape.empty()){
          throw std::runtime_error("TMVA SOFIE Operator Sigmoid called to Generate without being initialized first");
       }
@@ -57,9 +56,10 @@ public:
       for(auto& i: fShape){
          length *= i;
       }
-      out << "\t" << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << "\t\t" << "tensor_" << fNY << "[id] = 1 / (1 + std::exp( - tensor_"  << fNX << "[id]));\n";
-      out << "\t}\n";
+      out << "\n//------ Sigmoid -- " << opName << "\n";
+      out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
+      out << SP << SP  << "tensor_" << fNY << "[id] = 1 / (1 + std::exp( - tensor_"  << fNX << "[id]));\n";
+      out << SP << "}\n";
       return out.str();
    }
 
