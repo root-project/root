@@ -272,8 +272,8 @@ public:
    /// \brief Write an object with proper type checking.
    /// \param[in] obj Pointer to an object to be written.
    /// \param[in] name Name of the object in the file.
-   /// \param[in] option Options. See TDirectory::WriteTObject.
-   /// \param[in] bufsize Buffer size. See TDirectory::WriteTObject.
+   /// \param[in] option Options. See TDirectoryFile::WriteTObject.
+   /// \param[in] bufsize Buffer size. See TDirectoryFile::WriteTObject.
    ///
    /// This overload takes care of instances of classes that are not derived
    /// from TObject. The method redirects to TDirectory::WriteObjectAny.
@@ -286,8 +286,8 @@ public:
    /// \brief Write an object with proper type checking.
    /// \param[in] obj Pointer to an object to be written.
    /// \param[in] name Name of the object in the file.
-   /// \param[in] option Options. See TDirectory::WriteTObject.
-   /// \param[in] bufsize Buffer size. See TDirectory::WriteTObject.
+   /// \param[in] option Options. See TDirectoryFile::WriteTObject.
+   /// \param[in] bufsize Buffer size. See TDirectoryFile::WriteTObject.
    ///
    /// This overload takes care of instances of classes that are derived from
    /// TObject. The method redirects to TDirectory::WriteTObject.
@@ -303,7 +303,7 @@ public:
    virtual void        WriteKeys() {}
 
    static Bool_t       Cd(const char *path);
-   static void         DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle, const size_t namesize = 0);
+   static size_t       DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle, const size_t namesize = 0);
 
    ClassDefOverride(TDirectory,5)  //Describe directory structure in memory
 };
