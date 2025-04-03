@@ -19,8 +19,8 @@
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 /// \author Andreas Hoecker
 
 

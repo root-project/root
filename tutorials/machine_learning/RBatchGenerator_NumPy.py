@@ -1,5 +1,5 @@
 ### \file
-### \ingroup tutorial_tmva
+### \ingroup tutorial_ml
 ### \notebook -nodraw
 ### Example of getting batches of events from a ROOT dataset as Python
 ### generators of numpy arrays.

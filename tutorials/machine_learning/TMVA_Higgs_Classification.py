@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tmva
+## \ingroup tutorial_ml
 ## \notebook
 ## Classification example of TMVA based on public Higgs UCI dataset
 ##

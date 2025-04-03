@@ -1,5 +1,12 @@
+## \file
+## \ingroup tutorial_ml
+## \notebook -nodraw
+##
 ## Tutorial showing how to parse a GNN from GraphNet and make a SOFIE model
 ## The tutorial also generate some  data which can serve as input for the tutorial TMVA_SOFIE_GNN_Application.C
+##
+## \macro_code
+
 import ROOT
 
 import numpy as np
