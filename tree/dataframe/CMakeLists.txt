@@ -172,7 +172,7 @@ if(MSVC)
 endif()
 
 if(builtin_nlohmannjson)
-  target_include_directories(ROOTDataFrame PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
+  target_include_directories(ROOTDataFrame PRIVATE ${ROOT_MAIN_SOURCE_DIR}/builtins)
 else()
   target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
 endif()

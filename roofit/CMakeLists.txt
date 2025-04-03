@@ -30,7 +30,7 @@ set(roofit_etc_files
 )
 
 foreach(roofit_etc_file ${roofit_etc_files})
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${roofit_etc_file}" "${CMAKE_BINARY_DIR}/${roofit_etc_file}" COPYONLY)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${roofit_etc_file}" "${ROOT_MAIN_BINARY_DIR}/${roofit_etc_file}" COPYONLY)
 endforeach()
 
 install(FILES ${roofit_etc_files} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})

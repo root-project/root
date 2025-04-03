@@ -8,7 +8,7 @@ include(ExternalProject)
 
 set(XROOTD_VERSION "5.7.2")
 
-set(XROOTD_PREFIX ${CMAKE_BINARY_DIR})
+set(XROOTD_PREFIX ${ROOT_MAIN_BINARY_DIR})
 message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
 
 list(REMOVE_ITEM XROOTD_CLIENT_LIBRARIES OpenSSL::SSL)

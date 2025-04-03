@@ -173,7 +173,7 @@ if(ROOT_opengl_FOUND)
   configure_file(stressGraphics_web.ref stressGraphics_web.ref COPYONLY)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/visualisation/graphics/earth.dat earth.dat COPYONLY)
   ROOT_ADD_TEST(test-stressgraphics
-                ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                ENVIRONMENT LD_LIBRARY_PATH=${ROOT_MAIN_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                 COMMAND stressGraphics -b --web=off -k -p=sge
                 FAILREGEX "FAILED|Error in"
                 LABELS longtest)
@@ -184,7 +184,7 @@ if(ROOT_opengl_FOUND)
   if(CHROME_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-chrome
                   RUN_SERIAL
-                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                  ENVIRONMENT LD_LIBRARY_PATH=${ROOT_MAIN_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                   COMMAND stressGraphics -b -k -p=sgc --web=chrome
                   FAILREGEX "FAILED|Error in"
                   LABELS longtest)
@@ -192,7 +192,7 @@ if(ROOT_opengl_FOUND)
   if(FIREFOX_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-firefox-skip3d
                   RUN_SERIAL
-                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                  ENVIRONMENT LD_LIBRARY_PATH=${ROOT_MAIN_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                   COMMAND stressGraphics -b -k -p=sgf --web=firefox -skip3d
                   FAILREGEX "FAILED|Error in"
                   LABELS longtest)
@@ -284,7 +284,7 @@ if(WIN32)
   set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
 endif()
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
-              WORKING_DIR ${CMAKE_BINARY_DIR}
+              WORKING_DIR ${ROOT_MAIN_BINARY_DIR}
               PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
@@ -296,13 +296,13 @@ ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
 
 #--stressProof-------------------------------------------------------------------------------
 if(proof AND NOT WIN32)
-  add_custom_target(TestData COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
+  add_custom_target(TestData COMMAND ${CMAKE_COMMAND} -DDST=${ROOT_MAIN_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
   ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-  ROOT_ADD_TEST(test-stressproof PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TestData
+  ROOT_ADD_TEST(test-stressproof PRECMD ${CMAKE_COMMAND} --build ${ROOT_MAIN_BINARY_DIR} --target TestData
                                  COMMAND stressProof lite://
-                                         -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
+                                         -h1 ${ROOT_MAIN_SOURCE_DIR}/files/h1 -event ${ROOT_MAIN_SOURCE_DIR}/files/event
                                          -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
-                                         ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                                         ENVIRONMENT PATH=${ROOT_MAIN_BINARY_DIR}/bin:$ENV{PATH}
                                          FAILREGEX "FAILED|Error in")
 endif()
 
@@ -385,7 +385,7 @@ if(MSVC)
   ROOT_ADD_TEST(test-periodic-build
     COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
       --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-      --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
+      --build-options -DCMAKE_PREFIX_PATH=${ROOT_MAIN_BINARY_DIR}
   )
 else()
   ROOT_ADD_TEST(test-periodic-build
@@ -393,7 +393,7 @@ else()
       env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
       ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
       --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-      --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
+      --build-options -DCMAKE_PREFIX_PATH=${ROOT_MAIN_BINARY_DIR}
   )
 endif()
 
