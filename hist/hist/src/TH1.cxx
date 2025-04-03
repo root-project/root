@@ -7913,18 +7913,15 @@ Double_t TH1::GetSumOfAllWeights(const bool includeOverflow) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
-   Int_t bin, binx, biny, binz;
-   const Int_t startX = (includeOverflow ? 0 : 1);
-   const Int_t startY = (includeOverflow ? 0 : 1);
-   const Int_t startZ = (includeOverflow ? 0 : 1);
+   const Int_t start = (includeOverflow ? 0 : 1);
    const Int_t lastX = fXaxis.GetNbins() + (includeOverflow ? 1 : 0);
    const Int_t lastY = fYaxis.GetNbins() + (includeOverflow ? 1 : 0);
    const Int_t lastZ = fZaxis.GetNbins() + (includeOverflow ? 1 : 0);
    Double_t sum =0;
-   for(binz = startZ; binz <= lastZ; binz++) {
-      for(biny = startY; biny <= lastY; biny++) {
-         for(binx = startX; binx <= lastX; binx++) {
-            bin = GetBin(binx, biny, binz);
+   for(auto binz = start; binz <= lastZ; binz++) {
+      for(auto biny = start; biny <= lastY; biny++) {
+         for(auto binx = start; binx <= lastX; binx++) {
+            const auto bin = GetBin(binx, biny, binz);
             sum += RetrieveBinContent(bin);
          }
       }
