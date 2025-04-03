@@ -2371,6 +2371,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    Int_t nbd, inc, bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
+   bool resetAxisRange = false;
    static std::unique_ptr<TBox> zoombox;
    Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
@@ -2524,8 +2525,12 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       bin2 = axis->GetLast()+inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
+      resetAxisRange = (bin1 == 1 && axis->GetFirst() == 1 && bin2 == axis->GetNbins() && axis->GetLast() == axis->GetNbins());
       if (bin2>bin1) {
          axis->SetRange(bin1,bin2);
+      }
+      if (resetAxisRange) axis->ResetBit(TAxis::kAxisRange);
+      if (bin2>bin1) {
          gPad->Modified();
          gPad->Update();
       }
