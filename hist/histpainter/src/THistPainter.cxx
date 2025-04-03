@@ -3641,12 +3641,16 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          bin2 = xaxis->GetLast()+1;
          bin1 = TMath::Max(bin1, 1);
          bin2 = TMath::Min(bin2, xaxis->GetNbins());
+         const bool resetXaxisRange = bin1 == 1 && xaxis->GetFirst() == 1 && bin2 == xaxis->GetNbins() && xaxis->GetLast() == xaxis->GetNbins();
          if (bin2>bin1) xaxis->SetRange(bin1,bin2);
+         if (resetXaxisRange) xaxis->ResetBit(TAxis::kAxisRange);
          bin1 = yaxis->GetFirst()-1;
          bin2 = yaxis->GetLast()+1;
          bin1 = TMath::Max(bin1, 1);
          bin2 = TMath::Min(bin2, yaxis->GetNbins());
+         const bool resetYaxisRange = bin1 == 1 && yaxis->GetFirst() == 1 && bin2 == yaxis->GetNbins() && yaxis->GetLast() == yaxis->GetNbins();
          if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+         if (resetYaxisRange) yaxis->ResetBit(TAxis::kAxisRange);
       }
       gPad->Modified();
       gPad->Update();
