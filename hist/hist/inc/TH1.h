@@ -326,7 +326,7 @@ public:
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
-   virtual Double_t GetSumOfAllWeights() const;
+   virtual Double_t GetSumOfAllWeights(const bool overflow) const;
    virtual Double_t GetSumOfWeights() const;
    virtual TArrayD *GetSumw2() {return &fSumw2;}
    virtual const TArrayD *GetSumw2() const {return &fSumw2;}

@@ -7905,19 +7905,26 @@ void TH1::ResetStats()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the sum of all weights including under/overflows.
-/// \note Different from GetSumOfWeights, that excludes those
+/// Return the sum of all weights
+/// \param overflow true to include under/overflows bins, false to exclude those.
+/// \note Different from TH1::GetSumOfWeights, that always excludes those
 
-Double_t TH1::GetSumOfAllWeights() const
+Double_t TH1::GetSumOfAllWeights(const bool overflow) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
-   Int_t bin,binx,biny,binz;
+   Int_t bin, binx, biny, binz;
+   const Int_t startX = (overflow ? 0 : 1);
+   const Int_t startY = (overflow ? 0 : 1);
+   const Int_t startZ = (overflow ? 0 : 1);
+   const Int_t lastX = fXaxis.GetNbins() + (overflow ? 1 : 0);
+   const Int_t lastY = fYaxis.GetNbins() + (overflow ? 1 : 0);
+   const Int_t lastZ = fZaxis.GetNbins() + (overflow ? 1 : 0);
    Double_t sum =0;
-   for(binz=0; binz<=fZaxis.GetNbins()+1; binz++) {
-      for(biny=0; biny<=fYaxis.GetNbins()+1; biny++) {
-         for(binx=0; binx<=fXaxis.GetNbins()+1; binx++) {
-            bin = GetBin(binx,biny,binz);
+   for(binz = startZ; binz <= lastZ; binz++) {
+      for(biny = startY; biny <= lastY; biny++) {
+         for(binx = startX; binx <= lastX; binx++) {
+            bin = GetBin(binx, biny, binz);
             sum += RetrieveBinContent(bin);
          }
       }
@@ -7927,23 +7934,12 @@ Double_t TH1::GetSumOfAllWeights() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the sum of weights excluding under/overflows.
-/// \note Different from GetSumOfAllWeights, that includes those
+/// \note Different from TH1::GetSumOfAllWeights, that allows you to control
+/// if you include or exclude those.
 
 Double_t TH1::GetSumOfWeights() const
 {
-   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
-
-   Int_t bin,binx,biny,binz;
-   Double_t sum =0;
-   for(binz=1; binz<=fZaxis.GetNbins(); binz++) {
-      for(biny=1; biny<=fYaxis.GetNbins(); biny++) {
-         for(binx=1; binx<=fXaxis.GetNbins(); binx++) {
-            bin = GetBin(binx,biny,binz);
-            sum += RetrieveBinContent(bin);
-         }
-      }
-   }
-   return sum;
+   return GetSumOfAllWeights(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
