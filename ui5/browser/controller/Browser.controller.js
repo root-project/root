@@ -7,6 +7,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/table/Column',
                'sap/ui/table/TreeTable',
                'sap/ui/table/library',
+               'sap/m/table/columnmenu/Menu',
+               'sap/m/table/columnmenu/ActionItem',
                'sap/ui/layout/HorizontalLayout',
                'sap/m/TabContainerItem',
                'sap/m/MessageToast',
@@ -38,6 +40,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            tableColumn,
            TreeTable,
            table_lib,
+           ColumnMenu,
+           MenuActionItem,
            HorizontalLayout,
            TabContainerItem,
            MessageToast,
@@ -201,10 +205,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          t.setModel(this.model);
 
          this.model.assignTreeTable(t);
+         this.oMenu = new ColumnMenu();
+         this.getView().addDependent(this.oMenu);
+
          t.addColumn(new tableColumn({
             label: 'Name',
             autoResizable: true,
             visible: true,
+            headerMenu: this.oMenu.getId(),
             template: new HorizontalLayout({
                content: [
                          new CoreIcon({src:'{icon}', tooltip: '{className}' }),
@@ -212,54 +220,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                          ]
             })
          }));
-         t.addColumn(new tableColumn({
-            label: 'Size',
-            autoResizable: true,
-            visible: true,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{fsize}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'Time',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{mtime}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'Type',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{ftype}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'UID',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{fuid}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'GID',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{fgid}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'ClassName',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{className}', wrapping: false }) ]
-            })
-         }));
+
+         this.columnNames   = ['Size',  'Time',  'Type',  'UID',  'GID',  'ClassName'];
+         this.columnFields  = ['fisze', 'mtime', 'ftype', 'fuid', 'fgid', 'className'];
+         this.columnVisible = [ true,    false,   false,   false,  false,  false];
+         for (let i = 0; i < this.columnNames.length; ++i) {
+            t.addColumn(new tableColumn({
+               label: this.columnNames[i],
+               autoResizable: true,
+               visible: this.columnVisible[i],
+               headerMenu: this.oMenu.getId(),
+               template: new HorizontalLayout({
+                  content: [ new mText({text:`{${this.columnFields[i]}}`, wrapping: false }) ]
+               })
+            }));
+         }
+
+         this.buildColumnsMenu();
+         // t.getColumns().forEach(column => column.setHeaderMenu(this.oMenu.getId()));
 
          // ignore first resize
          this._columnResized = -1;
@@ -288,6 +266,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             drop: event => this.onDrop(event)
          }));
       },
+
+      buildColumnsMenu() {
+         this.oMenu.removeAllItems();
+
+         for (let i = 0; i < this.columnNames.length; ++i)
+            this.oMenu.addItem(new MenuActionItem({
+               icon: this.columnVisible[i] ? "sap-icon://accept" : "sap-icon://hide",
+               label: this.columnNames[i],
+               press: [() => this.pressColumnMenu(i), this]
+            }));
+      },
+
+      pressColumnMenu(indx) {
+         this.columnVisible[indx] = !this.columnVisible[indx];
+
+         let t = this.getView().byId('treeTable');
+         t.getColumns()[indx+1].setVisible(this.columnVisible[indx]);
+
+         this.oMenu.close();
+         this.buildColumnsMenu();
+      },
+
 
       /* =========================================== */
       /* =============== Image Viewer ============== */
@@ -1058,6 +1058,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onCellClick(oEvent) {
          if (!this.model.isHandleDoubleClick())
             this.onRowDblClick(null, oEvent.getParameter('rowBindingContext'));
+      },
+
+      onCellContextMenu(oEvent) {
+         oEvent.preventDefault();
       },
 
       onDragStart(oEvent) {
