@@ -1294,55 +1294,78 @@ void TDirectory::SetName(const char* newname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Decode a namecycle "aap;2" into name "aap" and cycle "2". Destination
-/// buffer size for name (including string terminator) should be specified in
-/// namesize.
+/// Decode a namecycle `"aap;2"` contained in the null-terminated string `buffer` into name `"aap"` and cycle `2`.
+/// The destination buffer size for `name` (including the string terminator) should be specified in
+/// `namesize`. If `namesize` is too small to contain the full name, the name will be truncated to `namesize`.
+/// If `namesize == 0` but `name` is not nullptr, this method will assume that `name` points
+/// to a large enough buffer to hold the name. THIS IS UNSAFE, so you should **always** pass the proper `namesize`!
+/// If `name` is nullptr, only the cycle will be returned and `namesize` will be ignored.
 /// @note Edge cases:
 ///   - If the number after the `;` is larger than `SHORT_MAX`, cycle is set to `0`.
 ///   - If name ends with `;*`, cycle is set to 10000`.
-///   - In all other cases, i.e. when number is not a digit or buffer is a nullptr, cycle is set to `9999`.
+///   - In all other cases, i.e. when number is not a digit, buffer is a nullptr or buffer does not contain a cycle,
+///     `cycle` is set to `9999`.
+/// @return The actual name length, or 0 if `buffer` was a nullptr.
 
-void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
-                                 const size_t namesize)
+size_t TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle, const size_t namesize)
 {
    if (!buffer) {
       cycle = 9999;
-      return;
+      return 0;
    }
 
-   size_t len = 0;
-   const char *ni = strchr(buffer, ';');
+   // Scan the string to find the name length and the semicolon
+   size_t nameLen = 0;
+   int semicolonIdx = -1;
+   {
+      char ch = buffer[nameLen];
+      while (ch) {
+         if (ch == ';') {
+            semicolonIdx = nameLen;
+            break;
+         }
+         ++nameLen;
+         ch = buffer[nameLen];
+      }
+   }
+   assert(semicolonIdx == -1 || semicolonIdx == static_cast<int>(nameLen));
 
-   if (ni) {
-      // Found ';'
-      len = ni - buffer;
-      ++ni;
-   } else {
-      // No ';' found
-      len = strlen(buffer);
-      ni = &buffer[len];
+   if (name) {
+      size_t truncatedNameLen = nameLen;
+      if (namesize) {
+         // accommodate string terminator
+         truncatedNameLen = std::min(truncatedNameLen, namesize - 1);
+      } else {
+         ::Error("TDirectory::DecodeNameCycle",
+                 "Using unsafe version: invoke this method by specifying the buffer size");
+      }
+
+      strncpy(name, buffer, truncatedNameLen);
+      name[truncatedNameLen] = '\0';
    }
 
-   if (namesize) {
-      if (len > namesize-1ul) len = namesize-1;  // accommodate string terminator
-   } else {
-      ::Warning("TDirectory::DecodeNameCycle",
-         "Using unsafe version: invoke this method by specifying the buffer size");
+   if (semicolonIdx < 0) {
+      // namecycle didn't contain a cycle
+      cycle = 9999;
+      return nameLen;
    }
 
-   strncpy(name, buffer, len);
-   name[len] = '\0';
+   const char *cycleStr = buffer + semicolonIdx + 1;
 
-   if (*ni == '*')
+   if (cycleStr[0] == '*') {
       cycle = 10000;
-   else if (isdigit(*ni)) {
-      long parsed = strtol(ni,nullptr,10);
-      if (parsed >= (long) std::numeric_limits<Short_t>::max())
+   } else if (isdigit(cycleStr[0])) {
+      long parsed = strtol(cycleStr, nullptr, 10);
+      if (parsed >= static_cast<long>(std::numeric_limits<Short_t>::max()))
          cycle = 0;
       else
-         cycle = (Short_t)parsed;
-   } else
+         cycle = static_cast<Short_t>(parsed);
+   } else {
+      // Either `;` was the last character of the string, or the character following it was invalid.
       cycle = 9999;
+   }
+
+   return nameLen;
 }
 
 void TDirectory::TContext::RegisterCurrentDirectory()
@@ -1397,9 +1420,8 @@ void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_p
    // know whether globalptr->load() has been deleted by another thread in the meantime.
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc TDirectory::WriteObject(const T*,const char*,Option_t*,Int_t).
+/// \copydoc TDirectoryFile::WriteObject(const T*,const char*,Option_t*,Int_t).
 
 Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/)
 {
