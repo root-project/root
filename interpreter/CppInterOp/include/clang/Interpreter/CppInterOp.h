@@ -127,13 +127,15 @@ namespace Cpp {
       : m_Kind(K), m_DestructorCall(C), m_FD(Dtor) {}
 
     /// Checks if the passed arguments are valid for the given function.
-    bool AreArgumentsValid(void* result, ArgList args, void* self) const;
+    CPPINTEROP_API bool AreArgumentsValid(void* result, ArgList args,
+                                          void* self) const;
 
     /// This function is used for debugging, it reports when the function was
     /// called.
-    void ReportInvokeStart(void* result, ArgList args, void* self) const;
-    void ReportInvokeStart(void* object, unsigned long nary,
-                           int withFree) const;
+    CPPINTEROP_API void ReportInvokeStart(void* result, ArgList args,
+                                          void* self) const;
+    CPPINTEROP_API void ReportInvokeStart(void* object, unsigned long nary,
+                                          int withFree) const;
     void ReportInvokeEnd() const;
   public:
     Kind getKind() const { return m_Kind; }
@@ -313,8 +315,8 @@ namespace Cpp {
   /// underlying decl is not a class it returns the input unchanged.
   CPPINTEROP_API TCppScope_t GetUnderlyingScope(TCppScope_t scope);
 
-  /// Gets the namespace or class (by stripping typedefs) for the name 
-  /// passed as a parameter, and if the parent is not passed, 
+  /// Gets the namespace or class (by stripping typedefs) for the name
+  /// passed as a parameter, and if the parent is not passed,
   /// then global scope will be assumed.
   CPPINTEROP_API TCppScope_t GetScope(const std::string& name,
                                       TCppScope_t parent = nullptr);
@@ -414,13 +416,27 @@ namespace Cpp {
   CPPINTEROP_API bool ExistsFunctionTemplate(const std::string& name,
                                              TCppScope_t parent = nullptr);
 
+  /// Sets a list of all the constructor for a scope/class that is
+  /// supplied as a parameter.
+  ///\param[in] name - This string is used as a constraint, that clients can use
+  ///           to ensure the constructors match the name that they provide
+  ///\param[in] parent - Pointer to the scope/class for which the constructors
+  ///           are being looked up
+  ///           to be retrieved
+  ///\param[out] funcs - vector of handles to all constructors found under the
+  ///            given scope
+  CPPINTEROP_API void LookupConstructors(const std::string& name,
+                                         TCppScope_t parent,
+                                         std::vector<TCppFunction_t>& funcs);
+
   /// Sets a list of all the Templated Methods that are in the Class that is
   /// supplied as a parameter.
+  ///\returns true if the lookup succeeded, and false if there are no candidates
   ///\param[in] name - method name
   ///\param[in] parent - Pointer to the scope/class under which the methods have
   ///           to be retrieved
   ///\param[out] funcs - vector of function pointers matching the name
-  CPPINTEROP_API void
+  CPPINTEROP_API bool
   GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
                            std::vector<TCppFunction_t>& funcs);
 
@@ -563,12 +579,12 @@ namespace Cpp {
                                                 TCppIndex_t param_index);
 
   ///\returns arity of the operator or kNone
-  OperatorArity GetOperatorArity(TCppFunction_t op);
+  CPPINTEROP_API OperatorArity GetOperatorArity(TCppFunction_t op);
 
   ///\returns list of operator overloads
-  void GetOperator(TCppScope_t scope, Operator op,
-                   std::vector<TCppFunction_t>& operators,
-                   OperatorArity kind = kBoth);
+  CPPINTEROP_API void GetOperator(TCppScope_t scope, Operator op,
+                                  std::vector<TCppFunction_t>& operators,
+                                  OperatorArity kind = kBoth);
 
   /// Creates an instance of the interpreter we need for the various interop
   /// services.
@@ -782,6 +798,11 @@ namespace Cpp {
                                    const char* code,
                                    unsigned complete_line = 1U,
                                    unsigned complete_column = 1U);
+
+  /// Reverts the last N operations performed by the interpreter.
+  ///\param[in] N The number of operations to undo. Defaults to 1.
+  ///\returns 0 on success, non-zero on failure.
+  CPPINTEROP_API int Undo(unsigned N = 1);
 
 } // end namespace Cpp
 

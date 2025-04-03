@@ -190,7 +190,7 @@ TEST(EnumReflectionTest, GetIntegerTypeFromEnumType) {
 #else
   EXPECT_EQ(get_int_type_from_enum_var(Decls[10]), "unsigned int");
 #endif
-  EXPECT_EQ(get_int_type_from_enum_var(Decls[11]), "NULL TYPE"); // When a non Enum Type variable is used 
+  EXPECT_EQ(get_int_type_from_enum_var(Decls[11]), "NULL TYPE"); // When a non Enum Type variable is used
 }
 
 TEST(EnumReflectionTest, GetEnumConstants) {

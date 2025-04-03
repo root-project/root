@@ -908,7 +908,7 @@ namespace Cpp {
       // of the Object file. They are present in the ExportDirectory section.
       for (auto I=CoffObj->export_directory_begin(),
                 E=CoffObj->export_directory_end(); I != E; I = ++I) {
-        // All the symbols are already flagged as exported. 
+        // All the symbols are already flagged as exported.
         // We cannot really ignore symbols based on flags as we do on unix.
         StringRef Name;
         auto Err = I->getSymbolName(Name);

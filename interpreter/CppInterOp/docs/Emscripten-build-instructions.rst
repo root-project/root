@@ -35,12 +35,13 @@ This can be installed by executing (we only currently support version
    git clone https://github.com/emscripten-core/emsdk.git
    ./emsdk/emsdk install  3.1.73
 
-and activate the emsdk environment
+and activate the emsdk environment (we are defining SYSROOT_PATH for use later)
 
 .. code:: bash
 
    ./emsdk/emsdk activate 3.1.73
    source ./emsdk/emsdk_env.sh
+   export SYSROOT_PATH=$PWD/emsdk/upstream/emscripten/cache/sysroot
 
 Now clone the 19.x release of the LLVM project repository and CppInterOp
 (the building of the emscripten version of llvm can be avoided by
@@ -84,10 +85,13 @@ executing the following
                  -DLLVM_INCLUDE_EXAMPLES=OFF                     \
                  -DLLVM_INCLUDE_TESTS=OFF                        \
                  -DLLVM_ENABLE_THREADS=OFF                       \
+                 -DLLVM_BUILD_TOOLS=OFF                          \
+                 -DLLVM_ENABLE_LIBPFM=OFF                        \
+                 -DCLANG_BUILD_TOOLS=OFF                         \
                  ../llvm
-   emmake make clang -j $(nproc --all)
-   emmake make clang-repl -j $(nproc --all)
-   emmake make lld -j $(nproc --all)
+   emmake make libclang -j $(nproc --all)
+   emmake make clangInterpreter clangStaticAnalyzerCore -j $(nproc --all)
+   emmake make lldWasm -j $(nproc --all)
 
 Once this finishes building we need to take note of where we built our
 llvm build. This can be done by executing the following
@@ -115,7 +119,7 @@ You will also want to set a few environment variables
    export CMAKE_PREFIX_PATH=$PREFIX
    export CMAKE_SYSTEM_PREFIX_PATH=$PREFIX
 
-Now to build CppInterOp execute the following
+Now to build and test your Emscripten build of CppInterOp by executing the following  
 
 .. code:: bash
 
@@ -128,15 +132,15 @@ Now to build CppInterOp execute the following
                  -DBUILD_SHARED_LIBS=ON                      \
                  -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON            \
                  -DCMAKE_INSTALL_PREFIX=$PREFIX         \
+                 -DSYSROOT_PATH=$SYSROOT_PATH                                   \
                  ../
-   emmake make -j $(nproc --all) install
+   emmake make -j $(nproc --all) check-cppinterop
 
-Once this finishes building we need to take note of where we built
-CppInterOp. This can be done by executing the following
+Assuming it passes all test you can install by executing the following. 
 
 .. code:: bash
 
-   export CPPINTEROP_BUILD_DIR=$PWD
+   emmake make -j $(nproc --all) install
 
 ## Xeus-cpp-lite Wasm Build Instructions
 
@@ -147,7 +151,6 @@ build folder, you can build the wasm version of xeus-cpp by executing
 .. code:: bash
 
    cd ../..
-   export SYSROOT_PATH=$PWD/emsdk/upstream/emscripten/cache/sysroot
    git clone --depth=1 https://github.com/compiler-research/xeus-cpp.git
    cd ./xeus-cpp
    mkdir build
@@ -158,7 +161,6 @@ build folder, you can build the wasm version of xeus-cpp by executing
            -DCMAKE_INSTALL_PREFIX=$PREFIX                                 \
            -DXEUS_CPP_EMSCRIPTEN_WASM_BUILD=ON                            \
            -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON                         \
-           -DCppInterOp_DIR="$CPPINTEROP_BUILD_DIR/lib/cmake/CppInterOp"  \
            -DSYSROOT_PATH=$SYSROOT_PATH                                   \
            ..
    emmake make -j $(nproc --all) install

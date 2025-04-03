@@ -306,7 +306,10 @@ TInterp_t clang_Interpreter_takeInterpreterAsPtr(CXInterpreter I) {
 
 enum CXErrorCode clang_Interpreter_undo(CXInterpreter I, unsigned int N) {
 #ifdef CPPINTEROP_USE_CLING
-  return CXError_Failure;
+  auto* interp = getInterpreter(I);
+  cling::Interpreter::PushTransactionRAII RAII(interp);
+  interp->unload(N);
+  return CXError_Success;
 #else
   return getInterpreter(I)->Undo(N) ? CXError_Failure : CXError_Success;
 #endif // CPPINTEROP_USE_CLING
@@ -326,17 +329,15 @@ void clang_Interpreter_addIncludePath(CXInterpreter I, const char* dir) {
   getInterpreter(I)->AddIncludePath(dir);
 }
 
+namespace Cpp {
+int Declare(compat::Interpreter& interp, const char* code, bool silent);
+} // namespace Cpp
+
 enum CXErrorCode clang_Interpreter_declare(CXInterpreter I, const char* code,
                                            bool silent) {
   auto* interp = getInterpreter(I);
-  auto& diag = interp->getSema().getDiagnostics();
 
-  const bool is_silent_old = diag.getSuppressAllDiagnostics();
-
-  diag.setSuppressAllDiagnostics(silent);
-  const auto result = interp->declare(code);
-  diag.setSuppressAllDiagnostics(is_silent_old);
-
+  const auto result = Cpp::Declare(*interp, code, silent);
   if (result)
     return CXError_Failure;
 
