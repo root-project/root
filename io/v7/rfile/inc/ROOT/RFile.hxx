@@ -89,6 +89,11 @@ public:
 };
 
 class RFile final {
+   enum PutFlags {
+      kPutAllowOverwrite = 0x1,
+      kPutOverwriteKeepCycle = 0x2,   
+   };
+   
    std::unique_ptr<TFile> fFile;
 
    explicit RFile(std::unique_ptr<TFile> file) : fFile(std::move(file)) {}
@@ -99,7 +104,22 @@ class RFile final {
    [[nodiscard]] void *GetUntyped(const char *path, const TClass *type) const;
 
    /// Writes `obj` to file, without taking its ownership.
-   void PutUntyped(const char *path, const TClass *type, void *obj);
+   void PutUntyped(const char *path, const TClass *type, const void *obj, std::uint32_t flags);
+
+   // XXX: consider exposing this function
+   template <typename T>
+   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags)
+   {
+      if (!IsValidPath(path)) {
+         throw RException(R__FAIL(std::string("Invalid object path: ") + std::string(path)));
+      }
+      std::string pathStr(path);
+      const TClass *cls = TClass::GetClass(typeid(T));
+      if (!cls) {
+         throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + pathStr));
+      }
+      PutUntyped(pathStr.c_str(), cls, &obj, flags);
+   }
 
 public:
    ///// Factory methods /////
@@ -141,19 +161,30 @@ public:
 
    /// Puts an object into the file.
    /// The application retains ownership of the object.
+   ///
+   /// Throws a RException if a directory already exists at `path`.
+   /// Throws a RException if an object already exists at `path`.
    /// Throws a RException if the file was opened in read-only mode.
    template <typename T>
-   void Put(std::string_view path, T &obj)
+   void Put(std::string_view path, const T &obj)
    {
-      if (!IsValidPath(path)) {
-         throw RException(R__FAIL(std::string("Invalid object path: ") + std::string(path)));
-      }
-      std::string pathStr(path);
-      const TClass *cls = TClass::GetClass(typeid(T));
-      if (!cls) {
-         throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + pathStr));
-      }
-      PutUntyped(pathStr.c_str(), cls, &obj);
+      PutInternal(path, obj, /* flags = */ 0);
+   }
+
+   /// Puts an object into the file, overwriting any previously-existing object at that path.
+   /// The application retains ownership of the object.
+   ///
+   /// If an object already exists at that path, it is kept as a backup cycle unless `backupPrevious` is false.
+   /// Note that even if `backupPrevious` is false, any existing cycle except the latest will be preserved.
+   ///
+   /// Throws a RException if a directory already exists at `path`.
+   /// Throws a RException if the file was opened in read-only mode.
+   template <typename T>
+   void Overwrite(std::string_view path, const T &obj, bool backupPrevious = true)
+   {
+      std::uint32_t flags = kPutAllowOverwrite;
+      flags |= backupPrevious * kPutOverwriteKeepCycle;
+      PutInternal(path, obj, flags);
    }
 
    /// Returns an iterable over all paths of objects written into this RFile starting at directory "rootDir".

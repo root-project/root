@@ -120,6 +120,54 @@ TEST(RFile, OpenForUpdating)
    EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
+TEST(RFile, PutOverwrite)
+{
+   FileRaii fileGuard("test_rfile_putoverwrite.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+
+   {
+      TH1D hist("hist", "", 100, -10, 10);
+      hist.FillRandom("gaus", 1000);
+      file->Put("hist", hist);
+   }
+
+   {
+      auto hist = file->Get<TH1D>("hist");
+      ASSERT_TRUE(hist);
+      EXPECT_EQ(static_cast<int>(hist->GetEntries()), 1000);
+   }
+
+   // Try putting another object at the same path, should fail
+   TH1D hist2("hist2", "a different hist", 10, -1, 1);
+   hist2.FillRandom("gaus", 10);
+   EXPECT_THROW(file->Put("hist", hist2), ROOT::RException);
+
+   // Try with Overwrite, should work (and preserve the old object)
+   file->Overwrite("hist", hist2);
+   {
+      auto hist = file->Get<TH1D>("hist");
+      ASSERT_TRUE(hist);
+      EXPECT_EQ(static_cast<int>(hist->GetEntries()), 10);
+
+      hist = file->Get<TH1D>("hist;1");
+      ASSERT_TRUE(hist);
+      EXPECT_EQ(static_cast<int>(hist->GetEntries()), 1000);
+   }
+
+   // Now try overwriting without preserving the existing object
+   std::string s;
+   file->Overwrite("hist", s, false);
+   {
+      // the previous cycle should be gone...
+      auto hist = file->Get<TH1D>("hist;2");
+      EXPECT_EQ(hist, nullptr);
+      // ...but any cycle before the latest should still be there!
+      hist = file->Get<TH1D>("hist;1");
+      EXPECT_NE(hist, nullptr);
+   }
+}
+
 TEST(RFile, WrongExtension)
 {
    FileRaii fileGuard("test_rfile_wrong.xml");
@@ -221,12 +269,14 @@ TEST(RFile, SaneHierarchy)
       file->Put("b/c", s);
       file->Put("b/d", s);
       EXPECT_THROW(file->Put("b/c/d", s), ROOT::RException);
+      EXPECT_THROW(file->Put("b", s), ROOT::RException);
 
       EXPECT_NE(file->Get<std::string>("a"), nullptr);
       EXPECT_EQ(file->Get<std::string>("a/b"), nullptr);
       EXPECT_NE(file->Get<std::string>("b/c"), nullptr);
       EXPECT_NE(file->Get<std::string>("b/d"), nullptr);
       EXPECT_EQ(file->Get<std::string>("b/c/d"), nullptr);
+      EXPECT_EQ(file->Get<std::string>("b"), nullptr);
    }
 }
 

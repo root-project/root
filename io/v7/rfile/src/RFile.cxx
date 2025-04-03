@@ -208,7 +208,16 @@ void *RFile::GetUntyped(const char *path, const TClass *type) const
    TKey *key = fFile->FindKey(path);
    void *obj = nullptr;
    if (key) {
-      obj = key->ReadObjectAny(type);
+      // For some reason, FindKey will not return nullptr if we asked for a specific cycle and that cycle
+      // doesn't exist. It will instead return any key whose cycle is *at most* the requested one.
+      // This is very confusing, so in RFile we actually return null if the requested cycle is not there.
+      short cycle;
+      TDirectory::DecodeNameCycle(path, nullptr, cycle);
+      // NOTE: cycle == 9999 means that `path` didn't contain a valid cycle (including no cycle at all)
+      //       cycle == 10000 means that `path` contained the "any cycle" pattern ("name;*")
+      if (cycle >= 9999 || key->GetCycle() == cycle) {
+         obj = key->ReadObjectAny(type);
+      }
    }
 
    // If we didn't find the object, try in subdirectories.
@@ -246,7 +255,7 @@ void *RFile::GetUntyped(const char *path, const TClass *type) const
    return obj;
 }
 
-void RFile::PutUntyped(const char *path, const TClass *type, void *obj)
+void RFile::PutUntyped(const char *path, const TClass *type, const void *obj, std::uint32_t flags)
 {
    assert(path);
    assert(type);
@@ -281,7 +290,20 @@ void RFile::PutUntyped(const char *path, const TClass *type, void *obj)
       }
    }
 
-   int success = dir->WriteObjectAny(obj, type, tokens[tokens.size() - 1].c_str());
+   const bool allowOverwrite = (flags & kPutAllowOverwrite) != 0;
+   const bool backupCycle = (flags & kPutOverwriteKeepCycle) != 0;
+   const Option_t *writeOpts = "";
+   if (!allowOverwrite) {
+      const TKey *existing = dir->GetKey(tokens[tokens.size() - 1].c_str());
+      if (existing) {
+         throw ROOT::RException(R__FAIL(std::string("trying to overwrite object ") + path + " of type " +
+                                        existing->GetClassName() + " with another object of type " + type->GetName()));
+      }
+   } else if (!backupCycle) {
+      writeOpts = "WriteDelete";
+   }
+
+   int success = dir->WriteObjectAny(obj, type, tokens[tokens.size() - 1].c_str(), writeOpts);
 
    if (!success) {
       throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
@@ -317,7 +339,7 @@ ROOT::RResult<std::pair<std::string, int>> ROOT::Experimental::RFileKeyIterable:
 void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
 {
    fCurKeyName = "";
-   
+
    // We only want to return keys that refer to user objects, not internal ones, therefore we skip
    // all keys that have internal class names.
    while (1) {
