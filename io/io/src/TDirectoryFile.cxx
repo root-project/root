@@ -775,7 +775,9 @@ void TDirectoryFile::FillBuffer(char *&buffer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find key with name keyname in the current directory
+/// Find key with name `keyname` in the current directory.
+/// `keyname` may be of the form name;cycle.
+/// See GetKey() for details on the semantics of this form.
 
 TKey *TDirectoryFile::FindKey(const char *keyname) const
 {
@@ -787,8 +789,10 @@ TKey *TDirectoryFile::FindKey(const char *keyname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find key with name keyname in the current directory or
+/// Find key with name `keyname` in the current directory or
 /// its subdirectories.
+/// `keyname` may be of the form name;cycle.
+/// See GetKey() for details on the semantics of this form.
 ///
 /// NOTE: that If a key is found, the directory containing the key becomes
 /// the current directory
@@ -1130,7 +1134,8 @@ Int_t TDirectoryFile::GetBufferSize() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to key with name,cycle
+/// Return pointer to key with name,cycle. If no key exists with the specified
+/// cycle, returns the key with the highest cycle that is lower than the requested cycle.
 ///
 ///  if cycle = 9999 returns highest cycle
 
