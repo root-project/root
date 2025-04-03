@@ -1038,13 +1038,6 @@ void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t la
 ///  If `last > fNbins`, the overflow bin is included in the range and will be displayed during drawing.
 ///  If `first < 1`, the underflow bin is included in the range and will be displayed during drawing.
 ///
-///  In the special case that `first == 1` and `last == fNbins`,
-///  and `fFirst` and `fLast` were already those values, then the `kAxisRange` bit is also reset. This
-///  happens when calling this function twice with the same arguments eg when (fully) unzooming with the mouse wheel.
-///  From a script, to fully unset the axis range, either call function twice with (1, fNbins) or call ResetBit(kAxisRange) by hand;
-///  to set the range to exactly 1 to fNbins without overflows, call SetRange(2,fNbins-1) and then SetRange(1,fNbins)
-///  or call SetRange(1,fNbins) and SetBit(kAxisRange) by hand.
-///
 ///  \note For historical reasons, SetRange(0,0) resets the range even though bin 0 is
 ///       technically reserved for the underflow; in order to set the range of the axis
 ///       so that it only includes the underflow, use `SetRange(-1,0)`.
@@ -1061,8 +1054,6 @@ void TAxis::SetRange(Int_t first, Int_t last)
    ) {
       fFirst = 1;
       fLast = fNbins;
-      SetBit(kAxisRange, false);
-   } else if (first == 1 && last == fNbins && fFirst == 1 && fLast == fNbins) {
       SetBit(kAxisRange, false);
    } else {
       fFirst = std::max(first, 0);
