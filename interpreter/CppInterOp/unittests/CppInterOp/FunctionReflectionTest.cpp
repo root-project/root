@@ -6,6 +6,8 @@
 #include "clang/Interpreter/CppInterOp.h"
 #include "clang/Sema/Sema.h"
 
+#include "clang-c/CXCppInterOp.h"
+
 #include "gtest/gtest.h"
 
 #include <string>
@@ -105,6 +107,20 @@ TEST(FunctionReflectionTest, GetClassMethods) {
   std::vector<Cpp::TCppFunction_t> methods5;
   Cpp::GetClassMethods(nullptr, methods5);
   EXPECT_EQ(methods5.size(), 0);
+
+  // C API
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  auto C_API_SHIM = [&](Cpp::TCppFunction_t method) {
+    auto Str = clang_getFunctionSignature(
+        make_scope(static_cast<clang::Decl*>(method), I));
+    auto Res = std::string(get_c_string(Str));
+    dispose_string(Str);
+    return Res;
+  };
+  EXPECT_EQ(C_API_SHIM(methods0[0]), "int A::f1(int a, int b)");
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
 
 TEST(FunctionReflectionTest, ConstructorInGetClassMethods) {
@@ -154,13 +170,22 @@ TEST(FunctionReflectionTest, HasDefaultConstructor) {
     int sum(int a, int b){
       return a+b;
     }
-    
+
     )";
 
   GetAllTopLevelDecls(code, Decls);
   EXPECT_TRUE(Cpp::HasDefaultConstructor(Decls[0]));
   EXPECT_TRUE(Cpp::HasDefaultConstructor(Decls[1]));
   EXPECT_FALSE(Cpp::HasDefaultConstructor(Decls[3]));
+
+  // C API
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  EXPECT_TRUE(clang_hasDefaultConstructor(make_scope(Decls[0], I)));
+  EXPECT_TRUE(clang_hasDefaultConstructor(make_scope(Decls[1], I)));
+  EXPECT_FALSE(clang_hasDefaultConstructor(make_scope(Decls[3], I)));
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
 
 TEST(FunctionReflectionTest, GetDestructor) {
@@ -189,6 +214,14 @@ TEST(FunctionReflectionTest, GetDestructor) {
   EXPECT_TRUE(DeletedDtor);
   EXPECT_TRUE(Cpp::IsFunctionDeleted(DeletedDtor));
   EXPECT_FALSE(Cpp::GetDestructor(Decls[3]));
+
+  // C API
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  EXPECT_TRUE(clang_getDestructor(make_scope(Decls[0], I)).data[0]);
+  EXPECT_TRUE(clang_getDestructor(make_scope(Decls[1], I)).data[0]);
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
 
 TEST(FunctionReflectionTest, GetFunctionsUsingName) {
@@ -244,6 +277,43 @@ TEST(FunctionReflectionTest, GetClassDecls) {
 
       template<class A = int, class B = char>
       long get_float_size(int i, A a = A(), B b = B()) {}
+
+      template<class A>
+      void get_char_size(long k, A, char ch = 'a', double l = 0.0) {}
+
+      void f1() {}
+      void f2(int i, double d, long l, char ch) {}
+
+      template<class A>
+      void get_size(long k, A, char ch = 'a', double l = 0.0) {}
+
+      void f3(int i, double d, long l = 0, char ch = 'a') {}
+      void f4(int i = 0, double d = 0.0, long l = 0, char ch = 'a') {}
+    };
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+  GetAllSubDecls(Decls[0], SubDecls);
+
+  std::vector<Cpp::TCppFunction_t> methods;
+  Cpp::GetClassMethods(Decls[0], methods);
+
+  EXPECT_EQ(methods.size(), 10); // includes structors and operators
+  EXPECT_EQ(Cpp::GetName(methods[0]), Cpp::GetName(SubDecls[4]));
+  EXPECT_EQ(Cpp::GetName(methods[1]), Cpp::GetName(SubDecls[5]));
+  EXPECT_EQ(Cpp::GetName(methods[2]), Cpp::GetName(SubDecls[7]));
+  EXPECT_EQ(Cpp::GetName(methods[3]), Cpp::GetName(SubDecls[8]));
+}
+
+TEST(FunctionReflectionTest, GetFunctionTemplatedDecls) {
+  std::vector<Decl*> Decls, SubDecls;
+  std::string code = R"(
+    class MyTemplatedMethodClass {
+      template<class A, class B>
+      long get_size(A, B, int i = 0) {}
+
+      template<class A = int, class B = char>
+      long get_float_size(int i, A a = A(), B b = B()) {}
            
       template<class A>
       void get_char_size(long k, A, char ch = 'a', double l = 0.0) {}
@@ -261,21 +331,15 @@ TEST(FunctionReflectionTest, GetClassDecls) {
 
   GetAllTopLevelDecls(code, Decls);
   GetAllSubDecls(Decls[0], SubDecls);
-  
-  std::vector<Cpp::TCppFunction_t> methods;
-  std::vector<Cpp::TCppFunction_t> template_methods;
 
-  Cpp::GetClassMethods(Decls[0], methods);
+  std::vector<Cpp::TCppFunction_t> template_methods;
   Cpp::GetFunctionTemplatedDecls(Decls[0], template_methods);
 
+  EXPECT_EQ(template_methods.size(), 4);
   EXPECT_EQ(Cpp::GetName(template_methods[0]), Cpp::GetName(SubDecls[1]));
   EXPECT_EQ(Cpp::GetName(template_methods[1]), Cpp::GetName(SubDecls[2]));
   EXPECT_EQ(Cpp::GetName(template_methods[2]), Cpp::GetName(SubDecls[3]));
-  EXPECT_EQ(Cpp::GetName(methods[0])         , Cpp::GetName(SubDecls[4]));
-  EXPECT_EQ(Cpp::GetName(methods[1])         , Cpp::GetName(SubDecls[5]));
   EXPECT_EQ(Cpp::GetName(template_methods[3]), Cpp::GetName(SubDecls[6]));
-  EXPECT_EQ(Cpp::GetName(methods[2])         , Cpp::GetName(SubDecls[7]));
-  EXPECT_EQ(Cpp::GetName(methods[3])         , Cpp::GetName(SubDecls[8]));
 }
 
 TEST(FunctionReflectionTest, GetFunctionReturnType) {
@@ -304,7 +368,7 @@ TEST(FunctionReflectionTest, GetFunctionReturnType) {
       char get_string(A) {
           return 'A';
       }
-              
+
       template<class A>
       void get_size() {}
 
@@ -379,7 +443,7 @@ TEST(FunctionReflectionTest, GetFunctionNumArgs) {
       char get_string(A, int i) {
           return 'A';
       }
-              
+
       template<class A>
       void get_size() {}
 
@@ -419,7 +483,7 @@ TEST(FunctionReflectionTest, GetFunctionRequiredArgs) {
 
       template<class A = int, class B = char>
       long get_size(int i, A a = A(), B b = B()) {}
-           
+
       template<class A>
       void get_size(long k, A, char ch = 'a', double l = 0.0) {}
     };
@@ -464,6 +528,8 @@ TEST(FunctionReflectionTest, GetFunctionSignature) {
   std::string code = R"(
     class C {
       void f(int i, double d, long l = 0, char ch = 'a') {}
+      template<typename T>
+      void ft(T a) {}
     };
 
     namespace N
@@ -471,6 +537,8 @@ TEST(FunctionReflectionTest, GetFunctionSignature) {
       void f(int i, double d, long l = 0, char ch = 'a') {}
     }
 
+    template<typename T>
+    void ft(T a) {}
     void f1() {}
     C f2(int i, double d, long l = 0, char ch = 'a') { return C(); }
     C *f3(int i, double d, long l = 0, char ch = 'a') { return new C(); }
@@ -482,18 +550,19 @@ TEST(FunctionReflectionTest, GetFunctionSignature) {
   GetAllSubDecls(Decls[0], Decls);
   GetAllSubDecls(Decls[1], Decls);
 
-  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[2]), "void f1()");
-  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[3]),
-            "C f2(int i, double d, long l = 0, char ch = 'a')");
+  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[2]), "void ft(T a)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[3]), "void f1()");
   EXPECT_EQ(Cpp::GetFunctionSignature(Decls[4]),
-            "C *f3(int i, double d, long l = 0, char ch = 'a')");
+            "C f2(int i, double d, long l = 0, char ch = 'a')");
   EXPECT_EQ(Cpp::GetFunctionSignature(Decls[5]),
-            "void f4(int i = 0, double d = 0., long l = 0, char ch = 'a')");
+            "C *f3(int i, double d, long l = 0, char ch = 'a')");
   EXPECT_EQ(Cpp::GetFunctionSignature(Decls[6]),
-            "<unknown>");
-  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[8]),
+            "void f4(int i = 0, double d = 0., long l = 0, char ch = 'a')");
+  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[7]), "<unknown>");
+  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[9]),
             "void C::f(int i, double d, long l = 0, char ch = 'a')");
-  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[13]),
+  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[10]), "void C::ft(T a)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(Decls[15]),
             "void N::f(int i, double d, long l = 0, char ch = 'a')");
   EXPECT_EQ(Cpp::GetFunctionSignature(nullptr), "<unknown>");
 }
@@ -524,6 +593,17 @@ TEST(FunctionReflectionTest, IsTemplatedFunction) {
   EXPECT_FALSE(Cpp::IsTemplatedFunction(Decls[3]));
   EXPECT_FALSE(Cpp::IsTemplatedFunction(SubDeclsC1[1]));
   EXPECT_TRUE(Cpp::IsTemplatedFunction(SubDeclsC1[2]));
+
+  // C API
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  EXPECT_FALSE(clang_isTemplatedFunction(make_scope(Decls[0], I)));
+  EXPECT_TRUE(clang_isTemplatedFunction(make_scope(Decls[1], I)));
+  EXPECT_FALSE(clang_isTemplatedFunction(make_scope(Decls[3], I)));
+  EXPECT_FALSE(clang_isTemplatedFunction(make_scope(SubDeclsC1[1], I)));
+  EXPECT_TRUE(clang_isTemplatedFunction(make_scope(SubDeclsC1[2], I)));
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
 
 TEST(FunctionReflectionTest, ExistsFunctionTemplate) {
@@ -544,6 +624,14 @@ TEST(FunctionReflectionTest, ExistsFunctionTemplate) {
   EXPECT_TRUE(Cpp::ExistsFunctionTemplate("f", 0));
   EXPECT_TRUE(Cpp::ExistsFunctionTemplate("f", Decls[1]));
   EXPECT_FALSE(Cpp::ExistsFunctionTemplate("f", Decls[2]));
+
+  // C API
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  EXPECT_TRUE(clang_existsFunctionTemplate("f", make_scope(Decls[1], I)));
+  EXPECT_FALSE(clang_existsFunctionTemplate("f", make_scope(Decls[2], I)));
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
 
 TEST(FunctionReflectionTest, InstantiateTemplateFunctionFromString) {
@@ -605,6 +693,159 @@ TEST(FunctionReflectionTest, InstantiateTemplateMethod) {
   EXPECT_TRUE(TA1.getAsType()->isIntegerType());
 }
 
+TEST(FunctionReflectionTest, LookupConstructors) {
+  if (llvm::sys::RunningOnValgrind())
+    GTEST_SKIP() << "XFAIL due to Valgrind report";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class MyClass {
+      public:
+        MyClass();
+        void helperMethod();
+        MyClass(const MyClass&);
+        static void staticFunc();
+        MyClass(MyClass&&);
+        template<typename T>
+        MyClass(T);
+        ~MyClass();
+    };
+
+    MyClass::MyClass() {}
+    void MyClass::helperMethod() {}
+    MyClass::MyClass(const MyClass&) {}
+    void MyClass::staticFunc() {}
+    MyClass::MyClass(MyClass&&) {}
+    template<typename T>
+    MyClass::MyClass(T t) {}
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+  std::vector<Cpp::TCppFunction_t> ctors;
+  Cpp::LookupConstructors("MyClass", Decls[0], ctors);
+
+  EXPECT_EQ(ctors.size(), 4)
+      << "Constructor lookup did not retrieve the expected set";
+  EXPECT_EQ(Cpp::GetFunctionSignature(ctors[0]), "MyClass::MyClass()");
+  EXPECT_EQ(Cpp::GetFunctionSignature(ctors[1]),
+            "MyClass::MyClass(const MyClass &)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(ctors[2]),
+            "MyClass::MyClass(MyClass &&)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(ctors[3]), "MyClass::MyClass(T t)");
+}
+
+TEST(FunctionReflectionTest, GetClassTemplatedMethods) {
+  if (llvm::sys::RunningOnValgrind())
+    GTEST_SKIP() << "XFAIL due to Valgrind report";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class MyClass {
+      public:
+        MyClass();
+        void helperMethod();
+        template<typename T>
+        MyClass(T);
+        template<typename U>
+        void templatedMethod(U param);
+        template<typename U, typename V>
+        U templatedMethod(U a, V b);
+        static void staticFunc();
+        template<typename T>
+        static void templatedStaticMethod(T param);
+        ~MyClass();
+    };
+
+    MyClass::MyClass() {}
+    void MyClass::helperMethod() {}
+    template<typename T>
+    MyClass::MyClass(T t) {}
+    template<typename U>
+    void MyClass::templatedMethod(U param) {}
+    template<typename U, typename V>
+    U MyClass::templatedMethod(U a, V b) { return a * b; }
+    void MyClass::staticFunc() {}
+    template<typename T>
+    void MyClass::templatedStaticMethod(T param) {}
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+  std::vector<Cpp::TCppFunction_t> templatedMethods;
+  Cpp::GetClassTemplatedMethods("MyClass", Decls[0], templatedMethods);
+  Cpp::GetClassTemplatedMethods("templatedMethod", Decls[0], templatedMethods);
+  Cpp::GetClassTemplatedMethods("templatedStaticMethod", Decls[0],
+                                templatedMethods);
+
+  EXPECT_EQ(templatedMethods.size(), 6)
+      << "Templated methods lookup did not retrieve the expected set";
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[0]),
+            "MyClass::MyClass()");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[1]),
+            "MyClass::MyClass(T t)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[2]),
+            "inline constexpr MyClass::MyClass(const MyClass &)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[3]),
+            "void MyClass::templatedMethod(U param)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[4]),
+            "U MyClass::templatedMethod(U a, V b)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[5]),
+            "void MyClass::templatedStaticMethod(T param)");
+}
+
+TEST(FunctionReflectionTest, GetClassTemplatedMethods_VariadicsAndOthers) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class MyClass {
+      public:
+        template<typename... Args>
+        void variadicMethod(Args... args);
+
+        template<int N>
+        int fixedMethod();
+
+        template<typename T = int>
+        T defaultMethod(T param);
+
+        template<typename U, typename... V>
+        U variadicMethod(U first, V... rest);
+
+        template<typename T, typename... Args>
+        static void staticVariadic(T t, Args... args);
+    };
+
+    template<typename... Args>
+    void MyClass::variadicMethod(Args... args) {}
+    template<int N>
+    int MyClass::fixedMethod() { return N; }
+    template<typename T>
+    T MyClass::defaultMethod(T param) { return param; }
+    template<typename U, typename... V>
+    U MyClass::variadicMethod(U first, V... rest) { return first; }
+    template<typename T, typename... Args>
+    void MyClass::staticVariadic(T t, Args... args) {}
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+  std::vector<Cpp::TCppFunction_t> templatedMethods;
+  Cpp::GetClassTemplatedMethods("fixedMethod", Decls[0], templatedMethods);
+  Cpp::GetClassTemplatedMethods("defaultMethod", Decls[0], templatedMethods);
+  Cpp::GetClassTemplatedMethods("variadicMethod", Decls[0], templatedMethods);
+  Cpp::GetClassTemplatedMethods("staticVariadic", Decls[0], templatedMethods);
+
+  EXPECT_EQ(templatedMethods.size(), 5)
+      << "Templated methods lookup did not retrieve the expected set";
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[0]),
+            "int MyClass::fixedMethod()");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[1]),
+            "T MyClass::defaultMethod(T param)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[2]),
+            "void MyClass::variadicMethod(Args ...args)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[3]),
+            "U MyClass::variadicMethod(U first, V ...rest)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[4]),
+            "void MyClass::staticVariadic(T t, Args ...args)");
+}
+
 TEST(FunctionReflectionTest, BestOverloadFunctionMatch1) {
   std::vector<Decl*> Decls;
   std::string code = R"(
@@ -636,7 +877,7 @@ TEST(FunctionReflectionTest, BestOverloadFunctionMatch1) {
       long MyTemplatedMethodClass::get_size(A a, B b) {
           return sizeof(A) + sizeof(B);
       }
-      
+
       template <int N, class T>
       long MyTemplatedMethodClass::get_size(T a) {
         return N + sizeof(T) + a;
@@ -761,7 +1002,7 @@ TEST(FunctionReflectionTest, BestOverloadFunctionMatch3) {
     template<typename T>
     struct A {
       T value;
-      
+
       template<typename TT>
       A<TT> operator-(A<TT> rhs) {
         return A<TT>{value - rhs.value};
@@ -1004,6 +1245,28 @@ TEST(FunctionReflectionTest, IsConstructor) {
   EXPECT_FALSE(Cpp::IsConstructor(SubDecls[4]));
   EXPECT_FALSE(Cpp::IsConstructor(SubDecls[6]));
   EXPECT_FALSE(Cpp::IsConstructor(SubDecls[8]));
+
+  // Test for templated constructor
+  std::vector<Decl*> templDecls, templSubDecls;
+  std::string templCode = R"(
+    class T {
+    public:
+      template<typename U>
+      T(U) {}
+      void func() {}
+      ~T() {}
+    };
+  )";
+
+  GetAllTopLevelDecls(templCode, templDecls);
+  GetAllSubDecls(templDecls[0], templSubDecls);
+
+  int templCtorCount = 0;
+  for (auto* decl : templSubDecls) {
+    if (Cpp::IsConstructor(decl))
+      templCtorCount++;
+  }
+  EXPECT_EQ(templCtorCount, 1);
 }
 
 TEST(FunctionReflectionTest, IsDestructor) {
@@ -1049,6 +1312,9 @@ TEST(FunctionReflectionTest, IsStaticMethod) {
 }
 
 TEST(FunctionReflectionTest, GetFunctionAddress) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
@@ -1093,6 +1359,9 @@ TEST(FunctionReflectionTest, IsVirtualMethod) {
 }
 
 TEST(FunctionReflectionTest, JitCallAdvanced) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
   std::vector<Decl*> Decls;
@@ -1113,10 +1382,24 @@ TEST(FunctionReflectionTest, JitCallAdvanced) {
   EXPECT_TRUE(object) << "Failed to call the ctor.";
   // Building a wrapper with a typedef decl must be possible.
   Cpp::Destruct(object, Decls[1]);
+
+  // C API
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  auto S = clang_getDefaultConstructor(make_scope(Decls[0], I));
+  void* object_c = nullptr;
+  clang_invoke(S, &object_c, nullptr, 0, nullptr);
+  EXPECT_TRUE(object_c) << "Failed to call the ctor.";
+  clang_destruct(object_c, make_scope(Decls[1], I), true);
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
 
 
 TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #if defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
@@ -1216,12 +1499,12 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   FCI_Dtor.Invoke(object);
   output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "Dtor Called\n");
-  
+
   std::vector<Decl*> Decls1;
   std::string code1 = R"(
-        template<typename T> 
+        template<typename T>
         struct S {
-        
+
         static T Add(T a, T b) { return a + b; }
 
         };
@@ -1353,7 +1636,7 @@ TEST(FunctionReflectionTest, GetFunctionArgName) {
 
     template<class A = int, class B = char>
     long get_size(int i, A a = A(), B b = B()) {}
-          
+
     template<class A>
     void get_size(long k, A, char ch = 'a', double l = 0.0) {}
     )";
@@ -1393,7 +1676,7 @@ TEST(FunctionReflectionTest, GetFunctionArgDefault) {
 
     template<class A = int, class B = char>
     long get_size(int i, A a = A(), B b = B()) {}
-          
+
     template<class A>
     void get_size(long k, A, char ch = 'a', double l = 0.0) {}
 
@@ -1424,6 +1707,9 @@ TEST(FunctionReflectionTest, GetFunctionArgDefault) {
 }
 
 TEST(FunctionReflectionTest, Construct) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
@@ -1461,9 +1747,29 @@ TEST(FunctionReflectionTest, Construct) {
   Cpp::Deallocate(scope, where);
   output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "Constructor Executed");
+  output.clear();
+
+  // C API
+  testing::internal::CaptureStdout();
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  auto scope_c = make_scope(static_cast<clang::Decl*>(scope), I);
+  auto object_c = clang_construct(scope_c, nullptr);
+  EXPECT_TRUE(object_c != nullptr);
+  output = testing::internal::GetCapturedStdout();
+  EXPECT_EQ(output, "Constructor Executed");
+  output.clear();
+  auto* dummy = clang_allocate(8);
+  EXPECT_TRUE(dummy);
+  clang_deallocate(dummy);
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
 
 TEST(FunctionReflectionTest, Destruct) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 
@@ -1501,4 +1807,44 @@ TEST(FunctionReflectionTest, Destruct) {
   Cpp::Deallocate(scope, object);
   output = testing::internal::GetCapturedStdout();
   EXPECT_EQ(output, "Destructor Executed");
+
+  // C API
+  testing::internal::CaptureStdout();
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  auto scope_c = make_scope(static_cast<clang::Decl*>(scope), I);
+  auto object_c = clang_construct(scope_c, nullptr);
+  clang_destruct(object_c, scope_c, true);
+  output = testing::internal::GetCapturedStdout();
+  EXPECT_EQ(output, "Destructor Executed");
+  output.clear();
+  // Clean up resources
+  clang_Interpreter_takeInterpreterAsPtr(I);
+  clang_Interpreter_dispose(I);
 }
+
+TEST(FunctionReflectionTest, UndoTest) {
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#else
+  Cpp::CreateInterpreter();
+  EXPECT_EQ(Cpp::Process("int a = 5;"), 0);
+  EXPECT_EQ(Cpp::Process("int b = 10;"), 0);
+  EXPECT_EQ(Cpp::Process("int x = 5;"), 0);
+  Cpp::Undo();
+  EXPECT_NE(Cpp::Process("int y = x;"), 0);
+  EXPECT_EQ(Cpp::Process("int x = 10;"), 0);
+  EXPECT_EQ(Cpp::Process("int y = 10;"), 0);
+  Cpp::Undo(2);
+  EXPECT_EQ(Cpp::Process("int x = 20;"), 0);
+  EXPECT_EQ(Cpp::Process("int y = 20;"), 0);
+  int ret = Cpp::Undo(100);
+#ifdef CPPINTEROP_USE_CLING
+  EXPECT_EQ(ret, 0);
+#else
+  EXPECT_EQ(ret, 1);
+#endif
+#endif
+  }

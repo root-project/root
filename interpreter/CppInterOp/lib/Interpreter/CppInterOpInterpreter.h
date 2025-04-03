@@ -429,6 +429,15 @@ public:
     return ret; // TODO: Implement
   }
 
+  CompilationResult undo(unsigned N = 1) {
+    if (llvm::Error Err = Undo(N)) {
+      llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
+                                  "Failed to undo via ::undo");
+      return kFailure;
+    }
+    return kSuccess;
+  }
+
 }; // Interpreter
 } // namespace Cpp
 

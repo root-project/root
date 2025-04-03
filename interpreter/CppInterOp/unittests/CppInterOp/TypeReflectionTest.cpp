@@ -5,6 +5,8 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
+#include "clang-c/CXCppInterOp.h"
+
 #include "gtest/gtest.h"
 
 #include <cstdint>
@@ -354,7 +356,7 @@ TEST(TypeReflectionTest, GetComplexType) {
   EXPECT_EQ(get_complex_type_as_string("double"), "_Complex double");
 
   // C API
-  auto I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
+  auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
   auto C_API_SHIM = [&](const std::string& element_type) {
     auto ElementQT = Cpp::GetType(element_type);
     CXQualType EQT = {CXType_Unexposed, {ElementQT, I}};
@@ -382,7 +384,7 @@ TEST(TypeReflectionTest, GetTypeFromScope) {
     struct S {};
     int a = 10;
     )";
-  
+
   GetAllTopLevelDecls(code, Decls);
 
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetTypeFromScope(Decls[0])), "C");
@@ -474,7 +476,7 @@ TEST(TypeReflectionTest, GetDimensions) {
   {
     EXPECT_EQ(dims[i], truth_dims[i]);
   }
-  
+
   // Variable c
   dims = Cpp::GetDimensions(Cpp::GetVariableType(Decls[2]));
   truth_dims = std::vector<long int>({1, 2});

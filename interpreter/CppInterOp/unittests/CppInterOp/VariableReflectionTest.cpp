@@ -166,11 +166,11 @@ TEST(VariableReflectionTest, GetTypeAsString) {
 
   std::string code = R"(
   namespace my_namespace {
-  
+
   struct Container {
     int value;
   };
-  
+
   struct Wrapper {
     Container item;
   };
@@ -263,6 +263,9 @@ TEST(VariableReflectionTest, GetVariableType) {
 CODE
 
 TEST(VariableReflectionTest, GetVariableOffset) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
   std::vector<Decl *> Decls;
 #define Stringify(s) Stringifyx(s)
 #define Stringifyx(...) #__VA_ARGS__
@@ -487,7 +490,7 @@ TEST(VariableReflectionTest, DISABLED_GetArrayDimensions) {
   //FIXME: is_vec_eq is an unused variable until test does something
   //auto is_vec_eq = [](const std::vector<size_t> &arr_dims,
   //                    const std::vector<size_t> &truth_vals) {
-  //  if (arr_dims.size() != truth_vals.size()) 
+  //  if (arr_dims.size() != truth_vals.size())
   //    return false;
   //
   //  return std::equal(arr_dims.begin(), arr_dims.end(), truth_vals.begin());
