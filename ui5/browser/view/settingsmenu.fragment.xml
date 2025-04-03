@@ -53,6 +53,7 @@
             <CheckBox text="Reverse order" selected="{/ReverseOrder}" />
             <CheckBox text="Show hidden files" selected="{/ShowHiddenFiles}" />
             <CheckBox text="Double click to run macro" selected="{/DBLCLKRun}" />
+            <CheckBox text="Draw by mouse double-click" selected="{/HandleDoubleClick}" tooltip="Plain click mode support also keyboard navigation"/>
           </VBox>
         </content>
       </ViewSettingsCustomTab>

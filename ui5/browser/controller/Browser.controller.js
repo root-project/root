@@ -6,6 +6,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/model/json/JSONModel',
                'sap/ui/table/Column',
                'sap/ui/table/TreeTable',
+               'sap/ui/table/library',
                'sap/ui/layout/HorizontalLayout',
                'sap/m/TabContainerItem',
                'sap/m/MessageToast',
@@ -36,6 +37,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            JSONModel,
            tableColumn,
            TreeTable,
+           table_lib,
            HorizontalLayout,
            TabContainerItem,
            MessageToast,
@@ -81,6 +83,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ReverseOrder: false,
             ShowHiddenFiles: false,
             AppendToCanvas: false,
+            HandleDoubleClick: true,
             DBLCLKRun: false,
             optTH1: '<dflt>',
             TH1: [
@@ -193,6 +196,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          };
 
          let t = this.getView().byId('treeTable');
+
+         t.setSelectionMode(this.model.isHandleDoubleClick() ? table_lib.SelectionMode.None : table_lib.SelectionMode.Single);
          t.setModel(this.model);
 
          this.model.assignTreeTable(t);
@@ -589,7 +594,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Invoke dialog with server side code */
       onSaveAsFile(tab) {
-
          const oModel = tab.getModel();
          FileDialogController.SaveAs({
             websocket: this.websocket,
@@ -755,6 +759,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onSettingsPress() {
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
+         this._oSettingsModel.setProperty("/HandleDoubleClick", this.model.isHandleDoubleClick());
          this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
@@ -781,14 +786,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       handleSeetingsConfirm() {
          let append = this._oSettingsModel.getProperty("/AppendToCanvas"),
+             handledbl = this._oSettingsModel.getProperty("/HandleDoubleClick"),
              lastcycle = this._oSettingsModel.getProperty("/OnlyLastCycle"),
              hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles"),
              sort = this._oSettingsModel.getProperty("/SortMethod"),
              reverse = this._oSettingsModel.getProperty("/ReverseOrder"),
-             changed = false;
+             changed = false, changed_dblclick = false;
 
          if (append != this.model.isAppendToCanvas())
             this.model.setAppendToCanvas(append);
+
+         if (handledbl != this.model.isHandleDoubleClick()) {
+            this.model.setHandleDoubleClick(handledbl);
+            changed_dblclick = true;
+         }
 
          if (lastcycle != (this.model.getOnlyLastCycle() > 0)) {
             changed = true;
@@ -814,6 +825,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (optmsg != this.lastOptMessage) {
             this.lastOptMessage = optmsg;
             this.websocket.send(optmsg);
+         }
+
+         if (changed_dblclick) {
+            this.assignRowHandlers();
+            this.getView().byId('treeTable').setSelectionMode(this.model.isHandleDoubleClick() ? table_lib.SelectionMode.None : table_lib.SelectionMode.Single);
          }
 
          if (changed)
@@ -1031,11 +1047,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Assign the "double click" event handler to each row */
       assignRowHandlers() {
-         let rows = this.byId("treeTable").getRows();
+         const rows = this.byId("treeTable").getRows(),
+               on = this.model.isHandleDoubleClick();
          for (let k = 0; k < rows.length; ++k) {
-            rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]))
+            rows[k].$().dblclick(on ? this.onRowDblClick.bind(this, rows[k]) : null)
                        .css('user-select', 'none');
          }
+      },
+
+      onCellClick(oEvent) {
+         if (!this.model.isHandleDoubleClick())
+            this.onRowDblClick(null, oEvent.getParameter('rowBindingContext'));
       },
 
       onDragStart(oEvent) {
@@ -1057,19 +1079,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          const oDragSession = oEvent.getParameter("dragSession"),
                prop = oDragSession.getComplexData("item_property");
 
-         console.log('handle drop', prop.path);
-
          this.websocket.send("DROP:" + JSON.stringify(prop.path));
 
          this.invokeWarning("Processing drop of: " + prop.name, 1000);
       },
 
       /** @summary Double-click event handler */
-      onRowDblClick(row) {
-         let ctxt = row.getBindingContext(),
-             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
-
-         if (!prop || !prop.path) return;
+      onRowDblClick(row, ctxt) {
+         if (row) ctxt = row.getBindingContext();
+         const prop = ctxt?.getProperty(ctxt?.getPath());
+         if (!prop?.path)
+            return;
 
          let opt = "<dflt>", exec = "";
 
