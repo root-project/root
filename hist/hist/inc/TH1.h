@@ -326,7 +326,7 @@ public:
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
-   Double_t GetSumOfAllWeights(const bool includeOverflow) const;
+   Double_t         GetSumOfAllWeights(const bool includeOverflow) const;
    ////////////////////////////////////////////////////////////////////////////////
    /// Return the sum of weights excluding under/overflows.
    /// \note Different from TH1::GetSumOfAllWeights, that allows you to control
