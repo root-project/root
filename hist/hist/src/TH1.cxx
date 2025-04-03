@@ -7906,20 +7906,20 @@ void TH1::ResetStats()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the sum of all weights
-/// \param overflow true to include under/overflows bins, false to exclude those.
+/// \param includeOverflow true to include under/overflows bins, false to exclude those.
 /// \note Different from TH1::GetSumOfWeights, that always excludes those
 
-Double_t TH1::GetSumOfAllWeights(const bool overflow) const
+Double_t TH1::GetSumOfAllWeights(const bool includeOverflow) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
    Int_t bin, binx, biny, binz;
-   const Int_t startX = (overflow ? 0 : 1);
-   const Int_t startY = (overflow ? 0 : 1);
-   const Int_t startZ = (overflow ? 0 : 1);
-   const Int_t lastX = fXaxis.GetNbins() + (overflow ? 1 : 0);
-   const Int_t lastY = fYaxis.GetNbins() + (overflow ? 1 : 0);
-   const Int_t lastZ = fZaxis.GetNbins() + (overflow ? 1 : 0);
+   const Int_t startX = (includeOverflow ? 0 : 1);
+   const Int_t startY = (includeOverflow ? 0 : 1);
+   const Int_t startZ = (includeOverflow ? 0 : 1);
+   const Int_t lastX = fXaxis.GetNbins() + (includeOverflow ? 1 : 0);
+   const Int_t lastY = fYaxis.GetNbins() + (includeOverflow ? 1 : 0);
+   const Int_t lastZ = fZaxis.GetNbins() + (includeOverflow ? 1 : 0);
    Double_t sum =0;
    for(binz = startZ; binz <= lastZ; binz++) {
       for(biny = startY; biny <= lastY; biny++) {
@@ -7930,16 +7930,6 @@ Double_t TH1::GetSumOfAllWeights(const bool overflow) const
       }
    }
    return sum;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the sum of weights excluding under/overflows.
-/// \note Different from TH1::GetSumOfAllWeights, that allows you to control
-/// if you include or exclude those.
-
-Double_t TH1::GetSumOfWeights() const
-{
-   return GetSumOfAllWeights(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
