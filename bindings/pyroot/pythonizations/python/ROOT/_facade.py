@@ -12,6 +12,7 @@ from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
 
 from ._pythonization import pythonization
+from ._pythonization._uhi import add_module_level_uhi_helpers
 
 
 class PyROOTConfiguration(object):
@@ -60,6 +61,8 @@ class ROOTFacade(types.ModuleType):
 
     def __init__(self, module, is_ipython):
         types.ModuleType.__init__(self, module.__name__)
+
+        add_module_level_uhi_helpers(self)
 
         self.module = module
 
