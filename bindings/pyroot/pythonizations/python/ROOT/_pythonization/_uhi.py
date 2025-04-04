@@ -171,11 +171,6 @@ def _setbin(self, index, value):
 def _resolve_slice_indices(self, index, axis):
     """Resolve slice start and stop indices for a given axis"""
     start, stop = index.start, index.stop
-    # exclude flow bins
-    if start == 0 and stop is len:
-        start = _underflow(self, axis) - 1
-        stop = _overflow(self, axis)
-
     start = start(self, axis) if callable(start) else start or (_underflow(self, axis))
     stop = stop(self, axis) if callable(stop) else stop or (_overflow(self, axis) + 1)
     if start < _underflow(self, axis) or stop > (_overflow(self, axis) + 1) or start > stop:
