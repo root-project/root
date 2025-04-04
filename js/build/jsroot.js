@@ -168108,7 +168108,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Change zooming in standalone mode */
    zoomStandalone(min, max) {
-      this.changeAxisAttr(1, 'zoomMin', min, 'zoomMax', max);
+      return this.changeAxisAttr(1, 'zoomMin', min, 'zoomMax', max);
    }
 
    /** @summary Redraw axis, used in standalone mode for RAxisDrawable */
@@ -168120,15 +168120,17 @@ class RAxisPainter extends RObjectPainter {
             labels_len = drawable.fLabels.length,
             min = (labels_len > 0) ? 0 : this.v7EvalAttr('min', 0),
             max = (labels_len > 0) ? labels_len : this.v7EvalAttr('max', 100);
-      let len = pp.getPadLength(drawable.fVertical, drawable.fLength);
+      let len = pp.getPadLength(drawable.fVertical, drawable.fLength),
+          smin = this.v7EvalAttr('zoomMin'),
+          smax = this.v7EvalAttr('zoomMax');
 
       // in vertical direction axis drawn in negative direction
-      if (drawable.fVertical) len -= pp.getPadHeight();
+      if (drawable.fVertical)
+         len -= pp.getPadHeight();
 
-      let smin = this.v7EvalAttr('zoomMin'),
-          smax = this.v7EvalAttr('zoomMax');
       if (smin === smax) {
-         smin = min; smax = max;
+         smin = min;
+         smax = max;
       }
 
       this.configureAxis('axis', min, max, smin, smax, drawable.fVertical, undefined, len, { reverse, labels: labels_len > 0 });
@@ -170513,7 +170515,7 @@ class RPadPainter extends RObjectPainter {
 
       // empty object, no need to do something, take next
       if (snap.fDummy)
-         return this.drawNextSnap(lst, pindx, indx);
+         return this.drawNextSnap(lst, pindx + 1, indx);
 
       if (snap._typename === `${nsREX}TObjectDisplayItem`) {
          // identifier used in TObjectDrawable
@@ -170699,16 +170701,15 @@ class RPadPainter extends RObjectPainter {
          if (i >= snap.fPrimitives.length)
             break;
 
+
          const prim = snap.fPrimitives[i];
-         // ignore primitives without snapid or which are not produce drawings
-         if (prim.fDummy || !prim.fObjectID || ((prim._typename === `${nsREX}TObjectDisplayItem`) && ((prim.fKind === webSnapIds.kStyle) || (prim.fKind === webSnapIds.kColors) || (prim.fKind === webSnapIds.kPalette) || (prim.fKind === webSnapIds.kFont)))) {
-            i++;
-            continue;
-         }
 
          if (prim.fObjectID === sub.snapid) {
             i++;
             k++;
+         } else if (prim.fDummy || !prim.fObjectID || ((prim._typename === `${nsREX}TObjectDisplayItem`) && ((prim.fKind === webSnapIds.kStyle) || (prim.fKind === webSnapIds.kColors) || (prim.fKind === webSnapIds.kPalette) || (prim.fKind === webSnapIds.kFont)))) {
+            // ignore primitives without snapid or which are not produce drawings
+            i++;
          } else {
             missmatch = true;
             break;

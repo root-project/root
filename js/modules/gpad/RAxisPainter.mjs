@@ -949,7 +949,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Change zooming in standalone mode */
    zoomStandalone(min, max) {
-      this.changeAxisAttr(1, 'zoomMin', min, 'zoomMax', max);
+      return this.changeAxisAttr(1, 'zoomMin', min, 'zoomMax', max);
    }
 
    /** @summary Redraw axis, used in standalone mode for RAxisDrawable */
@@ -961,15 +961,17 @@ class RAxisPainter extends RObjectPainter {
             labels_len = drawable.fLabels.length,
             min = (labels_len > 0) ? 0 : this.v7EvalAttr('min', 0),
             max = (labels_len > 0) ? labels_len : this.v7EvalAttr('max', 100);
-      let len = pp.getPadLength(drawable.fVertical, drawable.fLength);
+      let len = pp.getPadLength(drawable.fVertical, drawable.fLength),
+          smin = this.v7EvalAttr('zoomMin'),
+          smax = this.v7EvalAttr('zoomMax');
 
       // in vertical direction axis drawn in negative direction
-      if (drawable.fVertical) len -= pp.getPadHeight();
+      if (drawable.fVertical)
+         len -= pp.getPadHeight();
 
-      let smin = this.v7EvalAttr('zoomMin'),
-          smax = this.v7EvalAttr('zoomMax');
       if (smin === smax) {
-         smin = min; smax = max;
+         smin = min;
+         smax = max;
       }
 
       this.configureAxis('axis', min, max, smin, smax, drawable.fVertical, undefined, len, { reverse, labels: labels_len > 0 });
