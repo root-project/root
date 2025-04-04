@@ -464,8 +464,8 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
     throw hf_exc();
   }
 
-
-  TH1 * ptr = static_cast<TH1 *>(hist->Clone());
+  TDirectory::TContext ctx{nullptr}; // Suppress any kind of registration
+  TH1 *ptr = static_cast<TH1 *>(hist->Clone());
 
   if(!ptr){
     std::cerr << "Not all necessary info are set to access the input file. Check your config" << std::endl;
@@ -475,6 +475,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
     throw hf_exc();
   }
 
+  ptr->SetBit(kMustCleanup, false); // Don't try to clean up this histogram
   ptr->SetDirectory(nullptr);
 
 
