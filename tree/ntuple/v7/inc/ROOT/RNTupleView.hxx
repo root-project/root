@@ -371,7 +371,11 @@ public:
                                      collectionStart.GetIndexInCluster() + size);
    }
 
+   /// Provides access to an individual (sub)field.
+   ///
    /// Raises an exception if there is no field with the given name.
+   ///
+   /// \sa ROOT::RNTupleReader::GetView(std::string_view)
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName)
    {
@@ -380,7 +384,12 @@ public:
       return RNTupleView<T>(std::move(field), range);
    }
 
+   /// Provides direct access to the I/O buffers of a **mappable** (sub)field.
+   ///
    /// Raises an exception if there is no field with the given name.
+   /// Attempting to access the values of a direct-access view for non-mappable fields will yield compilation errors.
+   ///
+   /// \sa ROOT::RNTupleReader::DirectAccessView(std::string_view)
    template <typename T>
    RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
    {
@@ -389,7 +398,13 @@ public:
       return RNTupleDirectAccessView<T>(std::move(field), range);
    }
 
-   /// Raises an exception if there is no field with the given name.
+   /// Provides access to a collection field, that can itself generate new RNTupleViews for its nested fields.
+   ///
+   /// Raises an exception if:
+   /// * there is no field with the given name or,
+   /// * the field is not a collection
+   ///
+   /// \sa ROOT::RNTupleReader::GetCollectionView(std::string_view)
    RNTupleCollectionView GetCollectionView(std::string_view fieldName)
    {
       return RNTupleCollectionView::Create(GetFieldId(fieldName), fSource);
