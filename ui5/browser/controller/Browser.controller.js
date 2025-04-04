@@ -222,7 +222,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }));
 
          this.columnNames   = ['Size',  'Time',  'Type',  'UID',  'GID',  'ClassName'];
-         this.columnFields  = ['fisze', 'mtime', 'ftype', 'fuid', 'fgid', 'className'];
+         this.columnFields  = ['fsize', 'mtime', 'ftype', 'fuid', 'fgid', 'className'];
          this.columnVisible = [ true,    false,   false,   false,  false,  false];
          for (let i = 0; i < this.columnNames.length; ++i) {
             t.addColumn(new tableColumn({
@@ -246,15 +246,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          t.addEventDelegate({
             onAfterRendering() {
                this.assignRowHandlers();
-               if (this._columnResized < 1) return;
-               this._columnResized = 0;
-               let fullsz = 4;
-
-               t.getColumns().forEach(col => {
-                  if (col.getVisible()) fullsz += 4 + col.$().width();
-               });
-               // this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
-               this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth(fullsz + 'px');
+               if (this._columnResized > 0) {
+                  this._columnResized = 0;
+                  this.adjustToColumnsWidths(false);
+               }
             }
          }, this);
 
@@ -274,18 +269,38 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.oMenu.addItem(new MenuActionItem({
                icon: this.columnVisible[i] ? "sap-icon://accept" : "sap-icon://hide",
                label: this.columnNames[i],
-               press: [() => this.pressColumnMenu(i), this]
+               press: () => this.pressColumnMenu(i)
             }));
+         this.oMenu.addItem(new MenuActionItem({
+            icon: 'sap-icon://resize-horizontal',
+            label: 'Resize columns',
+            press: () => this.adjustToColumnsWidths(true)
+         }));
       },
 
       pressColumnMenu(indx) {
          this.columnVisible[indx] = !this.columnVisible[indx];
 
-         let t = this.getView().byId('treeTable');
+         const t = this.getView().byId('treeTable');
          t.getColumns()[indx+1].setVisible(this.columnVisible[indx]);
 
          this.oMenu.close();
          this.buildColumnsMenu();
+      },
+
+      adjustToColumnsWidths(auto_resize) {
+         if (auto_resize)
+            this.oMenu.close();
+         let fullsz = 4;
+         const t = this.getView().byId('treeTable');
+         t.getColumns().forEach(col => {
+            if (col.getVisible()) {
+               if (auto_resize)
+                  col.autoResize();
+               fullsz += 4 + col.$().width();
+            }
+         });
+         this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth(fullsz + 'px');
       },
 
 
