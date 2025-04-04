@@ -206,6 +206,9 @@ protected:
    void             MoveReadCache(TFile *src, TDirectory *dir);
    Int_t            SetCacheSizeAux(bool autocache = true, Long64_t cacheSize = 0);
 
+   TBranch *GetBranchFromSelf(const char *branchName);
+   TBranch *GetBranchFromFriends(const char *branchName);
+
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
       // usage of TTree Friends. Implemented in TTree.cxx.
