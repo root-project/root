@@ -1845,6 +1845,11 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
        (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
       map_convert = json->is_object() ? 2 : 1; // check if map was written as array or as object
+
+      if (objClass && !objClass->HasDictionary()) {
+         Error("JsonReadObject", "Cannot stream class %s without dictionary", objClass->GetName());
+         return obj;
+      }
    }
 
    // from now all operations performed with sub-element,
