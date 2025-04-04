@@ -83,17 +83,19 @@ if(ROOT_TORCH_FOUND)
 
    # Test RModelParser_PyTorch
 
-   ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
-         LIBRARIES
-         ROOTTMVASofie
-         TMVA
-         Python3::NumPy
-         Python3::Python
-         INCLUDE_DIRS
-         SYSTEM
-         ${CMAKE_CURRENT_BINARY_DIR}
-      )
-   target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+   if(BLAS_FOUND)
+     ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
+           LIBRARIES
+           ROOTTMVASofie
+           TMVA
+           Python3::NumPy
+           Python3::Python
+           BLAS::BLAS
+           INCLUDE_DIRS
+           SYSTEM
+           ${CMAKE_CURRENT_BINARY_DIR}
+        )
+   endif()
 
 endif(ROOT_TORCH_FOUND)
 
@@ -127,16 +129,18 @@ if((ROOT_KERAS_FOUND AND ROOT_THEANO_FOUND) OR (ROOT_KERAS_FOUND AND ROOT_TENSOR
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass DEPENDS ${PyMVA-Keras-Multiclass-depends})
 
-   ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
-    LIBRARIES
-    ROOTTMVASofie
-    PyMVA
-    Python3::NumPy
-    Python3::Python
-    INCLUDE_DIRS
-    SYSTEM
-    ${CMAKE_CURRENT_BINARY_DIR}
-   )
-   target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+   if(BLAS_FOUND)
+      ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
+         LIBRARIES
+         ROOTTMVASofie
+         PyMVA
+         Python3::NumPy
+         Python3::Python
+         BLAS::BLAS
+         INCLUDE_DIRS
+         SYSTEM
+         ${CMAKE_CURRENT_BINARY_DIR}
+     )
+  endif()
 
 endif()
