@@ -1364,6 +1364,12 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          map_convert = 2; // mapped into normal object
       else
          map_convert = 1;
+
+      if (!cl->HasDictionary()) {
+         Error("JsonWriteObject", "Cannot stream class %s without dictionary", cl->GetName());
+         AppendOutput(map_convert == 1 ? "[]" : "null");
+         goto post_process;
+      }
    }
 
    if (!obj) {
