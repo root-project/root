@@ -832,8 +832,8 @@ void ROOT::Internal::TTreeReaderValueBase::ErrorAboutMissingProxyIfNeeded()
 {
    // Print the error only if the branch name does not appear in the list of
    // missing proxies that the user explicitly requested not to error about
-   if (std::find(fTreeReader->fMissingProxies.cbegin(), fTreeReader->fMissingProxies.cend(), fBranchName.Data()) ==
-       fTreeReader->fMissingProxies.cend())
+   if (!fTreeReader || std::find(fTreeReader->fMissingProxies.cbegin(), fTreeReader->fMissingProxies.cend(),
+                                 fBranchName.Data()) == fTreeReader->fMissingProxies.cend())
       Error("TTreeReaderValue::Get()", "Value reader not properly initialized, did you call "
                                        "TTreeReader::Set(Next)Entry() or TTreeReader::Next()?");
 }
