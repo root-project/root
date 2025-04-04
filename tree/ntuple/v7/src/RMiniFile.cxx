@@ -1152,6 +1152,9 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
       flags |= O_DIRECT;
    }
    int fd = open(std::string(path).c_str(), flags, 0666);
+   if (fd == -1) {
+      throw RException(R__FAIL(std::string("open failed for file \"") + std::string(path) + "\": " + strerror(errno)));
+   }
    FILE *fileStream = fdopen(fd, "wb");
 #else
 #ifdef R__SEEK64
@@ -1160,7 +1163,9 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    FILE *fileStream = fopen(std::string(path.data(), path.size()).c_str(), "wb");
 #endif
 #endif
-   R__ASSERT(fileStream);
+   if (!fileStream) {
+      throw RException(R__FAIL(std::string("open failed for file \"") + std::string(path) + "\": " + strerror(errno)));
+   }
    // RNTupleFileWriter::RFileSimple does its own buffering, turn off additional buffering from C stdio.
    std::setvbuf(fileStream, nullptr, _IONBF, 0);
 
