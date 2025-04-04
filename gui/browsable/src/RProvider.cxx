@@ -509,6 +509,9 @@ public:
    RDefaultProvider()
    {
       // TODO: let read from rootrc or any other files
+      RegisterClass("ROOT::Experimental::RCanvas", "sap-icon://business-objects-experience", "", "",
+                    "libROOTObjectDraw7Provider");
+
       RegisterClass("ROOT::RNTuple", "sap-icon://table-chart", "libROOTNTupleBrowseProvider",
                     "libROOTNTupleDraw6Provider", "libROOTNTupleDraw7Provider");
    }
