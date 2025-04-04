@@ -1072,7 +1072,7 @@ class RPadPainter extends RObjectPainter {
 
       // empty object, no need to do something, take next
       if (snap.fDummy)
-         return this.drawNextSnap(lst, pindx, indx);
+         return this.drawNextSnap(lst, pindx + 1, indx);
 
       if (snap._typename === `${nsREX}TObjectDisplayItem`) {
          // identifier used in TObjectDrawable
@@ -1259,16 +1259,15 @@ class RPadPainter extends RObjectPainter {
          if (i >= snap.fPrimitives.length)
             break;
 
+
          const prim = snap.fPrimitives[i];
-         // ignore primitives without snapid or which are not produce drawings
-         if (prim.fDummy || !prim.fObjectID || ((prim._typename === `${nsREX}TObjectDisplayItem`) && ((prim.fKind === webSnapIds.kStyle) || (prim.fKind === webSnapIds.kColors) || (prim.fKind === webSnapIds.kPalette) || (prim.fKind === webSnapIds.kFont)))) {
-            i++;
-            continue;
-         }
 
          if (prim.fObjectID === sub.snapid) {
             i++;
             k++;
+         } else if (prim.fDummy || !prim.fObjectID || ((prim._typename === `${nsREX}TObjectDisplayItem`) && ((prim.fKind === webSnapIds.kStyle) || (prim.fKind === webSnapIds.kColors) || (prim.fKind === webSnapIds.kPalette) || (prim.fKind === webSnapIds.kFont)))) {
+            // ignore primitives without snapid or which are not produce drawings
+            i++;
          } else {
             missmatch = true;
             break;
