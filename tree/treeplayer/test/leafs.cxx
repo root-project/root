@@ -8,7 +8,6 @@
 
 #include "data.h"
 
-#include "RErrorIgnoreRAII.hxx"
 #include "ROOT/TestSupport.hxx"
 
 #include <memory>
@@ -185,7 +184,10 @@ TEST(TTreeReaderLeafs, ArrayWithReaderValue)
    TTreeReader tr(tree.get());
    TTreeReaderValue<double> valueOfArr(tr, "arr");
    {
-      RErrorIgnoreRAII errorIgnRAII;
+      ROOT::TestSupport::CheckDiagsRAII check;
+      check.requiredDiag(kError, "TTreeReaderValueBase", "Must use TTreeReaderArray to read branch", false);
+      check.requiredDiag(kError, "TTreeReaderValueBase", /*The branch xxx*/ "contains data of type", false);
+      check.requiredDiag(kError, "TTreeReaderValue", /*Value reader for xxx*/ "not properly initialized", false);
       tr.Next();
       *valueOfArr;
    }
