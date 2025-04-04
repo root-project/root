@@ -376,6 +376,8 @@ bool TTreeReader::Notify()
 
 bool TTreeReader::SetProxies()
 {
+   fMissingProxies.clear();
+   fProxiesSet = false; // In the loop below, we cannot recreate proxies if this is true
 
    for (size_t i = 0; i < fValues.size(); ++i) {
       ROOT::Internal::TTreeReaderValueBase *reader = fValues[i];
