@@ -687,8 +687,12 @@ TEST(MiniFile, Multi)
 TEST(MiniFile, Failures)
 {
    RNTupleWriteOptions options;
-   // TODO(jblomer): failures should be exceptions
-   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", EContainerFormat::kTFile, options), ".*");
+   try {
+      RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", EContainerFormat::kTFile, options);
+      FAIL() << "trying to create a RNTuple in an inexisting location should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("open failed for file \""));
+   }
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
