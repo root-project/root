@@ -326,7 +326,10 @@ public:
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
-   virtual Double_t GetSumOfWeights() const;
+   Double_t         GetSumOfAllWeights(const bool includeOverflow) const;
+   /// Return the sum of weights across all bins excluding under/overflows.
+   /// \see TH1::GetSumOfAllWeights()
+   virtual Double_t GetSumOfWeights() const { return GetSumOfAllWeights(false); }
    virtual TArrayD *GetSumw2() {return &fSumw2;}
    virtual const TArrayD *GetSumw2() const {return &fSumw2;}
    virtual Int_t    GetSumw2N() const {return fSumw2.fN;}

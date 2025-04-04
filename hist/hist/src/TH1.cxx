@@ -7889,7 +7889,7 @@ void TH1::PutStats(Double_t *stats)
 /// The number of entries is set to the total bin content or (in case of weighted histogram)
 /// to number of effective entries
 ///
-/// Note that, by default, before calling this function, statistics are those
+/// \note By default, before calling this function, statistics are those
 /// computed at fill time, which are unbinned. See TH1::GetStats.
 
 void TH1::ResetStats()
@@ -7905,18 +7905,23 @@ void TH1::ResetStats()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the sum of weights excluding under/overflows.
+/// Return the sum of all weights
+/// \param includeOverflow true to include under/overflows bins, false to exclude those.
+/// \note Different from TH1::GetSumOfWeights, that always excludes those
 
-Double_t TH1::GetSumOfWeights() const
+Double_t TH1::GetSumOfAllWeights(const bool includeOverflow) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
-   Int_t bin,binx,biny,binz;
+   const Int_t start = (includeOverflow ? 0 : 1);
+   const Int_t lastX = fXaxis.GetNbins() + (includeOverflow ? 1 : 0);
+   const Int_t lastY = fYaxis.GetNbins() + (includeOverflow ? 1 : 0);
+   const Int_t lastZ = fZaxis.GetNbins() + (includeOverflow ? 1 : 0);
    Double_t sum =0;
-   for(binz=1; binz<=fZaxis.GetNbins(); binz++) {
-      for(biny=1; biny<=fYaxis.GetNbins(); biny++) {
-         for(binx=1; binx<=fXaxis.GetNbins(); binx++) {
-            bin = GetBin(binx,biny,binz);
+   for(auto binz = start; binz <= lastZ; binz++) {
+      for(auto biny = start; biny <= lastY; biny++) {
+         for(auto binx = start; binx <= lastX; binx++) {
+            const auto bin = GetBin(binx, biny, binz);
             sum += RetrieveBinContent(bin);
          }
       }
