@@ -17,8 +17,8 @@
 
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriter;
-using ROOT::Experimental::RNTupleDS;
 using ROOT::Experimental::Internal::RPageSource;
+using ROOT::RDF::RNTupleDS;
 
 namespace {
 
@@ -118,7 +118,7 @@ TEST_F(RNTupleDSTest, NFiles)
 
 TEST_F(RNTupleDSTest, CardinalityColumn)
 {
-   auto df = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+   auto df = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
 
    // Check that the special column #<collection> works without jitting...
    auto identity = [](std::size_t sz) { return sz; };
@@ -142,7 +142,7 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
 
 static void ReadTest(const std::string &name, const std::string &fname)
 {
-   auto df = ROOT::RDF::Experimental::FromRNTuple(name, fname);
+   auto df = ROOT::RDF::FromRNTuple(name, fname);
 
    auto count = df.Count();
    auto sumpt = df.Sum<float>("pt");
@@ -312,7 +312,7 @@ TEST_F(RNTupleDSTest, ChainTailScheduling)
 
 TEST_F(RNTupleDSTest, ModifyColumnValues)
 {
-   auto df = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+   auto df = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
    auto dfCorrected =
       df.Define("jetsCorrected",
                 [](ROOT::RVec<float> &jets) {
@@ -431,7 +431,7 @@ TEST(RNTupleDS, CollectionFieldTypes)
 
 TEST_F(RNTupleDSTest, AlternativeColumnTypes)
 {
-   auto df = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+   auto df = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
 
    // Alternative inner type
    auto usingDouble = df.Define("nJets", [](const ROOT::RVec<double> &jets) { return jets.size(); }, {"jets"})
@@ -496,7 +496,7 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
 
    try {
       // Invalid outer field type
-      auto dfInvalid = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+      auto dfInvalid = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
       dfInvalid.Define("firstJet", [](const std::pair<float, float> &jets) { return jets.first; }, {"jets"})
          .Take<float, ROOT::RVec<float>>("firstJet")
          .GetValue();
@@ -508,7 +508,7 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
 
    try {
       // Invalid inner field types
-      auto dfInvalid = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+      auto dfInvalid = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
       dfInvalid.Define("nJets", [](const std::vector<std::uint64_t> &jets) { return jets.size(); }, {"jets"})
          .Take<std::size_t, ROOT::RVec<std::size_t>>("nJets")
          .GetValue();
@@ -585,7 +585,7 @@ void ReadArraysTest(const std::string &name, const std::string &fname)
 {
    // These tests use the columns that contain std::array data on disk as RVecs
    // reading them into RVecs and checking their values.
-   auto df = ROOT::RDF::Experimental::FromRNTuple(name, fname);
+   auto df = ROOT::RDF::FromRNTuple(name, fname);
 
    auto count = df.Count();
 
@@ -696,7 +696,7 @@ void UseArraysAsRVec(const std::string &name, const std::string &fname)
 {
    // These tests use the columns that contain std::array data on disk as RVecs
    // passing them as arguments to functions that expect RVecs.
-   auto df = ROOT::RDF::Experimental::FromRNTuple(name, fname);
+   auto df = ROOT::RDF::FromRNTuple(name, fname);
 
    auto df1 = df.Define("col1_short", [](const ROOT::RVecI &arr) { return ROOT::VecOps::Take(arr, 2); }, {"col1_arr"});
    auto take1 = df1.Take<ROOT::RVecI>("col1_short");
@@ -734,7 +734,7 @@ void UseArraySizeColumn(const std::string &name, const std::string &fname)
 {
    // These tests use the columns that contain std::array data on disk as RVecs
    // checking the size of the collection with the R_rdf_sizeof_* columns
-   auto df = ROOT::RDF::Experimental::FromRNTuple(name, fname);
+   auto df = ROOT::RDF::FromRNTuple(name, fname);
 
    auto sizeOfCol1 = df.Take<std::size_t>("R_rdf_sizeof_col1_arr");
    // Use # here to exercise that too
