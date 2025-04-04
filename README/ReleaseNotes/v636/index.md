@@ -47,6 +47,9 @@ The following people have contributed to this new version:
 ## Python Interface
 
 ## RDataFrame
+- When running multiple computation graphs run concurrently using [`RunGraphs()`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a526d77d018bf69462d736bbdd1a695c4),
+  the pool of slot numbers that a thread can pick from is now shared across all graphs. This enables use cases where a single resource, which may be expensive to create or copy,
+  is shared across tasks belonging to different computation graphs.
 
 ## RooFit
 

@@ -17,6 +17,7 @@
 #include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RResultHandle.hxx"    // for RResultHandle, RunGraphs
+#include "ROOT/RSlotStack.hxx"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif // R__USE_IMT
@@ -107,9 +108,12 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
       << (sw.RealTime() > 1e-3 ? " in " + std::to_string(sw.RealTime()) + " seconds." : " in less than 1ms.");
 
    // Trigger the unique event loops
-   auto run = [](RResultHandle &h) {
-      if (h.fLoopManager)
+   auto slotStack = std::make_shared<ROOT::Internal::RSlotStack>(ROOT::GetThreadPoolSize());
+   auto run = [&slotStack](RResultHandle &h) {
+      if (h.fLoopManager) {
+         h.fLoopManager->SetSlotStack(slotStack);
          h.fLoopManager->Run(/*jit=*/false);
+      }
    };
 
    sw.Start();
