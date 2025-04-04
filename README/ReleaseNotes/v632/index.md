@@ -840,3 +840,6 @@ In addition, these items were addressed:
 * [[#16189](https://github.com/root-project/root/issues/16189)] - TFile::k630forwardCompatibility does not apply to new files correctly
 
 ## HEAD of the v6-32-00-patches branch
+
+### Externals updates
+ * The version of builtin veccore has been updated to 0.8.2
