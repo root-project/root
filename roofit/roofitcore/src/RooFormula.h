@@ -77,6 +77,7 @@ private:
    std::string processFormula(std::string origFormula) const;
    RooArgList usedVariables() const;
    std::string reconstructFormula(std::string internalRepr) const;
+   std::string reconstructNullFormula(std::string internalRepr) const;
    void installFormulaOrThrow(const std::string &formulaa);
 
    RooArgList _origList;                ///<! Original list of dependents
