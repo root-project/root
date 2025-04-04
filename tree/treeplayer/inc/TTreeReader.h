@@ -345,7 +345,7 @@ private:
    // List of branches for which we want to suppress the printed error about
    // missing branch when switching to a new tree
    std::set<std::string> fSuppressErrorsForMissingBranches{};
-   std::vector<std::string> fMissingProxies{};
+   std::set<std::string> fMissingProxies{};
 
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
