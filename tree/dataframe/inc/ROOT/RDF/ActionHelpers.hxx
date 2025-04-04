@@ -2039,7 +2039,7 @@ public:
       fWriter.reset();
       // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
       fOutputLoopManager->SetDataSource(
-         std::make_unique<ROOT::Experimental::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
+         std::make_unique<ROOT::RDF::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
    }
 
    std::string GetActionName() { return "Snapshot"; }

@@ -34,7 +34,7 @@
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using RNTupleDS = ROOT::Experimental::RNTupleDS;
+using RNTupleDS = ROOT::RDF::RNTupleDS;
 
 constexpr char const *kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1.root";
 
