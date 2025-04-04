@@ -833,8 +833,10 @@ void ROOT::Internal::TTreeReaderValueBase::ErrorAboutMissingProxyIfNeeded()
    // Print the error only if the branch name does not appear in the list of
    // missing proxies that the user explicitly requested not to error about
    if (!fTreeReader || fTreeReader->fMissingProxies.count(fBranchName.Data()) == 0)
-      Error("TTreeReaderValue::Get()", "Value reader not properly initialized, did you call "
-                                       "TTreeReader::Set(Next)Entry() or TTreeReader::Next()?");
+      Error("TTreeReaderValue::Get()",
+            "Value reader for branch %s not properly initialized, did you call "
+            "TTreeReader::Set(Next)Entry() or TTreeReader::Next()?",
+            fBranchName.Data());
 }
 
 namespace cling {
