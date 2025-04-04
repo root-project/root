@@ -5338,10 +5338,96 @@ TBranch *R__GetBranch(const TObjArray &branches, const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to the branch with the given name, if it can be found in
+/// this tree. Otherwise, returns nullptr.
+TBranch *TTree::GetBranchFromSelf(const char *branchName)
+{
+   // Look for an exact match in the list of top level
+   // branches.
+   if (auto *br = static_cast<TBranch *>(fBranches.FindObject(branchName)))
+      return br;
+
+   // Look for an exact match in the mapping from branch name to TBranch *
+   // gathered when first reading the TTree from disk.
+   if (auto it = fNamesToBranches.find(branchName); it != fNamesToBranches.end())
+      return it->second;
+
+   // Search using branches, breadth first.
+   if (auto *br = R__GetBranch(fBranches, branchName))
+      return br;
+
+   // Search using leaves.
+   TObjArray *leaves = GetListOfLeaves();
+   Int_t nleaves = leaves->GetEntriesFast();
+   for (Int_t i = 0; i < nleaves; i++) {
+      TLeaf *leaf = (TLeaf *)leaves->UncheckedAt(i);
+      TBranch *branch = leaf->GetBranch();
+      if (!strcmp(branch->GetName(), branchName)) {
+         return branch;
+      }
+      if (!strcmp(branch->GetFullName(), branchName)) {
+         return branch;
+      }
+   }
+
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to the branch with the given name, if it can be found in
+/// the list of friends of this tree. Otherwise, returns nullptr.
+TBranch *TTree::GetBranchFromFriends(const char *branchName)
+{
+   if (!fFriends) {
+      return nullptr;
+   }
+
+   // Search in list of friends.
+   TFriendLock lock(this, kGetBranch);
+   TIter next(fFriends);
+   TFriendElement *fe = nullptr;
+   while ((fe = (TFriendElement *)next())) {
+      TTree *t = fe->GetTree();
+      if (t) {
+         TBranch *branch = t->GetBranch(branchName);
+         if (branch) {
+            return branch;
+         }
+      }
+   }
+
+   // Second pass in the list of friends when
+   // the branch name is prefixed by the tree name.
+   next.Reset();
+   while ((fe = (TFriendElement *)next())) {
+      TTree *t = fe->GetTree();
+      if (!t) {
+         continue;
+      }
+      const char *subname = strstr(branchName, fe->GetName());
+      if (subname != branchName) {
+         continue;
+      }
+      Int_t l = strlen(fe->GetName());
+      subname += l;
+      if (*subname != '.') {
+         continue;
+      }
+      subname++;
+      TBranch *branch = t->GetBranch(subname);
+      if (branch) {
+         return branch;
+      }
+   }
+
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the branch with the given name in this tree or its friends.
 /// The search is done breadth first.
 
-TBranch* TTree::GetBranch(const char* name)
+TBranch *TTree::GetBranch(const char *name)
 {
    // We already have been visited while recursively
    // looking through the friends tree, let's return.
@@ -5352,75 +5438,12 @@ TBranch* TTree::GetBranch(const char* name)
    if (!name)
       return nullptr;
 
-   // Look for an exact match in the list of top level
-   // branches.
-   TBranch *result = (TBranch*)fBranches.FindObject(name);
-   if (result)
-      return result;
+   if (auto *br = GetBranchFromSelf(name))
+      return br;
 
-   if (auto it = fNamesToBranches.find(name); it != fNamesToBranches.end())
-      return it->second;
+   if (auto *br = GetBranchFromFriends(name))
+      return br;
 
-   // Search using branches, breadth first.
-   result = R__GetBranch(fBranches, name);
-   if (result)
-     return result;
-
-   // Search using leaves.
-   TObjArray* leaves = GetListOfLeaves();
-   Int_t nleaves = leaves->GetEntriesFast();
-   for (Int_t i = 0; i < nleaves; i++) {
-      TLeaf* leaf = (TLeaf*) leaves->UncheckedAt(i);
-      TBranch* branch = leaf->GetBranch();
-      if (!strcmp(branch->GetName(), name)) {
-         return branch;
-      }
-      if (!strcmp(branch->GetFullName(), name)) {
-         return branch;
-      }
-   }
-
-   if (!fFriends) {
-      return nullptr;
-   }
-
-   // Search in list of friends.
-   TFriendLock lock(this, kGetBranch);
-   TIter next(fFriends);
-   TFriendElement* fe = nullptr;
-   while ((fe = (TFriendElement*) next())) {
-      TTree* t = fe->GetTree();
-      if (t) {
-         TBranch* branch = t->GetBranch(name);
-         if (branch) {
-            return branch;
-         }
-      }
-   }
-
-   // Second pass in the list of friends when
-   // the branch name is prefixed by the tree name.
-   next.Reset();
-   while ((fe = (TFriendElement*) next())) {
-      TTree* t = fe->GetTree();
-      if (!t) {
-         continue;
-      }
-      const char* subname = strstr(name, fe->GetName());
-      if (subname != name) {
-         continue;
-      }
-      Int_t l = strlen(fe->GetName());
-      subname += l;
-      if (*subname != '.') {
-         continue;
-      }
-      subname++;
-      TBranch* branch = t->GetBranch(subname);
-      if (branch) {
-         return branch;
-      }
-   }
    return nullptr;
 }
 
@@ -8554,6 +8577,50 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TClass* ptrClass, E
    return SetBranchAddress(bname, addr, nullptr, ptrClass, datatype, isptr);
 }
 
+Int_t TTree::SetBranchAddressImp(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                                 bool isptr)
+{
+   if (auto *branchFromSelf = GetBranchFromSelf(bname)) {
+      Int_t res = CheckBranchAddressType(branchFromSelf, ptrClass, datatype, isptr);
+
+      // This will set the value of *ptr to branch.
+      if (res >= 0) {
+         // The check succeeded.
+         if ((res & kNeedEnableDecomposedObj) && !branchFromSelf->GetMakeClass())
+            branchFromSelf->SetMakeClass(true);
+         SetBranchAddressImp(branchFromSelf, addr, ptr);
+      } else {
+         if (ptr)
+            *ptr = nullptr;
+      }
+      return res;
+   }
+
+   // Check friends
+   if (fFriends) {
+      int status{kMissingBranch};
+      for (auto *fe : TRangeDynCast<TFriendElement>(fFriends)) {
+         if (auto *tree = fe->GetTree()) {
+            status = tree->SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr, true);
+            // We exit early from visiting all friends only if a perfect match was found
+            if (status == kMatch)
+               return status;
+         }
+      }
+      // This allows for the valid case of friend TChain(s) which might hold
+      // the requested branch, but might not know it yet since they haven't loaded
+      // the tree. This is encoded in the kNoCheck == 5 value.
+      if (status != kMissingBranch)
+         return status;
+   }
+
+   // Branch not found
+   if (ptr)
+      *ptr = nullptr;
+
+   return kMissingBranch;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Verify the validity of the type of addr before calling SetBranchAddress.
 /// See TTree::CheckBranchAddressType for the semantic of the return value.
@@ -8561,27 +8628,21 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TClass* ptrClass, E
 /// Note: See the comments in TBranchElement::SetAddress() for the
 /// meaning of the addr parameter and the object ownership policy.
 
-Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TClass* ptrClass, EDataType datatype, bool isptr)
+Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                              bool isptr)
 {
-   TBranch* branch = GetBranch(bname);
-   if (!branch) {
-      if (ptr) *ptr = nullptr;
+   auto res = SetBranchAddressImp(bname, addr, ptr, ptrClass, datatype, isptr);
+   if (res == kMissingBranch)
       Error("SetBranchAddress", "unknown branch -> %s", bname);
-      return kMissingBranch;
-   }
-
-   Int_t res = CheckBranchAddressType(branch, ptrClass, datatype, isptr);
-
-   // This will set the value of *ptr to branch.
-   if (res >= 0) {
-      // The check succeeded.
-      if ((res & kNeedEnableDecomposedObj) && !branch->GetMakeClass())
-         branch->SetMakeClass(true);
-      SetBranchAddressImp(branch,addr,ptr);
-   } else {
-      if (ptr) *ptr = nullptr;
-   }
    return res;
+}
+
+Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                              bool isptr, bool)
+{
+   // This has been called while setting the branch address of friends of a TTree. We can't know a priori
+   // which friend actually has the branch bname, so we avoid printing an error in case of missing branch
+   return SetBranchAddressImp(bname, addr, ptr, ptrClass, datatype, isptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
