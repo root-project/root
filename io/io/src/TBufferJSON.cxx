@@ -47,6 +47,12 @@ All STL containers by default converted into JSON Array. Vector of integers:
 ~~~
 Will produce JSON code "[1, 4, 7]".
 
+IMPORTANT: Before using any of `map` classes in I/O, one should create dictionary
+for it with the command like:
+```
+gInterpreter->GenerateDictionary("std::map<int,std::string>", "map;string")
+```
+
 There are special handling for map classes like `map` and `multimap`.
 They will create Array of pair objects with "first" and "second" as data members. Code:
 ~~~{.cpp}
@@ -63,9 +69,10 @@ Will generate json string:
 ]
 ~~~
 In special cases map container can be converted into JSON object. For that key parameter
-must be `std::string` and compact parameter should be 5.
-Like in example:
+must be `std::string` and compact parameter should be 5. Like in example:
 ~~~{.cpp}
+gInterpreter->GenerateDictionary("std::map<std::string,int>", "map;string")
+
 std::map<std::string,int> data;
 data["name1"] = 11;
 data["name2"] = 22;
