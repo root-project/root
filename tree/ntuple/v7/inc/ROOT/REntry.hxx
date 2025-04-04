@@ -135,6 +135,13 @@ private:
       return bytesWritten;
    }
 
+   void Reset()
+   {
+      for (auto &v : fValues) {
+         v.Reset();
+      }
+   }
+
    void EnsureMatchingModel(RFieldToken token) const
    {
       if (fSchemaId != token.fSchemaId) {

@@ -40,9 +40,6 @@ class RFieldVisitor;
 } // namespace Detail
 
 namespace Experimental {
-
-class RNTupleJoinProcessor;
-
 namespace Internal {
 class RPageSink;
 class RPageSource;
@@ -82,7 +79,6 @@ This is and can only be partially enforced through C++.
 // clang-format on
 class RFieldBase {
    friend class ROOT::RClassField;                             // to mark members as artificial
-   friend class ROOT::Experimental::RNTupleJoinProcessor;      // needs ConstructValue
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
@@ -723,6 +719,7 @@ public:
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
    void EmplaceNew() { fObjPtr = fField->CreateValue().GetPtr<void>(); }
+   void Reset() { fField->ConstructValue(fObjPtr.get()); }
 
    template <typename T>
    std::shared_ptr<T> GetPtr() const

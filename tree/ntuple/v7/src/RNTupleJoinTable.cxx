@@ -33,7 +33,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t CastValuePtr(void *v
 } // anonymous namespace
 
 ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
-   RPageSource &pageSource, const std::vector<std::string> &joinFieldNames)
+   RPageSource &pageSource, const std::vector<std::string> &joinFieldNames, ROOT::NTupleSize_t entryOffset)
    : fJoinFieldNames(joinFieldNames)
 {
    static const std::unordered_set<std::string> allowedTypes = {"std::int8_t",   "std::int16_t", "std::int32_t",
@@ -82,7 +82,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
          castJoinValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField().GetValueSize()));
       }
 
-      fMapping[RCombinedJoinFieldValue(castJoinValues)].push_back(i);
+      fMapping[RCombinedJoinFieldValue(castJoinValues)].push_back(i + entryOffset);
    }
 }
 
@@ -115,12 +115,29 @@ ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::st
 }
 
 ROOT::Experimental::Internal::RNTupleJoinTable &
-ROOT::Experimental::Internal::RNTupleJoinTable::Add(RPageSource &pageSource, PartitionKey_t partitionKey)
+ROOT::Experimental::Internal::RNTupleJoinTable::Add(RPageSource &pageSource, PartitionKey_t partitionKey,
+                                                    ROOT::NTupleSize_t entryOffset)
 {
-   auto joinMapping = std::unique_ptr<REntryMapping>(new REntryMapping(pageSource, fJoinFieldNames));
+   auto joinMapping = std::unique_ptr<REntryMapping>(new REntryMapping(pageSource, fJoinFieldNames, entryOffset));
    fPartitions[partitionKey].emplace_back(std::move(joinMapping));
 
    return *this;
+}
+
+ROOT::NTupleSize_t
+ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndex(const std::vector<void *> &valuePtrs) const
+{
+
+   for (const auto &partition : fPartitions) {
+      for (const auto &joinMapping : partition.second) {
+         auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
+         if (entriesForMapping) {
+            return (*entriesForMapping)[0];
+         }
+      }
+   }
+
+   return kInvalidNTupleIndex;
 }
 
 std::vector<ROOT::NTupleSize_t>
