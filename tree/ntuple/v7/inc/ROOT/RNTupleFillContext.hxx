@@ -116,23 +116,25 @@ public:
    /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
    /// and check RNTupleFillStatus::ShouldFlushCluster.
    ///
-   /// This method will perform a light check whether the entry comes from the context's own model.
+   /// This method will check the entry's model ID to ensure it comes from the context's own model or throw an exception
+   /// otherwise.
    void FillNoFlush(ROOT::REntry &entry, ROOT::RNTupleFillStatus &status) { FillNoFlushImpl(entry, status); }
-   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
-   /// context's own model.
+   /// Fill an entry into this context.  This method will check the entry's model ID to ensure it comes from the
+   /// context's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(ROOT::REntry &entry) { return FillImpl(entry); }
 
    /// Fill an RRawPtrWriteEntry into this context, but don't commit the cluster. The calling code must pass an
    /// RNTupleFillStatus and check RNTupleFillStatus::ShouldFlushCluster.
    ///
-   /// This method will perform a light check whether the entry comes from the context's own model.
+   /// This method will check the entry's model ID to ensure it comes from the context's own model or throw an exception
+   /// otherwise.
    void FillNoFlush(Detail::RRawPtrWriteEntry &entry, ROOT::RNTupleFillStatus &status)
    {
       FillNoFlushImpl(entry, status);
    }
-   /// Fill an RRawPtrWriteEntry into this context.  This method will perform a light check whether the entry comes from
-   /// the context's own model.
+   /// Fill an RRawPtrWriteEntry into this context.  This method will check the entry's model ID to ensure it comes
+   /// from the context's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
 
