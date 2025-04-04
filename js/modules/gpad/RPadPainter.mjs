@@ -429,6 +429,9 @@ class RPadPainter extends RObjectPainter {
          if (!this.isBatchMode() && !this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
 
+         if (!this.isBatchMode())
+            svg.style('user-select', settings.UserSelect || null);
+
          frect = svg.append('svg:path').attr('class', 'canvas_fillrect');
          if (!this.isBatchMode()) {
             frect.style('pointer-events', 'visibleFill')

@@ -835,6 +835,7 @@ class JSRootMenu {
       this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
       this.endsub();
       this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
+      this.addchk(!settings.UserSelect, 'User select', flag => { settings.UserSelect = flag ? '' : 'none'; }, 'Set "user-select: none" for drawings to avoid text selection ');
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });

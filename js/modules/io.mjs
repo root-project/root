@@ -2882,7 +2882,8 @@ class TFile {
 
       function setFileUrl(use_second) {
          if (use_second) {
-            console.log('Failure - try to repait with URL2', file.fURL2);
+            console.log('Failure - try to repair with URL2', file.fURL2);
+            internals.RemapCounter = (internals.RemapCounter ?? 0) + 1;
             file.fURL = file.fURL2;
             delete file.fURL2;
          }
@@ -2939,8 +2940,10 @@ class TFile {
                const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
                xhr.addEventListener('progress', oEvent => {
                   if (oEvent.lengthComputable) {
-                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
+                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break') {
+                        xhr.did_abort = true;
                         xhr.abort();
+                     }
                   }
                });
             } else if (first_block_retry && isFunc(xhr.addEventListener)) {
@@ -2949,6 +2952,7 @@ class TFile {
                      console.warn('Fail to get file size information');
                   else if (oEvent.total > 5e7) {
                      console.error(`Try to load very large file ${oEvent.total} at once - abort`);
+                     xhr.did_abort = 'large';
                      xhr.abort();
                   }
                });
@@ -2966,7 +2970,7 @@ class TFile {
                file.fUseStampPar = false;
                return send_new_request();
             }
-            if (file.fURL2) {
+            if (file.fURL2 && (this.did_abort !== 'large')) {
                setFileUrl(true);
                return send_new_request();
             }
@@ -3004,7 +3008,7 @@ class TFile {
          }
 
          if (!res) {
-            if (file.fURL2) {
+            if (file.fURL2 && (this.did_abort !== 'large')) {
                setFileUrl(true);
                return send_new_request();
             }

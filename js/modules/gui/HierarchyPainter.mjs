@@ -35,7 +35,7 @@ function injectHStyle(node) {
 .jsroot .${cssValueNum} { color: blue; }
 .jsroot .h_line { height: 18px; display: block; }
 .jsroot .${cssButton} { cursor: pointer; color: blue; text-decoration: underline; }
-.jsroot .${cssItem} { cursor: pointer; }
+.jsroot .${cssItem} { cursor: pointer; user-select: none; }
 .jsroot .${cssItem}:hover { text-decoration: underline; }
 .jsroot .h_childs { overflow: hidden; display: block; }
 .jsroot_fastcmd_btn { height: 32px; width: 32px; display: inline-block; margin: 2px; padding: 2px; background-position: left 2px top 2px;

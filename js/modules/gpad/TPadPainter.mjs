@@ -664,6 +664,9 @@ class TPadPainter extends ObjectPainter {
          else if (!this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
 
+         if (!is_batch)
+            svg.style('user-select', settings.UserSelect || null);
+
          if (!is_batch || (this.pad.fFillStyle > 0))
             frect = svg.append('svg:path').attr('class', 'canvas_fillrect');
 

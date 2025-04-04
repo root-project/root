@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '1/04/2025',
+version_date = '4/04/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -274,6 +274,8 @@ settings = {
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
+   /** @summary Value of user-select style in interactive drawings */
+   UserSelect: 'none',
    /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
@@ -891,7 +893,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
          if ((this.readyState === 2) && this.expected_size) {
             const len = parseInt(this.getResponseHeader('Content-Length'));
             if (Number.isInteger(len) && (len > this.expected_size) && !settings.HandleWrongHttpResponse) {
-               this.did_abort = true;
+               this.did_abort = 'large';
                this.abort();
                return this.error_callback(Error(`Server response size ${len} larger than expected ${this.expected_size}. Abort I/O operation`), 599);
             }
@@ -70481,6 +70483,7 @@ class JSRootMenu {
       this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
       this.endsub();
       this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
+      this.addchk(!settings.UserSelect, 'User select', flag => { settings.UserSelect = flag ? '' : 'none'; }, 'Set "user-select: none" for drawings to avoid text selection ');
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
@@ -78364,6 +78367,9 @@ class TPadPainter extends ObjectPainter {
             svg.attr('xmlns', nsSVG);
          else if (!this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
+
+         if (!is_batch)
+            svg.style('user-select', settings.UserSelect || null);
 
          if (!is_batch || (this.pad.fFillStyle > 0))
             frect = svg.append('svg:path').attr('class', 'canvas_fillrect');
@@ -111924,7 +111930,8 @@ class TFile {
 
       function setFileUrl(use_second) {
          if (use_second) {
-            console.log('Failure - try to repait with URL2', file.fURL2);
+            console.log('Failure - try to repair with URL2', file.fURL2);
+            internals.RemapCounter = (internals.RemapCounter ?? 0) + 1;
             file.fURL = file.fURL2;
             delete file.fURL2;
          }
@@ -111981,8 +111988,10 @@ class TFile {
                const progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
                xhr.addEventListener('progress', oEvent => {
                   if (oEvent.lengthComputable) {
-                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break')
+                     if (progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total) === 'break') {
+                        xhr.did_abort = true;
                         xhr.abort();
+                     }
                   }
                });
             } else if (first_block_retry && isFunc(xhr.addEventListener)) {
@@ -111991,6 +112000,7 @@ class TFile {
                      console.warn('Fail to get file size information');
                   else if (oEvent.total > 5e7) {
                      console.error(`Try to load very large file ${oEvent.total} at once - abort`);
+                     xhr.did_abort = 'large';
                      xhr.abort();
                   }
                });
@@ -112008,7 +112018,7 @@ class TFile {
                file.fUseStampPar = false;
                return send_new_request();
             }
-            if (file.fURL2) {
+            if (file.fURL2 && (this.did_abort !== 'large')) {
                setFileUrl(true);
                return send_new_request();
             }
@@ -112046,7 +112056,7 @@ class TFile {
          }
 
          if (!res) {
-            if (file.fURL2) {
+            if (file.fURL2 && (this.did_abort !== 'large')) {
                setFileUrl(true);
                return send_new_request();
             }
@@ -154713,7 +154723,7 @@ function injectHStyle(node) {
 .jsroot .${cssValueNum} { color: blue; }
 .jsroot .h_line { height: 18px; display: block; }
 .jsroot .${cssButton} { cursor: pointer; color: blue; text-decoration: underline; }
-.jsroot .${cssItem} { cursor: pointer; }
+.jsroot .${cssItem} { cursor: pointer; user-select: none; }
 .jsroot .${cssItem}:hover { text-decoration: underline; }
 .jsroot .h_childs { overflow: hidden; display: block; }
 .jsroot_fastcmd_btn { height: 32px; width: 32px; display: inline-block; margin: 2px; padding: 2px; background-position: left 2px top 2px;
@@ -169859,6 +169869,9 @@ class RPadPainter extends RObjectPainter {
 
          if (!this.isBatchMode() && !this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
+
+         if (!this.isBatchMode())
+            svg.style('user-select', settings.UserSelect || null);
 
          frect = svg.append('svg:path').attr('class', 'canvas_fillrect');
          if (!this.isBatchMode()) {
