@@ -401,13 +401,9 @@ bool TTreeReader::SetProxies()
       if (!reader->GetProxy()) {
          if (suppressErrorsForThisBranch ||
              (reader->GetSetupStatus() == ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMissingBranch))
-            fMissingProxies.push_back(reader->fBranchName.Data());
+            fMissingProxies.insert(reader->fBranchName.Data());
          else
             return false;
-      } else {
-         // Erase the branch name from the missing proxies if it was present
-         fMissingProxies.erase(std::remove(fMissingProxies.begin(), fMissingProxies.end(), reader->fBranchName.Data()),
-                               fMissingProxies.end());
       }
    }
    // If at least one proxy was there and no error occurred, we assume the proxies to be set.
