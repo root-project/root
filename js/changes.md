@@ -23,6 +23,7 @@
 1. Support `TF12` - projection of `TF2`
 1. Upgrade three.js r168 -> r174
 1. Remove support of qt5 webengine, only qt6web is supported
+1. Set 'user-select: none' style in drawings to exclude text selection, using `settings.UserSelect` value
 1. Internals - use private members and methods
 1. Internals - use `WeakRef` class for cross-referencing of painters
 1. Internals - use negative indexes in arrays and Strings
