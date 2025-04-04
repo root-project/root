@@ -104,16 +104,16 @@ public:
    /// The simplest user interface if the default entry that comes with the ntuple model is used.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill() { return fFillContext.Fill(fFillContext.fModel->GetDefaultEntry()); }
-   /// Multiple entries can have been instantiated from the ntuple model.  This method will perform
-   /// a light check whether the entry comes from the ntuple's own model.
+   /// Multiple entries can have been instantiated from the ntuple model.  This method will check the entry's model ID
+   /// to ensure it comes from the writer's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(ROOT::REntry &entry) { return fFillContext.Fill(entry); }
    /// Fill an entry into this ntuple, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
    /// and check RNTupleFillStatus::ShouldFlushCluster.
    void FillNoFlush(ROOT::REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoFlush(entry, status); }
 
-   /// Fill an RRawPtrWriteEntry into this ntuple.  This method will perform
-   /// a light check whether the entry comes from the ntuple's own model
+   /// Fill an RRawPtrWriteEntry into this ntuple.  This method will check the entry's model ID to ensure it comes from
+   /// the writer's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(Experimental::Detail::RRawPtrWriteEntry &entry) { return fFillContext.Fill(entry); }
    /// Fill an RRawPtrWriteEntry into this ntuple, but don't commit the cluster. The calling code must pass an
