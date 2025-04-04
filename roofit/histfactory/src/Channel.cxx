@@ -456,7 +456,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
     throw hf_exc();
   }
 
-  std::unique_ptr<TH1>hist(key->ReadObject<TH1>());
+  std::unique_ptr<TH1> hist(key->ReadObject<TH1>());
   if( !hist ) {
     cxcoutEHF << "Histogram '" << HistoName
         << "' wasn't found in file '" << InputFile
