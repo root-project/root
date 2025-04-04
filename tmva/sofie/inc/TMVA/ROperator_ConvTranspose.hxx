@@ -40,6 +40,9 @@ private:
    std::string fNBroadcastedB;
    std::string fNY;
 
+   std::string fConvK;
+   std::string fImcol;
+
    std::vector<size_t> fShapeX;
    std::vector<size_t> fShapeW;
    std::vector<size_t> fShapeB;
@@ -112,11 +115,6 @@ public:
    /*! \brief Generate code for initializing the op
     */
    std::string GenerateInitCode() override;
-
-   /*! \brief Generate code for Session data members (e.g. internal vectors)
-    * \param opName name of the operator
-    */
-   std::string GenerateSessionMembersCode(std::string /*opName*/) override;
 
    /*! \brief Generate the inference code
     * \param opName name of the operator
