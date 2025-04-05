@@ -376,6 +376,8 @@ bool TTreeReader::Notify()
 
 bool TTreeReader::SetProxies()
 {
+   fMissingProxies.clear();
+   fProxiesSet = false; // In the loop below, we cannot recreate proxies if this is true
 
    for (size_t i = 0; i < fValues.size(); ++i) {
       ROOT::Internal::TTreeReaderValueBase *reader = fValues[i];
@@ -399,13 +401,9 @@ bool TTreeReader::SetProxies()
       if (!reader->GetProxy()) {
          if (suppressErrorsForThisBranch ||
              (reader->GetSetupStatus() == ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMissingBranch))
-            fMissingProxies.push_back(reader->fBranchName.Data());
+            fMissingProxies.insert(reader->fBranchName.Data());
          else
             return false;
-      } else {
-         // Erase the branch name from the missing proxies if it was present
-         fMissingProxies.erase(std::remove(fMissingProxies.begin(), fMissingProxies.end(), reader->fBranchName.Data()),
-                               fMissingProxies.end());
       }
    }
    // If at least one proxy was there and no error occurred, we assume the proxies to be set.
