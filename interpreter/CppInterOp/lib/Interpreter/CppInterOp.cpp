@@ -55,6 +55,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+// #include <iostream>
 
 // Stream redirect.
 #ifdef _WIN32
@@ -218,8 +219,13 @@ namespace Cpp {
     return isa<NamespaceDecl>(D);
   }
 
-  bool IsClass(TCppScope_t scope) {
-    Decl *D = static_cast<Decl*>(scope);
+  bool IsClass(TCppConstFunction_t scope) {
+    const Decl *D = static_cast<const Decl*>(scope);
+    return isa<CXXRecordDecl>(D);
+  }
+
+  bool IsClassConst(TCppConstFunction_t scope) {
+    const Decl *D = static_cast<const Decl*>(scope);
     return isa<CXXRecordDecl>(D);
   }
 
@@ -836,6 +842,15 @@ namespace Cpp {
     return false;
   }
 
+  bool HasDefaultConstructorConst(TCppConstFunction_t scope) {
+    auto *D = (clang::Decl *) scope;
+
+    if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D))
+      return CXXRD->hasDefaultConstructor();
+
+    return false;
+  }
+
   TCppFunction_t GetDefaultConstructor(compat::Interpreter& interp,
                                        TCppScope_t scope) {
     if (!HasDefaultConstructor(scope))
@@ -845,8 +860,21 @@ namespace Cpp {
     return interp.getCI()->getSema().LookupDefaultConstructor(CXXRD);
   }
 
+  TCppFunction_t GetDefaultConstructorConst(compat::Interpreter& interp,
+                                      TCppConstFunction_t scope) {
+    if (!HasDefaultConstructorConst(scope))
+      return nullptr;
+
+    auto *CXXRD = (clang::CXXRecordDecl*)scope;
+    return interp.getCI()->getSema().LookupDefaultConstructor(CXXRD);
+  }
+
   TCppFunction_t GetDefaultConstructor(TCppScope_t scope) {
     return GetDefaultConstructor(getInterp(), scope);
+  }
+
+  TCppFunction_t GetDefaultConstructorConst(TCppConstFunction_t scope) {
+    return GetDefaultConstructorConst(getInterp(), scope);
   }
 
   TCppFunction_t GetDestructor(TCppScope_t scope) {
@@ -1582,6 +1610,12 @@ namespace Cpp {
   }
 
   bool IsRecordType(TCppType_t type)
+  {
+    QualType QT = QualType::getFromOpaquePtr(type);
+    return QT->isRecordType();
+  }
+
+  bool IsRecordTypeConst(TCppConstFunction_t type)
   {
     QualType QT = QualType::getFromOpaquePtr(type);
     return QT->isRecordType();
@@ -2656,6 +2690,7 @@ namespace Cpp {
                                       withAccessControl);
       if (wrapper) {
         gWrapperStore.insert(std::make_pair(FD, wrapper));
+        // std::cout<<"WRAPPER CODE: \n"<<wrapper<<"\n"; 
       } else {
         llvm::errs() << "TClingCallFunc::make_wrapper"
                      << ":"
