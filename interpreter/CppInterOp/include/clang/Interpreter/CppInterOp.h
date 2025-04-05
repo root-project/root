@@ -210,7 +210,8 @@ namespace Cpp {
   CPPINTEROP_API bool IsNamespace(TCppScope_t scope);
 
   /// Checks if the scope is a class or not.
-  CPPINTEROP_API bool IsClass(TCppScope_t scope);
+  CPPINTEROP_API bool IsClass(TCppConstFunction_t scope);
+  // CPPINTEROP_API bool IsClassConst(TCppConstFunction_t scope);
 
   /// Checks if the scope is a function.
   CPPINTEROP_API bool IsFunction(TCppScope_t scope);
@@ -378,6 +379,7 @@ namespace Cpp {
 
   ///\returns the default constructor of a class, if any.
   CPPINTEROP_API TCppFunction_t GetDefaultConstructor(TCppScope_t scope);
+  CPPINTEROP_API TCppFunction_t GetDefaultConstructorConst(TCppConstFunction_t scope);
 
   ///\returns the class destructor, if any.
   CPPINTEROP_API TCppFunction_t GetDestructor(TCppScope_t scope);
@@ -519,6 +521,8 @@ namespace Cpp {
 
   /// Checks if the provided parameter is a Record (struct).
   CPPINTEROP_API bool IsRecordType(TCppType_t type);
+
+  CPPINTEROP_API bool IsRecordTypeConst(TCppConstFunction_t type);
 
   /// Checks if the provided parameter is a Plain Old Data Type (POD).
   CPPINTEROP_API bool IsPODType(TCppType_t type);
