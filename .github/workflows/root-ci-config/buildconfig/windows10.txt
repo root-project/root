@@ -1,13 +1,17 @@
+asimage_tiff=OFF
 builtin_cfitsio=ON
 builtin_freetype=ON
 builtin_ftgl=ON
+builtin_gif=ON
 builtin_gl2ps=ON
 builtin_glew=ON
 builtin_gtest=ON
+builtin_jpeg=ON
 builtin_lz4=ON
 builtin_lzma=ON
 builtin_nlohmannjson=ON
 builtin_pcre=ON
+builtin_png=ON
 builtin_tbb=ON
 builtin_xxhash=ON
 builtin_zlib=ON
