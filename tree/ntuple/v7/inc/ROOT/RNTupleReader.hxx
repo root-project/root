@@ -272,18 +272,42 @@ public:
       return GetView<T>(RetrieveFieldId(fieldName));
    }
 
+   /// Provides access to an individual (sub)field, reading its values into `objPtr`.
+   ///
+   /// Raises an exception if there is no field with the given name.
+   ///
+   /// **Example: iterate over a field named "pt" of type `float`**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTupleReader.hxx>
+   /// #include <iostream>
+   ///
+   /// auto reader = ROOT::RNTupleReader::Open("myNTuple", "some/file.root");
+   /// auto pt = std::make_shared<float>();
+   /// auto ptView = reader->GetView("pt", pt);
+   ///
+   /// for (auto i : reader->GetEntryRange()) {
+   ///    ptView(i);
+   ///    std::cout << i << ": " << *pt << "\n";
+   /// }
+   /// ~~~
    template <typename T>
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), objPtr);
    }
 
+   /// Provides access to an individual (sub)field, reading its values into `rawPtr`.
+   ///
+   /// \sa GetView(std::string_view, std::shared_ptr<T>)
    template <typename T>
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
       return GetView<T>(RetrieveFieldId(fieldName), rawPtr);
    }
 
+   /// Provides access to an individual (sub)field from its on-disk ID.
+   ///
+   /// \sa GetView(std::string_view)
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId)
    {
@@ -292,6 +316,9 @@ public:
       return ROOT::RNTupleView<T>(std::move(field), range);
    }
 
+   /// Provides access to an individual (sub)field from its on-disk ID, reading its values into `objPtr`.
+   ///
+   /// \sa GetView(std::string_view, std::shared_ptr<T>)
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
@@ -300,6 +327,9 @@ public:
       return ROOT::RNTupleView<T>(std::move(field), range, objPtr);
    }
 
+   /// Provides access to an individual (sub)field from its on-disk ID, reading its values into `rawPtr`.
+   ///
+   /// \sa GetView(std::string_view, std::shared_ptr<T>)
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
    {
@@ -308,12 +338,21 @@ public:
       return ROOT::RNTupleView<T>(std::move(field), range, rawPtr);
    }
 
+   /// Provides direct access to the I/O buffers of a **mappable** (sub)field.
+   ///
+   /// Raises an exception if there is no field with the given name.
+   /// Attempting to access the values of a direct-access view for non-mappable fields will yield compilation errors.
+   ///
+   /// \sa GetView(std::string_view)
    template <typename T>
    ROOT::RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
    {
       return GetDirectAccessView<T>(RetrieveFieldId(fieldName));
    }
 
+   /// Provides direct access to the I/O buffers of a **mappable** (sub)field from its on-disk ID.
+   ///
+   /// \sa GetDirectAccessView(std::string_view)
    template <typename T>
    ROOT::RNTupleDirectAccessView<T> GetDirectAccessView(ROOT::DescriptorId_t fieldId)
    {
@@ -322,9 +361,13 @@ public:
       return ROOT::RNTupleDirectAccessView<T>(std::move(field), range);
    }
 
+   /// Provides access to a collection field, that can itself generate new RNTupleViews for its nested fields.
+   ///
    /// Raises an exception if:
    /// * there is no field with the given name or,
    /// * the field is not a collection
+   ///
+   /// \sa GetView(std::string_view)
    ROOT::RNTupleCollectionView GetCollectionView(std::string_view fieldName)
    {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
@@ -335,6 +378,10 @@ public:
       return GetCollectionView(fieldId);
    }
 
+   /// Provides access to a collection field from its on-disk ID, that can itself generate new RNTupleViews for its
+   /// nested fields.
+   ///
+   /// \sa GetCollectionView(std::string_view)
    ROOT::RNTupleCollectionView GetCollectionView(ROOT::DescriptorId_t fieldId)
    {
       return ROOT::RNTupleCollectionView::Create(fieldId, fSource.get());
