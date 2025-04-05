@@ -106,4 +106,15 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 
 ## Build, Configuration and Testing Infrastructure
 
+### New build options for dependiencies of image processing
 
+ROOT supports image processing via `libAfterImage`, which can be enabled with the `asimage` build option.
+A few more options were added to make ROOT builds more reproducible and to avoid builtin dependencies:
+
+  * `asimage_tiff` (default `ON`): build `libAfterImage` with TIFF support if `libtiff` is found on the system
+  * `builtin_gif` (default `OFF`): don't look for `libgif` on the system and instead build it together with ROOT
+  * `builtin_jpeg` (default `OFF`): same as above but for `libjpeg`
+  * `builtin_png` (default `OFF`): same as above but for `libpng`
+
+With default build option values, there is no difference in behavior compared to previous ROOT versions.
+The real benefit of the new options becomes apparent in builds with `fail-on-missing=ON`, because then the build will fail if any of the dependencies is not found.
