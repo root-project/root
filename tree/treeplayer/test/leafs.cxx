@@ -189,7 +189,7 @@ TEST(TTreeReaderLeafs, ArrayWithReaderValue)
    {
       RErrorIgnoreRAII errorIgnRAII;
       tr.Next();
-      *valueOfArr;
+      EXPECT_EQ(valueOfArr.Get(), nullptr);
    }
    EXPECT_FALSE(valueOfArr.IsValid());
 }
