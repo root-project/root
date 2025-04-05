@@ -83,6 +83,7 @@ RooFit::OwningPtr<RooWorkspace>
 RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measurement &measurement,
                                                    HistoToWorkspaceFactoryFast::Configuration const &cfg)
 {
+  TDirectory::TContext dirContext{nullptr};
   std::unique_ptr<TFile> outFile;
 
   auto& msgSvc = RooMsgService::instance();
@@ -133,7 +134,8 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     // This holds the TGraphs that are created during the fit
     std::string outputFileName = measurement.GetOutputFilePrefix() + "_" + measurement.GetName() + ".root";
     cxcoutIHF << "Creating the output file: " << outputFileName << std::endl;
-    outFile = std::make_unique<TFile>(outputFileName.c_str(), "recreate");
+    outFile = std::make_unique<TFile>(outputFileName.c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION");
+    gDirectory = nullptr; // Prevent global registration of histograms. They are owned by HF.
 
     cxcoutIHF << "Creating the HistoToWorkspaceFactoryFast factory" << std::endl;
     HistoToWorkspaceFactoryFast factory{measurement, cfg};
