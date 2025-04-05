@@ -424,8 +424,10 @@ static SymbolMap GetListOfMacOSCompilerRTSymbols(const LLJIT& Jit) {
   };
   SymbolMap CompilerRTSymbols;
   for (const auto& NamePtr : NamePtrList) {
-    CompilerRTSymbols[Jit.mangleAndIntern(NamePtr.first)] = {
-        orc::ExecutorAddr::fromPtr(NamePtr.second), JITSymbolFlags::Exported};
+    auto Addr = static_cast<JITTargetAddress>(
+        reinterpret_cast<uintptr_t>(NamePtr.second));
+    CompilerRTSymbols[Jit.mangleAndIntern(NamePtr.first)] =
+        JITEvaluatedSymbol(Addr, JITSymbolFlags::Exported);
   }
   return CompilerRTSymbols;
 }
@@ -576,7 +578,7 @@ IncrementalJIT::IncrementalJIT(
 #endif
 
 #if defined(__APPLE__)
-  cantFail(Jit->getProcessSymbolsJITDylib()->define(
+  cantFail(Jit->getMainJITDylib().define(
       absoluteSymbols(GetListOfMacOSCompilerRTSymbols(*Jit))));
 #endif
 
