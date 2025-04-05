@@ -32,18 +32,20 @@
 #include <unordered_map>
 
 namespace ROOT {
-class RNTuple;
 class RFieldBase;
-
-namespace Experimental {
-
-namespace Internal {
+class RDataFrame;
+class RNTuple;
+} // namespace ROOT
+namespace ROOT::Internal::RDF {
 class RNTupleColumnReader;
+}
+namespace ROOT::Experimental::Internal {
 class RPageSource;
 }
 
+namespace ROOT::RDF {
 class RNTupleDS final : public ROOT::RDF::RDataSource {
-   friend class Internal::RNTupleColumnReader;
+   friend class ROOT::Internal::RDF::RNTupleColumnReader;
 
    /// The PrepareNextRanges() method populates the fNextRanges list with REntryRangeDS records.
    /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of
@@ -98,7 +100,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::vector<std::string> fColumnTypes;
    /// List of column readers returned by GetColumnReaders() organized by slot. Used to reconnect readers
    /// to new page sources when the files in the chain change.
-   std::vector<std::vector<Internal::RNTupleColumnReader *>> fActiveColumnReaders;
+   std::vector<std::vector<ROOT::Internal::RDF::RNTupleColumnReader *>> fActiveColumnReaders;
 
    ULong64_t fSeenEntries = 0;                ///< The number of entries so far returned by GetEntryRanges()
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
@@ -198,17 +200,11 @@ public:
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
+} // namespace ROOT::RDF
 
-} // namespace Experimental
-
-class RDataFrame;
-
-namespace RDF {
-namespace Experimental {
+namespace ROOT::RDF {
 RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
 RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
-} // namespace Experimental
-} // namespace RDF
-} // namespace ROOT
+} // namespace ROOT::RDF
 
 #endif

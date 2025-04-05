@@ -1383,7 +1383,7 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string_view fileNameGlob,
                                        const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
-   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(datasetName, fileNameGlob);
+   auto dataSource = std::make_unique<ROOT::RDF::RNTupleDS>(datasetName, fileNameGlob);
    auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
@@ -1392,7 +1392,7 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                                        const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
-   auto dataSource = std::make_unique<ROOT::Experimental::RNTupleDS>(datasetName, fileNameGlobs);
+   auto dataSource = std::make_unique<ROOT::RDF::RNTupleDS>(datasetName, fileNameGlobs);
    auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
