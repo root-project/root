@@ -189,7 +189,7 @@ TEST(TTreeReaderLeafs, ArrayWithReaderValue)
       check.requiredDiag(kError, "TTreeReaderValueBase", /*The branch xxx*/ "contains data of type", false);
       check.requiredDiag(kError, "TTreeReaderValue", /*Value reader for xxx*/ "not properly initialized", false);
       tr.Next();
-      *valueOfArr;
+      EXPECT_EQ(valueOfArr.Get(), nullptr);
    }
    EXPECT_FALSE(valueOfArr.IsValid());
 }
