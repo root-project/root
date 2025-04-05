@@ -1611,21 +1611,27 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
       ::Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return nullptr;
    }
-   if (tcling_callfunc_ctor_Wrapper_t wrapper = make_ctor_wrapper(info, kind, type_name)) {
-      //if (!info->HasDefaultConstructor()) {
-      //   // FIXME: We might have a ROOT ioctor, we might
-      //   //        have to check for that here.
-      //   ::Error("TClingCallFunc::ExecDefaultConstructor",
-      //         "Class has no default constructor: %s",
-      //         info->Name());
-      //   return 0;
-      //}
-      void *obj = nullptr;
-      (*wrapper)(&obj, address, nary);
-      return obj;
+   auto D = info->GetDecl();
+   // bool is_rec = ;
+   if (Cpp::IsClass(D)) {
+      auto FD = Cpp::GetDefaultConstructorConst(D);
+      fJitCall = std::make_unique<Cpp::JitCall>(Cpp::MakeFunctionCallable(FD));
    }
-   ::Error("TClingCallFunc::ExecDefaultConstructor", "Called with no wrapper, not implemented!");
-   return nullptr;
+   else if (Cpp::IsConstructor(D))
+      fJitCall = std::make_unique<Cpp::JitCall>(Cpp::MakeFunctionCallable(D));
+
+   else return nullptr;
+   
+   if(fJitCall->getKind() == Cpp::JitCall::kUnknown) return nullptr;
+
+   // Invoke:
+   void *obj = nullptr;
+   fJitCall->Invoke(&obj);
+   // (*wrapper)(&obj, address, nary);
+   return obj;
+   
+   // ::Error("TClingCallFunc::ExecDefaultConstructor", "Called with no wrapper, not implemented!");
+   // return nullptr;
 }
 
 void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /*=0*/,
