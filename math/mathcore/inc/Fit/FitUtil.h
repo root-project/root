@@ -232,7 +232,7 @@ namespace FitUtil {
         // Figure out the size of the SIMD vectors.
         constexpr static int vecSize = sizeof(ROOT::Double_v) / sizeof(double);
         double xBuffer[vecSize];
-        ROOT::Double_v xx[fDim];
+        std::vector<ROOT::Double_v> xx(fDim);
         for (unsigned int i = 0; i < fDim; ++i) {
            // The Load() function reads multiple values from the pointed-to
            // memory into xx. This is why we have to copy the input values from
@@ -244,7 +244,7 @@ namespace FitUtil {
            }
            vecCore::Load<ROOT::Double_v>(xx[i], xBuffer);
         }
-        auto res = (*f)(xx, p);
+        auto res = (*f)(xx.data(), p);
         return vecCore::Get<ROOT::Double_v>(res, 0);
      }
 #endif
