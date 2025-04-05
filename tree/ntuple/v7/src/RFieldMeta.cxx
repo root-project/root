@@ -255,22 +255,6 @@ std::vector<const ROOT::TSchemaRule *> ROOT::RClassField::FindRules(const ROOT::
          continue;
       }
 
-      // For the time being, we only support rules targeting transient members
-      bool hasPersistentTarget = false;
-      for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
-         const auto dataMember = fClass->GetDataMember(target->GetString());
-         if (!dataMember || dataMember->IsPersistent()) {
-            R__LOG_WARNING(ROOT::Internal::NTupleLog())
-               << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
-            hasPersistentTarget = true;
-            break;
-         }
-      }
-      if (hasPersistentTarget) {
-         itr = rules.erase(itr);
-         continue;
-      }
-
       ++itr;
    }
 
@@ -396,7 +380,9 @@ void ROOT::RClassField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
 void ROOT::RClassField::BeforeConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource)
 {
    std::vector<const TSchemaRule *> rules;
-   std::unordered_set<std::string> knownSubfields;
+   // On-disk members that are not targeted by an I/O rule; all other sub fields of the in-memory class
+   // will be marked as artificial (added member in a new class version or member set by rule).
+   std::unordered_set<std::string> regularSubfields;
 
    if (GetOnDiskId() == kInvalidDescriptorId) {
       // This can happen for added base classes or added members of class type
@@ -417,7 +403,7 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Experimental::Internal::RP
 
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
-         knownSubfields.insert(subFieldDesc.GetFieldName());
+         regularSubfields.insert(subFieldDesc.GetFieldName());
       }
 
       rules = FindRules(&fieldDesc);
@@ -426,6 +412,16 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Experimental::Internal::RP
          PrepareStagingArea(rules, desc, fieldDesc);
          for (auto &[_, si] : fStagingItems)
             Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
+
+         // Remove target member of read rules from the list of regular members of the underlying on-disk field
+         for (const auto rule : rules) {
+            if (!rule->GetTarget())
+               continue;
+
+            for (const auto target : ROOT::Detail::TRangeStaticCast<const TObjString>(*rule->GetTarget())) {
+               regularSubfields.erase(std::string(target->GetString()));
+            }
+         }
       }
    }
 
@@ -435,7 +431,7 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Experimental::Internal::RP
 
    // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
    for (auto &field : fSubfields) {
-      if (knownSubfields.count(field->GetFieldName()) == 0) {
+      if (regularSubfields.count(field->GetFieldName()) == 0) {
          field->SetArtificial();
       }
    }

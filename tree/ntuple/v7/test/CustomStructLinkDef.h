@@ -72,10 +72,7 @@
 
 #pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[1-99]" targetClass = \
    "StructWithIORulesBase" target = "b" code = "{ b = onfile.a + 1.0f; }"
-// Including a non-transient member in `target` should issue a warning and ignore the rule; thus, `a` remains unchanged
-// in the test
-#pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[1-]" targetClass = \
-   "StructWithIORulesBase" target = "a" code = "{ a = 0.0f; }"
+
 // This rule is ignored due to type version mismatch
 #pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[100-]" targetClass = \
    "StructWithIORulesBase" target = "b" code = "{ b = 0.0f; }"
@@ -108,6 +105,14 @@
 #pragma read sourceClass = "CoordinatesWithIORules" source = "float fX; float fY" version = "[3]" targetClass = \
    "CoordinatesWithIORules" target = "fPhi,fR" include = "cmath" code =                                         \
       "{ fR = sqrt(onfile.fX * onfile.fX + onfile.fY * onfile.fY); fPhi = atan2(onfile.fY, onfile.fX); }"
+
+#pragma link C++ options = version(3) class LowPrecisionFloatWithIORules + ;
+
+#pragma read sourceClass = "LowPrecisionFloatWithIORules" source = "float fLast8BitsZero;" version =       \
+   "[3]" targetClass = "LowPrecisionFloatWithIORules" target = "fLast8BitsZero" include = "cstring,cstdint" code = \
+      "{ std::uint32_t bits; std::memcpy(&bits, &onfile.fLast8BitsZero, sizeof(bits)); \
+         bits |= 137; /* placeholder for randomizing the 8 LSBs */ \
+         std::memcpy(&fLast8BitsZero, &bits, sizeof(fLast8BitsZero)); }"
 
 #pragma link C++ class Cyclic + ;
 #pragma link C++ class CyclicCollectionProxy + ;
