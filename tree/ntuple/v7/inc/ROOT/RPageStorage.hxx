@@ -504,7 +504,7 @@ protected:
    ///
    /// A subclass using the default set of metrics is always responsible for updating the counters
    /// appropriately, e.g. `fCounters->fNPageCommited.Inc()`
-   void EnableDefaultMetrics(const std::string &prefix);
+   void EnableDefaultMetrics(std::string_view prefix);
 
 public:
    RPagePersistentSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
@@ -728,7 +728,7 @@ protected:
    /// appropriately, e.g. `fCounters->fNRead.Inc()`
    /// Alternatively, a subclass might provide its own RNTupleMetrics object by overriding the
    /// `GetMetrics()` member function.
-   void EnableDefaultMetrics(const std::string &prefix);
+   void EnableDefaultMetrics(std::string_view prefix);
 
    /// Note that the underlying lock is not recursive. See `GetSharedDescriptorGuard()` for further information.
    RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }

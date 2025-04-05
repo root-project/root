@@ -62,7 +62,7 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
 
 // Recursively normalizes a template argument using the regular type name normalizer F as a helper.
 template <typename F>
-std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
+std::string GetNormalizedTemplateArg(std::string_view arg, F fnTypeNormalizer)
 {
    R__ASSERT(!arg.empty());
 
@@ -81,7 +81,7 @@ std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
 }
 
 using AnglePos = std::pair<std::string::size_type, std::string::size_type>;
-std::vector<AnglePos> FindTemplateAngleBrackets(const std::string &typeName)
+std::vector<AnglePos> FindTemplateAngleBrackets(std::string_view typeName)
 {
    std::vector<AnglePos> result;
    std::string::size_type currentPos = 0;
@@ -122,9 +122,9 @@ std::vector<AnglePos> FindTemplateAngleBrackets(const std::string &typeName)
 
 } // namespace
 
-std::string ROOT::Internal::GetCanonicalTypePrefix(const std::string &typeName)
+std::string ROOT::Internal::GetCanonicalTypePrefix(std::string_view typeName)
 {
-   std::string canonicalType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/1)};
+   std::string canonicalType{TClassEdit::CleanType(typeName.data(), /*mode=*/1)};
    if (canonicalType.substr(0, 7) == "struct ") {
       canonicalType.erase(0, 7);
    } else if (canonicalType.substr(0, 5) == "enum ") {
@@ -222,7 +222,7 @@ std::string ROOT::Internal::GetCanonicalTypePrefix(const std::string &typeName)
    return canonicalType;
 }
 
-std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
+std::string ROOT::Internal::GetRenormalizedTypeName(std::string_view metaNormalizedName)
 {
    const std::string canonicalTypePrefix{GetCanonicalTypePrefix(metaNormalizedName)};
    // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
@@ -264,11 +264,11 @@ std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNorma
    return normName;
 }
 
-std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &origName)
+std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(std::string_view origName)
 {
    const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
       TClassEdit::kDropStlDefault | TClassEdit::kDropComparator | TClassEdit::kDropHash);
-   TClassEdit::TSplitType splitname(origName.c_str(), modType);
+   TClassEdit::TSplitType splitname(origName.data(), modType);
    std::string canonicalTypePrefix;
    splitname.ShortType(canonicalTypePrefix, modType);
    canonicalTypePrefix = GetCanonicalTypePrefix(canonicalTypePrefix);
@@ -344,7 +344,7 @@ std::string ROOT::Internal::GetNormalizedInteger(unsigned long long val)
    return std::to_string(val);
 }
 
-std::string ROOT::Internal::GetNormalizedInteger(const std::string &intTemplateArg)
+std::string ROOT::Internal::GetNormalizedInteger(std::string_view intTemplateArg)
 {
    R__ASSERT(!intTemplateArg.empty());
    if (intTemplateArg[0] == '-')
@@ -352,46 +352,46 @@ std::string ROOT::Internal::GetNormalizedInteger(const std::string &intTemplateA
    return GetNormalizedInteger(ParseUIntTypeToken(intTemplateArg));
 }
 
-long long ROOT::Internal::ParseIntTypeToken(const std::string &intToken)
+long long ROOT::Internal::ParseIntTypeToken(std::string_view intToken)
 {
    std::size_t nChars = 0;
-   long long res = std::stoll(intToken, &nChars);
+   long long res = std::stoll(intToken.data(), &nChars);
    if (nChars == intToken.size())
       return res;
 
    assert(nChars < intToken.size());
    if (nChars == 0) {
-      throw RException(R__FAIL("invalid integer type token: " + intToken));
+      throw RException(R__FAIL("invalid integer type token: " + std::string(intToken)));
    }
 
-   auto suffix = intToken.substr(nChars);
+   auto suffix = std::string(intToken).substr(nChars);
    std::transform(suffix.begin(), suffix.end(), suffix.begin(), ::toupper);
    if (suffix == "L" || suffix == "LL")
       return res;
    if (res >= 0 && (suffix == "U" || suffix == "UL" || suffix == "ULL"))
       return res;
 
-   throw RException(R__FAIL("invalid integer type token: " + intToken));
+   throw RException(R__FAIL("invalid integer type token: " + std::string(intToken)));
 }
 
-unsigned long long ROOT::Internal::ParseUIntTypeToken(const std::string &uintToken)
+unsigned long long ROOT::Internal::ParseUIntTypeToken(std::string_view uintToken)
 {
    std::size_t nChars = 0;
-   unsigned long long res = std::stoull(uintToken, &nChars);
+   unsigned long long res = std::stoull(uintToken.data(), &nChars);
    if (nChars == uintToken.size())
       return res;
 
    assert(nChars < uintToken.size());
    if (nChars == 0) {
-      throw RException(R__FAIL("invalid integer type token: " + uintToken));
+      throw RException(R__FAIL("invalid integer type token: " + std::string(uintToken)));
    }
 
-   auto suffix = uintToken.substr(nChars);
+   auto suffix = std::string(uintToken).substr(nChars);
    std::transform(suffix.begin(), suffix.end(), suffix.begin(), ::toupper);
    if (suffix == "U" || suffix == "L" || suffix == "LL" || suffix == "UL" || suffix == "ULL")
       return res;
 
-   throw RException(R__FAIL("invalid integer type token: " + uintToken));
+   throw RException(R__FAIL("invalid integer type token: " + std::string(uintToken)));
 }
 
 ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializationMode(TClass *cl)
@@ -413,7 +413,7 @@ ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializatio
    }
 }
 
-std::tuple<std::string, std::vector<std::size_t>> ROOT::Internal::ParseArrayType(const std::string &typeName)
+std::tuple<std::string, std::vector<std::size_t>> ROOT::Internal::ParseArrayType(std::string_view typeName)
 {
    std::vector<std::size_t> sizeVec;
 
@@ -423,12 +423,12 @@ std::tuple<std::string, std::vector<std::size_t>> ROOT::Internal::ParseArrayType
       auto posRBrace = prefix.size() - 1;
       auto posLBrace = prefix.rfind('[', posRBrace);
       if (posLBrace == std::string_view::npos) {
-         throw RException(R__FAIL(std::string("invalid array type: ") + typeName));
+         throw RException(R__FAIL(std::string("invalid array type: ") + std::string(typeName)));
       }
 
       const std::size_t size = ParseUIntTypeToken(prefix.substr(posLBrace + 1, posRBrace - posLBrace - 1));
       if (size == 0) {
-         throw RException(R__FAIL(std::string("invalid array size: ") + typeName));
+         throw RException(R__FAIL(std::string("invalid array size: ") + std::string(typeName)));
       }
 
       sizeVec.insert(sizeVec.begin(), size);
