@@ -963,7 +963,7 @@ if(ROOT_pyroot_FOUND)
       endif()
     endforeach()
 
-    if(NOT ${${tname}-depends} STREQUAL ${tutorial_name})
+    if(NOT "${${tname}-depends}" STREQUAL ${tutorial_name})
       set(tutorial_dependency ${${tname}-depends})
     else()
       set(tutorial_dependency "")
