@@ -240,7 +240,8 @@ __global__ void kahanSum(const double *__restrict__ input, const double *__restr
 }
 
 __global__ void nllSumKernel(const double *__restrict__ probas, const double *__restrict__ weights,
-                             const double *__restrict__ offsetProbas, size_t n, double *__restrict__ result)
+                             const double *__restrict__ offsetProbas, size_t nProbas, double scalarProba,
+                             size_t nWeights, double *__restrict__ result)
 {
    int thIdx = threadIdx.x;
    int gthIdx = thIdx + blockIdx.x * blockSize;
@@ -253,14 +254,13 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
    double sum = 0.0;
    double carry = 0.0;
 
-   for (int i = gthIdx; i < n; i += nThreadsTotal) {
+   for (int i = gthIdx; i < nWeights; i += nThreadsTotal) {
       // Note: it does not make sense to use the nll option and provide at the
       // same time external carries.
-      double val = -std::log(probas[i]);
+      double val = -std::log(nProbas == 1 ? scalarProba : probas[i]);
       if (offsetProbas)
          val += std::log(offsetProbas[i]);
-      if (weights)
-         val = weights[i] * val;
+      val = weights[i] * val;
       kahanSumUpdate(sum, carry, val, 0.0);
    }
 
@@ -270,7 +270,7 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
    // Wait until all threads in each block have loaded their elements
    __syncthreads();
 
-   kahanSumReduction(shared, n, result, carry_index);
+   kahanSumReduction(shared, nWeights, result, carry_index);
 }
 
 double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n)
@@ -295,7 +295,7 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    if (probas.empty()) {
       return out;
    }
-   const int gridSize = getGridSize(probas.size());
+   const int gridSize = getGridSize(weights.size());
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
    cudaStream_t stream = *cfg.cudaStream();
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
@@ -309,8 +309,8 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
 #endif
 
    nllSumKernel<<<gridSize, blockSize, shMemSize, stream>>>(
-      probas.data(), weights.size() == 1 ? nullptr : weights.data(),
-      offsetProbas.empty() ? nullptr : offsetProbas.data(), probas.size(), devOut.data());
+      probas.data(), weights.data(), offsetProbas.empty() ? nullptr : offsetProbas.data(), probas.size(),
+      probas.size() == 1 ? probas[0] : 0.0, weights.size(), devOut.data());
 
    kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut.data(), devOut.data() + gridSize, gridSize, devOut.data(), 0);
 
@@ -318,11 +318,6 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    double tmpCarry = 0.0;
    CudaInterface::copyDeviceToHost(devOut.data(), &tmpSum, 1, cfg.cudaStream());
    CudaInterface::copyDeviceToHost(devOut.data() + 1, &tmpCarry, 1, cfg.cudaStream());
-
-   if (weights.size() == 1) {
-      tmpSum *= weights[0];
-      tmpCarry *= weights[0];
-   }
 
    out.nllSum = tmpSum;
    out.nllSumCarry = tmpCarry;
@@ -462,7 +457,12 @@ public:
    }
 
 private:
-   enum class LastAccessType { CPU_READ, GPU_READ, CPU_WRITE, GPU_WRITE };
+   enum class LastAccessType {
+      CPU_READ,
+      GPU_READ,
+      CPU_WRITE,
+      GPU_WRITE
+   };
 
    CudaInterface::PinnedHostArray<double> _arr;
    GPUBufferContainer _gpuBuffer;

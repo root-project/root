@@ -171,18 +171,18 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
    gBenchmark->Start("StressRooFit");
 
    int i(1);
-   for (list<RooUnitTest *>::iterator iter = testList.begin(); iter != testList.end(); ++iter) {
+   for (RooUnitTest *unitTest : testList) {
       if (oneTest < 0 || oneTest == i) {
          if (doDump) {
-            (*iter)->setDebug(true);
+            unitTest->setDebug(true);
          }
-         int status = (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
-         StatusPrint(i, (*iter)->GetName(), status);
+         int status = unitTest->isTestAvailable() ? unitTest->runTest() : -1;
+         StatusPrint(i, unitTest->GetName(), status);
          // increment retVal for every failed test
          if (!status)
             ++retVal;
       }
-      delete (*iter);
+      delete unitTest;
       i++;
    }
 
