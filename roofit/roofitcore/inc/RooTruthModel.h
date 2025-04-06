@@ -24,7 +24,7 @@ public:
   RooTruthModel() = default;
   RooTruthModel(const char *name, const char *title, RooAbsRealLValue& x) ;
   RooTruthModel(const RooTruthModel& other, const char* name=nullptr) : RooResolutionModel{other, name} {}
-  TObject* clone(const char* newname) const override { return new RooTruthModel(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooTruthModel(*this,newname) ; }
 
   Int_t basisCode(const char* name) const override ;
 

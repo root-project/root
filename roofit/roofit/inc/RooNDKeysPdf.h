@@ -81,7 +81,7 @@ public:
   RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=nullptr);
   ~RooNDKeysPdf() override;
 
-  TObject* clone(const char* newname) const override { return new RooNDKeysPdf(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooNDKeysPdf(*this,newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

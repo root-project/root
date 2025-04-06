@@ -23,7 +23,7 @@ public:
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& cacheObs);
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf);
   RooCachedPdf(const RooCachedPdf& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooCachedPdf(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCachedPdf(*this,newname); }
 
   void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const override ;
 

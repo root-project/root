@@ -30,7 +30,7 @@ public:
          const char *blindString, double scale, RooAbsReal& blindValue,
          RooAbsCategory& blindState);
   RooUnblindOffset(const RooUnblindOffset& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooUnblindOffset(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooUnblindOffset(*this,newname); }
 
 protected:
 

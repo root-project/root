@@ -30,7 +30,7 @@ public:
   inline RooResolutionModel() = default;
   RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& x) ;
   RooResolutionModel(const RooResolutionModel& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override = 0;
+  TObject* clone(const char* newname=nullptr) const override = 0;
   ~RooResolutionModel() override;
 
   virtual RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf&, const RooArgSet&,

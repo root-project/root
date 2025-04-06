@@ -33,7 +33,7 @@ public:
 
   RooNumConvPdf(const RooNumConvPdf& other, const char* name=nullptr) ;
 
-  TObject* clone(const char* newname) const override { return new RooNumConvPdf(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooNumConvPdf(*this,newname) ; }
   ~RooNumConvPdf() override ;
 
   double evaluate() const override ;

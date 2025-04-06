@@ -32,7 +32,7 @@ public:
       RooAbsReal& x, const RooArgList& coefList, TArrayD const& limits, Int_t nBins=1) ;
 
   RooParametricStepFunction(const RooParametricStepFunction& other, const char* name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooParametricStepFunction(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooParametricStepFunction(*this, newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

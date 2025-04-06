@@ -25,7 +25,7 @@ public:
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs);
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func);
   RooCachedReal(const RooCachedReal& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooCachedReal(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCachedReal(*this,newname); }
 
   /// If flag is true the RooHistFunc that represent the cache histogram
   /// will use special boundary conditions for use with cumulative distribution

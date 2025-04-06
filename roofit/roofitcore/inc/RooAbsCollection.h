@@ -71,7 +71,7 @@ public:
   // Constructors, assignment etc.
   RooAbsCollection();
   RooAbsCollection(const char *name);
-  virtual TObject* clone(const char* newname) const = 0 ;
+  virtual TObject* clone(const char* newname=nullptr) const = 0 ;
   virtual TObject* create(const char* newname) const = 0 ;
   TObject* Clone(const char* newname=nullptr) const override {
     return clone(newname?newname:GetName()) ;

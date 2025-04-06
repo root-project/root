@@ -29,7 +29,7 @@ public:
   RooDecay(const char *name, const char *title, RooRealVar& t,
       RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;
   RooDecay(const RooDecay& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooDecay(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooDecay(*this,newname) ; }
 
   double coefficient(Int_t basisIndex) const override ;
 

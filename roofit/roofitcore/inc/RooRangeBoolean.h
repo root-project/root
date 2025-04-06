@@ -29,7 +29,7 @@ public:
   RooRangeBoolean() = default;
   RooRangeBoolean(const char* name, const char* title, RooAbsRealLValue& x, const char* rangeName) ;
   RooRangeBoolean(const RooRangeBoolean& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooRangeBoolean(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooRangeBoolean(*this, newname); }
 
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
 
