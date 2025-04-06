@@ -34,7 +34,7 @@ public:
 
   RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = nullptr);
 
-  TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname=nullptr) const override {
     return new RooBinSamplingPdf(*this, newname);
   }
 

@@ -32,7 +32,7 @@ public:
 
   RooJohnson(const RooJohnson& other, const char* newName = nullptr);
 
-  TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname=nullptr) const override {
     return new RooJohnson(*this,newname);
   }
 

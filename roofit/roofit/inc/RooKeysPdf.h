@@ -35,7 +35,7 @@ public:
              RooAbsReal& x, RooRealVar& xdata, RooDataSet& data, Mirror mirror= NoMirror,
         double rho=1);
   RooKeysPdf(const RooKeysPdf& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override {return new RooKeysPdf(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override {return new RooKeysPdf(*this,newname); }
   ~RooKeysPdf() override;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,

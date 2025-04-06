@@ -27,7 +27,7 @@ public:
               RooAbsReal& _width, RooAbsReal& _sigma,
               bool doFast = false);
   RooVoigtian(const RooVoigtian& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooVoigtian(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooVoigtian(*this,newname); }
 
   /// Enable the fast evaluation of the complex error function using look-up
   /// tables (default is the "slow" CERNlib algorithm).

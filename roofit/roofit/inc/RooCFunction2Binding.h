@@ -232,7 +232,7 @@ public:
   } ;
   RooCFunction2Binding(const char *name, const char *title, VO (*_func)(VI1,VI2), RooAbsReal& _x, RooAbsReal& _y);
   RooCFunction2Binding(const RooCFunction2Binding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooCFunction2Binding(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCFunction2Binding(*this,newname); }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
@@ -299,7 +299,7 @@ public:
   } ;
   RooCFunction2PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2), RooAbsReal& _x, RooAbsReal& _y);
   RooCFunction2PdfBinding(const RooCFunction2PdfBinding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooCFunction2PdfBinding(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCFunction2PdfBinding(*this,newname); }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer

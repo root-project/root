@@ -29,7 +29,7 @@ public:
   RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar,
       const char* defCatName="Default", Int_t defCatIdx=0);
   RooThresholdCategory(const RooThresholdCategory& other, const char *name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooThresholdCategory(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooThresholdCategory(*this, newname); }
 
   // Mapping function
   bool addThreshold(double upperLimit, const char* catName, Int_t catIdx=-99999) ;

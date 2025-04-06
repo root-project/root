@@ -37,7 +37,7 @@ public:
   RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
              std::unique_ptr<RooDataHist> dhist, int intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooHistPdf(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooHistPdf(*this,newname); }
 
   RooDataHist& dataHist()  {
     // Return RooDataHist that is represented

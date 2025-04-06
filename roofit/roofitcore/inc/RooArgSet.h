@@ -108,7 +108,7 @@ public:
   explicit RooArgSet(const char *name);
 
   ~RooArgSet() override;
-  TObject* clone(const char* newname) const override { return new RooArgSet(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooArgSet(*this,newname); }
   TObject* create(const char* newname) const override { return new RooArgSet(newname); }
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 

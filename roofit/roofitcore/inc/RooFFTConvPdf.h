@@ -31,7 +31,7 @@ public:
   RooFFTConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder=2);
   RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pdfConvVar, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder=2);
   RooFFTConvPdf(const RooFFTConvPdf& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooFFTConvPdf(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooFFTConvPdf(*this,newname); }
   ~RooFFTConvPdf() override ;
 
   void setShift(double val1, double val2) { _shift1 = val1 ; _shift2 = val2 ; }
