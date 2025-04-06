@@ -135,7 +135,7 @@ RooPolyFunc::RooPolyFunc() {}
 /// Parameterised constructor
 
 RooPolyFunc::RooPolyFunc(const char *name, const char *title, const RooAbsCollection &vars)
-   : RooAbsReal(name, title), _vars("x", "list of dependent variables", this)
+   : RooAbsReal(name, title), _vars("vars", "list of dependent variables", this)
 {
    _vars.addTyped<RooAbsReal>(vars);
 }
@@ -143,8 +143,7 @@ RooPolyFunc::RooPolyFunc(const char *name, const char *title, const RooAbsCollec
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name)
-   : RooAbsReal(other, name), _vars("vars", this, other._vars)
+RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name) : RooAbsReal(other, name), _vars(this, other._vars)
 {
    for (auto const &term : other._terms) {
       _terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
