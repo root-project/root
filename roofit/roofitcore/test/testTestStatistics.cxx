@@ -25,12 +25,14 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
+#include <TH1D.h>
 #include <TMath.h>
 
 #include "gtest_wrapper.h"
 
 #include <cmath>
 #include <memory>
+#include <numeric>
 
 namespace {
 
@@ -641,6 +643,62 @@ TEST_P(TestStatisticTest, HideOffset)
    EXPECT_FLOAT_EQ(nll->getVal(), nllNoOffset->getVal());
 
    RooAbsReal::setHideOffset(hideOffsetOrig);
+}
+
+// Test case where we have a constant pdf object that doesn't depend on any
+// observables or parameters.
+TEST_P(TestStatisticTest, ConstantPdf)
+{
+   std::vector<int> obsCounts{2, 3};
+   std::vector<double> predProbas{0.5, 0.5};
+   std::vector<double> binWidths{1., 1.};
+   double nPred = 2;
+   int obsCountTotal = std::accumulate(obsCounts.begin(), obsCounts.end(), 0);
+   double normInteg = std::accumulate(predProbas.begin(), predProbas.end(), 0.);
+
+   // calculate reference value
+   auto calcExtTerm = [](double n, double pred) { return n * std::log(pred) - pred; };
+   double nllRef = 0.;
+   for (std::size_t i = 0; i < obsCounts.size(); ++i) {
+      nllRef -= obsCounts[i] * std::log(predProbas[i] / normInteg / binWidths[i]);
+   }
+   nllRef -= calcExtTerm(obsCountTotal, nPred);
+
+   RooWorkspace ws{"w"};
+   ws.factory("x[1,3]");
+
+   ws.factory("p0[2.0, 0.0, 10.0]");
+   // Flat PDF: value is 0.5 so it integrates to 1 over [1, 3]
+   ws.factory("GenericPdf::bkg(0.5, {})");
+
+   // Extended model
+   ws.factory("ExtendPdf::bkg_ext(bkg, p0)");
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("bkg_ext");
+
+   // RooDataHist case
+   TH1D histMin("hist_min", "hist_min", 2, 1, 3);
+   for (std::size_t i = 0; i < obsCounts.size(); ++i) {
+      histMin.SetBinContent(i + 1, obsCounts[i]);
+   }
+   RooDataHist dh{"dh", "dh", {x}, &histMin};
+   std::unique_ptr<RooAbsReal> nllDh{model.createNLL(dh, _evalBackend)};
+   EXPECT_FLOAT_EQ(nllDh->getVal(), nllRef);
+
+   // RooDataSet case
+   RooArgSet dataVars{x};
+   RooDataSet ds{"ds", "ds", dataVars};
+   for (std::size_t i = 0; i < obsCounts.size(); ++i) {
+      x.setBin(i);
+      // We have to fill the dataset explicitly in a loop, so we avoid having a
+      // weighted dataset, which would go through the same code path as the
+      // RooDataHist.
+      for (int j = 0; j < obsCounts[i]; ++j) {
+         ds.add(dataVars);
+      }
+   }
+   std::unique_ptr<RooAbsReal> nllDs{model.createNLL(dh, _evalBackend)};
+   EXPECT_FLOAT_EQ(nllDs->getVal(), nllRef);
 }
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
