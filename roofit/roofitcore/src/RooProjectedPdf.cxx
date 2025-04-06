@@ -79,7 +79,7 @@ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
  RooProjectedPdf::RooProjectedPdf(const RooProjectedPdf& other, const char* name) :
    RooAbsPdf(other,name),
    intpdf("!IntegratedPdf",this,other.intpdf),
-   intobs("!IntegrationObservable",this,other.intobs),
+   intobs("!IntegrationObservables",this,other.intobs),
    deps("!Dependents",this,other.deps),
    _cacheMgr(other._cacheMgr,this)
 {

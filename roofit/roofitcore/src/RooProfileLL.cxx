@@ -57,9 +57,9 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
 
 RooProfileLL::RooProfileLL(const RooProfileLL &other, const char *name)
    : RooAbsReal(other, name),
-     _nll("nll", this, other._nll),
-     _obs("obs", this, other._obs),
-     _par("par", this, other._par),
+     _nll("input", this, other._nll),
+     _obs(this, other._obs),
+     _par(this, other._par),
      _startFromMin(other._startFromMin),
      _paramFixed(other._paramFixed)
 {
