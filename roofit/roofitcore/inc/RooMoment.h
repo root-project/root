@@ -32,7 +32,7 @@ public:
        bool intNSet=false) ;
 
   RooMoment(const RooMoment& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooMoment(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooMoment(*this, newname); }
 
   const RooAbsReal& xF() { return _xf.arg() ; }
   const RooAbsReal& ixF() { return _ixf.arg() ; }

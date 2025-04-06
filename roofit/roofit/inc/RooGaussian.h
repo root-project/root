@@ -31,7 +31,7 @@ public:
   RooGaussian(const char *name, const char *title,
          RooAbsReal::Ref _x, RooAbsReal::Ref _mean, RooAbsReal::Ref _sigma);
   RooGaussian(const RooGaussian& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname=nullptr) const override {
     return new RooGaussian(*this,newname);
   }
 

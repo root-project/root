@@ -25,7 +25,7 @@ public:
                           RooAbsReal& _k,
                           RooAbsReal& _lambda);
    RooNonCentralChiSquare(const RooNonCentralChiSquare& other, const char* name=nullptr) ;
-   TObject* clone(const char* newname) const override { return new RooNonCentralChiSquare(*this,newname); }
+   TObject* clone(const char* newname=nullptr) const override { return new RooNonCentralChiSquare(*this,newname); }
 
    void SetErrorTolerance(double t) {fErrorTol = t;}
    void SetMaxIters(Int_t mi) {fMaxIters = mi;}

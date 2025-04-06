@@ -29,7 +29,7 @@ public:
   ParamHistFunc(const char *name, const char *title, const RooArgList& vars, const RooArgList& paramSet, const TH1* hist );
 
   ParamHistFunc(const ParamHistFunc& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new ParamHistFunc(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new ParamHistFunc(*this, newname); }
 
   const RooArgList& paramList() const { return _paramSet ; }
 

@@ -29,7 +29,7 @@ public:
         RooAbsReal& _alpha, RooAbsReal& _n);
 
   RooCBShape(const RooCBShape& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooCBShape(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCBShape(*this,newname); }
 
   Int_t getAnalyticalIntegral( RooArgSet& allVars,  RooArgSet& analVars, const char* rangeName=nullptr ) const override;
   double analyticalIntegral(Int_t, const char *rangeName = nullptr) const override;

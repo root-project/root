@@ -23,7 +23,7 @@ public:
   RooEffProd(const char *name, const char *title, RooAbsPdf& pdf, RooAbsReal& efficiency);
   RooEffProd(const RooEffProd& other, const char* name=nullptr);
 
-  TObject* clone(const char* newname) const override { return new RooEffProd(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooEffProd(*this,newname); }
 
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype,
                                        const RooArgSet* auxProto, bool verbose) const override;

@@ -34,7 +34,7 @@ public:
           DecayType type=DoubleSided) ;
 
   RooBMixDecay(const RooBMixDecay& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooBMixDecay(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooBMixDecay(*this,newname) ; }
 
   double coefficient(Int_t basisIndex) const override ;
 

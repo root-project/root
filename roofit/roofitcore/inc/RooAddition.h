@@ -32,7 +32,7 @@ public:
   RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2);
 
   RooAddition(const RooAddition& other, const char* name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooAddition(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooAddition(*this, newname); }
 
   double defaultErrorLevel() const override ;
 

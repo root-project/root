@@ -32,7 +32,7 @@ public:
   RooMappedCategory();
   RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defCatName="NotMapped", Int_t defCatIdx=NoCatIdx);
   RooMappedCategory(const RooMappedCategory& other, const char *name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooMappedCategory(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooMappedCategory(*this,newname); }
   ~RooMappedCategory() override;
 
   // Mapping function

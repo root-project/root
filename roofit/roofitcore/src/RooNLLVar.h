@@ -32,7 +32,7 @@ public:
             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
 
   RooNLLVar(const RooNLLVar& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooNLLVar(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooNLLVar(*this,newname); }
 
   RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
                                       const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) override;

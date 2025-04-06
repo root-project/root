@@ -37,7 +37,7 @@ public:
   RooMomentMorph(const char *name, const char *title, RooAbsReal& _m, const RooArgList& varList,
           const RooArgList& pdfList, const TVectorD& mrefpoints, Setting setting = NonLinearPosFractions );
   RooMomentMorph(const RooMomentMorph& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooMomentMorph(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooMomentMorph(*this,newname); }
   ~RooMomentMorph() override;
 
   void     setMode(const Setting& setting) { _setting = setting; }

@@ -34,7 +34,7 @@ public:
   RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, const RooArgSet& depList,
         const RooArgSet* funcNormSet=nullptr, const RooNumIntConfig* config=nullptr, const char* rangeName=nullptr) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooRealIntegral(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooRealIntegral(*this,newname); }
   ~RooRealIntegral() override;
 
   double getValV(const RooArgSet* set=nullptr) const override ;

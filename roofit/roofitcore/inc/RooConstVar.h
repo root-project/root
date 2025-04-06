@@ -26,7 +26,7 @@ public:
   RooConstVar() { }
   RooConstVar(const char *name, const char *title, double value);
   RooConstVar(const RooConstVar& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooConstVar(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooConstVar(*this,newname); }
 
   /// Return (constant) value.
   double getValV(const RooArgSet*) const override {

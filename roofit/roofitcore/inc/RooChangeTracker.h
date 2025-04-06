@@ -27,7 +27,7 @@ public:
   RooChangeTracker(const char *name, const char *title, const RooArgSet& trackSet, bool checkValues=false) ;
 
   RooChangeTracker(const RooChangeTracker& other, const char* name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooChangeTracker(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooChangeTracker(*this, newname); }
 
   bool hasChanged(bool clearState) ;
 

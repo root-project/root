@@ -55,7 +55,7 @@ public:
              const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
   RooProdPdf(const RooProdPdf& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooProdPdf(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooProdPdf(*this,newname) ; }
   ~RooProdPdf() override ;
 
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;

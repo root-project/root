@@ -24,7 +24,7 @@ public:
   RooSpHarmonic(const char *name, const char *title, RooAbsReal& ctheta, RooAbsReal& phi, int l1, int m1, int l2, int m2);
 
   RooSpHarmonic(const RooSpHarmonic& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooSpHarmonic(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooSpHarmonic(*this, newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

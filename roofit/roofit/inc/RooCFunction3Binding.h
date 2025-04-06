@@ -242,7 +242,7 @@ public:
   } ;
   RooCFunction3Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z);
   RooCFunction3Binding(const RooCFunction3Binding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooCFunction3Binding(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCFunction3Binding(*this,newname); }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
@@ -312,7 +312,7 @@ public:
   } ;
   RooCFunction3PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z);
   RooCFunction3PdfBinding(const RooCFunction3PdfBinding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooCFunction3PdfBinding(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCFunction3PdfBinding(*this,newname); }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer

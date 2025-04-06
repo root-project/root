@@ -35,7 +35,7 @@ public:
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const char *name, const char *title, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const RooFormulaVar& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooFormulaVar(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooFormulaVar(*this,newname); }
 
   bool ok() const;
   const char* expression() const { return _formExpr.Data(); }

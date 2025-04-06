@@ -33,7 +33,7 @@ public:
   }
   RooErrorVar(const char *name, const char *title, const RooRealVar& input) ;
   RooErrorVar(const RooErrorVar& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooErrorVar(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooErrorVar(*this,newname); }
   ~RooErrorVar() override ;
 
   double getValV(const RooArgSet* set=nullptr) const override ;

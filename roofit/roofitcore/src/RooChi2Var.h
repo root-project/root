@@ -28,7 +28,7 @@ public:
              RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
 
   RooChi2Var(const RooChi2Var& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooChi2Var(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooChi2Var(*this,newname); }
 
   RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
                                       const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) override {

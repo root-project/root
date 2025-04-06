@@ -29,7 +29,7 @@ public:
   }
   RooEfficiency(const char *name, const char *title, const RooAbsReal& effFunc, const RooAbsCategory& cat, const char* sigCatName);
   RooEfficiency(const RooEfficiency& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooEfficiency(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooEfficiency(*this,newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

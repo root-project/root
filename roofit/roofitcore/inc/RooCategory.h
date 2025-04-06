@@ -34,7 +34,7 @@ public:
   RooCategory(const RooCategory& other, const char* name=nullptr) ;
   RooCategory& operator=(const RooCategory&) = delete;
   ~RooCategory() override;
-  TObject* clone(const char* newname) const override { return new RooCategory(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooCategory(*this,newname); }
 
   /// Return current index.
   value_type getCurrentIndex() const final {

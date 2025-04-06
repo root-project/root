@@ -36,7 +36,7 @@ public:
   ~RooDerivative() override ;
 
   RooDerivative(const RooDerivative& other, const char* name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooDerivative(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooDerivative(*this, newname); }
 
   Int_t order() const { return _order ; }
   double eps() const { return _eps ; }
