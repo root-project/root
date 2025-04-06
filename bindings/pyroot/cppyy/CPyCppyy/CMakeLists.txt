@@ -79,7 +79,7 @@ endif()
 # CPython docs for C/C++ extensions. see
 # https://docs.python.org/3/extending/extending.html#keyword-parameters-for-extension-functions
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(${libname} PRIVATE -Wno-cast-function-type -Wno-bad-function-cast)
+  target_compile_options(${libname} PRIVATE -Wno-cast-function-type)
 endif()
 
 # Disables warnings in Python 3.8 caused by the temporary extra filed for tp_print compatibility
