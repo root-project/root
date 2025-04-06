@@ -416,29 +416,21 @@ include(RootInstallDirs)
 
 #---RPATH options-------------------------------------------------------------------------------
 
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-
 # add to RPATH any directories outside the project that are in the linker search path
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 if(rpath)
   file(RELATIVE_PATH BINDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_BINDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
 
-  set(CMAKE_SKIP_RPATH FALSE)
-  set(CMAKE_SKIP_INSTALL_RPATH FALSE)
-
   if(APPLE)
     set(CMAKE_MACOSX_RPATH TRUE)
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
-    set(CMAKE_INSTALL_RPATH "@loader_path;@loader_path/${BINDIR_TO_LIBDIR}")
+    list(APPEND CMAKE_INSTALL_RPATH @loader_path @loader_path/${BINDIR_TO_LIBDIR})
   else()
-    set(CMAKE_INSTALL_RPATH "$ORIGIN;$ORIGIN/${BINDIR_TO_LIBDIR}")
+    list(APPEND CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${BINDIR_TO_LIBDIR})
   endif()
 
   unset(BINDIR_TO_LIBDIR)
-else()
-  set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 endif()
 
 #---deal with the DCMAKE_IGNORE_PATH------------------------------------------------------------
