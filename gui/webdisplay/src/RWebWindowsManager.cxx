@@ -756,13 +756,14 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 /// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.
 /// See RWebDisplayArgs::SetBrowserKind() for all available options. Default value for the browser can be configured
 /// when starting root with --web argument like: "root --web=chrome". When root started in web server mode "root --web=server",
-/// no any web browser will be started - just URL will be printout, which can be entered in any running web browser
+/// no web browser will be started - just the URL will be printed, which can be opened in any running web browser.
+/// Also configurable via ROOT_WEBDISPLAY environment variable taking the same options.
 ///
 /// If allowed, same window can be displayed several times (like for RCanvas or TCanvas)
 ///
 /// Following parameters can be configured in rootrc file:
 ///
-///      WebGui.Display: kind of display like chrome or firefox or browser, can be overwritten by --web=value command line argument
+///      WebGui.Display: kind of display, identical to --web option and ROOT_WEBDISPLAY environment variable documented above
 ///      WebGui.OnetimeKey: if configured requires unique key every time window is connected (default yes)
 ///      WebGui.SingleConnMode: if configured the only connection and the only user of any widget is possible (default yes)
 ///      WebGui.Chrome: full path to Google Chrome executable
