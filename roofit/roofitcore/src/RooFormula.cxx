@@ -528,17 +528,17 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
   }
 
   if (theFormula && theFormula->GetNdim() != 0) {
-    auto theNullFormula = std::make_unique<TFormula>((std::string(GetName()) + "0").c_str(), reconstructNullFormula(processedFormula).c_str());
-    if (theNullFormula && theNullFormula->GetNdim() != 0) {
+    TFormula nullFormula{"nullFormula", reconstructNullFormula(processedFormula).c_str(), /*addToGlobList=*/false};
+    const auto nullDim = nullFormula.GetNdim();
+    if (nullDim != 0) {
       // TFormula thinks that we have an n-dimensional formula (n>0), but it shouldn't, as
       // these vars should have been replaced by zeroes in reconstructNullFormula
       // since RooFit only uses the syntax x[0], x[1], x[2], ...
       // This can happen e.g. with variables x,y,z,t that were not supplied in arglist.
       std::stringstream msg;
-      msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim()+theNullFormula->GetNdim() << "-dimensional with undefined variable(s) {";
-      for (int i=0; i < theNullFormula->GetNdim(); ++i) {
-        const TString varName = theNullFormula->GetVarName(i);
-        msg << theNullFormula->GetVarName(i) << ",";
+      msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim()+nullDim << "-dimensional with undefined variable(s) {";
+      for (auto i=0; i < nullDim; ++i) {
+        msg << nullFormula.GetVarName(i) << ",";
       }
       msg << "}, which could not be supplied by RooFit."
           << "\nThe formula must be modified, or those variables must be supplied in the list of variables." << std::endl;
