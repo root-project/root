@@ -45,6 +45,11 @@ set(LLVM_LINK_COMPONENTS
   ${LLVM_TARGETS_TO_BUILD}
 )
 
+set(cling_vc_support ON CACHE BOOL "" FORCE)
+if (NOT vc)
+  set(cling_vc_support OFF CACHE BOOL "" FORCE)
+endif()
+
 # clingInterpreter depends on Options.inc to be tablegen-ed
 # (target ClangDriverOptions) from in-tree builds.
 set(CLING_DEPENDS ClingDriverOptions)
@@ -349,6 +354,10 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/CIFactory.cpp
              APPEND PROPERTY OBJECT_DEPENDS
              ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h)
+if(cling_vc_support)
+  set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/CIFactory.cpp
+               APPEND PROPERTY COMPILE_DEFINITIONS "CLING_SUPPORT_VC")
+endif()
 
 # If LLVM is external, but Clang is builtin, we must use some files
 # from patched (builtin) version of LLVM
