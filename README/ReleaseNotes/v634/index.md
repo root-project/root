@@ -703,4 +703,16 @@ The following items were addressed:
 * [[#17753](https://github.com/root-project/root/issues/17753)] - Race condition in TClass::fStreamerImpl value for emulated classes.
 * [[#17992](https://github.com/root-project/root/issues/17992)] - Spurrious auto parsing when looking up a TClass
 
+## Release 6.34.08
+
+Published on April 8, 2025
+
+### Items addressed in this release
+
+This branch includes minor bugfixes as well as the changes necessary to build and run on macOS Sequoia 15.4 and XCode 16.3.
+
+The following item was addressed:
+
+* [[#18195](https://github.com/root-project/root/issues/18195)] - TBufferJSON not serializing std::map
+
 ## HEAD of the v6-34-00-patches branch
