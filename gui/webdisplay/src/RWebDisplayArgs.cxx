@@ -153,6 +153,7 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 ///       local - either cef or qt6
 ///         off - disable web display
 ///          on - first try "local", then "native", then "default" (default option)
+///      server - run as web server without display (URL printed to command line; also available via e.g. RWebWindow::GetUrl)
 ///    `<prog>` - any program name which will be started to open widget URL, like "/usr/bin/opera"
 
 RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
