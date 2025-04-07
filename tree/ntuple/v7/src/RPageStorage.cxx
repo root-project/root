@@ -187,7 +187,7 @@ ROOT::Internal::RPageSource::Create(std::string_view ntupleName, std::string_vie
       throw RException(R__FAIL("This RNTuple build does not support DAOS."));
 #endif
 
-   return std::make_unique<ROOT::Experimental::Internal::RPageSourceFile>(ntupleName, location, options);
+   return std::make_unique<ROOT::Internal::RPageSourceFile>(ntupleName, location, options);
 }
 
 ROOT::Internal::RPageStorage::ColumnHandle_t
@@ -780,7 +780,7 @@ ROOT::Internal::RPagePersistentSink::Create(std::string_view ntupleName, std::st
    }
 
    // Otherwise assume that the user wants us to create a file.
-   return std::make_unique<ROOT::Experimental::Internal::RPageSinkFile>(ntupleName, location, options);
+   return std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleName, location, options);
 }
 
 ROOT::Internal::RPagePersistentSink::RPagePersistentSink(std::string_view name,

@@ -416,8 +416,7 @@ ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, std::string_view fi
 {
 }
 
-ROOT::RDF::RNTupleDS::RNTupleDS(RNTuple *ntuple)
-   : RNTupleDS(ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(*ntuple))
+ROOT::RDF::RNTupleDS::RNTupleDS(RNTuple *ntuple) : RNTupleDS(ROOT::Internal::RPageSourceFile::CreateFromAnchor(*ntuple))
 {
 }
 
