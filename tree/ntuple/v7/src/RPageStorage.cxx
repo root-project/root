@@ -447,7 +447,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
-void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
+void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(std::string_view prefix)
 {
    fMetrics = Detail::RNTupleMetrics(prefix);
    fCounters = std::make_unique<RCounters>(RCounters{
@@ -1264,7 +1264,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitDatasetImpl()
    CommitDatasetImpl(bufFooter.get(), szFooter);
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string &prefix)
+void ROOT::Experimental::Internal::RPagePersistentSink::EnableDefaultMetrics(std::string_view prefix)
 {
    fMetrics = Detail::RNTupleMetrics(prefix);
    fCounters = std::make_unique<RCounters>(RCounters{

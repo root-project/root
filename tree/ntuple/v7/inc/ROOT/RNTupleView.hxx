@@ -312,7 +312,7 @@ private:
    ROOT::RField<RNTupleCardinality<std::uint64_t>> fField;
    ROOT::RFieldBase::RValue fValue;
 
-   RNTupleCollectionView(ROOT::DescriptorId_t fieldId, const std::string &fieldName,
+   RNTupleCollectionView(ROOT::DescriptorId_t fieldId, std::string_view fieldName,
                          ROOT::Experimental::Internal::RPageSource *source)
       : fSource(source), fField(fieldName), fValue(fField.CreateValue())
    {
@@ -327,8 +327,8 @@ private:
          const auto &desc = source->GetSharedDescriptorGuard().GetRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if (fieldDesc.GetStructure() != ROOT::ENTupleStructure::kCollection) {
-            throw RException(
-               R__FAIL("invalid attemt to create collection view on non-collection field " + fieldDesc.GetFieldName()));
+            throw RException(R__FAIL("invalid attempt to create collection view on non-collection field " +
+                                     fieldDesc.GetFieldName()));
          }
          fieldName = fieldDesc.GetFieldName();
       }

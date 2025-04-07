@@ -164,7 +164,7 @@ private:
    ROOT::DescriptorId_t
    LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName, ROOT::DescriptorId_t classFieldId);
    /// Sets fStagingClass according to the given name and version
-   void SetStagingClass(const std::string &className, unsigned int classVersion);
+   void SetStagingClass(const std::string_view className, unsigned int classVersion);
    /// If there are rules with inputs (source members), create the staging area according to the TClass instance
    /// that corresponds to the on-disk field.
    void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const ROOT::RNTupleDescriptor &desc,

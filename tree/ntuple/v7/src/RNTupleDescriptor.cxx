@@ -654,7 +654,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
          continue;
 
       if (options.GetReconstructProjections() && topDesc.IsProjectedField()) {
-         model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string {
+         model->AddProjectedField(std::move(field), [this](std::string_view targetName) -> std::string {
             return GetQualifiedFieldName(GetFieldDescriptor(FindFieldId(targetName)).GetProjectionSourceId());
          });
       } else {

@@ -167,8 +167,8 @@ private:
       /// Writes a TKey including the data record, given by buffer, into fFile; returns the file offset to the payload.
       /// The payload is already compressed
       std::uint64_t WriteKey(const void *buffer, std::size_t nbytes, std::size_t len, std::int64_t offset = -1,
-                             std::uint64_t directoryOffset = 100, const std::string &className = "",
-                             const std::string &objectName = "", const std::string &title = "");
+                             std::uint64_t directoryOffset = 100, std::string_view className = "",
+                             std::string_view objectName = "", std::string_view title = "");
       /// Reserves an RBlob opaque key as data record and returns the offset of the record. If keyBuffer is specified,
       /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
       /// argument is actually just a pointer.)

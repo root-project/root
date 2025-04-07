@@ -221,7 +221,7 @@ public:
    static std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer);
    static std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t &val);
 
-   static std::uint32_t SerializeString(const std::string &val, void *buffer);
+   static std::uint32_t SerializeString(std::string_view val, void *buffer);
    static RResult<std::uint32_t> DeserializeString(const void *buffer, std::uint64_t bufSize, std::string &val);
 
    /// While we could just interpret the enums as ints, we make the translation explicit
@@ -306,7 +306,7 @@ public:
 
    // Helper functions to (de-)serialize the streamer info type extra information
    static std::string SerializeStreamerInfos(const StreamerInfoMap_t &infos);
-   static RResult<StreamerInfoMap_t> DeserializeStreamerInfos(const std::string &extraTypeInfoContent);
+   static RResult<StreamerInfoMap_t> DeserializeStreamerInfos(std::string_view extraTypeInfoContent);
 }; // class RNTupleSerializer
 
 } // namespace Internal

@@ -96,7 +96,7 @@ public:
       daos_oclass_id_t fCid;
 
       ObjClassId(daos_oclass_id_t cid) : fCid(cid) {}
-      ObjClassId(const std::string &name) : fCid(daos_oclass_name2id(name.data())) {}
+      ObjClassId(std::string_view name) : fCid(daos_oclass_name2id(name.data())) {}
 
       bool IsUnknown() const { return fCid == OC_UNKNOWN; }
       std::string ToString() const;

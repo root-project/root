@@ -140,14 +140,14 @@ struct RDaosContainerNTupleLocator {
    static const ntuple_index_t kReservedIndex = 0;
 
    RDaosContainerNTupleLocator() = default;
-   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
+   explicit RDaosContainerNTupleLocator(std::string_view ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)) {};
 
    bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
    [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };
-   static ntuple_index_t Hash(const std::string &ntupleName)
+   static ntuple_index_t Hash(std::string_view ntupleName)
    {
       // Convert string to numeric representation via `std::hash`.
-      uint64_t h = std::hash<std::string>{}(ntupleName);
+      uint64_t h = std::hash<std::string_view>{}(ntupleName);
       // Fold the hash into 32-bit using `boost::hash_combine()` algorithm and magic number.
       auto seed = static_cast<uint32_t>(h >> 32);
       seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -198,7 +198,7 @@ struct RDaosContainerNTupleLocator {
    }
 
    static std::pair<RDaosContainerNTupleLocator, ROOT::Internal::RNTupleDescriptorBuilder>
-   LocateNTuple(ROOT::Experimental::Internal::RDaosContainer &cont, const std::string &ntupleName)
+   LocateNTuple(ROOT::Experimental::Internal::RDaosContainer &cont, std::string_view ntupleName)
    {
       auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName), ROOT::Internal::RNTupleDescriptorBuilder());
 
@@ -209,7 +209,7 @@ struct RDaosContainerNTupleLocator {
          if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
             // Hash already taken by a differently-named ntuple.
             throw ROOT::RException(
-               R__FAIL("LocateNTuple: ntuple name '" + ntupleName + "' unavailable in this container."));
+               R__FAIL("LocateNTuple: ntuple name '" + std::string(ntupleName) + "' unavailable in this container."));
          }
       }
       return result;

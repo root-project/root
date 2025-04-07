@@ -408,11 +408,11 @@ void ROOT::Internal::RPrintValueVisitor::VisitRVecField(const ROOT::RRVecField &
 
 //---------------------------- RNTupleFormatter --------------------------------
 
-std::string ROOT::Internal::RNTupleFormatter::FitString(const std::string &str, int availableSpace)
+std::string ROOT::Internal::RNTupleFormatter::FitString(std::string_view str, int availableSpace)
 {
    int strSize{static_cast<int>(str.size())};
    if (strSize <= availableSpace)
-      return str + std::string(availableSpace - strSize, ' ');
+      return std::string(str) + std::string(availableSpace - strSize, ' ');
    else if (availableSpace < 3)
       return std::string(availableSpace, '.');
    return std::string(str, 0, availableSpace - 3) + "...";
