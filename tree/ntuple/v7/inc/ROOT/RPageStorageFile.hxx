@@ -37,26 +37,24 @@ namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
 
-namespace Internal {
-class RRawFile;
+namespace Experimental::Internal {
+class RClusterPool;
 }
 
-namespace Experimental {
-
 namespace Internal {
-class RClusterPool;
+class RRawFile;
 class RPageAllocatorHeap;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageSinkFile
+\class ROOT::Internal::RPageSinkFile
 \ingroup NTuple
 \brief Storage provider that write ntuple pages into a file
 
 The written file can be either in ROOT format or in RNTuple bare format.
 */
 // clang-format on
-class RPageSinkFile : public ROOT::Internal::RPagePersistentSink {
+class RPageSinkFile : public RPagePersistentSink {
 private:
    // A set of pages to be committed together in a vector write.
    // Currently we assume they're all sequential (although they may span multiple ranges).
@@ -69,7 +67,7 @@ private:
       size_t fBytesPacked;
    };
 
-   std::unique_ptr<RNTupleFileWriter> fWriter;
+   std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
@@ -87,7 +85,7 @@ private:
 protected:
    using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) override;
+   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override;
    RNTupleLocator
    CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator>
@@ -109,12 +107,12 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageSourceFile
+\class ROOT::Internal::RPageSourceFile
 \ingroup NTuple
 \brief Storage provider that reads ntuple pages from a file
 */
 // clang-format on
-class RPageSourceFile : public ROOT::Internal::RPageSource {
+class RPageSourceFile : public RPageSource {
    friend class ROOT::RNTuple;
 
 private:
@@ -135,15 +133,15 @@ private:
    /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name
    std::optional<RNTuple> fAnchor;
    /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
-   RCluster *fCurrentCluster = nullptr;
+   ROOT::Experimental::Internal::RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
-   std::unique_ptr<ROOT::Internal::RRawFile> fFile;
+   std::unique_ptr<RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
-   RMiniFileReader fReader;
+   ROOT::Experimental::Internal::RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
-   ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
+   RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<RClusterPool> fClusterPool;
+   std::unique_ptr<ROOT::Experimental::Internal::RClusterPool> fClusterPool;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
 
@@ -153,21 +151,22 @@ private:
    /// read requests for a given cluster and columns.  The reead requests are appended to
    /// the provided vector.  This way, requests can be collected for multiple clusters before
    /// sending them to RRawFile::ReadV().
-   std::unique_ptr<RCluster>
-   PrepareSingleCluster(const RCluster::RKey &clusterKey, std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
+   std::unique_ptr<ROOT::Experimental::Internal::RCluster>
+   PrepareSingleCluster(const ROOT::Experimental::Internal::RCluster::RKey &clusterKey,
+                        std::vector<RRawFile::RIOVec> &readRequests);
 
 protected:
    void LoadStructureImpl() final;
-   ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) final;
+   ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
-   ROOT::Internal::RPageRef
+   RPageRef
    LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleReadOptions &options);
-   RPageSourceFile(std::string_view ntupleName, std::unique_ptr<ROOT::Internal::RRawFile> file,
+   RPageSourceFile(std::string_view ntupleName, std::unique_ptr<RRawFile> file,
                    const ROOT::RNTupleReadOptions &options);
    /// Used from the RNTuple class to build a datasource if the anchor is already available.
    /// Requires the RNTuple object to be streamed from a file.
@@ -183,12 +182,11 @@ public:
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
-   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
+   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
+   LoadClusters(std::span<ROOT::Experimental::Internal::RCluster::RKey> clusterKeys) final;
 }; // class RPageSourceFile
 
 } // namespace Internal
-
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

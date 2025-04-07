@@ -48,6 +48,7 @@ using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RNTupleSerializer;
 using ROOT::Internal::RPageSink;
 using ROOT::Internal::RPageSource;
+using ROOT::Internal::RPageSourceFile;
 using ROOT::Internal::RPageStorage;
 
 using namespace ROOT::Experimental::Internal;
@@ -207,7 +208,7 @@ try {
    RNTupleWriteOptions writeOpts;
    assert(compression);
    writeOpts.SetCompression(*compression);
-   auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
+   auto destination = std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleName, *outFile, writeOpts);
    std::unique_ptr<ROOT::RNTupleModel> model;
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
    if (outNTuple) {
