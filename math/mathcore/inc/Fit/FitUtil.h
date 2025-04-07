@@ -227,6 +227,9 @@ namespace FitUtil {
      }
 
 #ifdef R__HAS_VECCORE
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvla-cxx-extension"
+
      inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const
      {
         // Figure out the size of the SIMD vectors.
@@ -247,6 +250,7 @@ namespace FitUtil {
         auto res = (*f)(xx, p);
         return vecCore::Get<ROOT::Double_v>(res, 0);
      }
+#pragma clang diagnostic pop
 #endif
 
      // objects of this class are not meant to be copied / assigned
