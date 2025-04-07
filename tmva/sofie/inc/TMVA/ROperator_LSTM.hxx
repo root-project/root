@@ -57,6 +57,8 @@ template <typename T> class ROperator_LSTM final : public ROperator {
 
    std::string fType;                         ///< Type of the tensors
 
+   int fCounter = 0;
+
  public:
    /*! Default constructor of ROperator_LSTM */
    ROperator_LSTM() {}
