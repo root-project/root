@@ -791,7 +791,6 @@ of the cluster schedulers supported by Dask (more information in the
 ~~~{.py}
 import ROOT
 from dask.distributed import Client
-
 # In a Python script the Dask client needs to be initalized in a context
 # Jupyter notebooks / Python session don't need this
 if __name__ == "__main__":
@@ -838,6 +837,42 @@ if __name__ == "__main__":
 
 Note that when processing a TTree or TChain dataset, the `npartitions` value should not exceed the number of clusters in
 the dataset. The number of clusters in a TTree can be retrieved by typing `rootls -lt myfile.root` at a command line.
+
+### Distributed FromSpec 
+
+RDataFrame can be also built from a JSON sample specification file using the FromSpec function. In distributed mode, two arguments need to be provided: the path to the specification 
+jsonFile (same as for local RDF case) and an additional executor argument - in the same manner as for the RDataFrame constructors above - an executor can either be a spark connection or a dask client. 
+If no second argument is given, the local version of FromSpec will be run. Here is an example of FromSpec usage in distributed RDF using either spark or dask backends. 
+For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. 
+
+Using spark:
+~~~{.py}
+import pyspark
+import ROOT
+
+conf = SparkConf().setAppName(appName).setMaster(master)
+sc = SparkContext(conf=conf)
+
+# The FromSpec function accepts an optional "sparkcontext" parameter
+# and it will distribute the application to the connected cluster
+df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor = sc)
+# Proceed as usual
+df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
+~~~
+
+Using dask: 
+~~~{.py}
+import ROOT
+from dask.distributed import Client
+
+if __name__ == "__main__":
+    client = Client("dask_scheduler.domain.com:8786")
+
+    # The FromSpec function accepts the Dask Client object as an optional argument
+    df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor=client) 
+    # Proceed as usual
+    df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
+~~~
 
 ### Distributed Snapshot
 
