@@ -6,6 +6,7 @@ from check_backend import *
 from check_cloned_actions import *
 from check_distribute_cppcode import * 
 from check_definepersample import *
+from check_fromspec import *
 from check_explicit_api import *
 from check_friend_trees_alignment import *
 from check_friend_trees import *
