@@ -890,7 +890,7 @@ ROOT::RExtraTypeInfoDescriptor ROOT::RStreamerField::GetExtraTypeInfo() const
    extraTypeInfoBuilder.ContentId(ROOT::EExtraTypeInfoIds::kStreamerInfo)
       .TypeVersion(GetTypeVersion())
       .TypeName(GetTypeName())
-      .Content(ROOT::Experimental::Internal::RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
+      .Content(ROOT::Internal::RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
    return extraTypeInfoBuilder.MoveDescriptor().Unwrap();
 }
 

@@ -59,6 +59,7 @@
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
+using ROOT::Internal::RNTupleSerializer;
 
 namespace {
 
