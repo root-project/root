@@ -839,7 +839,22 @@ In addition, these items were addressed:
 * [[#17444](https://github.com/root-project/root/issues/17444)] - ROOT doesn't compile with gcc-15
 * [[#16189](https://github.com/root-project/root/issues/16189)] - TFile::k630forwardCompatibility does not apply to new files correctly
 
-## HEAD of the v6-32-00-patches branch
+## Release 6.32.12
+
+Published on April 8, 2025
+
+### Items addressed in this release
+
+This branch includes minor bugfixes as well as the changes necessary to build and run on macOS Sequoia 15.4 and XCode 16.3.
+
+The following items were addressed:
+
+* [[#18195](https://github.com/root-project/root/issues/18195)] - TBufferJSON not serializing std::map
+* [[#17992](https://github.com/root-project/root/issues/17992)] - Spurrious auto parsing when looking up a TClass
+* [[#17978](https://github.com/root-project/root/issues/17978)] - root build fails in clad when using more than one job
+* [[#17753](https://github.com/root-project/root/issues/17753)] - Race condition in TClass::fStreamerImpl value for emulated classes.
 
 ### Externals updates
  * The version of builtin veccore has been updated to 0.8.2
+
+## HEAD of the v6-32-00-patches branch
