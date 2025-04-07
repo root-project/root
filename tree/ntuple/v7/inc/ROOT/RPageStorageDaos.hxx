@@ -98,7 +98,7 @@ Currently, an object is allocated for ntuple metadata (anchor/header/footer).
 Objects can correspond to pages or clusters of pages depending on the RNTuple-DAOS mapping strategy.
 */
 // clang-format on
-class RPageSinkDaos : public RPagePersistentSink {
+class RPageSinkDaos : public ROOT::Internal::RPagePersistentSink {
 private:
    /// \brief Underlying DAOS container. An internal `std::shared_ptr` keep the pool connection alive.
    /// ISO C++ ensures the correct destruction order, i.e., `~RDaosContainer` is invoked first
@@ -146,7 +146,7 @@ public:
 \brief Storage provider that reads ntuple pages from a DAOS container
 */
 // clang-format on
-class RPageSourceDaos : public RPageSource {
+class RPageSourceDaos : public ROOT::Internal::RPageSource {
 private:
    ntuple_index_t fNTupleIndex{0};
 

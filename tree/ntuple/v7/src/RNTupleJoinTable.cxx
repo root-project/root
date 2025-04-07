@@ -33,7 +33,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t CastValuePtr(void *v
 } // anonymous namespace
 
 ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
-   RPageSource &pageSource, const std::vector<std::string> &joinFieldNames)
+   ROOT::Internal::RPageSource &pageSource, const std::vector<std::string> &joinFieldNames)
    : fJoinFieldNames(joinFieldNames)
 {
    static const std::unordered_set<std::string> allowedTypes = {"std::int8_t",   "std::int16_t", "std::int32_t",
@@ -115,7 +115,8 @@ ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::st
 }
 
 ROOT::Experimental::Internal::RNTupleJoinTable &
-ROOT::Experimental::Internal::RNTupleJoinTable::Add(RPageSource &pageSource, PartitionKey_t partitionKey)
+ROOT::Experimental::Internal::RNTupleJoinTable::Add(ROOT::Internal::RPageSource &pageSource,
+                                                    PartitionKey_t partitionKey)
 {
    auto joinMapping = std::unique_ptr<REntryMapping>(new REntryMapping(pageSource, fJoinFieldNames));
    fPartitions[partitionKey].emplace_back(std::move(joinMapping));

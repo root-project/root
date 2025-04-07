@@ -29,10 +29,12 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
-
 namespace Internal {
 class RPageSource;
+}
+
+namespace Experimental {
+namespace Internal {
 
 // clang-format off
 /**
@@ -79,7 +81,7 @@ private:
 
    /// Every cluster pool is responsible for exactly one page source that triggers loading of the clusters
    /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadClusters()).
-   RPageSource &fPageSource;
+   ROOT::Internal::RPageSource &fPageSource;
    /// The number of clusters before the currently active cluster that should stay in the pool if present
    /// Reserved for later use.
    unsigned int fWindowPre = 0;
@@ -119,8 +121,10 @@ private:
 
 public:
    static constexpr unsigned int kDefaultClusterBunchSize = 1;
-   RClusterPool(RPageSource &pageSource, unsigned int clusterBunchSize);
-   explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultClusterBunchSize) {}
+   RClusterPool(ROOT::Internal::RPageSource &pageSource, unsigned int clusterBunchSize);
+   explicit RClusterPool(ROOT::Internal::RPageSource &pageSource) : RClusterPool(pageSource, kDefaultClusterBunchSize)
+   {
+   }
    RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();

@@ -31,8 +31,7 @@
 
 using ROOT::Internal::RColumnElementBase;
 
-ROOT::Experimental::RNTupleInspector::RNTupleInspector(
-   std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource)
+ROOT::Experimental::RNTupleInspector::RNTupleInspector(std::unique_ptr<ROOT::Internal::RPageSource> pageSource)
    : fPageSource(std::move(pageSource))
 {
    fPageSource->Attach();
@@ -163,7 +162,7 @@ ROOT::Experimental::RNTupleInspector::Create(const ROOT::RNTuple &sourceNTuple)
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::string_view sourceFileName)
 {
-   auto pageSource = ROOT::Experimental::Internal::RPageSource::Create(ntupleName, sourceFileName);
+   auto pageSource = ROOT::Internal::RPageSource::Create(ntupleName, sourceFileName);
    return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 

@@ -376,7 +376,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
 
    PrepareSchema();
 
-   std::unique_ptr<Internal::RPageSink> sink =
+   std::unique_ptr<ROOT::Internal::RPageSink> sink =
       std::make_unique<Internal::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");

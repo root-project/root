@@ -46,17 +46,13 @@
 
 namespace ROOT {
 
+class RNTupleModel;
+
 namespace Internal {
+
 class RPageAllocator;
 class RColumn;
 struct RNTupleModelChangeset;
-}
-
-class RNTupleModel;
-
-namespace Experimental {
-
-namespace Internal {
 
 enum class EPageStorageType {
    kSink,
@@ -65,7 +61,7 @@ enum class EPageStorageType {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageStorage
+\class ROOT::Internal::RPageStorage
 \ingroup NTuple
 \brief Common functionality of an ntuple storage for both reading and writing
 
@@ -149,7 +145,7 @@ public:
    };
 
 protected:
-   Detail::RNTupleMetrics fMetrics;
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
 
    /// For the time being, we will use the heap allocator for all sources and sinks. This may change in the future.
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAllocator;
@@ -195,7 +191,7 @@ public:
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
-   virtual Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
+   virtual ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 
    /// Returns the NTuple name.
    const std::string &GetNTupleName() const { return fNTupleName; }
@@ -205,7 +201,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RWritePageMemoryManager
+\class ROOT::Internal::RWritePageMemoryManager
 \ingroup NTuple
 \brief Helper to maintain a memory budget for the write pages of a set of columns
 
@@ -247,7 +243,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageSink
+\class ROOT::Internal::RPageSink
 \ingroup NTuple
 \brief Abstract interface to write data into an ntuple
 
@@ -433,7 +429,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPagePersistentSink
+\class ROOT::Internal::RPagePersistentSink
 \ingroup NTuple
 \brief Base class for a sink with a physical storage backend
 */
@@ -466,13 +462,13 @@ protected:
 
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
-      Detail::RNTupleAtomicCounter &fNPageCommitted;
-      Detail::RNTupleAtomicCounter &fSzWritePayload;
-      Detail::RNTupleAtomicCounter &fSzZip;
-      Detail::RNTupleAtomicCounter &fTimeWallWrite;
-      Detail::RNTupleAtomicCounter &fTimeWallZip;
-      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuWrite;
-      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuZip;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPageCommitted;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzWritePayload;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzZip;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallWrite;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallZip;
+      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuWrite;
+      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuZip;
    };
    std::unique_ptr<RCounters> fCounters;
 
@@ -549,7 +545,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageSource
+\class ROOT::Internal::RPageSource
 \ingroup NTuple
 \brief Abstract interface to read data from an ntuple
 
@@ -634,23 +630,23 @@ private:
 protected:
    /// Default I/O performance counters that get registered in `fMetrics`
    struct RCounters {
-      Detail::RNTupleAtomicCounter &fNReadV;
-      Detail::RNTupleAtomicCounter &fNRead;
-      Detail::RNTupleAtomicCounter &fSzReadPayload;
-      Detail::RNTupleAtomicCounter &fSzReadOverhead;
-      Detail::RNTupleAtomicCounter &fSzUnzip;
-      Detail::RNTupleAtomicCounter &fNClusterLoaded;
-      Detail::RNTupleAtomicCounter &fNPageRead;
-      Detail::RNTupleAtomicCounter &fNPageUnsealed;
-      Detail::RNTupleAtomicCounter &fTimeWallRead;
-      Detail::RNTupleAtomicCounter &fTimeWallUnzip;
-      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuRead;
-      Detail::RNTupleTickCounter<Detail::RNTupleAtomicCounter> &fTimeCpuUnzip;
-      Detail::RNTupleCalcPerf &fBandwidthReadUncompressed;
-      Detail::RNTupleCalcPerf &fBandwidthReadCompressed;
-      Detail::RNTupleCalcPerf &fBandwidthUnzip;
-      Detail::RNTupleCalcPerf &fFractionReadOverhead;
-      Detail::RNTupleCalcPerf &fCompressionRatio;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNReadV;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNRead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzReadPayload;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzReadOverhead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzUnzip;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNClusterLoaded;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPageRead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPageUnsealed;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallRead;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTimeWallUnzip;
+      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuRead;
+      ROOT::Experimental::Detail::RNTupleTickCounter<ROOT::Experimental::Detail::RNTupleAtomicCounter> &fTimeCpuUnzip;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthReadUncompressed;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthReadCompressed;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthUnzip;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fFractionReadOverhead;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fCompressionRatio;
    };
 
    /// Keeps track of the requested physical column IDs and their in-memory target type via a column element identifier.
@@ -673,7 +669,7 @@ protected:
    public:
       void Insert(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
       void Erase(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
-      RCluster::ColumnSet_t ToColumnSet() const;
+      ROOT::Experimental::Internal::RCluster::ColumnSet_t ToColumnSet() const;
       bool HasColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
       {
          return fColumnInfos.count(physicalColumnId) > 0;
@@ -709,7 +705,7 @@ protected:
    /// Returns a new, unattached page source for the same data set
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
-   virtual void UnzipClusterImpl(RCluster *cluster);
+   virtual void UnzipClusterImpl(ROOT::Experimental::Internal::RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
    virtual ROOT::Internal::RPageRef
    LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) = 0;
@@ -718,7 +714,8 @@ protected:
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
    /// commonly used as part of `LoadClusters()` in derived classes.
    void PrepareLoadCluster(
-      const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
+      const ROOT::Experimental::Internal::RCluster::RKey &clusterKey,
+      ROOT::Experimental::Internal::ROnDiskPageMap &pageZeroMap,
       std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
          perPageFunc);
 
@@ -810,14 +807,15 @@ public:
    /// for the cluster would assume an incomplete cluster and trigger loading again.
    /// `LoadClusters()` is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
-   virtual std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) = 0;
+   virtual std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
+   LoadClusters(std::span<ROOT::Experimental::Internal::RCluster::RKey> clusterKeys) = 0;
 
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
    /// unzip thread. It is an optional optimization, the method can safely do nothing. In particular, the
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
-   void UnzipCluster(RCluster *cluster);
+   void UnzipCluster(ROOT::Experimental::Internal::RCluster *cluster);
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
    RResult<ROOT::Internal::RPage>
@@ -825,8 +823,6 @@ public:
 }; // class RPageSource
 
 } // namespace Internal
-
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

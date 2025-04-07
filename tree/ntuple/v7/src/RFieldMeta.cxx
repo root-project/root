@@ -377,7 +377,7 @@ void ROOT::RClassField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
    });
 }
 
-void ROOT::RClassField::BeforeConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource)
+void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
 {
    std::vector<const TSchemaRule *> rules;
    // On-disk members that are not targeted by an I/O rule; all other sub fields of the in-memory class

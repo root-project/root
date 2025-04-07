@@ -149,7 +149,7 @@ private:
       ///
       /// \param[in] pageSource The page source of the RNTuple with the entries to map.
       /// \param[in] joinFieldNames Names of the join fields to use in the mapping.
-      REntryMapping(RPageSource &pageSource, const std::vector<std::string> &joinFieldNames);
+      REntryMapping(ROOT::Internal::RPageSource &pageSource, const std::vector<std::string> &joinFieldNames);
    };
    /// Names of the join fields used for the mapping to their respective entry indexes.
    std::vector<std::string> fJoinFieldNames;
@@ -189,7 +189,7 @@ public:
    /// partition.
    ///
    /// \return A reference to the updated join table.
-   RNTupleJoinTable &Add(RPageSource &pageSource, PartitionKey_t partitionKey = kDefaultPartitionKey);
+   RNTupleJoinTable &Add(ROOT::Internal::RPageSource &pageSource, PartitionKey_t partitionKey = kDefaultPartitionKey);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all entry indexes for the given join field value(s) within a partition.

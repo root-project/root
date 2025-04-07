@@ -31,7 +31,7 @@
 #include <utility>
 
 ROOT::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
-                                   std::unique_ptr<ROOT::Experimental::Internal::RPageSink> sink)
+                                   std::unique_ptr<ROOT::Internal::RPageSink> sink)
    : fFillContext(std::move(model), std::move(sink)), fMetrics("RNTupleWriter")
 {
 #ifdef R__USE_IMT
@@ -54,10 +54,9 @@ ROOT::RNTupleWriter::~RNTupleWriter()
    }
 }
 
-std::unique_ptr<ROOT::RNTupleWriter>
-ROOT::RNTupleWriter::Create(std::unique_ptr<ROOT::RNTupleModel> model,
-                            std::unique_ptr<Experimental::Internal::RPageSink> sink,
-                            const ROOT::RNTupleWriteOptions &options)
+std::unique_ptr<ROOT::RNTupleWriter> ROOT::RNTupleWriter::Create(std::unique_ptr<ROOT::RNTupleModel> model,
+                                                                 std::unique_ptr<Internal::RPageSink> sink,
+                                                                 const ROOT::RNTupleWriteOptions &options)
 {
    if (model->GetRegisteredSubfieldNames().size() > 0) {
       throw RException(R__FAIL("cannot create an RNTupleWriter from a model with registered subfields"));
@@ -77,7 +76,7 @@ std::unique_ptr<ROOT::RNTupleWriter>
 ROOT::RNTupleWriter::Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                               std::string_view storage, const ROOT::RNTupleWriteOptions &options)
 {
-   auto sink = Experimental::Internal::RPagePersistentSink::Create(ntupleName, storage, options);
+   auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
    return Create(std::move(model), std::move(sink), options);
 }
 
@@ -86,7 +85,7 @@ ROOT::RNTupleWriter::Recreate(std::initializer_list<std::pair<std::string_view, 
                               std::string_view ntupleName, std::string_view storage,
                               const ROOT::RNTupleWriteOptions &options)
 {
-   auto sink = Experimental::Internal::RPagePersistentSink::Create(ntupleName, storage, options);
+   auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
    auto model = ROOT::RNTupleModel::Create();
    for (const auto &fieldDesc : fields) {
       std::string typeName(fieldDesc.first);
@@ -143,7 +142,7 @@ void ROOT::RNTupleWriter::CommitDataset()
 
 std::unique_ptr<ROOT::RNTupleWriter>
 ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
-                                    std::unique_ptr<ROOT::Experimental::Internal::RPageSink> sink)
+                                    std::unique_ptr<ROOT::Internal::RPageSink> sink)
 {
    return std::unique_ptr<ROOT::RNTupleWriter>(new ROOT::RNTupleWriter(std::move(model), std::move(sink)));
 }
