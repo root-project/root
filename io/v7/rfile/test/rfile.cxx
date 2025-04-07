@@ -4,6 +4,7 @@
 #include <TH1D.h>
 #include <TROOT.h>
 #include <TTree.h>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
 #include <numeric>
@@ -340,3 +341,14 @@ TEST(RFile, IterateKeysNonRecursive)
       EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("e")), "e/f");
    }
 }
+
+#ifdef R__HAS_DAVIX
+TEST(RFile, RemoteRead)
+{
+   constexpr const char *kFileName = "http://root.cern/files/RNTuple.root";
+
+   auto file = RFile::OpenForReading(kFileName);
+   auto ntuple = file->Get<ROOT::RNTuple>("Contributors");
+   ASSERT_NE(ntuple, nullptr);
+}
+#endif
