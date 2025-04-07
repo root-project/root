@@ -136,3 +136,12 @@ def create_cloned_actions():
                 t.FlushBaskets()
             t.Fill()
         f.WriteObject(t, t.GetName())
+        
+def create_fromspec():
+    # Create a test file for processing
+    treename = "tree"
+    filename = "distrdf_roottest_check_fromspec.root"
+    nentries = 1000
+    opts = ROOT.RDF.RSnapshotOptions()
+    opts.fAutoFlush = 5000
+    ROOT.RDataFrame(nentries).Define("b1", "50").Snapshot(treename, filename, ["b1"], opts)
