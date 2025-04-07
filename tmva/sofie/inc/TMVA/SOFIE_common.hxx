@@ -637,6 +637,23 @@ inline void FillOutput(std::vector<bool> const &vec, std::vector<std::uint8_t> &
    }
 }
 
+// Used at the end of infer() to fill the return object.
+template <class T>
+void FillOutput(T const *arr, T *out, std::size_t n)
+{
+   for (std::size_t i = 0; i < n; ++i) {
+      out[i] = arr[i];
+   }
+}
+
+// Special case for std::vector<bool>.
+inline void FillOutput(std::vector<bool> const &vec, std::uint8_t *out, std::size_t n)
+{
+   for (std::size_t i = 0; i < n; ++i) {
+      out[i] = vec[i];
+   }
+}
+
 }  // end namespace UTILITY
 
 namespace BLAS{
