@@ -4,7 +4,9 @@
 #include <memory>
 #include <string>
 
+#ifdef SOFIE_SUPPORT_ROOT_BINARY
 #include "TFile.h"
+#endif
 
 #include "TMVA/RModel.hxx"
 #include "TMVA/SOFIE_common.hxx"
@@ -995,6 +997,7 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
 
     // generate the code to read initialized tensors from a ROOT data file
     if(fWeightFile == WeightFileType::RootBinary) {
+#ifdef SOFIE_SUPPORT_ROOT_BINARY
         fGC += "  {\n";
         fGC += "   std::unique_ptr<TFile> rootFile(TFile::Open(filename.c_str(), \"READ\"));\n";
         fGC += "   if (!rootFile->IsOpen()) {\n";
@@ -1026,6 +1029,9 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
             fGC += "  }\n";
         }
         fGC += "  }\n";
+#else
+        throw std::runtime_error("SOFIE was not built with ROOT file support.");
+#endif // SOFIE_SUPPORT_ROOT_BINARY
     }
 }
 
@@ -1051,6 +1057,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
 
     // Write the initialized tensors to the file
     if (fWeightFile == WeightFileType::RootBinary) {
+#ifdef SOFIE_SUPPORT_ROOT_BINARY
         if(fIsGNNComponent || fIsGNN) {
             throw std::runtime_error("SOFIE-GNN yet not supports writing to a ROOT file.");
         }
@@ -1094,6 +1101,9 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
         // this needs to be changed, similar to the text file
         return -1;
 
+#else
+        throw std::runtime_error("SOFIE was not built with ROOT file support.");
+#endif // SOFIE_SUPPORT_ROOT_BINARY
     } else if (fWeightFile == WeightFileType::Text) {
         std::ofstream f;
         if(fIsGNNComponent) {
