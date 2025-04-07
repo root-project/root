@@ -77,3 +77,15 @@ TEST(RooFormula, UnusedVariables)
    // formula.
    EXPECT_EQ(func.servers().size(), 2);
 }
+
+TEST(RooFormula, UndefinedVariables)
+{
+   RooRealVar B("B", "", 0.516952);
+   RooRealVar r("r", "", 0.214107);
+   RooRealVar x("x", "", 0.2, 1);
+   RooRealVar y("y", "", 0.2, 1);
+
+   ASSERT_ANY_THROW(RooFormulaVar f1("f1", "r + B + x", {r, B}))  << "Formulae with missing x in arg list cannot work.";
+   ASSERT_ANY_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B}))  << "Formulae with missing (x,)y in arg list cannot work.";
+   ASSERT_NO_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B, y})) << "Formula with specified y must work.";
+}

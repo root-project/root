@@ -184,6 +184,41 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// From the internal representation, construct a formula by replacing all index place holders
+/// with the names of the variables that are being used to evaluate it, and return it as string.
+std::string reconstructFormula(std::string internalRepr, RooArgList const& args) {
+  const auto nArgs = args.size();
+  for (unsigned int i = 0; i < nArgs; ++i) {
+    const auto& var = args[i];
+    std::stringstream regexStr;
+    regexStr << "x\\[" << i << "\\]|@" << i;
+    std::regex regex(regexStr.str());
+
+    std::string replacement = std::string("[") + var.GetName() + "]";
+    internalRepr = std::regex_replace(internalRepr, regex, replacement);
+  }
+
+  return internalRepr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// From the internal representation, construct a null-formula by replacing all
+/// index place holders with zeroes, and return it as string
+std::string reconstructNullFormula(std::string internalRepr, RooArgList const& args) {
+  const auto nArgs = args.size();
+  for (unsigned int i = 0; i < nArgs; ++i) {
+     std::stringstream regexStr;
+     regexStr << "x\\[" << i << "\\]|@" << i;
+     std::regex regex(regexStr.str());
+
+     std::string replacement = "1e-18";
+     internalRepr = std::regex_replace(internalRepr, regex, replacement);
+  }
+
+  return internalRepr;
+}
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +253,6 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
 
   _tFormula = std::move(newTF);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process given formula by replacing all ordinal and name references by
@@ -284,7 +318,6 @@ std::string RooFormula::processFormula(std::string formula) const {
   return formula;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Analyse internal formula to find out which variables are actually in use.
 RooArgList RooFormula::usedVariables() const {
@@ -313,30 +346,10 @@ RooArgList RooFormula::usedVariables() const {
   return useList;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// From the internal representation, construct a formula by replacing all index place holders
-/// with the names of the variables that are being used to evaluate it.
-std::string RooFormula::reconstructFormula(std::string internalRepr) const {
-  for (unsigned int i = 0; i < _origList.size(); ++i) {
-    const auto& var = _origList[i];
-    std::stringstream regexStr;
-    regexStr << "x\\[" << i << "\\]|@" << i;
-    std::regex regex(regexStr.str());
-
-    std::string replacement = std::string("[") + var.GetName() + "]";
-    internalRepr = std::regex_replace(internalRepr, regex, replacement);
-  }
-
-  return internalRepr;
-}
-
-
 void RooFormula::dump() const
 {
   printMultiline(std::cout, 0);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change used variables to those with the same name in given list.
@@ -371,8 +384,6 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
 
   return errorStat;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the internal TFormula.
@@ -433,12 +444,11 @@ void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*
 {
   os << indent << "--- RooFormula ---" << std::endl;
   os << indent << " Formula:        '" << GetTitle() << "'" << std::endl;
-  os << indent << " Interpretation: '" << reconstructFormula(GetTitle()) << "'" << std::endl;
+  os << indent << " Interpretation: '" << reconstructFormula(GetTitle(), _origList) << "'" << std::endl;
   indent.Append("  ");
   os << indent << "Servers: " << _origList << "\n";
   os << indent << "In use : " << actualDependents() << std::endl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print value of formula
@@ -448,7 +458,6 @@ void RooFormula::printValue(ostream& os) const
   os << const_cast<RooFormula*>(this)->eval(nullptr) ;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of formula
 
@@ -456,7 +465,6 @@ void RooFormula::printName(ostream& os) const
 {
   os << GetName() ;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of formula
@@ -466,7 +474,6 @@ void RooFormula::printTitle(ostream& os) const
   os << GetTitle() ;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of formula
 
@@ -474,7 +481,6 @@ void RooFormula::printClassName(ostream& os) const
 {
   os << ClassName() ;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print arguments of formula, i.e. dependents that are actually used
@@ -488,7 +494,6 @@ void RooFormula::printArgs(ostream& os) const
   os << " ]";
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that the formula compiles, and also fulfills the assumptions.
 ///
@@ -498,10 +503,10 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
   cxcoutD(InputArguments) << "RooFormula '" << GetName() << "' will be compiled as "
       << "\n\t" << processedFormula
       << "\n  and used as"
-      << "\n\t" << reconstructFormula(processedFormula)
+      << "\n\t" << reconstructFormula(processedFormula, _origList)
       << "\n  with the parameters " << _origList << std::endl;
 
-  auto theFormula = std::make_unique<TFormula>(GetName(), processedFormula.c_str(), false);
+  auto theFormula = std::make_unique<TFormula>(GetName(), processedFormula.c_str(), /*addToGlobList=*/false);
 
   if (!theFormula || !theFormula->IsValid()) {
     std::stringstream msg;
@@ -512,21 +517,19 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
     throw std::runtime_error(msg.str());
   }
 
-  if (theFormula && theFormula->GetNdim() != 1) {
-    // TFormula thinks that we have a multi-dimensional formula, e.g. with variables x,y,z,t.
-    // We have to check now that this is not the case, as RooFit only uses the syntax x[0], x[1], x[2], ...
-    bool haveProblem = false;
-    std::stringstream msg;
-    msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim() << "-dimensional with the variable(s) {";
-    for (int i=1; i < theFormula->GetNdim(); ++i) {
-      const TString varName = theFormula->GetVarName(i);
-      if (varName.BeginsWith("x[") && varName[varName.Length()-1] == ']')
-        continue;
-
-      haveProblem = true;
-      msg << theFormula->GetVarName(i) << ",";
-    }
-    if (haveProblem) {
+  if (theFormula && theFormula->GetNdim() != 0) {
+    TFormula nullFormula{"nullFormula", reconstructNullFormula(processedFormula, _origList).c_str(), /*addToGlobList=*/false};
+    const auto nullDim = nullFormula.GetNdim();
+    if (nullDim != 0) {
+      // TFormula thinks that we have an n-dimensional formula (n>0), but it shouldn't, as
+      // these vars should have been replaced by zeroes in reconstructNullFormula
+      // since RooFit only uses the syntax x[0], x[1], x[2], ...
+      // This can happen e.g. with variables x,y,z,t that were not supplied in arglist.
+      std::stringstream msg;
+      msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim()+nullDim << "-dimensional with undefined variable(s) {";
+      for (auto i=0; i < nullDim; ++i) {
+        msg << nullFormula.GetVarName(i) << ",";
+      }
       msg << "}, which could not be supplied by RooFit."
           << "\nThe formula must be modified, or those variables must be supplied in the list of variables." << std::endl;
       coutF(InputArguments) << msg.str();

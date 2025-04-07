@@ -76,8 +76,7 @@ public:
 private:
    std::string processFormula(std::string origFormula) const;
    RooArgList usedVariables() const;
-   std::string reconstructFormula(std::string internalRepr) const;
-   void installFormulaOrThrow(const std::string &formulaa);
+   void installFormulaOrThrow(const std::string &formula);
 
    RooArgList _origList;                ///<! Original list of dependents
    std::vector<bool> _isCategory;       ///<! Whether an element of the _origList is a category.
