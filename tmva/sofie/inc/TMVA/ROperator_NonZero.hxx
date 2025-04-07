@@ -101,15 +101,15 @@ public:
          }
       }
    }
+
    std::string GenerateSessionMembersCode(std::string /*opName*/) override {
       if (fIsOutputConstant) return "";
       // define output value used as max non zero with max size = input shape * N
       auto inputLength = ConvertDimShapeToLength(fShapeX);
       std::stringstream out;
-      out << SP << "size_t v_NonZero_" << fNX << " = " << inputLength << ";\n";
+      out << SP << "size_t fV_NonZero_" << fNX << " = " << inputLength << ";\n";
       return out.str();
    }
-
 
    std::string Generate(std::string opName) override {
       if (fIsOutputConstant) {
@@ -133,7 +133,7 @@ public:
 
       // loop on input indices
       out << SP << "size_t offset_" << opName << " = 0;\n";
-      out << SP << vnonzero << " = 0;\n";
+      out << SP << "size_t " << vnonzero << " = 0;\n";
       for (size_t j = 0; j < dims; j++) {
          std::string index = "i_" + std::to_string(j);
          for (size_t k = 0; k <= j; k++) out << SP;

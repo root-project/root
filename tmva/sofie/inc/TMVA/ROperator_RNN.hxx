@@ -308,18 +308,38 @@ std::string ROperator_RNN<T>::GenerateSessionMembersCode(std::string opName)
    size_t batch_size = (fAttrLayout == 0) ? fShapeX[1] : fShapeX[0];
    size_t input_size = fShapeX[2];
 
-   if (fAttrLayout != 0) {
-      out << "std::vector<" << fType << "> fVec_" << opName << "_input = std::vector<" << fType << ">("
-          << seq_length * batch_size * input_size << ");\n";
-      out << "std::vector<" << fType << "> fVec_" << opName << "_initial_hidden_state = std::vector<" << fType << ">("
-          << num_directions * batch_size * fAttrHiddenSize << ");\n";
-   }
-   out << "std::vector<" << fType << "> fVec_" << opName << "_feedforward = std::vector<" << fType << ">("
-       << seq_length * batch_size * fAttrHiddenSize << ");\n";
+   struct Block {
+      std::string name;
+      size_t size;
+   };
 
+   std::vector<Block> blocks;
+
+   if (fAttrLayout != 0) {
+      blocks.push_back({"input", seq_length * batch_size * input_size});
+      blocks.push_back({"initial_hidden_state", num_directions * batch_size * fAttrHiddenSize});
+   }
+   blocks.push_back({"feedforward", seq_length * batch_size * fAttrHiddenSize});
    if (fAttrLayout != 0 || fNY.empty()) {
-      out << "std::vector<" << fType << "> fVec_" << opName << "_hidden_state = std::vector<" << fType << ">("
-          << seq_length * num_directions * batch_size * fAttrHiddenSize << ");\n";
+      blocks.push_back({"hidden_state", seq_length * num_directions * batch_size * fAttrHiddenSize});
+   }
+
+   // Compute total size
+   size_t total_size = 0;
+   for (const auto &b : blocks) {
+      total_size += b.size;
+   }
+
+   // Emit backing storage
+   out << "std::vector<" << fType << "> fVec_" << opName << "_buffer = std::vector<" << fType << ">(" << total_size
+       << ");\n";
+
+   // Emit pointers
+   std::size_t offset = 0;
+   for (const auto &b : blocks) {
+      out << fType << "* fVec_" << opName << "_" << b.name << " = fVec_" << opName << "_buffer.data() + " << offset
+          << ";\n";
+      offset += b.size;
    }
 
    out << "\n";
@@ -346,7 +366,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
       }
    } else {
       if (fUseSession)
-         out << SP << fType << " * " << OpName << "_input = this->fVec_" << OpName << "_input.data();\n";
+         out << SP << fType << " * " << OpName << "_input = this->fVec_" << OpName << "_input;\n";
       else
          out << SP << fType << " " << OpName << "_input[" << seq_length * batch_size * input_size << "];\n";
       out << SP << "for(size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
@@ -367,7 +387,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
       } else {
          if (fUseSession)
             out << SP << fType << " * " << OpName << "_initial_hidden_state = this->fVec_" << OpName
-                << "_initial_hidden_state.data();\n";
+                << "_initial_hidden_state;\n";
          else
             out << fType << " " << OpName << "_initial_hidden_state[" << num_directions * batch_size * fAttrHiddenSize
                 << "] = {0};\n";
@@ -385,7 +405,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
    }
 
    if (fUseSession)
-      out << SP << fType << " * " << OpName << "_feedforward = this->fVec_" << OpName << "_feedforward.data();\n";
+      out << SP << fType << " * " << OpName << "_feedforward = this->fVec_" << OpName << "_feedforward;\n";
    else
       out << SP << fType << " " << OpName << "_feedforward[" << seq_length * batch_size * fAttrHiddenSize
           << "] = {0};\n";
@@ -395,7 +415,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
       out << SP << fType << " *" << OpName << "_hidden_state = tensor_" << fNY << ";\n";
    } else {
       if (fUseSession)
-         out << SP << fType << " * " << OpName << "_hidden_state = this->fVec_" << OpName << "_hidden_state.data();\n";
+         out << SP << fType << " * " << OpName << "_hidden_state = this->fVec_" << OpName << "_hidden_state;\n";
       else
          out << SP << fType << " " << OpName << "_hidden_state["
              << seq_length * num_directions * batch_size * fAttrHiddenSize << "] = {0};\n";

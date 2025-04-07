@@ -35,8 +35,6 @@ private:
    std::vector<std::string> fOutputTensorNames;
    std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
 
-
-
    std::vector<std::unique_ptr<ROperator>> fOperators;
 
    std::vector<std::shared_ptr<RModel>> fSubGraphs;    ///<!  sub-graph models (transient)
@@ -196,6 +194,8 @@ protected:
    void GenerateIntermediateMemoryPool();
    // Generate all session code
    void GenerateSessionCode();
+   bool IsInputTensorShapeParam(std::string const &name) const;
+   std::vector<std::string> CollectTensorMemberNames(const std::string &input);
 
 public:
    const std::vector<std::string> & GetInputTensorNames() const { return fInputTensorNames; }
