@@ -110,7 +110,7 @@ ROOT::RNTupleWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model, std::stri
                                std::string(file->GetName())));
    }
 
-   auto sink = std::make_unique<Experimental::Internal::RPageSinkFile>(ntupleName, fileOrDirectory, options);
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, fileOrDirectory, options);
    return Create(std::move(model), std::move(sink), options);
 }
 

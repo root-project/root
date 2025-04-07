@@ -323,7 +323,7 @@ TEST(PageStorageFile, LoadClusters)
       writer->Fill();
    }
 
-   ROOT::Experimental::Internal::RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
+   ROOT::Internal::RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
 
    ROOT::DescriptorId_t ptId;

@@ -28,10 +28,13 @@ namespace ROOT {
 
 class RNTuple;
 
+namespace Internal {
+class RPageSourceFile;
+}
+
 namespace Experimental {
 namespace Internal {
 class RNTupleFileWriter;
-class RPageSourceFile;
 
 RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
                      std::uint16_t versionPatch, std::uint64_t seekHeader, std::uint64_t nbytesHeader,
@@ -68,7 +71,7 @@ auto reader = RNTupleReader::Open(ntpl);
 // clang-format on
 class RNTuple final {
    friend class Experimental::Internal::RNTupleFileWriter;
-   friend class Experimental::Internal::RPageSourceFile;
+   friend class Internal::RPageSourceFile;
 
    friend ROOT::RNTuple ROOT::Experimental::Internal::CreateAnchor(
       std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor, std::uint16_t versionPatch,

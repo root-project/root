@@ -28,7 +28,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec
 
    auto dir = std::get<TDirectory *>(fStorage);
    auto ntuple = std::unique_ptr<ROOT::RNTuple>(dir->Get<ROOT::RNTuple>(fNTupleName.c_str()));
-   return ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(*ntuple);
+   return ROOT::Internal::RPageSourceFile::CreateFromAnchor(*ntuple);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
