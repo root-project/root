@@ -65,9 +65,71 @@ This meant that one could not get yield histograms that were correctly scaled by
 This release changes that behavior, meaning the `Scale(bool)` command argument is now respected for extended pdfs.
 
 
-## IO
+## I/O
 
 * Honour the `Davix.GSI.CACheck` parameter also in the `ROOT::Internal::RRawFileDavix` class.
+* Added support for `enum class` with a non default underlying size, for example `enum smallenum: std::int16_t`.  The default is 32 bits.  All enums, independently of their in memory size are stored on file using 32 bits to enable forward compatibility of the file; files created with a `enum class` with a non default underlying size can be read with old version of ROOT into a `enum` type of default size.
+* * Note: `enum class` with an underlying size strictly greater than 32 bits are not supported since they would be truncated when stored on file.
+* The version number of `TStreamerInfo` has been increase to 10 to encoded the addition of the support for `enum class` with a non default underlying size. This allows the opportunity to detect files written by old version of ROOT (`v9` and older of `TStreamerInfo`) where  `enum class` with a non default underlying size where stored incorrectly but recoverably.  Those files can be recover by using I/O customization rules that takes in consideration their size at the time of writing (this information is not recorded in the `ROOT` file).  See https://github.com/root-project/root/pull/17009#issuecomment-2522228598 for some examples.
+* New attribute for I/O customization rules: `CanIgnore`.  When using this attribute the rule will be ignored if the input is missing from the schema/class-layout they apply to instead of issue a `Warning`
+
+### RNTuple
+
+* Following the [HEP-CCE review](https://indico.fnal.gov/event/67890/contributions/307688/attachments/185815/255889/RNTuple_HEP-CCE.pdf) of the RNTuple public API,
+  the following types were moved from the `ROOT::Experimental` to the `ROOT` namespace:
+  * `DescriptorId_t`
+  * `Detail::RFieldVisitor`
+  * `ENTupleColumnType` (renamed from `EColumnType`)
+  * `ENTupleStructure`
+  * `NTupleSize_t`
+  * `RArrayAsRVecField`
+  * `RArrayField`
+  * `RAtomicField`
+  * `RBitsetField`
+  * `RCardinalityField`
+  * `RClassField`
+  * `RClusterDescriptor`
+  * `RClusterGroupDescriptor`
+  * `RColumnDescriptor`
+  * `RCreateFieldOptions`
+  * `REntry`
+  * `REnumField`
+  * `RExtraTypeInfoDescriptor`
+  * `RField`
+  * `RFieldBase`
+  * `RFieldDescriptor`
+  * `RFieldToken` (moved from `REntry::RFieldToken`)
+  * `RFieldZero`
+  * `RIntegralField`
+  * `RInvalidField`
+  * `RMapField`
+  * `RNTupleCardinality`
+  * `RNTupleCollectionView`
+  * `RNTupleDescriptor`
+  * `RNTupleDirectAccessView`
+  * `RNTupleFillStatus`
+  * `RNTupleGlobalRange`
+  * `RNTupleLocalRange` (renamed from `RNTupleClusterRange`)
+  * `RNTupleLocator`
+  * `RNTupleLocatorObject64`
+  * `RNTupleModel`
+  * `RNTupleReader`
+  * `RNTupleReadOptions`
+  * `RNTupleView`
+  * `RNTupleViewBase`
+  * `RNTupleWriteOptions`
+  * `RNTupleWriter`
+  * `RNullableField`
+  * `RPairField`
+  * `RProxiedCollectionField`
+  * `RRecordField`
+  * `RRVecField`
+  * `RSetField`
+  * `RSimpleField`
+  * `RStreamerField`
+  * `RTupleField`
+  * `RVariantField`
+  * `RVectorField`
 * New options have been added to TFileMerger (which can be passed as whitespace-separated TStrings via `TFileMerger::SetMergeOptions`)
   * "FirstSrcCompression": when merging multiple files, instructs the class-specific merger to use the same compression as the
     first object of the destination's class as the destination's compression. Currently only recognized by the RNTuple merger;
@@ -79,10 +141,6 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
     [RNTupleMergeOptions](https://root.cern/doc/v634/structROOT_1_1Experimental_1_1Internal_1_1RNTupleMergeOptions.html));
   * "rntuple.ErrBehavior=(Abort|Skip)": RNTuple-specific option that specifies the behavior of the RNTupleMerger on error (see link above);
   * "rntuple.ExtraVerbose": RNTuple-specific option that tells the RNTupleMerger to emit more information during the merge process.
-* Added support for `enum class` with a non default underlying size, for example `enum smallenum: std::int16_t`.  The default is 32 bits.  All enums, independently of their in memory size are stored on file using 32 bits to enable forward compatibility of the file; files created with a `enum class` with a non default underlying size can be read with old version of ROOT into a `enum` type of default size.
-* * Note: `enum class` with an underlying size strictly greater than 32 bits are not supported since they would be truncated when stored on file.
-* The version number of `TStreamerInfo` has been increase to 10 to encoded the addition of the support for `enum class` with a non default underlying size. This allows the opportunity to detect files written by old version of ROOT (`v9` and older of `TStreamerInfo`) where  `enum class` with a non default underlying size where stored incorrectly but recoverably.  Those files can be recover by using I/O customization rules that takes in consideration their size at the time of writing (this information is not recorded in the `ROOT` file).  See https://github.com/root-project/root/pull/17009#issuecomment-2522228598 for some examples.
-* New attribute for I/O customization rules: `CanIgnore`.  When using this attribute the rule will be ignored if the input is missing from the schema/class-layout they apply to instead of issue a `Warning`
 
 ## RDataFrame
 
