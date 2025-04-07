@@ -2515,7 +2515,7 @@ TEST(ONNX, Equal){
    });
 
    TMVA_SOFIE_Equal::Session s("Equal_FromONNX.dat");
-   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Equal_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2540,7 +2540,7 @@ TEST(ONNX, LessOrEqual){
    });
 
    TMVA_SOFIE_LessOrEqual::Session s("LessOrEqual_FromONNX.dat");
-   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LessOrEqual_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2565,7 +2565,7 @@ TEST(ONNX, GreaterOrEqual){
    });
 
    TMVA_SOFIE_GreaterOrEqual::Session s("GreaterOrEqual_FromONNX.dat");
-   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(GreaterOrEqual_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2590,7 +2590,7 @@ TEST(ONNX, Greater){
    });
 
    TMVA_SOFIE_Greater::Session s("Greater_FromONNX.dat");
-   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Greater_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2615,7 +2615,7 @@ TEST(ONNX, Less){
    });
 
    TMVA_SOFIE_Less::Session s("Less_FromONNX.dat");
-   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Less_ExpectedOutput::outputs) / sizeof(bool));
 
