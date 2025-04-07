@@ -63,6 +63,7 @@ add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 if (BLAS_FOUND)  # we need BLAS for compiling the models
 ROOT_ADD_GTEST(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
   LIBRARIES
+    MathCore
     ROOTTMVASofie
     BLAS::BLAS
   INCLUDE_DIRS
@@ -83,7 +84,7 @@ target_include_directories(emitFromROOT PRIVATE
    ${CMAKE_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}
 )
-target_link_libraries(emitFromROOT protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser)
+target_link_libraries(emitFromROOT protobuf::libprotobuf RIO ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromROOT PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bounds)

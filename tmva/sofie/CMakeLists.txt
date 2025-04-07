@@ -11,6 +11,12 @@
 
 #sofie is built only if protobuf is found
 
+set(sofie_root_support ON CACHE BOOL "" FORCE)
+
+if(sofie_root_support)
+    list(APPEND EXTRA_SOFIE_DEPENDENCIES RIO)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
    TMVA/OperatorList.hxx
@@ -79,13 +85,19 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     src/RFunction_Sum.cxx
     src/SOFIE_common.cxx
   DEPENDENCIES
+    Core
     TMVA
+    ${EXTRA_SOFIE_DEPENDENCIES}
 )
 
 target_include_directories(ROOTTMVASofie PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
+
+if(sofie_root_support)
+  target_compile_definitions(ROOTTMVASofie PRIVATE SOFIE_SUPPORT_ROOT_BINARY)
+endif()
 
 # tests requires protobuf
 if (tmva-sofie)
