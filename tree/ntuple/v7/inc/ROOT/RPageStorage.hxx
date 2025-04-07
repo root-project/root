@@ -441,7 +441,7 @@ public:
 class RPagePersistentSink : public RPageSink {
 private:
    /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
-   RNTupleSerializer::RContext fSerializationContext;
+   ROOT::Internal::RNTupleSerializer::RContext fSerializationContext;
 
    /// Remembers the starting cluster id for the next cluster group
    std::uint64_t fNextClusterInGroup = 0;
@@ -453,7 +453,7 @@ private:
    std::vector<ROOT::RClusterDescriptor::RPageRange> fOpenPageRanges;
 
    /// Union of the streamer info records that are sent from streamer fields to the sink before committing the dataset.
-   RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
+   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
 
 protected:
    /// Set of optional features supported by the persistent sink
@@ -705,7 +705,7 @@ protected:
 
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
-   virtual ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
+   virtual ROOT::RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
    /// Returns a new, unattached page source for the same data set
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
@@ -778,8 +778,8 @@ public:
    /// Therefore, `LoadStructure()` may do nothing and defer loading the metadata to `Attach()`.
    void LoadStructure();
    /// Open the physical storage container and deserialize header and footer
-   void Attach(
-      RNTupleSerializer::EDescriptorDeserializeMode mode = RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
+   void Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode =
+                  ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    ROOT::NTupleSize_t GetNEntries();
    ROOT::NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
 

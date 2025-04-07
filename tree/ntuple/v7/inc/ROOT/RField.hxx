@@ -215,8 +215,7 @@ private:
    };
 
    TClass *fClass = nullptr;
-   ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t
-      fStreamerInfos;                                             ///< streamer info records seen during writing
+   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
    ROOT::Internal::RColumnIndex fIndex;                           ///< number of bytes written in the current cluster
 
 private:

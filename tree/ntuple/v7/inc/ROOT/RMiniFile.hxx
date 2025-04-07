@@ -192,7 +192,7 @@ private:
    RNTuple fNTupleAnchor;
    /// Set of streamer info records that should be written to the file.
    /// The RNTuple class description is always present.
-   RNTupleSerializer::StreamerInfoMap_t fStreamerInfoMap;
+   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfoMap;
 
    explicit RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize);
 
@@ -254,7 +254,7 @@ public:
    /// previously reserved key.
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
    /// Ensures that the streamer info records passed as argument are written to the file
-   void UpdateStreamerInfos(const RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
+   void UpdateStreamerInfos(const ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
 };

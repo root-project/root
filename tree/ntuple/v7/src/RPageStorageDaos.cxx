@@ -47,6 +47,7 @@ using ntuple_index_t = ROOT::Experimental::Internal::ntuple_index_t;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
+using ROOT::Internal::RNTupleSerializer;
 
 /// \brief RNTuple page-DAOS mappings
 enum EDaosMapping { kOidPerCluster, kOidPerPage };
@@ -183,7 +184,7 @@ struct RDaosContainerNTupleLocator {
                                      kAttributeKeyHeader, kCidMetadata)))
          return err;
       RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader, buffer.get());
-      ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(buffer.get(), anchor.fLenHeader, builder);
+      RNTupleSerializer::DeserializeHeader(buffer.get(), anchor.fLenHeader, builder);
 
       builder.AddToOnDiskFooterSize(anchor.fNBytesFooter);
       buffer = MakeUninitArray<unsigned char>(anchor.fLenFooter);
@@ -192,7 +193,7 @@ struct RDaosContainerNTupleLocator {
                                      kAttributeKeyFooter, kCidMetadata)))
          return err;
       RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter, buffer.get());
-      ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(buffer.get(), anchor.fLenFooter, builder);
+      RNTupleSerializer::DeserializeFooter(buffer.get(), anchor.fLenFooter, builder);
 
       return 0;
    }
@@ -222,7 +223,6 @@ struct RDaosContainerNTupleLocator {
 
 std::uint32_t ROOT::Experimental::Internal::RDaosNTupleAnchor::Serialize(void *buffer) const
 {
-   using RNTupleSerializer = RNTupleSerializer;
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
       bytes += RNTupleSerializer::SerializeUInt64(fVersionAnchor, bytes);
@@ -245,7 +245,6 @@ ROOT::Experimental::Internal::RDaosNTupleAnchor::Deserialize(const void *buffer,
    if (bufSize < 32)
       return R__FAIL("DAOS anchor too short");
 
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
    bytes += RNTupleSerializer::DeserializeUInt64(bytes, fVersionAnchor);
    if (fVersionAnchor != RDaosNTupleAnchor().fVersionAnchor) {
