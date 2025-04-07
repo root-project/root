@@ -702,15 +702,10 @@ std::string typeForOutput(ETensorType t) {
 
 }
 
-void RModel::GenerateOutput() {
-
-   if (fVerbose)
-      std::cout << "Generating main inference code for " << fName << std::endl;
-
+void RModel::GenerateOutput()
+{
    size_t outputSize = fOutputTensorNames.size();
    // assume output types are all the same
-   if (outputSize == 0)
-      throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
 
    bool sameOutputTypes = true;
    std::string inferReturnType; // type return by infer function
@@ -720,8 +715,8 @@ void RModel::GenerateOutput() {
       fGC += "std::vector<" + typeForOutput(eFirstOutputType) + ">";
    } else {
       // if all output types are the same we return an std::vector - otherwise a tuple
-      for (size_t i = 1; i < outputSize; i++) {
-         if (GetTensorType(fOutputTensorNames[i]) != eFirstOutputType)
+      for (std::string const &name : fOutputTensorNames) {
+         if (GetTensorType(name) != eFirstOutputType)
             sameOutputTypes = false;
       }
       if (sameOutputTypes)
@@ -730,7 +725,8 @@ void RModel::GenerateOutput() {
          inferReturnType = "std::tuple<";
          for (size_t i = 0; i < outputSize; i++) {
             inferReturnType += "std::vector<" + typeForOutput(GetTensorType(fOutputTensorNames[i])) + ">";
-            if (i < outputSize-1) inferReturnType += ",";
+            if (i < outputSize - 1)
+               inferReturnType += ",";
          }
          inferReturnType += ">";
          fGC += inferReturnType;
@@ -739,31 +735,40 @@ void RModel::GenerateOutput() {
 
    fGC += " infer(" + GenerateInferSignature() + "){\n";
 
-   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
-      if (fVerbose) std::cout << "Generating code for operator .... " << op_idx << std::endl;
-      fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
+   std::string doInferArgs = GenerateInferSignature(false);
+   if (!doInferArgs.empty())
+      doInferArgs += ",";
+   for (std::string const &name : fOutputTensorNames) {
+      fGC += SP + "std::vector<" + typeForOutput(GetTensorType(name)) + " > output_tensor_" + name + ";\n";
+      doInferArgs += " output_tensor_" + name + ",";
    }
+   if (!doInferArgs.empty())
+      doInferArgs.back() = ' ';
 
-   fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::CreateOutput;\n\n";
+   fGC += SP + "doInfer(" + doInferArgs + ");\n";
 
    fGC += SP + "return {";
-   for (size_t i = 0; i < outputSize; i++) {
-      std::string tensorName = *(fOutputTensorNames.begin() + i);
-      bool isIntermediate = fIntermediateTensorInfos.count(tensorName) > 0;
-      auto outputLength = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(tensorName)))
-                                         : ConvertDynamicShapeToLength(GetDynamicTensorShape(tensorName));
-      // need to check is size is the same (don't want to return a vector with
-      // larger size) in that case better to copy
-      fGC += "CreateOutput(tensor_" + tensorName + ", " + outputLength + ")";
-      if (i < outputSize - 1)
+   for (size_t i = 0; i < fOutputTensorNames.size(); i++) {
+      fGC += "output_tensor_" + fOutputTensorNames[i];
+      if (i < fOutputTensorNames.size() - 1)
          fGC += ",";
    }
    fGC += "};\n";
-   fGC += "}\n";  // end of infer function scope
+   fGC += "}\n"; // end of infer function scope
 }
 
 void RModel::GenerateSessionCode()
 {
+   // Determine the signature of the actual inference function
+   std::string doInferSignature = GenerateInferSignature();
+   if (!doInferSignature.empty())
+      doInferSignature += ", ";
+   for (auto const &name : fOutputTensorNames) {
+      doInferSignature += " std::vector<" + typeForOutput(GetTensorType(name)) + "> &output_tensor_" + name + ",";
+   }
+   doInferSignature.back() = ' ';
+
+   doInferSignature = "void doInfer(" + doInferSignature + ")";
 
    // define the Session struct (for GNN this is generated in RModel_GNN)
    if (fUseSession && !fIsGNNComponent) {
@@ -862,12 +867,42 @@ void RModel::GenerateSessionCode()
 
       fGC += "}\n\n";
    }
+
+   fGC += doInferSignature + "{\n";
+   fGC += "\n";
+
    // generate the inference code
+   if (fVerbose)
+      std::cout << "Generating main inference code for " << fName << std::endl;
+
+   if (fOutputTensorNames.size() == 0)
+      throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
+
+   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+      if (fVerbose)
+         std::cout << "Generating code for operator .... " << op_idx << std::endl;
+      fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
+   }
+
+   fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
+
+   for (std::string const &name : fOutputTensorNames) {
+      // need to check is size is the same (don't want to return a vector with
+      // larger size) in that case better to copy
+      bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
+      std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
+                                     : ConvertDynamicShapeToLength(GetDynamicTensorShape(name));
+      fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
+   }
+
+   fGC += "}\n\n";
+
+   // generate the inference overload that returns an output struct
    GenerateOutput();
 
    // end of session
    if (fUseSession && !fIsGNNComponent) {
-      fGC += "};   // end of Session\n";
+      fGC += "};   // end of Session\n\n";
    }
 }
 
