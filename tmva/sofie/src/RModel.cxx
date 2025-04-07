@@ -53,7 +53,7 @@ RModel& RModel::operator=(RModel&& other) {
     return *this;
 }
 
-const std::vector<size_t>& RModel::GetTensorShape(std::string name) {
+const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.shape;
@@ -79,7 +79,7 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) {
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
-std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) {
+std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) const {
    if (auto f = fDynamicTensorInfos.find(name); f != fDynamicTensorInfos.end()) {
       return f->second.shape;
    }
@@ -91,7 +91,7 @@ std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) {
    return ConvertShapeToDim(GetTensorShape(name));
 }
 
-const ETensorType& RModel::GetTensorType(std::string name) {
+const ETensorType& RModel::GetTensorType(std::string name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.type;
@@ -713,6 +713,35 @@ std::string RModel::GenerateInferSignature(bool isdecl) {
    return rGC;
 }
 
+namespace {
+
+std::string createOutputTensor(RModel const &rmodel, std::string const &name, bool isIntermediateTensor)
+{
+   if(name.empty()) return "{}";
+   ETensorType eOutputType = rmodel.GetTensorType(name);
+   std::string outputType = ConvertTypeToString(eOutputType);
+   if (isIntermediateTensor) {
+
+      if (eOutputType == ETensorType::BOOL) {
+         return "fTensor_" + name;
+      } else {
+         // need to check is size is the same(don't want to return a vector with larger size)
+         // in that case better to copy
+         return "std::vector<" + ConvertTypeToString(eOutputType) + ">(tensor_" + name + ", tensor_" + name + " + " +
+                std::to_string(ConvertShapeToLength(rmodel.GetTensorShape(name))) + ")";
+      }
+   }
+   // include also dynamic tensors since the vectors can be allocated with a size larger than their output
+   // we need a special handling for bool type allocated as vector<bool>
+   auto outputLength = ConvertDynamicShapeToLength(rmodel.GetDynamicTensorShape(name));
+   if (rmodel.IsDynamicTensor(name) && eOutputType == ETensorType::BOOL) {
+      return "std::vector<bool>(fTensor_" + name + ".begin(), fTensor_" + name + ".begin() + " + outputLength + ")";
+   }
+   return "std::vector<" + outputType + ">(tensor_" + name + ", tensor_" + name + " + " + outputLength + ")";
+}
+
+} // namespace
+
 void RModel::GenerateOutput() {
 
    if (fVerbose)
@@ -723,12 +752,10 @@ void RModel::GenerateOutput() {
    if (outputSize == 0)
       throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
 
-   std::string outputType;
    bool sameOutputTypes = true;
    std::string inferReturnType; // type return by infer function
-   ETensorType eOutputType;
-   eOutputType = GetTensorType(*fOutputTensorNames.begin());
-   outputType = ConvertTypeToString(eOutputType);
+   ETensorType eOutputType = GetTensorType(*fOutputTensorNames.begin());
+   std::string outputType = ConvertTypeToString(eOutputType);
    fGC += "\n\n";
    if (outputSize == 1) {
       fGC += "std::vector<" + outputType + ">";
@@ -762,62 +789,15 @@ void RModel::GenerateOutput() {
       fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
    }
 
-   if (outputSize == 1) {
-      std::string tensorName = fOutputTensorNames[0];
-      if (fIntermediateTensorInfos.count(tensorName) > 0) {
-
-         if (GetTensorType(tensorName) == ETensorType::BOOL){
-            fGC += SP + "return fTensor_" + tensorName + ";\n";
-         } else {
-            // need to check is size is the same(don't want to return a vector with larger size)
-            // in that case better to copy
-            fGC += SP + "std::vector<"+ ConvertTypeToString(GetTensorType(std::string(tensorName))) +"> ret(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ");\n";
-            fGC += SP + "return ret;\n";
-         }
-      } else {
-         // include also dynamic tensors since the vectors can be allocated with a size larger than their output
-         // we need a special handling for bool type allocated as vector<bool>
-         auto outputLength = ConvertDynamicShapeToLength(GetDynamicTensorShape(tensorName));
-         if (IsDynamicTensor(tensorName) && eOutputType == ETensorType::BOOL) {
-            fGC += SP + "std::vector<bool> ret (fTensor_" + tensorName + ".begin(), fTensor_" + tensorName +
-                   ".begin() + " + outputLength + ");\n";
-         } else {
-            fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + tensorName + ", tensor_" + tensorName + " + " +
-                  outputLength + ");\n";
-         }
-         fGC += SP + "return ret;\n";
-      }
-   } else {
-      // here we assume all outputs have same type
-      if (sameOutputTypes)
-         fGC += SP + "std::vector<std::vector<" + outputType + ">> ret({";
-      else
-         fGC += SP + inferReturnType + " ret({";
-      for (size_t i = 0; i < outputSize; i++) {
-         std::string tensorName = *(fOutputTensorNames.begin() + i);
-         if (!tensorName.empty()) {
-
-            if (fIntermediateTensorInfos.count(tensorName) > 0) {
-               fGC += SP + "std::vector<"+ ConvertTypeToString(GetTensorType(std::string(tensorName))) +">(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ")";
-            } else {
-               auto outputLength = ConvertDynamicShapeToLength(GetDynamicTensorShape(tensorName));
-               if (IsDynamicTensor(tensorName) && eOutputType == ETensorType::BOOL) {
-                  fGC += "std::vector<bool>(fTensor_" + tensorName + ".begin(), fTensor_" + tensorName + ".begin() + " +
-                        outputLength + ");\n";
-               } else {
-                  fGC += "std::vector<" + outputType + ">(tensor_" + tensorName + ", tensor_" + tensorName + " + " +
-                        outputLength + ")";
-               }
-            }
-            if (i < outputSize - 1)
-               fGC += ",";
-         } else {
-            fGC += "{}";
-         }
-      }
-      fGC += "});\n";
-      fGC += SP + "return ret;\n";
+   fGC += SP + "return {";
+   for (size_t i = 0; i < outputSize; i++) {
+      std::string tensorName = *(fOutputTensorNames.begin() + i);
+      bool isIntermediate = fIntermediateTensorInfos.count(tensorName) > 0;
+      fGC += createOutputTensor(*this, tensorName, isIntermediate);
+      if (i < outputSize - 1)
+         fGC += ",";
    }
+   fGC += "};\n";
    fGC += "}\n";  // end of infer function scope
 }
 

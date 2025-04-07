@@ -59,9 +59,9 @@ public:
 
    int Verbose() const { return fVerbose;}
 
-   const std::vector<size_t> &GetTensorShape(std::string name);
-   std::vector<Dim> GetDynamicTensorShape(std::string name);
-   const ETensorType &GetTensorType(std::string name);
+   const std::vector<size_t> &GetTensorShape(std::string name) const;
+   std::vector<Dim> GetDynamicTensorShape(std::string name) const;
+   const ETensorType &GetTensorType(std::string name) const;
 
    bool CheckIfTensorAlreadyExist(std::string tensor_name);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<Dim> shape);
