@@ -45,8 +45,8 @@ using ROOT::RNTupleDescriptor;
 using ROOT::RNTupleModel;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RColumnElementBase;
+using ROOT::Internal::RNTupleSerializer;
 
-using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
 // TFile options parsing

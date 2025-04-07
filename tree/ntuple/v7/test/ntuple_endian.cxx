@@ -82,7 +82,7 @@ protected:
    const std::vector<RPageStorage::RSealedPage> &fPages;
 
    void LoadStructureImpl() final {}
-   RNTupleDescriptor AttachImpl(ROOT::Experimental::Internal::RNTupleSerializer::EDescriptorDeserializeMode) final
+   RNTupleDescriptor AttachImpl(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode) final
    {
       return RNTupleDescriptor();
    }

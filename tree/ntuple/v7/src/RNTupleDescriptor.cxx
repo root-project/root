@@ -34,7 +34,7 @@
 #include <set>
 #include <utility>
 
-using ROOT::Experimental::Internal::RNTupleSerializer;
+using ROOT::Internal::RNTupleSerializer;
 
 bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {

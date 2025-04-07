@@ -46,6 +46,7 @@
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
+using ROOT::Internal::RNTupleSerializer;
 using ROOT::Internal::RPagePool;
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,

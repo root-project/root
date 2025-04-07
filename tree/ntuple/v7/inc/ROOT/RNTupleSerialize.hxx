@@ -43,13 +43,9 @@ namespace Internal {
 class RClusterDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 
-} // namespace Internal
-
-namespace Experimental {
-namespace Internal {
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleSerializer
+\class ROOT::Internal::RNTupleSerializer
 \ingroup NTuple
 \brief A helper class for serializing and deserialization of the RNTuple binary format
 
@@ -310,7 +306,6 @@ public:
 }; // class RNTupleSerializer
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleSerialize
