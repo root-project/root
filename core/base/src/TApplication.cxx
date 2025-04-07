@@ -244,7 +244,7 @@ void TApplication::NeedGraphicsLibs()
 
 void TApplication::SkipParsingArguments()
 {
-      fgSkipArguments = kTRUE;
+   fgSkipArguments = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -482,7 +482,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                argv[i] = null;
          }
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
-         if (fgSkipArguments) continue;
+         if (fgSkipArguments)
+            continue;
          Long64_t size;
          Long_t id, flags, modtime;
          char *arg = strchr(argv[i], '(');
