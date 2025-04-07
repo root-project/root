@@ -54,7 +54,7 @@ class RNTupleFillContext {
    friend class RNTupleParallelWriter;
 
 private:
-   std::unique_ptr<Internal::RPageSink> fSink;
+   std::unique_ptr<ROOT::Internal::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
@@ -78,7 +78,7 @@ private:
    /// append the clusters to the RNTuple.
    bool fStagedClusterCommitting = false;
    /// Vector of currently staged clusters.
-   std::vector<Internal::RPageSink::RStagedCluster> fStagedClusters;
+   std::vector<ROOT::Internal::RPageSink::RStagedCluster> fStagedClusters;
 
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
@@ -106,7 +106,7 @@ private:
       return status.GetLastEntrySize();
    }
 
-   RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;
    RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
 

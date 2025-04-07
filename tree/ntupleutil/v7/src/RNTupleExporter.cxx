@@ -108,7 +108,8 @@ int CountPages(const ROOT::RNTupleDescriptor &desc, std::span<const RColumnExpor
 
 } // namespace
 
-RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RPagesOptions &options)
+RNTupleExporter::RPagesResult
+RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOptions &options)
 {
    RPagesResult res = {};
 

@@ -94,7 +94,7 @@ struct RNTupleMergeOptions {
 class RNTupleMerger final {
    friend class ROOT::RNTuple;
 
-   std::unique_ptr<RPagePersistentSink> fDestination;
+   std::unique_ptr<ROOT::Internal::RPagePersistentSink> fDestination;
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
@@ -105,22 +105,24 @@ class RNTupleMerger final {
                            RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
                            ROOT::Internal::RPageAllocator &pageAlloc);
 
-   void MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+   void MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
                             std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
    /// (i.e. in case of incremental merging).
-   RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination, std::unique_ptr<ROOT::RNTupleModel> model);
+   RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination,
+                 std::unique_ptr<ROOT::RNTupleModel> model);
 
 public:
    /// Creates a RNTupleMerger with the given destination.
-   explicit RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination);
+   explicit RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination);
 
    /// Merge a given set of sources into the destination.
    /// Note that sources with an empty schema (i.e. created from a Model that had no fields added to it) are in
    /// general valid (depending on the merging mode) but add no entries to the destination.
-   RResult<void> Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
+   RResult<void> Merge(std::span<ROOT::Internal::RPageSource *> sources,
+                       const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
 

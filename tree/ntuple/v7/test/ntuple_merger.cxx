@@ -822,7 +822,7 @@ static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t
    auto descriptor = source->GetSharedDescriptorGuard();
    const auto &columnDesc = descriptor->GetColumnDescriptor(0);
    const auto colElement = ROOT::Internal::RColumnElementBase::Generate(columnDesc.GetType());
-   ROOT::Experimental::Internal::RPageStorage::RSealedPage sealedPage;
+   RPageStorage::RSealedPage sealedPage;
    source->LoadSealedPage(0, {0, 0}, sealedPage);
    auto buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
    sealedPage.SetBuffer(buffer.get());

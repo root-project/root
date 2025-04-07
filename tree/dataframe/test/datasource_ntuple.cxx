@@ -17,7 +17,7 @@
 
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriter;
-using ROOT::Experimental::Internal::RPageSource;
+using ROOT::Internal::RPageSource;
 using ROOT::RDF::RNTupleDS;
 
 namespace {

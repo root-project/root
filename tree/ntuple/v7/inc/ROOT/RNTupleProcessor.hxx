@@ -62,7 +62,7 @@ public:
    RNTupleOpenSpec(std::string_view n, TDirectory *s) : fNTupleName(n), fStorage(s) {}
    RNTupleOpenSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
 
-   std::unique_ptr<Internal::RPageSource> CreatePageSource() const;
+   std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource() const;
 };
 
 // clang-format off
@@ -146,7 +146,7 @@ protected:
    std::string fProcessorName;
    std::vector<RNTupleOpenSpec> fNTuples;
    std::unique_ptr<ROOT::REntry> fEntry;
-   std::unique_ptr<Internal::RPageSource> fPageSource;
+   std::unique_ptr<ROOT::Internal::RPageSource> fPageSource;
    /// Maps the (qualified) field name to its corresponding field context.
    std::unordered_map<std::string, RFieldContext> fFieldContexts;
 
@@ -162,7 +162,7 @@ protected:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create and connect a concrete field to the current page source, based on its proto field.
-   void ConnectField(RFieldContext &fieldContext, Internal::RPageSource &pageSource, ROOT::REntry &entry);
+   void ConnectField(RFieldContext &fieldContext, ROOT::Internal::RPageSource &pageSource, ROOT::REntry &entry);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number.
@@ -530,7 +530,7 @@ class RNTupleJoinProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
-   std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
+   std::vector<std::unique_ptr<ROOT::Internal::RPageSource>> fAuxiliaryPageSources;
    /// Tokens representing the join fields present in the main RNTuple
    std::vector<ROOT::RFieldToken> fJoinFieldTokens;
    std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinTables;

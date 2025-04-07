@@ -57,7 +57,7 @@ ROOT::Experimental::Internal::RPageSinkBuf::~RPageSinkBuf()
    WaitForAllTasks();
 }
 
-ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
+ROOT::Internal::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(ROOT::DescriptorId_t /*fieldId*/, ROOT::Internal::RColumn &column)
 {
    return ColumnHandle_t{fNColumns++, &column};
@@ -226,7 +226,8 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPage(ROOT::Descript
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> /*ranges*/)
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPageV(
+   std::span<ROOT::Internal::RPageStorage::RSealedPageGroup> /*ranges*/)
 {
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
 }
@@ -269,10 +270,10 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::NT
    return nbytes;
 }
 
-ROOT::Experimental::Internal::RPageSink::RStagedCluster
+ROOT::Internal::RPageSink::RStagedCluster
 ROOT::Experimental::Internal::RPageSinkBuf::StageCluster(ROOT::NTupleSize_t nNewEntries)
 {
-   ROOT::Experimental::Internal::RPageSink::RStagedCluster stagedCluster;
+   ROOT::Internal::RPageSink::RStagedCluster stagedCluster;
    FlushClusterImpl([&] { stagedCluster = fInnerSink->StageCluster(nNewEntries); });
    return stagedCluster;
 }

@@ -47,22 +47,20 @@ namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
 
-namespace Internal {
-class RPageSink;
-class RPageSource;
-} // namespace Internal
-
 } // namespace Experimental
 
 namespace Internal {
+
+class RPageSink;
+class RPageSource;
 struct RFieldCallbackInjector;
 struct RFieldRepresentationModifier;
+
 // TODO(jblomer): find a better way to not have these methods in the RFieldBase public API
 void CallFlushColumnsOnField(RFieldBase &);
 void CallCommitClusterOnField(RFieldBase &);
-void CallConnectPageSinkOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSink &,
-                                ROOT::NTupleSize_t firstEntry = 0);
-void CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
+void CallConnectPageSinkOnField(RFieldBase &, ROOT::Internal::RPageSink &, ROOT::NTupleSize_t firstEntry = 0);
+void CallConnectPageSourceOnField(RFieldBase &, ROOT::Internal::RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
                     const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
@@ -92,9 +90,8 @@ class RFieldBase {
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
-   friend void
-   Internal::CallConnectPageSinkOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSink &, ROOT::NTupleSize_t);
-   friend void Internal::CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
+   friend void Internal::CallConnectPageSinkOnField(RFieldBase &, ROOT::Internal::RPageSink &, ROOT::NTupleSize_t);
+   friend void Internal::CallConnectPageSourceOnField(RFieldBase &, ROOT::Internal::RPageSource &);
    friend ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
                                  const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
@@ -260,12 +257,12 @@ private:
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
    /// \param firstEntry The global index of the first entry with on-disk data for the connected field
-   void ConnectPageSink(ROOT::Experimental::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry = 0);
+   void ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry = 0);
    /// Connects the field and its subfield tree to the given page source. Once connected, data can be read.
    /// Only unconnected fields may be connected, i.e. the method is not idempotent. The field ID has to be set prior to
    /// calling this function. For subfields, a field ID may or may not be set. If the field ID is unset, it will be
    /// determined using the page source descriptor, based on the parent field ID and the subfield name.
-   void ConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource);
+   void ConnectPageSource(ROOT::Internal::RPageSource &pageSource);
 
    void SetArtificial()
    {
@@ -495,7 +492,7 @@ protected:
    void Attach(std::unique_ptr<RFieldBase> child);
 
    /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
-   virtual void BeforeConnectPageSource(ROOT::Experimental::Internal::RPageSource &) {}
+   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
 
    /// Called by ConnectPageSource() once connected; derived classes may override this as appropriate
    virtual void AfterConnectPageSource() {}

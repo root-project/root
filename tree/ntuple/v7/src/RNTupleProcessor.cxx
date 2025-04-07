@@ -21,10 +21,10 @@
 
 #include <TDirectory.h>
 
-std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
+std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
 {
    if (const std::string *storagePath = std::get_if<std::string>(&fStorage))
-      return ROOT::Experimental::Internal::RPageSource::Create(fNTupleName, *storagePath);
+      return ROOT::Internal::RPageSource::Create(fNTupleName, *storagePath);
 
    auto dir = std::get<TDirectory *>(fStorage);
    auto ntuple = std::unique_ptr<ROOT::RNTuple>(dir->Get<ROOT::RNTuple>(fNTupleName.c_str()));
@@ -156,8 +156,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleProcessor> ROOT::Experimental::RNTupl
    return processor;
 }
 
-void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldContext, Internal::RPageSource &pageSource,
-                                                        ROOT::REntry &entry)
+void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldContext,
+                                                        ROOT::Internal::RPageSource &pageSource, ROOT::REntry &entry)
 {
    pageSource.Attach();
    auto desc = pageSource.GetSharedDescriptorGuard();
@@ -458,7 +458,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetModel(std::unique_ptr<ROOT::RN
 void ROOT::Experimental::RNTupleJoinProcessor::ConnectFields()
 {
    for (auto &[_, fieldContext] : fFieldContexts) {
-      Internal::RPageSource &pageSource =
+      ROOT::Internal::RPageSource &pageSource =
          fieldContext.IsAuxiliary() ? *fAuxiliaryPageSources.at(fieldContext.fNTupleIdx - 1) : *fPageSource;
       ConnectField(fieldContext, pageSource, *fEntry);
    }

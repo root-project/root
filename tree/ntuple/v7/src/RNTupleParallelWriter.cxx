@@ -31,10 +31,10 @@ using ROOT::DescriptorId_t;
 using ROOT::NTupleSize_t;
 using ROOT::RExtraTypeInfoDescriptor;
 using ROOT::RNTupleDescriptor;
-using ROOT::Experimental::Internal::RPageSink;
 using ROOT::Internal::RColumn;
 using ROOT::Internal::RNTupleModelChangeset;
 using ROOT::Internal::RPage;
+using ROOT::Internal::RPageSink;
 
 /// An internal RPageSink that enables multiple RNTupleFillContext to write into a single common RPageSink.
 ///
@@ -117,7 +117,7 @@ public:
 } // namespace
 
 ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                                 std::unique_ptr<Internal::RPageSink> sink)
+                                                                 std::unique_ptr<RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
 {
    if (fModel->GetRegisteredSubfieldNames().size() > 0) {
@@ -163,7 +163,7 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<ROOT::RNTupl
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = Internal::RPagePersistentSink::Create(ntupleName, storage, options);
+   auto sink = ROOT::Internal::RPagePersistentSink::Create(ntupleName, storage, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }

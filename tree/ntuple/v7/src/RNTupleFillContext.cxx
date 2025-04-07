@@ -27,7 +27,7 @@
 #include <utility>
 
 ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                           std::unique_ptr<Internal::RPageSink> sink)
+                                                           std::unique_ptr<ROOT::Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
    fModel->Freeze();

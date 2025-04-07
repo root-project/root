@@ -45,6 +45,9 @@ using ROOT::RNTupleModel;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RNTupleSerializer;
+using ROOT::Internal::RPageSink;
+using ROOT::Internal::RPageSource;
+using ROOT::Internal::RPageStorage;
 
 using namespace ROOT::Experimental::Internal;
 
@@ -1022,7 +1025,7 @@ static void PrefillColumnMap(const ROOT::RNTupleDescriptor &desc, const ROOT::RF
    }
 }
 
-RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination,
+RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination,
                              std::unique_ptr<ROOT::RNTupleModel> model)
    // TODO(gparolini): consider using an arena allocator instead, since we know the precise lifetime
    // of the RNTuples we are going to handle (e.g. we can reset the arena at every source)
@@ -1038,7 +1041,7 @@ RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination,
 #endif
 }
 
-RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination)
+RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination)
    : RNTupleMerger(std::move(destination), nullptr)
 {
 }

@@ -29,7 +29,7 @@ namespace Experimental {
 
 namespace Internal {
 
-class RNTupleImtTaskScheduler : public RPageStorage::RTaskScheduler {
+class RNTupleImtTaskScheduler : public ROOT::Internal::RPageStorage::RTaskScheduler {
 private:
    TTaskGroup fTaskGroup;
 

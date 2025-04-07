@@ -23,8 +23,8 @@
 #include <cassert>
 #include <utility>
 
-using ROOT::Experimental::Internal::RPageSink;
-using ROOT::Experimental::Internal::RPageSource;
+using ROOT::Internal::RPageSink;
+using ROOT::Internal::RPageSource;
 
 ROOT::Internal::RColumn::RColumn(ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
    : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})

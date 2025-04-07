@@ -69,9 +69,9 @@ class RNTupleReader {
 private:
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
-   std::unique_ptr<Experimental::Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
+   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
 
-   std::unique_ptr<Experimental::Internal::RPageSource> fSource;
+   std::unique_ptr<Internal::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<ROOT::RNTupleModel> fModel;
    /// We use a dedicated on-demand reader for Show(). Printing data uses all the fields
@@ -88,11 +88,10 @@ private:
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
 
-   RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Experimental::Internal::RPageSource> source,
+   RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
    /// The model is generated from the RNTuple metadata on storage.
-   explicit RNTupleReader(std::unique_ptr<Experimental::Internal::RPageSource> source,
-                          const ROOT::RNTupleReadOptions &options);
+   explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
 
    void ConnectModel(ROOT::RNTupleModel &model);
    RNTupleReader *GetDisplayReader();

@@ -23,9 +23,11 @@
 
 #include <ROOT/RNTupleUtil.hxx>
 
-namespace ROOT::Experimental::Internal {
-
+namespace ROOT::Internal {
 class RPageSource;
+}
+
+namespace ROOT::Experimental::Internal {
 
 class RNTupleExporter {
 public:
@@ -69,7 +71,7 @@ public:
 
    /// Given a page source, writes all its pages to individual files (1 per page).
    /// If the source is not already attached, it will be attached by this process.
-   static RPagesResult ExportPages(RPageSource &source, const RPagesOptions &options = {});
+   static RPagesResult ExportPages(ROOT::Internal::RPageSource &source, const RPagesOptions &options = {});
 };
 
 } // namespace ROOT::Experimental::Internal

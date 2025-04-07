@@ -30,11 +30,11 @@ namespace ROOT {
 
 class RNTupleModel;
 
-namespace Experimental {
-
 namespace Internal {
 class RPageSink;
 } // namespace Internal
+
+namespace Experimental {
 
 class RNTupleFillContext;
 
@@ -70,14 +70,14 @@ private:
    /// A mutex to synchronize the final page sink.
    std::mutex fSinkMutex;
    /// The final RPageSink that represents the synchronization point.
-   std::unique_ptr<Internal::RPageSink> fSink;
+   std::unique_ptr<ROOT::Internal::RPageSink> fSink;
    /// The original RNTupleModel connected to fSink; needs to be destructed before it.
    std::unique_ptr<ROOT::RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
    /// List of all created helpers. They must be destroyed before this RNTupleParallelWriter is destructed.
    std::vector<std::weak_ptr<RNTupleFillContext>> fFillContexts;
 
-   RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+   RNTupleParallelWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleParallelWriter(const RNTupleParallelWriter &) = delete;
    RNTupleParallelWriter &operator=(const RNTupleParallelWriter &) = delete;
 

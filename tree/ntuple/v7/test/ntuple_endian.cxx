@@ -25,13 +25,13 @@ using ROOT::NTupleSize_t;
 using ROOT::RNTupleDescriptor;
 using ROOT::RNTupleModel;
 using ROOT::Experimental::Internal::RCluster;
-using ROOT::Experimental::Internal::RPageSink;
-using ROOT::Experimental::Internal::RPageSource;
-using ROOT::Experimental::Internal::RPageStorage;
 using ROOT::Internal::RColumn;
 using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RPage;
 using ROOT::Internal::RPageRef;
+using ROOT::Internal::RPageSink;
+using ROOT::Internal::RPageSource;
+using ROOT::Internal::RPageStorage;
 
 namespace {
 class RPageSinkMock : public RPageSink {

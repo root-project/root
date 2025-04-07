@@ -38,7 +38,7 @@ namespace Internal {
 \brief Wrapper sink that coalesces cluster column page writes
 */
 // clang-format on
-class RPageSinkBuf : public RPageSink {
+class RPageSinkBuf : public ROOT::Internal::RPageSink {
 private:
    /// A buffered column. The column is not responsible for RPage memory management (i.e. ReservePage),
    /// which is handled by the enclosing RPageSinkBuf.
@@ -107,7 +107,7 @@ private:
    };
    std::unique_ptr<RCounters> fCounters;
    /// The inner sink, responsible for actually performing I/O.
-   std::unique_ptr<RPageSink> fInnerSink;
+   std::unique_ptr<ROOT::Internal::RPageSink> fInnerSink;
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
    /// For the unbuffered case, the RNTupleModel is instead managed by a RNTupleWriter.
    std::unique_ptr<ROOT::RNTupleModel> fInnerModel;
@@ -122,7 +122,7 @@ private:
    void FlushClusterImpl(std::function<void(void)> FlushClusterFn);
 
 public:
-   explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
+   explicit RPageSinkBuf(std::unique_ptr<ROOT::Internal::RPageSink> inner);
    RPageSinkBuf(const RPageSinkBuf&) = delete;
    RPageSinkBuf& operator=(const RPageSinkBuf&) = delete;
    RPageSinkBuf(RPageSinkBuf&&) = default;

@@ -186,7 +186,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
-   void BeforeConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource) final;
+   void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);

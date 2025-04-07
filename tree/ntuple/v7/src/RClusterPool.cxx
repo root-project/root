@@ -48,7 +48,8 @@ bool ROOT::Experimental::Internal::RClusterPool::RInFlightCluster::operator<(con
    return fClusterKey.fClusterId < other.fClusterKey.fClusterId;
 }
 
-ROOT::Experimental::Internal::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int clusterBunchSize)
+ROOT::Experimental::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSource &pageSource,
+                                                         unsigned int clusterBunchSize)
    : fPageSource(pageSource),
      fClusterBunchSize(clusterBunchSize),
      fPool(2 * clusterBunchSize),

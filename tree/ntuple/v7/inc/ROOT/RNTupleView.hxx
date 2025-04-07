@@ -39,8 +39,7 @@ namespace Internal {
 /// by the number of elements of the first principal column found in the subfields searched by BFS.
 /// If the field hierarchy is empty on columns, the returned field range is invalid (start and end set to
 /// kInvalidNTupleIndex). An attempt to use such a field range in RNTupleViewBase::GetFieldRange will throw.
-ROOT::RNTupleGlobalRange
-GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Experimental::Internal::RPageSource &pageSource);
+ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Internal::RPageSource &pageSource);
 
 } // namespace Internal
 
@@ -88,9 +87,8 @@ protected:
    ROOT::RNTupleGlobalRange fFieldRange;
    ROOT::RFieldBase::RValue fValue;
 
-   static std::unique_ptr<ROOT::RFieldBase> CreateField(ROOT::DescriptorId_t fieldId,
-                                                        Experimental::Internal::RPageSource &pageSource,
-                                                        std::string_view typeName = "")
+   static std::unique_ptr<ROOT::RFieldBase>
+   CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource, std::string_view typeName = "")
    {
       std::unique_ptr<ROOT::RFieldBase> field;
       {
@@ -264,8 +262,7 @@ protected:
    ROOT::RField<T> fField;
    ROOT::RNTupleGlobalRange fFieldRange;
 
-   static ROOT::RField<T>
-   CreateField(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSource &pageSource)
+   static ROOT::RField<T> CreateField(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSource &pageSource)
    {
       const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
@@ -312,19 +309,19 @@ class RNTupleCollectionView {
    friend class ROOT::RNTupleReader;
 
 private:
-   ROOT::Experimental::Internal::RPageSource *fSource;
+   ROOT::Internal::RPageSource *fSource;
    ROOT::RField<RNTupleCardinality<std::uint64_t>> fField;
    ROOT::RFieldBase::RValue fValue;
 
    RNTupleCollectionView(ROOT::DescriptorId_t fieldId, const std::string &fieldName,
-                         ROOT::Experimental::Internal::RPageSource *source)
+                         ROOT::Internal::RPageSource *source)
       : fSource(source), fField(fieldName), fValue(fField.CreateValue())
    {
       fField.SetOnDiskId(fieldId);
       ROOT::Internal::CallConnectPageSourceOnField(fField, *source);
    }
 
-   static RNTupleCollectionView Create(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSource *source)
+   static RNTupleCollectionView Create(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSource *source)
    {
       std::string fieldName;
       {

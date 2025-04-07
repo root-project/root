@@ -661,8 +661,7 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
    return fPagePool.RegisterPage(std::move(newPage), ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType});
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
-ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
+std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
    auto clone = new RPageSourceDaos(fNTupleName, fURI, fOptions);
    return std::unique_ptr<RPageSourceDaos>(clone);

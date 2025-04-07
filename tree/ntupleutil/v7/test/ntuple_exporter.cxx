@@ -5,6 +5,7 @@
 #include "ntupleutil_test.hxx"
 #include <filesystem>
 
+using ROOT::Internal::RPageSource;
 using namespace ROOT::Experimental;
 using ROOT::Experimental::Internal::RNTupleExporter;
 
@@ -91,7 +92,7 @@ TEST(RNTupleExporter, ExportToFiles)
    CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums);
 
    // Now export the pages
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto res = RNTupleExporter::ExportPages(*source);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 3);
@@ -130,7 +131,7 @@ TEST(RNTupleExporter, ExportToFilesWithChecksum)
    CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums);
 
    // Now export the pages
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto opts = RNTupleExporter::RPagesOptions();
    opts.fFlags |= RNTupleExporter::RPagesOptions::kIncludeChecksums;
    auto res = RNTupleExporter::ExportPages(*source, opts);
@@ -171,7 +172,7 @@ TEST(RNTupleExporter, ExportToFilesWithNoChecksum)
    CreateExportRNTuple(fileGuard.GetPath(), kWithoutChecksums);
 
    // Now export the pages
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto opts = RNTupleExporter::RPagesOptions();
    opts.fFlags |= RNTupleExporter::RPagesOptions::kIncludeChecksums;
    auto res = RNTupleExporter::ExportPages(*source, opts);
@@ -225,7 +226,7 @@ TEST(RNTupleExporter, ExportToFilesManyPages)
    }
 
    // Now export the pages
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto res = RNTupleExporter::ExportPages(*source);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 14);
@@ -242,7 +243,7 @@ TEST(RNTupleExporter, EmptySource)
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto res = RNTupleExporter::ExportPages(*source);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 0);
@@ -282,7 +283,7 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
    } const defer;
 
    // Now export the pages
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto opts = RNTupleExporter::RPagesOptions();
    opts.fOutputPath = kDirName;
    auto res = RNTupleExporter::ExportPages(*source, opts);
@@ -314,7 +315,7 @@ TEST(RNTupleExporter, ExportToFilesWhitelist)
    CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums);
 
    // Now export the pages
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto opts = RNTupleExporter::RPagesOptions();
    opts.fColumnTypeFilter.fType = RNTupleExporter::EFilterType::kWhitelist;
    opts.fColumnTypeFilter.fSet.insert(ROOT::ENTupleColumnType::kIndex64);
@@ -350,7 +351,7 @@ TEST(RNTupleExporter, ExportToFilesBlacklist)
    CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums);
 
    // Now export the pages
-   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto opts = RNTupleExporter::RPagesOptions();
    opts.fColumnTypeFilter.fType = RNTupleExporter::EFilterType::kBlacklist;
    opts.fColumnTypeFilter.fSet.insert(ROOT::ENTupleColumnType::kIndex64);

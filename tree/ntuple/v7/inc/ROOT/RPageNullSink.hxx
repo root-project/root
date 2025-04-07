@@ -33,7 +33,7 @@ namespace Internal {
 The RPageNullSink class is for internal testing only and can be used to measure the software overhead of serializing
 elements into pages, without actually writing them onto disk or even serializing the RNTuple headers and footers.
 */
-class RPageNullSink : public RPageSink {
+class RPageNullSink : public ROOT::Internal::RPageSink {
    ROOT::DescriptorId_t fNColumns = 0;
    std::uint64_t fNBytesCurrentCluster = 0;
 
