@@ -588,7 +588,8 @@ void RModel::GenerateIntermediateTensorInfo() {
       for (auto &i : fIntermediateTensorInfos) {
          if (i.second.type == ETensorType::BOOL) {
                tensor_declaration_block += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
-               // No pointer allocation needed for BOOL
+               // No pointer allocation possible for BOOL, but we create a reference to the vector to make the data member layout more consistent
+               tensor_declaration_block += "std::vector<bool> & tensor_" + i.first + " = fTensor_" + i.first + ";\n";
          }
          if (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end() && std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end()) {
             size_t length = ConvertShapeToLength(i.second.shape);
@@ -690,35 +691,6 @@ std::string RModel::GenerateInferSignature(bool isdecl) {
    return rGC;
 }
 
-namespace {
-
-std::string createOutputTensor(RModel const &rmodel, std::string const &name, bool isIntermediateTensor)
-{
-   if(name.empty()) return "{}";
-   ETensorType eOutputType = rmodel.GetTensorType(name);
-   std::string outputType = ConvertTypeToString(eOutputType);
-   if (isIntermediateTensor) {
-
-      if (eOutputType == ETensorType::BOOL) {
-         return "fTensor_" + name;
-      } else {
-         // need to check is size is the same(don't want to return a vector with larger size)
-         // in that case better to copy
-         return "std::vector<" + ConvertTypeToString(eOutputType) + ">(tensor_" + name + ", tensor_" + name + " + " +
-                std::to_string(ConvertShapeToLength(rmodel.GetTensorShape(name))) + ")";
-      }
-   }
-   // include also dynamic tensors since the vectors can be allocated with a size larger than their output
-   // we need a special handling for bool type allocated as vector<bool>
-   auto outputLength = ConvertDynamicShapeToLength(rmodel.GetDynamicTensorShape(name));
-   if (rmodel.IsDynamicTensor(name) && eOutputType == ETensorType::BOOL) {
-      return "std::vector<bool>(fTensor_" + name + ".begin(), fTensor_" + name + ".begin() + " + outputLength + ")";
-   }
-   return "std::vector<" + outputType + ">(tensor_" + name + ", tensor_" + name + " + " + outputLength + ")";
-}
-
-} // namespace
-
 void RModel::GenerateOutput() {
 
    if (fVerbose)
@@ -732,7 +704,7 @@ void RModel::GenerateOutput() {
    bool sameOutputTypes = true;
    std::string inferReturnType; // type return by infer function
    ETensorType eOutputType = GetTensorType(*fOutputTensorNames.begin());
-   std::string outputType = ConvertTypeToString(eOutputType);
+   std::string outputType = eOutputType != ETensorType::BOOL ? ConvertTypeToString(eOutputType) : "std::uint8_t";
    fGC += "\n\n";
    if (outputSize == 1) {
       fGC += "std::vector<" + outputType + ">";
@@ -766,11 +738,17 @@ void RModel::GenerateOutput() {
       fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
    }
 
+   fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::CreateOutput;\n\n";
+
    fGC += SP + "return {";
    for (size_t i = 0; i < outputSize; i++) {
       std::string tensorName = *(fOutputTensorNames.begin() + i);
       bool isIntermediate = fIntermediateTensorInfos.count(tensorName) > 0;
-      fGC += createOutputTensor(*this, tensorName, isIntermediate);
+      auto outputLength = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(tensorName)))
+                                         : ConvertDynamicShapeToLength(GetDynamicTensorShape(tensorName));
+      // need to check is size is the same (don't want to return a vector with
+      // larger size) in that case better to copy
+      fGC += "CreateOutput(tensor_" + tensorName + ", " + outputLength + ")";
       if (i < outputSize - 1)
          fGC += ",";
    }
