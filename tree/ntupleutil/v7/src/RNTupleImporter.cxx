@@ -382,7 +382,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
 
    if (fWriteOptions.GetUseBufferedWrite()) {
-      sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
+      sink = std::make_unique<ROOT::Internal::RPageSinkBuf>(std::move(sink));
    }
 
    auto ntplWriter = ROOT::Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
