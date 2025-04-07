@@ -3062,6 +3062,4 @@ TEST(RNTupleMerger, MergeStaggeredIncremental)
          EXPECT_FLOAT_EQ(*pnBar, expBar);
       }
    }
-
-   fileGuardMerged.PreserveFile();
 }

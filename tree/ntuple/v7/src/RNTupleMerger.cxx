@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RClusterPool.hxx>
@@ -40,8 +41,6 @@
 #include <vector>
 
 using ROOT::ENTupleColumnType;
-using ROOT::RFieldDescriptor;
-using ROOT::RNTupleDescriptor;
 using ROOT::RNTupleModel;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RColumnElementBase;
@@ -606,9 +605,9 @@ static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> new
 
 // Generates default (zero) values for the given columns
 static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMergeInfo> columns,
-                                        RSealedPageMergeData &sealedPageData,
+                                        RSealedPageMergeData &sealedPageData, ROOT::Internal::RPageAllocator &pageAlloc,
                                         const ROOT::RNTupleDescriptor &srcDescriptor,
-                                        const ROOT::RNTupleDescriptor &dstDescriptor)
+                                        const ROOT::RNTupleDescriptor &dstDescriptor, const RNTupleMergeData &mergeData)
 {
    if (!nEntriesToGenerate)
       return;
@@ -665,12 +664,20 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
          const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : nBytesOnStorage - kPageSizeLimit * (nPages - 1);
          const auto checksumSize = RPageStorage::kNBytesPageChecksum;
          const auto bufSize = pageSize + checksumSize;
-         auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[bufSize]);
+         assert(pageSize % colElement->GetSize() == 0);
+         const auto nElementsPerPage = pageSize / colElement->GetSize();
+         auto page = pageAlloc.NewPage(colElement->GetSize(), nElementsPerPage);
+         page.GrowUnchecked(nElements);
+         memset(page.GetBuffer(), 0, page.GetNBytes());
 
-         RPageStorage::RSealedPage sealedPage{buffer.get(), bufSize, static_cast<std::uint32_t>(nElements), true};
-         // TODO: properly seal this page; currently we're always writing it uncompressed!
-         memset(buffer.get(), 0, pageSize);
-         sealedPage.ChecksumIfEnabled();
+         auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[bufSize]);
+         RPageSink::RSealPageConfig sealConf;
+         sealConf.fElement = colElement.get();
+         sealConf.fPage = &page;
+         sealConf.fBuffer = buffer.get();
+         sealConf.fCompressionSettings = mergeData.fMergeOpts.fCompressionSettings.value();
+         sealConf.fWriteChecksum = mergeData.fDestination.GetWriteOptions().GetEnablePageChecksums();
+         auto sealedPage = RPageSink::SealPage(sealConf);
 
          sealedPageData.fPagesV.push_back({sealedPage});
       }
@@ -686,7 +693,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RC
                                        std::span<const RColumnMergeInfo> commonColumns,
                                        const RCluster::ColumnSet_t &commonColumnSet,
                                        std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
-                                       const RNTupleMergeData &mergeData)
+                                       const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc)
 {
    assert(nCommonColumnsInCluster == commonColumnSet.size());
    assert(nCommonColumnsInCluster <= commonColumns.size());
@@ -746,8 +753,8 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RC
       // TODO: also avoid doing this if we added no real page of this column to the destination yet.
       if (columnDesc.GetFirstElementIndex() > clusterDesc.GetFirstEntryIndex() && mergeData.fNumDstEntries > 0) {
          const auto nMissingEntries = columnDesc.GetFirstElementIndex() - clusterDesc.GetFirstEntryIndex();
-         GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData, *mergeData.fSrcDescriptor,
-                                     mergeData.fDstDescriptor);
+         GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData, pageAlloc,
+                                     *mergeData.fSrcDescriptor, mergeData.fDstDescriptor, mergeData);
       }
 
       // Loop over the pages
@@ -846,9 +853,9 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RCo
 
       RSealedPageMergeData sealedPageData;
       MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, nCommonColumnsInCluster,
-                         sealedPageData, mergeData);
-      GenerateZeroPagesForColumns(nClusterEntries, missingColumns, sealedPageData, *mergeData.fSrcDescriptor,
-                                  mergeData.fDstDescriptor);
+                         sealedPageData, mergeData, *fPageAlloc);
+      GenerateZeroPagesForColumns(nClusterEntries, missingColumns, sealedPageData, *fPageAlloc,
+                                  *mergeData.fSrcDescriptor, mergeData.fDstDescriptor, mergeData);
 
       // Commit the pages and the clusters
       mergeData.fDestination.CommitSealedPageV(sealedPageData.fGroups);

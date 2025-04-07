@@ -30,6 +30,10 @@ namespace ROOT {
 
 class RNTuple;
 
+namespace Internal {
+class RPageAllocator;
+}
+
 namespace Experimental::Internal {
 
 enum class ENTupleMergingMode {
@@ -98,7 +102,8 @@ class RNTupleMerger final {
    void MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
                            std::span<const RColumnMergeInfo> commonColumns,
                            const RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
-                           RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
+                           RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
+                           ROOT::Internal::RPageAllocator &pageAlloc);
 
    void MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
                             std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
