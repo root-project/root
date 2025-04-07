@@ -39,7 +39,7 @@ class RNTuple;
 namespace ROOT::Internal::RDF {
 class RNTupleColumnReader;
 }
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 class RPageSource;
 }
 
@@ -51,7 +51,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of
    /// REntryRangeDS records to return the list of ranges ready to use by the RDF loop manager.
    struct REntryRangeDS {
-      std::unique_ptr<ROOT::Experimental::Internal::RPageSource> fSource;
+      std::unique_ptr<ROOT::Internal::RPageSource> fSource;
       ULong64_t fFirstEntry = 0; ///< First entry index in fSource
       /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
       ULong64_t fLastEntry = 0;
@@ -79,7 +79,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ///         and
    ///      c) trigger staging of the next batch of files in the I/O background thread.
    ///   4. On `Finalize()`, the I/O background thread is stopped.
-   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RPageSource>> fStagingArea;
+   std::vector<std::unique_ptr<ROOT::Internal::RPageSource>> fStagingArea;
    std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
 
    /// We prepare a prototype field for every column. If a column reader is actually requested
@@ -165,7 +165,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// is not enough work to give at least one cluster to every slot.
    void PrepareNextRanges();
 
-   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource);
+   explicit RNTupleDS(std::unique_ptr<ROOT::Internal::RPageSource> pageSource);
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);

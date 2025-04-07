@@ -56,7 +56,7 @@ class RPageAllocatorHeap;
 The written file can be either in ROOT format or in RNTuple bare format.
 */
 // clang-format on
-class RPageSinkFile : public RPagePersistentSink {
+class RPageSinkFile : public ROOT::Internal::RPagePersistentSink {
 private:
    // A set of pages to be committed together in a vector write.
    // Currently we assume they're all sequential (although they may span multiple ranges).
@@ -114,7 +114,7 @@ public:
 \brief Storage provider that reads ntuple pages from a file
 */
 // clang-format on
-class RPageSourceFile : public RPageSource {
+class RPageSourceFile : public ROOT::Internal::RPageSource {
    friend class ROOT::RNTuple;
 
 private:

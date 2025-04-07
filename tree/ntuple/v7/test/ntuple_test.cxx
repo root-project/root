@@ -54,7 +54,7 @@ void CreateCorruptedRNTuple(const std::string &uri)
    memset(pyBuffer, 0, sizeof(float));
 
    // Rewrite RNTuple with valid pz page and corrupted px, py page
-   auto pageSink = ROOT::Experimental::Internal::RPagePersistentSink::Create("ntpl", uri, options);
+   auto pageSink = ROOT::Internal::RPagePersistentSink::Create("ntpl", uri, options);
    pageSink->Init(*modelClone);
    pageSink->CommitSealedPage(pxColId, pxSealedPage);
    pageSink->CommitSealedPage(pyColId, pySealedPage);

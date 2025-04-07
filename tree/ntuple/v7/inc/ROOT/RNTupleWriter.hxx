@@ -42,7 +42,7 @@ class RNTupleWriteOptions;
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
 std::unique_ptr<RNTupleWriter>
-CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Experimental::Internal::RPageSink> sink);
+CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 } // namespace Internal
 
 // clang-format off
@@ -60,29 +60,28 @@ triggered by FlushCluster() or by destructing the writer.  On I/O errors, an exc
 class RNTupleWriter {
    friend ROOT::RNTupleModel::RUpdater;
    friend std::unique_ptr<RNTupleWriter>
-      Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>,
-                                    std::unique_ptr<Experimental::Internal::RPageSink>);
+      Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
    /// Needs to be destructed after the page sink (in the fill context) is destructed and so declared before.
-   std::unique_ptr<Experimental::Internal::RPageStorage::RTaskScheduler> fZipTasks;
+   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fZipTasks;
    Experimental::RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
-   RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Experimental::Internal::RPageSink> sink);
+   RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
    ROOT::RNTupleModel &GetUpdatableModel();
-   Experimental::Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
+   Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
 
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                std::unique_ptr<Experimental::Internal::RPageSink> sink,
+                                                std::unique_ptr<Internal::RPageSink> sink,
                                                 const ROOT::RNTupleWriteOptions &options);
 
 public:

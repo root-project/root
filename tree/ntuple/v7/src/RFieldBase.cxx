@@ -76,12 +76,12 @@ void ROOT::Internal::CallCommitClusterOnField(RFieldBase &field)
 {
    field.CommitCluster();
 }
-void ROOT::Internal::CallConnectPageSinkOnField(RFieldBase &field, ROOT::Experimental::Internal::RPageSink &sink,
+void ROOT::Internal::CallConnectPageSinkOnField(RFieldBase &field, ROOT::Internal::RPageSink &sink,
                                                 ROOT::NTupleSize_t firstEntry)
 {
    field.ConnectPageSink(sink, firstEntry);
 }
-void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Experimental::Internal::RPageSource &source)
+void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Internal::RPageSource &source)
 {
    field.ConnectPageSource(source);
 }
@@ -947,7 +947,7 @@ void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &op
       SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
 }
 
-void ROOT::RFieldBase::ConnectPageSink(ROOT::Experimental::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry)
+void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry)
 {
    if (dynamic_cast<ROOT::RFieldZero *>(this))
       throw RException(R__FAIL("invalid attempt to connect zero field to page sink"));
@@ -967,13 +967,13 @@ void ROOT::RFieldBase::ConnectPageSink(ROOT::Experimental::Internal::RPageSink &
 
    if (HasExtraTypeInfo()) {
       pageSink.RegisterOnCommitDatasetCallback(
-         [this](ROOT::Experimental::Internal::RPageSink &sink) { sink.UpdateExtraTypeInfo(GetExtraTypeInfo()); });
+         [this](ROOT::Internal::RPageSink &sink) { sink.UpdateExtraTypeInfo(GetExtraTypeInfo()); });
    }
 
    fState = EState::kConnectedToSink;
 }
 
-void ROOT::RFieldBase::ConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource)
+void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource)
 {
    if (dynamic_cast<ROOT::RFieldZero *>(this))
       throw RException(R__FAIL("invalid attempt to connect zero field to page source"));

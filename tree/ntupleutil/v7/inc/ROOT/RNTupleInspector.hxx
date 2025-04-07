@@ -34,11 +34,11 @@
 namespace ROOT {
 class RNTuple;
 
-namespace Experimental {
-
 namespace Internal {
 class RPageSource;
 } // namespace Internal
+
+namespace Experimental {
 
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
@@ -133,7 +133,7 @@ public:
    };
 
 private:
-   std::unique_ptr<Internal::RPageSource> fPageSource;
+   std::unique_ptr<ROOT::Internal::RPageSource> fPageSource;
    ROOT::RNTupleDescriptor fDescriptor;
    std::optional<std::uint32_t> fCompressionSettings; ///< The compression settings are unknown for an empty ntuple
    std::uint64_t fCompressedSize = 0;
@@ -142,7 +142,7 @@ private:
    std::unordered_map<int, RColumnInspector> fColumnInfo;
    std::unordered_map<int, RFieldTreeInspector> fFieldTreeInfo;
 
-   RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
+   RNTupleInspector(std::unique_ptr<ROOT::Internal::RPageSource> pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Gather column-level and RNTuple-level information.

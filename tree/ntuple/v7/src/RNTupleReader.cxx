@@ -58,7 +58,7 @@ void ROOT::RNTupleReader::InitPageSource(bool enableMetrics)
 }
 
 ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
-                                   std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source,
+                                   std::unique_ptr<ROOT::Internal::RPageSource> source,
                                    const ROOT::RNTupleReadOptions &options)
    : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
 {
@@ -72,7 +72,7 @@ ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
    ConnectModel(*fModel);
 }
 
-ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source,
+ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Internal::RPageSource> source,
                                    const ROOT::RNTupleReadOptions &options)
    : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader")
 {
@@ -85,15 +85,15 @@ std::unique_ptr<ROOT::RNTupleReader> ROOT::RNTupleReader::Open(std::unique_ptr<R
                                                                std::string_view ntupleName, std::string_view storage,
                                                                const ROOT::RNTupleReadOptions &options)
 {
-   return std::unique_ptr<RNTupleReader>(new RNTupleReader(
-      std::move(model), Experimental::Internal::RPageSource::Create(ntupleName, storage, options), options));
+   return std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(std::move(model), Internal::RPageSource::Create(ntupleName, storage, options), options));
 }
 
 std::unique_ptr<ROOT::RNTupleReader> ROOT::RNTupleReader::Open(std::string_view ntupleName, std::string_view storage,
                                                                const ROOT::RNTupleReadOptions &options)
 {
    return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(Experimental::Internal::RPageSource::Create(ntupleName, storage, options), options));
+      new RNTupleReader(Internal::RPageSource::Create(ntupleName, storage, options), options));
 }
 
 std::unique_ptr<ROOT::RNTupleReader>
@@ -117,7 +117,7 @@ ROOT::RNTupleReader::Open(const ROOT::RNTupleDescriptor::RCreateModelOptions &cr
                           const ROOT::RNTupleReadOptions &options)
 {
    auto reader = std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(Experimental::Internal::RPageSource::Create(ntupleName, storage, options), options));
+      new RNTupleReader(Internal::RPageSource::Create(ntupleName, storage, options), options));
    reader->fCreateModelOptions = createModelOpts;
    return reader;
 }

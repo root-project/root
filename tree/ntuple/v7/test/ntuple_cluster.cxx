@@ -27,8 +27,8 @@
 using ROOT::Experimental::Internal::RCluster;
 using ROOT::Experimental::Internal::RClusterPool;
 using ROOT::Experimental::Internal::ROnDiskPage;
-using ROOT::Experimental::Internal::RPageSource;
 using ROOT::Internal::RPageRef;
+using ROOT::Internal::RPageSource;
 
 namespace {
 

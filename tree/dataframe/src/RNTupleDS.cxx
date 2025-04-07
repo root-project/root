@@ -155,7 +155,7 @@ public:
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::RFieldBase;
-   using RPageSource = ROOT::Experimental::Internal::RPageSource;
+   using RPageSource = ROOT::Internal::RPageSource;
 
    RNTupleDS *fDataSource;                     ///< The data source that owns this column reader
    RFieldBase *fProtoField;                    ///< The prototype field from which fField is cloned
@@ -375,7 +375,7 @@ void ROOT::RDF::RNTupleDS::AddField(const ROOT::RNTupleDescriptor &desc, std::st
    fProtoFields.emplace_back(std::move(valueField));
 }
 
-ROOT::RDF::RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource)
+ROOT::RDF::RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Internal::RPageSource> pageSource)
 {
    pageSource->Attach();
    fPrincipalDescriptor = pageSource->GetSharedDescriptorGuard()->Clone();
@@ -405,10 +405,9 @@ const ROOT::RNTupleReadOptions &GetOpts()
    return opts;
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
-CreatePageSource(std::string_view ntupleName, std::string_view fileName)
+std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource(std::string_view ntupleName, std::string_view fileName)
 {
-   return ROOT::Experimental::Internal::RPageSource::Create(ntupleName, fileName, GetOpts());
+   return ROOT::Internal::RPageSource::Create(ntupleName, fileName, GetOpts());
 }
 } // namespace
 
@@ -557,7 +556,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
    // Again, we need to skip empty files.
    unsigned int nSlotsPerFile = fNSlots / nRemainingFiles;
    for (std::size_t i = 0; (fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles); ++i) {
-      std::unique_ptr<ROOT::Experimental::Internal::RPageSource> source;
+      std::unique_ptr<ROOT::Internal::RPageSource> source;
       std::swap(fStagingArea[fNextFileIndex], source);
       if (!source) {
          // Empty files trigger this condition

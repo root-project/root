@@ -489,8 +489,7 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceFile::LoadPage
    return fPagePool.RegisterPage(std::move(newPage), RPagePool::RKey{columnId, elementInMemoryType});
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
-ROOT::Experimental::Internal::RPageSourceFile::CloneImpl() const
+std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceFile::CloneImpl() const
 {
    auto clone = new RPageSourceFile(fNTupleName, fOptions);
    clone->fFile = fFile->Clone();
