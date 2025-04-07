@@ -48,14 +48,20 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ONNX
 # Creating a Google Test
 if (BLAS_FOUND)  # we need BLAS for compiling the models
   ROOT_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
-    LIBRARIES
-      Core
-      GTest::gtest
-      GTest::gtest_main
+    LIBRARIES Core GTest::gtest GTest::gtest_main
   )
   ROOTTEST_ADD_TEST(TestCustomModelsFromONNX
                     EXEC ./TestCustomModelsFromONNX
                     FIXTURES_REQUIRED sofie-compile-models-onnx)
+
+  if (clad)
+    ROOT_EXECUTABLE(TestCladAutodiff TestCladAutodiff.cxx
+      LIBRARIES Core GTest::gtest GTest::gtest_main
+    )
+    ROOTTEST_ADD_TEST(TestCladAutodiff
+                      EXEC ./TestCladAutodiff
+                      FIXTURES_REQUIRED sofie-compile-models-onnx)
+  endif()
 endif()
 
 # For testing serialisation of RModel object
