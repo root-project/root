@@ -235,7 +235,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
       }
    } else {
       if (fUseSession)
-         out << SP << fType << " * " << OpName << "_input = fVec_" << OpName << "_input.data();\n";
+         out << SP << fType << " * " << OpName << "_input = this->fVec_" << OpName << "_input.data();\n";
       else
          out << SP << fType << " " << OpName << "_input[" << seq_length * batch_size * input_size << "];\n";
       out << SP << "for(size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
@@ -256,7 +256,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
                 << fNInitial_h << ";\n";
       } else {
          if (fUseSession)
-            out << SP << fType << " * " << OpName << "_initial_hidden_state = fVec_" << OpName
+            out << SP << fType << " * " << OpName << "_initial_hidden_state = this->fVec_" << OpName
                 << "_initial_hidden_state.data();\n";
          else
             out << fType << " " << OpName << "_initial_hidden_state[" << num_directions * batch_size *
@@ -276,7 +276,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
    }
 
    if (fUseSession)
-      out << SP << fType << " * " << OpName << "_feedforward = fVec_" << OpName
+      out << SP << fType << " * " << OpName << "_feedforward = this->fVec_" << OpName
           << "_feedforward.data();\n";
    else
       out << SP << fType << " " << OpName << "_feedforward[" << seq_length * batch_size * fAttrHiddenSize << "] = {0};\n";
@@ -286,7 +286,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
       out << SP << fType << " *" << OpName << "_hidden_state = tensor_" << fNY << ";\n";
    } else {
       if (fUseSession)
-         out << SP << fType << " * " << OpName << "_hidden_state = fVec_" << OpName << "_hidden_state.data();\n";
+         out << SP << fType << " * " << OpName << "_hidden_state = this->fVec_" << OpName << "_hidden_state.data();\n";
       else
          out << SP << fType << " " << OpName << "_hidden_state[" << seq_length * num_directions *
             batch_size * fAttrHiddenSize << "] = {0};\n";
