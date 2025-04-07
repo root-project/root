@@ -67,7 +67,7 @@ std::unique_ptr<ROOT::RNTupleWriter> ROOT::RNTupleWriter::Create(std::unique_ptr
             R__FAIL("creating a RNTupleWriter from a model containing emulated fields is currently unsupported."));
    }
    if (options.GetUseBufferedWrite()) {
-      sink = std::make_unique<Experimental::Internal::RPageSinkBuf>(std::move(sink));
+      sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
    }
    return std::unique_ptr<RNTupleWriter>(new RNTupleWriter(std::move(model), std::move(sink)));
 }
