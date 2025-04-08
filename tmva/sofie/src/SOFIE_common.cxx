@@ -11,7 +11,7 @@ namespace SOFIE {
 /// @brief  Convert shape from integer format to dynamic one (based on Dim)
 /// @param shape
 /// @return shape based on Dim
-std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape){
+std::vector<Dim> ConvertShapeToDim(const std::vector<size_t> & shape){
    std::vector<Dim> ret_shape(shape.size());
    for (size_t i =0; i < shape.size(); i++){
       ret_shape[i].dim = shape[i];
@@ -22,7 +22,7 @@ std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape){
 /// @brief Convert shape based on Dim to integer format
 /// @param shape
 /// @return shape based on integer. Return an empty shape in case shape is dynamic (has a parameter)
-std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape){
+std::vector<size_t> ConvertShapeToInt(const std::vector<Dim> & shape){
    std::vector<size_t> ret_shape(shape.size());
    for (size_t i =0; i < shape.size(); i++){
       if (shape[i].isParam) {
@@ -48,7 +48,7 @@ std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape){
 }
 
 
-std::size_t ConvertShapeToLength(std::vector<size_t> shape){
+std::size_t ConvertShapeToLength(const std::vector<size_t> & shape){
    // Empty shape represent scalar values, so we return a length=1
    std::size_t fLength = 1;
    for (auto& dim: shape) fLength *= dim;
@@ -114,7 +114,7 @@ ETensorType ConvertStringToType(std::string type){
    }
 }
 
-std::string ConvertShapeToString(std::vector<size_t> shape) {
+std::string ConvertShapeToString(const std::vector<size_t> & shape) {
    std::stringstream out;
    out << "{ ";
    for (size_t i = 0; i < shape.size(); i++) {
@@ -125,7 +125,7 @@ std::string ConvertShapeToString(std::vector<size_t> shape) {
    return out.str();
 }
 
-std::string ConvertDynamicShapeToString(std::vector<Dim> shape) {
+std::string ConvertDimShapeToString(const std::vector<Dim> & shape) {
    std::stringstream out;
    out << "{ ";
    for (size_t i = 0; i < shape.size(); i++) {
@@ -136,7 +136,8 @@ std::string ConvertDynamicShapeToString(std::vector<Dim> shape) {
    return out.str();
 }
 
-std::string ConvertDynamicShapeToLength(std::vector<Dim> shape) {
+
+std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
    // convert generic shape to a string
    // multiply all the integer specified dimensions of the shape
    std::string length;
@@ -159,6 +160,13 @@ std::string ConvertDynamicShapeToLength(std::vector<Dim> shape) {
    }
    return length;
 }
+std::string ConvertDynamicShapeToString(const std::vector<Dim> & shape) {
+   return ConvertDimShapeToString(shape);
+}
+std::string ConvertDynamicShapeToLength(const std::vector<Dim> & shape) {
+   return ConvertDimShapeToLength(shape);
+}
+
 
 namespace{
 template<typename T>
@@ -338,17 +346,24 @@ std::vector<size_t>  UTILITY::MultidirectionalBroadcastShape(std::vector<std::ve
    }
 }
 
-std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> shapeA, std::vector<size_t> shapeB)
+// check multi-directional broadcasting of two shapes (need to pass inputs by non const ref. since we might prepends with one's
+// return a pair of integer flag and new broadcasted shape
+// if flag = 0: shape are identical
+//    flag = 1: return shape is equal to A, we broadcast B
+//    flag = 2: return shape is equal to B we broadcast A
+//    flag = 3: return shape is common of two we broadcast A and B to output
+std::pair<int, std::vector<size_t>>  UTILITY::MultidirectionalBroadcastShape(std::vector<size_t> & shapeA, std::vector<size_t> & shapeB)
 {
    size_t sizeA = shapeA.size();
    size_t sizeB = shapeB.size();
    // Check if A and B have the same shape
    if (UTILITY::AreSameShape(shapeA, shapeB)){
-      return shapeA;
+      return std::make_pair(0, shapeA);
    }
    // Find the common shape of A and B
    size_t size = std::max(sizeA, sizeB);
    if (sizeA < size) {
+      // prepend 1's in A to make of same shape as B
       std::vector<size_t> newShapeA(size, 1);
       size_t offset = size - sizeA;
       std::copy(shapeA.begin(), shapeA.end(), newShapeA.begin() + offset);
@@ -367,19 +382,113 @@ std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> s
          break;
       }
    }
+   int broadcastFlag = 0;
    if (broadcastable) {
       // The output shape is max(outShape, targetShape)
       std::vector<size_t> targetShape(size, 1);
       for (size_t i = 0; i < size; i++) {
          targetShape[i] = std::max(shapeA[i], shapeB[i]);
+         if (shapeB[i] < targetShape[i]) broadcastFlag |= 1;
+         if (shapeA[i] < targetShape[i]) broadcastFlag |= 2;
       }
-      return targetShape;
+      return std::make_pair(broadcastFlag, targetShape);
    } else {
       throw
-         std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
+         std::runtime_error("TMVA::SOFIE - Error multidirectional broadcasting tensors of shape "
             + ConvertShapeToString(shapeA) + " and " + ConvertShapeToString(shapeB)
             + " to a common shape.");
    }
+}
+// unidirectional broadcast- only B changes
+std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> & shapeA, std::vector<size_t> & shapeB)
+{
+   auto ret = UTILITY::MultidirectionalBroadcastShape(shapeA, shapeB);
+   if (ret.first > 1) {
+      std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
+            + ConvertShapeToString(shapeA) + " and " + ConvertShapeToString(shapeB)
+            + " to a common shape.");
+   }
+   return ret.second;
+}
+
+// for broadcasting Dim shapes
+std::pair<int, std::vector<Dim>> UTILITY::MultidirectionalBroadcastShape(std::vector<Dim> & shapeA, std::vector<Dim> & shapeB) {
+   size_t sizeA = shapeA.size();
+   size_t sizeB = shapeB.size();
+   // Check if A and B have the same shape
+   if (UTILITY::AreSameShape(shapeA, shapeB)){
+      return std::make_pair(0, shapeA);
+   }
+   // Find the common shape of A and B
+   size_t size = std::max(sizeA, sizeB);
+   if (sizeA < size) {
+      // prepend 1's in A to make of same shape as B
+      std::vector<Dim> newShapeA(size, Dim{1});
+      size_t offset = size - sizeA;
+      std::copy(shapeA.begin(), shapeA.end(), newShapeA.begin() + offset);
+      shapeA = std::move(newShapeA);
+   }
+   if (sizeB < size) {
+      std::vector<Dim> newShapeB(size, Dim{1});
+      size_t offset = size - sizeB;
+      std::copy(shapeB.begin(), shapeB.end(), newShapeB.begin() + offset);
+      shapeB = std::move(newShapeB);
+   }
+
+   int broadcastFlag = 0;
+   // The output shape is targetShape
+   std::vector<Dim> targetShape(size);
+   for (size_t i = 0; i < size; i++) {
+      // assume we broadcast to the parametric value
+      if (shapeA[i] == shapeB[i]) {
+         targetShape[i] = shapeA[i];
+      } else if (shapeA[i].isParam && !shapeB[i].isParam) {
+         // broadcast B to A
+         targetShape[i] = shapeA[i];
+         broadcastFlag |= 1;
+      } else if (!shapeA[i].isParam && shapeB[i].isParam) {
+         // broadcast A to B
+         targetShape[i] = shapeB[i];
+         broadcastFlag |= 2;
+      } else if (!shapeA[i].isParam && !shapeB[i].isParam) {
+         if (shapeB[i].dim < shapeA[i].dim && shapeB[i].dim == 1) {
+            targetShape[i] = shapeA[i];
+            broadcastFlag |= 1;
+         } else if (shapeA[i].dim < shapeB[i].dim && shapeA[i].dim == 1) {
+            targetShape[i] = shapeB[i];
+            broadcastFlag |= 2;
+         } else { // non broadcastable case
+            broadcastFlag = -1;
+         }
+      } else {
+         // two different parametric shape cannot be broadcasted
+         broadcastFlag = -1;
+      }
+   }
+   if (broadcastFlag < 0) {
+      throw std::runtime_error("TMVA::SOFIE - Error multidirectional broadcasting tensors of shape " +
+                                 ConvertDimShapeToString(shapeA) + " and " + ConvertDimShapeToString(shapeB) +
+                                 " to a common shape.");
+   }
+
+   return std::make_pair(broadcastFlag, targetShape);
+}
+
+// UNidirectional broadcast specialization for vector<bool>
+
+// specialization for vector of boolean
+void UTILITY::UnidirectionalBroadcast(const std::vector<bool> & data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::vector<bool> & broadcastedData)
+ {
+   // Prepend shape with ones
+   auto ncdata = const_cast<std::vector<bool> &>(data);
+   if (shape.size() < targetShape.size()) {
+      size_t targetSize = targetShape.size();
+      std::vector<size_t> newShape(targetSize, 1);
+      size_t offset = targetSize - shape.size();
+      std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
+      UTILITY::BroadcastTensor<bool, const std::vector<bool> &, std::vector<bool> &>(ncdata, newShape, targetShape, broadcastedData);
+   }
+   UTILITY::BroadcastTensor<bool, const std::vector<bool> &, std::vector<bool> &>(ncdata, shape, targetShape, broadcastedData);
 }
 
 std::string UTILITY::Clean_name(std::string input_tensor_name){

@@ -26,7 +26,7 @@ std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, O
     return opA | static_cast<std::underlying_type_t<Options>>(opB);
 }
 
-const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
+const std::vector<size_t>& RModel::GetTensorShape(const std::string & name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.shape;
@@ -52,7 +52,7 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
-std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) const {
+std::vector<Dim> RModel::GetDimTensorShape(const std::string & name) const {
    if (auto f = fDynamicTensorInfos.find(name); f != fDynamicTensorInfos.end()) {
       return f->second.shape;
    }
@@ -62,6 +62,19 @@ std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) const {
    // in case is not a dynamic tensor convert normal shape to Dim one
    // for this we need to return the vector by value
    return ConvertShapeToDim(GetTensorShape(name));
+}
+std::vector<Dim> RModel::GetDynamicTensorShape(const std::string & name) const {
+   if (auto f = fDynamicTensorInfos.find(name); f != fDynamicTensorInfos.end()) {
+      return f->second.shape;
+   }
+   if (auto f = fInputTensorInfos.find(name); f != fInputTensorInfos.end()) {
+      return f->second.shape;
+   }
+   // throw error if shape is not dynamic
+   if (!IsDynamicTensor(name))
+      throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not dynamic");
+
+   throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
 const ETensorType& RModel::GetTensorType(std::string name) const {
@@ -183,9 +196,11 @@ bool RModel::IsConstantTensor(const std::string& tensorName) const {
     return itr->second.IsConstantTensor();
 }
 
+// dynamic tensors include also Dim input tensors
 bool RModel::IsDynamicTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
-   return fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+   bool ret = fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+   return (ret) ? true : IsDimInputTensor(tensorName);
 }
 bool RModel::IsDimInputTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
@@ -1238,8 +1253,8 @@ void RModel::PrintOutputTensors() {
     for (auto& it: fOutputTensorNames) {
         std::cout << "Tensor name: \"" << it << "\"\t";
         if (!IsDynamicTensor(it))
-          std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
-       else
+           std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
+        else
           std::cout << "shape: " << ConvertDynamicShapeToString(GetDynamicTensorShape(it)) << std::endl;
     }
     std::cout << "\n";

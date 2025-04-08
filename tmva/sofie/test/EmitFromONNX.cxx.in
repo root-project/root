@@ -13,6 +13,7 @@ using namespace TMVA::Experimental::SOFIE;
 
 int EmitModel(std::string filename, std::string outname) {
 
+   std::cout << "parsing file ..." << filename << std::endl;
    RModelParser_ONNX parser;
    RModel model = parser.Parse(filename);
    model.Generate();
