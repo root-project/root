@@ -274,12 +274,6 @@ TEST(RNTuple, ViewWithExternalAddress)
    auto view_1 = reader->GetView("pt", data_1);
    view_1(0);
    EXPECT_FLOAT_EQ(42.0, *data_1);
-
-   // Void shared_ptr
-   std::shared_ptr<void> data_2{new float()};
-   auto view_2 = reader->GetView("pt", data_2);
-   view_2(0);
-   EXPECT_FLOAT_EQ(42.0, *static_cast<float *>(data_2.get()));
 }
 
 TEST(RNTuple, BindEmplaceTyped)
@@ -341,7 +335,7 @@ TEST(RNTuple, BindEmplaceVoid)
 
    // bind to shared_ptr
    std::shared_ptr<void> value1{new float()};
-   auto view = reader->GetView<void>("pt", nullptr);
+   auto view = reader->GetView<void>("pt");
    view.Bind(value1);
    view(0);
    EXPECT_FLOAT_EQ(11.f, *reinterpret_cast<float *>(value1.get()));
@@ -433,7 +427,7 @@ TEST(RNTuple, ViewFrameworkUse)
    for (auto i : reader->GetEntryRange()) {
       if (i > 1) {
          if (!viewPx) {
-            viewPx = reader->GetView<void>("px", &px);
+            viewPx = reader->GetView("px", &px, "float");
          }
          (*viewPx)(i);
          EXPECT_FLOAT_EQ(i, px);
@@ -441,7 +435,7 @@ TEST(RNTuple, ViewFrameworkUse)
 
       if (i > 3) {
          if (!viewPy) {
-            viewPy = reader->GetView<void>("py", &py);
+            viewPy = reader->GetView("py", &py, "float");
          }
          (*viewPy)(i);
          EXPECT_FLOAT_EQ(0.2 + i, py);
@@ -449,7 +443,7 @@ TEST(RNTuple, ViewFrameworkUse)
 
       if (i > 7) {
          if (!viewPz) {
-            viewPz = reader->GetView<void>("pz", &pz);
+            viewPz = reader->GetView("pz", &pz, "float");
          }
          (*viewPz)(i);
          EXPECT_FLOAT_EQ(0.4 + i, pz);
@@ -531,5 +525,85 @@ TEST(RNTuple, ViewFieldIteration)
       FAIL() << "accessing the field range of a view on an empty field should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field iteration over empty fields is unsupported"));
+   }
+}
+
+TEST(RNTuple, VoidWithExternalAddressAndTypeName)
+{
+   FileRaii fileGuard("test_ntuple_voidwithexternaladdressandtypename.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldFoo = model->MakeField<std::uint64_t>("foo");
+      auto fldBar = model->MakeField<std::uint64_t>("bar");
+      auto fldBaz = model->MakeField<std::vector<float>>("baz");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *fldFoo = 42;
+      *fldBar = std::numeric_limits<std::uint64_t>::max();
+      *fldBaz = {1.f, 2.f, 3.f};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(1u, reader->GetNEntries());
+
+   // Read "foo" as std::int32_t (instead of its on-disk type std::uint64_t)
+   auto int32SharedPtr = std::make_shared<std::int32_t>();
+
+   // Raw pointer interface from type name string
+   {
+      auto viewFoo = reader->GetView("foo", int32SharedPtr.get(), "std::int32_t");
+      viewFoo(0);
+      EXPECT_EQ(42, *int32SharedPtr);
+      EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
+   }
+
+   // Raw pointer interface from std::type_info
+   {
+      auto viewFoo = reader->GetView("foo", int32SharedPtr.get(), typeid(std::int32_t));
+      viewFoo(0);
+      EXPECT_EQ(42, *int32SharedPtr);
+      EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
+   }
+
+   // Reading as a type when the on-disk value doesn't fit in this type is not possible
+   try {
+      auto viewBar = reader->GetView("bar", int32SharedPtr.get(), "std::int32_t");
+      viewBar(0);
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("value out of range: 18446744073709551615 for type i"));
+   }
+
+   // Read "baz" as std::vector<double> (instead of its on-disk type std::vector<float>)
+   std::vector<double> doubleVec;
+   void *doubleVecPtr = &doubleVec;
+   std::vector<double> expDoubleVec{1., 2., 3.};
+
+   // From type name string
+   {
+      auto viewBaz = reader->GetView("baz", doubleVecPtr, "std::vector<double>");
+      viewBaz(0);
+      EXPECT_EQ(expDoubleVec, viewBaz.GetValue().GetRef<std::vector<double>>());
+      EXPECT_STREQ("baz", viewBaz.GetField().GetFieldName().c_str());
+      EXPECT_STREQ("std::vector<double>", viewBaz.GetField().GetTypeName().c_str());
+   }
+
+   // From std::type_info
+   {
+      auto viewBaz = reader->GetView("baz", doubleVecPtr, typeid(std::vector<double>));
+      viewBaz(0);
+      EXPECT_EQ(expDoubleVec, viewBaz.GetValue().GetRef<std::vector<double>>());
+      EXPECT_STREQ("baz", viewBaz.GetField().GetFieldName().c_str());
+      EXPECT_STREQ("std::vector<double>", viewBaz.GetField().GetTypeName().c_str());
+   }
+
+   try {
+      std::vector<int> intVec;
+      void *bazAsIntsPtr = &intVec;
+      reader->GetView("baz", bazAsIntsPtr, "std::vector<int>");
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types {`SplitReal32`} for field `baz._0` cannot be "
+                                                 "matched to its in-memory type `std::int32_t`"));
    }
 }
