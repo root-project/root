@@ -20,8 +20,9 @@ ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_report dataframe_report.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_incomplete_entries dataframe_incomplete_entries.cxx LIBRARIES ROOTDataFrame)
 
-
 if(MSVC)
+  set_source_files_properties(dataframe_cloning.cxx PROPERTIES COMPILE_FLAGS /bigobj)
+  set_source_files_properties(dataframe_interface.cxx PROPERTIES COMPILE_FLAGS /bigobj)
   set_property(TARGET dataframe_cache APPEND_STRING PROPERTY LINK_FLAGS " -STACK:10000000")
   set_property(TARGET dataframe_interface APPEND_STRING PROPERTY LINK_FLAGS " -STACK:10000000")
 endif()
@@ -67,6 +68,9 @@ ROOT_ADD_GTEST(dataframe_merge_results dataframe_merge_results.cxx LIBRARIES ROO
 ROOT_ADD_GTEST(dataframe_samplecallback dataframe_samplecallback.cxx CounterHelper.h LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_vary dataframe_vary.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_compgraph dataframe_compgraph.cxx LIBRARIES ROOTDataFrame)
+if(MSVC)
+  set_source_files_properties(dataframe_vary.cxx COMPILE_FLAGS /bigobj)
+endif()
 
 #### TESTS FOR DIFFERENT DATASOURCES ####
 if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929 OR CMAKE_CXX_STANDARD LESS 17)
@@ -89,9 +93,6 @@ configure_file(spec.json . COPYONLY)
 configure_file(pyspec.json . COPYONLY)
 configure_file(spec_ordering_samples_withFriends.json . COPYONLY)
 ROOT_ADD_GTEST(datasource_csv datasource_csv.cxx LIBRARIES ROOTDataFrame)
-if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set_source_files_properties(dataframe_vary.cxx COMPILE_FLAGS "-bigobj")
-endif()
 
 #### TESTS REQUIRING EXTRA ROOT FEATURES ####
 if (imt)
