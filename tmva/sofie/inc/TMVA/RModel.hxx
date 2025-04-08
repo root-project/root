@@ -52,9 +52,26 @@ public:
 
    int Verbose() const { return fVerbose;}
 
-   const std::vector<size_t> &GetTensorShape(std::string name) const;
-   std::vector<Dim> GetDynamicTensorShape(std::string name) const;
+   const std::vector<size_t> & GetTensorShape(const std::string & name) const;
+   std::vector<Dim> GetDimTensorShape(const std::string & name) const;
+   std::vector<Dim> GetDynamicTensorShape(const std::string & name) const ;
+
    const ETensorType &GetTensorType(std::string name) const;
+
+   // template<class T>
+   // void GetTensorShape(const std::string & name, std::vector<T> & shape) {
+   //    if (TensorShape<T>::IsDim()) {
+   //       if (model.IsDynamicTensor(name)) {
+   //          shape = model.GetDynamicTensorShape(name);
+   //       } else {
+   //          intShape = model.GetTensorShape(name);
+   //          shape = ConvertShapeToDim(intShape);
+   //       }
+   //    } else {
+   //       shape = model.GetTensorShape(name);
+   //    }
+
+   // }
 
    bool CheckIfTensorAlreadyExist(std::string tensor_name);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<Dim> shape);

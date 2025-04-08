@@ -82,7 +82,7 @@ public:
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }
       bool isDynamic = model.IsDynamicTensor(fNX);
-      fShapeX = model.GetDynamicTensorShape(fNX);
+      fShapeX = model.GetDimTensorShape(fNX);
       fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       // Type of the output
