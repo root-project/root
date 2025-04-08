@@ -311,6 +311,7 @@ public:
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
+      static_assert(!std::is_void_v<T>, "invalid attempt to call GetView<void> without a type name");
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range, objPtr);
@@ -319,6 +320,7 @@ public:
    template <typename T>
    ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
    {
+      static_assert(!std::is_void_v<T>, "invalid attempt to call GetView<void> without a type name");
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range, rawPtr);

@@ -274,12 +274,6 @@ TEST(RNTuple, ViewWithExternalAddress)
    auto view_1 = reader->GetView("pt", data_1);
    view_1(0);
    EXPECT_FLOAT_EQ(42.0, *data_1);
-
-   // Void shared_ptr
-   std::shared_ptr<void> data_2{new float()};
-   auto view_2 = reader->GetView("pt", data_2);
-   view_2(0);
-   EXPECT_FLOAT_EQ(42.0, *static_cast<float *>(data_2.get()));
 }
 
 TEST(RNTuple, BindEmplaceTyped)
@@ -341,7 +335,7 @@ TEST(RNTuple, BindEmplaceVoid)
 
    // bind to shared_ptr
    std::shared_ptr<void> value1{new float()};
-   auto view = reader->GetView<void>("pt", nullptr);
+   auto view = reader->GetView<void>("pt");
    view.Bind(value1);
    view(0);
    EXPECT_FLOAT_EQ(11.f, *reinterpret_cast<float *>(value1.get()));
@@ -433,7 +427,7 @@ TEST(RNTuple, ViewFrameworkUse)
    for (auto i : reader->GetEntryRange()) {
       if (i > 1) {
          if (!viewPx) {
-            viewPx = reader->GetView<void>("px", &px);
+            viewPx = reader->GetView("px", &px, "float");
          }
          (*viewPx)(i);
          EXPECT_FLOAT_EQ(i, px);
@@ -441,7 +435,7 @@ TEST(RNTuple, ViewFrameworkUse)
 
       if (i > 3) {
          if (!viewPy) {
-            viewPy = reader->GetView<void>("py", &py);
+            viewPy = reader->GetView("py", &py, "float");
          }
          (*viewPy)(i);
          EXPECT_FLOAT_EQ(0.2 + i, py);
@@ -449,7 +443,7 @@ TEST(RNTuple, ViewFrameworkUse)
 
       if (i > 7) {
          if (!viewPz) {
-            viewPz = reader->GetView<void>("pz", &pz);
+            viewPz = reader->GetView("pz", &pz, "float");
          }
          (*viewPz)(i);
          EXPECT_FLOAT_EQ(0.4 + i, pz);
