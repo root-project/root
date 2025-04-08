@@ -559,7 +559,7 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
 
    // Raw pointer interface from type name string
    {
-      auto viewFoo = reader->GetView<void>("foo", int32SharedPtr.get(), "std::int32_t");
+      auto viewFoo = reader->GetView("foo", int32SharedPtr.get(), "std::int32_t");
       viewFoo(0);
       EXPECT_EQ(42, *int32SharedPtr);
       EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
@@ -567,7 +567,7 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
 
    // Raw pointer interface from std::type_info
    {
-      auto viewFoo = reader->GetView<void>("foo", int32SharedPtr.get(), typeid(std::int32_t));
+      auto viewFoo = reader->GetView("foo", int32SharedPtr.get(), typeid(std::int32_t));
       viewFoo(0);
       EXPECT_EQ(42, *int32SharedPtr);
       EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
@@ -575,7 +575,7 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
 
    // Reading as a type when the on-disk value doesn't fit in this type is not possible
    try {
-      auto viewBar = reader->GetView<void>("bar", int32SharedPtr.get(), "std::int32_t");
+      auto viewBar = reader->GetView("bar", int32SharedPtr.get(), "std::int32_t");
       viewBar(0);
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range: 18446744073709551615 for type i"));
@@ -588,7 +588,7 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
 
    // From type name string
    {
-      auto viewBaz = reader->GetView<void>("baz", doubleVecPtr, "std::vector<double>");
+      auto viewBaz = reader->GetView("baz", doubleVecPtr, "std::vector<double>");
       viewBaz(0);
       EXPECT_EQ(expDoubleVec, viewBaz.GetValue().GetRef<std::vector<double>>());
       EXPECT_STREQ("baz", viewBaz.GetField().GetFieldName().c_str());
@@ -597,7 +597,7 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
 
    // From std::type_info
    {
-      auto viewBaz = reader->GetView<void>("baz", doubleVecPtr, typeid(std::vector<double>));
+      auto viewBaz = reader->GetView("baz", doubleVecPtr, typeid(std::vector<double>));
       viewBaz(0);
       EXPECT_EQ(expDoubleVec, viewBaz.GetValue().GetRef<std::vector<double>>());
       EXPECT_STREQ("baz", viewBaz.GetField().GetFieldName().c_str());
@@ -607,7 +607,7 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
    try {
       std::vector<int> intVec;
       void *bazAsIntsPtr = &intVec;
-      reader->GetView<void>("baz", bazAsIntsPtr, "std::vector<int>");
+      reader->GetView("baz", bazAsIntsPtr, "std::vector<int>");
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types {`SplitReal32`} for field `baz._0` cannot be "
                                                  "matched to its in-memory type `std::int32_t`"));
