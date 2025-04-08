@@ -148,11 +148,11 @@
                if (model.CheckIfTensorAlreadyExist(it) == false) {
                   throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");
                }
-               fInputShapes.push_back(model.GetDynamicTensorShape(it));
+               fInputShapes.push_back(model.GetDimTensorShape(it));
             }
             fOutputShape = ShapeInference(fInputShapes)[0];
             if (model.Verbose())
-               std::cout << "Output of concat operator has shape " << ConvertDynamicShapeToString(fOutputShape) << std::endl;
+               std::cout << "Output of concat operator has shape " << ConvertDimShapeToString(fOutputShape) << std::endl;
 
             // check if concat has constant inputs , axis 0(concat contigous memory and type is integer)
             if (model.GetTensorType(fInputs[0]) == ETensorType::INT64 && fAxis == 0) {
@@ -186,7 +186,7 @@
             if (!fIsOutputConstant) {
                model.AddIntermediateTensor(fOutput, model.GetTensorType(fInputs[0]), fOutputShape);
                if (model.Verbose()) {
-                  std::cout << "Concat ---> " << fOutput << " " <<  ConvertDynamicShapeToString(fOutputShape) << std::endl;
+                  std::cout << "Concat ---> " << fOutput << " " <<  ConvertDimShapeToString(fOutputShape) << std::endl;
                }
             }
          }
