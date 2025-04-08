@@ -168,6 +168,6 @@ public:
    static Int_t GetNumberOfWorkers(const char *url = 0);
 
    ClassDefOverride(TProofLite,0)  //PROOF-Lite control class
-};
+} R__DEPRECATED(6,38, "Legacy interactive distributed processing engine. Use RDataFrame instead.");
 
 #endif
