@@ -1071,7 +1071,7 @@ public:
    static Int_t         GetParameter(TCollection *c, const char *par, Double_t &value);
 
    ClassDefOverride(TProof,0)  //PROOF control class
-};
+} R__DEPRECATED(6,38, "Legacy interactive distributed processing engine. Use RDataFrame instead.");
 
 // Global object with default PROOF session
 R__EXTERN TProof *gProof;
