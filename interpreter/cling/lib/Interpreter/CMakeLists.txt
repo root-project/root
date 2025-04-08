@@ -45,9 +45,8 @@ set(LLVM_LINK_COMPONENTS
   ${LLVM_TARGETS_TO_BUILD}
 )
 
-set(cling_vc_support ON CACHE BOOL "" FORCE)
-if (NOT vc)
-  set(cling_vc_support OFF CACHE BOOL "" FORCE)
+if (vc)
+  set(cling_vc_support ON)
 endif()
 
 # clingInterpreter depends on Options.inc to be tablegen-ed
