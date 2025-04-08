@@ -20,9 +20,16 @@
 #include <TFile.h>
 #include <string_view>
 #include <memory>
+#include <iostream>
 
 namespace ROOT {
 namespace Experimental {
+
+struct RFileKeyInfo {
+  std::string fName;
+  std::string fTitle;
+  std::string fClassName; 
+};
 
 class RFileKeyIterable final {
    TFile *fFile;
@@ -36,7 +43,7 @@ public:
       TFile *fFile;
       ROOT::Detail::TKeyMapIterable::TIterator fIter;
       std::string_view fRootDir;
-      std::string fCurKeyName;
+      RFileKeyInfo fCurKey;
       int fRootDirNesting = 0;
       bool fRecursive;
 
@@ -64,7 +71,7 @@ public:
       using iterator = RIterator;
       using iterator_category = std::forward_iterator_tag;
       using difference_type = std::ptrdiff_t;
-      using value_type = std::string;
+      using value_type = RFileKeyInfo;
       using pointer = value_type *;
       using reference = value_type &;
 
@@ -73,8 +80,8 @@ public:
          Advance();
          return *this;
       }
-      reference operator*() { return fCurKeyName; }
-      pointer operator->() { return &fCurKeyName; }
+      reference operator*() { return fCurKey; }
+      pointer operator->() { return &fCurKey; }
       bool operator!=(const iterator &rh) const { return !(*this == rh); }
       bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
@@ -206,6 +213,8 @@ public:
    {
       return RFileKeyIterable(fFile.get(), rootDir, /* recursive = */ false);
    }
+
+   void Print(std::ostream &out = std::cout) const;
 };
 
 } // namespace Experimental

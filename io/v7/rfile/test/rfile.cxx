@@ -229,7 +229,7 @@ TEST(RFile, IterateKeys)
       const auto expected = "a,b,c,";
       std::string s = "";
       for (const auto &key : file->GetKeys()) {
-         s += key + ",";
+         s += key.fName + ",";
       }
       EXPECT_EQ(expected, s);
 
@@ -240,7 +240,7 @@ TEST(RFile, IterateKeys)
       auto it = iterable.begin();
       std::advance(it, 1);
       for (; it != iterable.end(); ++it) {
-         s += *it + ",";
+         s += it->fName + ",";
       }
       EXPECT_EQ(expected2, s);
    }
@@ -294,11 +294,12 @@ TEST(RFile, IterateKeysRecursive)
       file->Put("e/c/g", s);
    }
 
-   const auto JoinKeyNames = [] (const auto &iterable) {
+   const auto JoinKeyNames = [](const auto &iterable) {
       auto beg = iterable.begin();
-      if (beg == iterable.end()) return std::string("");
-      return std::accumulate(std::next(beg), iterable.end(), *beg,
-                             [](const auto &a, const auto &b) { return a + ", " + b; });
+      if (beg == iterable.end())
+         return std::string("");
+      return std::accumulate(std::next(beg), iterable.end(), beg->fName,
+                             [](const auto &a, const auto &b) { return a + ", " + b.fName; });
    };
 
    {
@@ -325,11 +326,12 @@ TEST(RFile, IterateKeysNonRecursive)
       file->Put("e/c/g", s);
    }
 
-   const auto JoinKeyNames = [] (const auto &iterable) {
+   const auto JoinKeyNames = [](const auto &iterable) {
       auto beg = iterable.begin();
-      if (beg == iterable.end()) return std::string("");
-      return std::accumulate(std::next(beg), iterable.end(), *beg,
-                             [](const auto &a, const auto &b) { return a + ", " + b; });
+      if (beg == iterable.end())
+         return std::string("");
+      return std::accumulate(std::next(beg), iterable.end(), beg->fName,
+                             [](const auto &a, const auto &b) { return a + ", " + b.fName; });
    };
 
    {
@@ -352,3 +354,35 @@ TEST(RFile, RemoteRead)
    ASSERT_NE(ntuple, nullptr);
 }
 #endif
+
+TEST(RFile, ComplexExample)
+{
+   FileRaii fileGuard("test_rfile_complex.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+
+   const std::string topLevelDirs[] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+   for (const auto &dir : topLevelDirs) {
+      const auto kNRuns = 5;
+      for (int runIdx = 0; runIdx < kNRuns; ++runIdx) {
+         const auto runDir = dir + "/run" + (runIdx + 1);
+
+         const auto kNHist = 10;
+         for (int i = 0; i < kNHist; ++i) {
+            const auto histName = std::string("h") + (i + 1);
+            const auto histPath = runDir + "/hists/" + histName;
+            const auto histTitle = std::string("Histogram #") + (i + 1);
+            TH1D hist(histName, histTitle, 100, -10 * (i + 1), 10 * (i + 1));
+            file->Put(histPath, hist);
+         }
+
+         // TODO: add RFile impl in RNTupleFileWriter
+         // const auto kNDatasets = 10;
+         // for (int i = 0; i < kNDatasets; ++i) {
+         //    const auto datasetName = std::string("data_") + (i + 1) + ".root";
+         //    const auto datasetPath = runDir + "/data/" + datasetName;
+         //    const auto 
+         // }
+      }
+   }
+}
