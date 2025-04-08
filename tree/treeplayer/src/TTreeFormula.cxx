@@ -2309,9 +2309,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                // Check for an alias.
                if (strlen(left) && left[strlen(left)-1]=='.') left[strlen(left)-1]=0;
                const char *aliasValue = fTree->GetAlias(left);
-               if (aliasValue && strcspn(aliasValue,"+*/-%&!=<>|")==strlen(aliasValue)) {
+               if (aliasValue && strcspn(aliasValue,"()[]+*/-%&!=<>|")==strlen(aliasValue)) {
                   // First check whether we are using this alias recursively (this would
-                  // lead to an infinite recursion.
+                  // lead to an infinite recursion).
                   if (find(aliasUsed.begin(),
                      aliasUsed.end(),
                      left) != aliasUsed.end()) {
@@ -2871,7 +2871,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       const char *aliasValue = fTree->GetAlias(cname);
       if (aliasValue) {
          // First check whether we are using this alias recursively (this would
-         // lead to an infinite recursion.
+         // lead to an infinite recursion).
          if (find(fAliasesUsed.begin(),
                   fAliasesUsed.end(),
                   cname) != fAliasesUsed.end()) {
@@ -2882,7 +2882,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             return -3;
          }
 
-         if (strcspn(aliasValue, "()+*/-%&!=<>|") != strlen(aliasValue) || IsNumberConstant(aliasValue)) {
+         if (strcspn(aliasValue, "()[]+*/-%&!=<>|") != strlen(aliasValue) || IsNumberConstant(aliasValue)) {
             // If the alias contains an operator, we need to use a nested formula
             // (since DefinedVariable must only add one entry to the operation's list).
 
