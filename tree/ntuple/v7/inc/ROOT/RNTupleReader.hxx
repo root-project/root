@@ -278,24 +278,6 @@ public:
       return GetView<T>(RetrieveFieldId(fieldName), objPtr);
    }
 
-   /// Provides access to an individual (sub)field, reading its values into `objPtr` as the type provided by `typeName`.
-   ///
-   /// \sa GetView(std::string_view, std::shared_ptr<T>)
-   template <typename T>
-   ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr, std::string_view typeName)
-   {
-      return GetView<T>(RetrieveFieldId(fieldName), objPtr, typeName);
-   }
-
-   /// Provides access to an individual (sub)field, reading its values into `objPtr` as the type provided by `ti`.
-   ///
-   /// \sa GetView(std::string_view, std::shared_ptr<T>)
-   template <typename T>
-   ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr, const std::type_info &ti)
-   {
-      return GetView<T>(RetrieveFieldId(fieldName), objPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
-   }
-
    template <typename T>
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, T *rawPtr)
    {
@@ -334,29 +316,6 @@ public:
       auto field = ROOT::RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
       return ROOT::RNTupleView<T>(std::move(field), range, objPtr);
-   }
-
-   /// Provides access to an individual (sub)field from its on-disk ID, reading its values into `objPtr` as the type
-   /// provided by `typeName`.
-   ///
-   /// \sa GetView(std::string_view, std::shared_ptr<T>)
-   template <typename T>
-   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr, std::string_view typeName)
-   {
-      static_assert(std::is_void_v<T>, "calling GetView with a type name string is only allowed for [T = void]");
-      auto field = RNTupleView<T>::CreateField(fieldId, *fSource, typeName);
-      auto range = ROOT::Internal::GetFieldRange(*field, *fSource);
-      return RNTupleView<T>(std::move(field), range, objPtr);
-   }
-
-   /// Provides access to an individual (sub)field from its on-disk ID, reading its values into `objPtr` as the type
-   /// provided by `ti`.
-   ///
-   /// \sa GetView(std::string_view, std::shared_ptr<T>)
-   template <typename T>
-   ROOT::RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr, const std::type_info &ti)
-   {
-      return GetView<T>(fieldId, objPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
    }
 
    template <typename T>

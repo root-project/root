@@ -573,22 +573,6 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
       EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
    }
 
-   // Shared pointer interface from type name string
-   {
-      auto viewFoo = reader->GetView<void>("foo", int32SharedPtr, "std::int32_t");
-      viewFoo(0);
-      EXPECT_EQ(42, *int32SharedPtr);
-      EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
-   }
-
-   // Shared pointer interface from std::type_info
-   {
-      auto viewFoo = reader->GetView<void>("foo", int32SharedPtr, typeid(std::int32_t));
-      viewFoo(0);
-      EXPECT_EQ(42, *int32SharedPtr);
-      EXPECT_STREQ("std::int32_t", viewFoo.GetField().GetTypeName().c_str());
-   }
-
    // Reading as a type when the on-disk value doesn't fit in this type is not possible
    try {
       auto viewBar = reader->GetView<void>("bar", int32SharedPtr.get(), "std::int32_t");
