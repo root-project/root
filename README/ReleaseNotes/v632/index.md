@@ -34,7 +34,7 @@ The following people have contributed to this new version:
  Bernhard Manfred Gruber,\
  Enrico Guiraud,
  Jonas Hahnfeld, CERN/Goethe University Frankfurt,\
- Fernando Hueso Gonzalez, University of Valencia\
+ Fernando Hueso Gonzalez, CSIC/University of Valencia\
  Attila Krasznahorkay, CERN/EP-ADP-OS,\
  Wim Lavrijsen, LBL,\
  Dennis Klein, GSI,\
@@ -80,6 +80,7 @@ The following people have contributed to this new version:
 - Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
 - The `TList::TList(TObject*)` constructor is deprecated and will be removed in ROOT 6.34
 - The deprecated `TProofOutputList::TProofOutputList(TObject *o)` constructor was removed
+- On the ROOT prompt or in interpreted scripts, CINT-like implicit declarations such as `i = 0;` are now deprecated and might no longer be supported in future ROOT releases.   Update those declarations by explicitly using the `auto` keyword: `auto i=0`.    The deprecation is marked by printing this kind of warning: `declaration without the 'auto' keyword is deprecated`.
 
 ## Core Libraries
 
@@ -837,5 +838,23 @@ In addition, these items were addressed:
 
 * [[#17444](https://github.com/root-project/root/issues/17444)] - ROOT doesn't compile with gcc-15
 * [[#16189](https://github.com/root-project/root/issues/16189)] - TFile::k630forwardCompatibility does not apply to new files correctly
+
+## Release 6.32.12
+
+Published on April 8, 2025
+
+### Items addressed in this release
+
+This branch includes minor bugfixes as well as the changes necessary to build and run on macOS Sequoia 15.4 and XCode 16.3.
+
+The following items were addressed:
+
+* [[#18195](https://github.com/root-project/root/issues/18195)] - TBufferJSON not serializing std::map
+* [[#17992](https://github.com/root-project/root/issues/17992)] - Spurrious auto parsing when looking up a TClass
+* [[#17978](https://github.com/root-project/root/issues/17978)] - root build fails in clad when using more than one job
+* [[#17753](https://github.com/root-project/root/issues/17753)] - Race condition in TClass::fStreamerImpl value for emulated classes.
+
+### Externals updates
+ * The version of builtin veccore has been updated to 0.8.2
 
 ## HEAD of the v6-32-00-patches branch

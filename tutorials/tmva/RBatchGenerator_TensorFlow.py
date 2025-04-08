@@ -13,7 +13,7 @@ import tensorflow as tf
 import ROOT
 
 tree_name = "sig_tree"
-file_name = "http://root.cern/files/Higgs_data.root"
+file_name = str(ROOT.gROOT.GetTutorialDir()) + "/tmva/data/Higgs_data.root"
 
 batch_size = 128
 chunk_size = 5_000

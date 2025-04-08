@@ -38,6 +38,9 @@ endif()
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
+#---Copy the input file of the quadp portfolio example to the build directory--------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/quadp/stock.root ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
 #---Provide a rootlogon.C file in the current build directory that
 #   will affect the way we run all tutorials.
 #   This overwrites the existing rootlogon.C and rootalias.C in the
@@ -275,6 +278,12 @@ endif()
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
 else()
+  #copy input data files
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/tmva_reg_example.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/tmva_multiclass_example.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tmva/data/Higgs_data.root ${CMAKE_CURRENT_BINARY_DIR}/tmva/data COPYONLY)
+
   #---These do not need to run for TMVA
   list(APPEND tmva_veto tmva/createData.C)
   if(MSVC AND NOT win_broken_tests)
@@ -350,6 +359,7 @@ if(root7)
   if(NOT davix)
     list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto v7/ntuple/ntpl008_import.C)
     list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
   endif()
   if(NOT dataframe)
@@ -409,6 +419,7 @@ if(MSVC)
   # disable run_h1analysis.C because of Endpoint Security HTTP traffic scanning,
   # which is corrupting the data on Windows
   list(APPEND extra_veto tree/run_h1analysis.C)
+  list(APPEND extra_veto legacy/th2polyEurope.C) # needs to download from the web
 endif()
 
 if(MSVC AND NOT llvm13_broken_tests)
@@ -623,6 +634,13 @@ if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${ROOT_environ})
 endif()
+
+# Download open data csv only once from a python tutorial, the C++ ones depend on it
+set(dataframe-df014_CSVDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+set(dataframe-df015_LazyDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+
+# Download the input root file only once from a python tutorial, the C++ one depends on it
+set(hist-th2polyUSA-depends tutorial-hist-th2polyUSA-py)
 
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
@@ -863,6 +881,12 @@ if(ROOT_pyroot_FOUND)
       set(py_will_fail ${PYTESTS_WILLFAIL})
     endif()
 
+    if(NOT ${${tname}-depends} STREQUAL ${tutorial_name})
+      set(tutorial_dependency ${${tname}-depends})
+    else()
+      set(tutorial_dependency "")
+    endif()
+
     # Test if this tutorial is requiring any fixture
     unset(python_deps)
     foreach(fixtureList ${fixtureLists})
@@ -877,7 +901,7 @@ if(ROOT_pyroot_FOUND)
                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
-                DEPENDS ${${tname}-depends}
+                DEPENDS ${tutorial_dependency}
                 ENVIRONMENT ${ROOT_environ}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})

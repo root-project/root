@@ -73,8 +73,12 @@ if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND NOT MSVC)
     -Wno-unused-but-set-parameter)
 endif()
 
-# Disables warnings coming from PyCFunction casts
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 8)
+# Avoid warnings due to invalid function casts from C++ functions in CPyCppyy
+# to CPython API function typedefs (e.g. PyCFunction). This is a common pattern
+# in CPython extension implementations, explicitly encouraged by the official
+# CPython docs for C/C++ extensions. see
+# https://docs.python.org/3/extending/extending.html#keyword-parameters-for-extension-functions
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${libname} PRIVATE -Wno-cast-function-type)
 endif()
 

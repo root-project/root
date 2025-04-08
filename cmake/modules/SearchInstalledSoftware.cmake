@@ -433,7 +433,7 @@ if(builtin_afterimage)
     if(GIF_FOUND)
        set(_gifinclude  --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
     else()
-       set(_gifinclude)
+       set(_gifinclude  --with-builtin-ungif)
     endif()
     if(PNG_FOUND)
       set(_pnginclude  --with-png-includes=${PNG_INCLUDE_DIR})
@@ -445,11 +445,10 @@ if(builtin_afterimage)
     else()
       set(_tiffinclude --with-tiff=no)
     endif()
-    if(cocoa)
-      set(_jpeginclude --without-x --with-builtin-jpeg)
-      set(_gifinclude  --with-builtin-ungif)
-      set(_pnginclude  --with-builtin-png)
-      set(_tiffinclude --with-tiff=no)
+    if(x11)
+      set(_xinclude --with-x)
+    else()
+      set(_xinclude --without-x)
     endif()
     if(builtin_freetype)
       set(_ttf_include --with-ttf-includes=-I${FREETYPE_INCLUDE_DIR})
@@ -471,6 +470,7 @@ if(builtin_afterimage)
                         --without-svg --disable-glx ${_after_mmx}
                         ${_gifinclude} --with-jpeg ${_jpeginclude}
                         --with-png ${_pnginclude} ${_tiffinclude}
+                        ${_xinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
@@ -1385,7 +1385,7 @@ if(builtin_veccore AND NO_CONNECTION)
 endif()
 
 if(builtin_veccore)
-  set(VecCore_VERSION "0.7.0")
+  set(VecCore_VERSION "0.8.2")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
   set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1393,9 +1393,9 @@ if(builtin_veccore)
 
   ExternalProject_Add(VECCORE
     URL     ${VecCore_SRC_URI}
-    URL_HASH SHA256=61d9fc4be815c5c98088c2796763d3ed82ba4bad5a69b7892c1c2e7e1e53d311
+    URL_HASH SHA256=1268bca92acf00acd9775f1e79a2da7b1d902733d17e283e0dd5e02c41ac9666
     BUILD_IN_SOURCE 0
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
                -DBUILD_TESTING=OFF
                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -1477,13 +1477,13 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.4)
+    set(vdt_version 0.4.6)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=8b1664b45ec82042152f89d171dd962aea9bb35ac53c8eebb35df1cb9c34e498
+      URL_HASH SHA256=1820feae446780763ec8bbb60a0dbcf3ae1ee548bdd01415b1fb905fd4f90c54
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS
         -DSSE=OFF # breaks on ARM without this

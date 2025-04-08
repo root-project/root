@@ -304,7 +304,6 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fCanSplit = fCanSplit;
    cl->fProperty = fProperty;
    cl->fClassProperty = fClassProperty;
-   cl->fStreamerType = fStreamerType;
 
    // Update pointers to TClass
    if (cl->fBase.load()) {
@@ -405,7 +404,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       cl->fRealData = new TList(); // FIXME: this should really become a THashList!
    }
 
-   cl->SetStreamerImpl();
+   cl->SetStreamerImpl(fStreamerType);
 
    // set to zero in order not to delete when protoclass is deleted
    fBase = nullptr;

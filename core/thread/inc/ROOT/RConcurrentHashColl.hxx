@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <vector>
+#include <functional>
 #include "Rtypes.h"
 
 namespace ROOT {

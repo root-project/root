@@ -44,6 +44,8 @@ Some files have been modified compare to the official libAfterImage version:
 
    configure.in: support clang++ by removing some warnings.
 
+   libpng/pngpriv.h: fp.h was moved into math.h. This fix was originated by G. Eullisse - ALICE (April 2025)
+
    configure:
    - has been modified to look at the ".dylib" file extension to find
      the X11 libraries. This is needed on the Mac Leopard system.

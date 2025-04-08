@@ -23,6 +23,13 @@ endif(MSVC)
 if(NOT _clad_build_type STREQUAL "" AND NOT _clad_build_type STREQUAL ".")
   set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
 endif()
+
+if(NOT MSVC AND CMAKE_VERSION VERSION_LESS 3.31.1)
+  # Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/26398
+  # The problem got eventually fixed upstream in CMake.
+  list(APPEND EXTRA_BUILD_ARGS "-j 1")
+endif()
+
 set(_CLAD_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/clad-prefix/src/clad-build/${_clad_build_type}/lib${LLVM_LIBDIR_SUFFIX})
 
 # build byproducts only needed by Ninja

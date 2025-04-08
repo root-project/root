@@ -97,6 +97,12 @@
 #include <random>
 #include <cassert>
 
+#ifdef __CLING__
+const auto tmp_root_file_name = "tmp_hist_interpreted.root";
+#else
+const auto tmp_root_file_name = "tmp_hist.root";
+#endif
+
 using std::ostringstream, std::cout, std::endl, std::string;
 
 const unsigned int __DRAW__ = 0;
@@ -132,7 +138,7 @@ enum RefFileEnum {
 
 const int refFileOption = 1;
 TFile * refFile = 0;
-const char* refFileName = "http://root.cern/files/stressHistogram.5.18.00.root";
+const char* refFileName = "./stressHistogram.5.18.00.root";
 
 TRandom2 r;
 // set to zero if want to run different numbers every time
@@ -2956,11 +2962,11 @@ bool testWriteRead1D()
       h1->Fill(value, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    h1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TH1D* h2 = static_cast<TH1D*> ( f2.Get("wr1D_h1") );
 
    bool ret = equals("Read/Write Hist 1D", h1, h2, cmpOptStats);
@@ -2984,11 +2990,11 @@ bool testWriteReadVar1D()
       h1->Fill(value, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    h1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TH1D* h2 = static_cast<TH1D*> ( f2.Get("wr1D_h1") );
 
    bool ret = equals("Read/Write VarH 1D", h1, h2, cmpOptStats);
@@ -3008,11 +3014,11 @@ bool testWriteReadProfile1D()
       p1->Fill(x, y, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    p1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TProfile* p2 = static_cast<TProfile*> ( f2.Get("wr1D_p1") );
 
    bool ret = equals("Read/Write Prof 1D", p1, p2, cmpOptStats);
@@ -3035,11 +3041,11 @@ bool testWriteReadProfileVar1D()
       p1->Fill(x, y, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    p1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TProfile* p2 = static_cast<TProfile*> ( f2.Get("wr1D_p1") );
 
    bool ret = equals("Read/Write VarP 1D", p1, p2, cmpOptStats);
@@ -3063,11 +3069,11 @@ bool testWriteRead2D()
       h1->Fill(x, y, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    h1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TH2D* h2 = static_cast<TH2D*> ( f2.Get("wr2D_h1") );
 
    bool ret = equals("Read/Write Hist 2D", h1, h2, cmpOptStats);
@@ -3090,11 +3096,11 @@ bool testWriteReadProfile2D()
       p1->Fill(x, y, z, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    p1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TProfile2D* p2 = static_cast<TProfile2D*> ( f2.Get("wr2D_p1") );
 
    bool ret = equals("Read/Write Prof 2D", p1, p2, cmpOptStats);
@@ -3120,11 +3126,11 @@ bool testWriteRead3D()
       h1->Fill(x, y, z, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    h1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TH3D* h2 = static_cast<TH3D*> ( f2.Get("wr3D_h1") );
 
    bool ret = equals("Read/Write Hist 3D", h1, h2, cmpOptStats);
@@ -3149,11 +3155,11 @@ bool testWriteReadProfile3D()
       p1->Fill(x, y, z, t, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    p1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    TProfile3D* p2 = static_cast<TProfile3D*> ( f2.Get("wr3D_p1") );
 
    // In this particular case the statistics are not checked. The
@@ -3188,11 +3194,11 @@ bool testWriteReadHn()
       s1->Fill(points);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(tmp_root_file_name, "RECREATE");
    s1->Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(tmp_root_file_name);
    HIST* s2 = static_cast<HIST*> ( f2.Get("wrS-s1") );
 
    bool ret = equals(TString::Format("Read/Write Hist %s", HIST::Class()->GetName()), s1, s2, cmpOptStats);

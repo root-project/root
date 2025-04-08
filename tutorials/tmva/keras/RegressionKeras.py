@@ -10,7 +10,7 @@
 ## \date 2017
 ## \author TMVA Team
 
-from ROOT import TMVA, TFile, TTree, TCut
+from ROOT import TMVA, TFile, TTree, TCut, gROOT
 from subprocess import call
 from os.path import isfile
 
@@ -30,7 +30,7 @@ factory = TMVA.Factory('TMVARegression', output,
 if not isfile('tmva_reg_example.root'):
     call(['curl', '-L', '-O', 'http://root.cern/files/tmva_reg_example.root'])
 
-data = TFile.Open('tmva_reg_example.root')
+data = TFile.Open(str(gROOT.GetTutorialDir()) + '/tmva/data/tmva_reg_example.root')
 tree = data.Get('TreeR')
 
 dataloader = TMVA.DataLoader('dataset')

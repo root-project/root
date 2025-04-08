@@ -120,8 +120,15 @@ if (runtime_cxxmodules)
 
   # We need to override the default modulemap because instead of producing a
   # single std.pcm, produces hundreds of pcms. This changed with sdk 15.3.
-  if (CMAKE_SYSTEM_NAME MATCHES Darwin AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0.15000309)
-    set(custom_modulemaps ${custom_modulemaps} std_darwin.modulemap)
+  # we need to patch the modulemap from MacOSX15.2.sdk
+  if (APPLE)
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0.15000309)
+      if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0.0.17000013)
+        set(custom_modulemaps ${custom_modulemaps} std_darwin.MacOSX15.2.sdk.modulemap)
+      else()
+        set(custom_modulemaps ${custom_modulemaps} std_darwin.modulemap)
+      endif()
+    endif()
   endif()
 
   if (NOT libcxx)
