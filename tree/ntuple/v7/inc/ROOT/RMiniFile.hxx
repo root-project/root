@@ -176,11 +176,9 @@ private:
       operator bool() const { return fFile; }
    };
 
-   // TODO(jblomer): wrap in an std::variant with C++17
-   /// For updating existing files and for storing more than just an RNTuple in the file
-   RFileProper fFileProper;
-   /// For simple use cases, survives without libRIO dependency
-   RFileSimple fFileSimple;
+   /// RFileSimple: for simple use cases, survives without libRIO dependency
+   /// RFileProper: for updating existing files and for storing more than just an RNTuple in the file
+   std::variant<RFileSimple, RFileProper> fFile;
    /// A simple file can either be written as TFile container or as NTuple bare file
    bool fIsBare = false;
    /// The identifier of the RNTuple; A single writer object can only write a single RNTuple but multiple
