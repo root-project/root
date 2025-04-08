@@ -338,7 +338,7 @@ ROOT::RResult<std::pair<std::string, int>> ROOT::Experimental::RFileKeyIterable:
 
 void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
 {
-   fCurKeyName = "";
+   fCurKey = {};
 
    // We only want to return keys that refer to user objects, not internal ones, therefore we skip
    // all keys that have internal class names.
@@ -370,7 +370,23 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
          continue;
 
       // All checks passed: return this key.
-      fCurKeyName = fullPath;
+      fCurKey.fName = fullPath;
+      fCurKey.fTitle = fIter->fKeyTitle;
+      fCurKey.fClassName = fIter->fClassName;
       break;
+   }
+}
+
+void ROOT::Experimental::RFile::Print(std::ostream &out) const
+{
+   std::vector<RFileKeyInfo> keys;
+   auto keysIter = GetKeys();
+   for (const auto &key : keysIter) {
+      keys.emplace_back(key);
+   }
+
+   std::sort(keys.begin(), keys.end(), [] (const auto &a, const auto &b) { return a.fName < b.fName; });
+   for (const auto &key : keys) {
+      out << key.fClassName << " " << key.fName << ": \"" << key.fTitle << "\"\n";
    }
 }
