@@ -4964,13 +4964,16 @@ void TBranchElement::ResetInitInfo(bool recurse)
 
 void TBranchElement::SetAddress(void* addr)
 {
-   SetAddressImpl(addr, (addr == nullptr));
+   SetAddressImpl(addr, (addr == nullptr), 0);
 }
 
 /// See TBranchElement::SetAddress.
 /// If implied is true, we do not over-ride existing address for
 /// sub-branches.
-void TBranchElement::SetAddressImpl(void* addr, bool implied)
+/// The `offset` is the offset of the sub-object within its parent,
+/// it is already included in the addr but is still needed to be added
+/// the OnfileObject address when/if we need to use that address.
+void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
 {
    //
    //  Don't bother if we are disabled.
@@ -5495,11 +5498,15 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
    //
    // FIXME: This is a tail recursion, we burn stack.
    Int_t nbranches = fBranches.GetEntriesFast();
+   char *localObject = fObject;
+   if (fOnfileObject && this != GetMother()) {
+      localObject = fOnfileObject->GetObjectAt(0) + offset;
+   }
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch *abranch = (TBranch*) fBranches.UncheckedAt(i);
       // FIXME: This is a tail recursion!
       if (fBranchOffset[i] != TStreamerInfo::kMissing && !(implied && abranch->TestBit(kAddressSet))) {
-         abranch->SetAddressImpl(fObject + fBranchOffset[i], implied);
+         abranch->SetAddressImpl(localObject + fBranchOffset[i], implied, fBranchOffset[i]);
          abranch->SetBit(kAddressSet);
          if (TestBit(kDecomposedObj) != abranch->TestBit(kDecomposedObj))
             abranch->SetMakeClass(TestBit(kDecomposedObj));

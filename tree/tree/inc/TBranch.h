@@ -176,7 +176,7 @@ protected:
 
    TString  GetRealFileName() const;
 
-   virtual void SetAddressImpl(void *addr, bool /* implied */) { SetAddress(addr); }
+   virtual void SetAddressImpl(void *addr, bool /* implied */, Int_t /* offset */) { SetAddress(addr); }
 
 private:
    Int_t    GetBasketAndFirst(TBasket*& basket, Long64_t& first, TBuffer* user_buffer);
