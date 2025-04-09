@@ -218,6 +218,12 @@
 /// given in the column of the statement. For non-PostgreSQL databases,
 /// calling GetLargeObject()/SetLargeObject() is redirected to GetBinary()/SetBinary().
 ///
+/// Since ROOT 6.36, the GetLargeObject/GetBinary(Int_t col, void* &mem, Long_t& size) API
+/// is defined strictly to return new memory `mem` that must be released with
+/// `delete [] (unsigned char *) mem` by the caller.
+/// Older uses of this API (such as those of oracle, mysql, odbc) that relied on
+/// internal buffer management (owning pointers) are deprecated/no longer supported.
+///
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TSQLStatement.h"
