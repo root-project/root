@@ -125,24 +125,6 @@ def main():
 
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
-    if testing:
-      # Where to put the roottest directory
-      if os.path.exists(os.path.join(WORKDIR, "src", "roottest", ".git")):
-         roottest_dir = "src/roottest"
-      else:
-         roottest_dir = "roottest"
-
-      # Where to find the target branch
-      roottest_origin_repository = re.sub( "/root(.git)*$", "/roottest.git", args.repository)
-
-      # Where to find the incoming branch
-      roottest_repository, roottest_head_ref = relatedrepo_GetClosestMatch("roottest", args.pull_repository, args.repository)
-
-      git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
-
-      if pull_request:
-        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
-
     if not WINDOWS:
         show_node_state()
 
@@ -510,69 +492,12 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
 
   return ""
 
-@github_log_group("Pull/clone roottest branch")
-def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
-  """
-  relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
-                              FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
-  Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
-  current head name.
-
-  See relatedrepo_GetClosestMatch in toplevel CMakeLists.txt
-  """
-
-  # Alternatively, we could use: re.sub( "/root(.git)*$", "", varname)
-  origin_prefix = origin[:origin.rfind('/')]
-  upstream_prefix = upstream[:upstream.rfind('/')]
-
-  fetch_url = upstream_prefix + "/" + repo_name
-
-  gitdir = os.path.join(WORKDIR, "src", ".git")
-  current_head = get_stdout_subprocess(f"""
-      git --git-dir={gitdir} rev-parse --abbrev-ref HEAD
-      """, "Failed capture of current branch name")
-
-  # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
-  # upstream as the fork repository may be out-of-sync
-  branch_regex = re.compile("^(master|latest-stable|v[0-9]+-[0-9]+-[0-9]+(-patches)?)$")
-  known_head = branch_regex.match(current_head)
-
-  if known_head:
-    if current_head == "latest-stable":
-      # Resolve the 'latest-stable' branch to the latest merged head/tag
-      current_head = get_stdout_subprocess(f"""
-           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\\(refname:short\\)
-           """, "Failed capture of lastest-stable underlying branch name")
-      return fetch_url, current_head
-
-  # Otherwise, try to use a branch that matches `current_head` in the fork repository
-  matching_refs = get_stdout_subprocess(f"""
-       git ls-remote --heads --tags {origin_prefix}/{repo_name} {current_head}
-       """, "")
-  if matching_refs != "":
-    fetch_url = origin_prefix + "/" + repo_name
-    return fetch_url, current_head
-
-  # Finally, try upstream using the closest head/tag below the parent commit of the current head
-  closest_ref = get_stdout_subprocess(f"""
-       git --git-dir={gitdir} describe --all --abbrev=0 HEAD^
-       """, "") # Empty error means, ignore errors.
-  candidate_head = re.sub("^(heads|tags)/", "", closest_ref)
-
-  matching_refs = get_stdout_subprocess(f"""
-       git ls-remote --heads --tags {upstream_prefix}/{repo_name} {candidate_head}
-       """, "")
-  if matching_refs != "":
-    return fetch_url, candidate_head
-  return "", ""
-
-
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
     builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""
         cd '{builddir}'
-        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="roottest|runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
+        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
     """)
 
     if result != 0:
