@@ -2,7 +2,7 @@ CLEAN_TARGETS += main *Dict* Event.root *~  *.log $(ALL_LIBRARIES)
 TEST_TARGETS += ptrArr ArraySave
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

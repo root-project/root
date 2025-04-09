@@ -13,7 +13,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) ti_files $(DICTS) $(DICTS_H) ii_files \
 	*.exp .def *.log *.pdb *.rootmap 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

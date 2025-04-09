@@ -9,7 +9,7 @@ CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog __pycache__
 TEST_TARGETS += PyROOT_basictests PyROOT_overloadtests PyROOT_datatypetest PyROOT_operatortests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

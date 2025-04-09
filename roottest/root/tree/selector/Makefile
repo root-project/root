@@ -2,7 +2,7 @@ TEST_TARGETS = SelectorTest SelectorCintTest
 CLEAN_TARGETS += *.log $(ALL_LIBRARIES) lhef*_gen.[Ch]
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif
