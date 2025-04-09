@@ -81,7 +81,7 @@ void df106_HiggsToFourLeptons()
 
    // Create the RDataFrame from the spec json file. The df106_HiggsToFourLeptons_spec.json is provided in the same
    // folder as this tutorial
-   std::string dataset_spec = gROOT->GetTutorialsDir() + std::string("/dataframe/df106_HiggsToFourLeptons_spec.json");
+   std::string dataset_spec = gROOT->GetTutorialsDir() + std::string("/analysis/dataframe/df106_HiggsToFourLeptons_spec.json");
    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromSpec(dataset_spec);
 
    // Add the ProgressBar feature
