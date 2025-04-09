@@ -58,7 +58,7 @@ public:
    virtual Int_t  *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    TClass         *GetClass() const {return fClass;}
    TMethodCall    *GetMethodCall(const char *name);
-   TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
+   TObject        *GetObject() const {return fObjAddress ? (TObject*)(*fObjAddress) : nullptr;}
    const char     *GetTypeName() const override;
    void           *GetValuePointer() const override {return fObjAddress;}
    bool            IsOnTerminalBranch() const override;
