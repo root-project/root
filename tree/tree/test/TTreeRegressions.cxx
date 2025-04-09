@@ -3,6 +3,7 @@
 #include "TTree.h"
 #include "TInterpreter.h"
 #include "TSystem.h"
+#include "TLeafObject.h"
 
 #include "gtest/gtest.h"
 
@@ -221,4 +222,11 @@ TEST(TTreeRegressions, PrintTopOnlySplit)
                     "******************************************************************************\n"
                     "branch: ev                           0\n";
    EXPECT_EQ(output, ref);
+}
+
+// https://github.com/root-project/root/issues/12537
+TEST(TTreeRegressions, EmptyLeafObject)
+{
+   TLeafObject tlo;
+   EXPECT_EQ(tlo.GetObject(), nullptr);
 }
