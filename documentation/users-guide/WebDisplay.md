@@ -115,9 +115,94 @@ Typical values are:
 - "off": turns off the web display and comes back to normal graphics in  interactive mode.
 
 Alternatively one can call `gROOT->SetWebDisplay("<kind>")` to specify display kind.
-Same argument can be provided directly to the `RWebWindow::Show()`.
+Same argument can be provided directly to the `RWebWindow::ShowWindow()`.
 
 With the method `win->GetUrl()` one obtains URL string, which can be typed in the browser address string directly.
+
+
+## Use window in multi-threads application
+
+It it highly recommended to always use same `RWebWindow` instance from the same thread.
+Means if one plans to use many threads running many web window,
+one should create, communicate and destroy window from that thread.
+In such situation one avoids need of extra locks for handling window functionality.
+
+When `RWebWindow` object is created, it store thread `id`. That `id` always checked when communication with the client is performed.
+One can change this thread `id` by `RWebWindow::AssignThreadId()` method, but it should be done in the beginning before communication
+with client is started. Communication callbacks from the RWebWindow invoked always in context of thread `id`.
+
+To let handle window communication with the client, one should regularly call `RWebWindow::Run()` method.
+It runs send/receive operations and invoke user call-backs. As argument, one provides time in seconds.
+Alternatively, one can invoke `RWebWindow::Sync()` which only handle queued operations and does not block thread for the long time.
+
+There are correspondent `RWebWindow::WaitFor()` and `RWebWindow::WaitForTimed()` methods which allow not simply run window functionality
+for the long time, but wait until function returns non-zero value.
+
+
+## Run web-canvas in multiple threads
+
+`TWebCanvas` in web implementation for `TCanvas` class. It is allowed to create, modify and update canvases
+from different threads. But as with `RWebWindow` class, it is highly recommended to work with canvas always from the same thread.
+Also objects which are drawn and modified in the canvas, should be modified from this thread.
+
+`TWebCanvas` is automatically created for `TCanvas` when root started with `--web` argument or `gROOT->SetWebDisplay()` in invoked.
+One also can use `TWebCanvas::CreateWebCanvas()` method which creates canvas with pre-configured web implementation.
+
+Of the main importance is correct usage of `TCanvas::Update()` method. If canvas runs in special thread,
+one should regularly invokde `canv->Upated()` method. This not only updates drawing of the canvas on the client side,
+but also perform all necessary communication and callbacks caused by client interaction.
+
+If there are many canvases run from the same thread, one probably can enable async mode of the `TWebCanvas` by
+calling `TWebCanvas::SetAsyncMode(kTRUE)`. This let invoke updates of many canvases without blocking caller thread -
+drawing will be performed asynchronousely in in the browser.
+
+
+## Use of i/o threads of `civetweb` servers
+
+`THttpServer` class of ROOT uses `civetweb` for implementing communication over http protocol.
+It creates and run several threads to reply on http requests and to run websockets.
+Normally recevived packets queued and processed afterwards in the thread where `RWebWindow` created and run.
+All this involves mutexes locking and condition wait - which costs extra time.
+
+DANGEROUS! To achive maximal responsiveness and minimal latency one can enable direct usage of `civetweb` threads by
+calling `RWebWindow::UseServerThreads()`. In this case callbacks directly in context of `civetweb` threads at the moment when
+data received from websocket. One can immediately send new message to websocket - and this will be the fastest way to communicate
+with the client. But one should care about proper locking of any data which can be accessed from other application threads.
+
+Example of such threads usage is `tutorials/visualisation/webgui/ping` example.
+
+
+## Embed widgets for connection sharing
+
+Each websocket connection consume resources of `civetweb` server - which uses one thread per connection.
+If many connection are required, one can increase number of threads by specifying `WebGui.HttpThrds` parameter in rootrc file.
+
+But it is possible to share same connection between several widgets.
+One such example can be found in `tutorials/visualisation/webgui/bootstrap` demo, where canvas embed into larger bootstrap widget.
+In general case following steps are performed:
+
+- create channel on the client side and send id to the server
+```javascript
+    const new_conn = handle.createChannel();
+    new_conn.setReceiver({ onWebsocketMsg(h, msg) { console.log(msg) } });
+    handle.send('channel:' + new_conn.getChannelId());
+```
+- on the server one extracts channel id and embed new RWebWindow instance to main:
+```cpp
+   if (msg.compare(0, 8, "channel:") == 0) {
+      int chid = std::stoi(msg.substr(8));
+      printf("Get channel request %d\n", chid);
+      auto new_window = RWebWindow::Create();
+      new_window->SetDataCallBack(...);
+      RWebWindow::ShowWebWindow(new_window, { main_window, connid, chid });
+   }
+```
+
+From this point `new_window` instance will be able to use `new_conn` created on the client side.
+This is exactly the way how `TWebCanvas` embed in bootstrap example or
+many different widget kinds embed in `RBrowser`.
+At some point probably one may need to increase default credits numbers for the connection by setting
+`gEnv->SetValue("WebGui.ConnCredits", 100);` before starting main widget.
 
 
 ## Use ROOT web widgets on the remote nodes
