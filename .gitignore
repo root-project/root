@@ -1,5 +1,4 @@
-# roottest & rootbench are their own repos
-roottest
+# rootbench is its own repo
 rootbench
 
 # MacOS Xcode
