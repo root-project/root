@@ -705,6 +705,21 @@ inline GNN_Data Copy(const GNN_Data & data) {
    return out;
 }
 
+inline void Gemm_Call(float *output, bool transa, bool transb, int m, int n, int k, float alpha, const float *A,
+                      const float *B, float beta, const float *C)
+{
+   char ct = 't';
+   char cn = 'n';
+   const int *lda = transa ? &k : &m;
+   const int *ldb = transb ? &n : &k;
+   const int *ldc = &m;
+   if (C != nullptr) {
+      std::copy(C, C + m * n, output);
+   }
+   TMVA::Experimental::SOFIE::BLAS::sgemm_(transa ? &ct : &cn, transb ? &ct : &cn, &m, &n, &k, &alpha, A, lda, B, ldb,
+                                           &beta, output, ldc);
+}
+
 }//SOFIE
 }//Experimental
 }//TMVA
