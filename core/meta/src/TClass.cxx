@@ -3153,6 +3153,21 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       // continue as before ...
    }
 
+   bool disableAutoParsing = gInterpreter->IsAutoParsingSuspended();
+   // FIXME: We need to decided on the interface to disable auto-parsing only during TClass::GetClass.
+#ifdef ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING
+   constexpr bool requestDisableAutoLoading = true;
+#else
+   // We could get the user choice from:
+   //   - environment variable ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING
+   //   - rootrc key Root.TClass.GetClass.AutoParsing
+   //   - TClass::SetGetClassAutoParsing
+   constexpr bool requestDisableAutoLoading = false;
+#endif
+   if (requestDisableAutoLoading)
+      disableAutoParsing = true;
+   TInterpreter::SuspendAutoParsing autoparseFence(gInterpreter, disableAutoParsing);
+
    // Note: this variable does not always holds the fully normalized name
    // as there is information from a not yet loaded library or from header
    // not yet parsed that may be needed to fully normalize the name.
