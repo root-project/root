@@ -903,6 +903,8 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                         Fatal("InitializeEx",
                               "Could not load nor generate the dictionary for \"%s\", some element might be missing their dictionary (eg. enums)",
                               nam.c_str());
+                     } else {
+                        delete info;
                      }
                   } else {
                      if ((!paircl->IsSyntheticPair() && paircl->GetState() < TClass::kInterpreted) || paircl->GetClassSize() != fValDiff) {

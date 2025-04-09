@@ -181,9 +181,16 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                   GenerateTemporaryTEnum keyEnum(fKey->fCase, inside[1]);
                   GenerateTemporaryTEnum valueEnum(fVal->fCase, inside[2]);
 
-                  if (0==TClass::GetClass(nam.c_str(), kTRUE, silent)) {
+                  if (TClass::GetClass(nam.c_str(), kTRUE, silent) == nullptr) {
                      // We need to emulate the pair
-                     TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1],inside[2], silent, 0, 0);
+                     auto info = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1],inside[2], silent, 0, 0);
+                     if (!info) {
+                        Fatal("InitializeEx",
+                              "Could not load nor generate the dictionary for \"%s\", some element might be missing their dictionary (eg. enums)",
+                              nam.c_str());
+                     } else {
+                        delete info;
+                     }
                   }
                }
                fValue = new Value(nam,silent);
