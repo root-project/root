@@ -125,7 +125,7 @@ public:
       fWebCanvas->SetAsyncMode(kTRUE);
    }
 
-   virtual ~RBrowserTCanvasWidget()
+   ~RBrowserTCanvasWidget() override
    {
       if (!fCanvas || !gROOT->GetListOfCanvases()->FindObject(fCanvas))
          return;
@@ -261,6 +261,6 @@ protected:
 
 public:
    RBrowserTCanvasProvider() : RBrowserWidgetProvider("tcanvas") {}
-   ~RBrowserTCanvasProvider() = default;
+   ~RBrowserTCanvasProvider() override = default;
 } sRBrowserTCanvasProvider;
 
