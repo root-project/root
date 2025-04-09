@@ -2663,6 +2663,29 @@ void TCling::PrintIntro()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print information about the interpreter.
+///\param[in] option Selects the type of information to print.
+///
+/// List of currently support options:
+///   - autoparsed: Print the list of classes that triggered autoparsing.
+void TCling::Print(Option_t *option) const
+{
+   if (option && *option) {
+      if (!strcmp(option, "autoparsed")) {
+         std::cout << "Auto parsed classes:" << std::endl;
+         for (auto & cls : fAutoParseClasses) {
+            std::cout << "  " << cls << std::endl;
+         }
+      } else {
+         ::Error("TCling::Print", "Unknown option '%s'", option);
+      }
+   } else {
+      ::Info("TCling::Print", "No options specified");
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// \brief Add a directory to the list of directories in which the
 ///        interpreter looks for include files.
 /// \param[in] path The path to the directory.
@@ -6536,6 +6559,12 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
       }
    }
 
+   if (nHheadersParsed) {
+      // Register that we did autoparsing for this class.
+      fAutoParseClasses.insert(cls);
+      if (gDebug)
+         Info("AutoParse", "Parsed %d headers for %s", nHheadersParsed, cls);
+   }
    return nHheadersParsed;
 
 }

@@ -121,6 +121,7 @@ private: // Data Members
    std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already
    std::set<size_t> fPayloads; // Set of payloads
    std::set<const char*> fParsedPayloadsAddresses; // Set of payloads which were parsed
+   std::set<std::string> fAutoParseClasses; // Set of classes for which we autoparsed a header
    std::hash<std::string> fStringHashFunction; // A simple hashing function
    std::unordered_set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
@@ -200,6 +201,7 @@ public: // Public Interface
    Int_t   AutoLoad(const char *classname, Bool_t knowDictNotLoaded = kFALSE) final;
    Int_t   AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE) final;
    Int_t   AutoParse(const char* cls) final;
+   const std::set<std::string>& GetAutoParseClasses() const { return fAutoParseClasses; }
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
    bool    LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
    Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
@@ -240,6 +242,7 @@ public: // Public Interface
    Longptr_t ProcessLineAsynch(const char* line, EErrorCode* error = nullptr);
    Longptr_t ProcessLineSynch(const char* line, EErrorCode* error = nullptr) final;
    void    PrintIntro() final;
+   void    Print(Option_t *option="") const final;
    bool    RegisterPrebuiltModulePath(const std::string& FullPath,
                                       const std::string& ModuleMapName = "module.modulemap") const final;
    void    RegisterModule(const char* modulename,
