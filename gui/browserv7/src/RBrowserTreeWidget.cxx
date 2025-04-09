@@ -41,7 +41,7 @@ public:
       });
    }
 
-   virtual ~RBrowserTreeWidget() = default;
+   ~RBrowserTreeWidget() override = default;
 
    std::string GetKind() const override { return "tree"s; }
    std::string GetTitle() override { return fTitle; }
@@ -113,5 +113,5 @@ protected:
    }
 public:
    RBrowserTreeProvider() : RBrowserWidgetProvider("tree") {}
-   ~RBrowserTreeProvider() = default;
+   ~RBrowserTreeProvider() override = default;
 } sRBrowserTreeProvider;

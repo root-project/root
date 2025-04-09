@@ -225,7 +225,7 @@ class RSysDirLevelIter : public RLevelIter {
 public:
    explicit RSysDirLevelIter(const std::string &path = "") : fPath(path) { OpenDir(); }
 
-   virtual ~RSysDirLevelIter() { CloseDir(); }
+   ~RSysDirLevelIter() override { CloseDir(); }
 
    bool Next() override { return NextDirEntry(); }
 

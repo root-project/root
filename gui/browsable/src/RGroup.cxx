@@ -22,7 +22,7 @@ class RGroupIter : public RLevelIter {
 public:
 
    explicit RGroupIter(RGroup &comp) : fComp(comp) {}
-   virtual ~RGroupIter() = default;
+   ~RGroupIter() override = default;
 
    /** Shift to next element */
    bool Next() override { return ++fIndx < (int) fComp.GetChilds().size(); }
