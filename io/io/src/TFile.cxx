@@ -2810,6 +2810,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             if (gSystem->Unlink(path))
                Warning("MakeProject", "problems unlinking '%s'", path.Data());
          }
+         gSystem->FreeDirectory(dir);
       }
       // Make sure that the relevant dirs exists: this is mandatory, so we fail if unsuccessful
       path.Form("%s/%s/PROOF-INF", pardir.Data(), parname.Data());

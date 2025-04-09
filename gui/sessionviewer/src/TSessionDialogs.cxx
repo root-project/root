@@ -1098,6 +1098,7 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
             }
          }
       }
+      gSystem->FreeDirectory(filesDir);
    }
    else {
       // single file

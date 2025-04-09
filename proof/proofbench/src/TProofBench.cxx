@@ -804,6 +804,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
          }
          SafeDelete(f);
       }
+      gSystem->FreeDirectory(dirp);
    } else if (!R_ISREG(st.fMode)) {
       ::Error("TProofBench::GetPerfSpecs",
               "path '%s' not a regular file nor a directory - abort", pp.Data());
