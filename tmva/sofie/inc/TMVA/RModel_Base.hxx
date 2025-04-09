@@ -43,7 +43,6 @@ protected:
 
    std::unordered_set<std::string> fNeededBlasRoutines;
 
-   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath", "memory", "span"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
 
@@ -74,7 +73,8 @@ public:
    }
    void AddNeededStdLib(std::string libname)
    {
-      if (fAllowedStdLib.find(libname) != fAllowedStdLib.end()) {
+      static const std::unordered_set<std::string> allowedStdLib = {"vector", "algorithm", "cmath", "memory", "span"};
+      if (allowedStdLib.find(libname) != allowedStdLib.end()) {
          fNeededStdLib.insert(libname);
       }
    }
