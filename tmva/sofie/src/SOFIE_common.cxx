@@ -59,6 +59,9 @@ std::string ConvertTypeToString(ETensorType type){
       case ETensorType::FLOAT : {
          return "float";
       }
+      case ETensorType::INT8 : {
+         return "int8_t";
+      }
       case ETensorType::INT16 : {
          return "int16_t";
       }
@@ -67,6 +70,9 @@ std::string ConvertTypeToString(ETensorType type){
       }
       case ETensorType::INT64 : {
          return "int64_t";
+      }
+      case ETensorType::UINT8 : {
+         return "uint8_t";
       }
       case ETensorType::UINT16 : {
          return "uint16_t";
