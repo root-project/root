@@ -218,6 +218,29 @@ void RWebDisplayHandle::BrowserCreator::TestProg(const std::string &nexttry, boo
 #endif
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Create temporary file for web display
+/// Normally gSystem->TempFileName() method used to create file in default temporary directory
+/// For snap chromium use of default temp directory is not always possible therefore one switches to home directory
+/// But one checks if default temp directory modified and already points to /home folder
+
+FILE *RWebDisplayHandle::BrowserCreator::TemporaryFile(TString &name, int use_home_dir, const char *suffix)
+{
+   std::string dirname;
+   if (use_home_dir > 0) {
+      if (use_home_dir == 1) {
+         const char *tmp_dir = gSystem->TempDirectory();
+         if (tmp_dir && (strncmp(tmp_dir, "/home", 5) == 0))
+            use_home_dir = 0;
+         else if (!tmp_dir || (strncmp(tmp_dir, "/tmp", 4) == 0))
+            use_home_dir = 2;
+      }
+
+      if (use_home_dir > 1)
+         dirname = gSystem->GetHomeDirectory();
+   }
+   return gSystem->TempFileName(name, use_home_dir > 1 ? dirname.c_str() : nullptr, suffix);
+}
 
 static void DummyTimeOutHandler(int /* Sig */) {}
 
@@ -265,7 +288,7 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    if (((url.find("token=") != std::string::npos) || (url.find("key=") != std::string::npos)) && !args.IsBatchMode() && !args.IsHeadless()) {
       TString filebase = "root_start_";
 
-      auto f = gSystem->TempFileName(filebase, nullptr, ".html");
+      auto f = TemporaryFile(filebase, IsSnapChromium() ? 1 : 0, ".html");
 
       bool ferr = false;
 
@@ -1157,12 +1180,25 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       return false;
    }
 
-   auto isChromeBased = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge),
+   auto isChrome = (args.GetBrowserKind() == RWebDisplayArgs::kChrome),
+        isChromeBased = isChrome || (args.GetBrowserKind() == RWebDisplayArgs::kEdge),
         isFirefox = args.GetBrowserKind() == RWebDisplayArgs::kFirefox;
 
    std::vector<std::string> draw_kinds;
    bool use_browser_draw = false, can_optimize_json = false;
+   int use_home_dir = 0;
    TString jsonkind;
+
+   // Some Chrome installation do not allow run html code from files, created in /tmp directory
+   // When during session such failures happened, force usage of home directory from the beginning
+   static int chrome_tmp_workaround = 0;
+
+   if (isChrome) {
+      use_home_dir = chrome_tmp_workaround;
+      auto &h1 = FindCreator("chrome", "ChromeCreator");
+      if (h1 && h1->IsActive() && h1->IsSnapChromium() && (use_home_dir == 0))
+         use_home_dir = 1;
+   }
 
    if (fmts[0] == "s.png") {
       if (!isChromeBased && !isFirefox) {
@@ -1249,10 +1285,11 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
    filecont = std::regex_replace(filecont, std::regex("\\$draw_heights"), jsonh.Data());
    filecont = std::regex_replace(filecont, std::regex("\\$draw_objects"), mains);
 
-   TString dump_name;
+   TString dump_name, html_name;
+
    if (!use_browser_draw && (isChromeBased || isFirefox)) {
       dump_name = "canvasdump";
-      FILE *df = gSystem->TempFileName(dump_name);
+      FILE *df = BrowserCreator::TemporaryFile(dump_name, use_home_dir);
       if (!df) {
          R__LOG_ERROR(WebGUILog()) << "Fail to create temporary file for dump-dom";
          return false;
@@ -1261,57 +1298,25 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
       fclose(df);
    }
 
-   // When true, place HTML file into home directory
-   // Some Chrome installation do not allow run html code from files, created in /tmp directory
-   static bool chrome_tmp_workaround = false;
-
-   TString tmp_name, html_name;
-
 try_again:
 
    if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
       args.SetUrl(""s);
       args.SetPageContent(filecont);
 
-      tmp_name.Clear();
       html_name.Clear();
 
       R__LOG_DEBUG(0, WebGUILog()) << "Using file content_len " << filecont.length() << " to produce batch images ";
 
    } else {
-      tmp_name = "canvasbody";
-      FILE *hf = gSystem->TempFileName(tmp_name);
+      html_name = "canvasbody";
+      FILE *hf = BrowserCreator::TemporaryFile(html_name, use_home_dir, ".html");
       if (!hf) {
          R__LOG_ERROR(WebGUILog()) << "Fail to create temporary file for batch job";
          return false;
       }
       fputs(filecont.c_str(), hf);
       fclose(hf);
-
-      html_name = tmp_name + ".html";
-
-      if (chrome_tmp_workaround) {
-         std::string homedir = gSystem->GetHomeDirectory();
-         auto pos = html_name.Last('/');
-         if (pos == kNPOS) {
-            TRandom3 rnd;
-            rnd.SetSeed(0);
-            html_name = TString::Format("/random%d.html", rnd.Integer(1000000));
-         } else
-            html_name.Remove(0, pos);
-         html_name = homedir + html_name.Data();
-         gSystem->Unlink(html_name.Data());
-         gSystem->Unlink(tmp_name.Data());
-
-         std::ofstream ofs(html_name.Data(), std::ofstream::out);
-         ofs << filecont;
-      } else {
-         if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
-            R__LOG_ERROR(WebGUILog()) << "Fail to rename temp file " << tmp_name << " into " << html_name;
-            gSystem->Unlink(tmp_name.Data());
-            return false;
-         }
-      }
 
       args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
       args.SetPageContent(""s);
@@ -1386,11 +1391,11 @@ try_again:
    } else {
       auto dumpcont = handle->GetContent();
 
-      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && isChromeBased) {
+      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && (use_home_dir < 2) && isChrome) {
          // chrome creates dummy html file with mostly no content
          // problem running chrome from /tmp directory, lets try work from home directory
-
-         chrome_tmp_workaround = true;
+         R__LOG_INFO(WebGUILog()) << "Use home directory for running chrome in batch, set TMPDIR for preferable temp directory";
+         chrome_tmp_workaround = use_home_dir = 2;
          goto try_again;
       }
 
