@@ -48,7 +48,7 @@ public:
    {
    }
 
-   virtual ~RFieldElement() = default;
+   ~RFieldElement() override = default;
 
    /** Name of RField */
    std::string GetName() const override
@@ -110,7 +110,7 @@ public:
       fNtplReader = ROOT::RNTupleReader::Open(ntplName, filename);
    }
 
-   virtual ~RNTupleElement() = default;
+   ~RNTupleElement() override = default;
 
    /** Returns true if no ntuple found */
    bool IsNull() const { return !fNtplReader; }
@@ -164,7 +164,7 @@ public:
    {
    }
 
-   virtual ~RFieldsIterator() = default;
+   ~RFieldsIterator() override = default;
 
    bool Next() override
    {
@@ -261,10 +261,7 @@ public:
       });
    }
 
-   virtual ~RNTupleBrowseProvider()
-   {
-      RegisterNTupleFunc(nullptr);
-   }
+   ~RNTupleBrowseProvider() override { RegisterNTupleFunc(nullptr); }
 
 } newRNTupleBrowseProvider;
 

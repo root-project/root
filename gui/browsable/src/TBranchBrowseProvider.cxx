@@ -128,7 +128,7 @@ class TBrBrowsableElement : public TTreeBrowsingElement {
 public:
    TBrBrowsableElement(std::unique_ptr<RHolder> &br) : TTreeBrowsingElement(br) {}
 
-   virtual ~TBrBrowsableElement() = default;
+   ~TBrBrowsableElement() override = default;
 
    int GetNumChilds() override
    {

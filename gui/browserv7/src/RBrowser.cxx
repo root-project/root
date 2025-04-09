@@ -69,7 +69,7 @@ public:
    std::string fItemPath;   ///<! item path in the browser
 
    RBrowserEditorWidget(const std::string &name, bool is_editor = true) : RBrowserWidget(name), fIsEditor(is_editor) {}
-   virtual ~RBrowserEditorWidget() = default;
+   ~RBrowserEditorWidget() override = default;
 
    void ResetConn() override { fFirstSend = false; }
 
@@ -146,7 +146,7 @@ public:
       Refresh();
    }
 
-   virtual ~RBrowserInfoWidget() = default;
+   ~RBrowserInfoWidget() override = default;
 
    void ResetConn() override { fFirstSend = false; }
 

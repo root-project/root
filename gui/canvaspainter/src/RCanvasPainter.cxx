@@ -149,7 +149,7 @@ private:
 public:
    RCanvasPainter(RCanvas &canv);
 
-   virtual ~RCanvasPainter();
+   ~RCanvasPainter() override;
 
    void CanvasUpdated(uint64_t ver, bool async, CanvasCallback_t callback) final;
 
@@ -190,7 +190,7 @@ public:
       {
          return std::make_unique<RCanvasPainter>(canv);
       }
-      ~GeneratorImpl() = default;
+      ~GeneratorImpl() override = default;
 
       /// Set RVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
       static void SetGlobalPainter()
