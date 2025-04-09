@@ -298,8 +298,6 @@ namespace SOFIE{
          }
          std::stringstream out;
          out << "\n//--------- Gemm\n";
-         out << SP << "char " << opName << "_transA = " << (fAttrTransA ? "\'t\'" : "\'n\'") << ";\n";
-         out << SP << "char " << opName << "_transB = " << (fAttrTransB ? "\'t\'" : "\'n\'") << ";\n";
          // need to consider case A and B have dim > 2 (for MatMul)
          int64_t dimA = fShapeA.size();
          int64_t dimB = fShapeB.size();
@@ -318,14 +316,6 @@ namespace SOFIE{
          }
          auto lengthGemm = ConvertDynamicShapeToLength(sY); // size of the Gemm operation
          auto lengthExtra = ConvertDynamicShapeToLength(sA); // extra length in case input tensors are of dim>2 (MatMul)
-
-         out << SP << "int " << opName << "_m = " << m << ";\n";
-         out << SP << "int " << opName << "_n = " << n << ";\n";
-         out << SP << "int " << opName << "_k = " << k << ";\n";
-         out << SP << "float " << opName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ";\n";
-         out << SP << "float " << opName << "_beta = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ";\n";
-         out << SP << "int " << opName << "_lda = " << (fAttrTransA ? m : k) << ";\n";
-         out << SP << "int " << opName << "_ldb = " << (fAttrTransB ? k : n) << ";\n";
 
          // case bias is present
          if (!fNC.empty()){
@@ -357,23 +347,25 @@ namespace SOFIE{
             out << SP << "for (int i = 0; i < " << lengthExtra << "; i++){\n";
             out << SP;
          }
-         // in the case of bias
-         if (!fNC.empty()){
-            out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << lengthGemm << ", "
-               << "tensor_" << fNY;
-            if (doStackMul) out << " + " << opName << "_yoffset";
-            out << ");\n";
-         }
-
 
          if (fType == "float"){
 
-            out << SP << "BLAS::sgemm_(&" << opName << "_transB, &" << opName << "_transA, &" << opName
-             << "_n, &" << opName << "_m, &" << opName << "_k, &" << opName << "_alpha, " << "tensor_" << fNB
-             << ", &" << opName << "_ldb, " << "tensor_" << fNA << ", &" << opName << "_lda, &" << opName << "_beta, "
+            out << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
              << "tensor_" << fNY;
              if (doStackMul) out << " + " << opName << "_yoffset";
-             out << ", &" << opName << "_n);\n";
+            out <<   ", "
+             << (fAttrTransB ? "true, " : "false, ")
+             << (fAttrTransA ? "true, " : "false, ")
+             << n << ", " << m << ", " << k << ", ";
+            out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ",";
+            out << "tensor_" << fNB << ", " << "tensor_" << fNA << ", ";
+            out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
+            // in the case of bias
+             if (!fNC.empty())
+               out << "tensor_" << fNC2;
+             else
+               out << "nullptr";
+             out << ");\n";
 
             if(fActivation == EActivationType::RELU){
                out << SP << "for (int id = 0; id < " << TMVA::Experimental::SOFIE::ConvertDynamicShapeToLength(fShapeY) << " ; id++){\n";
