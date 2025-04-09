@@ -28,7 +28,7 @@ namespace SOFIE{
 //typedef RTensor tensor_t;
 
 enum class ETensorType{
-   UNDEFINED = 0, FLOAT = 1, UNINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
+   UNDEFINED = 0, FLOAT = 1, UINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
 };
 
@@ -40,7 +40,7 @@ constexpr size_t GetTypeSize(ETensorType type) {
     switch (type) {
         case ETensorType::FLOAT:     return sizeof(float);
         case ETensorType::DOUBLE:    return sizeof(double);
-        case ETensorType::UNINT8:     return sizeof(uint8_t);
+        case ETensorType::UINT8:     return sizeof(uint8_t);
         case ETensorType::INT8:      return sizeof(int8_t);
         case ETensorType::UINT16:    return sizeof(uint16_t);
         case ETensorType::INT16:     return sizeof(int16_t);
@@ -272,7 +272,7 @@ private:
 template <typename T>
 ETensorType GetTemplatedType(T /*obj*/ ){
    if (std::is_same<T, float>::value) return ETensorType::FLOAT;
-   if (std::is_same<T, uint8_t>::value) return ETensorType::UNINT8;
+   if (std::is_same<T, uint8_t>::value) return ETensorType::UINT8;
    if (std::is_same<T, int8_t>::value) return ETensorType::INT8;
    if (std::is_same<T, uint16_t>::value) return ETensorType::UINT16;
    if (std::is_same<T, int16_t>::value) return ETensorType::INT16;
