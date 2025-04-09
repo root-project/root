@@ -2514,6 +2514,7 @@ void TProofLite::ShowDataDir(const char *dirname)
          }
       }
    }
+   gSystem->FreeDirectory(dirp);
    // Done
    return;
 }

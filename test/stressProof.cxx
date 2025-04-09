@@ -498,6 +498,7 @@ void CleanupSelector(const char *selpath)
          gSystem->Unlink(fn);
       }
    }
+   gSystem->FreeDirectory(dirp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
