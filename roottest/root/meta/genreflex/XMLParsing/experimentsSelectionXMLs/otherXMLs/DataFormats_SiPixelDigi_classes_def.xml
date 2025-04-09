@@ -1,0 +1,52 @@
+<lcgdict>
+   <class name="PixelDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3516592386"/>
+   </class>
+   <class name="PixelDigiCollection" ClassVersion="10">
+    <version ClassVersion="10" checksum="544759626"/>
+   </class>
+   <class name="edm::DetSet<PixelDigi>"/>
+   <class name="std::vector<PixelDigi>"/>
+   <class name="edm::DetSetVector<PixelDigi>"/>
+   <class name="std::vector<edm::DetSet<PixelDigi> >"/>
+   <class name="edm::Wrapper< edm::DetSet<PixelDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper< std::vector<edm::DetSet<PixelDigi> > >" splitLevel="0"/>
+   <class name="edm::Wrapper< edm::DetSetVector<PixelDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<PixelDigiCollection>" splitLevel="0"/>
+
+   <class name="edmNew::DetSetVector<PixelDigi>"/>
+   <class name="edm::Wrapper< edmNew::DetSetVector<PixelDigi> >"/>
+
+   <class name="SiPixelCalibDigi::datacontainer" ClassVersion="10">
+    <version ClassVersion="10" checksum="3289693280"/>
+   </class>
+   <class name="std::vector<SiPixelCalibDigi::datacontainer>"/>
+   <class name="SiPixelCalibDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3382452939"/>
+   </class>
+   <class name="std::vector<SiPixelCalibDigi>"/>
+   <class name="edm::DetSet<SiPixelCalibDigi>"/>
+   <class name="edm::DetSetVector<SiPixelCalibDigi>"/>
+   <class name="std::vector<edm::DetSet<SiPixelCalibDigi> >"/>
+   <class name="edm::Wrapper<std::vector<edm::DetSet<SiPixelCalibDigi> > >" splitLevel="0"/>
+   <class name="edm::Wrapper<edm::DetSet<SiPixelCalibDigi > > " splitLevel="0"/>
+   <class name="edm::Wrapper<edm::DetSetVector<SiPixelCalibDigi> > " splitLevel="0"/>
+
+   <class name="edmNew::DetSetVector<SiPixelCalibDigi>"/>
+   <class name="edm::Wrapper< edmNew::DetSetVector<SiPixelCalibDigi> >"/>
+
+   <class name="SiPixelCalibDigiError" ClassVersion="10">
+    <version ClassVersion="10" checksum="1495440127"/>
+   </class>
+   <class name="edm::DetSet<SiPixelCalibDigiError>"/>
+   <class name="std::vector<SiPixelCalibDigiError>"/>
+   <class name="edm::DetSetVector<SiPixelCalibDigiError>"/>
+   <class name="std::vector<edm::DetSet<SiPixelCalibDigiError> >"/>
+   <class name="edm::Wrapper<SiPixelCalibDigiError>" splitLevel="0"/>
+   <class name="edm::Wrapper<std::vector<edm::DetSet<SiPixelCalibDigiError> > >" splitLevel="0"/>
+   <class name="edm::Wrapper<edm::DetSet<SiPixelCalibDigiError> > " splitLevel="0"/>
+   <class name="edm::Wrapper<edm::DetSetVector<SiPixelCalibDigiError> > " splitLevel="0"/>
+
+   <class name="edmNew::DetSetVector<SiPixelCalibDigiError> "/>
+   <class name="edm::Wrapper<edmNew::DetSetVector<SiPixelCalibDigiError> > "/>
+</lcgdict>

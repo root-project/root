@@ -1,0 +1,28 @@
+<lcgdict>
+	<class name="L1CaloPedestalContainer" id="0B43D5BF-5AE9-4B65-8E2F-54FBB944EE84" >
+	</class>
+	<class name="DataVector<L1CaloPedestal>" />
+	<class name="std::vector<L1CaloPedestal*>" />
+	<class name="L1CaloPedestal" />
+
+	<class name="L1CaloPprLutContainer" id="2751F38C-212B-4277-AC27-8B20E8D0DE10" >
+	</class>
+
+	<class name="L1CaloEnergyScanResultsContainer" id="0584D299-E798-4263-8E9D-F1523B7FDDE7" />
+	<class name="L1CaloEnergyScanResultsContainer::const_iterator" />
+	<class name="std::pair<const unsigned int,L1CaloEnergyScanResults>" />
+	<class name="L1CaloEnergyScanResults" />
+	<class name="L1CaloEnergyScanRunInfoContainer" id="60993AFD-7720-4CC2-A62C-2735A723C9D4" />
+
+	<class name="L1CaloRampDataContainer" id="B257FB1D-4779-4A74-B865-0586F6CD512D" >
+	</class>
+	<class name="std::map<unsigned int, L1CaloRampData>" />
+	<class name="std::pair<const unsigned int, L1CaloRampData>" />
+	<class name="std::map<unsigned int, L1CaloRampData>::const_iterator" />
+	<class name="L1CaloRampData" />
+	<class name="std::vector<std::pair<L1CaloRampStep, L1CaloRampStep> >" />
+	<class name="std::pair<L1CaloRampStep, L1CaloRampStep>" />
+	<class name="L1CaloRampStep" />
+
+	<class name="IL1CaloPersistenceCapable" transient="true" />
+</lcgdict>

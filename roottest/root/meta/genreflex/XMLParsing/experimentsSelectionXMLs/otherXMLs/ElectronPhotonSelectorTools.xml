@@ -1,0 +1,14 @@
+<lcgdict>
+  <enum pattern="egammaPID::*"/>
+  <variable pattern="egammaPID::*"/>
+
+  <!-- <class name="Root::TElectronIsEMSelector" /> -->
+  <!-- <class name="AsgElectronIsEMSelector" /> -->
+  <!-- <class name="Root::TPhotonIsEMSelector" /> -->
+  <!-- <class name="AsgPhotonIsEMSelector" /> -->
+  <!-- <class name="Root::TElectronMultiLeptonSelector" /> -->
+  <!-- <class name="AsgElectronMultiLeptonSelector" /> -->
+  <!-- <class name="Root::TElectronLikelihoodTool" /> -->
+  <!-- <class name="AsgElectronLikelihoodTool" /> -->
+  <enum name="LikeEnum::Menu" />
+</lcgdict>

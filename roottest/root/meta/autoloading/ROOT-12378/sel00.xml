@@ -1,0 +1,4 @@
+<lcgdict>
+ <class name="TestxAOD::Jet_v1" />
+ <class name="TestDataVector<TestxAOD::Jet_v1>" />
+</lcgdict>

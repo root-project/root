@@ -1,0 +1,231 @@
+THIS FILE NEEDS TO BE ADAPTED TO NEW Dump() LAYOUT
+SEE ROOT @ 6883a7fe83 / roottest @ aa20b1e
+
+Writing Hit
+Warning in <TClass::TClass>: no dictionary for class BaseWithNoDict is available
+Warning in <TClass::TClass>: no dictionary for class RootPCnodict is available
+Warning in <TStreamerInfo::Build:>: RootCaloHit: RootPCnodict has no streamer or dictionary, data member "mynocell" will not be saved
+Warning in <TStreamerInfo::Build:>: RootPCellID: base class BaseWithNoDict has no streamer or dictionary it will not be saved
+Warning in <TStreamerInfo::WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
+
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+index                         2           
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         50331648    bit field status word
+base 	t e s t 
+id 	3
+base 	n o d i 
+id 	7
+nodict 	55
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+nodict 	55
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+base 	v i r t 
+id 	0
+virt 	44
+base 	f i x 1 
+id 	1
+fix 	33
+
+Reading Hit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+index                         2           
+*myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         50331648    bit field status word
+base 	t e s t 
+id 	3
+base 	n o n e 
+id 	0
+nodict 	0
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+
+Writing Data
+Warning in <TStreamerInfo::WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
+
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+index                         2           
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         50331648    bit field status word
+base 	t e s t 
+id 	3
+base 	n o d i 
+id 	7
+nodict 	55
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+nodict 	55
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+base 	v i r t 
+id 	0
+virt 	44
+base 	f i x 1 
+id 	1
+fix 	33
+
+Reading Data
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
+
+energy                        1.1         
+time                          1.2         
+itra                          2           
+mycell.id                     3           
+mycell.base[4]                116         
+index                         2           
+*myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
+*mycellnull                   ->0         
+fUniqueID                     0           object unique identifier
+fBits                         50331648    bit field status word
+base 	t e s t 
+id 	3
+base 	n o n e 
+id 	0
+nodict 	0
+base 	f i x 1 
+id 	4
+fix 	33
+base 	v i r t 
+id 	5
+virt 	44
+base 	n o d i 
+id 	8
+base 	t e s t 
+id 	4
+base 	t e s t 
+id 	5
+base 	t e s t 
+id 	6
+base 	t e m p 
+id 	0
+templated 	66
+base 	t e m p 
+id 	1
+templated 	66
+base 	t e m p 
+id 	2
+templated 	66
+base 	t e m p 
+id 	3
+templated 	66
+
+
+StreamerInfo for class: RootCaloHit, version=1
+  TObject       BASE            offset=  0 type=66 Basic ROOT object   
+  float         energy          offset= 12 type= 5                     
+  float         time            offset= 16 type= 5                     
+  int           itra            offset= 20 type= 3                     
+  RootPCellID   mycell          offset= 24 type=62                     
+  RootPCellID   myArr[3]        offset= 36 type=82                     
+  RootPCtemp<int>*myArrFix[4]     offset= 72 type=69                     
+  int           index           offset= 88 type= 3                     
+  RootPCnodict  mynocell        offset= 96 type=62                     
+  RootPCellID*  mycellnull      offset=112 type=69                     
+  RootPCellID*  mycellfix       offset=116 type=69                     
+  RootPCellID*  mycellvirt      offset=120 type=69                     
+  RootPCellID*  mynocellp       offset=124 type=69                     
+   i= 0, TObject         type= 66, offset=  0, len=1, method=0
+   i= 1, energy          type=  5, offset= 12, len=1, method=0
+   i= 2, time            type=  5, offset= 16, len=1, method=0
+   i= 3, itra            type=  3, offset= 20, len=1, method=0
+   i= 4, mycell          type= 62, offset= 24, len=1, method=0
+   i= 5, myArr           type= 82, offset= 36, len=3, method=0
+   i= 6, myArrFix        type= 69, offset= 72, len=4, method=0
+   i= 7, index           type=  3, offset= 88, len=1, method=0
+   i= 8, mynocell        type= 62, offset= 96, len=1, method=0
+   i= 9, mycellnull      type= 69, offset=112, len=1, method=0
+   i=10, mycellfix       type= 69, offset=116, len=1, method=0
+   i=11, mycellvirt      type= 69, offset=120, len=1, method=0
+   i=12, mynocellp       type= 69, offset=124, len=1, method=0

@@ -1,0 +1,4 @@
+
+Processing runfunctca.C...
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+tree->Draw("cos(p)")

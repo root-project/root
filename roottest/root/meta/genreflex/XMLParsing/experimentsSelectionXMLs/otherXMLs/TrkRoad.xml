@@ -1,0 +1,6 @@
+<lcgdict>
+    <class name="Trk::TrackRoad" />
+    <!--class name="Trk::TrackRoadCollection" id="41092CF3-5344-4135-A3B9-5A977CA0225E" /-->
+    <class name="DataVector<Trk::TrackRoad>" id="41092CF3-5344-4135-A3B9-5A977CA0225E" />
+    <class name="std::vector<Trk::TrackRoad*>" />
+</lcgdict>

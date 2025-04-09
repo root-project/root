@@ -1,0 +1,19 @@
+
+Processing runcircular.C+...
+Alone
+3
+-2
+-2
+Friend
+3
+12
+-2
+Indirect Circular
+3
+12
+-2
+Direct Circular
+3
+12
+-2
+(int)0

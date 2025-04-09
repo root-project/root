@@ -1,0 +1,85 @@
+<lcgdict>
+  <class name="TrigInDetTrackCollection" id="5F6029E6-764B-4126-891D-73BFC3CC391C" />
+  <class name="DataVector<TrigInDetTrack>" />
+  <class name="std::vector<TrigInDetTrack*>" />
+  <class name="std::list<const TrigInDetTrack*>" />
+  <class name="std::list<const TrigInDetTrack*>::iterator" />
+  <class name="TrigInDetTrack" id="BF6B3636-BC2F-4309-903E-2117DC3407D8" >
+    <field name="m_siSpacePoints" transient="true" />
+    <field name="m_trtDriftCircles" transient="true" />
+    <field name="m_rdoList" transient="false" />
+  </class>
+ 
+  <class name="DataVector<TrigInDetTrackCollection>" id="D5A94D82-EB3C-4224-BD52-BD86F4DF578E" />
+  <class name="std::vector<TrigInDetTrackCollection*>" />
+  
+
+
+  <class name="TrigInDetTrackFitPar" id="D47C2A8F-4FCD-4E70-93B2-7A1E4EE9B264" >
+    <field name="m_cov" transient="false" />
+  </class>
+
+  <class name="DataVector<TrigInDetTrackFitPar>" id="28D972D0-B985-4017-A7B8-4FCF5E281936" />
+  <class name="std::vector<TrigInDetTrackFitPar*>" />
+
+  <class name="TrigVertexCollection" id="0974DF97-5B51-4416-8FBE-42BAE0C54010" />
+  <class name="DataVector<TrigVertex>"  id="E2C600D6-CD4B-4B7B-9C09-93CE9FF435A1" />
+  <class name="std::vector<TrigVertex*>" />
+  <class name="TrigVertex" id="77CCC075-25BD-45B2-BEB9-F3EEFF5CF2AC" >
+    <field name="m_cov" transient="false" />
+    <field name="m_tracks" transient="false" />
+    <field name="m_position" transient="true" />
+    <field name="m_P" transient="true" />
+  </class>
+ 
+  <class name="DataVector<TrigVertexCollection>" id="A7C5BCF0-051E-41BC-84A3-DBD29CA0911D" />
+  <class name="std::vector<TrigVertexCollection*>" />
+
+ <function name="dummyTriggerForTVCollTypedef" />
+
+  <class name="TrigHisto">
+    <field name="m_itr" transient="true" />
+    <field name="m_itr_end" transient="true" />
+  </class>
+  <class name="TrigHisto1D" id="1DC53456-7E55-4C1F-B9AA-820EAE5C2316" />
+  <class name="TrigHisto2D" id="3C3241B3-2FDB-4C0B-B2E0-2A38C5FE6990">
+    <field name="m_underflowBin_y" transient="true" />
+    <field name="m_overflowBin_y" transient="true" />
+    <field name="m_binSize_y" transient="true" />
+  </class>
+  <class name="TrigHisto1DContainer" id="B5752F0C-EF7A-4330-8413-1CCF0FC58AC8" />
+  <class name="DataVector<TrigHisto1D>" id="0D92B990-3850-4807-8B00-66990581C65C" />
+  <class name="std::vector<TrigHisto1D*>" />
+  <class name="TrigHisto2DContainer" id="E43A29FA-3BC9-4B08-9A94-735E1EC53951" />
+  <class name="DataVector<TrigHisto2D>" id="6E82EA7A-95CD-4811-9A7B-CF96EB909338" />
+  <class name="std::vector<TrigHisto2D*>" />
+
+  <class name="TrigSpacePointCountsCollection" id="633C9739-C3D1-4F5D-9678-887445DA42B6" />
+  <class name="TrigSpacePointCounts" id="1BCAD9FD-DAFE-4E50-9A37-C75E822E6D02" />
+  <class name="DataVector<TrigSpacePointCounts>" id="EB182127-C36B-419B-9057-A7CA43290D11" />
+  <class name="std::vector<TrigSpacePointCounts*>" />
+
+ <class name="TrigTrtHitCountsCollection" id="7631C2C2-612F-4245-8C8B-D40F59222E1E" />
+ <class name="TrigTrtHitCounts" id="6F04169E-E47C-4556-9456-256A659EC68B" />
+ <class name="DataVector<TrigTrtHitCounts>" id="2BA9359C-C1A5-4298-A903-3273FB0400D0" />
+ <class name="std::vector<TrigTrtHitCounts*>" />
+
+ <class name="TrigTrackCountsCollection" id="7A4412AD-C11D-4EFD-AE15-D343D2CB28BC" />
+ <class name="DataVector<TrigTrackCounts>" id="BEB86BA3-2AE3-46D6-B496-43781B136492" />
+ <class name="std::vector<TrigTrackCounts*>" />
+ <class name="TrigTrackCounts" id="6277C97C-0EAA-4922-892E-E88C1FA01BA0" />
+
+ <class name="TrigVertexCountsCollection" id="0C1EE526-FB6C-44B6-8FA5-B9722ED6CB99" />
+ <class name="DataVector<TrigVertexCounts>" id="ECC6DB82-CBE2-442A-A6A4-E5ECA7E183CC" />
+ <class name="std::vector<TrigVertexCounts*>" />
+ <class name="TrigVertexCounts" id="6EB3B5D2-3376-4231-8B0A-0984139F1D23" /> 
+
+ <class name="TrigTauTracksInfoCollection" id="27E95E77-0D99-417D-83C7-7F1B8E6DE511" />
+ <class name="TrigTauTracksInfo" id="630E4944-7EDE-4938-B189-020DBC0436AE" >
+   <field name="m_tracks" transient="true" />
+ </class>
+ <class name="DataVector<TrigTauTracksInfo>" id="562459CC-233C-4135-BAF8-515B194FDD10" />
+ <class name="std::vector<TrigTauTracksInfo*>" />
+
+
+</lcgdict>

@@ -1,0 +1,26 @@
+{
+    "samples": {
+       "sample1": {
+          "trees": [
+             "tree"
+          ],
+          "files": [
+             "../data/ttree/distrdf_roottest_check_rungraphs.root"
+          ],
+          "metadata": {
+             "data_or_mc": "data"
+          }
+       },
+       "sample2": {
+          "trees": [
+             "tree"
+          ],
+          "files": [
+            "../data/ttree/distrdf_roottest_check_fromspec.root"
+          ],
+          "metadata": {
+             "data_or_mc": "mc"
+          }
+       }
+    }
+ }

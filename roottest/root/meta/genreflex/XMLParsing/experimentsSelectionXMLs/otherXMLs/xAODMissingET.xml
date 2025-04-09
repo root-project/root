@@ -1,0 +1,56 @@
+<!-- $Id: selection.xml 595403 2014-05-05 12:58:53Z krasznaa $ -->
+<lcgdict>
+
+  <!-- MissingET_v1 dictionaries: -->
+  <class name="xAOD::MissingET_v1" />
+  <class name="DataVector<xAOD::MissingET_v1>" />
+  <class name="xAOD::MissingETContainer_v1" id="F49162FE-6BC0-49BC-A7DA-A792136BD939" />
+  <class name="xAOD::MissingETAuxContainer_v1" id="2F92EC94-8CD1-49F3-BCA4-3D78599D4D60" />
+
+  <!-- MissingETComponent_v1/MissingETComponentMap_v1 dictionaries: -->
+  <class name="xAOD::MissingETComponent_v1">
+    <field name="m_lastObjectPointer" transient="true" />
+    <field name="m_lastObjectIndex" transient="true" />
+  </class>
+  <class name="xAOD::MissingETComponent_v1::Weight">
+    <field name="m_wpx" transient="true" />
+    <field name="m_wpy" transient="true" />
+    <field name="m_wet" transient="true" />
+  </class>
+  <class name="DataVector<xAOD::MissingETComponent_v1>" />
+  <class name="xAOD::MissingETComponentMap_v1" id="994D9D32-820F-47B1-A54B-37C15CD0FD1E" >
+    <field name="m_lastMETObject" transient="true" />
+    <field name="m_lastContribIndex" transient="true" />
+    <field name="m_clusterLinks" transient="true" />
+    <field name="m_trackLinks" transient="true" />
+    <field name="m_particleLinks" transient="true" />
+  </class>
+  <class name="xAOD::MissingETAuxComponentMap_v1" id="96287268-4165-4288-8FC1-6227FD4AB95D" />
+
+  <!-- Smart pointer dictionaries: -->
+  <class name="DataLink<xAOD::MissingETContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::MissingETContainer_v1> >" />
+
+  <class name="DataLink<xAOD::MissingETComponentMap_v1>" />
+  <class name="std::vector<DataLink<xAOD::MissingETComponentMap_v1> >" />
+
+  <class name="ElementLink<xAOD::MissingETContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::MissingETContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::MissingETContainer_v1> > >" />
+
+  <class name="ElementLink<xAOD::MissingETComponentMap_v1>" />
+  <class name="std::vector<ElementLink<xAOD::MissingETComponentMap_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::MissingETComponentMap_v1> > >" />
+
+  <class name="std::vector<unsigned long long>" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+    <class name="ElementLink<DataVector<xAOD::IParticle> >" />
+  </exclusion>
+
+</lcgdict>

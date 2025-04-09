@@ -1,0 +1,9 @@
+
+Processing runGetMissingDictionaries.C...
+No recursion:
+Warning in <TClass::Init>: no dictionary for class ArrayTry is available
+Warning in <TClass::Init>: no dictionary for class NoA is available
+Warning in <TClass::Init>: no dictionary for class ParamL1 is available
+Warning in <TClass::Init>: no dictionary for class ParamL2 is available
+With recursion:
+(int) 0

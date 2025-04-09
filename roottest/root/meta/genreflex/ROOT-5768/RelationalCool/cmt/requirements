@@ -1,0 +1,107 @@
+package RelationalCool
+
+#============================================================================
+# Public dependencies and build rules
+#============================================================================
+
+use CoolKernel v*
+
+#----------------------------------------------------------------------------
+# Library
+#----------------------------------------------------------------------------
+
+include_path none
+apply_pattern lcg_shared_library
+
+#============================================================================
+# Private dependencies and build rules
+#============================================================================
+
+private
+
+# Link the CORAL relational libraries
+apply_tag NEEDS_CORAL_RELATIONAL_ACCESS
+
+# Temporary hack to avoid c++ deprecation warnings for auto_ptr (bug #98086)
+macro_append cppflags "" target-c11 " -Wno-deprecated "
+
+# Not sure why this was needed on Windows...
+###macro_append lcg_RelationalCool_shlibflags '' target-winxp ' PowrProf.lib '
+
+#----------------------------------------------------------------------------
+# Tests
+#----------------------------------------------------------------------------
+
+use CppUnit v* LCG_Interfaces -no_auto_imports
+
+# Unit tests with no database connection
+apply_pattern cool_unit_test tname=ChannelSelection
+apply_pattern cool_unit_test tname=PayloadSpecification
+apply_pattern cool_unit_test tname=VersionNumber
+apply_pattern cool_unit_test tname=HvsPathHandler
+apply_pattern cool_unit_test tname=RelationalDatabaseId
+apply_pattern cool_unit_test tname=ObjectId
+apply_pattern cool_unit_test tname=utility_methods
+
+# Unit tests with a database connection
+apply_pattern cool_unit_test tname=Channels
+apply_pattern cool_unit_test tname=HvsTags
+apply_pattern cool_unit_test tname=RalDatabase
+apply_pattern cool_unit_test tname=RalDatabase_extendedSpec
+apply_pattern cool_unit_test tname=RalDatabaseSvc
+apply_pattern cool_unit_test tname=RalSequence
+apply_pattern cool_unit_test tname=RelationalFolder
+apply_pattern cool_unit_test tname=RelationalFolderSet
+apply_pattern cool_unit_test tname=RelationalObjectIterator
+apply_pattern cool_unit_test tname=RelationalObjectMgr
+apply_pattern cool_unit_test tname=RelationalObjectSet
+apply_pattern cool_unit_test tname=RelationalObjectTable
+
+# Private unit tests - not to be installed in the release area
+###apply_pattern cool_unit_test tname=Bug62634
+###macro_remove tests_constituents test_RelationalCool_Bug62634
+
+#----------------------------------------------------------------------------
+# Utilities
+#----------------------------------------------------------------------------
+
+# New version using the new LCG_Policy patterns (SPI-169)
+# Inherit gcov/icc linkopts from pattern lcg_application (fix bug #91133)
+# Link lcg_<package> needed in lcg_module_library but not in lcg_shared_library
+pattern cool_utility \
+  apply_pattern lcg_application appname=<uname> files=../utilities/<uname>/*.cpp import2=<timport> category=utilities ; \
+  macro <uname>_dependencies ' lcg_<package> '
+
+apply_pattern cool_utility uname=coolAuthentication
+apply_pattern cool_utility uname=coolDropDB
+apply_pattern cool_utility uname=coolDumpSchema
+apply_pattern cool_utility uname=coolEvolveSchema
+apply_pattern cool_utility uname=coolPrivileges
+apply_pattern cool_utility uname=coolReplicateDB
+apply_pattern cool_utility uname=coolStat
+apply_pattern cool_utility uname=coolValidateSchema
+
+#----------------------------------------------------------------------------
+# Install the scripts
+#----------------------------------------------------------------------------
+
+macro  scrdir "$(CMTINSTALLAREA)/$(tag)/bin" \
+       target-winxp "$(CMTINSTALLAREA)\$(tag)\bin"
+action install_scripts "mkdir -p $(scrdir); cp -rf ../scripts/*.* $(scrdir)/.; cp -rf ../scripts/sql $(scrdir)/." \
+       target-winxp "xcopy /I/S/Y/Q ..\scripts\*.* $(scrdir)\."
+
+# Append to 'constituents' to execute an action in 'cmt make'
+# (append to 'all_constituents' to execute it only in 'cmt make all').
+# Remove the action from cmt_actions_constituents so that the action 
+# is not executed twice in 'cmt make all_groups' (it executes all actions).
+macro_append constituents "install_scripts"
+macro_remove cmt_actions_constituents "install_scripts"
+
+#----------------------------------------------------------------------------
+
+# Do not install the header files 
+macro_remove constituents 'install_includes'
+
+# Fake target for examples
+action examples "echo No examples in this package"
+macro_remove cmt_actions_constituents "examples"

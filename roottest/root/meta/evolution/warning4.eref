@@ -1,0 +1,26 @@
+No warning is expected from the 1st 4 files opening since we
+can not distinguish an emulated ClassDef(name,1) from a foreign class
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
+Warning in <TStreamerInfo::BuildCheck>: 
+   The class Tdata transitioned from not having a specified class version
+   to having a specified class version (the current class version is 1).
+   However too many different non-versioned layouts of the class have been
+   loaded so far.  This prevent the proper reading of objects written with
+   the class layout version 2, in particular from the file:
+   data5.root.
+   To work around this issue, load fewer 'old' files in the same ROOT session.
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the on-file layout version 2 of class 'Tdata' differs from 
+the in-memory layout version 2:
+   double mydouble; //
+vs
+   double mydouble_two; //
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the in-memory layout version 2 of class 'Tdata' is missing from 
+the on-file layout version 2:
+   int more; //
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the in-memory layout version 2 of class 'Tdata' is missing from 
+the on-file layout version 2:
+   int three; //

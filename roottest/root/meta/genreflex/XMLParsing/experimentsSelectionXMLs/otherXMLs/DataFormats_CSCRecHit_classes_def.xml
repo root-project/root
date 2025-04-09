@@ -1,0 +1,42 @@
+<lcgdict>
+<selection>
+  <class name="CSCRecHit2D" ClassVersion="13">
+   <version ClassVersion="11" checksum="2464154506"/>
+   <version ClassVersion="10" checksum="2273322213"/>
+  <version ClassVersion="12" checksum="4199658304"/>
+  <version ClassVersion="13" checksum="1105334358"/>
+  </class>
+  <class name="std::vector<CSCRecHit2D>"/>
+  <class name="std::vector<CSCRecHit2D*>"/>
+  <class name="std::map<CSCDetId,std::pair<unsigned int,unsigned int> >"/>
+  <class name="std::map<CSCDetId,std::pair<unsigned long,unsigned long> >"/>
+  <class name="edm::OwnVector<CSCRecHit2D,edm::ClonePolicy<CSCRecHit2D> >"/>
+  <class name="edm::RangeMap<CSCDetId,edm::OwnVector<CSCRecHit2D,edm::ClonePolicy<CSCRecHit2D> >,edm::ClonePolicy<CSCRecHit2D> >"/>
+  <class name="edm::Wrapper<edm::RangeMap<CSCDetId,edm::OwnVector<CSCRecHit2D,edm::ClonePolicy<CSCRecHit2D> >,edm::ClonePolicy<CSCRecHit2D> > >"/>
+
+  <class name="std::vector<CSCSegment>"/>
+  <class name="std::vector<CSCSegment*>"/>
+  <class name="CSCSegment" ClassVersion="10">
+   <version ClassVersion="10" checksum="3002485899"/>
+  </class>
+  <class name="edm::OwnVector<CSCSegment,edm::ClonePolicy<CSCSegment> >"/>
+  <class name="edm::RangeMap<CSCDetId,edm::OwnVector<CSCSegment,edm::ClonePolicy<CSCSegment> >,edm::ClonePolicy<CSCSegment> >"/>
+  <class name="edm::Wrapper<edm::RangeMap<CSCDetId,edm::OwnVector<CSCSegment,edm::ClonePolicy<CSCSegment> >,edm::ClonePolicy<CSCSegment> > >"/>
+  <class name="CSCSegmentRef"/>
+</selection>
+
+<exclusion>
+  <class name="edm::OwnVector<CSCRecHit2D, edm::ClonePolicy<CSCRecHit2D> >">
+    <method name="sort"/>
+  </class>
+
+  <class name="edm::OwnVector<CSCSegment, edm::ClonePolicy<CSCSegment> >">
+    <method name="sort"/>
+  </class>
+</exclusion>
+
+</lcgdict>
+
+
+
+

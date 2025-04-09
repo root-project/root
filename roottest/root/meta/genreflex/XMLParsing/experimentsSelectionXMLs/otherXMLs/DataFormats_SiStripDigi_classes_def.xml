@@ -1,0 +1,48 @@
+<lcgdict>
+
+ <class name="SiStripDigi" ClassVersion="10">
+  <version ClassVersion="10" checksum="2432564049"/>
+ </class>
+ <class name="edm::DetSet<SiStripDigi>"/>
+ <class name="std::vector<SiStripDigi>"/>
+ <class name="edm::DetSetVector<SiStripDigi>"/>
+ <class name="std::vector<edm::DetSet<SiStripDigi> >"/>
+ <class name="edm::Wrapper<edm::DetSet<SiStripDigi> >" splitLevel="0"/>
+ <class name="edm::Wrapper<std::vector<edm::DetSet<SiStripDigi> > >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSetVector<SiStripDigi> >" splitLevel="0"/>
+
+ <class name="edmNew::DetSetVector<SiStripDigi>" />
+ <class name="edm::Wrapper<edmNew::DetSetVector<SiStripDigi> >" />
+
+ <class name="SiStripRawDigi" ClassVersion="10">
+  <version ClassVersion="10" checksum="1489666272"/>
+ </class>
+ <class name="std::vector<SiStripRawDigi>"/>
+ <class name="edm::DetSet<SiStripRawDigi>"/>
+ <class name="edm::DetSetVector<SiStripRawDigi>"/>
+ <class name="std::vector<edm::DetSet<SiStripRawDigi> >"/>
+ <class name="edm::Wrapper<edm::DetSet<SiStripRawDigi> >" splitLevel="0"/>
+ <class name="edm::Wrapper<std::vector<edm::DetSet<SiStripRawDigi> > >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSetVector<SiStripRawDigi> >" splitLevel="0"/>
+
+ <class name="edmNew::DetSetVector<SiStripRawDigi>" />
+ <class name="edm::Wrapper<edmNew::DetSetVector<SiStripRawDigi> >" />
+
+ <class name="SiStripProcessedRawDigi" ClassVersion="10">
+  <version ClassVersion="10" checksum="1849443551"/>
+ </class>
+ <class name="std::vector<SiStripProcessedRawDigi>"/>
+ <class name="edm::DetSet<SiStripProcessedRawDigi>"/>
+ <class name="edm::DetSetVector<SiStripProcessedRawDigi>"/>
+ <class name="std::vector<edm::DetSet<SiStripProcessedRawDigi> >"/>
+ <class name="edm::Wrapper<edm::DetSet<SiStripProcessedRawDigi> >" splitLevel="0"/>
+ <class name="edm::Wrapper<std::vector<edm::DetSet<SiStripProcessedRawDigi> > >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSetVector<SiStripProcessedRawDigi> >" splitLevel="0"/>
+
+ <class name="edmNew::DetSetVector<SiStripProcessedRawDigi>" />
+ <class name="edm::Wrapper<edmNew::DetSetVector<SiStripProcessedRawDigi> >" />
+
+</lcgdict>
+
+
+

@@ -1,0 +1,24 @@
+
+Processing execTestv2.C...
+=== Reading new style object ===
+Info in <AliAODForwardMult::>: Creating header
+Info in <AliAODForwardMult::>: Creating header
+=== Read from file (from TTree) ===
+TH1.Print Name  = forwardMult, Entries= 2, Total sum= 0
+N_ch(eta,phi): (200,-4-6)x(20,0-6.28319)
+sNN:           2760GeV
+System:        PbPb
+Ipz:           -5cm valid
+Triggers:      NSD
+Centrality:    30%
+N_cluster:     0
+TH1.Print Name  = forwardMult, Entries= 2, Total sum= 0
+N_ch(eta,phi): (200,-4-6)x(20,0-6.28319)
+sNN:           2760GeV
+System:        PbPb
+Ipz:           -5cm valid
+Triggers:      NSD
+Centrality:    30%
+N_cluster:     0
+=== End of Test ===
+(int) 0

@@ -1,0 +1,5 @@
+
+Processing test1.cxx+("r")...
+[i] Generating test data model version 1
+Warning in <TStreamerInfo::Build:>: LHCb::Track: ROOT::Math::SMatrix<double,2,5,ROOT::Math::MatRepStd<double,2,5> > has no streamer or dictionary, data member "m_projections_file" will not be saved
+(int)0

@@ -1,0 +1,33 @@
+Contains 2
+Contains 1
+==> Dumping object at: pointervalue, class=Contains
+
+Warning in <TStreamerInfo::Build>: Contains: pair<unsigned char,short> has no streamer or dictionary, data member "fShort" will not be saved
+fShort                        pointervalue      
+fShort.first                  1                   
+fShort.second                 2                   
+fSameAs                       pointervalue      
+fSameAs.first                 3                   Emulation
+fSameAs.second                pointervalue      Emulation
+fSameAs.second.fValue         4                   
+======> EVENT:0
+ pair.           = (Contains*)pointervalue
+ pair.fShort.first = 49
+ pair.fShort.second = 2
+ pair.fSameAs.first = 51
+ pair.fSameAs.second.fValue = 4
+size of pair<char, SameAsShort>: 4
+1
+2
+3
+4
+size of pair<char, SameAsShort>: 4
+==> Dumping object at: pointervalue, class=pair<SameAsShort,short>
+
+first                         pointervalue      Emulation
+first.fValue                  11                  
+second                        12                  Emulation
+======> EVENT:0
+ pair.           = (pair<SameAsShort,short>*)pointervalue
+ pair.first.fValue = 11
+ pair.second     = 12

@@ -1,0 +1,1086 @@
+# globals
+
+*.summary
+*.success
+*.log
+*.elog
+*.clog
+*.celog
+*.eclog
+*.pylog
+.root_hist
+.gdb_history
+*.o
+*.d
+*.pcm
+*.dwo
+*.so
+*.dll
+*.dylib
+*.def
+*.exp
+*.lib
+*.pdb
+*.ilk
+*.pyc
+*.pyo
+*.pcl
+*.cpcl
+*.manifest
+rootmap_*
+*.rootmap
+pt_*.root
+pt_*.gif
+dummy[0-9]*.C
+AutoDict_*.cxx
+*_rflx.h
+*_rflx.cpp
+*_rflxdriver.C
+*_cling.cpp
+*~
+*_dictContent.h
+*_dictUmbrella.h
+
+# Eclipse
+.project
+.pydevproject
+
+# /
+/root_version
+/build
+
+# /cling/cintex/
+/cling/cintex/data.root
+/cling/cintex/tree.root
+/cling/cintex/CintexTest_rflx.cpp
+
+# /cling/dict
+/cling/dict/AutoDict_*.cxx
+/cling/dict/*.shortlog
+
+#cint/dict/typedefs
+/cling/dict/typedefs/cmsdict*
+
+# /cling/other/
+/cling/other/runStaticDataMemberDict.C
+/cling/other/runStaticDataMemberDict.h
+/cling/other/assertBaseMembers.ref
+
+# /cling/parsing/
+/cling/parsing/*Dict.*
+/cling/parsing/*Dict2.*
+
+# /cling/reflex/
+/cling/reflex/*_rflx_tmp1.C
+/cling/reflex/*_rflx_tmp2.C
+/cling/reflex/iotype.root
+
+# /cling/reflex_standalone
+/cling/reflex_standalone/cmake-build
+
+# /cling/specialobj/
+/cling/specialobj/assertGPad.ref
+/cling/specialobj/tmp.root
+/cling/specialobj/f02.log.filtered
+
+# /cling/stl/default
+/cling/stl/default/*Dict.*
+/cling/stl/default/dict*
+/cling/stl/default/VectorSort.log.tmp
+
+# /cling/stl/map
+/cling/stl/map/dict*
+
+# /cling/stl/dicts/
+/cling/stl/dicts/*Dict?.*
+
+# /cling/stl/string/
+/cling/stl/string/*Dict.*
+/cling/stl/string/*.out
+
+# /cling/template/
+/cling/template/*Dict.C
+/cling/template/*Dict.h
+/cling/template/*.out
+
+# /cling/template/separateDict/
+/cling/template/separateDict/*Dict*
+
+# /cling/template/separateDictNamespace/
+/cling/template/separateDictNamespace/*Dict*
+
+# /cling/templateMembers/
+/cling/templateMembers/opdict.*
+/cling/templateMembers/templateMembersDict.*
+/cling/templateMembers/templateMembers.ref
+/cling/templateMembers/templateMembersNoMem.ref
+/cling/templateMembers/*Dict.*
+
+# /cling/typedef/
+/cling/typedef/*Dict.*
+/cling/typedef/ptrptr
+/cling/typedef/*_timestamp
+
+# /cling/typedef_global/
+/cling/typedef_global/*dict*
+/cling/typedef_global/*Dict*
+/cling/typedef_global/output[0-9]
+/cling/typedef_global/*_timestamp
+
+/python/basic/failingDowncast.h
+/python/ttree/test.root
+
+/root/aclic/global/idDict*
+/root/aclic/misc/temp
+/root/collection/tbits
+/root/collection/TExMap
+/root/collection/TMap
+/root/collection/ca.root
+/root/fit/linear/formula.root
+/root/fit/linear/linfitter.root
+
+# /root/hist/
+/root/hist/*.root
+/root/hist/assertSparseToTHn.ref
+
+# /root/hist/division/
+
+# /root/hist/formula/
+/root/hist/formula/temp.root
+/root/hist/formula/constargs
+/root/hist/formula/formio
+/root/hist/formula/recurse
+/root/hist/formula/string
+
+# /root/hist/misc/
+/root/hist/misc/histo.root
+
+# /root/hist/operator/
+/root/hist/operator/add
+/root/hist/operator/sparse
+/root/hist/operator/Projections
+/root/hist/operator/copy
+
+# /root/hist/profile/
+
+# /root/html/
+/root/html/htmldoc
+
+# /root/io/
+/root/io/*.root
+
+# /root/io/TFile
+/root/io/TFile/*.root
+
+# /root/io/ForeignCArray/
+
+# /root/io/abstractclass/
+/root/io/abstractclass/*.bak
+/root/io/abstractclass/DataCint*
+
+# /root/io/alloc/
+/root/io/alloc/customConstructorDict*
+
+# /root/io/arrayobject/
+/root/io/arrayobject/*.root
+
+# /root/io/bigevent/
+/root/io/bigevent/EventDict*
+/root/io/bigevent/Event.root
+/root/io/bigevent/*.sln
+/root/io/bigevent/*.suo
+/root/io/bigevent/Event
+
+# /root/io/bill01/
+
+# /root/io/bill02/
+
+# /root/io/buffer/
+
+# /root/io/clones/
+/root/io/clones/*.root
+
+# /root/io/complex/
+/root/io/complex/*.root
+/root/io/complex/*.xml
+
+# /root/io/compression/
+/root/io/compression/Event
+/root/io/compression/Event*.root
+/root/io/compression/EventDict*
+
+# /root/io/const/
+/root/io/const/test.root
+
+# /root/io/constmembers/
+/root/io/constmembers/*.root
+
+# /root/io/cpp11Containers/
+/root/io/cpp11Containers/*.root
+
+# /root/io/customCollection/
+/root/io/customCollection/coll.root
+/root/io/customCollection/tcoll.root
+
+# /root/io/customStreamer/
+
+# /root/io/datamodelevolution/
+/root/io/datamodelevolution/*.root
+
+# /root/io/datamodelevolution/00/
+/root/io/datamodelevolution/00/test1.root
+
+# /root/io/datamodelevolution/01/
+/root/io/datamodelevolution/01/*_cint.h
+/root/io/datamodelevolution/01/*.root
+
+# /root/io/datamodelevolution/cms-00/
+/root/io/datamodelevolution/cms-00/*_cint.h
+/root/io/datamodelevolution/cms-00/*_rflx.h
+/root/io/datamodelevolution/cms-00/*.root
+
+# /root/io/datamodelevolution/common/
+
+# /root/io/datamodelevolution/logs/
+
+# /root/io/datamodelevolution/logs/01/
+
+# /root/io/datamodelevolution/logs/cms-00/
+
+# /root/io/datamodelevolution/misc/
+/root/io/datamodelevolution/misc/*.root
+/root/io/datamodelevolution/misc/arr_cint.cpp
+
+# /root/io/datamodelevolution/stl/
+/root/io/datamodelevolution/stl/stlinnerevo.root
+/root/io/datamodelevolution/stl/libcond/libcondProjectDict.cxx
+
+# /root/io/directory/
+/root/io/directory/example.root
+
+# /root/io/dirdelete/
+/root/io/dirdelete/test.root
+/root/io/dirdelete/test.xml
+
+# /root/io/directory/
+/root/io/directory/TDirGetObj.root
+/root/io/directory/runcd.root
+/root/io/directory/runcd1.root
+/root/io/directory/fdb.root
+/root/io/directory/test.root
+/root/io/directory/dirkeydelete.root
+
+# /root/io/double32/
+/root/io/double32/double32.root
+/root/io/double32/dict*.*
+/root/io/double32/dummy*.*
+
+# /root/io/emulated/
+/root/io/emulated/inherit*.root
+/root/io/emulated/abstract.root
+
+# /root/io/event/
+/root/io/event/*.root
+/root/io/event/Event
+/root/io/event/Event.exe
+/root/io/event/EventDict*
+
+# /root/io/event01/
+
+# /root/io/evolution/
+/root/io/evolution/*.xml
+/root/io/evolution/*.root
+
+# /root/io/evolution/array/
+/root/io/evolution/array/oldArrayObject.root
+
+# /root/io/evolution/issue-8083/
+/root/io/evolution/issue-8083/stringarray.root
+
+# /root/io/evolution/numerical_conversions/
+/root/io/evolution/numerical_conversions/*.root
+
+# /root/io/evolution/pragma_read
+/root/io/evolution/pragma_read/test.root
+
+# /root/io/evolution/rules/
+/root/io/evolution/rules/*.root
+
+# /root/io/evolution/stl_conversions/
+/root/io/evolution/stl_conversions/*.root
+
+# /root/io/evolution/versions/
+/root/io/evolution/versions/*.root
+
+# /root/io/evolution/versions/lhcb/
+
+# /root/io/fakeClass/
+/root/io/fakeClass/little.root
+/root/io/fakeClass/*.out
+
+# /root/io/filemerger/
+/root/io/filemerger/mfile*.root
+/root/io/filemerger/a_file_1.root
+/root/io/filemerger/b_file_1.root
+/root/io/filemerger/a_file_3.root
+/root/io/filemerger/b_file_3.root
+/root/io/filemerger/a_file.root
+/root/io/filemerger/b_file.root
+/root/io/filemerger/freidt_merge.root
+/root/io/filemerger/a_file_0.root
+/root/io/filemerger/b_file_0.root
+/root/io/filemerger/a_file_2.root
+/root/io/filemerger/b_file_2.root
+/root/io/filemerger/input*.root
+/root/io/filemerger/merged*.root
+/root/io/filemerger/hsimple*.root
+/root/io/filemerger/mzfile*.root
+
+# /root/io/float16/
+/root/io/float16/*.root
+
+# /root/io/geo/
+/root/io/geo/maketar
+/root/io/geo/alice_all.C
+/root/io/geo/alice_itsd.C
+/root/io/geo/alice.root
+/root/io/geo/atlas_all.C
+/root/io/geo/atlas_cryo.C
+/root/io/geo/atlas.root
+/root/io/geo/cms_cmse.C
+/root/io/geo/cms.root
+/root/io/geo/ams.C
+/root/io/geo/ams_all.C
+/root/io/geo/btev.C
+/root/io/geo/btev_all.C
+/root/io/geo/gem.C
+/root/io/geo/gem_all.C
+/root/io/geo/hades_all.C
+/root/io/geo/hades.root
+/root/io/geo/phenix.C
+/root/io/geo/phenix_all.C
+/root/io/geo/lhcb.C
+/root/io/geo/lhcb_all.C
+/root/io/geo/lhcbfull_all.C
+/root/io/geo/lhcbnobool_all.C
+/root/io/geo/lhcbfull.root
+/root/io/geo/lhcbnobool.root
+/root/io/geo/unpack.lastaleph.root
+/root/io/geo/aleph_all.C
+/root/io/geo/alice_itsv.C
+/root/io/geo/ams.root
+/root/io/geo/atlas_sctt.C
+/root/io/geo/brahms.C
+/root/io/geo/brahms.root
+/root/io/geo/brahms_all.C
+/root/io/geo/btev.root
+/root/io/geo/cdf.root
+/root/io/geo/cdf_all.C
+/root/io/geo/cdf_svxc.C
+/root/io/geo/cms_calo.C
+/root/io/geo/d0.C
+/root/io/geo/d0.root
+/root/io/geo/d0_all.C
+/root/io/geo/e907.C
+/root/io/geo/e907.root
+/root/io/geo/e907_all.C
+/root/io/geo/gem.root
+/root/io/geo/phenix.root
+/root/io/geo/phobos.C
+/root/io/geo/phobos.root
+/root/io/geo/phobos_all.C
+/root/io/geo/star.root
+/root/io/geo/star_all.C
+/root/io/geo/star_svtt.C
+/root/io/geo/tesla.C
+/root/io/geo/tesla.root
+/root/io/geo/tesla_all.C
+/root/io/geo/aleph.root
+/root/io/geo/unpack.last
+/root/io/geo/babar_all.C
+/root/io/geo/babar_emca.C
+/root/io/geo/babar_ssvd.C
+/root/io/geo/lhcb_mag.C
+/root/io/geo/babar.root
+/root/io/geo/lhcb_mag.root
+
+# /root/io/heritstl/
+/root/io/heritstl/strtest.root
+
+# /root/io/ignoretobject/
+/root/io/ignoretobject/test.root
+
+# /root/io/unordered_set
+/root/io/unordered_set/set_problem.root
+
+# /root/io/interface/
+/root/io/interface/*.root
+
+# /root/io/longlong/
+/root/io/longlong/longlongdict.*
+/root/io/longlong/*.root
+
+# /root/io/multipleInherit/
+/root/io/multipleInherit/*.root
+
+# /root/io/multizip/
+
+# /root/io/namespacedict/
+/root/io/namespacedict/*Dict*
+/root/io/namespacedict/*.root
+
+# /root/io/newClassDef/
+/root/io/newClassDef/*.root
+
+# /root/io/newClassDef/backup/
+
+# /root/io/newClassDef/backup/current/
+
+# /root/io/newClassDef/backup/new/
+
+# /root/io/newClassDef/current/
+/root/io/newClassDef/current/test.root
+/root/io/newClassDef/current/*dict*
+
+# /root/io/newClassDef/event/
+
+# /root/io/newClassDef/featuretest/
+/root/io/newClassDef/featuretest/*.out
+
+# /root/io/newClassDef/first/
+
+# /root/io/newClassDef/new/
+/root/io/newClassDef/new/new.root
+/root/io/newClassDef/new/*dict*
+/root/io/newClassDef/new/test.root
+
+# /root/io/newClassDef/new.noclassdef/
+
+# /root/io/newClassDef/noclassdef/
+/root/io/newClassDef/noclassdef/pass.mode
+/root/io/newClassDef/noclassdef/mytest.root
+/root/io/newClassDef/noclassdef/mydict*
+/root/io/newClassDef/noclassdef/driver*
+
+# /root/io/newClassDef/original/
+
+# /root/io/newClassDef/portable/
+
+# /root/io/newClassDef/showmember/
+
+# /root/io/newClassDef/showmember/featuretest/
+
+# /root/io/newClassDef/showmember/sm_test/
+
+# /root/io/newClassDef/showmember/t01/
+
+# /root/io/newClassDef/showmember/t02/
+
+# /root/io/newClassDef/testfiles/
+
+# /root/io/newClassDef/testfiles/ti_files/
+
+# /root/io/newClassDef/win/
+
+# /root/io/newdelete/
+/root/io/newdelete/output
+/root/io/newdelete/4-*
+/root/io/newdelete/3-*
+/root/io/newdelete/ClassesDict.*
+
+# /root/io/newstl/
+/root/io/newstl/AutoDict*
+/root/io/newstl/pospelov
+/root/io/newstl/latest
+/root/io/newstl/3-*
+/root/io/newstl/4-*
+/root/io/newstl/5-*
+/root/io/newstl/6-*
+/root/io/newstl/7-*
+/root/io/newstl/*.root
+/root/io/newstl/ArchivedDataFiles
+
+# /root/io/perf/
+/root/io/perf/*.root
+
+# /root/io/perf/simple/
+
+# /root/io/perf/slowreading/
+/root/io/perf/slowreading/NuEvent_DST.mark
+
+# /root/io/perf/slowreading/rootfiles/
+
+# /root/io/perf/stl/
+
+# /root/io/perf/userdatasets/
+/root/io/perf/userdatasets/*.root
+/root/io/perf/userdatasets/libatlasFlushed
+/root/io/perf/userdatasets/liblhcb2
+/root/io/perf/userdatasets/libcmsflush
+/root/io/perf/userdatasets/libgenatlasFlushed
+/root/io/perf/userdatasets/libgenlhcb2
+/root/io/perf/userdatasets/libgencmsflush
+
+# /root/io/pointers/
+
+# /root/io/prefetching/
+
+# /root/io/prefetching/atlasFlushed/
+/root/io/prefetching/atlasFlushed/*Dict*
+
+# /root/io/recover/
+/root/io/recover/temp.root
+
+# /root/io/references/
+/root/io/references/*.root
+
+# /root/io/references/actions/
+/root/io/references/actions/a.root
+/root/io/references/actions/b.root
+
+# /root/io/rootcint/
+/root/io/rootcint/cltest.root
+/root/io/rootcint/*Dict*
+/root/io/rootcint/*Cint*
+/root/io/rootcint/weirdpair_dict.cxx
+
+# /root/io/rootcint/doubleconst/
+/root/io/rootcint/doubleconst/*~
+/root/io/rootcint/doubleconst/*.a
+/root/io/rootcint/doubleconst/Makefile.temp
+/root/io/rootcint/doubleconst/CandClusterSRCint.*
+/root/io/rootcint/doubleconst/*.root
+
+# /root/io/rootcint/sigbug/
+
+# /root/io/rootcint/sigbug/sigc++/
+
+# /root/io/rootcint/sigbug/sigc++/macros/
+
+# /root/io/rootcint/stl/
+/root/io/rootcint/stl/*_dict*
+
+# /root/io/set/
+/root/io/set/dict.cxx
+/root/io/set/dict.h
+/root/io/set/set_problem
+/root/io/set/set_problem.root
+
+# /root/io/simple/
+/root/io/simple/*.root
+
+# /root/io/tclass/
+
+# /root/io/transient/
+/root/io/transient/trans.root
+/root/io/transient/AtomTransient.root
+/root/io/transient/*.*log
+/root/io/transient/missingdict_rflx.cpp
+
+# /root/io/transient/base
+/root/io/transient/base/data1.root
+/root/io/transient/base/data2.root
+/root/io/transient/base/data_merge.root
+
+# /root/io/tree/
+/root/io/tree/*.root
+/root/io/tree/*.out
+
+# /root/io/treeForeign/
+/root/io/treeForeign/test.root
+
+# /root/io/treeproblem/
+/root/io/treeproblem/*Dict.*
+/root/io/treeproblem/FooDict.h
+/root/io/treeproblem/reader
+/root/io/treeproblem/writer
+/root/io/treeproblem/file.root
+/root/io/treeproblem/FooDict*
+
+# /root/io/tuple
+/root/io/tuple/tuple.root
+
+# /root/io/uniquePointer/
+/root/io/uniquePointer/*_rflx.cpp_tmp_*
+
+# /root/io/vararyobj/
+/root/io/vararyobj/*.root
+
+# /root/io/webfile/
+
+# /root/io/withoutDictionaries/
+/root/io/withoutDictionaries/*.root
+
+# /root/io/xml/
+/root/io/xml/file.xml
+
+# /root/math/
+
+# /root/math/genvector/
+/root/math/genvector/RotationTraits.h
+/root/math/genvector/CoordinateTraits.h
+/root/math/genvector/coordinates3D.cxx
+/root/math/genvector/coordinates4D.cxx
+/root/math/genvector/rotationApplication.cxx
+/root/math/genvector/testGenVector.cxx
+
+# /root/math/mathcore/
+
+# /root/meta/
+/root/meta/loadernotapp
+/root/meta/loadernotapp.*
+/root/meta/*.root
+
+# /root/meta/MakeProject/
+/root/meta/MakeProject/small_aod
+/root/meta/MakeProject/cms310
+/root/meta/MakeProject/aliceesd
+/root/meta/MakeProject/stltest
+/root/meta/MakeProject/stl_example.root
+/root/meta/MakeProject/foreign
+
+# /root/meta/callfunc/
+
+# /root/meta/ROOT-7181
+/root/meta/ROOT-7181/obj/
+
+# /root/meta/cmsUnload
+/root/meta/cmsUnload/obj/
+
+# /root/meta/evolution/
+/root/meta/evolution/data5.root
+/root/meta/evolution/data2.root
+/root/meta/evolution/data4.root
+/root/meta/evolution/data6.root
+/root/meta/evolution/data1.root
+/root/meta/evolution/data3.root
+/root/meta/evolution/baseClass_merge1.root
+/root/meta/evolution/baseClass_merge2.root
+/root/meta/evolution/baseClass_v1.root
+/root/meta/evolution/baseClass_v2.root
+/root/meta/evolution/mixedBase_merge1.root
+/root/meta/evolution/mixedBase_merge2.root
+/root/meta/evolution/mixedBase_v1.root
+/root/meta/evolution/mixedBase_v2.root
+
+# /root/meta/fwdDecls/
+/root/meta/fwdDecls/testa
+/root/meta/fwdDecls/testb
+/root/meta/fwdDecls/testc
+
+# /root/meta/genreflex
+/root/meta/genreflex/dicts/*
+/root/meta/genreflex/ofile.root
+/root/meta/genreflex/*_rflx.cpp_tmp_*
+
+# root/meta/genreflex/XMLParsing
+root/meta/genreflex/XMLParsing/dicts/*
+
+# /root/meta/iotypeioname/
+/root/meta/iotypeioname/*.xml
+
+# /root/meta/loadAllLibs/
+/root/meta/loadAllLibs/assert*.ref
+
+# /root/meta/tclass/
+/root/meta/tclass/pairs.root
+/root/meta/tclass/myclass.root
+/root/meta/tclass/tmpltd.root
+/root/meta/tclass/tmpltd32.root
+
+# /root/meta/ROOT-7462
+/root/meta/ROOT-7462/inst2lib.cxx
+/root/meta/ROOT-7462/instlib.cxx
+/root/meta/ROOT-7462/inst.root
+
+# /root/rint/
+/root/rint/TabCom.err
+
+# /root/selector/
+/root/selector/*.root
+
+# /root/selector/simple/
+
+# /root/stress/
+/root/stress/*_ref.root
+/root/stress/*_diff.root
+/root/stress/sg*.C
+/root/stress/sg*.gif
+/root/stress/sg*.jpg
+/root/stress/sg*.pdf
+/root/stress/sg*.png
+/root/stress/sg*.ps
+/root/stress/files
+/root/stress/stressEntryListTrees_0.root
+/root/stress/hsimple.root
+/root/stress/linearIO.root
+/root/stress/test
+/root/stress/stressGraphics.ref
+/root/stress/xpd-tutorial
+/root/stress/TMVAtest.root
+/root/stress/primes.txt
+/root/stress/weights
+/root/stress/earth.dat
+/root/stress/tmpHist.root
+
+# /root/tree/
+
+# /root/tree/addresses/
+/root/tree/addresses/*.*log
+/root/tree/addresses/*.root
+
+# root/tree/addresses/converterIssues
+root/tree/addresses/converterIssues/test_file.root
+root/tree/addresses/converterIssues/ExtHit/ExtHitProjectDict.cxx
+
+# /root/tree/addresses/data/
+
+# /root/tree/array/
+/root/tree/array/test.root
+
+# /root/tree/basket/
+
+# /root/tree/branches/
+/root/tree/branches/branch.root
+/root/tree/branches/treeobj.root
+/root/tree/branches/abc*.root
+/root/tree/branches/copy.root
+/root/tree/branches/temp.root
+/root/tree/branches/blah.root
+/root/tree/branches/execGetBranch.root
+
+# /root/tree/cache/
+/root/tree/cache/multi.root
+/root/tree/cache/test_in.root
+/root/tree/cache/test_out.root
+/root/tree/cache/autocache1.root
+/root/tree/cache/autocache2.root
+/root/tree/cache/EventDict.*
+/root/tree/cache/perftest.root
+/root/tree/cache/tree1ps.root
+/root/tree/cache/tree2ps.root
+
+# /root/tree/chain/
+/root/tree/chain/*.root
+
+# /root/tree/chain/subdir.root/
+
+# /root/tree/cloning/
+/root/tree/cloning/*.root
+/root/tree/cloning/Event.h
+/root/tree/cloning/copiedEvent*
+/root/tree/cloning/*.out
+
+# /root/tree/cloning/root/
+
+# /root/tree/entrylist/
+/root/tree/entrylist/testEntryListTrees_?.root
+/root/tree/entrylist/sub.root
+
+# /root/tree/evolution/
+/root/tree/evolution/*.root
+
+# /root/tree/evolution/split/
+/root/tree/evolution/split/*.root
+
+# /root/tree/fastcloning/
+/root/tree/fastcloning/CloneTree.root
+/root/tree/fastcloning/Event.new.split0.root
+/root/tree/fastcloning/dt_reference.root
+/root/tree/fastcloning/Event.new.split2.root
+/root/tree/fastcloning/cal.root
+/root/tree/fastcloning/Event.new.split1.root
+/root/tree/fastcloning/Event.new.split9.root
+/root/tree/fastcloning/one
+/root/tree/fastcloning/two
+/root/tree/fastcloning/merged
+/root/tree/fastcloning/copiedEvent*
+/root/tree/fastcloning/Event.h
+/root/tree/fastcloning/missplit*.root
+/root/tree/fastcloning/TestFile2.root
+/root/tree/fastcloning/output.root
+/root/tree/fastcloning/TestMerged.root
+/root/tree/fastcloning/mix_merge.root
+/root/tree/fastcloning/mix_int.root
+/root/tree/fastcloning/mix_char.root
+/root/tree/fastcloning/TestFile1.root
+/root/tree/fastcloning/Tuple_merge.root
+/root/tree/fastcloning/abstract.root
+/root/tree/fastcloning/copy-abstract.root
+/root/tree/fastcloning/Event.old.split.root
+/root/tree/fastcloning/Event.old.streamed.root
+/root/tree/fastcloning/execmisstop.root
+
+# /root/tree/fastcloning/perf/
+
+# /root/tree/friend/
+/root/tree/friend/copiedEvent
+/root/tree/friend/copiedEvent.exe
+/root/tree/friend/Event.h
+/root/tree/friend/*.root
+/root/tree/friend/createfile.out
+/root/tree/friend/unevenFriend.out
+
+# /root/tree/index/
+/root/tree/index/newTestFile.root
+/root/tree/index/index64.root
+
+# /root/tree/interpreted/
+
+# /root/tree/leaves/
+
+# /root/tree/pointers/
+/root/tree/pointers/*.root
+
+# /root/tree/query/
+
+# /root/tree/reader/
+/root/tree/reader/*.root
+/root/tree/reader/assertReaderIterator.ref
+
+# /root/tree/readfile/
+
+# /root/tree/selector/
+/root/tree/selector/lhef_*_gen.C
+/root/tree/selector/lhef_*_gen.h
+
+
+# /root/tree/selectorreader/
+/root/tree/selectorreader/generated_selectors/
+
+# /root/tree/split/
+/root/tree/split/abstract.root
+/root/tree/split/customClassTree.root
+
+# /root/tree/stl/
+root/tree/stl/vecptr.root
+
+# /root/tree/string/
+/root/tree/string/longstring.root
+/root/tree/string/shortstring.root
+
+# /root/tree/tcut/
+
+# /root/tree/treeproblem/
+/root/tree/treeproblem/FooDict*
+/root/tree/treeproblem/file.root
+/root/tree/treeproblem/reader
+/root/tree/treeproblem/writer
+/root/tree/treeproblem/memory.root
+/root/tree/treeproblem/trial.root
+
+# /root/treedraw/
+/root/treedraw/*.ps
+/root/treedraw/*.root
+
+# /root/treeformula/
+
+# /root/treeformula/array/
+/root/treeformula/array/NtpRecord.root
+/root/treeformula/array/myTree.root
+/root/treeformula/array/twodim_0.root
+/root/treeformula/array/twodim_99.root
+/root/treeformula/array/*ilk
+/root/treeformula/array/*.output
+
+# /root/treeformula/casting/
+/root/treeformula/casting/simple.root
+
+# /root/treeformula/clones/
+
+# /root/treeformula/depth/
+/root/treeformula/depth/depth.root
+/root/treeformula/depth/*.root
+
+# /root/treeformula/event/
+/root/treeformula/event/Event.root
+/root/treeformula/event/EventDict*
+/root/treeformula/event/Event
+
+# /root/treeformula/evolution/
+/root/treeformula/evolution/test.root
+
+# /root/treeformula/formulaio/
+
+# /root/treeformula/function/
+/root/treeformula/function/test.root
+/root/treeformula/function/prova.root
+
+# /root/treeformula/morrison/
+/root/treeformula/morrison/fooDict.C
+/root/treeformula/morrison/barDict.C
+/root/treeformula/morrison/main
+/root/treeformula/morrison/fooDict.h
+/root/treeformula/morrison/barDict.h
+/root/treeformula/morrison/Event.root
+
+# /root/treeformula/ntuple/
+/root/treeformula/ntuple/*.root
+
+# /root/treeformula/operator/
+
+# /root/treeformula/parse/
+/root/treeformula/parse/test.root
+/root/treeformula/parse/speedtest.root
+/root/treeformula/parse/myTest.root
+/root/treeformula/parse/cmakeclass.C
+/root/treeformula/parse/cmakeclass.h
+/root/treeformula/parse/cmakeproxy.h
+/root/treeformula/parse/generatedSel.h
+/root/treeformula/parse/generatedSel.old
+
+# /root/treeformula/perf/
+
+# /root/treeformula/references/
+/root/treeformula/references/reftca.root
+/root/treeformula/references/Event.new.split0.root
+/root/treeformula/references/Event.new.split1.root
+/root/treeformula/references/Event.new.split2.root
+/root/treeformula/references/Event.new.split9.root
+/root/treeformula/references/Event.root
+/root/treeformula/references/EventDict*
+/root/treeformula/references/Event
+
+# /root/treeformula/retobj/
+/root/treeformula/retobj/Event.root
+/root/treeformula/retobj/Event.new.split0.root
+/root/treeformula/retobj/EventDict*
+/root/treeformula/retobj/result
+/root/treeformula/retobj/Event
+
+# /root/treeformula/scan/
+/root/treeformula/scan/testScanIn.root
+
+# /root/treeformula/schemaEvolution/
+/root/treeformula/schemaEvolution/Event
+/root/treeformula/schemaEvolution/Event.exe
+/root/treeformula/schemaEvolution/Event.root
+/root/treeformula/schemaEvolution/EventDict*.*
+/root/treeformula/schemaEvolution/*.sln
+/root/treeformula/schemaEvolution/*.suo
+/root/treeformula/schemaEvolution/schemaRun.ref
+
+# /root/treeformula/stl/
+/root/treeformula/stl/mapvector.root
+
+# /root/treeformula/string/
+/root/treeformula/string/generatedSel.h
+/root/treeformula/string/*.root
+
+# /root/treeformula/sync/
+/root/treeformula/sync/example.root
+/root/treeformula/sync/jetclass.root
+/root/treeformula/sync/copiedEvent
+/root/treeformula/sync/*manifest
+/root/treeformula/sync/Event
+/root/treeformula/sync/Event.root
+/root/treeformula/sync/Event.h
+/root/treeformula/sync/*.exe
+/root/treeformula/sync/Event.cxx
+/root/treeformula/sync/EventDict.cxx
+/root/treeformula/sync/EventDict.h
+/root/treeformula/sync/EventLinkDef.h
+/root/treeformula/sync/*.out
+
+# /root/treeproxy/
+/root/treeproxy/searchSelector.h
+/root/treeproxy/generatedSel.h
+/root/treeproxy/red.h
+/root/treeproxy/val3dimSel.h
+/root/treeproxy/fullmcSel.h
+/root/treeproxy/vectorint/vectorintSel.h
+/root/treeproxy/vectorint/vectorintEmuSel.h
+/root/treeproxy/vectorint/vec.root
+/root/treeproxy/forproxy.root
+/root/treeproxy/withfriend*
+/root/treeproxy/make_tuple.root
+/root/treeproxy/make_tuple_sel.h
+/root/treeproxy/btagobjsSel.h
+/root/treeproxy/VectorProxyTestSel.h
+
+# /root/treeproxy/split/
+/root/treeproxy/split/MyTree.root
+/root/treeproxy/split/MyTree0.h
+/root/treeproxy/split/MyTree99.h
+
+# /root/treeproxy/stlvec/
+/root/treeproxy/stlvec/tlorentzvecProxy.h
+
+# /root/tutorials/
+/root/tutorials/*.rs
+/root/tutorials/Roo*.h
+/root/tutorials/roostats
+/root/tutorials/Roo*.cxx
+/root/tutorials/mc
+/root/tutorials/*.C
+/root/tutorials/*.gif
+/root/tutorials/*.pdf
+/root/tutorials/*.png
+/root/tutorials/*.ps
+/root/tutorials/*.py
+/root/tutorials/*.root
+/root/tutorials/*.svg
+/root/tutorials/*.tmp
+/root/tutorials/*.xml
+/root/tutorials/xpd-temp
+/root/tutorials/xpd-tutorial
+/root/tutorials/person.xml
+/root/tutorials/saxexample.xml
+/root/tutorials/image
+/root/tutorials/foam
+/root/tutorials/physics
+/root/tutorials/graphs
+/root/tutorials/proof
+/root/tutorials/mlp
+/root/tutorials/math
+/root/tutorials/tree
+/root/tutorials/splot
+/root/tutorials/spectrum
+/root/tutorials/matrix
+/root/tutorials/hist
+/root/tutorials/thread
+/root/tutorials/g4root
+/root/tutorials/fit
+/root/tutorials/gui
+/root/tutorials/net
+/root/tutorials/geom
+/root/tutorials/sql
+/root/tutorials/graphics
+/root/tutorials/xml
+/root/tutorials/gl
+/root/tutorials/io
+/root/tutorials/quadp
+/root/tutorials/eve
+/root/tutorials/aliesd
+/root/tutorials/files
+/root/tutorials/fft
+/root/tutorials/pythia
+/root/tutorials/unuran
+/root/tutorials/cont
+/root/tutorials/roofit
+/root/tutorials/rf*.txt
+/root/tutorials/rf*.tex
+/root/tutorials/MyPdf*.cxx
+/root/tutorials/MyPdf*.h
+/root/tutorials/RooGenPdfClass.*
+/root/tutorials/RooCFAuto000Pdf.cxx
+/root/tutorials/RooCFAuto000Pdf.h
+/root/tutorials/RooGenPdfPdf.cxx
+/root/tutorials/RooGenPdfPdf.h
+/root/tutorials/c1.eps
+/root/tutorials/c1.jpg/
+/root/tutorials/cocoa/
+/root/tutorials/config/
+/root/tutorials/data/
+/root/tutorials/fitsio/
+/root/tutorials/histfactory/
+/root/tutorials/memstat/
+/root/tutorials/parallelcoordtrans.jpg
+/root/tutorials/person.dtd
+/root/tutorials/results/
+/root/tutorials/rf206_model.dot
+/root/tutorials/c1.jpg
+
+# /scripts/
+/scripts/roottest.arch
+/scripts/roottesttiming.root

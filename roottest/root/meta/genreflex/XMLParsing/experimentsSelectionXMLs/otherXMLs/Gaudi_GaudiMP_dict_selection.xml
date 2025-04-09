@@ -1,0 +1,6 @@
+<lcgdict>
+
+  <class name    = "GaudiMP::PyROOTPickle"/>
+  <class name    = "GaudiMP::TESSerializer"/>
+
+</lcgdict>

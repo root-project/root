@@ -1,0 +1,16 @@
+<lcgdict>
+  <class name="AtlasHitsVector<SiHit>" />
+  <class name="std::vector<SiHit>" />
+  <class name="SiHit" />
+
+  <class name="AtlasHitsVector<TRTUncompressedHit>" />
+  <class name="std::vector<TRTUncompressedHit>" />
+  <class name="TRTUncompressedHit" />
+
+  <class name="AthenaHitsVector<SiHit>" id="1EC39DA3-14F9-4901-88C7-F6909B064574" />
+  <class name="std::vector<SiHit*>" />
+
+  <class name="AthenaHitsVector<TRTUncompressedHit>" id="35722E01-C4E3-420E-8A7E-E375C5E7989D" />
+  <class name="std::vector<TRTUncompressedHit*>" />
+
+</lcgdict>

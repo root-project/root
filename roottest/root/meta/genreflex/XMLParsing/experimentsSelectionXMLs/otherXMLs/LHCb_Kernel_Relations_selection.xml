@@ -1,0 +1,33 @@
+<!-- * $Id: selection.xml,v 1.5 2006-06-11 15:23:47 ibelyaev Exp $ 
+     * ========================================================================
+     * $CVS tag:$, version $Revision: 1.5 $ 
+     * ========================================================================
+     * $Log: not supported by cvs2svn $
+     * ==================================================================== -->   
+
+<!-- * @file
+     * 
+     * The basic selection file to build the Reflex dictionaries
+     * @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     * @date 2006-02-06
+     * ========================================================================
+-->  
+
+<lcgdict>
+  
+  <function pattern="Relations::*" />
+  
+  <class    name="Relations::BaseRange" /> 
+  <class    name="Relations::BaseTable" /> 
+  <class    name="Relations::BaseWeightedTable" /> 
+  
+  <class    name="IRelationBase" />
+  <class    name="IRelationWeightedBase" />
+
+</lcgdict>
+
+<!-- * ===================================================================== -->
+<!-- * The END * =========================================================== -->   
+<!-- * ===================================================================== -->
+
+

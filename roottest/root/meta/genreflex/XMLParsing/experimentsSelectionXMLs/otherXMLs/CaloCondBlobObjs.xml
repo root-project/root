@@ -1,0 +1,7 @@
+<lcgdict>
+<class name="CaloCondUtils"/>
+<class name="CaloCondType"/>
+<class name="CaloCondBlobBase"/>
+<class name="CaloCondBlobFlt"/>
+<class name="CaloCondBlobDat<float>"/>
+</lcgdict>

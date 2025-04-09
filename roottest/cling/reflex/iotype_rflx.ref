@@ -1,0 +1,132 @@
+
+t: ok.
+
+data member 'vd' 
+cl: ok.
+dm: ok.
+
+data member 'vd', type 'vector<double>'
+
+data member 'vd32' 
+cl: ok.
+dm: ok.
+
+data member 'vd32', type 'std::vector<Double32_t>'
+
+data member 'vdd32' 
+cl: ok.
+dm: ok.
+
+data member 'vdd32', type 'std::vector<Double32_t>'
+
+data member 'vf' 
+cl: ok.
+dm: ok.
+
+data member 'vf', type 'vector<float>'
+
+data member 'd' 
+cl: ok.
+dm: ok.
+
+data member 'd', type 'double'
+
+data member 'd32' 
+cl: ok.
+dm: ok.
+
+data member 'd32', type 'Double32_t'
+
+data member 'dd32' 
+cl: ok.
+dm: ok.
+
+data member 'dd32', type 'Double32_t'
+
+data member 'f' 
+cl: ok.
+dm: ok.
+
+data member 'f', type 'float'
+
+data member 'vTd32' 
+cl: ok.
+dm: ok.
+
+data member 'vTd32', type 'std::vector<Template<Double32_t> >'
+
+data member 'vTdd32' 
+cl: ok.
+dm: ok.
+
+data member 'vTdd32', type 'std::vector<Template<Double32_t> >'
+
+data member 'vTf' 
+cl: ok.
+dm: ok.
+
+data member 'vTf', type 'vector<Template<float> >'
+
+data member 'Tvd' 
+cl: ok.
+dm: ok.
+
+data member 'Tvd', type 'Template<vector<double> >'
+
+data member 'Tvd32' 
+cl: ok.
+dm: ok.
+
+data member 'Tvd32', type 'Template<std::vector<Double32_t> >'
+
+data member 'Tvdd32' 
+cl: ok.
+dm: ok.
+
+data member 'Tvdd32', type 'Template<std::vector<Double32_t> >'
+
+data member 'Tvf' 
+cl: ok.
+dm: ok.
+
+data member 'Tvf', type 'Template<vector<float> >'
+
+data member 'Td32' 
+cl: ok.
+dm: ok.
+
+data member 'Td32', type 'Template<Double32_t>'
+
+data member 'Tdd32' 
+cl: ok.
+dm: ok.
+
+data member 'Tdd32', type 'Template<Double32_t>'
+
+data member 'Tf' 
+cl: ok.
+dm: ok.
+Warning in <TStreamerInfo::Build>: CIoType: Template<std::vector<Double32_t> > has no streamer or dictionary, data member "Tvd32" will not be saved
+Warning in <TStreamerInfo::Build>: CIoType: Template<std::vector<Double32_t> > has no streamer or dictionary, data member "Tvdd32" will not be saved
+
+data member 'Tf', type 'Template<float>'
+Comparing vd32 with vf
+relBytesDiff2 < 0.001: ok.
+Comparing vdd32 with vf
+relBytesDiff2 < 0.001: ok.
+Comparing d32 with f
+relBytesDiff2 < 0.001: ok.
+Comparing dd32 with f
+relBytesDiff2 < 0.001: ok.
+Comparing vTd32 with vTf
+relBytesDiff2 < 0.001: ok.
+Comparing vTdd32 with vTf
+relBytesDiff2 < 0.001: ok.
+Comparing Tvd32 with Tvf
+EXPECTED FAILURE (missing dictionary for branch's Tvd32 type 'Template<std::vector<Double32_t> >')
+Comparing Tvdd32 with Tvf
+EXPECTED FAILURE (missing dictionary for branch's Tvdd32 type 'Template<std::vector<Double32_t> >')
+Comparing Td32 with Tf
+relBytesDiff2 < 0.001: ok.
+Comparing Tdd32 with Tf
+relBytesDiff2 < 0.001: ok.

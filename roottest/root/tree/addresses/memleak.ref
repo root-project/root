@@ -1,0 +1,173 @@
+
+Processing runmemleak.C+...
+******************************************************************************
+*Tree    :MonoData  : branch=mono class=TMyData                              *
+*Entries :        2 : Total =         9415198 bytes  File  Size =     128056 *
+*        :          : Tree compression factor =  76.06                       *
+******************************************************************************
+*Branch  :mono                                                               *
+*Entries :        2 : BranchElement (see below)                              *
+*............................................................................*
+*Br    0 :fUniqueID : UInt_t                                                 *
+*Entries :        2 : Total  Size=        689 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :fBits     : UInt_t                                                 *
+*Entries :        2 : Total  Size=        677 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :fModel    : TString                                                *
+*Entries :        2 : Total  Size=        691 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :fCommL    : const TObjArray*                                       *
+*Entries :        2 : Total  Size=       7695 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    4 :fSDay     : Long_t                                                 *
+*Entries :        2 : Total  Size=        673 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    5 :fEDay     : Long_t                                                 *
+*Entries :        2 : Total  Size=        673 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    6 :fParamFile : TString                                               *
+*Entries :        2 : Total  Size=        867 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    7 :fCoeffDate : Long_t                                                *
+*Entries :        2 : Total  Size=        703 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    8 :fNrSrcs   : Int_t                                                  *
+*Entries :        2 : Total  Size=        677 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    9 :fPeriodGroupStr : TString                                          *
+*Entries :        2 : Total  Size=        739 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   10 :fDotsHalfLife : Double_t                                           *
+*Entries :        2 : Total  Size=        721 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   11 :fWindow   : Int_t                                                  *
+*Entries :        2 : Total  Size=        677 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   12 :fFitVarType : TString                                              *
+*Entries :        2 : Total  Size=        723 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   13 :fWorkingDir : TString                                              *
+*Entries :        2 : Total  Size=        803 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   14 :fSmoothCoeffFile : TString                                         *
+*Entries :        2 : Total  Size=        873 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   15 :fUse      : TArrayD                                                *
+*Entries :        2 : Total  Size=       2207 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   16 :fSsize    : TArrayD                                                *
+*Entries :        2 : Total  Size=       2219 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   17 :fNrho     : TArrayD                                                *
+*Entries :        2 : Total  Size=     148141 bytes  File Size  =       1892 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=  78.03     *
+*............................................................................*
+*Br   18 :fNrhoInv  : TArrayD                                                *
+*Entries :        2 : Total  Size=     148159 bytes  File Size  =       3546 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=  41.64     *
+*............................................................................*
+*Br   19 :fPnts     : TArrayD*                                               *
+*Entries :        2 : Total  Size=      33113 bytes  File Size  =        652 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=  50.02     *
+*............................................................................*
+*Br   20 :fCalcVarRed : Int_t                                                *
+*Entries :        2 : Total  Size=        701 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   21 :fSmoothMonoM : TMap*                                               *
+*Entries :        2 : Total  Size=    9060369 bytes  File Size  =     117332 *
+*Baskets :        2 : Basket Size=      32000 bytes  Compression=  77.22     *
+*............................................................................*
+Info in <memleak>: branch has 2 entries
+Info in <memleak>: fSmoothMonoM->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(caff)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(corchg2)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(aff)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(imacd)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(msra)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(vol)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(dist)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(vol2)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(paten2)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(owcm)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(msrv)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(hvol)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(lrvol)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(driftchg)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(ssr)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(paten)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(trd)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(std)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(corchgi)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(trd2)->fSmoothL->IsOwner(): 1
+Info in <memleak>: fSmoothMonoM->par(vol15)->fSmoothL->IsOwner(): 1
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()
+Executing TMyData::~TMyData()

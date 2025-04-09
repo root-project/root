@@ -1,0 +1,22 @@
+ 
+<lcgdict>
+  <class name="ALFA_DigitCollection" id="0F21F6BB-6719-41D3-8219-3ABF523826CD"/>
+  <class name="std::vector<ALFA_Digit*>" />
+  <class name="DataVector<ALFA_Digit>" />
+  <class name="ALFA_Digit" />
+  <class name="ALFA_ODDigitCollection" id="72E4BD80-E8B1-4C24-AA0F-E5C6D1B741AD"/>
+  <class name="std::vector<ALFA_ODDigit*>" />
+  <class name="DataVector<ALFA_ODDigit>" />
+  <class name="ALFA_ODDigit" />  
+  
+  <class name="ALFA_RawDataContainer" id="D2E1A2A4-43C0-4B72-8264-AB91ED079564"/>
+  <class name="std::vector<ALFA_RawDataCollection*>" />
+  <class name="DataVector<ALFA_RawDataCollection>" />
+
+  <class name="ALFA_RawDataCollection" />
+  <class name="std::vector<ALFA_RawData*>" />
+  <class name="DataVector<ALFA_RawData>" />
+    
+  <class name="ALFA_RawData" />
+</lcgdict>
+

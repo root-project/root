@@ -1,0 +1,10 @@
+
+Processing runcustomConstructorACLiC.C...
+Error in <TClass::New>: cannot create object of class Private
+Called Regular::Regular()
+Called G4::G4(G4_ROOT_IO*)
+Called G4_v2::G4_v2(__void__&)
+Called Other::Other(OTHER_ROOT_IO*)
+Called Default::Default(TRootIOCtor*)
+Called Typedef::Typedef(MyCtor*) typedefed from TRootIoCtor
+Called Pointers::Pointers()

@@ -1,0 +1,8 @@
+<lcgdict>
+   // This will match twice
+   <class name="C"/>
+   <class pattern="myTyped*"/>
+   <class pattern="secondOrderType*"/>
+   // This last one for C++11 only
+   <class pattern="cpp11Al*"/>
+</lcgdict>

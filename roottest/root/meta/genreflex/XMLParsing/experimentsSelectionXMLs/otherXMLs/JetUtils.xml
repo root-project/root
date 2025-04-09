@@ -1,0 +1,14 @@
+<lcgdict>
+
+   <class name="jet::JetCaloQualityUtils"/>
+   <class name="jet::JetCalcnLeadingCells"/>
+   <class name="jet::JetCalcTimeCells"/>
+   <class name="jet::JetCalcQuality"/>
+   <class name="jet::JetCalcQualityHEC"/>
+   <class name="jet::JetCalcNegativeEnergy"/>
+   <class name="jet::JetCalcOutOfTimeEnergyFraction"/>
+   <class name="jet::JetCalcAverageLArQualityF"/>
+   <class name="jet::JetCaloCalculations"/>
+   <class name="jet::JetCaloCalculator"/>
+</lcgdict>
+

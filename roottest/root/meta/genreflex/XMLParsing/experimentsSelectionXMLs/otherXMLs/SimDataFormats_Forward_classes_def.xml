@@ -1,0 +1,16 @@
+<lcgdict>
+  <class name="TotemTestHistoClass" ClassVersion="10">
+   <version ClassVersion="10" checksum="599416754"/>
+  </class>
+  <class name="TotemTestHistoClass::Hit" ClassVersion="10">
+   <version ClassVersion="10" checksum="4069870155"/>
+  </class>
+  <class name="std::vector<TotemTestHistoClass::Hit>"/>
+  <class name="edm::Wrapper<TotemTestHistoClass>"/>
+
+  <class name="LHCTransportLink" ClassVersion="10">
+   <version ClassVersion="10" checksum="159175617"/>
+  </class>
+  <class name="std::vector<LHCTransportLink>"/>
+  <class name="edm::Wrapper<std::vector<LHCTransportLink>>" splitLevel="0" />
+</lcgdict>

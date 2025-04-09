@@ -1,0 +1,10 @@
+
+Processing execQualifiedNames.C...
+Name/Title: en/
+QualName: en
+Name/Title: en/
+QualName: a::b::en
+Name/Title: enpclass/myns
+QualName: myns::enpclass
+Name/Title: enpclass/
+QualName: enpclass

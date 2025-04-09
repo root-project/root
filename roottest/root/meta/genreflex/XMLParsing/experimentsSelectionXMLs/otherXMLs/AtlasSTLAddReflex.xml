@@ -1,0 +1,102 @@
+<lcgdict>
+
+  <class name="std::pair<int, float>" />
+  <class name="std::pair<unsigned int, unsigned int>" />
+  <class name="std::pair<std::string, unsigned int>" />
+  <class name="std::pair<std::string, double>" />
+  <class name="std::pair<std::string, std::vector<int> >"/>
+  <class name="std::pair<std::string, std::vector<double> >"/>
+  
+  <class name="std::pair<std::pair<std::string, unsigned int>, std::pair<std::string, unsigned int> >"/>
+  <class name="std::pair<unsigned int, std::vector<float> >"/>
+  <class name="std::pair<unsigned int, std::vector<unsigned int> >"/>
+  
+  <class name="std::vector<long long>"/>
+  <class name="std::vector<unsigned long long>"/>
+
+  <class name="std::vector<std::vector<float> >"/>
+  <class name="std::vector<std::vector<double> >"/>
+  <class name="std::vector<std::vector<char> >"/>
+  <class name="std::vector<std::vector<short> >"/>
+  <class name="std::vector<std::vector<int> >"/>
+  <class name="std::vector<std::vector<long> >"/>
+  <class name="std::vector<std::vector<uint8_t> >"/>
+  <class name="std::vector<std::vector<unsigned int> >"/>
+  <class name="std::vector<std::vector<unsigned short> >"/>
+  <class name="std::vector<std::vector<unsigned long> >"/>
+  <class name="std::vector<std::vector<unsigned long long> >"/>
+  <class name="std::vector<std::vector<std::string> >"/>
+
+  <class name="std::vector<std::vector<std::vector<float> > >"/>
+  <class name="std::vector<std::vector<std::vector<int> > >"/>
+  <class name="std::vector<std::vector<std::vector<unsigned char> > >"/>
+  <class name="std::vector<std::vector<std::vector<unsigned long> > >"/>
+
+  <class name="std::vector<std::pair<int, float> >"/>
+  <class name="std::vector<std::pair<unsigned int, std::vector<float> > >" />
+  <class name="std::vector<std::pair<std::string,double> >"/>
+  <class name="std::vector<std::pair<std::string, std::vector<int> > >"/>
+  <class name="std::vector<std::pair<std::string, std::vector<double> > >"/>
+  <class name="std::vector<std::pair<std::pair<std::string, unsigned int>, std::pair<std::string, unsigned int> > >"/>
+
+  <class name="std::map<int, unsigned int>"/>
+  <class name="std::map<unsigned int, unsigned int>"/>
+  <class name="std::map<unsigned int, std::string>"/>
+  <class name="std::map<const std::string, unsigned int>"/>
+  <class name="std::map<std::string, bool>"/>
+  <class name="std::map<std::string, int>"/>
+  <class name="std::map<std::string, int>::iterator"/>
+  <class name="std::map<std::string, unsigned short>"/>
+  <class name="std::map<std::string, unsigned long>"/>
+  <class name="std::map<std::string, float>"/>
+  <class name="std::map<std::string, double>"/>
+  <class name="std::map<std::string, std::string>"/>
+  <class name="std::map<std::string, std::vector<bool> >"/>
+  <class name="std::map<std::string, std::vector<float> >"/>
+  <class name="std::map<std::string, std::vector<double> >"/>
+  <class name="std::map<std::string, std::vector<int> >"/>
+  <class name="std::map<unsigned int,std::vector<float> >"/>
+
+
+  <class name="std::multimap<std::string, int>"/>
+
+
+  <class name="boost::array<float,2>"/>
+  <class name="boost::array<float,3>"/>
+  <class name="boost::array<float,4>"/>
+  <class name="boost::array<float,5>"/>
+  <class name="boost::array<float,6>"/>
+  <class name="boost::array<float,7>"/>
+  <class name="boost::array<float,8>"/>
+  <class name="boost::array<float,9>"/>
+  <class name="boost::array<float,10>"/>
+  <class name="boost::array<float,16>"/>
+  <class name="boost::array<double,2>"/>
+  <class name="boost::array<double,3>"/>
+  <class name="boost::array<double,4>"/>
+  <class name="boost::array<double,5>"/>
+  <class name="boost::array<double,6>"/>
+  <class name="boost::array<double,7>"/>
+  <class name="boost::array<double,8>"/>
+  <class name="boost::array<double,9>"/>
+  <class name="boost::array<double,10>"/>
+  <class name="boost::array<double,16>"/>
+  <class name="boost::array<int,2>"/>
+  <class name="boost::array<int,3>"/>
+  <class name="boost::array<int,4>"/>
+  <class name="boost::array<int,5>"/>
+  <class name="boost::array<int,6>"/>
+  <class name="boost::array<int,7>"/>
+  <class name="boost::array<int,8>"/>
+  <class name="boost::array<int,9>"/>
+  <class name="boost::array<int,10>"/>
+  <class name="boost::array<long,2>"/>
+  <class name="boost::array<long,3>"/>
+  <class name="boost::array<long,4>"/>
+  <class name="boost::array<long,5>"/>
+  <class name="boost::array<long,6>"/>
+  <class name="boost::array<long,7>"/>
+  <class name="boost::array<long,8>"/>
+  <class name="boost::array<long,9>"/>
+  <class name="boost::array<long,10>"/>
+</lcgdict>

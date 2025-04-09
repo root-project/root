@@ -1,0 +1,27 @@
+
+Processing runClasses.C...
+Error in <TClass::New>: cannot create object of class Nodefault
+deleting a Nodefault 10
+Error in <TClass::New>: cannot create object of class NodefaultOpNew
+Error in <TClass::New>: cannot create object of class PartialDefault
+OBJ: TClass	TStruct	
+OBJ: TClass	TStruct	
+Error in <TClass::New>: cannot create object of class TNodefault
+OBJ: TClass	TNodefault	
+deleting a TNodefault 10
+Error in <TClass::New>: cannot create object of class TNodefaultOpNew
+OBJ: TClass	TNodefaultOpNew	
+OBJ: TClass	TDefault	
+OBJ: TClass	TDefault	
+Error in <TClass::New>: cannot create object of class TPartialDefault
+OBJ: TClass	TPartialDefault	
+OBJ: TClass	TNormal	
+OBJ: TClass	TNormal	
+Warning in <TKey::TKey>: since TPrivateDefaultConstructor has no public constructor
+	which can be called without argument, objects of this class
+	can not be read with the current library. You will need to
+	add a default constructor before attempting to read it.
+Warning in <TBufferFile::WriteObjectAny>: since TPrivateDefaultConstructor has no public constructor
+	which can be called without argument, objects of this class
+	can not be read with the current library. You will need to
+	add a default constructor before attempting to read it.

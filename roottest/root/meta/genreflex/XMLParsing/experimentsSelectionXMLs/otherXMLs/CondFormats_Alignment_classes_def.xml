@@ -1,0 +1,22 @@
+<lcgdict>
+ <class name="Alignments" id="2F16F0A9-79D5-4881-CE0B-C271DD84A7F3"/>
+ <class name="AlignTransform"/>
+ <class name="std::vector<AlignTransform>"/>
+ <class name="uint32_t"/>
+
+ <class name="AlignmentErrors"/>
+ <class name="AlignTransformError"/>
+ <class name="std::vector<AlignTransformError>"/>
+
+ <class name="AlignmentSurfaceDeformations">
+   <field name="m_items" mapping="blob"/>
+   <field name="m_parameters" mapping="blob"/>
+ </class>
+ <class name="AlignmentSurfaceDeformations::Item"/>
+ <class name="std::vector<AlignmentSurfaceDeformations::Item>"/>
+
+ <class name="SurveyError"/>
+ <class name="SurveyErrors"/>
+ <class name="std::vector<SurveyError>"/>
+
+</lcgdict>

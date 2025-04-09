@@ -1,0 +1,5 @@
+. PyROOT_pythonizationtest.py::TestClassPYTHONIZATIONS::()::test01_size_mapping
+. PyROOT_pythonizationtest.py::TestClassPYTHONIZATIONS::()::test02_type_pinning
+. PyROOT_pythonizationtest.py::TestClassROOT_PYTHONIZATIONS::()::test01_tgraph
+. PyROOT_pythonizationtest.py::TestClassROOT_PYTHONIZATIONS::()::test02_tfile
+

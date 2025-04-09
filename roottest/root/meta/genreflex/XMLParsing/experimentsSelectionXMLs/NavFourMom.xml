@@ -1,0 +1,49 @@
+
+
+<lcgdict>
+
+  <class name="DataVector<I4Momentum>" id="997F076F-CEB3-4D46-A019-94BF24A46186" >
+    <field name="m_ownPolicy" transient="true" />
+  </class>
+  <class name="std::vector<I4Momentum*>" />
+  <class pattern="DataVector*<I4Momentum>" />
+
+  <class name="DataVector<INavigable4Momentum>" id="EE9985C0-3F2E-4023-B18C-BF79AB139048" >
+    <field name="m_ownPolicy" transient="true" />
+  </class>
+  <class name="std::vector<INavigable4Momentum*>" />
+  <class pattern="DataVector*<INavigable4Momentum>" />
+
+  <class name="DataVector<IParticle>" id="6A886244-3314-40C7-BA75-2ECB96DDE9EA"/>
+  <class name="std::vector<IParticle*>" />
+  <class name="std::vector<const IParticle*>" />
+  <class pattern="DataVector*<IParticle>" />
+
+  <class name="INav4MomAssocs" id="DF941034-CCB2-4A1A-9A8C-5F3D5EAFD08C" />
+  <class name="AssociationMap<DataVector<INavigable4Momentum>,DataVector<INavigable4Momentum> >">
+    <field name="m_associationMap" transient="true"/>
+  </class>
+  <class name="AssociationMap<DataVector<INavigable4Momentum>,DataVector<INavigable4Momentum> >::asso_list" />
+  <class name="std::list<const INavigable4Momentum*>::iterator" />
+  <class name="std::list<const INavigable4Momentum*>::const_iterator" />
+  <class name="AssociationMap<DataVector<INavigable4Momentum>,DataVector<INavigable4Momentum> >::AssociationObjectIterator"/>
+  <class name="AssociationMap<DataVector<INavigable4Momentum>,DataVector<INavigable4Momentum> >::AssociationVectorIterator"/>
+
+  <class name="Navigable<DataVector<INavigable4Momentum>,NavigationDefaults::DefaultWeight,std::vector<ElementLink<DataVector<INavigable4Momentum> > > >"/>
+  <class name="NavigableIterator<DataVector<INavigable4Momentum>,NavigationDefaults::DefaultWeight,std::vector<ElementLink<DataVector<INavigable4Momentum> > > >"/>
+
+  <class name="NavigableIterator<DataVector<INavigable4Momentum>,double,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,double > > >"/>
+
+  <class name="Nav4MomWrapper<Navigable<DataVector<INavigable4Momentum>,double,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,double> > >,P4ImplPxPyPzE>"/>
+  <class name="NavWrapper<Navigable<DataVector<INavigable4Momentum>,double,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,double> > > > "/>
+
+  <class name="IParticleLink" />
+  <class name="INav4MomLink"  />
+
+  <class name="IParticleLinkContainer" id="E620F202-838D-42BA-8643-8AD32B5A643C" />
+  <class name="std::vector<IParticleLink>" />
+
+  <class name="INav4MomLinkContainer" id="46CB0F1D-BBC0-4E9E-99D5-6B5F9FE38F6B"  />
+  <class name="std::vector<INav4MomLink>" />
+</lcgdict>
+

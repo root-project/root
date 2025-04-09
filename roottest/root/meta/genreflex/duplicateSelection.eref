@@ -1,0 +1,17 @@
+Warning in <SelectionRules::CheckDuplicates>: Duplicated rule found.
+Rule:
+		Selected (line 2): Yes
+		Attributes: 
+		name = DataProduct
+		No field sel rules
+		No method sel rules
+Conflicting rule already stored:
+		Selected (line 5): Yes
+		Attributes: 
+		name = DataProduct
+		Field 0:
+		Selected: Yes
+			name = dummy
+			transient = true
+		No method sel rules
+Error in <SelectionRules::CheckDuplicates>: Duplicates in rules were found.

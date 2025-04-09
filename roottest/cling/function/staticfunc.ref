@@ -1,0 +1,9 @@
+
+Processing runstaticfunc.C...
+test
+Error: cannot call member function without object staticfunc.C:--:
+  staticfunc.C  40 void Top::Run();
+Calling : Top::Run();
+Match rank: file     line  signature
+*        0 staticfunc.C  40 void Top::Run();
+*** Interpreter error recovered ***

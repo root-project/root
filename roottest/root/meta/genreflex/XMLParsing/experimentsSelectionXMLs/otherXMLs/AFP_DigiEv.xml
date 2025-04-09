@@ -1,0 +1,10 @@
+ 
+<lcgdict>
+  <class name="AFP_TDDigiCollection" />
+  <class name="AtlasHitsVector<AFP_TDDigi>" />
+  <class name="AFP_TDDigi" />
+  <class name="AFP_SiDigiCollection" />
+  <class name="AtlasHitsVector<AFP_SiDigi>" />
+  <class name="AFP_SiDigi" />  
+</lcgdict>
+

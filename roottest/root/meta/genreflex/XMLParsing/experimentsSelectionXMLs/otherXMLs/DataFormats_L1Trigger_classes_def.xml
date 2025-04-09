@@ -1,0 +1,89 @@
+<lcgdict>
+  <class name="l1extra::L1EmParticle" ClassVersion="10">
+   <version ClassVersion="10" checksum="2019457791"/>
+  </class>
+  <class name="l1extra::L1JetParticle" ClassVersion="10">
+   <version ClassVersion="10" checksum="2992828146"/>
+  </class>
+  <class name="l1extra::L1MuonParticle" ClassVersion="10">
+   <version ClassVersion="10" checksum="404862417"/>
+  </class>
+  <class name="l1extra::L1EtMissParticle" ClassVersion="10">
+   <version ClassVersion="10" checksum="256436604"/>
+  </class>
+  <class name="l1extra::L1ParticleMap" ClassVersion="10">
+   <version ClassVersion="10" checksum="72905536"/>
+  </class>
+  <class name="l1extra::L1HFRings" ClassVersion="10">
+   <version ClassVersion="10" checksum="3430623962"/>
+  </class>
+  <class name="std::vector<l1extra::L1EmParticle>"/>
+  <class name="std::vector<l1extra::L1JetParticle>"/>
+  <class name="std::vector<l1extra::L1MuonParticle>"/>
+  <class name="std::vector<l1extra::L1EtMissParticle>"/>
+  <class name="std::vector<l1extra::L1ParticleMap>"/>
+  <class name="std::vector<l1extra::L1HFRings>"/>
+  <class name="edm::Wrapper<std::vector<l1extra::L1EmParticle> >"/>
+  <class name="edm::Wrapper<std::vector<l1extra::L1JetParticle> >"/>
+  <class name="edm::Wrapper<std::vector<l1extra::L1MuonParticle> >"/>
+  <class name="edm::Wrapper<l1extra::L1EtMissParticle>"/>
+  <class name="edm::Wrapper<std::vector<l1extra::L1EtMissParticle> >"/>
+  <class name="edm::Wrapper<std::vector<l1extra::L1ParticleMap> >"/>
+  <class name="edm::Wrapper<std::vector<l1extra::L1HFRings> >"/>
+
+  <class name="edm::Ref<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle> >"/>
+  <class name="edm::Ref<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle> >"/>
+  <class name="edm::Ref<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle> >"/>
+  <class name="edm::Ref<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle> >"/>
+  <class name="edm::Ref<std::vector<l1extra::L1HFRings>,l1extra::L1HFRings,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1HFRings>,l1extra::L1HFRings> >"/>
+
+  <class name="edm::RefVector<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle> >"/>
+  <class name="edm::RefVector<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle> >"/>
+  <class name="edm::RefVector<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle> >"/>
+  <class name="edm::RefVector<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle> >"/>
+  <class name="edm::RefVector<std::vector<l1extra::L1HFRings>,l1extra::L1HFRings,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1HFRings>,l1extra::L1HFRings> >"/>
+
+  <class name="std::vector<edm::Ref<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<l1extra::L1HFRings>,l1extra::L1HFRings,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1HFRings>,l1extra::L1HFRings> > >"/>
+
+  <class name="edm::RefProd<l1extra::L1EtMissParticle>"/>
+
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EmParticle>,l1extra::L1EmParticle> > >" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1MuonParticle>,l1extra::L1MuonParticle> > >" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1JetParticle>,l1extra::L1JetParticle> > >" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle,edm::refhelper::FindUsingAdvance<std::vector<l1extra::L1EtMissParticle>,l1extra::L1EtMissParticle> > >" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::RefProd<l1extra::L1EtMissParticle> > "/>
+
+  <class name="std::vector<l1extra::L1ParticleMap::L1ObjectType>"/>
+
+  <class name="GltDEDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="1378084374"/>
+  </class>
+  <class name="L1MonitorDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="2151016500"/>
+  </class>
+
+  <class name="L1DataEmulDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="634833762"/>
+  </class>
+  <class name="std::vector<L1DataEmulDigi>"/>
+  <class name="L1DataEmulRecord" ClassVersion="10">
+   <version ClassVersion="10" checksum="466303541"/>
+  </class>
+  <class name="edm::Wrapper<L1DataEmulRecord>"/>
+
+  <class name="L1TriggerError" ClassVersion="10">
+   <version ClassVersion="10" checksum="3499325937"/>
+  </class>
+  <class name="std::vector<L1TriggerError>"/>
+  <class name="edm::Wrapper<std::vector<L1TriggerError> >"/>
+
+
+</lcgdict>

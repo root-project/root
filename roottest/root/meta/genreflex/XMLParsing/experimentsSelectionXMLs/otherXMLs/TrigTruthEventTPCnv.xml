@@ -1,0 +1,18 @@
+<lcgdict>
+
+<!-- TrigInDetTrackTruthMap -->
+  <class name="TrigInDetTrackTruthMap_tlp1" id="08892FEB-5706-4938-9226-F45C0AA662E7"/>
+  <class name="TrigInDetTrackTruthMap_tlp2" id="02074F47-F290-4A48-B503-4DCAB4181B3D"/>
+  <class name="TrigInDetTrackTruthMap_p1" />
+  <class name="std::vector<TrigInDetTrackTruthMap_p1>" />
+
+<!-- TrigInDetTrackTruth --> 
+  <class name="TrigInDetTrackTruth_p1"/>
+  <class name="std::vector<TrigInDetTrackTruth_p1>" />
+
+<!-- TrigIDHitStats -->
+  <class name="TrigIDHitStats_p1"/>
+  <class name="std::vector<TrigIDHitStats_p1>" /> 
+
+</lcgdict>
+

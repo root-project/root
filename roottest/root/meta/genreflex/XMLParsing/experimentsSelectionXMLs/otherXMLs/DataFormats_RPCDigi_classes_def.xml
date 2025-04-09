@@ -1,0 +1,29 @@
+<lcgdict>
+<class name="RPCDigi" ClassVersion="10">
+ <version ClassVersion="10" checksum="3371330358"/>
+</class>
+<class name="std::vector<RPCDigi>"/>
+<class name="std::map<RPCDetId,std::vector<RPCDigi> >"/>
+<class name="MuonDigiCollection<RPCDetId,RPCDigi>"/> 
+<class name="edm::Wrapper<MuonDigiCollection<RPCDetId,RPCDigi>>" splitLevel="0"/> 
+
+<class name="edm::Wrapper<std::map <std::pair<int,int>, int> > "/> 
+<class name="RPCRawDataCounts" ClassVersion="10">
+ <version ClassVersion="10" checksum="977138550"/>
+</class>
+<class name="edm::Wrapper<RPCRawDataCounts>"/>
+
+<class name="LinkBoardElectronicIndex" ClassVersion="10">
+ <version ClassVersion="10" checksum="1528446863"/>
+</class>
+<class name="edm::Wrapper<LinkBoardElectronicIndex>"/>
+<class name="std::pair<LinkBoardElectronicIndex,int>"/>
+<class name="edm::Wrapper< std::pair<LinkBoardElectronicIndex,int> >"/>
+<class name="std::vector< std::pair<LinkBoardElectronicIndex, int> >"/> 
+<class name="edm::Wrapper< std::vector< std::pair<LinkBoardElectronicIndex, int> > >"/> 
+ <class name="RPCDigiL1Link" ClassVersion="10">
+  <version ClassVersion="10" checksum="231458210"/>
+ </class>
+ <class name="std::vector<RPCDigiL1Link>"/>
+ <class name="edm::Wrapper< std::vector<RPCDigiL1Link > >"/>
+</lcgdict>

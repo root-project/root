@@ -1,0 +1,50 @@
+<lcgdict>
+
+  <class name="std::vector<ParticleBase_p1>" />
+  <class name="ParticleBase_p1" />
+
+  <class name="std::vector<ParticleBase_p2>" />
+  <class name="ParticleBase_p2" />
+
+  <class name="ParticleLinks_p1" id="1368A875-F458-45C6-9A87-09E0C24A9C67"/>
+  <class name="SelectedParticles_p1" id="DEC1562B-16E6-4ACE-9E89-9B1E733696F5"/>
+
+  <!-- Neutrino _p1 -->
+  <class name="NeutrinoContainer_p1" id="2E5A2E46-E9FC-47C1-AA32-89889B3B9A85" />
+  <class name="std::vector<Neutrino_p1>" />
+  <class name="Neutrino_p1" />
+
+  <!-- Neutrino _p2 -->
+  <class name="NeutrinoContainer_p2" id="7B72B6DD-2B74-4097-8489-749EB57B47B3" />
+  <class name="std::vector<Neutrino_p2>" />
+  <class name="Neutrino_p2" />
+
+
+  <!-- CompositeParticle _p1 -->
+  <class name="CompositeParticleContainer_p1" id="6CFA134E-F669-435B-B20E-FA9EB2F51DCD" />
+  <class name="std::vector<CompositeParticle_p1>" />
+  <class name="CompositeParticle_p1" />
+
+
+  <!-- ParticleShallowClone _p1 -->
+  <class name="ParticleShallowCloneContainer_p1" id="EF004D41-FFCD-4E68-85D7-7F39186158E5" />
+  <class name="std::vector<ParticleShallowClone_p1>" />
+  <class name="ParticleShallowClone_p1" />
+
+
+
+  <!-- ParticleBaseLinks 
+  <class name="ParticleBaseLinks_p1" id="533F5794-7C88-43F9-A9B3-43C52D43B89B" />
+  <class name="ParticleLinks_p1"/>
+  -->
+
+  <class name="TrackParticleAssocs_p1" id="42E21200-3433-489A-BED9-D4F2BDC97102" />
+
+  <class name="INav4MomToTrackParticleAssocs_p1" id="7DDB5B30-918F-44C2-BBEE-12D671C1C3DC" />
+
+  <!-- these are already handled by EventCommonTPCnv -->
+  <!-- <class name="TrackParticleAssocs_p1::Assocs_t" /> -->
+  <!-- <class name="TrackParticleAssocs_p1::AssocElem_t" /> -->
+
+
+</lcgdict>

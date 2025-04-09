@@ -1,0 +1,22 @@
+<lcgdict>
+  <class name="HcalTB02HistoClass" ClassVersion="10">
+   <version ClassVersion="10" checksum="944394599"/>
+  </class>
+  <class name="edm::Wrapper<HcalTB02HistoClass>"/>
+  <class name="PHcalTB04Info" ClassVersion="10">
+   <version ClassVersion="10" checksum="406173511"/>
+  </class>
+  <class name="edm::Wrapper<PHcalTB04Info>"/>
+  <class name="PHcalTB06Info" ClassVersion="10">
+   <version ClassVersion="10" checksum="3969279899"/>
+  </class>
+  <class name="PHcalTB06Info::Vtx" ClassVersion="10">
+   <version ClassVersion="10" checksum="4037247532"/>
+  </class>
+  <class name="PHcalTB06Info::Hit" ClassVersion="10">
+   <version ClassVersion="10" checksum="2273647542"/>
+  </class>
+  <class name="std::vector<PHcalTB06Info::Vtx>"/>
+  <class name="std::vector<PHcalTB06Info::Hit>"/>
+  <class name="edm::Wrapper<PHcalTB06Info>"/>
+</lcgdict>

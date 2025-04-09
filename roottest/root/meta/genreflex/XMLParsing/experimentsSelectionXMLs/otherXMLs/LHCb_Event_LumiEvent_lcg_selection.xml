@@ -1,0 +1,7 @@
+<lcgdict>
+  <class name="LHCb::LumiFSR::ValuePair"/>
+  <class name="LHCb::LumiFSR::ExtraInfo"/>
+  <class name="LHCb::HltLumiSummary::ExtraInfo"/>
+  <class name="std::pair<int,std::pair<int,long long> >"/>
+  <class name="std::vector<std::pair<int,std::pair<int,long long> > >"/>
+</lcgdict>

@@ -1,0 +1,19 @@
+<lcgdict>
+
+<class name="GEMDigi" ClassVersion="10">
+ <version ClassVersion="10" checksum="2054480652"/>
+</class>
+<class name="std::vector<GEMDigi>"/>
+<class name="std::map<GEMDetId,std::vector<GEMDigi> >"/>
+<class name="MuonDigiCollection<GEMDetId,GEMDigi>"/> 
+<class name="edm::Wrapper<MuonDigiCollection<GEMDetId,GEMDigi> >" splitLevel="0"/> 
+
+<class name="GEMCSCPadDigi" ClassVersion="10">
+ <version ClassVersion="10" checksum="1196724793"/>
+</class>
+<class name="std::vector<GEMCSCPadDigi>"/>
+<class name="std::map<GEMDetId,std::vector<GEMCSCPadDigi> >"/>
+<class name="MuonDigiCollection<GEMDetId,GEMCSCPadDigi>"/> 
+<class name="edm::Wrapper<MuonDigiCollection<GEMDetId,GEMCSCPadDigi> >" splitLevel="0"/> 
+
+</lcgdict>

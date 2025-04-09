@@ -1,0 +1,35 @@
+
+Processing runursula.C...
+Warning in <TClass::Init>: no dictionary for class edm::ProductRegistry is available
+Warning in <TClass::Init>: no dictionary for class edm::BranchKey is available
+Warning in <TClass::Init>: no dictionary for class edm::BranchDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::ModuleDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::PS_ID is available
+Warning in <TClass::Init>: no dictionary for class edm::ProductID is available
+Warning in <TClass::Init>: no dictionary for class edm::EventAux is available
+Warning in <TClass::Init>: no dictionary for class edm::EventID is available
+Warning in <TClass::Init>: no dictionary for class edm::Timestamp is available
+Warning in <TClass::Init>: no dictionary for class edm::Wrapper<edm::EmbdSimTrackContainer> is available
+Warning in <TClass::Init>: no dictionary for class edm::EDProduct is available
+Warning in <TClass::Init>: no dictionary for class edm::EmbdSimTrackContainer is available
+Warning in <TClass::Init>: no dictionary for class EmbdSimTrack is available
+Warning in <TClass::Init>: no dictionary for class CoreSimTrack is available
+Warning in <TClass::Init>: no dictionary for class CLHEP::HepLorentzVector is available
+Warning in <TClass::Init>: no dictionary for class CLHEP::Hep3Vector is available
+Warning in <TClass::Init>: no dictionary for class edm::Wrapper<edm::EmbdSimVertexContainer> is available
+Warning in <TClass::Init>: no dictionary for class edm::EmbdSimVertexContainer is available
+Warning in <TClass::Init>: no dictionary for class EmbdSimVertex is available
+Warning in <TClass::Init>: no dictionary for class CoreSimVertex is available
+Warning in <TClass::Init>: no dictionary for class edm::Wrapper<edm::PSimHitContainer> is available
+Warning in <TClass::Init>: no dictionary for class edm::PSimHitContainer is available
+Warning in <TClass::Init>: no dictionary for class PSimHit is available
+Warning in <TClass::Init>: no dictionary for class Point3DBase<float,LocalTag> is available
+Warning in <TClass::Init>: no dictionary for class PV3DBase<float,PointTag,LocalTag> is available
+Warning in <TClass::Init>: no dictionary for class Basic3DVector<float> is available
+Warning in <TClass::Init>: no dictionary for class Vector3DBase<float,LocalTag> is available
+Warning in <TClass::Init>: no dictionary for class PV3DBase<float,VectorTag,LocalTag> is available
+Warning in <TClass::Init>: no dictionary for class edm::EventProvenance is available
+Warning in <TClass::Init>: no dictionary for class edm::BranchEntryDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::Wrapper<CrossingFrame> is available
+Warning in <TClass::Init>: no dictionary for class CrossingFrame is available
+Warning in <TClass::Init>: no dictionary for class BCrossingFrame is available

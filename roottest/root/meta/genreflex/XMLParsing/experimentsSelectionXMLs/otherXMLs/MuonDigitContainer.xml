@@ -1,0 +1,98 @@
+<lcgdict>
+  <!-- Misc -->
+  <class name="std::set<IdentifierHash>" />
+
+  <!-- Digit -->
+  <class name="MuonDigit" />
+  <class name="CscDigit" />
+  <class name="MdtDigit" />
+  <class name="RpcDigit" />
+  <class name="TgcDigit" />
+  <class name="MmDigit" />
+  <class name="sTgcDigit" />
+ 
+  <!-- Collection -->
+  <class name="DataVector<CscDigit>" />
+  <class name="std::vector<CscDigit*>" />
+  <class name="CscDigitCollection" />  
+
+  <class name="DataVector<MdtDigit>" />
+  <class name="std::vector<MdtDigit*>" />
+  <class name="MdtDigitCollection" />  
+
+  <class name="DataVector<RpcDigit>" />
+  <class name="std::vector<RpcDigit*>" />
+  <class name="RpcDigitCollection" />  
+
+  <class name="DataVector<TgcDigit>" />
+  <class name="std::vector<TgcDigit*>" />
+  <class name="TgcDigitCollection" />  
+
+  <class name="DataVector<MmDigit>" />
+  <class name="std::vector<MmDigit*>" />
+  <class name="MmDigitCollection" />  
+
+  <class name="DataVector<sTgcDigit>" />
+  <class name="std::vector<sTgcDigit*>" />
+  <class name="sTgcDigitCollection" />  
+
+
+  <!-- Container -->
+  <class name="IdentifiableContainer<CscDigitCollection>" />
+  <class name="DataLinkVector<CscDigitCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="CscDigitContainer" />
+  <class name="std::vector<CscDigitCollection * >" />
+  <class name="DataVector<CscDigitCollection>" id="52F8E66C-34C6-4B77-916A-E849A4DBE19D" />
+
+  <class name="IdentifiableContainer<MdtDigitCollection>" />
+  <class name="DataLinkVector<MdtDigitCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="MdtDigitContainer" />
+  <class name="std::vector<MdtDigitCollection * >" />
+  <class name="DataVector<MdtDigitCollection>" id="F9511C9C-D76E-4818-AB24-3851ED4C78B8" />
+
+  <class name="IdentifiableContainer<RpcDigitCollection>" />
+  <class name="DataLinkVector<RpcDigitCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="RpcDigitContainer" />
+  <class name="std::vector<RpcDigitCollection * >" />
+  <class name="DataVector<RpcDigitCollection>" id="9A162126-C5AD-43AF-B727-B9243286D3B8" />
+
+  <class name="IdentifiableContainer<TgcDigitCollection>" />
+  <class name="DataLinkVector<TgcDigitCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="TgcDigitContainer" />
+  <class name="std::vector<TgcDigitCollection * >" />
+  <class name="DataVector<TgcDigitCollection>" id="66A92EED-5FA9-4235-A095-E986903AEB42" />
+
+  <class name="IdentifiableContainer<MmDigitCollection>" />
+  <class name="DataLinkVector<MmDigitCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="MmDigitContainer" id="523C8E6A-EAE8-4009-B2D0-32FCD80DFBAA" />
+  <class name="std::vector<MmDigitCollection * >" />
+  <class name="DataVector<MmDigitCollection>"/>
+	
+  <class name="IdentifiableContainer<sTgcDigitCollection>"/>
+  <class name="DataLinkVector<sTgcDigitCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="sTgcDigitContainer"  id="645AA9AE-FB99-4305-8CDB-FE0888744B56"  />
+  <class name="std::vector<sTgcDigitCollection * >" />
+  <class name="DataVector<sTgcDigitCollection>"/>
+
+
+</lcgdict>
+
+

@@ -1,0 +1,12 @@
+<lcgdict>
+   <class name="DataHeader" id="9DD1A285-5989-4023-9A1C-6586BE7C1FA6">
+      <field name="m_status" transient="true"/>
+      <field name="m_processTag" transient="true"/>
+   </class>
+   <class name="std::vector<DataHeaderElement>"/>
+   <class name="std::vector<DataHeaderElement>::iterator"/>
+   <class name="std::vector<DataHeaderElement>::const_iterator"/>
+   <class name="DataHeaderElement"/>
+   <class name="Token" id="E013D4B1-CA9C-4E3C-9BE2-8691BBAFCB9A"/>
+   <class name="Token::OID_t" id="9E944D67-6C88-47E2-9834-FCCDA9020F29"/>
+</lcgdict>

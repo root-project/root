@@ -1,0 +1,44 @@
+<lcgdict>
+
+<class name="ESPedestal"/>
+<class name="std::vector<ESPedestal>"/>
+<class name="ESPedestals"/>
+
+<class name="ESWeightSet"/>
+
+<class name="ESWeightStripGroups"/>
+<class name="ESStripGroupId"/>
+<class name="ESTBWeights"/>
+<class name="std::map< ESStripGroupId ,ESWeightSet >"/>
+<class name="std::pair< ESStripGroupId, ESWeightSet >"/>
+<class name="std::vector<ESStripGroupId>"/>
+
+<class name="ESADCToGeVConstant"/>
+
+<class name="ESMIPToGeVConstant"/>
+
+<class name="ESThresholds"/>
+
+<class name="ESTimeSampleWeights"/>
+
+<class name="ESGain"/>
+
+<class name="ESIntercalibConstants"/>
+
+<class name="ESAngleCorrectionFactors"/>
+
+<class name="ESEEIntercalibConstants"/>
+
+<class name="ESMissingEnergyCalibration"/>
+
+<class name="ESRecHitRatioCuts"/>
+
+<class name="ESChannelStatus"/>
+<class name="ESChannelStatusCode"/>
+<class name="std::vector<ESChannelStatusCode>"/>
+<class name="EcalContainer<ESDetId,ESChannelStatusCode>"/>
+<class name="EcalContainer<ESDetId,ESPedestal>"/>
+<class name="EcalContainer<ESDetId,ESStripGroupId>"/>
+<class name="EcalContainer<ESDetId,float>"/>
+
+</lcgdict>

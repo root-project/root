@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="tfwliteselectortest::ThingsTSelector"/>
+  <class name="tfwliteselectortest::ThingsTSelector2"/>
+  <class name="TFWLiteSelector<tfwliteselectortest::ThingsWorker>"/>
+</lcgdict>

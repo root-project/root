@@ -1,0 +1,8 @@
+
+Processing execAtlasTest.C...
+Checking normalisation of names:
+std::string --> string
+std::vector<std::string> --> vector<string>
+Atlas::ClassA<Atlas::ClassB, float> --> Atlas::ClassA<Atlas::ClassB>
+Atlas::ClassA<Atlas::ClassC, int> --> Atlas::ClassA<Atlas::ClassC>
+(int) 0

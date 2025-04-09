@@ -1,0 +1,10 @@
+
+Processing runoperatorEqual.C...
+===========================================================================
+class StThreeVector<double>
+List of member variables: -------------------------------------------------
+List of member functions: -------------------------------------------------
+filename     line:size busy function type and name
+(compiled)     (NA):(NA) 0 public: template <class X> StThreeVector<double> func(X);
+(compiled)     (NA):(NA) 0 public: template <class X> StThreeVector<double> operator-=(const StThreeVector<X> &);
+(compiled)     (NA):(NA) 0 public: template <class X> StThreeVector<double> &operator+=(const StThreeVector<X> &);

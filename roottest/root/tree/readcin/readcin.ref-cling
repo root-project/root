@@ -1,0 +1,31 @@
+
+Processing runreadcin.C...
+******************************************************************************
+*Tree    :test      : test                                                   *
+*Entries :      101 : Total =            6850 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :EventNumber : EventNumber/F                                        *
+*Entries :      101 : Total  Size=       1085 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :mg_reweight_1 : mg_reweight_1/F                                    *
+*Entries :      101 : Total  Size=       1097 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :mg_reweight_2 : mg_reweight_2/F                                    *
+*Entries :      101 : Total  Size=       1097 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :mg_reweight_3 : mg_reweight_3/F                                    *
+*Entries :      101 : Total  Size=       1097 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    4 :mg_reweight_4 : mg_reweight_4/F                                    *
+*Entries :      101 : Total  Size=       1097 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    5 :mg_reweight_5 : mg_reweight_5/F                                    *
+*Entries :      101 : Total  Size=       1097 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*

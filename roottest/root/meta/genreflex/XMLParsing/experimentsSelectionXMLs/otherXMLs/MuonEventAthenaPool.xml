@@ -1,0 +1,55 @@
+<lcgdict>
+  <class name="CscRawData_p2" />
+  <class name="std::vector<CscRawData_p2>" />
+  <class name="CscRawDataCollection_p2" />
+  <class name="std::vector<CscRawDataCollection_p2>" />
+  <class name="CscRawDataContainer_p2" id="19221A0D-4167-4A1C-BE2A-EE335D7C9D5F" />
+
+  <class name="CscRawData_p1" />
+  <class name="std::vector<CscRawData_p1>" />
+  <class name="CscRawDataCollection_p1" />
+  <class name="std::vector<CscRawDataCollection_p1>" />
+  <class name="CscRawDataContainer_p1" id="3586FE6B-0504-4E78-BD9F-AF839C50F931" />
+
+  <class name="CscRawData_p3" />
+  <class name="std::vector<CscRawData_p3>" />
+  <class name="CscRawDataCollection_p3" />
+  <class name="std::vector<CscRawDataCollection_p3>" />
+  <class name="CscRawDataContainer_p3" id="A77330FB-BD12-4E50-829C-DADFBF556119" />
+
+  <class name="TgcRawData_p1" />
+  <class name="std::vector<TgcRawData_p1>" />
+  <class name="TgcRdo_p1" />
+  <class name="std::vector<TgcRdo_p1>" />
+  <class name="TgcRdoContainer_p1" id="BF9D17EA-AC87-4243-9126-8FC86DDCDAA3" />
+
+  <class name="TgcRawData_p2" />
+  <class name="std::vector<TgcRawData_p2>" />
+  <class name="TgcRdo_p2" />
+  <class name="std::vector<TgcRdo_p2>" />
+  <class name="TgcRdoContainer_p2" id="3DA250DA-321C-4DD3-996A-BB0E67A6034D" />
+
+  <class name = "RpcFiredChannel_p1" />
+  <class name = "RpcCoinMatrix_p1" />
+  <class name="std::vector<RpcFiredChannel_p1>" />
+  <class name = "RpcPad_p1" />
+  <class name="std::vector<RpcCoinMatrix_p1>" />
+  <class name = "RpcPadContainer_p1" id="60A912DD-7920-4DCE-986E-6CD5644835BD" />
+  <class name = "RpcPadContainer_p2" id="3B29433B-015F-4664-AB3F-A6B2FAA8C97F" />
+  <class name="std::vector<RpcPad_p1>" />
+
+  <class name = "MdtAmtHit_p1" />
+  <class name = "MdtCsm_p1" />
+  <class name="std::vector<MdtAmtHit_p1>" />
+  <class name = "MdtCsmContainer_p1" id="66D77835-5290-4C9A-842A-AF10F384FC93" />
+  <class name="std::vector<MdtCsm_p1>" />
+
+  <!-- for TP separation backward compatibility using ROOT streamers (MN)  -->
+  <class name="CscRawData_p0" />
+  <class name="CscRawDataStreamer_p0" />
+  
+  <class name = "RpcSectorLogicContainer_p1" id="93035F54-0FA9-4A56-98E0-A808DD23C089" />
+  
+
+</lcgdict>
+

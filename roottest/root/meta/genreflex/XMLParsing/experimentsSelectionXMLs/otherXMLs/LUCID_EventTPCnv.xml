@@ -1,0 +1,14 @@
+<lcgdict>
+  <class name="std::vector<LUCID_SimHit_p1>" id="9ACC906C-74CA-4F77-AC16-2A503358C2D1" />
+  <class name="std::vector<LUCID_Digit_p1>" />
+  <class name="std::vector<LUCID_RawData_p1>" />
+  <class name="LUCID_SimHit_p1" />
+  <class name="LUCID_Digit_p1" />
+  <class name="LUCID_DigitContainer_p1" id="681CDB46-D6D0-4C59-98C9-398B43873B50" />
+  <class name="LUCID_RawData_p1" />
+  <class name="LUCID_RawDataContainer_p1" id="88937AAE-D299-4A80-8608-96EFB3068F9A" />
+
+  <class name="std::vector<LUCID_Digit_p2>" />
+  <class name="LUCID_Digit_p2" />
+  <class name="LUCID_DigitContainer_p2" id="08BBB3C5-BCAE-4540-8F3A-76D873045585" />
+</lcgdict>

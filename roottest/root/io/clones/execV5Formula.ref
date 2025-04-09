@@ -1,0 +1,87 @@
+
+Processing execV5Formula.C...
+Collection name='TF1s', class='TClonesArray', size=21
+ Formula based function:     f_Ch01_BC00_int0 
+     f_Ch01_BC00_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC01_int0 
+     f_Ch01_BC01_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC02_int0 
+     f_Ch01_BC02_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC03_int0 
+     f_Ch01_BC03_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC04_int0 
+     f_Ch01_BC04_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC05_int0 
+     f_Ch01_BC05_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC06_int0 
+     f_Ch01_BC06_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC07_int0 
+     f_Ch01_BC07_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC08_int0 
+     f_Ch01_BC08_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC09_int0 
+     f_Ch01_BC09_int0 : [0]+([1]*x) Ndim= 1, Npar= 2, Number= 0 
+ Formula expression: 
+	[p0]+([p1]*x) 
+ Formula based function:     f_Ch01_BC10_int0 
+     f_Ch01_BC10_int0 : [0]+([1]*x) Ndim= 1, Npar= 2, Number= 0 
+ Formula expression: 
+	[p0]+([p1]*x) 
+ Formula based function:     f_Ch01_BC11_int0 
+     f_Ch01_BC11_int0 : ([0]+([1]*x))+([2]*(abs(x)^[3])) Ndim= 1, Npar= 4, Number= 0 
+ Formula expression: 
+	([p0]+([p1]*x))+([p2]*(pow(abs(x),[p3]))) 
+ Formula based function:     f_Ch01_BC12_int0 
+     f_Ch01_BC12_int0 : ([0]+([1]*x))+([2]*(abs(x)^[3])) Ndim= 1, Npar= 4, Number= 0 
+ Formula expression: 
+	([p0]+([p1]*x))+([p2]*(pow(abs(x),[p3]))) 
+ Formula based function:     f_Ch01_BC13_int0 
+     f_Ch01_BC13_int0 : ([0]+([1]*x))+([2]*(abs(x)^[3])) Ndim= 1, Npar= 4, Number= 0 
+ Formula expression: 
+	([p0]+([p1]*x))+([p2]*(pow(abs(x),[p3]))) 
+ Formula based function:     f_Ch01_BC14_int0 
+     f_Ch01_BC14_int0 : ([0]+([1]*x))+([2]*(abs(x)^[3])) Ndim= 1, Npar= 4, Number= 0 
+ Formula expression: 
+	([p0]+([p1]*x))+([p2]*(pow(abs(x),[p3]))) 
+ Formula based function:     f_Ch01_BC15_int0 
+     f_Ch01_BC15_int0 : ([0]+([1]*x))+([2]*(abs(x)^[3])) Ndim= 1, Npar= 4, Number= 0 
+ Formula expression: 
+	([p0]+([p1]*x))+([p2]*(pow(abs(x),[p3]))) 
+ Formula based function:     f_Ch01_BC16_int0 
+     f_Ch01_BC16_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC17_int0 
+     f_Ch01_BC17_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC18_int0 
+     f_Ch01_BC18_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC19_int0 
+     f_Ch01_BC19_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 
+ Formula based function:     f_Ch01_BC20_int0 
+     f_Ch01_BC20_int0 : x Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x 

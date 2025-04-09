@@ -1,0 +1,11 @@
+
+Processing execIntroTut.C...
+Warning in <TClass::Init>: no dictionary for class EventData is available
+Warning in <TClass::Init>: no dictionary for class Particle is available
+Error in <TTreeReaderArrayBase::CreateContentProxy()>: The branch fParticles contains data of type Particle. It cannot be accessed by a TTreeReaderArray<int>
+Error in <TTreeReaderValueBase::CreateProxy()>: The branch fParticles contains data of type vector<Particle>. It cannot be accessed by a TTreeReaderValue<int>
+Error in <TTreeReaderValueBase::GetBranchDataType()>: Must use TTreeReaderArray to access a member of an object that is stored in a collection.
+Error in <TTreeReaderValueBase::CreateProxy()>: The branch fParticles.fMomentum contains data of type {UNDETERMINED TYPE}, which does not have a dictionary.
+Error in <TTreeReaderArrayBase::CreateContentProxy()>: The branch fParticles.fPosX contains data of type double. It cannot be accessed by a TTreeReaderArray<float>
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called fDoesntExist. You could check with TTree::Print() for available branches.
+(int) 0

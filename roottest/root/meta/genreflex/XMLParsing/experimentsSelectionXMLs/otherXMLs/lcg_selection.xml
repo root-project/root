@@ -1,0 +1,107 @@
+<lcgdict>
+  <class name="std::vector<LHCb::LHCbID>::const_iterator"/>
+  <class name="std::vector<LHCb::VeloChannelID>"/>
+  <class name="std::vector<std::pair<LHCb::VeloChannelID,int> >"/>
+  <class name="std::pair<LHCb::VeloChannelID,int>"/>
+  <class name="std::vector<LHCb::VPChannelID>"/>
+  <class name="std::vector<std::pair<LHCb::VPChannelID,int> >"/>
+  <class name="std::pair<LHCb::VPChannelID,int>"/>
+  <class name="std::vector<LHCb::VLChannelID>"/>
+  <class name="std::vector<std::pair<LHCb::VLChannelID,int> >"/>
+  <class name="std::pair<LHCb::VLChannelID,int>"/>
+  <class name="std::vector<std::pair<LHCb::STChannelID,int> >"/>
+  <class name="std::pair<LHCb::STChannelID,int>"/>
+  <class name="std::vector<std::pair<LHCb::OTChannelID,int> >"/>
+  <class name="std::pair<LHCb::OTChannelID,int>"/>
+  <class name="std::pair<double,LHCb::CaloCellID>"/>
+  <class name="std::vector<std::pair<double,LHCb::CaloCellID> >"/>
+  <class name="std::pair<LHCb::MuonTileID,int>"/>
+  <class name="std::vector<std::pair<LHCb::MuonTileID,int> >"/>
+  <class name="LHCb::Trajectory"/>
+  <class name="LHCb::AlignTraj"/>
+  <class name="LHCb::CircleTraj"/>
+  <class name="LHCb::LineTraj"/>
+  <class name="LHCb::ParabolaTraj"/>
+  <class name="MuonLayout"/>
+  <class name="std::auto_ptr<LHCb::Trajectory>"/>
+  <class pattern ="LHCb::SiPositionInfo<*>"/>
+  <class pattern ="LHCb::PixelPositionInfo<*>"/>
+  <class pattern ="GaudiUtils::VectorMap<*>"/>
+<!--- Next should really be in L0Event, is an L0DUReport return type -->
+  <class name ="std::map<std::pair<int,unsigned int>,unsigned int>"/>
+<!--- Add here all interfaces from Kernel directory -->
+  <class name = "IAlgorithmCorrelations" />
+  <class name = "IBdlTool"             />
+  <class name = "IBIntegrator"         />
+  <class name = "ICheckTool"           />
+  <class name = "ICondDBInfo"          />
+  <class name = "IDQFilter"            />
+  <class name = "IDQScanner"           />
+  <class name = "IEventCounter"        />
+  <class name = "IEventTupleTool"      />
+  <class name = "IEvtTypeSvc"          />
+  <class name = "IInAcceptance"        />
+  <class name = "ILHCbMagnetSvc"       />
+  <class name = "IMCVeloFEType"        />
+  <class name = "INormalizeTool"       />
+  <class name = "ISiAmplifierResponse" />
+  <class name = "ITrajPoca"            />
+  <class name = "IUsedLHCbID"          />
+  <class name = "IReferenceRate"    />
+  <class name = "LHCb::Inspector" />
+  <class name = "IAccept"                />
+  <class name = "ICountContainedObjects" />
+
+  <variable pattern="Rich::NRadiatorTypes"  />
+  <enum name = "Rich::RadiatorType" />
+  <class name = "Rich::RadiatorTypeVector" />
+  <class name = "Rich::Radiators" />
+  <function pattern="Rich::radiators*" />
+
+  <variable pattern="Rich::NRiches"  />
+  <enum name = "Rich::DetectorType" />
+  <class name = "Rich::DetectorVector" />
+  <class name = "Rich::Detectors" />
+  <function pattern="Rich::detectors*" />
+
+  <variable pattern="Rich::NParticleTypes"  />
+  <enum name = "Rich::ParticleIDType" />
+  <class name = "Rich::ParticleIDTypeVector" />
+  <class name = "Rich::Particles" />
+  <function pattern="Rich::particles*" />
+
+  <variable pattern="Rich::NTotalHPDPanels"  />
+  <variable pattern="Rich::NHPDPanelsPerRICH"  />
+  <enum name = "Rich::Side" />
+  <class name = "Rich::RichSideVector" />
+  <class name = "Rich::Sides" />
+  <function pattern="Rich::sides*" />
+
+  <class name = "Rich::RadIntersection" />
+  <class name = "Rich::RadIntersection::Vector" />
+  <class name = "Rich::RadIntersection::Sorter" />
+
+  <function pattern="Rich::text*" />
+
+  <class name="LHCb::RichSmartID"/>
+  <class name="LHCb::RichSmartID::Vector"/>
+  <class name="LHCb::RichSmartID::HPD"/>
+  <class name="LHCb::RichSmartID::MaPMT"/>
+  <enum  name="LHCb::RichSmartID::IDType"/>
+
+<!-- Counters in TES -->
+
+  <class name = "Gaudi::Counter"  id = "00000096-0000-0000-0000-000000000000" />
+  <class name = "Gaudi::Counters" id = "00000097-0000-0000-0000-000000000000" />
+  <class name = "Gaudi::Numbers"  id = "00000098-0000-0000-0000-000000000000" />
+
+  <class name = "std::pair<std::string,double>"     />
+  <class name = "std::pair<std::string,StatEntity>" />
+  <class name = "std::vector<std::pair<std::string,double> >"      />
+  <class name = "std::vector<std::pair<std::string,StatEntity> > " />
+
+  <!--- These should really be moved to GaudiKernel or Reflex -->
+  <class name="std::pair<Gaudi::XYZPoint,Gaudi::XYZPoint>" />
+
+</lcgdict>
+

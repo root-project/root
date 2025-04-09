@@ -1,0 +1,43 @@
+<rootdict>
+   <class name="MyClass" />
+
+   <ioread sourceClass = "MyClass"
+           version = "[1]"
+           source = "int ver"
+           targetClass = "MyClass"
+           target = "ver"
+           include = "iostream">
+           <![CDATA[
+            std::cout << \"rule reading class version: \" << onfile.ver << \"\\n\"; ver = 99;
+           ]]>
+   </ioread>
+
+   <ioread sourceClass = "MyClass"
+           version = "[1]"
+           source = "vector<int> fArray"
+           targetClass = "MyClass"
+           target = "fArray"
+           include = "iostream">
+           <![CDATA[
+           int i=0; for (int cont : onfile.fArray) {fArray[i++] = cont;std::cout << "Cont is " << cont << "\n"; };
+           ]]>
+   </ioread>
+</rootdict>
+
+<!--
+The rule for a linkdef:
+
+#ifdef __CINT__
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+#pragma link C++ class MyClass + ;
+
+#pragma read sourceClass = "MyClass" version = "[1]" source = "int ver;vector<int> fArray" targetClass = "MyClass" target = "ver" include = "iostream" code =                                                             \
+    "{ std::cout << \"rule reading class version: \" << onfile.ver << \"\\n\"; ver = 99; }"
+
+#pragma read sourceClass = "MyClass" version = "[1]" source = "vector<int> fArray" targetClass = "MyClass" target = "fArray" include = "iostream" code = "{ if (onfile.fArray.size() >2)cerr<< \"Vector is too big!\\n\";  int i=0;for (int cont : onfile.fArray)fArray[i++] = cont ;}"
+
+
+#endif
+-->

@@ -1,0 +1,10 @@
+
+Processing /Users/mato/Development/ROOT/roottest.git/python/cmdLineUtils/ROOT_8197.C...
+** first file **
+TFile**		myfile1.root	
+ TFile*		myfile1.root	
+  KEY: TList	mylist;1	Doubly linked list
+** second file **
+TFile**		myfile2.root	
+ TFile*		myfile2.root	
+  KEY: TList	mylist;1	Doubly linked list

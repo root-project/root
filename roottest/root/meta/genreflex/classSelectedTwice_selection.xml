@@ -1,0 +1,11 @@
+<rootdict>
+   <class name="Muon::myclass<float>"/>
+   <class name="Muon::additionalTypedef" />
+   <class name="Muon::RpcPrepDataContainer_p3"/>
+
+   <class pattern="thisClass*" />
+   <class pattern="thisClas*" />
+   <class name="thisClassWithALongName" />
+
+</rootdict>
+

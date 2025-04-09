@@ -1,0 +1,139 @@
+<lcgdict>
+  <class name    = "__gnu_cxx::dummy" />
+  <!--class pattern = "GaudiPython::Interface<*>"/-->
+  <class pattern = "std::unary_function<*>"/>
+  <class name    = "GaudiPython::Helper"/>
+
+  <class name    = "std::vector<Property*>" />
+  <class name    = "std::vector<const Property*>"/>
+  <class name    = "std::vector<std::basic_string<char> >" rootmap="false"/>
+  <class name    = "std::vector<std::vector<double> >" rootmap="false"/>
+  <class name    = "std::vector<IRegistry*>"/>
+  <class name    = "std::ostream"/>
+  <!--class name    = "std::basic_ostream<char,std::char_traits<char> >" rootmap="false"/-->
+  <class name    = "std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >" rootmap="false"/>
+  <class name    = "std::map<std::basic_string<char>,std::basic_string<char> >"  rootmap="false"/>
+  <class pattern = "std::_Bit_reference*"/>
+
+  <class name    = "std::list<IAlgorithm*>"/>
+  <class name    = "std::list<IService*>"/>
+  <class name    = "std::list<const IFactory*>"/>
+
+  <class name    = "std::allocator<IRegistry*>"/>
+  <class name    = "std::allocator<IAlgorithm*>"/>
+  <class name    = "std::allocator<IService*>"/>
+
+
+  <class name    = "std::vector<IAlgTool*>"          />
+  <class name    = "std::vector<const StatEntity*>"  />
+  <class name    = "std::vector<GaudiAlg::ID>"       />
+  <class name    = "std::vector<AIDA::IHistogram1D*>"/>
+  <class name    = "std::vector<AIDA::IHistogram2D*>"/>
+  <class name    = "std::vector<AIDA::IHistogram3D*>"/>
+  <class name    = "std::vector<AIDA::IProfile1D*>"  />
+  <class name    = "std::vector<AIDA::IProfile2D*>"  />
+  <function name = "Gaudi::Utils::Histos::path"      />
+  <function name = "Gaudi::Utils::Histos::histoDump" />
+  <class name    = "Gaudi::Utils::Histos::HistoStrings" />
+
+  <class pattern = "SimpleProperty<*>"/>
+  <class pattern = "SimplePropertyRef<*>"/>
+  <class pattern = "BoundedVerifier<*>"/>
+  <class pattern = "PropertyVerifier<*>"/>
+  <class name    = "PropertyCallbackFunctor"/>
+
+  <class name    = "GaudiHandleProperty"      />
+  <class name    = "GaudiHandleArrayProperty" />
+
+  <class pattern = "GaudiAlg::*"              />
+  <class name    = "GaudiAlgorithm"           />
+  <class name    = "GaudiHistoAlg"            />
+  <class pattern = "GaudiPython::PyAlg<*>"    />
+  <class name    = "GaudiTupleAlg"            />
+  <class name    = "Tuples::Tuple"            />
+  <class pattern = "GaudiPython::*Decorator*" />
+  <class name    = "StatEntity"               />
+  <class pattern = "GaudiPython::Printer<*>"  />
+  <class pattern = "GaudiAlg::Print*"         />
+
+  <class pattern = "GaudiCommon<*>"      />
+  <class pattern = "GaudiHistos<*>"      />
+  <class pattern = "GaudiTuples<*>"      />
+  <class name    = "Gaudi::Utils::Aida2ROOT"    />
+
+  <class name    = "Stat"                   />
+  <class pattern = "Chrono*"                 />
+
+  <class pattern = "Property*Functor"        />
+  <class pattern = "SimpleProperty<*>"       />
+  <class pattern = "SimplePropertyRef<*>"    />
+  <class pattern = "PropertyWithVerifier<*>" />
+  <class pattern = "PropertyWithValue<*>">
+    <field name="m_value" transient="true"/>
+  </class>
+  <class pattern = "BoundedVerifier<*>"      />
+  <class pattern = "PropertyVerifier<*>"     />
+
+  <class pattern = "AIDA::I*"  />
+  <class name    = "GaudiPython::PyAlgorithm"/>
+  <class name    = "GaudiPython::CallbackStreamBuf"/>
+  <class name    = "ParticleProperty"/>
+  <class name    = "InterfaceID"/>
+
+  <class name    = "Gaudi::StringKey" />
+  <class name    = "Gaudi::Utils::MapBase" />
+
+  <class name = "IErrorTool" />
+  <class name = "IGenericTool" />
+  <class name = "IHistoTool" />
+  <class name = "ITupleTool" />
+  <class name = "ISequencerTimerTool" />
+
+  <function name= "Gaudi::Utils::hasProperty" />
+
+  <class name = "Gaudi::IFileCatalog" />
+  <class name = "Gaudi::IFileCatalogMgr" />
+  <class name = "Gaudi::IDataConnection" />
+  <class name = "Gaudi::IIODataManager" />
+
+  <enum     name= "Gaudi::Utils::Histos::Formats::Format" />
+  <function name= "Gaudi::Utils::Histos::Formats::format" />
+  <function name= "Gaudi::Utils::Histos::Formats::header" />
+  <function name= "Gaudi::Utils::Histos::format" />
+  <class    name= "Gaudi::Utils::Histos::Table"  />
+  <class    name= "Gaudi::Utils::HistoStats"  />
+
+  <class    name= "Gaudi::RangeBase_"  />
+
+  <exclusion>
+    <class name    = "GaudiAlg::ID::LiteralID" />
+    <class name    = "GaudiAlg::HistoBinEdges" />
+    <class pattern = "std::list<std::pair<InterfaceID,*" />
+    <class pattern = "std::vector<*table_node*"          />
+    <class pattern = "GaudiUtils::HashMap<*Tuple*>"       />
+    <class pattern = "GaudiUtils::HashMap<*Histo*>"       />
+    <class pattern = "GaudiUtils::HashMap<*Profi*>"       />
+    <class pattern = "GaudiUtils::HashMap<GaudiAlg::ID*>" />
+    <class pattern = "GaudiAlg::*Map*"                   />
+    <class pattern = "GaudiHistos<*>::*Map*"             />
+    <class pattern = "GaudiTuples<*>::*Map*"             />
+    <class pattern = "std::unary_function<std::pair<*,Tuples::*>" />
+    <class pattern = "std::unary_function<std::pair<*,NTuple::*>" />
+    <class pattern = "std::unary_function<std::pair<*,AIDA::*>"   />
+    <class name    = "GaudiPython::CallbackStreamBuf">
+      <!-- assignment operator and copy constructor cannot compile -->
+      <method name="="/>
+<!--      <method proto_pattern="CallbackStreamBuf*CallbackStreamBuf*"/> -->
+    </class>
+    <class pattern = "std::basic_ostream&lt;char*">
+      <!-- assignment operator and copy constructor cannot compile -->
+      <method name="="/>
+      <!-- We should exclude only the copy constructor, but I did not manage to do it -->
+      <!--method pattern="basic_ostream*"/-->
+    </class>
+    <class pattern = "std::basic_stringbuf&lt;char*">
+      <!-- assignment operator cannot compile -->
+      <method name="="/>
+    </class>
+  </exclusion>
+</lcgdict>

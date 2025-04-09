@@ -1,0 +1,22 @@
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test01_load_reflection_cache
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test02_instance_data_read_access
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test03_instance_data_write_access
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test04_array_passing
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test05_class_read_access
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test06_class_data_write_access
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test07_range_access
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test08_type_conversions
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test09_global_builtin_types
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test10_global_ptr
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test11_enum
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test12_string_passing
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test13_copy_contructor
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test14_object_returns
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test15_object_arguments
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test16_nullptr_passing
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test17_respect_privacy
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test18_object_and_pointer_comparisons
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test19_object_validity
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test20_buffer_reshaping
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test21_voidp
+

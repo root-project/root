@@ -1,0 +1,28 @@
+<lcgdict>
+
+//Needed only for HLT-Open
+<class name="reco::HLTTau" ClassVersion="10">
+ <version ClassVersion="10" checksum="2579739479"/>
+</class>
+  <class name="std::vector<reco::HLTTau>"/>
+  <class name="edm::Wrapper<std::vector<reco::HLTTau> >"/>
+  <class name="edm::Ref<std::vector<reco::HLTTau>,reco::HLTTau,edm::refhelper::FindUsingAdvance<std::vector<reco::HLTTau>,reco::HLTTau> >"/>
+  <class name="edm::RefProd<std::vector<reco::HLTTau> >"/>
+  <class name="edm::RefVector<std::vector<reco::HLTTau>,reco::HLTTau,edm::refhelper::FindUsingAdvance<std::vector<reco::HLTTau>,reco::HLTTau> >"/>
+
+  <class name="edm::Ptr<reco::BaseTau>" />
+  <class name="edm::PtrVector<reco::BaseTau>" />
+
+  <class name="edm::Ptr<reco::PFTau>" />
+  <class name="std::vector<edm::Ptr<reco::PFTau> >" />
+  <class name="edm::Wrapper<std::vector<edm::Ptr<reco::PFTau> > >" />
+
+  <class name="edm::FwdPtr<reco::PFTau>" />
+  <class name="std::vector<edm::FwdPtr<reco::PFTau> >" />
+  <class name="edm::Wrapper<std::vector<edm::FwdPtr<reco::PFTau> > >" />
+
+  <class name="edm::FwdPtr<reco::BaseTau>" />
+  <class name="std::vector<edm::FwdPtr<reco::BaseTau> >" />
+  <class name="edm::Wrapper<std::vector<edm::FwdPtr<reco::BaseTau> > >" />
+
+</lcgdict>

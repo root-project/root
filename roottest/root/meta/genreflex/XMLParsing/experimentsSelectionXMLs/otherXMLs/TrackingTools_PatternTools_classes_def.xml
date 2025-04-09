@@ -1,0 +1,62 @@
+<lcgdict>
+  <class name="Trajectory"/>
+  <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+  <class name="std::vector<Trajectory>" persistent="false"/>
+  <class name="edm::Wrapper<std::vector<Trajectory> >" persistent="false"/>
+  <class name="edm::RefProd<std::vector<Trajectory> >"/>
+  <class name="edm::Ref<std::vector<Trajectory>, Trajectory, edm::refhelper::FindUsingAdvance<std::vector<Trajectory>, Trajectory> >"/>
+
+  <class name="MomentumConstraint"/>
+  <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+  <class name="std::vector<MomentumConstraint>" persistent="false"/>
+  <class name="edm::Wrapper<std::vector<MomentumConstraint> >" persistent="false"/>
+  <class name="edm::RefProd<std::vector<MomentumConstraint> >"/>
+
+  <class name="VertexConstraint"/>
+  <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+  <class name="std::vector<VertexConstraint>" persistent="false"/>
+  <class name="edm::Wrapper<std::vector<VertexConstraint> >" persistent="false"/>
+  <class name="edm::RefProd<std::vector<VertexConstraint> >"/>
+
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<Trajectory>,std::vector<reco::Track>,unsigned short > >" >
+    <field name="transientMap_" transient="true"/>
+  </class>
+  <class name="edm::AssociationMap<edm::OneToOne<reco::TrackCollection,std::vector<MomentumConstraint>,unsigned int> >" >
+    <field name="transientMap_" transient="true"/>
+  </class>
+  <class name="edm::AssociationMap<edm::OneToOne<reco::TrackCollection,std::vector<VertexConstraint>,unsigned int> >" >
+    <field name="transientMap_" transient="true"/>
+  </class>
+
+  <class pattern="edm::KeyVal<*>"/>
+
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<std::vector<Trajectory>,std::vector<reco::Track>,unsigned short> > >" persistent="false" />
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<reco::TrackCollection,std::vector<MomentumConstraint>,unsigned int> > >" />
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<reco::TrackCollection,std::vector<VertexConstraint>,unsigned int> > >"/>
+
+  <class pattern="edm::Ref<edm::AssociationMap<*>"/>
+  <class pattern="edm::RefProd<edm::AssociationMap<*>"/>
+  <class pattern="edm::RefVector<edm::AssociationMap<*>"/>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<Trajectory> >,edm::RefProd<std::vector<reco::Track> > >"/>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::Track> >,edm::RefProd<std::vector<MomentumConstraint> > >"/>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::Track> >,edm::RefProd<std::vector<VertexConstraint> > >"/>
+
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<Trajectory> >,edm::RefProd<std::vector<Trajectory> > >"/>
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<Trajectory>,std::vector<Trajectory>,unsigned int> >">
+       <field name="transientMap_" transient="true"/>
+  </class>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::Track> >,edm::RefProd<std::vector<Trajectory> > >"/>
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<reco::Track>,std::vector<Trajectory>,unsigned int> >">
+       <field name="transientMap_" transient="true"/>
+  </class>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<Trajectory> >,edm::RefProd<std::vector<TrajectorySeed> > >"/>
+  <class name="edm::AssociationMap<edm::OneToMany<std::vector<Trajectory>,std::vector<TrajectorySeed>,unsigned int> >">
+       <field name="transientMap_" transient="true"/>
+  </class>
+
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<TrackCandidate> >, edm::RefProd<std::vector<Trajectory> > >" />
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<TrackCandidate>, std::vector<Trajectory>, unsigned int > >">
+       <field name="transientMap_" transient="true" />
+  </class>
+
+</lcgdict>

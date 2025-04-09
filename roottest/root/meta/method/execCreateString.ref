@@ -1,0 +1,14 @@
+
+Processing execCreateString.C...
+running create_string
+Bug 1:
+string default ctor is valid:       1
+basic_string default ctor is valid: 1
+
+Bug 2:
+std::basic_string default ctor is valid: 0
+
+Bug 3:
+basic_string default ctor (exact match) is valid: 1
+basic_string copy ctor 1 (exact match) is valid:  1
+basic_string copy ctor 2 (exact match) is valid:  1

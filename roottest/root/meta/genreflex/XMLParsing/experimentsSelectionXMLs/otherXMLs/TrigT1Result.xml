@@ -1,0 +1,38 @@
+<lcgdict>
+
+  <!-- MuCTPI RDO -->
+  <class name="MuCTPI_RDO" id="5BE3FA7E-CC70-4842-A095-CA046164764D" />
+
+  <!-- CTP RDO -->
+  <class name="CTP_RDO" id="56C714CC-DC17-4927-B413-9151C82792BB" />
+
+  <!-- RoIBResult -->
+  <class name="ROIB::RoIBResult" id="E9F89B95-329A-4FF1-9110-4CE48D1D7176" />
+
+  <!-- MuCTPIResult -->
+  <class name="ROIB::MuCTPIResult" />
+  <class name="ROIB::MuCTPIRoI" />  
+  <class name="std::vector<ROIB::MuCTPIRoI>" />
+  
+  <!-- CTPResult -->
+  <class name="ROIB::CTPResult" />
+  <class name="ROIB::CTPRoI" />
+  <class name="std::vector<ROIB::CTPRoI>" />
+
+  <!-- EMTauResult -->
+  <class name="ROIB::EMTauResult" />
+  <class name="std::vector<ROIB::EMTauResult>" />
+  <class name="ROIB::EMTauRoI" />
+  <class name="std::vector<ROIB::EMTauRoI>" />
+
+  <!-- JetEnergyResult -->
+  <class name="ROIB::JetEnergyResult" />
+  <class name="std::vector<ROIB::JetEnergyResult>" />
+  <class name="ROIB::JetEnergyRoI" />
+  <class name="std::vector<ROIB::JetEnergyRoI>" />
+
+  <!-- common -->  
+  <class name="ROIB::Header" />
+  <class name="ROIB::Trailer" />
+
+</lcgdict>

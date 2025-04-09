@@ -1,0 +1,44 @@
+
+Processing runtemplateBase.C...
+Warning in <TClass::Init>: no dictionary for class edm::EDProduct is available
+Warning in <TClass::Init>: no dictionary for class CaloCrystal is available
+Warning in <TClass::Init>: no dictionary for class CaloLayer is available
+Warning in <TClass::Init>: no dictionary for class CaloTower is available
+Warning in <TClass::Init>: no dictionary for class edm::EDCollection<CaloTower> is available
+Warning in <TClass::Init>: no dictionary for class edm::EventAux is available
+Warning in <TClass::Init>: no dictionary for class CaloTowerCollection is available
+Warning in <TClass::Init>: no dictionary for class edm::PS_ID is available
+Warning in <TClass::Init>: no dictionary for class edm::ModuleDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::Provenance is available
+Warning in <TClass::Init>: no dictionary for class edm::EventProvenance is available
+Warning in <TClass::Init>: no dictionary for class CommonJetData is available
+Warning in <TClass::Init>: no dictionary for class Jet is available
+Warning in <TClass::Init>: no dictionary for class CaloJet is available
+Warning in <TClass::Init>: no dictionary for class edm::EDCollection<CaloJet> is available
+Warning in <TClass::Init>: no dictionary for class CaloJetCollection is available
+***********************************
+*    Row   * Instance * CaloJetCo *
+***********************************
+*        0 *        0 * 65.983642 *
+*        0 *        1 * 306.87518 *
+*        0 *        2 * 198.49794 *
+*        0 *        3 * 303.83369 *
+*        0 *        4 * 106.96242 *
+*        0 *        5 * 13.170654 *
+*        0 *        6 * 30.692123 *
+*        0 *        7 * 202.39884 *
+*        0 *        8 * 109.14905 *
+***********************************
+***********************************
+*    Row   * Instance * CaloJetCo *
+***********************************
+*        0 *        0 * 32.991821 *
+*        0 *        1 * 153.43759 *
+*        0 *        2 * 99.248971 *
+*        0 *        3 * 151.91684 *
+*        0 *        4 * 53.481210 *
+*        0 *        5 * 6.5853270 *
+*        0 *        6 * 15.346061 *
+*        0 *        7 * 101.19942 *
+*        0 *        8 * 54.574525 *
+***********************************

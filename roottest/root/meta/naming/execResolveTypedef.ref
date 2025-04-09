@@ -1,0 +1,87 @@
+
+Processing execResolveTypedef.cxx...
+Test 1 The result is correct: const int
+Test 2 The result is correct: const int
+Test 3 The result is correct: const Long64_t
+Test 4 The result is correct: const Long64_t
+Test 5 The result is correct: const int&
+Test 6 The result is correct: const int&
+Test 7 The result is correct: const Long64_t&
+Test 8 The result is correct: const Long64_t&
+Test 9 The result is correct: const int*
+Test 10 The result is correct: const int*
+Test 11 The result is correct: const Long64_t*
+Test 12 The result is correct: const Long64_t*
+Test 13 The result is correct: const int *&
+Test 14 The result is correct: const int*&
+Test 15 The result is correct: const Long64_t*&
+Test 16 The result is correct: const Long64_t*&
+Test 17 The result is correct: const int*const&
+Test 18 The result is correct: const int* const &
+Test 19 The result is correct: const Long64_t* const  &
+Test 20 The result is correct: const Long64_t*const&
+Test 21 The result is correct: int
+Test 22 The result is correct: const int
+Test 23 The result is correct: long
+Test 24 The result is correct: long
+Test 25 The result is correct: long
+Test 26 The result is correct: long
+Test 27 The result is correct: const long
+Test 28 The result is correct: const long
+Test 29 The result is correct: const long
+Test 30 The result is correct: const long
+Test 31 The result is correct: Object::Inside
+Test 32 The result is correct: Object
+Test 33 The result is correct: NS::Inner<long,Object>
+Test 34 The result is correct: NS::Inner<long,Object>
+Test 35 The result is correct: NS::Inner<long,Object>
+Test 36 The result is correct: NS::Inner<long,Object>
+Test 37 The result is correct: vector<long>
+Test 38 The result is correct: long
+Test 39 The result is correct: pair<vector<long>,int>
+Test 40 The result is correct: pair<vector<long>,long>
+Test 41 The result is correct: pair<pair<long,vector<int> >,long>
+Test 42 The result is correct: pair<pair<long,vector<int> >,long>
+Test 43 The result is correct: pair<vector<long>,long*>
+Test 44 The result is correct: pair<vector<long>,long*>
+Test 45 The result is correct: int
+Test 46 The result is correct: Long64_t
+Test 47 The result is correct: Long64_t
+Test 48 The result is correct: vec<Long64_t>
+Test 49 The result is correct: vec<Long64_t>
+Test 50 The result is correct: Long64_t
+Test 51 The result is correct: Long64_t
+Test 52 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
+Test 53 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
+Test 54 The result is correct: !=<const Roo*,const Roo*,std::vector<RooFunction> >
+Test 55 The result is correct: vec<const int>
+Test 56 The result is correct: vec<const int>
+Test 57 The result is correct: vec<const int>
+Test 58 The result is correct: vec<const int>
+Test 59 The result is correct: vec<const int>
+Test 60 The result is correct: unknown::wrapper<int>
+Test 61 The result is correct: std::pair<char,unknown::wrapper<int> >
+Starting GetNormalizedName tests
+Test 62 The result is correct: NS::Inner<long,Object>
+Test 63 The result is correct: NS::Inner<long,Object>
+Test 64 The result is correct: NS::Inner<Long64_t,Object>
+Test 65 The result is correct: NS::Inner<Long64_t,Object>
+Test 66 The result is correct: NS::Inner<Long64_t,Object>
+Test 67 The result is correct: NS::Inner<Long64_t,Object>
+Test 68 The result is correct: pair<vector<long>,long>
+Test 69 The result is correct: NS::Inner<int,Object>
+Test 70 The result is correct: Wrapper<NS::Inner<int,Object> >
+Test 71 The result is correct: vector2<NS::Inner<int,Object> >
+Test 72 The result is correct: vector<NS::Inner<int,Object> >
+Test 73 The result is correct: RootPCtempObj<const TObject*const>
+Test 74 The result is correct: vector<const cl::inner<const long>*const>
+Test 75 The result is correct: const cl::inner<const long>*const
+Test 76 The result is correct: vector<const cl::inner<const long>*const>
+Test 77 The result is correct: const cl::inner<const long>*const
+Test 78 The result is correct: vector<const cl::inner<const long>*const>
+Test 79 The result is correct: const cl::inner<const long>*const
+Test 80 The result is correct: ::int
+Test 81 The result is correct: ::Unknown
+Test 82 The result is correct: ::SomeTypedefName_tSF
+Test 83 The result is correct: ::int
+(int) 0

@@ -1,0 +1,13 @@
+ 
+<lcgdict>
+  <class name="AFP_SIDLocRecoEvCollection" id="656A4FA4-54C2-4F45-9A00-39374EB79A74"/>
+  <class name="std::vector<AFP_SIDLocRecoEvent*>" />
+  <class name="DataVector<AFP_SIDLocRecoEvent>" />
+  <class name="AFP_SIDLocRecoEvent" />
+  
+  <class name="AFP_TDLocRecoEvCollection" id="D9DCE1DD-C120-4406-8872-C72773C71DE8"/>
+  <class name="std::vector<AFP_TDLocRecoEvent*>" />
+  <class name="DataVector<AFP_TDLocRecoEvent>" />
+  <class name="AFP_TDLocRecoEvent" />  
+</lcgdict>
+

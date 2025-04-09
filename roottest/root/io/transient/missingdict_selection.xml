@@ -1,0 +1,16 @@
+<lcgdict>
+  <class name="Content" ClassVersion="2">
+	<field name="fMMap" transient="TRUE" />
+	<field name="fMap" transient="TRUE" />
+	<field name="fCache" transient="TRUE" />
+        <field name="fValue" transient="TRUE" />
+  </class>
+  <function name="missingdict"/>
+  <class name="TransientHolder" ClassVersion="11"> 
+    <version ClassVersion="11" checksum="..."/> 
+    <field name="transient" transient="true"/> 
+  </class> 
+  <class name="RflxTransient" ClassVersion="0"/> 
+
+</lcgdict>
+

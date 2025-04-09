@@ -1,0 +1,7 @@
+
+Processing roottest/root/core/base64.C...
+base64: VGhpcyBpcyB0ZXN0IGJpbmFyeQ==
+base64: coding1 match
+base64: T3RoZXIgdGVzdCBzdHJpbmc=
+base64: coding2 match
+(int) 0

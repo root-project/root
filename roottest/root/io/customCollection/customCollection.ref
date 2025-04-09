@@ -1,0 +1,37 @@
+
+Processing runcustomCollection.C...
+Reading file with just a TTree
+Warning in <TClass::Init>: no dictionary for class Content is available
+Warning in <TClass::Init>: no dictionary for class DataVectorConcrete is available
+Warning in <TClass::Init>: no dictionary for class DataVectorTmplt<Content> is available
+***********************************
+*    Row   * Instance * coll.fNam *
+***********************************
+*        0 *        0 *         7 *
+*        0 *        1 *         7 *
+*        0 *        2 *         7 *
+*        0 *        3 *         7 *
+***********************************
+***********************************************************************
+*    Row   * Instance *  coll.fId * coll.fNam *   vec.fId * vec.fName *
+***********************************************************************
+*        0 *        0 *         0 *   name0_4 *         0 *   name0_4 *
+*        0 *        1 *         1 *   name0_4 *         1 *   name0_4 *
+*        0 *        2 *         2 *   name0_4 *         2 *   name0_4 *
+*        0 *        3 *         3 *   name0_4 *         3 *   name0_4 *
+***********************************************************************
+Reading TTree
+***********************************
+*    Row   * Instance * coll.fNam *
+***********************************
+*        0 *        0 *         7 *
+*        0 *        1 *         7 *
+*        0 *        2 *         7 *
+***********************************
+***********************************************************************
+*    Row   * Instance *  coll.fId * coll.fNam *   vec.fId * vec.fName *
+***********************************************************************
+*        0 *        0 *         0 *   name0_3 *         0 *   name0_3 *
+*        0 *        1 *         1 *   name0_3 *         1 *   name0_3 *
+*        0 *        2 *         2 *   name0_3 *         2 *   name0_3 *
+***********************************************************************

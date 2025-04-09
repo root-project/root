@@ -1,0 +1,12 @@
+
+Processing runFullMissingEntriesROOT-5759.C...
+1:10: fatal error: 'does_not_exist.h' file not found
+#include "does_not_exist.h"
+         ^~~~~~~~~~~~~~~~~~
+2:6: error: expected ';' after expression
+ cool d;
+     ^
+     ;
+2:7: error: use of undeclared identifier 'd'
+ cool d;
+      ^

@@ -1,0 +1,16 @@
+
+<lcgdict>
+
+  <class name="DataVector<LVL1::TriggerTower>" id="1B6DA81A-2F27-4B50-ACF6-D3FC19B40ADB"/> 
+  <class name="std::vector<LVL1::TriggerTower*>" />
+
+  <class name="LVL1::TriggerTower" >
+  </class>
+
+  <class name="DataVector<LVL1::JetElement>" id="48B92167-4892-4694-9E9E-E201F1E1FFFE" />
+  <class name="std::vector<LVL1::JetElement*>" />
+
+  <class name="LVL1::JetElement"/>
+
+
+</lcgdict>

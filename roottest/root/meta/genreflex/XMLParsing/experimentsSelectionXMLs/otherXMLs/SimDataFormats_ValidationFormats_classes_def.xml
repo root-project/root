@@ -1,0 +1,178 @@
+<lcgdict>
+  <class name="PGlobalSimHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="2475681360"/>
+  </class>
+  <class name="PGlobalSimHit::Vtx" ClassVersion="10">
+   <version ClassVersion="10" checksum="2472465168"/>
+  </class>
+  <class name="PGlobalSimHit::Trk" ClassVersion="10">
+   <version ClassVersion="10" checksum="1469075425"/>
+  </class>
+  <class name="PGlobalSimHit::CalHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="874524041"/>
+  </class>
+  <class name="PGlobalSimHit::FwdHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="3335786575"/>
+  </class>
+  <class name="PGlobalSimHit::BrlHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="1504967606"/>
+  </class>
+  <class name="std::vector<PGlobalSimHit::Vtx>"/>
+  <class name="std::vector<PGlobalSimHit::Trk>"/>
+  <class name="std::vector<PGlobalSimHit::CalHit>"/>
+  <class name="std::vector<PGlobalSimHit::FwdHit>"/>
+  <class name="std::vector<PGlobalSimHit::BrlHit>"/>
+  <class name="edm::Wrapper<PGlobalSimHit>"/>
+
+  <class name="PGlobalDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="3608410396"/>
+  </class>
+  <class name="PGlobalDigi::ECalDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="2362929189"/>
+  </class>
+  <class name="PGlobalDigi::ESCalDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="1181612450"/>
+  </class>
+  <class name="PGlobalDigi::HCalDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="2884257254"/>
+  </class>
+  <class name="PGlobalDigi::SiStripDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="2483108654"/>
+  </class>
+  <class name="PGlobalDigi::SiPixelDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="296132691"/>
+  </class>
+  <class name="PGlobalDigi::DTDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="1928134513"/>
+  </class>
+  <class name="PGlobalDigi::CSCstripDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="932597238"/>
+  </class>
+  <class name="PGlobalDigi::CSCwireDigi" ClassVersion="10">
+   <version ClassVersion="10" checksum="923547918"/>
+  </class>
+  <class name="std::vector<PGlobalDigi::ECalDigi>"/>
+  <class name="std::vector<PGlobalDigi::ESCalDigi>"/>
+  <class name="std::vector<PGlobalDigi::HCalDigi>"/>
+  <class name="std::vector<PGlobalDigi::SiStripDigi>"/>
+  <class name="std::vector<PGlobalDigi::SiPixelDigi>"/>
+  <class name="std::vector<PGlobalDigi::DTDigi>"/>
+  <class name="std::vector<PGlobalDigi::CSCstripDigi>"/>
+  <class name="std::vector<PGlobalDigi::CSCwireDigi>"/>
+  <class name="edm::Wrapper<PGlobalDigi>" splitLevel="0"/>
+
+  <class name="PGlobalRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="2378484053"/>
+  </class>
+  <class name="PGlobalRecHit::ECalRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="2464725595"/>
+  </class>
+  <class name="PGlobalRecHit::HCalRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="4045573289"/>
+  </class>
+  <class name="PGlobalRecHit::SiStripRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="1510299181"/>
+  </class>
+  <class name="PGlobalRecHit::SiPixelRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="3091348871"/>
+  </class>
+  <class name="PGlobalRecHit::DTRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="340236748"/>
+  </class>
+  <class name="PGlobalRecHit::CSCRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="1176792218"/>
+  </class>
+  <class name="PGlobalRecHit::RPCRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="1286309253"/>
+  </class>
+  <class name="std::vector<PGlobalRecHit::ECalRecHit>"/>
+  <class name="std::vector<PGlobalRecHit::HCalRecHit>"/>
+  <class name="std::vector<PGlobalRecHit::SiStripRecHit>"/>
+  <class name="std::vector<PGlobalRecHit::SiPixelRecHit>"/>
+  <class name="std::vector<PGlobalRecHit::DTRecHit>"/>
+  <class name="std::vector<PGlobalRecHit::CSCRecHit>"/>
+  <class name="std::vector<PGlobalRecHit::RPCRecHit>"/>
+  <class name="edm::Wrapper<PGlobalRecHit>"/>
+
+  <class name="PEcalValidInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="3721976541"/>
+  </class>
+  <class name="edm::Wrapper<PEcalValidInfo>"/>
+
+  <class name="PHcalValidInfoLayer" ClassVersion="10">
+   <version ClassVersion="10" checksum="3685483203"/>
+  </class>
+  <class name="PHcalValidInfoNxN" ClassVersion="10">
+   <version ClassVersion="10" checksum="916539230"/>
+  </class>
+  <class name="PHcalValidInfoJets" ClassVersion="10">
+   <version ClassVersion="10" checksum="3878729576"/>
+  </class>
+  <class name="edm::Wrapper<PHcalValidInfoLayer>"/>
+  <class name="edm::Wrapper<PHcalValidInfoNxN>"/>
+  <class name="edm::Wrapper<PHcalValidInfoJets>"/>
+
+  <class name="PMuonSimHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="3899830179"/>
+  </class>
+  <class name="PMuonSimHit::Vtx" ClassVersion="10">
+   <version ClassVersion="10" checksum="3765376416"/>
+  </class>
+  <class name="PMuonSimHit::Trk" ClassVersion="10">
+   <version ClassVersion="10" checksum="394451010"/>
+  </class>
+  <class name="PMuonSimHit::CSC" ClassVersion="10">
+   <version ClassVersion="10" checksum="3079994217"/>
+  </class>
+  <class name="PMuonSimHit::DT" ClassVersion="10">
+   <version ClassVersion="10" checksum="1074081844"/>
+  </class>
+  <class name="PMuonSimHit::RPC" ClassVersion="10">
+   <version ClassVersion="10" checksum="591845399"/>
+  </class>
+  <class name="std::vector<PMuonSimHit::Vtx>"/>
+  <class name="std::vector<PMuonSimHit::Trk>"/>
+  <class name="std::vector<PMuonSimHit::CSC>"/>
+  <class name="std::vector<PMuonSimHit::DT>"/>
+  <class name="std::vector<PMuonSimHit::RPC>"/>
+  <class name="edm::Wrapper<PMuonSimHit>"/>
+
+  <class name="PTrackerSimHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="2799801898"/>
+  </class>
+  <class name="PTrackerSimHit::Vtx" ClassVersion="10">
+   <version ClassVersion="10" checksum="3878707963"/>
+  </class>
+  <class name="PTrackerSimHit::Trk" ClassVersion="10">
+   <version ClassVersion="10" checksum="2060865915"/>
+  </class>
+  <class name="PTrackerSimHit::Hit" ClassVersion="10">
+   <version ClassVersion="10" checksum="1348837015"/>
+  </class>
+  <class name="std::vector<PTrackerSimHit::Vtx>"/>
+  <class name="std::vector<PTrackerSimHit::Trk>"/>
+  <class name="std::vector<PTrackerSimHit::Hit>"/>
+  <class name="edm::Wrapper<PTrackerSimHit>"/>
+  
+  <!--<class name="std::pair<float,float>"/>-->
+
+  <class name="MaterialAccountingStep" ClassVersion="10">
+   <version ClassVersion="10" checksum="1239697155"/>
+  </class>
+  <class name="std::vector<MaterialAccountingStep>"/>
+  <class name="edm::Wrapper<std::vector<MaterialAccountingStep> >"/>
+
+  <class name="MaterialAccountingDetector" ClassVersion="10">
+   <version ClassVersion="10" checksum="2816241367"/>
+  </class>
+  <class name="std::vector<MaterialAccountingDetector>"/>
+  <class name="edm::Wrapper<std::vector<MaterialAccountingDetector> >"/>
+
+  <class name="MaterialAccountingTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="3618055651"/>
+    <field name="m_current_volume"  transient="true"/>
+    <field name="m_detector"        transient="true"/>
+  </class>
+  <class name="std::vector<MaterialAccountingTrack>"/>
+  <class name="edm::Wrapper<std::vector<MaterialAccountingTrack> >"/>
+</lcgdict>

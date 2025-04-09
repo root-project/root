@@ -1,0 +1,21 @@
+<lcgdict>
+  <class name="CLHEP::Hep3Vector" ClassVersion="10">
+   <version ClassVersion="10" checksum="3040806103"/>
+  </class>
+  <class name="CLHEP::HepEulerAngles" ClassVersion="10">
+   <version ClassVersion="10" checksum="2060568599"/>
+  </class>
+  <class name="CLHEP::HepGenMatrix" ClassVersion="10">
+   <version ClassVersion="10" checksum="1734210912"/>
+  </class>
+  <class name="CLHEP::HepLorentzVector" ClassVersion="10">
+   <version ClassVersion="10" checksum="2698081358"/>
+  </class>
+  <class name="CLHEP::HepMatrix" ClassVersion="11">
+   <version ClassVersion="11" checksum="2283727874"/>
+  </class>
+  <class name="CLHEP::HepSymMatrix" ClassVersion="11">
+   <version ClassVersion="11" checksum="3670575592"/>
+  </class>
+  <class name="std::vector<CLHEP::HepLorentzVector>"/>
+</lcgdict>

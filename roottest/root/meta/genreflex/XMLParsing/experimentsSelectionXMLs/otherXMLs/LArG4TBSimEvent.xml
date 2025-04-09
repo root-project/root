@@ -1,0 +1,16 @@
+<lcgdict>
+  <class name="AthenaHitsVector<LArG4H6FrontHit>" id="99983A93-E3B0-4F0D-9B6B-C9AED46DD2D7" />
+  <class name="std::vector<LArG4H6FrontHit*>" />
+  <class name="LArG4H6FrontHit" />
+
+  <class name="AthenaHitsVector<LArG4H6LeakHit>" id="D029E5FE-1F83-43ED-8878-C42902F5A542" />
+  <class name="std::vector<LArG4H6LeakHit*>" />
+  <class name="LArG4H6LeakHit" />
+
+  <class name="AthenaHitsVector<LArG4H6WarmTCHit>" id="8E9932EF-0C24-4F10-8BEF-E43BCD2F8EB6" />
+  <class name="std::vector<LArG4H6WarmTCHit*>" />
+  <class name="LArG4H6WarmTCHit" />
+
+  <!-- <class name="G4VHit" /> -->
+
+</lcgdict>
