@@ -13,44 +13,15 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
+namespace {
+const std::string SP = "   ";
+}
+
 std::underlying_type_t<Options> operator|(Options opA, Options opB) {
     return static_cast<std::underlying_type_t<Options>>(opA) | static_cast<std::underlying_type_t<Options>>(opB);
 }
 std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB) {
     return opA | static_cast<std::underlying_type_t<Options>>(opB);
-}
-
-RModel::RModel(RModel&& other) {
-    fInputTensorInfos = std::move(other.fInputTensorInfos);
-    fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
-    fOutputTensorNames = other.fOutputTensorNames;
-    fInputTensorNames = other.fInputTensorNames;
-    fOperators = std::move(other.fOperators);
-    fInitializedTensors = std::move(other.fInitializedTensors);
-    fIntermediateTensorInfos = std::move(other.fIntermediateTensorInfos);
-    fName = other.fName;
-    fFileName = other.fFileName;
-    fParseTime = other.fParseTime;
-    fGC = other.fGC;
-    fNeededBlasRoutines = other.fNeededBlasRoutines;
-    fNeededStdLib = other.fNeededStdLib;
-}
-
-RModel& RModel::operator=(RModel&& other) {
-    fInputTensorInfos = std::move(other.fInputTensorInfos);
-    fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
-    fOutputTensorNames = other.fOutputTensorNames;
-    fInputTensorNames = other.fInputTensorNames;
-    fOperators = std::move(other.fOperators);
-    fInitializedTensors = std::move(other.fInitializedTensors);
-    fIntermediateTensorInfos = std::move(other.fIntermediateTensorInfos);
-    fName = other.fName;
-    fFileName = other.fFileName;
-    fParseTime = other.fParseTime;
-    fGC = other.fGC;
-    fNeededBlasRoutines = other.fNeededBlasRoutines;
-    fNeededStdLib = other.fNeededStdLib;
-    return *this;
 }
 
 const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
