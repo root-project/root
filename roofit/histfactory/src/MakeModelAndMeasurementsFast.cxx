@@ -131,7 +131,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
        } else {
           gSystem->FreeDirectory(outdir);
        }
-
     }
 
     // This holds the TGraphs that are created during the fit
