@@ -843,6 +843,7 @@ int TSystem::MakeDirectory(const char *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a directory. Returns 0 if directory does not exist.
+/// \note Remember to call FreeDirectory(returned_pointer) later, to prevent a memory leak
 
 void *TSystem::OpenDirectory(const char *)
 {
