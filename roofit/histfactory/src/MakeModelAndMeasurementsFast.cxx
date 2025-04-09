@@ -120,7 +120,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
        std::string outputDir = prefix.substr(0,pos);
        cxcoutDHF << "Checking if output directory : " << outputDir << " -  exists" << std::endl;
        void *outdir = gSystem->OpenDirectory( outputDir.c_str() );
-       if ( outdir == nullptr ) {
+       if (outdir == nullptr) {
           cxcoutDHF << "Output directory : " << outputDir << " - does not exist, try to create" << std::endl;
           int success = gSystem->MakeDirectory( outputDir.c_str() );
           if( success != 0 ) {
@@ -129,7 +129,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
              throw hf_exc();
           }
        } else {
-        gSystem->FreeDirectory(outdir);
+          gSystem->FreeDirectory(outdir);
        }
 
     }
