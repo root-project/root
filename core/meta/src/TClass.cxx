@@ -3261,8 +3261,11 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
          auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
          // Fall-through to allow TClass to be created when known by the interpreter
          // This is used in the case where TStreamerInfo can not handle them.
-         if (pairinfo)
-            return pairinfo->GetClass();
+         if (pairinfo) {
+            auto pairclass = pairinfo->GetClass();
+            delete pairinfo;
+            return pairclass;
+         }
       } else {
          //  Check if we have an STL container that might provide it.
          static constexpr size_t slen = std::char_traits<char>::length("pair");
