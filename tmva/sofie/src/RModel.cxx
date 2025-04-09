@@ -786,7 +786,7 @@ void RModel::GenerateSessionCode()
    intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
       intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
-      CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
+      //CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
    }
 
    // to check remaining unused fragments after memory allocation (lesser the better)
