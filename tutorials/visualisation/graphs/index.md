@@ -37,25 +37,25 @@ The graph tutorials below are divided in groups of increasing complexity, starti
 These examples showcase the creation of different types of graphs and basic ways to plot them.
 
 | **Tutorial** || **Description** |
-|------|--------|-----------------|
-| gr001_simple.C |  | Create a simple graph from available data or from a file, and draw it. |
-| gr002_errors.C |  | Create and draw a graph with error bars.|
-| gr003_errors2.C |  | Create and draw two graphs with error bars, superposed on the same canvas (not using TMultiGraph). |
-| gr004_errors_asym.C |  | Create and draw a graph with asymmetric x & y errors. |
-| gr005_apply.C |  | Demonstrate the functionality of the TGraph::Apply() method. |
-| gr006_scatter.C |  | Scatter plot for 4 variables, mapped to: x, y, marker color and marker size. |
-| gr007_multigraph.C |  | Create and draw a TMultiGraph (several graphs superposed). |
-| gr008_multierrors.C |  | Graph with multiple y errors in each bin. |
-| gr009_bent_err.C | gr009_bent_err.py | Graph with bent (non-vertical/non-horizontal) error bars. |
-| gr010_approx_smooth.C |  | Create a TGraphSmooth and show the usage of the interpolation function Approx. |
-| gr011_graph2d_errorsfit.C |  | Create, draw and fit a TGraph2DErrors. |
-| gr012_polar.C |  | Create and draw a polar graph. |
-| gr013_polar2.C |  | Polar graph with errors and polar axis in radians (PI fractions). |
-| gr014_polar3.C |  | Create a polar graph using a TF1 and draw it with PI axis. |
-| gr015_smooth.C |  | Show scatter plot smoothers: ksmooth, lowess, supsmu |
-| gr016_struct.C |  | Draw a simple graph structure. |
-| gr017_time.C |  | Example of TGraphTime. |
-| gr018_time2.C |  | TGraphTime to visualize a set of particles with their time stamp in a MonteCarlo program. |
+|---------------------------|-------------------------------|-----------------|
+| gr001_simple.C            | gr001_simple.py               | Create a simple graph from available data or from a file, and draw it. |
+| gr002_errors.C            | gr002_errors.py               | Create and draw a graph with error bars.|
+| gr003_errors2.C           | gr003_errors2.py              | Create and draw two graphs with error bars, superposed on the same canvas (not using TMultiGraph). |
+| gr004_errors_asym.C       | gr004_errors_asym.py          | Create and draw a graph with asymmetric x & y errors. |
+| gr005_apply.C             | gr005_apply.py                | Demonstrate the functionality of the TGraph::Apply() method. |
+| gr006_scatter.C           | gr006_scatter.py              | Scatter plot for 4 variables, mapped to: x, y, marker color and marker size. |
+| gr007_multigraph.C        | gr007_multigraph.py           | Create and draw a TMultiGraph (several graphs superposed). |
+| gr008_multierrors.C       |                               | Graph with multiple y errors in each bin. |
+| gr009_bent_err.C          | gr009_bent_err.py             | Graph with bent (non-vertical/non-horizontal) error bars. |
+| gr010_approx_smooth.C     | gr010_approx_smooth.py        | Create a TGraphSmooth and show the usage of the interpolation function Approx. |
+| gr011_graph2d_errorsfit.C | gr011_graph2d_errorsfit.py    | Create, draw and fit a TGraph2DErrors. |
+| gr012_polar.C             | gr012_polar.py                | Create and draw a polar graph. |
+| gr013_polar2.C            | gr013_polar2.py               | Polar graph with errors and polar axis in radians (PI fractions). |
+| gr014_polar3.C            | gr014_polar3.py               | Create a polar graph using a TF1 and draw it with PI axis. |
+| gr015_smooth.C            |                               | Show scatter plot smoothers: ksmooth, lowess, supsmu |
+| gr016_struct.C            |                               | Draw a simple graph structure. |
+| gr017_time.C              |                               | Example of TGraphTime. |
+| gr018_time2.C             |                               | TGraphTime to visualize a set of particles with their time stamp in a MonteCarlo program. |
 
 
 \anchor modifying
