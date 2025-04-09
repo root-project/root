@@ -33,16 +33,14 @@ private:
    std::vector<std::shared_ptr<RModel>> fSubGraphs;    ///<!  sub-graph models (transient)
    RModel * fParentGraph = nullptr;
 
-   const std::string SP = "   ";
-
    // memory pool information for intermediate tensors
    MemoryPoolInfo fIntermediateMemoryInfo;    ///<!  intermediate memory info (transient)
    std::unordered_map<std::string_view, size_t> fIntermediateTensorFrequencyLookup;    ///<!  lookup table for intermediate tensor frequency (transient)
 
 public:
    // Rule of five: explicitly define move semantics, disallow copy
-   RModel(RModel &&other);
-   RModel &operator=(RModel &&other);
+   RModel(RModel &&other) = default;
+   RModel &operator=(RModel &&other) = default;
    RModel(const RModel &other) = delete;
    RModel &operator=(const RModel &other) = delete;
    ~RModel() = default;
