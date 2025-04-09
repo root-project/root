@@ -297,16 +297,22 @@ AutoDict_*.cxx
 # /root/io/evolution/issue-8083/
 /root/io/evolution/issue-8083/stringarray.root
 
+# /root/io/evolution/numerical_conversions/
+/root/io/evolution/numerical_conversions/*.root
+
 # /root/io/evolution/pragma_read
 /root/io/evolution/pragma_read/test.root
+
+# /root/io/evolution/rules/
+/root/io/evolution/rules/*.root
+
+# /root/io/evolution/stl_conversions/
+/root/io/evolution/stl_conversions/*.root
 
 # /root/io/evolution/versions/
 /root/io/evolution/versions/*.root
 
 # /root/io/evolution/versions/lhcb/
-
-# /root/io/evolution/rules/
-/root/io/evolution/rules/*.root
 
 # /root/io/fakeClass/
 /root/io/fakeClass/little.root
