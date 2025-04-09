@@ -38,6 +38,7 @@ protected:
    unsigned fValid{kValid};  ///< used to verify if instance valid or not
 
    CefRefPtr<CefBrowser> fBrowser; ///< associated browser
+   bool fCloseBrowser = true;
 
 public:
    RCefWebDisplayHandle(const std::string &url) : ROOT::RWebDisplayHandle(url) {}
