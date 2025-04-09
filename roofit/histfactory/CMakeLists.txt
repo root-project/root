@@ -41,6 +41,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     RooStats/HistFactory/PiecewiseInterpolation.h
     RooStats/HistFactory/PreprocessFunction.h
     RooStats/HistFactory/RooBarlowBeestonLL.h
+    RooStats/HistFactory/RooBarlowBeestonLLConway.h
     RooStats/HistFactory/Sample.h
     RooStats/HistFactory/Systematics.h
     ${HISTFACTORY_XML_HEADERS}
@@ -61,6 +62,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/PiecewiseInterpolation.cxx
     src/PreprocessFunction.cxx
     src/RooBarlowBeestonLL.cxx
+    src/RooBarlowBeestonLLConway.cxx
     src/Sample.cxx
     src/Systematics.cxx
     ${HISTFACTORY_XML_SOURCES}
