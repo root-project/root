@@ -27,6 +27,7 @@
          std::vector<std::vector<Dim>> fInputShapes;
 
      public:
+
          ROperator_Concat(){}
          ROperator_Concat(std::vector<std::string> inputs, int axis, int newAxis, std::string output):
          fAxis(axis), fnewAxis(newAxis), fOutput(UTILITY::Clean_name(output)) {
@@ -107,31 +108,50 @@
             if (fAxis < 0 || fAxis >= (int) inputs[0].size())
                throw std::runtime_error("TMVA SOFIE Concat Op - invalid axis value ");
 
-            int concat_dim=0;
+            std::string concat_dim;
+            size_t i_concat_dim = 0;
             if(fnewAxis == 0){
                for (size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i - 1].size())
                      throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " + fInputs[i] + " : " +
-                                              ConvertDynamicShapeToString(inputs[i]) + " and " + fInputs[i-1] + " : " + ConvertDynamicShapeToString(inputs[i - 1]));
+                                              ConvertShapeToString(inputs[i]) + " and " + fInputs[i-1] + " : " + ConvertShapeToString(inputs[i - 1]));
                   for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
                      if ((int)iaxis == fAxis) {
                         // support only non-params shape for the concatenation axis
-                        if (inputs[i][iaxis].isParam)
-                           throw std::runtime_error("TMVA SOFIE Concat Op - not supporting input param dimensions for concatenation axis. Input shape is " +
-                                                     ConvertDynamicShapeToString(inputs[i]));
-                        concat_dim += inputs[i][iaxis].dim;
+                        if (inputs[i][iaxis].isParam) {
+                           if (concat_dim.empty())
+                              concat_dim = inputs[i][iaxis].GetVal();
+                           else
+                              concat_dim += std::string("+ ") + inputs[i][iaxis].GetVal();
+                        } else {
+                           i_concat_dim += inputs[i][iaxis].dim;
+                           concat_dim = std::to_string(i_concat_dim);
+                        }
                      }
                      // other dimensions must be the same
                      else if (i > 0 && inputs[i][iaxis].GetVal() != inputs[i - 1][iaxis].GetVal())
                         throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have wrong shapes " +
-                                                 ConvertDynamicShapeToString(inputs[i]) + " and " +
-                                                 ConvertDynamicShapeToString(inputs[i - 1]));
+                                                 ConvertShapeToString(inputs[i]) + " and " +
+                                                 ConvertShapeToString(inputs[i - 1]));
                   }
                }
 
                // output shape
                ret[0] = inputs[0];
-               ret[0][fAxis].dim = concat_dim;
+               // check if concat_dim is an integer
+               // case like "2+n" can be converted to an integer so need to check the length
+               size_t pos = 0;
+               try {
+                  i_concat_dim = std::stoi(concat_dim, &pos);
+                  if (pos == concat_dim.length())
+                     ret[0][fAxis] = Dim{i_concat_dim}; // dimension is integer
+                  else
+                     ret[0][fAxis] = Dim{concat_dim};
+               }
+               catch (std::invalid_argument const& ex) {
+                  ret[0][fAxis] = Dim{concat_dim};
+               }
+
             }
             // case of stacking (not supported yet)
             // here we need to check that input shapes are the same
@@ -143,7 +163,7 @@
             return ret;
          }
 
-      void Initialize(RModel& model) override {
+         void Initialize(RModel& model) override {
             for (auto &it : fInputs) {
                if (model.CheckIfTensorAlreadyExist(it) == false) {
                   throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");
@@ -210,7 +230,7 @@
             if (fAxis == 0 || hasShapeOnes) {
                std::string offset;
                for(size_t i=0; i<fInputs.size(); ++i) {
-                  std::string length = ConvertDynamicShapeToLength(fInputShapes[i]);
+                  auto length = ConvertDimShapeToLength(fInputShapes[i]);
                   out << SP << "std::copy(tensor_" <<fInputs[i] << ", tensor_" <<fInputs[i] << "+" << length <<", tensor_"<<fOutput;
                   if (i > 0)  out << offset;
                   offset += " + " + length;

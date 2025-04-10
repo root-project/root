@@ -36,7 +36,7 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
    // old version of reshape and squeeze have axes as attributes
    std::unique_ptr<ROperator> op;
    int attr_value = (opMode == Reshape) ? 0 : 1;
-   if (opMode == Reshape && nodeproto.attribute_size() > 0)
+   if ((opMode == Reshape || opMode == Flatten) && nodeproto.attribute_size() > 0)
       attr_value = nodeproto.attribute(0).i();
 
    std::vector<int64_t> attr_axes = {};

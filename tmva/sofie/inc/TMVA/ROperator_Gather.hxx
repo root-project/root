@@ -23,9 +23,9 @@ private:
    std::string fNIndices;
    std::string fNY;
 
-   std::vector<size_t> fShapeX;
+   std::vector<Dim> fShapeX;
    std::vector<size_t> fShapeIndices;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeY;
 
    std::vector<int64_t> fIndices;  // indices vector in case they are known at initialization
 
@@ -52,7 +52,8 @@ public:
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");
       }
-      fShapeX = model.GetTensorShape(fNX);
+      fShapeX = model.GetDimTensorShape(fNX);
+      // assume fShapeIndices is not dynamic
       fShapeIndices = model.GetTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
       // Axis in range [0, r) where r=rank(X)
@@ -71,8 +72,11 @@ public:
          model.SetNotWritableInitializedTensor(fNIndices);
          // update indices data in case of negative dim values
          for (size_t i = 0; i < indicesLength; i++) {
-            if (indicesData[i] < 0) {
-               indicesData[i] += fShapeX[fAttrAxis];
+            // move this at generation time?
+            if (!fShapeX[fAttrAxis].isParam) {
+               if (indicesData[i] < 0) {
+                  indicesData[i] += fShapeX[fAttrAxis].dim;
+               }
             }
          }
          // Save in a vector gather Indices of size q
@@ -90,21 +94,23 @@ public:
          }
          // Set shape of Y[axis, ..., axis + q)
          for (size_t i = 0; i < q; i++) {
-            fShapeY[fAttrAxis + i] = fShapeIndices[i];
+            fShapeY[fAttrAxis + i] = Dim{ fShapeIndices[i]};
          }
          // Copy shape of X[axis + 1, ..., axis + r) to shape of Y[axis + q, ... q + r - 1)
          std::copy(fShapeX.begin() + fAttrAxis + 1, fShapeX.end(), fShapeY.begin() + fAttrAxis + q);
       }
       // case input is known (type is an integer) and input indices is a scalar (or vector of size 1)
       if (model.IsInitializedTensor(fNX) && q <= 1 && r == 1 && fIndices.size() > 0) {
+         auto shapeX = ConvertShapeToInt(fShapeX);  // we assume model is not dynamic
+         auto shapeY = ConvertShapeToInt(fShapeY);
          if (model.GetTensorType(fNX) == ETensorType::INT64) {
             auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNX).get());
             // if q <=1 and r = 1 output length = 1 (it is a scalar)
-            std::vector<int64_t> outputData(ConvertShapeToLength(fShapeY));
+            std::vector<int64_t> outputData(ConvertShapeToLength(shapeY));
             outputData[0] = inputData[fIndices[0]];
-            model.AddConstantTensor(fNY, fShapeY, outputData.data());
+            model.AddConstantTensor(fNY, shapeY, outputData.data());
             if (model.Verbose())
-               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(shapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(shapeY)
                    << " and values " << ConvertValuesToString(outputData) << " (constant) " << std::endl;
             fIsOutputConstant = true;
          }
@@ -114,7 +120,7 @@ public:
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          fType = ConvertTypeToString(model.GetTensorType(fNX));
          if (model.Verbose())
-               std::cout <<  "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+               std::cout <<  "Gather: " << fNX << " " << ConvertDimShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
                   << std::endl;
       }
    }
@@ -132,9 +138,9 @@ public:
       // Indices of shape q
       size_t q = fShapeIndices.size();
       // Strides
-      std::vector<size_t> stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
-      std::vector<size_t> stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
-      std::vector<size_t> stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
+      auto stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
+      auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
+      auto stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
 
       // case fIndices is not known we need to correct for negative axis indices at run-time
       if (fIndices.empty()) {

@@ -3,6 +3,7 @@
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
+#include <charconv>
 
 namespace TMVA {
 namespace Experimental {
@@ -136,11 +137,12 @@ std::string ConvertDimShapeToString(const std::vector<Dim> & shape) {
    return out.str();
 }
 
-
 std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
    // convert generic shape to a string
    // multiply all the integer specified dimensions of the shape
    std::string length;
+   // case of empty vectors return 1
+   if (shape.empty()) return "1";
    size_t int_length = 0;
    for (size_t i = 0; i < shape.size(); i++) {
       if (shape[i].isParam) {
@@ -160,7 +162,7 @@ std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
    }
    return length;
 }
-std::string ConvertDynamicShapeToString(const std::vector<Dim> & shape) {
+std::string ConvertShapeToString(const std::vector<Dim> & shape) {
    return ConvertDimShapeToString(shape);
 }
 std::string ConvertDynamicShapeToLength(const std::vector<Dim> & shape) {
@@ -183,6 +185,12 @@ static inline void copy_vector_data(int_t no_of_copies, int_t input_size, T* inp
       std::memcpy(target + already_copied * input_size, target, (no_of_copies - already_copied) * input_size * sizeof(T));
    }
 }
+}
+
+bool IsInteger(const std::string & s) {
+   int value;
+   auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), value);
+   return ec == std::errc() && ptr == s.data() + s.size();
 }
 
 bool UTILITY::AreSameShape(const std::vector<size_t>& shapeA, const std::vector<size_t>& shapeB) {
