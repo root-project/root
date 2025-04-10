@@ -5,6 +5,7 @@ builtin_zeromq=OFF
 builtin_zlib=ON
 builtin_zstd=ON
 ccache=ON
+experimental_adaptivecpp=ON
 pythia8=OFF
 roofit_multiprocess=OFF
 unuran=OFF
