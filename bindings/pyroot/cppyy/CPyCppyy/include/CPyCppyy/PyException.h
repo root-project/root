@@ -44,7 +44,7 @@ public:
 // give reason for raised exception
     const char* what() const noexcept override;
 
-    // clear Python error, to allow full error handling C++ side
+// clear Python error, to allow full error handling C++ side
     void clear() const noexcept;
 
 private:
