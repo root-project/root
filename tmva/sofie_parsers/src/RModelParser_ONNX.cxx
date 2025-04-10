@@ -160,6 +160,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Sqrt", ParseSqrt);
    RegisterOperator("Reciprocal", ParseReciprocal);
    RegisterOperator("Neg", ParseNeg);
+   RegisterOperator("Not", ParseNeg);
    RegisterOperator("Exp", ParseExp);
    RegisterOperator("Log", ParseLog);
    RegisterOperator("Sin", ParseSin);
