@@ -1,4 +1,5 @@
 builtin_zlib=ON
 builtin_zstd=ON
 ccache=ON
+experimental_adaptivecpp=ON
 vdt=OFF
