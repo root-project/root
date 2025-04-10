@@ -820,7 +820,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
       for (auto &conn : fPendingConn)
          if (_CanTrustIn(conn, key, ntry, is_remote, true /* test_first_time */))
-             return true;
+            return true;
 
       return false;
    }
@@ -860,6 +860,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          // preserve key for longpoll or when with session key used for HMAC hash of messages
          // conn->fKey.clear();
          conn->ResetStamps();
+         // remove files which are required for startup
+         if (conn->fDisplayHandle)
+            conn->fDisplayHandle->RemoveStartupFiles();
          if (conn->fWasFirst)
             fConn.emplace(fConn.begin(), conn);
          else
