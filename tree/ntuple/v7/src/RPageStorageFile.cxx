@@ -46,12 +46,12 @@
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using ROOT::Experimental::Internal::RCluster;
 using ROOT::Experimental::Internal::RClusterPool;
-using ROOT::Experimental::Internal::RNTupleFileWriter;
 using ROOT::Experimental::Internal::ROnDiskPage;
 using ROOT::Experimental::Internal::ROnDiskPageMap;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
+using ROOT::Internal::RNTupleFileWriter;
 using ROOT::Internal::RNTupleSerializer;
 using ROOT::Internal::RPagePool;
 
@@ -270,7 +270,7 @@ ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
 {
    fFile = std::move(file);
    R__ASSERT(fFile);
-   fReader = ROOT::Experimental::Internal::RMiniFileReader(fFile.get());
+   fReader = ROOT::Internal::RMiniFileReader(fFile.get());
 }
 
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
@@ -489,7 +489,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSourceFile::Cl
 {
    auto clone = new RPageSourceFile(fNTupleName, fOptions);
    clone->fFile = fFile->Clone();
-   clone->fReader = ROOT::Experimental::Internal::RMiniFileReader(clone->fFile.get());
+   clone->fReader = ROOT::Internal::RMiniFileReader(clone->fFile.get());
    return std::unique_ptr<RPageSourceFile>(clone);
 }
 
