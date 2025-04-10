@@ -63,6 +63,12 @@ struct UnaryOpTraits<T, EBasicUnaryOperator::kAbs> {
    static std::string Op(const std::string &X) { return "std::abs(" + X + ")"; }
 };
 
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kRound> {
+   static std::string Name() { return "Round"; }
+   static std::string Op(const std::string &X) { return "std::round(" + X + ")"; }
+};
+
 template <typename T, EBasicUnaryOperator Op>
 class ROperator_BasicUnary final : public ROperator {
 private:
