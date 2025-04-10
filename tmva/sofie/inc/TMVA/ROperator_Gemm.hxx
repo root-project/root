@@ -193,7 +193,7 @@ namespace SOFIE{
          if (!fIsDynamic) {
             shapeY = ConvertShapeToInt(fShapeY);
             if (shapeY.empty()) {
-               throw std::runtime_error("TMVA SOFIE Gemm Op " + fNY + " has invalid shape" + ConvertDynamicShapeToString(fShapeY));
+               throw std::runtime_error("TMVA SOFIE Gemm Op " + fNY + " has invalid shape" + ConvertShapeToString(fShapeY));
             }
          }
 
@@ -262,7 +262,7 @@ namespace SOFIE{
          if (model.Verbose()){
             std::cout << "Gemm (or MatMul) " << " ---> " << fNY << " shape ";
             if (fIsDynamic)
-               std::cout << ConvertDynamicShapeToString(fShapeY) << std::endl;
+               std::cout << ConvertShapeToString(fShapeY) << std::endl;
             else
                std::cout << ConvertShapeToString(shapeY) << std::endl;
          }
@@ -282,8 +282,8 @@ namespace SOFIE{
             out << "//--- broadcast bias tensor " << fNC << "for Gemm op\n";
             out << SP << "{\n";
             out << "      float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
-               << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertDynamicShapeToString(fShapeY) << ");\n";
-            auto length = TMVA::Experimental::SOFIE::ConvertDynamicShapeToLength(fShapeY); // output size
+               << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+            auto length = ConvertDimShapeToLength(fShapeY); // output size
             out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNC2 << ");\n";
             out << SP << SP << "delete [] data;\n";
             out << SP << "}\n";
@@ -315,8 +315,8 @@ namespace SOFIE{
          for (int64_t i = 0; i < dimY-2; i++) {
             sA.push_back(fShapeY[i]);
          }
-         auto lengthGemm = ConvertDynamicShapeToLength(sY); // size of the Gemm operation
-         auto lengthExtra = ConvertDynamicShapeToLength(sA); // extra length in case input tensors are of dim>2 (MatMul)
+         auto lengthGemm = ConvertDimShapeToLength(sY); // size of the Gemm operation
+         auto lengthExtra = ConvertDimShapeToLength(sA); // extra length in case input tensors are of dim>2 (MatMul)
 
          // case bias is present
          if (!fNC.empty()){
@@ -369,7 +369,7 @@ namespace SOFIE{
              out << ");\n";
 
             if(fActivation == EActivationType::RELU){
-               out << SP << "for (int id = 0; id < " << TMVA::Experimental::SOFIE::ConvertDynamicShapeToLength(fShapeY) << " ; id++){\n";
+               out << SP << "for (int id = 0; id < " << ConvertDimShapeToLength(fShapeY) << " ; id++){\n";
                out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNY << "[id] > 0 )? tensor_" << fNY << "[id] : 0);\n";
                out << SP << "}\n";
             }
