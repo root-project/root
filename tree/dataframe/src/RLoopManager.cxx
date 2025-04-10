@@ -132,10 +132,29 @@ void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, c
 void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b,
                           std::string prefix, std::string &friendName, bool allowDuplicates)
 {
+   // We want to avoid situations of overlap between the prefix and the
+   // sub-branch name that might happen when the branch is composite, e.g.
+   // prefix=reco_Wdecay2_from_tbar_4vect_NOSYS.fCoordinates.
+   // subBranchName=fCoordinates.fPt
+   // which would lead to a repetition of fCoordinates in the output branch name
+   // Boundary to search for the token before the last dot
+   auto prefixEndingDot = std::string::npos;
+   if (!prefix.empty() && prefix.back() == '.')
+      prefixEndingDot = prefix.size() - 2;
+   std::string lastPrefixToken{};
+   if (auto prefixLastRealDot = prefix.find_last_of('.', prefixEndingDot); prefixLastRealDot != std::string::npos)
+      lastPrefixToken = prefix.substr(prefixLastRealDot + 1, prefixEndingDot - prefixLastRealDot);
+
    for (auto sb : *b->GetListOfBranches()) {
       TBranch *subBranch = static_cast<TBranch *>(sb);
       auto subBranchName = std::string(subBranch->GetName());
       auto fullName = prefix + subBranchName;
+
+      if (auto subNameFirstDot = subBranchName.find_first_of('.'); subNameFirstDot != std::string::npos) {
+         // Concatenate the prefix to the sub-branch name without overlaps
+         if (!lastPrefixToken.empty() && lastPrefixToken == subBranchName.substr(0, subNameFirstDot))
+            fullName = prefix + subBranchName.substr(subNameFirstDot + 1);
+      }
 
       std::string newPrefix;
       if (!prefix.empty())
