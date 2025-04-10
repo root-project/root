@@ -977,7 +977,7 @@ public:
       // main constructor.
       fBrowser = b; fCount = 0;
    }
-   virtual ~TAutoInspector() {}
+   ~TAutoInspector() override {}
    using TMemberInspector::Inspect;
    void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
    Bool_t IsTreatingNonAccessibleTypes() override { return kFALSE; }

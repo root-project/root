@@ -3488,7 +3488,7 @@ public:
       InterpreterCallbacks(interp),
       fFilesIncludedByLinkdef(filesIncludedByLinkdef){};
 
-   ~TRootClingCallbacks(){};
+   ~TRootClingCallbacks() override{};
 
    void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                            llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
@@ -3577,13 +3577,13 @@ public:
    {
    }
 
-   ~CheckModuleBuildClient()
+   ~CheckModuleBuildClient() override
    {
       if (fOwnsChild)
          delete fChild;
    }
 
-   virtual void HandleDiagnostic(clang::DiagnosticsEngine::Level DiagLevel, const clang::Diagnostic &Info) override
+   void HandleDiagnostic(clang::DiagnosticsEngine::Level DiagLevel, const clang::Diagnostic &Info) override
    {
       using namespace clang::diag;
 
@@ -3645,31 +3645,31 @@ public:
    }
 
    // All methods below just forward to the child and the default method.
-   virtual void clear() override
+   void clear() override
    {
       fChild->clear();
       DiagnosticConsumer::clear();
    }
 
-   virtual void BeginSourceFile(const clang::LangOptions &LangOpts, const clang::Preprocessor *PP) override
+   void BeginSourceFile(const clang::LangOptions &LangOpts, const clang::Preprocessor *PP) override
    {
       fChild->BeginSourceFile(LangOpts, PP);
       DiagnosticConsumer::BeginSourceFile(LangOpts, PP);
    }
 
-   virtual void EndSourceFile() override
+   void EndSourceFile() override
    {
       fChild->EndSourceFile();
       DiagnosticConsumer::EndSourceFile();
    }
 
-   virtual void finish() override
+   void finish() override
    {
       fChild->finish();
       DiagnosticConsumer::finish();
    }
 
-   virtual bool IncludeInDiagnosticCounts() const override { return fChild->IncludeInDiagnosticCounts(); }
+   bool IncludeInDiagnosticCounts() const override { return fChild->IncludeInDiagnosticCounts(); }
 };
 
 static void MaybeSuppressWin32CrashDialogs() {
