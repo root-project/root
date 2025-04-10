@@ -70,7 +70,7 @@ template <class T>
 using RField = ROOT::RField<T>;
 using RFieldBase = ROOT::RFieldBase;
 using RFieldDescriptor = ROOT::RFieldDescriptor;
-using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
+using RMiniFileReader = ROOT::Internal::RMiniFileReader;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
@@ -79,7 +79,7 @@ using RNTupleDecompressor = ROOT::Internal::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::RNTupleDescriptor;
 using RNTupleFillStatus = ROOT::RNTupleFillStatus;
 using RNTupleDescriptorBuilder = ROOT::Internal::RNTupleDescriptorBuilder;
-using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
+using RNTupleFileWriter = ROOT::Internal::RNTupleFileWriter;
 using RNTupleJoinTable = ROOT::Experimental::Internal::RNTupleJoinTable;
 using RNTupleParallelWriter = ROOT::Experimental::RNTupleParallelWriter;
 using RNTupleReader = ROOT::RNTupleReader;

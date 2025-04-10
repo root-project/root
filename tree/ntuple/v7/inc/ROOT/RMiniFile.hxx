@@ -40,15 +40,13 @@ class RRawFile;
 
 class RNTupleWriteOptions;
 
-namespace Experimental {
-
 namespace Internal {
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RMiniFileReader
+\class ROOT::Internal::RMiniFileReader
 \ingroup NTuple
 \brief Read RNTuple data blocks from a TFile container, provided by a RRawFile
 
@@ -97,7 +95,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleFileWriter
+\class ROOT::Internal::RNTupleFileWriter
 \ingroup NTuple
 \brief Write RNTuple data blocks in a TFile or a bare file container
 
@@ -150,7 +148,7 @@ private:
       /// Keeps track of the next key offset
       std::uint64_t fKeyOffset = 0;
       /// Keeps track of TFile control structures, which need to be updated on committing the data set
-      std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
+      std::unique_ptr<ROOT::Internal::RTFileControlBlock> fControlBlock;
 
       RFileSimple();
       RFileSimple(const RFileSimple &other) = delete;
@@ -258,7 +256,6 @@ public:
 };
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
