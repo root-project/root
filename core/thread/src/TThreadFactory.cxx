@@ -20,7 +20,7 @@
 
 #include "TThreadFactory.h"
 
-TThreadFactory *gThreadFactory = 0;
+TThreadFactory *gThreadFactory = nullptr;
 
 ClassImp(TThreadFactory);
 

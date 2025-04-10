@@ -37,7 +37,7 @@ TPosixCondition::TPosixCondition(TMutexImp *m)
 {
    fMutex = (TPosixMutex *) m;
 
-   int rc = pthread_cond_init(&fCond, 0);
+   int rc = pthread_cond_init(&fCond, nullptr);
 
    if (rc)
       SysError("TPosixCondition", "pthread_cond_init error");
