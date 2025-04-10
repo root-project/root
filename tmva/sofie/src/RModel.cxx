@@ -590,8 +590,12 @@ void RModel::GenerateIntermediateTensorInfo() {
                tensor_declaration_block += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
                // No pointer allocation possible for BOOL, but we create a reference to the vector to make the data member layout more consistent
                tensor_declaration_block += "std::vector<bool> & tensor_" + i.first + " = fTensor_" + i.first + ";\n";
+               return;
          }
-         if (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end() && std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end()) {
+
+         bool memory_optimization_condition = (fOptimizationLevel==OptimizationLevel::kExtended) && (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end());
+         if (!memory_optimization_condition &&
+            std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end())  {
             size_t length = ConvertShapeToLength(i.second.shape);
 
             if (i.second.type == ETensorType::FLOAT) {
@@ -776,24 +780,26 @@ void RModel::GenerateSessionCode()
    // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
 
-   // evaluate total intermediate memory and position intermediate tensor addresses
-   std::string intermediate_memory_alloc_string = "";
-   intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
-   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
-      intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
-      CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
+   if (fOptimizationLevel == OptimizationLevel::kExtended){
+      // evaluate total intermediate memory and position intermediate tensor addresses
+      std::string intermediate_memory_alloc_string = "";
+      intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
+      for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+         intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
+         CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
+      }
+
+      // to check remaining unused fragments after memory allocation (lesser the better)
+      // for (const auto &it: fIntermediateMemoryInfo.available_stack){
+      //    std::cout<<"chunk_idx: "<<it.first<<", chunk_size: "<<it.second<<"\n";
+      // }
+
+      // generate the memory pool to be used by intermediate tensors
+      GenerateIntermediateMemoryPool();
+
+      // position intermediate tensors
+      fGC += intermediate_memory_alloc_string;
    }
-
-   // to check remaining unused fragments after memory allocation (lesser the better)
-   // for (const auto &it: fIntermediateMemoryInfo.available_stack){
-   //    std::cout<<"chunk_idx: "<<it.first<<", chunk_size: "<<it.second<<"\n";
-   // }
-
-   // generate the memory pool to be used by intermediate tensors
-   GenerateIntermediateMemoryPool();
-
-   // position intermediate tensors
-   fGC += intermediate_memory_alloc_string;
 
    // generate the declaring the intermediate tensors
    GenerateIntermediateTensorInfo();
