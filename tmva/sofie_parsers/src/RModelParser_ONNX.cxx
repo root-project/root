@@ -71,6 +71,7 @@ extern ParserFuncSignature ParseIdentity;
 extern ParserFuncSignature ParseSoftmax;
 extern ParserFuncSignature ParseConcat;
 extern ParserFuncSignature ParseCast;
+extern ParserFuncSignature ParseCastLike;
 extern ParserFuncSignature ParseExpand;
 extern ParserFuncSignature ParseShape;
 extern ParserFuncSignature ParseMatMul;
@@ -195,6 +196,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Constant", ParseConstant);
    RegisterOperator("ConstantOfShape", ParseConstant);
    RegisterOperator("Cast", ParseCast);
+   RegisterOperator("CastLike", ParseCastLike);
    RegisterOperator("Concat", ParseConcat);
    RegisterOperator("Conv", ParseConv);
    RegisterOperator("ConvTranspose", ParseConvTranspose);
