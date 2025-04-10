@@ -57,6 +57,9 @@ typedef std::int64_t int_t;
 std::string ConvertTypeToString(ETensorType type);
 ETensorType ConvertStringToType(std::string type);
 
+// find if a string represents a number
+bool IsInteger(const std::string & s);
+
 struct Dim{
    bool isParam = false;
    size_t dim = 0;
@@ -66,7 +69,14 @@ struct Dim{
    Dim() {}
 
    // constructor for a parametric dimension with the option to pass a default dim value
-   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p) {}
+   // in case the string represents a number make Dim not parametric
+   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p)
+   {
+      if (IsInteger(p)) {
+            isParam = false;
+            dim = std::stoi(p);
+      }
+   }
 
    // constructor for a non-parametric dimension
    Dim(size_t d) : dim(d) {}
@@ -75,13 +85,21 @@ struct Dim{
       return (isParam) ? param : std::to_string(dim);
    }
 
+   std::ostream& operator<< (std::ostream& os) const {
+      os << GetVal();
+      return os;
+   }
+
    bool operator==(const Dim& rhs) const {
        return (isParam && rhs.isParam) ? param == rhs.param : dim == rhs.dim;
    }
 };
 
 //bool operator==(const Dim& lhs, const Dim& rhs);
-
+inline std::ostream & operator<< (std::ostream &os, const Dim &d) {
+   os << d.GetVal();
+   return os;
+}
 
 struct InputTensorInfo{
    ETensorType type;
@@ -173,7 +191,7 @@ std::size_t ConvertShapeToLength(const std::vector<size_t> & shape);
 
 std::string ConvertShapeToString(const std::vector<size_t> & shape);
 std::string ConvertDimShapeToString(const std::vector<Dim> & shape);
-std::string ConvertDynamicShapeToString(const std::vector<Dim> & shape);
+std::string ConvertShapeToString(const std::vector<Dim> & shape);
 
 
 
@@ -306,6 +324,8 @@ ETensorType GetTemplatedType(T /*obj*/ ){
 }
 
 namespace UTILITY{
+
+
 
 // clean operator and tensor names
 std::string Clean_name(std::string input_tensor_name);
