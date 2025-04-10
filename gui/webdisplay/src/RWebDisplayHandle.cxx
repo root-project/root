@@ -125,13 +125,15 @@ class RWebBrowserHandle : public RWebDisplayHandle {
    browser_process_id fPid;
 
 public:
-   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &tmpfile, const std::string &dump) :
-      RWebDisplayHandle(url), fTmpDir(tmpdir), fTmpFile(tmpfile)
+   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &tmpfile,
+                     const std::string &dump)
+      : RWebDisplayHandle(url), fTmpDir(tmpdir), fTmpFile(tmpfile)
    {
       SetContent(dump);
    }
 
-   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &tmpfile, browser_process_id pid)
+   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &tmpfile,
+                     browser_process_id pid)
       : RWebDisplayHandle(url), fTmpDir(tmpdir), fTmpFile(tmpfile), fHasPid(true), fPid(pid)
    {
    }
@@ -140,19 +142,30 @@ public:
    {
 #ifdef _MSC_VER
       if (fHasPid)
-         gSystem->Exec(("taskkill /F /PID "s + std::to_string(fPid) + " >NUL 2>NUL").c_str());
-      std::string rmdir = "rmdir /S /Q ", rmfile = "del /F ";
+         gSystem->Exec(("taskkill /F /PID " s + std::to_string(fPid) + " >NUL 2>NUL").c_str());
+      std::string rmdir = "rmdir /S /Q ";
 #else
       if (fHasPid)
          kill(fPid, SIGKILL);
-      std::string rmdir = "rm -rf ", rmfile = "rm -f ";
+      std::string rmdir = "rm -rf ";
 #endif
       if (!fTmpDir.empty())
          gSystem->Exec((rmdir + fTmpDir).c_str());
-      if (!fTmpFile.empty())
-         gSystem->Exec((rmfile + fTmpFile).c_str());
+      RemoveStartupFiles();
    }
 
+   void RemoveStartupFiles() override
+   {
+#ifdef _MSC_VER
+      std::string rmfile = "del /F ";
+#else
+      std::string rmfile = "rm -f ";
+#endif
+      if (!fTmpFile.empty()) {
+         gSystem->Exec((rmfile + fTmpFile).c_str());
+         fTmpFile.clear();
+      }
+   }
 };
 
 } // namespace ROOT
