@@ -54,7 +54,7 @@ protected:
 public:
    TQSlot(TClass *cl, const char *method, const char *funcname);
    TQSlot(const char *class_name, const char *funcname);
-   virtual ~TQSlot();
+   ~TQSlot() override;
 
    Bool_t      CheckSlot(Int_t nargs) const;
    Longptr_t   GetOffset() const { return fOffset; }

@@ -314,9 +314,9 @@ private:
 public:
    TQConnectionList(const char *name, Int_t nsigargs) : TList()
       { fName = name; fSignalArgs = nsigargs; }
-   virtual ~TQConnectionList();
+   ~TQConnectionList() override;
 
-   Bool_t Disconnect(void *receiver=nullptr, const char *slot_name=nullptr);
+   Bool_t Disconnect(void *receiver = nullptr, const char *slot_name = nullptr);
    Int_t  GetNargs() const { return fSignalArgs; }
    void   ls(Option_t *option = "") const override;
 };

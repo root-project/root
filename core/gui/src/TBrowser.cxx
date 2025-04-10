@@ -88,7 +88,7 @@ public:
       SetBit(kCanDelete);
    }
 
-   ~TBrowserObject() {}
+   ~TBrowserObject() override {}
 
    void Browse(TBrowser *b) override { fClass->Browse(fObj, b); }
    Bool_t IsFolder() const override { return fClass->IsFolder(fObj); }

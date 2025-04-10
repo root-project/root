@@ -70,7 +70,7 @@ public:
    RRDFCardinalityField() : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */) {}
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
-   ~RRDFCardinalityField() = default;
+   ~RRDFCardinalityField() override = default;
 
    const RColumnRepresentations &GetColumnRepresentations() const final
    {
@@ -170,7 +170,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
 
 public:
    RNTupleColumnReader(RNTupleDS *ds, RFieldBase *protoField) : fDataSource(ds), fProtoField(protoField) {}
-   ~RNTupleColumnReader() = default;
+   ~RNTupleColumnReader() override = default;
 
    /// Connect the field and its subfields to the page source
    void Connect(RPageSource &source, Long64_t entryOffset)
