@@ -67,7 +67,7 @@ private:
       size_t fBytesPacked;
    };
 
-   std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter> fWriter;
+   std::unique_ptr<ROOT::Internal::RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
@@ -137,7 +137,7 @@ private:
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
-   ROOT::Experimental::Internal::RMiniFileReader fReader;
+   ROOT::Internal::RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters

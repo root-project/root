@@ -30,10 +30,6 @@ class RNTuple;
 
 namespace Internal {
 class RPageSourceFile;
-}
-
-namespace Experimental {
-namespace Internal {
 class RNTupleFileWriter;
 
 RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
@@ -42,7 +38,6 @@ RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std
                      std::uint64_t lenFooter, std::uint64_t maxKeySize);
 
 } // namespace Internal
-} // namespace Experimental
 
 // clang-format off
 /**
@@ -70,13 +65,14 @@ auto reader = RNTupleReader::Open(ntpl);
 */
 // clang-format on
 class RNTuple final {
-   friend class Experimental::Internal::RNTupleFileWriter;
+   friend class Internal::RNTupleFileWriter;
    friend class Internal::RPageSourceFile;
 
-   friend ROOT::RNTuple ROOT::Experimental::Internal::CreateAnchor(
-      std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor, std::uint16_t versionPatch,
-      std::uint64_t seekHeader, std::uint64_t nbytesHeader, std::uint64_t lenHeader, std::uint64_t seekFooter,
-      std::uint64_t nbytesFooter, std::uint64_t lenFooter, std::uint64_t maxKeySize);
+   friend ROOT::RNTuple
+   Internal::CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
+                          std::uint16_t versionPatch, std::uint64_t seekHeader, std::uint64_t nbytesHeader,
+                          std::uint64_t lenHeader, std::uint64_t seekFooter, std::uint64_t nbytesFooter,
+                          std::uint64_t lenFooter, std::uint64_t maxKeySize);
 
 public:
    static constexpr std::uint16_t kVersionEpoch = 1;
