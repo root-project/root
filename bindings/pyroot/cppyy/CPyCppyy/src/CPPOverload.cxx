@@ -54,54 +54,48 @@ public:
         fCallable = callable;
     }
 
-    ~TPythonCallback() override
-    {
-       Py_DECREF(fCallable);
-       fCallable = nullptr;
+    ~TPythonCallback() override {
+        Py_DECREF(fCallable);
+        fCallable = nullptr;
     }
 
-    PyObject *GetSignature(bool /*show_formalargs*/ = true) override
-    {
-       return CPyCppyy_PyText_FromString("*args, **kwargs");
+    PyObject* GetSignature(bool /*show_formalargs*/ = true) override {
+        return CPyCppyy_PyText_FromString("*args, **kwargs");
     }
-    PyObject *GetPrototype(bool /*show_formalargs*/ = true) override
-    {
-       return CPyCppyy_PyText_FromString("<callback>");
+    PyObject* GetPrototype(bool /*show_formalargs*/ = true) override {
+        return CPyCppyy_PyText_FromString("<callback>");
     }
-    PyObject *GetDocString() override
-    {
-       if (PyObject_HasAttrString(fCallable, "__doc__")) {
-          return PyObject_GetAttrString(fCallable, "__doc__");
-       } else {
-          return GetPrototype();
-       }
+    PyObject* GetDocString() override {
+        if (PyObject_HasAttrString(fCallable, "__doc__")) {
+            return PyObject_GetAttrString(fCallable, "__doc__");
+        } else {
+            return GetPrototype();
+        }
     }
 
     int GetPriority() override { return 100; };
     bool IsGreedy() override { return false; };
 
     int GetMaxArgs() override { return 100; };
-    PyObject *GetCoVarNames() override
-    { // TODO: pick these up from the callable
-       Py_RETURN_NONE;
+    PyObject* GetCoVarNames() override { // TODO: pick these up from the callable
+        Py_RETURN_NONE;
     }
-    PyObject *GetArgDefault(int /* iarg */, bool /* silent */ = true) override
-    {
-       Py_RETURN_NONE; // TODO: pick these up from the callable
+    PyObject* GetArgDefault(int /* iarg */, bool /* silent */ =true) override {
+        Py_RETURN_NONE;      // TODO: pick these up from the callable
     }
 
-    PyObject *GetScopeProxy() override
-    { // should this be the module ??
-       Py_RETURN_NONE;
+    PyObject* GetScopeProxy() override { // should this be the module ??
+        Py_RETURN_NONE;
     }
 
-    Cppyy::TCppFuncAddr_t GetFunctionAddress() override { return (Cppyy::TCppFuncAddr_t) nullptr; }
+    Cppyy::TCppFuncAddr_t GetFunctionAddress() override {
+        return (Cppyy::TCppFuncAddr_t)nullptr;
+    }
 
-    PyCallable *Clone() override { return new TPythonCallback(*this); }
+    PyCallable* Clone() override { return new TPythonCallback(*this); }
 
-    PyObject *Call(CPPInstance *&self, CPyCppyy_PyArgs_t args, size_t nargsf, PyObject *kwds,
-                   CallContext * /* ctxt = 0 */) override
-    {
+    PyObject* Call(CPPInstance*& self,
+            CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* /* ctxt = 0 */) override {
 
 #if PY_VERSION_HEX >= 0x03080000
         if (self) {
