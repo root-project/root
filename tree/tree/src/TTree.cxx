@@ -5314,6 +5314,9 @@ TBranch* TTree::GetBranch(const char* name)
    if (result)
       return result;
 
+   if (auto it = fNamesToBranches.find(name); it != fNamesToBranches.end())
+      return it->second;
+
    // Search using branches, breadth first.
    result = R__GetBranch(fBranches, name);
    if (result)
@@ -9615,7 +9618,7 @@ Int_t TTree::StopCacheLearningPhase()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the fTree member for all branches and sub branches.
 
-static void TBranch__SetTree(TTree *tree, TObjArray &branches)
+void ROOT::Internal::TreeUtils::TBranch__SetTree(TTree *tree, TObjArray &branches)
 {
    Int_t nb = branches.GetEntriesFast();
    for (Int_t i = 0; i < nb; ++i) {
@@ -9630,7 +9633,9 @@ static void TBranch__SetTree(TTree *tree, TObjArray &branches)
          }
       }
 
-      TBranch__SetTree(tree,*br->GetListOfBranches());
+      tree->RegisterBranchFullName({std::string{br->GetFullName()}, br});
+
+      ROOT::Internal::TreeUtils::TBranch__SetTree(tree, *br->GetListOfBranches());
    }
 }
 
@@ -9672,7 +9677,7 @@ void TTree::Streamer(TBuffer& b)
          fBranches.SetOwner(true); // True needed only for R__v < 19 and most R__v == 19
 
          if (fBranchRef) fBranchRef->SetTree(this);
-         TBranch__SetTree(this,fBranches);
+         ROOT::Internal::TreeUtils::TBranch__SetTree(this, fBranches);
          TFriendElement__SetTree(this,fFriends);
 
          if (fTreeIndex) {
@@ -9720,7 +9725,7 @@ void TTree::Streamer(TBuffer& b)
       if (fEstimate <= 10000) fEstimate = 1000000;
       fBranches.Streamer(b);
       if (fBranchRef) fBranchRef->SetTree(this);
-      TBranch__SetTree(this,fBranches);
+      ROOT::Internal::TreeUtils::TBranch__SetTree(this, fBranches);
       fLeaves.Streamer(b);
       fSavedBytes = fTotBytes;
       if (R__v > 1) fIndexValues.Streamer(b);
