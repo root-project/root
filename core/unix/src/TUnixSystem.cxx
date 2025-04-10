@@ -4644,7 +4644,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
    if (reset || !initialized) {
 
       dynpath_envpart = gSystem->Getenv("ROOT_LIBRARY_PATH");
-      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char *)nullptr);
+      TString rdynpath = gEnv->GetValue("Root.DynamicPath", nullptr);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
          rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
