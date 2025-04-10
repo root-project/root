@@ -238,51 +238,48 @@ struct CountedItemGetter : public ItemGetter {
 struct TupleItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
     Py_ssize_t size() override { return PyTuple_GET_SIZE(fPyObject); }
-    PyObject *get() override
-    {
-       if (fCur < PyTuple_GET_SIZE(fPyObject)) {
-          PyObject *item = PyTuple_GET_ITEM(fPyObject, fCur++);
-          Py_INCREF(item);
-          return item;
-       }
-       PyErr_SetString(PyExc_StopIteration, "end of tuple");
-       return nullptr;
+    PyObject* get() override {
+        if (fCur < PyTuple_GET_SIZE(fPyObject)) {
+            PyObject* item = PyTuple_GET_ITEM(fPyObject, fCur++);
+            Py_INCREF(item);
+            return item;
+        }
+        PyErr_SetString(PyExc_StopIteration, "end of tuple");
+        return nullptr;
     }
 };
 
 struct ListItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
     Py_ssize_t size() override { return PyList_GET_SIZE(fPyObject); }
-    PyObject *get() override
-    {
-       if (fCur < PyList_GET_SIZE(fPyObject)) {
-          PyObject *item = PyList_GET_ITEM(fPyObject, fCur++);
-          Py_INCREF(item);
-          return item;
-       }
-       PyErr_SetString(PyExc_StopIteration, "end of list");
-       return nullptr;
+    PyObject* get() override {
+        if (fCur < PyList_GET_SIZE(fPyObject)) {
+            PyObject* item = PyList_GET_ITEM(fPyObject, fCur++);
+            Py_INCREF(item);
+            return item;
+        }
+        PyErr_SetString(PyExc_StopIteration, "end of list");
+        return nullptr;
     }
 };
 
 struct SequenceItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    Py_ssize_t size() override
-    {
-       Py_ssize_t sz = PySequence_Size(fPyObject);
-       if (sz < 0) {
-          PyErr_Clear();
-          return PyObject_LengthHint(fPyObject, 8);
-       }
-       return sz;
+    Py_ssize_t size() override {
+        Py_ssize_t sz = PySequence_Size(fPyObject);
+        if (sz < 0) {
+            PyErr_Clear();
+            return PyObject_LengthHint(fPyObject, 8);
+        }
+        return sz;
     }
-    PyObject *get() override { return PySequence_GetItem(fPyObject, fCur++); }
+    PyObject* get() override { return PySequence_GetItem(fPyObject, fCur++); }
 };
 
 struct IterItemGetter : public ItemGetter {
     using ItemGetter::ItemGetter;
     Py_ssize_t size() override { return PyObject_LengthHint(fPyObject, 8); }
-    PyObject *get() override { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
+    PyObject* get() override { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
 };
 
 static ItemGetter* GetGetter(PyObject* args)
