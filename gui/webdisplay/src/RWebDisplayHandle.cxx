@@ -142,7 +142,7 @@ public:
    {
 #ifdef _MSC_VER
       if (fHasPid)
-         gSystem->Exec(("taskkill /F /PID " s + std::to_string(fPid) + " >NUL 2>NUL").c_str());
+         gSystem->Exec(("taskkill /F /PID " + std::to_string(fPid) + " >NUL 2>NUL").c_str());
       std::string rmdir = "rmdir /S /Q ";
 #else
       if (fHasPid)
