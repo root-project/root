@@ -250,11 +250,14 @@ TEST(RNTuple, TClassReadRules)
       auto model = RNTupleModel::Create();
       auto ptrClass = model->MakeField<StructWithIORules>("class");
       auto ptrCoord = model->MakeField<CoordinatesWithIORules>("coord");
+      auto ptrOldCoord = model->MakeField<OldCoordinates>("oldCoord");
       auto ptrLowPrecisionFloat = model->MakeField<LowPrecisionFloatWithIORules>("lowPrecisionFloat");
-      ptrCoord->fX = 1.0;
-      ptrCoord->fY = 1.0;
+      auto ptrOldName = model->MakeField<OldName<OldName<int>>>("rename");
+      ptrCoord->fX = ptrOldCoord->fOldX = 1.0;
+      ptrCoord->fY = ptrOldCoord->fOldY = 1.0;
       ptrLowPrecisionFloat->fFoo = 1.0;
       ptrLowPrecisionFloat->fLast8BitsZero = last8BitsZero;
+      ptrOldName->fValue.fValue = 42;
       auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       for (int i = 0; i < 5; i++) {
          *ptrClass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
@@ -294,4 +297,12 @@ TEST(RNTuple, TClassReadRules)
    EXPECT_FLOAT_EQ(1.0, viewLowPrecisionFloat(0).fFoo);
    EXPECT_NE(last8BitsZero, viewLowPrecisionFloat(0).fLast8BitsZero);
    EXPECT_NEAR(2.0, viewLowPrecisionFloat(0).fLast8BitsZero, 0.001);
+   auto viewOldCoordTransformed = reader->GetView<CoordinatesWithIORules>("oldCoord");
+   EXPECT_FLOAT_EQ(1.0, viewOldCoordTransformed(0).fX);
+   EXPECT_FLOAT_EQ(1.0, viewOldCoordTransformed(0).fY);
+   EXPECT_FLOAT_EQ(sqrt(2), viewOldCoordTransformed(0).fR);
+   EXPECT_FLOAT_EQ(M_PI / 4., viewOldCoordTransformed(0).fPhi);
+
+   auto viewRename = reader->GetView<NewName<OldName<int>>>("rename");
+   EXPECT_EQ(42, viewRename(0).fValue.fValue);
 }

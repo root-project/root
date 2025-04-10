@@ -100,11 +100,19 @@
 #pragma read sourceClass = "StructWithIORules" source = "" checksum = "[1]" targetClass = "StructWithIORules" target = \
    "checksumB" code = "{ checksumB = 0.0; }"
 
+#pragma link C++ options = version(3) class OldCoordinates + ;
+
 #pragma link C++ options = version(3) class CoordinatesWithIORules + ;
 
 #pragma read sourceClass = "CoordinatesWithIORules" source = "float fX; float fY" version = "[3]" targetClass = \
    "CoordinatesWithIORules" target = "fPhi,fR" include = "cmath" code =                                         \
       "{ fR = sqrt(onfile.fX * onfile.fX + onfile.fY * onfile.fY); fPhi = atan2(onfile.fY, onfile.fX); }"
+
+#pragma read sourceClass = "OldCoordinates" source = "float fOldX; float fOldY" version = "[3]" targetClass = \
+   "CoordinatesWithIORules" target = "fX,fY,fPhi,fR" include = "cmath" code =                                 \
+      "{ fR = sqrt(onfile.fOldX * onfile.fOldX + onfile.fOldY * onfile.fOldY); \
+      fPhi = atan2(onfile.fOldY, onfile.fOldX); \
+      fX = onfile.fOldX; fY = onfile.fOldY; }"
 
 #pragma link C++ options = version(3) class LowPrecisionFloatWithIORules + ;
 
@@ -113,6 +121,12 @@
       "{ std::uint32_t bits; std::memcpy(&bits, &onfile.fLast8BitsZero, sizeof(bits)); \
          bits |= 137; /* placeholder for randomizing the 8 LSBs */ \
          std::memcpy(&fLast8BitsZero, &bits, sizeof(fLast8BitsZero)); }"
+
+#pragma link C++ options = version(3) class OldName < int> + ;
+#pragma link C++ options = version(3) class OldName < OldName < int>> + ;
+#pragma link C++ options = version(3) class NewName < int> + ;
+#pragma link C++ options = version(3) class NewName < NewName < int>> + ;
+#pragma read sourceClass = "OldName<OldName<int>>" targetClass = "NewName<OldName<int>>" version = "[3]"
 
 #pragma link C++ class Cyclic + ;
 #pragma link C++ class CyclicCollectionProxy + ;

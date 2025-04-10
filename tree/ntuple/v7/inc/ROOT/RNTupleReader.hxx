@@ -50,7 +50,7 @@ enum class ENTupleInfo {
 \ingroup NTuple
 \brief Reads RNTuple data from storage
 
-The RNTupleReader provides access to data stored in the RNTuple binary format as C++ objects, using an RNTupleModel. 
+The RNTupleReader provides access to data stored in the RNTuple binary format as C++ objects, using an RNTupleModel.
 It infers this model from the RNTuple's on-disk metadata, or uses a model imposed by the user.
 The latter case allows users to read into a specialized RNTuple model that covers
 only a subset of the fields in the RNTuple. The RNTuple model is used when reading complete entries through LoadEntry().
