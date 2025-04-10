@@ -4644,7 +4644,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
    if (reset || !initialized) {
 
       dynpath_envpart = gSystem->Getenv("ROOT_LIBRARY_PATH");
-      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char *)nullptr);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
          rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
@@ -4688,7 +4688,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
       std::string result = "";
       char buffer[128];
       while (!feof(pf)) {
-         if (fgets(buffer, 128, pf) != NULL)
+         if (fgets(buffer, 128, pf) != nullptr)
             result += buffer;
       }
       pclose(pf);
