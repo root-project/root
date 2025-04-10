@@ -56,7 +56,7 @@ public:
    TPyDispatcher(PyObject *callable);
    TPyDispatcher(const TPyDispatcher &);
    TPyDispatcher &operator=(const TPyDispatcher &);
-   ~TPyDispatcher();
+   ~TPyDispatcher() override;
 
 public:
    PyObject *DispatchVA(const char *format = 0, ...);
