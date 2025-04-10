@@ -18,6 +18,8 @@ private:
    int fBatchSize = -1;
    long fReadPos = 0;  // reading file position
 
+   OptimizationLevel fOptimizationLevel = OptimizationLevel::kExtended;
+
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; // input tensors where shape may not fully defined or other graph inputs?
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos; // input tensors where shape is full defined
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
@@ -140,6 +142,10 @@ public:
    // calculate total intermediate memory and position intermediate tensor addresses
    std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
    void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
+
+   void SetOptimizationLevel(const OptimizationLevel& optim_level) {
+      fOptimizationLevel = optim_level;
+   }
 
 protected:
    // internal functions
