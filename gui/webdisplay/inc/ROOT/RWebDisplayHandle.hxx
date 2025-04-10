@@ -109,6 +109,9 @@ public:
    /// resize web window - if possible
    virtual bool Resize(int, int) { return false; }
 
+   /// remove file which was used to startup widget - if possible
+   virtual void RemoveStartupFiles() {}
+
    static bool NeedHttpServer(const RWebDisplayArgs &args);
 
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
