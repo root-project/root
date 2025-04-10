@@ -28,6 +28,16 @@ enum class Options {
    kGNNComponent = 0x10,
 };
 
+// Optimization levels inspired by ONNXRuntime.
+// We only get Operator Fusion with the Basic, and
+// memory reuse with Extended. kExtended is enabled
+// by default
+enum class OptimizationLevel {
+   kBasic = 0x0,
+   kExtended = 0x1,
+};
+
+
 enum class WeightFileType { None, RootBinary, Text };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
