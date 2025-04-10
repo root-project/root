@@ -237,8 +237,8 @@ struct CountedItemGetter : public ItemGetter {
 
 struct TupleItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() { return PyTuple_GET_SIZE(fPyObject); }
-    virtual PyObject* get() {
+    Py_ssize_t size() override { return PyTuple_GET_SIZE(fPyObject); }
+    PyObject* get() override {
         if (fCur < PyTuple_GET_SIZE(fPyObject)) {
             PyObject* item = PyTuple_GET_ITEM(fPyObject, fCur++);
             Py_INCREF(item);
@@ -251,8 +251,8 @@ struct TupleItemGetter : public CountedItemGetter {
 
 struct ListItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() { return PyList_GET_SIZE(fPyObject); }
-    virtual PyObject* get() {
+    Py_ssize_t size() override { return PyList_GET_SIZE(fPyObject); }
+    PyObject* get() override {
         if (fCur < PyList_GET_SIZE(fPyObject)) {
             PyObject* item = PyList_GET_ITEM(fPyObject, fCur++);
             Py_INCREF(item);
@@ -265,7 +265,7 @@ struct ListItemGetter : public CountedItemGetter {
 
 struct SequenceItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() {
+    Py_ssize_t size() override {
         Py_ssize_t sz = PySequence_Size(fPyObject);
         if (sz < 0) {
             PyErr_Clear();
@@ -273,13 +273,13 @@ struct SequenceItemGetter : public CountedItemGetter {
         }
         return sz;
     }
-    virtual PyObject* get() { return PySequence_GetItem(fPyObject, fCur++); }
+    PyObject* get() override { return PySequence_GetItem(fPyObject, fCur++); }
 };
 
 struct IterItemGetter : public ItemGetter {
     using ItemGetter::ItemGetter;
-    virtual Py_ssize_t size() { return PyObject_LengthHint(fPyObject, 8); }
-    virtual PyObject* get() { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
+    Py_ssize_t size() override { return PyObject_LengthHint(fPyObject, 8); }
+    PyObject* get() override { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
 };
 
 static ItemGetter* GetGetter(PyObject* args)
