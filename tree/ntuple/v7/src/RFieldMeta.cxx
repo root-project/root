@@ -26,6 +26,7 @@
 #include <TBaseClass.h>
 #include <TBufferFile.h>
 #include <TClass.h>
+#include <TClassEdit.h>
 #include <TDataMember.h>
 #include <TEnum.h>
 #include <TObject.h>
@@ -205,13 +206,15 @@ std::vector<const ROOT::TSchemaRule *> ROOT::RClassField::FindRules(const ROOT::
       // of the class
       rules = ruleset->FindRules(fClass->GetName(), fClass->GetClassVersion(), fClass->GetCheckSum());
    } else {
+      // We need to change (back) the name normalization from RNTuple to ROOT Meta
+      std::string normalizedName;
+      TClassEdit::GetNormalizedName(normalizedName, fieldDesc->GetTypeName());
       // We do have an on-disk field that correspond to the current RClassField instance. Ask for rules matching the
       // on-disk version of the field.
       if (fieldDesc->GetTypeChecksum()) {
-         rules =
-            ruleset->FindRules(fieldDesc->GetTypeName(), fieldDesc->GetTypeVersion(), *fieldDesc->GetTypeChecksum());
+         rules = ruleset->FindRules(normalizedName, fieldDesc->GetTypeVersion(), *fieldDesc->GetTypeChecksum());
       } else {
-         rules = ruleset->FindRules(fieldDesc->GetTypeName(), fieldDesc->GetTypeVersion());
+         rules = ruleset->FindRules(normalizedName, fieldDesc->GetTypeVersion());
       }
    }
 
@@ -319,10 +322,15 @@ void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned i
    TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
    if (classVersion != GetTypeVersion()) {
       fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
+      if (!fStagingClass) {
+         // For a rename rule, we may simply ask for the old class name
+         fStagingClass = TClass::GetClass(className.c_str());
+      }
    } else {
       fStagingClass = fClass;
    }
    R__ASSERT(fStagingClass);
+   R__ASSERT(static_cast<unsigned int>(fStagingClass->GetClassVersion()) == classVersion);
 }
 
 void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
@@ -367,7 +375,10 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
 void ROOT::RClassField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
 {
    auto func = rule->GetReadFunctionPointer();
-   R__ASSERT(func != nullptr);
+   if (func == nullptr) {
+      // Can happen for rename rules
+      return;
+   }
    fReadCallbacks.emplace_back([func, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
       TVirtualObject onfileObj{nullptr};
       onfileObj.fClass = stagingClass;
@@ -394,19 +405,20 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
       const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
 
-      // Check that we have the same type.
-      // TODO(jblomer): relax for class rename rule
-      if (GetTypeName() != fieldDesc.GetTypeName()) {
-         throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
-                                  " vs. " + fieldDesc.GetTypeName()));
-      }
-
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
          regularSubfields.insert(subFieldDesc.GetFieldName());
       }
 
       rules = FindRules(&fieldDesc);
+
+      // If the field's type name is not the on-disk name but we found a rule, we know it is valid to read
+      // on-disk data because we found the rule according to the on-disk (source) type name and version/checsksum.
+      if ((GetTypeName() != fieldDesc.GetTypeName()) && rules.empty()) {
+         throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
+                                  " vs. " + fieldDesc.GetTypeName()));
+      }
+
       if (!rules.empty()) {
          SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
          PrepareStagingArea(rules, desc, fieldDesc);

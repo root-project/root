@@ -19,22 +19,34 @@
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 
+#include <deque>
+
 ROOT::RNTupleGlobalRange
 ROOT::Internal::GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Internal::RPageSource &pageSource)
 {
    const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
 
    auto fnGetPrincipalColumnId = [&desc](ROOT::DescriptorId_t fieldId) -> ROOT::DescriptorId_t {
+      R__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
       auto columnIterable = desc.GetColumnIterable(fieldId);
       return (columnIterable.size() > 0) ? columnIterable.begin()->GetPhysicalId() : ROOT::kInvalidDescriptorId;
    };
 
    auto columnId = fnGetPrincipalColumnId(field.GetOnDiskId());
    if (columnId == ROOT::kInvalidDescriptorId) {
-      for (const auto &f : field) {
-         columnId = fnGetPrincipalColumnId(f.GetOnDiskId());
+      // We need to iterate the field descriptor tree, not the sub fields of `field`, because in the presence of
+      // read rules, the in-memory sub fields may be artificial and not have valid on-disk IDs.
+      const auto &linkIds = desc.GetFieldDescriptor(field.GetOnDiskId()).GetLinkIds();
+      std::deque<ROOT::DescriptorId_t> subFields(linkIds.begin(), linkIds.end());
+      while (!subFields.empty()) {
+         auto subFieldId = subFields.front();
+         subFields.pop_front();
+         columnId = fnGetPrincipalColumnId(subFieldId);
          if (columnId != ROOT::kInvalidDescriptorId)
             break;
+
+         const auto &subLinkIds = desc.GetFieldDescriptor(subFieldId).GetLinkIds();
+         subFields.insert(subFields.end(), subLinkIds.begin(), subLinkIds.end());
       }
    }
 
