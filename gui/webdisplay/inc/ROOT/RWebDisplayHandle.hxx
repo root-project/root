@@ -36,7 +36,7 @@ protected:
       virtual std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) = 0;
       virtual bool IsActive() const { return true; }
       virtual ~Creator() = default;
-      virtual bool IsSnapChromium() const { return false; }
+      virtual bool IsSnapBrowser() const { return false; }
    };
 
    class BrowserCreator : public Creator {
@@ -70,7 +70,7 @@ protected:
       ChromeCreator(bool is_edge = false);
       ~ChromeCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
-      bool IsSnapChromium() const override { return fProg == "/snap/bin/chromium"; }
+      bool IsSnapBrowser() const override { return fProg == "/snap/bin/chromium"; }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &) override;
       std::string MakeProfile(std::string &exec, bool) override;
    };
@@ -80,6 +80,7 @@ protected:
       FirefoxCreator();
       ~FirefoxCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
+      bool IsSnapBrowser() const override { return fProg == "/snap/bin/firefox"; }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &) override;
       std::string MakeProfile(std::string &exec, bool batch) override;
    };
