@@ -1127,6 +1127,43 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
 } // namespace Math
 } // namespace ROOT
 
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
+
+inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, int n, int k, float alpha,
+                               const float *A, const float *B, float beta, const float *C, float *_d_output,
+                               bool *_d_transa, bool *_d_transb, int *_d_m, int *_d_n, int *_d_k, float *_d_alpha,
+                               float *_d_A, float *_d_B, float *_d_beta, float *_d_C)
+{
+   // TODO: also fill:
+   //   - _d_alpha
+   //   - _d_beta
+   //   - _d_C
+
+   char ct = 't';
+   char cn = 'n';
+
+   // beta needs to be one because we want to add to _d_A and _d_B instead of
+   // overwriting it.
+   float betaOne = 1.;
+
+   int lda_ = m;
+   int ldb_ = k;
+   int ldc_ = m;
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &lda_, B, &ldb_, &betaOne, _d_A, &ldc_);
+
+   lda_ = m;
+   ldb_ = m;
+   ldc_ = k;
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &lda_, _d_output, &ldb_, &betaOne, _d_B, &ldc_);
+}
+
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
+
+
 } // namespace custom_derivatives
 } // namespace clad
 

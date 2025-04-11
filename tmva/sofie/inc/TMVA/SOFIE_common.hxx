@@ -620,8 +620,6 @@ void col2im(const Dtype* data_col, const int channels,
   //std::cout << "finishing col2imp" << std::endl;
 }
 
-
-
 }  // end namespace UTILITY
 
 namespace BLAS{
