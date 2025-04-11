@@ -32,6 +32,8 @@
 #include "Math/SpecFuncMathMore.h"
 #endif
 
+#include <stdexcept>
+
 namespace clad {
 namespace custom_derivatives {
 namespace TMath {
@@ -712,7 +714,9 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -789,7 +793,9 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    }
    {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -856,7 +862,9 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -1117,7 +1125,9 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    }
    {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -1126,6 +1136,46 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
 
 } // namespace Math
 } // namespace ROOT
+
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
+
+inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, int n, int k, float alpha,
+                               const float *A, const float *B, float beta, const float *C, float *_d_output, bool *,
+                               bool *, int *, int *, int *, float *_d_alpha, float *_d_A, float *_d_B, float *_d_beta,
+                               float *_d_C)
+{
+   // TODO:
+   //    - handle transa and transb cases correctly
+   if ( transa || transb ) {
+      return;
+   }
+
+   char ct = 't';
+   char cn = 'n';
+
+   // beta needs to be one because we want to add to _d_A and _d_B instead of
+   // overwriting it.
+   float one = 1.;
+
+   // _d_A, _d_B
+   // note: beta needs to be one because we want to add to _d_A and _d_B instead of overwriting it.
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &m, B, &k, &one, _d_A, &m);
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &m, _d_output, &m, &one, _d_B, &k);
+
+   // _d_alpha, _d_beta, _d_C
+   int sizeC = n * m;
+   for (int i = 0; i < sizeC; ++i) {
+      *_d_alpha += _d_output[i] * (output[i] - beta * C[i]);
+      *_d_beta += _d_output[i] * C[i];
+      _d_C[i] += _d_output[i] * beta;
+   }
+}
+
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 
 } // namespace custom_derivatives
 } // namespace clad
