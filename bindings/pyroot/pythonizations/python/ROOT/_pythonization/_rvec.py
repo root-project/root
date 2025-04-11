@@ -75,7 +75,7 @@ _array_interface_dtype_map = {
 
 
 def _get_cpp_type_from_numpy_type(dtype):
-    cpptypes = {"i4": "int", "u4": "unsigned int", "i8": "Long64_t", "u8": "ULong64_t", "f4": "float", "f8": "double", "b1": "bool"}
+    cpptypes = {"i2": "Short_t", "u2": "UShort_t", "i4": "int", "u4": "unsigned int", "i8": "Long64_t", "u8": "ULong64_t", "f4": "float", "f8": "double", "b1": "bool"}
 
     if not dtype in cpptypes:
         raise RuntimeError("Object not convertible: Python object has unknown data-type '" + dtype + "'.")
