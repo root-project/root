@@ -1,0 +1,20 @@
+
+Processing execDrawString.C...
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+TH1.Print Name  = htemp, Entries= 3354, Total sum= 3354
+ fSumw[0]=0, x=-0.5
+ fSumw[1]=444, x=0.5
+ fSumw[2]=401, x=1.5
+ fSumw[3]=404, x=2.5
+ fSumw[4]=404, x=3.5
+ fSumw[5]=531, x=4.5
+ fSumw[6]=411, x=5.5
+ fSumw[7]=94, x=6.5
+ fSumw[8]=68, x=7.5
+ fSumw[9]=19, x=8.5
+ fSumw[10]=256, x=9.5
+ fSumw[11]=168, x=10.5
+ fSumw[12]=106, x=11.5
+ fSumw[13]=48, x=12.5
+ fSumw[14]=0, x=13.5
+(int) 0

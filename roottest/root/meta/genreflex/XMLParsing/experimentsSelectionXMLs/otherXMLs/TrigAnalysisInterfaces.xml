@@ -1,0 +1,9 @@
+<!-- $Id: selection.xml 360786 2011-04-21 11:30:18Z krasznaa $ -->
+<lcgdict>
+
+   <!-- The interfaces for which we need a Reflex dictionary: -->
+   <class name="Trig::IIBunchCrossingTool" />
+   <class name="Trig::IBunchCrossingTool" />
+   <class name="Trig::IBunchCrossingConfProvider" />
+
+</lcgdict>

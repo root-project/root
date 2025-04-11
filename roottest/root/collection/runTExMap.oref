@@ -1,0 +1,303 @@
+
+Processing /Users/mato/Development/ROOT/root.git/roottest/root/collection/runTExMap.C...
+
+TExMap Basic Tests Start
+
+TExMap()
+
+OBJ: TExMap	TExMap	Map with external hash
+Capacity(): 101
+GetSize(): 0
+
+TExMap(1000)
+
+OBJ: TExMap	TExMap	Map with external hash
+Capacity(): 1009
+GetSize(): 0
+
+TExMap(0)
+
+OBJ: TExMap	TExMap	Map with external hash
+Capacity(): 5
+GetSize(): 0
+
+TExMap(-1)
+
+OBJ: TExMap	TExMap	Map with external hash
+Capacity(): 5
+GetSize(): 0
+TestOne: 0, -9223372036854775808, -9223372036854775808
+
+TestOne: 0, -9223372036854775808, -1
+
+TestOne: 0, -9223372036854775808, 0
+
+TestOne: 0, -9223372036854775808, 1
+
+TestOne: 0, -9223372036854775808, 9223372036854775807
+
+TestOne: 0, -1, -9223372036854775808
+
+TestOne: 0, -1, -1
+
+TestOne: 0, -1, 0
+
+TestOne: 0, -1, 1
+
+TestOne: 0, -1, 9223372036854775807
+
+TestOne: 0, 0, -9223372036854775808
+
+TestOne: 0, 0, -1
+
+TestOne: 0, 0, 0
+
+TestOne: 0, 0, 1
+
+TestOne: 0, 0, 9223372036854775807
+
+TestOne: 0, 1, -9223372036854775808
+
+TestOne: 0, 1, -1
+
+TestOne: 0, 1, 0
+
+TestOne: 0, 1, 1
+
+TestOne: 0, 1, 9223372036854775807
+
+TestOne: 0, 9223372036854775807, -9223372036854775808
+
+TestOne: 0, 9223372036854775807, -1
+
+TestOne: 0, 9223372036854775807, 0
+
+TestOne: 0, 9223372036854775807, 1
+
+TestOne: 0, 9223372036854775807, 9223372036854775807
+
+TestOne: 1, -9223372036854775808, -9223372036854775808
+
+TestOne: 1, -9223372036854775808, -1
+
+TestOne: 1, -9223372036854775808, 0
+
+TestOne: 1, -9223372036854775808, 1
+
+TestOne: 1, -9223372036854775808, 9223372036854775807
+
+TestOne: 1, -1, -9223372036854775808
+
+TestOne: 1, -1, -1
+
+TestOne: 1, -1, 0
+
+TestOne: 1, -1, 1
+
+TestOne: 1, -1, 9223372036854775807
+
+TestOne: 1, 0, -9223372036854775808
+
+TestOne: 1, 0, -1
+
+TestOne: 1, 0, 0
+
+TestOne: 1, 0, 1
+
+TestOne: 1, 0, 9223372036854775807
+
+TestOne: 1, 1, -9223372036854775808
+
+TestOne: 1, 1, -1
+
+TestOne: 1, 1, 0
+
+TestOne: 1, 1, 1
+
+TestOne: 1, 1, 9223372036854775807
+
+TestOne: 1, 9223372036854775807, -9223372036854775808
+
+TestOne: 1, 9223372036854775807, -1
+
+TestOne: 1, 9223372036854775807, 0
+
+TestOne: 1, 9223372036854775807, 1
+
+TestOne: 1, 9223372036854775807, 9223372036854775807
+
+TestOne: 2, -9223372036854775808, -9223372036854775808
+
+TestOne: 2, -9223372036854775808, -1
+
+TestOne: 2, -9223372036854775808, 0
+
+TestOne: 2, -9223372036854775808, 1
+
+TestOne: 2, -9223372036854775808, 9223372036854775807
+
+TestOne: 2, -1, -9223372036854775808
+
+TestOne: 2, -1, -1
+
+TestOne: 2, -1, 0
+
+TestOne: 2, -1, 1
+
+TestOne: 2, -1, 9223372036854775807
+
+TestOne: 2, 0, -9223372036854775808
+
+TestOne: 2, 0, -1
+
+TestOne: 2, 0, 0
+
+TestOne: 2, 0, 1
+
+TestOne: 2, 0, 9223372036854775807
+
+TestOne: 2, 1, -9223372036854775808
+
+TestOne: 2, 1, -1
+
+TestOne: 2, 1, 0
+
+TestOne: 2, 1, 1
+
+TestOne: 2, 1, 9223372036854775807
+
+TestOne: 2, 9223372036854775807, -9223372036854775808
+
+TestOne: 2, 9223372036854775807, -1
+
+TestOne: 2, 9223372036854775807, 0
+
+TestOne: 2, 9223372036854775807, 1
+
+TestOne: 2, 9223372036854775807, 9223372036854775807
+
+TestOne: 18446744073709551615, -9223372036854775808, -9223372036854775808
+
+TestOne: 18446744073709551615, -9223372036854775808, -1
+
+TestOne: 18446744073709551615, -9223372036854775808, 0
+
+TestOne: 18446744073709551615, -9223372036854775808, 1
+
+TestOne: 18446744073709551615, -9223372036854775808, 9223372036854775807
+
+TestOne: 18446744073709551615, -1, -9223372036854775808
+
+TestOne: 18446744073709551615, -1, -1
+
+TestOne: 18446744073709551615, -1, 0
+
+TestOne: 18446744073709551615, -1, 1
+
+TestOne: 18446744073709551615, -1, 9223372036854775807
+
+TestOne: 18446744073709551615, 0, -9223372036854775808
+
+TestOne: 18446744073709551615, 0, -1
+
+TestOne: 18446744073709551615, 0, 0
+
+TestOne: 18446744073709551615, 0, 1
+
+TestOne: 18446744073709551615, 0, 9223372036854775807
+
+TestOne: 18446744073709551615, 1, -9223372036854775808
+
+TestOne: 18446744073709551615, 1, -1
+
+TestOne: 18446744073709551615, 1, 0
+
+TestOne: 18446744073709551615, 1, 1
+
+TestOne: 18446744073709551615, 1, 9223372036854775807
+
+TestOne: 18446744073709551615, 9223372036854775807, -9223372036854775808
+
+TestOne: 18446744073709551615, 9223372036854775807, -1
+
+TestOne: 18446744073709551615, 9223372036854775807, 0
+
+TestOne: 18446744073709551615, 9223372036854775807, 1
+
+TestOne: 18446744073709551615, 9223372036854775807, 9223372036854775807
+
+
+TestRange(hash_identity)
+
+
+TestRange(hash_min)
+
+
+TestRange(hash_max)
+
+
+TestRange(hash_div4)
+
+
+TestDoubleAdd(hash_identity, -9223372036854775808)
+
+(Expect Error) 
+TestDoubleAdd(hash_min, -9223372036854775808)
+
+(Expect Error) 
+TestDoubleAdd(hash_max, -9223372036854775808)
+
+(Expect Error) 
+TestDoubleAdd(hash_div4, -9223372036854775808)
+
+(Expect Error) 
+TestDoubleAdd(hash_identity, -1)
+
+(Expect Error) 
+TestDoubleAdd(hash_min, -1)
+
+(Expect Error) 
+TestDoubleAdd(hash_max, -1)
+
+(Expect Error) 
+TestDoubleAdd(hash_div4, -1)
+
+(Expect Error) 
+TestDoubleAdd(hash_identity, 0)
+
+(Expect Error) 
+TestDoubleAdd(hash_min, 0)
+
+(Expect Error) 
+TestDoubleAdd(hash_max, 0)
+
+(Expect Error) 
+TestDoubleAdd(hash_div4, 0)
+
+(Expect Error) 
+TestDoubleAdd(hash_identity, 1)
+
+(Expect Error) 
+TestDoubleAdd(hash_min, 1)
+
+(Expect Error) 
+TestDoubleAdd(hash_max, 1)
+
+(Expect Error) 
+TestDoubleAdd(hash_div4, 1)
+
+(Expect Error) 
+TestDoubleAdd(hash_identity, 9223372036854775807)
+
+(Expect Error) 
+TestDoubleAdd(hash_min, 9223372036854775807)
+
+(Expect Error) 
+TestDoubleAdd(hash_max, 9223372036854775807)
+
+(Expect Error) 
+TestDoubleAdd(hash_div4, 9223372036854775807)
+
+(Expect Error) 
+TExMap Basic Tests End
+

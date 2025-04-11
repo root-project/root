@@ -1,0 +1,40 @@
+<lcgdict>
+  <class name="TrackingVertex"  ClassVersion="10">
+   <version ClassVersion="10" checksum="378811908"/>
+  </class>
+  <class name="std::vector<TrackingVertex>" />
+  <class name="std::vector<TrackingVertex>::iterator" />
+  <class name="std::vector<TrackingVertex>::const_iterator" />
+  <class name="edm::Wrapper<std::vector<TrackingVertex> >" />
+  <class pattern="edm::Ref<std::vector<TrackingVertex>,*>" />
+  <class pattern="edm::RefVector<std::vector<TrackingVertex>,*>" />
+  <class name="edm::RefProd<std::vector<TrackingVertex> >" />
+
+  <class name="TrackingParticle" ClassVersion="11">
+   <version ClassVersion="11" checksum="2086515162"/>
+   <version ClassVersion="10" checksum="2835241548"/>
+  </class>
+  <class name="std::vector<TrackingParticle>" />
+  <class name="edm::Wrapper<std::vector<TrackingParticle> >" />
+  <class pattern="edm::Ref<std::vector<TrackingParticle>,*>" />
+  <class pattern="edm::RefVector<std::vector<TrackingParticle>,*>" />
+  <class name="edm::RefProd<std::vector<TrackingParticle> >" />
+
+  <class pattern="edm::Ref< std::vector<HepMC::GenVertex>,*>" />
+  <class pattern="edm::RefVector< std::vector<HepMC::GenVertex>,*>" />
+
+ 
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<TrackingParticle> >,edm::RefToBaseProd<reco::Track> >" />
+  <class name="edm::helpers::KeyVal<edm::RefToBaseProd<reco::Track>,edm::RefProd<std::vector<TrackingParticle> > >" />
+  <class name="std::map<unsigned int,edm::helpers::KeyVal<edm::Ref<std::vector<TrackingParticle>,TrackingParticle,edm::refhelper::FindUsingAdvance<std::vector<TrackingParticle>,TrackingParticle> >,std::vector<std::pair<edm::RefToBase<reco::Track>,double> > > >" />
+  <class name="std::map<unsigned int,edm::helpers::KeyVal<edm::RefToBase<reco::Track>,std::vector<std::pair<edm::Ref<std::vector<TrackingParticle>,TrackingParticle,edm::refhelper::FindUsingAdvance<std::vector<TrackingParticle>,TrackingParticle> >,double> > > >" />
+
+  <class name="edm::helpers::KeyVal<edm::Ref<std::vector<TrackingParticle>,TrackingParticle,edm::refhelper::FindUsingAdvance<std::vector<TrackingParticle>,TrackingParticle> >,std::vector<std::pair<edm::RefToBase<reco::Track>,double> > >" />
+  <class name="edm::helpers::KeyVal<edm::RefToBase<reco::Track>,std::vector<std::pair<edm::Ref<std::vector<TrackingParticle>,TrackingParticle,edm::refhelper::FindUsingAdvance<std::vector<TrackingParticle>,TrackingParticle> >,double> > >" />
+
+  <class name="std::vector<std::pair<edm::Ref<std::vector<TrackingParticle>,TrackingParticle,edm::refhelper::FindUsingAdvance<std::vector<TrackingParticle>,TrackingParticle> >,double> >" />
+  <class name="std::pair<edm::Ref<std::vector<TrackingParticle>,TrackingParticle,edm::refhelper::FindUsingAdvance<std::vector<TrackingParticle>,TrackingParticle> >,double>" />
+
+  <class pattern="edm::Wrapper<edm::RefVector<std::vector<TrackingParticle>,*> >" />
+
+</lcgdict>

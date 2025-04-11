@@ -1,0 +1,6 @@
+<lcgdict>
+  <class name="CaloCalibrationHit" />
+  <class name="std::vector<CaloCalibrationHit*>" />
+  <class name="AthenaHitsVector<CaloCalibrationHit>" />
+  <class name="CaloCalibrationHitContainer" id="33CDAED0-F472-47D2-8F28-27C6D6761F35"  />
+</lcgdict>

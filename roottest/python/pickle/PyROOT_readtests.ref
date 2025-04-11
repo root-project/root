@@ -1,0 +1,11 @@
+Test reference counting of pickled object ... ok
+Test that a TBufferFile can be pickled ... ok
+Test reading of a histogram from a pickle file ... ok
+Test reading of an std::vector<double> from a pickle file ... ok
+Test reading of a user-defined object from a pickle file ... ok
+Test reading of a ROOT object in a namespace from a pickle file ... ok
+Test reading PyROOT custom types ... ok
+
+----------------------------------------------------------------------
+
+OK

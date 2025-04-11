@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="DeOTDetector"     />
+  <class name="DeOTStation"      />
+  <class name="DeOTLayer"        />
+  <class name="DeOTModule"       />
+  <class name="DeOTQuarter"      />
+  <class name="std::vector<DeOTStation*>" />    
+  <class name="std::vector<DeOTLayer*>"   />    
+  <class name="std::vector<DeOTQuarter*>" />
+  <class name="std::vector<DeOTModule*>"  />        
+  <variable pattern="DeOTDetectorLocation::*" />
+</lcgdict>

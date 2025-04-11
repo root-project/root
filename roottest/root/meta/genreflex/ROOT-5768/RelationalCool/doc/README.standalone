@@ -1,0 +1,221 @@
+------------------------------------------------
+Standalone installation on Windows (20.04.2005)
+------------------------------------------------
+
+Login a bash shell under cywgin.
+
+  bash
+
+Follow the instructions in
+
+  http://spi.cern.ch/workbook/howto/HowTo-Install-locally-lcg-software.html
+
+Create a directory /opt/sw/lcg in cygwin.
+[In my case, first do 'ln -sf /cygdrive/l /opt' to create it on the L: disk]
+
+  mkdir -p /opt/sw/lcg
+
+Download the installation script
+Change the python version from 2.2 to 2.4
+
+  cd /opt/sw
+  wget http://service-spi.web.cern.ch/service-spi/external/distribution//lcg-installation-manager.py
+  cat lcg-installation-manager.py | sed 's/python2.2/python2.4/' > lcg-installation-manager.py.NEW
+  \mv lcg-installation-manager.py.NEW lcg-installation-manager.py
+  chmod +x ./lcg-installation-manager.py 
+
+Download the required packages
+
+  ./lcg-installation-manager.py --project=POOL_2_0_4 \
+     --arch=win32_vc71_dbg --prefix=/opt/sw/lcg download
+
+This does not work! 
+
+  fetching file: 
+    /opt/sw/lcg/external/distribution//POOL_2_0_4__LCG_win32_vc71_dbg.info
+  ERROR: could not download the file : POOL_2_0_4__LCG_win32_vc71_dbg.info
+  fetching file: /opt/sw/lcg/external/distribution//POOL_2_0_4.scram_output
+  ERROR: could not download the file : POOL_2_0_4.scram_output
+  Most probably POOL_2_0_4  is not available in the LCG software repository...
+  Please report this to LCG SPI
+
+Andreas confirms that there are some known problems on Windows.
+The installation via the python script does not work on Linux,
+but other /afs/cern.ch/sw/lcg/app/spi/tools/latest/scripts/
+solutions are possible, for instance one can look at
+/afs/cern.ch/sw/lcg/app/spi/tools/latest/scripts/lcg-mirror-externals.bat
+
+...to be continued...
+
+------------------------------------------------
+Standalone installation on Windows (21.06.2005)
+------------------------------------------------
+
+Tried again the same as above, it does not work again.
+
+Try using the lcg-mirror-externals.bat script.
+I tried by myself but failed miserably.
+
+Finally found some useful doc from SEAL on
+http://seal.web.cern.ch/seal/snapshot/workbook/howtorelease.html
+
+1. Add environment variable AFS with value \\afs in MyComputer->Properties.
+
+2. Create directory  "C:\Documents and Settings\avalassi\mycmt"
+as this is needed by CMT.
+
+3. Copied lcg-mirror-externals.bat and lcg-mirror-externals.py
+from /afs/cern.ch/sw/lcg/app/spi/tools/latest/scripts/
+to L:\sw and made them more verbose to debug them.
+
+4. From a command prompt in L:\sw I execute
+  lcg-mirror-externals -v 35 -p win32_vc71_dbg -o L:\sw\lcg\external
+
+But this only copies the LCGCMT package...
+
+Andreas proposed
+/afs/cern.ch/user/p/pfeiffer/public/scripts/syncWinTree.py
+but in the meantime I had done my own solution (see below).
+
+Removed AFS variable from MyComputer at the end.
+
+------------------------------------------------
+Standalone installation on Windows (21.06.2005)
+------------------------------------------------
+
+Developed my own script.
+This creates a script on Windows,
+executed on Linux to create a tar file of AFS,
+the tar is then shipped back to Windows.
+This is to avoid file copying over AFS on Windows.
+
+I also use a little script to download POOL locally,
+rather than using CVS from Windows directly.
+There seems to be a problem with CVS (or the SCRAM
+installer using CVS) on Windows, it gets stuck.
+Note also that I had to do (like on Mac!)
+  cp /afs/cern.ch/user/a/avalassi/.cvspass /tmp/79125CVSmodule/.cvspass
+(where id gives 79125 for avalassi on cygwin), but this was not enough.
+
+1. On Windows (cygwin) ~ 1 minute
+
+From the standard COOL_HEAD using SITENAME=CERN:
+
+cd ~/myLCG/COOL_HEAD/config
+coolMirrorExternals.csh
+
+2. On lxb0675 ~ 6 + 2 minutes
+
+cd ~/myLCG/COOL_HEAD/config
+./coolMirrorExternals-win32_vc71_dbg.csh
+scp /opt/avalassi/coolKit-win32_vc71_dbg/sw/lcg-win32_vc71_dbg.tar \
+  avalassi@pcitdb38:/opt/sw
+
+(NB The archive is ~950 MB if it includes POOL and ~590 MB if it does not)
+
+3. On Windows (cygwin) ~ 4 minutes
+
+date
+cd /opt/sw
+rm -rf /opt/sw/lcg
+tar -xvf lcg-win32_vc71_dbg.tar > lcg-win32_vc71_dbg-tar.txt
+date
+
+4. On lxb0675 ~ 2 minutes
+
+cd ~/myLCG/COOL_HEAD/config
+./coolInstallPool.csh
+scp /opt/avalassi/poolKit/sw/lcg-POOL_2_1_0.tar \
+  avalassi@pcitdb38:/opt/sw
+
+(NB The archive is ~3 MB)
+
+5. On Windows (cygwin) ~ few seconds
+
+cd /opt/sw
+rm -rf /opt/sw/lcg/app/releases/POOL
+tar -xvf lcg-POOL_2_1_0.tar > lcg-POOL_2_1_0-tar.txt
+
+6. On Windows (cygwin)
+
+Stop the AFS service and start a new cygwin window.
+
+cd /opt/sw/lcg/app/releases/POOL/POOL_2_1_0/
+export SITENAME=STANDALONE
+export PATH=/opt/sw/lcg/app/spi/scram:$PATH
+scram setup
+
+cd /opt/sw/lcg/app/releases/POOL/POOL_2_1_0/src
+export SITENAME=STANDALONE
+export PATH=/opt/sw/lcg/app/spi/scram:$PATH
+date
+scram b
+date
+
+This is in any case rather slow (~35-40 minutes),
+but at least it does work standalone and is faster than with AFS.
+The CPU consumption is always around ~50% spread across two CPUs (25% each).
+The largest CPU consupmption comes from python (peaks of 40% on one CPU).
+Also perl shows up but never with as high CPU peaks as python.
+One problem may be that there is not a single python process,
+but rather very many python processes that start and finish.
+With AFS, a lot of CPU was eaten up by the AFS daemons.
+
+-----------------------------------------------------
+Standalone COOL installation on Windows (21.06.2005)
+-----------------------------------------------------
+
+1. On lxb0675
+
+This uses a siple private script to create a tar of the COOL_HEAD.
+
+cd ~/myLCG
+./installCoolHead-local.csh
+scp ~/myLCG/coolKit/COOL_HEAD.tar avalassi@pcitdb38:/opt
+
+2. On Windows (cygwin)
+
+cd /opt/
+rm -rf /opt/COOL_HEAD
+tar -xvf COOL_HEAD.tar > COOL_HEAD-tar.txt
+
+3. On Windows (cygwin)
+
+Stop the AFS service and start a new cygwin window.
+
+cd /opt/COOL_HEAD
+export SITENAME=STANDALONE
+export PATH=/opt/sw/lcg/app/spi/scram:$PATH
+scram setup
+
+cd /opt/COOL_HEAD/src
+export SITENAME=STANDALONE
+export PATH=/opt/sw/lcg/app/spi/scram:$PATH
+date
+scram b
+date
+
+This is a factor ~5 faster than with AFS,
+but it is still very slow (~50 minutes!).
+Definitely scram is extremely slow (especially) on Windows.
+With the CMT VisualStudio plugin things were MUCH faster.
+Note that perl shows up more than for POOL,
+but still python seems to be the bottleneck.
+
+NB: HOW TO IMPROVE?
+It looks like python is the bottleneck (but maybe not the only one -
+perl also shows up significantly in no-op mode on a prebuilt COOL).
+1. One idea could be to try to precompile all .py files from the config
+area into .pyc files (but should Python not compile them automatically?).
+The only file that appears to be compiled as .pyc is unixToWinPath.py,
+however other files are used too (I tried to remove all .py and execute
+"scram b", the first errors were from other py modules missing.
+However I gave a first quick try at this and it does not seem to help
+(try also 'python unixToWinPath.py xxx' or 'python unixToWinPath.pyc xxx',
+they are both very slow and not very different from each other).
+2. Another possibility is to get rid of python and use instead precompiled 
+C++ programs or even just bash scripts inside the makefile fragments
+(for unixToWinPath.py this should be rather easy).
+3. However also perl and possibly other problems may show up.
+It may be useful to do a no-o dry run of scram and measure where 
+the time is actually spent.

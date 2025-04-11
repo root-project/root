@@ -1,0 +1,17 @@
+
+Processing runCATTreeClear.C...
+During writing, tree event 1, ca entry 1 is == NULL
+***********************************************************************
+*    Row   * Instance * CA.fUniqu *  CA.fBits *  CA.fName * CA.fTitle *
+***********************************************************************
+*        0 *        0 *         0 *  50331648 *       One * One title *
+*        0 *        1 *         0 *  50331648 *       One * One title *
+*        1 *        0 *         0 *  50331648 *       One *   New one *
+***********************************************************************
+TCA[1] != NULL
+CA contains 2 elements
+ Name: One Title: One title
+ Name: Two Title: Short lived
+TCA[1] == NULL
+CA contains 1 elements
+ Name: One Title: New one

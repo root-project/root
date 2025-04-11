@@ -1,0 +1,39 @@
+Warning in <SelectionRules::CheckDuplicates>: Duplicated rule found.
+Rule:
+		Selected (line 10): Yes
+		Attributes: 
+		pattern = thisClas*
+		No field sel rules
+		No method sel rules
+Identical rule already stored:
+		Selected (line 11): Yes
+		Attributes: 
+		pattern = thisClas*
+		No field sel rules
+		No method sel rules
+Warning in <SelectionRules::CheckDuplicates>: Duplicated rule found.
+Rule:
+		Selected (line 5): Yes
+		Attributes: 
+		name = Atd1
+		No field sel rules
+		No method sel rules
+Identical rule already stored:
+		Selected (line 7): Yes
+		Attributes: 
+		name = Atd1
+		No field sel rules
+		No method sel rules
+Warning in <SelectionRules::CheckDuplicates>: Duplicated rule found.
+Rule:
+		Selected (line 2): Yes
+		Attributes: 
+		name = A
+		No field sel rules
+		No method sel rules
+Identical rule already stored:
+		Selected (line 3): Yes
+		Attributes: 
+		name = A
+		No field sel rules
+		No method sel rules

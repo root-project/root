@@ -1,0 +1,7 @@
+
+Processing TestTClassGlobalIsA.C+...
+Running with fIsA
+Running without fIsA
+Running with  fGlobalIsA
+running globalIsA for TObject
+running globalIsA for TNamed

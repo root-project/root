@@ -1,0 +1,26 @@
+
+Processing rundropbasket.C...
+Warning in <TClass::Init>: no dictionary for class XFolder is available
+Warning in <TClass::Init>: no dictionary for class XPosition is available
+Warning in <TClass::Init>: no dictionary for class XTreeInfo is available
+Warning in <TClass::Init>: no dictionary for class XTreeSet is available
+Warning in <TClass::Init>: no dictionary for class XTreeHeader is available
+Warning in <TClass::Init>: no dictionary for class XGCCell is available
+Warning in <TClass::Init>: no dictionary for class XDataTreeInfo is available
+Warning in <TClass::Init>: no dictionary for class XGeneChipHyb is available
+Warning in <TClass::Init>: no dictionary for class XHybridization is available
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (XDataTreeInfo) to store in a compiled pointer (TObject)
+************************
+*    Row   *        fX *
+************************
+*        3 *         3 *
+*        4 *         4 *
+*        5 *         5 *
+************************
+************************
+*    Row   *        fX *
+************************
+*        3 *         3 *
+*        4 *         4 *
+*        5 *         5 *
+************************

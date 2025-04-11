@@ -1,0 +1,11 @@
+<lcgdict>
+
+ <class name="TrackParticleTruth" />
+ <class name="Rec::TrackParticleTruthKey" />
+ 
+ <class name="TrackParticleTruthCollection"  id="97B666DA-B4B3-4483-9F7A-7CD2C357AAC1" />
+ <class name="TrackParticleTruthCollectionContainer" id="AA57DEB4-189E-40B2-9609-499958A6E4B4"/>
+ <class name="std::map<Rec::TrackParticleTruthKey,TrackParticleTruth>" /> 
+ <class name="std::pair<Rec::TrackParticleTruthKey,TrackParticleTruth>" /> 
+
+</lcgdict>

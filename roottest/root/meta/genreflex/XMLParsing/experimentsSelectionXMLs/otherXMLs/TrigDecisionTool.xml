@@ -1,0 +1,19 @@
+<lcgdict>
+
+
+<namespace name="TrigDefs"/>
+
+<variable pattern="TrigDefs::*"/>
+
+<function name="TrigDefs::Physics"/>
+
+<class name="Trig::Logger" />
+<class name="Trig::ChainGroup" />
+<class name="Trig::CacheGlobalMemory" />
+<class name="Trig::ChainGroupFunctions" />
+<class name="Trig::ConfigurationAccess" />
+<class name="Trig::ExpertMethods" />
+<class name="Trig::TrigDecisionTool" />
+<class name="Trig::TrigDecisionToolCore" />
+
+</lcgdict>

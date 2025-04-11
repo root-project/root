@@ -1,0 +1,10 @@
+
+Processing /Users/mato/Development/ROOT/roottest.git/root/meta/evolution/checkWarn.C(16)...
+
+StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
+  int            myvar_one       offset=99999 type= 3 newtype=-1                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
+  int            myvar_one       offset=99999 type= 3 newtype=-1                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0

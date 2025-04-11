@@ -1,0 +1,3026 @@
+Package RelationalCool
+Package managers: Andrea Valassi, Sven A. Schmidt and Marco Clemencic
+Package contributors: Uli Moosbrugger, Romain Basset.
+
+==============================================================================
+TODO
+- Remove RelationalTableRow (replace it by Record)
+- Rename defaultSpecification as metadataSpecification
+- Rename fetchLastRowXXX as fetchLastRowMetadataXXX
+- Add option to select only certain payload columns
+
+==============================================================================
+!2009.04.27 - Marco
+
+Modified the level of the message NO SCHEMA EVOLUTION REQUIRED from warning to
+info.
+https://savannah.cern.ch/bugs/?49495
+
+==============================================================================
+!2008.11.10 - Andrea
+
+Internal doc for tag COOL_2_6_0.
+
+Summary of changes in RelationalCool with respect to COOL_2_6_0-pre6:
+- Change API and implementation to replace 'const int f()' by 'int f()' 
+  and get rid of gcc43 compilation warnings (bug #42584, aka task #8261).
+- Fix bug #43622 (slow performance: countObjects must not call browseObjects).
+- Use the new CORAL API ISession::remoteProperties (sr #103545) to determine 
+  the remote database technology even when forwarded through a CORAL server.
+
+==============================================================================
+!2008.10.21 - Andrea
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_2_4_0b. Rebuild of the 2.4.0a release for the LCG_54h configuration.
+Add support for Oracle on MacOSX. Bug fixes in CORAL and frontier_client.
+No change in the source code. Software version remains "2.4.0".
+
+NB: None of the _code_ changes in COOL_2_4-branch are released in COOL_2_4_0b!
+NB: [there is one minor exception, RelationalCool/tests/RelationalDatabaseId]
+NB: Only the _config_ branch changes are released in COOL_2_4_0b!
+
+Actually, some of the implementation files tagged as COOL_2_4_0b have a
+different version number than those tagged as COOL_2_4_0a: they were committed 
+unchanged to the COOL_2_4_x branch and then retagged as CORAL_2_4_0b.
+
+==============================================================================
+!2008.10.16 - Andrea
+
+Internal tag COOL_2_6_0-pre5-bis ('2008/10/16 10:00:00').
+
+Changes in RelationalCool with respect to COOL_2_6_0-pre5:
+- Performance optimization: issue COUNT(*) queries only on demand (task #7971).
+  This implies a minor backward-incompatible change in the CoolKernel API: 
+  remove const qualifier from IObjectIterator methods size, isEmpty, hasNext.
+- Remove '(forcereload=short)' from the aliases in dblookup.xml.
+  Use the environment variable FRONTIER_FORCERELOAD in QMTEST
+  to force the immediate refresh of Frontier short-lived cached queries.
+- Define CORAL linkopts using the NEEDS_CORAL_BASE macro
+  (fix for LCGCMT bug #41579: link RelationalAccess only if needed).
+- Start the port to gcc4.3. 
+  Add missing STL headers to the implementation code.
+  Add gcc43 to all .cvsignore files.
+
+==============================================================================
+!2008.09.27 - Andrea
+
+Internal tag COOL_2_6_0-pre5 (-D '2008/09/27 10:00:00').
+
+Changes in RelationalCool with respect to COOL_2_6_0-pre4:
+- Major internal cleanup of 'Ral' (CORAL) and 'Relational' (generic) classes.
+  > Add a generic cool::IRelationalCursor to handle relational queries.
+    This is returned by new method RelationalQueryMgr::prepareAndExecuteQuery.
+    Implement it as a RalCursor (wrapper for a CORAL ICursor).
+    Use it to replace RalObjectIterator by a generic RelationalObjectIterator. 
+    Remove the old commened out COOL210 RalObjectIterator implementation.
+    Remove the registerIterator method (already commented out).
+    Replace the RalObjectIterator test by a RelationalObjectIterator test.
+  > Add static qualifier for RalQueryMgr methods 
+    cursorNext and executeQuery (for TimingReport).</li>
+    Identify COOL sessions by their IRelationalTransactionMgr
+    (rather than the RalSessionMgr) in ObjectIteratorCounter.
+    Add a RelationalQueryMgr::clone() method.
+    Use a RelationalQueryMgr instead of a RalSessionMgr
+    in the RelationalObjectIterator constructor.
+  > Replace RalObjectMgr by generic RelationalObjectMgr. 
+    The browseObjects method now returns a generic RelationalObjectIterator.
+    Remove the session method (not used).
+    Remove the sessionMgr method (inline it in implementation).
+    Remove the objectIdSequence method (inline it in implementation and tests).
+    Remove the unused storeObjects method (move it to the test);
+    keep the __storeObjects method (which does not start a transaction).
+    Replace the RalObjectMgr test by a RelationalObjectMgr test.
+  > Add RelationalQueryMgr::bulkUpdateTableRows for bulk updates.
+    Use the cool::RelationalQueryMgr bulk inserter and updater
+    in the implementation of RelationalObjectMgr.
+  > Replace RalObjectTable by generic RelationalObjectTable. 
+    Replace the RalObjectTable test by a RelationalObjectTable test.
+
+==============================================================================
+!2008.09.25 - Andrea
+
+Internal tag COOL_2_6_0-pre4.
+
+Summary of changes in RelationalCool with respect to COOL_2_6_0-pre3:
+- Fix bug #40812 (insertionTimeOfLastObjectInTag for user tags). Add tests.
+- Fix bug #41735 (add missing sequence tables to the coolPrivileges tool).
+- Fix bug #42101 ("HEAD" tag not accepted for browsing SV folders). Add a test.
+- Fix message printouts in log() for RalObjectMgr and RelationalObjectTable.
+- Partial fix for bug #17903 (bulk insertion for MV [key,key+1] uses single 
+  row insertion). Alg can be tuned using COOL_MVINSERTION_PREFETCH_MAXROWS.
+  Better performance observed when inserting over void. Abother improvement
+  (missing bulk updates) is needed for inserting over existing IOVs.
+  Add QMTEST tests for both the old and new algorithm.
+- Add coolPrivileges logfiles to document the granted privileges (task #7825). 
+
+==============================================================================
+!2008.09.11 - Andrea
+
+Internal tag COOL_2_6_0-pre3.
+
+Summary of changes in RelationalCool with respect to COOL_2_6_0-pre2:
+- Check for any missing tables in the coolValidateSchema tool (task #7691).
+  Differentiate between warnings, errors and fatal errors in the final dump.
+  Add a standalone test (using brute force to manually drop a table).
+- Add a test for bug #36646 (metadata fields are visible in IObject::payload).
+- Remove COOL workaround for CORAL bug #40315, aka COOL bug #40295 (rows not 
+  deleted from coral_sqlite_fk when tables are dropped). Now fixed in CORAL.
+- Add link options for Boost date_time after adding /DBOOST_ALL_NO_LIB for vc9.
+- Drop inheritance of RelationalTransaction on ITransaction (#ifdef COOL270).
+- Include in RelationalCool/tests/dblookup.xml the lcgnight entries from 
+  /afs/cern.ch/sw/lcg/app/pool/db/dblookup.xml, for consistency.
+
+==============================================================================
+!2008.09.01 - Andrea
+
+Internal tag COOL_2_6_0-pre2.
+
+Summary of changes in RelationalCool with respect to COOL_2_6_0-pre1:
+- Implement addition of IOVs to partially locked tags (task #6541), add tests.
+- Fix bug #40353 (do not modify verbosity if COOL_MSGLEVEL is not set).
+- Remove the dependency of RelationalCool on CoolApplication.
+  Keep the dependency of RelationalCool on CoolKernel.
+  Keep the dependency of CoolApplication on RelationalCool.
+  Adapt all implementation code and tests.
+- Change '#ifdef COOL260' into '#ifdef COOL270'.
+- Disable the internal manual transaction handling if COOL270 is not defined.
+- Add infrastructure for tests of the Frontier Squid cache (task #3440).
+  > Update the dblookup.xml file using the complex frontier URL syntax.
+- Move RelationalObjectTable methods fetchRowsInTag, fetchRowsInHead, 
+  fetchRowsInPastHead out of src into RalObjectTableTest (task #7646).
+
+==============================================================================
+!2008.08.27 - Andrea
+
+Internal tag COOL_2_6_0-pre1.
+
+Summary of changes in RelationalCool with respect to COOL_2_5_0:
+- Upgrade software version to COOL 2.6.0.
+- Implement payload queries (server-side for FieldSelection and
+  CompositeSelection, client-side for any other IRecordSelection).
+  This functionality is protected behind#ifdef COOL260.
+  > Add class RelationalPayloadQuery.
+  > Add functional tests for server-side and client-side payload queries
+    (using a SelectionWrapper test class for the latter).
+- Implement manual transaction handling and add test for several use cases.
+  This functionality is protected behind #ifdef COOL260.
+  > RelationalTransaction implements ITransaction if COOL260 is defined.
+  > Add RelationalFolder::maxBufferSize().
+  > Add RelationalObjectMgr::__storeObjects.
+  > Add RalObjectMgr::__storeSingle/MultiVersionObjects.
+  > Modify the internal transaction manager interface and classes.
+- Add virtual destructor for RelationalTransaction. 
+- Fix bug #22474 (bulk insertion is split across many transactions). Add test.
+- Fix bug #38251 (hints ignored in COUNT(*) queries).
+- Fix performance for 'SELECT COUNT(*) FROM ( subquery )' queries
+  by including again the list of selected columns in the subquery,
+  which had been removed between COOL 2.4.0 and COOL 2.5.0 (task #6482)
+- Use the new goToNext API instead of the obsolete hasNext API
+  in the internal implementation of RalObjectIterator2.
+- Enhance the coolAuthentication tool to display all CORAL replicas.
+  > Add option to display only 1st replica (R/O or R/W) or 1st R/W replica.
+  > Fix a small memory leak (related to CORAL bug #40507).
+  > Port the new features to the CoolAuthentication python package too
+- Workaround for Windows VC9 bug #40142: #undef symbols 'DELETE' and 'ERROR'
+- Workaround for Windows VC9 bug #40143: specify namespace in cool::MSG.
+- Remove workaround in the replication tool for SQLiteAccess bug #24867 
+  (workaround was to avoid dropping and recreating FKs during replication)
+  > But the SQLiteAccess bug is not fully fixed and COOL tests fail
+    (see also CORAL bug #40315 and COOL bug #40327)
+- Add workaround for CORAL bug #40315 (coral_sqlite_fk not updated when 
+  tables are dropped), aka COOL bug #40295 (error messages for sqlite)
+- Implement RelationalObjectTable::fetchRowsInHead using 
+  queryDefinitionGeneric insted of whereDataHead and whereClauseHead.
+- Rename RelationalObjectTable::fetchLastRow as fetchLastRowSV and comment 
+  it out (it is only present, commented out, in test_RalObjectTable).
+- Remove RelationalObjectTable::fetchRowAtTimeInTag. This was already not 
+  used, except in one test (which has been kept with inlined implementation).
+- Remove RelationalObjectTable methods whereClauseHead, whereDataHead, 
+  whereClauseTag, whereDataTag. These were already not used, except in tests.
+- Add empty skeleton for RelationalFolder::truncateObjectValidity().
+- Small fix in the schema evolution tool using CORAL msgVerbosity().
+- Temporary workaround for Boost 1.35.0 bug (warnings from Boost headers).
+- Get rid of cool::Sleep (use cool::sleep everywhere).
+- Add cmt/version.cmt to prepare support for the latest CMT version.
+- Remove the old test infrastructure using bash scripts.
+- Remove SCRAM configuration fragments.
+- Remove SeaUtil_SealTimer.h (keep SealUtil_SealTimer.h).
+
+==============================================================================
+!2008.07.16 - Andrea
+
+Copy back COOL_2_4_0a code into COOL_2_4-branch.
+
+This removes a useful bug fix but also some performance improvements we 
+were not really sure about. Make the COOL_2_4-branch clean to be released.
+
+==============================================================================
+!2008.07.16 - Andrea
+
+Add workaround for LCGCMT bug #38934 (python module installation is broken 
+by LCGCMT_55a). This was removed immediately after the LCGCMT bug fix.
+
+[Changes included by Andrea in COOL_2_4-branch on 2008.07.16]
+
+==============================================================================
+!2008.06.10 - Andrea
+
+Tag COOL_2_5_0. Production release with API semantic changes, API extensions
+and package structure changes to remove the dependency on SEAL.
+Upgrade to LCG_55 using the 'de-SEALed' CORAL_2_0_0.
+
+Summary of changes in RelationalCool with respect to COOL_2_4_0a
+(refer to the web release notes for more details):
+- CMT package structure changes.
+- Remove internal dependency on SEAL
+  > De-SEAL all tests and utilities.
+  > Replace seal::TimeInfo::sleep with a sleep function based on Boost.
+  > Import the SealUtil timing classes (after removing what is not needed).
+- Add new internal class CoralConnectionServiceProxy.
+- Performance improvements (many many changes).
+- There may be more changes that are only documented in the web release notes!
+
+==============================================================================
+!2008.06.04 - Andrea
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_2_4_0a. Rebuild of the 2.4.0 release for the LCG_54g configuration.
+Port to osx105 and .so shared lib names on MacOSX. Changes in CORAL and ROOT.
+No change in the source code. Software version remains "2.4.0".
+
+NB: None of the _code_ changes in COOL_2_4-branch are released in COOL_2_4_0a!
+NB: Only the (osx105) _config_ branch changes are released in COOL_2_4_0a!
+
+==============================================================================
+!2008.05.21 - Marco
+
+Added a COOL specific implementation of coral::IMsgReporter.
+It is activated setting the environment variable USE_COOL_MSGREPORTER, and the
+level can be tuned with COOL_MSGLEVEL (by default it is "ERROR").
+
+==============================================================================
+!2008.04.18 - Marco
+
+Fixed bug #35734: compilation error on Windows after removeal of SEAL.
+
+==============================================================================
+!2008.04.11 - Marco
+
+Removed dependency on SEAL.
+- De-SEAL all tests and utilities.
+- Replace seal::TimeInfo::sleep with a sleep function implemented using Boost.
+- Import the SealUtil timing classes (after removing what is not needed).
+
+==============================================================================
+!2008.04.09 - Andrea
+
+Algorithmic fix: the internal implementation classes exchange a shared pointer 
+to a connection service proxy (CoralConnectionServiceProxy) rather than a 
+service reference. The proxy contains a pointer that is reset to null when the 
+COOL database service is deleted (the CORAL connection service may or may not 
+continue to exist, but is declared to be unusable). Adapt utilities and tests.
+
+==============================================================================
+!2008.04.10 - Andrea
+
+Include a modified version of Jaco Kroon's signal handler.
+See http://www.tlug.org.za/wiki/index.php/Obtaining_a_stack_trace_in_C_upon_SIGSEGV 
+and http://cool.cvs.cern.ch/cgi-bin/cool.cgi/cool/contrib/ExternalTests/SignalHandler/src/sigsegv.cpp
+
+This is enabled only if environment variable COOL_ENABLE_COOLSIGNALHANDLER 
+is set (this replaces COOL_ENABLE_SEALSIGNALHANDLER and the SEAL handler).
+
+==============================================================================
+!2008.04.09 - Andrea
+
+Modify some of Marco's changes to remove SEAL.
+- In COOL_2_4_0, RalDatabaseSvc could be loaded as a SEAL plugin
+  (either through CoolApplication or directly from a seal Context).
+- In Marco's code, RalDatabaseSvc could be loaded as a Reflex plugin.
+- In the present code, RalDatabaseSvc is linked directly to CoolApplication.
+
+Method IApplication::connectionSvc returns a reference (rather than
+a shared pointer) to the coral::IConnectionService. This reference
+is exchanged internally between all relevant RelationalCool classes.
+
+Class Application is implemented by instantiating a CoralApplication
+from the RelationalCool library. Class CoralApplication is needed in
+RelationalCool to implement tests and utilities: it cannot be in
+CoolApplication as otherwise there would be a circular dependency.
+
+Modify all tests and utilities so that they bootstrap COOL using the
+CoralApplication class from RelationalCool rather than the Application
+or DatabaseSvcFactory classes from package CoolApplication.
+Package CoolApplication is now built after RelationalCool.
+
+Remove the infrastructure to load RalDatabaseSvc as a Reflex plugin.
+
+Remove RalDatabaseSvcLabel.h (modules.cpp had already been removed)
+because RalDatabaseSvc is not a SEAL plugin anymore.
+
+Internally replace seal::MessageStream by coral::MessageStream.
+- WARNING: changing message verbosity has no effect yet. 
+- WARNING: retrieving message verbosity is not possible yet. 
+- WARNING: changing or retrieving message verbosity of an individual 
+  cool::IApplication affects all COOL and CORAL applications because 
+  this is implemented in coral::MessageStreams using static methods. 
+
+Remove the dependency on Reflex, add a (temporary!) dependency on SEAL.
+Remove the private dependency of RelationalCool on CoolApplication:
+this would imply a circular dependency because now it is CoolApplication
+that links the RelationalCool library (which is not a plugin anymore).
+
+Keep a dependency on CoolApplication headers only (class CoralApplication
+implements the IApplication interface defined in package CoolApplication).
+
+Build the RelationalCool library as an LCG CMT 'shared' library
+(not a Reflex 'plugin' library nor a SEAL 'module' library).
+
+Add build directives to mkdir the bin directory if it does not exist
+(else scripts cannot be copied there).
+
+==============================================================================
+!2008.04.03 - Andrea
+
+Remove lines containing 'Invalid folder node path' from the qmtest XML report.
+This is needed in the SEAL-less HEAD version where Error messages 
+are not filtered out by the new message reporting infrastructure: 
+line 'ralDb->createFolderSet( "/my\folderset" )' triggers an error
+printout with a binary character that fails the XML parsing.
+This is not needed in COOL_2_4-branch but it is included for consistency.
+
+[Changes included by Andrea in COOL_2_4-branch on 2008.04.03]
+
+==============================================================================
+!2008.04.03 - Andrea
+
+Improve summarizeAll.csh to accept one or more CMTCONFIG values as arguments
+when building the qmtest result summaries.
+
+[Changes included by Andrea in COOL_2_4-branch on 2008.04.03]
+
+==============================================================================
+!2008.04.02 - Andrea
+
+Created a COOL_2_4 branch off COOL_2_4_1-pre1 for the whole of COOL:
+  cvs rtag -r COOL_2_4_1-pre1 -b COOL_2_4-branch cool
+
+==============================================================================
+!2008.04.02 - Marco
+
+Re-enabled LFC support in utilities.
+
+==============================================================================
+!2008.03.20 - Marco
+
+Removed seal::Context.
+cool::RalDatabase can be loaded as a Reflex plug-in.
+All the references to seal::MessagesService have been removed and now only
+coral::MessageStream is used.
+
+The tests have been updated, but the utilities are not yet ready.
+
+==============================================================================
+!2008.03.03 - Andrea
+
+Internal tag COOL_2_4_1-pre1 (bug fixes).
+The only changes wrt COOL_2_4_0 are in RelationalCool.
+
+==============================================================================
+!2008.02.29 - Andrea
+
+Test the parsing of middleTier() in the RelationalDatabaseId class.
+
+==============================================================================
+!2008.02.29 - Andrea
+
+Remove a few compilation warnings from cppunit the hard way
+(remove all uses of CPPUNIT_TEST_EXCEPTION).
+
+==============================================================================
+!2008.02.29 - Sven
+
+Fix for bug #33989 (setTagDescription should fail if called from wrong node).
+
+==============================================================================
+!2008.02.29 - Andrea
+
+Test for bug #33989 (setTagDescription should fail if called from wrong node).
+
+==============================================================================
+!2008.02.28 - Andrea
+
+Tag COOL_2_4_0. Production release with backward compatible API extensions.
+Upgrade to LCG_54b using CORAL_1_9_5.
+
+==============================================================================
+!2008.02.27 - Andrea
+
+Add a test for CORAL bug #33401 as reported by Richard for COOL (ORA-00904).
+
+==============================================================================
+!2008.02.26 - Sven
+
+Implement IHvsNode::setTagDescription. 
+This modifies only the global tag table (not the local one).
+It can be used to set the description of both IOV and HVS tags.
+Add several tests for setTagDescription under various use cases.
+
+==============================================================================
+!2008.02.26 - Andrea
+
+Prototype support for coralxxx://host:port&... URLs (CORAL server backend).
+Add a few tests.
+
+==============================================================================
+!2008.02.25 - Andrea
+
+Implement userTagOnly argument to IFolder::storeObject (task #6153), to allow 
+users to avoid the duplication of MV data in the global and user tag HEADs.
+Add a few tests.
+
+==============================================================================
+!2008.02.20 - Andrea (changes committed before COOL_2_3_1 but not tagged)
+
+Change the config: do not install the RelationalCool headers directory
+even if it is found (this may happen if cvs co -P is not used).
+
+==============================================================================
+!2008.02.19 - Andrea (changes committed before COOL_2_3_1 but not tagged)
+
+Upgrade software version to 2.4.0.
+
+Add two API extensions to be released as COOL_2_4_0:
+- add IHvsNode::setTagDescription (task #6394), to allow users to first
+  create a tag (also as a user tag or HVS tag) and then set its description
+- add userTagOnly argument to IFolder::storeObject (task #6153), to allow
+  users to avoid the duplication of MV data in the global and user tag HEADs
+
+Remove Sven's IFolder::setTagDescription from the API.
+Keep the implementation, but comment it out: this should be moved to 
+RelationalHvsNode and should not modify the local tag table (to be ignored).
+Comment out Sven's tests for setTagDescription.
+The implementation of setTagDescription presently throws an exception.
+No tests exist to check that this is the case.
+
+The implementation of storeObject( userTagOnly=true ) throws an exception.
+Add a test for storeObject( userTagOnly=true ), checking that it throws.
+
+==============================================================================
+!2008.02.18 - Sven (changes committed before COOL_2_3_1 but not tagged)
+
+Implement IFolder::setTagDescription.
+This modifies both the global and local tag tables.
+It cannot be used to set the description of HVS tags for folder sets.
+Add several tests for setTagDescription under various use cases.
+
+==============================================================================
+!2008.02.21 - Andrea
+
+Tag COOL_2_3_1. Bug-fix production release (binary compatible with 2.3.0) 
+with performance optimizations for multi-version retrieval and insertion.
+Upgrade to LCG_54a including bug fixes in ROOT 5.18.00a. 
+
+==============================================================================
+!2008.02.13 - Andrea (-D '2008/02/13 19:30:00')
+
+Internal tag COOL_2_3_1-pre2 (bug fixes and performance optimizations).
+Use the default LCG_54 (including ROOT 5.18) on all platforms.
+
+==============================================================================
+!2008.02.13 - Romain and Andrea
+
+Performance optimization in MV insertion of IOVs with user tags (task #6086).
+Part 2 of the optimization: performance improvement for the UPDATE statement.
+
+When new IOVs are inserted in MV mode, they may overlap with older IOVS that 
+were previously part of the HEAD: these IOVs need to be updated to mark that 
+they are not part of the HEAD any longer. The new UPDATE implementation uses 
+the same 'SELECT MAX(IOV_SINCE)' subquery used in most retrieval use cases 
+to speed up the lookup of which IOVS need to be updated.
+
+The latest implementation is enabled by default and reuses almost the same
+SQL code that is defined in RelationalObjectTable::queryDefinitionGeneric
+(originally developed for MV tag retrieval, task #5820). 
+
+The old COOL_2_3_0 implementation is used by default for MySQL because of 
+an intrinsic limitation of MySQL (an UPDATE statement cannot update a table 
+which is also SELECTed from in a subquery of the UPDATE statement).
+The old COOL_2_3_0 implementation can also be reenabled for the other
+backends if the environment variable COOL_TASK6086_DISABLERBUPDATE is set.
+
+Limitation of the current implementation: a better SQL statement has been
+designed for Oracle, but it cannot be implemented because of missing
+support for hints in UPDATE statements in CORAL (sr #103420).
+
+==============================================================================
+!2008.02.08 - Andrea
+
+Performance optimization in MV insertion of IOVs with user tags (task #5820).
+All subqueries which can be rewritten ("merged") as multi-table joins (and 
+which the Oracle optimizer internally does merge this way) are now 
+consistently rewritten explicitly as multi-table joins.
+
+==============================================================================
+!2008.02.08 - Andrea
+
+Performance optimization in MV insertion of IOVs with user tags (task #5820).
+A consistent approach is used for naming SQL query blocks and table aliases 
+in different use cases, making the code much more readable and easier to 
+maintain and improve. Add several hooks for changing the default query hints 
+using environment variables for faster performance tests.
+
+==============================================================================
+!2008.02.08 - Andrea
+
+Performance optimization in MV insertion of IOVs with user tags (task #5820).
+When browsing for IOVS between times t1 and t2, the COALESCE function in SQL 
+is now used consistently (instead of OR or UNION ALL clauses) to concatenate 
+the IOVS valid at time t1 (since <= t1 < until) with the IOVS starting 
+between t1 and t2 (t1 < since < t2).
+
+==============================================================================
+!2008.02.05 - Andrea
+
+Enable the RelationalObjectTable::queryDefinitionGeneric method also for 
+MV retrieval from standard tags (task #5820). This was previously handled 
+by method queryDefinitionTag, which now delegates most of its functionality 
+to the generic method (also used for user tags - task #6086).
+
+The same method is designed to also handle the SV case (but is not used in 
+production yet). It can also be adapted for MV HEAD retrieval.
+
+==============================================================================
+!2008.02.05 - Romain and Andrea
+
+Performance optimization in MV insertion of IOVs with user tags (task #6086).
+Part 1 of the optimization: performance improvement for the SELECT statement.
+
+==============================================================================
+!2008.02.04 - Andrea
+
+Internal tag COOL_2_3_1-pre1 (bug fixes and performance optimizations).
+Upgrade COOL software version to 2.3.1.
+
+==============================================================================
+!2008.02.04 - Sven
+
+Fix for bug #32976 in the replication tool.
+
+==============================================================================
+!2008.01.29 - Andrea
+
+Performance optimization for MV retrieval from standard HEAD tags (task #5820).
+Main change: query the IOV2TAG table instead of the IOV table!
+The new strategy is in RelationalObjectTable::queryDefinitionTag.
+
+==============================================================================
+!2008.01.21 - Andrea
+
+Tag COOL_2_3_0. Production release with backward compatible API extensions.
+Upgrade to LCG_54 using Python 2.5, ROOT 5.18 and several other new externals.
+
+PyCool is not supported on MacOSX because of bug #32770 in ROOT 5.18.00.
+The COOL nightlies are all green (except for the PyCool tests on MacOSX).
+
+==============================================================================
+!2008.01.17 - Andrea
+
+Undo the attempt at performance optimization for task #6086.
+There was no clear performance benefit, and some penalty instead.
+Keep the new code to be used in the future, but comment it out.
+
+==============================================================================
+!2008.01.17 - Andrea
+
+Ensure that RelationalCool scripts are installed by 'cmt make all' 
+and not only by 'cmt make all_groups' (task #5835).
+
+==============================================================================
+!2007.01.16 - Sven
+
+Fix bug #32610 in the replication tool when replicating databases
+where renamePayload or extendPayloadSpecification has been used.
+
+==============================================================================
+!2007.01.15 - Andrea
+
+Attempt at performance optimization for MV user tag insertion (task #6086).
+
+Add new RelationalObjectTable::queryDefinitionGeneric method that supports
+both the SV and MV user tag cases, with improved queries on since/until.
+Use this method in production also for the SV case (remove queryDefinitionSV).
+Eventually this can be used in a more general reimplementation of all queries.
+
+==============================================================================
+!2007.01.09 - Andrea
+
+New signature (record) for IFolder::extendPayloadSpecification (task #5742).
+This allows users to add more than one columns at once and to specify 
+a non-null default value for the additional column of all existing rows. 
+Remove the old signature (name, type). Add tests for non-null default values.
+
+Warning: the replication tool has not yet been ported to support the new
+IFolder::extendPayloadSpecification functionality (bug #32610).
+
+==============================================================================
+!2008.01.08 - Andrea
+
+Disable CppUnit header warnings from gcc41 nightlies (task #5837).
+
+==============================================================================
+!2007.12.19 - Andrea
+
+Internal tag COOL_2_3_0-pre1 (new COOL API extensions on standard LCG_53f).
+All CMT tests successful, bash tests not updated. Software version is 2.3.0.
+
+==============================================================================
+!2007.12.17 - Sven
+
+Complete task #4327 by adding a few new tests in test_RelationalFolder:
+
+	CPPUNIT_TEST( test_findObjects_channelName_SV ); 
+	CPPUNIT_TEST( test_findObjects_channelName_MV ); 
+  CPPUNIT_TEST( test_findObjects_channelName_MV_tag ); 
+  CPPUNIT_TEST( test_findObjects_channelName_MV_userTag );
+  CPPUNIT_TEST( test_countObjects_channelName_SV_all ); 
+  CPPUNIT_TEST( test_countObjects_channelName_SV_range ); 
+  CPPUNIT_TEST( test_countObjects_channelName_MV_all ); 
+  CPPUNIT_TEST( test_countObjects_channelName_MV_tag ); 
+  CPPUNIT_TEST( test_countObjects_channelName_MV_userTag );
+
+==============================================================================
+!2007.12.17 - Andrea
+
+Centrally maintain credentials for the nightly builds (user lcgspi) in 
+/afs/cern.ch/sw/lcg/app/pool/db. Files authentication.xml and dblookup.xml 
+are automatically copied to the private directories on MacOSX and Windows
+using Samba. Set CORAL_AUTH_PATH and CORAL_DBLOOKUP_PATH equal to
+- /afs/cern.ch/sw/lcg/app/pool/db on Linux
+- $HOME/private on MacOSX
+- %USERPROFILE%\private on Windows
+
+Remove dblookup entries for users roiser and pkolet 
+(the nightly tests are only executed as user lcgspi). 
+
+==============================================================================
+!2007.12.16 - Sven
+
+Implemented channelName based ChannelSelection support for
+browseObjects methods. Relevant tests are in test_RelationalFolder:
+
+  CPPUNIT_TEST( test_browseObjects_channelName_SV_all );
+  CPPUNIT_TEST( test_browseObjects_channelName_SV_range );
+  CPPUNIT_TEST( test_browseObjects_channelName_MV_all );
+  CPPUNIT_TEST( test_browseObjects_channelName_MV_tag );
+  CPPUNIT_TEST( test_browseObjects_channelName_MV_userTag );
+
+These should cover all possible where clauses used by browseObjects code.
+The calls findObjects and countObjects also go through browseObjects.
+
+These changes almost complete task #4327.
+
+==============================================================================
+!2007.12.14 - Andrea
+
+Upgrade COOL software version to 2.3.0.
+
+==============================================================================
+!2007.12.13 - Andrea
+
+Split RelationalFolder and Channel tests. Workaround for COOL bug #27650 
+(CORAL bug #28547): long tests fail because SQLite file descriptors are not 
+released (SQLite feature) and the maximum cannot be increased beyond 1024.
+
+==============================================================================
+!2007.12.13 - Andrea
+
+Added enum value HvsTagLock::PARTIALLYLOCKED (task #4606).
+
+A PARTIALLYLOCKED tag behaves like a LOCKED tag except in the following cases:
+1. It is possible to add a tag relation from a partially locked parent HVS tag
+to a tag in a child HVS node (if no tag relation exists for that child node).
+
+Eventually, one or both of the following functionalities may also be added
+(but for the moment, neither of them is implemented yet):
+2. It is possible to add IOVs to a partially locked user tag, only if the 
+newly inserted IOVS have no overlap to those already existing in the user tag.
+3. It is possible to retag the HEAD of a folder with a partially locked tag,
+only if the retag operation only results in adding new IOVS to the tag.
+
+==============================================================================
+!2007.12.13 - Andrea
+
+Disable the CORAL connection pool automatic cleanup if the environment
+variable COOL_DISABLE_CORALCONNECTIONPOOLCLEANUP is set (bug #30435).
+Disable it by default in COOL tests by modifying config/cmt/requirements.
+
+==============================================================================
+!2007.12.13 - Andrea
+
+Added method IFolder::listChannelsWithNames (task #5868).
+Added two tests in the RelationalFolder and RalDatabase test suites.
+
+Aborted attempts to add method IObject::channelName. The functionality 
+required by Atlas is provided by IFolder::listChannelsWithNames instead.
+
+==============================================================================
+!2007.12.12 - Andrea
+
+Added method IFolder::extendPayloadSpecification (task #5742).
+Added two tests in the RelationalFolder and RalDatabase test suites.
+
+==============================================================================
+!2007.12.12 - Andrea
+
+Moved exception DatabaseOpenInReadOnlyMode to the public API (task #5743).
+This was previously defined as a RelationalException in RelationalCool.
+
+==============================================================================
+!2007.12.03 - Marco
+
+Added dblookup entries for uses pkolet and lcgspi for the SPI nightly tests.
+
+==============================================================================
+!2007.11.26 - Sven
+
+Added channel selection by channel name in the ChannelSelection class.
+Implemented channel selection by channel name in RelationalObjectTable.cpp.
+Added four tests for the new selections to the ChannelSelection test suite.
+Added test_browseObjects_channelName to the RelationalFolder test suite.
+
+==============================================================================
+!2007.11.13 - Andrea
+
+Tag COOL_2_2_2. Production release (binary compatible with 2.2.0) with many
+performance and configuration improvements and bug fixes. New versions of 
+CORAL and Frontier server (fixing all pending problems in the tests) and ROOT.
+This is the first COOL release built by the SPI team (and no SCRAM config).
+
+==============================================================================
+!2007.11.09 - Andrea/Romain
+
+Reimplement user tags queries using the new RelationalQueryDefinition.
+This is needed to implement hints to use the 5d index for task #4381.
+
+Add the following hint to try and stabilize the execution plan:
+/*+ ALL_ROWS FULL(T) INDEX(O (USER_TAG_ID)) LEADING(T O) USE_NL(O)*/.
+
+==============================================================================
+!2007.11.08 - Andrea
+
+Internal tag COOL_2_2_2-pre2 (using private CORAL192 build and SEAL193 copy).
+All CMT tests successful, bash tests not updated. Software version is 2.2.2.
+
+==============================================================================
+!2007.11.07 - Andrea
+
+Upgrade software version to 2.2.2.
+
+==============================================================================
+!2007.11.07 - Andrea
+
+Internal tag COOL_2_2_2-pre1 (using private CORAL192 build and SEAL193 copy).
+All CMT tests successful (no pending Frontier failures).
+Bash tests not updated (Wine failures are expected).
+
+==============================================================================
+!2007.11.06 - Andrea
+
+Add tests for string and templated methods payloadValue (task #2859).
+These methods were not tested anywhere in the C++ test suite before.
+Test also FieldIsNull and FieldCppWrong from the templated method.
+
+==============================================================================
+!2007.10.25 - Romain
+
+Performance improvement in IOV insertion by stabilizing the execution plan 
+for the 'select last IOV' query (in RalObjectMgr::fetchLastRowsWithNewData,
+add hint "/*+ INDEX(C) INDEX_RS_ASC(O) LEADING(C O) USE_NL(C O) */",
+replacing the previous "/*+INDEX(O)*/" hint that was not appropriate).
+
+==============================================================================
+!2007.10.30 - Andrea
+
+Added a fake make target "examples" to please nmake (task #5414).
+
+==============================================================================
+!2007.10.26 - Andrea
+
+Implement constraints on allowed characters in a node name (task #4371).
+
+Modified tests for bug #30751 and task #4371:
+- test that creation of folder[set] with a trailing space in its name fails
+- remove test of creation of two folder[set]s with almost the same name
+
+All tests are now successful (including MySQL).
+
+==============================================================================
+!2007.10.26 - Andrea/Sven
+
+Added tests for bug #30751 and task #4371:
+- test that creation of folder[set] with a trailing space in its name succeeds
+- test creation of two folder[set]s with the same name but for a trailing space
+
+The second set of tests fails for MySQL because of an intrinsic limitation
+of the MySQL 5.0 server ("x" and "x " are indistinguishable, for instance
+in enforcing primary keys and in where clauses).
+
+==============================================================================
+!2007.10.26 - Andrea
+
+Fix schema evolution tool so that UK/FK errors from CORAL are not printed
+when the corresponding exception is caught in the normal program flow.
+
+==============================================================================
+!2007.10.26 - Andrea
+
+Fix in enforcing "folders with schema version 2.0.0 are no longer supported".
+Method listAllTables should not fail (we know all tables), else we may
+get failures in schema evolution (MySQL was indeed failing... not Oracle?).
+
+Extend exceptions UnsupportedFolder[Set]Schema to accept any message.
+Move UnsupportedFolder[Set]Schema exceptions to file RelationalException.h.
+
+Add a PanicException for all PANIC situations (asserts).
+
+Add tests for listAllTables with node schema versions 1.9.9, 2.0.9, 2.9.0
+(panic, success, fail) and with folder schema version 2.0.0 (success).
+
+==============================================================================
+!2007.10.25 - Romain
+
+Performance improvement in IOV insertion (to be cross-checked)
+by stabilizing the execution plan for the 'select last IOV' query
+(add the "/*+INDEX(O)*/" hint in RalObjectMgr::fetchLastRowsWithNewData).
+
+==============================================================================
+!2007.10.25 - Andrea
+
+Fix for performance and functional bug #30431 in MV folders: 
+in RelationalFolder.cpp, use the channels table for MV existsChannel.
+
+Fix for functional bug #30443 and performance bug #24448 in MV folders: 
+in RelationalFolder.cpp, use the channels table for MV listChannels.
+
+Remove all workarounds for bug #23755, including:
+- in RelationalFolder.cpp, remove the old fixes for 
+  bug #24445 (MV setChannelName fails without createChannel),
+  bug #24449 (MV existsChannel fails without createChannel),
+  bug #24461 (MV setChannelDesc fails without createChannel) and
+  bug #24463 (MV channelName fails without createChannel);
+- in RalObjectMgr, make channel table manipulation private again;
+- in RelationalObjectMgr, dropChannel continues to check also the IOV table
+  (because this is the semantics: throw if the channel has some IOVs);
+- in RelationalObjectTable, remove listChannels (but keep existsChannel).
+
+These changes complete the fix for bug #23755.
+
+All RelationalCool and PyCoolUtilities tests are now successful.
+
+==============================================================================
+!2007.10.25 - Andrea
+
+Folders with schema version 2.0.0 are no longer supported.
+This ensures that folders have been evolved to 2.0.1 or higher (i.e. that FK 
+constraints exist between each IOV table and the corresponding channel table).
+
+Add tests that using or dropping a 2.0.0 folder fails.
+Add tests that dropping a database containing a 2.0.0 folder also fails.
+
+Rename RelationalFolderNew as RelationalFolderUnsupported.
+Rename RelationalFolderSetNew as RelationalFolderSetUnsupported.
+
+==============================================================================
+!2007.10.24 - Andrea
+
+Add new tool coolValidateSchema to check internal consistency of databases.
+Presently this only investigates possible data corruption due to bug #23755,
+e.g. due to unenforced FK constraints in sqlite (checks that channels in all
+IOV tables are listed in the corresponding channel tables, both MV and SV).
+
+==============================================================================
+!2007.10.24 - Andrea
+
+Use RelationalQueryDefinition in RalObjectMgr::fetchLastRowsWithNewData
+(task #5282 - also see task #5654, will rewrite this query to fix the plan).
+
+Add the option to define a hint in an IRelationalQueryDefinition
+(thanks to Romain for the suggestion - e.g. can be useful for task #5654).
+
+Clean up result set specification handling for queries executed from an 
+IRelationalQueryDefinition: the spec is in the query definition,
+no need to specify it as an argument to fetchOrderedRows.
+
+==============================================================================
+!2007.10.23 - Andrea
+
+Add pure virtual methods to RelationalQueryMgr for selecting or counting rows
+from a query defined using an IRelationalQueryDefinition (task #5282).
+
+==============================================================================
+!2007.10.23 - Andrea
+
+Add a new test_SealPluginDump.sh test to the bash test suite (task #5678).
+Running the test also makes sure that the COOL plugins are loaded for SCRAM.
+The same machinery was implemented by Marco for CMT and QMTEST.
+
+==============================================================================
+!2007.10.23 - Andrea
+
+Use the MySQL integration cluster itrac424 instead of Marco's pclhcb55
+for Andrea's private tests (task #5412). Not yet done for the nightlies.
+
+==============================================================================
+!2007.10.23 - Andrea
+
+Fix bug #30500 (wrong exception thrown when attempting to update a database
+that is open in read-only mode): add new exception DatabaseOpenInReadOnlyMode,
+thrown by both transaction managers and also by RalObjectMgr::storeObjects.
+
+Add a test for bug #30500 (check that DatabaseOpenInReadOnlyMode is thrown
+when attempting to update a database that is open in read-only mode).
+
+==============================================================================
+!2007.10.20 - Sven
+
+Fix bug #30578 in the replication tool.
+
+==============================================================================
+!2007.10.16 - Andrea
+
+Add tests for bug #30431 (MV existsChannel) and bug #30443 (MV listChannels).
+
+==============================================================================
+!2007.10.16 - Andrea
+
+Fix bug #30361 in the schema evolution tool.
+
+==============================================================================
+!2007.10.11 - Andrea
+
+Tag COOL_2_2_1. Production release (binary compatible with 2.2.0) with many
+configuration improvements, feature enhancements and bug fixes. New versions 
+of CORAL (with important bug fixes for SQLite and Frontier), ROOT and SEAL.
+This is the first COOL release with support for MacOSX/Intel platforms.
+
+==============================================================================
+!2007.10.09 - Andrea
+
+Drop SEAL package granularity in SCRAM as there is no .SCRAM in SEAL_1_9_3.
+CoolKernel depends on SEAL and adds link libraries SealBase, PluginManager 
+and SealKernel by default. SealUtil and SealServices are added where needed.
+
+==============================================================================
+!2007.10.08 - Andrea
+
+Internal tag COOL_2_2_1-pre5. Last private tag before COOL_2_2_1.
+All CMT/SCRAM tests successful on all platforms using a private CORAL191
+(except for the last pending failure RO_02b1 - bug #23368 in FrontierAccess),
+including MacOSX/PPC (last build) and gcc41 (not built for official COOL221).
+Non-debug osx104_ia32_gcc401 not built, test results copied from debug version.
+
+Changes in RelationalCool code, tests and test results (none in config):
+- Allow back-insertion of non-overlapping IOVS in SV folders (task #3138).
+  > Add several tests for task #3138, all successful.
+- Avoid a few warnings in Windows.
+- Reenable tests for sqlite bug #22485, now fixed.
+- Add a few timing reports for task #4672.
+- Software version is now 2.2.1
+- Update test results for cygwin (.NT) again..
+
+==============================================================================
+!2007.09.29 - Sven
+
+Partial implementation of task #3138: allow back-insertion of IOVS 
+in SV folders as long as there are no IOV overlaps.
+
+Use case #3 is implemented: back-insertion is possible 
+if IOVs are inserted one at a time (no bulk insertion).
+
+Use case #2 is implemented: back-insertion is possible with bulk insertion,
+if any back-inserted IOV is the only IOV inserted in its channel (while
+many IOVs can be inserted at a time in channels with no back-insertion).
+
+Use case #3 is not yet implemented: back-insertion is not possible with 
+bulk insertion if several IOVs are inserted at a time in a channel where
+at least one IOV is back-inserted.
+
+==============================================================================
+!2007.09.18 - Marco
+
+Minor changes to avoid a few warnings on Windows
+in RelationalQueryDefinition.cpp and RalQueryMgr.cpp.
+
+==============================================================================
+!2007.09.02 - Andrea
+
+Add a few more timing reports for task #4672.
+
+==============================================================================
+!2007.08.29 - Andrea (-D '2007/08/29 13:30:00')
+
+Internal tag COOL_2_2_1-pre4.
+First version with successful tests of slc4_ia32_gcc41 on SCRAM/BASH,
+including SQLite and Frontier support and complete private config for CMT.
+
+No changes in RelationalCool code or config.
+
+Changes in bash test results:
+- All OK for slc4_ia32_gcc41 (after enabling SQLite/Frontier).
+- Replace 'Skip test' by 'Skip' in existing logfiles for mergeTestOutput.
+
+==============================================================================
+!2007.08.24 - Andrea (-D '2007/08/24 17:15:00')
+
+Internal tag COOL_2_2_1-pre3.
+First version with successful tests of MacOSX Intel on both CMT/QMTEST 
+and SCRAM/BASH, including PyCool (but still no Oracle support).
+First version with successful tests of slc4_ia32_gcc41 on SCRAM/BASH
+(but CMT is badly configured, and still no SQLite or Frontier support).
+
+Implementation bug fixes:
+- Fix bug #28189 (missing quotes around table alias in new Oracle queries)
+- Fix bug #28787 (segfault if 'live' iterator is not closed)
+  > fixed by using RalSessionMgr instead of IDatabase to keep track of how many
+    iterators are open (now allow at most one open iterator per RalSessionMgr)
+
+Add a test for MySQL bug #24646 (storing 11 blobs with 1000 characters fails). 
+The test is disabled for MySQL, for the moment it only prints a warning. 
+
+Changes in bash test results:
+- New test_payloadSpecOver8000Bytes for bug #24646 is OK (disabled for MySQL).
+- Added logfile for slc4_ia32_gcc41 (all tests OK using SCRAM).
+
+==============================================================================
+!2007.08.07 - Andrea (-D '2007/08/07 16:02:00')
+
+Internal tag COOL_2_2_1-pre2.
+First version with all QMTEST tests as successful as bash tests.
+
+Test config improvements:
+- Fix bug #28553 (duplicate entry in dblookup.xml for tests).
+
+No changes in RelationalCool code or bash test results.
+
+==============================================================================
+!2007.08.02 - Andrea (-D '2007/08/03 14:05:00')
+
+Internal tag COOL_2_2_1-pre1. 
+
+Changes in bash test results:
+- OSX PPC tests for SQLite succeed after adding workaround for bug #27650.
+- Added results for OSX Intel (all ok except Oracle that is not supported).
+
+C++ bug fixes:
+- RelationalFolderSetNew inheritance from IFolderSet must be virtual.
+
+Tool improvements:
+- Port CoolQueryManager to Windows (task #5255).
+- Improved usage messages from various scripts.
+
+CMT config improvements:
+- Fixes for OSX link warnings.
+
+==============================================================================
+!2007.07.13 - Andrea
+
+Tag COOL_2_2_0. Production release with many performance optimizations and bug 
+fixes, also including backward-compatible API extensions and schema changes.
+New versions of CMT, CORAL, ROOT/Reflex, oracle, sqlite, frontier_client
+and LFC using LCG_53 (with respect to COOL 2.1.1 using LCG_51).
+
+Main API changes in CoolKernel:
+- Added support for Blob16M (task #2197).
+- Added reverse order object iterator from browseObjects (task #3430).
+- Added goToNext() and currentRef() methods to IObjectIterator to improve the 
+  C++ client performance by avoiding copies of CORAL currentRow (task #4672).
+- Removed unnecessary virtual class inheritance from final classes and 
+  unnecessary virtual method inheritance from final methods (task #4879).
+- Added IDatabase::databaseName() method (sr #101807).
+- Added IFolder::dropChannel() method to delete/drop an existing channel.
+
+Main schema changes (all included in the coolEvolveSchema tool):
+- Fill the channels table for MV folders (fix for bug #23755).
+- Added a FK on the IOV table referencing channelId in the channels table:
+  this is part of the fix for bug #23755 (MV channels table was not filled).
+  > Note that FKs are parsed but not enforced on SQLite.
+- Folder schema is now 2.0.1 (database schema remains 2.0.0).
+  > For the moment, the code is still able to read the older 2.0.0 schema
+    (i.e. it does not rely on the fact that the MV channels table is filled).
+    In other words, schema evolution is recommended but is not necessary.
+  > Eventually, a future COOL release will require schema evolution, so
+    that it can assume that the MV channels table is filled. 
+  > Older releases 210 and 211 are able to read/write data in the new 2.0.1
+    folders: however, on Oracle and MySQL, where FKs are enforced, IOVs cannot
+    be inserted into new channels unless these are first manually created using
+    createChannel (or they have been created using storeObjects on COOL_2_2_0).
+  > *** WARNING *** Even if COOL210/211 can be used to insert data into
+    the 2.0.1 folders created by COOL_2_2_0, this is discouraged on SQLite
+    files as it may lead to data corruption (a 2.0.1 sqlite folder has a
+    non-enforced FK, so an IOV may exist for a channel that is not registered
+    in the channels table). This may be solved in the future if FKs are 
+    enforced using triggers in the CORAL SQLIteAccess (sr #102114).
+- String255 columns on MySQL are VARCHAR(255) BINARY instead of VARCHAR(255)
+  > This change is due to the fix in CORAL190 for bug #26484, which was
+    responsible in COOL for bug #24393 (tag queries were case insensitive).
+  > Warning: strings longer than 255 characters are still TEXT instead of 
+    BINARY TEXT, hence they are still queried/sorted in a case-insensitive way.
+- Schema evolution database attribute is now called "SE_2_2_0".
+
+Additional implementation improvements over COOL 2_1_1:
+- Performance improvements for SV queries (task #4402).
+  > The query time for all-channel queries is now flat across IOVs.
+  > SV queries are now handled through a join of the channels and IOV tables.
+  > New class IRelationalQueryDefinition to encapsulate a generic query
+    description that can be reused as part of a subquery, eg for COUNT(*).
+  > Adapt the RelationalQueryMgr to the new IRelationalQueryDefinition.
+    Table row count is now possible using SELECT COUNT(*) FROM (SELECT...)
+    where the subquery is the same as the query used to fetch individual rows.
+  > Add schemaName() and databaseTechnology() to RelationalQueryMgr to handle 
+    backend-dependent SQL injection in subqueries not supported by CORAL.
+- Performance improvement for multi-channel bulk insertion (task #2009).
+  > Also clean up a bit the storeMultiVersionObjects method.
+- Performance improvement for SV listChannels (bug #24448): use channels table.
+- Drop support for the old RalObjectIterator (use only RalObjectIterator2).
+- Progress in cleanup of inheritance.
+  > Removed unnecessary virtual class inheritance from final classes and 
+    unnecessary virtual method inheritance from final methods (task #4879).
+  > Renamed RelationalBulkOperation as IRelationalBulkOperation.
+  > Renamed RelationalTransactionMgr as IRelationalTransactionMgr.
+  > Remove RalNodeMgr and RalTagMgr (Relational versions are enough).
+  > Separate getSequence and instantiateSequence metods in sequence manager.
+  > Bug fix: remove '=0' qualifier from the RelationalObjectTable destructor.
+- Fix bug in RalDatabaseSvc (variable redefined in internal {} block)
+- Removed workaround for CORAL bug #22453 for BLOB handling
+  (this is part of the implementation for the Blob16M storage type).
+- Fix bug in RelationalNodeTable::tableSpecification() for many COOL releases.
+
+Additional tool improvements over COOL 2.1.1:
+- Support evolution from either 1.3.0 (required) or 2.0.0 schemas (optional).
+  > The evolution from 2.0.0 schemas always checks all folders, upgrading them
+    from 2.0.0 to 2.0.1, while leaving the database schema version as 2.0.0.
+  > The evolution from 2.0.0 schemas also adds the 5d index for user tags
+    (which was introduced to solve task #4381 in COOL_2_1_1), if not yet there.
+  > Use two separate tests for evolution from 130 and 200 (in PyCoolUtilities).
+- Enable schema evolution from 1.3.0 databases on AMD64.
+  > On AMD64, use the 32bit mode to create a 1.3.0 schema for evolution tests.
+- Fix bug #26509 (coolReplicateDB fails on large databases - out of memory).
+- Fix bug in coolPrivileges (add channels table: frontier tests were failing).
+- Fix bug #23438 in CoolDescribeTable (invert single/double quotes on Windows).
+- Fix bug in CoolDescribeTable (COLLATE syntax was not parsed for MySQL).
+- Adapt coolReplicateDB after fixing bug #23755 (MV channel table not filled).
+- Adapt coolReplicateDB and coolEvolveSchema to the new channelId FK.
+- Add support for LFC to the coolAuthentication, coolDBDiscovery, coolDropDB, 
+  coolDumpSchema, coolEvolveSchema, coolMiniClient, coolPrivileges and 
+  coolReplicateDB tools (task #4326).
+- Disabled the CORAL automatic pool clean up thread in coolDropDB and 
+  coolReplicateDB (fix bug #27844 - nightly tests were hanging).
+- Add COOLREPLICATION_TIMEOUT environment variable for coolReplicateDB tests.
+- Add documentation for the coolReplicateDB tool (task #4328).
+- Add support for 'select *' queries in the coolExecuteSql.csh script.
+- Add CoolQueryManager python package to issue arbitrary 'select' queries
+  against a COOL database: this is used in regression and schema evolution 
+  tests to check at the database level that the MV channels table is filled.
+
+==============================================================================
+!2007.07.06 - Marco
+
+Disabled the CORAL connection pool clean up thread in coolDropDB and
+coolReplicateDB (fix for nightly test failures reported as bug #27844).
+
+==============================================================================
+!2007.04.16 - Marco
+
+Tag COOL_2_1_1. Bug-fix production release (binary compatible with 2.1.0).
+New versions of CORAL, ROOT and frontier_client using LCGCMT_51.
+
+Main bug fixes and improvements over COOL 2.1.0:
+- Implement cross-check that only one 'live' iterator can be open at a time.
+  > This was always claimed in the past, but not yet enforced.
+  > Added exception TooManyIterators.
+  > Fix for bug #25151 (abort in concurrent use of iterators).
+  > Fix for bug #25817 (segfault introduced by new iterator checks).
+  > Fix for bug #25256 (MySQL test failure introduced by new iterator checks).
+  > Added tests for read concurrency with live iterators.
+- Performance improvements in the C++ client.
+  > Copy data only once in browseObjects using new RalObjectIterator2
+    (can be disabled using COOL_210ITERATOR env variable).
+  > Construct RelationalObject from coral AttributeList 
+    (rather than from RelationalObjectTableRow). 
+  > Private hacks for PDB stress tests in RalObjectIterator
+    (controlled by env variable COOL_PDBSTRESSTEST_NBYTES).
+- Resurrect TimingReport for performance studies (disabled by default).
+  > Fix a memory leak (related to bug #9253).
+  > Can be enabled by COOL_TIMINGREPORT env variable.
+  > Keep track of time spent in CORAL alone.
+- Start a single read-only transaction and preload the nodes table at the 
+  start of read-only connections (task #2816).
+  > Can be disabled by COOL_READONLYSESSION_MANYTRANSACTIONS env variable.
+  > New bug (memory leak): the database is never deleted.
+  > Add methods to read all nodes from the nodes table.
+  > Use a bool flag always (no more strings) to indicate read-only sessions.
+  > Added new class DummyTransactionMgr for read-only connections.
+- Added goToNext() and currentRef() methods to IObjectIterator API.
+  > These are presently disabled (#ifdef'ed out)and will be enabled in 2.2.0 
+    (improve C++ client performance by avoiding copies of CORAL currentRow).
+  > Added new classes ConstTimeAdapter and ConstRelationalObjectAdapter.
+- Fix for bug #24999 in the replication tools.
+- Fixes for gcc4.0 in RelationalObjectTableRow.
+- Fixes for gcc4.1 in CppUnit tests.
+- Fix in coolAuthentication for aliases in frontier (ignore missing password).
+- Added test for case sensitivity of tag names in MySQL (bug #24393).
+  > Bug introduced in COOL2.0.0 by removing BINARY for strings in CORAL.
+  > Improved tests for special characters such as umlauts.
+
+==============================================================================
+!2007.04.04 - Marco
+
+Fixed bug #25256. RalObjectIterator2 was registered even if the construction 
+fails with an exception in the initialization part (before the constructor 
+body), but in that case was never unregistered. Now it is registered in the 
+body of the constructor, so an exception in the initialization part will not 
+cause a mis-balance. Added the class ObjectIteratorCounterWatchDog to spot 
+when an iterator is not correctly unregistered.
+
+==============================================================================
+!2007.03.26 - Andrea
+
+C++ performance improvement in RalObjectIterator and RelationalObject: 
+copy data only once in browseObjects, while previously it was copied twice.
+A query time reduction from 0.31s to 0.27s was observed on slc3_ia32_gcc323
+for the benchmark Atlas prompt reconstruction query (retrieve in total
+100MB and 100k rows from 100 folders with 1k channels each).
+
+==============================================================================
+!2007.03.24 - Sven
+
+Fixed replication bug #24999.
+
+==============================================================================
+!2007.03.24 - Andrea
+
+Tag COOL_2_1_0. Production release with backward-compatible API extensions 
+and schema changes. New versions of CORAL and ROOT using LCGCMT_50c.
+
+Summary of backward-compatible API changes in CoolKernel:
+- Tag locking functionality (task #3709)
+  > add IHvsTag::setTagLockStatus and IHvs::tagLockStatus methods
+  > add TagIsLocked exception
+- Fix for bug #23751 in the IFolder::folderSpecification() method.
+- Fixes to allow compilation on MacOSX.
+- Define int64 as long long also on AMD64, as in CORAL_1_7_2 (task #4357).
+
+Backward-compatible schema changes:
+- Added a 5D index to IOV tables to improve user tag performance (task #4381).
+
+Configuration changes:
+- Prepared infrastructure for private SCRAM builds in parallel to CMT.
+
+Other improvements and bug fixes in COOL:
+- SQL performance improvement for SV SC browseObjects (task #3675).
+- Forward compatibility with 2.0.x folder and folder set schemas. 
+- Added replication test to the PyCoolUtilities test suite (task #4348).
+- Completed integration with LFCReplicaSvc and added an example (task #4326).
+- Fix for bug #23597 in PyCoolCopy with sqlite files.
+- Fix for bug #23610 in RelationalTagMgr::fetchGlobalTagTableRowForInnerNode.
+- Fixes for coolReplicateDB bug #23662 (drop/recreate FKs when needed).
+- Partial fix for bug #23716 in PyCoolCopy handling of BLOBs. 
+- Fix for bug #23754 (IFolder::setChannelName should accept current name).
+- Fix for bug #24248 in schema evolution test infrastructure for sqlite.
+- Partial fix for bug #24392 (missing try/catch in an example).
+- Fixes for bug #24445, bug #24449, bug #24461 and bug #24463 in MV channel 
+  management: actually, these are all workarounds for bug #23755 (channels 
+  table is not filled for MV folders).
+- Fix for bug #24464 (storeObject should accept payload with fewer fields 
+  than those defined in the folder payload specification).
+- Fix for a bug in IFolder::existsUserTag(): the transaction was started twice.
+- Fixes in the authentication and statistics tools (moved from C++ to python).
+- Fixes for bug #24480, bug #24481 and bug #24555 in C++ test infrastructure.
+- Start internal preparation for 3.0.0 schema (task #4307 and task #4396).
+- Improvements in PyCool (some of which related to the LFCReplicaSvc).
+- Added tool PyCoolDiff to extract the difference between two DBs.
+
+Improvements from the upgrade to CORAL_1_7_2 (from CORAL_1_7_0):
+- Fix for bug #23412 in MySQLAccess SQL syntax for PK creation.
+- Fix for bug #24103 in SQLiteAccess handling of unsigned int on AMD64.
+- Fix for bug #24642 in MySQLAccess SQL syntax for FK creation.
+
+Improvements from the upgrade to ROOT 5.14.00d (from 5.14.00b):
+- Fix for bug #23807 (abort in boost::shared_ptr<IObject>).
+- Fix for bug #24100 in unsigned long long handling in python for AMD64.
+
+Improvements from the upgrade to LCGCMT_50c (from LCGCMT_50):
+- Fix for bug #24052 (missing oracle/mysql binaries in PATH).
+
+==============================================================================
+!2007.03.22 - Marco
+
+Fixed a bug observed by Richard: the transaction was started twice when
+calling RelationalFolder::existsUserTag().
+
+==============================================================================
+!2007.02.21 - Andrea
+
+Added TestListener.h replacing the corresponding cppunit header file.
+This seemed to be the only way to get rid of compilation warnings with -O2.
+
+==============================================================================
+!2007.02.20 - Andrea
+
+Apply the performance patch for SV SC browseObjects(key,key+10,chId) that
+had been developed by Kristoffer Dahl in 2006. This completes task #3675.
+
+==============================================================================
+!2007.02.19 - Andrea
+
+Fixes for the tools to gather table and schema statistics.
+Move them from csh to py scripts (with associated python packages).
+
+Minor fix in the CoolAuthentication python package.
+
+==============================================================================
+!2007.02.16 - Andrea
+
+Add 5d index to IOV tables to improve user tag performance (task #4381).
+
+Change s/w release version to 2.0.1 (keep db schema version at 2.0.0).
+
+Change folder schema version to 2.0.1 (mark the existence of the new index).
+The 2.0.1 RelationalFolder class can still read (with lower performance)
+any 2.0.0 folder where this index is not defined. The 2.0.0 software 
+release is now forbidden from reading the new 2.0.1 folders to encourage
+users to move to 2.0.1 (even if the 2.0.0 code could actually read data 
+from the new folder with the extra index - even with better performance!).
+
+Cleanup assigning and checking of folder and folder set schema versions.
+
+==============================================================================
+!2007.02.16 - Andrea
+
+Added infrastructure to create new tables in 3.0.0 database schema:
+- IOVTABLES and CHANNELTABLES tables (task #4307)
+- USERTAGS and HEADTAGS tables (tag #4396)
+The code has been committed, but must be kept commented out until 3.0.0.
+
+In order to complete the 3.0.0 db schema, CHECK constraints are needed.
+Filed CORAL sr#101506 asking support for this feature.
+
+Removed schema manipulation methods from RelationalDatabase
+(they were already delegated to the schema manager anyway).
+
+==============================================================================
+!2007.02.16 - Andrea
+
+Adopt for SCRAM the same naming convention used by CMT:
+- rename unitTest as test
+- rename exampleCool as example_Cool
+
+==============================================================================
+!2007.02.14 - Andrea
+
+Added a C++ test for CORAL bug #22485 (empty blobs in sqlite).
+We now have a failing test in the RelationalCool test suite.
+
+==============================================================================
+!2007.02.14 - Marco
+
+Fixed bug #23751: "IFolder::folderSpecification() does not work".
+
+The fix required a fix in IFolder.h (return const IRecordSpecification instead
+of const RecordSpecification). It is "semantically" compatible, and should not
+break compilation, but it is not strictly the same API. Also added a test.
+
+==============================================================================
+!2007.02.12 - Sven
+
+Various fixes for the dynamic replication tool. Still not fully functional.
+
+==============================================================================
+!2007.02.08 - Marco
+
+Fixed bug #23610: rename RelationalTagMgr::fetchGlobalTagTableRowForInnerNode
+as fetchGlobalTagTableRowForNode and change all comments accordingly.
+
+==============================================================================
+!2007.02.08 - Andrea
+
+Minor changes in RelationalTagMgr to remove a warning on MacOSX
+(control reaches end of non-void function) - see task #2062.
+
+==============================================================================
+!2007.01.31 - Andrea
+
+Tag COOL_2_0_0. Major production release with backward-incompatible
+API and schema changes. New versions of SEAL, CORAL and frontier_client. 
+
+Summary of main API changes in CoolKernel and CoolApplication:
+- Changes in folder specification, payload specification and payload data API
+  > new StorageType::TypeId enum with associated new typedefs (eg Int64)
+  > new RecordSpecification class
+  > new Record and Field classes with validation of storage constraints
+  > temporary extensions use coral AttributeList for backward compatibility 
+  > new FolderSpecification class accepted by createFolder
+  > treat empty string "" as NULL
+- Stripped API of all SEAL classes
+  > integer type definitions not based on seal::IntBits
+  > new class cool::Time replaces seal::Time.
+  > new SEAL-free API for class cool::Application
+- Changes in the support for user-defined payload fields
+  > added support for BLOB and signed int64 payload data
+  > constraints on numbers and names of user-defined payload fields
+  > added cool::IFolder::renamePayload (to change unsupported payload names)
+  > string payload cannot contain character "\0" (only BLOBs can contain it)
+- Renamed methods and removed default channel arguments in IFolder:
+- Removed obsolete IDatabaseSvc::dropDatabase(dbId,throwIfDoesNotExist)
+- Added the possibility of specifying a CORAL role in the connection string
+- Changed default mode for openDatabase from read/write to read/only
+
+==============================================================================
+!2006.01.18 - Marco
+
+Added the possibility of specifying a CORAL role in the connection string.
+The format is now one of:
+ - alias/DBNAME
+ - alias(role)/DBNAME
+
+==============================================================================
+!2007.01.17 - Marco
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_3_4. Production release (backward-compatible bug-fix, 
+functionality enhancement and LCG_50 configuration upgrade release). 
+Important fixes in SEAL (component model and multithreading), CORAL and ROOT.
+
+==============================================================================
+!2006.12.12 - Marco
+
+Removed explicit (hardcoded) reference to XMLAuthenticationService 
+(let CORAL decide which authentication service should be used).
+
+Added a warning message if explicit credentials are used (deprecated).
+
+Small fix in database Id parsing: the separator between coral ID
+and cool db name has to be the last '/', not the first.
+
+[Changes included by Marco in COOL_1_3-branch on 2006.12.12]
+
+==============================================================================
+!2006.12.08 - Andrea
+
+Remove all default channel=0 or channels=all arguments
+from all methods to store, find, browse or count objects.
+
+Rename browseObjects(time,channelsel) as findObjects,
+as otherwise the old browseObjects(5,10) would change 
+semantics (t=5,ch=10 instead of s=5,u=10,ch=0)!
+
+Keep the implicit ChannelSelection(id) constructor.
+Note that ChannelSelection(id) must be given explicitly in PyCool
+(the implicit constructor from an integer does not seem to work).
+
+These changes represent a fix for bug #14759.
+
+==============================================================================
+!2006.12.07 - Andrea
+
+Completed internal port to new IRecord and IField API.
+
+Eased backward compatibility for users by keeping the old 
+storeObject(..AttributeList&..) method signature in parallel 
+to the new storeObject(..IRecord&..), for writing,
+and via the IRecord::attributeList()method, for reading.
+
+PyCool still uses only the AttributeList interface
+(Marco will port it to the new Record interface).
+
+All C++ and python tests pass.
+
+==============================================================================
+!2006.11.26 - Andrea
+
+Moved ReferenceDb tool from RelationalCool tests to PyCoolUtilities as 
+new package PyCoolReferenceDb (this is a python package based on PyCool).
+This ensures that the python package is compiled in the platform-dependent 
+area, avoiding interference between 32 and 64bit Linux (fix for bug #21391).
+
+Moved execution of the regression tests based on ReferenceDb tool from 
+PyCool to PyCoolUtilities. This includes the Frontier regression test.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.11.26]
+
+==============================================================================
+!2006.11.24 - Andrea
+
+Added two python packages CoolAuthentication and CoolDescribeTable
+to dump the list of column names and SQL types of any table.
+This will be needed for regression tests of column SQL types.
+
+Added two corresponding tests in RelationalCool/tests/python.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.11.26]
+
+==============================================================================
+!2006.11.13 - Marco
+
+Clean up in RelationalCool test source code (prepare to QMTest).
+
+==============================================================================
+!2006.11.06 - Marco
+
+Add a check for active transactions in RalSessionMgr::disconnect (bug #21344).
+
+==============================================================================
+!2006.10.30 - Andrea
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_3_3c. Rebuild of the 1.3.3 release for the LCG_48 configuration.
+Important fixes in SEAL (component model and multithreading), CORAL and ROOT.
+No change in the source code. Software version remains "1.3.3".
+
+==============================================================================
+!2006.10.16 - Marco
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_3_3b. Rebuild of the 1.3.3 release for the LCG_47b configuration.
+New version of ROOT. Pending bugs in SEAL and ROOT. 
+Partial support for MySQL on Windows (pending PyCoolUtilities bug #20780). 
+No change in the source code. Software version remains "1.3.3".
+
+===============================================================================
+!2006.10.09 - Marco
+
+Added support (and tests) for coral::Blob.
+
+==============================================================================
+!2006.09.29 - Andrea
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_3_3a. Rebuild release (bug fixes in CORAL and frontier_client).
+Pending bugs in SEAL, new bugs in ROOT. Same source code as COOL_1_3_3. 
+Only added two Frontier regression tests. Software version remains "1.3.3".
+
+Upgrade to CORAL_1_6_0 (from CORAL_1_5_4), including the following bug 
+fixes and enhancements relevant to COOL.
+- CORAL bug #19758 (segfault in Frontier QueryDefinition::process)
+- CORAL bug #19777 (COOL bug #19753) in Frontier lowercase table aliases
+- CORAL sr #101135 (authentication credentials for different roles)
+
+Upgrade to frontier_client 2.6.0_cms (from 2.5.1_cms): 
+- Fix frontier_client bug #18359 (COOL bug #18390) in AMD64 data compression
+
+Upgrade to ROOT 5.13.02 (from ROOT 5.12.00c). This has triggered 
+the appearance of a new bug that prevents PyCool support on Windows:
+- ROOT bug #20133 (COOL bug #20216) for python ROOT on Windows
+
+No upgrade from SEAL_1_8_1 yet. Pending bugs and thread unsafety 
+in SEAL component model causing segfaults, assertions and aborts.
+
+==============================================================================
+!2006.09.26 - Andrea
+
+Fix for bug #20073 - no need to select payload columns for inserting IOVS.
+Bug observed in COOL133 but fixed only for COOL200 (as the code has changed).
+Bug fixed by adding the option to select only metadata columns in method 
+RelationalObjectTable::fetchRowForId, which is called by fetchLastRowForTagId
+(this was also called by fetchLastRow in COOL133). Also related to task #2266
+(allow users to specify which payload columns should be retrieved).
+The problem is not present in RalObjectMgr::fetchLastRowsWithNewData.
+
+Comment out RelationalObjectTable::fetchLastRow and its RalObjectTable test: 
+this is not used in the internal implementation as it has been replaced by 
+fetchLastRowsWithNewData (instead of querying the IOV table for the last 
+objectid, this is now read off the channels table). Note that fetchLastRow 
+is still used in COOL133 instead.
+
+==============================================================================
+!2006.09.14 - Andrea
+
+Added MV retrieval tests to the Regression test suite.
+Reproduces FrontierAccess bug #19753 for COOL_1_3_3.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.09.13]
+
+==============================================================================
+!2006.08.29 - Andrea
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_3_3. Production release (backward-compatible bug-fix, 
+functionality enhancement and configuration upgrade release).
+Many important fixes in CORAL and Frontier; pending critical bugs in SEAL.
+
+Eight supported platforms: win32_vc71_dbg_wine, slc4_ia32_gcc345(_dbg),
+slc3_ia32_gcc323(_dbg/_gcov) and slc3_ia32_gcc344(_dbg).
+No MySQL support on Windows (no support in CORAL).
+No Frontier support on Windows (no client library from FNAL).
+
+Two AMD64 test platforms: slc4_amd64_gcc345(_dbg). The only pending problem 
+with AMD64 is the 'long' type ambiguity on 32/64 bit platforms (task #2227);
+this is fixed in the new COOL HEAD API, which will be released as COOL140.
+
+Release built using LCG_46e_2 (upgrade from LCG_46_2). 
+May become available as LCG_46f_3 (the only difference 
+with LCG_46e_3 being COOL133 instead of COOL132c).
+
+Upgrade to ROOT 5.12.00c (from ROOT 5.12.00).
+
+Upgrade to CORAL_1_5_3 (from CORAL_1_5_1), including the following bug 
+fixes and enhancements relevant to COOL. In CORAL_1_5_3:
+- CORAL bug #19000 (disable OCI_THREADED to prevent OracleAccess hanging)
+- CORAL bug #19003 (fix for Oracle 'select from SYS.DUAL')
+- CORAL sr #101074 (fix for value returned by updateRows on MySQL)
+Already in CORAL_1_5_2:
+- CORAL bug #18275 (mismatch between output buffer and result set metadata in 
+  FrontierAccess) - patch contributed by the COOL team (this was responsible 
+  for both COOL bug #18270 and COOL bug #16995) 
+- CORAL bug #18292 (added plugin checks in case of misconfiguration)
+- Added ConnectionService property "PoolCleanUpPeriod"
+- Bug fixes in OracleAccess multi-threading (prevent deadlock)
+- CORAL sr #100958 (print out the values of SQLite bind variables)
+- CORAL bug #18316 (missing double quotes in some SQLite operations)
+- Improvements in SQLite file and directory handling
+
+Upgrade to frontier_client 2.5.1_cms (from 2.4.5_cms): 
+- Fix frontier_client bug #18359 (COOL bug #18390) in AMD64 data compression
+
+Upgrade to Frontier server version 3.2 and additional bug fixes:
+- Data compression in Frontier server 3.1 (required in 2.4.5_cms client)
+- Fix for Frontier server bug #18191 (not yet released)
+
+No upgrade from SEAL_1_8_1 yet. Pending bugs and thread unsafety 
+in SEAL component model (workarounds developed by the COOL team exist
+for some but not all of these issues):
+- SEAL bugs #19019 and #18908): segmentation fault in MessageStream
+- SEAL bug #19005 (COOL bug #18910): assertion 'pos != m_children.end ()'
+- SEAL bug #18909 (COOL bug #18440): abort (pure virtual method called)
+- SEAL bug #18914: segmentation fault in seal::intrusive_ptr_release
+- SEAL bug #19360: ConfigurationService is never deleted
+- SEAL bug #19004 (COOL bug #18396): assertion 's_trampolines[sig]'
+- COOL bug #18225: unhandled/unknown exceptions on Windows
+
+Enhancements in COOL_1_3_3 with respect to COOL_1_3_2c: 
+- Change the message level verbosity in PyCool/CoolApplication interactively
+- Implement forward compatibility with future releases (task #3426)
+- PyCoolUtilities enhancements for HVS
+- Warning messages in CoolApplication in case of problems loading plugins. 
+
+Bug fixes in COOL_1_3_3 with respect to COOL_1_3_2c: 
+- Bug #18116 in RalSequence test (segfault when the password is invalid) 
+- Bug #18284 in privilege manager (open database in update mode, add tag2tag)
+- Bug #18145 in PyCool on AMD64 (no attribute 'data').
+- Bugs in four RelationalCool tests: check connection service in tearDown()
+- Bugs in PyCoolCopy tool (preserve payload data type precision in the copy)
+- Possible segfault in the use of SEAL components in CoolApplication
+
+==============================================================================
+!2006.08.28 - Andrea
+
+*** BRANCH RELEASE NOTES ***
+
+Preparing for COOL_1_3_3.
+
+Aborted present attempts to fix or workaround bugs in SEAL_1_8_1
+causing random assertions, segmentation faults and aborts.
+
+Developed fixes and workarounds for several independent bugs in the 
+SEAL component model, but could not workaround the intrinsic thread 
+unsafety of SEAL handles based on boost intrusive pointers.
+
+==============================================================================
+!2006.08.23 - Andrea
+
+Added test for CORAL sr#101074 in RalDatabase test.
+Verified that the fix works (will be released in CORAL_1_5_3).
+
+Remove workaround for CORAL sr#101074 (return value of updateRows 
+on MySQL is different from Oracle/SQLite) in RalDatabase test.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.08.23]
+
+==============================================================================
+!2006.08.22 - Andrea
+
+Minor bug fix in the RalDatabase_extendedSpec, RalObjectIterator,
+RalObjectTable and RelationalFolder tests: check that the connection 
+service is still alive in tearDown() before using it to purge the pool.
+
+This prevents a boost shared pointer assertion if RalSessionMgr is changed
+to load the ConnectionService in the local database service context.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.08.13]
+
+==============================================================================
+!2006.08.15 - Andrea
+
+Added script wineWrap.sh for running individual commands on Wine (task #3495).
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.08.15]
+
+==============================================================================
+!2006.07.27 - Andrea
+
+Implement forward compatibility with future releases using the same schema:
+compare data and software schema versions if data release number is newer 
+than software release number (task #3426). Added the relevant tests.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.27]
+
+==============================================================================
+!2006.07.27 - Andrea
+
+Bug fix in common CoolDBUnitTest (check availability of CORAL 
+connection service in forceDisconnect to prevent program abort).
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.27]
+
+==============================================================================
+!2006.07.24 - Andrea
+
+*** BRANCH RELEASE NOTES ***
+
+Prepare for tag COOL_1_3_3 (non-HEAD branch off COOL_1_3_2).
+Backward-compatible production release.
+A few bug fixes and enhancements with respect to 1.3.2
+for CoolApplication, RelationalCool and PyCool.
+Commit PyCoolUtilities logfiles to the new branch too.
+Same code as 1.3.2 for CoolKernel, Examples and Utilities.
+
+Created branch COOL_1_3-branch off COOL_1_3_2.
+Initially (2006.05.18) branched all of config, CoolKernel and RelationalCool:
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/config
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/CoolKernel
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/RelationalCool
+Later on (2006.05.18) realised it was not necessary to modify CoolKernel:
+  cvs rtag -d -B COOL_1_3-branch cool/CoolKernel
+
+Later on still (2006.07.24) realised it was not necessary to modify config, 
+while it was necessary to branch off also CoolApplication and PyCool.
+Eventually branched off also PyCoolUtilities for simpler logfile commits.
+  cvs rtag -d -B COOL_1_3-branch cool/config
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/CoolApplication
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/PyCool
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/PyCoolUtilities
+Note that cool/config COOL_1_3-branch contained a single file
+doc/release.notes different from COOL_1_3_2. Untagging cool/config 
+detached the COOL_1_3-branch from this file but did not delete it.
+
+==============================================================================
+!2006.07.21 - Andrea
+
+Added handler of SEAL PluginManager feedback to cool::Application.
+This will print out warning messages if there are problems loading plugins.
+
+If environment variable COOL_PLUGINMANAGER_DEBUG is set, 
+debug information will be printed about the modules being loaded 
+(otherwise only warnings will be displayed).
+
+This must be done in package CoolApplication and not in RelationalCool
+(so that problems loading the RelationalCool plugin can be disaplayed).
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.24]
+
+==============================================================================
+!2006.07.20 - Andrea
+
+Set the CORAL connection service pool cleanup period to 1 second 
+in the seal.opts files. These files should be in config!
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.25]
+
+==============================================================================
+!2006.07.19 - Andrea
+
+Use Marco's MySQL server instead of Radovan's for Andrea's tests.
+This file should be in config!
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.24]
+
+==============================================================================
+!2006.07.18 - Andrea
+
+Fix for bug #18284: add HVS tag2tag table to privilege manager.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.08.29]
+
+==============================================================================
+!2006.07.18 - Andrea
+
+Added listChannels tests to the Regression test suite
+(needed to reproduce FrontierAccess bug #16995).
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.09.14]
+
+==============================================================================
+!2006.07.14 - Marco
+
+Enable the usage of dblookup.xml for tests for all users.
+Enable frontier tests for Marco. This file should be in config!
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.24]
+
+==============================================================================
+!2006.07.14 - Marco
+
+Added function cool::IFolder::renamePayloadColumn and tests (task #3609).
+
+==============================================================================
+!2006.07.12 - Marco
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_3_2c. Rebuild of COOL_1_3_2 for the LCG_46 configuration.
+No change in the source code. Software version remains "1.3.2".
+
+Upgrade to ROOT 5.12.00 (from ROOT 5.11.06a), 
+including the following fixes for bugs relevant to COOL: 
+- ROOT bug #17255 (COOL bug #17254) for exception handling on AMD64
+- ROOT bug #17592 for enums in PyCintex
+- ROOT bug #18062 for namespaces in PyCintex
+
+Upgrade to CORAL_1_5_1 (from CORAL_1_5_0), 
+including the following bug fixes (the first three contributed by the 
+COOL team) and connection service improvements relevant to COOL: 
+- CORAL bug #17651 (COOL bug #17624) for missing quotes in SQL on MySQL
+- CORAL bugs #14688 and #17787 for SQLite data types on AMD64
+- CORAL bugs #14688 and #17761 for MySQL data types on AMD64
+- CORAL bug #17757 (COOL bug #17755) for Oracle bulk operations on >65k rows
+- CORAL bug #17791 for Oracle SELECT FROM DUAL
+- CORAL bug #15933 for SQLite named binding
+- implementation of automatic purging of the connection pool 
+- switch to Oracle multi-threaded OCI mode with no mutex locks 
+
+Upgrade to frontier_client 2.4.5_cms (from frontier_client 2.4.4_cms).
+COOL_1_3_2b had been tagged and installed before LCG_45 
+was redefined to use frontier_client 2.4.5_cms.
+
+Six supported platforms: win32_vc71_dbg_wine, 
+slc4_ia32_gcc345(_dbg) and slc3_ia32_gcc323(_dbg/_gcov).
+No MySQL support on Windows (no support in CORAL).
+No Frontier support on Windows (no client library from FNAL).
+
+Two test platforms: slc4_amd64_gcc345(_dbg).
+A few problems in COOL are still pending on AMD64 
+after the ROOT and CORAL bug fixes for this platform.
+
+Dropped support for slc3_ia32_gcc344(_dbg)
+and test builds on slc3_amd64_gcc344(_dbg).
+
+==============================================================================
+!2006.07.11 - Marco
+
+Add check to prevent segmentation fault in RalSequence test when the 
+connection fails, e.g. because of wrong username/password (bug #18116).
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.24]
+
+==============================================================================
+!2006.07.11 - Marco
+
+Added check on the payload column names:
+only alphanumeric chars and '_' are allowed. 
+Throw cool::BadPayloadColumnName if the case of a name like "is-a".
+The test in RelationalFolderTest has been updated accordingly.
+Still need to add a method to allow users to rename payload columns.
+
+==============================================================================
+!2006.06.29 - Andrea
+
+Fix for bug in coolPrivileges: open the database in update mode.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.08.29]
+
+==============================================================================
+!2006.06.26 - Sven
+
+Brought back double query strategy using maxIovAtTime() for findObject
+in the SV case as it was in COOL 1.3.0 (maxIovAtTime was only used in
+SV even then). This required the following minor changes.
+- RelationalObjectTable::whereClauseSV now takes since, until parameters
+to determine if a 'point in time' (since == until) query is issued.
+- RelationalObjectTable::whereDataSV is now non-static, because it needs
+to access the non-static methods objectTableName() and maxIovAtTime().
+It was not used in any static contexts anyway.
+- In general, the 'old', optimized SV query will be used if since == until
+and channels.firstChannel() == channels.lastChannel().
+- Bug fix #16179 is still in place, because it concerns user tags (and
+therefore MV code).
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.24]
+
+==============================================================================
+!2006.06.19 - Andrea
+
+Added a call to purgeConnectionPool inside RalSessionMgr::disconnect().
+This should ensure that closeDatabase() physically drops the connection
+if the connection service timeout has been pre-set to 0. To be tested.
+This is related to task #3546. [NB NOT committed to COOL_1_3-branch].
+
+==============================================================================
+!2006.06.19 - Marco
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_3_2b. Rebuild of COOL_1_3_2 for the LCG_45 configuration.
+Upgrade to ROOT/Reflex 5.11.06a and CORAL_1_5_0 using LCG_45 
+(from ROOT/Reflex 5.11.02 and CORAL_1_4_3 using LCG_44).
+Also implies upgrade to oracle 10.2.0.2 (from 10.2.0.1),
+sqlite 3.3.5 (from 3.2.8) and cppunit 1.10.2_p2 (from 1.10.2_p1).
+
+Upgrade to frontier_client 2.4.4_cms (from frontier_client 2.4.1_cms_p1).
+Note that COOL_1_3_2b was tagged and installed before LCG_45 
+was redefined to use frontier_client 2.4.5_cms.
+
+No change in the source code. Software version remains "1.3.2".
+
+Support for slc4_ia32_gcc323 and slc4_ia32_gcc323_dbg.
+
+Eight supported platforms: win32_vc71_dbg_wine, slc4_ia32_gcc345(_dbg),
+slc3_ia32_gcc323(_dbg/_gcov) and slc3_ia32_gcc344(_dbg).
+No MySQL support on Windows (no support in CORAL).
+No Frontier support on Windows (no client library from FNAL).
+
+Four test platforms: slc3_amd64_gcc344(_dbg) and slc4_amd64_gcc345(_dbg).
+Pending problems with AMD64 mainly due to 32bit/64bit integer types.
+
+==============================================================================
+!2006.06.16 - Marco
+
+Added tests for Int64 in RalDatabase_extendedSpec
+(UInt64 is ready, but commented out).
+
+==============================================================================
+!2006.06.13 - Sven
+
+Added LASTMOD_DATE to RelationalObjectTable. Field is updated for SV and MV 
+storage in RalObjectMgr and accessible through RelationalObjectTableRow.
+Added the corresponding tests as well.
+
+==============================================================================
+!2006.06.13 - Marco
+
+Removed extra transaction in RalObjectMgr.cpp (bug #17376).
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.07.24]
+
+==============================================================================
+!2006.05.28 - Sven
+
+API changes. First prototype of channel metadata (channel name and number).
+
+==============================================================================
+!2006.05.19 - Marco (comments by Andrea)
+
+API changes. First prototype of PayloadSpecification API. No AMD64 port yet.
+
+TO DO (amongst other things):
+- check/validate the changes in the Oracle schema
+- in particular, check what happens with Oracle version numbers 8, 9, 10?
+- can we really let CORAL choose the SQL types? (else renable the tests!)
+- add an enum value for some unsupported types to be supported later?
+
+Implies changes in the test structure:
+[*Note: since a few releases, obsolete tests have been removed using 
+an "#ifdef NOPORT". A better solution would be to cvs delete the tests.]
+- added PayloadSpecification tests
+- removed(*) all RelationalDatabase tests, moved to PayloadSpecification tests
+  > encode/decode spec description
+  > decode bad specifications (empty spec, no colon, trailing comma)
+  > decodeOnlyOneColon test removed - new spec expects one colon instead of two
+- removed(*) all RelationalTypeConverter tests, obsoleted
+  > remove all tests to control SQL types (the new implementation lets CORAL 
+    choose SQL types, instead of choosing 9i/10g-dependent SQL types in COOL)
+  > oracleMajorVersionNumber test removed - use CORAL SQL types
+  > sqlTypeForCppType_oracle/mysql/sqlite tests removed - use CORAL SQL types
+  > checkStorageHintCompliance tests removed - no type/hint pairs
+    (this test was NOT testing that actual attribute values were compliant to
+    a hint, it was only testing that a given hint was valid for a given type)
+- removed some RalDatabase_extended tests, obsoleted
+  > test_unsupportedTypesXXX - obsolete, it is not possible to specify 
+    an unsupported type, simply because there is no enum value for it
+
+==============================================================================
+!2006.05.19 - Andrea
+
+Fixed bug #16903 in maxIovAtTime: this was not strictly necessary, as this
+is only called by fetchRowAtTimeSV, which is never used by the public API. 
+Later on, removed both unused methods fetchRowAtTimeSV and maxIovAtTime.
+
+[Changes included by Andrea in COOL_1_3-branch on 2006.05.19]
+
+==============================================================================
+!2006.05.18 - Andrea
+
+Created branch COOL_1_3-branch to fix pending bugs in COOL_1_3_2 if required.
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/config
+  cvs rtag -r COOL_1_3_2 -b COOL_1_3-branch cool/RelationalCool
+
+==============================================================================
+!2006.05.17 - Sven
+
+First prototype of channel table to implement multi channel bulk insertion.
+No channel metadata yet. 
+
+No API changes.
+
+==============================================================================
+!2006.05.14 - Andrea
+
+Tag COOL_1_3_2a. Rebuild of the 1.3.2 release for the LCG_44 configuration.
+Upgrade to ROOT 5.11.02 using LCG_44 (from ROOT 5.10.00d using LCG_43b_2).
+
+No change in the source code. Software version remains "1.3.2".
+
+Six supported platforms: win32_vc71_dbg_wine,
+slc3_ia32_gcc323(_dbg/_gcov) and slc3_ia32_gcc344(_dbg).
+No MySQL support on Windows (no support in CORAL).
+No Frontier support on Windows (no client library from FNAL).
+
+Six test platforms: slc3_amd64_gcc344(_dbg),
+slc4_ia32_gcc345(_dbg) and slc4_amd64_gcc345(_dbg).
+Pending problems with slc4_ia32_gcc345(_dbg) only for SQLite.
+Pending problems with four AMD64 platforms mainly due to intrinsic 
+COOL problems with 32bit/64bit integer types (to be solved in COOL_1_4_0).
+
+==============================================================================
+!2006.05.10 - Andrea
+
+Tag COOL_1_3_2. Production release (backward-compatible 
+bug-fix and Frontier support release in the 1.3 series).
+
+Six supported platforms: win32_vc71_dbg_wine,
+slc3_ia32_gcc323(_dbg/_gcov) and slc3_ia32_gcc344(_dbg).
+
+Six test platforms: slc3_amd64_gcc344(_dbg),
+slc4_ia32_gcc345(_dbg) and slc4_amd64_gcc345(_dbg).
+Pending problems with AMD64 mainly due to 32bit/64bit integer types.
+Pending problems with SLC4 mainly due to wrong OracleAccess configuration.
+
+Upgrade to ROOT 5.10.00d and CORAL_1_4_3 using LCG_43b_2.
+Upgrade to ROOT 5.11.02 postponed to LCG44 because not yet requested
+(Atlas will build its release 12 using the LCG43 configuration).
+
+Add David Front's VerificationClient to the COOL release installation.
+Keep VerificationClient in its original CVS repository in the contrib area
+and install it as a subdirectory of the Utilities package at boostrap time.
+The only executable installed in the public PATH is coolVerificationClient.
+
+==============================================================================
+!2006.05.03 - Andrea, Marco, Sven 
+
+Bug fixes in COOL:
+- #16566 - IHvsNode::resolveTag() does not work for "local" tags
+- #16567 - IHvsNode::listTags() does not work for inner nodes
+- bugs in transaction handling (split findTagRecord from __findTagRecord)
+
+Added basic Frontier support:
+- Added frontier_client tool to the SCRAM configuration
+- Filed CORAL bug #16617 - authentication.xml user used as Oracle schema owner
+- Filed CORAL bug #16621 - success with "COUNT(*)" but failure with "count(*)
+- Implemented workarounds in COOL for both CORAL bugs    
+- SimpleRead example works successfully!
+[NB: remember to grant read privileges to PUBLIC from the Oracle account!]
+
+Prepare for API changes in COOL_1_4_0:
+- Prepared tests and examples to switch to read-only default in openDatabase.
+  Keep read-write as default in API until COOL_1_4_0 (backward compatibility).
+
+Internal cleanup:
+- Move many object-related methods from RalDatabase to RelationalObjectMgr.
+
+==============================================================================
+!2006.04.25 - Andrea, Marco, Sven
+
+Tag COOL_1_3_1. Production release (backward-compatible 
+COOL and CORAL bug-fix release in the 1.3 series).
+
+Bug fixes in COOL_1_3_1:
+- #16337 - PyCool assertions on Win (workaround for ROOT bug fixed in 5.11.02)
+- #16315 - exceptions not caught in coolDropDb (resulting in Win runtime error)
+- #16257 - folderset tag sequence table not created for createParents=true
+- #16179 - findObject does not find user tagged objects
+- fixed a feature in PyCoolTool that was preventing the use of aliases
+
+Bug fixes in CORAL_1_4_2 (binary compatible with CORAL_1_4_0):
+- #16189 - missing quotes around "order" column name in SQLite table creation
+
+Minor modifications to transaction handling (split createFolderSet with
+transactions from __createFolderSet without transactions).
+
+Maintained dependency on ROOT 5.10.00c (no upgrade to 5.11.02 yet).
+Added configuration infrastructure for SLC4.
+
+==============================================================================
+!2006.04.06 - Andrea
+
+Tag COOL_1_3_0. Functionality enhancement production release (first 
+release in the 1.3 series: backward incompatible API and schema changes).
+
+Main features with respect to COOL_1_2_8 and COOL_1_2_9:
+- upgrade to CORAL_1_4_0 using LCG_43_2
+- CORAL-based API, drop all POOL dependencies
+- user tags functionality according to spec #1
+- HVS functionality (limitation: the same tag cannot be used for >1 folders) 
+- schema evolution tool for user tag and HVS schema modifications
+- CORAL connection service (including use of connection aliases)
+- internal code cleanup (profound changes to the internal class structure)
+- performance improvements for SV folders (remove non-uniformity)
+- cool::Exception derived from std::exception instead of seal::Exception
+- PyCool rewritten from scratch
+
+Summary of API changes:
+- HVS functionality
+  > new IHvsNode methods: create/delete/findTagRelation and resolveTag
+  > new HVS exceptions Node/Tag[Relation]NotFound and NodeIsSingleVersion
+  > split IHvsNodeRecord from IHvsNode 
+  > limitation: the same tag name still cannot be used for more than one folder
+- prepare for further HVS features (reuse same tag name for several folders)
+  > changed std::string tagScope() to IHvsNode::Type tagNameScope()
+  > added std::vector<std::string> taggedNodes()
+- CORAL connection service (URLs can be specified using aliases)
+- user tags (storeObject accepts an optional tag name argument)
+  > added existsUserTag()
+- drop all POOL dependencies (API now based on coral::AttributeList)
+- cool::Exception derived from std::exception instead of seal::Exception
+- const qualifyers added to many methods (not yet complete)
+
+Summary of schema changes:
+- new userTagId column added to all IOV tables (both SV and MV)
+- new tag sequence table added for all folder sets
+- new global tag2tag table and sequence
+- schema evolution rows may exist in the main database table
+
+Summary of internal changes:
+- changes affected well over 50% of the total number of lines of code
+- new session manager class for session management
+- new query manager class for query and update management
+- new schema manager class for schema manipulations
+- new sequence manager class for sequence management
+- new transaction manager class for sequence management
+- new tag and node manager classes for HVS node and tag management
+- 50% of RalDatabase code and functionality moved elsewhere
+- significantly reduced ratio of CORAL specific Ral to generic Relational code
+- progress in clean separation of generic HVS to specific CondDB code
+- progress in adding const qualifyers wherever possible
+- progress in simplifying forward/backward pointers/references between mgrs
+- progress in separating record information (table rows) from active managers
+- tool-specific authentication and privilege managers moved to utilities
+
+==============================================================================
+!2006.04.06 - Andrea
+
+Summary of problems for Windows:
+- unknown exception thrown (workaround by Andrea)
+- MySQL still not supported by CORAL (COOL script workaround by Andrea)
+- os.sysconf not defined in Python (fixed by Marco)
+- ROOT window still pops up for Python (pending)
+
+==============================================================================
+!2006.03.22 - Andrea
+
+Internal tag COOL_1_3_0-pre1 (stable state before COOL_1_3_0).
+All C++, PyCool and PyCoolUtilities tests pass for slc3_ia32_gcc323_dbg.
+
+Main features with respect to COOL_1_2_8 and COOL_1_2_9:
+- tests executed using (private version of) CORAL_1_3_1
+- user tags functionality according to spec #1
+- schema evolution tool for user tag schema modifications
+- CORAL connection service
+- cleanup well advanced: profound changes to the internal class structure
+- performance improvements for SV folders (remove non-uniformity)
+- std exception
+- new PyCool
+- CORAL-based API, drop all POOL dependencies
+More complete details will follow in the COOL_1_3_0 release notes.
+
+Still missing on the way to COOL_1_3_0:
+- waiting for CORAL_1_4_0 release with ISessionProxy::serverFlavor()
+- use CORAL cross-backend connection aliases (dynamically retrieve flavor)
+- HVS
+- schema evolution tool for HVS
+
+==============================================================================
+!2006.03.03 - Andrea
+
+Backward-incompatible API change (start adding HVS functionality).
+
+Change the semantics of the tagScope method in IDatabase: it now returns 
+whether a tag can be used for inner nodes (folder sets) or leaf nodes
+(folders), rather than returning the node name it is used for. In HVS 
+(following a request from LHCb), the same tag name can be used for only 
+one folder set or for several folders. There is not anymore a unique node
+each tag can be attached to. Also, a tag can be reserved for inner nodes
+or leaf nodes without being actually attached to any specific nodes yet.
+
+No change in relational schema yet. 
+The schema still forces tags to be assigned to only one folder or folder 
+set, even if the API assumes that a tag can be assigned to several folders.
+
+==============================================================================
+!2006.03.02 - Uli
+
+Removed non-uniformity in IOV retrieval for SV folders by implementing
+Andrea's proposal for a two-step query strategy - query max(since)
+followed by query for since=max(since).
+
+==============================================================================
+!2006.03.01 - Andrea
+
+Completed internal formal cleanup of IOV table queries.
+All IOV table queries have now been moved from RalObjectTable to 
+RelationalObjectTable and proceed through generic (non-CORAL specific) 
+methods in RelationalQueryMgr (implemented via CORAL in RalQueryMgr).
+
+==============================================================================
+!2006.03.08 - Marco
+
+*** BRANCH RELEASE NOTES ***
+
+Tag COOL_1_2_9 (non-HEAD branch after COOL_1_2_8).
+Backward-compatible production release.
+Same code as 1.2.8, but compiled against LCG_42_4.
+
+==============================================================================
+!2006.01.27 - Andrea
+
+Tag COOL_1_2_8. Backward-compatible production release (internal migration 
+from SEAL Reflex to ROOT Reflex; port to gcc344; attempted port to AMD64).
+
+Minor API changes ("long" -> "int") to attempt AMD64 port, should be
+backward compatible for users on 32bit machines. No added functionalities. 
+
+==============================================================================
+!2006.01.27 - Andrea
+
+Note about the port from Reflection to Reflex: workarounds have been added 
+because SEAL exceptions are not caught from Cintex. This was already an 
+issue in COOL_1_2_7 (SEAL Cintex) and remains in COOL_1_2_8 (ROOT Cintex).
+This was possible in PyLCGDict2/Reflection but was removed from Cintex/Reflex.
+- Bug report (bug #14685): cintex does not catch seal exceptions
+- Could be solved by deriving seal::Exception from std::exception (sr #100955)
+
+==============================================================================
+!2006.01.27 - Sven
+
+Changes in handling of count(*) return type to ensure compatibility with MySQL
+server 5.0 : essentially use the default CORAL return type (thanks to Ioannis).
+
+==============================================================================
+!2006.01.27 - Andrea
+
+Many changes towards completing the AMD64 port (Uli, Sven, Marco, Andrea).
+Got rid of "long" wherever possible, replaced by "int".
+
+Used many #ifdef to disable parts of the code on AMD64 
+(essentially the storage of "long", keeping only "int" and "long long"),
+but this is not a valid solution: all three types must be analysed,
+the solution should be to throw an exception when storing "long".
+This should be for 32bit platforms too for portability and will break the 
+current API for 32bit platforms (users should only store "int", not "long").
+
+AMD64 port not completed because of pending bugs in CORAL and POOL:
+- AttributeList in CORAL and POOL must analyse all three integers
+  (segmentation fault for missing integer type - bug #14684)
+- MySQLAccess and SQLiteAccess return 4294967295 when 9223372036854775807 
+  was stored (bug #14688)
+
+Before completing the AMD64 port, a SEAL feature may also be changed:
+- IntBits<64> is long long on 32bit, long on 64bit platforms (bug #14671)
+
+After solving all problems in SEAL, CORAL and POOL for AMD64,
+a few pending issues in COOL also need to be addressed:
+- Bug in COOL, at first incorrectly identified as a bug in ROOT (bug #14681)
+
+==============================================================================
+!2006.01.16 - Andrea
+
+Tag COOL_1_2_7. Backward-compatible production release
+(internal migration from RAL to CORAL and from Reflection to seal Reflex).
+
+All tests successful against Oracle, MySQL and SQLite using CORAL_1_2_1
+(including many CORAL bug fixes contributed by the COOL team).
+
+Workarounds for problems in PyCool and PyCoolUtilities after Reflex migration:
+- disabled tests with mutex lock in boost/PyROOT (all platforms and backends)
+- hacked config to have SEAL before ROOT (different/incompatible PyCintex.py)
+- manually minimize windows during Windows test execution (ROOT window popup)
+
+Workaround in Examples for minor MySQLAccess bug (insertion of "'" character).
+
+First release with MySQL support on Windows (thanks to CORAL migration).
+
+==============================================================================
+!2006.01.11 - Marco
+
+Complete migration of PyCool from seal Reflection to seal Reflex.
+New mutex lock problem observed from boost/PyROOT/Reflex interaction.
+
+==============================================================================
+!2005.12.16 - Marco
+
+First release candidate for COOL_1_2_7 based on CORAL_1_2_0.
+MySQL and SQLite tests still fail.
+
+==============================================================================
+!2005.12.09 - Marco
+
+Added thin layer to make the public API backward compatible.
+Methods returning new CORAL AttributeList 
+kept as temporary extension, with suffix _new.
+
+Fixed gcc 3.4.4 compilation (bug #13395)
+
+==============================================================================
+!2005.12.08 - Sven
+
+Internal reimplementation based on CORAL. 
+Oracle tests successful. MySQL and SQLite tests fail.
+
+API not backward compatible: POOL AttributeList 
+replaced by CORAL AttributeLists in the API.
+
+==============================================================================
+!2005.11.15 - Andrea, Sven
+
+Internal tag COOL_1_2_7-pre1 (prepare for the CORAL migration).
+All C++, PyCool and PyCoolUtilities tests pass for slc3_ia32_gcc323_dbg.
+
+Fix eight bugs in transaction handling (read-write transactions instead of 
+read-only transactions were started in RalDatabase).
+
+New IteratorIsClosed exception. Rename IteratorHasStarted as IteratorIsActive.
+
+Added IObjectIterator::close() API and implementation.
+
+==============================================================================
+!2005.11.15 - Marco
+
+Tag COOL_1_2_6. Production release (backward-compatible 
+SEAL_1_7_6 and POOL_2_2_4 upgrade release in the 1.2 series).
+
+==============================================================================
+!2005.11.09 - Marco
+
+Change the definition of int64 min/max value constants in types.h.
+After upgrading to SEAL_1_7_6, seal::IntTraits<>::Min/Max fail at link time 
+on Windows. Temporary (?) workaround: use in COOL the same values that are 
+used in the SEAL IntTraits.cpp implementation (taken from SealBase/LongLong.h).
+
+==============================================================================
+!2005.11.02 - Sven, Andrea
+
+Added IDatabase::openDatabase() and closeDatabase() API and implemntation.
+
+Added ObjectNotFound exception to the API.
+
+Added implicit ChannelSelection constructor from a ChannelId to the API.
+Removed IFolder::browseObjects for a single channel (user code is not 
+broken as it can now use the implicit conversion to ChannelSelection).
+
+Added IFolder::countObjects API and implementation.
+
+Added live browsing functionalities for object iteration.
+Added IFolder::setPrefetchAll() API and implementation (to choose 
+whether the browse methods should return a vector or live iterator).
+
+Added IObjectVector and IObjectVectorPtr type definitions to the API.
+Added IObjectIterator::fetchAllAsVector API and implementation
+(to retrieve all objects in the iterator as an STL vector).
+
+First prototype of STL-like iterator interface for object browsing.
+Removed from public API, may be reintroduced later on.
+
+Clean up RalDatabase implementation using session() instead of m_session.
+
+Start internal reimplementation using new classes Ral/RelationalQueryMgr
+and RelationalTableRow to remove some responsibilities from RalDatabase.
+
+==============================================================================
+!2005.10.24 - Andrea, Marco
+
+Tag COOL_1_2_5. Production release (backward-compatible 
+SEAL_1_7_5 and POOL_2_2_3 upgrade release in the 1.2 series).
+
+Retag COOL_1_2_4 code as COOL_1_2_5. 
+Do not include changes other than those in VersionInfo and related tests. 
+
+==============================================================================
+!2005.10.05 - Andrea
+
+Add scripts for gathering Oracle table/schema statistics.
+
+==============================================================================
+!2005.09.29 - Andrea, Sven, Marco, David, Uli
+
+Tag COOL_1_2_4. Production release (backward-compatible 
+bug-fix and POOL_2_2_1 upgrade release in the 1.2 series).
+
+VersionInfo:
+- Release number = 1.2.4
+- Schema version = 1.2.0
+Backward compatibility with data written 
+using previous releases 1.2.3, 1.2.2, 1.2.1 and 1.2.0.
+
+All tests pass on all four supported platforms: slc3_ia32_gcc323, 
+slc3_ia32_gcc323_dbg slc3_ia32_gcc323_gcov and win32_vc71_dbg.
+
+- Upgrade to POOL_2_2_1 and SEAL_1_7_3 using LCG_37_2a
+
+- Identified and fixed outstanding memory leaks in COOL and POOL
+  (in close collaboration between the COOL and POOL teams for POOL)
+  > memory leak in all three flavours of RAL queries fixed in POOL_2_2_1 
+    (destructor for Oracle/MySQL/SQLite cursor was not called - note that 
+    protected virtual destructor for IRelationalCursor is still missing)
+  > memory leak in AttributeList (only observed for osx103) fixed in 
+    POOL_2_2_1 (missing destructors for Attribute[List][Specification])
+  > memory leak in COOL fixed by disabling cool::TimingReport
+    (workaround: the real leak still needs to be identified and removed)
+  > ported ProcMemory utility class to osx103 and Windows for memory leak 
+    analysis on Mac and Windows
+
+- Internal implementation changes
+  > move large fraction of RalDatabase.cpp to new class RelationalObjectTable
+
+==============================================================================
+!2005.08.29 - Andrea, Sven and Marco
+
+Tag COOL_1_2_3. Production release (backward-compatible 
+API enhancement and bug-fix release in the 1.2 series).
+
+VersionInfo:
+- Release number = 1.2.3
+- Schema version = 1.2.0
+Backward compatibility with data written 
+using previous releases 1.2.2, 1.2.1 and 1.2.0.
+
+All tests pass on all four supported platforms: slc3_ia32_gcc323, 
+slc3_ia32_gcc323_dbg slc3_ia32_gcc323_gcov and win32_vc71_dbg.
+
+==============================================================================
+!2005.08.26 - Andrea and Sven
+
+- Move current mechanism for CLOB support from private to TEMPORARY public API
+  > document it as a TEMPORARY API extension that may be removed in COOL_1_3_0
+
+==============================================================================
+!2005.08.18 - Andrea and Sven
+
+- Added IDatabase::tagScope( tagName ) to get the scope of a tag (Andrea)
+  > returns the name of the node where the tag is defined
+  > throws TagNotFound if not found and ReservedHeadTag for HEAD tags
+
+- Added IDatabaseSvc::serviceVersion() to get library release tag (Andrea)
+
+==============================================================================
+!2005.08.10 - Andrea and Sven
+
+- Added IFolder::folderAttributes() to get backend-specific properties (Andrea)
+  > for MV folders (3): the names of the IOV, tag and IOV2tag tables
+  > for SV folders (1): the name of the IOV table
+
+- Progress in understanding of problems with MyODBC bulk insertion (Marco)
+  > introduced workaround in COOL to disable MyODBC bulk insertions for all
+    tables with over 8kb data volume in each row (summed over all columns):
+    the problem does not affect only CLOBs, for instance bulk insertion into
+    three characters of 3000 characters would also generate a runtime error
+  > also understood that "bulk insertion" in MyODBC does not use bind 
+    variables: this may imply a potentially large performance penalty 
+    (which may be enough to motivate a switch from MyODBC to native MySQL API)
+
+- Internal support for CLOBs - not yet exposed in the public API (Marco)
+  > enable 'storage hints' for 64K and 16M CLOBs
+  > add tests of CLOB storage and retrieval using orivate API
+
+- Bug fixes in tag handling (Andrea)
+  > deleteGlobalTagTableRow was taking only one tagId argument, but the
+    PK for the global tag table also includes nodeId
+  > also correct error message printed out by deleteGlobalTagTableRow
+
+- API extensions for multi-channel bulk retrieval (Sven)
+  
+- First prototype of infrastructure to create doxygen-based user guide (Andrea)
+
+==============================================================================
+!2005.07.27 - Andrea and Sven
+
+Tag COOL_1_2_2. Production release (upgrade to SEAL_1_7_1 bug fix release).
+
+VersionInfo:
+- Release number = 1.2.2
+- Schema version = 1.2.0
+Backward compatibility with data written 
+using previous releases 1.2.1 and 1.2.0.
+
+All tests pass on all four supported platforms: slc3_ia32_gcc323, 
+slc3_ia32_gcc323_dbg slc3_ia32_gcc323_gcov and win32_vc71_dbg.
+
+- Upgrade to POOL_2_1_2 and SEAL_1_7_1 using LCG_36_2a.
+  No change in the COOL code.
+
+- Upgrade to POOL_2_1_2 includes bug fix proposed by Marco for CLOBs 
+  in OracleAccess (with extra improvements by Ioannis).
+
+==============================================================================
+!2005.07.20 - Andrea and Sven
+
+Tag COOL_1_2_1. Production release (backward-compatible 
+API enhancement and bug-fix release in the 1.2 series).
+
+VersionInfo:
+- Release number = 1.2.1
+- Schema version = 1.2.0
+Backward compatibility with data written using previous release 1.2.0.
+
+All tests pass on all four supported platforms: slc3_ia32_gcc323, 
+slc3_ia32_gcc323_dbg slc3_ia32_gcc323_gcov and win32_vc71_dbg.
+
+- Privilege management
+  > completed API and tools to grant reader, writer and tagger privileges:
+    added coolPrivilege command line utility to implemente them;
+    completed test suite in tests/Privileges (only tested on Oracle!)
+  > added private relational exceptions TableNotDropped, RowNotUpdated, 
+    RowNotDeleted, RowNotInserted to test exceptions thrown because 
+    of missing database privileges
+  > still missing for a future release (if needed): test on MySQL
+
+- Bug fixes in POOL
+  [available in POOL_HEAD two weeks ago but not included in COOL_1_2_1-pre1]
+  > "max# of open cursors exceeded" reported by David in Oracle,
+    identified by Sven in bulk insertion and fixed by Ioannis
+    [unfortunately this does not help much with memory leak reported by David]
+  > "pthread_mutex_lock" fixed by Ioannis using Andrea's suggestion to
+    disable Oracle multithreading (replace OCI_THREADED by OCI_DEFAULT)
+    [pthread_mutex_lock is indeed solved by removing OCI_THREADED:
+     cross-checked by running the same test with the ONLY difference
+     of enabling/disabling OCI_THREADED in a custom private version of POOL]
+
+- First production release with support for SQLite.
+  All unit tests pass for SQLite (after upgrade to POOL_2_1_1).
+
+- Extensive API cleanup for tag handling for HEAD and single-version folders
+  > add FolderIsSingleVersion exception: this is thrown for SV folders 
+    by IFolder::tag() and internally by RelationalFolder::tagTableName() 
+    and RelationalFolder::object2TagTableName()
+  > add ReservedHeadTag exception: this is thrown when trying to tag a node
+    using the "" or "HEAD" tags or trying to delete the "" or "HEAD" tags
+  > treat "" and "HEAD" (or any case insensitive variant such as "head" or
+    "Head") as equivalent in all methods: add method IHvsNode::isHeadTag()
+    method to test if a tag name is a reserved HEAD tag
+  > except for "HEAD", all other tag names are case sensitive
+  > IDatabase::existsTag() now returns true for both "" and "HEAD"
+  > IFolder::findObject() and IFolder::browseObjects() now accept both ""
+    and "HEAD" to indicate the HEAD tag; for all other tag names, throws 
+    TagNotFound if tag does not exist or folder is a single version folder
+  > IFolder::tag() throws ReservedHeadTag for "" and "HEAD"; for all other 
+    tag names, throws FolderIsSingleVersion for single version folders 
+    and TagExists if the tag already exists for multi-version folders
+  > IFolder::deleteTag() throws ReservedHeadTag for "" and "HEAD"; for all 
+    other tag names, throws TagNotFound if tag does not exist or folder is 
+    a single version folder
+  > IHvsNode::listTags() does NOT list "" or "HEAD"; 
+    it returns an empty list for folder sets and SV folders
+  > IHvsNode::tagDescription() returns default "HEAD tag" for "" and "HEAD";
+    it throws TagNotFound for all other tags in folder sets and SV folders
+  > IHvsNode::tagInsertionTime() returns node insertion time for "" and "HEAD";
+    it throws TagNotFound for all other tags in folder sets and SV folders
+
+- Further improvements in API for tagging methods
+  > declare the two tag() methods obsolete (to be removed in COOL_1_3_0) 
+    in IFolder, rename them as tagCurrentHead and tagAsOfDate
+    [very dangerous in RalDatabase: tag() method with asOfDate argument was
+    called instead of tag() method with asOfObjectId argument if the latter
+    was commented out - implicit conversion of unsigned long to seal::Time!]
+  > add IFolder::tagLastObjectTime method
+  > use a string reference argument instead of a string argument
+    in IHvsNode::tagDescription and IHvsNode::tagInsertionTime
+
+- Internal cleanup of HvsNode, RelationalFolder and RelationalFolderSet
+  > renamed HvsNode as RelationalHvsNode
+  > RelationalFolder[Set] derived class inheriting from RelationalHvsNode
+    (modified listTags, tagDescription and tagInsertionTime accordingly):
+    this implied some debugging of 'inheritance by dominance' on Windows
+    and forced the use of inlined constructors for RelationalFolder[Set]
+
+- Bug fixes
+  > deleteTag() throws an exception if the number of rows deleted from the 
+    object2tag table is different from the selected COUNT(*) for such rows 
+    (computed using new method countObject2TagTableRows)
+  > IDatabase::dropNode also deletes any tags associated to the node
+    (and throws a RelationalException if such tags cannot be deleted)
+
+- Unit test coverage reports
+  > added support for slc3_ia32_gcc323_gcov: unit test coverage reports 
+    will be built by the SPI team (thanks to Johanne!)
+
+==============================================================================
+!2005.07.07 - Andrea and Sven
+
+Tag COOL_1_2_1-pre1. Internal tag.
+
+- Bug fixes in COOL:
+  > bug in dropping MV tables (reported by Federico, fixed by Sven)
+  > uninitialized variable in RelationalTypeConverter (Sven/Andrea)
+
+- API improvements
+  > added method IFolder::deleteTag (Sven)
+  > clarified exceptions thrown by dropDatabase and dropFolder methods,
+    throwIfDoesNotExist flag in dropDatabase and dropNode declared obsolete:
+    kept for backward compatibility, will be removed in COOL_1_3_0 (Andrea)
+  > add isFolderSet/isFolder flag to Folder/FolderSetNotFound exceptions
+
+- Internal refactoring
+  > new implementation of fetchObjectTableRows (Sven)
+  > gmtime tests moved to test_utilities, now included in test suite (Sven)
+  > add private NodeTableRowNotFound exception to fix inconsistencies (Andrea)
+  > extensive cleanup of dropDatabase and dropNode (Andrea)
+
+- Started work on privilege management (Andrea)
+  > added private class RalPrivilegeManager
+  > added tests to access database as owner/reader/writer/tagger/nopriv role
+
+- Bug fixes in POOL (see COOL_1_2_1) available in POOL_HEAD but not yet 
+  included (tests for COOL_1_2_1-pre1 executed using POOL_2_1_0)
+
+==============================================================================
+!2005.06.28 - Andrea and Sven
+
+Tag COOL_1_2_0. Production release (first release in the 1.2 series).
+
+VersionInfo:
+- Release number = 1.2.0
+- Schema version = 1.2.0
+Backward compatibility with data written using NO previous release.
+
+All tests pass on all three supported platforms:
+slc3_ia32_gcc323, slc3_ia32_gcc323_dbg and win32_vc71_dbg.
+
+All tests executed also on all RH73 platforms using private POOL_2_1_0
+(this was actually done using the code as of June 20, before some last fixes).
+Last release with unit tests run on RH73 (not supported anymore by POOL/AF).
+All tests pass on rh73_gcc323, rh73_gcc32 and rh73_gcc32_dbg, but the
+RalDatabase unit test HANGS (__pthread_mutex_lock) on rh73_gcc323_dbg.
+Commit the log file with failure (after Ctrl-C) fo reference.
+Do not attempt to debug the problem, as RH73 is not supported anymore.
+
+PS: A __pthread_mutex_lock was also observed on SLC (in the same method
+as RH73, the first time the unit tests were executed. The problem 
+disappeared when the unit tests were rerun on another SLC host.
+It is likely that the source of the problem has been identified as the use 
+of multi-threaded OCI in RAL and will be removed in the next release of POOL.
+
+==============================================================================
+!2005.06.28 - Andrea and Sven
+
+- Workaround for a bug in the seal::Time constructor.
+  > The bug affected unit tests on Windows (which may or may not fail 
+    depending on local environment such as the summer time clock setting).
+
+- API enhancements
+  > Add the setDescription() method to change folder/folderset descriptions
+
+- Bug fix
+  > Fix bug reported by Federico: when inserting [20,+inf) over [30,+inf)
+    in single version mode, the latter was modified to [30,20]
+
+==============================================================================
+!2005.06.17 - Andrea and Sven
+
+- Payload type handling improvements
+  > restrict uInt64 user payload to same 63-bit range as IOVs [0, 2^63-1]
+
+- Internal code cleanup
+  > tidy up (a bit, not complete!) the fetching of rows from the IOV table
+
+==============================================================================
+!2005.06.13 - Andrea and Sven (with useful contributions from MANY people!)
+
+Tag COOL_1_2_0-pre1. Internal tag.
+
+- API changes (backward-incompatible)
+  > add IFolderSet interface and related methods in IDatabase
+  > changed IDatabase::dropFolder to dropNode
+  > removed IDatabase::listFolders 
+  > implementation code has been changed accordingly
+
+- Performance improvements (pbs reported by DirkD)
+  > SV insertion: better scalability of query for last IOV by querying max(Id)
+  > findObject(): factor 2 improvement by removing useless node table lookup
+
+- Schema improvements (schema changed to 1.1.1)
+  > store insertion times as GMT with " GMT" appended (pb reported by Torre)
+  > change name of unique constraint on tag name
+  > changed index on node full path to unique (pb reported by DavidF)
+  > prepared simple utility to dump the COOL Oracle schema
+
+- DatabaseId and authentication improvements
+  > support POOL XMLAuthenticationService (also support COOL URL syntax)
+  > hide passwords from all printouts in the implementation code
+  > support the "host:port[/service]" syntax for Oracle and MySQL 
+
+- Payload type improvements (thanks to Rado and Ioannis for RAL fixes)
+  > reenabled bool and unsigned char user payload (fixed in POOL HEAD)
+  > internally replaced maxSizeForCpp by checkStorageHintCompliance
+
+- Work on SQLite support (thanks to MarcoC and Zhen for many patches)
+
+All tests pass on rh73_gcc323 (using privately built POOL libraries
+from POOL HEAD at -D "2005/06/15 12:00:00", later than POOL_2_1_0-zeta).
+
+==============================================================================
+!2005.05.25 - Andrea and Sven
+
+Tag COOL_1_1_0. Production release (first release in the 1.1 series).
+
+VersionInfo:
+- Release number = 1.1.0
+- Schema version = 1.0.1
+Backward compatibility with data written using releases 1.0.2 and 1.0.1.
+
+All tests pass on all seven supported platforms.
+
+==============================================================================
+!2005.05.23 - Andrea and Sven
+
+Tag COOL_1_1_0-pre1. Internal tag.
+
+Major code repackaging and API changes
+- RelationalCool is a plugin with no public header file
+- move technology-independent exceptions from RelationalCool to CoolKernel
+- move database service factory (and dependency on SealServices) from 
+  RelationalCool to new package CoolApplication: there are now four tagged 
+  packages in src (CoolKernel, RelationalCool, CoolApplication, Utilities)
+
+Functionality and performance improvements
+- simultaneous bulk insertion into many channels does not throw an exception 
+  any more (but more complete performance optimization will come in later tags)
+- internally refactor store[Single/Multi]VersionObjects to use common code
+
+All tests pass on rh73_gcc323.
+
+==============================================================================
+!2005.05.09 - Andrea and Sven
+
+Tag COOL_1_0_2. Production release (backward-compatible 
+API enhancement and bug-fix release in the 1.0 series).
+
+API enhancements:
+- IFolder::listChannels
+- IHvsNode::listTags and two related methods
+
+Bug fixes:
+- prevent creation of two folders with the same name from two concurrent jobs
+
+VersionInfo:
+- Release number = 1.0.2
+- Schema version = 1.0.1
+Backward compatibility with data written using release 1.0.1.
+
+All tests pass on all seven supported platforms.
+
+First production release using the new COOL CVS repository.
+
+==============================================================================
+!2005.05.02 - Andrea and Sven
+
+Tag COOL_1_0_2-pre1. 
+
+Internal tag: same code as COOL_1_0_1, using the new COOL CVS repository.
+
+==============================================================================
+!2005.04.25 - Andrea and Sven
+
+Tag COOL_1_0_1. Production release (bug fix release in the 1.0 series).
+
+Bug fix: ValidityKey range checks added for MultiVersion folders.
+
+VersionInfo:
+- Release number = 1.0.1
+- Schema version = 1.0.1
+Backward compatibility with data written using NO previous release.
+
+All tests pass on all seven supported platforms.
+
+ValidityKey type definition and allowed range unchanged: unsigned int64 
+in [0, +9223372036854775807]. Schema version number changed to 1.0.1
+just to enforce that ValidityKey's > +9223372036854775807 are excluded.
+
+Support for unsigned int64 in user defined folder payload is unchanged.
+Users can store also values in [+9223372036854775808, +18446744073709551615],
+as long as they are aware how MySQL would interpret any queries on them.
+In any case, it is not the responsibility of COOL to implement such queries.
+
+==============================================================================
+!2005.04.22 - Andrea and Sven
+
+Tag COOL_1_0_0. FIRST PRODUCTION RELEASE!
+
+Minor change in SQL types: hack to change "RAL default" to NUMBER(10)
+for long and unsigned long, and to NUMBER(20) for unsigned long long.
+
+Small bug fix in the unit tests (check on ValidityKeyMin hardcoded value).
+
+VersionInfo:
+- Release number = 1.0.0
+- Schema version = 1.0.0
+
+All tests pass on all seven supported platforms 
+(rh73_gcc323, rh73_gcc323_dbg, rh73_gcc32, rh73_gcc32_dbg, 
+slc3_ia32_gcc323, slc3_ia32_gcc323_dbg, win32_vc71_dbg).
+
+Dropped the idea of reviewing PK, UK and FK constraints and indexes as 
+it might take too much time. This can still be done in the next release.
+Scripts can be provided to upgrade the schema, to add a few missing columns 
+(e.g. node_id with a fixed value in all folder-specific tables, usertag_id 
+in the IOV table...) and to drop and recreate indexes and constraints.
+
+Dropped the idea of providing Mac support and/or of providing scripts
+for standalone local installations. These issues will be addressed later.
+
+==============================================================================
+!2005.04.21 - Andrea and Sven
+
+Tag COOL_1_0_0-pre3 (production release 1.0.0 third internal prerelease).
+
+Extensive checks of SQL types. 
+Forced to introduce many workarounds for bugs and features in RAL and Oracle.
+
+- Problem with signed long long
+  (OCI-22053 when retrieving LLONG_MIN = -9223372036854775808).
+  This could be cured by limiting long long to >= -9223372036854775807.
+  TEMPORARY? More radical approach: get rid of signed long long for now.
+  Declare that long long in user payload is not supported.
+  *** Change ValidityKey to unsigned long long, but use only 63 bits      ***
+  *** Change ValidityKeyMin to 0, keep ValidityKeyMax=9223372036854775807 ***
+  Eventually: rediscuss with the users if they want a signed or unsigned key.
+  Eventually: implement C++ check that user payload long long >= sInt64Min+1.
+
+- Problem with bool
+  (bug in RAL bulk insertion for both Oracle/MySQL, false=0 stored as true=1).
+  TEMPORARY! Declare that bool is not supported in user payload.
+  Eventually: bug fixed in OracleAccess-1-5-4 and ODBCAccess-1-1-14.
+
+- Problem with unsigned char
+  (no default SQL type in RAL OracleAccess).
+  TEMPORARY! Declare that unsigned char is not supported in user payload.
+  Eventually: bug fixed in OracleAccess-1-5-5.
+
+- Problem with long double
+  (no default SQL type in RAL MyODBCAccess).
+  TEMPORARY! Declare that long double is not supported in user payload.
+  Eventually: bug should be fixed in new MyODBCAccess.
+
+- Problems with char
+  (MySql error "String data, right truncated" in reading back 'a' or 'Z')
+  (Oracle stores and retrieves different values for binary data CHAR_MIN/MAX)
+  TEMPORARY! Declare that char is not supported in user payload.
+  Eventually: investigate and fix/workaround the two bugs
+  (should there be also a check that char is used only for character data?).
+  
+==============================================================================
+!2005.04.20 - Andrea and Sven
+
+Tag COOL_1_0_0-pre2 (production release 1.0.0 second internal prerelease).
+
+Final bug fixes. All tests pass on all seven supported platforms.
+
+==============================================================================
+!2005.04.16 - Andrea and Sven
+
+Tag COOL_1_0_0-pre1 (production release 1.0.0 first internal prerelease).
+
+Code tested on rh73_gcc323 using the current configuration (one failure).
+To do before the production release:
+- fix the test that failed
+- update to latest SEAL/POOL releases
+- run tests on all four platforms
+
+Latest features added:
+- Added ExtendedAttributeListSpecification adding one "hint" for each 
+  attribute. This is used to create tables with non-default SQL types
+  (such as 4000-characters string instead of 255-character). Size
+  compliance checks are implemented everywhere. Hints (strings) replace the
+  previous implementation based on unsigned long sizes.
+
+Updated TODO list of functionalities to add in backward compatible way
+(AFTER THE PRODUCTION RELEASE AND ITS DOCUMENTATION!):
+- Add tests that folder description and tag description are limited in size
+- Expose non-default hint functionality in public API to allow
+  storage of 4000 character strings
+- The same functionality may be extended to store NUMBERS instead
+  of native BINARY_FLOAT in Oracle if requested for PVSS
+- Once the problems with CLOB in Oracle are solved, add CLOB support 
+- Add methods to browse through the folder set hierarchy
+- Add methods to add references to external tables
+- Add user tags (this will require adding some columns)
+- Review indexes, UK, FK in the relational schemas (this will require
+  creating methods and/or scripts to drop all indexes and FKs and
+  recreate new ones)
+
+==============================================================================
+!2005.04.09 - Andrea and Sven
+
+Intermediate changes towards the production release:
+- Renumber object_id encoding schema from 3N+0,1,2 to 6N+0,1,2,3,4,5
+  to foresee the future implementation of user tags
+- Implement string size checks in some of the tables
+- Implement non-default string SQL types for some columns of some tables
+
+==============================================================================
+!2005.04.05 - Andrea and Sven
+
+Intermediate changes towards production release (up to and including April 5):
+- Renumber object_id to keep objects ordered with respect to version 'layers'
+  (also introduce internal tagAsOfObjectId functionality and unit tests for it)
+- Introduce release number comparison (start addressing schema evolution)
+- Internal name changes XXX_FOLDERS to XXX_NODES, folderId to nodeId, 
+  FolderTable to NodeTable, FolderExistsException to NodeExistsException etc...
+- Various bug fixes (browsing, MV-processing...)
+
+==============================================================================
+!2005.03.20 - Andrea and Sven
+
+Intermediate tags towards the production release.
+
+Tag COOL_0_2_0-pre4:
+- Final step in int64 IOV implementation: change ValidityKeyMin/Max
+  to LONG_LONG_MIN/MAX [-9223372036854775808, +9223372036854775807].
+
+Tag COOL_0_2_0-pre3:
+- Implemented since/until IOV storage type as signed int64. All tests pass.
+  No change in the accepted min/max boundaries for IOVs yet.
+- Bug fix in RelationalFolder: clear storage buffer when storing fails
+- This tag requires RelationalAccess-1-5-0 and OracleAccess-1-5-1 or later 
+  (POOL tag does not exist yet, COOL config will be modified and retagged)
+
+Tag COOL_0_2_0-pre2:
+- Name change: rename IValidityKey as ValidityKey and IChannelId as ChannelId 
+  and check that all tests still pass. No change in stored type yet.
+
+Tag COOL_0_2_0-pre1:
+- Minimal change: replace seal::LongLong by seal::IntBits<64>::SLeast
+  and check that all tests still pass. No change in stored type yet.
+
+==============================================================================
+!2005.03.19 - Andrea and Sven
+
+Intermediate tags towards the production release.
+
+Tag COOL_0_1_1-pre2:
+- Bypassed segmentation fault and mutex lock by using debug libraries
+  also on non-debug platforms
+- Reenabled all test in RalDatabase_versioning test
+- All tests from execUnitTests pass for both Oracle and MySQL on all of
+  rh73_gcc323, rh73_gcc323_dbg, rh73_gcc32, slc3_ia32_gcc323
+- Last stable tag before starting the implementation of int64 and CLOBs
+
+Tag COOL_0_1_1-pre1:
+- Fixed the problem with tagging in MySQL 
+  (change COOL usage of bind variables to bypass RAL problem)
+- Changed online/offline to single/multi version
+- Changed till to until consistently
+- Changed getters consistently
+- Consistently removed NULL values from all database tables
+  (copying AttributeList's will not work with NULL result sets from RAL)
+- Fixed bugs in COOL with MySQL date (%i format and second granularity) and 
+  MySQL bind variables (they need to be in the same order in the AttrList)
+  and fixed bugs in RAL (as of POOL_2_0_2) with MyODBC '\0' strings
+- Move description() method for folders to IHvsNode and return 
+  a string reference consistently to other IHvsNode string methods.
+- Add a method to declare that some payload columns reference external payload.
+  Dummy implementation for the moment.
+- Identified a workaround for the segmentation faults and mutex locks found 
+  in RalDatabase_versioning test. Will become default as of next tag.
+
+==============================================================================
+!2005.03.03 - Andrea and Sven
+
+First complete prototype with the versioning and tagging functionalities.
+Tagged as prerelease COOL_0_1_0-pre1.
+Tagged as prerelease COOL_0_1_0-pre2 (only configuration changes).
+
+This pre-release suffers from a known problem with MySQL in RAL 
+("since < :a and :a < until" will not work): use it only for Oracle.
+
+==============================================================================
+!2005.02.02 - Andrea and Sven
+
+First version made publicly available for feedback.
+Tagged as prerelease COOL_0_0_3-pre1.
+Tagged as prerelease COOL_0_0_3-pre2 with Windows support added.
+
+==============================================================================
+!2004.11.21 - Andrea and Sven
+
+New package. 
+
+This package contains the implementation of the Cool kernel component
+using the POOL RelationalAccess layer (RAL).
+
+==============================================================================

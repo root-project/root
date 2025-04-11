@@ -1,0 +1,23 @@
+<lcgdict>
+
+  <class name="HepMcParticleLink_p1" />
+
+
+  <class name="McEventCollection_p4" id="C517102A-94DE-407C-B07F-09BD81F6172E" />
+  <class name="std::vector<GenEvent_p4>" />
+  <class name="GenEvent_p4" />
+  <class name="std::vector<GenVertex_p4>" />
+  <class name="GenVertex_p4" />
+  <class name="std::vector<GenParticle_p4>" />
+  <class name="GenParticle_p4" />
+
+
+  <class name="McEventCollection_p5" id="D52391A4-F951-46BF-A0D5-E407698D2917" />
+  <class name="std::vector<GenEvent_p5>" />
+  <class name="GenEvent_p5" />
+  <class name="std::vector<GenVertex_p5>" />
+  <class name="GenVertex_p5" />
+  <class name="std::vector<GenParticle_p5>" />
+  <class name="GenParticle_p5" />
+
+</lcgdict>

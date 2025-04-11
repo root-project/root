@@ -1,0 +1,7 @@
+.L lib/libjet.so
+.L lib/libbtag.so 
+#include "DataVector.h"
+auto c = TClass::GetClass("DataVector<xAOD::Jet_v1>");
+printf("TClass for DataVector<xAOD::Jet_v1> is %s\n",c->IsLoaded() ? "loaded" : "not loaded");
+
+

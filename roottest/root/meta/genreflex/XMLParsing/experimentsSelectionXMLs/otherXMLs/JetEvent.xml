@@ -1,0 +1,42 @@
+<lcgdict>      
+  <class name="JetSamplingCollection" id="EA7497BA-7AAA-43A2-8735-EB071FCA5276" />
+  <class name="JetSampling" /> 
+  <class name="JetConstituentIterator" /> 
+  <class name="DataVector<JetSampling>" />
+  <class name="std::vector<JetSampling*>" /> 
+  <class name="JetCollection" id="2FB4D25D-E217-4B8A-B865-180DE73B20E0">
+    <field name="m_ordered" transient="true" />
+    <field name="m_keyStore" transient="true" />
+  </class>
+  <class name="Jet" />
+  <class name="DataVector<Jet>" />
+  <!-- <class name="std::vector<Jet*>" /> -->
+
+  <class name="JetMomentMapCollection" id="5C1C7C54-8365-4673-9506-400457C9A4EF"/>
+  <class name="DataVector<JetMomentMap>" />
+  <class name="std::vector<JetMomentMap*>" />
+  <class name="JetMoment" /> 
+  <class name="JetMomentMap" /> 
+  <class name="JetMapBase<JetMoment::MomentData>" /> 
+
+
+  <class name="JetAssociationBase">
+    <field name="m_jetKeyDescr" transient="true" />
+  </class>
+  <class name="std::vector<const JetAssociationBase*>" />
+
+  <class name="JetINav4MomAssociation" />
+
+  <class name="JetTagInfoBase" />
+  <class name="std::vector<const JetTagInfoBase*>" />
+  
+  <class name="Analysis::ITagInfo" />
+  <class name="std::vector<Analysis::ITagInfo*>" />
+
+  <class name="JetKeyDescriptorCollection" id="EF06BB16-837D-4122-B0BB-91366854EC68"/>
+  <class name="DataVector<JetKeyDescriptor>" />
+  <class name="std::vector<JetKeyDescriptor*>" />
+  <class name="JetKeyDescriptor"/>
+  <class name="JetKeyDescriptorInstance"/>
+</lcgdict>
+

@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="DeMuonDetector"     />
+  <class name="DeMuonChamber"      />
+  <class name="DeMuonRegion"       />
+  <class name="MuonBasicGeometry"  />
+  <class name="MuonTSMap"          />
+  <class name="MuonL1Board"        />
+  <class name="MuonODEBoard"       />
+  <class name="MuonStationCabling" />
+  <class name="IMuonFastPosTool"       />
+  <variable pattern="DeMuonLocation::*" />
+</lcgdict>

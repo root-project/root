@@ -1,0 +1,7 @@
+<lcgdict>
+  <!-- TrigJpsi output (uuid for TrigJpsi might be not needed if only container is saved -->
+  <class name="TrigJpsi" id="1DBB8E9F-621D-4207-A342-129ED4E13637" />
+  <class name="TrigJpsiContainer" id="B7378A58-0167-4614-AEE1-87529CB4D0BF"/>
+  <class name="DataVector<TrigJpsi>" />
+  <class name="std::vector<TrigJpsi*>" />
+</lcgdict>

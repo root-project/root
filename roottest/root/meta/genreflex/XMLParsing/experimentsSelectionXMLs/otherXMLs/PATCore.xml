@@ -1,0 +1,11 @@
+<lcgdict>
+    <class name="Root::TAccept" />
+    <!--<class name="std::bitset<32>" />-->
+    <class name="Root::TSelectorToolBase" />
+    <class name="IAthSelectorTool" />
+    <class name="Root::TResult" />
+    <class name="Root::TCalculatorToolBase" />
+    <class name="IAthCalculatorTool" />
+    <class name="IUserDataCalcTool" />
+    <class name="IAthHistogramTool" />
+</lcgdict>

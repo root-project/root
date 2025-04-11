@@ -1,0 +1,62 @@
+<lcgdict>
+<selection>
+
+
+  <class name="reco::PFNuclearInteraction"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1573561360"/>
+  </class>
+  <class name="std::vector<reco::PFNuclearInteraction>" />
+  <class name="edm::Wrapper<std::vector<reco::PFNuclearInteraction> >" />
+  <class name="edm::Ref<std::vector<reco::PFNuclearInteraction>, reco::PFNuclearInteraction, edm::refhelper::FindUsingAdvance<std::vector<reco::PFNuclearInteraction>, reco::PFNuclearInteraction> >" />
+  <class name="edm::RefProd<std::vector<reco::PFNuclearInteraction> >" />
+  <class name="edm::RefVector<std::vector<reco::PFNuclearInteraction>, reco::PFNuclearInteraction, edm::refhelper::FindUsingAdvance<std::vector<reco::PFNuclearInteraction>, reco::PFNuclearInteraction> >" />
+
+
+  <class name="reco::PFDisplacedTrackerVertex"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2059737151"/>
+  </class>
+  <class name="std::vector<reco::PFDisplacedTrackerVertex>" />
+  <class name="edm::Wrapper<std::vector<reco::PFDisplacedTrackerVertex> >" />
+  <class name="edm::Ref<std::vector<reco::PFDisplacedTrackerVertex>, reco::PFDisplacedTrackerVertex, edm::refhelper::FindUsingAdvance<std::vector<reco::PFDisplacedTrackerVertex>, reco::PFDisplacedTrackerVertex> >" />
+  <class name="edm::RefProd<std::vector<reco::PFDisplacedTrackerVertex> >" />
+  <class name="edm::RefVector<std::vector<reco::PFDisplacedTrackerVertex>, reco::PFDisplacedTrackerVertex, edm::refhelper::FindUsingAdvance<std::vector<reco::PFDisplacedTrackerVertex>, reco::PFDisplacedTrackerVertex> >" />
+
+  <class name="reco::PFConversion" ClassVersion="10">
+   <version ClassVersion="10" checksum="2417207933"/>
+  </class>
+  <class name="std::vector<reco::PFConversion>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFConversion> >"/>
+  <class name="edm::Ref<std::vector<reco::PFConversion>,reco::PFConversion,edm::refhelper::FindUsingAdvance<std::vector<reco::PFConversion>,reco::PFConversion> >"/>
+  <class name="edm::RefProd<std::vector<reco::PFConversion> >"/>
+  <class name="edm::RefVector<std::vector<reco::PFConversion>,reco::PFConversion,edm::refhelper::FindUsingAdvance<std::vector<reco::PFConversion>,reco::PFConversion> >"/>
+  <class name="std::vector<edm::Ref<std::vector<reco::PFRecTrack>,reco::PFRecTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::PFRecTrack>,reco::PFRecTrack> > >"/>
+
+ <class name="reco::PFV0"  ClassVersion="10">
+  <version ClassVersion="10" checksum="40832700"/>
+ </class>
+  <class name="std::vector<reco::PFV0>" />
+  <class name="edm::Wrapper<std::vector<reco::PFV0> >" />
+  <class name="edm::Ref<std::vector<reco::PFV0>, reco::PFV0, edm::refhelper::FindUsingAdvance<std::vector<reco::PFV0>, reco::PFV0> >" />
+  <class name="edm::RefProd<std::vector<reco::PFV0> >" />
+  <class name="edm::RefVector<std::vector<reco::PFV0>, reco::PFV0, edm::refhelper::FindUsingAdvance<std::vector<reco::PFV0>, reco::PFV0> >" />
+<class name="edm::Ref<std::vector<reco::VertexCompositeCandidate>,reco::VertexCompositeCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::VertexCompositeCandidate>,reco::VertexCompositeCandidate> >" />
+
+
+  <class name="reco::ConvBremSeed" ClassVersion="10">
+   <version ClassVersion="10" checksum="2980747190"/>
+  </class>
+  <class name="std::vector<reco::ConvBremSeed>"/>
+  <class name="edm::Ref<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed> >"/>
+  <class name="edm::RefProd<std::vector<reco::ConvBremSeed> >"/>
+  <class name="edm::Wrapper<std::vector<reco::ConvBremSeed> >"/>
+  <class name="edm::RefVector<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed> > >"/>
+  <class name="edm::RefToBase<reco::ConvBremSeed>"/>
+  <class name="edm::reftobase::BaseHolder<reco::ConvBremSeed>" />
+  <class name="edm::reftobase::RefHolder<edm::Ref<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed> > >"/>
+  <class name="edm::reftobase::Holder<reco::ConvBremSeed,edm::Ref<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ConvBremSeed>,reco::ConvBremSeed> > >"/>
+
+
+</selection>
+</lcgdict>
+

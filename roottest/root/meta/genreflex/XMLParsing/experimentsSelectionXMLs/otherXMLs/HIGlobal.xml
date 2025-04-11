@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="EtaPhiBins" id="080267dd-e545-4469-abed-bc7eb62d4c64" />
+  <class name="HIFlowData" id="D7709AC5-48DC-4A40-B504-B7FB1A471624" />
+  <class name="HIEtData" id="A144EF17-3FCF-4A03-8741-895B28E73499" />
+  <class name="HICentralityData" id="CA49AF2C-FAB3-461A-A016-1E01CE9761B1" />
+  <class name="HIPixelTracklets" id="62697C9C-3F6D-4C8A-890B-6FDD1CF2940D" />
+  <class name="HIPixelTrackletsCollection" id="12365748-21C1-4F6C-8B0D-6C8F8053E742" />
+  <class name="HIPixelTrackletsTruthCollection" id="7B54A2B0-731B-4558-9CA2-22C9DE5358C7" />
+</lcgdict>

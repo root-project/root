@@ -1,0 +1,18 @@
+<lcgdict>
+  <class name="ZdcRdoCollection" id="EEE66016-58B9-46FD-9D1E-35B9D784CC48" />
+  <class name="DataVector<ZdcRdo>" />
+  <class name="std::vector<ZdcRdo*>" />
+  <class name="ZdcRdo" />
+
+  <class name="ZdcDigitsCollection" id="B77B5F9A-1C29-4D74-A107-B3C71680C029" />
+  <class name="std::vector<ZdcDigits*>" />
+  <class name="DataVector<ZdcDigits>" />
+  <class name="ZdcDigits" />
+
+  <class name="ZdcRawChannelCollection" id="A2BDA733-7A0A-459D-9237-33DFF3DC9982"/>
+  <class name="std::vector<ZdcRawChannel*>" />
+  <class name="DataVector<ZdcRawChannel>" />
+  <class name="ZdcRawChannel" />
+
+
+</lcgdict>

@@ -1,0 +1,26 @@
+. PyROOT_basictests.py::Basic1ModuleTestCase::test1Import
+. PyROOT_basictests.py::Basic2SetupTestCase::test1Globals
+. PyROOT_basictests.py::Basic2SetupTestCase::test2AccessToGlobals
+. PyROOT_basictests.py::Basic2SetupTestCase::test3AccessToGlobalsFromROOT
+. PyROOT_basictests.py::Basic2SetupTestCase::test4AutoLoading
+. PyROOT_basictests.py::Basic2SetupTestCase::test5MacroLoading
+. PyROOT_basictests.py::Basic3PythonLanguageTestCase::test1HaveDocString
+. PyROOT_basictests.py::Basic3PythonLanguageTestCase::test2BoundUnboundMethodCalls
+. PyROOT_basictests.py::Basic3PythonLanguageTestCase::test3ThreadingSupport
+. PyROOT_basictests.py::Basic3PythonLanguageTestCase::test4ClassAndTypedefEquality
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test1TStringByValueInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test2TStringByRefInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test3TLorentzVectorByValueInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test4TLorentzVectorByRefInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test5TStringByValueCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test6TStringByRefCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test7TLorentzVectorByValueCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test8TLorentzVectorByRefCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test9ByRefPassing
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test1Strings
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test2Lists
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test3TVector
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test4TObjArray
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test5Hashing
+. PyROOT_basictests.py::Basic6ReturnValueTestCase::test1ReturnIntegers
+

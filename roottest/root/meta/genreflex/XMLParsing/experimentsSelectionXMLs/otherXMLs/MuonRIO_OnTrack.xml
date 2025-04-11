@@ -1,0 +1,24 @@
+<lcgdict>
+  <class name="Muon::MdtDriftCircleOnTrack" >
+    <field name="m_globalPosition" transient="true" />    
+    <field name="m_rio" transient="true" />    
+    <field name="m_detEl" transient="true" />
+  </class>
+  <class name="Muon::MuonClusterOnTrack" />
+  <class name="Muon::CscClusterOnTrack" >
+    <field name="m_rio" transient="true" />    
+  </class>
+  <class name="Muon::TgcClusterOnTrack" >
+    <field name="m_rio" transient="true" />    
+  </class>
+  <class name="Muon::sTgcClusterOnTrack" >
+    <field name="m_rio" transient="true" />    
+  </class>
+  <class name="Muon::MMClusterOnTrack" >
+    <field name="m_rio" transient="true" />    
+  </class>
+  <class name="Muon::RpcClusterOnTrack" >
+    <field name="m_rio" transient="true" />    
+  </class>
+ </lcgdict>
+

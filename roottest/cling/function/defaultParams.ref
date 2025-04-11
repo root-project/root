@@ -1,0 +1,25 @@
+
+Processing rundefaultParams.C...
+Interpeted code:
+interpreted: Base::FunctionX(int b=0, int c=5)
+interpreted: Derived::FunctionX(int b=1, int c=6)
+interpreted: Derived::FunctionX(int b=0, int c=5)
+interpreted: Base::FunctionY(int arg0=1, float arg1=1.)
+interpreted: Derived::FunctionY(int arg0=2, float arg1=2.)
+interpreted: Derived::FunctionY(int arg0=3, float arg1=3.)
+interpreted: Derived::FunctionY(int arg0=42, float arg1=42.)
+interpreted: Base::FunctionY(int arg0=4, float arg1=4.)
+interpreted: Derived::FunctionY(int arg0=5, float arg1=5.)
+interpreted: Derived::FunctionY(int arg0=6, float arg1=6.)
+
+Compiled code:
+compiled: Base::FunctionX(int b=0, int c=5)
+compiled: Derived::FunctionX(int b=1, int c=6)
+compiled: Derived::FunctionX(int b=0, int c=5)
+compiled: Base::FunctionY(int arg0=1, float arg1=1.)
+compiled: Derived::FunctionY(int arg0=2, float arg1=2.)
+compiled: Derived::FunctionY(int arg0=3, float arg1=3.)
+compiled: Derived::FunctionY(int arg0=42, float arg1=42.)
+compiled: Base::FunctionY(int arg0=4, float arg1=4.)
+compiled: Derived::FunctionY(int arg0=5, float arg1=5.)
+compiled: Derived::FunctionY(int arg0=6, float arg1=6.)

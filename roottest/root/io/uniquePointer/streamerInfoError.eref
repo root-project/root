@@ -1,0 +1,10 @@
+
+Processing roottest/root/io/uniquePointer/streamerInfoError.C...
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "l" we do not have a dictionary for the collection "list<TGraph*>". Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "fl" we do not have a dictionary for the collection "forward_list<TGraph*>". Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "s" we do not have a dictionary for the collection "set<TGraph*>". Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "m1" we do not have a dictionary for the collection "map<int,TGraph*>". Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "m2" we do not have a dictionary for the collection "map<TGraph*,int>". Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "m3" we do not have a dictionary for the collection "map<TGraph*,TGraph*>". Because of this, we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "B" is compiled and for its data member "m4" we do not have a dictionary for the collection "map<TH1F*,TGraph*>". Because of this, we will not be able to read or write this data member.
+(int) 0

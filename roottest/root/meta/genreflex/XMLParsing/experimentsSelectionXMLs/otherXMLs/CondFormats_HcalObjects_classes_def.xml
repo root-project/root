@@ -1,0 +1,383 @@
+<lcgdict>
+    <class name="HcalCondObjectContainerBase">
+      <field name="topo_" transient="true" />
+      <field name="packedIndexVersion_" transient="true"/>
+  </class>
+
+
+ <class name="HcalPedestal"/>
+ <class name="std::vector<HcalPedestal>"/>
+ <class name="std::pair<std::string, std::vector<HcalPedestal> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalPedestal> > >"/>
+ <class name="HcalCondObjectContainer<HcalPedestal>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalPedestals"/>
+
+ <class name="HcalPedestalWidth"/>
+ <class name="std::vector<HcalPedestalWidth>"/>
+ <class name="std::pair<std::string, std::vector<HcalPedestalWidth> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalPedestalWidth> > >"/>
+ <class name="HcalCondObjectContainer<HcalPedestalWidth>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalPedestalWidths"/>
+
+ <class name="HcalGain"/>
+ <class name="std::vector<HcalGain>"/>
+ <class name="std::pair<std::string, std::vector<HcalGain> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalGain> > >"/>
+ <class name="HcalCondObjectContainer<HcalGain>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalGains"/>
+
+ <class name="HcalGainWidth"/>
+ <class name="std::vector<HcalGainWidth>"/>
+ <class name="std::pair<std::string, std::vector<HcalGainWidth> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalGainWidth> > >"/>
+ <class name="HcalCondObjectContainer<HcalGainWidth>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalGainWidths"/>
+
+ <class name="HcalQIECoder">
+   <field name="mQIEIndex" transient="true"/>
+ </class>
+
+ <class name="std::vector<HcalQIECoder>"/>
+ <class name="std::pair<std::string, std::vector<HcalQIECoder> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalQIECoder> > >"/>
+ <class name="HcalCondObjectContainer<HcalQIECoder>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+
+ <class name="HcalQIEData">
+   <field name="mShape" transient="true"/>
+ </class>
+
+ <class name="HcalCalibrationQIECoder"/>
+ <class name="std::vector<HcalCalibrationQIECoder>"/>
+ <class name="std::pair<std::string, std::vector<HcalCalibrationQIECoder> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalCalibrationQIECoder> > >"/>
+ <class name="HcalCondObjectContainer<HcalCalibrationQIECoder>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalCalibrationQIEData"/>
+
+ <class name="HcalElectronicsMap">
+  <field name="mPItemsById" transient="true"/>
+  <field name="sortedByPId" transient="true"/>
+  <field name="mTItemsByTrigId" transient="true"/>
+  <field name="sortedByTId" transient="true"/>
+ </class>
+ <class name="HcalElectronicsMap::PrecisionItem"/>
+ <class name="HcalElectronicsMap::TriggerItem"/>
+ <class name="std::vector<HcalElectronicsMap::PrecisionItem>"/>
+ <class name="std::vector<HcalElectronicsMap::TriggerItem>"/>
+
+ <class name="HcalChannelStatus"/>
+ <class name="std::vector<HcalChannelStatus>"/>
+ <class name="std::pair<std::string, std::vector<HcalChannelStatus> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalChannelStatus> > >"/>
+ <class name="HcalCondObjectContainer<HcalChannelStatus>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalChannelQuality"/>
+
+ <class name="HcalZSThreshold"/>
+ <class name="std::vector<HcalZSThreshold>"/>
+ <class name="std::pair<std::string, std::vector<HcalZSThreshold> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalZSThreshold> > >"/>
+ <class name="HcalCondObjectContainer<HcalZSThreshold>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalZSThresholds"/>
+
+ <class name="HcalRespCorr"/>
+ <class name="std::vector<HcalRespCorr>"/>
+ <class name="std::pair<std::string, std::vector<HcalRespCorr> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalRespCorr> > >"/>
+ <class name="HcalCondObjectContainer<HcalRespCorr>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalRespCorrs"/>
+
+ <class name="HcalLUTCorr"/>
+ <class name="std::vector<HcalLUTCorr>"/>
+ <class name="std::pair<std::string, std::vector<HcalLUTCorr> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalLUTCorr> > >"/>
+ <class name="HcalCondObjectContainer<HcalLUTCorr>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalLUTCorrs"/>
+
+ <class name="HcalPFCorr"/>
+ <class name="std::vector<HcalPFCorr>"/>
+ <class name="std::pair<std::string, std::vector<HcalPFCorr> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalPFCorr> > >"/>
+ <class name="HcalCondObjectContainer<HcalPFCorr>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalPFCorrs"/>
+
+ <class name="HcalL1TriggerObject"/>
+ <class name="std::vector<HcalL1TriggerObject>"/>
+ <class name="std::pair<std::string, std::vector<HcalL1TriggerObject> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalL1TriggerObject> > >"/>
+ <class name="HcalCondObjectContainer<HcalL1TriggerObject>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalL1TriggerObjects"/>
+
+ <class name="HcalTimeCorr"/>
+ <class name="std::vector<HcalTimeCorr>"/>
+ <class name="std::pair<std::string, std::vector<HcalTimeCorr> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalTimeCorr> > >"/>
+ <class name="HcalCondObjectContainer<HcalTimeCorr>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalTimeCorrs"/>
+
+ <class name="HcalValidationCorr"/>
+ <class name="std::vector<HcalValidationCorr>"/>
+ <class name="std::pair<std::string, std::vector<HcalValidationCorr> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalValidationCorr> > >"/>
+ <class name="HcalCondObjectContainer<HcalValidationCorr>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalValidationCorrs"/>
+
+ <class name="HcalCholeskyMatrix"/>
+ <class name="std::vector<HcalCholeskyMatrix>"/>
+ <class name="HcalCholeskyMatrices">
+   <field name="HBcontainer" mapping="blob" />
+   <field name="HEcontainer" mapping="blob" />
+   <field name="HFcontainer" mapping="blob" />
+   <field name="HOcontainer" mapping="blob" />
+ </class> 
+
+ <class name="HcalCovarianceMatrix"/>
+ <class name="std::vector<HcalCovarianceMatrix>"/>
+ <class name="HcalCovarianceMatrices">
+   <field name="HBcontainer" mapping="blob" />
+   <field name="HEcontainer" mapping="blob" />
+   <field name="HFcontainer" mapping="blob" />
+   <field name="HOcontainer" mapping="blob" />
+ </class> 
+
+ <class name="HcalLutMetadatum"/>
+ <class name="std::vector<HcalLutMetadatum>"/>
+ <class name="std::pair<std::string, std::vector<HcalLutMetadatum> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalLutMetadatum> > >"/>
+ <class name="HcalCondObjectContainer<HcalLutMetadatum>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalLutMetadata" class_version="0"/>
+ <class name="HcalLutMetadata::NonChannelData"/>
+
+ <class name="HcalDcsValue">
+  <!-- <field name="mHBsorted" transient="true"/> -->
+  <!-- <field name="mHEsorted" transient="true"/> -->
+  <!-- <field name="mHO0sorted" transient="true"/> -->
+  <!-- <field name="mHO12sorted" transient="true"/> -->
+  <!-- <field name="mHFsorted" transient="true"/> -->
+ </class>
+ <class name="std::vector<HcalDcsValue>"/>
+ <class name="HcalDcsValues"/>
+
+ <class name="HcalDcsMap">
+  <field name="mItemsById" transient="true"/>
+  <field name="sortedById" transient="true"/>
+  <field name="mItemsByDcsId" transient="true"/>
+  <field name="sortedByDcsId" transient="true"/>
+ </class>
+ <class name="HcalDcsMap::Item"/>
+ <class name="std::vector<HcalDcsMap::Item>"/>
+
+ <class name="HcalRecoParam"/>
+ <class name="std::vector<HcalRecoParam>"/>
+ <class name="std::pair<std::string, std::vector<HcalRecoParam> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalRecoParam> > >"/>
+ <class name="HcalCondObjectContainer<HcalRecoParam>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalRecoParams" class_version="0"/>
+
+ <class name="HcalTimingParam"/>
+ <class name="std::vector<HcalTimingParam>"/>
+ <class name="std::pair<std::string, std::vector<HcalTimingParam> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalTimingParam> > >"/>
+ <class name="HcalCondObjectContainer<HcalTimingParam>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class> 
+ <class name="HcalTimingParams" class_version="0"/>
+
+ <class name="HcalLongRecoParam"/>
+ <class name="std::vector<HcalLongRecoParam>"/>
+ <class name="std::pair<std::string, std::vector<HcalLongRecoParam> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalLongRecoParam> > >"/>
+ <class name="HcalCondObjectContainer<HcalLongRecoParam>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalLongRecoParams" class_version="0"/>
+
+ <class name="HcalMCParam"/>
+ <class name="std::vector<HcalMCParam>"/>
+ <class name="std::pair<std::string, std::vector<HcalMCParam> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalMCParam> > >"/>
+ <class name="HcalCondObjectContainer<HcalMCParam>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+ <class name="HcalMCParams" class_version="0"/>
+
+ <class name="HcalFlagHFDigiTimeParam"/>
+ <class name="std::vector<HcalFlagHFDigiTimeParam>"/>
+ <class name="std::pair<std::string, std::vector<HcalFlagHFDigiTimeParam> >"/>
+ <class name="std::vector<std::pair<std::string, std::vector<HcalFlagHFDigiTimeParam> > >"/>
+ <class name="HcalCondObjectContainer<HcalFlagHFDigiTimeParam>">
+  <field name="HBcontainer" mapping="blob" />
+  <field name="HEcontainer" mapping="blob" />
+  <field name="HFcontainer" mapping="blob" />
+  <field name="HOcontainer" mapping="blob" />
+  <field name="HTcontainer" mapping="blob" />
+  <field name="ZDCcontainer" mapping="blob" />
+  <field name="CALIBcontainer" mapping="blob" />
+  <field name="CASTORcontainer" mapping="blob" />
+ </class> 
+ <class name="HcalFlagHFDigiTimeParams" class_version="0"/>
+
+</lcgdict>   

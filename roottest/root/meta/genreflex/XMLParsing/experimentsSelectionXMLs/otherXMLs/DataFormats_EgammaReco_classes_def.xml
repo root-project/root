@@ -1,0 +1,150 @@
+<lcgdict>
+
+  <class name="edm::RefToBase<reco::CaloCluster>"/>
+  <class name="edm::reftobase::BaseHolder<reco::CaloCluster>"/>
+  <class name="edm::reftobase::IndirectHolder<reco::CaloCluster>" />
+
+  <class name="edm::reftobase::Holder<
+    reco::CaloCluster,
+    edm::Ref<
+      std::vector<reco::SuperCluster>, reco::SuperCluster,
+      edm::refhelper::FindUsingAdvance<std::vector<reco::SuperCluster>,reco::SuperCluster>
+    >
+  >"/>
+  <class name="edm::reftobase::RefHolder<
+    edm::Ref<
+      std::vector<reco::SuperCluster>, reco::SuperCluster,
+      edm::refhelper::FindUsingAdvance<std::vector<reco::SuperCluster>,reco::SuperCluster>
+    >
+  >"/>
+  <class name="edm::reftobase::Holder<
+    reco::CaloCluster,
+    edm::Ref<
+      std::vector<reco::BasicCluster>, reco::BasicCluster,
+      edm::refhelper::FindUsingAdvance<std::vector<reco::BasicCluster>,reco::BasicCluster>
+    >
+  >"/>
+  <class name="edm::reftobase::RefHolder<
+    edm::Ref<
+      std::vector<reco::BasicCluster>, reco::BasicCluster,
+      edm::refhelper::FindUsingAdvance<std::vector<reco::BasicCluster>,reco::BasicCluster>
+    >
+  >"/>
+
+  <class name="std::vector<reco::BasicCluster>"/>
+  <class name="edm::Wrapper<std::vector<reco::BasicCluster> >"/>
+  <class name="edm::Ref<std::vector<reco::BasicCluster>,reco::BasicCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::BasicCluster>,reco::BasicCluster> >"/>
+  <class name="edm::RefProd<std::vector<reco::BasicCluster> >"/>
+  <class name="edm::RefVector<std::vector<reco::BasicCluster>,reco::BasicCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::BasicCluster>,reco::BasicCluster> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::BasicCluster>,reco::BasicCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::BasicCluster>,reco::BasicCluster> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<reco::BasicCluster>,reco::BasicCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::BasicCluster>,reco::BasicCluster> > >"/>
+
+  <class name="reco::SuperCluster" ClassVersion="11">
+   <version ClassVersion="11" checksum="83023066"/>
+   <version ClassVersion="10" checksum="3131732439"/>
+    <field name="rawEnergy_" iotype="Double32_t"/>
+    <field name="phiWidth_" iotype="Double32_t"/>
+    <field name="etaWidth_" iotype="Double32_t"/>
+  </class>
+  <class name="std::vector<reco::SuperCluster>"/>
+  <class name="edm::Wrapper<std::vector<reco::SuperCluster> >"/>
+  <class name="edm::Ref<std::vector<reco::SuperCluster>,reco::SuperCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::SuperCluster>,reco::SuperCluster> >"/>
+  <class name="edm::RefProd<std::vector<reco::SuperCluster> >"/>
+  <class name="edm::RefVector<std::vector<reco::SuperCluster>,reco::SuperCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::SuperCluster>,reco::SuperCluster> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::SuperCluster>,reco::SuperCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::SuperCluster>,reco::SuperCluster> > >"/>
+
+  <class name="reco::ClusterShape" ClassVersion="10">
+   <version ClassVersion="10" checksum="2977556974"/>
+    <field name="covEtaEta_" iotype="Double32_t"/>
+    <field name="covEtaPhi_" iotype="Double32_t"/>
+    <field name="covPhiPhi_" iotype="Double32_t"/>
+    <field name="eMax_" iotype="Double32_t"/>
+    <field name="e2nd_" iotype="Double32_t"/>
+    <field name="e2x2_" iotype="Double32_t"/>
+    <field name="e3x2_" iotype="Double32_t"/>
+    <field name="e3x3_" iotype="Double32_t"/>
+    <field name="e4x4_" iotype="Double32_t"/>
+    <field name="e5x5_" iotype="Double32_t"/>
+    <field name="e2x5Right_" iotype="Double32_t"/>
+    <field name="e2x5Left_" iotype="Double32_t"/>
+    <field name="e2x5Top_" iotype="Double32_t"/>
+    <field name="e2x5Bottom_" iotype="Double32_t"/>
+    <field name="e3x2Ratio_" iotype="Double32_t"/>
+    <field name="LAT_" iotype="Double32_t"/>
+    <field name="etaLAT_" iotype="Double32_t"/>
+    <field name="phiLAT_" iotype="Double32_t"/>
+    <field name="A20_" iotype="Double32_t"/>
+    <field name="A42_" iotype="Double32_t"/>
+  </class>
+  <class name="std::vector<reco::ClusterShape>"/>
+  <class name="edm::Wrapper<std::vector<reco::ClusterShape> >"/>
+  <class name="edm::Ref<std::vector<reco::ClusterShape>,reco::ClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::ClusterShape>,reco::ClusterShape> >"/>
+  <class name="edm::RefProd<std::vector<reco::ClusterShape> >"/>
+  <class name="edm::RefVector<std::vector<reco::ClusterShape>,reco::ClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::ClusterShape>,reco::ClusterShape> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::ClusterShape>,reco::ClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::ClusterShape>,reco::ClusterShape> > >"/>
+
+  <class name="reco::HFEMClusterShape" ClassVersion="10">
+   <version ClassVersion="10" checksum="1841315109"/>
+  </class>
+  <class name="std::vector<reco::HFEMClusterShape>"/>
+  <class name="edm::Wrapper<std::vector<reco::HFEMClusterShape> >"/>
+  <class name="edm::Ref<std::vector<reco::HFEMClusterShape>,reco::HFEMClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::HFEMClusterShape>,reco::HFEMClusterShape> >"/>
+  <class name="edm::RefProd<std::vector<reco::HFEMClusterShape> >"/>
+  <class name="edm::RefVector<std::vector<reco::HFEMClusterShape>,reco::HFEMClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::HFEMClusterShape>,reco::HFEMClusterShape> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::HFEMClusterShape>,reco::HFEMClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::HFEMClusterShape>,reco::HFEMClusterShape> > >"/>
+
+  <class name="reco::PreshowerClusterShape" ClassVersion="10">
+   <version ClassVersion="10" checksum="1713788487"/>
+  </class>
+  <class name="std::vector<reco::PreshowerClusterShape>"/>
+  <class name="edm::Wrapper<std::vector<reco::PreshowerClusterShape> >" splitLevel="0"/>
+  <class name="edm::Ref<std::vector<reco::PreshowerClusterShape>,reco::PreshowerClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::PreshowerClusterShape>,reco::PreshowerClusterShape> >"/>
+  <class name="edm::RefProd<std::vector<reco::PreshowerClusterShape> >"/>
+  <class name="edm::RefVector<std::vector<reco::PreshowerClusterShape>,reco::PreshowerClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::PreshowerClusterShape>,reco::PreshowerClusterShape> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::PreshowerClusterShape>,reco::PreshowerClusterShape,edm::refhelper::FindUsingAdvance<std::vector<reco::PreshowerClusterShape>,reco::PreshowerClusterShape> > >" splitLevel="0"/>
+
+  <class name="reco::ElectronSeed" ClassVersion="10">
+   <version ClassVersion="10" checksum="534580602"/>
+  </class>
+  <class name="std::vector<reco::ElectronSeed>"/>
+  <class name="edm::Ref<std::vector<reco::ElectronSeed>,reco::ElectronSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ElectronSeed>,reco::ElectronSeed> >"/>
+  <class name="edm::RefProd<std::vector<reco::ElectronSeed> >"/>
+  <class name="edm::Wrapper<std::vector<reco::ElectronSeed> >"/>
+  <class name="edm::RefVector<std::vector<reco::ElectronSeed>,reco::ElectronSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ElectronSeed>,reco::ElectronSeed> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::ElectronSeed>,reco::ElectronSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ElectronSeed>,reco::ElectronSeed> > >"/>
+  <class name="edm::RefToBase<reco::ElectronSeed>"/>
+  <class name="edm::reftobase::BaseHolder<reco::ElectronSeed>" />
+  <class name="edm::reftobase::IndirectHolder<reco::ElectronSeed>" />
+  <class name="edm::reftobase::RefHolder<edm::Ref<std::vector<reco::ElectronSeed>,reco::ElectronSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ElectronSeed>,reco::ElectronSeed> > >"/>
+  <class name="edm::reftobase::Holder<reco::ElectronSeed,edm::Ref<std::vector<reco::ElectronSeed>,reco::ElectronSeed,edm::refhelper::FindUsingAdvance<std::vector<reco::ElectronSeed>,reco::ElectronSeed> > >"/>
+
+
+  <class name="reco::PreshowerCluster" ClassVersion="10">
+   <version ClassVersion="10" checksum="469230288"/>
+  </class>
+  <class name="std::vector<reco::PreshowerCluster>"/>
+  <class name="edm::Wrapper<std::vector<reco::PreshowerCluster> >" splitLevel="0"/>
+  <class name="edm::Ref<std::vector<reco::PreshowerCluster>,reco::PreshowerCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::PreshowerCluster>,reco::PreshowerCluster> >"/>
+  <class name="edm::RefProd<std::vector<reco::PreshowerCluster> >"/>
+  <class name="edm::RefVector<std::vector<reco::PreshowerCluster>,reco::PreshowerCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::PreshowerCluster>,reco::PreshowerCluster> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::PreshowerCluster>,reco::PreshowerCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::PreshowerCluster>,reco::PreshowerCluster> > >" splitLevel="0"/>
+
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<reco::BasicCluster>, std::vector<reco::ClusterShape>, unsigned int > >">
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::BasicCluster> >, edm::RefProd<std::vector<reco::ClusterShape> > >"/>
+
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<reco::SuperCluster>, std::vector<reco::HFEMClusterShape>, unsigned int > >">
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::SuperCluster> >, edm::RefProd<std::vector<reco::HFEMClusterShape> > >"/>
+
+  <class pattern="edm::KeyVal<*>" />
+  <class pattern="edm::Wrapper<edm::AssociationMap<*>" />
+  <class pattern="edm::Ref<edm::AssociationMap<*>" />
+  <class pattern="edm::RefProd<edm::AssociationMap<*>" />
+  <class pattern="edm::RefVector<edm::AssociationMap<*>" />
+  <class pattern="edm::Wrapper<edm::RefVector<edm::AssociationMap<*>" />
+
+</lcgdict>
+

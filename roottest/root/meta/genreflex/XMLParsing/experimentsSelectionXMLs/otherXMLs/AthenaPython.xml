@@ -1,0 +1,33 @@
+<lcgdict>
+
+  <class name="std::type_info" />
+
+  <!-- Framework bindings -->
+  <class name="IClassIDSvc" />
+  <class name="IThinningSvc" />
+  <class name="Athena::IThinningHdlr" />
+  <class name="Athena::ISlimmingHdlr" />
+  <class name="IValgrindSvc" />
+  <class name="IUserDataSvc" />
+  <class name="IAthenaSealSvc" />
+  <class name="IDictLoaderSvc" />
+  <class name="IEvtIdModifierSvc" />
+  <class name="IIoComponent" />
+  <class name="IIoComponentMgr" />
+
+  <class name="AthAlgorithm" />
+  <class name="AthAlgTool" />
+  <class name="AthService" />
+
+  <class name="PyAthena::Alg" />
+  <class name="PyAthena::Svc" />
+  <class name="PyAthena::Tool" />
+  <class name="PyAthena::Aud" />
+
+  <!-- not yet
+  <function name="AthenaInternal::queryInterface" />
+  -->
+  <function name="AthenaInternal::getClid" />
+
+</lcgdict>
+

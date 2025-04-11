@@ -1,0 +1,30 @@
+
+<lcgdict>
+  <class name="NUEvent" ClassVersion="10">
+   <version ClassVersion="10" checksum="822636177"/>
+  </class>
+  <class name="NUEvent::NUParticle" ClassVersion="10">
+   <version ClassVersion="10" checksum="434697375"/>
+  </class>
+  <class name="std::vector<NUEvent::NUParticle>"/>
+  <class name="NUEvent::NUInteraction" ClassVersion="10">
+   <version ClassVersion="10" checksum="2164018178"/>
+  </class>
+  <class name="std::vector<NUEvent::NUInteraction>"/>
+
+  <class name="FSimVertexType" ClassVersion="10">
+   <version ClassVersion="10" checksum="1253390925"/>
+  </class>
+  <class name="std::vector<FSimVertexType>"/>
+  <class name="edm::Wrapper< std::vector<FSimVertexType> > "/>  
+  <class name="edm::Ref< std::vector<FSimVertexType>, FSimVertexType, edm::refhelper::FindUsingAdvance< std::vector<FSimVertexType>, FSimVertexType> >"/>
+
+  <class name="FSimDisplacedVertex" ClassVersion="10">
+   <version ClassVersion="10" checksum="251560649"/>
+  </class>
+  <class name="std::vector<FSimDisplacedVertex>"/>
+  <class name="edm::Wrapper< std::vector<FSimDisplacedVertex> > "/>  
+  <class name="edm::Ref< std::vector<FSimDisplacedVertex>, FSimDisplacedVertex, edm::refhelper::FindUsingAdvance< std::vector<FSimDisplacedVertex>, FSimDisplacedVertex> >"/>
+
+</lcgdict>
+

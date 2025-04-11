@@ -1,0 +1,13 @@
+<lcgdict>
+
+ <class name="RPCDigiSimLink" ClassVersion="10">
+  <version ClassVersion="10" checksum="3210258543"/>
+ </class>
+ <class name="edm::DetSet<RPCDigiSimLink>"/>
+ <class name="std::vector<RPCDigiSimLink>"/>
+ <class name="edm::DetSetVector<RPCDigiSimLink>"/>
+ <class name="std::vector<edm::DetSet<RPCDigiSimLink> >"/>
+ <class name="edm::Wrapper< edm::DetSet<RPCDigiSimLink> >" splitLevel="0" />
+ <class name="edm::Wrapper< std::vector<edm::DetSet<RPCDigiSimLink> > >" splitLevel="0" />
+ <class name="edm::Wrapper< edm::DetSetVector<RPCDigiSimLink> >" splitLevel="0" />
+</lcgdict>

@@ -1,0 +1,12 @@
+
+Processing execTestv1.C...
+=== Creating old-style object ===
+TH1.Print Name  = forwardMult, Entries= 2, Total sum= 0
+Ipz:         -5cm valid
+Triggers:    NSD
+sNN:         2760GeV
+System:      PbPb
+Centrality:  30%
+=== Wrote to file (in TTree) ===
+=== End of Test ===
+(int) 0

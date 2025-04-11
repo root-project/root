@@ -1,0 +1,16 @@
+
+Processing runtestTEfficiency.C...
+uniform prior with mode: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+uniform prior with mean: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+Jeffrey prior with mode: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+Jeffrey prior with mean: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+Clopper-Pearson: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+Agresti-Coull: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+Feldman-Cousin: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+Wilson: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+Normal: Comparison TEfficiency-TGraphAsymError :  OK for nevt = 1000
+confidence interval for Clopper-Pearson OK
+confidence interval for Normal OK
+confidence interval for Wilson OK
+confidence interval for Feldman-Cousins OK
+confidence interval for Jeffrey prior OK

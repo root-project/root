@@ -1,0 +1,99 @@
+<lcgdict>
+   <class name="reco::FFTBasicJet" />
+   <class name="reco::FFTBasicJetCollection" />
+   <class name="reco::FFTBasicJetRef" />
+   <class name="reco::FFTBasicJetFwdRef" />
+   <class name="reco::FFTBasicJetFwdPtr" />
+   <class name="reco::FFTBasicJetRefVector" />
+   <class name="reco::FFTBasicJetFwdRefVector" />
+   <class name="reco::FFTBasicJetFwdPtrVector" />
+   <class name="reco::FFTBasicJetRefProd" />
+   <class name="edm::Wrapper<reco::FFTBasicJetCollection>" />
+   <class name="edm::Wrapper<reco::FFTBasicJetRefVector>" />
+   <class name="edm::Wrapper<reco::FFTBasicJetFwdRefVector>" />
+   <class name="edm::Wrapper<reco::FFTBasicJetFwdPtrVector>" />
+   <class name="edm::reftobase::Holder<reco::Candidate, reco::FFTBasicJetRef>" />
+   <class name="reco::JetTrackMatch<reco::FFTBasicJetCollection>" />
+   <class name="edm::reftobase::Holder<reco::Jet, reco::FFTBasicJetRef>" />
+   <class name="edm::reftobase::RefHolder<reco::FFTBasicJetRef>" />
+   <class name="edm::Ptr<reco::FFTBasicJet>" />
+   <class name="edm::PtrVector<reco::FFTBasicJet>" />
+   <class name="edm::Association<reco::FFTBasicJetCollection>" />
+   <class name="edm::Wrapper<edm::Association<reco::FFTBasicJetCollection> >" />
+
+   <class name="reco::FFTPFJet" />
+   <class name="reco::FFTPFJetCollection" />
+   <class name="reco::FFTPFJetRef" />
+   <class name="reco::FFTPFJetFwdRef" />
+   <class name="reco::FFTPFJetFwdPtr" />
+   <class name="reco::FFTPFJetRefVector" />
+   <class name="reco::FFTPFJetFwdRefVector" />
+   <class name="reco::FFTPFJetFwdPtrVector" />
+   <class name="reco::FFTPFJetRefProd" />
+   <class name="edm::Wrapper<reco::FFTPFJetCollection>" />
+   <class name="edm::Wrapper<reco::FFTPFJetRefVector>" />
+   <class name="edm::Wrapper<reco::FFTPFJetFwdRefVector>" />
+   <class name="edm::Wrapper<reco::FFTPFJetFwdPtrVector>" />
+   <class name="edm::reftobase::Holder<reco::Candidate, reco::FFTPFJetRef>" />
+   <class name="reco::JetTrackMatch<reco::FFTPFJetCollection>" />
+   <class name="edm::reftobase::Holder<reco::Jet, reco::FFTPFJetRef>" />
+   <class name="edm::reftobase::RefHolder<reco::FFTPFJetRef>" />
+   <class name="edm::Ptr<reco::FFTPFJet>" />
+   <class name="edm::PtrVector<reco::FFTPFJet>" />
+   <class name="edm::Association<reco::FFTPFJetCollection>" />
+   <class name="edm::Wrapper<edm::Association<reco::FFTPFJetCollection> >" />
+
+   <class name="reco::FFTTrackJet" />
+   <class name="reco::FFTTrackJetCollection" />
+   <class name="reco::FFTTrackJetRef" />
+   <class name="reco::FFTTrackJetFwdRef" />
+   <class name="reco::FFTTrackJetFwdPtr" />
+   <class name="reco::FFTTrackJetRefVector" />
+   <class name="reco::FFTTrackJetFwdRefVector" />
+   <class name="reco::FFTTrackJetFwdPtrVector" />
+   <class name="reco::FFTTrackJetRefProd" />
+   <class name="edm::Wrapper<reco::FFTTrackJetCollection>" />
+   <class name="edm::Wrapper<reco::FFTTrackJetRefVector>" />
+   <class name="edm::Wrapper<reco::FFTTrackJetFwdRefVector>" />
+   <class name="edm::Wrapper<reco::FFTTrackJetFwdPtrVector>" />
+   <class name="edm::reftobase::Holder<reco::Candidate, reco::FFTTrackJetRef>" />
+   <class name="reco::JetTrackMatch<reco::FFTTrackJetCollection>" />
+   <class name="edm::reftobase::Holder<reco::Jet, reco::FFTTrackJetRef>" />
+   <class name="edm::reftobase::RefHolder<reco::FFTTrackJetRef>" />
+   <class name="edm::Ptr<reco::FFTTrackJet>" />
+   <class name="edm::PtrVector<reco::FFTTrackJet>" />
+   <class name="edm::Association<reco::FFTTrackJetCollection>" />
+   <class name="edm::Wrapper<edm::Association<reco::FFTTrackJetCollection> >" />
+
+   <class name="reco::FFTJPTJet" />
+   <class name="reco::FFTJPTJetCollection" />
+   <class name="reco::FFTJPTJetRef" />
+   <class name="reco::FFTJPTJetFwdRef" />
+   <class name="reco::FFTJPTJetFwdPtr" />
+   <class name="reco::FFTJPTJetRefVector" />
+   <class name="reco::FFTJPTJetFwdRefVector" />
+   <class name="reco::FFTJPTJetFwdPtrVector" />
+   <class name="reco::FFTJPTJetRefProd" />
+   <class name="edm::Wrapper<reco::FFTJPTJetCollection>" />
+   <class name="edm::Wrapper<reco::FFTJPTJetRefVector>" />
+   <class name="edm::Wrapper<reco::FFTJPTJetFwdRefVector>" />
+   <class name="edm::Wrapper<reco::FFTJPTJetFwdPtrVector>" />
+   <class name="edm::reftobase::Holder<reco::Candidate, reco::FFTJPTJetRef>" />
+   <class name="reco::JetTrackMatch<reco::FFTJPTJetCollection>" />
+   <class name="edm::reftobase::Holder<reco::Jet, reco::FFTJPTJetRef>" />
+   <class name="edm::reftobase::RefHolder<reco::FFTJPTJetRef>" />
+   <class name="edm::Ptr<reco::FFTJPTJet>" />
+   <class name="edm::PtrVector<reco::FFTJPTJet>" />
+   <class name="edm::Association<reco::FFTJPTJetCollection>" />
+   <class name="edm::Wrapper<edm::Association<reco::FFTJPTJetCollection> >" />
+
+   <class name="reco::DiscretizedEnergyFlow"  ClassVersion="10">
+    <version ClassVersion="10" checksum="2507131342"/>
+   </class>
+   <class name="edm::Wrapper<reco::DiscretizedEnergyFlow>" />
+
+   <class name="reco::FFTJetPileupSummary"  ClassVersion="10">
+    <version ClassVersion="10" checksum="987073443"/>
+   </class>
+   <class name="edm::Wrapper<reco::FFTJetPileupSummary>" />
+</lcgdict>

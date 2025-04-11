@@ -1,0 +1,9 @@
+<lcgdict>
+<class name="Outer::Class"/>
+<class name="list<Outer::Class>"/>
+<class name="Outer::Container<Outer::Class>"/>
+<class name="Outer::Template<Outer::Class>"/>
+<class name="Outer::Container<Outer::Template<Outer::Class> >"/>
+<class name="Outer::Template<Float16_t>"/>
+<class name="Outer::Container<Outer::Template<Double32_t> >"/>
+</lcgdict>

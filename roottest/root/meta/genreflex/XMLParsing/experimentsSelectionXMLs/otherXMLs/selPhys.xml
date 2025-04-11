@@ -1,0 +1,220 @@
+<!-- * $Id: Rels.py,v 1.2 2008-11-02 16:44:38 ibelyaev Exp $ 
+     * ========================================================================
+     * $CVS tag:$, version $Revision: 1.2 $ 
+     * ========================================================================
+-->
+
+<!-- * @file
+     *
+     * The basic selection file to build the Reflex dictionaries
+     * @author ibelyaev 
+     * @date  2012-11-22 20:29:42.355039 
+     * ========================================================================
+--> 
+
+
+<lcgdict>
+
+
+    <class name="LHCb::Relation1D<LHCb::Particle,LHCb::VertexBase>" 
+           id="EA9168DC-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation1D<LHCb::Particle,double>" 
+           id="2FF8FECF-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation1D<LHCb::Particle,int>" 
+           id="F94852E4-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::Relation1D<LHCb::Track,float>" 
+           id="C4411838-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::Particle,LHCb::Particle,double>" 
+           id="20501CF2-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted1D<LHCb::Particle,LHCb::VertexBase,double>" 
+           id="98D94C3F-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::CaloCluster,LHCb::Track,float>" 
+           id="9F983D0A-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::CaloHypo,LHCb::Track,float>" 
+           id="86C12D4E-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::Track,LHCb::CaloCluster,float>" 
+           id="25615483-0000-0000-0000-000000000000" />
+
+    <class name="LHCb::RelationWeighted2D<LHCb::Track,LHCb::CaloHypo,float>" 
+           id="0D105CB0-0000-0000-0000-000000000000" />
+
+ <class name="IRelation<LHCb::Particle,LHCb::VertexBase>" /> 
+ <class name="IRelation<LHCb::Particle,double>" /> 
+ <class name="IRelation<LHCb::Particle,int>" /> 
+ <class name="IRelation<LHCb::Track,float>" /> 
+ <class name="IRelationWeighted2D<LHCb::CaloCluster,LHCb::Track,float>" /> 
+ <class name="IRelationWeighted2D<LHCb::CaloHypo,LHCb::Track,float>" /> 
+ <class name="IRelationWeighted2D<LHCb::Track,LHCb::CaloCluster,float>" /> 
+ <class name="IRelationWeighted2D<LHCb::Track,LHCb::CaloHypo,float>" /> 
+ <class name="IRelationWeighted<LHCb::CaloCluster,LHCb::Track,float>" /> 
+ <class name="IRelationWeighted<LHCb::CaloHypo,LHCb::Track,float>" /> 
+ <class name="IRelationWeighted<LHCb::Particle,LHCb::Particle,double>" /> 
+ <class name="IRelationWeighted<LHCb::Particle,LHCb::VertexBase,double>" /> 
+ <class name="IRelationWeighted<LHCb::Track,LHCb::CaloCluster,float>" /> 
+ <class name="IRelationWeighted<LHCb::Track,LHCb::CaloHypo,float>" /> 
+ <class name="Relations::Entry_<LHCb::Particle,LHCb::VertexBase>" /> 
+ <class name="Relations::Entry_<LHCb::Particle,double>" /> 
+ <class name="Relations::Entry_<LHCb::Particle,int>" /> 
+ <class name="Relations::Entry_<LHCb::Track,float>" /> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::Particle,LHCb::VertexBase> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::Particle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::Particle,int> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::Entry_<LHCb::Track,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::CaloCluster,LHCb::Track,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::CaloHypo,LHCb::Track,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::Particle,LHCb::Particle,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::Particle,LHCb::VertexBase,double> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::Track,LHCb::CaloCluster,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Range_<std::vector<Relations::WEntry_<LHCb::Track,LHCb::CaloHypo,float> > >" >
+    <field name="m_begin" transient="true" />
+    <field name="m_end"   transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::CaloCluster,LHCb::Track,float>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::CaloHypo,LHCb::Track,float>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::Track,LHCb::CaloCluster,float>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation2Weighted<LHCb::Track,LHCb::CaloHypo,float>" >
+    <field name="m_inverse" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::Particle,LHCb::VertexBase>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::Particle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::Particle,int>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::Relation<LHCb::Track,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationBase<LHCb::Particle,LHCb::VertexBase>" /> 
+ <class name="Relations::RelationBase<LHCb::Particle,double>" /> 
+ <class name="Relations::RelationBase<LHCb::Particle,int>" /> 
+ <class name="Relations::RelationBase<LHCb::Track,float>" /> 
+ <class name="Relations::RelationWeighted<LHCb::CaloCluster,LHCb::Track,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::CaloHypo,LHCb::Track,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::Particle,LHCb::Particle,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::Particle,LHCb::VertexBase,double>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::Track,LHCb::CaloCluster,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeighted<LHCb::Track,LHCb::CaloHypo,float>" >
+    <field name="m_inverse_aux" transient="true" />
+ </class> 
+ <class name="Relations::RelationWeightedBase<LHCb::CaloCluster,LHCb::Track,float>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::CaloHypo,LHCb::Track,float>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::Particle,LHCb::Particle,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::Particle,LHCb::VertexBase,double>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::Track,LHCb::CaloCluster,float>" /> 
+ <class name="Relations::RelationWeightedBase<LHCb::Track,LHCb::CaloHypo,float>" /> 
+ <class name="Relations::WEntry_<LHCb::CaloCluster,LHCb::Track,float>" /> 
+ <class name="Relations::WEntry_<LHCb::CaloHypo,LHCb::Track,float>" /> 
+ <class name="Relations::WEntry_<LHCb::Particle,LHCb::Particle,double>" /> 
+ <class name="Relations::WEntry_<LHCb::Particle,LHCb::VertexBase,double>" /> 
+ <class name="Relations::WEntry_<LHCb::Track,LHCb::CaloCluster,float>" /> 
+ <class name="Relations::WEntry_<LHCb::Track,LHCb::CaloHypo,float>" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::Particle,LHCb::VertexBase> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::Particle,double> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::Particle,int> >" /> 
+ <class name="std::vector<Relations::Entry_<LHCb::Track,float> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::CaloCluster,LHCb::Track,float> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::CaloHypo,LHCb::Track,float> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::Particle,LHCb::Particle,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::Particle,LHCb::VertexBase,double> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::Track,LHCb::CaloCluster,float> >" /> 
+ <class name="std::vector<Relations::WEntry_<LHCb::Track,LHCb::CaloHypo,float> >" /> 
+
+ <class pattern="Relations::Pointer<*>"   /> 
+ <class pattern="Relations::Reference<*>" /> 
+
+ <!-- * EXCLUSIONS                       * -->
+ <!-- *  1) Not needed for interactivity * -->
+ <!-- *  2) Not needed for persistency   * -->
+
+ <exclusion>
+
+ <class pattern="IRelation*">
+    <method name="="/>
+ </class>
+ <class pattern="LHCb::Relation*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Relation*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Entry_*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::WEntry_*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Range_*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Pointer*">
+    <method name="="/>
+ </class>
+ <class pattern="Relations::Reference*">
+    <method name="="/>
+ </class>
+ <class pattern="std::vector&lt;Relations::*&gt;">
+    <method name="="/>
+ </class>
+
+ </exclusion>
+
+</lcgdict>
+
+<!-- * ===================================================================== -->
+<!-- * The END * =========================================================== -->
+<!-- * ===================================================================== -->
+

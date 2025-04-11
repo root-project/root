@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="HLTObjectsInRoI"/>
+  <class name="MuonObjectsInRoI"/>
+  <class name="TileMuObjectsInRoI"/>
+  <class name="ElectronObjectsInRoI"/>
+  <class name="TauObjectsInRoI"/>
+  <class name="JetObjectsInRoI"/>
+  <class name="MissingETObjectsInRoI"/>
+</lcgdict>

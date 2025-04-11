@@ -1,0 +1,103 @@
+<!-- $Id: selection.xml 601494 2014-06-12 17:36:43Z ssnyder $ -->
+<lcgdict>
+
+   <!-- The byte stream auxiliary container, v1: -->
+   <class name="xAOD::ByteStreamAuxContainer_v1" >
+     <field name="m_auxids" transient="true" />
+     <field name="m_staticVecs" transient="true" />
+     <field name="m_dynamicVecs" transient="true" />
+     <field name="m_locked" transient="true" />
+     <field name="m_isDecoration" transient="true" />
+     <field name="m_mutex" transient="true" />
+     <field name="m_tsAuxids" transient="true" />
+   </class>
+   <read sourceClass="xAOD::ByteStreamAuxContainer_v1" version="[1-]"
+         targetClass="xAOD::ByteStreamAuxContainer_v1" source=""
+         target="" >
+     <![CDATA[
+        newObj->reset();
+     ]]>
+   </read>
+
+   <!-- Types used by ByteStreamAuxContainer_v1 internally: -->
+   <class name="std::map<std::string,std::vector<int> >" />
+   <class name="std::map<std::string,std::vector<float> >" />
+   <class name="std::map<std::string,std::vector<std::vector<int> > >" />
+   <class name="std::map<std::string,std::vector<std::vector<float> > >" />
+
+   <!-- RoI dictionaries: -->
+   <class name="xAOD::MuonRoI_v1" />
+   <class name="xAOD::MuonRoIContainer_v1"
+          id="807F1B34-CFD5-4410-AB98-83231B551D6F" />
+   <class name="xAOD::MuonRoIAuxContainer_v1"
+          id="242CC7E8-D74C-4208-A3F6-2982628F1F8E" />
+
+   <class name="xAOD::JetRoI_v1" />
+   <class name="xAOD::JetRoIContainer_v1"
+          id="ED39F230-5E9A-11E3-9563-02163E00A725" />
+   <class name="xAOD::JetRoIAuxContainer_v1"
+          id="64C2E2A4-5E9A-11E3-BEF2-02163E00A725" />
+
+   <class name="xAOD::EmTauRoI_v1" />
+   <class name="xAOD::EmTauRoIContainer_v1"
+          id="101CD1EE-5EA2-11E3-895D-02163E00A743" />
+   <class name="xAOD::EmTauRoIAuxContainer_v1"
+          id="1825AE7E-5EA2-11E3-A41F-02163E00A743" />
+
+   <class name="xAOD::JetEtRoI_v1"
+          id="6018AD28-5EAF-11E3-9B5D-02163E00A743" />
+   <class name="xAOD::JetEtRoIAuxInfo_v1"
+          id="6A7C6F7A-5EAF-11E3-BFBC-02163E00A743" />
+
+   <class name="xAOD::EnergySumRoI_v1"
+          id="727CB19A-5EB8-11E3-81B0-02163E00A743" />
+   <class name="xAOD::EnergySumRoIAuxInfo_v1"
+          id="7BD71A00-5EB8-11E3-95AF-02163E00A743" />
+
+   <!-- TriggerMenu dictionaries: -->
+   <class name="xAOD::TriggerMenu_v1" />
+   <class name="xAOD::TriggerMenuContainer_v1"
+          id="AA55120B-11CF-44A3-B1E4-A5AB062207B7" />
+   <class name="xAOD::TriggerMenuAuxContainer_v1"
+          id="B8614CC5-8696-4170-8CCC-496DA7671246" />
+
+   <class name="xAOD::TrigConfKeys_v1"
+          id="A88FD5D2-8BCB-4ADC-978C-0914D86B96B7" />
+
+   <!-- Extra types used by TriggerMenu: -->
+   <class name="std::vector<std::vector<uint16_t> >" />
+   <class name="std::vector<std::vector<std::vector<uint16_t> > >" />
+
+  <!-- TrigDecision_v1 dictionaries: -->
+  <class name="xAOD::TrigDecision_v1"
+         id="092BCB2D-9630-4689-BE86-7B93466420DA" />
+  <class name="xAOD::TrigDecisionAuxInfo_v1"
+         id="F9618829-3B9C-41CB-8A87-D26B5D31CA79" />
+
+  <!-- TrigComposite_v1 dictionaries: -->
+  <class name="xAOD::TrigComposite_v1" />
+  <class name="xAOD::TrigCompositeContainer_v1"
+         id="3CB1DCCD-2B78-4E15-AC09-D75B228A29AA" />
+  <class name="xAOD::TrigCompositeAuxContainer_v1"
+         id="171EB8B8-A777-47D9-94A9-33B2482E2AAF" />
+
+  <!-- Extra types used by TrigComposite: -->
+  <class name="std::vector<std::vector<std::string> >" />
+
+  <!-- Bunch configuration dictionaries: -->
+  <class name="xAOD::BunchConf_v1" />
+  <class name="xAOD::BunchConfContainer_v1"
+         id="07B1BB98-24EE-4EA3-B0D5-ECB2B0A3CB65" />
+  <class name="xAOD::BunchConfAuxContainer_v1"
+         id="29CFA84E-5C7C-4AAD-8FB5-F5EB9AF93423" />
+  <class name="xAOD::BunchConfKey_v1"
+         id="B7FA1A14-95A4-4852-813E-CB2271906060" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+  </exclusion>
+
+</lcgdict>

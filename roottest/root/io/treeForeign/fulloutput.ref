@@ -1,0 +1,44 @@
+
+Processing Run.C...
+Warning in <TClass::TClass>: no dictionary for class Wrapper is available
+Warning in <TClass::TClass>: no dictionary for class MyClass is available
+******************************************************************************
+*Tree    :T         : T                                                      *
+*Entries :        2 : Total =           75332 bytes  File  Size =       1615 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Branch  :obj                                                                *
+*Entries :        2 : BranchElement (see below)                              *
+*............................................................................*
+*Br    0 :myvar     :                                                        *
+*Entries :        2 : Total  Size=      12412 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :arr       : arr_                                                   *
+*Entries :        2 : Total  Size=      62406 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :arr.fUniqueID : fUniqueID[arr_]                                    *
+*Entries :        2 : Total  Size=      12552 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :arr.fBits : fBits[arr_]                                            *
+*Entries :        2 : Total  Size=      12528 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    4 :arr.chunk : chunk[arr_]                                            *
+*Entries :        2 : Total  Size=      12600 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+************************
+*    Row   *     myvar *
+************************
+*        0 *        99 *
+*        1 *        99 *
+************************
+************************
+*    Row   * arr.chunk *
+************************
+*        0 *         1 *
+*        1 *         1 *
+************************

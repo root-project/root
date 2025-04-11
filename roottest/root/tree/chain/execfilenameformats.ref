@@ -1,0 +1,7 @@
+
+Processing execfilenameformats.C...
+Making ntuple file ff_n1.root
+Making ntuple file ff_n2.root
+Adding two files to a chain
+Adding two files to a chain, with treename specified in the filename
+Using wildcard to add all maching files to a chain, with treename specified in the filename

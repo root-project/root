@@ -1,0 +1,24 @@
+<lcgdict>
+  <class name="CommonMETv0Data" ClassVersion="10">
+   <version ClassVersion="10" checksum="1938538845"/>
+  </class>
+
+  <class name="BaseMETv0" ClassVersion="10">
+   <version ClassVersion="10" checksum="1641404436"/>
+  </class>
+  <class name="edm::Wrapper<BaseMETv0>"/>
+
+  <class name="METv0" ClassVersion="10">
+   <version ClassVersion="10" checksum="182988015"/>
+  </class>
+  <class name="edm::Wrapper<METv0>" id="20145548-21F3-49A6-9EDE-36DB78DC1D54"/>
+  <class name="edm::Wrapper<std::vector<METv0> >"/>
+  <class name="std::vector<METv0>"/>
+
+  <class name="TowerMETv0" ClassVersion="10">
+   <version ClassVersion="10" checksum="2638317504"/>
+  </class>
+  <class name="edm::Wrapper<TowerMETv0>" id="83414CC1-1BDD-0922-4752-1589391CBC4B"/>
+  <class name="edm::Wrapper<std::vector<TowerMETv0> >"/>
+  <class name="std::vector<TowerMETv0>"/>
+</lcgdict>

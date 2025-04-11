@@ -1,0 +1,15 @@
+Test calling of a python global function ... ok
+Test calling of a python callable object ... ok
+Test fitting with a python global function ... ok
+Test calling of an interpreted C++ global function ... ok
+Test calling of an interpreted C++ namespaced global function ... ok
+Test calling of a compiled C++ global function ... ok
+Test calling of a compiled C++ namespaced global function ... ok
+Test namespace update after adding a global function ... ok
+Test installing and calling global C++ function as python method ... ok
+Test installing and calling namespaced C++ function as python method ... ok
+Test minuit callback and fit ... ok
+
+----------------------------------------------------------------------
+
+OK

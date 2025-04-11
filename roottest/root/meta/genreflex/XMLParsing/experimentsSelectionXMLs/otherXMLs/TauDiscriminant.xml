@@ -1,0 +1,10 @@
+<lcgdict>
+  <enum pattern="TauID::Types::*"/>
+  <variable pattern="TauID::Types::*"/>
+  <class name="TauID::TauIDReader"/>
+  <class name="TauID::MethodCuts"/>
+  <class name="TauID::MethodBDT"/>
+  <class name="TauID::MethodLLH"/>
+  <class name="TauID::MethodDummy"/>
+  <class name="TauID::MethodTransform"/>
+</lcgdict>

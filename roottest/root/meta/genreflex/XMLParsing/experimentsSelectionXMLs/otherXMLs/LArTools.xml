@@ -1,0 +1,27 @@
+<lcgdict>
+
+  <class name="LArCablingService" />
+  <class name="LArCablingBase" />
+  <class name="LArSuperCellCablingTool" />
+  <class name="LArMCSymTool" />
+
+ <!--
+  <class name="LArFebRod_P::LArFebRod_P_t" />
+  <class name="std::vector<LArFebRod_P::LArFebRod_P_t>" /> 
+  <class name="LArFebRod_P" id="5848F83B-5AB5-4F8B-B1A0-F2236C554678" /> 
+
+  <class name="LArOnOffId_P::LArOnOffId_P_t" />
+  <class name="std::vector<LArOnOffId_P::LArOnOffId_P_t>" />
+  <class name="LArOnOffId_P" id="5BAE6A5A-48D1-4756-BD3E-ABA2D1DA3986" />
+-->
+
+  <!--  Not sure if we need all of ese yet
+  <class name="ILAVCell" />
+  <class name="ILAVDetector" />
+  <class name="ILAVElectrode" />
+  <class name="ILAVSpecialElectrode" />
+  <class name="ILArReadoutModuleService" />
+  -->
+
+</lcgdict>
+

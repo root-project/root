@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="MuonIdHelper" />
+  <class name="CscIdHelper" />
+  <class name="MdtIdHelper" />
+  <class name="RpcIdHelper" />
+  <class name="TgcIdHelper" />
+  <class name="sTgcIdHelper" />
+  <class name="MmIdHelper" />
+</lcgdict>

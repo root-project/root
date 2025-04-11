@@ -1,0 +1,38 @@
+#
+#   Common settings
+#
+CPPFLAGS      := -I. -I$(ROOTSYS)/include  -DST_NO_NAMESPACES
+CXXFLAGS      := -g -fPIC -Wall -L$(ROOTSYS)/lib -L. 
+LDFLAGS       := -z
+LIBS          := -lNew -lCore -lCint -lHist -lTree -lMatrix -lMyData  -ldl
+
+
+LD            := g++
+
+AR 	      		:= ar
+
+
+#
+#   Rules and dependencies
+#
+
+all: libMyData.so fillTree
+
+
+%.o:	%.cxx
+	$(CXX) -c $(CXXFLAGS) $(CPPFLAGS) $<
+
+
+Data_Cint.cxx: Data.h
+	rootcint -v4 -f Data_Cint.cxx Data.h DataLinkDef.h
+
+libMyData.so: Data_Cint.o Data.o
+	$(CXX) -g -shared -Wl,-soname,libMyData.so -o libMyData.so.0.0  Data_Cint.o Data.o 
+
+fillTree: fillTree.o
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LIBS) $< \
+	-o fillTree $(LDFLAGS)
+
+clean:
+	rm -rf *~ *.o lib*.so.0.0 *_Cint.cxx *_Cint.h fillTree myTree.root
+

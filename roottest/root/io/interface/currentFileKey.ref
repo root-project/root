@@ -1,0 +1,9 @@
+
+Processing runcurrentFileKey.C...
+Warning in <TClass::TClass>: no dictionary for class MyClass is available
+TFile**		output.root	
+ TFile*		output.root	
+  TDirectory*		subdir	subdir
+   KEY: TH1F	h;1	h
+  KEY: TDirectory	subdir;1	subdir
+  KEY: TH1F	h;1	h

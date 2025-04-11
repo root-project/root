@@ -1,0 +1,44 @@
+Brief summary of the problem with GMT times which caused Windows 
+unit tests to fail on the first attempted release of COOL_1-2_0.
+
+An IOV is stored with a string '13:38 GMT' in the table.
+The problem is that tagAsOfDate tries to use the string '12:38 GMT'.
+
+Let's look at what happens at retrieval after insertion.
+1. findObject calls findSingleVersionObject where 
+   - fetchObjectTableRowAtTimeSV retrieves the string in an AttributeList
+   - RelationalObjectTable::decodeRow transforms AttributeList into IObject
+2. RelationalObjectTable::decodeRow
+   - transforms the string into a seal::Time using stringToTime
+   - calls the RelationalObject constructor with a seal::Time argument
+3. RelationalObject constructor
+   - transforms seal::Time into nanosec (no 'local' argument needed)
+   - calls seal::Time constructor from nanosec argument (no 'local' argument)
+   - stores the date as a seal::Time
+4. RelationalObject::insertionTime()
+   - returns a reference to the seal::Time
+5. tag( asOfDate )
+   - takes a seal::Time argument
+     (prints it out to screen using timeToString)
+   - calls fetchObjectTableRowsForTagging with the same seal::Time argument
+     (prints it out to screen using timeToString)
+6. fetchObjectTableRowsForTagging 
+   - binds the argument as string using timeToString
+
+In summary, this is what happens:
+  "13:38 GMT" (stored in IOV)
+  -> convert to seal::Time by stringToTime in RelationalObjectTable::decodeRow
+  -> convert to int64 by ns() in RelationalObject constructor
+  -> convert to seal::Time by constructor in RelationalObject constructor
+  -> convert to string by timeToString in fetchObjectTableRowsForTagging 
+
+The problem must be either
+- in seal::Time::ns() and seal::Time( ns )
+- in timeToString and stringToTime
+
+PS The bug was identified in the seal::Time constructor.
+When converting using GMT times, tm_isdst should be set to 0.
+Note that gmtime(timegm(tm)) is always equal to tm on Windows
+only if isdst=0: if isdst=+1/-1, a one hour difference is observed 
+for instance in January/April. Note also that calling timegm
+alters the value of the original tm.

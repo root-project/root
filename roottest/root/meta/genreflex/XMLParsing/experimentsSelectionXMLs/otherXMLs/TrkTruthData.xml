@@ -1,0 +1,23 @@
+<lcgdict>
+ 
+ <class name="PRD_MultiTruthCollection" id="30794FF9-F003-44A6-8553-ED61E2039882" />
+ <class name="std::multimap<Identifier,HepMcParticleLink>" />
+
+ <class name="TrackTruthCollection"  id="9F7D4926-A9FE-4568-AA5D-C208F01D4663" />
+ <class name="std::map<Trk::TrackTruthKey,TrackTruth>" /> 
+ <class name="std::pair<Trk::TrackTruthKey,TrackTruth>" /> 
+
+ <class name="DetailedTrackTruthCollection" />
+ <class name="std::multimap<Trk::TrackTruthKey, DetailedTrackTruth >" />
+ <class name="std::pair<Trk::TrackTruthKey, DetailedTrackTruth >" />
+ <class name="std::pair<const Trk::TrackTruthKey, DetailedTrackTruth >" />
+
+ <class name="DataLink<TrackCollection, DataProxyStorage<DataVector<Trk::Track> > >" />
+
+ <class name="Trk::TrackTruthKey" />
+ <class name="TrackTruth" />
+ <class name="DetailedTrackTruth" />
+ <class name="SubDetHitStatistics" />
+ <class name="TruthTrajectory" />
+
+</lcgdict>

@@ -1,0 +1,36 @@
+Test data member access when using virtual inheritence ... ok
+Test reference passing when using virtual inheritance ... ok
+Test data member access for a templated class ... ok
+Test data member access for a templated class instantiated with a template ... ok
+Test template instantiation with a std::vector< float > ... ok
+Test template member functions lookup and calls ... ok
+Test template member functions lookup and calls (set 2) ... ok
+Test overloaded template member functions lookup and calls ... ok
+Test template global function lookup and calls ... ok
+Use of template argument ... ok
+Test usage of Long/Double place holders ... ok
+Test parameter passing of builtins through non-const reference ... ok
+Test parameter passing of builtins through const reference ... ok
+Test abstract class in a hierarchy ... ok
+Test non-instatiatability of abstract classes ... ok
+Test assignment to an instance returned by reference ... ok
+Want nice error message of failing assign by reference ... ok
+Test operator int/long/double incl. typedef ... ok
+Check that the global operator!=/== is picked up ... ok
+Check that the namespaced global operator!=/== is picked up ... ok
+Check that a namespaced global operator!=/== can be used directly ... ok
+Verify access to array of doubles ... ok
+Verify writability of global instances ... ok
+Test life time of temporary in long expression ... ok
+Access C++ standard exception objects from python ... ok
+Assignment operator on pointers ... ok
+Lazy lookup of late created functions ... ok
+Lazy lookup of late created overloaded functions ... ok
+Use of custom new/delete ... ok
+Overload with implicit copy ctor ... ok
+Overload with user provided cctor second ... ok
+Overload with user provided cctor first ... ok
+
+----------------------------------------------------------------------
+
+OK

@@ -1,0 +1,29 @@
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-1-3 12:1:2
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-1-3 11:1:2 (DST=0)
+aTm = 1970-1-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 216062
+aTmM1 = 1970-1-3 12:1:2 (DST=0)
+aTimet0 = 216062
+aTm0 = 1970-1-3 12:1:2 (DST=0)
+aTimetP1 = 212462
+aTmP1 = 1970-1-3 11:1:2 (DST=0)
+
+\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\src\RelationalCool\tests\RelationalFolder\test_RelationalFolder.cpp(287) : Assertion
+Test name: cool::RelationalFolderTest.test_gmtime_timegm
+- Expected : 12
+
+- Actual   : 11
+
+gmtime(timegm(tm,isDst=+1))==tm : hour (Month[0-11]=0)
+
+
+Failures !!!
+Run: 1   Failure total: 1   Failures: 1   Errors: 0
+Error: CppUnit Failures
+[OVAL] Cppunit-result =1

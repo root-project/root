@@ -1,0 +1,11 @@
+<lcgdict>
+
+    <!-- MuonByteStreamErrors -->
+    <class name="Muon::RpcByteStreamErrorContainer_p1" id="4E46BDDC-E1F9-420A-A11F-47EF082A3E3A"/>
+    <!-- these lines creates duplicates in the overall atlas db - see https://savannah.cern.ch/bugs/?90535 
+    <class name="DataVector<std::pair<IdentifierHash, int> >" />
+    <class name="std::pair< IdentifierHash, int>"/>
+    <class name="std::vector< std::pair< IdentifierHash, int>* >"/>
+    -->
+
+</lcgdict>

@@ -1,0 +1,39 @@
+<lcgdict>
+
+  <!-- Dictionaries for the persistent LVL1 RoI classes -->
+  <class name="LVL1_ROI_p1" id="5FBA83E0-77DC-43DD-A511-E4F0A49882E0" />
+  <class name="Muon_ROI_p1" />
+  <class name="std::vector<Muon_ROI_p1>" />
+  <class name="Jet_ROI_p1" />
+  <class name="std::vector<Jet_ROI_p1>" />
+  <class name="JetET_ROI_p1" />
+  <class name="std::vector<JetET_ROI_p1>" />
+  <class name="EmTau_ROI_p1" />
+  <class name="std::vector<EmTau_ROI_p1>" />
+  <class name="EnergySum_ROI_p1" />
+  <class name="std::vector<EnergySum_ROI_p1>" />
+
+  <!-- Dictionary for the persistent CTP_Decision class -->
+  <class name="CTP_Decision_p1" id="1F421F32-8FBD-47B7-82ED-5354B9BE96D8" />
+  <class name="CTP_Decision_p2" id="08922DA9-6E47-4D3A-9FEC-0B4440644B50" />
+
+  <class name="T_TPCnv<CTP_Decision,CTP_Decision_p1>"/>
+  <class name="CTP_DecisionCnv_p1"/>
+  <class name="T_AthenaPoolTPCnvBase<CTP_Decision,CTP_Decision_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<CTP_Decision,CTP_Decision,CTP_Decision_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<CTP_Decision,CTP_Decision,CTP_Decision_p1>"/>
+  <class name="T_TPCnv<CTP_Decision,CTP_Decision_p2>"/>
+  <class name="CTP_DecisionCnv_p2"/>
+  <class name="T_AthenaPoolTPCnvBase<CTP_Decision,CTP_Decision_p2>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<CTP_Decision,CTP_Decision,CTP_Decision_p2>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<CTP_Decision,CTP_Decision,CTP_Decision_p2>"/>
+  <class name="ITPConverterFor<CTP_Decision>"/>
+
+  <class name="T_TPCnv<LVL1_ROI,LVL1_ROI_p1>"/>
+  <class name="LVL1_ROICnv_p1"/>
+  <class name="T_AthenaPoolTPCnvBase<LVL1_ROI,LVL1_ROI_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<LVL1_ROI,LVL1_ROI,LVL1_ROI_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<LVL1_ROI,LVL1_ROI,LVL1_ROI_p1>"/>
+  <class name="ITPConverterFor<LVL1_ROI>"/>
+
+</lcgdict>

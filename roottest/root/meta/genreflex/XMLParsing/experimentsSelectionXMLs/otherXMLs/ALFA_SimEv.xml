@@ -1,0 +1,12 @@
+ 
+<lcgdict>
+  <class name="ALFA_HitCollection" id="0F21F6BB-6719-41D3-8219-3ABF523826CD"/>
+  <class name="AtlasHitsVector<ALFA_Hit>" />
+  <class name="std::vector<ALFA_Hit>" />
+  <class name="ALFA_Hit" />
+  <class name="ALFA_ODHitCollection" id="019FDC47-2EA1-4B55-BBFB-57C1ED2C1042"/>
+  <class name="AtlasHitsVector<ALFA_ODHit>" />  
+  <class name="std::vector<ALFA_ODHit>" />
+  <class name="ALFA_ODHit" />  
+</lcgdict>
+

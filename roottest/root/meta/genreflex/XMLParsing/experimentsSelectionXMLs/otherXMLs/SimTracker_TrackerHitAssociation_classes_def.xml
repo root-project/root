@@ -1,0 +1,20 @@
+<lcgdict>
+ <class name="std::vector<OmniClusterRef>" persistent="true" /> 
+ <class name="edm::RefProd<std::vector<OmniClusterRef> >" />
+ <class name="edm::Wrapper<std::vector<OmniClusterRef> >" persistent="true" />
+ <class name="edm::AssociationMap<edm::OneToMany<std::vector<SimTrack>, std::vector<OmniClusterRef>, unsigned int > >" persistent="true" /> 
+ <class name="edm::Wrapper<edm::AssociationMap<edm::OneToMany<std::vector<SimTrack>, std::vector<OmniClusterRef>, unsigned int > > >" persistent="true" /> 
+ <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<SimTrack> >,edm::RefProd<std::vector<OmniClusterRef> > >" />
+ <class name="edm::Wrapper<edm::helpers::KeyVal<edm::RefProd<std::vector<SimTrack> >,edm::RefProd<std::vector<OmniClusterRef> > > >"  persistent="true" />
+ <class name="std::map<unsigned int,edm::helpers::KeyVal<edm::Ref<std::vector<SimTrack>,SimTrack,edm::refhelper::FindUsingAdvance<std::vector<SimTrack>,SimTrack> >,edm::RefVector<std::vector<OmniClusterRef>,OmniClusterRef,edm::refhelper::FindUsingAdvance<std::vector<OmniClusterRef>,OmniClusterRef> > > >" />
+ <class name="edm::helpers::KeyVal<edm::Ref<std::vector<SimTrack>,SimTrack,edm::refhelper::FindUsingAdvance<std::vector<SimTrack>,SimTrack> >,edm::RefVector<std::vector<OmniClusterRef>,OmniClusterRef,edm::refhelper::FindUsingAdvance<std::vector<OmniClusterRef>,OmniClusterRef> > >" />
+ <class name="edm::RefVector<std::vector<OmniClusterRef>,OmniClusterRef,edm::refhelper::FindUsingAdvance<std::vector<OmniClusterRef>,OmniClusterRef> >" />
+
+  <class name="std::pair<OmniClusterRef, TrackingParticleRef>" persistent="true" /> 
+  <class name="std::vector<std::pair<OmniClusterRef, TrackingParticleRef> >" persistent="true" /> 
+  <class name="edm::Wrapper<std::vector<std::pair<OmniClusterRef,TrackingParticleRef> > >" />
+  <class name="std::map<TrackingParticleRef, std::vector<OmniClusterRef> >" persistent="false" /> 
+  <class name="edm::Wrapper<std::map<TrackingParticleRef, std::vector<OmniClusterRef> > >" persistent="false" /> 
+  <class name="std::map<OmniClusterRef, std::vector<TrackingParticleRef> >" persistent="false" /> 
+  <class name="edm::Wrapper<std::map<OmniClusterRef, std::vector<TrackingParticleRef> > >" persistent="false" /> 
+</lcgdict>

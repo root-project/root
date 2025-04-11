@@ -1,0 +1,8 @@
+
+Processing runnestedHists.C...
+Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fHists.
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fHists.
+Error in <TTreeFormula::DefinedVariable>: Can not call method fHists.GetNbinsX() on class without dictionary (list<TH1F*>)!
+Error in <TTreeFormula::Compile>:  Part of the Variable "sectors.fStrips.fHists.GetNbinsX()" exists but some of it is not accessible or useable
+Info in <TSelectorDraw::AbortProcess>: Variable compilation failed: {sectors.fStrips.fHists.GetNbinsX(),}

@@ -1,0 +1,23 @@
+<lcgdict>
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<Trajectory>, std::vector<reco::GsfTrack>, unsigned short > >" >
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::AssociationMap<edm::OneToOne<reco::GsfTrackCollection, std::vector<MomentumConstraint>, unsigned int> >" >
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::AssociationMap<edm::OneToOne<reco::GsfTrackCollection, std::vector<VertexConstraint>, unsigned int> >" >
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<std::vector<Trajectory>, std::vector<reco::GsfTrack>, unsigned short > > >" />
+
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<reco::GsfTrackCollection, std::vector<MomentumConstraint>, unsigned int> > >" />
+
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<reco::GsfTrackCollection, std::vector<VertexConstraint>, unsigned int> > >" />
+
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<Trajectory> >, edm::RefProd<std::vector<reco::GsfTrack> > >"/>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::GsfTrack> >, edm::RefProd<std::vector<MomentumConstraint> > >"/>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::GsfTrack> >, edm::RefProd<std::vector<VertexConstraint> > >"/>
+
+  <class name="edm::helpers::KeyVal<edm::Ref<std::vector<Trajectory>, Trajectory, edm::refhelper::FindUsingAdvance<std::vector<Trajectory>, Trajectory> >, edm::Ref<std::vector<reco::GsfTrack>, reco::GsfTrack, edm::refhelper::FindUsingAdvance<std::vector<reco::GsfTrack>, reco::GsfTrack> > >" />
+
+</lcgdict>

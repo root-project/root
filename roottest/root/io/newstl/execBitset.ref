@@ -1,0 +1,1319 @@
+
+Processing execBitset.cxx+...
+i: 0 val: false
+i: 1 val: true
+i: 2 val: false
+i: 3 val: true
+i: 4 val: false
+About to write
+About to read
+Finished reading
+i: 0 val: false
+i: 1 val: true
+i: 2 val: false
+i: 3 val: true
+i: 4 val: false
+Run with a copy of the collection proxy
+Using 2 push and 2 objects
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Using the same object (and hence same CollectionProxy Env).
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Relying on the single push.
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+OBJ: TDataType	bool	Builtin basic type
+Using GetDataType AsString.
+# 0 0 vs 0
+false
+# 1 1 vs 1
+true
+# 2 0 vs 0
+false
+# 3 1 vs 1
+true
+# 4 0 vs 0
+false
+# 5 1 vs 1
+true
+# 6 0 vs 0
+false
+# 7 1 vs 1
+true
+# 8 0 vs 0
+false
+# 9 1 vs 1
+true
+# 10 0 vs 0
+false
+# 11 1 vs 1
+true
+# 12 0 vs 0
+false
+# 13 1 vs 1
+true
+# 14 0 vs 0
+false
+# 15 1 vs 1
+true
+# 16 0 vs 0
+false
+# 17 1 vs 1
+true
+# 18 0 vs 0
+false
+# 19 1 vs 1
+true
+# 20 0 vs 0
+false
+# 21 1 vs 1
+true
+# 22 0 vs 0
+false
+# 23 1 vs 1
+true
+# 24 0 vs 0
+false
+# 25 1 vs 1
+true
+# 26 0 vs 0
+false
+# 27 1 vs 1
+true
+# 28 0 vs 0
+false
+# 29 1 vs 1
+true
+# 30 0 vs 0
+false
+# 31 1 vs 1
+true
+# 32 0 vs 0
+false
+# 33 1 vs 1
+true
+# 34 0 vs 0
+false
+# 35 1 vs 1
+true
+# 36 0 vs 0
+false
+# 37 1 vs 1
+true
+# 38 0 vs 0
+false
+# 39 1 vs 1
+true
+# 40 0 vs 0
+false
+# 41 1 vs 1
+true
+# 42 0 vs 0
+false
+# 43 1 vs 1
+true
+# 44 0 vs 0
+false
+# 45 1 vs 1
+true
+# 46 0 vs 0
+false
+# 47 1 vs 1
+true
+# 48 0 vs 0
+false
+# 49 1 vs 1
+true
+# 50 0 vs 0
+false
+# 51 1 vs 1
+true
+# 52 0 vs 0
+false
+# 53 1 vs 1
+true
+# 54 0 vs 0
+false
+# 55 1 vs 1
+true
+# 56 0 vs 0
+false
+# 57 1 vs 1
+true
+# 58 0 vs 0
+false
+# 59 1 vs 1
+true
+# 60 0 vs 0
+false
+# 61 1 vs 1
+true
+# 62 0 vs 0
+false
+# 63 1 vs 1
+true
+Run with the original collection proxy
+Using 2 push and 2 objects
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Using the same object (and hence same CollectionProxy Env).
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Relying on the single push.
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+OBJ: TDataType	bool	Builtin basic type
+Using GetDataType AsString.
+# 0 0 vs 0
+false
+# 1 1 vs 1
+true
+# 2 0 vs 0
+false
+# 3 1 vs 1
+true
+# 4 0 vs 0
+false
+# 5 1 vs 1
+true
+# 6 0 vs 0
+false
+# 7 1 vs 1
+true
+# 8 0 vs 0
+false
+# 9 1 vs 1
+true
+# 10 0 vs 0
+false
+# 11 1 vs 1
+true
+# 12 0 vs 0
+false
+# 13 1 vs 1
+true
+# 14 0 vs 0
+false
+# 15 1 vs 1
+true
+# 16 0 vs 0
+false
+# 17 1 vs 1
+true
+# 18 0 vs 0
+false
+# 19 1 vs 1
+true
+# 20 0 vs 0
+false
+# 21 1 vs 1
+true
+# 22 0 vs 0
+false
+# 23 1 vs 1
+true
+# 24 0 vs 0
+false
+# 25 1 vs 1
+true
+# 26 0 vs 0
+false
+# 27 1 vs 1
+true
+# 28 0 vs 0
+false
+# 29 1 vs 1
+true
+# 30 0 vs 0
+false
+# 31 1 vs 1
+true
+# 32 0 vs 0
+false
+# 33 1 vs 1
+true
+# 34 0 vs 0
+false
+# 35 1 vs 1
+true
+# 36 0 vs 0
+false
+# 37 1 vs 1
+true
+# 38 0 vs 0
+false
+# 39 1 vs 1
+true
+# 40 0 vs 0
+false
+# 41 1 vs 1
+true
+# 42 0 vs 0
+false
+# 43 1 vs 1
+true
+# 44 0 vs 0
+false
+# 45 1 vs 1
+true
+# 46 0 vs 0
+false
+# 47 1 vs 1
+true
+# 48 0 vs 0
+false
+# 49 1 vs 1
+true
+# 50 0 vs 0
+false
+# 51 1 vs 1
+true
+# 52 0 vs 0
+false
+# 53 1 vs 1
+true
+# 54 0 vs 0
+false
+# 55 1 vs 1
+true
+# 56 0 vs 0
+false
+# 57 1 vs 1
+true
+# 58 0 vs 0
+false
+# 59 1 vs 1
+true
+# 60 0 vs 0
+false
+# 61 1 vs 1
+true
+# 62 0 vs 0
+false
+# 63 1 vs 1
+true
+Run with a copy of the collection proxy
+Using 2 push and 2 objects
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Using the same object (and hence same CollectionProxy Env).
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Relying on the single push.
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+OBJ: TDataType	bool	Builtin basic type
+Using GetDataType AsString.
+# 0 0 vs 0
+false
+# 1 1 vs 1
+true
+# 2 0 vs 0
+false
+# 3 1 vs 1
+true
+# 4 0 vs 0
+false
+# 5 1 vs 1
+true
+# 6 0 vs 0
+false
+# 7 1 vs 1
+true
+# 8 0 vs 0
+false
+# 9 1 vs 1
+true
+# 10 0 vs 0
+false
+# 11 1 vs 1
+true
+# 12 0 vs 0
+false
+# 13 1 vs 1
+true
+# 14 0 vs 0
+false
+# 15 1 vs 1
+true
+# 16 0 vs 0
+false
+# 17 1 vs 1
+true
+# 18 0 vs 0
+false
+# 19 1 vs 1
+true
+# 20 0 vs 0
+false
+# 21 1 vs 1
+true
+# 22 0 vs 0
+false
+# 23 1 vs 1
+true
+# 24 0 vs 0
+false
+# 25 1 vs 1
+true
+# 26 0 vs 0
+false
+# 27 1 vs 1
+true
+# 28 0 vs 0
+false
+# 29 1 vs 1
+true
+# 30 0 vs 0
+false
+# 31 1 vs 1
+true
+# 32 0 vs 0
+false
+# 33 1 vs 1
+true
+# 34 0 vs 0
+false
+# 35 1 vs 1
+true
+# 36 0 vs 0
+false
+# 37 1 vs 1
+true
+# 38 0 vs 0
+false
+# 39 1 vs 1
+true
+# 40 0 vs 0
+false
+# 41 1 vs 1
+true
+# 42 0 vs 0
+false
+# 43 1 vs 1
+true
+# 44 0 vs 0
+false
+# 45 1 vs 1
+true
+# 46 0 vs 0
+false
+# 47 1 vs 1
+true
+# 48 0 vs 0
+false
+# 49 1 vs 1
+true
+# 50 0 vs 0
+false
+# 51 1 vs 1
+true
+# 52 0 vs 0
+false
+# 53 1 vs 1
+true
+# 54 0 vs 0
+false
+# 55 1 vs 1
+true
+# 56 0 vs 0
+false
+# 57 1 vs 1
+true
+# 58 0 vs 0
+false
+# 59 1 vs 1
+true
+# 60 0 vs 0
+false
+# 61 1 vs 1
+true
+# 62 0 vs 0
+false
+# 63 1 vs 1
+true
+Run with the original collection proxy
+Using 2 push and 2 objects
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Using the same object (and hence same CollectionProxy Env).
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+Relying on the single push.
+# 0 0 vs 0
+# 1 1 vs 1
+# 2 0 vs 0
+# 3 1 vs 1
+# 4 0 vs 0
+# 5 1 vs 1
+# 6 0 vs 0
+# 7 1 vs 1
+# 8 0 vs 0
+# 9 1 vs 1
+# 10 0 vs 0
+# 11 1 vs 1
+# 12 0 vs 0
+# 13 1 vs 1
+# 14 0 vs 0
+# 15 1 vs 1
+# 16 0 vs 0
+# 17 1 vs 1
+# 18 0 vs 0
+# 19 1 vs 1
+# 20 0 vs 0
+# 21 1 vs 1
+# 22 0 vs 0
+# 23 1 vs 1
+# 24 0 vs 0
+# 25 1 vs 1
+# 26 0 vs 0
+# 27 1 vs 1
+# 28 0 vs 0
+# 29 1 vs 1
+# 30 0 vs 0
+# 31 1 vs 1
+# 32 0 vs 0
+# 33 1 vs 1
+# 34 0 vs 0
+# 35 1 vs 1
+# 36 0 vs 0
+# 37 1 vs 1
+# 38 0 vs 0
+# 39 1 vs 1
+# 40 0 vs 0
+# 41 1 vs 1
+# 42 0 vs 0
+# 43 1 vs 1
+# 44 0 vs 0
+# 45 1 vs 1
+# 46 0 vs 0
+# 47 1 vs 1
+# 48 0 vs 0
+# 49 1 vs 1
+# 50 0 vs 0
+# 51 1 vs 1
+# 52 0 vs 0
+# 53 1 vs 1
+# 54 0 vs 0
+# 55 1 vs 1
+# 56 0 vs 0
+# 57 1 vs 1
+# 58 0 vs 0
+# 59 1 vs 1
+# 60 0 vs 0
+# 61 1 vs 1
+# 62 0 vs 0
+# 63 1 vs 1
+OBJ: TDataType	bool	Builtin basic type
+Using GetDataType AsString.
+# 0 0 vs 0
+false
+# 1 1 vs 1
+true
+# 2 0 vs 0
+false
+# 3 1 vs 1
+true
+# 4 0 vs 0
+false
+# 5 1 vs 1
+true
+# 6 0 vs 0
+false
+# 7 1 vs 1
+true
+# 8 0 vs 0
+false
+# 9 1 vs 1
+true
+# 10 0 vs 0
+false
+# 11 1 vs 1
+true
+# 12 0 vs 0
+false
+# 13 1 vs 1
+true
+# 14 0 vs 0
+false
+# 15 1 vs 1
+true
+# 16 0 vs 0
+false
+# 17 1 vs 1
+true
+# 18 0 vs 0
+false
+# 19 1 vs 1
+true
+# 20 0 vs 0
+false
+# 21 1 vs 1
+true
+# 22 0 vs 0
+false
+# 23 1 vs 1
+true
+# 24 0 vs 0
+false
+# 25 1 vs 1
+true
+# 26 0 vs 0
+false
+# 27 1 vs 1
+true
+# 28 0 vs 0
+false
+# 29 1 vs 1
+true
+# 30 0 vs 0
+false
+# 31 1 vs 1
+true
+# 32 0 vs 0
+false
+# 33 1 vs 1
+true
+# 34 0 vs 0
+false
+# 35 1 vs 1
+true
+# 36 0 vs 0
+false
+# 37 1 vs 1
+true
+# 38 0 vs 0
+false
+# 39 1 vs 1
+true
+# 40 0 vs 0
+false
+# 41 1 vs 1
+true
+# 42 0 vs 0
+false
+# 43 1 vs 1
+true
+# 44 0 vs 0
+false
+# 45 1 vs 1
+true
+# 46 0 vs 0
+false
+# 47 1 vs 1
+true
+# 48 0 vs 0
+false
+# 49 1 vs 1
+true
+# 50 0 vs 0
+false
+# 51 1 vs 1
+true
+# 52 0 vs 0
+false
+# 53 1 vs 1
+true
+# 54 0 vs 0
+false
+# 55 1 vs 1
+true
+# 56 0 vs 0
+false
+# 57 1 vs 1
+true
+# 58 0 vs 0
+false
+# 59 1 vs 1
+true
+# 60 0 vs 0
+false
+# 61 1 vs 1
+true
+# 62 0 vs 0
+false
+# 63 1 vs 1
+true

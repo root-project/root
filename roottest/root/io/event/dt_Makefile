@@ -1,0 +1,72 @@
+# General indication for the size of the files
+size=6
+tracks=30
+# Use compression or not
+comp=0
+# For writing of the files
+action=1
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
+#include ./Makefile
+
+DATAFILES = Event.new.split0.root Event.new.split1.root \
+	Event.new.split2.root  Event.new.split9.root \
+	Event.old.streamed.root Event.old.split.root
+
+REFFILE=dt_reference.root
+
+OUTPUT=>/dev/null
+
+EVENT=Event
+
+files: $(DATAFILES)
+
+$(EVENT)$(ExeSuf) : $(EVENTDIR)/$(SUCCESS_FILE)
+
+drawtest : $(DATAFILES) $(REFFILE) dt_RunDrawTest_C.$(DllSuf)
+
+Event.new.split0.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) 0 $(action) $(tracks) Event.new.split0.root $(EVENTBUFSIZE) $(OUTPUT) && \
+	echo  "$@ made"
+
+Event.new.split1.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) 1 $(action) $(tracks) Event.new.split1.root $(EVENTBUFSIZE) $(OUTPUT)  && \
+	echo  "$@ made"
+
+Event.new.split2.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) 2 $(action) $(tracks) Event.new.split2.root $(EVENTBUFSIZE) $(OUTPUT)  && \
+	echo  "$@ made"
+
+Event.new.split9.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	./$(EVENT) $(size) $(comp) 9 $(action) $(tracks) Event.new.split9.root $(EVENTBUFSIZE) $(OUTPUT) && \
+	echo  "$@ made"
+
+Event.old.streamed.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) -1 $(action) $(tracks) Event.old.streamed.root $(EVENTBUFSIZE) $(OUTPUT) && \
+	echo  "$@ made"
+
+Event.old.split.root : $(EVENT)$(ExeSuf) libEvent.$(DllSuf)
+	@./$(EVENT) $(size) $(comp) -2 $(action) $(tracks) Event.old.split.root $(EVENTBUFSIZE) $(OUTPUT) && \
+	echo  "$@ made"
+
+$(REFFILE) : dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root
+	@root -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
+	echo "$@ made"
+
+ClassWarning='Warning in <TClass::TClass>: no dictionary for class'
+RootPrompt='root \[0\]'
+Streamer="Event::Streamer not available,"
+
+
+dt_RunDrawTest_C.$(DllSuf) : dt_RunDrawTest.C dt_DrawTest.C
+	@root -l -b -q dt_build.C $(OUTPUT) && \
+	echo "$@ made"
+
+#Windows does not like piping 
+#	@echo 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"))' | root -l -b $(OUTPUT) && \
+

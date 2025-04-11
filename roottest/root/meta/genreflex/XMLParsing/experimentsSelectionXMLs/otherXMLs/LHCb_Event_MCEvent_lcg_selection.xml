@@ -1,0 +1,17 @@
+<lcgdict>
+  <class name = "MCTrackInfo" />
+  <class name = "std::vector<const LHCb::MCParticle*>" />
+  <class name = "std::pair<LHCb::MCParticle*,double>"/>
+  <class name = "std::map<LHCb::MCParticle*,unsigned int> "/>
+  <class name = "GaudiUtils::Map<LHCb::MCParticle*,unsigned int,std::map<LHCb::MCParticle*,unsigned int> > "/>    
+  <class name = "std::vector<const LHCb::MCVertex*>" />
+
+  <exclusion>
+    <class name = "KeyedObject<LHCb::CaloCellID>" />
+    <class name = "KeyedObject<LHCb::STChannelID>" />
+    <class name = "KeyedObject<LHCb::VeloChannelID>" />
+    <class name = "KeyedObject<LHCb::VPChannelID>" />
+    <class name = "KeyedObject<LHCb::VLChannelID>" />
+  </exclusion>
+
+</lcgdict>

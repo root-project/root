@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="reweight::PoissonMeanShifter"/>
+  <class name="edm::LumiReWeighting"/>
+  <class name="edm::Lumi3DReWeighting"/>
+</lcgdict>

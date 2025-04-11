@@ -1,0 +1,175 @@
+<lcgdict>
+  <class name="std::vector<IdentifierHash>" />
+
+  <class name="TileFragHash" />
+  <class name="TileRawData" />
+
+
+  <class name="TileTTL1" />
+  <class name="std::vector<TileTTL1*>" />
+  <class name="DataVector<TileTTL1>" />
+
+  <class name="TileTTL1Container" id="F06C00C1-896A-4773-9F9C-21893C1E0CE7" />
+
+
+  <class name="TileTTL1Cell" />
+  <class name="std::vector<TileTTL1Cell*>" />
+  <class name="DataVector<TileTTL1Cell>" />
+
+  <class name="TileTTL1CellContainer" id="85B3F1B4-B1EC-4743-9EE0-1A2AE3EB05D3" />
+
+
+  <class name="TileL2" />
+  <class name="std::vector<TileL2*>" />
+  <class name="DataVector<TileL2>" />
+
+  <class name="TileL2Container" id="E9BB4497-FF43-4D70-8A64-B509081DAD88" />
+
+
+  <class name="TileMu" />
+  <class name="std::vector<TileMu*>" />
+  <class name="DataVector<TileMu>" />
+
+  <class name="TileMuContainer" id="FC0456E4-912B-425B-9AA2-4DDD0C6B2275" />
+
+
+  <class name="TileTrigger" />
+  <class name="std::vector<TileTrigger*>" />
+  <class name="DataVector<TileTrigger>" />
+
+  <class name="TileTriggerContainer" id="E7A252B0-9FB3-49ED-9B31-2B4173A6A7AF" />
+
+
+  <class name="TileMuonReceiverObj" />
+  <class name="std::vector<TileMuonReceiverObj*>" />
+  <class name="DataVector<TileMuonReceiverObj>" />
+
+  <class name="TileMuonReceiverContainer" id="AE806D18-95FA-43F7-889E-AFF76552FF74" />
+
+  <class name="std::vector<TileCosmicMuon*>" />
+  <class name="DataVector<TileCosmicMuon>" />
+  <class name="TileCosmicMuon" id="7B95D355-1E3B-4E44-9F3D-6696305CE185" />
+ 
+  <class name="TileCosmicMuonContainer" id="81711CFC-C75C-49F4-BA12-31D6FAA2D93D" />
+
+  <class name="MBTSCollisionTime" id="BEAA05E0-2167-46FD-A7C4-30FBA47CD713" />
+
+  <class name="TileCell" >
+  </class>
+
+  <class name="TileCellVec" id="4853417E-D853-49E4-A874-13D9DA099EEB" />
+
+  <class name="DataVector<TileCell>" />
+  <class name="TileContainer<TileCell>"/>
+ 
+  <class name="TileRawChannel" />
+  <class name="std::vector<TileRawChannel*>" />
+  <class name="DataVector<TileRawChannel>" />
+
+  <class name="TileRawChannelCollection" id="452A9DF8-F2F1-4C93-BF3C-1EEA2E626B99" >
+    <field name="m_FragGlobalCRC"   transient="true" />
+    <field name="m_FragDSPBCID"     transient="true" />
+    <field name="m_FragBCID"        transient="true" />
+    <field name="m_FragMemoryPar"   transient="true" />
+    <field name="m_FragSstrobe"     transient="true" />
+    <field name="m_FragDstrobe"     transient="true" />
+    <field name="m_FragHeaderBit"   transient="true" />
+    <field name="m_FragHeaderPar"   transient="true" />
+    <field name="m_FragSampleBit"   transient="true" />
+    <field name="m_FragSamplePar"   transient="true" />
+    <field name="m_FragFEChipMask"  transient="true" />
+    <field name="m_FragRODChipMask" transient="true" />
+  </class>
+  <class name="TileRawDataCollection<TileRawChannel>" >
+  </class>
+
+  <class name="TileRawChannelCollectionVec" id="E18095F6-01D9-4E8B-AD51-A8628F92E7FF" />
+  <class name="TileRawDataCollectionVec<TileRawChannelCollection>" />
+  <class name="DataVector<TileRawChannelCollection>"   />
+  <class name="std::vector<TileRawChannelCollection*>" />
+
+  <class name="TileRawChannelContainer" id="1E504749-09A1-488F-A1A3-AC905C448D99" />
+  <class name="TileRawDataContainer<TileRawChannelCollection>" >
+    <field name="m_hashFunc" transient="true" />
+  </class>
+  <class name="IdentifiableContainer<TileRawChannelCollection>" />
+
+  <class name="DataLinkVector<TileRawChannelCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+
+
+  <class name="TileDigits" />
+  <class name="std::vector<TileDigits*>" />
+  <class name="DataVector<TileDigits>" />
+
+  <class name="TileDigitsCollection" id="007DD581-9184-46D1-BD5C-FD7C4055A0A5" />
+  <class name="TileRawDataCollection<TileDigits>" >
+  </class>
+
+  <class name="TileDigitsCollectionVec" id="EB51ED70-5EC0-4F31-97D3-14453F77C88B" />
+  <class name="TileRawDataCollectionVec<TileDigitsCollection>" />
+  <class name="DataVector<TileDigitsCollection>"   />
+  <class name="std::vector<TileDigitsCollection*>" />
+
+  <class name="TileDigitsContainer" id="0B1AAF0A-CBFE-493C-BEE1-03CE05E7476E" />
+  <class name="TileRawDataContainer<TileDigitsCollection>" >
+    <field name="m_hashFunc" transient="true" />
+  </class>
+  <class name="IdentifiableContainer<TileDigitsCollection>" />
+
+  <class name="DataLinkVector<TileDigitsCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+
+
+  <class name="TileBeamElem" />
+  <class name="std::vector<TileBeamElem*>" />
+  <class name="DataVector<TileBeamElem>" />
+
+  <class name="TileBeamElemCollection" id="3C6DF140-2794-48F6-B8EE-3BC3D7B40790" />
+  <class name="TileRawDataCollection<TileBeamElem>" >
+  </class>
+
+  <class name="TileBeamElemCollectionVec" id="7FCE8F30-B59E-41E6-9A66-0DCD6134552E" />
+  <class name="TileRawDataCollectionVec<TileBeamElemCollection>" />
+  <class name="DataVector<TileBeamElemCollection>"   />
+  <class name="std::vector<TileBeamElemCollection*>" />
+
+  <class name="TileBeamElemContainer" id="DEF995E4-7636-447A-A648-AF30C81F52C1" />
+  <class name="TileRawDataContainer<TileBeamElemCollection>" >
+    <field name="m_hashFunc" transient="true" />
+  </class>
+  <class name="IdentifiableContainer<TileBeamElemCollection>" />
+
+  <class name="DataLinkVector<TileBeamElemCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+
+
+  <class name="DataVector<TileHit>" />
+
+  <class name="TileHitCollection" id="B1809F51-7AF0-4690-A6CE-67EF916A975F" />
+  <class name="TileRawDataCollection<TileHit>" >
+  </class>
+
+  <class name="TileHitCollectionVec" id="704A373C-EA65-4721-A9B8-F577B683699E" />
+  <class name="TileRawDataCollectionVec<TileHitCollection>" />
+  <class name="DataVector<TileHitCollection>"   />
+  <class name="std::vector<TileHitCollection*>" />
+
+  <class name="TileHitContainer" id="116961CD-855B-4109-9B02-7FE9666ACD3A" />
+  <class name="TileRawDataContainer<TileHitCollection>" >
+    <field name="m_hashFunc" transient="true" />
+  </class>
+  <class name="IdentifiableContainer<TileHitCollection>" />
+
+  <class name="DataLinkVector<TileHitCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+
+</lcgdict>

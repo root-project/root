@@ -1,0 +1,6 @@
+
+Processing read.C...
+Warning in <TClass::Init>: no dictionary for class TEmcl is available
+Warning in <TClass::Init>: no dictionary for class TPhysObj is available
+Warning in <TClass::Init>: no dictionary for class TNonEmcl is available
+Warning in <TClass::Init>: no dictionary for class TNonPhysObj is available

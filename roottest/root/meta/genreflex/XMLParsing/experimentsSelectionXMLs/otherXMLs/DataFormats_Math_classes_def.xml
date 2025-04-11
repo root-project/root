@@ -1,0 +1,24 @@
+<lcgdict>
+<selection>
+  <class pattern="ROOT::Math::PtEtaPhiE4D<*>" />
+  <class pattern="ROOT::Math::PxPyPzE4D<*>" />
+  <class pattern="ROOT::Math::Cartesian3D<*>" />
+  <class pattern="ROOT::Math::CylindricalEta3D<*>" />
+  <class pattern="ROOT::Math::Polar3D<*>" />
+  <class pattern="ROOT::Math::LorentzVector<*>" />
+  <class pattern="ROOT::Math::DisplacementVector3D<*>" />
+  <class pattern="ROOT::Math::PositionVector3D<*>" />
+  <class pattern="ROOT::Math::SMatrix<*>" />
+  <class pattern="ROOT::Math::MatRepStd<*>" />
+  <class pattern="ROOT::Math::MatRepSym<*>" >
+    <field name="fOff" transient="true"/>
+  </class>
+  <class pattern="ROOT::Math::RowOffsets<*>" />
+  <class pattern="ROOT::Math::SVector<*>" />
+  <class pattern="std::vector<ROOT::Math::*>" />
+  <class pattern="edm::Wrapper<*>" />
+  <class pattern="edm::RefVector<*>" />
+  <class pattern="std::pair<ROOT::Math::PositionVector3D<*>,float>"/>
+  <class pattern="std::vector<std::pair<ROOT::Math::PositionVector3D<*>,float> >"/>
+</selection>
+</lcgdict>

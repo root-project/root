@@ -1,0 +1,13 @@
+
+Processing runvectorint.C+(5)...
+Warning in <TClassTable::Add>: class Track already in TClassTable
+myfunc: vec[0]==3
+myfunc: vec[1]==6
+myvec[0]==3
+myvec[1]==6
+myfunc2: vec[0][0]==3
+myfunc2: vec[0][1]==6
+myvecvec size: 1
+ptrmyvec[0][0]==3
+ptrmyvec[0][1]==6
+(int)0

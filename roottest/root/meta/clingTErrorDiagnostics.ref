@@ -1,0 +1,11 @@
+
+input_line_26:1:12: error: non-void function 'f1' should return a value [-Wreturn-type]
+int f1() { return; }
+           ^
+TestErrHdlr: 3000: input_line_27:1:12: error: non-void function 'f2' should return a value [-Wreturn-type]
+int f2() { return; }
+           ^
+
+input_line_28:1:12: error: non-void function 'f3' should return a value [-Wreturn-type]
+int f3() { return; }
+           ^

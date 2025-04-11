@@ -1,0 +1,22 @@
+
+Processing execRangeExpression.C...
+Testing range expression for iterating through ROOT collections
+TObjArray
+OBJ: TNamed	1	title 1 : 0
+OBJ: TNamed	2	title 2 : 0
+TList
+OBJ: TNamed	1	title 1 : 0
+OBJ: TNamed	2	title 2 : 0
+TSortedList
+OBJ: TNamed	1	title 1 : 0
+OBJ: TNamed	2	title 2 : 0
+THashList
+OBJ: TNamed	1	title 1 : 0
+OBJ: TNamed	2	title 2 : 0
+TClonesArray
+OBJ: TNamed	1	title 1 : 0
+OBJ: TNamed	2	title 2 : 0
+TMap
+OBJ: TPair	1	title 1 : 0
+OBJ: TPair	2	title 2 : 0
+end

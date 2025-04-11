@@ -1,0 +1,15 @@
+# roottest requirements for third-party Python packages
+# These are in addition to ROOT's requirements.txt!
+
+IPython
+jupyter
+pytest
+# nbconvert 7.3 has a bug that does not respect --output option
+# See https://github.com/jupyter/nbconvert/issues/1970
+nbconvert != 7.3.*
+
+# Needed by tutorials (run as part of roottest)
+pandas
+
+# Needed by pyroot/tests
+setuptools # for pkg_resources

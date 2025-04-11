@@ -1,0 +1,150 @@
+<!-- 
+     * $Id: LoKiNumbers.xml 120746 2011-03-24 19:20:43Z ibelyaev $ 
+     * ========================================================================
+     * @file
+     * The XML seleciton file to build Reflex 
+     * dictionaries for Phys/LoKiNumbers package
+     * @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     * @date 2007-12-01
+     * ========================================================================
+-->
+
+<lcgdict>
+  
+
+  <class name = "LoKi::Functor<double,double>"            />
+  <class name = "LoKi::Functor<double,bool>"            />
+  <class name = "LoKi::Functor<std::vector<double>,double>"            />
+  <class name = "LoKi::Functor<std::vector<double>,bool>"            />
+  <class name = "LoKi::Functor<std::vector<double>,std::vector<double> >"       />
+
+  <class name = "LoKi::FunctorFromFunctor<double,double>"            />
+  <class name = "LoKi::FunctorFromFunctor<double,bool>"            />
+  <class name = "LoKi::FunctorFromFunctor<std::vector<double>,double>"            />
+  <class name = "LoKi::FunctorFromFunctor<std::vector<double>,bool>"            />
+  <class name = "LoKi::FunctorFromFunctor<std::vector<double>,std::vector<double> >"       />
+
+  
+  <class name = "LoKi::Functor<void,double>"  />
+  <class name = "LoKi::Functor<void,bool>"    />
+  <class name = "LoKi::FunctorFromFunctor<void,double>" />
+  <class name = "LoKi::FunctorFromFunctor<void,bool>"   />
+
+  <class name = "LoKi::Functor<void,std::vector<double> >"             />
+  <class name = "LoKi::FunctorFromFunctor<void,std::vector<double> >"  />
+
+  <class name = "LoKi::Functors::Empty<double>"   />
+  <class name = "LoKi::Functors::Size<double>"    />
+
+
+  <class pattern   = "LoKi::Constant<*>"           />
+  <class pattern   = "LoKi::Identity<*>"           />
+  
+  <class pattern   = "LoKi::Dicts::*Ops<*>"        />
+  <class pattern   = "LoKi::Dicts::*Ops_<*>"       />
+  <class pattern   = "LoKi::Dicts::*Calls*>"       />
+  
+  <class pattern   = "LoKi::Random::*"       />
+  <class pattern   = "LoKi::Algorithms::*"   />
+  
+  <class name = "LoKi::Scalers::RateLimitV" >
+    <field name = "m_rateSvc" transient = "true"/>
+    <field name = "m_uniform" transient = "true"/>
+  </class>
+  <class name = "LoKi::Scalers::RateLimit"    />
+
+  <class name = "LoKi::Scalers::RandomScaleV" >
+    <field name = "m_uniform" transient = "true"/>
+  </class>
+  <class name = "LoKi::Scalers::RandomScale"  />
+
+  <class name = "LoKi::Scalers::SkipperV"     />
+  <class name = "LoKi::Scalers::Skipper"      />
+
+  <class name = "LoKi::TES::Exists"   >
+    <field name = "m_algorithm" transient = "true"/>
+  </class>
+  <class name = "LoKi::TES::Contains" >
+    <field name = "m_algorithm" transient = "true"/>
+  </class>
+  <class name = "LoKi::TES::Counter"       />
+  <class name = "LoKi::TES::Stat"          />
+  <class name = "LoKi::TES::HasRecSummary" />
+  <class name = "LoKi::TES::RecSummary"    />
+  
+  <class name = "LoKi::Status::Check"  >
+    <field name = "m_tool" transient = "true"/>
+  </class>
+  <class name = "LoKi::Status::Accept" >
+    <field name = "m_tool" transient = "true"/>
+  </class>
+
+  <enum name = "LoKi::Scalers::RateLimitType"  />
+  
+  <exclusion>
+    
+    <class pattern="LoKi::Random::*">
+      <method name="=" />
+    </class>
+    
+    <class pattern="LoKi::Dicts::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Interface&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::I*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Hybrid::*">
+      <method name="=" />
+    </class>
+    
+    <class pattern="LoKi::Functor&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Constant&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Valid&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::TheSame&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Identity&lt;*&gt;">
+      <method name="=" />
+    </class>
+    
+    <class pattern="Gaudi::Range_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="Gaudi::NamedRange_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::RangeList_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Keeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::UniqueKeeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+    
+    <class pattern="LoKi::Functors::*">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::Scalers::*">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::TES::*">
+      <method name="=" />
+    </class>
+    
+  </exclusion>
+
+
+</lcgdict>

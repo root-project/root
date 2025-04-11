@@ -1,0 +1,4 @@
+{ decls }
+
+[libscopedEnums_dictrflx.so]
+class cond::IOVSequence

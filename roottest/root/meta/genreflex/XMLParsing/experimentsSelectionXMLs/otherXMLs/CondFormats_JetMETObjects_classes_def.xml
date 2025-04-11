@@ -1,0 +1,20 @@
+<lcgdict>
+<selection>
+  <class name="FactorizedJetCorrector"/>
+  <class name="JetCorrectionUncertainty"/>
+  <class name="JetCorrectorParameters"/>
+  <class name="JetCorrectorParametersCollection"/>
+  <class name="JetCorrectorParametersCollection::collection_type"/>
+  <class name="JetCorrectorParametersCollection::pair_type"/>
+  <class name="JetCorrectorParameters::Definitions"/>
+  <class name="JetCorrectorParameters::Record"/>
+  <class name="std::vector<JetCorrectorParameters>"/>
+  <class name="std::vector<JetCorrectorParameters::Record>"/>
+  <class name="std::vector<JetCorrectorParametersCollection>"/>
+  <class name="SimpleJetCorrectionUncertainty"/>
+  <class name="SimpleJetCorrector"/>
+  <class name="FFTJetCorrectorParameters" class_version="0">
+     <field name="m_buffer" mapping="blob"/>
+  </class>
+</selection>
+</lcgdict>

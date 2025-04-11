@@ -1,0 +1,15 @@
+<lcgdict>
+  <class name="InDet::InDetLowBetaContainer" id="D2D1A83F-B7EA-4A4A-9482-F4A5D403182B" />
+  <class name="DataVector<InDet::InDetLowBetaCandidate>" id="5256D2DD-A188-4F96-9CFA-8954D5CE07CB"  />
+  <class name="std::vector<InDet::InDetLowBetaCandidate*>" />
+  <class name="InDet::InDetLowBetaCandidate" >
+      <field name="m_TRTCorrBitsOverThreshold"   transient="false" />
+      <field name="m_TRTTrailingEdge"            transient="false" />
+      <field name="m_TRTTrailingEdgeError"       transient="false" />
+      <field name="m_TRTNLastBits"               transient="false" />
+      <field name="m_TRTdEdx"                    transient="false" />
+      <field name="m_TRTLikelihoodBeta"          transient="false" />
+      <field name="m_TRTLikelihoodError"         transient="false" />
+      <field name="m_TRTHighTbits"               transient="false" />
+  </class>   
+</lcgdict>

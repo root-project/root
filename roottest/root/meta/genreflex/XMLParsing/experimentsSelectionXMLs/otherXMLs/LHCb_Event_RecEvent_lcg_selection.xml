@@ -1,0 +1,8 @@
+<lcgdict>
+  <class name = "std::vector<const LHCb::RecVertex*>"    />
+  <class name = "std::vector<const LHCb::VertexBase*>"   />
+  <class name = "std::pair<int,float>"                   />
+  <class name = "std::vector<std::pair<int,float> >"     />
+  <class name = "LHCb::RecVertex::TrackWithWeight"       />
+  <class name = "LHCb::RecVertex::TrackWithWeightVector" />
+</lcgdict>

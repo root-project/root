@@ -1,0 +1,4 @@
+<lcgdict>
+<enum name="reco::btau::TaggingVariableName"/>
+<class name="std::pair< reco::btau::TaggingVariableName, float >" />
+</lcgdict>

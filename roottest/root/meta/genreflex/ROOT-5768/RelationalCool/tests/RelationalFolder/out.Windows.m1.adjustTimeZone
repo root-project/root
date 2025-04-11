@@ -1,0 +1,74 @@
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-1-3 12:1:2
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-1-3 11:1:2 (DST=0)
+aTm = 1970-1-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 216062
+aTmM1 = 1970-1-3 12:1:2 (DST=0)
+aTimet0 = 216062
+aTm0 = 1970-1-3 12:1:2 (DST=0)
+aTimetP1 = 212462
+aTmP1 = 1970-1-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-2-3 12:1:2
+Before calling timegm: aTm = 1970-2-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-2-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-2-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-2-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-2-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-2-3 11:1:2 (DST=0)
+aTm = 1970-2-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 2894462
+aTmM1 = 1970-2-3 12:1:2 (DST=0)
+aTimet0 = 2894462
+aTm0 = 1970-2-3 12:1:2 (DST=0)
+aTimetP1 = 2890862
+aTmP1 = 1970-2-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-3-3 12:1:2
+Before calling timegm: aTm = 1970-3-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-3-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-3-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-3-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-3-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-3-3 11:1:2 (DST=0)
+aTm = 1970-3-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 5313662
+aTmM1 = 1970-3-3 12:1:2 (DST=0)
+aTimet0 = 5313662
+aTm0 = 1970-3-3 12:1:2 (DST=0)
+aTimetP1 = 5310062
+aTmP1 = 1970-3-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-4-3 12:1:2
+Before calling timegm: aTm = 1970-4-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-4-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-4-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-4-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-4-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-4-3 12:1:2 (DST=1)
+aTm = 1970-4-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 7988462
+aTmM1 = 1970-4-3 11:1:2 (DST=0)
+aTimet0 = 7992062
+aTm0 = 1970-4-3 12:1:2 (DST=0)
+aTimetP1 = 7988462
+aTmP1 = 1970-4-3 11:1:2 (DST=0)
+
+\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\src\RelationalCool\tests\RelationalFolder\test_RelationalFolder.cpp(284) : Assertion
+Test name: cool::RelationalFolderTest.test_gmtime_timegm
+- Expected : 12
+
+- Actual   : 11
+
+gmtime(timegm(tm,isDst=-1))==tm : hour (Month[0-11]=3)
+
+
+Failures !!!
+Run: 1   Failure total: 1   Failures: 1   Errors: 0
+Error: CppUnit Failures
+[OVAL] Cppunit-result =1

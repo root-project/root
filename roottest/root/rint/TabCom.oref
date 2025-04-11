@@ -1,0 +1,109 @@
+TObject::k	
+gROOT->GetListOfT	
+TNamed tabComTestNamedObj("AName","ATitle");
+tabComTestNamedOb	.SetTitl		"OtherTitle")
+tabComTestNamedOb	.GetTitl	()
+#include "MyClass.h"
+MyCla	::fgM	
+MyCla	::fgPrivateM	
+TH1F *h = 0;
+h->GetXaxis()->SetTi		
+struct Simple {};
+Simple s;
+s.	
+const Simple cs{};
+cs.	
+Simple* ps = nullptr;
+ps->	
+const Simple* pcs = nullptr;
+pcs->	
+Simple* const cps = nullptr;
+cps->	
+const Simple* const cpcs = nullptr;
+cpcs->	
+volatile Simple* vs = nullptr;
+vs->	
+const volatile Simple* cvs = nullptr;
+cvs->	
+.q
+
+
+kBitMask
+kCanDelete
+kCannotPick
+kHasUUID
+kInconsistent
+kInvalidObject
+kIsOnHeap
+kIsReferenced
+kMustCleanup
+kNoContextMenu
+kNotDeleted
+kObjInCanvas
+kOverwrite
+kSingleKey
+kWriteDelete
+kZombie
+
+GetListOfTasks
+GetListOfTypes
+
+void SetTitle(const char* title = "") 	// *MENU*
+(const char *) "OtherTitle"
+(int) 42
+
+SetTickLength
+SetTickSize
+SetTicks
+SetTimeDisplay
+SetTimeFormat
+SetTimeOffset
+SetTitle
+SetTitleColor
+SetTitleFont
+SetTitleOffset
+SetTitleSize
+
+SetTickLength
+SetTickSize
+SetTicks
+SetTimeDisplay
+SetTimeFormat
+SetTimeOffset
+SetTitle
+SetTitleColor
+SetTitleFont
+SetTitleOffset
+SetTitleSize
+
+Simple
+operator=
+~Simple
+
+Simple
+operator=
+~Simple
+
+Simple
+operator=
+~Simple
+
+Simple
+operator=
+~Simple
+
+Simple
+operator=
+~Simple
+
+Simple
+operator=
+~Simple
+
+Simple
+operator=
+~Simple
+
+Simple
+operator=
+~Simple

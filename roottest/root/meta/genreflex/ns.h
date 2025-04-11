@@ -1,0 +1,2 @@
+namespace the_ns{
+}

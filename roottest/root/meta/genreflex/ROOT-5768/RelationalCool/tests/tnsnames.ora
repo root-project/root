@@ -1,0 +1,24 @@
+# Add here the description of your private server
+# myserver =
+#   (DESCRIPTION =
+#      (ADDRESS_LIST =
+#        (ADDRESS = (PROTOCOL = TCP)(HOST = myhost.cern.ch)(PORT = 1521))
+#      )
+#      (CONNECT_DATA =
+#        (SERVICE_NAME = myservicename)
+#      )
+#    )
+
+# 3D Frontier test server
+bd3d =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = lxfs6043.cern.ch)(PORT = 1521))
+    (CONNECT_DATA =
+      (SID = bd3d)
+    )
+  )
+
+# Under cygwin, this path MUST start with '//'
+# Under Linux, both '/' and '//' would work
+IFILE = //afs/cern.ch/project/oracle/admin/tnsnames.ora
+

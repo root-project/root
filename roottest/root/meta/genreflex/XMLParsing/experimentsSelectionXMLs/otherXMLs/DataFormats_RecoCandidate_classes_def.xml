@@ -1,0 +1,154 @@
+<lcgdict>
+  <selection>
+  <class name="reco::RecoCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1183963017"/>
+  </class>
+  <class name="reco::RecoChargedCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2818554415"/>
+  </class>
+  <class name="reco::RecoChargedRefCandidateBase">
+    <field name="p4Polar_" transient="true"/>
+    <field name="p4Cartesian_" transient="true"/>
+    <field name="cachePolarFixed_" transient="true"/>
+    <field name="cacheCartesianFixed_" transient="true"/>
+  </class>
+  <class name="reco::RecoChargedRefCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2155624976"/>
+  </class>
+  <class name="reco::RecoEcalCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3531165310"/>
+  </class>
+  <class name="reco::RecoCaloTowerCandidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="4182970126"/>
+  </class>
+  <class name="reco::CaloRecHitCandidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="1441861764"/>
+  </class>
+
+  <class name="reco::FitQuality"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1584619238"/>
+  </class>
+  <class name="std::vector<reco::FitQuality>" />
+  <class name="reco::FitResultCollection">
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+
+  <class name="std::vector<reco::RecoChargedCandidate>"/>
+  <class name="edm::Wrapper<std::vector<reco::RecoChargedCandidate> >"/>
+  <class name="edm::Ref<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate> >"/>
+  <class name="edm::RefProd<std::vector<reco::RecoChargedCandidate> >"/>
+  <class name="edm::RefVector<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate> >"/>
+
+  <class name="std::vector<reco::RecoChargedRefCandidate>"/>
+  <class name="edm::Wrapper<std::vector<reco::RecoChargedRefCandidate> >"/>
+  <class name="edm::Ref<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate> >"/>
+  <class name="edm::RefProd<std::vector<reco::RecoChargedRefCandidate> >"/>
+  <class name="edm::RefVector<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate> >"/>
+
+  <class name="std::vector<reco::RecoEcalCandidate>"/>
+  <class name="edm::Wrapper<std::vector<reco::RecoEcalCandidate> >"/>
+  <class name="edm::Ref<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate> >"/>
+  <class name="edm::RefProd<std::vector<reco::RecoEcalCandidate> >"/>
+  <class name="edm::RefVector<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate> >"/>
+ <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate> > >" />
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate> > >" />
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate> > >" />
+
+  <class name="edm::AssociationMap<edm::OneToValue<std::vector<reco::RecoEcalCandidate>, float, unsigned int> >">
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToValue<std::vector<reco::RecoEcalCandidate>, float, unsigned int> > >" />
+  <class name="edm::helpers::Key<edm::RefProd<std::vector<reco::RecoEcalCandidate> > >" />
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<reco::Track>,edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,unsigned int> >">
+     <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::Track> >,edm::RefProd<edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> > > >" />
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<std::vector<reco::Track>,edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,unsigned int> > >" />
+
+  <class name="edm::Wrapper<reco::SimToRecoCollection>" />
+  <class name="edm::Wrapper<reco::RecoToSimCollection>" />
+
+  <class name="reco::SimToRecoCollection" />
+  <class name="reco::RecoToSimCollection" />
+
+
+  <class name="edm::ValueMap<reco::IsoDeposit>" />
+  <class name="edm::ValueMap<reco::FitQuality>" />
+  <class pattern="edm::Wrapper<edm::ValueMap<*>" />
+  <class pattern="edm::KeyVal<*>" />
+  <class pattern="edm::Wrapper<edm::AssociationMap<*>" />
+  <class pattern="edm::Ref<edm::AssociationMap<*>" />
+  <class pattern="edm::RefProd<edm::AssociationMap<*>" />
+  <class pattern="edm::RefVector<edm::AssociationMap<*>" />
+ 
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::RecoChargedCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::RecoChargedCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::RecoChargedCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::RecoChargedCandidateRefVector>" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::RecoChargedRefCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::RecoChargedRefCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::RecoChargedRefCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::RecoChargedRefCandidateRefVector>" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::RecoStandAloneMuonCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::RecoStandAloneMuonCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::RecoStandAloneMuonCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::RecoStandAloneMuonCandidateRefVector>" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::RecoEcalCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::RecoEcalCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::RecoEcalCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::RecoEcalCandidateRefVector>" />
+
+
+  <class name="reco::IsoDeposit" ClassVersion="10">
+   <version ClassVersion="10" checksum="2477314412"/>
+  </class>
+  <class name="reco::IsoDeposit::const_iterator" ClassVersion="10">
+   <version ClassVersion="10" checksum="3505639118"/>
+      <field name="parent_" transient="true" />
+      <field name="it_" transient="true" />
+      <field name="cache_" transient="true" />
+      <field name="cacheReady_" transient="true" />
+  </class>
+  <class name="std::vector<reco::IsoDeposit>"/>
+  <class name="std::vector<reco::IsoDeposit>::const_iterator"/>
+
+  <class name="reco::isodeposit::Direction" ClassVersion="10">
+   <version ClassVersion="10" checksum="2412209684"/>
+  </class>
+  <class name="reco::isodeposit::Direction::Distance" ClassVersion="10">
+   <version ClassVersion="10" checksum="2603689691"/>
+  </class>
+  <class name="reco::IsoDeposit::Veto" ClassVersion="10">
+   <version ClassVersion="10" checksum="4098085496"/>
+  </class>
+  <class name="std::multimap<reco::isodeposit::Direction::Distance,float>"/>
+
+  <class name="reco::IsoDepositMap"/>
+  <class name="edm::ValueMap<reco::IsoDeposit>::const_iterator">
+    <field name="values_" transient="true"/>
+    <field name="i_" transient="true"/>
+    <field name="end_" transient="true"/>
+  </class>
+  <class name="edm::Wrapper<reco::IsoDepositMap>"/>
+  
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate> > >" />
+
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedRefCandidate>,reco::RecoChargedRefCandidate> > >" />
+
+  <class name="std::vector<reco::RecoCandidate*>"/>
+  <class name="edm::OwnVector<reco::RecoCandidate, edm::ClonePolicy<reco::RecoCandidate> >"/>
+  <class name="edm::Wrapper<edm::OwnVector<reco::RecoCandidate, edm::ClonePolicy<reco::RecoCandidate> > >"/>
+
+  </selection>
+  <exclusion>
+     <class name="edm::OwnVector<reco::RecoCandidate, edm::ClonePolicy<reco::RecoCandidate> >">
+       <method name="sort" />
+     </class>
+  </exclusion>
+
+</lcgdict>
+ 

@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="LUCID_DigitContainer" id="49672224-A5AB-4D4C-802E-CA0749038ECC"/>
+  <class name="std::vector<LUCID_Digit*>" />
+  <class name="DataVector<LUCID_Digit>" />
+  <class name="LUCID_Digit" />
+
+  <class name="LUCID_RawDataContainer" id="0C023583-E3D4-4C7D-9B20-B6B2A1018D2F"/>
+  <class name="std::vector<LUCID_RawData*>" />
+  <class name="DataVector<LUCID_RawData>" />
+  <class name="LUCID_RawData" />
+</lcgdict>
+

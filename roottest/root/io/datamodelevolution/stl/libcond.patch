@@ -1,0 +1,40 @@
+*** libv5/DetCondKeyTrans.h	2014-02-20 15:59:52.000000000 -0600
+--- libcond/DetCondKeyTrans.h	2014-02-20 16:16:18.000000000 -0600
+***************
+*** 8,19 ****
+--- 8,24 ----
+  #ifndef DetCondKeyTrans_h
+  #define DetCondKeyTrans_h
+  class DetCondKeyTrans;
++ class Eigen {};
+  
+  #include "Riostream.h"
+  #include <map>
+  #include "HepGeom__Transform3D.h"
+  #ifdef __MAKECINT__
+  #pragma link C++ class pair<string,HepGeom::Transform3D >+;
++ #pragma link C++ class Eigen+;
++ #pragma link C++ class pair<string,Eigen>+;
++ #pragma read sourceClass="DetCondKeyTrans" version="[1-]" targetClass="DetCondKeyTrans" source="std::map<std::string,HepGeom::Transform3D> m_keytrans" target="m_keytrans" \
++     code="{ if (&m_keytrans){}; /*nothing*/ }"
+  #endif
+  
+  class DetCondKeyTrans {
+*************** public:
+*** 23,29 ****
+  
+  public:
+  // Data Members.
+!    std::vector<std::pair<std::string,HepGeom::Transform3D> > m_keytrans;    //
+  
+     DetCondKeyTrans();
+     DetCondKeyTrans(const DetCondKeyTrans & );
+--- 25,32 ----
+  
+  public:
+  // Data Members.
+!    //std::vector<std::pair<std::string,HepGeom::Transform3D> > m_keytrans;    //
+!    std::vector<std::pair<std::string,Eigen> > m_keytrans;
+  
+     DetCondKeyTrans();
+     DetCondKeyTrans(const DetCondKeyTrans & );

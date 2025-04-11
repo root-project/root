@@ -1,0 +1,43 @@
+<lcgdict>
+  <class name="SiPixelCluster" ClassVersion="12">
+   <field name="err_x" transient="true"/>
+   <field name="err_y" transient="true"/>
+   <version ClassVersion="10" checksum="2468063768"/>
+   <version ClassVersion="11" checksum="1473312403"/>
+   <version ClassVersion="12" checksum="2042538185"/>
+   <ioread sourceClass="SiPixelCluster" version="[1-10]" targetClass="SiPixelCluster" source="uint16_t theMinPixelCol" target="thePixelCol">
+   <![CDATA[thePixelCol = onfile.theMinPixelCol;]]>
+   </ioread>  
+   <ioread sourceClass="SiPixelCluster" version="[1-10]" targetClass="SiPixelCluster" source="uint16_t theMinPixelRow" target="thePixelRow">
+   <![CDATA[thePixelRow = onfile.theMinPixelRow;]]>
+   </ioread>  
+  </class>
+  <class name="SiPixelCluster::Pixel" ClassVersion="11">
+   <version ClassVersion="10" checksum="387573196"/>
+   <version ClassVersion="11" checksum="1898133768"/>
+  </class>
+  <class name="SiPixelCluster::Shift" ClassVersion="10">
+   <version ClassVersion="10" checksum="4096847861"/>
+  </class>
+  <class name="SiPixelCluster::PixelPos" ClassVersion="10">
+   <version ClassVersion="10" checksum="3521104094"/>
+  </class>
+  <class name="std::vector<SiPixelCluster>"/>
+  <class name="edm::DetSet<SiPixelCluster>"/>
+  <class name="std::vector<edm::DetSet<SiPixelCluster> >"/>
+  <class name="edm::DetSetVector<SiPixelCluster>"/>
+  <class name="edmNew::DetSetVector<SiPixelCluster>"/>
+  <class name="edm::Wrapper<edm::DetSetVector<SiPixelCluster> >" />
+  <class name="edm::Wrapper<edmNew::DetSetVector<SiPixelCluster> >" />
+  <class name="edm::RefProd<edm::DetSetVector<SiPixelCluster> >" />
+  <class name="edm::Ref<edm::DetSetVector<SiPixelCluster>,SiPixelCluster,edm::refhelper::FindForDetSetVector<SiPixelCluster> >" />
+  <class name="edm::ContainerMask<edmNew::DetSetVector<SiPixelCluster> >"/>
+  <class name="edm::Wrapper<edm::ContainerMask<edmNew::DetSetVector<SiPixelCluster> > >"/>
+  <class name="SiPixelClusterRefNew" />
+  <class name="edm::Ref<edm::DetSetVector<SiPixelCluster>,edm::DetSet<SiPixelCluster>,edm::refhelper::FindDetSetForDetSetVector<SiPixelCluster,edm::DetSetVector<SiPixelCluster> > >" />
+  <class name="edm::DetSetRefVector<SiPixelCluster,edm::DetSetVector<SiPixelCluster> >" />
+
+  <class name="std::vector<edm::Ref<edmNew::DetSetVector<SiPixelCluster>,SiPixelCluster,edmNew::DetSetVector<SiPixelCluster>::FindForDetSetVector> >" />
+  <class name="edmNew::DetSetVector<edm::Ref<edmNew::DetSetVector<SiPixelCluster>,SiPixelCluster,edmNew::DetSetVector<SiPixelCluster>::FindForDetSetVector> >" />
+  <class name="edm::Wrapper<edmNew::DetSetVector<edm::Ref<edmNew::DetSetVector<SiPixelCluster>,SiPixelCluster,edmNew::DetSetVector<SiPixelCluster>::FindForDetSetVector> > >" />
+</lcgdict>

@@ -1,0 +1,6 @@
+
+Processing runXmlDir.C...
+dir1/obj1: name1 title1
+dir1/dir2/obj2: name2 title2
+dir1/dir2/dir3/obj3: name3 title3
+dir1/dir2/obj4: name4 title4
