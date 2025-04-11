@@ -160,6 +160,9 @@ private:
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
    mutable std::atomic<Long64_t> fIMTZipBytes;    ///<! Zip bytes for the IMT flush baskets.
 
+   std::unordered_map<std::string, TBranch *>
+      fNamesToBranches; ///<! maps names to their branches, useful when retrieving branches by name
+
    void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
    Int_t            FlushBasketsImpl() const;
@@ -226,6 +229,8 @@ protected:
    };
 
 public:
+   void InsertNameAndBranch(std::pair<std::string, TBranch *> &&kv) { fNamesToBranches.insert(kv); }
+
    // Used as the max value for any TTree range operation.
    static constexpr Long64_t kMaxEntries = TVirtualTreePlayer::kMaxEntries;
 
