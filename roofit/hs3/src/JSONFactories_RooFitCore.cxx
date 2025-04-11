@@ -78,6 +78,11 @@ std::vector<std::string> extractArguments(std::string expr)
       if (startidx >= expr.size()) {
          if (isalpha(expr[i])) {
             startidx = i;
+            // check this character is not part of scientific notation, e.g. 2e-5
+            if (TFormula::IsScientificNotation(expr, i)) {
+               // if it is, we ignore this character
+               startidx = expr.size();
+            }
          }
       } else {
          if (!isdigit(expr[i]) && !isalpha(expr[i]) && expr[i] != '_') {
