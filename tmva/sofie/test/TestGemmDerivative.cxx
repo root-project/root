@@ -22,28 +22,38 @@ protected:
 
 void validator(float *variables, int m, int n, int k, float *target)
 {
-
-   bool passed = true;
-
    for (int i = 0; i < m * k + k * n; ++i) {
       target[i] = 0;
-      if (i < m * k) {
+      if (i == 0) {
+         // Check derivative with alpha
+         int _a;
+         int _b;
+         //  float _prod;
+         for (int _m = 1; _m < m + 1; ++_m) {
+            for (int _n = 1; _n < n + 1; ++n) {
+               for (int _k = 1; _k < k + 1; ++k) {
+                  _a = (_m - 1) * m + (_k - 1) % k;
+                  _b = (_k - 1) * k + (_n - 1) % n;
+                  //   _prod = variables[_a + 1] * variables[_b + m * k + 1];
+                  target[i] += variables[_a + 1] * variables[_b + m * k + 1];
+               }
+            }
+         }
+      } else if ((i - 1) < m * k) {
          // Get current position in m, k
-         int _m = i % m + 1;
-         int _k = (i - _m + 1) / m + 1;
+         int _m = (i - 1) % m + 1;
+         int _k = ((i - 1) - _m + 1) / m + 1;
 
          for (int _n = 1; _n < n + 1; ++_n) {
             int index = m * k + (_k - 1) % k + (_n - 1) * k;
-            target[i] += variables[index];
+            target[i] += variables[index + 1];
          }
       } else {
-
-         int _k = (i - m * k) % k + 1;
-         int _n = (i - m * k - _k + 1) / n + 1;
+         int _k = ((i - 1) - m * k) % k + 1;
 
          for (int _m = 1; _m < m + 1; ++_m) {
             int index = (_m - 1) % m + (_k - 1) * m;
-            target[i] += variables[index];
+            target[i] += variables[index + 1];
          }
       }
    }
@@ -90,9 +100,6 @@ TEST_P(GemmTest, GemmTestDerivative)
 
       declared = true;
    }
-
-   auto *function_ptr = reinterpret_cast<float (*)(float *, int, int, int)>(
-      gInterpreter->ProcessLine("static_cast<float(*)(float*, int, int, int)>(gemm_function);"));
 
    auto *gradient_ptr = reinterpret_cast<void (*)(float *, int, int, int, float *)>(
       gInterpreter->ProcessLine("static_cast<void (*)(float*, int, int, int, float*)>(gemm_function_grad_0);"));

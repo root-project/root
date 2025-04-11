@@ -1140,33 +1140,33 @@ namespace Experimental {
 namespace SOFIE {
 
 inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, int n, int k, float alpha,
-                               const float *A, const float *B, float beta, const float *C, float *_d_output,
-                               bool *_d_transa, bool *_d_transb, int *_d_m, int *_d_n, int *_d_k, float *_d_alpha,
-                               float *_d_A, float *_d_B, float *_d_beta, float *_d_C)
+                               const float *A, const float *B, float beta, const float *C, float *_d_output, bool *,
+                               bool *, int *, int *, int *, float *_d_alpha, float *_d_A, float *_d_B, float *_d_beta,
+                               float *_d_C)
 {
-   // TODO: also fill:
-   //   - _d_alpha
-   //   - _d_beta
-   //   - _d_C
+   // TODO:
+   //    - handle transa and transb cases correctly
+   //    - also fill _d_beta and _d_C
 
    char ct = 't';
    char cn = 'n';
 
    // beta needs to be one because we want to add to _d_A and _d_B instead of
    // overwriting it.
-   float betaOne = 1.;
+   float one = 1.;
 
-   int lda_ = m;
-   int ldb_ = k;
-   int ldc_ = m;
-   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &lda_, B, &ldb_, &betaOne, _d_A,
-                                             &ldc_);
+   // _d_A, _d_B
+   // note: beta needs to be one because we want to add to _d_A and _d_B instead of overwriting it.
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &m, B, &k, &one, _d_A, &m);
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &m, _d_output, &m, &one, _d_B, &k);
 
-   lda_ = m;
-   ldb_ = m;
-   ldc_ = k;
-   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &lda_, _d_output, &ldb_, &betaOne, _d_B,
-                                             &ldc_);
+   // _d_alpha, _d_beta, _d_C
+   int sizeC = n * m;
+   for (int i = 0; i < sizeC; ++i) {
+      *_d_alpha += _d_output[i] * (output[i] - beta * C[i]);
+      *_d_beta += _d_output[i] * _d_C[i];
+      _d_C[i] += _d_output[i] * beta;
+   }
 }
 
 } // namespace SOFIE
