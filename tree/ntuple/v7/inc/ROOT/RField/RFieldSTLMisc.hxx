@@ -431,16 +431,6 @@ public:
    ~RField() final = default;
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RAtomicField [[deprecated("ROOT::Experimental::RAtomicField moved to ROOT::RAtomicField")]] = ROOT::RAtomicField;
-using RVariantField [[deprecated("ROOT::Experimental::RVariantField moved to ROOT::RVariantField")]] =
-   ROOT::RVariantField;
-using RNullableField [[deprecated("ROOT::Experimental::RNullableField moved to ROOT::RNullableField")]] =
-   ROOT::RNullableField;
-using RBitsetField [[deprecated("ROOT::Experimental::RBitsetField moved to ROOT::RBitsetField")]] = ROOT::RBitsetField;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

@@ -34,12 +34,6 @@ public:
    bool GetEmulateUnknownTypes() const { return fEmulateUnknownTypes; }
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RCreateFieldOptions [[deprecated("ROOT::Experimental::RCreateFieldOptions moved to ROOT::RCreateFieldOptions")]] =
-   ROOT::RCreateFieldOptions;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

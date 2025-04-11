@@ -62,10 +62,6 @@ class REntry {
    friend class Experimental::RNTupleChainProcessor;
    friend class Experimental::RNTupleJoinProcessor;
 
-public:
-   // TODO: remove before branching ROOT v6.36
-   using RFieldToken [[deprecated("REntry::RFieldToken moved to ROOT::RFieldToken")]] = ROOT::RFieldToken;
-
 private:
    /// The entry must be linked to a specific model, identified by a model ID
    std::uint64_t fModelId = 0;
@@ -247,10 +243,6 @@ public:
    ConstIterator_t end() const { return fValues.cend(); }
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using REntry [[deprecated("ROOT::Experimental::REntry moved to ROOT::REntry")]] = ROOT::REntry;
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

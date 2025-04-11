@@ -361,15 +361,6 @@ public:
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RArrayField [[deprecated("ROOT::Experimental::RArrayField moved to ROOT::RArrayField")]] = ROOT::RArrayField;
-using RVectorField [[deprecated("ROOT::Experimental::RVectorField moved to ROOT::RVectorField")]] = ROOT::RVectorField;
-using RRVecField [[deprecated("ROOT::Experimental::RRVecField moved to ROOT::RRVecField")]] = ROOT::RRVecField;
-using RArrayAsRVecField [[deprecated("ROOT::Experimental::RArrayAsRVecField moved to ROOT::RArrayAsRVecField")]] =
-   ROOT::RArrayAsRVecField;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

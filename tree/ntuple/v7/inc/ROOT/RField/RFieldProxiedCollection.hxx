@@ -413,15 +413,6 @@ public:
    ~RField() final = default;
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RSetField [[deprecated("ROOT::Experimental::RSetField moved to ROOT::RSetField")]] = ROOT::RSetField;
-using RMapField [[deprecated("ROOT::Experimental::RMapField moved to ROOT::RMapField")]] = ROOT::RMapField;
-using RProxiedCollectionField
-   [[deprecated("ROOT::Experimental::RProxiedCollectionField moved to ROOT::RProxiedCollectionField")]] =
-      ROOT::RProxiedCollectionField;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif
