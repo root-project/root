@@ -3204,10 +3204,14 @@ static bool functionExists(const string &Name) {
 }
 
 static void IncludeCladRuntime(Bool_t &IsCladRuntimeIncluded) {
+   #ifdef ROOT_SUPPORT_CLAD
    if (!IsCladRuntimeIncluded) {
       IsCladRuntimeIncluded = true;
       gInterpreter->Declare("#include <Math/CladDerivator.h>\n#pragma clad OFF");
    }
+   #else
+   IsCladRuntimeIncluded = false;
+   #endif
 }
 
 static bool
