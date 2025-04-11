@@ -26,7 +26,6 @@
 #include <RooFormulaVar.h>
 
 #include <TROOT.h>
-#include <TSystem.h>
 
 #include <gtest/gtest.h>
 
@@ -431,12 +430,10 @@ TEST(RooFitHS3, ScientificNotation)
 
    // export to json
    RooJSONFactoryWSTool t(ws);
-   auto filename = "fv14637.json";
-   t.exportJSON(filename);
+   auto jsonStr = t.exportJSONtoString();
 
    // try to import, before the fix, it threw RooJSONFactoryWSTool::DependencyMissingError because of problem reading the exponential char
    RooWorkspace newws("newws");
    RooJSONFactoryWSTool t2(newws);
-   ASSERT_TRUE(t2.importJSON(filename));
-   gSystem->Unlink(filename);
+   ASSERT_TRUE(t2.importJSONfromString(jsonStr));
 }
