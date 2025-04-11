@@ -698,7 +698,7 @@ Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
    Double_t xl = 0, yl = 0, xr = 0, yr = 0;
    gr->GetPoint(left, xl, yl);
    gr->GetPoint(right, xr, yr);
-   return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
+   return (TMath::ATan2(yl, xl) >= TMath::ATan2(yr, xr));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -706,7 +706,7 @@ Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
 
 Bool_t TGraph::CompareX(const TGraph* gr, Int_t left, Int_t right)
 {
-   return gr->fX[left] > gr->fX[right];
+   return gr->fX[left] >= gr->fX[right];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -714,7 +714,7 @@ Bool_t TGraph::CompareX(const TGraph* gr, Int_t left, Int_t right)
 
 Bool_t TGraph::CompareY(const TGraph* gr, Int_t left, Int_t right)
 {
-   return gr->fY[left] > gr->fY[right];
+   return gr->fY[left] >= gr->fY[right];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -724,7 +724,7 @@ Bool_t TGraph::CompareY(const TGraph* gr, Int_t left, Int_t right)
 Bool_t TGraph::CompareRadius(const TGraph* gr, Int_t left, Int_t right)
 {
    return gr->fX[left] * gr->fX[left] + gr->fY[left] * gr->fY[left]
-          > gr->fX[right] * gr->fX[right] + gr->fY[right] * gr->fY[right];
+          >= gr->fX[right] * gr->fX[right] + gr->fY[right] * gr->fY[right];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
