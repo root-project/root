@@ -162,7 +162,7 @@ RooFuncWrapper::loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *d
 
 void RooFuncWrapper::createGradient()
 {
-   #ifdef ROOFIT_CLAD
+#ifdef ROOFIT_CLAD
    std::string gradName = _funcName + "_grad_0";
    std::string requestName = _funcName + "_req";
 
@@ -199,13 +199,13 @@ void RooFuncWrapper::createGradient()
    ss << "static_cast<void (*)(double *, double const *, double const *, double *)>(" << gradName << ");";
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine(ss.str().c_str()));
    _hasGradient = true;
-   #else
+#else
    _hasGradient = false;
    std::stringstream errorMsg;
    errorMsg << "Function " << GetName() << " could not be differentiated since ROOT was built without Clad support.";
    oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
    throw std::runtime_error(errorMsg.str().c_str());
-   #endif
+#endif
 }
 
 void RooFuncWrapper::gradient(double *out) const
