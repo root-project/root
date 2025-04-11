@@ -7,6 +7,7 @@
 //------------------------------------------------------------------------------
 
 // RUN: cat %s | %cling -I%p | FileCheck %s
+// UNSUPPORTED: system-darwin, system-windows, system-linux
 
 // This test tests the hook that cling expects in clang and enables it
 // at compile time. However that is not actual dynamic lookup because
