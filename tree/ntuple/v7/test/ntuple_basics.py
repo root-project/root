@@ -2,7 +2,6 @@ import unittest
 
 import ROOT
 
-RNTupleReader = ROOT.Experimental.RNTupleReader
 
 class RNTupleBasics(unittest.TestCase):
     """Basic tests of using RNTuple from Python"""
@@ -22,7 +21,7 @@ class RNTupleBasics(unittest.TestCase):
         # The model should not have been destroyed (a clone has been used).
         self.assertFalse(model.IsFrozen())
 
-        reader = RNTupleReader.Open("ntpl", "test_ntuple_py_write_read.root")
+        reader = ROOT.RNTupleReader.Open("ntpl", "test_ntuple_py_write_read.root")
         self.assertEqual(reader.GetNEntries(), 1)
         entry = reader.CreateEntry()
         reader.LoadEntry(0, entry)
@@ -39,7 +38,7 @@ class RNTupleBasics(unittest.TestCase):
             entry["f"] = 42
             writer.Fill(entry)
 
-        reader = RNTupleReader.Open("ntpl", "test_ntuple_py_write_fields.root")
+        reader = ROOT.RNTupleReader.Open("ntpl", "test_ntuple_py_write_fields.root")
         self.assertEqual(reader.GetNEntries(), 1)
         entry = reader.CreateEntry()
         reader.LoadEntry(0, entry)
@@ -60,7 +59,7 @@ class RNTupleBasics(unittest.TestCase):
         self.assertFalse(model.IsFrozen())
 
         with ROOT.TFile.Open("test_ntuple_py_append.root") as f:
-            reader = RNTupleReader.Open(f["ntpl"])
+            reader = ROOT.RNTupleReader.Open(f["ntpl"])
             self.assertEqual(reader.GetNEntries(), 1)
             entry = reader.CreateEntry()
             reader.LoadEntry(0, entry)
@@ -80,7 +79,7 @@ class RNTupleBasics(unittest.TestCase):
         read_model = ROOT.RNTupleModel.Create()
         read_model.MakeField["int"]("f1")
 
-        reader = RNTupleReader.Open(read_model, "ntpl", "test_ntuple_py_read_model.root")
+        reader = ROOT.RNTupleReader.Open(read_model, "ntpl", "test_ntuple_py_read_model.root")
         entry = reader.CreateEntry()
         with self.assertRaises(Exception):
             # Field f2 does not exist in imposed model

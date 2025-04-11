@@ -445,10 +445,6 @@ public:
    const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 }; // class RNTupleReader
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RNTupleReader [[deprecated("ROOT::RNTupleReader moved to ROOT::RNTupleReader")]] = ROOT::RNTupleReader;
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleReader

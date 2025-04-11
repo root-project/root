@@ -460,11 +460,6 @@ public:
    RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RNTupleModel [[deprecated("ROOT::Experimental::RNTupleModel moved to ROOT::RNTupleModel")]] = ROOT::RNTupleModel;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

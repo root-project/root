@@ -129,14 +129,6 @@ public:
    ROOT::NTupleSize_t size() const { return fEnd - fStart; }
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RNTupleGlobalRange [[deprecated("ROOT::Experimental::RNTupleGlobalRange moved to ROOT::RNTupleGlobalRange")]] =
-   ROOT::RNTupleGlobalRange;
-using RNTupleClusterRange [[deprecated("ROOT::Experimental::RNTupleClusterRange moved to ROOT::RNTupleLocalRange")]] =
-   ROOT::RNTupleLocalRange;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

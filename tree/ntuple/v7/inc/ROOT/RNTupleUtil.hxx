@@ -329,19 +329,6 @@ static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializable
 RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view where);
 
 } // namespace Internal
-
-namespace Experimental {
-
-// TODO(jblomer): remove before branching ROOT v6.36
-using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::ENTupleColumnType")]] =
-   ROOT::ENTupleColumnType;
-using ENTupleStructure [[deprecated("ROOT::Experimental::ENTupleStructure moved to ROOT::ENTupleStructure")]] =
-   ROOT::ENTupleStructure;
-using NTupleSize_t [[deprecated("ROOT::Experimental::NTupleSize_t moved to ROOT::NTupleSize_t")]] = ROOT::NTupleSize_t;
-using DescriptorId_t [[deprecated("ROOT::Experimental::DescriptorId_t moved to ROOT::DescriptorId_t")]] =
-   ROOT::DescriptorId_t;
-
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

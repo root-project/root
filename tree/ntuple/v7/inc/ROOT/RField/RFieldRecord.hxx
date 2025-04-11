@@ -249,13 +249,6 @@ public:
    ~RField() final = default;
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RRecordField [[deprecated("ROOT::Experimental::RRecordField moved to ROOT::RRecordField")]] = ROOT::RRecordField;
-using RPairField [[deprecated("ROOT::Experimental::RPairField moved to ROOT::RPairField")]] = ROOT::RPairField;
-using RTupleField [[deprecated("ROOT::Experimental::RTupleField moved to ROOT::RTupleField")]] = ROOT::RTupleField;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

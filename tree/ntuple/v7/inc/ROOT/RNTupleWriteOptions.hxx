@@ -268,13 +268,6 @@ inline void RNTupleWriteOptionsManip::SetMaxKeySize(RNTupleWriteOptions &options
 }
 
 } // namespace Internal
-
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RNTupleWriteOptions [[deprecated("ROOT::Experimental::RNTupleWriteOptions moved to ROOT::RNTupleWriteOptions")]] =
-   ROOT::RNTupleWriteOptions;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleWriteOptions

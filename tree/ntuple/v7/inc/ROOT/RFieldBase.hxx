@@ -881,12 +881,6 @@ struct RFieldRepresentationModifier {
    }
 };
 } // namespace Internal
-
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RFieldBase [[deprecated("ROOT::Experimental::RFieldBase moved to ROOT::RFieldBase")]] = ROOT::RFieldBase;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

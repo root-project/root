@@ -516,24 +516,6 @@ template <>
 std::unique_ptr<void, typename RFieldBase::RCreateObjectDeleter<void>::deleter>
 ROOT::RFieldBase::CreateObject<void>() const;
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RFieldZero [[deprecated("ROOT::Experimental::RFieldZero moved to ROOT::RFieldZero")]] = ROOT::RFieldZero;
-using RClassField [[deprecated("ROOT::Experimental::RClassField moved to ROOT::RClassField")]] = ROOT::RClassField;
-using REnumField [[deprecated("ROOT::Experimental::REnumField moved to ROOT::REnumField")]] = ROOT::REnumField;
-using RStreamerField [[deprecated("ROOT::Experimental::RStreamerField moved to ROOT::RStreamerField")]] =
-   ROOT::RStreamerField;
-template <typename T>
-using RSimpleField [[deprecated("ROOT::Experimental::RSimpleField moved to ROOT::RSimpleField")]] =
-   ROOT::RSimpleField<T>;
-using RInvalidField [[deprecated("ROOT::Experimental::RInvalidField moved to ROOT::RInvalidField")]] =
-   ROOT::RInvalidField;
-using RCardinalityField [[deprecated("ROOT::Experimental::RCardinalityField moved to ROOT::RCardinalityField")]] =
-   ROOT::RCardinalityField;
-template <typename T>
-using RField [[deprecated("ROOT::Experimental::RField moved to ROOT::RField")]] = ROOT::RField<T>;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif
