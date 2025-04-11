@@ -21,7 +21,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
       }
    }
 
-   Internal::RPageSourceFile source("ntpl", fnameOut, ROOT::RNTupleReadOptions());
+   ROOT::Internal::RPageSourceFile source("ntpl", fnameOut, ROOT::RNTupleReadOptions());
    source.Attach();
 
    Internal::RClusterPool pool{source};
