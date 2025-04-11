@@ -117,10 +117,9 @@ set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 set(custom_modulemaps)
 if (runtime_cxxmodules)
   set(custom_modulemaps boost.modulemap tinyxml2.modulemap cuda.modulemap module.modulemap.build)
-  # FIXME: We should install vc.modulemap only when Vc is found (Vc_FOUND) but
-  # some systems install it under /usr/include/Vc/Vc which allows rootcling to
-  # discover it and assert that the modulemap is not found.
-  set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
+  if(vc)
+    set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
+  endif()
 
   # We need to override the default modulemap because instead of producing a
   # single std.pcm, produces hundreds of pcms. This changed with MacOSX14.4.sdk
