@@ -334,6 +334,7 @@ if(WIN32)
 endif()
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox-bin firefox.exe
+             HINTS /snap/bin
              PATH_SUFFIXES "Mozilla Firefox")
 if(FIREFOX_EXECUTABLE)
   message(STATUS "Found Firefox browser executable ${FIREFOX_EXECUTABLE}")
