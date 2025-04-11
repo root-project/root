@@ -620,6 +620,18 @@ void col2im(const Dtype* data_col, const int channels,
   //std::cout << "finishing col2imp" << std::endl;
 }
 
+// Used at the end of infer() to create the return object.
+template <class T>
+std::vector<T> CreateOutput(T const *arr, std::size_t n)
+{
+   return {arr, arr + n};
+}
+
+// Special case for std::vector<bool>.
+inline std::vector<std::uint8_t> CreateOutput(std::vector<bool> const &vec, std::size_t n)
+{
+   return {vec.begin(), vec.begin() + n};
+}
 
 
 }  // end namespace UTILITY
