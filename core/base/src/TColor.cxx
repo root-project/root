@@ -2408,7 +2408,7 @@ void TColor::ListColors(Int_t ci, Int_t nb, Bool_t showEmpty)
    const Int_t ncolors = colors->GetSize();
    Int_t last = ci+nb;
    if (nb==0 || last>=ncolors) last = ncolors;
-   TColor *color = 0;
+   TColor *color = nullptr;
    Int_t nc =0 ;
 
    printf("   +------+-------+-------+-------+-------+--------------------+--------------------+\n");
