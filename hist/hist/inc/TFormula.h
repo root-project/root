@@ -156,7 +156,6 @@ protected:
    static Bool_t IsOperator(const char c);
    static Bool_t IsBracket(const char c);
    static Bool_t IsFunctionNameChar(const char c);
-   static Bool_t IsScientificNotation(const TString & formula, int ipos);
    static Bool_t IsHexadecimal(const TString & formula, int ipos);
    static Bool_t IsAParameterName(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
@@ -237,6 +236,8 @@ public:
    bool HasGeneratedHessian() const {
       return fHessFuncPtr != nullptr;
    }
+
+   static Bool_t IsScientificNotation(const TString & formula, int ipos);
 
    // template <class T>
    // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
