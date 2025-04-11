@@ -5796,3 +5796,21 @@ bool TTreeFormula::SwitchToFormLeafInfo(Int_t code)
    }
    return true;
 }
+
+Bool_t TTreeFormula::AnalyzePrimitive(TString&, TObjArray&, Int_t&, Int_t )
+{
+  // TTreeFormula version of AnalyzePrimitive(). Does nothing. Predefined
+  // primitive functions are not supported by TTreeFormula since they
+  // operate on x[] and parameters, which are unavailable here.
+
+  return kFALSE;
+}
+
+void TTreeFormula::Optimize()
+{
+  // TTreeFormula version of Optimize(). Does nothing. TTreeFormula does not
+  // support the TFormula-style optimization since it requires variables and
+  // parameters in fixed locations, which are unavailable here.
+
+  return;
+}

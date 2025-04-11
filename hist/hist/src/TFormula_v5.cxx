@@ -468,7 +468,14 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    delete method;
-   //
+
+   return AnalyzePrimitive(chaine, argArr, err, offset);
+}
+
+Bool_t TFormula::AnalyzePrimitive(TString &chaine, TObjArray& argArr, Int_t &err, Int_t offset)
+{
+   // Check if the given string matches a defined function primitive
+
    // MI change - extended space of functions
    // not forward compatible change
    //
@@ -479,13 +486,17 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    ROOT::v5::TFormulaPrimitive *prim = ROOT::v5::TFormulaPrimitive::FindFormula(cbase, args_paran>0 ? cbase.Data() + args_paran + 1 : (const char*)nullptr);
-   if (prim &&   (!IsA()->GetBaseClass("TTreeFormula"))) {
+   if (prim) {
       // TO BE DONE ALSO IN TTREFORMULA - temporary fix MI
       // Analyze the arguments
       TIter next(&argArr);
       TObjString *objstr;
+      Int_t nargs=0;
       while ( (objstr=(TObjString*)next()) ) {
-         Analyze(objstr->String(),err,offset); if (err) return kFALSE;
+         Analyze(objstr->String(), err, offset);
+         if (err)
+            return kFALSE;
+         ++nargs;
       }
       if (nargs!=prim->fNArguments) {
          Error("Compile",        "%s requires %d arguments",
@@ -2448,10 +2459,8 @@ Int_t TFormula::Compile(const char *expression)
    //   Convert(5);
    //
    //MI change
-   if (!IsA()->GetBaseClass("TTreeFormula")) {
-      Optimize();
-   }
-   //
+   Optimize();
+
    return 0;
 }
 
