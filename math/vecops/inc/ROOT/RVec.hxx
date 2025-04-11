@@ -3263,14 +3263,14 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  *
  * \param start The first value in the sequence.
  * \param end The last value in the sequence if \p endpoint is true; otherwise, \p end is excluded.
- * \param n The number of evenly spaced entries to produce.
+ * \param n The number of evenly spaced entries to produce. The default value is 128, which is different than numpy's default value of 50.
  * \param endpoint If true (default), \p end is included as the final element; if false, \p end is excluded.
  *
  * \return A vector (RVec<Common_t>) containing \p n evenly spaced values.
  *
  * \note If \p n is 1, the resulting vector will contain only the value \p start.
- * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
- *   - n is nonzero, and
+ * \note The check `if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
+ *   - division by zero is avoided when calculating `step`
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
@@ -3303,12 +3303,13 @@ inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, con
 {
     RVec<Common_t> temp;
     
-    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
+    if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
         return temp;
     }
     
     Common_t step = (static_cast<Common_t>(end) - static_cast<Common_t>(start)) / static_cast<Common_t>(n - endpoint);
+    
     temp.reserve(n);
     temp.push_back(static_cast<Common_t>(start));
     for (unsigned long long i = 1; i < n; i++)
@@ -3337,15 +3338,15 @@ inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, con
  *
  * \param start The exponent corresponding to the first element (i.e., the first element is \f$base^{start}\f$).
  * \param end The exponent corresponding to the final element if \p endpoint is true; otherwise, \p end is excluded.
- * \param n The number of log-spaced entries to produce.
- * \param base The base to be used in the exponentiation (default is 10.0).
+ * \param n The number of log-spaced entries to produce. The default value is 128, which is different than numpy's default value of 50.
  * \param endpoint If true (default), \f$base^{end}\f$ is included as the final element; if false, \f$base^{end}\f$ is excluded.
+ * \param base The base to be used in the exponentiation (default is 10.0).
  *
  * \return A vector (RVec<Common_t>) containing n log-spaced values.
  *
  * \note If \p n is 1, the resulting vector will contain only the value \f$base^{start}\f$.
- * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
- *   - n is nonzero, and
+ * \note The check `if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
+ *   - division by zero is avoided when calculating `step`
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
@@ -3376,11 +3377,11 @@ inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, con
  * ~~~
  */
 template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
-inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, T3 base = 10.0, const bool endpoint = true)
+inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, const bool endpoint = true, T3 base = 10.0)
 {
     RVec<Common_t> temp;
     
-    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
+    if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
         return temp;
     }
