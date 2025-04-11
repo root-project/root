@@ -124,13 +124,6 @@ inline void RNTupleReadOptionsManip::SetClusterBunchSize(RNTupleReadOptions &opt
 }
 
 } // namespace Internal
-
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RNTupleReadOptions [[deprecated("ROOT::Experimental::RNTupleReadOptions moved to ROOT::RNTupleReadOptions")]] =
-   ROOT::RNTupleReadOptions;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif

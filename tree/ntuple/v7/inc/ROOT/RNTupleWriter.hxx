@@ -182,11 +182,6 @@ public:
    }
 }; // class RNTupleWriter
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RNTupleWriter [[deprecated("ROOT::Experimental::RNTupleWriter moved to ROOT::RNTupleWriter")]] =
-   ROOT::RNTupleWriter;
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleWriter

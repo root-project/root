@@ -426,21 +426,6 @@ public:
    }
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-template <typename T>
-using RNTupleViewBase [[deprecated("ROOT::Experimental::RNTupleViewBase moved to ROOT::RNTupleViewBase")]] =
-   ROOT::RNTupleViewBase<T>;
-template <typename T>
-using RNTupleView [[deprecated("ROOT::Experimental::RNTupleView moved to ROOT::RNTupleView")]] = ROOT::RNTupleView<T>;
-template <typename T>
-using RNTupleDirectAccessView
-   [[deprecated("ROOT::Experimental::RNTupleDirectAccessView moved to ROOT::RNTupleDirectAccessView")]] =
-      ROOT::RNTupleDirectAccessView<T>;
-using RNTupleCollectionView
-   [[deprecated("ROOT::Experimental::RNTupleCollectionView moved to ROOT::RNTupleCollectionView")]] =
-      ROOT::RNTupleCollectionView;
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

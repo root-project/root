@@ -59,11 +59,6 @@ public:
    bool ShouldFlushCluster() const { return fShouldFlushCluster; }
 }; // class RNTupleFillContext
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-using RNTupleFillStatus [[deprecated("ROOT::Experimental::RNTupleFillStatus moved to ROOT::RNTupleFillStatus")]] =
-   ROOT::RNTupleFillStatus;
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleFillStatus

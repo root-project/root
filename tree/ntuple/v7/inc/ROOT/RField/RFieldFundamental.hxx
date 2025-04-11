@@ -520,13 +520,6 @@ public:
    void SetDouble32();
 };
 
-namespace Experimental {
-// TODO(gparolini): remove before branching ROOT v6.36
-template <typename T>
-using RIntegralField [[deprecated("ROOT::Experimental::RIntegralField moved to ROOT::RIntegralField")]] =
-   ROOT::RIntegralField<T>;
-} // namespace Experimental
-
 } // namespace ROOT
 
 #endif
