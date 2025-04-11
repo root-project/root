@@ -712,7 +712,9 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -789,7 +791,9 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    }
    {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -856,7 +860,9 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -1117,7 +1123,9 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    }
    {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -1151,18 +1159,19 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
    int lda_ = m;
    int ldb_ = k;
    int ldc_ = m;
-   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &lda_, B, &ldb_, &betaOne, _d_A, &ldc_);
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &lda_, B, &ldb_, &betaOne, _d_A,
+                                             &ldc_);
 
    lda_ = m;
    ldb_ = m;
    ldc_ = k;
-   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &lda_, _d_output, &ldb_, &betaOne, _d_B, &ldc_);
+   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &lda_, _d_output, &ldb_, &betaOne, _d_B,
+                                             &ldc_);
 }
 
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA
-
 
 } // namespace custom_derivatives
 } // namespace clad
