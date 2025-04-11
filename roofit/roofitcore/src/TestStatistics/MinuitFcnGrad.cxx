@@ -43,6 +43,9 @@ public:
 
    bool returnsInMinuit2ParameterSpace() const override { return _fcn.returnsInMinuit2ParameterSpace(); }
 
+   // TODO: Implement this
+   bool VanishingSecondDerivative(int /*i*/, int /*j*/) const override { return false; }
+
 private:
    double DoEval(const double *x) const override { return _fcn(x); }
 

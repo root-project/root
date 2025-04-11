@@ -56,6 +56,8 @@ public:
 
   void doEval(RooFit::EvalContext &) const override;
 
+  void fillVariableGroups(RooFit::VariableGroups &out) const override;
+
 protected:
 
   RooArgList   _ownedList ;      ///< List of owned components
