@@ -15,6 +15,8 @@
 #include <TTreeReader.h>
 #include <TTreeReaderArray.h>
 
+#include "DummyHeader.hxx"
+
 using namespace ROOT;              // RDataFrame
 using namespace ROOT::RDF;         // RInterface
 using namespace ROOT::VecOps;      // RVec
