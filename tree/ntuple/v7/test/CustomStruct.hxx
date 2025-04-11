@@ -259,6 +259,11 @@ struct StructWithIORules : StructWithIORulesBase {
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
 };
 
+struct OldCoordinates {
+   float fOldX;
+   float fOldY;
+};
+
 struct CoordinatesWithIORules {
    float fX;
    float fY;
@@ -269,6 +274,16 @@ struct CoordinatesWithIORules {
 struct LowPrecisionFloatWithIORules {
    float fFoo;
    float fLast8BitsZero; // the I/O rule will "randomize" the last 8 bits
+};
+
+template <typename T>
+struct OldName {
+   T fValue;
+};
+
+template <typename T>
+struct NewName {
+   T fValue;
 };
 
 struct Cyclic {
