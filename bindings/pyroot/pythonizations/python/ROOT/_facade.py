@@ -452,3 +452,17 @@ class ROOTFacade(types.ModuleType):
         tpd = cppyy.gbl.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd
+
+    # Create the uhi namespace
+    @property
+    def uhi(self):
+        uhi_module = types.ModuleType("uhi")
+        uhi_module.__file__ = "<module ROOT>"
+        uhi_module.__package__ = self
+        try:
+            from ._pythonization._uhi import _add_module_level_uhi_helpers
+
+            _add_module_level_uhi_helpers(uhi_module)
+        except ImportError:
+            raise Exception("Failed to pythonize the namespace uhi")
+        return uhi_module
