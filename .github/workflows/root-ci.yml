@@ -108,7 +108,7 @@ jobs:
           - platform: mac-beta
             is_special: true
             arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=23"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
