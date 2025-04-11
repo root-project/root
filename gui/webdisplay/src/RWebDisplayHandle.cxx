@@ -304,7 +304,7 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    if (((url.find("token=") != std::string::npos) || (url.find("key=") != std::string::npos)) && !args.IsBatchMode() && !args.IsHeadless()) {
       TString filebase = "root_start_";
 
-      auto f = TemporaryFile(filebase, IsSnapChromium() ? 1 : 0, ".html");
+      auto f = TemporaryFile(filebase, IsSnapBrowser() ? 1 : 0, ".html");
 
       bool ferr = false;
 
@@ -712,6 +712,9 @@ std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, boo
       TRandom3 rnd;
       rnd.SetSeed(0);
       profile_arg = gSystem->TempDirectory();
+      if ((profile_arg.compare(0, 4, "/tmp") == 0) && IsSnapBrowser())
+         profile_arg = gSystem->GetHomeDirectory();
+
 #ifdef _MSC_VER
       char slash = '\\';
 #else
@@ -744,6 +747,7 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
    TestProg("/Applications/Firefox.app/Contents/MacOS/firefox");
 #endif
 #ifdef R__LINUX
+   TestProg("/snap/bin/firefox");
    TestProg("/usr/bin/firefox");
    TestProg("/usr/bin/firefox-bin");
 #endif
@@ -794,6 +798,8 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
       TRandom3 rnd;
       rnd.SetSeed(0);
       std::string profile_dir = gSystem->TempDirectory();
+      if ((profile_dir.compare(0, 4, "/tmp") == 0) && IsSnapBrowser())
+         profile_dir = gSystem->GetHomeDirectory();
 
 #ifdef _MSC_VER
       char slash = '\\';
@@ -1216,7 +1222,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
    if (isChrome) {
       use_home_dir = chrome_tmp_workaround;
       auto &h1 = FindCreator("chrome", "ChromeCreator");
-      if (h1 && h1->IsActive() && h1->IsSnapChromium() && (use_home_dir == 0))
+      if (h1 && h1->IsActive() && h1->IsSnapBrowser() && (use_home_dir == 0))
          use_home_dir = 1;
    }
 
