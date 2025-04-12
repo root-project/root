@@ -20,7 +20,6 @@ numba>=0.48
 cffi>=1.9.1
 
 # Notebooks: ROOT C++ kernel
-ipython<9.0.0 # ipython 9.0.0 is incompatible the the latest metakernel, as of 03/03/25
 notebook>=4.4.1
 metakernel>=0.20.0
 
