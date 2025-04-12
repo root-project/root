@@ -8,34 +8,6 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-RModel_GraphIndependent::RModel_GraphIndependent(RModel_GraphIndependent&& other) {
-    edges_update_block = std::move(other.edges_update_block);
-    nodes_update_block = std::move(other.nodes_update_block);
-    globals_update_block = std::move(other.globals_update_block);
-
-    num_nodes = std::move(other.num_nodes);
-    num_edges = std::move(other.num_edges);
-
-    fName = std::move(other.fName);
-    fFileName = std::move(other.fFileName);
-    fParseTime = std::move(other.fParseTime);
-}
-
-RModel_GraphIndependent& RModel_GraphIndependent::operator=(RModel_GraphIndependent&& other) {
-    edges_update_block = std::move(other.edges_update_block);
-    nodes_update_block = std::move(other.nodes_update_block);
-    globals_update_block = std::move(other.globals_update_block);
-
-    num_nodes = std::move(other.num_nodes);
-    num_edges = std::move(other.num_edges);
-
-    fName = std::move(other.fName);
-    fFileName = std::move(other.fFileName);
-    fParseTime = std::move(other.fParseTime);
-
-    return *this;
-}
-
 RModel_GraphIndependent::RModel_GraphIndependent(GraphIndependent_Init& graph_input_struct) {
     edges_update_block = std::move(graph_input_struct.edges_update_block);
     nodes_update_block = std::move(graph_input_struct.nodes_update_block);
