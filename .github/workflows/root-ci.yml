@@ -417,14 +417,6 @@ jobs:
       volumes:
         - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
-        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
-        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
-        OS_AUTH_TYPE: 'v3applicationcredential'
-        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
-        OS_IDENTITY_API_VERSION: 3
-        OS_INTERFACE: 'public'
-        OS_REGION_NAME: 'cern'
-        PYTHONUNBUFFERED: true
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
         CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
 
