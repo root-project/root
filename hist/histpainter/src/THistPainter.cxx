@@ -4287,7 +4287,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       }
       memcpy(l,"    ", 4);
       l = strstr(chopt,"N");
-      if (l && fH->InheritsFrom(TH2Poly::Class())) Hoption.Text += 3000;
+      if (l && fH->InheritsFrom(TH2Poly::Class())) Hoption.Text = 3000 + (Hoption.Text != 1 ? Hoption.Text : 0);
       Hoption.Color = 0;
    }
    l = strstr(chopt,"COLZ");
