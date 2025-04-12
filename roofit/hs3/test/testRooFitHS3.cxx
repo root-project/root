@@ -23,6 +23,7 @@
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
+#include <RooFormulaVar.h>
 
 #include <TROOT.h>
 
@@ -403,4 +404,36 @@ TEST(RooFitHS3, SimultaneousGaussians)
 
    int status = validate(simPdf);
    EXPECT_EQ(status, 0);
+}
+
+// https://github.com/root-project/root/issues/14637
+TEST(RooFitHS3, ScientificNotation)
+{
+   RooRealVar v1("v1","v1",1.0);
+   RooRealVar v2("v2","v2",1.0);
+
+   // make a formula that is some parameters times some numbers
+   auto thestring = "@0*0.2e-6 + @1*0.1";
+   RooArgList arglist;
+   arglist.add(v1);
+   arglist.add(v2);
+
+   RooFormulaVar fvBad("fvBad", "fvBad", thestring, arglist);
+
+   // make gaussian with mean as that formula
+   RooRealVar x("x","x",0.0,-5.0,5.0);
+   RooGaussian g("g","g",x, fvBad, 1.0);
+
+   RooWorkspace ws("ws");
+   ws.import(g);
+   //std::cout << (fvBad.expression()) << std::endl;
+
+   // export to json
+   RooJSONFactoryWSTool t(ws);
+   auto jsonStr = t.exportJSONtoString();
+
+   // try to import, before the fix, it threw RooJSONFactoryWSTool::DependencyMissingError because of problem reading the exponential char
+   RooWorkspace newws("newws");
+   RooJSONFactoryWSTool t2(newws);
+   ASSERT_TRUE(t2.importJSONfromString(jsonStr));
 }
