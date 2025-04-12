@@ -65,19 +65,24 @@ namespace {
  * arguments are returned as a vector of strings.
  *
  * @param expr A string representing a mathematical expression.
- * @return A vector of strings representing the extracted arguments.
+ * @return A set of unique strings representing the extracted arguments.
  */
-std::vector<std::string> extractArguments(std::string expr)
+std::set<std::string> extractArguments(std::string expr)
 {
    // Get rid of whitespaces
    expr.erase(std::remove_if(expr.begin(), expr.end(), [](unsigned char c) { return std::isspace(c); }), expr.end());
 
-   std::vector<std::string> arguments;
+   std::set<std::string> arguments;
    size_t startidx = expr.size();
    for (size_t i = 0; i < expr.size(); ++i) {
       if (startidx >= expr.size()) {
          if (isalpha(expr[i])) {
             startidx = i;
+            // check this character is not part of scientific notation, e.g. 2e-5
+            if (TFormula::IsScientificNotation(expr, i)) {
+               // if it is, we ignore this character
+               startidx = expr.size();
+            }
          }
       } else {
          if (!isdigit(expr[i]) && !isalpha(expr[i]) && expr[i] != '_') {
@@ -87,12 +92,12 @@ std::vector<std::string> extractArguments(std::string expr)
             }
             std::string arg(expr.substr(startidx, i - startidx));
             startidx = expr.size();
-            arguments.push_back(arg);
+            arguments.insert(arg);
          }
       }
    }
    if (startidx < expr.size()) {
-      arguments.push_back(expr.substr(startidx));
+      arguments.insert(expr.substr(startidx));
    }
    return arguments;
 }
