@@ -26,7 +26,7 @@ ROOT::Internal::RootCling::TROOTSYSSetter gROOTSYSSetter;
 static const char *GetIncludeDir() {
    auto renv = getenv("ROOTSYS");
    if (!renv)
-      return "";
+      return nullptr;
    static std::string incdir = std::string(renv) + "/include";
    return incdir.c_str();
 }
@@ -34,7 +34,7 @@ static const char *GetIncludeDir() {
 static const char *GetEtcDir() {
    auto renv = getenv("ROOTSYS");
    if (!renv)
-      return "";
+      return nullptr;
    static std::string etcdir = std::string(renv) + "/etc";
    return etcdir.c_str();
 }
