@@ -71,7 +71,7 @@ env:
   OS_IDENTITY_API_VERSION: 3
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
-  GLOBAL_OVERRIDES: 'LLVM_ENABLE_ASSERTIONS=ON'
+  GLOBAL_OVERRIDES: 'asserts=ON LLVM_ENABLE_ASSERTIONS=ON'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
