@@ -71,6 +71,7 @@ env:
   OS_IDENTITY_API_VERSION: 3
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
+  GLOBAL_OVERRIDES: 'LLVM_ENABLE_ASSERTIONS=ON'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
@@ -97,16 +98,16 @@ jobs:
         include:
           - platform: mac13   
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
+            overrides: ["builtin_zlib=ON"]
           - platform: mac14
             arch: X64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac-beta
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -135,7 +136,7 @@ jobs:
 
           echo '' >> "$CONFIGFILE"
 
-          for ENTRY in $OVERRIDES; do
+          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
               KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
 
               # Add entry to file if not exists, otherwise replace
@@ -360,23 +361,21 @@ jobs:
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
           - image: fedora41
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: fedora42
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           - image: alma8
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu22
-            overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2410
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2504
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_STANDARD=23"]
           - image: debian125
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "dev=ON"]
+            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON"]
           # Special builds
           - image: alma9
             is_special: true
@@ -394,7 +393,7 @@ jobs:
           - image: alma9-clang
             is_special: true
             property: clang
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
           # Disable GPU builds until the DNS problem is solved  
           # - image: ubuntu2404-cuda
           #   is_special: true
@@ -474,7 +473,7 @@ jobs:
 
           echo '' >> "$CONFIGFILE"
 
-          for ENTRY in $OVERRIDES; do
+          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
               KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
 
               # Add entry to file if not exists, otherwise replace
