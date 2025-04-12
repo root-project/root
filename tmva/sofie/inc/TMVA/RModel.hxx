@@ -38,13 +38,6 @@ private:
    std::unordered_map<std::string_view, size_t> fIntermediateTensorFrequencyLookup;    ///<!  lookup table for intermediate tensor frequency (transient)
 
 public:
-   // Rule of five: explicitly define move semantics, disallow copy
-   RModel(RModel &&other) = default;
-   RModel &operator=(RModel &&other) = default;
-   RModel(const RModel &other) = delete;
-   RModel &operator=(const RModel &other) = delete;
-   ~RModel() = default;
-
    /**
        Default constructor. Needed to allow serialization of ROOT objects. See
        https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle

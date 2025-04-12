@@ -1298,13 +1298,13 @@ void RModel::OutputGenerated(std::string filename, bool append) {
 void RModel::Streamer(TBuffer &R__b) {
     if (R__b.IsReading()) {
         RModel::Class()->ReadBuffer(R__b, this);
-        for(auto i=RModel::fInitializedTensors.begin(); i!=RModel::fInitializedTensors.end(); ++i) {
-            i->second.CastPersistentToShared();
+        for (auto & i : fInitializedTensors) {
+            i.second.CastPersistentToShared();
         }
     }
     else {
-        for(auto i=RModel::fInitializedTensors.begin(); i!=RModel::fInitializedTensors.end(); ++i) {
-            i->second.CastSharedToPersistent();
+        for (auto & i : fInitializedTensors) {
+            i.second.CastSharedToPersistent();
         }
         RModel::Class()->WriteBuffer(R__b, this);
     }
