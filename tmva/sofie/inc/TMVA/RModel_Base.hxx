@@ -101,11 +101,6 @@ enum class FunctionRelation { INVALID = 0, NODES_EDGES = 1, NODES_GLOBALS = 2, E
 
 class RModel_GNNBase : public RModel_Base {
 public:
-   /**
-       Default constructor. Needed to allow serialization of ROOT objects. See
-       https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
-   */
-   RModel_GNNBase() = default;
    virtual void Generate() = 0;
    virtual ~RModel_GNNBase() = default;
 };

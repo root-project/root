@@ -25,8 +25,6 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-//typedef RTensor tensor_t;
-
 enum class ETensorType{
    UNDEFINED = 0, FLOAT = 1, UINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
