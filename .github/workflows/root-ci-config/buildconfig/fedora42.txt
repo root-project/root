@@ -3,6 +3,7 @@ builtin_unuran=OFF
 builtin_zlib=ON
 builtin_zstd=ON
 ccache=ON
+experimental_adaptivecpp=ON
 pythia8=OFF
 unuran=OFF
 vdt=OFF

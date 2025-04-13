@@ -45,6 +45,7 @@ davix=ON
 dcache=OFF
 dev=OFF
 distcc=OFF
+experimental_adaptivecpp=OFF
 fail-on-missing=On
 fcgi=OFF
 fftw3=ON

@@ -23,6 +23,10 @@ set(LIBS
   clangLex
 )
 
+if(experimental_adaptivecpp)
+  list(APPEND LIBS acpp-clang acpp-rt)
+endif()
+
 set(LLVM_LINK_COMPONENTS
   analysis
   core
@@ -298,6 +302,9 @@ if (UNIX)
     "
     #define CLING_CXX_INCL \"${CLING_CXX_HEADERS}\"
     #define CLING_INCLUDE_PATHS \"${CLING_INCLUDE_PATHS}\"
+
+    #define ADAPTIVE_CPP_HEADER_BUILD_PATH \"${ADAPTIVE_CPP_HEADER_BUILD_PATH}\"
+    #define ADAPTIVE_CPP_HEADER_INSTALL_PATH \"${ADAPTIVE_CPP_HEADER_INSTALL_PATH}\"
   ")
   if (CMAKE_OSX_SYSROOT)
     # CMAKE_OSX_SYSROOT hardcodes the concrete version of the sdk

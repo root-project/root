@@ -1399,6 +1399,19 @@ namespace {
       argvCompile.push_back("-fno-omit-frame-pointer");
     }
 
+#ifdef CLING_WITH_ADAPTIVECPP
+    llvm::SmallString<256> adaptiveCppIncludePath(
+        ADAPTIVE_CPP_HEADER_INSTALL_PATH);
+    if (!llvm::sys::fs::exists(adaptiveCppIncludePath))
+      adaptiveCppIncludePath = ADAPTIVE_CPP_HEADER_BUILD_PATH;
+    argvCompile.push_back("-isystem");
+    argvCompile.push_back(adaptiveCppIncludePath.c_str());
+    argvCompile.push_back("-D__ACPP_ENABLE_LLVM_SSCP_TARGET__");
+    argvCompile.push_back("-Xclang");
+    argvCompile.push_back("-disable-O0-optnone");
+    if (!debuggingEnabled)
+      argvCompile.push_back("-ffp-contract=fast");
+#endif
     // Add host specific includes, -resource-dir if necessary, and -isysroot
     std::string ClingBin = GetExecutablePath(argv[0]);
     AddHostArguments(ClingBin, argvCompile, LLVMDir, COpts);

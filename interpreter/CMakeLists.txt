@@ -53,7 +53,10 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # found before (because the user turned on cuda or tmva-gpu), this will not have
 # an effect, which is fine.
 # (Note that the option is very counter-intuitive: We turn *on* disabling it...)
-set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
+# Special case when we want to build cling with adaptiveCpp
+if(NOT experimental_adaptivecpp)
+  set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
+endif()
 
 # will be set again in case NOT builtin_llvm
 set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
@@ -404,6 +407,9 @@ if (builtin_clang)
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
   set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib/cmake/clang/")
+  set(CLANG_EXECUTABLE_PATH
+    "${LLVM_BINARY_DIR}/bin/clang${CMAKE_EXECUTABLE_SUFFIX}"
+    CACHE STRING "Path to just‐built clang (if builtin_clang).")
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")

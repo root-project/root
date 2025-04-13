@@ -128,6 +128,21 @@ set(CLING_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(LLVM_TOOLS_BINARY_DIR "${LLVM_BINARY_DIR}/bin")
 if(DEFINED CLING_ROOT_BUILD)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LLVM_TOOLS_BINARY_DIR}")
+
+  if(experimental_adaptivecpp)
+    # Hack for now to make it work with adaptiveCpp without making more changes
+    # Ensure runtime ACPP directory exists to prevent SYCL from running
+    set(ACPP_RUNTIME_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../lib/hipSYCL/")
+    file(MAKE_DIRECTORY ${ACPP_RUNTIME_DIRECTORY})
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib/hipSYCL/bitcode)
+
+    # Create a symbolic link to the bitcode directory
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -E create_symlink
+      "${CMAKE_BINARY_DIR}/lib/hipSYCL/bitcode"
+      "${ACPP_RUNTIME_DIRECTORY}/bitcode"
+    )
+  endif()
 endif()
 
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
@@ -236,7 +251,7 @@ if(MSVC)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std:c++14")
     endif()
   endif()
-else()
+elseif(NOT experimental_adaptivecpp) # adaptivecpp does not build with -fno-rtti
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 endif()
 
@@ -468,6 +483,76 @@ if (TARGET intrinsics_gen)
 endif()
 if (TARGET clang-headers)
   list(APPEND LLVM_COMMON_DEPENDS clang-headers)
+endif()
+
+if(experimental_adaptivecpp)
+  set(HIPSYCL_NO_FIBERS ON)
+  set(WITH_OPENCL_BACKEND OFF)
+  set(WITH_LEVEL_ZERO_BACKEND OFF)
+
+  add_compile_definitions(CLING_WITH_ADAPTIVECPP)
+
+  # Use ADAPTIVE_CPP_SOURCE_DIR variable if it is defined in the CMake
+  # configuration
+  if(NOT DEFINED ADAPTIVE_CPP_SOURCE_DIR)
+    include(FetchContent)
+    set(ADAPTIVE_CPP_SOURCE_DIR "${CMAKE_BINARY_DIR}/AdaptiveCpp")
+    FetchContent_Declare(
+      AdaptiveCpp
+      GIT_REPOSITORY https://github.com/devajithvs/AdaptiveCpp.git
+      GIT_TAG 3fb375fdc84ad0423139e05167739e9e906ca183
+    )
+    FetchContent_GetProperties(AdaptiveCpp)
+    if(NOT AdaptiveCpp_POPULATED)
+      FetchContent_Populate(AdaptiveCpp)
+    endif()
+
+    set(ADAPTIVE_CPP_SOURCE_DIR "${adaptivecpp_SOURCE_DIR}")
+  endif()
+
+  list(INSERT CMAKE_MODULE_PATH 0 "${ADAPTIVE_CPP_SOURCE_DIR}/cmake/")
+
+  set(ADAPTIVE_CPP_HEADER_BUILD_PATH
+      "${CMAKE_CURRENT_BINARY_DIR}/include/AdaptiveCpp")
+  set(ADAPTIVE_CPP_HEADER_INSTALL_PATH
+      "${CMAKE_INSTALL_PREFIX}/include/AdaptiveCpp")
+
+  add_subdirectory(
+    ${ADAPTIVE_CPP_SOURCE_DIR}
+    ${adaptivecpp_BINARY_DIR}
+  )
+
+  set(ACPP_EXPORTS
+      acpp-common
+      acpp-rt
+      acpp-clang-cbs
+      acpp-clang
+      llvm-to-backend
+      llvm-to-host
+      rt-backend-omp)
+
+  if(WITH_CUDA_BACKEND)
+    list(APPEND ACPP_EXPORTS llvm-to-ptx rt-backend-cuda)
+  endif()
+
+  if(WITH_OPENCL_BACKEND)
+    list(APPEND ACPP_EXPORTS llvm-to-spirv rt-backend-ocl ocl-cxx-headers ocl-headers)
+  endif()
+
+  if(WITH_ROCM_BACKEND)
+    list(APPEND ACPP_EXPORTS llvm-to-amdgpu rt-backend-hip)
+  endif()
+
+  foreach(target IN LISTS ACPP_EXPORTS)
+    install(TARGETS ${target} EXPORT ClingTargets)
+  endforeach()
+
+  set_property(GLOBAL APPEND PROPERTY CLING_EXPORTS ${ACPP_EXPORTS})
+
+  if(TARGET intrinsics_gen)
+    add_dependencies(acpp-clang-cbs intrinsics_gen)
+    add_dependencies(llvm-to-backend intrinsics_gen)
+  endif()
 endif()
 
 add_subdirectory(include/cling/Interpreter)
