@@ -1,0 +1,7 @@
+Info in <hadd>: parallelizing  with 2 processes.
+Info in <hadd>: target file: hadd_args_ff_dbg_j_2_out.root
+Info in <hadd>: compression setting for all output: 101
+Info in <hadd>: each process should handle at least 3 files for efficiency. Setting the number of processes to: 1
+hadd Source file 1: hadd_args_in.root
+hadd Source file 2: hadd_args_in.root
+hadd Target path: hadd_args_ff_dbg_j_2_out.root:/

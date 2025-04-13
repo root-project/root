@@ -1,0 +1,9 @@
+<lcgdict>
+ <class name="lumi::LumiSectionData" class_version="0"/>
+ <class name="lumi::HLTInfo"/>
+ <class name="lumi::TriggerInfo"/>
+ <class name="lumi::BunchCrossingInfo"/>
+ <class name="std::vector< lumi::HLTInfo >"/>
+ <class name="std::vector< lumi::TriggerInfo >"/>
+ <class name="std::vector< lumi::BunchCrossingInfo >"/>
+</lcgdict>  

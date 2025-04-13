@@ -1,0 +1,191 @@
+
+Processing runConversionOp.C...
+KNOWN FAILURE: b = ab
+KNOWN FAILURE: pb = ab
+A::op <(T)
+ab >= b
+A::op <(A)
+ab < *pab
+KNOWN FAILURE: ab = c
+KNOWN FAILURE: b = c
+KNOWN FAILURE: N::B nb = c
+KNOWN FAILURE: pac = c
+KNOWN FAILURE: cpab = c
+KNOWN FAILURE: pb = c
+KNOWN FAILURE: const A<B> & rab(c);
+KNOWN FAILURE: const B & rb(c)
+KNOWN FAILURE: ab = d + (ab)
+A::op T()
+D::op -(A<B>)
+A::op T()
+===========================================================================
+class A<C>
+ size=0x1 FILE:ConversionOp.h LINE:4
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in A<C>
+ConversionOp.h   15 0xffffffff private: C fT , size=8
+ConversionOp.h   54   0xffffffff private: A<B> fA , size=1
+ConversionOp.h   15     0xffffffff private: B fT , size=1
+ConversionOp.h   55   0x0        private: B fB , size=1
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in A<C>)
+ConversionOp.h    6:1    0 public: A<C> A<C>(void);
+ConversionOp.h    7:1    0 public: A<C> A<C>(const C& t);
+ConversionOp.h    8:1    0 public: C* operator C*(void);
+ConversionOp.h    9:1    0 public: C operator C(void);
+ConversionOp.h   10:1    0 public: A<C> operator A<C>(void);
+ConversionOp.h   11:1    0 public: A<C>* operator A<C>*(void);
+ConversionOp.h   12:1    0 public: bool operator<(const C&) const;
+ConversionOp.h   13:1    0 public: bool operator<(const A<C>&);
+===========================================================================
+class B
+ size=0x1 FILE:ConversionOp.h LINE:18
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in B
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in B)
+ConversionOp.h   20:1    0 public: B B(void);
+===========================================================================
+class N::B
+ size=0x1 FILE:ConversionOp.h LINE:24
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in B
+ConversionOp.h   32 0xffffffff private: B fB , size=1
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in B)
+ConversionOp.h   26:1    0 public: N::B B(const B& b);
+ConversionOp.h   30:1    0 public: B operator B(void) const;
+===========================================================================
+class C
+ size=0x8 FILE:ConversionOp.h LINE:36
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in C
+ConversionOp.h   54 0xffffffff private: A<B> fA , size=1
+ConversionOp.h   15   0xffffffff private: B fT , size=1
+ConversionOp.h   55 0x0        private: B fB , size=1
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in C)
+ConversionOp.h   38:1    0 public: C C(void);
+ConversionOp.h   40:1    0 public: A<C> operator A<C>(void);
+ConversionOp.h   41:1    0 public: A<B> operator A<B>(void);
+ConversionOp.h   42:1    0 public: B operator B(void);
+ConversionOp.h   43:1    0 public: N::B operator N::B(void);
+ConversionOp.h   45:1    0 public: A<C>* operator A<C>*(void) const;
+ConversionOp.h   46:1    0 public: const A<B>* operator const A<B>*(void) const;
+ConversionOp.h   47:1    0 public: B* operator B*(void) const;
+ConversionOp.h   49:1    0 public: const A<C>& operator const A<C>&(void) const;
+ConversionOp.h   50:1    0 public: A<B>& operator A<B>&(void);
+ConversionOp.h   51:1    0 public: const B& operator const B&(void) const;
+===========================================================================
+class D
+ size=0x1 FILE:ConversionOp.h LINE:58
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in D
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in D)
+ConversionOp.h   60:1    0 public: A<B> operator+(A<B> a);
+ConversionOp.h   61:1    0 public: A<B>* operator-(A<B> a);
+KNOWN FAILURE: b = ab
+KNOWN FAILURE: pb = ab
+A::op <(T)
+ab >= b
+A::op <(A)
+ab < *pab
+KNOWN FAILURE: ab = c
+KNOWN FAILURE: b = c
+KNOWN FAILURE: N::B nb = c
+KNOWN FAILURE: pac = c
+KNOWN FAILURE: cpab = c
+KNOWN FAILURE: pb = c
+KNOWN FAILURE: const A<B> & rab(c);
+KNOWN FAILURE: const B & rb(c)
+KNOWN FAILURE: ab = d + (ab)
+D::op -(A<B>)
+===========================================================================
+class A<C>
+ size=0x2 FILE:ConversionOp_h.so LINE:-1
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in A<C>
+ConversionOp_h.so  -1 0xffffffff private: C fT , size=2
+ConversionOp_h.so  -1   0xffffffff private: A<B> fA , size=1
+ConversionOp_h.so  -1     0xffffffff private: B fT , size=1
+ConversionOp_h.so  -1   0xffffffff private: B fB , size=1
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in A<C>)
+ConversionOp_h.so  -1:-1   0 public: A<C> A<C>(void);
+ConversionOp_h.so  -1:-1   0 public: A<C> A<C>(const C& t);
+ConversionOp_h.so  -1:-1   0 public: C* operator C*(void);
+ConversionOp_h.so  -1:-1   0 public: C operator C(void);
+ConversionOp_h.so  -1:-1   0 public: A<C> operator A<C>(void);
+ConversionOp_h.so  -1:-1   0 public: A<C>* operator A<C>*(void);
+ConversionOp_h.so  -1:-1   0 public: bool operator<(const C&) const;
+ConversionOp_h.so  -1:-1   0 public: bool operator<(const A<C>&);
+ConversionOp_h.so  -1:-1   0 public: A<C> A<C>(const A<C>&);
+ConversionOp_h.so  -1:-1   0 public: A<C>& operator=(const A<C>&);
+===========================================================================
+class B
+ size=0x1 FILE:ConversionOp_h.so LINE:-1
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in B
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in B)
+ConversionOp_h.so  -1:-1   0 public: B B(void);
+ConversionOp_h.so  -1:-1   0 public: B B(const B&);
+ConversionOp_h.so  -1:-1   0 public: B& operator=(const B&);
+===========================================================================
+class N::B
+ size=0x1 FILE:ConversionOp_h.so LINE:-1
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in B
+ConversionOp_h.so  -1 0xffffffff private: B fB , size=1
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in B)
+ConversionOp_h.so  -1:-1   0 public: N::B B(const B& b);
+ConversionOp_h.so  -1:-1   0 public: B operator B(void) const;
+ConversionOp_h.so  -1:-1   0 public: N::B B(const N::B&);
+ConversionOp_h.so  -1:-1   0 public: N::B& operator=(const N::B&);
+===========================================================================
+class C
+ size=0x2 FILE:ConversionOp_h.so LINE:-1
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in C
+ConversionOp_h.so  -1 0xffffffff private: A<B> fA , size=1
+ConversionOp_h.so  -1   0xffffffff private: B fT , size=1
+ConversionOp_h.so  -1 0xffffffff private: B fB , size=1
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in C)
+ConversionOp_h.so  -1:-1   0 public: C C(void);
+ConversionOp_h.so  -1:-1   0 public: A<C> operator A<C>(void);
+ConversionOp_h.so  -1:-1   0 public: A<B> operator A<B>(void);
+ConversionOp_h.so  -1:-1   0 public: B operator B(void);
+ConversionOp_h.so  -1:-1   0 public: N::B operator N::B(void);
+ConversionOp_h.so  -1:-1   0 public: A<C>* operator A<C>*(void) const;
+ConversionOp_h.so  -1:-1   0 public: const A<B>* operator const A<B>*(void) const;
+ConversionOp_h.so  -1:-1   0 public: B* operator B*(void) const;
+ConversionOp_h.so  -1:-1   0 public: const A<C>& operator const A<C>&(void) const;
+ConversionOp_h.so  -1:-1   0 public: A<B>& operator A<B>&(void);
+ConversionOp_h.so  -1:-1   0 public: const B& operator const B&(void) const;
+ConversionOp_h.so  -1:-1   0 public: C C(const C&);
+ConversionOp_h.so  -1:-1   0 public: C& operator=(const C&);
+===========================================================================
+class D
+ size=0x1 FILE:ConversionOp_h.so LINE:-1
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in D
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in D)
+ConversionOp_h.so  -1:-1   0 public: A<B> operator+(A<B> a);
+ConversionOp_h.so  -1:-1   0 public: A<B>* operator-(A<B> a);
+ConversionOp_h.so  -1:-1   0 public: D D(void);
+ConversionOp_h.so  -1:-1   0 public: D D(const D&);
+ConversionOp_h.so  -1:-1   0 public: D& operator=(const D&);

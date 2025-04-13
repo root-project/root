@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lcgdict>
+<!--  <class name="HLT::Navigation" /> -->
+  <!-- <class name="HLT::NavigationCore" /> -->
+
+  <exclusion>
+    <class pattern="HLT::TypeInformation::*"/>
+    <class pattern="TypeInfo_*">
+      <field name="*" />
+      <method name="*"/>
+   </class>
+  </exclusion>
+
+  <class name="HLT::TriggerElement">
+   <field name="m_relations" transient="true"/>
+  </class>
+  <class name="std::vector<HLT::TriggerElement*>" />
+  <class name="std::vector<const HLT::TriggerElement*>" />
+  <!-- <exclusion>
+   <class name="HLT::TriggerElement">
+    <method name="activeState"/>
+    <method name="addFeature"/>
+    <method pattern="*serialize"/>
+    <method name="getFeatureAccessHelpers"/>
+    <method name="getRelated"/>
+    <method name="inquireId"/>
+    <method name="nofwdState"/>
+    <method name="relate"/>
+    <method name="reset"/>
+    <method pattern="*Relation"/>
+    <method pattern="set*"/>
+   </class>
+  </exclusion> -->
+  <!-- <class name="HLT::FeatureDescriptor" />
+  <class name="std::vector< HLT::FeatureDescriptor >" /> -->
+
+  <class name="HLT::TriggerElement::FeatureAccessHelper" />  
+
+</lcgdict>

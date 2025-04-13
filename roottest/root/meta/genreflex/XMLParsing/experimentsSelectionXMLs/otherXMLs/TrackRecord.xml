@@ -1,0 +1,7 @@
+<lcgdict>
+
+<class name="AthenaHitsVector<TrackRecord>" id="0F77F941-6019-4FE5-B6F4-E90BE9F7ACC9" />
+<class name="std::vector<TrackRecord*>" />
+<class name="TrackRecord" />
+
+</lcgdict>

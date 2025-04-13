@@ -1,0 +1,287 @@
+<lcgdict>
+
+<!-- base class -->
+<class name="EcalChannelStatusCode"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalChannelStatusCode>"/>
+<class name="EcalContainer<EEDetId,EcalChannelStatusCode>"/>
+<class name="EcalContainer<EBDetId,EcalChannelStatusCode>"/>
+<class name="EcalCondObjectContainer<EcalChannelStatusCode>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- templates for EcalCondTowerObjectContainer having the class as template parameter -->
+<class name="EcalContainer<EcalTrigTowerDetId,EcalChannelStatusCode>"/>
+<class name="EcalContainer<EcalScDetId,EcalChannelStatusCode>"/>
+<class name="EcalCondTowerObjectContainer<EcalChannelStatusCode>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalChannelStatus"/>
+<!-- typedefs for EcalCondTowerObjectContainer -->
+<class name="EcalDCSTowerStatus"/>
+
+<!-- base class -->
+<class name="EcalDAQStatusCode"/>
+<!-- templates for EcalCondTowerObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalDAQStatusCode>"/>
+<class name="EcalContainer<EcalTrigTowerDetId,EcalDAQStatusCode>"/>
+<class name="EcalContainer<EcalScDetId,EcalDAQStatusCode>"/>
+<class name="EcalCondTowerObjectContainer<EcalDAQStatusCode>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondTowerObjectContainer -->
+<class name="EcalDAQTowerStatus"/>
+
+<!-- base class -->
+<class name="EcalDQMStatusCode"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalDQMStatusCode>"/>
+<class name="EcalContainer<EEDetId,EcalDQMStatusCode>"/>
+<class name="EcalContainer<EBDetId,EcalDQMStatusCode>"/>
+<class name="EcalCondObjectContainer<EcalDQMStatusCode>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- templates for EcalCondTowerObjectContainer having the class as template parameter -->
+<class name="EcalContainer<EcalTrigTowerDetId,EcalDQMStatusCode>"/>
+<class name="EcalContainer<EcalScDetId,EcalDQMStatusCode>"/>
+<class name="EcalCondTowerObjectContainer<EcalDQMStatusCode>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalDQMChannelStatus"/>
+<!-- typedefs for EcalCondTowerObjectContainer -->
+<class name="EcalDQMTowerStatus"/>
+
+<!-- base class -->
+<class name="EcalMGPAGainRatio"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalMGPAGainRatio>"/>
+<class name="EcalContainer<EEDetId,EcalMGPAGainRatio>"/>
+<class name="EcalContainer<EBDetId,EcalMGPAGainRatio>"/>
+<class name="EcalCondObjectContainer<EcalMGPAGainRatio>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalGainRatios"/>
+
+<!-- base class -->
+<class name="EcalMappingElement"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalMappingElement>"/>
+<class name="EcalContainer<EEDetId,EcalMappingElement>"/>
+<class name="EcalContainer<EBDetId,EcalMappingElement>"/>
+<class name="EcalCondObjectContainer<EcalMappingElement>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalMappingElectronics"/>
+
+<!-- base class -->
+<class name="EcalPedestal"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalPedestal>"/>
+<class name="EcalContainer<EEDetId,EcalPedestal>"/>
+<class name="EcalContainer<EBDetId,EcalPedestal>"/>
+<class name="EcalCondObjectContainer<EcalPedestal>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalPedestals"/>
+
+
+
+<!-- base class -->
+<class name="EcalTPGCrystalStatusCode"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalTPGCrystalStatusCode>"/>
+<class name="EcalContainer<EEDetId,EcalTPGCrystalStatusCode>"/>
+<class name="EcalContainer<EBDetId,EcalTPGCrystalStatusCode>"/>
+<class name="EcalCondObjectContainer<EcalTPGCrystalStatusCode>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalTPGCrystalStatus"/>
+
+<!-- base class -->
+<class name="EcalTPGLinearizationConstant"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalTPGLinearizationConstant>"/>
+<class name="EcalContainer<EEDetId,EcalTPGLinearizationConstant>"/>
+<class name="EcalContainer<EBDetId,EcalTPGLinearizationConstant>"/>
+<class name="EcalCondObjectContainer<EcalTPGLinearizationConstant>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalTPGLinearizationConst"/>
+
+<!-- base class -->
+<class name="EcalTPGPedestal"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalTPGPedestal>"/>
+<class name="EcalContainer<EEDetId,EcalTPGPedestal>"/>
+<class name="EcalContainer<EBDetId,EcalTPGPedestal>"/>
+<class name="EcalCondObjectContainer<EcalTPGPedestal>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalTPGPedestals"/>
+
+<!-- base class -->
+<class name="EcalXtalGroupId"/>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalXtalGroupId>"/>
+<class name="EcalContainer<EEDetId,EcalXtalGroupId>"/>
+<class name="EcalContainer<EBDetId,EcalXtalGroupId>"/>
+<class name="EcalCondObjectContainer<EcalXtalGroupId>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalWeightXtalGroups"/>
+
+<!-- base class is the builtin type float -->
+<!-- templates for EcalCondObjectContainer having the class as template parameter, excluding STL -->
+<class name="EcalContainer<EEDetId,float>"/>
+<class name="EcalContainer<EBDetId,float>"/>
+<class name = "EcalCondObjectContainer<float>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalFloatCondObjectContainer"/>
+<class name="EcalIntercalibConstants"/>
+<class name="EcalIntercalibConstantsMC"/>
+<class name="EcalIntercalibErrors"/>
+<class name="EcalLaserAPDPNRatiosRef"/>
+<class name="EcalLaserAlphas"/>
+<class name="EcalTimeCalibConstants"/>
+<class name="EcalTimeCalibErrors"/>
+
+
+<!-- base class -->
+<class name="EcalLaserAPDPNRatios::EcalLaserAPDPNpair"/>
+<class name="EcalLaserAPDPNRatios::EcalLaserTimeStamp"/>
+<class name="EcalLaserAPDPNRatios">
+   <field name="laser_map" mapping="blob" />
+</class>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalLaserAPDPNRatios::EcalLaserAPDPNpair>"/>
+<class name="std::vector<EcalLaserAPDPNRatios::EcalLaserTimeStamp>"/>
+<class name="EcalContainer<EEDetId,EcalLaserAPDPNRatios::EcalLaserAPDPNpair>"/>
+<class name="EcalContainer<EBDetId,EcalLaserAPDPNRatios::EcalLaserAPDPNpair>"/>
+<class name="EcalCondObjectContainer<EcalLaserAPDPNRatios::EcalLaserAPDPNpair>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalLaserAPDPNRatios::EcalLaserAPDPNRatiosMap"/>
+
+<!-- base class -->
+<class name="EcalTimeDependentCorrections::Values"/>
+<class name="EcalTimeDependentCorrections::Times"/>
+<class name="EcalTimeDependentCorrections">
+   <field name="value_map" mapping="blob" />
+</class>
+<!-- templates for EcalCondObjectContainer having the class as template parameter -->
+<class name="std::vector<EcalTimeDependentCorrections::Values>"/>
+<class name="std::vector<EcalTimeDependentCorrections::Times>"/>
+<class name="EcalContainer<EEDetId,EcalTimeDependentCorrections::Values>"/>
+<class name="EcalContainer<EBDetId,EcalTimeDependentCorrections::Values>"/>
+<class name="EcalCondObjectContainer<EcalTimeDependentCorrections::Values>">
+   <field name = "eb_" mapping = "blob"/>
+   <field name = "ee_" mapping = "blob"/>
+</class>
+<!-- typedefs for EcalCondObjectContainer -->
+<class name="EcalTimeDependentCorrections::EcalValueMap"/>
+
+<!-- typedefs for EcalTimeDependentCorrections -->
+<class name="EcalLinearCorrections"/>
+
+
+<class name="EcalWeightSet"/>
+
+<class name="EcalTBWeights"/>
+<class name="std::pair<EcalXtalGroupId, EcalTBWeights::EcalTDCId>"/>
+<class name="std::map<std::pair<EcalXtalGroupId, EcalTBWeights::EcalTDCId>, EcalWeightSet>"/>
+<class name="std::pair<const std::pair<EcalXtalGroupId, EcalTBWeights::EcalTDCId>, EcalWeightSet>"/>
+
+<class name="EcalSampleMask"/>
+
+<class name="EcalADCToGeVConstant"/>
+
+<class name="EcalTimeOffsetConstant"/>
+
+<class name="EcalFunParams"/>
+<!-- typedefs -->
+<class name="EcalClusterCrackCorrParameters"/>
+<class name="EcalClusterEnergyCorrectionObjectSpecificParameters"/>
+<class name="EcalClusterEnergyCorrectionParameters"/>
+<class name="EcalClusterEnergyUncertaintyParameters"/>
+<class name="EcalClusterLocalContCorrParameters"/>
+
+<class name="EcalDCUTemperatures"/>
+<class name="EcalPTMTemperatures"/>
+
+<class name="EcalTPGFineGrainConstEB"/>
+<class name="std::map<uint32_t, EcalTPGFineGrainConstEB>"/>
+<class name="std::pair<const uint32_t, EcalTPGFineGrainConstEB>"/>
+<class name="EcalTPGFineGrainEBIdMap"/>
+<class name="EcalTPGFineGrainStripEE"/>
+<class name="EcalTPGFineGrainStripEE::Item"/>
+<class name="std::map<uint32_t, EcalTPGFineGrainStripEE::Item>"/>
+<class name="std::pair<const uint32_t, EcalTPGFineGrainStripEE::Item>"/>
+<class name="EcalTPGFineGrainTowerEE"/>
+<class name="EcalTPGTowerStatus"/>
+<class name="std::map<uint32_t, uint16_t>"/>
+<class name="std::pair<const uint32_t, uint16_t>"/>
+<class name="EcalTPGGroups"/>
+
+<class name="EcalTPGLut"/>
+<class name="std::map<uint32_t, EcalTPGLut>"/>
+<class name="std::pair<const uint32_t, EcalTPGLut>"/>
+<class name="EcalTPGLutIdMap"/>
+
+<class name="EcalTPGSlidingWindow"/>
+<class name="EcalTPGWeightIdMap"/>
+<class name="EcalTPGWeights"/>
+<class name="std::map<uint32_t, EcalTPGWeights>"/>
+<class name="std::pair<const uint32_t, EcalTPGWeights>"/>
+<class name="EcalTPGStripStatus"/>
+<class name="EcalTPGSpike"/>
+
+<class name="EcalTPGFineGrainEBGroup"/>
+<class name="EcalTPGLutGroup"/>
+<class name="EcalTPGWeightGroup"/>
+<class name="EcalTPGPhysicsConst"/>
+<class name="EcalTPGPhysicsConst::Item"/>
+<class name="std::map<uint32_t, EcalTPGPhysicsConst::Item>"/>
+<class name="std::pair<const uint32_t, EcalTPGPhysicsConst::Item>"/>
+
+<class name="EcalSRSettings" class_version="0">
+  <field name="deltaEta_" mapping="blob" />
+  <field name="deltaPhi_" mapping="blob" />
+  <field name="ecalDccZs1stSample_" mapping="blob" />
+  <field name="dccNormalizedWeights_" mapping="blob" /> 
+  <field name="symetricZS_" mapping="blob" />
+  <field name="srpLowInterestChannelZS_" mapping="blob" />
+  <field name="srpHighInterestChannelZS_" mapping="blob" />
+  <field name="actions_" mapping="blob" />
+  <field name="tccMasksFromConfig_" mapping="blob" />
+  <field name="srpMasksFromConfig_" mapping="blob" />
+  <field name="dccMasks_" mapping="blob" />
+  <field name="srfMasks_" mapping="blob" />
+  <field name="substitutionSrfs_" mapping="blob" />
+</class>
+
+</lcgdict>

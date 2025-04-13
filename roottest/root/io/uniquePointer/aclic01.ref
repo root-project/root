@@ -1,0 +1,11 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/uniquePointer/aclic01.C+...
+Class aclic01Class01 has a dictionary
+Class vector<int*> has a dictionary
+Class set<vector<int*> > has a dictionary
+Class vector<vector<vector<vector<list<TH1F*> > > > > has a dictionary
+Class vector<map<int,TH1F*> > has a dictionary
+Class vector<double*> has a dictionary
+Class vector<list<double>*> has a dictionary
+Class unordered_map<int,set<vector<map<int,TH1F*> > > > has a dictionary
+(int) 0

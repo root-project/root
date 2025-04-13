@@ -1,0 +1,948 @@
+
+Processing runRootClasses.C...
+ ====== TObject representation ===== 
+TObject store/read/store MATCHED len1:63 len2:63
+{
+  "_typename" : "TObject",
+  "fUniqueID" : 0,
+  "fBits" : 0
+}
+
+ ====== TH1I representation ===== 
+TH1I store/read/store MATCHED len1:2929 len2:2929
+{
+  "_typename" : "TH1I",
+  "fUniqueID" : 0,
+  "fBits" : 0,
+  "fName" : "histo1",
+  "fTitle" : "histo title",
+  "fLineColor" : 602,
+  "fLineStyle" : 1,
+  "fLineWidth" : 1,
+  "fFillColor" : 0,
+  "fFillStyle" : 1001,
+  "fMarkerColor" : 1,
+  "fMarkerStyle" : 1,
+  "fMarkerSize" : 1,
+  "fNcells" : 102,
+  "fXaxis" : {
+    "_typename" : "TAxis",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "xaxis",
+    "fTitle" : "",
+    "fNdivisions" : 510,
+    "fAxisColor" : 1,
+    "fLabelColor" : 1,
+    "fLabelFont" : 42,
+    "fLabelOffset" : 0.005,
+    "fLabelSize" : 0.035,
+    "fTickLength" : 0.03,
+    "fTitleOffset" : 1,
+    "fTitleSize" : 0.035,
+    "fTitleColor" : 1,
+    "fTitleFont" : 42,
+    "fNbins" : 100,
+    "fXmin" : -10,
+    "fXmax" : 10,
+    "fXbins" : [],
+    "fFirst" : 0,
+    "fLast" : 0,
+    "fBits2" : 0,
+    "fTimeDisplay" : false,
+    "fTimeFormat" : "",
+    "fLabels" : null,
+    "fModLabs" : null
+  },
+  "fYaxis" : {
+    "_typename" : "TAxis",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "yaxis",
+    "fTitle" : "",
+    "fNdivisions" : 510,
+    "fAxisColor" : 1,
+    "fLabelColor" : 1,
+    "fLabelFont" : 42,
+    "fLabelOffset" : 0.005,
+    "fLabelSize" : 0.035,
+    "fTickLength" : 0.03,
+    "fTitleOffset" : 0,
+    "fTitleSize" : 0.035,
+    "fTitleColor" : 1,
+    "fTitleFont" : 42,
+    "fNbins" : 1,
+    "fXmin" : 0,
+    "fXmax" : 1,
+    "fXbins" : [],
+    "fFirst" : 0,
+    "fLast" : 0,
+    "fBits2" : 0,
+    "fTimeDisplay" : false,
+    "fTimeFormat" : "",
+    "fLabels" : null,
+    "fModLabs" : null
+  },
+  "fZaxis" : {
+    "_typename" : "TAxis",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "zaxis",
+    "fTitle" : "",
+    "fNdivisions" : 510,
+    "fAxisColor" : 1,
+    "fLabelColor" : 1,
+    "fLabelFont" : 42,
+    "fLabelOffset" : 0.005,
+    "fLabelSize" : 0.035,
+    "fTickLength" : 0.03,
+    "fTitleOffset" : 1,
+    "fTitleSize" : 0.035,
+    "fTitleColor" : 1,
+    "fTitleFont" : 42,
+    "fNbins" : 1,
+    "fXmin" : 0,
+    "fXmax" : 1,
+    "fXbins" : [],
+    "fFirst" : 0,
+    "fLast" : 0,
+    "fBits2" : 0,
+    "fTimeDisplay" : false,
+    "fTimeFormat" : "",
+    "fLabels" : null,
+    "fModLabs" : null
+  },
+  "fBarOffset" : 0,
+  "fBarWidth" : 1000,
+  "fEntries" : 100,
+  "fTsumw" : 0,
+  "fTsumw2" : 0,
+  "fTsumwx" : 0,
+  "fTsumwx2" : 0,
+  "fMaximum" : -1111,
+  "fMinimum" : -1111,
+  "fNormFactor" : 0,
+  "fContour" : [],
+  "fSumw2" : [],
+  "fOption" : "",
+  "fFunctions" : {
+    "_typename" : "TList",
+    "name" : "TList",
+    "arr" : [],
+    "opt" : []
+  },
+  "fBufferSize" : 0,
+  "fBuffer" : [],
+  "fBinStatErrOpt" : 0,
+  "fStatOverflows" : 2,
+  "fArray" : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 0]
+}
+
+ ====== TBox representation ===== 
+TBox store/read/store MATCHED len1:220 len2:220
+{
+  "_typename" : "TBox",
+  "fUniqueID" : 0,
+  "fBits" : 0,
+  "fLineColor" : 1,
+  "fLineStyle" : 1,
+  "fLineWidth" : 1,
+  "fFillColor" : 19,
+  "fFillStyle" : 1001,
+  "fX1" : 11,
+  "fY1" : 22,
+  "fX2" : 33,
+  "fY2" : 44
+}
+
+ ====== TList representation ===== 
+TList store/read/store MATCHED len1:2765 len2:2765
+{
+  "_typename" : "TList",
+  "name" : "TList",
+  "arr" : [{
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 0,
+    "fY1" : 0,
+    "fX2" : 0,
+    "fY2" : 0
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 10,
+    "fY1" : 100,
+    "fX2" : 20,
+    "fY2" : 200
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 20,
+    "fY1" : 200,
+    "fX2" : 40,
+    "fY2" : 400
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 30,
+    "fY1" : 300,
+    "fX2" : 60,
+    "fY2" : 600
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 40,
+    "fY1" : 400,
+    "fX2" : 80,
+    "fY2" : 800
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 50,
+    "fY1" : 500,
+    "fX2" : 100,
+    "fY2" : 1000
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 60,
+    "fY1" : 600,
+    "fX2" : 120,
+    "fY2" : 1200
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 70,
+    "fY1" : 700,
+    "fX2" : 140,
+    "fY2" : 1400
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 80,
+    "fY1" : 800,
+    "fX2" : 160,
+    "fY2" : 1600
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 90,
+    "fY1" : 900,
+    "fX2" : 180,
+    "fY2" : 1800
+  }],
+  "opt" : ["option_0_option", "option_1_option", "option_2_option", "option_3_option", "option_4_option", "option_5_option", "option_6_option", "option_7_option", "option_8_option", "option_9_option"]
+}
+
+ ====== TClonesArray representation ===== 
+TClonesArray store/read/store MATCHED len1:2570 len2:2570
+{
+  "_typename" : "TClonesArray",
+  "name" : "TBoxs",
+  "arr" : [{
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 0,
+    "fY1" : 0,
+    "fX2" : 0,
+    "fY2" : 0
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 10,
+    "fY1" : 100,
+    "fX2" : 20,
+    "fY2" : 200
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 20,
+    "fY1" : 200,
+    "fX2" : 40,
+    "fY2" : 400
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 30,
+    "fY1" : 300,
+    "fX2" : 60,
+    "fY2" : 600
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 40,
+    "fY1" : 400,
+    "fX2" : 80,
+    "fY2" : 800
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 50,
+    "fY1" : 500,
+    "fX2" : 100,
+    "fY2" : 1000
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 60,
+    "fY1" : 600,
+    "fX2" : 120,
+    "fY2" : 1200
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 70,
+    "fY1" : 700,
+    "fX2" : 140,
+    "fY2" : 1400
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 80,
+    "fY1" : 800,
+    "fX2" : 160,
+    "fY2" : 1600
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 90,
+    "fY1" : 900,
+    "fX2" : 180,
+    "fY2" : 1800
+  }]
+}
+
+ ====== TMap representation ===== 
+TMap store/read/store MATCHED len1:2797 len2:2797
+{
+  "_typename" : "TMap",
+  "name" : "TMap",
+  "arr" : [{
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str4"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name4",
+    "fTitle" : "Title4"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str5"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name5",
+    "fTitle" : "Title5"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str6"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name6",
+    "fTitle" : "Title6"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str7"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name7",
+    "fTitle" : "Title7"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str8"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name8",
+    "fTitle" : "Title8"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str9"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name9",
+    "fTitle" : "Title9"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str0"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name0",
+    "fTitle" : "Title0"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str1"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name1",
+    "fTitle" : "Title1"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str2"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name2",
+    "fTitle" : "Title2"
+  }
+  }, {
+  "$pair" : "TPair", 
+  "first" : {
+    "_typename" : "TObjString",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fString" : "Str3"
+  }, 
+  "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name3",
+    "fTitle" : "Title3"
+  }
+  }]
+}
+
+ ====== TJsonEx14 with different ROOT collections ===== 
+TJsonEx14 store/read/store MATCHED len1:7480 len2:7480
+{
+  "_typename" : "TJsonEx14",
+  "fObjArray" : {
+    "_typename" : "TObjArray",
+    "name" : "TObjArray",
+    "arr" : [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "ObjArr0",
+      "fTitle" : "ObjArrTitle0"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "ObjArr1",
+      "fTitle" : "ObjArrTitle1"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "ObjArr2",
+      "fTitle" : "ObjArrTitle2"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "ObjArr3",
+      "fTitle" : "ObjArrTitle3"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "ObjArr4",
+      "fTitle" : "ObjArrTitle4"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "ObjArr5",
+      "fTitle" : "ObjArrTitle5"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "ObjArr6",
+      "fTitle" : "ObjArrTitle6"
+    }]
+  },
+  "fList" : {
+    "_typename" : "TList",
+    "name" : "TList",
+    "arr" : [{
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 0,
+      "fY1" : 0,
+      "fX2" : 0,
+      "fY2" : 0
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 10,
+      "fY1" : 100,
+      "fX2" : 20,
+      "fY2" : 200
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 20,
+      "fY1" : 200,
+      "fX2" : 40,
+      "fY2" : 400
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 30,
+      "fY1" : 300,
+      "fX2" : 60,
+      "fY2" : 600
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 40,
+      "fY1" : 400,
+      "fX2" : 80,
+      "fY2" : 800
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 50,
+      "fY1" : 500,
+      "fX2" : 100,
+      "fY2" : 1000
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 60,
+      "fY1" : 600,
+      "fX2" : 120,
+      "fY2" : 1200
+    }],
+    "opt" : ["option_0_option", "option_1_option", "option_2_option", "option_3_option", "option_4_option", "option_5_option", "option_6_option"]
+  },
+  "fClones" : {
+    "_typename" : "TClonesArray",
+    "name" : "TBoxs",
+    "arr" : [{
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 0,
+      "fY1" : 0,
+      "fX2" : 0,
+      "fY2" : 0
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 7,
+      "fY1" : 27,
+      "fX2" : 17,
+      "fY2" : 77
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 14,
+      "fY1" : 54,
+      "fX2" : 34,
+      "fY2" : 154
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 21,
+      "fY1" : 81,
+      "fX2" : 51,
+      "fY2" : 231
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 28,
+      "fY1" : 108,
+      "fX2" : 68,
+      "fY2" : 308
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 35,
+      "fY1" : 135,
+      "fX2" : 85,
+      "fY2" : 385
+    }, {
+      "_typename" : "TBox",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fLineColor" : 1,
+      "fLineStyle" : 1,
+      "fLineWidth" : 1,
+      "fFillColor" : 19,
+      "fFillStyle" : 1001,
+      "fX1" : 42,
+      "fY1" : 162,
+      "fX2" : 102,
+      "fY2" : 462
+    }]
+  },
+  "fMap" : {
+    "_typename" : "TMap",
+    "name" : "TMap",
+    "arr" : [{
+    "$pair" : "TPair", 
+    "first" : {
+      "_typename" : "TObjString",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fString" : "Str4"
+    }, 
+    "second" : {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name4",
+      "fTitle" : "Title4"
+    }
+    }, {
+    "$pair" : "TPair", 
+    "first" : {
+      "_typename" : "TObjString",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fString" : "Str5"
+    }, 
+    "second" : {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name5",
+      "fTitle" : "Title5"
+    }
+    }, {
+    "$pair" : "TPair", 
+    "first" : {
+      "_typename" : "TObjString",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fString" : "Str6"
+    }, 
+    "second" : {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name6",
+      "fTitle" : "Title6"
+    }
+    }, {
+    "$pair" : "TPair", 
+    "first" : {
+      "_typename" : "TObjString",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fString" : "Str0"
+    }, 
+    "second" : {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name0",
+      "fTitle" : "Title0"
+    }
+    }, {
+    "$pair" : "TPair", 
+    "first" : {
+      "_typename" : "TObjString",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fString" : "Str1"
+    }, 
+    "second" : {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name1",
+      "fTitle" : "Title1"
+    }
+    }, {
+    "$pair" : "TPair", 
+    "first" : {
+      "_typename" : "TObjString",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fString" : "Str2"
+    }, 
+    "second" : {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name2",
+      "fTitle" : "Title2"
+    }
+    }, {
+    "$pair" : "TPair", 
+    "first" : {
+      "_typename" : "TObjString",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fString" : "Str3"
+    }, 
+    "second" : {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name3",
+      "fTitle" : "Title3"
+    }
+    }]
+  }
+}
+

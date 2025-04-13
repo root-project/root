@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--- $Id: -->
+<!--- Author  : Juan PALACIOS -->
+<!--- Created : 2008-06-20 -->
+
+<lcgdict>
+  <class name    = "Gaudi::Math::XYZLine"/>
+  <class name    = "Gaudi::Math::Polar3DLine"/>
+  <class name    = "Gaudi::Math::RhoEtaPhiLine"/>
+  <class name    = "Gaudi::Math::RhoZPhiLine"/>
+  <class name    = "Gaudi::Math::XYZLineF"/>
+  <class name    = "Gaudi::Math::Polar3DLineF"/>
+  <class name    = "Gaudi::Math::RhoEtaPhiLineF"/>
+  <class name    = "Gaudi::Math::RhoZPhiLineF"/>
+  <class name    = "Gaudi::Math::XYZGeomFun"/>
+  <class name    = "Gaudi::Math::MD5"/>
+  <class name    = "std::vector<Gaudi::Math::MD5>"/>
+  <class name    = "std::list<Gaudi::Math::MD5>"/>
+  <class name    = "Gaudi::Math::ValueWithError"    />
+  <class name    = "Gaudi::Math::Point3DWithError"  />
+  <class name    = "Gaudi::Math::Vector3DWithError" />
+  <class name    = "Gaudi::Math::LorentzVectorWithError" />
+  <class name    = "Gaudi::Math::Functions"         />
+  <class pattern = "Gaudi::Math::SVectorWithError*" />
+  <class name    = "std::vector<Gaudi::Math::ValueWithError>" />
+  <class name    = "std::vector<std::vector<Gaudi::Math::ValueWithError> >" />
+  
+  <class name    = "Gaudi::Math::ParticleParams"     />
+  <class name    = "Gaudi::Math::FitMass"            />
+  
+  <class name    = "Gaudi::Math::EigenSystems"            />
+  <class name    = "Gaudi::Math::Chebyshev"               />
+  <class name    = "Gaudi::Math::Legendre"                />  
+  <class name    = "Gaudi::Math::Hermite"                 />  
+  <class name    = "Gaudi::Math::Bukin"                   />
+  <class name    = "Gaudi::Math::Novosibirsk"             />
+  <class name    = "Gaudi::Math::CrystalBall"             />
+  <class name    = "Gaudi::Math::Needham"                 />
+  <class name    = "Gaudi::Math::CrystalBallDoubleSided"  />
+  <class name    = "Gaudi::Math::BifurcatedGauss"         />
+  <class name    = "Gaudi::Math::GramCharlierA"           />
+  <class name    = "Gaudi::Math::PhaseSpace2"             />
+  <class name    = "Gaudi::Math::PhaseSpace3"             />
+  <class name    = "Gaudi::Math::PhaseSpaceLeft"          />
+  <class name    = "Gaudi::Math::PhaseSpaceRight"         />
+  <class name    = "Gaudi::Math::PhaseSpaceNL"            />
+  <class name    = "Gaudi::Math::PhaseSpace23L"           />
+  <class name    = "Gaudi::Math::LASS23L"                 />
+  <class name    = "Gaudi::Math::Bugg23L"                 />
+  <class name    = "Gaudi::Math::BW23L"                   />
+  <class name    = "Gaudi::Math::Voigt"                   />
+  <class name    = "Gaudi::Math::Flatte23L"               />
+  <class name    = "Gaudi::Math::Gounaris23L"             />
+  <class name    = "Gaudi::Math::StudentT"                />
+  <class name    = "Gaudi::Math::BreitWigner">
+    <field name = "m_rho_fun" transient = "true"/>      
+  </class>
+  <class name    = "Gaudi::Math::Rho0"             />
+  <class name    = "Gaudi::Math::Rho0FromEtaPrime" />
+  <class name    = "Gaudi::Math::Flatte"           />
+  <class name    = "Gaudi::Math::Flatte2"          />
+  <class name    = "Gaudi::Math::WorkSpace"        >
+    <field name = "m_workspace" transient = "true"/>      
+  </class>
+  <class name    = "Gaudi::Math::Positive"        />
+  <class name    = "Gaudi::Math::Bernstein"       />
+  
+  <class name    = "std::vector<ROOT::Math::SVector<double,2> >" />
+  <class name    = "std::vector<ROOT::Math::SVector<double,3> >" />
+  <class name    = "std::vector<ROOT::Math::SVector<double,4> >" />
+  <class name    = "std::vector<ROOT::Math::SVector<double,6> >" />
+
+  
+  <function name = "Gaudi::Math::blind"           />
+  <function name = "Gaudi::Math::pow"             />
+  <function name = "Gaudi::Math::exp"             />
+  <function name = "Gaudi::Math::log"             />
+  <function name = "Gaudi::Math::log10"           />
+  <function name = "Gaudi::Math::chi2"            />
+  <function name = "Gaudi::Math::mean"            />
+  <function name = "Gaudi::Math::asym"            />
+  <function name = "Gaudi::Math::frac"            />
+  <function name = "Gaudi::Math::sum"             />
+  <function name = "Gaudi::Math::subtract"        />
+  <function name = "Gaudi::Math::diff"            />
+  <function name = "Gaudi::Math::mult"            />
+  <function name = "Gaudi::Math::multiply"        />
+  <function name = "Gaudi::Math::divide"          />
+  <function name = "Gaudi::Math::sumabs"          />
+  <function name = "Gaudi::Math::abssum"          />
+  <function name = "Gaudi::Math::binomEff"        />
+  <function name = "Gaudi::Math::wilsonEff"       />
+  <function name = "Gaudi::Math::agrestiCoullEff" />
+  
+  <function name    = "LHCb::Math::round"                  />
+  <function name    = "LHCb::Math::isint"                  />
+  <function name    = "LHCb::Math::islong"                 />
+  <function name    = "LHCb::Math::equal_to_int"           />
+  <function name    = "LHCb::Math::equal_to_uint"          />
+  <function name    = "LHCb::Math::knuth_equal_to_double"  />
+  <function name    = "Gaudi::Math::lomont_compare_double" />
+  <function name    = "Gaudi::Math::interpolate_1D"        />
+  <function name    = "Gaudi::Math::interpolate_2D"        />
+  <function pattern = "Gaudi::Math::Jackson::jackson*"     />
+  
+  <class name = "Gaudi::Math::Chi2Fit"   />
+
+  <class name = "Gaudi::Math::Chi2Solution<4,2,double>"         />
+  <class name = "Gaudi::Math::Chi2Solution<4,2,double>::CMTRX2" />
+  <class name = "Gaudi::Math::Chi2Solution<6,2,double>"         />
+  <class name = "Gaudi::Math::Chi2Solution<6,2,double>::CMTRX2" />
+  
+  <exclusion>
+    <class name = "ROOT::Math::SVector&lt;double,2&gt;"     />
+    <class name = "ROOT::Math::SVector&lt;double,4&gt;"     />
+    <class name = "ROOT::Math::SVector&lt;double,3&gt;"     />
+    <class name = "ROOT::Math::SVector&lt;double,5&gt;"     />
+    <class name = "ROOT::Math::SVector&lt;double,6&gt;"     />
+    <class name = "ROOT::Math::SVector&lt;double,8&gt;"     />
+    <class name = "Gaudi::Math::SVectorWithError&lt;2,double&gt;::Value"       />
+    <class name = "Gaudi::Math::SVectorWithError&lt;2,double&gt;::Covariance"  />
+    <class name = "Gaudi::Math::SVectorWithError&lt;3,double&gt;::Value"       />
+    <class name = "Gaudi::Math::SVectorWithError&lt;3,double&gt;::Covariance"  />
+    <class name = "Gaudi::Math::SVectorWithError&lt;4,double&gt;::Value"       />
+    <class name = "Gaudi::Math::SVectorWithError&lt;4,double&gt;::Covariance"  />
+    <class name = "Gaudi::Math::SVectorWithError&lt;5,double&gt;::Value"       />
+    <class name = "Gaudi::Math::SVectorWithError&lt;5,double&gt;::Covariance"  />
+    <class name = "Gaudi::Math::SVectorWithError&lt;7,double&gt;::Value"       />
+    <class name = "Gaudi::Math::SVectorWithError&lt;7,double&gt;::Covariance"  />
+    <class name = "Gaudi::Math::SVectorWithError&lt;6,double&gt;::Value"       />
+    <class name = "Gaudi::Math::SVectorWithError&lt;6,double&gt;::Covariance"  />
+    <class name = "Gaudi::Math::SVectorWithError&lt;8,double&gt;::Value"       />
+    <class name = "Gaudi::Math::SVectorWithError&lt;8,double&gt;::Covariance"  />
+    
+    <class name = "Gaudi::Math::Workspace">  
+      <field name = "m_workspace"/>      
+    </class>
+    <class name = "Gaudi::Math::BreitWigner::rho_fun"/>  
+    <class name = "Gaudi::Math::BreitWigner">  
+      <field name = "m_rho_fun"/>      
+    </class>
+    <class name = "Gaudi::Math::Chi2Fit">  
+      <field name = "m_solu" />      
+      <field name = "m_cov2" />      
+    </class>
+    
+  </exclusion> 
+  
+
+</lcgdict>

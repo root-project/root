@@ -1,0 +1,17 @@
+
+!props->HasKey("Doesn't Exist"): ok.
+props->HasKey("id"): ok.
+props->GetPropertyAsString("id") == string("MyID"): ok.
+props->HasKey("someProperty"): ok.
+props->GetPropertyAsString("someProperty") == string("42"): ok.
+TClass object: ok.
+TDataMember data member memWithComment: ok.
+TDataMember comment property memWithComment: ok.
+TDataMember data member memNoIO: ok.
+TDataMember comment property memNoIO: ok.
+TDataMember data member memWithoutSplitting: ok.
+TDataMember comment property memWithoutSplitting: ok.
+TDataMember data member memPtrAlwaysValid: ok.
+TDataMember comment property memPtrAlwaysValid: ok.
+TDataMember data member memDouble32Range: ok.
+TDataMember comment property memDouble32Range: ok.

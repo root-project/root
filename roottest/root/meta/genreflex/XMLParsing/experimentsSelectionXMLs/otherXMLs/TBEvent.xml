@@ -1,0 +1,55 @@
+<lcgdict>
+  <class name="TBADCRawCont"                          id="5D407302-FD4E-42BC-A6E5-F5C9ECCDCBF1" />
+  <class name="TBADCRaw" />
+  <class name="DataVector<TBADCRaw>" />
+  <class name="std::vector<TBADCRaw*>" />
+  <class name="TBBPCCont"                             id="05E6C927-F43C-4C2A-B654-C671BF8FDB67" />
+  <class name="TBBPC" />
+  <class name="DataVector<TBBPC>" />
+  <class name="std::vector<TBBPC*>" />
+  <class name="TBBPCRawCont"                          id="ABB22405-C4B6-4C60-BDB0-B7B214746052" />
+  <class name="TBBPCRaw" />
+  <class name="DataVector<TBBPCRaw>" />
+  <class name="std::vector<TBBPCRaw*>" />
+  <class name="TBBeamDetector" />
+  <class name="TBEventInfo"                           id="1295BE02-D698-43A8-A2BB-76E5ADCBD228" />
+  <class name="TBHitCont"                             id="AE2CC447-7DD3-4B0D-A52C-D15B4B2CCE97" />
+  <class name="TBHit" />
+  <class name="DataVector<TBHit>" />
+  <class name="std::vector<TBHit*>" />
+  <class name="TBHitPlaneCont"                        id="D314646E-67CA-41D4-ADF7-B3458AC84241" />
+  <class name="TBHitPlane" />
+  <class name="DataVector<TBHitPlane>" />
+  <class name="std::vector<TBHitPlane*>" />
+  <class name="TBIdentifiedParticle"                  id="4D5AE27F-33DA-48D3-A61F-27961F683E56" />
+  <class name="TBLArCalibDigitContainer"              id="9406C68F-19BD-4F2D-9916-BA00EB9FFFC5" />
+  <class name="TBLArDigitContainer"                   id="2AE22E26-8687-4DDF-81A3-4B96A4B42137" />
+  <class name="TBMWPCCont"                            id="05F6DFD7-EB63-49DB-AA5B-F03BE66365AC" />
+  <class name="TBMWPC" />
+  <class name="DataVector<TBMWPC>" />
+  <class name="std::vector<TBMWPC*>" />
+  <class name="TBMWPCRawCont"                         id="E226FC28-C150-4524-B8F3-28A3C2B09EBF" />
+  <class name="TBMWPCRaw" />
+  <class name="DataVector<TBMWPCRaw>" />
+  <class name="std::vector<TBMWPCRaw*>" />
+  <class name="TBPhase"                               id="C044C9BE-E371-4AC3-95ED-CCA05984EDE4" />
+  <class name="TBScintillatorCont"                    id="AE688514-B192-426D-A971-5CD072593272" />
+  <class name="TBScintillator" />
+  <class name="DataVector<TBScintillator>" />
+  <class name="std::vector<TBScintillator*>" />
+  <class name="TBScintillatorRawCont"                 id="DB1C6278-59F6-4FC8-8ED2-8562FDB60962" />
+  <class name="TBScintillatorRaw" />
+  <class name="DataVector<TBScintillatorRaw>" />
+  <class name="std::vector<TBScintillatorRaw*>" />
+  <class name="TBTDC"                                 id="51CEFACC-47E5-4BF1-8BF5-FA48FCA15B43" />
+  <class name="TBTDCRawCont"                          id="82D6D14E-49FE-4841-9B39-08D66B9DC7CE" />
+  <class name="TBTDCRaw" />
+  <class name="DataVector<TBTDCRaw>" />
+  <class name="std::vector<TBTDCRaw*>" />
+  <class name="TBTailCatcher"                         id="7AA6F3C3-3FF2-4732-B0CB-4ECC32FEF06D" />
+  <class name="TBTailCatcherRaw"                      id="E8DD0765-DB15-4959-A2F7-16FAA6D5254D" />
+  <class name="TBTrack"                               id="37E880D7-EBCB-4F53-8B14-490A4CEB71BD" />
+  <class name="TBTriggerPatternUnit"                  id="0B82A5B3-0808-4B78-B47B-BFE9388EEEEB" />
+  <class name="TBTrackInfo"                           id="5780AB02-D5D1-4537-B682-56CA95927BFB" />
+
+</lcgdict>

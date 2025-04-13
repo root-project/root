@@ -1,0 +1,12 @@
+
+Processing digiRun.C...
+Warning in <TClass::Init>: no dictionary for class DigiEvent is available
+Warning in <TClass::Init>: no dictionary for class L1T is available
+Warning in <TClass::Init>: no dictionary for class AcdId is available
+Warning in <TClass::Init>: no dictionary for class VolumeIdentifier is available
+Warning in <TClass::Init>: no dictionary for class AcdDigi is available
+Warning in <TClass::Init>: no dictionary for class CalDigi is available
+Warning in <TClass::Init>: no dictionary for class CalXtalId is available
+Warning in <TClass::Init>: no dictionary for class CalXtalReadout is available
+Warning in <TClass::Init>: no dictionary for class TkrDigi is available
+Warning in <TClass::Init>: no dictionary for class TowerId is available

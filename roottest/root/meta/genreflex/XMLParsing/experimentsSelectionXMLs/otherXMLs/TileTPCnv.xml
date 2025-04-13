@@ -1,0 +1,48 @@
+<lcgdict>
+
+  <class name="TileHit_p1" />
+  <class name="std::vector<TileHit_p1>" />
+  <class name="TileHitVector_p1" id="65AD597A-BF97-46EE-B9E3-203B35218EA7" />
+  <class name="TileHitContainer_p1" id="E347580F-BBF0-441E-A799-9AC0256F69DF" />
+
+  <class name="TileTTL1_p1" />
+  <class name="std::vector<TileTTL1_p1>" />
+  <class name="TileTTL1Container_p1" id="213FA88B-52AE-4229-8886-62D7D54FA7A3" />
+
+  <class name="TileL2_p1" />
+  <class name="std::vector<TileL2_p1>" />
+  <class name="TileL2Container_p1" id="FE877FF9-475D-42D9-8DC3-CABD220BFD27" />
+
+  <class name="TileL2_p2" />
+  <class name="std::vector<TileL2_p2>" />
+  <class name="TileL2Container_p2" id="3283BF32-0B18-408F-9B46-6A1B26B37D5C" />
+
+  <class name="TileMu_p1" />
+  <class name="std::vector<TileMu_p1>" />
+  <class name="TileMuContainer_p1" id="DE8904EB-25FD-495A-8DD5-E31B05E397C6" />
+
+  <class name="TileCosmicMuon_p1" />
+  <class name="std::vector<TileCosmicMuon_p1>" />
+  <class name="TileCosmicMuonContainer_p1" id="716F406D-8F59-4879-AA07-C28BA374E6EF" />
+
+  <class name="TileCosmicMuon_p2" />
+  <class name="std::vector<TileCosmicMuon_p2>" />
+  <class name="TileCosmicMuonContainer_p2" id="8957FF04-12E8-43BA-A0C8-D7D9638E242E" />
+
+  <class name="TileDigits_p1" />
+  <class name="std::vector<TileDigits_p1>" />
+  <class name="TileDigitsContainer_p1" id="F9386A42-43A7-4482-8A5B-F33EDE586FB2" />
+
+  <class name="TileBeamElem_p1" />
+  <class name="std::vector<TileBeamElem_p1>" />
+  <class name="TileBeamElemContainer_p1" id="CF8DE6AB-8E15-4B5F-881B-39B736EAB4E0" />
+
+  <class name="TileRawChannel_p1" />
+  <class name="std::vector<TileRawChannel_p1>" />
+  <class name="TileRawChannelContainer_p1" id="BF727F06-9F94-4989-9C1F-9E59023988EA" />
+
+  <class name="TileMuonReceiverObj_p1" />
+  <class name="std::vector<TileMuonReceiverObj_p1>" />
+  <class name="TileMuonReceiverContainer_p1" id="7F0DA5A3-7773-4852-AE55-A9920FEB31AB" /> 
+
+</lcgdict>

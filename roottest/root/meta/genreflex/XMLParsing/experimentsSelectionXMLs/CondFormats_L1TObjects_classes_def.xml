@@ -1,0 +1,216 @@
+<lcgdict>
+  <class name="L1MuScale"/>
+  <class name="L1MuBinnedScale">
+    <field name="m_Scale" mapping="blob" />
+  </class>
+  <class name="L1MuSymmetricBinnedScale">
+    <field name="m_Scale" mapping="blob" />
+  </class>
+  <class name="L1MuPacking"/>
+  <class name="L1MuPseudoSignedPacking"/>
+  <class name="L1MuTriggerScales"/>
+  <class name="L1MuTriggerPtScale"/>
+  <class name="L1MuGMTParameters" class_version="L1MuGMTParameters_V01" />
+  <class name="L1MuGMTChannelMask"/>
+  <class name="L1MuGMTScales"/>
+  <class name="L1CaloEtScale">
+    <field name="m_thresholds" mapping="blob" />
+  </class>
+  <class name="L1GctChannelMask">
+    <field name="mhtMask_" mapping="blob" />
+    <field name="regionMask_" mapping="blob" />
+  </class>
+  <class name="L1GctJetFinderParams">
+    <field name="energyConversionCoeffs_" mapping="blob" />
+    <field name="jetCorrCoeffs_" mapping="blob" />
+    <field name="tauCorrCoeffs_" mapping="blob" />
+  </class>
+  <class name="L1MuDTExtLut::LUT"/>
+  <class name="std::vector<L1MuDTExtLut::LUT>"/>
+  <class name="L1MuDTExtLut">
+    <field name="ext_lut" mapping="blob" />
+  </class>
+  <class name="L1MuDTPhiLut">
+    <field name="phi_lut" mapping="blob" />
+  </class>
+  <class name="L1MuDTPtaLut">
+    <field name="pta_lut" mapping="blob" />
+    <field name="pta_threshold" mapping="blob" />
+  </class>
+  <class name="L1MuDTEtaPattern"/>
+  <class name="std::pair<short,L1MuDTEtaPattern>"/>
+  <class name="std::map<short,L1MuDTEtaPattern>"/>
+  <class name="std::map<short,L1MuDTEtaPattern>::value_type"/>
+  <class name="L1MuDTEtaPatternLut">
+    <field name="m_lut" mapping="blob" />
+  </class>
+  <class name="L1MuDTQualPatternLut">
+    <field name="m_lut" mapping="blob" />
+  </class>
+  <class name="L1MuDTTFParameters"/>
+  <class name="L1MuDTTFMasks"/>
+  <class name="L1MuCSCTFConfiguration"/>
+  <class name="L1MuCSCTFAlignment">
+    <field name="coefficients" mapping="blob" />
+  </class>
+  <class name="L1MuCSCPtLut">
+    <field name="pt_lut" mapping="blob" />
+  </class>
+  <class name="L1RPCConfig">
+    <field name="m_pats" mapping="blob" />
+    <field name="m_quals" mapping="blob" />
+  </class>
+  <class name="RPCPattern"/>
+  <class name="RPCPattern::RPCLogicalStrip"/>
+  <class name="RPCPattern::TQuality"/>
+  <class name="std::vector<RPCPattern::TQuality>"/>
+  <class name="std::vector<RPCPattern>"/>
+  <class name="L1RPCConeDefinition">
+    <field name="m_LPSizeVec" mapping="blob" />
+    <field name="m_ringToLPVec" mapping="blob" />
+    <field name="m_ringToTowerVec" mapping="blob" />
+  </class>
+  <class name="L1RPCConeDefinition::TLPSize"/>
+  <class name="std::vector<L1RPCConeDefinition::TLPSize>"/>
+  <class name="L1RPCConeDefinition::TRingToTower"/>
+  <class name="std::vector<L1RPCConeDefinition::TRingToTower>"/>
+  <class name="L1RPCConeDefinition::TRingToLP"/>
+  <class name="std::vector<L1RPCConeDefinition::TRingToLP>"/>
+  <class name="L1RPCBxOrConfig"/>
+  <class name="L1RPCHsbConfig"/>
+  <class name="L1TriggerKey">
+    <field name="m_recordToKey" mapping="blob" />
+  </class>
+  <class name="L1TriggerKeyList">
+    <field name="m_recordKeyToken" mapping="blob" />
+    <field name="m_tscKeyToToken" mapping="blob" />
+  </class>
+  <class name="L1RCTParameters">
+    <field name="HoverE_smear_high_" mapping="blob" />
+    <field name="HoverE_smear_low_" mapping="blob" />
+    <field name="cross_terms_" mapping="blob" />
+    <field name="eGammaECalScaleFactors_" mapping="blob" />
+    <field name="eGammaHCalScaleFactors_" mapping="blob" />
+    <field name="ecal_calib_" mapping="blob" />
+    <field name="hcal_calib_" mapping="blob" />
+    <field name="hcal_high_calib_" mapping="blob" />
+    <field name="jetMETECalScaleFactors_" mapping="blob" />
+    <field name="jetMETHCalScaleFactors_" mapping="blob" />
+  </class>
+  <class name="L1RCTChannelMask">
+    <field name="ecalMask" mapping="blob" />
+    <field name="hcalMask" mapping="blob" />
+    <field name="hfMask" mapping="blob" />
+  </class>
+  <class name="L1RCTNoisyChannelMask">
+    <field name="ecalMask" mapping="blob" />
+    <field name="hcalMask" mapping="blob" />
+    <field name="hfMask" mapping="blob" />
+  </class>
+  <class name="L1CaloEcalScale">
+    <field name="m_scale" mapping="blob" />
+  </class>
+  <class name="L1CaloHcalScale">
+    <field name="m_scale" mapping="blob" />
+  </class>
+
+  <class name="L1GtStableParameters">
+    <field name="m_orderConditionChip" mapping="blob" />
+  </class>
+  <class name="L1GtParameters">
+    <field name="m_daqNrBxBoard" mapping="blob" />
+    <field name="m_evmNrBxBoard" mapping="blob" />
+  </class>
+  <class name="L1GtPrescaleFactors">
+    <field name="m_prescaleFactors" mapping="blob" />
+  </class>
+  <class name="L1GtTriggerMask">
+    <field name="m_triggerMask" mapping="blob" />
+  </class>
+  <class name="L1GtBoard"/>
+  <class name="L1GtBoardMaps">
+    <field name="m_gtBoardMaps" mapping="blob" />
+  </class>
+  <class name="std::vector<L1GtBoard>"/>
+  <class name="std::vector<L1GtPsbQuad>"/>
+  <class name="L1GtPsbConfig"/>
+  <class name="std::vector<L1GtPsbConfig>"/>
+  <class name="L1GtPsbSetup">
+   <field name="m_gtPsbSetup" mapping="blob" />
+  </class>
+  <class name="std::pair<int, std::vector<L1GtObject> >"/>  
+  <class name="std::map<int, std::vector<L1GtObject> >"/>  
+  <class name="std::map<int, std::vector<L1GtObject> >::value_type"/>  
+  <class name="L1GtCondition"/>
+  <class name="L1GtMuonTemplate"/>
+  <class name="L1GtMuonTemplate::ObjectParameter"/>
+  <class name="std::vector<L1GtMuonTemplate::ObjectParameter>"/>
+  <class name="L1GtMuonTemplate::CorrelationParameter"/>
+  <class name="std::vector<L1GtMuonTemplate>"/>
+  <class name="std::vector<std::vector<L1GtMuonTemplate> >"/>
+  <class name="L1GtCaloTemplate"/>
+  <class name="L1GtCaloTemplate::ObjectParameter"/>
+  <class name="std::vector<L1GtCaloTemplate::ObjectParameter>"/>
+  <class name="L1GtCaloTemplate::CorrelationParameter"/>
+  <class name="std::vector<L1GtCaloTemplate>"/>
+  <class name="std::vector<std::vector<L1GtCaloTemplate> >"/>
+  <class name="L1GtEnergySumTemplate"/>
+  <class name="L1GtEnergySumTemplate::ObjectParameter"/>
+  <class name="std::vector<L1GtEnergySumTemplate::ObjectParameter>"/>
+  <class name="std::vector<L1GtEnergySumTemplate>"/>
+  <class name="std::vector<std::vector<L1GtEnergySumTemplate> >"/>
+  <class name="L1GtJetCountsTemplate"/>
+  <class name="L1GtJetCountsTemplate::ObjectParameter"/>
+  <class name="std::vector<L1GtJetCountsTemplate::ObjectParameter>"/>
+  <class name="std::vector<L1GtJetCountsTemplate>"/>
+  <class name="std::vector<std::vector<L1GtJetCountsTemplate> >"/>
+  <class name="L1GtCastorTemplate"/>
+  <class name="std::vector<L1GtCastorTemplate>"/>
+  <class name="std::vector<std::vector<L1GtCastorTemplate> >"/>
+  <class name="L1GtHfBitCountsTemplate"/>
+  <class name="L1GtHfBitCountsTemplate::ObjectParameter"/>
+  <class name="std::vector<L1GtHfBitCountsTemplate::ObjectParameter>"/>
+  <class name="std::vector<L1GtHfBitCountsTemplate>"/>
+  <class name="std::vector<std::vector<L1GtHfBitCountsTemplate> >"/>
+  <class name="L1GtHfRingEtSumsTemplate"/>
+  <class name="L1GtHfRingEtSumsTemplate::ObjectParameter"/>
+  <class name="std::vector<L1GtHfRingEtSumsTemplate::ObjectParameter>"/>
+  <class name="std::vector<L1GtHfRingEtSumsTemplate>"/>
+  <class name="std::vector<std::vector<L1GtHfRingEtSumsTemplate> >"/>
+  <class name="L1GtBptxTemplate"/>
+  <class name="std::vector<L1GtBptxTemplate>"/>
+  <class name="std::vector<std::vector<L1GtBptxTemplate> >"/>
+  <class name="L1GtExternalTemplate"/>
+  <class name="std::vector<L1GtExternalTemplate>"/>
+  <class name="std::vector<std::vector<L1GtExternalTemplate> >"/>
+  <class name="L1GtCorrelationTemplate"/>
+  <class name="L1GtCorrelationTemplate::CorrelationParameter"/>
+  <class name="std::vector<L1GtCorrelationTemplate>"/>
+  <class name="std::vector<std::vector<L1GtCorrelationTemplate> >"/>
+  <class name="L1GtAlgorithm"/>
+  <class name="std::map<std::string, L1GtAlgorithm>"/>
+  <class name="std::map<std::string, L1GtAlgorithm>::value_type"/>
+  <class name="std::pair<std::string, L1GtAlgorithm>"/>
+  <class name="L1GtTriggerMenu" class_version="L1GtTriggerMenu_V01">
+    <field name="m_conditionMap" transient="true" />
+    <field name="m_algorithmAliasMap" mapping="blob" />
+    <field name="m_algorithmMap" mapping="blob" />
+    <field name="m_corCaloTemplate" mapping="blob" />
+    <field name="m_corEnergySumTemplate" mapping="blob" />
+    <field name="m_corMuonTemplate" mapping="blob" />
+    <field name="m_technicalTriggerMap" mapping="blob" />
+    <field name="m_vecBptxTemplate" mapping="blob" />
+    <field name="m_vecCaloTemplate" mapping="blob" />
+    <field name="m_vecCastorTemplate" mapping="blob" />
+    <field name="m_vecCorrelationTemplate" mapping="blob" />
+    <field name="m_vecEnergySumTemplate" mapping="blob" />
+    <field name="m_vecExternalTemplate" mapping="blob" />
+    <field name="m_vecHfBitCountsTemplate" mapping="blob" />
+    <field name="m_vecHfRingEtSumsTemplate" mapping="blob" />
+    <field name="m_vecJetCountsTemplate" mapping="blob" />
+    <field name="m_vecMuonTemplate" mapping="blob" />
+  </class>
+  <class name="L1CaloGeometry" class_version="L1CaloGeometry_V01">
+    <field name="m_gctEtaBinBoundaries" mapping="blob" />
+  </class>
+</lcgdict>

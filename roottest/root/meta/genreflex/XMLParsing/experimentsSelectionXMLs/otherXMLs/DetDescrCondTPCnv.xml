@@ -1,0 +1,19 @@
+<lcgdict>
+ <class name="AlignableTransform_p1" id="BA1A841C-8D92-45AE-9AD1-9AF7A1736844" />
+ <class name="DetCondCFloat_p1" id="7E19F4EE-540A-4FB0-AEED-0DC65C1DEFC6" />
+ <class name="DetCondKeyTrans_p1" id="0FBC4B54-5F6B-4A5B-A1C7-B7EB5DD124E5" />
+ <class name="DetStatusMap_p1" id="AD99EE0F-DFD9-4734-8930-F5FC702C0BE8" />
+ <class name="DetDescrCondIdentifier_old" />
+ <class name="DetDescrCondIdentifier_old_cnv" />
+ <class name="TVirtualConverter_T<Identifier, DetDescrCondIdentifier_old>" />
+</lcgdict>
+
+
+
+
+
+
+
+
+
+

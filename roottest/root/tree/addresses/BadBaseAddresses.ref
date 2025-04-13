@@ -1,0 +1,20 @@
+
+Processing runBadBaseAddresses.C...
+Filling: 10 .. 20 .. 30 .. 40 .. 50 .. 60 .. 70 .. 80 .. 90 .. 100 .. 
+**** SmartRefCount=0
+Reading
+TFile**		dummy1.root	
+ TFile*		dummy1.root	
+  KEY: TTree	T;1	T
+Reading 10 entries
+Getting 110 Event:0 10 0 9
+Getting 190 Event:1 20 1 9
+Getting 270 Event:2 30 2 9
+Getting 350 Event:3 40 3 9
+Getting 430 Event:4 50 4 9
+Getting 510 Event:5 60 5 9
+Getting 590 Event:6 70 6 9
+Getting 670 Event:7 80 7 9
+Getting 750 Event:8 90 8 9
+Getting 830 Event:9 100 9 9
+**** SmartRefCount=0

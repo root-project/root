@@ -1,0 +1,3 @@
+
+Processing execGetExp.C...
+[p0]+[p1]*cos(x*TMath::DegToRad())+[p2]*sin(x*TMath::DegToRad())

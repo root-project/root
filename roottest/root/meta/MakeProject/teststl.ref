@@ -1,0 +1,7 @@
+
+Processing runstltest.C...
+Warning in <TClass::Init>: no dictionary for class SillyStlEvent is available
+MakeProject has generated 1 classes in stltest
+MAKEP file has been generated
+stltest.so has been generated
+stltest.so has been dynamically linked

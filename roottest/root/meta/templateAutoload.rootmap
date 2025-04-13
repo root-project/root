@@ -1,0 +1,30 @@
+{ decls }
+class TagClassWithoutDefinition;
+template <typename T, int, typename TAG, typename TDEF, int> class Template;
+template <> class Template<float,0,TagClassWithoutDefinition,float,0>;
+template <> class Template<int,0,TagClassWithoutDefinition,int,0>;
+template <> class Template<int,1,TagClassWithoutDefinition,int,1>;
+template <> class Template<short,0,TagClassWithoutDefinition,int,1>;
+namespace ANamespace {  }
+namespace ANamespace { template <typename T, int, typename TAG, typename TDEF, int> class Template; }
+template <> class ANamespace::Template<int,0,TagClassWithoutDefinition,int,0>;
+template <> class ANamespace::Template<int,1,TagClassWithoutDefinition,int,1>;
+
+[libCore.so]
+class NotReal
+
+[TmpltFloat_C]
+class Template<float,0,TagClassWithoutDefinition,float,0>
+
+[TmpltInt0_C]
+class Template<int,0,TagClassWithoutDefinition,int,0>
+
+[TmpltInt1_C]
+class Template<int,1,TagClassWithoutDefinition,int,1>
+
+[TmpltNoSpec_C]
+class Template<short,0,TagClassWithoutDefinition,int,1>
+
+[ANSTmpltInt_C]
+class ANamespace::Template<int,0,TagClassWithoutDefinition,int,0>
+class ANamespace::Template<int,1,TagClassWithoutDefinition,int,1>

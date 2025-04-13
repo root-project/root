@@ -1,0 +1,45 @@
+<lcgdict>
+
+   <!-- SJet_v1 dictionaries: -->
+   <class name="xAOD::SJet_v1" >
+   </class>
+
+   <!--  <class name="std::vector< xAOD::SJetFourMom_t >" /> -->
+
+   <class name="xAOD::SJetContainer_v1"
+   id="646342DF-D1E1-422A-975D-EA6DBF13CB6D" />
+
+<!--
+   <class name="xAOD::SJetAuxContainer_v1"
+   id="17E48A73-2219-44A0-8913-D59DB61F4B15" />
+   <class name="xAOD::SJetTrigAuxContainer_v1"
+   id="89AE2C6B-A862-499C-8BDA-11D24FAC83F1" />
+-->
+
+   <!-- Smart pointers to SJet_v1: -->
+   <class name="DataLink<xAOD::SJetContainer_v1>" />
+   <class name="std::vector<DataLink<xAOD::SJetContainer_v1> >" />
+
+   <class name="ElementLink<xAOD::SJetContainer_v1>" />
+   <class name="std::vector<ElementLink<xAOD::SJetContainer_v1> >" />
+   <class name="std::vector<std::vector<ElementLink<xAOD::SJetContainer_v1> > >" />
+
+   <class name="ElementLinkVector<xAOD::SJetContainer_v1>" />
+   <class name="std::vector<ElementLinkVector<xAOD::SJetContainer_v1> >" />
+
+<!--   <class name="std::pair<std::string,std::vector<const xAOD::IParticle*> >" /> -->
+<!--   <class name="std::pair<std::string,std::vector<float> >" />
+   <class name="std::pair<std::string,std::vector<std::vector<int> > >" />
+   <class name="std::pair<std::string,std::vector<std::vector<float> > >" />
+-->
+
+<!-- Suppress the unwanted classes found by ROOT 6. -->
+<!-- Hopefully we can remove these extra lines at one point... -->
+<exclusion>
+   <class name="SG::IConstAuxStore" />
+   <class name="DataLink<SG::IConstAuxStore>" />
+   <class name="SDataVector<xAOD::IParticle>" />
+   <class pattern="ElementLink<SDataVector<xAOD::IParticle*" />
+</exclusion>
+
+</lcgdict>

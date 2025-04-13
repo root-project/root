@@ -1,0 +1,44 @@
+
+Processing execUnloading.C...
+Unloading of globals: VarDecl and EnumConstDecl.
+Check validity before unloading, expected: true.
+<<i>> is valid.
+Check validity after unloading, expected: false.
+<<i>> unloaded.
+Check validity after reloading, expected: true.
+<<i>> is valid after reloading.
+Check that the same obejct is used and not another created.
+
+Unloading of enum: EnumDecl and implicitly EnumConstDecl.
+Check validity before unloading, expected: true.
+<<MyEnum>> is valid.
+Check validity after unloading, expected: false.
+<<MyEnum>> unloaded.
+Check validity after reloading, expected: true.
+<<MyEnum>> is valid after reloading.
+
+Unloading of functions: FunctionDecl.
+Check validity before unloading, expected: true.
+<<func>> is valid.
+Check validity after unloading, expected: false.
+<<func>> unloaded.
+Check validity after reloading, expected: true.
+<<func>> is valid after reloading.
+
+Unloading of classes: RecordDecl.
+Check state of class, expected: "3" (kInterpreted).
+The state of MyClass is: 3
+Check validity before unloading, expected: true.
+<<data>> is valid.
+<<method>> is valid.
+Check state of class, expected: "1" (kForwardDeclared).
+The state of MyClass is: 1
+Check validity after unloading, expected: false.
+<<data>> unloaded.
+<<method>> unloaded.
+
+Unloading of namespaces: NamespaceDecl.
+Check validity before unloading, expected: true.
+<<ns::k>> is valid.
+Check validity after unloading, expected: false.
+<<ns::k>> unloaded.

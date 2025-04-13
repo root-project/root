@@ -1,0 +1,24 @@
+<lcgdict>
+<class name="WithClassVersion" ClassVersion="42" />
+
+<class name="MyTemp<std::vector<std::string> >" />
+
+<class pattern="std::vector<With*>" />
+
+<exclusion>
+   <class pattern="std::vector<std::string>::*" />
+   <class pattern="std::vector<With*>::*" />
+</exclusion>
+
+
+<class name="WithClassDef"/>
+<class name="NoIO"/>
+<class name="FromTObject">
+   <field name="fTransientBySelection" transient="true" />
+</class>
+
+
+<class name="TemplateWithVersion<int>" />
+<class name="TemplateWithVersion<double>" />
+
+</lcgdict>

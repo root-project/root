@@ -1,0 +1,66 @@
+
+Processing execCheckErrors.C...
+
+ALL should be FINE ... 
+Float_t ... 0
+p set to the branch address
+Float_t ... 0
+Float_t ... 0
+Float_t ... 0
+
+ALL should FAIL ... 
+Error in <TTree::SetBranchAddress>: The pointer type given "Int_t" (3) does not correspond to the type needed "Float_t" (5) by the branch: px
+Int_t ...  -2
+Error in <TTree::SetBranchAddress>: The pointer type given "Int_t" (3) does not correspond to the type needed "Float_t" (5) by the branch: px
+p set to zero
+Int_t ...  -2
+Error in <TTree::SetBranchAddress>: The pointer type given "Int_t" (3) does not correspond to the type needed "Float_t" (5) by the branch: px
+Int_t ...  -2
+Error in <TTree::SetBranchAddress>: The pointer type given "Int_t" (3) does not correspond to the type needed "Float_t" (5) by the branch: px
+Int_t ...  -2
+
+ALL should FAIL ... 
+Error in <TTree::SetBranchAddress>: The pointer type given "TString" does not correspond to the type needed "Float_t" (5) by the branch: px
+TString ... -2
+Error in <TTree::SetBranchAddress>: The pointer type given "TString" does not correspond to the type needed "Float_t" (5) by the branch: px
+p set to zero
+TString ... -2
+Error in <TTree::SetBranchAddress>: The pointer type given "TString" does not correspond to the type needed "Float_t" (5) by the branch: px
+TString ... -2
+
+ALL should FAIL ... 
+Error in <TTree::SetBranchAddress>: The pointer type given "TObjString" does not correspond to the type needed "Float_t" (5) by the branch: px
+TObjString ... -2
+Error in <TTree::SetBranchAddress>: The pointer type given "TObjString" does not correspond to the type needed "Float_t" (5) by the branch: px
+p set to zero
+TObjString ... -2
+Error in <TTree::SetBranchAddress>: The pointer type given "TObjString" does not correspond to the type needed "Float_t" (5) by the branch: px
+TObjString ... -2
+
+ALL should FAIL ... 
+Error in <TTree::SetBranchAddress>: unknown branch -> fake_px
+nonexistent branch ... -5
+Error in <TTree::SetBranchAddress>: unknown branch -> fake_px
+p set to zero
+nonexistent branch ... -5
+Error in <TTree::SetBranchAddress>: unknown branch -> fake_px
+nonexistent branch ... -5
+Error in <TTree::SetBranchAddress>: unknown branch -> fake_px
+nonexistent branch ... -5
+
+ALL should FAIL ... 
+Error in <TTree::SetBranchAddress>: The pointer type given "Float_t" (5) does not correspond to the type needed "TString" by the branch: str
+Float ... -2
+Error in <TTree::SetBranchAddress>: The pointer type given "Float_t" (5) does not correspond to the type needed "TString" by the branch: str
+p set to zero
+Float ... -2
+Error in <TTree::SetBranchAddress>: The pointer type given "Float_t" (5) does not correspond to the type needed "TString" by the branch: str
+Float ... -2
+Error in <TTree::SetBranchAddress>: The pointer type given "Float_t" (5) does not correspond to the type needed "TString" by the branch: str
+Float ... -2
+Warning in <TClass::Init>: no dictionary for class TMyData is available
+Warning in <TClass::Init>: no dictionary for class TMyPar is available
+Error in <TChain::SetBranchAddress>: The pointer type given (TString) does not correspond to the class needed (TMyData) by the branch: mono
+From chain, TString ... -1
+Error in <TChain::SetBranchAddress>: The pointer type given (TString) does not correspond to the class needed (TMyData) by the branch: mono
+From tree, TString ... -1

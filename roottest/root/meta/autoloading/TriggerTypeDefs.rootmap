@@ -1,0 +1,4 @@
+[ libTriggerTypeDefs_dictrflx.so ]
+# List of selected enums and outer classes
+enum trigger::TriggerObjectType
+

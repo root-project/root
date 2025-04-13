@@ -1,0 +1,128 @@
+<lcgdict>
+
+   <!-- Dictionary for the persistent MuCTPI_RDO object -->
+   <class name="MuCTPI_RDO_p1" id="406BC4C7-56B6-4956-A66A-B749BCD35009" />
+
+   <!-- Converter(s) for the MuCTPI_RDO object -->
+   <class name="MuCTPI_RDOCnv_p1" />
+   <class name="T_AthenaPoolTPCnvBase<MuCTPI_RDO,MuCTPI_RDO_p1>" />
+   <class name="T_AthenaPoolTPPolyCnvBase<MuCTPI_RDO,MuCTPI_RDO,MuCTPI_RDO_p1>" />
+   <class name="T_AthenaPoolTPAbstractPolyCnvBase<MuCTPI_RDO,MuCTPI_RDO,MuCTPI_RDO_p1>" />
+   <class name="ITPConverterFor<MuCTPI_RDO>" />
+
+   <!-- Dictionary for the persistent CTP_RDO object -->
+   <class name="CTP_RDO_p1" id="5E6D3E52-952F-4144-BC68-83ACE605AA45" />
+   <class name="CTP_RDO_p2" id="12717F15-E516-4ECD-BC07-82C72B524AD5" />
+
+   <!-- Converter(s) for the CTP_RDO object -->
+   <class name="CTP_RDOCnv_p1" />
+   <class name="T_AthenaPoolTPCnvBase<CTP_RDO,CTP_RDO_p1>" />
+   <class name="T_AthenaPoolTPPolyCnvBase<CTP_RDO,CTP_RDO,CTP_RDO_p1>" />
+   <class name="T_AthenaPoolTPAbstractPolyCnvBase<CTP_RDO,CTP_RDO,CTP_RDO_p1>" />
+   <class name="CTP_RDOCnv_p2" />
+   <class name="T_AthenaPoolTPCnvBase<CTP_RDO,CTP_RDO_p2>" />
+   <class name="T_AthenaPoolTPPolyCnvBase<CTP_RDO,CTP_RDO,CTP_RDO_p2>" />
+   <class name="T_AthenaPoolTPAbstractPolyCnvBase<CTP_RDO,CTP_RDO,CTP_RDO_p2>" />
+   <class name="ITPConverterFor<CTP_RDO>" />
+
+   <!-- Dictionary for the persistent ROIB::RoIBResult object -->
+   <class name="RoIBResult_p1" id="A9FF18A0-E5A2-4F24-82C7-605CAA9EA1F8" />
+   <class name="SubSysResult_p1" />
+   <class name="std::vector<SubSysResult_p1>" />
+
+   <!-- Converter(s) for the ROIB::RoIBResult object -->
+   <class name="RoIBResultCnv_p1" />
+   <class name="T_AthenaPoolTPCnvBase<ROIB::RoIBResult,RoIBResult_p1>" />
+   <class name="T_AthenaPoolTPPolyCnvBase<ROIB::RoIBResult,ROIB::RoIBResult,RoIBResult_p1>" />
+   <class name="T_AthenaPoolTPAbstractPolyCnvBase<ROIB::RoIBResult,ROIB::RoIBResult,RoIBResult_p1>" />
+   <class name="ITPConverterFor<ROIB::RoIBResult>" />
+
+   <!-- Dictionary for the persistent LVL1::TriggerTower container  -->
+   <class name="TriggerTowerCollection_tlp1" id="CDF34B04-7594-4A52-8EE0-FE85CF2C2A18" />
+   <class name="TriggerTowerCollection_p1" id="CAD2A15C-61B7-4BA9-AC12-5AEE20FC5F9F" />
+   <class name="std::vector<TriggerTowerCollection_p1>" />
+   <class name="TriggerTower_p1" />
+   <class name="std::vector<TriggerTower_p1>" />
+
+   <!-- Dictionary for the persistent LVL1::JetElement   -->
+   <class name="JetElementCollection_tlp1" id="132ABB53-1F89-4E0E-83A3-382338B278F3" />
+   <class name="JetElementCollection_p1" id="6FC535E7-1E2B-4110-889B-BC6436FD19AC" />
+   <class name="std::vector<JetElementCollection_p1>" />
+   <class name="JetElement_p1" />
+   <class name="std::vector<JetElement_p1>" />
+
+   <!-- Dictionary for the persistent LVL1::CPMTower container  -->
+   <class name="CPMTowerCollection_tlp1" id="AF950A9C-D929-4E3D-8B95-53D0B36B78D8" />
+   <class name="CPMTowerCollection_p1" id="4B54CFFB-099A-4A88-A76E-3E061DBBE45F" />
+   <class name="std::vector<CPMTowerCollection_p1>" />
+   <class name="CPMTower_p1" />
+   <class name="std::vector<CPMTower_p1>" />
+
+   <!-- Dictionaries for LVL1::CPMHits -->
+   <class name="CPMHitsCollection_tlp1" id="4A309D12-C11D-4666-8253-72522BF7948E" />
+   <class name="CPMHitsCollection_p1" id="DEF85AE4-AB9C-41D3-98F9-067F62F16EF7" />
+   <class name="std::vector<CPMHitsCollection_p1>" />
+   <class name="CPMHits_p1" />
+   <class name="std::vector<CPMHits_p1>" />
+
+   <!-- Dictionaries for LVL1::CPMRoI -->
+   <class name="CPMRoICollection_tlp1" id="A5867077-621F-4B04-8777-56846085E550" />
+   <class name="CPMRoICollection_p1" id="D9FD95D7-B09E-4048-A8FF-DC185E0D6719" />
+   <class name="std::vector<CPMRoICollection_p1>" />
+   <class name="CPMRoI_p1" />
+   <class name="std::vector<CPMRoI_p1>" />
+
+   <!-- Dictionaries for LVL1::CMMCPHits -->
+   <class name="CMMCPHitsCollection_tlp1" id="8C6E0191-FAE9-4C2E-BD0A-E6A5518145E2" />
+   <class name="CMMCPHitsCollection_p1" id="EC9017AF-AD43-4E89-8174-42DB3FE8D7D8" />
+   <class name="std::vector<CMMCPHitsCollection_p1>" />
+   <class name="CMMCPHits_p1" />
+   <class name="std::vector<CMMCPHits_p1>" />
+
+   <!-- Dictionaries for LVL1::CMMJetHits -->
+   <class name="CMMJetHitsCollection_tlp1" id="972519B8-F2B3-4205-A0B1-06678460918F" />
+   <class name="CMMJetHitsCollection_p1" id="0D3061CC-A0D1-42D5-964C-6FC446C35EDE" />
+   <class name="std::vector<CMMJetHitsCollection_p1>" />
+   <class name="CMMJetHits_p1" />
+   <class name="std::vector<CMMJetHits_p1>" />
+
+   <!-- Dictionaries for LVL1::CMMRoI -->
+   <class name="CMMRoI_p1" id="AF2D0BF8-8B28-4BFD-92B1-67F4708039C3" />
+   <class name="std::vector<CMMRoI_p1>" />
+
+   <!-- Dictionaries for LVL1::CMMEtsums -->
+   <class name="CMMEtSumsCollection_tlp1" id="DAB02AE0-736D-4C24-AC21-E6F12B3A4FE3" />
+   <class name="CMMEtSumsCollection_p1" id="37F88F61-CB7C-4DFA-A3B1-E9128B132B26" />
+   <class name="std::vector<CMMEtSumsCollection_p1>" />
+   <class name="CMMEtSums_p1" />
+   <class name="std::vector<CMMEtSums_p1>" />
+
+   <!-- Dictionaries for LVL1::JEMHits -->
+   <class name="JEMHitsCollection_tlp1" id="A9D89195-219E-4F33-9B19-4684639CCA5B" />
+   <class name="JEMHitsCollection_p1" id="03CA1E2D-49D0-4542-8137-95D995254975" />
+   <class name="std::vector<JEMHitsCollection_p1>" />
+   <class name="JEMHits_p1" />
+   <class name="std::vector<JEMHits_p1>" />
+
+   <!-- Dictionaries for LVL1::JEMEtSums -->
+   <class name="JEMEtSumsCollection_tlp1" id="FFEF6FF1-31E5-492A-9A44-4AD5B79DB22B" />
+   <class name="JEMEtSumsCollection_p1" id="B7B463CE-429F-4973-B077-99AA44B34B37" />
+   <class name="std::vector<JEMEtSumsCollection_p1>" />
+   <class name="JEMEtSums_p1" />
+   <class name="std::vector<JEMEtSums_p1>" />
+
+   <!-- Dictionaries for LVL1::JEMRoI -->
+   <class name="JEMRoICollection_tlp1" id="B82ECDA7-30FE-4F02-9BF3-EC507BA8CB04" />
+   <class name="JEMRoICollection_p1" id="BA85F048-61FC-4F1F-9108-0A0804040ED9" />
+   <class name="std::vector<JEMRoICollection_p1>" />
+   <class name="JEMRoI_p1" />
+   <class name="std::vector<JEMRoI_p1>" />
+
+   <!-- Dictionaries for LVL1::RODHeader -->
+   <class name="RODHeaderCollection_tlp1" id="8226F1B6-374D-424D-B059-E0A1B18A1DA7" />
+   <class name="RODHeaderCollection_p1" id="846C1C9F-499A-4705-8538-3A927F7B8DCA" />
+   <class name="std::vector<RODHeaderCollection_p1>" />
+   <class name="RODHeader_p1" />
+   <class name="std::vector<RODHeader_p1>" />
+
+</lcgdict>

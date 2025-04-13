@@ -1,0 +1,7 @@
+Test usage and access of std::shared_ptr<> ... ok
+Test usage and access of a const static enum defined in header ... ok
+Allow the programmer to pass NULL in certain cases ... ok
+
+----------------------------------------------------------------------
+
+OK

@@ -1,0 +1,215 @@
+Various problems with CLOB. Let's start with the most important.
+
+-----------------------------------------------------------------------------
+Problem #1: segmentation fault in reading back CLOB from Oracle (08.04.2005)
+-----------------------------------------------------------------------------
+
+The problem initially appeared in COOL after changing the folder payload spec
+column to CLOB. In Oracle, I got a segmentation fault when reading from this table.
+
+I initially thought this was because I was mixing CLOB and non-CLOB columns
+and thought of testing this. So I downloaded the standard clobInputOutput.cpp
+test from the POOL OracleAccess test suite. However I realised that even the 
+standard POOL test failed. I went on to investigate this.
+
+I thought that this could be an environment problem (the COOL environment mixes 
+some debug and non-debug libraries, it ALWAYS uses POOL in debug mode to avoid
+segmentation faults discovered elsewhere in the code).
+I downloaded POOL into a separate project area than COOL.
+Using the POOL standard environment everything works fine:
+the test executes successfully in non-debug mode.
+
+  cd ~/myLCG/
+  rm -rf POOL_2_0_3
+  setenv SCRAM_ARCH rh73_gcc323
+  scram project POOL POOL_2_0_3
+  cd POOL_2_0_3/
+  setenv CVSROOT :kserver:pool.cvs.cern.ch:/cvs/POOL
+  cvs co -r POOL_2_0_3 OracleAccess
+  cd OracleAccess/tests/CLOBInputOutput/
+  mv clobInputOutput.cpp clobInputOutput.cpp.OLD
+  mv authentication.xml authentication.xml.OLD
+  cp ~/myLCG/COOL_HEAD/src/RelationalCool/tests/ClobIO/clobInputOutput.cpp . 
+  cp ~/myLCG/COOL_HEAD/src/RelationalCool/tests/ClobIO/authentication.xml .
+  scram b
+  which unitTest_OracleAccess_CLOBInputOutput
+  unitTest_OracleAccess_CLOBInputOutput
+
+I try again using the debug version. This one causes a segmentation fault! 
+The POOL debug library causes a segmentation fault when using CLOBs in Oracle.
+[Note: scram setup is probably not needed, it does nothing.]
+
+  setenv SCRAM_ARCH rh73_gcc323_dbg
+  cd ~/myLCG/POOL_2_0_3/src/OracleAccess/tests/CLOBInputOutput > 
+  scram setup
+  scram b
+  eval `scram runtime -csh`
+  which unitTest_OracleAccess_CLOBInputOutput
+  unitTest_OracleAccess_CLOBInputOutput
+
+Note that my own modifications to the test only change the debug level and the schema.
+I need to change the schema because the POOL default test uses an unknown database.
+I tested in any case that changing the message level from Info to Debug is not
+what causes the problem. The segmentation fault appears also if the level is Info.
+
+Changes between the POOL standard test and my test:
+==> diff clobInputOutput.cpp clobInputOutput.cpp.OLD 
+179,180c179
+<     //pool::POOLContext::setMessageVerbosityLevel( seal::Msg::Info );
+<     pool::POOLContext::setMessageVerbosityLevel( seal::Msg::Verbose );
+---
+>     pool::POOLContext::setMessageVerbosityLevel( seal::Msg::Info );
+183,184c182
+<     // std::string connectionString = "oracle://test10g/ioannis";
+<     std::string connectionString = "oracle://devdb/conddb_test";
+---
+>     std::string connectionString = "oracle://test10g/ioannis";
+==> diff authentication.xml authentication.xml.OLD
+14,17d13
+< <connection name="oracle://devdb/conddb_test">
+<   <parameter name="user" value="conddb_test" />
+<   <parameter name="password" value="lcg" />
+< </connection>
+
+Output from the program (within gdb):
+==> gdb unitTest_OracleAccess_CLOBInputOutput
+GNU gdb Red Hat Linux (5.2-2)
+Copyright 2002 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i386-redhat-linux"...
+(gdb) r
+Starting program: /afs/cern.ch/user/a/avalassi/myLCG/POOL_2_0_3/rh73_gcc323_dbg/tests/bin/unitTest_OracleAccess_CLOBInputOutput 
+LOCALRT: /afs/cern.ch/user/a/avalassi/myLCG/POOL_2_0_3
+ORACLE_HOME not set
+[New Thread 1024 (LWP 21112)]
+POOL/Services/RelationalService     Info Found plugin for RDBMS technology "mysql" with implementation "odbc"
+POOL/Services/RelationalService     Info Found plugin for RDBMS technology "oracle" with native implementation
+POOL/Services/RelationalService     Info Found plugin for RDBMS technology "sqlite" with native implementation
+POOL/Services/RelationalService     Info Default implementation for RDBMS technology "mysql" is "odbc"
+POOL/Services/RelationalService     Info Default implementation for RDBMS technology "oracle" is native
+POOL/Services/RelationalService     Info Default implementation for RDBMS technology "sqlite" is native
+Connecting...
+POOL/RelationalPlugins/oracle     Info Connected to a server running Oracle version 9.2.0.6.0
+Starting a new transaction
+POOL/RelationalPlugins/oracle    Debug Prepared statement : "SELECT TABLE_NAME FROM ALL_TABLES WHERE OWNER = 'CONDDB_TEST'"
+Deleting table "DataTable"
+POOL/RelationalPlugins/oracle    Debug Prepared statement : "DROP TABLE "CONDDB_TEST"."DataTable""
+Creating table "DataTable"
+POOL/RelationalPlugins/oracle    Debug Prepared statement : "CREATE TABLE "CONDDB_TEST"."DataTable" ( "id" NUMBER(10), "data" CLOB )"
+Adding a row into the table
+POOL/RelationalPlugins/oracle    Debug Prepared statement : "INSERT INTO "CONDDB_TEST"."DataTable" ("id","data") VALUES (:"id",:"data")"
+Adding a second row into the table
+POOL/RelationalPlugins/oracle    Debug Prepared statement : "INSERT INTO "CONDDB_TEST"."DataTable" ("id","data") VALUES (:"id",:"data")"
+Committing...
+Disconnecting...
+Connecting...
+POOL/RelationalPlugins/oracle     Info Connected to a server running Oracle version 9.2.0.6.0
+Starting a new transaction
+POOL/RelationalPlugins/oracle    Debug Prepared statement : "SELECT TABLE_NAME FROM ALL_TABLES WHERE OWNER = 'CONDDB_TEST'"
+POOL/RelationalPlugins/oracle    Debug Prepared statement : "SELECT "id", "data" FROM "CONDDB_TEST"."DataTable""
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 1024 (LWP 20859)]
+0x407ef2cf in kpccld2i ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+
+Stack trace from gdb at this point:
+==> (gdb) bt
+#0  0x407ef2cf in kpccld2i ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#1  0x407da72b in ttccfpg ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#2  0x407d95b6 in ttcfour ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#3  0x407ceab7 in ttcdrv ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#4  0x4066590d in nioqwa ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#5  0x404e1366 in upirtrc ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#6  0x4047801d in kpurcsc ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#7  0x405824a8 in kpufch0 ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#8  0x405832fb in kpufch ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#9  0x404ab067 in OCIStmtFetch2 ()
+   from /afs/cern.ch/sw/lcg/external/oracle/10.1.0.3-1/rh73_gcc323/lib/libclntsh.so.10.1
+#10 0x400b57fc in pool::OracleAccess::OracleStatement::fetchNext() (this=0x80f4878)
+    at /afs/cern.ch/sw/lcg/app/releases/POOL/POOL_2_0_3/src/OracleAccess/src/OracleStatement.cpp:635
+#11 0x4008e8be in pool::OracleAccess::OracleCursor::next() (this=0x8082af8)
+    at /afs/cern.ch/sw/lcg/app/releases/POOL/POOL_2_0_3/src/OracleAccess/src/OracleCursor.cpp:117
+#12 0x0804f281 in readClob(std::string const&) (connectionString=@0xbfffc0c0)
+    at /afs/cern.ch/user/a/avalassi/myLCG/POOL_2_0_3/src/OracleAccess/tests/CLOBInputOutput/clobInputOutput.cpp:140
+#13 0x0804faef in main ()
+    at /afs/cern.ch/user/a/avalassi/myLCG/POOL_2_0_3/src/OracleAccess/tests/CLOBInputOutput/clobInputOutput.cpp:189
+#14 0x42017589 in __libc_start_main () from /lib/i686/libc.so.6
+
+-----------------------------------------------------------------------------
+Problem #2: Feedback about the RAL API (07.04.2005)
+-----------------------------------------------------------------------------
+
+The present RAL interface has some limitations in handling tables where 
+columns with the same C++ type are stored using different SQL types.
+Presently non-default SQL types can only be set at the session level
+using the type converter, not on individual table columns.
+The present workaround is that columns must be individually altered, or dropped
+and recreated using a new SQL type mapping temporarily set at the session level.
+A new RAL API is being designed to overcome this problem.
+
+Feedback for the new RAL design:
+1. The RAL interface should allow to specify some kind of SQL-type 'hint'
+for individual columns already when creating the table.
+2. The "size" of the SQL type should be a part of the hint. For strings, for 
+instance, RAL should automatically decide that 255-size strings can use VARCHAR2(255)
+on Oracle and VARCHAR(255) BINARY on MySQL,  but 4000-size strings can use
+VARCHAR2(4000) on Oracle and need TEXT on MySQL.
+3. The "size" alone is not enough. Strings can be mapped to DATE, for instance.
+The RAL interface for creating a table should allow users to specify that a 
+string is stored as DATE. reserving a special size value for this seems awkward.
+Other examples may include CHAR vs VARCHAR2, for instance, with the same size.
+4. The "size" should not only be used in creating the table, but also in inserting 
+(and reading back?) data: for instance, if the type is specified as 4000-size 
+maximum but is stored as TEXT in MySQL, a 5000-size string could be stored in MySQL. 
+RAL should throw an exception. This should make sure that data can safely be 
+transferred to Oracle, where VARCHAR2(4000) would be used. This also means that
+an SQL-type hint alone is also not enough (one may indicate TEXT or CLOB but may
+also want to indicate a maximum size).
+5. The "size" (and eventually maybe also the DATEness or CHAR/VARCHAR) of 
+each attribute is presently being added in COOL to a wrapper for the POOL
+AttributeListSpecification class. It may be useful to review this class
+so that an extended AttributeListSpecification with size or other SQL-related
+information can be derived from the POOL AttributeListSpecification
+and included in POOL. Or maybe this information can simply be added to the
+new POOL AttributeListSpecification.
+
+-----------------------------------------------------------------------------
+Problem #3: ALTER TABLE constraints in Oracle (07.04.2005)
+-----------------------------------------------------------------------------
+
+The initial implementation I tried to change the payload specification
+column from the RAL default to CLOB was using the ALTER TABLE statement
+(via the RAL modifyColumn interface).
+
+However, changing a VARCHAR to CLOB is not possible (ORA-22858).
+Similarly, changing a CLOB to VARCHAR to CLOB is also not possible (ORA-22859).
+
+Solution: the COOL implementation now drops and recreates columns.
+In order not to change the column order, all columns following the first 
+column whose SQL type needs to be changed are also dropped and recreated.
+
+-----------------------------------------------------------------------------
+Problem #4: modifying column types did not seem to work in MySQL (07.04.2005)
+-----------------------------------------------------------------------------
+
+Both the alter table and the drop/recreate column solution seemed to give 
+problems also in MySQL. Using DESC table in TOra, the old schema was printed.
+
+Solution: thanks to Rado, I found out that the reason is that TOra has a schema 
+cache that it does not refresh. One should use the TOra schema browser for the
+specified table to make sure the table schema is refreshed. Another possibility
+is to use the SHOW CREATE TABLE statement in MySQL, which is guaranteed
+to print out the full correct schema of a table.
+

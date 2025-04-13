@@ -1,0 +1,11 @@
+<lcgdict>
+   <class name="DQMSummary" class_version="0"/>
+   <class name="DQMSummary::RunItem"/>
+   <class name="std::vector<DQMSummary::RunItem>"/>
+   <class name="DQMSummary::RunItem::LumiItem"/>
+   <class name="std::vector<DQMSummary::RunItem::LumiItem>"/> 
+   <class name="HDQMSummary" class_version="0"/>
+   <class name="HDQMSummary::DetRegistry"/>
+   <class name="std::vector<HDQMSummary::DetRegistry>"/>
+
+</lcgdict>

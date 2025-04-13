@@ -1,0 +1,11 @@
+<lcgdict>
+   <class name="LArG4GlobalOptions"/>
+   <class name="LArG4BarrelOptions"/>
+   <class name="LArG4EMECOptions"/>
+   <class name="LArG4HECOptions"/>
+   <class name="LArG4FCALOptions"/>
+   <class name="LArG4TBPosOptions"/>
+   <class name="LArGeoTBGeometricOptions"/>
+   <class name="LArGeoTBH1GeoOptions"/>
+   <class name="LArGeoTB2004Options"/>
+</lcgdict>

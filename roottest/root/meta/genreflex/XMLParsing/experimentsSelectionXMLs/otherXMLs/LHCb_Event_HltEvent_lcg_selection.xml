@@ -1,0 +1,25 @@
+<lcgdict>
+  <class name = "std::pair<std::string, LHCb::HltDecReport>" />
+  <class name = "std::vector<std::pair<std::string, LHCb::HltDecReport> >" />
+  <class name = "LHCb::HltDecReports::Container" />
+  <exclusion>
+    <class pattern = "*HltDecReport*">
+      <method name = "=="/>
+      <method name = "<"/>
+    </class>
+  </exclusion>
+
+  <class name = "std::pair<std::string, LHCb::HltObjectSummary>" />
+  <class name = "std::vector<std::pair<std::string, LHCb::HltObjectSummary> >" />
+  <class name = "LHCb::HltSelReports::Container" />
+  <exclusion>
+    <class pattern = "*HltObjectSummary*">
+      <method name = "=="/>
+      <method name = "<"/>
+    </class>
+  </exclusion>
+
+  <class name = "LHCb::HltVertexReports::Container" />
+  <class name = "std::vector<const LHCb::HltObjectSummary*>" />
+  <class name = "LHCb::HltObjectSummary::Info" /> 
+</lcgdict>

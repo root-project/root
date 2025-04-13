@@ -1,0 +1,12 @@
+23,24c23,24
+<     <TStreamerInfo name="Container" title="" v="9" classversion="1" canoptimize="true" checksum="-625423781">
+<       <TStreamerBase name="TObject" title="Basic ROOT object" v="3" type="66" typename="BASE" size="masked" baseversion="1" basechecksum="-1877229523"/>
+---
+>     <TStreamerInfo name="Container" title="" v="9" classversion="1" canoptimize="true" checksum="866396786">
+>       <TStreamerBase name="TObject" title="Basic ROOT object" v="3" type="66" typename="BASE" size="masked" baseversion="1"/>
+28,29c28,29
+<     <TStreamerInfo name="SuperCluster" title="" v="9" classversion="-1" canoptimize="true" checksum="158258328">
+<       <TStreamerBasicType name="energy2" v="2" type="9" typename="Double32_t" size="masked"/>
+---
+>     <TStreamerInfo name="SuperCluster" title="" v="9" classversion="-1" canoptimize="true" checksum="2016884484">
+>       <TStreamerBasicType name="energy2" v="2" type="8" typename="double" size="masked"/>

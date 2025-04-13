@@ -1,0 +1,52 @@
+<lcgdict>
+
+  <!-- JetLinks -->
+  <class name="T_TPCnv<JetLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<JetLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<JetLinks,JetLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<JetLinks,JetLinks,ParticleLinks_p1>"/>
+  <class name="ITPConverterFor<JetLinks>"/>
+
+  <!-- TauJetLinks -->
+  <class name="T_TPCnv<TauJetLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<TauJetLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<TauJetLinks,TauJetLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<TauJetLinks,TauJetLinks,ParticleLinks_p1>"/>
+  <class name="ITPConverterFor<TauJetLinks>"/>
+
+  <!-- MuonLinks -->
+  <class name="T_TPCnv<MuonLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<MuonLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<MuonLinks,MuonLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<MuonLinks,MuonLinks,ParticleLinks_p1>"/>
+  <class name="ITPConverterFor<MuonLinks>"/>
+
+  <!-- ElectronLinks -->
+  <class name="T_TPCnv<ElectronLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<ElectronLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<ElectronLinks,ElectronLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<ElectronLinks,ElectronLinks,ParticleLinks_p1>"/>
+  <class name="ITPConverterFor<ElectronLinks>"/>
+
+  <!-- PhotonLinks -->
+  <class name="T_TPCnv<PhotonLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<PhotonLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<PhotonLinks,PhotonLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<PhotonLinks,PhotonLinks,ParticleLinks_p1>"/>
+  <class name="ITPConverterFor<PhotonLinks>"/>
+
+  <!-- TruthParticleLinks -->
+  <class name="T_TPCnv<TruthParticleLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<TruthParticleLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<TruthParticleLinks,TruthParticleLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<TruthParticleLinks,TruthParticleLinks,ParticleLinks_p1>"/>
+  <class name="ITPConverterFor<TruthParticleLinks>"/>
+
+  <!-- TrackLinks -->
+  <class name="T_TPCnv<TrackLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<TrackLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<TrackLinks,TrackLinks,ParticleLinks_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<TrackLinks,TrackLinks,ParticleLinks_p1>"/>
+  <class name="ITPConverterFor<TrackLinks>"/>
+
+</lcgdict>

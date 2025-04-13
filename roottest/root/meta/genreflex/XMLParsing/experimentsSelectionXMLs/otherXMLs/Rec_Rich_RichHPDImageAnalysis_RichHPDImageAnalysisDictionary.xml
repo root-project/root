@@ -1,0 +1,21 @@
+<lcgdict>
+  <class name="Rich::HPDImage::HPDBoundaryFcn" />
+  <class name="Rich::HPDImage::HPDBoundaryFcn::Params" />
+  <class name="Rich::HPDImage::Pixel" />
+  <class name="Rich::HPDImage::Pixel::List" />
+  <class name="Rich::HPDImage::HPDFit" />
+  <class name="Rich::HPDImage::HPDFit::Params" />
+  <class name="Rich::HPDImage::HPDFit::Result" />
+  <class name="Rich::HPDImage::GraphSmoother" />
+  <class name="Rich::HPDImage::SimpleChi2Fit" />
+  <class name="Rich::HPDImage::SobelFilter" />
+  <class name="Rich::HPDImage::Clean" />
+  <class name="Rich::HPDImage::Clean::Params" />
+  <class name="Rich::HPDImage::FullImageFit" />
+  <class name="Rich::HPDImage::SobelPeakPixelFinder" />
+  <class name="Rich::HPDImage::SobelPeakPixelFinder::Params" />
+  <class name="Rich::HPDImage::BoundaryOutlierRejection" />
+  <class name="Rich::HPDImage::BoundaryOutlierRejection::FitResult" />
+  <class name="Rich::HPDImage::BoundaryOutlierRejection::Params" />
+  <class name="TH2D" />
+</lcgdict>

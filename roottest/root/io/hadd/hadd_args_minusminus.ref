@@ -1,0 +1,6 @@
+Info in <hadd>: target file: --hadd_args_out.root
+Info in <hadd>: compression setting for all output: 0
+hadd Source file 1: hadd_args_in.root
+Warning in <hadd>: Sources and Target have different compression settings
+hadd merging will be slower
+hadd Target path: --hadd_args_out.root:/

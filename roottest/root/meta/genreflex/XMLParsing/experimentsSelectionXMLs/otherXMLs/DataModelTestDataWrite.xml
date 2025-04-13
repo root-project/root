@@ -1,0 +1,26 @@
+<!--
+  $Id: selection.xml,v 1.7 2008-11-21 06:31:28 ssnyder Exp $
+
+  File: DataModelTestDataWrite/selection.xml
+  Author: snyder@bnl.gov
+  Date: Nov 2005
+  Purpose: LCG dictionary generation selection file.
+-->
+
+<lcgdict>
+
+  <class name="DMTest::BDer" id="F899E479-B507-44CD-B571-B3CD254D215D"/>
+  <class name="DMTest::DDer" id="BF1FF2FB-332A-497B-B55E-D704108C68D0"/>
+  <class name="std::vector<DMTest::B*>"/>
+  <class name="std::vector<DMTest::D*>"/>
+  <class name="DataVector<DMTest::B>" id="726A6BED-3DD9-4AD9-9F5E-1DCBFA42EB75"/>
+  <class name="DataVector<DMTest::D>" id="14085919-C66D-45B2-A183-17D77986CACC"/>
+
+  <class name="DMTest::ELVec" id="08A5FE26-1553-44E0-BFC4-196B96D3AD44">
+    <field name="m_elv2" transient="true"/>
+    <field name="m_el2" transient="true"/>
+    <field name="m_dl2" transient="true"/>
+  </class>
+
+  <class name="std::vector<ElementLink<DataVector<DMTest::B> > >"/>
+</lcgdict>

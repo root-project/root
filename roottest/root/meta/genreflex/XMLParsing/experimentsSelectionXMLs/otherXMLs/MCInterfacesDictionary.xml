@@ -1,0 +1,25 @@
+<lcgdict>
+
+  <class name = "IForcedBDecayTool"           />
+  <class name = "IIdealStateCreator"          />
+  <class name = "ILHCbIDsToMCParticles"       />                               
+  <class name = "ILHCbIDsToMCHits"            />
+  <class name = "IMCDecayFinder"              />
+  <class name = "IMCEventTypeFinder"          />
+  <class name = "IMCParticleSelector"         />
+  <class name = "IMCReconstructed"            />
+  <class name = "IMCReconstructible"          />
+  <class name = "IMuonPad2MCTool"             />
+  <class name = "IPrintMCDecayTreeTool"       />
+  <class name = "Rich::MC::IMCTrackInfoTool"  />
+  <class name = "Rich::MC::IMCTruthTool"      />
+  <class name = "Rich::Rec::MC::IMCTruthTool" />
+  <class name = "ISiDepositedCharge"          />
+  <class name = "ITrackGhostClassification"   />
+  <class name = "IVisPrimVertTool"            />
+  <class name = "IHepMCParticleSelector"         />
+  
+  <class name = "IGenCutTool"          />
+  <class name = "IFullGenEventCutTool" />
+
+</lcgdict>

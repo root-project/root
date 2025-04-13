@@ -1,0 +1,31 @@
+Test handling of twice 'from ROOT import*' ... ok
+Test thrown TPyException object processing ... ok
+Handling of a temporary for user defined operator new ... ok
+Calls on a TQClass instance ... ok
+Classes with iterators in a namespace ... ok
+Smart class that returns itself on dereference should not loop ... ok
+Direct access on the meta class ... ok
+Inspect TH1I ... ok
+Test the special role that gROOT plays vis-a-vis threading ... ok
+Test different import styles vis-a-vis threading ... ok
+Test various ways of preventing GUI thread startup ... ok
+Test name resolution of template with namespace parameter ... ok
+Test conversion of Int(64) limit values to unsigned long ... ok
+Test conversion of Int(64) limit values to unsigned long long ... ok
+Test return type against proper overload w/ const and covariance ... ok
+Be able to pass enums as function arguments ... ok
+Verify TVector3 pythonization ... ok
+Verify that the correct base class iterators is picked up ... ok
+Test that ROOT.cout does not cause error messages ... ok
+Entities in 'ROOT::' need no explicit 'ROOT.' ... ok
+Write a TGraph object and read it back correctly ... ok
+Access a base class data member made availabe by 'using' ... ok
+Load TPyException into python and make sure its usable ... ok
+Test passing arguments by const reference ... ok
+Test nested namespace lookup ... ok
+Matrix lookup has to be non-const to allow assigment ... ok
+Auto-downcast of interpreted class ... ok
+
+----------------------------------------------------------------------
+
+OK

@@ -1,0 +1,9 @@
+Processing runptrptr.C...
+ptrptr.C          1 typedef void** *iterator_1
+ptrptr.C          2 typedef void **const *const iterator_2
+ptrptr.C          3 typedef void **const *const iterator_3
+ptrptr.C          4 typedef const void *const *const iterator_4
+ptrptr.C          7 typedef void** *wrapper::iterator_1
+ptrptr.C          8 typedef void **const *const wrapper::iterator_2
+ptrptr.C          9 typedef void **const *const wrapper::iterator_3
+ptrptr.C         10 typedef const void *const *const wrapper::iterator_4

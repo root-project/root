@@ -1,0 +1,36 @@
+
+Processing execOverWriteDir.C...
+File map after the object write/delete
+At:100   N=130      K=51  O=79        TFile          CX =  1
+At:230   N=111      K=51  O=60        TDirectory     CX =  1
+At:341   N=111      K=64  O=47        TNamed         CX =  1
+At:452   N=1        K=    O=          END           
+File map after the explicit key delete
+At:100   N=130      K=51  O=79        TFile          CX =  1
+At:230   N=111      K=51  O=60        TDirectory     CX =  1
+At:341   N=1        K=    O=          END           
+File map after the 2nd object write
+At:100   N=130      K=51  O=79        TFile          CX =  1
+At:230   N=111      K=51  O=60        TDirectory     CX =  1
+At:341   N=111      K=64  O=47        TNamed         CX =  1
+At:452   N=1        K=    O=          END           
+Final file map
+At:100   N=130      K=51  O=79        TFile          CX =  1
+At:230   N=111      K=51  O=60        TDirectory     CX =  1
+At:341   N=111      K=64  O=47        TNamed         CX =  1
+At:452   N=55       K=51  O=4         TDirectory     CX =  1
+At:507   N=119      K=51  O=68        KeysList       CX =  1
+At:626   N=61       K=51  O=10        FreeSegments   CX =  1
+At:687   N=1        K=    O=          END           
+Reading the file
+TFile**		dirkeydelete.root	
+ TFile*		dirkeydelete.root	
+  KEY: TNamed	subdir;1	some title and more inf
+At:100   N=130      K=51  O=79        TFile          CX =  1
+At:230   N=111      K=51  O=60        TDirectory     CX =  1
+At:341   N=111      K=64  O=47        TNamed         CX =  1
+At:452   N=55       K=51  O=4         TDirectory     CX =  1
+At:507   N=119      K=51  O=68        KeysList       CX =  1
+At:626   N=61       K=51  O=10        FreeSegments   CX =  1
+At:687   N=1        K=    O=          END           
+OBJ: TNamed	subdir	some title and more inf

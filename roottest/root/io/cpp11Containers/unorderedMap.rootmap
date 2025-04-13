@@ -1,0 +1,69 @@
+{ decls }
+namespace std { }
+
+[ libunorderedMap_dictrflx.so ]
+# List of selected classes
+class map<Long64_t,TH1F>
+class map<Long64_t,double>
+class map<Long64_t,vector<TH1F> >
+class map<double,TH1F>
+class map<double,double>
+class map<double,vector<TH1F> >
+class map<float,TH1F>
+class map<float,double>
+class map<float,vector<TH1F> >
+class map<int,TH1F>
+class map<int,double>
+class map<int,vector<TH1F> >
+class multimap<Long64_t,TH1F>
+class multimap<Long64_t,double>
+class multimap<Long64_t,vector<TH1F> >
+class multimap<double,TH1F>
+class multimap<double,double>
+class multimap<double,vector<TH1F> >
+class multimap<float,TH1F>
+class multimap<float,double>
+class multimap<float,vector<TH1F> >
+class multimap<int,TH1F>
+class multimap<int,double>
+class multimap<int,vector<TH1F> >
+class unordered_map<Long64_t,TH1F>
+class unordered_map<Long64_t,double>
+class unordered_map<Long64_t,vector<TH1F> >
+class unordered_map<double,TH1F>
+class unordered_map<double,double>
+class unordered_map<double,vector<TH1F> >
+class unordered_map<float,TH1F>
+class unordered_map<float,double>
+class unordered_map<float,vector<TH1F> >
+class unordered_map<int,TH1F>
+class unordered_map<int,double>
+class unordered_map<int,vector<TH1F> >
+class unordered_multimap<Long64_t,TH1F>
+class unordered_multimap<Long64_t,double>
+class unordered_multimap<Long64_t,vector<TH1F> >
+class unordered_multimap<double,TH1F>
+class unordered_multimap<double,double>
+class unordered_multimap<double,vector<TH1F> >
+class unordered_multimap<float,TH1F>
+class unordered_multimap<float,double>
+class unordered_multimap<float,vector<TH1F> >
+class unordered_multimap<int,TH1F>
+class unordered_multimap<int,double>
+class unordered_multimap<int,vector<TH1F> >
+class vector<map<Long64_t,TH1F> >
+class vector<map<double,TH1F> >
+class vector<map<float,TH1F> >
+class vector<map<int,TH1F> >
+class vector<multimap<Long64_t,TH1F> >
+class vector<multimap<double,TH1F> >
+class vector<multimap<float,TH1F> >
+class vector<multimap<int,TH1F> >
+class vector<unordered_map<Long64_t,TH1F> >
+class vector<unordered_map<double,TH1F> >
+class vector<unordered_map<float,TH1F> >
+class vector<unordered_map<int,TH1F> >
+class vector<unordered_multimap<Long64_t,TH1F> >
+class vector<unordered_multimap<double,TH1F> >
+class vector<unordered_multimap<float,TH1F> >
+class vector<unordered_multimap<int,TH1F> >

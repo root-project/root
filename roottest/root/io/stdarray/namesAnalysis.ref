@@ -1,0 +1,66 @@
+
+Processing /Users/danilopiparo/RootDevel/Root6/head/roottest/root/io/stdarray/namesAnalysis.C...
+Class "C<array<bool,4>,array<int,5>>" is not an STL array
+array<int,3>:
+ - typename: int
+ - ndim: 1
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 0
+  o Dim 2: 0
+  o Dim 3: 0
+  o Dim 4: 0
+array<array<T,4>,3>:
+ - typename: T
+ - ndim: 2
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 0
+  o Dim 3: 0
+  o Dim 4: 0
+array<array<array<L,16>,4>,3>:
+ - typename: L
+ - ndim: 3
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 16
+  o Dim 3: 0
+  o Dim 4: 0
+array<array<array<array<double,13>,16>,4>,3>:
+ - typename: double
+ - ndim: 4
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 16
+  o Dim 3: 13
+  o Dim 4: 0
+array<array<array<array<array<c,18>,13>,16>,4>,3>:
+ - typename: c
+ - ndim: 5
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 16
+  o Dim 3: 13
+  o Dim 4: 18
+array<A<int>,12>:
+ - typename: A<int>
+ - ndim: 1
+ - max index:
+  o Dim 0: 12
+  o Dim 1: 0
+  o Dim 2: 0
+  o Dim 3: 0
+  o Dim 4: 0
+array<array<A<array<int,6>>,4>,3>:
+ - typename: A<array<int,6> >
+ - ndim: 2
+ - max index:
+  o Dim 0: 3
+  o Dim 1: 4
+  o Dim 2: 0
+  o Dim 3: 0
+  o Dim 4: 0

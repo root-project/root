@@ -1,0 +1,39 @@
+Processing execCheckNaming.C...
+
+Check TClassEdit::ResolveTypedef
+@const Something_t&@ --> @const std::Something&@
+@const std::Something&@ --> @const std::Something&@
+@const string&@ --> @const string&@
+@A<B>[2]@ --> @A<B>[2]@
+@X<A<B>[2]>@ --> @X<A<B>[2]>@
+Check TClassEdit::ShortType
+@const std::Something&@ --> @const std::Something&@
+@const std::Something  &@ --> @const std::Something&@
+@const std::string&@ --> @const std::string&@
+@const std::string &@ --> @const std::string&@
+@const std::string    &@ --> @const std::string&@
+@A<B>[2]@ --> @A<B>[2]@
+@X<A<B>[2]>@ --> @X<A<B>[2]>@
+@__shared_ptr<TObject>@ --> @__shared_ptr<TObject>@
+@map<int,int>@ --> @map<int,int>@
+@map<int,int>, less<int>>@ --> @map<int,int>@
+@map<Int_t,int>, less<int>>@ --> @map<Int_t,int>@
+@map<Int_t,Int_t>, less<int>>@ --> @map<Int_t,Int_t>@
+@map<int,int,less<int>,allocator<pair<int const,int> > >@ --> @map<int,int>@
+@map<Int_t,Int_t,less<Int_t>,allocator<pair<Int_t const,Int_t> > >@ --> @map<Int_t,Int_t>@
+@map<const TObject*,int,less<TObject const*>,allocator<pair<TObject* const,int> > >@ --> @map<const TObject*,int>@
+@map<TObject const*,int,less<TObject const*>,allocator<pair<TObject const* const,int> > >@ --> @map<TObject const*,int>@
+@map<TObject*const,int,less<TObject*const>,allocator<pair<const TObject* const,int> > >@ --> @map<TObject*const,int>@
+@map<TObject*,int,less<TObject*>,allocator<pair<TObject* const,int> > >@ --> @map<TObject*,int>@
+@map<TObject*,int,less<TObject*>,allocator<pair<TObject*const,int> > >@ --> @map<TObject*,int>@
+@list<int,allocator<int> >@ --> @list<int>@
+@typeid(set<int>)@ --> @set<int,struct std::less<int> >@
+@typeid(list<int>)@ --> @list<int>@
+@typeid(deque<int>)@ --> @deque<int>@
+@typeid(vector<int>)@ --> @vector<int>@
+@typeid(map<int,float>)@ --> @map<int,float,struct std::less<int>,allocator<struct std::pair<int const,float> > >@
+@typeid(multimap<int,float>)@ --> @multimap<int,float,struct std::less<int>,allocator<struct std::pair<int const,float> > >@
+@typeid(unordered_set<int>)@ --> @unordered_set<int,struct std::hash<int>,struct std::equal_to<int> >@
+@typeid(unordered_map<int,float>)@ --> @unordered_map<int,float,struct std::hash<int>,struct std::equal_to<int>,allocator<struct std::pair<int const,float> > >@
+@typeid(unordered_multimap<int,float>)@ --> @unordered_multimap<int,float,struct std::hash<int>,struct std::equal_to<int>,allocator<struct std::pair<int const,float> > >@
+(int) 0

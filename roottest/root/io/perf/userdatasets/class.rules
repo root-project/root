@@ -1,0 +1,20 @@
+# This file contains a set of ROOT I/O customization rules. 
+# The short form of those rules is
+#    [type=Read] classname membername [attributes=... ] [version=[...] ] [checksum=[...] ] [oldtype=...] [code={...}]
+#
+# See the documentation for TClass::AddRule for more details.
+#
+# Each rule must be on one line (possibly split with a trailing \)
+
+# LHCb rules
+
+KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >     m_sequential   attributes=Owner 
+KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >    m_sequential   attributes=Owner 
+ObjectVector<LHCb::MCRichDigitSummary>    m_vector   attributes=Owner  
+
+# CMS rules
+edm::OwnVector<reco::BaseTagInfo,edm::ClonePolicy<reco::BaseTagInfo> >    data_   attributes=Owner 
+edm::OwnVector<pat::UserData,edm::ClonePolicy<pat::UserData> >            data_   attributes=Owner 
+
+# Atlas rules
+MuonSpShowerContainer_p1    m_showers   attributes=Owner 

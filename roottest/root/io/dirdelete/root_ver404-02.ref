@@ -1,0 +1,7 @@
+
+Processing rundirdelete.C...
+Error in <TDirectory::cd>: Unknown directory dir_2_newname
+After rename
+   Error: subdirectory dir_0/dir_1/dir_2_newname/dir_3/dir_4 not found
+After 20 dir create/delete
+  Error: File size 73946 too big. Expected not more than 30000

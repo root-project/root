@@ -1,0 +1,8 @@
+<lcgdict>
+  <class name="DeVLSensor"/>
+  <class name="DeVLPhiSensor"/>
+  <class name="DeVLRSensor"/>
+  <class name="std::vector<DeVLSensor*>"/>
+  <class name="std::vector<DeVLPhiSensor*>"/>
+  <class name="std::vector<DeVLRSensor*>"/>
+</lcgdict>

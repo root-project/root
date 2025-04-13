@@ -1,0 +1,47 @@
+
+Processing runSelectorCintTest.C...
+Warning in <TClass::Init>: no dictionary for class Event is available
+Warning in <TClass::Init>: no dictionary for class EventHeader is available
+Warning in <TClass::Init>: no dictionary for class Track is available
+Running Interpreted Process 0
+Running Interpreted Process 1
+Running Interpreted Process 2
+Running Interpreted Process 3
+Running Interpreted Process 4
+Running Interpreted Process 5
+Running Interpreted Process 6
+Running Interpreted Process 7
+Running Interpreted Process 8
+Running Interpreted Process 9
+Running Interpreted Process 0
+Running Interpreted Process 1
+Running Interpreted Process 2
+Running Interpreted Process 3
+Running Interpreted Process 4
+Running Interpreted Process 5
+Running Interpreted Process 6
+Running Interpreted Process 7
+Running Interpreted Process 8
+Running Interpreted Process 9
+Info in <ACLiC>: script has already been loaded in interpreted mode
+Info in <ACLiC>: unloading sel01.C and compiling it
+Running Compiled Process 0
+Running Compiled Process 1
+Running Compiled Process 2
+Running Compiled Process 3
+Running Compiled Process 4
+Running Compiled Process 5
+Running Compiled Process 6
+Running Compiled Process 7
+Running Compiled Process 8
+Running Compiled Process 9
+Running Compiled Process 0
+Running Compiled Process 1
+Running Compiled Process 2
+Running Compiled Process 3
+Running Compiled Process 4
+Running Compiled Process 5
+Running Compiled Process 6
+Running Compiled Process 7
+Running Compiled Process 8
+Running Compiled Process 9

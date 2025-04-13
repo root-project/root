@@ -1,0 +1,191 @@
+<lcgdict>
+
+  <class name="CommonMETData" ClassVersion="10">
+   <version ClassVersion="10" checksum="2091468611"/>
+  </class>
+  <class name="edm::Wrapper<CommonMETData>"/> 
+  <class name="std::vector<CommonMETData>"/> 
+  <class name="edm::Wrapper<std::vector<CommonMETData> >"/> 
+
+  <class name="CorrMETData" ClassVersion="10">
+   <version ClassVersion="10" checksum="1727583300"/>
+  </class>
+  <class name="edm::Wrapper<CorrMETData>"/> 
+  <class name="std::vector<CorrMETData>"/> 
+  <class name="edm::Wrapper<std::vector<CorrMETData> >"/> 
+
+  <class name="metsig::SigInputObj" ClassVersion="10">
+   <version ClassVersion="10" checksum="802320509"/>
+  </class>
+  <class name="edm::Wrapper<metsig::SigInputObj>"/> 
+  <class name="std::vector<metsig::SigInputObj>"/> 
+  <class name="edm::Wrapper<std::vector<metsig::SigInputObj> >"/> 
+
+  <class name="reco::MVAMEtJetInfo" ClassVersion="12">
+   <version ClassVersion="10" checksum="695030979"/>
+   <version ClassVersion="11" checksum="2096949665"/>
+   <version ClassVersion="12" checksum="774362219"/>
+  </class>
+  <class name="reco::MVAMEtJetInfoCollection" />
+  <class name="edm::Wrapper<reco::MVAMEtJetInfoCollection>" />
+
+  <class name="reco::MVAMEtPFCandInfo" ClassVersion="11">
+   <version ClassVersion="10" checksum="2500257969"/>
+   <version ClassVersion="11" checksum="1494751375"/>
+  </class>
+  <class name="reco::MVAMEtPFCandInfoCollection" />
+  <class name="edm::Wrapper<reco::MVAMEtPFCandInfoCollection>" />
+
+  <class name="SpecificCaloMETData" ClassVersion="10">
+   <version ClassVersion="10" checksum="3022746385"/>
+  </class>
+  <class name="std::vector<SpecificCaloMETData> "/>
+
+  <class name="SpecificPFMETData" ClassVersion="10">
+   <version ClassVersion="10" checksum="219431109"/>
+  </class>
+  <class name="std::vector<SpecificPFMETData> "/>
+  <class name="SpecificGenMETData" ClassVersion="10">
+   <version ClassVersion="10" checksum="2173201550"/>
+  </class>
+
+  <class name="reco::MET" ClassVersion="10">
+   <version ClassVersion="10" checksum="3898304931"/>
+  </class>
+  <class name="edm::Wrapper<reco::MET>"/>
+  <class name="edm::Wrapper<std::vector<reco::MET> >"/>
+  <class name="std::vector<reco::MET>"/>
+
+  <class name="std::vector<edm::Ref<std::vector<reco::CaloMET>,reco::CaloMET,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloMET>,reco::CaloMET> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<reco::MET>,reco::MET,edm::refhelper::FindUsingAdvance<std::vector<reco::MET>,reco::MET> > >"/>
+
+  <class name="reco::CaloMET" ClassVersion="10">
+   <version ClassVersion="10" checksum="3207121440"/>
+  </class>
+  <class name="edm::Wrapper<reco::CaloMET>"/>
+  <class name="edm::Wrapper<std::vector<reco::CaloMET> >"/>
+  <class name="std::vector<reco::CaloMET>"/>
+
+  <class name="reco::PFMET" ClassVersion="10">
+   <version ClassVersion="10" checksum="3708270533"/>
+  </class>
+  <class name="edm::Wrapper<reco::PFMET>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFMET> >"/>
+  <class name="std::vector<reco::PFMET>"/>
+
+  <class name="reco::PFClusterMET" ClassVersion="10">
+   <version ClassVersion="10" checksum="3408846646"/>
+  </class>
+  <class name="edm::Wrapper<reco::PFClusterMET>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFClusterMET> >"/>
+  <class name="std::vector<reco::PFClusterMET>"/>
+
+
+  <class name="reco::GenMET" ClassVersion="10">
+   <version ClassVersion="10" checksum="595237107"/>
+  </class>
+  <class name="edm::Wrapper<reco::GenMET>"/>
+  <class name="edm::Wrapper<std::vector<reco::GenMET> >"/>
+  <class name="std::vector<reco::GenMET>"/>
+
+  <class name="edm::RefProd<std::vector<reco::MET> >"/>
+  <class name="edm::RefVector<std::vector<reco::MET>,reco::MET,edm::refhelper::FindUsingAdvance<std::vector<reco::MET>,reco::MET> >"/>
+  <class name="edm::Ref<std::vector<reco::MET>,reco::MET,edm::refhelper::FindUsingAdvance<std::vector<reco::MET>,reco::MET> >"/>
+
+  <class name="edm::RefProd<std::vector<reco::CaloMET> >"/>
+  <class name="edm::RefVector<std::vector<reco::CaloMET>,reco::CaloMET,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloMET>,reco::CaloMET> >"/>
+  <class name="edm::Ref<std::vector<reco::CaloMET>,reco::CaloMET,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloMET>,reco::CaloMET> >"/>
+
+  <class name="edm::RefProd<std::vector<reco::PFMET> >"/>
+  <class name="edm::RefVector<std::vector<reco::PFMET>,reco::PFMET,edm::refhelper::FindUsingAdvance<std::vector<reco::PFMET>,reco::PFMET> >"/>
+  <class name="edm::Ref<std::vector<reco::PFMET>,reco::PFMET,edm::refhelper::FindUsingAdvance<std::vector<reco::PFMET>,reco::PFMET> >"/>
+
+  <class name="edm::RefProd<std::vector<reco::PFClusterMET> >"/>
+  <class name="edm::RefVector<std::vector<reco::PFClusterMET>,reco::PFClusterMET,edm::refhelper::FindUsingAdvance<std::vector<reco::PFClusterMET>,reco::PFClusterMET> >"/>
+  <class name="edm::Ref<std::vector<reco::PFClusterMET>,reco::PFClusterMET,edm::refhelper::FindUsingAdvance<std::vector<reco::PFClusterMET>,reco::PFClusterMET> >"/>
+
+
+  <class name="reco::HcalNoiseHPD" ClassVersion="10">
+   <version ClassVersion="10" checksum="2302635745"/>
+    <field name="refrechitset_" transient="true"/>
+  </class>
+  <class name="reco::HcalNoiseHPDCollection"/>
+  <class name="edm::Wrapper<reco::HcalNoiseHPDCollection>"/>
+
+  <class name="reco::HcalNoiseRBX" ClassVersion="10">
+   <version ClassVersion="10" checksum="697859706"/>
+  </class>
+  <class name="std::vector<reco::HcalNoiseHPD>"/>
+  <class name="std::vector<reco::HcalNoiseHPD>::const_iterator"/>
+  <class name="reco::HcalNoiseRBXCollection"/>
+  <class name="edm::Wrapper<reco::HcalNoiseRBXCollection>"/>
+
+  <class name="HcalNoiseSummary" ClassVersion="13">
+   <version ClassVersion="11" checksum="664452001"/>
+   <version ClassVersion="12" checksum="4280559065"/>
+   <version ClassVersion="13" checksum="382065414"/>
+  </class>
+  <class name="edm::Wrapper<HcalNoiseSummary>"/>
+
+  <class name="edm::RefProd<std::vector<reco::GenMET> >"/>
+  <class name="edm::RefVector<std::vector<reco::GenMET>,reco::GenMET,edm::refhelper::FindUsingAdvance<std::vector<reco::GenMET>,reco::GenMET> >"/>
+  <class name="edm::Ref<std::vector<reco::GenMET>,reco::GenMET,edm::refhelper::FindUsingAdvance<std::vector<reco::GenMET>,reco::GenMET> >"/>
+
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::MET>,reco::MET,edm::refhelper::FindUsingAdvance<std::vector<reco::MET>,reco::MET> > >" />
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::CaloMET>,reco::CaloMET,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloMET>,reco::CaloMET> > >" />
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::PFMET>,reco::PFMET,edm::refhelper::FindUsingAdvance<std::vector<reco::PFMET>,reco::PFMET> > >" />
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::PFClusterMET>,reco::PFClusterMET,edm::refhelper::FindUsingAdvance<std::vector<reco::PFClusterMET>,reco::PFClusterMET> > >" />
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::GenMET>,reco::GenMET,edm::refhelper::FindUsingAdvance<std::vector<reco::GenMET>,reco::GenMET> > >" />
+
+  <class name="edm::reftobase::RefHolder<reco::METRef>" />
+  <class name="edm::reftobase::RefHolder<reco::CaloMETRef>" />
+  <class name="edm::reftobase::RefHolder<reco::PFMETRef>" />
+  <class name="edm::reftobase::RefHolder<reco::PFClusterMETRef>" />
+  <class name="edm::reftobase::RefHolder<reco::GenMETRef>" />
+
+  <class name="reco::PhiWedge" ClassVersion="10">
+   <version ClassVersion="10" checksum="2763792428"/>
+  </class>
+  <class name="edm::Wrapper<reco::PhiWedge>"/>
+  <class name="std::vector<reco::PhiWedge>"/>
+  <class name="std::vector<reco::PhiWedge>::iterator"/>
+
+  <class name="reco::EcalHaloData" ClassVersion="10">
+   <version ClassVersion="10" checksum="520399124"/>
+  </class>
+  <class name="edm::Wrapper<reco::EcalHaloData>"/>
+
+  <class name="reco::HcalHaloData" ClassVersion="10">
+   <version ClassVersion="10" checksum="3928363167"/>
+  </class>
+  <class name="edm::Wrapper<reco::HcalHaloData>"/>
+
+  <class name="reco::CSCHaloData" ClassVersion="10">
+   <version ClassVersion="10" checksum="3522217120"/>
+  </class>
+  <class name="edm::Wrapper<reco::CSCHaloData>"/>
+
+  <class name="reco::GlobalHaloData" ClassVersion="10">
+   <version ClassVersion="10" checksum="4148277690"/>
+  </class>
+  <class name="edm::Wrapper<reco::GlobalHaloData>"/>
+
+  <class name="reco::BeamHaloSummary" ClassVersion="10">
+   <version ClassVersion="10" checksum="1514181401"/>
+  </class>
+  <class name="edm::Wrapper<reco::BeamHaloSummary>"/>
+
+  <class name="std::vector<Point3DBase<float,GlobalTag> >"/>
+  <class name="edm::Wrapper<std::vector<Point3DBase<float,GlobalTag> > >"/>
+
+  <class name="edm::Ptr<reco::MET>" />
+  <class name="edm::PtrVector<reco::MET>" />
+
+  <class name="AnomalousECALVariables"/>
+  <class name="edm::Wrapper<AnomalousECALVariables>"/>
+  <class name="BoundaryInformation"/>
+  <class name="edm::Wrapper<BoundaryInformation>"/>
+  <class name="std::vector<BoundaryInformation>"/>
+  <class name="edm::Wrapper<std::vector<BoundaryInformation> >"/>
+
+</lcgdict>

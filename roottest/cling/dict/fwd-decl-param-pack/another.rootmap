@@ -1,0 +1,9 @@
+{ decls }
+namespace edm2 {  }
+namespace edm2 { template <typename ... T> class Table2; }
+
+[ dummy.so ]
+# List of selected classes
+class edm2::Table2<float,int,basic_string<char,char_traits<char>,allocator<char> > >
+class edm2::Table2<float,int,std::string>
+class edm2::Table2<float,int,string>

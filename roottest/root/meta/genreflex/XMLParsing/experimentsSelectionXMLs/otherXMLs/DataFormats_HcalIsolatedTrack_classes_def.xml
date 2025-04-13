@@ -1,0 +1,34 @@
+<lcgdict>
+
+  <class name="edm::Wrapper<std::map <int,std::pair<double,double> > >"/> 
+
+  <class name="reco::IsolatedPixelTrackCandidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="3865088611"/>
+  </class>
+  <class name="reco::IsolatedPixelTrackCandidateCollection"/>
+  <class name="reco::IsolatedPixelTrackCandidateRef"/>
+  <class name="reco::IsolatedPixelTrackCandidateRefVector"/>
+  <class name="reco::IsolatedPixelTrackCandidateRefProd"/>
+  <class name="edm::Wrapper<reco::IsolatedPixelTrackCandidateCollection>"/>
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::IsolatedPixelTrackCandidate>,reco::IsolatedPixelTrackCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::IsolatedPixelTrackCandidate>,reco::IsolatedPixelTrackCandidate> > >" />
+  <class name="edm::Ref<std::vector<reco::IsolatedPixelTrackCandidate>,reco::IsolatedPixelTrackCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::IsolatedPixelTrackCandidate>,reco::IsolatedPixelTrackCandidate> >"/>
+  <class name="std::vector<edm::Ref<std::vector<reco::IsolatedPixelTrackCandidate>,reco::IsolatedPixelTrackCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::IsolatedPixelTrackCandidate>,reco::IsolatedPixelTrackCandidate> > >"/>
+
+  <class name="reco::EcalIsolatedParticleCandidate" ClassVersion="11">
+   <version ClassVersion="10" checksum="4174683084"/>
+   <version ClassVersion="11" checksum="928263435"/>
+   <ioread sourceClass="reco::EcalIsolatedParticleCandidate" version="[1-10]" targetClass="reco::LeafParticle" source="double eta_" target="float eta_">
+   <![CDATA[eta_ = onfile.eta_;]]>
+   </ioread>  
+   <ioread sourceClass="reco::EcalIsolatedParticleCandidate" version="[1-10]" targetClass="reco::LeafParticle" source="double phi_" target="float phi_">
+   <![CDATA[phi_ = onfile.phi_;]]>
+   </ioread>   
+  </class>
+  <class name="reco::EcalIsolatedParticleCandidateCollection"/>
+  <class name="reco::EcalIsolatedParticleCandidateRef"/>
+  <class name="reco::EcalIsolatedParticleCandidateRefVector"/>
+  <class name="reco::EcalIsolatedParticleCandidateRefProd"/>
+  <class name="edm::Wrapper<reco::EcalIsolatedParticleCandidateCollection>"/>
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::EcalIsolatedParticleCandidate>,reco::EcalIsolatedParticleCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::EcalIsolatedParticleCandidate>,reco::EcalIsolatedParticleCandidate> > >" />
+
+</lcgdict>

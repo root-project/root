@@ -1,0 +1,55 @@
+
+Processing rewrite.C...
+Warning in <TClass::Init>: no dictionary for class Holder is available
+Warning in <TClass::Init>: no dictionary for class MidLevel is available
+Warning in <TClass::Init>: no dictionary for class TopLevel is available
+Warning in <TClass::Init>: no dictionary for class TObjTopLevel is available
+Warning in <TClass::Init>: no dictionary for class Bottom is available
+Warning in <TClass::Init>: no dictionary for class BottomDouble is available
+Warning in <TClass::Init>: no dictionary for class Side is available
+Warning in <TClass::Init>: no dictionary for class TObjFirst is available
+Warning in <TClass::Init>: no dictionary for class TObjSecond is available
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (TObjTopLevel) to store in a compiled pointer (TObject)
+Testing Directory
+Testing Writing
+Delete original
+Marker for Holder
+Marker for TObjSecond
+Marker for TopLevel
+Marker for TObjFirst
+Marker for TopLevel
+Marker for BottomDouble
+Marker for Side
+Marker for MidLevel
+Marker for TopLevel
+Marker for BottomDouble
+Marker for Side
+Marker for MidLevel
+Marker for TopLevel
+Marker for Bottom
+Marker for TObjTopLevel
+Marker for MidLevel
+Marker for TopLevel
+Marker for MidLevel
+Marker for TopLevel
+Testing the re-wrote object
+Delete copy
+Marker for Holder
+Marker for TObjSecond
+Marker for TopLevel
+Marker for TObjFirst
+Marker for TopLevel
+Marker for BottomDouble
+Marker for Side
+Marker for MidLevel
+Marker for TopLevel
+Marker for BottomDouble
+Marker for Side
+Marker for MidLevel
+Marker for TopLevel
+Marker for Bottom
+Marker for TObjTopLevel
+Marker for MidLevel
+Marker for TopLevel
+Marker for MidLevel
+Marker for TopLevel

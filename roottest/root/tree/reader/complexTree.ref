@@ -1,0 +1,4478 @@
+
+Processing runcomplexTree.C...
+
+Entry 1
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 1.00 to vectorFloat
+Adding 1 to vectorB
+Adding 2 to vectorStarB
+Adding 2 to vectorBStar
+Adding 2.00 to vectorFloat
+Adding 2 to vectorB
+Adding 4 to vectorStarB
+Adding 4 to vectorBStar
+Adding 3.00 to vectorFloat
+Adding 3 to vectorB
+Adding 6 to vectorStarB
+Adding 6 to vectorBStar
+Adding 4.00 to vectorFloat
+Adding 4 to vectorB
+Adding 8 to vectorStarB
+Adding 8 to vectorBStar
+Adding 5.00 to vectorFloat
+Adding 5 to vectorB
+Adding 10 to vectorStarB
+Adding 10 to vectorBStar
+Adding 6.00 to vectorFloat
+Adding 6 to vectorB
+Adding 12 to vectorStarB
+Adding 12 to vectorBStar
+Adding 7.00 to vectorFloat
+Adding 7 to vectorB
+Adding 14 to vectorStarB
+Adding 14 to vectorBStar
+Adding 8.00 to vectorFloat
+Adding 8 to vectorB
+Adding 16 to vectorStarB
+Adding 16 to vectorBStar
+Adding 9.00 to vectorFloat
+Adding 9 to vectorB
+Adding 18 to vectorStarB
+Adding 18 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 2
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 2.00 to vectorFloat
+Adding 2 to vectorB
+Adding 4 to vectorStarB
+Adding 4 to vectorBStar
+Adding 4.00 to vectorFloat
+Adding 4 to vectorB
+Adding 8 to vectorStarB
+Adding 8 to vectorBStar
+Adding 6.00 to vectorFloat
+Adding 6 to vectorB
+Adding 12 to vectorStarB
+Adding 12 to vectorBStar
+Adding 8.00 to vectorFloat
+Adding 8 to vectorB
+Adding 16 to vectorStarB
+Adding 16 to vectorBStar
+Adding 10.00 to vectorFloat
+Adding 10 to vectorB
+Adding 20 to vectorStarB
+Adding 20 to vectorBStar
+Adding 12.00 to vectorFloat
+Adding 12 to vectorB
+Adding 24 to vectorStarB
+Adding 24 to vectorBStar
+Adding 14.00 to vectorFloat
+Adding 14 to vectorB
+Adding 28 to vectorStarB
+Adding 28 to vectorBStar
+Adding 16.00 to vectorFloat
+Adding 16 to vectorB
+Adding 32 to vectorStarB
+Adding 32 to vectorBStar
+Adding 18.00 to vectorFloat
+Adding 18 to vectorB
+Adding 36 to vectorStarB
+Adding 36 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 3
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 3.00 to vectorFloat
+Adding 3 to vectorB
+Adding 6 to vectorStarB
+Adding 6 to vectorBStar
+Adding 6.00 to vectorFloat
+Adding 6 to vectorB
+Adding 12 to vectorStarB
+Adding 12 to vectorBStar
+Adding 9.00 to vectorFloat
+Adding 9 to vectorB
+Adding 18 to vectorStarB
+Adding 18 to vectorBStar
+Adding 12.00 to vectorFloat
+Adding 12 to vectorB
+Adding 24 to vectorStarB
+Adding 24 to vectorBStar
+Adding 15.00 to vectorFloat
+Adding 15 to vectorB
+Adding 30 to vectorStarB
+Adding 30 to vectorBStar
+Adding 18.00 to vectorFloat
+Adding 18 to vectorB
+Adding 36 to vectorStarB
+Adding 36 to vectorBStar
+Adding 21.00 to vectorFloat
+Adding 21 to vectorB
+Adding 42 to vectorStarB
+Adding 42 to vectorBStar
+Adding 24.00 to vectorFloat
+Adding 24 to vectorB
+Adding 48 to vectorStarB
+Adding 48 to vectorBStar
+Adding 27.00 to vectorFloat
+Adding 27 to vectorB
+Adding 54 to vectorStarB
+Adding 54 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 4
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 4.00 to vectorFloat
+Adding 4 to vectorB
+Adding 8 to vectorStarB
+Adding 8 to vectorBStar
+Adding 8.00 to vectorFloat
+Adding 8 to vectorB
+Adding 16 to vectorStarB
+Adding 16 to vectorBStar
+Adding 12.00 to vectorFloat
+Adding 12 to vectorB
+Adding 24 to vectorStarB
+Adding 24 to vectorBStar
+Adding 16.00 to vectorFloat
+Adding 16 to vectorB
+Adding 32 to vectorStarB
+Adding 32 to vectorBStar
+Adding 20.00 to vectorFloat
+Adding 20 to vectorB
+Adding 40 to vectorStarB
+Adding 40 to vectorBStar
+Adding 24.00 to vectorFloat
+Adding 24 to vectorB
+Adding 48 to vectorStarB
+Adding 48 to vectorBStar
+Adding 28.00 to vectorFloat
+Adding 28 to vectorB
+Adding 56 to vectorStarB
+Adding 56 to vectorBStar
+Adding 32.00 to vectorFloat
+Adding 32 to vectorB
+Adding 64 to vectorStarB
+Adding 64 to vectorBStar
+Adding 36.00 to vectorFloat
+Adding 36 to vectorB
+Adding 72 to vectorStarB
+Adding 72 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 5
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 5.00 to vectorFloat
+Adding 5 to vectorB
+Adding 10 to vectorStarB
+Adding 10 to vectorBStar
+Adding 10.00 to vectorFloat
+Adding 10 to vectorB
+Adding 20 to vectorStarB
+Adding 20 to vectorBStar
+Adding 15.00 to vectorFloat
+Adding 15 to vectorB
+Adding 30 to vectorStarB
+Adding 30 to vectorBStar
+Adding 20.00 to vectorFloat
+Adding 20 to vectorB
+Adding 40 to vectorStarB
+Adding 40 to vectorBStar
+Adding 25.00 to vectorFloat
+Adding 25 to vectorB
+Adding 50 to vectorStarB
+Adding 50 to vectorBStar
+Adding 30.00 to vectorFloat
+Adding 30 to vectorB
+Adding 60 to vectorStarB
+Adding 60 to vectorBStar
+Adding 35.00 to vectorFloat
+Adding 35 to vectorB
+Adding 70 to vectorStarB
+Adding 70 to vectorBStar
+Adding 40.00 to vectorFloat
+Adding 40 to vectorB
+Adding 80 to vectorStarB
+Adding 80 to vectorBStar
+Adding 45.00 to vectorFloat
+Adding 45 to vectorB
+Adding 90 to vectorStarB
+Adding 90 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 6
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 6.00 to vectorFloat
+Adding 6 to vectorB
+Adding 12 to vectorStarB
+Adding 12 to vectorBStar
+Adding 12.00 to vectorFloat
+Adding 12 to vectorB
+Adding 24 to vectorStarB
+Adding 24 to vectorBStar
+Adding 18.00 to vectorFloat
+Adding 18 to vectorB
+Adding 36 to vectorStarB
+Adding 36 to vectorBStar
+Adding 24.00 to vectorFloat
+Adding 24 to vectorB
+Adding 48 to vectorStarB
+Adding 48 to vectorBStar
+Adding 30.00 to vectorFloat
+Adding 30 to vectorB
+Adding 60 to vectorStarB
+Adding 60 to vectorBStar
+Adding 36.00 to vectorFloat
+Adding 36 to vectorB
+Adding 72 to vectorStarB
+Adding 72 to vectorBStar
+Adding 42.00 to vectorFloat
+Adding 42 to vectorB
+Adding 84 to vectorStarB
+Adding 84 to vectorBStar
+Adding 48.00 to vectorFloat
+Adding 48 to vectorB
+Adding 96 to vectorStarB
+Adding 96 to vectorBStar
+Adding 54.00 to vectorFloat
+Adding 54 to vectorB
+Adding 108 to vectorStarB
+Adding 108 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 7
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 7.00 to vectorFloat
+Adding 7 to vectorB
+Adding 14 to vectorStarB
+Adding 14 to vectorBStar
+Adding 14.00 to vectorFloat
+Adding 14 to vectorB
+Adding 28 to vectorStarB
+Adding 28 to vectorBStar
+Adding 21.00 to vectorFloat
+Adding 21 to vectorB
+Adding 42 to vectorStarB
+Adding 42 to vectorBStar
+Adding 28.00 to vectorFloat
+Adding 28 to vectorB
+Adding 56 to vectorStarB
+Adding 56 to vectorBStar
+Adding 35.00 to vectorFloat
+Adding 35 to vectorB
+Adding 70 to vectorStarB
+Adding 70 to vectorBStar
+Adding 42.00 to vectorFloat
+Adding 42 to vectorB
+Adding 84 to vectorStarB
+Adding 84 to vectorBStar
+Adding 49.00 to vectorFloat
+Adding 49 to vectorB
+Adding 98 to vectorStarB
+Adding 98 to vectorBStar
+Adding 56.00 to vectorFloat
+Adding 56 to vectorB
+Adding 112 to vectorStarB
+Adding 112 to vectorBStar
+Adding 63.00 to vectorFloat
+Adding 63 to vectorB
+Adding 126 to vectorStarB
+Adding 126 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 8
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 8.00 to vectorFloat
+Adding 8 to vectorB
+Adding 16 to vectorStarB
+Adding 16 to vectorBStar
+Adding 16.00 to vectorFloat
+Adding 16 to vectorB
+Adding 32 to vectorStarB
+Adding 32 to vectorBStar
+Adding 24.00 to vectorFloat
+Adding 24 to vectorB
+Adding 48 to vectorStarB
+Adding 48 to vectorBStar
+Adding 32.00 to vectorFloat
+Adding 32 to vectorB
+Adding 64 to vectorStarB
+Adding 64 to vectorBStar
+Adding 40.00 to vectorFloat
+Adding 40 to vectorB
+Adding 80 to vectorStarB
+Adding 80 to vectorBStar
+Adding 48.00 to vectorFloat
+Adding 48 to vectorB
+Adding 96 to vectorStarB
+Adding 96 to vectorBStar
+Adding 56.00 to vectorFloat
+Adding 56 to vectorB
+Adding 112 to vectorStarB
+Adding 112 to vectorBStar
+Adding 64.00 to vectorFloat
+Adding 64 to vectorB
+Adding 128 to vectorStarB
+Adding 128 to vectorBStar
+Adding 72.00 to vectorFloat
+Adding 72 to vectorB
+Adding 144 to vectorStarB
+Adding 144 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 9
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 9.00 to vectorFloat
+Adding 9 to vectorB
+Adding 18 to vectorStarB
+Adding 18 to vectorBStar
+Adding 18.00 to vectorFloat
+Adding 18 to vectorB
+Adding 36 to vectorStarB
+Adding 36 to vectorBStar
+Adding 27.00 to vectorFloat
+Adding 27 to vectorB
+Adding 54 to vectorStarB
+Adding 54 to vectorBStar
+Adding 36.00 to vectorFloat
+Adding 36 to vectorB
+Adding 72 to vectorStarB
+Adding 72 to vectorBStar
+Adding 45.00 to vectorFloat
+Adding 45 to vectorB
+Adding 90 to vectorStarB
+Adding 90 to vectorBStar
+Adding 54.00 to vectorFloat
+Adding 54 to vectorB
+Adding 108 to vectorStarB
+Adding 108 to vectorBStar
+Adding 63.00 to vectorFloat
+Adding 63 to vectorB
+Adding 126 to vectorStarB
+Adding 126 to vectorBStar
+Adding 72.00 to vectorFloat
+Adding 72 to vectorB
+Adding 144 to vectorStarB
+Adding 144 to vectorBStar
+Adding 81.00 to vectorFloat
+Adding 81 to vectorB
+Adding 162 to vectorStarB
+Adding 162 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 10
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 10.00 to vectorFloat
+Adding 10 to vectorB
+Adding 20 to vectorStarB
+Adding 20 to vectorBStar
+Adding 20.00 to vectorFloat
+Adding 20 to vectorB
+Adding 40 to vectorStarB
+Adding 40 to vectorBStar
+Adding 30.00 to vectorFloat
+Adding 30 to vectorB
+Adding 60 to vectorStarB
+Adding 60 to vectorBStar
+Adding 40.00 to vectorFloat
+Adding 40 to vectorB
+Adding 80 to vectorStarB
+Adding 80 to vectorBStar
+Adding 50.00 to vectorFloat
+Adding 50 to vectorB
+Adding 100 to vectorStarB
+Adding 100 to vectorBStar
+Adding 60.00 to vectorFloat
+Adding 60 to vectorB
+Adding 120 to vectorStarB
+Adding 120 to vectorBStar
+Adding 70.00 to vectorFloat
+Adding 70 to vectorB
+Adding 140 to vectorStarB
+Adding 140 to vectorBStar
+Adding 80.00 to vectorFloat
+Adding 80 to vectorB
+Adding 160 to vectorStarB
+Adding 160 to vectorBStar
+Adding 90.00 to vectorFloat
+Adding 90 to vectorB
+Adding 180 to vectorStarB
+Adding 180 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+Tree created
+A0: readNum(): ----------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A0: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A0: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A0: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+A0: readVectorFloatValue(): ---------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+Success!
+A0: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+A0: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A0: readVectorStarBArray(): ---------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorFloatArray(): ---------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorFloat. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBArray(): -------------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
+Failure
+A0: readBArray(): -------------------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
+Failure
+A0: readBStarArray(): ---------------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+A0: readVectorBStarArray(): ---------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A0: readBClonesArrayArray(): --------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBDummyArray(): --------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayDummyArray(): ---------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
+Failure
+A1: readNum(): ------------------------------ 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A1: readBObject(): -------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A1: readBStar(): ---------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+A1: readVectorFloatValue(): ----------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+Success!
+A1: readVectorBValue(): --------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+A1: readVectorStarBValue(): ----------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A1: readVectorStarBArray(): ----------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A1: readVectorFloatArray(): ----------------- 
+vectorFloat values(10): 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values(10): 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values(10): 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values(10): 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values(10): 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values(10): 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values(10): 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values(10): 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values(10): 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values(10): 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+Success!
+A1: readVectorBArray(): --------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+A1: readBArray(): --------------------------- 
+BArray dummies(12): 0 4 8 12 16 20 24 28 32 36
+BArray dummies(12): 0 8 16 24 32 40 48 56 64 72
+BArray dummies(12): 0 12 24 36 48 60 72 84 96 108
+BArray dummies(12): 0 16 32 48 64 80 96 112 128 144
+BArray dummies(12): 0 20 40 60 80 100 120 140 160 180
+BArray dummies(12): 0 24 48 72 96 120 144 168 192 216
+BArray dummies(12): 0 28 56 84 112 140 168 196 224 252
+BArray dummies(12): 0 32 64 96 128 160 192 224 256 288
+BArray dummies(12): 0 36 72 108 144 180 216 252 288 324
+BArray dummies(12): 0 40 80 120 160 200 240 280 320 360
+Success!
+A1: readBStarArray(): ----------------------- 
+BStarArray dummies(14): 0 5 10 15 20 25 30 35 40 45 50 55 60 65
+BStarArray dummies(14): 0 10 20 30 40 50 60 70 80 90 100 110 120 130
+BStarArray dummies(14): 0 15 30 45 60 75 90 105 120 135 150 165 180 195
+BStarArray dummies(14): 0 20 40 60 80 100 120 140 160 180 200 220 240 260
+BStarArray dummies(14): 0 25 50 75 100 125 150 175 200 225 250 275 300 325
+BStarArray dummies(14): 0 30 60 90 120 150 180 210 240 270 300 330 360 390
+BStarArray dummies(14): 0 35 70 105 140 175 210 245 280 315 350 385 420 455
+BStarArray dummies(14): 0 40 80 120 160 200 240 280 320 360 400 440 480 520
+BStarArray dummies(14): 0 45 90 135 180 225 270 315 360 405 450 495 540 585
+BStarArray dummies(14): 0 50 100 150 200 250 300 350 400 450 500 550 600 650
+Success!
+A1: readVectorBStarValue(): ----------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+A1: readVectorBStarArray(): ----------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+A1: readBClonesArrayValue(): ---------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A1: readBClonesArrayArray(): ---------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A99: readNum(): ----------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A99: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A99: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A99: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+A99: readVectorFloatValue(): ---------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+Success!
+A99: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+A99: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A99: readVectorStarBArray(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A99: readVectorFloatArray(): ---------------- 
+vectorFloat values(10): 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values(10): 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values(10): 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values(10): 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values(10): 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values(10): 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values(10): 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values(10): 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values(10): 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values(10): 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+Success!
+A99: readVectorBArray(): -------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+A99: readBArray(): -------------------------- 
+BArray dummies(12): 0 4 8 12 16 20 24 28 32 36
+BArray dummies(12): 0 8 16 24 32 40 48 56 64 72
+BArray dummies(12): 0 12 24 36 48 60 72 84 96 108
+BArray dummies(12): 0 16 32 48 64 80 96 112 128 144
+BArray dummies(12): 0 20 40 60 80 100 120 140 160 180
+BArray dummies(12): 0 24 48 72 96 120 144 168 192 216
+BArray dummies(12): 0 28 56 84 112 140 168 196 224 252
+BArray dummies(12): 0 32 64 96 128 160 192 224 256 288
+BArray dummies(12): 0 36 72 108 144 180 216 252 288 324
+BArray dummies(12): 0 40 80 120 160 200 240 280 320 360
+Success!
+A99: readBStarArray(): ---------------------- 
+BStarArray dummies(14): 0 5 10 15 20 25 30 35 40 45 50 55 60 65
+BStarArray dummies(14): 0 10 20 30 40 50 60 70 80 90 100 110 120 130
+BStarArray dummies(14): 0 15 30 45 60 75 90 105 120 135 150 165 180 195
+BStarArray dummies(14): 0 20 40 60 80 100 120 140 160 180 200 220 240 260
+BStarArray dummies(14): 0 25 50 75 100 125 150 175 200 225 250 275 300 325
+BStarArray dummies(14): 0 30 60 90 120 150 180 210 240 270 300 330 360 390
+BStarArray dummies(14): 0 35 70 105 140 175 210 245 280 315 350 385 420 455
+BStarArray dummies(14): 0 40 80 120 160 200 240 280 320 360 400 440 480 520
+BStarArray dummies(14): 0 45 90 135 180 225 270 315 360 405 450 495 540 585
+BStarArray dummies(14): 0 50 100 150 200 250 300 350 400 450 500 550 600 650
+Success!
+A99: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+A99: readVectorBStarArray(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+A99: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A99: readBClonesArrayArray(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A99: readVectorBDummyArray(): --------------- 
+vectorB.dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB.dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB.dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB.dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB.dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB.dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB.dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB.dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB.dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB.dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+A99: readBClonesArrayDummyArray(): ---------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A101: readNum(): ---------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A101: readBObject(): ------------------------ 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A101: readBStar(): -------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+A101: readVectorBValue(): ------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+A101: readVectorStarBValue(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A101: readVectorStarBArray(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A101: readVectorBArray(): ------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+A101: readBArray(): ------------------------- 
+BArray dummies(12): 0 4 8 12 16 20 24 28 32 36
+BArray dummies(12): 0 8 16 24 32 40 48 56 64 72
+BArray dummies(12): 0 12 24 36 48 60 72 84 96 108
+BArray dummies(12): 0 16 32 48 64 80 96 112 128 144
+BArray dummies(12): 0 20 40 60 80 100 120 140 160 180
+BArray dummies(12): 0 24 48 72 96 120 144 168 192 216
+BArray dummies(12): 0 28 56 84 112 140 168 196 224 252
+BArray dummies(12): 0 32 64 96 128 160 192 224 256 288
+BArray dummies(12): 0 36 72 108 144 180 216 252 288 324
+BArray dummies(12): 0 40 80 120 160 200 240 280 320 360
+Success!
+A101: readBStarArray(): --------------------- 
+BStarArray dummies(14): 0 5 10 15 20 25 30 35 40 45 50 55 60 65
+BStarArray dummies(14): 0 10 20 30 40 50 60 70 80 90 100 110 120 130
+BStarArray dummies(14): 0 15 30 45 60 75 90 105 120 135 150 165 180 195
+BStarArray dummies(14): 0 20 40 60 80 100 120 140 160 180 200 220 240 260
+BStarArray dummies(14): 0 25 50 75 100 125 150 175 200 225 250 275 300 325
+BStarArray dummies(14): 0 30 60 90 120 150 180 210 240 270 300 330 360 390
+BStarArray dummies(14): 0 35 70 105 140 175 210 245 280 315 350 385 420 455
+BStarArray dummies(14): 0 40 80 120 160 200 240 280 320 360 400 440 480 520
+BStarArray dummies(14): 0 45 90 135 180 225 270 315 360 405 450 495 540 585
+BStarArray dummies(14): 0 50 100 150 200 250 300 350 400 450 500 550 600 650
+Success!
+A101: readBClonesArrayValue(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A101: readBClonesArrayArray(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S0_: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+S0_: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+S0_: readVectorFloatValue(): ---------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+Success!
+S0_: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+S0_: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S0_: readVectorStarBArray(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S0_: readVectorFloatArray(): ---------------- 
+vectorFloat values(10): 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values(10): 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values(10): 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values(10): 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values(10): 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values(10): 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values(10): 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values(10): 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values(10): 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values(10): 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+Success!
+S0_: readVectorBArray(): -------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+S0_: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+S0_: readVectorBStarArray(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+S1_: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+S1_: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+S1_: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+S1_: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+S1_: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S1_: readVectorStarBArray(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S1_: readVectorBArray(): -------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+S1_: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+S1_: readVectorBStarArray(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+S1_: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S1_: readBClonesArrayArray(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S1_: readVectorBDummyArray(): --------------- 
+vectorB.dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB.dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB.dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB.dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB.dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB.dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB.dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB.dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB.dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB.dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+S1_: readBClonesArrayDummyArray(): ---------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S99_: readBObject(): ------------------------ 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+S99_: readBObjectDummy(): ------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+S99_: readBStar(): -------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+S99_: readVectorBValue(): ------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+S99_: readVectorStarBValue(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S99_: readVectorStarBArray(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S99_: readVectorBArray(): ------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+S99_: readVectorBStarValue(): --------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+S99_: readVectorBStarArray(): --------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+S99_: readBClonesArrayValue(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S99_: readBClonesArrayArray(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S99_: readVectorBDummyArray(): -------------- 
+vectorB.dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB.dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB.dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB.dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB.dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB.dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB.dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB.dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB.dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB.dummies(10): 0 10 20 30 40 50 60 70 80 90
+Success!
+S99_: readBClonesArrayDummyArray(): --------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S101_: readBObject(): ----------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+S101_: readBObjectDummy(): ------------------ 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+S101_: readBStar(): ------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+S101_: readBClonesArrayValue(): ------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S101_: readBClonesArrayArray(): ------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S101_: readBClonesArrayDummyArray(): -------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+readLeafFloatX(): --------------------------- 
+MyLeafList.x: 1.000000
+MyLeafList.x: 2.000000
+MyLeafList.x: 3.000000
+MyLeafList.x: 4.000000
+MyLeafList.x: 5.000000
+MyLeafList.x: 6.000000
+MyLeafList.x: 7.000000
+MyLeafList.x: 8.000000
+MyLeafList.x: 9.000000
+MyLeafList.x: 10.000000
+Success!
+readLeafFloatY(): --------------------------- 
+MyLeafList.y: 0.100000
+MyLeafList.y: 0.200000
+MyLeafList.y: 0.300000
+MyLeafList.y: 0.400000
+MyLeafList.y: 0.500000
+MyLeafList.y: 0.600000
+MyLeafList.y: 0.700000
+MyLeafList.y: 0.800000
+MyLeafList.y: 0.900000
+MyLeafList.y: 1.000000
+Success!
+readLeafIntN(): ----------------------------- 
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+Success!
+readLeafDoubleAArray(): --------------------- 
+MyLeafList.a(8): 0.000000 0.100000 0.200000 0.300000 0.400000 0.500000 0.600000 0.700000
+MyLeafList.a(8): 0.000000 0.200000 0.400000 0.600000 0.800000 1.000000 1.200000 1.400000
+MyLeafList.a(8): 0.000000 0.300000 0.600000 0.900000 1.200000 1.500000 1.800000 2.100000
+MyLeafList.a(8): 0.000000 0.400000 0.800000 1.200000 1.600000 2.000000 2.400000 2.800000
+MyLeafList.a(8): 0.000000 0.500000 1.000000 1.500000 2.000000 2.500000 3.000000 3.500000
+MyLeafList.a(8): 0.000000 0.600000 1.200000 1.800000 2.400000 3.000000 3.600000 4.200000
+MyLeafList.a(8): 0.000000 0.700000 1.400000 2.100000 2.800000 3.500000 4.200000 4.900000
+MyLeafList.a(8): 0.000000 0.800000 1.600000 2.400000 3.200000 4.000000 4.800000 5.600000
+MyLeafList.a(8): 0.000000 0.900000 1.800000 2.700000 3.600000 4.500000 5.400000 6.300000
+MyLeafList.a(8): 0.000000 1.000000 2.000000 3.000000 4.000000 5.000000 6.000000 7.000000
+Success!
+readLeafBoolBArray(): ----------------------- 
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+Success!
+
+Entry 11
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 11.00 to vectorFloat
+Adding 11 to vectorB
+Adding 22 to vectorStarB
+Adding 22 to vectorBStar
+Adding 22.00 to vectorFloat
+Adding 22 to vectorB
+Adding 44 to vectorStarB
+Adding 44 to vectorBStar
+Adding 33.00 to vectorFloat
+Adding 33 to vectorB
+Adding 66 to vectorStarB
+Adding 66 to vectorBStar
+Adding 44.00 to vectorFloat
+Adding 44 to vectorB
+Adding 88 to vectorStarB
+Adding 88 to vectorBStar
+Adding 55.00 to vectorFloat
+Adding 55 to vectorB
+Adding 110 to vectorStarB
+Adding 110 to vectorBStar
+Adding 66.00 to vectorFloat
+Adding 66 to vectorB
+Adding 132 to vectorStarB
+Adding 132 to vectorBStar
+Adding 77.00 to vectorFloat
+Adding 77 to vectorB
+Adding 154 to vectorStarB
+Adding 154 to vectorBStar
+Adding 88.00 to vectorFloat
+Adding 88 to vectorB
+Adding 176 to vectorStarB
+Adding 176 to vectorBStar
+Adding 99.00 to vectorFloat
+Adding 99 to vectorB
+Adding 198 to vectorStarB
+Adding 198 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 12
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 12.00 to vectorFloat
+Adding 12 to vectorB
+Adding 24 to vectorStarB
+Adding 24 to vectorBStar
+Adding 24.00 to vectorFloat
+Adding 24 to vectorB
+Adding 48 to vectorStarB
+Adding 48 to vectorBStar
+Adding 36.00 to vectorFloat
+Adding 36 to vectorB
+Adding 72 to vectorStarB
+Adding 72 to vectorBStar
+Adding 48.00 to vectorFloat
+Adding 48 to vectorB
+Adding 96 to vectorStarB
+Adding 96 to vectorBStar
+Adding 60.00 to vectorFloat
+Adding 60 to vectorB
+Adding 120 to vectorStarB
+Adding 120 to vectorBStar
+Adding 72.00 to vectorFloat
+Adding 72 to vectorB
+Adding 144 to vectorStarB
+Adding 144 to vectorBStar
+Adding 84.00 to vectorFloat
+Adding 84 to vectorB
+Adding 168 to vectorStarB
+Adding 168 to vectorBStar
+Adding 96.00 to vectorFloat
+Adding 96 to vectorB
+Adding 192 to vectorStarB
+Adding 192 to vectorBStar
+Adding 108.00 to vectorFloat
+Adding 108 to vectorB
+Adding 216 to vectorStarB
+Adding 216 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 13
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 13.00 to vectorFloat
+Adding 13 to vectorB
+Adding 26 to vectorStarB
+Adding 26 to vectorBStar
+Adding 26.00 to vectorFloat
+Adding 26 to vectorB
+Adding 52 to vectorStarB
+Adding 52 to vectorBStar
+Adding 39.00 to vectorFloat
+Adding 39 to vectorB
+Adding 78 to vectorStarB
+Adding 78 to vectorBStar
+Adding 52.00 to vectorFloat
+Adding 52 to vectorB
+Adding 104 to vectorStarB
+Adding 104 to vectorBStar
+Adding 65.00 to vectorFloat
+Adding 65 to vectorB
+Adding 130 to vectorStarB
+Adding 130 to vectorBStar
+Adding 78.00 to vectorFloat
+Adding 78 to vectorB
+Adding 156 to vectorStarB
+Adding 156 to vectorBStar
+Adding 91.00 to vectorFloat
+Adding 91 to vectorB
+Adding 182 to vectorStarB
+Adding 182 to vectorBStar
+Adding 104.00 to vectorFloat
+Adding 104 to vectorB
+Adding 208 to vectorStarB
+Adding 208 to vectorBStar
+Adding 117.00 to vectorFloat
+Adding 117 to vectorB
+Adding 234 to vectorStarB
+Adding 234 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 14
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 14.00 to vectorFloat
+Adding 14 to vectorB
+Adding 28 to vectorStarB
+Adding 28 to vectorBStar
+Adding 28.00 to vectorFloat
+Adding 28 to vectorB
+Adding 56 to vectorStarB
+Adding 56 to vectorBStar
+Adding 42.00 to vectorFloat
+Adding 42 to vectorB
+Adding 84 to vectorStarB
+Adding 84 to vectorBStar
+Adding 56.00 to vectorFloat
+Adding 56 to vectorB
+Adding 112 to vectorStarB
+Adding 112 to vectorBStar
+Adding 70.00 to vectorFloat
+Adding 70 to vectorB
+Adding 140 to vectorStarB
+Adding 140 to vectorBStar
+Adding 84.00 to vectorFloat
+Adding 84 to vectorB
+Adding 168 to vectorStarB
+Adding 168 to vectorBStar
+Adding 98.00 to vectorFloat
+Adding 98 to vectorB
+Adding 196 to vectorStarB
+Adding 196 to vectorBStar
+Adding 112.00 to vectorFloat
+Adding 112 to vectorB
+Adding 224 to vectorStarB
+Adding 224 to vectorBStar
+Adding 126.00 to vectorFloat
+Adding 126 to vectorB
+Adding 252 to vectorStarB
+Adding 252 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 15
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 15.00 to vectorFloat
+Adding 15 to vectorB
+Adding 30 to vectorStarB
+Adding 30 to vectorBStar
+Adding 30.00 to vectorFloat
+Adding 30 to vectorB
+Adding 60 to vectorStarB
+Adding 60 to vectorBStar
+Adding 45.00 to vectorFloat
+Adding 45 to vectorB
+Adding 90 to vectorStarB
+Adding 90 to vectorBStar
+Adding 60.00 to vectorFloat
+Adding 60 to vectorB
+Adding 120 to vectorStarB
+Adding 120 to vectorBStar
+Adding 75.00 to vectorFloat
+Adding 75 to vectorB
+Adding 150 to vectorStarB
+Adding 150 to vectorBStar
+Adding 90.00 to vectorFloat
+Adding 90 to vectorB
+Adding 180 to vectorStarB
+Adding 180 to vectorBStar
+Adding 105.00 to vectorFloat
+Adding 105 to vectorB
+Adding 210 to vectorStarB
+Adding 210 to vectorBStar
+Adding 120.00 to vectorFloat
+Adding 120 to vectorB
+Adding 240 to vectorStarB
+Adding 240 to vectorBStar
+Adding 135.00 to vectorFloat
+Adding 135 to vectorB
+Adding 270 to vectorStarB
+Adding 270 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 16
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 16.00 to vectorFloat
+Adding 16 to vectorB
+Adding 32 to vectorStarB
+Adding 32 to vectorBStar
+Adding 32.00 to vectorFloat
+Adding 32 to vectorB
+Adding 64 to vectorStarB
+Adding 64 to vectorBStar
+Adding 48.00 to vectorFloat
+Adding 48 to vectorB
+Adding 96 to vectorStarB
+Adding 96 to vectorBStar
+Adding 64.00 to vectorFloat
+Adding 64 to vectorB
+Adding 128 to vectorStarB
+Adding 128 to vectorBStar
+Adding 80.00 to vectorFloat
+Adding 80 to vectorB
+Adding 160 to vectorStarB
+Adding 160 to vectorBStar
+Adding 96.00 to vectorFloat
+Adding 96 to vectorB
+Adding 192 to vectorStarB
+Adding 192 to vectorBStar
+Adding 112.00 to vectorFloat
+Adding 112 to vectorB
+Adding 224 to vectorStarB
+Adding 224 to vectorBStar
+Adding 128.00 to vectorFloat
+Adding 128 to vectorB
+Adding 256 to vectorStarB
+Adding 256 to vectorBStar
+Adding 144.00 to vectorFloat
+Adding 144 to vectorB
+Adding 288 to vectorStarB
+Adding 288 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 17
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 17.00 to vectorFloat
+Adding 17 to vectorB
+Adding 34 to vectorStarB
+Adding 34 to vectorBStar
+Adding 34.00 to vectorFloat
+Adding 34 to vectorB
+Adding 68 to vectorStarB
+Adding 68 to vectorBStar
+Adding 51.00 to vectorFloat
+Adding 51 to vectorB
+Adding 102 to vectorStarB
+Adding 102 to vectorBStar
+Adding 68.00 to vectorFloat
+Adding 68 to vectorB
+Adding 136 to vectorStarB
+Adding 136 to vectorBStar
+Adding 85.00 to vectorFloat
+Adding 85 to vectorB
+Adding 170 to vectorStarB
+Adding 170 to vectorBStar
+Adding 102.00 to vectorFloat
+Adding 102 to vectorB
+Adding 204 to vectorStarB
+Adding 204 to vectorBStar
+Adding 119.00 to vectorFloat
+Adding 119 to vectorB
+Adding 238 to vectorStarB
+Adding 238 to vectorBStar
+Adding 136.00 to vectorFloat
+Adding 136 to vectorB
+Adding 272 to vectorStarB
+Adding 272 to vectorBStar
+Adding 153.00 to vectorFloat
+Adding 153 to vectorB
+Adding 306 to vectorStarB
+Adding 306 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 18
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 18.00 to vectorFloat
+Adding 18 to vectorB
+Adding 36 to vectorStarB
+Adding 36 to vectorBStar
+Adding 36.00 to vectorFloat
+Adding 36 to vectorB
+Adding 72 to vectorStarB
+Adding 72 to vectorBStar
+Adding 54.00 to vectorFloat
+Adding 54 to vectorB
+Adding 108 to vectorStarB
+Adding 108 to vectorBStar
+Adding 72.00 to vectorFloat
+Adding 72 to vectorB
+Adding 144 to vectorStarB
+Adding 144 to vectorBStar
+Adding 90.00 to vectorFloat
+Adding 90 to vectorB
+Adding 180 to vectorStarB
+Adding 180 to vectorBStar
+Adding 108.00 to vectorFloat
+Adding 108 to vectorB
+Adding 216 to vectorStarB
+Adding 216 to vectorBStar
+Adding 126.00 to vectorFloat
+Adding 126 to vectorB
+Adding 252 to vectorStarB
+Adding 252 to vectorBStar
+Adding 144.00 to vectorFloat
+Adding 144 to vectorB
+Adding 288 to vectorStarB
+Adding 288 to vectorBStar
+Adding 162.00 to vectorFloat
+Adding 162 to vectorB
+Adding 324 to vectorStarB
+Adding 324 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 19
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 19.00 to vectorFloat
+Adding 19 to vectorB
+Adding 38 to vectorStarB
+Adding 38 to vectorBStar
+Adding 38.00 to vectorFloat
+Adding 38 to vectorB
+Adding 76 to vectorStarB
+Adding 76 to vectorBStar
+Adding 57.00 to vectorFloat
+Adding 57 to vectorB
+Adding 114 to vectorStarB
+Adding 114 to vectorBStar
+Adding 76.00 to vectorFloat
+Adding 76 to vectorB
+Adding 152 to vectorStarB
+Adding 152 to vectorBStar
+Adding 95.00 to vectorFloat
+Adding 95 to vectorB
+Adding 190 to vectorStarB
+Adding 190 to vectorBStar
+Adding 114.00 to vectorFloat
+Adding 114 to vectorB
+Adding 228 to vectorStarB
+Adding 228 to vectorBStar
+Adding 133.00 to vectorFloat
+Adding 133 to vectorB
+Adding 266 to vectorStarB
+Adding 266 to vectorBStar
+Adding 152.00 to vectorFloat
+Adding 152 to vectorB
+Adding 304 to vectorStarB
+Adding 304 to vectorBStar
+Adding 171.00 to vectorFloat
+Adding 171 to vectorB
+Adding 342 to vectorStarB
+Adding 342 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+
+Entry 20
+
+Setting BObject
+Adding 0.00 to vectorFloat
+Adding 0 to vectorB
+Adding 0 to vectorStarB
+Adding 0 to vectorBStar
+Adding 20.00 to vectorFloat
+Adding 20 to vectorB
+Adding 40 to vectorStarB
+Adding 40 to vectorBStar
+Adding 40.00 to vectorFloat
+Adding 40 to vectorB
+Adding 80 to vectorStarB
+Adding 80 to vectorBStar
+Adding 60.00 to vectorFloat
+Adding 60 to vectorB
+Adding 120 to vectorStarB
+Adding 120 to vectorBStar
+Adding 80.00 to vectorFloat
+Adding 80 to vectorB
+Adding 160 to vectorStarB
+Adding 160 to vectorBStar
+Adding 100.00 to vectorFloat
+Adding 100 to vectorB
+Adding 200 to vectorStarB
+Adding 200 to vectorBStar
+Adding 120.00 to vectorFloat
+Adding 120 to vectorB
+Adding 240 to vectorStarB
+Adding 240 to vectorBStar
+Adding 140.00 to vectorFloat
+Adding 140 to vectorB
+Adding 280 to vectorStarB
+Adding 280 to vectorBStar
+Adding 160.00 to vectorFloat
+Adding 160 to vectorB
+Adding 320 to vectorStarB
+Adding 320 to vectorBStar
+Adding 180.00 to vectorFloat
+Adding 180 to vectorB
+Adding 360 to vectorStarB
+Adding 360 to vectorBStar
+Setting BStar
+Filling BArray
+Filling BStarArray
+Filling BClonesArray
+Filling leaflist
+Filling tree
+Entry created
+Tree created
+A0: readNum(): ----------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A0: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A0: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A0: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+A0: readVectorFloatValue(): ---------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+vectorFloat values: 0.00 11.00 22.00 33.00 44.00 55.00 66.00 77.00 88.00 99.00
+vectorFloat values: 0.00 12.00 24.00 36.00 48.00 60.00 72.00 84.00 96.00 108.00
+vectorFloat values: 0.00 13.00 26.00 39.00 52.00 65.00 78.00 91.00 104.00 117.00
+vectorFloat values: 0.00 14.00 28.00 42.00 56.00 70.00 84.00 98.00 112.00 126.00
+vectorFloat values: 0.00 15.00 30.00 45.00 60.00 75.00 90.00 105.00 120.00 135.00
+vectorFloat values: 0.00 16.00 32.00 48.00 64.00 80.00 96.00 112.00 128.00 144.00
+vectorFloat values: 0.00 17.00 34.00 51.00 68.00 85.00 102.00 119.00 136.00 153.00
+vectorFloat values: 0.00 18.00 36.00 54.00 72.00 90.00 108.00 126.00 144.00 162.00
+vectorFloat values: 0.00 19.00 38.00 57.00 76.00 95.00 114.00 133.00 152.00 171.00
+vectorFloat values: 0.00 20.00 40.00 60.00 80.00 100.00 120.00 140.00 160.00 180.00
+Success!
+A0: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+A0: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A0: readVectorStarBArray(): ---------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorFloatArray(): ---------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorFloat. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBArray(): -------------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
+Failure
+A0: readBArray(): -------------------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
+Failure
+A0: readBStarArray(): ---------------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A0: readVectorBStarArray(): ---------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A0: readBClonesArrayArray(): --------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBDummyArray(): --------------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayDummyArray(): ---------- 
+Error in <TTreeReaderArrayBase::GetBranchAndLeaf()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
+Failure
+A1: readNum(): ------------------------------ 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A1: readBObject(): -------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A1: readBStar(): ---------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+A1: readVectorFloatValue(): ----------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+vectorFloat values: 0.00 11.00 22.00 33.00 44.00 55.00 66.00 77.00 88.00 99.00
+vectorFloat values: 0.00 12.00 24.00 36.00 48.00 60.00 72.00 84.00 96.00 108.00
+vectorFloat values: 0.00 13.00 26.00 39.00 52.00 65.00 78.00 91.00 104.00 117.00
+vectorFloat values: 0.00 14.00 28.00 42.00 56.00 70.00 84.00 98.00 112.00 126.00
+vectorFloat values: 0.00 15.00 30.00 45.00 60.00 75.00 90.00 105.00 120.00 135.00
+vectorFloat values: 0.00 16.00 32.00 48.00 64.00 80.00 96.00 112.00 128.00 144.00
+vectorFloat values: 0.00 17.00 34.00 51.00 68.00 85.00 102.00 119.00 136.00 153.00
+vectorFloat values: 0.00 18.00 36.00 54.00 72.00 90.00 108.00 126.00 144.00 162.00
+vectorFloat values: 0.00 19.00 38.00 57.00 76.00 95.00 114.00 133.00 152.00 171.00
+vectorFloat values: 0.00 20.00 40.00 60.00 80.00 100.00 120.00 140.00 160.00 180.00
+Success!
+A1: readVectorBValue(): --------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+A1: readVectorStarBValue(): ----------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A1: readVectorStarBArray(): ----------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A1: readVectorFloatArray(): ----------------- 
+vectorFloat values(10): 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values(10): 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values(10): 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values(10): 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values(10): 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values(10): 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values(10): 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values(10): 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values(10): 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values(10): 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+vectorFloat values(10): 0.00 11.00 22.00 33.00 44.00 55.00 66.00 77.00 88.00 99.00
+vectorFloat values(10): 0.00 12.00 24.00 36.00 48.00 60.00 72.00 84.00 96.00 108.00
+vectorFloat values(10): 0.00 13.00 26.00 39.00 52.00 65.00 78.00 91.00 104.00 117.00
+vectorFloat values(10): 0.00 14.00 28.00 42.00 56.00 70.00 84.00 98.00 112.00 126.00
+vectorFloat values(10): 0.00 15.00 30.00 45.00 60.00 75.00 90.00 105.00 120.00 135.00
+vectorFloat values(10): 0.00 16.00 32.00 48.00 64.00 80.00 96.00 112.00 128.00 144.00
+vectorFloat values(10): 0.00 17.00 34.00 51.00 68.00 85.00 102.00 119.00 136.00 153.00
+vectorFloat values(10): 0.00 18.00 36.00 54.00 72.00 90.00 108.00 126.00 144.00 162.00
+vectorFloat values(10): 0.00 19.00 38.00 57.00 76.00 95.00 114.00 133.00 152.00 171.00
+vectorFloat values(10): 0.00 20.00 40.00 60.00 80.00 100.00 120.00 140.00 160.00 180.00
+Success!
+A1: readVectorBArray(): --------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A1: readBArray(): --------------------------- 
+BArray dummies(12): 0 4 8 12 16 20 24 28 32 36
+BArray dummies(12): 0 8 16 24 32 40 48 56 64 72
+BArray dummies(12): 0 12 24 36 48 60 72 84 96 108
+BArray dummies(12): 0 16 32 48 64 80 96 112 128 144
+BArray dummies(12): 0 20 40 60 80 100 120 140 160 180
+BArray dummies(12): 0 24 48 72 96 120 144 168 192 216
+BArray dummies(12): 0 28 56 84 112 140 168 196 224 252
+BArray dummies(12): 0 32 64 96 128 160 192 224 256 288
+BArray dummies(12): 0 36 72 108 144 180 216 252 288 324
+BArray dummies(12): 0 40 80 120 160 200 240 280 320 360
+BArray dummies(12): 0 44 88 132 176 220 264 308 352 396
+BArray dummies(12): 0 48 96 144 192 240 288 336 384 432
+BArray dummies(12): 0 52 104 156 208 260 312 364 416 468
+BArray dummies(12): 0 56 112 168 224 280 336 392 448 504
+BArray dummies(12): 0 60 120 180 240 300 360 420 480 540
+BArray dummies(12): 0 64 128 192 256 320 384 448 512 576
+BArray dummies(12): 0 68 136 204 272 340 408 476 544 612
+BArray dummies(12): 0 72 144 216 288 360 432 504 576 648
+BArray dummies(12): 0 76 152 228 304 380 456 532 608 684
+BArray dummies(12): 0 80 160 240 320 400 480 560 640 720
+Success!
+A1: readBStarArray(): ----------------------- 
+BStarArray dummies(14): 0 5 10 15 20 25 30 35 40 45 50 55 60 65
+BStarArray dummies(14): 0 10 20 30 40 50 60 70 80 90 100 110 120 130
+BStarArray dummies(14): 0 15 30 45 60 75 90 105 120 135 150 165 180 195
+BStarArray dummies(14): 0 20 40 60 80 100 120 140 160 180 200 220 240 260
+BStarArray dummies(14): 0 25 50 75 100 125 150 175 200 225 250 275 300 325
+BStarArray dummies(14): 0 30 60 90 120 150 180 210 240 270 300 330 360 390
+BStarArray dummies(14): 0 35 70 105 140 175 210 245 280 315 350 385 420 455
+BStarArray dummies(14): 0 40 80 120 160 200 240 280 320 360 400 440 480 520
+BStarArray dummies(14): 0 45 90 135 180 225 270 315 360 405 450 495 540 585
+BStarArray dummies(14): 0 50 100 150 200 250 300 350 400 450 500 550 600 650
+BStarArray dummies(14): 0 55 110 165 220 275 330 385 440 495 550 605 660 715
+BStarArray dummies(14): 0 60 120 180 240 300 360 420 480 540 600 660 720 780
+BStarArray dummies(14): 0 65 130 195 260 325 390 455 520 585 650 715 780 845
+BStarArray dummies(14): 0 70 140 210 280 350 420 490 560 630 700 770 840 910
+BStarArray dummies(14): 0 75 150 225 300 375 450 525 600 675 750 825 900 975
+BStarArray dummies(14): 0 80 160 240 320 400 480 560 640 720 800 880 960 1040
+BStarArray dummies(14): 0 85 170 255 340 425 510 595 680 765 850 935 1020 1105
+BStarArray dummies(14): 0 90 180 270 360 450 540 630 720 810 900 990 1080 1170
+BStarArray dummies(14): 0 95 190 285 380 475 570 665 760 855 950 1045 1140 1235
+BStarArray dummies(14): 0 100 200 300 400 500 600 700 800 900 1000 1100 1200 1300
+Success!
+A1: readVectorBStarValue(): ----------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A1: readVectorBStarArray(): ----------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A1: readBClonesArrayValue(): ---------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A1: readBClonesArrayArray(): ---------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A99: readNum(): ----------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A99: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A99: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A99: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+A99: readVectorFloatValue(): ---------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+vectorFloat values: 0.00 11.00 22.00 33.00 44.00 55.00 66.00 77.00 88.00 99.00
+vectorFloat values: 0.00 12.00 24.00 36.00 48.00 60.00 72.00 84.00 96.00 108.00
+vectorFloat values: 0.00 13.00 26.00 39.00 52.00 65.00 78.00 91.00 104.00 117.00
+vectorFloat values: 0.00 14.00 28.00 42.00 56.00 70.00 84.00 98.00 112.00 126.00
+vectorFloat values: 0.00 15.00 30.00 45.00 60.00 75.00 90.00 105.00 120.00 135.00
+vectorFloat values: 0.00 16.00 32.00 48.00 64.00 80.00 96.00 112.00 128.00 144.00
+vectorFloat values: 0.00 17.00 34.00 51.00 68.00 85.00 102.00 119.00 136.00 153.00
+vectorFloat values: 0.00 18.00 36.00 54.00 72.00 90.00 108.00 126.00 144.00 162.00
+vectorFloat values: 0.00 19.00 38.00 57.00 76.00 95.00 114.00 133.00 152.00 171.00
+vectorFloat values: 0.00 20.00 40.00 60.00 80.00 100.00 120.00 140.00 160.00 180.00
+Success!
+A99: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+A99: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A99: readVectorStarBArray(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A99: readVectorFloatArray(): ---------------- 
+vectorFloat values(10): 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values(10): 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values(10): 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values(10): 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values(10): 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values(10): 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values(10): 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values(10): 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values(10): 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values(10): 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+vectorFloat values(10): 0.00 11.00 22.00 33.00 44.00 55.00 66.00 77.00 88.00 99.00
+vectorFloat values(10): 0.00 12.00 24.00 36.00 48.00 60.00 72.00 84.00 96.00 108.00
+vectorFloat values(10): 0.00 13.00 26.00 39.00 52.00 65.00 78.00 91.00 104.00 117.00
+vectorFloat values(10): 0.00 14.00 28.00 42.00 56.00 70.00 84.00 98.00 112.00 126.00
+vectorFloat values(10): 0.00 15.00 30.00 45.00 60.00 75.00 90.00 105.00 120.00 135.00
+vectorFloat values(10): 0.00 16.00 32.00 48.00 64.00 80.00 96.00 112.00 128.00 144.00
+vectorFloat values(10): 0.00 17.00 34.00 51.00 68.00 85.00 102.00 119.00 136.00 153.00
+vectorFloat values(10): 0.00 18.00 36.00 54.00 72.00 90.00 108.00 126.00 144.00 162.00
+vectorFloat values(10): 0.00 19.00 38.00 57.00 76.00 95.00 114.00 133.00 152.00 171.00
+vectorFloat values(10): 0.00 20.00 40.00 60.00 80.00 100.00 120.00 140.00 160.00 180.00
+Success!
+A99: readVectorBArray(): -------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A99: readBArray(): -------------------------- 
+BArray dummies(12): 0 4 8 12 16 20 24 28 32 36
+BArray dummies(12): 0 8 16 24 32 40 48 56 64 72
+BArray dummies(12): 0 12 24 36 48 60 72 84 96 108
+BArray dummies(12): 0 16 32 48 64 80 96 112 128 144
+BArray dummies(12): 0 20 40 60 80 100 120 140 160 180
+BArray dummies(12): 0 24 48 72 96 120 144 168 192 216
+BArray dummies(12): 0 28 56 84 112 140 168 196 224 252
+BArray dummies(12): 0 32 64 96 128 160 192 224 256 288
+BArray dummies(12): 0 36 72 108 144 180 216 252 288 324
+BArray dummies(12): 0 40 80 120 160 200 240 280 320 360
+BArray dummies(12): 0 44 88 132 176 220 264 308 352 396
+BArray dummies(12): 0 48 96 144 192 240 288 336 384 432
+BArray dummies(12): 0 52 104 156 208 260 312 364 416 468
+BArray dummies(12): 0 56 112 168 224 280 336 392 448 504
+BArray dummies(12): 0 60 120 180 240 300 360 420 480 540
+BArray dummies(12): 0 64 128 192 256 320 384 448 512 576
+BArray dummies(12): 0 68 136 204 272 340 408 476 544 612
+BArray dummies(12): 0 72 144 216 288 360 432 504 576 648
+BArray dummies(12): 0 76 152 228 304 380 456 532 608 684
+BArray dummies(12): 0 80 160 240 320 400 480 560 640 720
+Success!
+A99: readBStarArray(): ---------------------- 
+BStarArray dummies(14): 0 5 10 15 20 25 30 35 40 45 50 55 60 65
+BStarArray dummies(14): 0 10 20 30 40 50 60 70 80 90 100 110 120 130
+BStarArray dummies(14): 0 15 30 45 60 75 90 105 120 135 150 165 180 195
+BStarArray dummies(14): 0 20 40 60 80 100 120 140 160 180 200 220 240 260
+BStarArray dummies(14): 0 25 50 75 100 125 150 175 200 225 250 275 300 325
+BStarArray dummies(14): 0 30 60 90 120 150 180 210 240 270 300 330 360 390
+BStarArray dummies(14): 0 35 70 105 140 175 210 245 280 315 350 385 420 455
+BStarArray dummies(14): 0 40 80 120 160 200 240 280 320 360 400 440 480 520
+BStarArray dummies(14): 0 45 90 135 180 225 270 315 360 405 450 495 540 585
+BStarArray dummies(14): 0 50 100 150 200 250 300 350 400 450 500 550 600 650
+BStarArray dummies(14): 0 55 110 165 220 275 330 385 440 495 550 605 660 715
+BStarArray dummies(14): 0 60 120 180 240 300 360 420 480 540 600 660 720 780
+BStarArray dummies(14): 0 65 130 195 260 325 390 455 520 585 650 715 780 845
+BStarArray dummies(14): 0 70 140 210 280 350 420 490 560 630 700 770 840 910
+BStarArray dummies(14): 0 75 150 225 300 375 450 525 600 675 750 825 900 975
+BStarArray dummies(14): 0 80 160 240 320 400 480 560 640 720 800 880 960 1040
+BStarArray dummies(14): 0 85 170 255 340 425 510 595 680 765 850 935 1020 1105
+BStarArray dummies(14): 0 90 180 270 360 450 540 630 720 810 900 990 1080 1170
+BStarArray dummies(14): 0 95 190 285 380 475 570 665 760 855 950 1045 1140 1235
+BStarArray dummies(14): 0 100 200 300 400 500 600 700 800 900 1000 1100 1200 1300
+Success!
+A99: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A99: readVectorBStarArray(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A99: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A99: readBClonesArrayArray(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A99: readVectorBDummyArray(): --------------- 
+vectorB.dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB.dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB.dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB.dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB.dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB.dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB.dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB.dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB.dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB.dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB.dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB.dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB.dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB.dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB.dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB.dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB.dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB.dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB.dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB.dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A99: readBClonesArrayDummyArray(): ---------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray.dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray.dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray.dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray.dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray.dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray.dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray.dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray.dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray.dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray.dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A101: readNum(): ---------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A101: readBObject(): ------------------------ 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A101: readBStar(): -------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+A101: readVectorBValue(): ------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+A101: readVectorStarBValue(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A101: readVectorStarBArray(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A101: readVectorBArray(): ------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A101: readBArray(): ------------------------- 
+BArray dummies(12): 0 4 8 12 16 20 24 28 32 36
+BArray dummies(12): 0 8 16 24 32 40 48 56 64 72
+BArray dummies(12): 0 12 24 36 48 60 72 84 96 108
+BArray dummies(12): 0 16 32 48 64 80 96 112 128 144
+BArray dummies(12): 0 20 40 60 80 100 120 140 160 180
+BArray dummies(12): 0 24 48 72 96 120 144 168 192 216
+BArray dummies(12): 0 28 56 84 112 140 168 196 224 252
+BArray dummies(12): 0 32 64 96 128 160 192 224 256 288
+BArray dummies(12): 0 36 72 108 144 180 216 252 288 324
+BArray dummies(12): 0 40 80 120 160 200 240 280 320 360
+BArray dummies(12): 0 44 88 132 176 220 264 308 352 396
+BArray dummies(12): 0 48 96 144 192 240 288 336 384 432
+BArray dummies(12): 0 52 104 156 208 260 312 364 416 468
+BArray dummies(12): 0 56 112 168 224 280 336 392 448 504
+BArray dummies(12): 0 60 120 180 240 300 360 420 480 540
+BArray dummies(12): 0 64 128 192 256 320 384 448 512 576
+BArray dummies(12): 0 68 136 204 272 340 408 476 544 612
+BArray dummies(12): 0 72 144 216 288 360 432 504 576 648
+BArray dummies(12): 0 76 152 228 304 380 456 532 608 684
+BArray dummies(12): 0 80 160 240 320 400 480 560 640 720
+Success!
+A101: readBStarArray(): --------------------- 
+BStarArray dummies(14): 0 5 10 15 20 25 30 35 40 45 50 55 60 65
+BStarArray dummies(14): 0 10 20 30 40 50 60 70 80 90 100 110 120 130
+BStarArray dummies(14): 0 15 30 45 60 75 90 105 120 135 150 165 180 195
+BStarArray dummies(14): 0 20 40 60 80 100 120 140 160 180 200 220 240 260
+BStarArray dummies(14): 0 25 50 75 100 125 150 175 200 225 250 275 300 325
+BStarArray dummies(14): 0 30 60 90 120 150 180 210 240 270 300 330 360 390
+BStarArray dummies(14): 0 35 70 105 140 175 210 245 280 315 350 385 420 455
+BStarArray dummies(14): 0 40 80 120 160 200 240 280 320 360 400 440 480 520
+BStarArray dummies(14): 0 45 90 135 180 225 270 315 360 405 450 495 540 585
+BStarArray dummies(14): 0 50 100 150 200 250 300 350 400 450 500 550 600 650
+BStarArray dummies(14): 0 55 110 165 220 275 330 385 440 495 550 605 660 715
+BStarArray dummies(14): 0 60 120 180 240 300 360 420 480 540 600 660 720 780
+BStarArray dummies(14): 0 65 130 195 260 325 390 455 520 585 650 715 780 845
+BStarArray dummies(14): 0 70 140 210 280 350 420 490 560 630 700 770 840 910
+BStarArray dummies(14): 0 75 150 225 300 375 450 525 600 675 750 825 900 975
+BStarArray dummies(14): 0 80 160 240 320 400 480 560 640 720 800 880 960 1040
+BStarArray dummies(14): 0 85 170 255 340 425 510 595 680 765 850 935 1020 1105
+BStarArray dummies(14): 0 90 180 270 360 450 540 630 720 810 900 990 1080 1170
+BStarArray dummies(14): 0 95 190 285 380 475 570 665 760 855 950 1045 1140 1235
+BStarArray dummies(14): 0 100 200 300 400 500 600 700 800 900 1000 1100 1200 1300
+Success!
+A101: readBClonesArrayValue(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A101: readBClonesArrayArray(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S0_: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+S0_: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+S0_: readVectorFloatValue(): ---------------- 
+vectorFloat values: 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values: 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values: 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values: 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values: 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values: 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values: 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values: 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values: 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values: 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+vectorFloat values: 0.00 11.00 22.00 33.00 44.00 55.00 66.00 77.00 88.00 99.00
+vectorFloat values: 0.00 12.00 24.00 36.00 48.00 60.00 72.00 84.00 96.00 108.00
+vectorFloat values: 0.00 13.00 26.00 39.00 52.00 65.00 78.00 91.00 104.00 117.00
+vectorFloat values: 0.00 14.00 28.00 42.00 56.00 70.00 84.00 98.00 112.00 126.00
+vectorFloat values: 0.00 15.00 30.00 45.00 60.00 75.00 90.00 105.00 120.00 135.00
+vectorFloat values: 0.00 16.00 32.00 48.00 64.00 80.00 96.00 112.00 128.00 144.00
+vectorFloat values: 0.00 17.00 34.00 51.00 68.00 85.00 102.00 119.00 136.00 153.00
+vectorFloat values: 0.00 18.00 36.00 54.00 72.00 90.00 108.00 126.00 144.00 162.00
+vectorFloat values: 0.00 19.00 38.00 57.00 76.00 95.00 114.00 133.00 152.00 171.00
+vectorFloat values: 0.00 20.00 40.00 60.00 80.00 100.00 120.00 140.00 160.00 180.00
+Success!
+S0_: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+S0_: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+S0_: readVectorStarBArray(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+S0_: readVectorFloatArray(): ---------------- 
+vectorFloat values(10): 0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00 8.00 9.00
+vectorFloat values(10): 0.00 2.00 4.00 6.00 8.00 10.00 12.00 14.00 16.00 18.00
+vectorFloat values(10): 0.00 3.00 6.00 9.00 12.00 15.00 18.00 21.00 24.00 27.00
+vectorFloat values(10): 0.00 4.00 8.00 12.00 16.00 20.00 24.00 28.00 32.00 36.00
+vectorFloat values(10): 0.00 5.00 10.00 15.00 20.00 25.00 30.00 35.00 40.00 45.00
+vectorFloat values(10): 0.00 6.00 12.00 18.00 24.00 30.00 36.00 42.00 48.00 54.00
+vectorFloat values(10): 0.00 7.00 14.00 21.00 28.00 35.00 42.00 49.00 56.00 63.00
+vectorFloat values(10): 0.00 8.00 16.00 24.00 32.00 40.00 48.00 56.00 64.00 72.00
+vectorFloat values(10): 0.00 9.00 18.00 27.00 36.00 45.00 54.00 63.00 72.00 81.00
+vectorFloat values(10): 0.00 10.00 20.00 30.00 40.00 50.00 60.00 70.00 80.00 90.00
+vectorFloat values(10): 0.00 11.00 22.00 33.00 44.00 55.00 66.00 77.00 88.00 99.00
+vectorFloat values(10): 0.00 12.00 24.00 36.00 48.00 60.00 72.00 84.00 96.00 108.00
+vectorFloat values(10): 0.00 13.00 26.00 39.00 52.00 65.00 78.00 91.00 104.00 117.00
+vectorFloat values(10): 0.00 14.00 28.00 42.00 56.00 70.00 84.00 98.00 112.00 126.00
+vectorFloat values(10): 0.00 15.00 30.00 45.00 60.00 75.00 90.00 105.00 120.00 135.00
+vectorFloat values(10): 0.00 16.00 32.00 48.00 64.00 80.00 96.00 112.00 128.00 144.00
+vectorFloat values(10): 0.00 17.00 34.00 51.00 68.00 85.00 102.00 119.00 136.00 153.00
+vectorFloat values(10): 0.00 18.00 36.00 54.00 72.00 90.00 108.00 126.00 144.00 162.00
+vectorFloat values(10): 0.00 19.00 38.00 57.00 76.00 95.00 114.00 133.00 152.00 171.00
+vectorFloat values(10): 0.00 20.00 40.00 60.00 80.00 100.00 120.00 140.00 160.00 180.00
+Success!
+S0_: readVectorBArray(): -------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S0_: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S0_: readVectorBStarArray(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S1_: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+S1_: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+S1_: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+S1_: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+S1_: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+S1_: readVectorStarBArray(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+S1_: readVectorBArray(): -------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S1_: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S1_: readVectorBStarArray(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S1_: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S1_: readBClonesArrayArray(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S1_: readVectorBDummyArray(): --------------- 
+vectorB.dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB.dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB.dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB.dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB.dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB.dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB.dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB.dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB.dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB.dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB.dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB.dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB.dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB.dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB.dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB.dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB.dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB.dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB.dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB.dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S1_: readBClonesArrayDummyArray(): ---------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray.dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray.dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray.dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray.dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray.dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray.dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray.dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray.dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray.dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray.dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S99_: readBObject(): ------------------------ 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+S99_: readBObjectDummy(): ------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+S99_: readBStar(): -------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+S99_: readVectorBValue(): ------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+S99_: readVectorStarBValue(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+S99_: readVectorStarBArray(): --------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+S99_: readVectorBArray(): ------------------- 
+vectorB dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S99_: readVectorBStarValue(): --------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S99_: readVectorBStarArray(): --------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+S99_: readBClonesArrayValue(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S99_: readBClonesArrayArray(): -------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S99_: readVectorBDummyArray(): -------------- 
+vectorB.dummies(10): 0 1 2 3 4 5 6 7 8 9
+vectorB.dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB.dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorB.dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB.dummies(10): 0 5 10 15 20 25 30 35 40 45
+vectorB.dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB.dummies(10): 0 7 14 21 28 35 42 49 56 63
+vectorB.dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB.dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorB.dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB.dummies(10): 0 11 22 33 44 55 66 77 88 99
+vectorB.dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB.dummies(10): 0 13 26 39 52 65 78 91 104 117
+vectorB.dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB.dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorB.dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB.dummies(10): 0 17 34 51 68 85 102 119 136 153
+vectorB.dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB.dummies(10): 0 19 38 57 76 95 114 133 152 171
+vectorB.dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+S99_: readBClonesArrayDummyArray(): --------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray.dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray.dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray.dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray.dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray.dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray.dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray.dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray.dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray.dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray.dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S101_: readBObject(): ----------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+S101_: readBObjectDummy(): ------------------ 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+S101_: readBStar(): ------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+S101_: readBClonesArrayValue(): ------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S101_: readBClonesArrayArray(): ------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+S101_: readBClonesArrayDummyArray(): -------- 
+BClonesArray.dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray.dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray.dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray.dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray.dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray.dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray.dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray.dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray.dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray.dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray.dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray.dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray.dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray.dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray.dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray.dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray.dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray.dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray.dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray.dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+readLeafFloatX(): --------------------------- 
+MyLeafList.x: 1.000000
+MyLeafList.x: 2.000000
+MyLeafList.x: 3.000000
+MyLeafList.x: 4.000000
+MyLeafList.x: 5.000000
+MyLeafList.x: 6.000000
+MyLeafList.x: 7.000000
+MyLeafList.x: 8.000000
+MyLeafList.x: 9.000000
+MyLeafList.x: 10.000000
+MyLeafList.x: 11.000000
+MyLeafList.x: 12.000000
+MyLeafList.x: 13.000000
+MyLeafList.x: 14.000000
+MyLeafList.x: 15.000000
+MyLeafList.x: 16.000000
+MyLeafList.x: 17.000000
+MyLeafList.x: 18.000000
+MyLeafList.x: 19.000000
+MyLeafList.x: 20.000000
+Success!
+readLeafFloatY(): --------------------------- 
+MyLeafList.y: 0.100000
+MyLeafList.y: 0.200000
+MyLeafList.y: 0.300000
+MyLeafList.y: 0.400000
+MyLeafList.y: 0.500000
+MyLeafList.y: 0.600000
+MyLeafList.y: 0.700000
+MyLeafList.y: 0.800000
+MyLeafList.y: 0.900000
+MyLeafList.y: 1.000000
+MyLeafList.y: 1.100000
+MyLeafList.y: 1.200000
+MyLeafList.y: 1.300000
+MyLeafList.y: 1.400000
+MyLeafList.y: 1.500000
+MyLeafList.y: 1.600000
+MyLeafList.y: 1.700000
+MyLeafList.y: 1.800000
+MyLeafList.y: 1.900000
+MyLeafList.y: 2.000000
+Success!
+readLeafIntN(): ----------------------------- 
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+MyLeafList.n: 8
+Success!
+readLeafDoubleAArray(): --------------------- 
+MyLeafList.a(8): 0.000000 0.100000 0.200000 0.300000 0.400000 0.500000 0.600000 0.700000
+MyLeafList.a(8): 0.000000 0.200000 0.400000 0.600000 0.800000 1.000000 1.200000 1.400000
+MyLeafList.a(8): 0.000000 0.300000 0.600000 0.900000 1.200000 1.500000 1.800000 2.100000
+MyLeafList.a(8): 0.000000 0.400000 0.800000 1.200000 1.600000 2.000000 2.400000 2.800000
+MyLeafList.a(8): 0.000000 0.500000 1.000000 1.500000 2.000000 2.500000 3.000000 3.500000
+MyLeafList.a(8): 0.000000 0.600000 1.200000 1.800000 2.400000 3.000000 3.600000 4.200000
+MyLeafList.a(8): 0.000000 0.700000 1.400000 2.100000 2.800000 3.500000 4.200000 4.900000
+MyLeafList.a(8): 0.000000 0.800000 1.600000 2.400000 3.200000 4.000000 4.800000 5.600000
+MyLeafList.a(8): 0.000000 0.900000 1.800000 2.700000 3.600000 4.500000 5.400000 6.300000
+MyLeafList.a(8): 0.000000 1.000000 2.000000 3.000000 4.000000 5.000000 6.000000 7.000000
+MyLeafList.a(8): 0.000000 1.100000 2.200000 3.300000 4.400000 5.500000 6.600000 7.700000
+MyLeafList.a(8): 0.000000 1.200000 2.400000 3.600000 4.800000 6.000000 7.200000 8.400001
+MyLeafList.a(8): 0.000000 1.300000 2.600000 3.900000 5.200000 6.500000 7.800000 9.099999
+MyLeafList.a(8): 0.000000 1.400000 2.800000 4.200000 5.600000 7.000000 8.400000 9.800000
+MyLeafList.a(8): 0.000000 1.500000 3.000000 4.500000 6.000000 7.500000 9.000000 10.500000
+MyLeafList.a(8): 0.000000 1.600000 3.200000 4.800000 6.400000 8.000000 9.600000 11.200000
+MyLeafList.a(8): 0.000000 1.700000 3.400000 5.100000 6.800000 8.500000 10.200001 11.900001
+MyLeafList.a(8): 0.000000 1.800000 3.600000 5.400000 7.200000 9.000000 10.799999 12.599999
+MyLeafList.a(8): 0.000000 1.900000 3.800000 5.700000 7.600000 9.500000 11.400000 13.300000
+MyLeafList.a(8): 0.000000 2.000000 4.000000 6.000000 8.000000 10.000000 12.000000 14.000000
+Success!
+readLeafBoolBArray(): ----------------------- 
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+MyLeafList.b(12): false true false true false true false true false true
+Success!

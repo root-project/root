@@ -1,0 +1,49 @@
+
+Warning in <TClass::Init>: no dictionary for class RPRootDumpPatternInfo is available
+Warning in <TClass::Init>: no dictionary for class RPRootDumpTrackInfo is available
+Warning in <TClass::Init>: no dictionary for class RPRootDumpPattern is available
+Foreach:
+9.10796
+8.10288
+7.6934
+8.88047
+7.73662
+37.0946
+8.05405
+6.66683
+17.6845
+9.85596
+Alias plus jitted filter:
+-7.23373
+7.22813
+10.2214
+-4.05768
+7.93694
+10.0493
+8.3693
+9.83182
+-6.46293
+-8.21194
+Jitted filter, single-dotted name:
+-7.23373
+7.22813
+10.2214
+-4.05768
+7.93694
+10.0493
+8.3693
+9.83182
+-6.46293
+-8.21194
+Jitted filter, multi-dotted name:
+{  }
+{  }
+{  }
+{  }
+{  }
+{  }
+{  }
+{  }
+{  }
+{  }
+(int) 0

@@ -1,0 +1,91 @@
+<lcgdict>
+
+
+  <class name="DataVector<ParticleBase>" >
+  </class>
+  <class name="std::vector<ParticleBase*>" />
+  <class name="ParticleBase" />
+
+  <class name="ParticleEvent::Base" />
+
+ <class name="SelectedParticles" id="AC3CCD4A-48D7-40E5-B1BB-FFD84C63F875"  />
+
+  <class name="NeutrinoContainer" id="A83B8195-8650-4F93-A616-6059A47D3EA3" />
+  <class name="DataVector<Neutrino>" />
+  <class name="Neutrino" />
+
+  <class name="Analysis::IConstituent" />
+  <class name="std::vector<Analysis::IConstituent*>" />
+
+  <class name="CompositeParticleContainer" id="E14D5B90-5CCE-38F2-B2AD-E5EFFB2ADB37" />
+  <class name="DataVector<CompositeParticle>" />
+  <!--<class name="std::vector<CompositeParticle*>" />-->
+  <class name="CompositeParticle" />
+  <class name="CompositeParticle::Base_t" />
+  <exclusion>
+    <class name="CompositeParticle" >
+      <!-- gccxml gets confused by this one... -->
+      <method name="get_constituent" />
+    </class>
+  </exclusion>
+
+  <class name="ParticleImpl<Navigable<DataVector<INavigable4Momentum>,double,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,double> > >,P4ImplPxPyPzE,ParticleEvent::Base>"/>
+
+  <!-- The ParticleImpl copy ctor methods have signatures long enough
+       to overflow a fixed-size buffer within cint, causing crashes.
+       Disable dictionary generation for these. -->
+  <exclusion>
+    <class name="ParticleImpl<Navigable<DataVector<INavigable4Momentum>,double,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,double> > >,P4ImplPxPyPzE,ParticleEvent::Base>">
+      <method pattern="ParticleImpl*"/>
+    </class>
+    <class name="CompositeParticle::Base_t">
+      <method pattern="ParticleImpl*"/>
+    </class>
+  </exclusion>
+
+  <class name="ParticleSigStateImpl<Navigable<DataVector<INavigable4Momentum>,double,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,double> > >,P4ImplPxPyPzE,ParticleEvent::Base>"/>
+
+  <!-- The ParticleSigStateImpl copy ctor methods have signatures long enough
+       to overflow a fixed-size buffer within cint, causing crashes.
+       Disable dictionary generation for these. -->
+  <exclusion>
+    <class name="ParticleSigStateImpl<Navigable<DataVector<INavigable4Momentum>,double,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,double> > >,P4ImplPxPyPzE,ParticleEvent::Base>">
+      <method pattern="ParticleSigStateImpl*"/>
+    </class>
+    <class name="CompositeParticle::Base_t">
+      <method pattern="ParticleSigStateImpl*"/>
+    </class>
+  </exclusion>
+
+  <class name="ParticleEventDict::temp::PImpl_t_1" />
+  <class name="ParticleEventDict::temp::PImpl_t_2" />
+  <class name="ParticleEventDict::temp::PImpl_t_3" />
+
+<!-- example of what is needed for each Selector inheriting SelectorBase -->
+ <class name="ParticleLinks<ParticleBaseContainer>" id="FADB743B-90F9-487F-81f2-FDEA5A509945"  />
+ <class name="ParticleLinks<IParticleContainer>"    id="91504058-57C5-4FFE-B4B8-019F9096E838"  />
+
+<!-- Stuff for the TrackParticleAssocs -->
+<class name="TrackParticleAssocs" id="6BB74DC6-5142-4FF4-A8C8-C0FDF1C5F25F" />
+<class name="AssociationMap<Rec::TrackParticleContainer,Rec::TrackParticleContainer >">
+<field name="m_associationMap" transient="true"/>
+ </class>
+<class name="AssociationMap<Rec::TrackParticleContainer,Rec::TrackParticleContainer >::asso_list" />
+<class name="AssociationMap<Rec::TrackParticleContainer,Rec::TrackParticleContainer >::AssociationObjectIterator"/>
+<class name="AssociationMap<Rec::TrackParticleContainer,Rec::TrackParticleContainer >::AssociationVectorIterator"/>
+
+<!-- Stuff for the INav4MomToTrackParticleAssocs -->
+<class name="INav4MomToTrackParticleAssocs" id="90773961-FC8A-4535-B621-6BB62E4AE2D9" />
+<class name="AssociationMap<DataVector<INavigable4Momentum>,Rec::TrackParticleContainer >">
+<field name="m_associationMap" transient="true"/>
+ </class>
+<class name="AssociationMap<DataVector<INavigable4Momentum>,Rec::TrackParticleContainer >::asso_list" /> 
+<class name="AssociationMap<DataVector<INavigable4Momentum>,Rec::TrackParticleContainer >::AssociationObjectIterator"/>
+<class name="AssociationMap<DataVector<INavigable4Momentum>,Rec::TrackParticleContainer >::AssociationVectorIterator"/>
+
+<!-- Stuff for the ParticleShallowClone and its container -->
+<class name="ParticleShallowCloneContainer" id="4684AED0-3C6C-4333-91D2-07447655BF6A" />
+<class name="Analysis::ParticleShallowClone" />
+<class name="DataVector<Analysis::ParticleShallowClone>" />
+
+</lcgdict>

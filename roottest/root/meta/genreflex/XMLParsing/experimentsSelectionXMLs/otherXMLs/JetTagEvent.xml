@@ -1,0 +1,8 @@
+<lcgdict>
+
+  <class name="Analysis::JetConstituent" />
+  <class name="Analysis::TrackConstituents" />
+  <class name="Analysis::TrackAssociation" />
+  <class name="Analysis::ISvxConstituent" />
+  <class name="Analysis::ISvxAssociation" />
+</lcgdict>

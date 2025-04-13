@@ -1,0 +1,113 @@
+<lcgdict>
+  <class name="L1GtfeWord" ClassVersion="10">
+   <version ClassVersion="10" checksum="3339021130"/>
+  </class>
+  <class name="edm::Wrapper<L1GtfeWord>" splitLevel="0"/>
+
+  <class name="L1GtfeExtWord" ClassVersion="10">
+   <version ClassVersion="10" checksum="4067988117"/>
+  </class>
+  <class name="edm::Wrapper<L1GtfeExtWord>" splitLevel="0"/>
+
+  <class name="L1TcsWord" ClassVersion="10">
+   <version ClassVersion="10" checksum="2663215739"/>
+  </class>
+  <class name="edm::Wrapper<L1TcsWord>" splitLevel="0"/>
+
+  <class name="L1GtFdlWord" ClassVersion="10">
+   <version ClassVersion="10" checksum="3749331160"/>
+  </class>
+  <class name="edm::Wrapper<L1GtFdlWord>" splitLevel="0"/>
+  
+  <class name="std::vector<L1GtFdlWord>"/>
+  <class name="edm::Wrapper<std::vector<L1GtFdlWord> >" splitLevel="0"/>
+
+  <class name="L1GtPsbWord" ClassVersion="10">
+   <version ClassVersion="10" checksum="4164985273"/>
+  </class>
+  <class name="edm::Wrapper<L1GtPsbWord>" splitLevel="0"/>
+  
+  <class name="std::vector<L1GtPsbWord>"/>
+  <class name="edm::Wrapper<std::vector<L1GtPsbWord> >" splitLevel="0"/>
+ 
+ 
+  <class name="L1GlobalTriggerReadoutSetup" ClassVersion="10">
+   <version ClassVersion="10" checksum="2071076145"/>
+  </class>
+  <class name="edm::Wrapper<L1GlobalTriggerReadoutSetup>" splitLevel="0"/>
+  
+  <class name="L1GlobalTriggerReadoutRecord" ClassVersion="10">
+   <version ClassVersion="10" checksum="2061888019"/>
+  </class>
+  <class name="edm::Wrapper<L1GlobalTriggerReadoutRecord>" splitLevel="0"/>
+  
+  <class name="L1GlobalTriggerEvmReadoutRecord" ClassVersion="10">
+   <version ClassVersion="10" checksum="3816973918"/>
+  </class>
+  <class name="edm::Wrapper<L1GlobalTriggerEvmReadoutRecord>" splitLevel="0"/>
+
+  <class name="L1GlobalTriggerObjectMap" ClassVersion="10">
+   <version ClassVersion="10" checksum="744814082"/>
+  </class>
+  <class name="edm::Wrapper<L1GlobalTriggerObjectMap>" splitLevel="0"/>
+
+  <class name="std::vector<L1GlobalTriggerObjectMap>"/>
+  <class name="edm::Wrapper<std::vector<L1GlobalTriggerObjectMap> >" splitLevel="0"/>
+
+  <class name="L1GlobalTriggerObjectMapRecord" ClassVersion="10">
+   <version ClassVersion="10" checksum="3799476908"/>
+  </class>
+  <class name="edm::Wrapper<L1GlobalTriggerObjectMapRecord>" splitLevel="0"/>
+
+  <class name="L1GlobalTriggerObjectMaps::AlgorithmResult" ClassVersion="10">
+   <version ClassVersion="10" checksum="3647962944"/>
+  </class>
+  <class name="std::vector<L1GlobalTriggerObjectMaps::AlgorithmResult>"/>
+
+  <class name="L1GlobalTriggerObjectMaps::ConditionResult" ClassVersion="10">
+   <version ClassVersion="10" checksum="3470739114"/>
+  </class>
+  <class name="std::vector<L1GlobalTriggerObjectMaps::ConditionResult>"/>
+
+  <class name="L1GlobalTriggerObjectMaps" ClassVersion="10">
+   <version ClassVersion="10" checksum="3817566121"/>
+  </class>
+  <class name="edm::Wrapper<L1GlobalTriggerObjectMaps>"/>
+
+  <class name="L1GlobalTriggerRecord" ClassVersion="10">
+   <version ClassVersion="10" checksum="3463234758"/>
+  </class>
+  <class name="edm::Wrapper<L1GlobalTriggerRecord>" splitLevel="0"/>
+
+  <class name="L1GtTechnicalTrigger" ClassVersion="10">
+   <version ClassVersion="10" checksum="38955916"/>
+  </class>
+  <class name="edm::Wrapper<L1GtTechnicalTrigger>" splitLevel="0"/>
+
+  <class name="std::vector<L1GtTechnicalTrigger>"/>
+  <class name="edm::Wrapper<std::vector<L1GtTechnicalTrigger> >" splitLevel="0"/>
+
+  <class name="L1GtTechnicalTriggerRecord" ClassVersion="10">
+   <version ClassVersion="10" checksum="3203568288"/>
+  </class>
+  <class name="edm::Wrapper<L1GtTechnicalTriggerRecord>" splitLevel="0"/>
+
+  <class name="std::vector<L1GtObject> "/>
+  <class name="std::vector<std::vector<L1GtObject> >"/>
+
+  <class name="L1GtLogicParser::OperandToken" ClassVersion="10">
+   <version ClassVersion="10" checksum="599247693"/>
+  </class>
+  <class name="std::vector<L1GtLogicParser::OperandToken> "/>
+
+  <class name="L1GtLogicParser::TokenRPN" ClassVersion="10">
+   <version ClassVersion="10" checksum="535147936"/>
+  </class>
+  <class name="std::vector<L1GtLogicParser::TokenRPN> "/>
+
+  <class name="L1GtTriggerMenuLite" ClassVersion="10">
+   <version ClassVersion="10" checksum="851367861"/>
+  </class>
+  <class name="edm::Wrapper<L1GtTriggerMenuLite>" splitLevel="0"/>
+
+</lcgdict>

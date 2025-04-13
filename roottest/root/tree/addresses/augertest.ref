@@ -1,0 +1,29 @@
+
+Processing runaugertest.C...
+Warning in <TClass::Init>: no dictionary for class RecEvent is available
+Warning in <TClass::Init>: no dictionary for class Detector is available
+Warning in <TClass::Init>: no dictionary for class SDEvent is available
+Warning in <TClass::Init>: no dictionary for class SdRecShower is available
+Warning in <TClass::Init>: no dictionary for class RecShower is available
+Warning in <TClass::Init>: no dictionary for class Shower is available
+Warning in <TClass::Init>: no dictionary for class LDF is available
+Warning in <TClass::Init>: no dictionary for class GenShower is available
+Warning in <TClass::Init>: no dictionary for class SdRecStation is available
+Warning in <TClass::Init>: no dictionary for class GenStation is available
+Warning in <TClass::Init>: no dictionary for class FDEvent is available
+Warning in <TClass::Init>: no dictionary for class FdRecShower is available
+Warning in <TClass::Init>: no dictionary for class FdRecApertureLight is available
+Warning in <TClass::Init>: no dictionary for class FdApertureLight is available
+Warning in <TClass::Init>: no dictionary for class FdRecGeometry is available
+Warning in <TClass::Init>: no dictionary for class FdGeometry is available
+Warning in <TClass::Init>: no dictionary for class SdRecGeometry is available
+Warning in <TClass::Init>: no dictionary for class FdRecPixel is available
+Warning in <TClass::Init>: no dictionary for class FdGenGeometry is available
+Warning in <TClass::Init>: no dictionary for class FdGenApertureLight is available
+Warning in <TClass::Init>: no dictionary for class EventInfo is available
+Warning in <TClass::Init>: no dictionary for class FdRecStation is available
+Warning in <TClass::Init>: no dictionary for class EyeGeometry is available
+Warning in <TClass::Init>: no dictionary for class TelescopeGeometry is available
+Warning in <TClass::Init>: no dictionary for class DetectorGeometry is available
+Warning in <TClass::Init>: no dictionary for class FileInfo is available
+Warning in <TClass::Init>: no dictionary for class SimInfo is available

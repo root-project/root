@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="Trk::VertexOnTrack" >
+    <field name="m_globalPosition"       transient="false" />
+  </class>
+</lcgdict>

@@ -1,0 +1,17 @@
+<lcgdict>
+<class name="UserData"/>
+
+  <ioread
+    version="[12-25]"
+    sourceClass="UserData"
+    source="float posx; float posy;"
+    targetClass="UserData"
+    target="posx; posy;"
+    include="vector;SRSpill.h">
+    <![CDATA[{
+      posx.resize(1, onfile.posx);
+      posy.resize(1, onfile.posy);}
+    ]]>
+  </ioread>
+
+</lcgdict>

@@ -1,0 +1,9 @@
+<lcgdict>
+
+  <class name="TVirtualConverter"/>
+  <class name="TConverterRegistry"/>
+  <class name="TConvertingStreamerInfo"/>
+  <class name="TConvertingBranchElement"/>
+  <class name="RootConversions::VectorConverters"/>
+
+</lcgdict>

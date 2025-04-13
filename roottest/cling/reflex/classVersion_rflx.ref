@@ -1,0 +1,35 @@
+
+tWithClassVersion: ok.
+
+CLASS WithClassVersion, version 42, isATObject=0
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.
+
+CLASS WithClassDef, version 12, isATObject=0
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.
+
+CLASS NoIO, version 0, isATObject=0
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.
+
+CLASS FromTObject, version 13, isATObject=1
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.
+!TClass::GetClass("NoDictionary"): ok.
+!TClass::GetClass("NoDictionaryTObj"): ok.
+TClass::GetClass("MyTemp<std::vector<std::string> >"): ok.
+
+CLASS TemplateWithVersion<int>, version 10, isATObject=0
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.
+
+CLASS TemplateWithVersion<double>, version 10, isATObject=0
+cl: ok.
+cl->GetClassVersion() == version: ok.
+inhFromTObj == cl->InheritsFrom(TObject::Class()): ok.

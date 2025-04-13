@@ -1,0 +1,16 @@
+
+Processing runindex64.C...
+Tree BuildIndex returns 9
+Entry should be 3: 3
+Entry should be 6: 6
+Entries in chain: 9
+BuildIndex returns 9
+Try to get value that is not in the chain, this should return a -1:
+-1
+3
+Entries in chain: 9
+BuildIndex returns 1
+Try to get value that is not in the chain, this should return a -1:
+-1
+3
+(int) 0

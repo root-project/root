@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="D3PD::IAddVariable" />
+  <class name="D3PD::RootObjectMetadata" />
+  <class name="D3PD::ObjectMetadata" />
+  <class name="D3PD::ObjectMetadata::Variable" />
+  <class name="std::set<D3PD::ObjectMetadata::Variable>" />
+  <class name="std::vector<D3PD::ObjectMetadata::Variable>" />
+  <function name="D3PDMakerReaderDict::to_vector" />
+</lcgdict>

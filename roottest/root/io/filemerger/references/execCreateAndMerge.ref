@@ -1,0 +1,22 @@
+
+Processing execCreateAndMerge.C...
+4 a files created
+4 b files created
+4 a files merged
+4 b files merged
+******* MERGED A FILE ******** 4 objects with different names
+TFile**		a_file.root	
+ TFile*		a_file.root	
+  KEY: TNamed	namedObj0;1	namedObj0
+  KEY: TNamed	namedObj1;1	namedObj1
+  KEY: TNamed	namedObj2;1	namedObj2
+  KEY: TNamed	namedObj3;1	namedObj3
+******************************
+******* MERGED B FILE ******** 4 objects with the same names
+TFile**		b_file.root	
+ TFile*		b_file.root	
+  KEY: TNamed	namedObj;4	namedObj [current cycle]
+  KEY: TNamed	namedObj;3	namedObj [backup cycle]
+  KEY: TNamed	namedObj;2	namedObj [backup cycle]
+  KEY: TNamed	namedObj;1	namedObj [backup cycle]
+******************************

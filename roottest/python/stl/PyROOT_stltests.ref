@@ -1,0 +1,24 @@
+. PyROOT_stltests.py::TestClasSTLVECTOR::()::test01_builtin_vector_type
+. PyROOT_stltests.py::TestClasSTLVECTOR::()::test02_builtin_vector_type
+. PyROOT_stltests.py::TestClasSTLVECTOR::()::test03_generated_vector_type
+. PyROOT_stltests.py::TestClasSTLVECTOR::()::test04_empty_vector
+. PyROOT_stltests.py::TestClasSTLVECTOR::()::test05_pushback_iterables_with_iadd
+. PyROOT_stltests.py::TestClasSTLVECTOR::()::test06_vector_return_downcasting
+. PyROOT_stltests.py::TestClasSTLLIST::()::test01_builtin_list_type
+. PyROOT_stltests.py::TestClasSTLLIST::()::test02_empty_list_type
+. PyROOT_stltests.py::TestClasSTLMAP::()::test01_builtin_map_type
+. PyROOT_stltests.py::TestClasSTLMAP::()::test02_keyed_map_type
+. PyROOT_stltests.py::TestClasSTLMAP::()::test03_empty_map_type
+. PyROOT_stltests.py::TestClasSTLMAP::()::test04_unsigned_value_type_map_types
+. PyROOT_stltests.py::TestClasSTLMAP::()::test05_freshly_instantiated_map_type
+. PyROOT_stltests.py::TestClasSTLLIKECLASS::()::test01_STL_like_class_indexing_overloads
+. PyROOT_stltests.py::TestClasSTLLIKECLASS::()::test02_STL_like_class_iterators
+. PyROOT_stltests.py::TestClasSTLSTRINGHANDLING::()::test01_string_argument_passing
+. PyROOT_stltests.py::TestClasSTLSTRINGHANDLING::()::test02_string_data_access
+. PyROOT_stltests.py::TestClasSTLSTRINGHANDLING::()::test03_string_with_null_Character
+. PyROOT_stltests.py::TestClasSTLITERATORCOMPARISON::()::test01_builtin_vector_iterators
+. PyROOT_stltests.py::TestClasSTLITERATORCOMPARISON::()::test02_builtin_list_iterators
+. PyROOT_stltests.py::TestClasSTLITERATORCOMPARISON::()::test03_builtin_map_iterators
+. PyROOT_stltests.py::TestClasSTLSTREAM::()::test01_pass_stringstream
+. PyROOT_stltests.py::TestClasSTLSET::()::test01_iterate_set
+

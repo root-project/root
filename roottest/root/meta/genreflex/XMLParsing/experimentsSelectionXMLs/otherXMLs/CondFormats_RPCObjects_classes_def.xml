@@ -1,0 +1,113 @@
+<lcgdict>
+  <class name="ChamberStripSpec"/>
+  <class name="FebLocationSpec"/>
+  <class name="ChamberLocationSpec"/>
+
+  <class name="FebConnectorSpec">
+  <field name="theRawId" transient="true"/>
+  </class>
+  <class name="std::vector<ChamberStripSpec>"/>
+
+
+  <class name="LinkBoardSpec"/>
+  <class name="std::vector<FebConnectorSpec>"/>
+
+  <class name="LinkConnSpec"/>
+  <class name="std::vector<LinkBoardSpec>"/>
+
+  <class name="TriggerBoardSpec"/>
+  <class name="std::vector<LinkConnSpec>"/>
+
+  <class name="DccSpec"/>
+  <class name="std::vector<TriggerBoardSpec>"/>
+
+  <class name="RPCReadOutMapping"/>
+  <class name="std::map<int,DccSpec>"/>
+
+  <class name="RPCEMap"/>
+  <class name="RPCEMap::dccItem"/>
+  <class name="std::vector<RPCEMap::dccItem>"/>
+  <class name="RPCEMap::tbItem"/>
+  <class name="std::vector<RPCEMap::tbItem>"/>
+  <class name="RPCEMap::linkItem"/>
+  <class name="std::vector<RPCEMap::linkItem>"/>
+  <class name="RPCEMap::lbItem"/>
+  <class name="std::vector<RPCEMap::lbItem>"/>
+  <class name="RPCEMap::febItem"/>
+  <class name="std::vector<RPCEMap::febItem>"/>
+
+  <class name="L1RPCConeBuilder"/>
+
+  <class name="L1RPCHwConfig"/>
+  <class name="L1RPCDevCoords"/>
+  <class name="std::set<L1RPCDevCoords>"/>
+
+  <class name="RPCStripNoises"/>
+  <class name="RPCStripNoises::NoiseItem"/>
+  <class name="std::vector<RPCStripNoises::NoiseItem>"/>
+
+  <class name="RPCClusterSize"/>
+  <class name="RPCClusterSize::ClusterSizeItem"/>
+  <class name="std::vector<RPCClusterSize::ClusterSizeItem>"/>
+
+  <class name="RPCDQMObject">
+   <field name="v_cls" mapping="blob" />
+  </class>
+  <class name="RPCDQMObject::DQMObjectItem"/>
+  <class name="std::vector<RPCDQMObject::DQMObjectItem>"/>
+
+  <class name="RPCObGas"/>
+  <class name="RPCObGas::Item"/>
+  <class name="std::vector<RPCObGas::Item>"/>
+
+  <class name="RPCObImon"/>
+  <class name="RPCObImon::I_Item"/>
+  <class name="std::vector<RPCObImon::I_Item>"/>
+
+  <class name="RPCObVmon"/>
+  <class name="RPCObVmon::V_Item"/>
+  <class name="std::vector<RPCObVmon::V_Item>"/>
+
+  <class name="RPCObStatus"/>
+  <class name="RPCObStatus::S_Item"/>
+  <class name="std::vector<RPCObStatus::S_Item>"/>
+
+  <class name="RPCObTemp"/>
+  <class name="RPCObTemp::T_Item"/>
+  <class name="std::vector<RPCObTemp::T_Item>"/>
+
+
+  <class name="RPCObPVSSmap"/>
+  <class name="RPCObPVSSmap::Item"/>
+  <class name="std::vector<RPCObPVSSmap::Item>"/>
+
+  <class name="RPCObFebmap"/>
+  <class name="RPCObFebmap::Feb_Item"/>
+  <class name="std::vector<RPCObFebmap::Feb_Item>"/>
+
+  <class name="RPCObGasmap"/>
+  <class name="RPCObGasmap::GasMap_Item"/>
+  <class name="std::vector<RPCObGasmap::GasMap_Item>"/>
+
+  <class name="RPCTechTriggerConfig"/>
+  <class name="RBCBoardSpecs"/>
+  <class name="RBCBoardSpecs::RBCBoardConfig"/>
+  <class name="std::vector<RBCBoardSpecs::RBCBoardConfig>"/>
+
+  <class name="TTUBoardSpecs"/>
+  <class name="TTUBoardSpecs::TTUBoardConfig"/>
+  <class name="std::vector<TTUBoardSpecs::TTUBoardConfig>"/> 
+
+  <class name="RPCObUXC"/>
+  <class name="RPCObUXC::Item"/>
+  <class name="std::vector<RPCObUXC::Item>"/>
+
+  <class name="RPCObGasMix"/>
+  <class name="RPCObGasMix::Item"/>
+  <class name="std::vector<RPCObGasMix::Item>"/>
+
+  <class name="RPCObGasHum"/>
+  <class name="RPCObGasHum::Item"/>
+  <class name="std::vector<RPCObGasHum::Item>"/>
+
+</lcgdict>

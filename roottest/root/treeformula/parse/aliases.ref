@@ -1,0 +1,137 @@
+
+Processing runaliases.C...
+Test part1
+************************
+*    Row   *  objs.one *
+************************
+*        0 *         1 *
+************************
+************************
+*    Row   * access.on *
+************************
+*        0 *         1 *
+************************
+************************
+*    Row   *      ones *
+************************
+*        0 *         1 *
+************************
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "twos"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
+************************
+*    Row   *       add *
+************************
+*        0 *           *
+************************
+************************
+*    Row   *       add *
+************************
+*        0 *         3 *
+************************
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "crap"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
+************************
+*    Row   *       add *
+************************
+*        0 *           *
+************************
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed
+	because "add" is recursively used in its own definition!
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "crap" by "add" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
+************************
+*    Row   *       add *
+************************
+*        0 *           *
+************************
+Test part2
+************************
+*    Row   * vec.fElem *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   *        a2 *
+************************
+*        0 *         1 *
+************************
+************************
+*    Row   *        a1 *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   *         a *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   * vec.fElem *
+************************
+*        0 *         3 *
+************************
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "1[0]"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "a2" by "vec.fElements[3]>1" failed.
+************************
+*    Row   *     a2[0] *
+************************
+*        0 *           *
+************************
+************************
+*    Row   *     a1[0] *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   *      a[0] *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   * arr[3][1] *
+************************
+*        0 *        99 *
+************************
+************************
+*    Row   *     b1[1] *
+************************
+*        0 *        99 *
+************************
+************************
+*    Row   *      b[1] *
+************************
+*        0 *        99 *
+************************
+***********************************
+*    Row   * Instance *   arr.arr *
+***********************************
+*        0 *        0 *        -1 *
+*        0 *        1 *        -2 *
+*        0 *        2 *        -3 *
+*        0 *        3 *        -4 *
+*        0 *        4 *        -1 *
+*        0 *        5 *        -2 *
+*        0 *        6 *        -3 *
+*        0 *        7 *        -4 *
+*        0 *        8 *        -1 *
+*        0 *        9 *        -2 *
+*        0 *       10 *        -3 *
+*        0 *       11 *        -4 *
+*        0 *       12 *        -1 *
+*        0 *       13 *        99 *
+*        0 *       14 *        -3 *
+*        0 *       15 *        -4 *
+*        0 *       16 *        -1 *
+*        0 *       17 *        -2 *
+*        0 *       18 *        -3 *
+*        0 *       19 *        -4 *
+***********************************
+Error in <TTreeFormula::ParseWithLeaf>: Found a numerical leaf but the name has trailing characters: "misspelt"
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "arr.misspelt"
+************************
+*    Row   * arr.missp *
+************************
+*        0 *           *
+************************

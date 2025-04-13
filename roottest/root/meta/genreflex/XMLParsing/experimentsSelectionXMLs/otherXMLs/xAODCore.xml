@@ -1,0 +1,67 @@
+<!-- $Id: selection.xml 600145 2014-06-03 19:40:54Z ssnyder $ -->
+<lcgdict>
+
+   <!-- Auxiliary container base: -->
+   <class name="xAOD::AuxContainerBase"
+          id="C87C71B3-B03F-42FC-AF99-DF497F148397" >
+      <field name="m_auxids" transient="true" />
+      <field name="m_vecs" transient="true" />
+      <field name="m_store" transient="true" />
+      <field name="m_storeIO" transient="true" />
+      <field name="m_ownsStore" transient="true" />
+      <field name="m_selection" transient="true" />
+      <field name="m_tick" transient="true" />
+      <field name="m_mutex" transient="true" />
+      <field name="m_tsAuxids" transient="true" />
+      <field name="m_locked" transient="true" />
+   </class>
+
+   <!-- Auxiliary info base: -->
+   <class name="xAOD::AuxInfoBase"
+          id="47FE21D1-5196-4961-A8A1-1DC1B4104DD8" >
+      <field name="m_auxids" transient="true" />
+      <field name="m_vecs" transient="true" />
+      <field name="m_store" transient="true" />
+      <field name="m_storeIO" transient="true" />
+      <field name="m_ownsStore" transient="true" />
+      <field name="m_selection" transient="true" />
+      <field name="m_tick" transient="true" />
+      <field name="m_mutex" transient="true" />
+      <field name="m_tsAuxids" transient="true" />
+      <field name="m_locked" transient="true" />
+   </class>
+
+   <!-- Shallow auxiliary container: -->
+   <class name="xAOD::ShallowAuxContainer"
+          id="C63C39D7-9501-49DC-B1B0-6AD98B1AEEFA" >
+     <field name="m_selection" transient="true" />
+     <field name="m_auxids" transient="true" />
+     <field name="m_store" transient="true" />
+     <field name="m_storeIO" transient="true" />
+     <field name="m_ownsStore" transient="true" />
+     <field name="m_parentIO" transient="true" />
+     <field name="m_shallowIO" transient="true" />
+   </class>
+
+   <!-- Shallow auxiliary info: -->
+   <class name="xAOD::ShallowAuxInfo"
+          id="BE505E75-8760-4F39-9331-689CB5443DB1" />
+
+   <!-- The DataVector collection proxy classes: -->
+   <class name="xAOD::TDVCollectionProxy" />
+   <class name="xAOD::TDVCollectionProxyDummy" />
+   <class name="DataVector<xAOD::TDVCollectionProxyDummy>" />
+
+   <!-- Additional dictionaries used in multiple locations: -->
+   <class name="std::vector<ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > >" />
+   <class name="std::vector<unsigned char>" />
+   <class name="std::vector<std::vector<unsigned char> >" />
+
+   <!-- Suppress the unwanted classes found by ROOT 6. -->
+   <!-- Hopefully we can remove these extra lines at one point... -->
+   <exclusion>
+     <class name="SG::IConstAuxStore" />
+     <class name="DataLink<SG::IConstAuxStore>" />
+   </exclusion>
+
+</lcgdict>

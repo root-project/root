@@ -1,0 +1,235 @@
+
+Processing execDictSelection.C...
+*** Stress TClass with DictSelection ***
+Loading library libclassesDictSelection_dictrflx
+
+--- Class classVanilla
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classVanilla
+
+--- Class classTemplateVanilla<char>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classTemplateVanilla<char>
+
+--- Class classTransientMember
+Class category: foreign.
+ * Version: -1
+ o Members (1):
+  * int transientMember [ isBasic isTransient "!" ]
+--- End Class classTransientMember
+
+--- Class classTestAutoselect
+Class category: foreign.
+ * Version: -1
+ o Members (2):
+  * classAutoselected autoselected
+  * classAutoExcluded noautoselected
+--- End Class classTestAutoselect
+
+--- Class classAutoselected
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classAutoselected
+
+--- Class classWithAttributes
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classWithAttributes
+
+--- Class classAutoselectedFromTemplateElaborate1
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classAutoselectedFromTemplateElaborate1
+
+--- Class classAutoselectedFromTemplateElaborate2
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classAutoselectedFromTemplateElaborate2
+
+--- Class classRemoveTemplateArgs<float,bool>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classRemoveTemplateArgs<float,bool>
+
+--- Class classRemoveTemplateArgs<testNs::D>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classRemoveTemplateArgs<testNs::D>
+
+--- Class testNs::classRemoveTemplateArgs2<float*>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<float*>
+
+--- Class testNs::classRemoveTemplateArgs2<float*,int,classVanilla>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<float*,int,classVanilla>
+
+--- Class testNs::classRemoveTemplateArgs2<int*>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<int*>
+
+--- Class testNs::classRemoveTemplateArgs2<int*,int,classVanilla>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<int*,int,classVanilla>
+
+--- Class testNs::classRemoveTemplateArgs2<classVanilla>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<classVanilla>
+
+--- Class testNs::classRemoveTemplateArgs2<classVanilla,int >
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<classVanilla,int >
+
+--- Class testNs::classRemoveTemplateArgs2<classVanilla,int, classVanilla >
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<classVanilla,int, classVanilla >
+
+--- Class testNs::classRemoveTemplateArgs2<classRemoveTemplateArgs<classAutoselected> >
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<classRemoveTemplateArgs<classAutoselected> >
+
+--- Class testNs::classRemoveTemplateArgs2<testNs::D>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<testNs::D>
+
+--- Class A<B<double,double>,int,float >
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class A<B<double,double>,int,float >
+
+--- Class A<B<double>,int,float >
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class A<B<double>,int,float >
+
+--- Class C<char>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class C<char>
+
+--- Class C<char,int,3>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class C<char,int,3>
+
+--- Class C<C<char>,C<char,C<C<char,int>,int>,3>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class C<C<char>,C<char,C<C<char,int>,int>,3>>
+
+--- Class C<C<C<C<C<char>,C<char,C<C<char,int>,int>,3>>>,C<char,C<C<char,int>,int>,3>>,C<char,C<C<char,int>,int>,3>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class C<C<C<C<C<char>,C<char,C<C<char,int>,int>,3>>>,C<char,C<C<char,int>,int>,3>>,C<char,C<C<char,int>,int>,3>>
+
+--- Class myVector<C<char>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<C<char>>
+
+--- Class myVector<C<char,int>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<C<char,int>>
+
+--- Class myVector<C<char,int,3>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<C<char,int,3>>
+
+--- Class myVector<float>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<float>
+
+--- Class myVector<myVector<myVector<myVector<float>>>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<myVector<myVector<myVector<float>>>>
+
+--- Class myVector<float,myAllocator<float>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<float,myAllocator<float>>
+
+--- Class classTemplateElaborate<char>
+Class category: foreign.
+ * Version: -1
+ o Members (3):
+  * classAutoselectedFromTemplateElaborate1 autoselectedMember [ "||" ]
+  * classVanilla transientMember [ isTransient "!" ]
+  * classAutoselectedFromTemplateElaborate2 autoselectedMemberAndTransientMemberMember [ isTransient "!" ]
+--- End Class classTemplateElaborate<char>
+classVanilla --> classVanilla
+classTemplateVanilla<char> --> classTemplateVanilla<char>
+classTransientMember --> classTransientMember
+classTestAutoselect --> classTestAutoselect
+classAutoselected --> classAutoselected
+classWithAttributes --> classWithAttributes
+classAutoselectedFromTemplateElaborate1 --> classAutoselectedFromTemplateElaborate1
+classAutoselectedFromTemplateElaborate2 --> classAutoselectedFromTemplateElaborate2
+classRemoveTemplateArgs<float,bool> --> classRemoveTemplateArgs<float,bool>
+classRemoveTemplateArgs<testNs::D> --> classRemoveTemplateArgs<testNs::D,int>
+testNs::classRemoveTemplateArgs2<float*> --> testNs::classRemoveTemplateArgs2<float*>
+testNs::classRemoveTemplateArgs2<float*,int,classVanilla> --> testNs::classRemoveTemplateArgs2<float*>
+testNs::classRemoveTemplateArgs2<int*> --> testNs::classRemoveTemplateArgs2<int*>
+testNs::classRemoveTemplateArgs2<int*,int,classVanilla> --> testNs::classRemoveTemplateArgs2<int*>
+testNs::classRemoveTemplateArgs2<classVanilla> --> testNs::classRemoveTemplateArgs2<classVanilla>
+testNs::classRemoveTemplateArgs2<classVanilla,int > --> testNs::classRemoveTemplateArgs2<classVanilla>
+testNs::classRemoveTemplateArgs2<classVanilla,int, classVanilla > --> testNs::classRemoveTemplateArgs2<classVanilla>
+testNs::classRemoveTemplateArgs2<classRemoveTemplateArgs<classAutoselected> > --> testNs::classRemoveTemplateArgs2<classRemoveTemplateArgs<classAutoselected,int> >
+testNs::classRemoveTemplateArgs2<testNs::D> --> testNs::classRemoveTemplateArgs2<testNs::D>
+A<B<double,double>,int,float > --> A<B<double>,int,float>
+A<B<double>,int,float > --> A<B<double>,int,float>
+C<char> --> C<char>
+C<char,int,3> --> C<char>
+C<C<char>,C<char,C<C<char,int>,int>,3>> --> C<C<char> >
+C<C<C<C<C<char>,C<char,C<C<char,int>,int>,3>>>,C<char,C<C<char,int>,int>,3>>,C<char,C<C<char,int>,int>,3>> --> C<C<C<C<C<char> > > > >
+myVector<C<char>> --> myVector<C<char> >
+myVector<C<char,int>> --> myVector<C<char> >
+myVector<C<char,int,3>> --> myVector<C<char> >
+myVector<float> --> myVector<float>
+myVector<myVector<myVector<myVector<float>>>> --> myVector<myVector<myVector<myVector<float> > > >
+myVector<float,myAllocator<float>> --> myVector<float>
+classTemplateElaborate<char> --> classTemplateElaborate<char>
+(int) 0

@@ -1,0 +1,17 @@
+<lcgdict>
+ <class name="HDigiFP420" splitLevel="0" ClassVersion="10">
+  <version ClassVersion="10" checksum="451508377"/>
+ </class>
+ <class name="std::vector<HDigiFP420>" splitLevel="0"/>
+ <class name="std::map<unsigned int, std::vector<HDigiFP420> >" splitLevel="0"/>
+ <class name="edm::DetSet<HDigiFP420>" splitLevel="0"/>
+ <class name="edm::DetSetVector<HDigiFP420>" splitLevel="0"/>
+ <class name="std::vector<edm::DetSet<HDigiFP420> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSet<HDigiFP420> >" splitLevel="0"/>
+ <class name="edm::Wrapper<std::vector<edm::DetSet<HDigiFP420> > >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::DetSetVector<HDigiFP420> >" splitLevel="0"/>
+ <class name="DigiCollectionFP420" splitLevel="0" ClassVersion="10">
+  <version ClassVersion="10" checksum="1882227762"/>
+ </class>
+ <class name="edm::Wrapper<DigiCollectionFP420>" splitLevel="0"/>
+</lcgdict>

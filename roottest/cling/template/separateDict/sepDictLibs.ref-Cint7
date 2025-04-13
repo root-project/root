@@ -1,0 +1,86 @@
+
+Processing run.C...
+===========================================================================
+class Name::MyClass
+ size=n/a FILE:libmaster.so LINE:-1
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in MyClass
+libmaster.so     -1 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in MyClass)
+libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
+libmaster.so     -1:-1   0 public: void Print(Option_t*);
+libmaster.so     -1:-1   0 public: static TClass* Class(void);
+libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
+libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
+libmaster.so     -1:-1   0 public: static void Dictionary(void);
+libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
+libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer& b);
+libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& b);
+libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
+libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
+libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
+libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
+libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
+libmaster.so     -1:-1   0 public: void ~MyClass(void);
+libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
+===========================================================================
+class Name::MyClass
+ size=n/a FILE:libmaster.so LINE:-1
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in MyClass
+libmaster.so     -1 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in MyClass)
+libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
+libmaster.so     -1:-1   0 public: void Print(Option_t*);
+libmaster.so     -1:-1   0 public: static TClass* Class(void);
+libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
+libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
+libmaster.so     -1:-1   0 public: static void Dictionary(void);
+libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
+libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer& b);
+libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& b);
+libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
+libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
+libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
+libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
+libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
+libmaster.so     -1:-1   0 public: void ~MyClass(void);
+libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
+libmaster.so     -1:-1   0 public: TObject& func(TObject* t);
+===========================================================================
+class Name::MyClass
+ size=n/a FILE:libmaster.so LINE:-1
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in MyClass
+libmaster.so     -1 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in MyClass)
+libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
+libmaster.so     -1:-1   0 public: void Print(Option_t*);
+libmaster.so     -1:-1   0 public: static TClass* Class(void);
+libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
+libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
+libmaster.so     -1:-1   0 public: static void Dictionary(void);
+libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
+libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector& insp,char* parent);
+libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer& b);
+libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& b);
+libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
+libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
+libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
+libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
+libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
+libmaster.so     -1:-1   0 public: void ~MyClass(void);
+libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
+libmaster.so     -1:-1   0 public: TObject& func(TObject* t);
+libmaster.so     -1:-1   0 public: TH1F& func(TH1F* t);

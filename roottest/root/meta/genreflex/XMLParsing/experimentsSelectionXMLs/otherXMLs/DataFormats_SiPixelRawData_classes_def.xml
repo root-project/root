@@ -1,0 +1,16 @@
+<lcgdict>
+ <class name="SiPixelRawDataError" ClassVersion="10">
+  <version ClassVersion="10" checksum="3703023458"/>
+   <field name="errorMessage_" transient="true"/>
+ </class>
+ <class name="std::vector<SiPixelRawDataError>"/>
+ <class name="std::map<int, std::vector<SiPixelRawDataError> >"/>
+ <class name="edm::DetSet<SiPixelRawDataError>"/>
+ <class name="std::vector< edm::DetSet<SiPixelRawDataError> >"/>
+ <class name="edm::DetSetVector<SiPixelRawDataError>"/>
+ <class name="edm::Wrapper< std::vector<SiPixelRawDataError> >"/>
+ <class name="edm::Wrapper< std::map<int, std::vector<SiPixelRawDataError> > >"/>
+ <class name="edm::Wrapper< edm::DetSet<SiPixelRawDataError> >"/>
+ <class name="edm::Wrapper< std::vector<edm::DetSet<SiPixelRawDataError> > >"/>
+ <class name="edm::Wrapper< edm::DetSetVector<SiPixelRawDataError> >"/>
+</lcgdict>

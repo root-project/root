@@ -1,0 +1,38 @@
+<lcgdict>
+  <class name="AtlasHitsVector<MDTSimHit>" />
+  <class name="std::vector<MDTSimHit>" />
+
+  <class name="AtlasHitsVector<CSCSimHit>" />
+  <class name="std::vector<CSCSimHit>" />
+  
+  <class name="AtlasHitsVector<RPCSimHit>" />
+  <class name="std::vector<RPCSimHit>" />
+  
+  <class name="AtlasHitsVector<TGCSimHit>" />
+  <class name="std::vector<TGCSimHit>" />
+
+  <class name="AtlasHitsVector<GenericMuonSimHit>" />
+  <class name="std::vector<GenericMuonSimHit>" />
+
+  <class name="AthenaHitsVector<MDTSimHit>" id="D76D06CC-C15F-43E6-BBC3-480DE5DA065D" />
+  <class name="std::vector<MDTSimHit*>" />
+
+  <class name="AthenaHitsVector<CSCSimHit>" id="DC744F9B-078A-4C61-B03F-D035D885B559" />
+  <class name="std::vector<CSCSimHit*>" />
+  
+  <class name="AthenaHitsVector<RPCSimHit>" id="45EB013E-FC8E-4612-88B7-6E0CAF718F79" />
+  <class name="std::vector<RPCSimHit*>" />
+  
+  <class name="AthenaHitsVector<TGCSimHit>" id="D7C91818-4730-4717-A650-107F52C0221E" />
+  <class name="std::vector<TGCSimHit*>" />
+
+  <class name="AthenaHitsVector<GenericMuonSimHit>" id="5745A192-1438-11E1-9AE4-001E4F3DA869" />
+  <class name="std::vector<GenericMuonSimHit*>" />
+
+  <class name="MDTSimHit" />
+  <class name="CSCSimHit" />
+  <class name="RPCSimHit" />
+  <class name="TGCSimHit" />
+  <class name="GenericMuonSimHit" />
+
+</lcgdict>

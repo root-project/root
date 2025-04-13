@@ -1,0 +1,9 @@
+
+Processing execGetSelector.C...
+In constructor
+Testvar in constructor: -999
+
+In Macro after GetSelector
+Testvar before Process: 10
+
+testvar in Begin: 10

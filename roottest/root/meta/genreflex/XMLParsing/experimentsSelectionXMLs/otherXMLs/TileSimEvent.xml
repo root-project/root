@@ -1,0 +1,7 @@
+<lcgdict>
+  <class name="AthenaHitsVector<TileHit>" id="EA2209D1-C339-453D-AEAD-21C026F0735E" />
+  <class name="std::vector<TileHit*>" />
+  <class name="AtlasHitsVector<TileHit>"  id="8845A11C-49CA-448E-903D-4C5F2A325622" />
+  <class name="std::vector<TileHit>" />
+  <class name="TileHit" />
+</lcgdict>

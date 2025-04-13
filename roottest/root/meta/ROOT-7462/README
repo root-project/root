@@ -1,0 +1,84 @@
+Original problem:
+
+set atlas shell environment
+root.exe
+   TFile *_file0 = TFile::Open("atlasfile.root");
+
+bunch of Warning about missing dictionary
+
+   c = TClass::GetClass("GaudiCommon<Algorithm>")
+
+Error in <TProtoClass::FindDataMember>: data member with index 0 is not found in class GaudiUtils::Map<string,SmartIF<IService>,__gnu_cxx::hash_map<string,SmartIF<IService>,GaudiUtils::Hash<string>,equal_to<s
+tring>,allocator<SmartIF<IService> > > >
+Error in <CreateRealData>: Cannot find data member # 0 of class GaudiUtils::Map<string,SmartIF<IService>,__gnu_cxx::hash_map<string,SmartIF<IService>,GaudiUtils::Hash<string>,equal_to<string>,allocator<SmartI
+F<IService> > > > for parent GaudiCommon<Algorithm>!
+
+   c->GetListOfRealData()->ls();
+
+...
+OBJ: TRealData m_services      Description of persistent data members : 0 at: 0x9d46d70
+OBJ: TRealData m_errors        Description of persistent data members : 0 at: 0x9d47cb0
+...
+
+
+Tweak of the problem:
+
+  c = TClass::GetClass("GaudiCommon<Algorithm>");
+  c->GetListOfRealData()->ls();
+
+...
+OBJ: TRealData m_services      Description of persistent data members : 0 at: 0x300ce10
+OBJ: TRealData m_services.     Description of persistent data members : 0 at: 0x300e9c0
+OBJ: TRealData m_errors        Description of persistent data members : 0 at: 0x300eaa0
+...
+
+Note: no error or warning but the ListOfRealData is 'wrong'.
+
+
+Correct behavior:
+
+   TClass::GetClass("SmartIF<IService>");
+   TFile *_file0 = TFile::Open("atlasfile.root");
+TClass::GetClass("GaudiUtils::Map<string,SmartIF<IService>,__gnu_cxx::hash_map<string,SmartIF<IService>,GaudiUtils::Hash<string>,equal_to<string>,allocator<SmartIF<IService> > > >");
+   c = TClass::GetClass("GaudiCommon<Algorithm>");
+   c->GetListOfRealData()->ls();
+
+...
+OBJ: TRealData m_services      Description of persistent data members : 0 at: 0xc81c820
+OBJ: TRealData m_services.m_map        Description of persistent data members : 0 at: 0xc81dd00
+OBJ: TRealData m_errors        Description of persistent data members : 0 at: 0xc81ddb0
+...
+
+See autoparse for
+unary_function<pair<const string,SmartIF<IService> >,const string>
+SmartIF<IService>
+
+Analysis:
+  1) Opening the file triggering the autoloading of a lots of libraries and the autoparsing of many files.
+     This includes the declaration of Gaudi::Map but *not* of SmartIF nor SmartIF<IService>.
+     [Side note: this autoloading is due to DataVector<xAOD::Jet_v1> not having a dictionary]
+  2) During TClass::GetClass("GaudiCommon<Algorithm>"), the TProtoClass::FillTClass is called and
+     disable autoloading and autoparsing and then request the GaudiUtils::Map
+  3) Since there is no dictionary for GaudiUtils::Map, findScope is invoked.
+  4) During findScope, the instantiation of GaudiUtils::Map fails with an error similar to:
+        error: field has incomplete type 'SmartIF<IService>'
+  5) The error handling code path in this case in findScope did *not* revert the transaction
+     and unload the 'invalid' decl for the GaudiUtils::Map
+  6) TClingClassInfo assume all decl are valid but finds and use the invalid decl
+  7) In this case, the invalidity of the decl leads to a lack of data members
+  8) Thus TProtoClass::FindDataMember complains about the discrepency between the TProtoClass
+     information and the information from the decl.
+
+Requesting the TClass for the GaudiUtils::Map when autoloading and autoparsing are leads
+to the proper instantiation and thus success.
+
+Requesting the TClass for GaudiCommon<Algorithm> before loading the file means that
+when the request for the TClass for GaudiUtils::Map is done, the declaration for
+GaudiUtils::Map has not yet been parsed and thus findScope use a different error
+handling code path (one where the instantiation is not even attempted).
+
+In normal circunstances (all dictionary properly generated and loaded/loadable),
+the missing name part in the list of real data member is not fatal (it would be
+if it was the case during the initial gathering of information but as it is, all
+the necessary information is already in the rootpcm files).
+

@@ -1,0 +1,31 @@
+<lcgdict>
+
+  <class name    = "ICalo2Calo"               />
+  <class name    = "ICalo2MCTool"             />
+  <class name    = "ICaloClusterization"      />
+  <class name    = "ICaloClusterSelector"     />
+  <class name    = "ICaloClusterTool"         />
+  <class name    = "ICaloCorrection"          />
+  <class name    = "ICaloDigitTool"           />
+  <class name    = "ICaloDigits4Track"        />
+  <class name    = "ICaloHypoLikelihood"      /> 
+  <class name    = "ICaloHypoTool"            />
+  <class name    = "ICaloLikelihood"          />
+  <class name    = "ICaloSplitTool"           />
+  <class name    = "ICaloSubClusterTag"       />
+  <class name    = "ICaloTrackIdEval"         />
+  <class name    = "ICaloTrackMatch"          />
+  <class name    = "IL0Calo2Calo"             />
+  <class name    = "IPart2Calo"               />
+  <class name    = "ITrack2Calo"              />
+  <class name    = "ICaloCosmicsTool"         />
+  <class name    = "ICaloCosmicsTrackTool"    />
+  <class name    = "ICaloHypo2Calo"           />
+  <class name    = "ICaloGetterTool"          />
+  <class name    = "ICaloHypoEstimator"       />
+  <class name    = "IGammaPi0SeparationTool"  />
+</lcgdict>
+
+
+
+

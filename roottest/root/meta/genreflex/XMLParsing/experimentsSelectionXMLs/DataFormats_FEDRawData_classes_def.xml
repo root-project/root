@@ -1,0 +1,12 @@
+
+<lcgdict>
+ <class name="FEDRawData" ClassVersion="10">
+  <version ClassVersion="10" checksum="3186949634"/>
+ </class>
+ <class name="std::vector<FEDRawData>"/>
+ <class name="FEDRawDataCollection" ClassVersion="10">
+  <version ClassVersion="10" checksum="2136542618"/>
+ </class>
+ <class name="edm::Wrapper<FEDRawDataCollection>" splitLevel="0"/>
+ <class name="edm::RefProd<FEDRawDataCollection>"/>
+</lcgdict>

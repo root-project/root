@@ -1,0 +1,10 @@
+
+Processing execValuePrint.C...
+(TObject &) Name: TObject Title: Basic ROOT object
+(TNamed &) Name: a Title: b
+(TH1F &) Name:  Title:  NbinsX: 1
+(TDatime &) Mon Jan 30 12:45:59 1995
+(TString &) "123ABC"[6]
+(TFitResult &) <Empty FitResult>
+
+(TFitResultPtr &) <nullptr TFitResult>

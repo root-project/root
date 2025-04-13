@@ -1,0 +1,110 @@
+<lcgdict>
+
+  <!-- Vector -->
+  <class name="CLHEP::Hep2Vector"/>
+  <!-- rotation interface do not compile with reflex/gcc344 RDS 2006/03
+  <class name="CLHEP::Hep3RotationInterface"/>
+  <class name="CLHEP::Hep4RotationInterface"/>
+  -->
+  <class name="CLHEP::HepBoostZ"/>
+  <class name="CLHEP::HepBoostY"/>
+  <class name="CLHEP::HepBoostX"/>
+  <class name="CLHEP::HepBoost"/>
+  <class name="CLHEP::HepRotationZ"/>
+  <class name="CLHEP::HepRotationY"/>
+  <class name="CLHEP::HepRotationX"/>
+  <class name="CLHEP::HepRep4x4Symmetric"/>
+  <class name="CLHEP::HepRep4x4"/>
+  <class name="CLHEP::HepRep3x3"/>
+  <class name="CLHEP::HepLorentzVector"/>
+  <class name="CLHEP::HepLorentzRotation"/>
+  <class name="CLHEP::Hep3Vector"/>
+  <class name="CLHEP::HepAxisAngle"/>
+  <class name="CLHEP::HepEulerAngles"/>
+  <class name="CLHEP::HepRotation"/>
+
+  <!-- Random` -->
+  <class name="CLHEP::RandStudentT"/>
+  <class name="CLHEP::RandPoissonT"/>
+  <class name="CLHEP::RandPoissonQ"/>
+  <class name="CLHEP::RandPoisson"/>
+  <class name="CLHEP::RandLandau"/>
+  <class name="CLHEP::RandGeneral"/>
+  <class name="CLHEP::RandGaussT"/>
+  <class name="CLHEP::HepStat"/>
+  <class name="CLHEP::RandGaussQ"/>
+  <class name="CLHEP::RandGauss"/>
+  <class name="CLHEP::RandGamma"/>
+  <class name="CLHEP::RandBit"/>
+  <class name="CLHEP::RandExponential"/>
+  <class name="CLHEP::RandChiSquare"/>
+  <class name="CLHEP::RandBreitWigner"/>
+  <class name="CLHEP::RandFlat"/>
+  <class name="CLHEP::RandBinomial"/>
+  <class name="CLHEP::HepRandom"/>
+  <class name="CLHEP::RandEngine"/>
+  <class name="CLHEP::HepJamesRandom"/>
+  <class name="CLHEP::HepRandomEngine"/>
+
+  <!-- Geometry -->
+  <class name="HepGeom::BasicVector3D<double>"/>
+  <class name="HepGeom::BasicVector3D<float>"/>
+  <class name="HepGeom::Normal3D<double>"/>
+  <class name="HepGeom::Normal3D<float>"/>
+  <class name="HepGeom::Point3D<double>"/>
+  <class name="HepGeom::Point3D<float>"/>
+  <class name="HepGeom::Transform3D"/>
+<!--  <class name="HepTransform3D"/> -->
+  <class name="HepGeom::Rotate3D"/>
+  <class name="HepGeom::RotateX3D"/>
+  <class name="HepGeom::RotateY3D"/>
+  <class name="HepGeom::RotateZ3D"/>
+  <class name="HepGeom::Translate3D"/>
+  <class name="HepGeom::TranslateX3D"/>
+  <class name="HepGeom::TranslateY3D"/>
+  <class name="HepGeom::TranslateZ3D"/>
+  <class name="HepGeom::Reflect3D"/>
+  <class name="HepGeom::ReflectX3D"/>
+  <class name="HepGeom::ReflectY3D"/>
+  <class name="HepGeom::ReflectZ3D"/>
+  <class name="HepGeom::Scale3D"/>
+  <class name="HepGeom::ScaleX3D"/>
+  <class name="HepGeom::ScaleY3D"/>
+  <class name="HepGeom::ScaleZ3D"/>
+  <class name="HepGeom::Vector3D<double>"/>
+  <class name="HepGeom::Vector3D<float>"/>
+
+  <!-- Matrix  -->
+  <class name="CLHEP::HepDiagMatrix"/>
+  <class name="CLHEP::HepGenMatrix" />
+  <class name="CLHEP::HepMatrix"/>
+  <class name="CLHEP::HepSymMatrix"/>
+  <class name="CLHEP::HepVector"/>
+
+  <!-- GenericFunctions -->
+
+
+  <!-- OLD CLHEP -->
+
+  <class name="OldHepPoint3D" />
+  <class name="OldHepVector3D" />
+  <class name="OldBasicVector3D" />
+  <class name="OldHep3Vector" />
+  <class name="OldHepMatrix" />
+  <class name="OldHepGenMatrix" />
+  <class name="OldHepLorentzVector" />
+  <class name="OldHepTransform3D" />
+
+  <!-- OLD CLHEP Streamers -->
+
+  <class name="CLHEPVec3dStreamer" />
+  <class name="CLHEPPoint3dStreamer" />
+  <class name="CLHEPGenMatrixStreamer" />
+  <class name="CLHEPMatrixStreamer" />
+  <class name="CLHEPRotationStreamer" />
+  <class name="CLHEPLorVecStreamer" />
+  <class name="CLHEP3VectorStreamer" />
+  <class name="CLHEPBasicVectorStreamer" />
+  <class name="CLHEPTransform3DStreamer" />
+
+</lcgdict>

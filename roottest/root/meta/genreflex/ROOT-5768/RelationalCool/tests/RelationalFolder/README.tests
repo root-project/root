@@ -1,0 +1,40 @@
+The four log files contain the results of the tests executed by building 
+a stripped down version of test_RelationalFolder.cpp, i.e. essentially 
+test_RelationalFolder.cpp.gmtime (only test_gmtime_timegm enabled, with 
+verbose output, empty setup, and tests enabled for isdst=0, -1 and +1).
+
+- out.Windows.p1.adjustTimeZone
+
+From test_RelationalFolder.cpp.gmtime (both +1 and -1 tests enabled).
+It fails on isdst=+1 in January.
+Executed with PC clock set to "automatically adjust summer time".
+
+- out.Windows.m1.adjustTimeZone
+
+From test_RelationalFolder.cpp.gmtime modified so that the isdst=+1
+test is disabled. It fails on isdst=-1 in April.
+Executed with PC clock set to "automatically adjust summer time".
+
+- out.Windows.noTest.adjustTimeZone
+
+From test_RelationalFolder.cpp.gmtime modified so that the isdst=+1
+and isdst=-1 tests are both disabled. It succeeds but prints out all.
+Executed with PC clock set to "automatically adjust summer time".
+
+- out.Windows.doNotAdjustTimeZone
+
+From test_RelationalFolder.cpp.gmtime (both +1 and -1 tests enabled),
+i.e. the same setup as for out.Windows.p1.adjustTimeZone. It succeeds.
+Executed with PC clock set to "DO NOT automatically adjust summer time".
+
+-------------------------------------------------------------------------------
+
+For reference, the executable is rebuilt using the following two commands:
+
+cl.exe /nologo /c /I\\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\src\RelationalCool /I\\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\src\CoolKernel /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src\Foundation\SealBase /IL:\cygwin\win32_vc71_dbg\include /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src\Foundation\SealPlatform /I\\afs\all\cern.ch\sw\lcg\app\releases\POOL\POOL_2_1_0\src\AttributeList /I\\afs\all\cern.ch\sw\lcg\app\releases\POOL\POOL_2_1_0\src\POOLCore /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src\Framework\SealKernel /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src\Foundation\PluginManager /I\\afs\all\cern.ch\sw\lcg\app\releases\POOL\POOL_2_1_0\src\RelationalAccess /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src\Foundation\SealUtil /I\\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\src\CoolApplication /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src\Dictionary\Reflection /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src\Framework\SealServices /I\\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\src\RelationalCool\tests\Common /I\\afs\all\cern.ch\sw\lcg\external\uuid\1.32\win32_vc71\include /I\\afs\all\cern.ch\sw\lcg\external\Boost\1.31.0\win32_vc71\include\boost-1_31 /I\\afs\all\cern.ch\sw\lcg\external\CppUnit\1.8.0\win32_vc71\include /I\\afs\all\cern.ch\sw\lcg\external\pcre\4.4\win32_vc71\include /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\src /I\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\win32_vc71_dbg\include /I\\afs\all\cern.ch\sw\lcg\app\releases\POOL\POOL_2_1_0\src /Ic:\Program\ Files\Microsoft\ Visual\ Studio\ .NET\ 2003\VC7\include /Ic:\Program\ Files\Microsoft\ Visual\ Studio\ .NET\ 2003\VC7\PlatformSDK\Include /D_GNU_SOURCE /DGNU_SOURCE /DWIN32 /D_MBCS /D_WINDOWS /DSEAL_KERNEL_BUILD_ARCHIVE /D_DEBUG /W3 /WL /GR /GX /GF /GS /MD /Zm500 /Od /Z7 /Fo\\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\tmp\win32_vc71_dbg\src\RelationalCool\tests\RelationalFolder\test_RelationalFolder.obj \\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\src\RelationalCool\tests\RelationalFolder\test_RelationalFolder.cpp
+
+link.exe /NOLOGO /OUT:\\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\win32_vc71_dbg\tests\bin\unitTest_RelationalCool_RelationalFolder.exe /EXETYPE:DYNAMIC /DEBUG /INCREMENTAL:NO /LIBPATH:\\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\win32_vc71_dbg\lib /LIBPATH:\\afs\all\cern.ch\sw\lcg\external\uuid\1.32\win32_vc71\lib /LIBPATH:\\afs\all\cern.ch\sw\lcg\external\Boost\1.31.0\win32_vc71\lib /LIBPATH:\\afs\all\cern.ch\sw\lcg\external\CppUnit\1.8.0\win32_vc71\lib /LIBPATH:\\afs\all\cern.ch\sw\lcg\external\pcre\4.4\win32_vc71\lib /LIBPATH:\\afs\all\cern.ch\sw\lcg\app\releases\SEAL\SEAL_1_6_3\win32_vc71_dbg\lib /LIBPATH:\\afs\all\cern.ch\sw\lcg\app\releases\POOL\POOL_2_1_0\win32_vc71_dbg\lib /LIBPATH:c:\Program\ Files\Microsoft\ Visual\ Studio\ .NET\ 2003\VC7\lib /LIBPATH:c:\Program\ Files\Microsoft\ Visual\ Studio\ .NET\ 2003\VC7\PlatformSDK\Lib lcg_SealBase.lib lcg_AttributeList.lib lcg_POOLCore.lib lcg_PluginManager.lib lcg_SealKernel.lib lcg_RelationalAccess.lib lcg_SealUtil.lib lcg_RelationalCool.lib lcg_CoolApplication.lib lcg_Reflection.lib lcg_SealServices.lib uuid.lib cppunit_dll.lib libpcre.lib /nodefaultlib kernel32.lib user32.lib msvcprt.lib msvcrt.lib oldnames.lib \\afs\all\cern.ch\sw\lcg\app\releases\COOL\COOL_1_2_0\tmp\win32_vc71_dbg\src\RelationalCool\tests\RelationalFolder\test_RelationalFolder.obj
+
+
+
+

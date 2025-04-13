@@ -1,0 +1,19 @@
+<lcgdict>
+
+  <class name="ZdcDigits_p1" />
+  <class name="std::vector<ZdcDigits_p1>" />
+  <class name="ZdcDigitsCollection_p1" id="B77B5F9A-1C29-4D74-A107-B3C71680C029" />
+
+  <class name="ZdcRawChannel_p1" />
+  <class name="std::vector<ZdcRawChannel_p1>" />
+  <class name="ZdcRawChannelCollection_p1" id="A2BDA733-7A0A-459D-9237-33DFF3DC9982"/>
+
+  <class name="ZDC_SimStripHit_p1" />
+  <class name="std::vector<ZDC_SimStripHit_p1>" />
+  <class name="ZDC_SimStripHit_Collection_p1"  id="1082F8C1-BA19-47AF-83D7-4669BD12E9AC" />
+
+  <class name="ZDC_SimPixelHit_p1" />
+  <class name="std::vector<ZDC_SimPixelHit_p1>"  />
+  <class name="ZDC_SimPixelHit_Collection_p1"  id="EBCA37BF-38FF-4F19-B577-E5D0EFFA51D0" />
+
+</lcgdict>

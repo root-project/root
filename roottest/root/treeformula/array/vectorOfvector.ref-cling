@@ -1,0 +1,27 @@
+
+Processing runvectorOfvector.C+...
+Total created 10
+Total created 165
+Error in <TTree::Branch>: The pointer specified for vec is not of a class known to ROOT
+Total created 165
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "vec"
+Info in <TSelectorDraw::AbortProcess>: Variable compilation failed: {vec,}
+Total created 165
+Total created 825
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<One>
+Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fVec1.
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
+Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fVec1.
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
+Total created 165
+Total created 825
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<One>
+Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fVec1.
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
+Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fVec1.
+Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
+Total created 165
+The end
+(_Bool) false

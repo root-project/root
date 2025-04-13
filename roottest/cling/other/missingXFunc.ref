@@ -1,0 +1,8 @@
+
+Processing runmissingXFunc.C(12)...
+input_line_:2:2: error: no matching function for call to 'runmissingXFunc'
+ runmissingXFunc(12) /* invoking function corresponding to '.x' */
+ ^~~~~~~~~~~~~~~
+ note: candidate function not viable: requires 0 arguments, but 1 was provided
+void runmissingXFunc() {}
+     ^

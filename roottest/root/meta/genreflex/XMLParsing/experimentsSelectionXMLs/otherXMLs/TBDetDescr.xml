@@ -1,0 +1,10 @@
+<lcgdict>
+
+  <class name="TBElementContainer" id="37EEAD7E-4B29-4D1A-B9F1-62A755A758CD" />
+  <class name="TBElement" />
+
+  <class name="DataVector<TBElement>" />
+  <class name="std::vector<TBElement*>" />
+
+</lcgdict>
+

@@ -1,0 +1,34 @@
+<lcgdict>
+   <class name="EcalTBTDCSample" ClassVersion="10">
+    <version ClassVersion="10" checksum="3959849637"/>
+   </class>
+   <class name="EcalTBTDCRawInfo" ClassVersion="10">
+    <version ClassVersion="10" checksum="2382038550"/>
+   </class>
+   <class name="std::vector<EcalTBTDCSample>"/>
+   <class name="edm::Wrapper< EcalTBTDCRawInfo >" id="51B83E58-9F3A-7E74-D37C-7862F62CD62E"/>
+   <class name="EcalTBHodoscopePlaneRawHits" ClassVersion="10">
+    <version ClassVersion="10" checksum="3643975080"/>
+   </class>
+   <class name="EcalTBHodoscopeRawInfo" ClassVersion="10">
+    <version ClassVersion="10" checksum="3292505282"/>
+   </class>
+   <class name="std::vector<EcalTBHodoscopePlaneRawHits>"/>
+   <class name="edm::Wrapper< EcalTBHodoscopeRawInfo >" id="3D1D321A-05BE-28E1-ACE7-1B46D93A3BF5"/>
+   <class name="EcalTBHodoscopeRecInfo" ClassVersion="10">
+    <version ClassVersion="10" checksum="488867480"/>
+   </class>
+   <class name="edm::Wrapper< EcalTBHodoscopeRecInfo >" id="FBE03DB3-82D9-DA84-3666-8964E84C9080"/>
+   <class name="EcalTBTDCRecInfo" ClassVersion="10">
+    <version ClassVersion="10" checksum="4251405510"/>
+   </class>
+   <class name="edm::Wrapper< EcalTBTDCRecInfo >" id="709E9311-641C-F9FB-85B0-0AC689F982DD"/>
+   <class name="EcalTBEventHeader" ClassVersion="10">
+    <version ClassVersion="10" checksum="281518873"/>
+   </class>
+   <class name="EcalTBEventHeader::magnetsMeasurement" ClassVersion="10">
+    <version ClassVersion="10" checksum="4174944061"/>
+   </class>
+   <class name="std::vector<EcalTBEventHeader::magnetsMeasurement>"/>
+   <class name="edm::Wrapper< EcalTBEventHeader >" id="30CB005B-6BFD-A149-1D96-9279DB5C3441"/>
+</lcgdict>
