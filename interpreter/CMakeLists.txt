@@ -407,6 +407,12 @@ if (builtin_clang)
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
+
+  # Disable linking against shared LLVM.
+  # We have to do this after find_package(Clang). Finding Clang internally
+  # calls find_package(LLVM), which overwrites LLVM_LINK_LLVM_DYLIB to what it
+  # was set when building LLVM.
+  set(LLVM_LINK_LLVM_DYLIB FALSE)
 endif()
 
 # Reset the compiler flags after compiling LLVM and Clang
