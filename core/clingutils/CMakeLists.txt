@@ -80,31 +80,19 @@ foreach(dict ${stldicts})
   target_include_directories(${dict}Dict PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint)
 endforeach()
 
-set(CLANG_RESOURCE_DIR_STEM)
 if (builtin_clang)
-  set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR}/lib/clang)
-  set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION_MAJOR})
+    set(CLANG_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR})
 else ()
-  set(CLANG_RESOURCE_DIR_STEM ${LLVM_LIBRARY_DIR}/clang)
-  # A user can define a clang version to use, otherwise find it (but will error if more than one version is present)
-  if (NOT DEFINED CLANG_RESOURCE_DIR_VERSION)
-    if (NOT EXISTS ${CLANG_RESOURCE_DIR_STEM})
-      message(FATAL_ERROR "${CLANG_RESOURCE_DIR_STEM} does not exist. Please install clang.")
-    endif()
-    # There is no reasonable way to get the version of clang under which is its resource directory.
-    # For example, lib/clang/5.0.0/include. Deduce it.
-    file(GLOB CHILDREN RELATIVE ${CLANG_RESOURCE_DIR_STEM} ${CLANG_RESOURCE_DIR_STEM}/*)
-    list(LENGTH CHILDREN CHILDREN_LENGTH)
-    if (${CHILDREN_LENGTH} GREATER 1)
-      message(FATAL_ERROR "Found more than one version of clang. CLANG_RESOURCE_DIR_VERSION contains: '${CHILDREN}'." )
-    endif()
-
-    list(GET CHILDREN 0 CLANG_RESOURCE_DIR_VERSION)
+  # If no explicit Clang prefix is set, assume it lives inside LLVM prefix.
+  if(NOT DEFINED CLANG_INSTALL_PREFIX)
+    set(CLANG_INSTALL_PREFIX ${LLVM_DIR})
   endif()
 endif()
 
+# We only look for the Clang version that matches the LLVM version, because other setups are not supported.
+set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION_MAJOR})
 
-set(CLANG_RESOURCE_DIR ${CLANG_RESOURCE_DIR_STEM}/${CLANG_RESOURCE_DIR_VERSION}/include)
+set(CLANG_RESOURCE_DIR ${CLANG_INSTALL_PREFIX}/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include)
 
 #---Deal with clang resource here----------------------------------------------
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/
