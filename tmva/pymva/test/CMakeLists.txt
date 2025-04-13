@@ -16,7 +16,6 @@ set(Libraries Core MathCore TMVA PyMVA ROOTTMVASofie)
 # Look for needed python modules
 ROOT_FIND_PYTHON_MODULE(torch)
 ROOT_FIND_PYTHON_MODULE(keras)
-ROOT_FIND_PYTHON_MODULE(theano)
 ROOT_FIND_PYTHON_MODULE(tensorflow)
 ROOT_FIND_PYTHON_MODULE(sklearn)
 
