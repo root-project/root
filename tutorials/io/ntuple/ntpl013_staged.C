@@ -8,7 +8,7 @@
 /// \date September 2024
 /// \author The ROOT Team
 
-// NOTE: The RNTuple classes are experimental at this point.
+// NOTE: The RNTupleParallelWriter is experimental at this point.
 // Functionality and interface are still subject to changes.
 
 #include <ROOT/RNTupleFillContext.hxx>

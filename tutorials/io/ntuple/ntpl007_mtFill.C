@@ -9,9 +9,6 @@
 /// \date July 2021
 /// \author The ROOT Team
 
-// NOTE: The RNTuple classes are experimental at this point.
-// Functionality and interface are still subject to changes.
-
 #include <ROOT/REntry.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
