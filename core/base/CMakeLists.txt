@@ -198,12 +198,6 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
-if(root7)
-  set(BASE_HEADER_DIRS inc/ v7/inc/)
-  list(APPEND BASE_HEADERS
-      ROOT/RIndexIter.hxx)
-endif()
-
 # only here complete list of headers can be propogated to parent cmake file
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
 
@@ -211,7 +205,6 @@ target_sources(Core PRIVATE ${BASE_SOURCES})
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
 
 if(PCRE2_FOUND)
