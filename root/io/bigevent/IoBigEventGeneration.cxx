@@ -256,7 +256,8 @@ void Event::AddTrack(Float_t random)
 
    TClonesArray &tracks = *fTracks;
    //new(tracks[fNtrack++]) Track(random);
-   new(tracks[fNtrack++]) BigTrack(random,fNtrack%100);
+   new(tracks[fNtrack]) BigTrack(random,fNtrack%100);
+   ++fNtrack;
 }
 
 //______________________________________________________________________________
