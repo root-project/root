@@ -220,7 +220,7 @@ struct HasCollectionProxyMemberType<
 /// That is convenient only for non-nested types, i.e. it doesn't work with, e.g. `RField<std::vector<MyClass>,
 /// ROOT::Experimental::TagIsCollectionProxy>`, as the tag is not forwarded to the instantiation of the inner RField
 /// (that for the value type of the vector).  The following two possible solutions were considered:
-/// - A wrapper type (much like `ntuple/v7/inc/ROOT/RNTupleUtil.hxx:49`), that helps to differentiate both cases.
+/// - A wrapper type (much like `ntuple/inc/ROOT/RNTupleUtil.hxx:49`), that helps to differentiate both cases.
 /// There we would have:
 /// ```
 /// auto field = std::make_unique<RField<RProxiedCollection<MyClass>>>("klass"); // Using collection proxy

@@ -11,7 +11,7 @@
 // executable. This may be combined with `--gtest_filter` to select a particular test. For example, to run said test
 // for many clusters in a single group, the invocation would be
 // ```
-// ./tree/ntuple/v7/test/ntuple_limits --gtest_also_run_disabled_tests --gtest_filter=*Limits_ManyClusters
+// ./tree/ntuple/test/ntuple_limits --gtest_also_run_disabled_tests --gtest_filter=*Limits_ManyClusters
 // ```
 
 TEST(RNTuple, Limits_ManyFields)

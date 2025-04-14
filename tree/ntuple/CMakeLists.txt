@@ -56,39 +56,39 @@ HEADERS
   ROOT/RPageStorageFile.hxx
   ROOT/RRawPtrWriteEntry.hxx
 SOURCES
-  v7/src/RCluster.cxx
-  v7/src/RClusterPool.cxx
-  v7/src/RColumn.cxx
-  v7/src/RColumnElement.cxx
-  v7/src/RField.cxx
-  v7/src/RFieldBase.cxx
-  v7/src/RFieldMeta.cxx
-  v7/src/RFieldSequenceContainer.cxx
-  v7/src/RFieldUtils.cxx
-  v7/src/RFieldVisitor.cxx
-  v7/src/RMiniFile.cxx
-  v7/src/RNTuple.cxx
-  v7/src/RNTupleDescriptor.cxx
-  v7/src/RNTupleDescriptorFmt.cxx
-  v7/src/RNTupleFillContext.cxx
-  v7/src/RNTupleJoinTable.cxx
-  v7/src/RNTupleMerger.cxx
-  v7/src/RNTupleMetrics.cxx
-  v7/src/RNTupleModel.cxx
-  v7/src/RNTupleParallelWriter.cxx
-  v7/src/RNTupleProcessor.cxx
-  v7/src/RNTupleReader.cxx
-  v7/src/RNTupleSerialize.cxx
-  v7/src/RNTupleUtil.cxx
-  v7/src/RNTupleWriteOptions.cxx
-  v7/src/RNTupleWriter.cxx
-  v7/src/RNTupleView.cxx
-  v7/src/RPage.cxx
-  v7/src/RPageAllocator.cxx
-  v7/src/RPagePool.cxx
-  v7/src/RPageSinkBuf.cxx
-  v7/src/RPageStorage.cxx
-  v7/src/RPageStorageFile.cxx
+  src/RCluster.cxx
+  src/RClusterPool.cxx
+  src/RColumn.cxx
+  src/RColumnElement.cxx
+  src/RField.cxx
+  src/RFieldBase.cxx
+  src/RFieldMeta.cxx
+  src/RFieldSequenceContainer.cxx
+  src/RFieldUtils.cxx
+  src/RFieldVisitor.cxx
+  src/RMiniFile.cxx
+  src/RNTuple.cxx
+  src/RNTupleDescriptor.cxx
+  src/RNTupleDescriptorFmt.cxx
+  src/RNTupleFillContext.cxx
+  src/RNTupleJoinTable.cxx
+  src/RNTupleMerger.cxx
+  src/RNTupleMetrics.cxx
+  src/RNTupleModel.cxx
+  src/RNTupleParallelWriter.cxx
+  src/RNTupleProcessor.cxx
+  src/RNTupleReader.cxx
+  src/RNTupleSerialize.cxx
+  src/RNTupleUtil.cxx
+  src/RNTupleWriteOptions.cxx
+  src/RNTupleWriter.cxx
+  src/RNTupleView.cxx
+  src/RPage.cxx
+  src/RPageAllocator.cxx
+  src/RPagePool.cxx
+  src/RPageSinkBuf.cxx
+  src/RPageStorage.cxx
+  src/RPageStorageFile.cxx
 LINKDEF
   LinkDef.h
 DEPENDENCIES
@@ -102,14 +102,14 @@ target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
 # Enable RNTuple support for Intel DAOS
 if(daos OR daos_mock)
   set(ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
-  target_sources(ROOTNTuple PRIVATE v7/src/RDaos.cxx v7/src/RPageStorageDaos.cxx)
+  target_sources(ROOTNTuple PRIVATE src/RDaos.cxx src/RPageStorageDaos.cxx)
   target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_DAOS)
 
   target_include_directories(ROOTNTuple PRIVATE ${UUID_INCLUDE_DIR})
   target_link_libraries(ROOTNTuple PRIVATE ${UUID_LIBRARY})
   if(daos_mock)
-    target_include_directories(ROOTNTuple PRIVATE v7/inc/ROOT/libdaos_mock/)
-    target_sources(ROOTNTuple PRIVATE v7/src/libdaos_mock/libdaos_mock.cxx)
+    target_include_directories(ROOTNTuple PRIVATE inc/ROOT/libdaos_mock/)
+    target_sources(ROOTNTuple PRIVATE src/libdaos_mock/libdaos_mock.cxx)
   else()
     target_include_directories(ROOTNTuple PRIVATE ${DAOS_INCLUDE_DIRS})
     target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES})
@@ -118,7 +118,7 @@ endif()
 
 if(MSVC)
   target_compile_definitions(ROOTNTuple PRIVATE _USE_MATH_DEFINES)
-  set_source_files_properties(v7/src/RField.cxx PROPERTIES COMPILE_FLAGS /bigobj)
+  set_source_files_properties(src/RField.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)

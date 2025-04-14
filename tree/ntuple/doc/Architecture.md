@@ -3,7 +3,7 @@ RNTuple Code Architecture
 
 > This document is meant for ROOT developers. It provides background information on the RNTuple code design and behavior.
 
-> The RNTuple code uses the nomenclature from the [RNTuple format specification](https://github.com/root-project/root/blob/master/tree/ntuple/v7/doc/BinaryFormatSpecification.md) (e.g. "field", "column", "anchor", etc.).
+> The RNTuple code uses the nomenclature from the [RNTuple format specification](https://github.com/root-project/root/blob/master/tree/ntuple/doc/BinaryFormatSpecification.md) (e.g. "field", "column", "anchor", etc.).
 
 General Principles
 ------------------
