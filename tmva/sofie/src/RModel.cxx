@@ -584,18 +584,18 @@ void RModel::GenerateIntermediateMemoryPool() {
 void RModel::GenerateIntermediateTensorInfo() {
    if (!fIntermediateTensorInfos.empty()) {
       std::string tensor_declaration_block = "";
-
       for (auto &i : fIntermediateTensorInfos) {
          if (i.second.type == ETensorType::BOOL) {
                tensor_declaration_block += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
                // No pointer allocation possible for BOOL, but we create a reference to the vector to make the data member layout more consistent
                tensor_declaration_block += "std::vector<bool> & tensor_" + i.first + " = fTensor_" + i.first + ";\n";
-               return;
+               continue;
          }
+         bool is_extended = (fOptimizationLevel == OptimizationLevel::kExtended);
+         bool in_freq_map = (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end());
+         bool in_output_names = (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end());
 
-         bool memory_optimization_condition = (fOptimizationLevel==OptimizationLevel::kExtended) && (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end());
-         if (!memory_optimization_condition &&
-            std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end())  {
+         if ((in_freq_map && in_output_names) || (!in_freq_map && !is_extended && in_output_names)) {
             size_t length = ConvertShapeToLength(i.second.shape);
 
             if (i.second.type == ETensorType::FLOAT) {
@@ -648,7 +648,6 @@ void RModel::GenerateOperatorDeclarations() {
 }
 
 void RModel::GenerateDynamicTensorInfo() {
-    fGC += "//---- allocate the intermediate dynamic tensors\n";
     std::stringstream out;
     for (auto & i: fDynamicTensorInfos) {
         auto length = ConvertDynamicShapeToLength(i.second.shape);
