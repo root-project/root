@@ -1,7 +1,10 @@
+\defgroup NTuple RNTuple-related classes
+\brief Classes designed for columnar data storage in modern ROOT
+
 RNTuple Introduction
 ====================
 
-RNTuple (for n-tuple and nested tuple) is the experimental evolution of TTree columnar data storage. RNTuple introduces
+RNTuple (for n-tuple and nested tuple) is the evolution of TTree columnar data storage. RNTuple introduces
 new interfaces that aim to be more robust.  In particular, the new interfaces are type-safe through the use of
 templates, and the ownership is well-defined through the use of smart pointers.  For instance
 
@@ -53,21 +56,17 @@ an arbitrary number of fixed-sized elements of a well-defined set of types: inte
 bit sizes.  A C++ type may be mapped to multiple columns.  For instance, an `std::vector<float>` maps to two columns,
 an offset column indicating the size of the vector per entry, and a payload column with the float data.
 
-Columns are partitioned into **pages** (roughly: TTree baskets) of a few kB -- a few tens of kB each.
+Columns are partitioned into **pages** (roughly: TTree baskets) of a few kB -- a MB each.
 The **physical layer** (only) needs to provide the means to store and retrieve pages.  The physical layer is
 decoupled from the high-level C++ logic.  The physical layer implements an abstract page storage interface,
 so that dedicated implementations for key-value stores and other storage systems are conceivable.
 At this point, the only provided backend stores the pages in ROOT files.
 
 RNTuples are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
-consecutive entries.  Clusters provide a unit of writing and will provide the means for parallel writing of data
-in a future version of RNTuple.
+consecutive entries.  Clusters provide a unit of writing and provide the means for parallel writing of RNTuple data.
 
 Related classes
 ---------------
 
 \defgroup ROOT7 ROOT7 classes
-\brief Interfaces and classes designed for future ROOT version 7 (experimental!)
-
-\defgroup NTuple NTuple-related classes
-\brief tuple classes designed for future ROOT version 7  (experimental!)
+\brief Interfaces and classes designed for future ROOT version 7
