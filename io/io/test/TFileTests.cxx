@@ -1,7 +1,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <cstring>
 #include <csignal>
 
 #include "gtest/gtest.h"
@@ -205,12 +204,6 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(c, gDirectory);
    EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/a/b/c");
    EXPECT_EQ(std::string(gDirectory->GetName()), "c");
-}
-
-void handle_sigterm(int signum)
-{
-   terminated = 1;
-   std::cout << "handled signal " << strsignal(signum) << " on PID " << getpid() << std::endl;
 }
 
 // https://github.com/root-project/root/issues/13300
