@@ -471,6 +471,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
 
    std::size_t AppendImpl(const void *from) final;
+   void ReadTObject(void *to, UInt_t uniqueID, UInt_t bits);
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
    void AfterConnectPageSource() final;
