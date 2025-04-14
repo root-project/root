@@ -1,10 +1,13 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <cstring>
+#include <csignal>
 
 #include "gtest/gtest.h"
 
 #include "TFile.h"
+#include "TH1I.h"
 #include "TMemFile.h"
 #include "TDirectory.h"
 #include "TKey.h"
@@ -202,4 +205,32 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(c, gDirectory);
    EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/a/b/c");
    EXPECT_EQ(std::string(gDirectory->GetName()), "c");
+}
+
+void handle_sigterm(int signum)
+{
+   terminated = 1;
+   std::cout << "handled signal " << strsignal(signum) << " on PID " << getpid() << std::endl;
+}
+
+// https://github.com/root-project/root/issues/13300
+TEST(TFile, Sigterm)
+{
+   auto filename = "out13300.root";
+   {
+      TFile file(filename, "RECREATE");
+      file.mkdir("subdir")->cd();
+      TH1I hist("h", "h", 10, 0., 1.);
+      hist.Fill(0.4);
+      // Since the real behavior is save+close+crash which would make the test fail,
+      // rather than calling directly std::raise(SIGTERM),
+      // we emulate the response to SIGTERM in TerminalConfigUnix before crash:
+      TROOT::WriteCloseAllFiles();
+      TROOT::CleanUpROOTAtExit();
+   }
+   {
+      TFile file(filename, "READ");
+      ASSERT_EQ(file.Get<TH1I>("subdir/h")->GetBinContent(5), 1);
+   }
+   gSystem->Unlink(filename);
 }
