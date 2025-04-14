@@ -227,7 +227,7 @@ static Int_t ITIMQQ(const char *time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write and Close all open Files, useful to be called when SIGTERM is caught.
+/// Write and Close all open writable TFiles, useful to be called when SIGTERM is caught.
 
 void TROOT::WriteCloseAllFiles()
 {
@@ -236,12 +236,17 @@ void TROOT::WriteCloseAllFiles()
 
       if (gROOT->GetListOfFiles()) {
          TIter next(gROOT->GetListOfFiles());
-         while(TObject* obj = next()) {
-            if (obj) {
-               TMethodCall callwrite(obj->IsA(), "Write", "");
-               callwrite.Execute((void *)(obj));
-               TMethodCall callclose(obj->IsA(), "Close", "");
-               callclose.Execute((void *)(obj));
+         while (TObject *obj = next()) {
+            if (obj && obj->InheritsFrom(TClass::GetClass("TFile", kFALSE, kTRUE))) {
+               TMethodCall callIsWritable(obj->IsA(), "IsWritable", "");
+               Longptr_t retLong = 0;
+               callIsWritable.Execute((void *)(obj), retLong);
+               if (retLong == 1) {
+                  TMethodCall callWrite(obj->IsA(), "Write", "");
+                  callWrite.Execute((void *)(obj));
+                  TMethodCall callClose(obj->IsA(), "Close", "");
+                  callClose.Execute((void *)(obj));
+               }
             }
          }
       }

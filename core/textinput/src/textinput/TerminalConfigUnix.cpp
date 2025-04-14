@@ -107,7 +107,7 @@ TerminalConfigUnix::HandleSignal(int signum) {
   }
 
   // No previous handler found, re-raise to get default handling:
-    if (signum == SIGTERM) { // gentle save and close if SIGTERM
+  if (signum == SIGTERM) { // gentle save and close if SIGTERM
      TROOT::WriteCloseAllFiles();
      TROOT::CleanUpROOTAtExit();
   }
