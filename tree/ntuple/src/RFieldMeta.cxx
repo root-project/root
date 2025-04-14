@@ -981,7 +981,7 @@ std::size_t ROOT::RField<TObject>::AppendImpl(const void *from)
    return nbytes;
 }
 
-void ROOT::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+void ROOT::RField<TObject>::ReadTObject(void *to, UInt_t uniqueID, UInt_t bits)
 {
    // Cf. TObject::Streamer()
 
@@ -990,13 +990,19 @@ void ROOT::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void 
       throw RException(R__FAIL("RNTuple I/O on referenced TObject is unsupported"));
    }
 
-   CallReadOn(*fSubfields[0], globalIndex, static_cast<unsigned char *>(to) + GetOffsetUniqueID());
+   *reinterpret_cast<UInt_t *>(reinterpret_cast<unsigned char *>(to) + GetOffsetUniqueID()) = uniqueID;
 
    const UInt_t bitIsOnHeap = obj->TestBit(TObject::kIsOnHeap) ? TObject::kIsOnHeap : 0;
-   UInt_t bits;
-   CallReadOn(*fSubfields[1], globalIndex, &bits);
    bits |= bitIsOnHeap | TObject::kNotDeleted;
    *reinterpret_cast<UInt_t *>(reinterpret_cast<unsigned char *>(to) + GetOffsetBits()) = bits;
+}
+
+void ROOT::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   UInt_t uniqueID, bits;
+   CallReadOn(*fSubfields[0], globalIndex, &uniqueID);
+   CallReadOn(*fSubfields[1], globalIndex, &bits);
+   ReadTObject(to, uniqueID, bits);
 }
 
 void ROOT::RField<TObject>::AfterConnectPageSource()
