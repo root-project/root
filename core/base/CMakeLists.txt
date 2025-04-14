@@ -200,8 +200,7 @@ set(BASE_SOURCES
 if(root7)
   set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
-      ROOT/RFloat16.hxx
-      ROOT/RIndexIter.hxx)
+      ROOT/RFloat16.hxx)
 endif()
 
 # only here complete list of headers can be propogated to parent cmake file
