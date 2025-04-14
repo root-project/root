@@ -2676,6 +2676,11 @@ void TCling::Print(Option_t *option) const
          for (auto & cls : fAutoParseClasses) {
             std::cout << "  " << cls << std::endl;
          }
+      } else if (!strcmp(option, "autoloaded")) {
+         std::cout << "Auto loaded libraries:" << std::endl;
+         for (auto & lib : fAutoLoadedLibraries) {
+            std::cout << "  " << lib << std::endl;
+         }
       } else {
          ::Error("TCling::Print", "Unknown option '%s'", option);
       }
@@ -3453,6 +3458,14 @@ template <int N>
 static bool StartsWithStrLit(const char *haystack, const char (&needle)[N]) {
    return !strncmp(haystack, needle, N - 1);
 }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register that a library was autoloaded either to provide a 'missing' symbol
+/// or to provide a class (see TClass::GetClass and TROOT::LoadClass).
+void TCling::RegisterAutoLoadedLibrary(const char *libname)
+{
+   fAutoLoadedLibraries.insert(libname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6671,6 +6684,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    if (!LibLoader(libName))
       return nullptr;
 
+   fAutoLoadedLibraries.insert(libName);
    return llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(dlsym_mangled_name);
 }
 

@@ -122,6 +122,7 @@ private: // Data Members
    std::set<size_t> fPayloads; // Set of payloads
    std::set<const char*> fParsedPayloadsAddresses; // Set of payloads which were parsed
    std::set<std::string> fAutoParseClasses; // Set of classes for which we autoparsed a header
+   std::set<std::string> fAutoLoadedLibraries; // Set of libraries that were autoloaded
    std::hash<std::string> fStringHashFunction; // A simple hashing function
    std::unordered_set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
@@ -258,6 +259,8 @@ public: // Public Interface
    virtual void AddAvailableIndentifiers(TSeqCollection& Idents) final;
    void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) final;
    void    UnRegisterTClassUpdate(const TClass *oldcl) final;
+
+   void    RegisterAutoLoadedLibrary(const char *libname) final;
 
    Int_t   SetClassSharedLibs(const char *cls, const char *libs) final;
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),

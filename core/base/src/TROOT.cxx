@@ -2202,6 +2202,9 @@ Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
          // TSystem::Load returns 1 when the library was already loaded, return success in this case.
          if (err == 1)
             err = 0;
+         if (err == 0)
+            // Register the Autoloading of the library
+            gCling->RegisterAutoLoadedLibrary(libname);
          return err;
       }
    } else {
