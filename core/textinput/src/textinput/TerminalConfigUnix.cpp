@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <cstring>
 
+#include <TROOT.h>
+
 using namespace textinput;
 using std::memcpy;
 using std::signal;
@@ -105,6 +107,10 @@ TerminalConfigUnix::HandleSignal(int signum) {
   }
 
   // No previous handler found, re-raise to get default handling:
+    if (signum == SIGTERM) { // gentle save and close if SIGTERM
+     TROOT::WriteCloseAllFiles();
+     TROOT::CleanUpROOTAtExit();
+  }
   signal(signum, SIG_DFL); // unregister ourselves
   raise(signum); // terminate through default handler
 
