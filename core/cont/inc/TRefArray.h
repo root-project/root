@@ -72,13 +72,19 @@ public:
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
 
    void             Add(TObject *obj) override { AddLast(obj); }
+   void             Add(TObject *obj, Option_t *opt) override { AddLast(obj, opt); }
    void             AddFirst(TObject *obj) override;
+   void             AddFirst(TObject *obj, Option_t *) override { AddFirst(obj); }
    void             AddLast(TObject *obj) override;
+   void             AddLast(TObject *obj, Option_t *) override { AddLast(obj); }
    void             AddAt(TObject *obj, Int_t idx) override;
+   void             AddAt(TObject *obj, Int_t idx, Option_t *) override { AddAt(obj, idx); }
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
    void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddAfter(const TObject *after, TObject *obj, Option_t *) override { AddAfter(after, obj); }
    void             AddBefore(const TObject *before, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj, Option_t *) override { AddBefore(before, obj); }
    TObject         *RemoveAt(Int_t idx) override;
    TObject         *Remove(TObject *obj) override;
 
