@@ -544,7 +544,7 @@ TTree::TFriendLock::~TFriendLock()
 /// \class TTree::TClusterIterator
 /// Helper class to iterate over cluster of baskets.
 /// \note In contrast to class TListIter, looping here must NOT be done using
-/// `while (iter.Next())` that would lead to an infinite loop, but rather using
+/// `while (iter())` or `while (iter.Next())` that would lead to an infinite loop, but rather using
 /// `while( (auto clusterStart = iter()) < tree->GetEntries() )`.
 /// \see TTree::GetClusterIterator
 
