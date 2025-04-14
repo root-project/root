@@ -227,9 +227,31 @@ static Int_t ITIMQQ(const char *time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Write and Close all open Files, useful to be called when SIGTERM is caught.
+
+void TROOT::WriteCloseAllFiles()
+{
+   if (gROOT) {
+      R__LOCKGUARD(gROOTMutex);
+
+      if (gROOT->GetListOfFiles()) {
+         TIter next(gROOT->GetListOfFiles());
+         while(TObject* obj = next()) {
+            if (obj) {
+               TMethodCall callwrite(obj->IsA(), "Write", "");
+               callwrite.Execute((void *)(obj));
+               TMethodCall callclose(obj->IsA(), "Close", "");
+               callclose.Execute((void *)(obj));
+            }
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Clean up at program termination before global objects go out of scope.
 
-static void CleanUpROOTAtExit()
+void TROOT::CleanUpROOTAtExit()
 {
    if (gROOT) {
       R__LOCKGUARD(gROOTMutex);
