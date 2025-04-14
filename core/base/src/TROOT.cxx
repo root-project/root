@@ -236,7 +236,7 @@ void TROOT::WriteCloseAllFiles()
 
       if (gROOT->GetListOfFiles()) {
          TIter next(gROOT->GetListOfFiles());
-         while(TObject* obj = next()) {
+         while (TObject *obj = next()) {
             if (obj && obj->InheritsFrom(TClass::GetClass("TFile", kFALSE, kTRUE))) {
                TMethodCall callwrite(obj->IsA(), "Write", "");
                callwrite.Execute((void *)(obj));
