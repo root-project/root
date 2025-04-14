@@ -473,6 +473,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadTObject(void *to, UInt_t uniqueID, UInt_t bits);
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
    void AfterConnectPageSource() final;
 
