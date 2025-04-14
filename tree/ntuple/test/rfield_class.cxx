@@ -72,7 +72,7 @@ TEST(RNTuple, DiamondInheritance)
    EXPECT_FLOAT_EQ(4.0, d->d);
 }
 
-TEST(RTNuple, TObject)
+TEST(RNTuple, TObject)
 {
    // Ensure that TObject cannot be accidentally handled through the generic RClassField field
    EXPECT_THROW(ROOT::RClassField("obj", "TObject"), ROOT::RException);
@@ -128,7 +128,7 @@ TEST(RTNuple, TObject)
    EXPECT_TRUE(heapObj->TestBit(TObject::kNotDeleted));
 }
 
-TEST(RTNuple, TObjectReferenced)
+TEST(RNTuple, TObjectReferenced)
 {
    // RNTuple does not support reading nor writing of TObject objects that are marked as referenced
    FileRaii fileGuard("test_ntuple_tobject_referenced.root");
@@ -152,7 +152,7 @@ TEST(RTNuple, TObjectReferenced)
    EXPECT_THROW(reader->LoadEntry(0), ROOT::RException);
 }
 
-TEST(RTNuple, TObjectShow)
+TEST(RNTuple, TObjectShow)
 {
    FileRaii fileGuard("test_ntuple_tobject_show.root");
    {
@@ -179,7 +179,7 @@ TEST(RTNuple, TObjectShow)
    EXPECT_EQ(expected, os.str());
 }
 
-TEST(RTNuple, TObjectDerived)
+TEST(RNTuple, TObjectDerived)
 {
    FileRaii fileGuard("test_ntuple_tobject_derived.root");
 
