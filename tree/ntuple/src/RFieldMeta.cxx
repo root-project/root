@@ -1005,6 +1005,14 @@ void ROOT::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void 
    ReadTObject(to, uniqueID, bits);
 }
 
+void ROOT::RField<TObject>::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
+{
+   UInt_t uniqueID, bits;
+   CallReadOn(*fSubfields[0], localIndex, &uniqueID);
+   CallReadOn(*fSubfields[1], localIndex, &bits);
+   ReadTObject(to, uniqueID, bits);
+}
+
 void ROOT::RField<TObject>::AfterConnectPageSource()
 {
    if (GetOnDiskTypeVersion() != 1) {
