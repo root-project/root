@@ -362,7 +362,7 @@ jobs:
         include:
           - image: fedora41
           - image: fedora42
-            overrides: ["CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: alma8
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
