@@ -9,10 +9,6 @@
 # @author Jakob Blomer CERN
 ############################################################################
 
-if(NOT root7)
-  return()
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
 HEADERS
   ROOT/RCluster.hxx
