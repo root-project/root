@@ -13,8 +13,8 @@
 \ingroup Containers
 Iterator abstract base class. This base class provides the interface
 for collection iterators.
-\see TList documentation for examples of derived classes and on how to
-loop with these iterators, and TCollection documentation for more
+\note See TList documentation for examples of derived classes and on how
+to loop with these iterators, and TCollection documentation for more
 modern alternatives that dynamically cast the derived class.
 */
 
