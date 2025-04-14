@@ -2235,6 +2235,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
       TMathText tm;
       tm.SetTextAlign(GetTextAlign());
       tm.SetTextFont(GetTextFont());
+      tm.SetTextColor(GetTextColor());
       tm.PaintMathText(x, y, angle, size, text1);
       // If PDF, paint using TLatex
       if (gVirtualPS) {
