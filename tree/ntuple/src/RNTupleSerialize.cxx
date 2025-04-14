@@ -3,8 +3,6 @@
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2021-08-02
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *

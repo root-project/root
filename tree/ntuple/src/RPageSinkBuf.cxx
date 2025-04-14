@@ -4,8 +4,6 @@
 /// \author Max Orok <maxwellorok@gmail.com>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2021-03-17
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *

@@ -2,8 +2,6 @@
 /// \ingroup NTuple ROOT7
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-04-15
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
