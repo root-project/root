@@ -36,11 +36,17 @@ protected:
 public:
    virtual           ~TSeqCollection() { }
    void              Add(TObject *obj) override { AddLast(obj); }
+   void              Add(TObject *obj, Option_t *opt) override { AddLast(obj, opt); }
    virtual void      AddFirst(TObject *obj) = 0;
+   virtual void      AddFirst(TObject */*obj*/, Option_t */*opt*/) { AbstractMethod("AddFirst"); }; // not = 0, to not break user scripts
    virtual void      AddLast(TObject *obj) = 0;
+   virtual void      AddLast(TObject */*obj*/, Option_t */*opt*/) { AbstractMethod("AddLast"); }; // not = 0, to not break user scripts
    virtual void      AddAt(TObject *obj, Int_t idx) = 0;
+   virtual void      AddAt(TObject */*obj*/, Int_t /*idx*/, Option_t */*opt*/) { AbstractMethod("AddAt"); }; // not = 0, to not break user scripts
    virtual void      AddAfter(const TObject *after, TObject *obj) = 0;
+   virtual void      AddAfter(const TObject */*after*/, TObject */*obj*/, Option_t */*opt*/) { AbstractMethod("AddAfter"); }; // not = 0, to not break user scripts
    virtual void      AddBefore(const TObject *before, TObject *obj) = 0;
+   virtual void      AddBefore(const TObject */*before*/, TObject */*obj*/, Option_t */*opt*/)  { AbstractMethod("AddABefore"); }; // not = 0, to not break user scripts
    virtual void      RemoveFirst() { Remove(First()); }
    virtual void      RemoveLast() { Remove(Last()); }
    virtual TObject  *RemoveAt(Int_t idx) { return Remove(At(idx)); }
