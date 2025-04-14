@@ -644,3 +644,11 @@ Rint.Canvas.HighLightColor:      5
 #                          1 All Branches (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
 # TTreeCache.Prefill: 1
+
+# Advanced Debug Settings
+# Setting  Root.TClass.GetClass.AutoParsing to false
+# will disable any auto-parsing execution of `TClass::GetClass`.  This will
+# result in not being able to find TClass-es when the name requires not-already
+# loaded interpreted information (eg. a typedef to be resolved).
+#
+# Root.TClass.GetClass.AutoParsing: true

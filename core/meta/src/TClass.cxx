@@ -55,6 +55,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TDataType.h"
 #include "TDatime.h"
 #include "TEnum.h"
+#include "TEnv.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -3158,11 +3159,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
 #ifdef ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING
    constexpr bool requestDisableAutoLoading = true;
 #else
-   // We could get the user choice from:
-   //   - environment variable ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING
-   //   - rootrc key Root.TClass.GetClass.AutoParsing
-   //   - TClass::SetGetClassAutoParsing
-   constexpr bool requestDisableAutoLoading = false;
+   static const bool requestDisableAutoLoading = !gEnv->GetValue("Root.TClass.GetClass.AutoParsing", true);
 #endif
    if (requestDisableAutoLoading)
       disableAutoParsing = true;
