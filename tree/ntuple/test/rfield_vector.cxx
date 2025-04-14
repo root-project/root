@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <TObject.h>
+
 // A layer of indirection to hide std::vector's second template parameter.
 // This way we can generalize tests over RVec and std::vector using a template template parameter (see below).
 template <typename T>
@@ -493,4 +495,41 @@ TEST(RNTuple, VectorOfBitset)
    EXPECT_EQ(2u, ptrVecOfBitset->size());
    EXPECT_EQ("111", ptrVecOfBitset->at(0).to_string());
    EXPECT_EQ("000", ptrVecOfBitset->at(1).to_string());
+}
+
+TEST(RNTuple, VectorOfTObject)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_tobject.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto objs = model->MakeField<std::vector<TObject>>("objs");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      TObject obj;
+      obj.SetUniqueID(42);
+      objs->push_back(obj);
+      obj.SetUniqueID(43);
+      objs->push_back(obj);
+      writer->Fill();
+      writer->CommitCluster();
+
+      objs->clear();
+      obj.SetUniqueID(44);
+      objs->push_back(obj);
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2u, reader->GetNEntries());
+   auto &entry = reader->GetModel().GetDefaultEntry();
+   auto objs = entry.GetPtr<std::vector<TObject>>("objs");
+
+   reader->LoadEntry(0);
+   ASSERT_EQ(2u, objs->size());
+   EXPECT_EQ(42u, objs->at(0).GetUniqueID());
+   EXPECT_EQ(43u, objs->at(1).GetUniqueID());
+
+   reader->LoadEntry(1);
+   ASSERT_EQ(1u, objs->size());
+   EXPECT_EQ(44u, objs->at(0).GetUniqueID());
 }
