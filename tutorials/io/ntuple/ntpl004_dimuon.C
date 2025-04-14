@@ -13,12 +13,7 @@
 /// \date April 2019
 /// \author The ROOT Team
 
-// NOTE: The RNTuple classes are experimental at this point.
-// Functionality and interface are still subject to changes.
-
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RNTupleDS.hxx>
-#include <ROOT/RVec.hxx>
 
 #include <TCanvas.h>
 #include <TH1D.h>
@@ -32,9 +27,6 @@
 #include <string>
 #include <vector>
 #include <utility>
-
-// Import classes from experimental namespace for the time being
-using RNTupleDS = ROOT::RDF::RNTupleDS;
 
 constexpr char const *kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1.root";
 
