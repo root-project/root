@@ -24,7 +24,7 @@
 /// \date September 2024
 /// \author The ROOT Team
 
-// NOTE: The RNTuple classes are experimental at this point.
+// NOTE: The RNTupleParallelWriter, RNTupleFillContext, and RRawPtrWriteEntry are experimental at this point.
 // Functionality and interface are still subject to changes.
 
 #include <ROOT/RRawPtrWriteEntry.hxx>
