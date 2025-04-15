@@ -1359,7 +1359,7 @@ public:
 
          auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
             std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
-            options, newRDF->GetLoopManager(), GetDataSource(), true /* fToNTuple */});
+            options, newRDF->GetLoopManager(), GetLoopManager(), true /* fToNTuple */});
 
          // The Snapshot helper will use colListNoAliasesWithSizeBranches (with aliases resolved) as input columns, and
          // colListWithAliasesAndSizeBranches (still with aliases in it, passed through snapHelperArgs) as output column
@@ -1388,7 +1388,7 @@ public:
 
          auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
             std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
-            options, newRDF->GetLoopManager(), GetDataSource(), false /* fToRNTuple */});
+            options, newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */});
 
          resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
             colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
@@ -3247,7 +3247,7 @@ private:
 
          auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
             std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options,
-            newRDF->GetLoopManager(), GetDataSource(), true /* fToRNTuple */});
+            newRDF->GetLoopManager(), GetLoopManager(), true /* fToRNTuple */});
 
          // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
          // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column
@@ -3275,7 +3275,7 @@ private:
 
          auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
             std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options,
-            newRDF->GetLoopManager(), GetDataSource(), false /* fToRNTuple */});
+            newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */});
 
          // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
          // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column
