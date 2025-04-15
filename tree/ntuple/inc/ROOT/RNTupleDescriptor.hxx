@@ -235,7 +235,7 @@ class RClusterDescriptor final {
 public:
    // clang-format off
    /**
-   \class ROOT::Experimental::RClusterDescriptor::RColumnRange
+   \class ROOT::RClusterDescriptor::RColumnRange
    \ingroup NTuple
    \brief The window of element indexes of a particular column in a particular cluster
    */
