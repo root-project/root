@@ -283,7 +283,7 @@ void TObject::Delete(Option_t *)
 
 Int_t TObject::DistancetoPrimitive(Int_t, Int_t)
 {
-   // Method("DistancetoPrimitive");
+   // AbstractMethod("DistancetoPrimitive");
    return 999999;
 }
 
@@ -410,7 +410,7 @@ void TObject::Execute(TMethod *method, TObjArray *params, Int_t *error)
 
 void TObject::ExecuteEvent(Int_t, Int_t, Int_t)
 {
-   // Method("ExecuteEvent");
+   // AbstractMethod("ExecuteEvent");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
