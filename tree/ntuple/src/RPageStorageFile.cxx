@@ -42,15 +42,15 @@
 #include <mutex>
 
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
-using ROOT::Experimental::Internal::RCluster;
-using ROOT::Experimental::Internal::RClusterPool;
-using ROOT::Experimental::Internal::ROnDiskPage;
-using ROOT::Experimental::Internal::ROnDiskPageMap;
 using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RCluster;
+using ROOT::Internal::RClusterPool;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 using ROOT::Internal::RNTupleFileWriter;
 using ROOT::Internal::RNTupleSerializer;
+using ROOT::Internal::ROnDiskPage;
+using ROOT::Internal::ROnDiskPageMap;
 using ROOT::Internal::RPagePool;
 
 ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options)
@@ -491,7 +491,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSourceFile::Cl
    return std::unique_ptr<RPageSourceFile>(clone);
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RCluster>
+std::unique_ptr<ROOT::Internal::RCluster>
 ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clusterKey,
                                                       std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests)
 {
@@ -599,8 +599,7 @@ ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clus
 
    // Register the on disk pages in a page map
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
-   auto pageMap =
-      std::make_unique<ROOT::Experimental::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(buffer));
+   auto pageMap = std::make_unique<ROOT::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(buffer));
    for (const auto &s : onDiskPages) {
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
       pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
@@ -618,12 +617,12 @@ ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clus
    return cluster;
 }
 
-std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
+std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
 ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
    fCounters->fNClusterLoaded.Add(clusterKeys.size());
 
-   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>> clusters;
+   std::vector<std::unique_ptr<ROOT::Internal::RCluster>> clusters;
    std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
 
    clusters.reserve(clusterKeys.size());

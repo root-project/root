@@ -26,12 +26,11 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 
 // clang-format off
 /**
-\class ROnDiskPage
+\class ROOT::Internal::ROnDiskPage
 \ingroup NTuple
 \brief A page as being stored on disk, that is packed and compressed
 
@@ -68,16 +67,15 @@ public:
 }; // class ROnDiskPage
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 // For hash maps ROnDiskPage::Key --> ROnDiskPage
 namespace std
 {
 template <>
-struct hash<ROOT::Experimental::Internal::ROnDiskPage::Key> {
+struct hash<ROOT::Internal::ROnDiskPage::Key> {
    // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
-   size_t operator()(const ROOT::Experimental::Internal::ROnDiskPage::Key &key) const
+   size_t operator()(const ROOT::Internal::ROnDiskPage::Key &key) const
    {
       return (
          (std::hash<ROOT::DescriptorId_t>()(key.fPhysicalColumnId) ^ (hash<ROOT::NTupleSize_t>()(key.fPageNo) << 1)) >>
@@ -86,14 +84,12 @@ struct hash<ROOT::Experimental::Internal::ROnDiskPage::Key> {
 };
 }
 
-
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::ROnDiskPageMap
+\class ROOT::Internal::ROnDiskPageMap
 \ingroup NTuple
 \brief A memory region that contains packed and compressed pages
 
@@ -122,7 +118,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::ROnDiskPageMapHeap
+\class ROOT::Internal::ROnDiskPageMapHeap
 \ingroup NTuple
 \brief An ROnDiskPageMap that is used for an fMemory allocated as an array of unsigned char.
 */
@@ -142,7 +138,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RCluster
+\class ROOT::Internal::RCluster
 \ingroup NTuple
 \brief An in-memory subset of the packed and compressed pages of a cluster
 
@@ -199,7 +195,6 @@ public:
 }; // class RCluster
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

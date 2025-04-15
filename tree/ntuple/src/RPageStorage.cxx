@@ -50,9 +50,9 @@ using ROOT::Internal::RExtraTypeInfoDescriptorBuilder;
 using ROOT::Internal::RFieldDescriptorBuilder;
 using ROOT::Internal::RNTupleSerializer;
 
-using ROOT::Experimental::Internal::RCluster;
-using ROOT::Experimental::Internal::ROnDiskPage;
-using ROOT::Experimental::Internal::ROnDiskPageMap;
+using ROOT::Internal::RCluster;
+using ROOT::Internal::ROnDiskPage;
+using ROOT::Internal::ROnDiskPageMap;
 
 using ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
@@ -136,8 +136,7 @@ void ROOT::Internal::RPageSource::RActivePhysicalColumns::Erase(ROOT::Descriptor
    }
 }
 
-ROOT::Experimental::Internal::RCluster::ColumnSet_t
-ROOT::Internal::RPageSource::RActivePhysicalColumns::ToColumnSet() const
+ROOT::Internal::RCluster::ColumnSet_t ROOT::Internal::RPageSource::RActivePhysicalColumns::ToColumnSet() const
 {
    RCluster::ColumnSet_t result;
    for (const auto &[physicalColumnId, _] : fColumnInfos)

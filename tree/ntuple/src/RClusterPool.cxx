@@ -30,7 +30,7 @@
 #include <set>
 #include <utility>
 
-bool ROOT::Experimental::Internal::RClusterPool::RInFlightCluster::operator<(const RInFlightCluster &other) const
+bool ROOT::Internal::RClusterPool::RInFlightCluster::operator<(const RInFlightCluster &other) const
 {
    if (fClusterKey.fClusterId == other.fClusterKey.fClusterId) {
       if (fClusterKey.fPhysicalColumnSet.size() == other.fClusterKey.fPhysicalColumnSet.size()) {
@@ -48,8 +48,7 @@ bool ROOT::Experimental::Internal::RClusterPool::RInFlightCluster::operator<(con
    return fClusterKey.fClusterId < other.fClusterKey.fClusterId;
 }
 
-ROOT::Experimental::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSource &pageSource,
-                                                         unsigned int clusterBunchSize)
+ROOT::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSource &pageSource, unsigned int clusterBunchSize)
    : fPageSource(pageSource),
      fClusterBunchSize(clusterBunchSize),
      fPool(2 * clusterBunchSize),
@@ -58,7 +57,7 @@ ROOT::Experimental::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSo
    R__ASSERT(clusterBunchSize > 0);
 }
 
-ROOT::Experimental::Internal::RClusterPool::~RClusterPool()
+ROOT::Internal::RClusterPool::~RClusterPool()
 {
    {
       // Controlled shutdown of the I/O thread
@@ -69,7 +68,7 @@ ROOT::Experimental::Internal::RClusterPool::~RClusterPool()
    fThreadIo.join();
 }
 
-void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
+void ROOT::Internal::RClusterPool::ExecReadClusters()
 {
    std::deque<RReadItem> readItems;
    while (true) {
@@ -105,8 +104,7 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
    } // while (true)
 }
 
-ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::FindInPool(ROOT::DescriptorId_t clusterId) const
+ROOT::Internal::RCluster *ROOT::Internal::RClusterPool::FindInPool(ROOT::DescriptorId_t clusterId) const
 {
    for (const auto &cptr : fPool) {
       if (cptr && (cptr->GetId() == clusterId))
@@ -115,7 +113,7 @@ ROOT::Experimental::Internal::RClusterPool::FindInPool(ROOT::DescriptorId_t clus
    return nullptr;
 }
 
-size_t ROOT::Experimental::Internal::RClusterPool::FindFreeSlot() const
+size_t ROOT::Internal::RClusterPool::FindFreeSlot() const
 {
    auto N = fPool.size();
    for (unsigned i = 0; i < N; ++i) {
@@ -133,7 +131,7 @@ namespace {
 /// Helper class for the (cluster, column list) pairs that should be loaded in the background
 class RProvides {
    using DescriptorId_t = ROOT::DescriptorId_t;
-   using ColumnSet_t = ROOT::Experimental::Internal::RCluster::ColumnSet_t;
+   using ColumnSet_t = ROOT::Internal::RCluster::ColumnSet_t;
 
 public:
    struct RInfo {
@@ -182,9 +180,8 @@ public:
 
 } // anonymous namespace
 
-ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId,
-                                                       const RCluster::ColumnSet_t &physicalColumns)
+ROOT::Internal::RCluster *
+ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns)
 {
    std::set<ROOT::DescriptorId_t> keep;
    RProvides provide;
@@ -328,9 +325,8 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clus
    return WaitFor(clusterId, physicalColumns);
 }
 
-ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t clusterId,
-                                                    const RCluster::ColumnSet_t &physicalColumns)
+ROOT::Internal::RCluster *
+ROOT::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns)
 {
    while (true) {
       // Fast exit: the cluster happens to be already present in the cache pool
@@ -383,7 +379,7 @@ ROOT::Experimental::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t cluster
    }
 }
 
-void ROOT::Experimental::Internal::RClusterPool::WaitForInFlightClusters()
+void ROOT::Internal::RClusterPool::WaitForInFlightClusters()
 {
    while (true) {
       decltype(fInFlightClusters)::iterator itr;

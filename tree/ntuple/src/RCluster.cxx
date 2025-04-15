@@ -20,16 +20,15 @@
 #include <iterator>
 #include <utility>
 
-ROOT::Experimental::Internal::ROnDiskPageMap::~ROnDiskPageMap() = default;
+ROOT::Internal::ROnDiskPageMap::~ROnDiskPageMap() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Internal::ROnDiskPageMapHeap::~ROnDiskPageMapHeap() = default;
+ROOT::Internal::ROnDiskPageMapHeap::~ROnDiskPageMapHeap() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ROOT::Experimental::Internal::ROnDiskPage *
-ROOT::Experimental::Internal::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key) const
+const ROOT::Internal::ROnDiskPage *ROOT::Internal::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key) const
 {
    const auto itr = fOnDiskPages.find(key);
    if (itr != fOnDiskPages.end())
@@ -37,7 +36,7 @@ ROOT::Experimental::Internal::RCluster::GetOnDiskPage(const ROnDiskPage::Key &ke
    return nullptr;
 }
 
-void ROOT::Experimental::Internal::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap> pageMap)
+void ROOT::Internal::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap> pageMap)
 {
    auto &pages = pageMap->fOnDiskPages;
    fOnDiskPages.insert(std::make_move_iterator(pages.begin()), std::make_move_iterator(pages.end()));
@@ -45,7 +44,7 @@ void ROOT::Experimental::Internal::RCluster::Adopt(std::unique_ptr<ROnDiskPageMa
    fPageMaps.emplace_back(std::move(pageMap));
 }
 
-void ROOT::Experimental::Internal::RCluster::Adopt(RCluster &&other)
+void ROOT::Internal::RCluster::Adopt(RCluster &&other)
 {
    R__ASSERT(fClusterId == other.fClusterId);
 
@@ -60,7 +59,7 @@ void ROOT::Experimental::Internal::RCluster::Adopt(RCluster &&other)
    other.fPageMaps.clear();
 }
 
-void ROOT::Experimental::Internal::RCluster::SetColumnAvailable(ROOT::DescriptorId_t physicalColumnId)
+void ROOT::Internal::RCluster::SetColumnAvailable(ROOT::DescriptorId_t physicalColumnId)
 {
    fAvailPhysicalColumns.insert(physicalColumnId);
 }

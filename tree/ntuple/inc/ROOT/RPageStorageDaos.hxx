@@ -31,12 +31,15 @@
 #include <optional>
 
 namespace ROOT {
-namespace Experimental {
 
 namespace Internal {
-using ntuple_index_t = std::uint32_t;
 class RCluster;
 class RClusterPool;
+} // namespace Internal
+
+namespace Experimental {
+namespace Internal {
+using ntuple_index_t = std::uint32_t;
 class RDaosPool;
 class RDaosContainer;
 class RPageAllocatorHeap;
@@ -151,13 +154,13 @@ private:
    ntuple_index_t fNTupleIndex{0};
 
    /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
-   RCluster *fCurrentCluster = nullptr;
+   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<RClusterPool> fClusterPool;
+   std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
 
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
@@ -177,7 +180,8 @@ public:
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
-   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
+   std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
+   LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
 
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;

@@ -117,14 +117,14 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
    source.Attach();
 
    auto desc = source.GetSharedDescriptorGuard();
-   RClusterPool clusterPool{source};
+   ROOT::Internal::RClusterPool clusterPool{source};
 
    // Collect column info
    std::vector<RColumnExportInfo> columnInfos;
    const RAddColumnsResult addColRes = AddColumnsFromField(columnInfos, desc.GetRef(), desc->GetFieldZero(), options);
 
    // Collect ColumnSet for the cluster pool query
-   RCluster::ColumnSet_t columnSet;
+   ROOT::Internal::RCluster::ColumnSet_t columnSet;
    columnSet.reserve(columnInfos.size());
    for (const auto &colInfo : columnInfos) {
       columnSet.emplace(colInfo.fColDesc->GetPhysicalId());
@@ -141,7 +141,7 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
    int prevIntPercent = 0;
    while (clusterId != ROOT::kInvalidDescriptorId) {
       const auto &clusterDesc = desc->GetClusterDescriptor(clusterId);
-      const RCluster *cluster = clusterPool.GetCluster(clusterId, columnSet);
+      const ROOT::Internal::RCluster *cluster = clusterPool.GetCluster(clusterId, columnSet);
       for (const auto &colInfo : columnInfos) {
          auto columnId = colInfo.fColDesc->GetPhysicalId();
          const auto &pages = clusterDesc.GetPageRange(columnId);
@@ -155,8 +155,8 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
          assert(!colRange.IsSuppressed() || pages.GetPageInfos().empty());
 
          for (const auto &pageInfo : pages.GetPageInfos()) {
-            ROnDiskPage::Key key{columnId, pageIdx};
-            const ROnDiskPage *onDiskPage = cluster->GetOnDiskPage(key);
+            ROOT::Internal::ROnDiskPage::Key key{columnId, pageIdx};
+            const ROOT::Internal::ROnDiskPage *onDiskPage = cluster->GetOnDiskPage(key);
 
             // dump the page
             const void *pageBuf = onDiskPage->GetAddress();
