@@ -19,6 +19,8 @@
 #include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RDF/RVariationReader.hxx" // RVariationsWithReaders
 #include "ROOT/RLogger.hxx"
+#include "ROOT/RNTuple.hxx"
+#include "ROOT/RNTupleDS.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"
 #include "TBranchElement.h"
@@ -37,11 +39,6 @@
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "ROOT/RSlotStack.hxx"
-#endif
-
-#ifdef R__HAS_ROOT7
-#include "ROOT/RNTuple.hxx"
-#include "ROOT/RNTupleDS.hxx"
 #endif
 
 #ifdef R__UNIX
@@ -1396,7 +1393,6 @@ ROOT::Detail::RDF::CreateLMFromTTree(std::string_view datasetName, const std::ve
    return lm;
 }
 
-#ifdef R__HAS_ROOT7
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string_view fileNameGlob,
                                        const ROOT::RDF::ColumnNames_t &defaultColumns)
@@ -1451,7 +1447,6 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
    throw std::invalid_argument("RDataFrame: unsupported data format for dataset \"" + std::string(datasetName) +
                                "\" in file \"" + inFile->GetName() + "\".");
 }
-#endif
 
 // outlined to pin virtual table
 ROOT::Detail::RDF::RLoopManager::~RLoopManager() = default;
