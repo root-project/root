@@ -229,7 +229,7 @@ ROOT::RResult<std::uint32_t> SerializePhysicalColumn(const ROOT::RColumnDescript
                                                      const ROOT::Internal::RNTupleSerializer::RContext &context,
                                                      void *buffer)
 {
-   R__ASSERT(!columnDesc.IsAliasColumn());
+   R7__ASSERT(!columnDesc.IsAliasColumn());
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -509,7 +509,7 @@ ROOT::RResult<void> DeserializeLocatorPayloadObject64(const unsigned char *buffe
 std::uint32_t SerializeAliasColumn(const ROOT::RColumnDescriptor &columnDesc,
                                    const ROOT::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
-   R__ASSERT(columnDesc.IsAliasColumn());
+   R7__ASSERT(columnDesc.IsAliasColumn());
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1312,7 +1312,7 @@ void ROOT::Internal::RNTupleSerializer::RContext::MapSchema(const ROOT::RNTupleD
       }
    };
 
-   R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
+   R7__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
 
    std::vector<ROOT::DescriptorId_t> fieldTrees;
    if (!forHeaderExtension) {
@@ -1380,7 +1380,7 @@ ROOT::Internal::RNTupleSerializer::SerializeSchemaDescription(void *buffer, cons
    }
    const auto nExtraTypeInfos = desc.GetNExtraTypeInfos();
    const auto &onDiskFields = context.GetOnDiskFieldList();
-   R__ASSERT(onDiskFields.size() >= fieldListOffset);
+   R7__ASSERT(onDiskFields.size() >= fieldListOffset);
    std::span<const ROOT::DescriptorId_t> fieldList{onDiskFields.data() + fieldListOffset, nFields};
 
    auto frame = pos;

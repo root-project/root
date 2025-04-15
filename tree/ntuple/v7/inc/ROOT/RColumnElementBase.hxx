@@ -22,7 +22,6 @@
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <Byteswap.h>
-#include <TError.h>
 
 #include <cstring> // for memcpy
 #include <cstddef> // for std::byte
@@ -97,7 +96,7 @@ public:
    /// Derived, typed classes tell whether the on-storage layout is bitwise identical to the memory layout
    virtual bool IsMappable() const
    {
-      R__ASSERT(false);
+      R7__ASSERT(false);
       return false;
    }
 

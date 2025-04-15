@@ -200,7 +200,7 @@ TEST(RNTupleProjection, AliasQuantDiffPrec)
 
    {
       ROOT::TestSupport::CheckDiagsRAII diags;
-      diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false);
+      diags.requiredDiag(kWarning, "RProjectedFields", "on a projected field has no effect", false); //to-do change to catch RException
 
       auto projField = std::make_unique<RField<float>>("projq");
       projField->SetQuantized(0, 1, 30); // Set quantized with 30 bits of precision

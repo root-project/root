@@ -583,7 +583,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
                memberFields.emplace_back(std::move(field));
             }
-            R__ASSERT(typeName == fieldDesc.GetTypeName());
+            R7__ASSERT(typeName == fieldDesc.GetTypeName());
             auto recordField =
                Internal::CreateEmulatedField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
             recordField->fTypeAlias = fieldDesc.GetTypeAlias();
@@ -637,13 +637,13 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldBase::Clone(std::string_view newNa
 
 std::size_t ROOT::RFieldBase::AppendImpl(const void * /* from */)
 {
-   R__ASSERT(false && "A non-simple RField must implement its own AppendImpl");
+   R7__ASSERT(false && "A non-simple RField must implement its own AppendImpl");
    return 0;
 }
 
 void ROOT::RFieldBase::ReadGlobalImpl(ROOT::NTupleSize_t /*index*/, void * /* to */)
 {
-   R__ASSERT(false);
+   R7__ASSERT(false);
 }
 
 void ROOT::RFieldBase::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
@@ -674,7 +674,7 @@ std::size_t ROOT::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
 void *ROOT::RFieldBase::CreateObjectRawPtr() const
 {
    void *where = operator new(GetValueSize());
-   R__ASSERT(where != nullptr);
+   R7__ASSERT(where != nullptr);
    ConstructValue(where);
    return where;
 }
@@ -1008,7 +1008,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
             }
          }
       }
-      R__ASSERT(!fColumnRepresentatives.empty());
+      R7__ASSERT(!fColumnRepresentatives.empty());
       if (fOnDiskId != ROOT::kInvalidDescriptorId) {
          const auto &fieldDesc = desc.GetFieldDescriptor(fOnDiskId);
          fOnDiskTypeVersion = fieldDesc.GetTypeVersion();

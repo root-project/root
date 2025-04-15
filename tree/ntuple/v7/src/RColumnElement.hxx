@@ -370,7 +370,7 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(ENTupleColumnT
    default:
       if (onDiskType == kTestFutureColumnType)
          return std::make_unique<RColumnElement<CppT, kTestFutureColumnType>>();
-      R__ASSERT(false);
+      R7__ASSERT(false);
    }
    // never here
    return nullptr;
@@ -491,7 +491,7 @@ public:
    static constexpr bool kIsMappable = false;
 
    // We don't implement Pack() because integers must not be written to disk as booleans
-   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+   void Pack(void *, const void *, std::size_t) const final { R7__ASSERT(false); }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
@@ -516,7 +516,7 @@ public:
    static constexpr bool kIsMappable = false;
 
    // We don't implement Pack() because integers must not be written to disk as booleans
-   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+   void Pack(void *, const void *, std::size_t) const final { R7__ASSERT(false); }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
@@ -548,7 +548,7 @@ public:
    static constexpr bool kIsMappable = false;
 
    // We don't implement Pack() because booleans must not be written as integers to disk
-   void Pack(void *, const void *, std::size_t) const final { R__ASSERT(false); }
+   void Pack(void *, const void *, std::size_t) const final { R7__ASSERT(false); }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
@@ -891,7 +891,7 @@ public:
    void SetBitsOnStorage(std::size_t bitsOnStorage) final
    {
       const auto &[minBits, maxBits] = GetValidBitRange(ENTupleColumnType::kReal32Trunc);
-      R__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
+      R7__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
       fBitsOnStorage = bitsOnStorage;
    }
 
@@ -907,7 +907,7 @@ public:
    {
       using namespace ROOT::Internal::BitPacking;
 
-      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+      R7__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
 #if R__LITTLE_ENDIAN == 0
       // TODO(gparolini): to avoid this extra allocation we might want to perform byte swapping
@@ -925,7 +925,7 @@ public:
    {
       using namespace ROOT::Internal::BitPacking;
 
-      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+      R7__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
       UnpackBits(dst, src, count, sizeof(float), fBitsOnStorage);
 #if R__LITTLE_ENDIAN == 0
@@ -941,7 +941,7 @@ public:
    {
       using namespace ROOT::Internal::BitPacking;
 
-      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+      R7__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
       // Cast doubles to float before packing them
       // TODO(gparolini): avoid this allocation
@@ -966,7 +966,7 @@ public:
    {
       using namespace ROOT::Internal::BitPacking;
 
-      R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
+      R7__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
       // TODO(gparolini): avoid this allocation
       auto dstFloat = MakeUninitArray<float>(count);
@@ -1103,17 +1103,17 @@ public:
    void SetBitsOnStorage(std::size_t bitsOnStorage) final
    {
       const auto [minBits, maxBits] = GetValidBitRange(ENTupleColumnType::kReal32Quant);
-      R__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
+      R7__ASSERT(bitsOnStorage >= minBits && bitsOnStorage <= maxBits);
       fBitsOnStorage = bitsOnStorage;
    }
 
    void SetValueRange(double min, double max) final
    {
-      R__ASSERT(min >= std::numeric_limits<T>::lowest());
-      R__ASSERT(max <= std::numeric_limits<T>::max());
+      R7__ASSERT(min >= std::numeric_limits<T>::lowest());
+      R7__ASSERT(max <= std::numeric_limits<T>::max());
       // Disallow denormal, NaN and infinity
-      R__ASSERT(std::isnormal(min) || min == 0.0);
-      R__ASSERT(std::isnormal(max) || max == 0.0);
+      R7__ASSERT(std::isnormal(min) || min == 0.0);
+      R7__ASSERT(std::isnormal(max) || max == 0.0);
       fValueRange = {min, max};
    }
 

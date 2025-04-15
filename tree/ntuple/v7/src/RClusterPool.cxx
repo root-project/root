@@ -17,8 +17,6 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RPageStorage.hxx>
 
-#include <TError.h>
-
 #include <algorithm>
 #include <chrono>
 #include <future>
@@ -55,7 +53,7 @@ ROOT::Experimental::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSo
      fPool(2 * clusterBunchSize),
      fThreadIo(&RClusterPool::ExecReadClusters, this)
 {
-   R__ASSERT(clusterBunchSize > 0);
+   R7__ASSERT(clusterBunchSize > 0);
 }
 
 ROOT::Experimental::Internal::RClusterPool::~RClusterPool()
@@ -87,7 +85,7 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
             // `kInvalidDescriptorId` is used as a marker for thread cancellation. Such item causes the
             // thread to terminate; thus, it must appear last in the queue.
             if (R__unlikely(item.fClusterKey.fClusterId == ROOT::kInvalidDescriptorId)) {
-               R__ASSERT(i == (readItems.size() - 1));
+               R7__ASSERT(i == (readItems.size() - 1));
                return;
             }
             if ((bunchId >= 0) && (item.fBunchId != bunchId))
@@ -123,7 +121,7 @@ size_t ROOT::Experimental::Internal::RClusterPool::FindFreeSlot() const
          return i;
    }
 
-   R__ASSERT(false);
+   R7__ASSERT(false);
    return N;
 }
 
@@ -247,7 +245,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clus
       std::lock_guard<std::mutex> lockGuard(fLockWorkQueue);
 
       for (auto itr = fInFlightClusters.begin(); itr != fInFlightClusters.end(); ) {
-         R__ASSERT(itr->fFuture.valid());
+         R7__ASSERT(itr->fFuture.valid());
          if (itr->fFuture.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
             // Remove the set of columns that are already scheduled for being loaded
             provide.Erase(itr->fClusterKey.fClusterId, itr->fClusterKey.fPhysicalColumnSet);
@@ -256,7 +254,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clus
          }
 
          auto cptr = itr->fFuture.get();
-         R__ASSERT(cptr);
+         R7__ASSERT(cptr);
 
          const bool isExpired =
             !provide.Contains(itr->fClusterKey.fClusterId) && (keep.count(itr->fClusterKey.fClusterId) == 0);
@@ -305,7 +303,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clus
       // case but it's not ensured by the code
       if (!skipPrefetch) {
          for (const auto &kv : provide) {
-            R__ASSERT(!kv.second.fPhysicalColumnSet.empty());
+            R7__ASSERT(!kv.second.fPhysicalColumnSet.empty());
 
             RReadItem readItem;
             readItem.fClusterKey.fClusterId = kv.first;
@@ -357,7 +355,7 @@ ROOT::Experimental::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t cluster
             if (itr->fClusterKey.fClusterId == clusterId)
                break;
          }
-         R__ASSERT(itr != fInFlightClusters.end());
+         R7__ASSERT(itr != fInFlightClusters.end());
          // Note that the fInFlightClusters is accessed concurrently only by the I/O thread.  The I/O thread
          // never changes the structure of the in-flight clusters array (it does not add, remove, or swap elements).
          // Therefore, it is safe to access the element pointed to by itr here even after fLockWorkQueue
@@ -366,7 +364,7 @@ ROOT::Experimental::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t cluster
 
       auto cptr = itr->fFuture.get();
       // We were blocked waiting for the cluster, so assume that nobody discarded it.
-      R__ASSERT(cptr != nullptr);
+      R7__ASSERT(cptr != nullptr);
 
       // Noop unless the page source has a task scheduler
       fPageSource.UnzipCluster(cptr.get());
