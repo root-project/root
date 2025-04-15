@@ -244,7 +244,6 @@ void EnsureValidSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::str
    }
 }
 
-#ifdef R__HAS_ROOT7
 void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::string &ntupleName,
                                       const std::string &fileName)
 {
@@ -292,7 +291,6 @@ void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::s
       throw std::invalid_argument(msg);
    }
 }
-#endif
 
 } // end NS RDF
 } // end NS Internal
