@@ -24,7 +24,7 @@ using ROOT::ENTupleColumnType;
 using ROOT::NTupleSize_t;
 using ROOT::RNTupleDescriptor;
 using ROOT::RNTupleModel;
-using ROOT::Experimental::Internal::RCluster;
+using ROOT::Internal::RCluster;
 using ROOT::Internal::RColumn;
 using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RPage;

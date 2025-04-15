@@ -35,11 +35,8 @@ namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
 
-namespace Experimental::Internal {
-class RClusterPool;
-}
-
 namespace Internal {
+class RClusterPool;
 class RRawFile;
 class RPageAllocatorHeap;
 
@@ -131,7 +128,7 @@ private:
    /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name
    std::optional<RNTuple> fAnchor;
    /// The last cluster from which a page got loaded.  Points into fClusterPool->fPool
-   ROOT::Experimental::Internal::RCluster *fCurrentCluster = nullptr;
+   ROOT::Internal::RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
@@ -139,7 +136,7 @@ private:
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<ROOT::Experimental::Internal::RClusterPool> fClusterPool;
+   std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
 
@@ -149,9 +146,8 @@ private:
    /// read requests for a given cluster and columns.  The reead requests are appended to
    /// the provided vector.  This way, requests can be collected for multiple clusters before
    /// sending them to RRawFile::ReadV().
-   std::unique_ptr<ROOT::Experimental::Internal::RCluster>
-   PrepareSingleCluster(const ROOT::Experimental::Internal::RCluster::RKey &clusterKey,
-                        std::vector<RRawFile::RIOVec> &readRequests);
+   std::unique_ptr<ROOT::Internal::RCluster>
+   PrepareSingleCluster(const ROOT::Internal::RCluster::RKey &clusterKey, std::vector<RRawFile::RIOVec> &readRequests);
 
 protected:
    void LoadStructureImpl() final;
@@ -180,8 +176,8 @@ public:
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
-   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
-   LoadClusters(std::span<ROOT::Experimental::Internal::RCluster::RKey> clusterKeys) final;
+   std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
+   LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
 }; // class RPageSourceFile
 
 } // namespace Internal

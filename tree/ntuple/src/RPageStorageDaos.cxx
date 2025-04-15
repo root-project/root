@@ -45,6 +45,7 @@ using AttributeKey_t = ROOT::Experimental::Internal::RDaosContainer::AttributeKe
 using DistributionKey_t = ROOT::Experimental::Internal::RDaosContainer::DistributionKey_t;
 using ntuple_index_t = ROOT::Experimental::Internal::ntuple_index_t;
 using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RCluster;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 using ROOT::Internal::RNTupleSerializer;
@@ -489,8 +490,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
                                                                const ROOT::RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
      fURI(uri),
-     fClusterPool(
-        std::make_unique<RClusterPool>(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(options)))
+     fClusterPool(std::make_unique<ROOT::Internal::RClusterPool>(
+        *this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(options)))
 {
    EnableDefaultMetrics("RPageSourceDaos");
 
@@ -642,7 +643,7 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
       if (!cachedPageRef.Get().IsNull())
          return cachedPageRef;
 
-      ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
+      ROOT::Internal::ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
       sealedPage.SetBuffer(onDiskPage->GetAddress());
@@ -667,7 +668,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPage
    return std::unique_ptr<RPageSourceDaos>(clone);
 }
 
-std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
+std::vector<std::unique_ptr<RCluster>>
 ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
    struct RDaosSealedPageLocator {
@@ -692,7 +693,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
       std::unordered_map<std::uint32_t, std::vector<RDaosSealedPageLocator>> onDiskPages;
 
       unsigned clusterBufSz = 0, nPages = 0;
-      auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
+      auto pageZeroMap = std::make_unique<ROOT::Internal::ROnDiskPageMap>();
       PrepareLoadCluster(
          clusterKey, *pageZeroMap,
          [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
@@ -710,7 +711,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
          });
 
       auto clusterBuffer = new unsigned char[clusterBufSz];
-      auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(clusterBuffer));
+      auto pageMap =
+         std::make_unique<ROOT::Internal::ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(clusterBuffer));
 
       auto cageBuffer = clusterBuffer;
       // Fill the cluster page map and the read requests for the RDaosContainer::ReadV() call
@@ -722,8 +724,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
             assert(columnId == s.fColumnId);
             assert(cageIndex == s.fPosition);
             // Register the on disk pages in a page map
-            ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-            pageMap->Register(key, ROnDiskPage(cageBuffer + s.fCageOffset, s.fBufferSize));
+            ROOT::Internal::ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
+            pageMap->Register(key, ROOT::Internal::ROnDiskPage(cageBuffer + s.fCageOffset, s.fBufferSize));
             cageSz += s.fBufferSize;
          }
 
@@ -751,7 +753,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
 
    fCounters->fNClusterLoaded.Add(clusterKeys.size());
 
-   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>> clusters;
+   std::vector<std::unique_ptr<ROOT::Internal::RCluster>> clusters;
    RDaosContainer::MultiObjectRWOperation_t readRequests;
    for (auto key : clusterKeys) {
       clusters.emplace_back(fnPrepareSingleCluster(key, readRequests));
