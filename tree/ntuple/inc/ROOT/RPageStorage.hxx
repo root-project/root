@@ -667,7 +667,7 @@ protected:
    public:
       void Insert(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
       void Erase(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
-      ROOT::Experimental::Internal::RCluster::ColumnSet_t ToColumnSet() const;
+      ROOT::Internal::RCluster::ColumnSet_t ToColumnSet() const;
       bool HasColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
       {
          return fColumnInfos.count(physicalColumnId) > 0;
@@ -703,7 +703,7 @@ protected:
    /// Returns a new, unattached page source for the same data set
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
-   virtual void UnzipClusterImpl(ROOT::Experimental::Internal::RCluster *cluster);
+   virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
    virtual ROOT::Internal::RPageRef
    LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) = 0;
@@ -712,8 +712,7 @@ protected:
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
    /// commonly used as part of `LoadClusters()` in derived classes.
    void PrepareLoadCluster(
-      const ROOT::Experimental::Internal::RCluster::RKey &clusterKey,
-      ROOT::Experimental::Internal::ROnDiskPageMap &pageZeroMap,
+      const ROOT::Internal::RCluster::RKey &clusterKey, ROOT::Internal::ROnDiskPageMap &pageZeroMap,
       std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
          perPageFunc);
 
@@ -805,15 +804,15 @@ public:
    /// for the cluster would assume an incomplete cluster and trigger loading again.
    /// `LoadClusters()` is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
-   virtual std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
-   LoadClusters(std::span<ROOT::Experimental::Internal::RCluster::RKey> clusterKeys) = 0;
+   virtual std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
+   LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) = 0;
 
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
    /// unzip thread. It is an optional optimization, the method can safely do nothing. In particular, the
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
-   void UnzipCluster(ROOT::Experimental::Internal::RCluster *cluster);
+   void UnzipCluster(ROOT::Internal::RCluster *cluster);
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
    RResult<ROOT::Internal::RPage>

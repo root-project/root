@@ -43,6 +43,7 @@
 using ROOT::ENTupleColumnType;
 using ROOT::RNTupleModel;
 using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RCluster;
 using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RNTupleSerializer;
 using ROOT::Internal::RPageSink;
@@ -693,7 +694,8 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
 
 // Merges all columns appearing both in the source and destination RNTuples, just copying them if their
 // compression matches ("fast merge") or by unsealing and resealing them with the proper compression.
-void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
+void RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
+                                       const ROOT::RClusterDescriptor &clusterDesc,
                                        std::span<const RColumnMergeInfo> commonColumns,
                                        const RCluster::ColumnSet_t &commonColumnSet,
                                        std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
@@ -768,7 +770,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RC
          assert(sealedPageData.fBuffers.size() == 0 || pageIdx < sealedPageData.fBuffers.size());
          assert(pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero);
 
-         ROnDiskPage::Key key{columnId, pageIdx};
+         ROOT::Internal::ROnDiskPage::Key key{columnId, pageIdx};
          auto onDiskPage = cluster->GetOnDiskPage(key);
 
          const auto checksumSize = pageInfo.HasChecksum() * RPageStorage::kNBytesPageChecksum;
@@ -816,7 +818,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RC
 void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
                                         std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData)
 {
-   RClusterPool clusterPool{source};
+   ROOT::Internal::RClusterPool clusterPool{source};
 
    std::vector<RColumnMergeInfo> missingColumns{extraDstColumns.begin(), extraDstColumns.end()};
 
