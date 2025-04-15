@@ -306,6 +306,7 @@ def _TTree__getattr__(self, key):
     out, cast_type = GetBranchAttr(self, key)
     if cast_type:
         out = cppyy.ll.cast[cast_type](out)
+        out.__python_owns__ = False
     return out
 
 def _TTree_CloneTree(self, *args, **kwargs):
