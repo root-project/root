@@ -1,11 +1,12 @@
-
 import os
 import unittest
+from array import array
 
+import ROOT
+from DistRDF._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
 from DistRDF.Backends import Base
 from DistRDF.DataFrame import RDataFrame
 from DistRDF.HeadNode import get_headnode
-from DistRDF._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
 
 
 def clear_caches():
@@ -110,42 +111,74 @@ class GraphCaching(unittest.TestCase):
                 # The RDataFrame should have run as many times as partitions
                 self.assertEqual(cached_rdf.GetNRuns(), npartitions)
 
-    def test_snapshot(self):
-        """The cache is used to Snapshot data."""
-        treename = "myTree"
-        filenames = ["4clusters.root"] * 5
-        nentries = 5000
-        backend = GraphCaching.TestBackend()
-
+    def _test_snapshot_impl(self, backend, treename, filenames, nentries):
         for npartitions in [1, 2, 4, 8, 16]:
             # Start from a fresh cache at each subtest iteration
             clear_caches()
 
             output_basename = "test_graph_caching_test_snapshot"
             output_filenames = [f"{output_basename}_{i}.root" for i in range(npartitions)]
+            try:
+                with self.subTest(npartitions=npartitions):
+                    headnode = get_headnode(backend, npartitions, treename, filenames)
+                    distrdf = RDataFrame(headnode)
 
-            with self.subTest(npartitions=npartitions):
-                headnode = get_headnode(backend, npartitions, treename, filenames)
-                distrdf = RDataFrame(headnode)
+                    output_branch = "b1"
+                    snapdf = distrdf.Snapshot(treename, f"{output_basename}.root", (output_branch,))
 
-                output_branches = ("b1", )
-                snapdf = distrdf.Snapshot(treename, f"{output_basename}.root", ["b1", ])
-
-                # There should be exactly one cached RDF and set of actions
-                self.assertEqual(len(_RDF_REGISTER), 1)
-                self.assertEqual(len(_RDF_REGISTER), len(_ACTIONS_REGISTER))
-                cached_rdf = tuple(_RDF_REGISTER.values())[0]
-                # The RDataFrame should have run as many times as partitions
-                self.assertEqual(cached_rdf.GetNRuns(), npartitions)
-                # All the correct output files should be present
+                    # There should be exactly one cached RDF and set of actions
+                    self.assertEqual(len(_RDF_REGISTER), 1)
+                    self.assertEqual(len(_RDF_REGISTER), len(_ACTIONS_REGISTER))
+                    cached_rdf = tuple(_RDF_REGISTER.values())[0]
+                    # The RDataFrame should have run as many times as partitions
+                    self.assertEqual(cached_rdf.GetNRuns(), npartitions)
+                    # All the correct output files should be present
+                    for output_filename in output_filenames:
+                        self.assertTrue(os.path.exists(output_filename))
+                    # Make sure we have the correct data in the snapshot output
+                    self.assertListEqual(list(snapdf.AsNumpy()[output_branch]), list(range(500)))
+            finally:
+                # Remove output files at each iteration
                 for output_filename in output_filenames:
-                    self.assertTrue(os.path.exists(output_filename))
-                # The snapshotted dataframe should be usable
-                self.assertEqual(snapdf.Count().GetValue(), nentries)
+                    try:
+                        os.remove(output_filename)
+                    except OSError:
+                        pass
 
-            # Remove output files at each iteration
-            for output_filename in output_filenames:
-                os.remove(output_filename)
+    def test_snapshot(self):
+        """The cache is used to Snapshot data."""
+
+        def write_data(treenames, filenames):
+            # Create a dataset with 100 entries per file with sequential values
+            b1 = array("i", [0])
+            for i in range(1, len(filenames) + 1):
+                with ROOT.TFile.Open(filenames[i - 1], "recreate") as f:
+                    t = ROOT.TTree(treenames[i - 1], treenames[i - 1])
+                    t.Branch("b1", b1, "b1/I")
+                    nentries = 0
+                    for val in range((i - 1) * 100, i * 100):
+                        b1[0] = val
+                        t.Fill()
+                        nentries += 1
+                        # 5 clusters per file
+                        if nentries % 20 == 0:
+                            t.FlushBaskets()
+                    f.Write()
+
+        treename = "Events"
+        filenames = [f"test_graph_caching_test_snapshot_input_{i}.root" for i in range(1, 6)]
+        nentries = 100 * len(filenames)
+        backend = GraphCaching.TestBackend()
+
+        try:
+            write_data([treename] * len(filenames), filenames)
+            self._test_snapshot_impl(backend, treename, filenames, nentries)
+        finally:
+            for fn in filenames:
+                try:
+                    os.remove(fn)
+                except OSError:
+                    pass
 
     def test_multiple_graphs(self):
         """The caches are used with multiple executions."""

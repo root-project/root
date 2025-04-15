@@ -1070,7 +1070,13 @@ const ColumnNames_t &RLoopManager::GetDefaultColumnNames() const
 
 TTree *RLoopManager::GetTree() const
 {
-   return fTree.get();
+   // This is currently called in SnapshotTTreeHelper[MT] to retrieve the task-local input TTree. It is not guaranteed
+   // that the same RLoopManager will always have the same input TTree for its entire lifetime, notably it could be
+   // changed by ChangeSpec when moving to a different entry range.
+   if (auto *treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fDataSource.get())) {
+      return treeDS->GetTree();
+   }
+   return nullptr;
 }
 
 void RLoopManager::Register(RDFInternal::RActionBase *actionPtr)
