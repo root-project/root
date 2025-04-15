@@ -250,8 +250,8 @@ struct SnapshotHelperArgs {
    std::string fTreeName;
    std::vector<std::string> fOutputColNames;
    ROOT::RDF::RSnapshotOptions fOptions;
-   ROOT::Detail::RDF::RLoopManager *fLoopManager;
-   ROOT::RDF::RDataSource *fDataSource;
+   ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
    bool fToNTuple;
 };
 
@@ -267,8 +267,8 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    const auto &treename = snapHelperArgs->fTreeName;
    const auto &outputColNames = snapHelperArgs->fOutputColNames;
    const auto &options = snapHelperArgs->fOptions;
-   const auto &lmPtr = snapHelperArgs->fLoopManager;
-   const auto &dataSource = snapHelperArgs->fDataSource;
+   const auto &lmPtr = snapHelperArgs->fOutputLoopManager;
+   const auto &inputLM = snapHelperArgs->fInputLoopManager;
 
    auto sz = sizeof...(ColTypes);
    std::vector<bool> isDefine(sz);
@@ -304,14 +304,14 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
          using Helper_t = SnapshotTTreeHelper<ColTypes...>;
          using Action_t = RAction<Helper_t, PrevNodeType>;
          actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
-                                               std::move(isDefine), lmPtr, dataSource),
+                                               std::move(isDefine), lmPtr, inputLM),
                                       colNames, prevNode, colRegister));
       } else {
          // multi-thread snapshot
          using Helper_t = SnapshotTTreeHelperMT<ColTypes...>;
          using Action_t = RAction<Helper_t, PrevNodeType>;
          actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options,
-                                               std::move(isDefine), lmPtr, dataSource),
+                                               std::move(isDefine), lmPtr, inputLM),
                                       colNames, prevNode, colRegister));
       }
    }

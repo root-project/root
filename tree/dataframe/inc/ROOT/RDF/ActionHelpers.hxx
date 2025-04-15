@@ -1528,14 +1528,14 @@ class R__CLING_PTRCHECK(off) SnapshotTTreeHelper : public RActionImpl<SnapshotTT
    RBranchSet fOutputBranches;
    std::vector<bool> fIsDefine;
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
-   ROOT::RDF::RDataSource *fInputDataSource;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotTTreeHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                        const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options,
                        std::vector<bool> &&isDefine, ROOT::Detail::RDF::RLoopManager *loopManager,
-                       ROOT::RDF::RDataSource *inputDataSource)
+                       ROOT::Detail::RDF::RLoopManager *inputLM)
       : fFileName(filename),
         fDirName(dirname),
         fTreeName(treename),
@@ -1546,7 +1546,7 @@ public:
         fBranchAddresses(vbnames.size(), nullptr),
         fIsDefine(std::move(isDefine)),
         fOutputLoopManager(loopManager),
-        fInputDataSource(inputDataSource)
+        fInputLoopManager(inputLM)
    {
       EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
@@ -1569,12 +1569,11 @@ public:
       }
    }
 
-   void InitTask(TTreeReader *r, unsigned int /* slot */)
+   void InitTask(TTreeReader * /*treeReader*/, unsigned int /* slot */)
    {
-      if (r)
-         fInputTree = r->GetTree();
-      else if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputDataSource))
-         fInputTree = treeDS->GetTree();
+      // We ask the input RLoopManager if it has a TTree. We cannot rely on getting this information when constructing
+      // this action helper, since the TTree might change e.g. when ChangeSpec is called in-between distributed tasks.
+      fInputTree = fInputLoopManager->GetTree();
       fBranchAddressesNeedReset = true;
    }
 
@@ -1689,7 +1688,7 @@ public:
                                  fOptions,
                                  std::vector<bool>(fIsDefine),
                                  fOutputLoopManager,
-                                 fInputDataSource};
+                                 fInputLoopManager};
    }
 };
 
@@ -1715,7 +1714,7 @@ class R__CLING_PTRCHECK(off) SnapshotTTreeHelperMT : public RActionImpl<Snapshot
    std::vector<RBranchSet> fOutputBranches;
    std::vector<bool> fIsDefine;
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
-   ROOT::RDF::RDataSource *fInputDataSource;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
@@ -1723,7 +1722,7 @@ public:
    SnapshotTTreeHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                          std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                          const RSnapshotOptions &options, std::vector<bool> &&isDefine,
-                         ROOT::Detail::RDF::RLoopManager *loopManager, ROOT::RDF::RDataSource *inputDataSource)
+                         ROOT::Detail::RDF::RLoopManager *loopManager, ROOT::Detail::RDF::RLoopManager *inputLM)
       : fNSlots(nSlots),
         fOutputFiles(fNSlots),
         fOutputTrees(fNSlots),
@@ -1740,7 +1739,7 @@ public:
         fOutputBranches(fNSlots),
         fIsDefine(std::move(isDefine)),
         fOutputLoopManager(loopManager),
-        fInputDataSource(inputDataSource)
+        fInputLoopManager(inputLM)
    {
       EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
@@ -1785,11 +1784,11 @@ public:
       if (fOptions.fAutoFlush)
          fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
-         // not an empty-source RDF
+         // We could be getting a task-local TTreeReader from the TTreeProcessorMT.
          fInputTrees[slot] = r->GetTree();
-      } else if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputDataSource))
-         fInputTrees[slot] = treeDS->GetTree();
-
+      } else {
+         fInputTrees[slot] = fInputLoopManager->GetTree();
+      }
       fBranchAddressesNeedReset[slot] = 1; // reset first event flag for this slot
    }
 
@@ -1914,7 +1913,7 @@ public:
                                    fOptions,
                                    std::vector<bool>(fIsDefine),
                                    fOutputLoopManager,
-                                   fInputDataSource};
+                                   fInputLoopManager};
    }
 };
 
