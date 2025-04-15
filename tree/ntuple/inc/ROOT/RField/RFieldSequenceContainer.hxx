@@ -313,7 +313,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
-\class ROOT::Experimental::RArrayAsRVecField
+\class ROOT::RArrayAsRVecField
 \brief A field for fixed-size arrays that are represented as RVecs in memory.
 \ingroup NTuple
 This class is used only for reading. In particular, it helps exposing
