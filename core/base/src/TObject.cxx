@@ -1107,8 +1107,15 @@ void TObject::Fatal(const char *location, const char *va_(fmt), ...) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use this method to implement an "abstract" method that you don't
-/// want to leave purely abstract.
+/// Call this function within a function that you don't want to define as
+/// purely virtual, in order not to force all users deriving from that class to
+/// implement that maybe (on their side) unused function; but at the same time,
+/// emit a run-time warning if they try to call it, telling that it is not
+/// implemented in the derived class: action must thus be taken on the user side
+/// to override it. In other word, this method acts as a "runtime purely virtual"
+/// warning instead of a "compiler purely virtual" error.
+/// \note This interface is a legacy function that is no longer recommended
+/// to be used by new development code. 
 
 void TObject::AbstractMethod(const char *method) const
 {
