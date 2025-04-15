@@ -2041,23 +2041,10 @@ std::string printValue(ROOT::RDataFrame *df)
       throw std::runtime_error("Cannot print information about this RDataFrame, "
                                "it was not properly created. It must be discarded.");
    }
-   auto *tree = lm->GetTree();
    auto defCols = lm->GetDefaultColumnNames();
 
    std::ostringstream ret;
-   if (tree) {
-      ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
-      if (!defCols.empty()) {
-         if (defCols.size() == 1)
-            ret << "\nDefault column: " << defCols[0];
-         else {
-            ret << "\nDefault columns:\n";
-            for (auto &&col : defCols) {
-               ret << " - " << col << "\n";
-            }
-         }
-      }
-   } else if (auto ds = df->GetDataSource()) {
+   if (auto ds = df->GetDataSource()) {
       ret << "A data frame associated to the data source \"" << cling::printValue(ds) << "\"";
    } else {
       ret << "An empty data frame that will create " << lm->GetNEmptyEntries() << " entries\n";
