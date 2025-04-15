@@ -592,10 +592,12 @@ void RModel::GenerateIntermediateTensorInfo() {
                continue;
          }
          bool is_extended = (fOptimizationLevel == OptimizationLevel::kExtended);
-         bool in_freq_map = (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end());
-         bool in_output_names = (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end());
+         bool not_in_freq_map =
+            (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end());
+         bool not_in_output_names =
+            (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end());
 
-         if ((in_freq_map && in_output_names) || (!in_freq_map && !is_extended && in_output_names)) {
+         if ((not_in_freq_map && not_in_output_names) || (!not_in_freq_map && !is_extended && not_in_output_names)) {
             size_t length = ConvertShapeToLength(i.second.shape);
 
             if (i.second.type == ETensorType::FLOAT) {
@@ -647,16 +649,17 @@ void RModel::GenerateOperatorDeclarations() {
    fGC += "\n";
 }
 
-void RModel::GenerateDynamicTensorInfo() {
-    std::stringstream out;
-    for (auto & i: fDynamicTensorInfos) {
-        auto length = ConvertDynamicShapeToLength(i.second.shape);
-        out << SP <<  "if (" << length << " > 0) {\n";
-        out << SP << SP <<  "fTensor_" <<  i.first  <<  ".resize(" <<  length << ");\n";
-        out << SP << SP <<  "tensor_" << i.first << " = fTensor_" << i.first  << ".data();\n";
-        out << SP << "}\n";
-    }
-    fGC += out.str();
+void RModel::GenerateDynamicTensorInfo()
+{
+   std::stringstream out;
+   for (auto &i : fDynamicTensorInfos) {
+      auto length = ConvertDynamicShapeToLength(i.second.shape);
+      out << SP << "if (" << length << " > 0) {\n";
+      out << SP << SP << "fTensor_" << i.first << ".resize(" << length << ");\n";
+      out << SP << SP << "tensor_" << i.first << " = fTensor_" << i.first << ".data();\n";
+      out << SP << "}\n";
+   }
+   fGC += out.str();
 }
 
 std::string RModel::GenerateInferSignature(bool isdecl) {
@@ -779,7 +782,7 @@ void RModel::GenerateSessionCode()
    // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
 
-   if (fOptimizationLevel == OptimizationLevel::kExtended){
+   if (fOptimizationLevel == OptimizationLevel::kExtended) {
       // evaluate total intermediate memory and position intermediate tensor addresses
       std::string intermediate_memory_alloc_string = "";
       intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
