@@ -25,4 +25,5 @@ An extensive Users Guide is available from that site (see below).
 	parser.add_argument('[data1.root...dataN.root]', help='Open the given ROOT files; remote protocols (such as http://) are supported')
 	parser.add_argument('[file1.C...fileN.C]', help='Execute the ROOT macro file1.C ... fileN.C\nCompilation flags as well as macro arguments can be passed, see format in https://root.cern/manual/root_macros_and_shared_libraries/')
 	parser.add_argument('[file1_C.so...fileN_C.so]', help='Load and execute file1_C.so ... fileN_C.so (or .dll if on Windows)\nThey should be already-compiled ROOT macros (shared libraries) or:\nregular user shared libraries e.g. userlib.so with a function userlib(args)')
+	parser.add_argument('[anyfile1..anyfileN]', help='All other arguments pointing to existing files will be checked to see if they are ROOT Files (checking the MIME type inside the file) and if they are not they will be handled as a  ROOT macro file')
 	return parser
