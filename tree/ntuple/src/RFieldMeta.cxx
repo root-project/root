@@ -339,8 +339,8 @@ void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned i
    } else {
       fStagingClass = fClass;
    }
-   R__ASSERT(fStagingClass);
-   R__ASSERT(static_cast<unsigned int>(fStagingClass->GetClassVersion()) == classVersion);
+   R7__ASSERT(fStagingClass);
+   R7__ASSERT(static_cast<unsigned int>(fStagingClass->GetClassVersion()) == classVersion);
 }
 
 void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
@@ -371,13 +371,13 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
          stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
          // Since we successfully looked up the source member in the RNTuple on-disk metadata, we expect it
          // to be present in the TClass instance, too.
-         R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
+         R7__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
          stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->GetValueSize());
       }
    }
 
    if (stagingAreaSize) {
-      R__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
+      R7__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
       // We use std::make_unique instead of MakeUninitArray to zero-initialize the staging area.
       fStagingArea = std::make_unique<unsigned char[]>(stagingAreaSize);
 
@@ -616,7 +616,7 @@ ROOT::RProxiedCollectionField::RCollectionIterableOnce::GetIteratorFuncs(TVirtua
    ifuncs.fCreateIterators = proxy->GetFunctionCreateIterators(readFromDisk);
    ifuncs.fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators(readFromDisk);
    ifuncs.fNext = proxy->GetFunctionNext(readFromDisk);
-   R__ASSERT((ifuncs.fCreateIterators != nullptr) && (ifuncs.fDeleteTwoIterators != nullptr) &&
+   R7__ASSERT((ifuncs.fCreateIterators != nullptr) && (ifuncs.fDeleteTwoIterators != nullptr) &&
              (ifuncs.fNext != nullptr));
    return ifuncs;
 }
@@ -1163,7 +1163,7 @@ std::string ROOT::RVariantField::GetTypeList(const std::vector<std::unique_ptr<R
    for (size_t i = 0; i < itemFields.size(); ++i) {
       result += itemFields[i]->GetTypeName() + ",";
    }
-   R__ASSERT(!result.empty()); // there is always at least one variant
+   R7__ASSERT(!result.empty()); // there is always at least one variant
    result.pop_back();          // remove trailing comma
    return result;
 }
@@ -1251,7 +1251,7 @@ void ROOT::RVariantField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *t
    RNTupleLocalIndex variantIndex;
    std::uint32_t tag;
    fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
-   R__ASSERT(tag < 256);
+   R7__ASSERT(tag < 256);
 
    // If `tag` equals 0, the variant is in the invalid state, i.e, it does not hold any of the valid alternatives in
    // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes

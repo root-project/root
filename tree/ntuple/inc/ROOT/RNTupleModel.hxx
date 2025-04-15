@@ -447,7 +447,7 @@ public:
       auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
       auto it =
          std::find_if(fieldZero->begin(), fieldZero->end(), [&](const auto &f) { return f.GetFieldName() == name; });
-      R__ASSERT(it != fieldZero->end());
+      R7__ASSERT(it != fieldZero->end());
       fOpenChangeset.fAddedFields.emplace_back(&(*it));
       return objPtr;
    }

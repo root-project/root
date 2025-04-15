@@ -28,7 +28,6 @@
 #endif
 
 #include <Compression.h>
-#include <TError.h>
 
 #include <algorithm>
 #include <atomic>
@@ -120,7 +119,7 @@ void ROOT::Internal::RPageSource::RActivePhysicalColumns::Erase(ROOT::Descriptor
                                                                 RColumnElementBase::RIdentifier elementId)
 {
    auto itr = fColumnInfos.find(physicalColumnId);
-   R__ASSERT(itr != fColumnInfos.end());
+   R7__ASSERT(itr != fColumnInfos.end());
    for (std::size_t i = 0; i < itr->second.size(); ++i) {
       if (itr->second[i].fElementId != elementId)
          continue;
@@ -190,10 +189,10 @@ ROOT::Internal::RPageSource::Create(std::string_view ntupleName, std::string_vie
 ROOT::Internal::RPageStorage::ColumnHandle_t
 ROOT::Internal::RPageSource::AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column)
 {
-   R__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
+   R7__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
    auto physicalId =
       GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex(), column.GetRepresentationIndex());
-   R__ASSERT(physicalId != ROOT::kInvalidDescriptorId);
+   R7__ASSERT(physicalId != ROOT::kInvalidDescriptorId);
    fActivePhysicalColumns.Insert(physicalId, column.GetElement()->GetIdentifier());
    return ColumnHandle_t{physicalId, &column};
 }
@@ -289,7 +288,7 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
             sealedPage.SetHasChecksum(pi.HasChecksum());
             sealedPage.SetBufferSize(pi.GetLocator().GetNBytesOnStorage() + pi.HasChecksum() * kNBytesPageChecksum);
             sealedPage.SetBuffer(onDiskPage->GetAddress());
-            R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+            R7__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
             auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                              &foundChecksumFailure,
@@ -405,7 +404,7 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
          return ROOT::Internal::RPageRef();
 
       clusterInfo.fColumnOffset = columnRange.GetFirstElementIndex();
-      R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
+      R7__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
       idxInCluster = globalIndex - clusterInfo.fColumnOffset;
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
@@ -729,7 +728,7 @@ ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(co
       isAdoptedBuffer = true;
    }
 
-   R__ASSERT(isAdoptedBuffer);
+   R7__ASSERT(isAdoptedBuffer);
 
    RSealedPage sealedPage{pageBuf, nBytesZipped + nBytesChecksum, config.fPage->GetNElements(), config.fWriteChecksum};
    sealedPage.ChecksumIfEnabled();
@@ -764,7 +763,7 @@ void ROOT::Internal::RPageSink::CommitDataset()
 
 ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
-   R__ASSERT(nElements > 0);
+   R7__ASSERT(nElements > 0);
    const auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    const auto nBytes = elementSize * nElements;
    if (!fWritePageMemoryManager.TryUpdate(*columnHandle.fColumn, nBytes))
@@ -879,7 +878,7 @@ void ROOT::Internal::RPagePersistentSink::UpdateSchema(const ROOT::Internal::RNT
       }
    };
 
-   R__ASSERT(firstEntry >= fPrevClusterNEntries);
+   R7__ASSERT(firstEntry >= fPrevClusterNEntries);
    const auto nColumnsBeforeUpdate = descriptor.GetNPhysicalColumns();
    for (auto f : changeset.fAddedFields) {
       addField(*f);
@@ -961,7 +960,7 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 
    // Create column/page ranges
    const auto nColumns = descriptor.GetNPhysicalColumns();
-   R__ASSERT(fOpenColumnRanges.empty() && fOpenPageRanges.empty());
+   R7__ASSERT(fOpenColumnRanges.empty() && fOpenPageRanges.empty());
    fOpenColumnRanges.reserve(nColumns);
    fOpenPageRanges.reserve(nColumns);
    for (ROOT::DescriptorId_t i = 0; i < nColumns; ++i) {
@@ -984,11 +983,11 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
          auto &cluster = srcDescriptor.GetClusterDescriptor(clusterId);
          auto nEntries = cluster.GetNEntries();
          for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
-            R__ASSERT(fOpenColumnRanges[i].GetPhysicalColumnId() == i);
+            R7__ASSERT(fOpenColumnRanges[i].GetPhysicalColumnId() == i);
             if (!cluster.ContainsColumn(i)) // a cluster may not contain a column if that column is deferred
                break;
             const auto &columnRange = cluster.GetColumnRange(i);
-            R__ASSERT(columnRange.GetPhysicalColumnId() == i);
+            R7__ASSERT(columnRange.GetPhysicalColumnId() == i);
             // TODO: properly handle suppressed columns (check MarkSuppressedColumnRange())
             fOpenColumnRanges[i].IncrementFirstElementIndex(columnRange.GetNElements());
          }
@@ -1093,7 +1092,7 @@ void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RPageStora
             continue;
          }
          // Same page merging requires page checksums - this is checked in the write options
-         R__ASSERT(sealedPageIt->GetHasChecksum());
+         R7__ASSERT(sealedPageIt->GetHasChecksum());
 
          const auto chk = sealedPageIt->GetChecksum().Unwrap();
          auto itr = originalPages.find(chk);
@@ -1254,8 +1253,8 @@ void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
          if (etDesc.GetContentId() == EExtraTypeInfoIds::kStreamerInfo) {
             // The specification mandates that the type name for a kStreamerInfo should be empty and the type version
             // should be zero.
-            R__ASSERT(etDesc.GetTypeName().empty());
-            R__ASSERT(etDesc.GetTypeVersion() == 0);
+            R7__ASSERT(etDesc.GetTypeName().empty());
+            R7__ASSERT(etDesc.GetTypeVersion() == 0);
             auto etInfo = RNTupleSerializer::DeserializeStreamerInfos(etDesc.GetContent()).Unwrap();
             fStreamerInfos.merge(etInfo);
          }

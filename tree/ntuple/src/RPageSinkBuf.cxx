@@ -160,7 +160,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
 
    auto allocateBuf = [&zipItem, maxSealedPageBytes]() {
       zipItem.fBuf = MakeUninitArray<unsigned char>(maxSealedPageBytes);
-      R__ASSERT(zipItem.fBuf);
+      R7__ASSERT(zipItem.fBuf);
    };
    auto shrinkSealedPage = [&zipItem, maxSealedPageBytes, &sealedPage]() {
       // If the sealed page is smaller than the maximum size (with compression), allocate what is needed and copy the
@@ -244,7 +244,7 @@ void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(std::function<void(void)> Fl
    std::vector<RSealedPageGroup> toCommit;
    toCommit.reserve(fBufferedColumns.size());
    for (auto &bufColumn : fBufferedColumns) {
-      R__ASSERT(bufColumn.HasSealedPagesOnly());
+      R7__ASSERT(bufColumn.HasSealedPagesOnly());
       const auto &sealedPages = bufColumn.GetSealedPages();
       toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
    }

@@ -290,7 +290,7 @@ void ROOT::Internal::RPrintValueVisitor::VisitCardinalityField(const ROOT::RCard
       fOutput << fValue.GetRef<std::uint64_t>();
       return;
    }
-   R__ASSERT(false && "unsupported cardinality size type");
+   R7__ASSERT(false && "unsupported cardinality size type");
 }
 
 void ROOT::Internal::RPrintValueVisitor::VisitBitsetField(const ROOT::RBitsetField &field)

@@ -21,7 +21,6 @@
 #include <string_view>
 
 #include <RZip.h>
-#include <TError.h>
 #include <TVirtualStreamerInfo.h>
 
 #include <algorithm>
@@ -197,8 +196,8 @@ ROOT::RClusterDescriptor::RPageInfoExtended
 ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) const
 {
    const auto N = fCumulativeNElements.size();
-   R__ASSERT(N > 0);
-   R__ASSERT(N == fPageInfos.size());
+   R7__ASSERT(N > 0);
+   R7__ASSERT(N == fPageInfos.size());
 
    std::size_t left = 0;
    std::size_t right = N - 1;
@@ -215,12 +214,12 @@ ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) cons
 
       right = midpoint - 1;
    }
-   R__ASSERT(midpoint < N);
+   R7__ASSERT(midpoint < N);
 
    auto pageInfo = fPageInfos[midpoint];
    decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : fCumulativeNElements[midpoint - 1];
-   R__ASSERT(firstInPage <= idxInCluster);
-   R__ASSERT((firstInPage + pageInfo.GetNElements()) > idxInCluster);
+   R7__ASSERT(firstInPage <= idxInCluster);
+   R7__ASSERT((firstInPage + pageInfo.GetNElements()) > idxInCluster);
    return RPageInfoExtended{pageInfo, firstInPage, midpoint};
 }
 
@@ -229,8 +228,8 @@ ROOT::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const RColumnRange 
                                                              const ROOT::Internal::RColumnElementBase &element,
                                                              std::size_t pageSize)
 {
-   R__ASSERT(fPhysicalColumnId == columnRange.GetPhysicalColumnId());
-   R__ASSERT(!columnRange.IsSuppressed());
+   R7__ASSERT(fPhysicalColumnId == columnRange.GetPhysicalColumnId());
+   R7__ASSERT(!columnRange.IsSuppressed());
 
    const auto nElements =
       std::accumulate(fPageInfos.begin(), fPageInfos.end(), 0U,
@@ -239,12 +238,12 @@ ROOT::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const RColumnRange 
 
    if (nElementsRequired == nElements)
       return 0U;
-   R__ASSERT((nElementsRequired > nElements) && "invalid attempt to shrink RPageRange");
+   R7__ASSERT((nElementsRequired > nElements) && "invalid attempt to shrink RPageRange");
 
    std::vector<RPageInfo> pageInfos;
    // Synthesize new `RPageInfo`s as needed
    const std::uint64_t nElementsPerPage = pageSize / element.GetSize();
-   R__ASSERT(nElementsPerPage > 0);
+   R7__ASSERT(nElementsPerPage > 0);
    for (auto nRemainingElements = nElementsRequired - nElements; nRemainingElements > 0;) {
       RPageInfo pageInfo;
       pageInfo.SetNElements(std::min(nElementsPerPage, nRemainingElements));
@@ -412,7 +411,7 @@ ROOT::RNTupleDescriptor::FindClusterId(ROOT::DescriptorId_t physicalColumnId, RO
    while (cgLeft <= cgRight) {
       const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
       const auto &clusterIds = GetClusterGroupDescriptor(fSortedClusterGroupIds[cgMidpoint]).GetClusterIds();
-      R__ASSERT(!clusterIds.empty());
+      R7__ASSERT(!clusterIds.empty());
 
       const auto &clusterDesc = GetClusterDescriptor(clusterIds.front());
       // this may happen if the RNTuple has an empty schema
@@ -422,7 +421,7 @@ ROOT::RNTupleDescriptor::FindClusterId(ROOT::DescriptorId_t physicalColumnId, RO
       const auto firstElementInGroup = clusterDesc.GetColumnRange(physicalColumnId).GetFirstElementIndex();
       if (firstElementInGroup > index) {
          // Look into the lower half of cluster groups
-         R__ASSERT(cgMidpoint > 0);
+         R7__ASSERT(cgMidpoint > 0);
          cgRight = cgMidpoint - 1;
          continue;
       }
@@ -447,7 +446,7 @@ ROOT::RNTupleDescriptor::FindClusterId(ROOT::DescriptorId_t physicalColumnId, RO
             return clusterId;
 
          if (columnRange.GetFirstElementIndex() > index) {
-            R__ASSERT(clusterMidpoint > 0);
+            R7__ASSERT(clusterMidpoint > 0);
             clusterRight = clusterMidpoint - 1;
             continue;
          }
@@ -457,7 +456,7 @@ ROOT::RNTupleDescriptor::FindClusterId(ROOT::DescriptorId_t physicalColumnId, RO
             continue;
          }
       }
-      R__ASSERT(false);
+      R7__ASSERT(false);
    }
    return ROOT::kInvalidDescriptorId;
 }
@@ -476,7 +475,7 @@ ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindClusterId(ROOT::NTupleSize_t e
       const auto &cgDesc = GetClusterGroupDescriptor(fSortedClusterGroupIds[cgMidpoint]);
 
       if (cgDesc.GetMinEntry() > entryIdx) {
-         R__ASSERT(cgMidpoint > 0);
+         R7__ASSERT(cgMidpoint > 0);
          cgRight = cgMidpoint - 1;
          continue;
       }
@@ -489,7 +488,7 @@ ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindClusterId(ROOT::NTupleSize_t e
       // Binary search in the current cluster group; since we already checked the element range boundaries,
       // the element must be in that cluster group.
       const auto &clusterIds = cgDesc.GetClusterIds();
-      R__ASSERT(!clusterIds.empty());
+      R7__ASSERT(!clusterIds.empty());
       std::size_t clusterLeft = 0;
       std::size_t clusterRight = clusterIds.size() - 1;
       while (clusterLeft <= clusterRight) {
@@ -497,7 +496,7 @@ ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindClusterId(ROOT::NTupleSize_t e
          const auto &clusterDesc = GetClusterDescriptor(clusterIds[clusterMidpoint]);
 
          if (clusterDesc.GetFirstEntryIndex() > entryIdx) {
-            R__ASSERT(clusterMidpoint > 0);
+            R7__ASSERT(clusterMidpoint > 0);
             clusterRight = clusterMidpoint - 1;
             continue;
          }
@@ -509,7 +508,7 @@ ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindClusterId(ROOT::NTupleSize_t e
 
          return clusterIds[clusterMidpoint];
       }
-      R__ASSERT(false);
+      R7__ASSERT(false);
    }
    return ROOT::kInvalidDescriptorId;
 }
@@ -773,7 +772,7 @@ ROOT::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnRanges(const RN
    for (auto &[_, columnRange] : fCluster.fColumnRanges) {
       if (!columnRange.IsSuppressed())
          continue;
-      R__ASSERT(columnRange.GetFirstElementIndex() == ROOT::kInvalidNTupleIndex);
+      R7__ASSERT(columnRange.GetFirstElementIndex() == ROOT::kInvalidNTupleIndex);
 
       const auto &columnDesc = desc.GetColumnDescriptor(columnRange.GetPhysicalColumnId());
       const auto &fieldDesc = desc.GetFieldDescriptor(columnDesc.GetFieldId());
@@ -1222,12 +1221,12 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t o
 {
    if (fDescriptor.GetNLogicalColumns() == 0)
       return;
-   R__ASSERT(fDescriptor.GetNPhysicalColumns() > 0);
+   R7__ASSERT(fDescriptor.GetNPhysicalColumns() > 0);
 
    for (ROOT::DescriptorId_t id = fDescriptor.GetNLogicalColumns() - 1; id >= fDescriptor.GetNPhysicalColumns(); --id) {
       auto c = fDescriptor.fColumnDescriptors[id].Clone();
-      R__ASSERT(c.IsAliasColumn());
-      R__ASSERT(id == c.GetLogicalId());
+      R7__ASSERT(c.IsAliasColumn());
+      R7__ASSERT(id == c.GetLogicalId());
       fDescriptor.fColumnDescriptors.erase(id);
       for (auto &link : fDescriptor.fFieldDescriptors[c.fFieldId].fLogicalColumnIds) {
          if (link == c.fLogicalColumnId) {
@@ -1236,7 +1235,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(std::uint32_t o
          }
       }
       c.fLogicalColumnId += offset;
-      R__ASSERT(fDescriptor.fColumnDescriptors.count(c.fLogicalColumnId) == 0);
+      R7__ASSERT(fDescriptor.fColumnDescriptors.count(c.fLogicalColumnId) == 0);
       fDescriptor.fColumnDescriptors.emplace(c.fLogicalColumnId, std::move(c));
    }
 }

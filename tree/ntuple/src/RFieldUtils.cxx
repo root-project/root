@@ -62,7 +62,7 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
 template <typename F>
 std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
 {
-   R__ASSERT(!arg.empty());
+   R7__ASSERT(!arg.empty());
 
    if (std::isdigit(arg[0]) || arg[0] == '-') {
       // Integer template argument
@@ -105,12 +105,12 @@ std::vector<AnglePos> FindTemplateAngleBrackets(const std::string &typeName)
          posClose++;
       }
       // We should have found a closing angle bracket at the right level.
-      R__ASSERT(posClose < typeName.size());
+      R7__ASSERT(posClose < typeName.size());
       result.emplace_back(posOpen, posClose);
 
       // If we are not at the end yet, the following two characeters should be :: for nested types.
       if (posClose < typeName.size() - 1) {
-         R__ASSERT(typeName.substr(posClose + 1, 2) == "::");
+         R7__ASSERT(typeName.substr(posClose + 1, 2) == "::");
       }
       currentPos = posClose + 1;
    }
@@ -234,7 +234,7 @@ std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNorma
    }
 
    const auto angleBrackets = FindTemplateAngleBrackets(canonicalTypePrefix);
-   R__ASSERT(!angleBrackets.empty());
+   R7__ASSERT(!angleBrackets.empty());
 
    std::string normName;
    std::string::size_type currentPos = 0;
@@ -245,7 +245,7 @@ std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNorma
 
       const auto argList = canonicalTypePrefix.substr(posOpen + 1, posClose - posOpen - 1);
       const auto templateArgs = TokenizeTypeList(argList);
-      R__ASSERT(!templateArgs.empty());
+      R7__ASSERT(!templateArgs.empty());
 
       for (const auto &a : templateArgs) {
          normName += GetNormalizedTemplateArg(a, GetRenormalizedTypeName) + ",";
@@ -277,7 +277,7 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
    }
 
    const auto angleBrackets = FindTemplateAngleBrackets(canonicalTypePrefix);
-   R__ASSERT(!angleBrackets.empty());
+   R7__ASSERT(!angleBrackets.empty());
 
    // For user-defined class types, we will need to get the default-initialized template arguments.
    const bool isUserClass =
@@ -292,7 +292,7 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
 
       const auto argList = canonicalTypePrefix.substr(posOpen + 1, posClose - posOpen - 1);
       const auto templateArgs = TokenizeTypeList(argList);
-      R__ASSERT(!templateArgs.empty());
+      R7__ASSERT(!templateArgs.empty());
 
       for (const auto &a : templateArgs) {
          normName += GetNormalizedTemplateArg(a, GetNormalizedUnresolvedTypeName) + ",";
@@ -305,13 +305,13 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
             const std::string expandedName = cl->GetName();
             const auto expandedAngleBrackets = FindTemplateAngleBrackets(expandedName);
             // We can have fewer pairs than angleBrackets, for example in case of type aliases.
-            R__ASSERT(!expandedAngleBrackets.empty());
+            R7__ASSERT(!expandedAngleBrackets.empty());
 
             const auto [expandedPosOpen, expandedPosClose] = expandedAngleBrackets.back();
             const auto expandedArgList =
                expandedName.substr(expandedPosOpen + 1, expandedPosClose - expandedPosOpen - 1);
             const auto expandedTemplateArgs = TokenizeTypeList(expandedArgList);
-            R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
+            R7__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
 
             for (std::size_t j = templateArgs.size(); j < expandedTemplateArgs.size(); ++j) {
                normName += GetNormalizedTemplateArg(expandedTemplateArgs[j], GetNormalizedUnresolvedTypeName) + ",";
@@ -344,7 +344,7 @@ std::string ROOT::Internal::GetNormalizedInteger(unsigned long long val)
 
 std::string ROOT::Internal::GetNormalizedInteger(const std::string &intTemplateArg)
 {
-   R__ASSERT(!intTemplateArg.empty());
+   R7__ASSERT(!intTemplateArg.empty());
    if (intTemplateArg[0] == '-')
       return GetNormalizedInteger(ParseIntTypeToken(intTemplateArg));
    return GetNormalizedInteger(ParseUIntTypeToken(intTemplateArg));

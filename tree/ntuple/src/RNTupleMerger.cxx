@@ -149,7 +149,7 @@ try {
    const bool defaultComp = mergeInfo->fOptions.Contains("DefaultCompression");
    const bool firstSrcComp = mergeInfo->fOptions.Contains("FirstSrcCompression");
    const bool extraVerbose = mergeInfo->fOptions.Contains("rntuple.ExtraVerbose");
-   if (defaultComp && firstSrcComp) {
+   if (defaultComp && firstSrcComp) { // TO-DO replace with RWarning or RError
       // this should never happen through hadd, but a user may call RNTuple::Merge() from custom code.
       R__LOG_WARNING(NTupleMergeLog()) << "Passed both options \"DefaultCompression\" and \"FirstSrcCompression\": "
                                           "only the latter will apply.";
@@ -251,8 +251,8 @@ try {
    *this = *outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
 
    return 0;
-} catch (const std::exception &ex) {
-   R__LOG_ERROR(NTupleMergeLog()) << "Exception thrown while merging: " << ex.what();
+} catch (const std::exception &ex) { // TO-DO replace with RWarning or RError
+   Error("RNTuple::Merge", "Exception thrown while merging: %s", ex.what()); // TO-DO replace with RWarning or RError
    return -1;
 }
 
@@ -665,7 +665,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
       }
 
       // NOTE: we cannot have a Record here because it has no associated columns.
-      R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
+      R7__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
                 structure == ROOT::ENTupleStructure::kLeaf);
 
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
@@ -723,7 +723,7 @@ void RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool
    for (size_t colIdx = 0; colIdx < nCommonColumnsInCluster; ++colIdx) {
       const auto &column = commonColumns[colIdx];
       const auto &columnId = column.fInputId;
-      R__ASSERT(clusterDesc.ContainsColumn(columnId));
+      R7__ASSERT(clusterDesc.ContainsColumn(columnId));
 
       const auto &columnDesc = mergeData.fSrcDescriptor->GetColumnDescriptor(columnId);
       const auto srcColElement = column.fInMemoryType
@@ -790,7 +790,7 @@ void RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool
          sealedPage.SetBuffer(onDiskPage->GetAddress());
          // TODO(gparolini): more graceful error handling (skip the page?)
          sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
-         R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+         R7__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
          if (needsResealing) {
             const auto uncompressedSize = srcColElement->GetSize() * sealedPage.GetNElements();
@@ -838,7 +838,7 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RCo
    while (clusterId != ROOT::kInvalidDescriptorId) {
       const auto &clusterDesc = mergeData.fSrcDescriptor->GetClusterDescriptor(clusterId);
       const auto nClusterEntries = clusterDesc.GetNEntries();
-      R__ASSERT(nClusterEntries > 0);
+      R7__ASSERT(nClusterEntries > 0);
 
       // NOTE: just because a column is in `commonColumns` it doesn't mean that each cluster in the source contains it,
       // as it may be a deferred column that only has real data in a future cluster.
@@ -1044,7 +1044,7 @@ RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink
      fPageAlloc(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()),
      fModel(std::move(model))
 {
-   R__ASSERT(fDestination);
+   R7__ASSERT(fDestination);
 
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled())

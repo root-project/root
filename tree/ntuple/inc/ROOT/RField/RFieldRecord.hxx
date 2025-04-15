@@ -163,8 +163,8 @@ public:
    static std::string TypeName() { return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RPairField(name, BuildItemFields(), BuildItemOffsets())
    {
-      R__ASSERT(fMaxAlignment >= std::max(alignof(T1), alignof(T2)));
-      R__ASSERT(fSize >= sizeof(ContainerT));
+      R7__ASSERT(fMaxAlignment >= std::max(alignof(T1), alignof(T2)));
+      R7__ASSERT(fSize >= sizeof(ContainerT));
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
@@ -239,8 +239,8 @@ public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
    explicit RField(std::string_view name) : RTupleField(name, BuildItemFields(), BuildItemOffsets())
    {
-      R__ASSERT(fMaxAlignment >= std::max({alignof(ItemTs)...}));
-      R__ASSERT(fSize >= sizeof(ContainerT));
+      R7__ASSERT(fMaxAlignment >= std::max({alignof(ItemTs)...}));
+      R7__ASSERT(fSize >= sizeof(ContainerT));
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;

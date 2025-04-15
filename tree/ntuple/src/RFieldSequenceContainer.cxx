@@ -130,10 +130,10 @@ std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rve
    void **begin = reinterpret_cast<void **>(rvecPtr);
    // int32_t fSize is the second data member (after 1 void*)
    std::int32_t *size = reinterpret_cast<std::int32_t *>(begin + 1);
-   R__ASSERT(*size >= 0);
+   R7__ASSERT(*size >= 0);
    // int32_t fCapacity is the third data member (1 int32_t after fSize)
    std::int32_t *capacity = size + 1;
-   R__ASSERT(*capacity >= -1);
+   R7__ASSERT(*capacity >= -1);
    return {begin, size, capacity};
 }
 
@@ -294,7 +294,7 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
       *beginPtr = malloc(nItems * fItemSize);
-      R__ASSERT(*beginPtr != nullptr);
+      R7__ASSERT(*beginPtr != nullptr);
       begin = reinterpret_cast<char *>(*beginPtr);
       *capacityPtr = nItems;
 
@@ -502,11 +502,11 @@ std::size_t ROOT::RVectorField::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::vector<char> *>(from);
    // The order is important here: Profiling showed that the integer division is on the critical path. By moving the
-   // computation of count before R__ASSERT, the compiler can use the result of a single instruction (on x86) also for
-   // the modulo operation. Otherwise, it must perform the division twice because R__ASSERT expands to an external call
+   // computation of count before R7__ASSERT, the compiler can use the result of a single instruction (on x86) also for
+   // the modulo operation. Otherwise, it must perform the division twice because R7__ASSERT expands to an external call
    // of Fatal() in case of failure, which could have side effects that the compiler cannot analyze.
    auto count = typedValue->size() / fItemSize;
-   R__ASSERT((typedValue->size() % fItemSize) == 0);
+   R7__ASSERT((typedValue->size() % fItemSize) == 0);
    std::size_t nbytes = 0;
 
    if (fSubfields[0]->IsSimple() && count) {
@@ -539,7 +539,7 @@ void ROOT::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to
    }
 
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
-   R__ASSERT(fItemSize > 0);
+   R7__ASSERT(fItemSize > 0);
    const auto oldNItems = typedValue->size() / fItemSize;
    const bool canRealloc = oldNItems < nItems;
    bool allDeallocated = false;
@@ -585,8 +585,8 @@ void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
    if (fItemDeleter) {
-      R__ASSERT(fItemSize > 0);
-      R__ASSERT((vecPtr->size() % fItemSize) == 0);
+      R7__ASSERT(fItemSize > 0);
+      R7__ASSERT((vecPtr->size() % fItemSize) == 0);
       auto nItems = vecPtr->size() / fItemSize;
       for (std::size_t i = 0; i < nItems; ++i) {
          fItemDeleter->operator()(vecPtr->data() + (i * fItemSize), true /* dtorOnly */);
@@ -606,8 +606,8 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RVectorField::GetDeleter() con
 std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValue &value) const
 {
    auto vec = value.GetPtr<std::vector<char>>();
-   R__ASSERT(fItemSize > 0);
-   R__ASSERT((vec->size() % fItemSize) == 0);
+   R7__ASSERT(fItemSize > 0);
+   R7__ASSERT((vec->size() % fItemSize) == 0);
    auto nItems = vec->size() / fItemSize;
    std::vector<RValue> result;
    result.reserve(nItems);
@@ -758,7 +758,7 @@ void ROOT::RArrayAsRVecField::ConstructValue(void *where) const
    }
 
    *beginPtr = malloc(fArrayLength * fItemSize);
-   R__ASSERT(*beginPtr != nullptr);
+   R7__ASSERT(*beginPtr != nullptr);
    // Re-assign begin pointer after allocation
    begin = reinterpret_cast<char *>(*beginPtr);
    // Size and capacity are equal since the field data type is std::array

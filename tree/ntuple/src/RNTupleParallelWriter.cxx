@@ -22,7 +22,6 @@
 #include <ROOT/RPageStorageFile.hxx>
 
 #include <TDirectory.h>
-#include <TError.h>
 #include <TFile.h>
 
 namespace {

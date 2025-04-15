@@ -2,7 +2,6 @@
 #include "RXTuple.hxx"
 
 #include <TBuffer.h>
-#include <TError.h>
 #include <TFile.h>
 
 #include <xxhash.h>

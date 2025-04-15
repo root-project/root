@@ -14,8 +14,6 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RColumn.hxx>
 
-#include <TError.h>
-
 #include <algorithm>
 #include <cstdlib>
 #include <utility>
