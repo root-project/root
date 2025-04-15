@@ -252,9 +252,6 @@ clean_environment
 set_environment
 
 
-# Prevent Cppyy from checking the PCH (and avoid warning)
-export CLING_STANDARD_PCH=none
-
 if (root-config --arch | grep -v win32gcc | grep -q -i win32); then
    ROOTSYS="$(cygpath -w "$ROOTSYS")"
 fi
