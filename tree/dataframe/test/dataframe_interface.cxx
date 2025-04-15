@@ -48,14 +48,21 @@ TEST(RDataFrameInterface, CreateFromStrings)
 class TreeInFileRAII {
 private:
    std::string fPath;
-   TFile fFile;
 
 public:
-   explicit TreeInFileRAII(const std::string &path) : fPath(path), fFile(path.c_str(), "recreate")
+   explicit TreeInFileRAII(const std::string &path) : fPath(path)
    {
-      TTree t("t", "t");
-      fFile.WriteObject(&t, "t");
-      fFile.Close();
+      // NOTE(vpadulan): these TFile and TTree are created on the heap to work around a know bug that can
+      // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+      // living on the stack.
+      // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+      // mark a heap object appearing by chance on the stack.
+      // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+      // so for now we are forced to work around the bug rather than fixing it.
+      auto f = std::make_unique<TFile>(path.c_str(), "RECREATE");
+      const char *treeName{"t"};
+      auto t = std::make_unique<TTree>(treeName, treeName);
+      f->Write();
    }
    ~TreeInFileRAII() { std::remove(fPath.c_str()); }
 };
