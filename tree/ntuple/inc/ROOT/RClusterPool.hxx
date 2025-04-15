@@ -33,12 +33,11 @@ namespace Internal {
 class RPageSource;
 }
 
-namespace Experimental {
 namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RClusterPool
+\class ROOT::Internal::RClusterPool
 \ingroup NTuple
 \brief Managed a set of clusters containing compressed and packed pages
 
@@ -142,7 +141,6 @@ public:
 }; // class RClusterPool
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

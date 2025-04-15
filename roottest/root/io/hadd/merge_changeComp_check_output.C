@@ -24,7 +24,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
    ROOT::Internal::RPageSourceFile source("ntpl", fnameOut, ROOT::RNTupleReadOptions());
    source.Attach();
 
-   Internal::RClusterPool pool{source};
+   ROOT::Internal::RClusterPool pool{source};
 
    const auto expCompAlgo = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(expectedCompressionRNT);
    const auto &desc = source.GetSharedDescriptorGuard();
@@ -44,7 +44,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
          std::uint64_t pageIdx = 0;
          for (const auto &pageInfo : pages.GetPageInfos()) {
             auto cluster = pool.GetCluster(clusterDesc.GetId(), {column.GetPhysicalId()});
-            Internal::ROnDiskPage::Key key{column.GetPhysicalId(), pageIdx};
+            ROOT::Internal::ROnDiskPage::Key key{column.GetPhysicalId(), pageIdx};
             auto onDiskPage = cluster->GetOnDiskPage(key);
             R__ASSERT(onDiskPage);
             const auto actualCompAlgo =
