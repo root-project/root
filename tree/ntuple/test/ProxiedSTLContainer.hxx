@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test_ProxiedSTLContainer
-#define ROOT7_RNTuple_Test_ProxiedSTLContainer
+#ifndef ROOT_RNTuple_Test_ProxiedSTLContainer
+#define ROOT_RNTuple_Test_ProxiedSTLContainer
 
 #include "CustomStruct.hxx"
 
@@ -9,4 +9,4 @@
 #include <unordered_map>
 #include <utility>
 
-#endif // ROOT7_RNTuple_Test_ProxiedSTLContainer
+#endif // ROOT_RNTuple_Test_ProxiedSTLContainer

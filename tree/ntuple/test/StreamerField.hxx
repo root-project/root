@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test_StreamerField
-#define ROOT7_RNTuple_Test_StreamerField
+#ifndef ROOT_RNTuple_Test_StreamerField
+#define ROOT_RNTuple_Test_StreamerField
 
 #include <Rtypes.h>
 
@@ -54,4 +54,4 @@ struct PolyContainer {
    std::unique_ptr<PolyBase> fPoly;
 };
 
-#endif // ROOT7_RNTuple_Test_StreamerField
+#endif // ROOT_RNTuple_Test_StreamerField

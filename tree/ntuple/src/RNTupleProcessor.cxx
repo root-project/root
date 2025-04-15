@@ -1,5 +1,5 @@
 /// \file RNTupleProcessor.cxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2024-03-26
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback

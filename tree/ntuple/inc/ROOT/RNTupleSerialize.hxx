@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleSerialize.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2021-08-02
@@ -12,8 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleSerialize
-#define ROOT7_RNTupleSerialize
+#ifndef ROOT_RNTupleSerialize
+#define ROOT_RNTupleSerialize
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -306,4 +306,4 @@ public:
 } // namespace Internal
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleSerialize
+#endif // ROOT_RNTupleSerialize

@@ -1,5 +1,5 @@
 /// \file ROOT/RColumn.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RColumn
-#define ROOT7_RColumn
+#ifndef ROOT_RColumn
+#define ROOT_RColumn
 
 #include <ROOT/RConfig.hxx> // for R__likely
 #include <ROOT/RColumnElementBase.hxx>

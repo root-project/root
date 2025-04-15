@@ -1,5 +1,5 @@
 /// \file ROOT/RColumnElementBase.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RColumnElementBase
-#define ROOT7_RColumnElementBase
+#ifndef ROOT_RColumnElementBase
+#define ROOT_RColumnElementBase
 
 #include "RtypesCore.h"
 #include <ROOT/RError.hxx>

@@ -1,5 +1,5 @@
 /// \file ROOT/RPageSinkBuf.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Max Orok <maxwellorok@gmail.com>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPageSinkBuf
-#define ROOT7_RPageSinkBuf
+#ifndef ROOT_RPageSinkBuf
+#define ROOT_RPageSinkBuf
 
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RPageStorage.hxx>

@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleMetrics.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-08-27
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleMetrics
-#define ROOT7_RNTupleMetrics
+#ifndef ROOT_RNTupleMetrics
+#define ROOT_RNTupleMetrics
 
 #include <ROOT/RConfig.hxx>
 #include <string_view>

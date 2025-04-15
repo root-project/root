@@ -1,5 +1,5 @@
 /// \file ROOT/RFieldToken.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2025-03-19
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RFieldToken
-#define ROOT7_RFieldToken
+#ifndef ROOT_RFieldToken
+#define ROOT_RFieldToken
 
 #include <cstddef> // for std::size_t
 #include <cstdint> // for std::uint64_t

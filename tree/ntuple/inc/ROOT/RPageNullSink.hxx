@@ -1,5 +1,5 @@
 /// \file ROOT/RPageNullSink.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-01-31
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPageNullSink
-#define ROOT7_RPageNullSink
+#ifndef ROOT_RPageNullSink
+#define ROOT_RPageNullSink
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RFieldBase.hxx>

@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleFillContext.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleFillContext
-#define ROOT7_RNTupleFillContext
+#ifndef ROOT_RNTupleFillContext
+#define ROOT_RNTupleFillContext
 
 #include <ROOT/RConfig.hxx> // for R__unlikely
 #include <ROOT/REntry.hxx>
@@ -174,4 +174,4 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleFillContext
+#endif // ROOT_RNTupleFillContext

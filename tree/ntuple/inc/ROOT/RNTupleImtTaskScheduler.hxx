@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleImtTaskScheduler.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-19
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleImtTaskScheduler
-#define ROOT7_RNTupleImtTaskScheduler
+#ifndef ROOT_RNTupleImtTaskScheduler
+#define ROOT_RNTupleImtTaskScheduler
 
 #ifdef R__USE_IMT
 
@@ -45,4 +45,4 @@ public:
 } // namespace ROOT
 
 #endif // R__USE_IMT
-#endif // ROOT7_RNTupleImtTaskScheduler
+#endif // ROOT_RNTupleImtTaskScheduler

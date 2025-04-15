@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleFillStatus.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-04-15
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleFillStatus
-#define ROOT7_RNTupleFillStatus
+#ifndef ROOT_RNTupleFillStatus
+#define ROOT_RNTupleFillStatus
 
 #include <ROOT/RNTupleUtil.hxx>
 
@@ -59,4 +59,4 @@ public:
 
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleFillStatus
+#endif // ROOT_RNTupleFillStatus

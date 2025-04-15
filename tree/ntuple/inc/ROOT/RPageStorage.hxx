@@ -1,5 +1,5 @@
 /// \file ROOT/RPageStorage.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-07-19
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPageStorage
-#define ROOT7_RPageStorage
+#ifndef ROOT_RPageStorage
+#define ROOT_RPageStorage
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RCluster.hxx>

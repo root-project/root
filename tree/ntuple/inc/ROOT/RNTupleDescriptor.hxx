@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleDescriptor.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2018-07-19
@@ -12,8 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleDescriptor
-#define ROOT7_RNTupleDescriptor
+#ifndef ROOT_RNTupleDescriptor
+#define ROOT_RNTupleDescriptor
 
 #include <ROOT/RCreateFieldOptions.hxx>
 #include <ROOT/RError.hxx>
@@ -1598,4 +1598,4 @@ inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
 } // namespace Internal
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleDescriptor
+#endif // ROOT_RNTupleDescriptor

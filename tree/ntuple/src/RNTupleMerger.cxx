@@ -1,5 +1,5 @@
 /// \file RNTupleMerger.cxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>,
 /// Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2020-07-08
