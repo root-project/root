@@ -37,7 +37,6 @@ enum class OptimizationLevel {
    kExtended = 0x1,
 };
 
-
 enum class WeightFileType { None, RootBinary, Text };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
