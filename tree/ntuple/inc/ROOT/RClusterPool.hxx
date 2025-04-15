@@ -1,5 +1,5 @@
 /// \file ROOT/RClusterPool.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2020-03-11
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RClusterPool
-#define ROOT7_RClusterPool
+#ifndef ROOT_RClusterPool
+#define ROOT_RClusterPool
 
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleUtil.hxx>

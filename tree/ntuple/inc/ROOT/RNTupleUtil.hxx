@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleUtil.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleUtil
-#define ROOT7_RNTupleUtil
+#ifndef ROOT_RNTupleUtil
+#define ROOT_RNTupleUtil
 
 #include <cstdint>
 #include <string>

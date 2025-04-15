@@ -1,5 +1,5 @@
 /// \file ROOT/RPageAllocator.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-06-25
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPageAllocator
-#define ROOT7_RPageAllocator
+#ifndef ROOT_RPageAllocator
+#define ROOT_RPageAllocator
 
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>

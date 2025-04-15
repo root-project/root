@@ -1,5 +1,5 @@
 /// \file ROOT/REntry.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-07-19
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_REntry
-#define ROOT7_REntry
+#ifndef ROOT_REntry
+#define ROOT_REntry
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>

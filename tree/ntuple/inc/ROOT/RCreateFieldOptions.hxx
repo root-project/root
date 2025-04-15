@@ -1,5 +1,5 @@
 /// \file ROOT/RCreateFieldOptions.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2024-12-17
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RCreateFieldOptions
-#define ROOT7_RCreateFieldOptions
+#ifndef ROOT_RCreateFieldOptions
+#define ROOT_RCreateFieldOptions
 
 namespace ROOT {
 

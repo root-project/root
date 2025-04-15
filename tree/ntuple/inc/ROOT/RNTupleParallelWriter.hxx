@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleParallelWriter.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-02-01
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleParallelWriter
-#define ROOT7_RNTupleParallelWriter
+#ifndef ROOT_RNTupleParallelWriter
+#define ROOT_RNTupleParallelWriter
 
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>

@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test_StreamerFieldXML
-#define ROOT7_RNTuple_Test_StreamerFieldXML
+#ifndef ROOT_RNTuple_Test_StreamerFieldXML
+#define ROOT_RNTuple_Test_StreamerFieldXML
 
 #include <Rtypes.h>
 
@@ -17,4 +17,4 @@ struct ForceStreamedXML {
    float a;
 };
 
-#endif // ROOT7_RNTuple_Test_StreamerFieldXML
+#endif // ROOT_RNTuple_Test_StreamerFieldXML

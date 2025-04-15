@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleProcessor.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2024-03-26
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleProcessor
-#define ROOT7_RNTupleProcessor
+#ifndef ROOT_RNTupleProcessor
+#define ROOT_RNTupleProcessor
 
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
@@ -617,4 +617,4 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleProcessor
+#endif // ROOT_RNTupleProcessor
