@@ -542,7 +542,7 @@ std::string GenerateConstantTensorCode(const std::pair<std::string, InitializedT
       else {
          strs << ConvertValuesToString(length, data) << ";\n";
       }
-      strs << "const " << type << " * tensor_" + t.first + " = fTensor_" + t.first + ".data();\n";
+      strs << type << " * tensor_" + t.first + " = fTensor_" + t.first + ".data();\n";
    }
    return strs.str();
 }
@@ -739,13 +739,16 @@ void RModel::GenerateOutput()
    if (!doInferArgs.empty())
       doInferArgs += ",";
    for (std::string const &name : fOutputTensorNames) {
-      fGC += SP + "std::vector<" + typeForOutput(GetTensorType(name)) + " > output_tensor_" + name + ";\n";
-      doInferArgs += " output_tensor_" + name + ",";
+      bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
+      std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
+                                     : ConvertDynamicShapeToLength(GetDynamicTensorShape(name));
+      fGC += SP + "std::vector<" + typeForOutput(GetTensorType(name)) + " > output_tensor_" + name + "(" + n + ");\n";
+      doInferArgs += " output_tensor_" + name + ".data(),";
    }
    if (!doInferArgs.empty())
       doInferArgs.back() = ' ';
 
-   fGC += SP + "doInfer(" + doInferArgs + ");\n";
+   fGC += SP + "doInfer(this, " + doInferArgs + ");\n";
 
    fGC += SP + "return {";
    for (size_t i = 0; i < fOutputTensorNames.size(); i++) {
@@ -759,23 +762,35 @@ void RModel::GenerateOutput()
 
 void RModel::GenerateSessionCode()
 {
+   std::string sessionName;
+   if (fUseSession && !fIsGNNComponent) {
+      sessionName = !fIsSubGraph ? "Session" : "Session_" + fName;
+
+      //  forward declare session struct
+      fGC += "struct " + sessionName + ";\n";
+   }
+
    // Determine the signature of the actual inference function
    std::string doInferSignature = GenerateInferSignature();
    if (!doInferSignature.empty())
       doInferSignature += ", ";
    for (auto const &name : fOutputTensorNames) {
-      doInferSignature += " std::vector<" + typeForOutput(GetTensorType(name)) + "> &output_tensor_" + name + ",";
+      doInferSignature += typeForOutput(GetTensorType(name)) + " *tensor_" + name + ",";
    }
    doInferSignature.back() = ' ';
+
+   if (fUseSession && !fIsGNNComponent) {
+      doInferSignature = sessionName + " *session, " + doInferSignature;
+   }
 
    doInferSignature = "void doInfer(" + doInferSignature + ")";
 
    // define the Session struct (for GNN this is generated in RModel_GNN)
    if (fUseSession && !fIsGNNComponent) {
-      if (!fIsSubGraph)
-         fGC += "struct Session {\n";
-      else
-         fGC += "struct Session_" + fName + " {\n";
+      // forward declare inference implementation to be used in Session
+      fGC += doInferSignature + ";\n";
+
+      fGC += "struct " + sessionName + " {\n";
    }
 
    // generate code for declaring the initialized tensors
@@ -786,7 +801,7 @@ void RModel::GenerateSessionCode()
    intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
       intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
-      CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
+      //CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
    }
 
    // to check remaining unused fragments after memory allocation (lesser the better)
@@ -815,9 +830,6 @@ void RModel::GenerateSessionCode()
 
    // Generate code for Session constructor
    if (fUseSession) {
-      std::string sessionName = "Session";
-      if (fIsSubGraph)
-         sessionName += "_" + fName;
       // add here specific operator code that needs to define session data members
       fGC += "\n";
       for (size_t id = 0; id < fOperators.size(); id++) {
@@ -868,8 +880,38 @@ void RModel::GenerateSessionCode()
       fGC += "}\n\n";
    }
 
+   // generate the inference overload that returns an output struct
+   GenerateOutput();
+
+   // end of session
+   if (fUseSession && !fIsGNNComponent) {
+      fGC += "};   // end of Session\n\n";
+   }
+
    fGC += doInferSignature + "{\n";
    fGC += "\n";
+
+   if (fUseSession && !fIsGNNComponent) {
+      fGC += "    " + sessionName + " &sess = session[0];\n";
+      std::vector<std::string> names;
+      for (auto const& it: fInitializedTensors) {
+         names.push_back(it.first);
+      }
+      for (auto const& it: fIntermediateTensorInfos) {
+         names.push_back(it.first);
+      }
+      std::vector<std::string> added;
+      for (auto const& name : names) {
+         auto found = std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), name);
+         auto found2 = std::find(added.begin(), added.end(), name);
+         // Output tensors are passed directly via the function call
+         if(found == fOutputTensorNames.end() && found2 == added.end()) {
+            fGC += "    auto & tensor_" + name + " = sess.tensor_" + name + ";\n";
+            added.push_back(name);
+         }
+      }
+      fGC += "\n";
+   }
 
    // generate the inference code
    if (fVerbose)
@@ -879,31 +921,11 @@ void RModel::GenerateSessionCode()
       throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
 
    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
-      if (fVerbose)
-         std::cout << "Generating code for operator .... " << op_idx << std::endl;
+      if (fVerbose) std::cout << "Generating code for operator .... " << op_idx << std::endl;
       fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
    }
 
-   fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
-
-   for (std::string const &name : fOutputTensorNames) {
-      // need to check is size is the same (don't want to return a vector with
-      // larger size) in that case better to copy
-      bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
-      std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
-                                     : ConvertDynamicShapeToLength(GetDynamicTensorShape(name));
-      fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
-   }
-
-   fGC += "}\n\n";
-
-   // generate the inference overload that returns an output struct
-   GenerateOutput();
-
-   // end of session
-   if (fUseSession && !fIsGNNComponent) {
-      fGC += "};   // end of Session\n\n";
-   }
+   fGC += "}\n";
 }
 
 void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos, bool verbose)
