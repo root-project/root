@@ -1047,7 +1047,6 @@ void RemoveDuplicates(ColumnNames_t &columnNames)
       columnNames.end());
 }
 
-#ifdef R__HAS_ROOT7
 void RemoveRNTupleSubFields(ColumnNames_t &columnNames)
 {
    ColumnNames_t parentFields;
@@ -1065,7 +1064,6 @@ void RemoveRNTupleSubFields(ColumnNames_t &columnNames)
                                     }),
                      columnNames.end());
 }
-#endif
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT

@@ -22,11 +22,6 @@ if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
 endif()
 
-if(root7)
-  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RNTupleDS.hxx)
-  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTNTuple)
-endif()
-
 if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
@@ -99,6 +94,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
+    ROOT/RNTupleDS.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -138,6 +134,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RRootDS.cxx
     src/RTrivialDS.cxx
     src/RDFDescription.cxx
+    src/RNTupleDS.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${RDATAFRAME_EXTRA_INCLUDES}
@@ -147,6 +144,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     Hist
     RIO
     ROOTVecOps
+    ROOTNTuple
     ${RDATAFRAME_EXTRA_DEPS}
   ${EXTRA_DICT_OPTS}
 )
@@ -162,10 +160,6 @@ if(sqlite)
   target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
   target_link_libraries(ROOTDataFrame PRIVATE ${SQLITE_LIBRARIES})
 endif()
-
-if(root7)
-  target_sources(ROOTDataFrame PRIVATE src/RNTupleDS.cxx)
-endif(root7)
 
 if(MSVC)
   target_compile_definitions(ROOTDataFrame PRIVATE _USE_MATH_DEFINES)
