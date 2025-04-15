@@ -283,7 +283,7 @@ void TObject::Delete(Option_t *)
 
 Int_t TObject::DistancetoPrimitive(Int_t, Int_t)
 {
-   // AbstractMethod("DistancetoPrimitive");
+   // Method("DistancetoPrimitive");
    return 999999;
 }
 
@@ -410,7 +410,7 @@ void TObject::Execute(TMethod *method, TObjArray *params, Int_t *error)
 
 void TObject::ExecuteEvent(Int_t, Int_t, Int_t)
 {
-   // AbstractMethod("ExecuteEvent");
+   // Method("ExecuteEvent");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1114,8 +1114,10 @@ void TObject::Fatal(const char *location, const char *va_(fmt), ...) const
 /// implemented in the derived class: action must thus be taken on the user side
 /// to override it. In other word, this method acts as a "runtime purely virtual"
 /// warning instead of a "compiler purely virtual" error.
-/// \note This interface is a legacy function that is no longer recommended
-/// to be used by new development code. 
+/// \warning This interface is a legacy function that is no longer recommended
+/// to be used by new development code.
+/// \note The name "AbstractMethod" does not imply that it's an abstract method
+/// in the strict C++ sense.
 
 void TObject::AbstractMethod(const char *method) const
 {
