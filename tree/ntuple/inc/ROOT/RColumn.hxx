@@ -19,8 +19,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
-
-#include <TError.h>
+#include <ROOT/RError.hxx>
 
 #include <cstring> // for memcpy
 #include <memory>
@@ -325,8 +324,8 @@ public:
    void Flush();
    void CommitSuppressed();
 
-   void MapPage(ROOT::NTupleSize_t globalIndex) { R__ASSERT(TryMapPage(globalIndex)); }
-   void MapPage(RNTupleLocalIndex localIndex) { R__ASSERT(TryMapPage(localIndex)); }
+   void MapPage(ROOT::NTupleSize_t globalIndex) { R7__ASSERT(TryMapPage(globalIndex)); }
+   void MapPage(RNTupleLocalIndex localIndex) { R7__ASSERT(TryMapPage(localIndex)); }
    bool TryMapPage(ROOT::NTupleSize_t globalIndex);
    bool TryMapPage(RNTupleLocalIndex localIndex);
 

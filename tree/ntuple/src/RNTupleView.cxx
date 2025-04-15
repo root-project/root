@@ -25,7 +25,7 @@ ROOT::Internal::GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Interna
    const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
 
    auto fnGetPrincipalColumnId = [&desc](ROOT::DescriptorId_t fieldId) -> ROOT::DescriptorId_t {
-      R__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
+      R7__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
       auto columnIterable = desc.GetColumnIterable(fieldId);
       return (columnIterable.size() > 0) ? columnIterable.begin()->GetPhysicalId() : ROOT::kInvalidDescriptorId;
    };

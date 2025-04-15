@@ -29,7 +29,6 @@
 #include <ROOT/RColumnElementBase.hxx>
 #include <TROOT.h>
 #include <TFileMergeInfo.h>
-#include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
 
@@ -108,7 +107,7 @@ Long64_t ROOT::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 try {
    // Check the inputs
    if (!inputs || inputs->GetEntries() < 3 || !mergeInfo) {
-      Error("RNTuple::Merge", "Invalid inputs.");
+      Error("RNTuple::Merge", "Invalid inputs."); // TO-DO replace with RWarning or RError
       return -1;
    }
 
@@ -122,7 +121,7 @@ try {
    TObject *secondArg = itr();
    TFile *outFile = dynamic_cast<TFile *>(secondArg);
    if (!outFile) {
-      Error("RNTuple::Merge", "Second input parameter should be a TFile, but it's a %s.", secondArg->ClassName());
+      Error("RNTuple::Merge", "Second input parameter should be a TFile, but it's a %s.", secondArg->ClassName()); // TO-DO replace with RWarning or RError
       return -1;
    }
 
@@ -132,7 +131,7 @@ try {
    if (outKey) {
       outNTuple = outKey->ReadObject<ROOT::RNTuple>();
       if (!outNTuple) {
-         Error("RNTuple::Merge", "Output file already has key, but not of type RNTuple!");
+         Error("RNTuple::Merge", "Output file already has key, but not of type RNTuple!"); // TO-DO replace with RWarning or RError
          return -1;
       }
       // In principle, we should already be working on the RNTuple object from the output file, but just continue with
@@ -142,10 +141,10 @@ try {
    const bool defaultComp = mergeInfo->fOptions.Contains("DefaultCompression");
    const bool firstSrcComp = mergeInfo->fOptions.Contains("FirstSrcCompression");
    const bool extraVerbose = mergeInfo->fOptions.Contains("rntuple.ExtraVerbose");
-   if (defaultComp && firstSrcComp) {
+   if (defaultComp && firstSrcComp) { // TO-DO replace with RWarning or RError
       // this should never happen through hadd, but a user may call RNTuple::Merge() from custom code.
       Warning("RNTuple::Merge", "Passed both options \"DefaultCompression\" and \"FirstSrcCompression\": "
-                                "only the latter will apply.");
+                                "only the latter will apply."); // TO-DO replace with RWarning or RError
    }
    std::optional<std::uint32_t> compression;
    if (firstSrcComp) {
@@ -180,7 +179,7 @@ try {
          auto descriptor = source->GetSharedDescriptorGuard();
          auto clusterIter = descriptor->GetClusterIterable();
          auto firstCluster = clusterIter.begin();
-         if (firstCluster == clusterIter.end()) {
+         if (firstCluster == clusterIter.end()) { // TO-DO replace with RWarning or RError
             Error("RNTuple::Merge",
                   "Asked to use the first source's compression as the output compression, but the "
                   "first source (file '%s') has an empty RNTuple, therefore the output compression could not be "
@@ -190,8 +189,8 @@ try {
          }
          auto colRangeIter = (*firstCluster).GetColumnRangeIterable();
          auto firstColRange = colRangeIter.begin();
-         if (firstColRange == colRangeIter.end()) {
-            Error("RNTuple::Merge",
+         if (firstColRange == colRangeIter.end()) { // TO-DO replace with RWarning or RError
+            Error("RNTuple::Merge", // TO-DO replace with RWarning or RError
                   "Asked to use the first source's compression as the output compression, but the "
                   "first source (file '%s') has an empty RNTuple, therefore the output compression could not be "
                   "determined.",
@@ -241,8 +240,8 @@ try {
    *this = *outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
 
    return 0;
-} catch (const std::exception &ex) {
-   Error("RNTuple::Merge", "Exception thrown while merging: %s", ex.what());
+} catch (const std::exception &ex) { // TO-DO replace with RWarning or RError
+   Error("RNTuple::Merge", "Exception thrown while merging: %s", ex.what()); // TO-DO replace with RWarning or RError
    return -1;
 }
 
@@ -655,7 +654,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
       }
 
       // NOTE: we cannot have a Record here because it has no associated columns.
-      R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
+      R7__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
                 structure == ROOT::ENTupleStructure::kLeaf);
 
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
@@ -712,7 +711,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RC
    for (size_t colIdx = 0; colIdx < nCommonColumnsInCluster; ++colIdx) {
       const auto &column = commonColumns[colIdx];
       const auto &columnId = column.fInputId;
-      R__ASSERT(clusterDesc.ContainsColumn(columnId));
+      R7__ASSERT(clusterDesc.ContainsColumn(columnId));
 
       const auto &columnDesc = mergeData.fSrcDescriptor->GetColumnDescriptor(columnId);
       const auto srcColElement = column.fInMemoryType
@@ -779,7 +778,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const ROOT::RC
          sealedPage.SetBuffer(onDiskPage->GetAddress());
          // TODO(gparolini): more graceful error handling (skip the page?)
          sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
-         R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+         R7__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
          if (needsResealing) {
             const auto uncompressedSize = srcColElement->GetSize() * sealedPage.GetNElements();
@@ -827,7 +826,7 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RCo
    while (clusterId != ROOT::kInvalidDescriptorId) {
       const auto &clusterDesc = mergeData.fSrcDescriptor->GetClusterDescriptor(clusterId);
       const auto nClusterEntries = clusterDesc.GetNEntries();
-      R__ASSERT(nClusterEntries > 0);
+      R7__ASSERT(nClusterEntries > 0);
 
       // NOTE: just because a column is in `commonColumns` it doesn't mean that each cluster in the source contains it,
       // as it may be a deferred column that only has real data in a future cluster.
@@ -1034,7 +1033,7 @@ RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink
      fPageAlloc(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()),
      fModel(std::move(model))
 {
-   R__ASSERT(fDestination);
+   R7__ASSERT(fDestination);
 
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled())
@@ -1084,6 +1083,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
    }
 
+ // TO-DO replace with RWarning or RError
 #define SKIP_OR_ABORT(errMsg)                                                        \
    do {                                                                              \
       if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                \
@@ -1146,7 +1146,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    } // end loop over sources
 
    if (fDestination->GetNEntries() == 0)
-      Warning("RNTuple::Merge", "Output RNTuple '%s' has no entries.", fDestination->GetNTupleName().c_str());
+      Warning("RNTuple::Merge", "Output RNTuple '%s' has no entries.", fDestination->GetNTupleName().c_str()); // TO-DO replace with RWarning or RError
 
    // Commit the output
    fDestination->CommitClusterGroup();

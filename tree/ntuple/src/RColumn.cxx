@@ -15,8 +15,6 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RPageStorage.hxx>
 
-#include <TError.h>
-
 #include <algorithm>
 #include <cassert>
 #include <utility>
@@ -73,7 +71,7 @@ void ROOT::Internal::RColumn::Flush()
 
    fPageSink->CommitPage(fHandleSink, fWritePage);
    fWritePage = fPageSink->ReservePage(fHandleSink, fInitialNElements);
-   R__ASSERT(!fWritePage.IsNull());
+   R7__ASSERT(!fWritePage.IsNull());
    fWritePage.Reset(fNElements);
 }
 

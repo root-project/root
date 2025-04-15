@@ -28,7 +28,6 @@
 
 #include <RVersion.h>
 #include <TDirectory.h>
-#include <TError.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -267,7 +266,7 @@ ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
    : RPageSourceFile(ntupleName, options)
 {
    fFile = std::move(file);
-   R__ASSERT(fFile);
+   R7__ASSERT(fFile);
    fReader = ROOT::Internal::RMiniFileReader(fFile.get());
 }
 
@@ -343,8 +342,8 @@ void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
       fCounters->fNRead.Add(2);
    } else {
       RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-      R__ASSERT(fAnchor->GetNBytesHeader() < std::numeric_limits<std::size_t>::max());
-      R__ASSERT(fAnchor->GetNBytesFooter() < std::numeric_limits<std::size_t>::max());
+      R7__ASSERT(fAnchor->GetNBytesHeader() < std::numeric_limits<std::size_t>::max());
+      R7__ASSERT(fAnchor->GetNBytesFooter() < std::numeric_limits<std::size_t>::max());
       ROOT::Internal::RRawFile::RIOVec readRequests[2] = {{fStructureBuffer.fPtrHeader, fAnchor->GetSeekHeader(),
                                                            static_cast<std::size_t>(fAnchor->GetNBytesHeader()), 0},
                                                           {fStructureBuffer.fPtrFooter, fAnchor->GetSeekFooter(),
@@ -457,7 +456,7 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
-      R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
+      R7__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       auto cachedPageRef =
          fPagePool.GetPage(RPagePool::RKey{columnId, elementInMemoryType}, RNTupleLocalIndex(clusterId, idxInCluster));
@@ -466,7 +465,7 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
 
       ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
-      R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
+      R7__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
       sealedPage.SetBuffer(onDiskPage->GetAddress());
    }
 
@@ -569,7 +568,7 @@ ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clus
    std::size_t szOverhead = 0;
    const std::uint64_t maxKeySize = fReader.GetMaxKeySize();
    for (auto &s : onDiskPages) {
-      R__ASSERT(s.fSize > 0);
+      R7__ASSERT(s.fSize > 0);
       const std::int64_t readUpTo = req.fOffset + req.fSize;
       // Note: byte ranges of pages may overlap
       const std::uint64_t overhead = std::max(static_cast<std::int64_t>(s.fOffset) - readUpTo, std::int64_t(0));

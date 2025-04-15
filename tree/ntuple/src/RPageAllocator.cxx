@@ -14,13 +14,11 @@
 
 #include <ROOT/RPageAllocator.hxx>
 
-#include <TError.h>
-
 #include <algorithm>
 
 ROOT::Internal::RPage ROOT::Internal::RPageAllocatorHeap::NewPage(std::size_t elementSize, std::size_t nElements)
 {
-   R__ASSERT((elementSize > 0) && (nElements > 0));
+   R7__ASSERT((elementSize > 0) && (nElements > 0));
    auto nbytes = elementSize * nElements;
    auto buffer = new unsigned char[nbytes];
    return RPage(buffer, this, elementSize, nElements);

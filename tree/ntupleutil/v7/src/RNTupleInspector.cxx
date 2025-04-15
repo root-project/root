@@ -283,7 +283,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
                 << std::setprecision(3) << typeInfo.GetCompressionFactor() << "," << typeInfo.nPages << std::endl;
       }
       break;
-   default: R__ASSERT(false && "Invalid print format");
+   default: R7__ASSERT(false && "Invalid print format");
    }
 }
 
