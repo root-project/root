@@ -73,6 +73,10 @@ jobs:
             while IFS=- read -r start length; do
               [ -z "$start" ] && continue
               length=${length:-1}
+              # Skip invalid ranges
+              if [ "$start" -eq 0 ] || [ "$length" -eq 0 ]; then
+                continue
+              fi
               end=$((start + length))
               diff_command+="ruff format --diff --range $start-$end $file && "
               apply_command+="ruff format --range $start-$end $file && "
