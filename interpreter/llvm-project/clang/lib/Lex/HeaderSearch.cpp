@@ -960,13 +960,9 @@ OptionalFileEntryRef HeaderSearch::LookupFile(
       // If we have no includer, that means we're processing a #include
       // from a module build. We should treat this as a system header if we're
       // building a [system] module.
-      bool IncluderIsSystemHeader = [&]() {
-        if (!Includer)
-          return BuildSystemModule;
-        const HeaderFileInfo *HFI = getExistingFileInfo(*Includer);
-        assert(HFI && "includer without file info");
-        return HFI->DirInfo != SrcMgr::C_User;
-      }();
+      bool IncluderIsSystemHeader =
+          Includer ? getFileInfo(*Includer).DirInfo != SrcMgr::C_User :
+          BuildSystemModule;
       if (OptionalFileEntryRef FE = getFileAndSuggestModule(
               TmpDir, IncludeLoc, IncluderAndDir.second, IncluderIsSystemHeader,
               RequestingModule, SuggestedModule)) {
