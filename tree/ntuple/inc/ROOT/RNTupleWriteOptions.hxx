@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleWriteOptions.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleWriteOptions
-#define ROOT7_RNTupleWriteOptions
+#ifndef ROOT_RNTupleWriteOptions
+#define ROOT_RNTupleWriteOptions
 
 #include <Compression.h>
 
@@ -268,4 +268,4 @@ inline void RNTupleWriteOptionsManip::SetMaxKeySize(RNTupleWriteOptions &options
 } // namespace Internal
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleWriteOptions
+#endif // ROOT_RNTupleWriteOptions

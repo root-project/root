@@ -1,5 +1,5 @@
 /// \file RNTupleUtil.cxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch> & Max Orok <maxwellorok@gmail.com>
 /// \date 2020-07-14
 /// \author Vincenzo Eduardo Padulano, CERN

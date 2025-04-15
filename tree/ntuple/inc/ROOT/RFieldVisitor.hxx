@@ -1,5 +1,5 @@
 /// \file ROOT/RFieldVisitor.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Simon Leisibach <simon.satoshi.rene.leisibach@cern.ch>
 /// \date 2019-06-11
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RFieldVisitor
-#define ROOT7_RFieldVisitor
+#ifndef ROOT_RFieldVisitor
+#define ROOT_RFieldVisitor
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>

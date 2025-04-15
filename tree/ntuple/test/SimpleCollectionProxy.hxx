@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test_SimpleCollectionProxy
-#define ROOT7_RNTuple_Test_SimpleCollectionProxy
+#ifndef ROOT_RNTuple_Test_SimpleCollectionProxy
+#define ROOT_RNTuple_Test_SimpleCollectionProxy
 
 #include "ntuple_test.hxx"
 

@@ -1,5 +1,5 @@
 /// \file ROOT/RRawPtrWriteEntry.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2025-03-19
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RRawPtrWriteEntry
-#define ROOT7_RRawPtrWriteEntry
+#ifndef ROOT_RRawPtrWriteEntry
+#define ROOT_RRawPtrWriteEntry
 
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldToken.hxx>

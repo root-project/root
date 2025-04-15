@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test_RXTuple
-#define ROOT7_RNTuple_Test_RXTuple
+#ifndef ROOT_RNTuple_Test_RXTuple
+#define ROOT_RNTuple_Test_RXTuple
 
 #include <cstdint>
 #include "Rtypes.h"

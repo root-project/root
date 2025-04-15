@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleZip.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-11-21
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleZip
-#define ROOT7_RNTupleZip
+#ifndef ROOT_RNTupleZip
+#define ROOT_RNTupleZip
 
 #include <RZip.h>
 #include <TError.h>

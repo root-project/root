@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test
-#define ROOT7_RNTuple_Test
+#ifndef ROOT_RNTuple_Test
+#define ROOT_RNTuple_Test
 
 #include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RError.hxx>

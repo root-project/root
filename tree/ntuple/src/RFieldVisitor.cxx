@@ -1,5 +1,5 @@
 /// \file RFieldVisitor.cxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Simon Leisibach <simon.leisibach@gmail.com>
 /// \date 2019-06-11
 

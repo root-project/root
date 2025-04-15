@@ -1,10 +1,10 @@
 /// \file RFieldUtils.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-11-19
 
-#ifndef ROOT7_RFieldUtils
-#define ROOT7_RFieldUtils
+#ifndef ROOT_RFieldUtils
+#define ROOT_RFieldUtils
 
 #include <string>
 #include <string_view>

@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleMerger.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>
 /// \date 2020-07-08
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleMerger
-#define ROOT7_RNTupleMerger
+#ifndef ROOT_RNTupleMerger
+#define ROOT_RNTupleMerger
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>

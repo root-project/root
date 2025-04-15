@@ -1,5 +1,5 @@
 /// \file RColumnElement.cxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-08-11
 

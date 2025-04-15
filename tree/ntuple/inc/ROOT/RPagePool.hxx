@@ -1,5 +1,5 @@
 /// \file ROOT/RPagePool.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPagePool
-#define ROOT7_RPagePool
+#ifndef ROOT_RPagePool
+#define ROOT_RPagePool
 
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>

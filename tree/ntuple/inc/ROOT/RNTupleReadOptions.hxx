@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleReadOptions.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleReadOptions
-#define ROOT7_RNTupleReadOptions
+#ifndef ROOT_RNTupleReadOptions
+#define ROOT_RNTupleReadOptions
 
 namespace ROOT {
 

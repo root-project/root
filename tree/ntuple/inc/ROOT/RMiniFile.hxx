@@ -1,5 +1,5 @@
 /// \file ROOT/RMiniFile.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-22
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RMiniFile
-#define ROOT7_RMiniFile
+#ifndef ROOT_RMiniFile
+#define ROOT_RMiniFile
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTuple.hxx>

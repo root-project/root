@@ -1,5 +1,5 @@
 /// \file RPage.cxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 

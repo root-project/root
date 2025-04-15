@@ -1,5 +1,5 @@
 /// \file ROOT/RField.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RField
-#define ROOT7_RField
+#ifndef ROOT_RField
+#define ROOT_RField
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RFieldBase.hxx>

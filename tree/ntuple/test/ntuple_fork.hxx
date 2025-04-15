@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test_Fork
-#define ROOT7_RNTuple_Test_Fork
+#ifndef ROOT_RNTuple_Test_Fork
+#define ROOT_RNTuple_Test_Fork
 
 #include <functional>
 #include <string_view>
@@ -74,4 +74,4 @@ inline void ProcessLineImpl(const char *line)
          return;                              \
    } while (0)
 
-#endif // ROOT7_RNTuple_Test_Fork
+#endif // ROOT_RNTuple_Test_Fork

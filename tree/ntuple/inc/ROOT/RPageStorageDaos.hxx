@@ -1,5 +1,5 @@
 /// \file ROOT/RPageStorageDaos.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Javier Lopez-Gomez <j.lopez@cern.ch>
 /// \date 2020-11-03
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPageStorageDaos
-#define ROOT7_RPageStorageDaos
+#ifndef ROOT_RPageStorageDaos
+#define ROOT_RPageStorageDaos
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>

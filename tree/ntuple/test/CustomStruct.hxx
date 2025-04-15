@@ -1,5 +1,5 @@
-#ifndef ROOT7_RNTuple_Test_CustomStruct
-#define ROOT7_RNTuple_Test_CustomStruct
+#ifndef ROOT_RNTuple_Test_CustomStruct
+#define ROOT_RNTuple_Test_CustomStruct
 
 #include <RtypesCore.h> // for Double32_t
 #include <TObject.h>

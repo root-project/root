@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleJoinTable.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2024-04-02
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleJoinTable
-#define ROOT7_RNTupleJoinTable
+#ifndef ROOT_RNTupleJoinTable
+#define ROOT_RNTupleJoinTable
 
 #include <ROOT/RField.hxx>
 
@@ -229,4 +229,4 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleJoinTable
+#endif // ROOT_RNTupleJoinTable

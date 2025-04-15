@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleWriter.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-20
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleWriter
-#define ROOT7_RNTupleWriter
+#ifndef ROOT_RNTupleWriter
+#define ROOT_RNTupleWriter
 
 #include <ROOT/RConfig.hxx> // for R__unlikely
 #include <ROOT/REntry.hxx>
@@ -182,4 +182,4 @@ public:
 
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleWriter
+#endif // ROOT_RNTupleWriter

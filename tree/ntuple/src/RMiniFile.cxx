@@ -1,5 +1,5 @@
 /// \file RMiniFile.cxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-22
 

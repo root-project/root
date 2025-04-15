@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleRange.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-05
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleRange
-#define ROOT7_RNTupleRange
+#ifndef ROOT_RNTupleRange
+#define ROOT_RNTupleRange
 
 #include <ROOT/RNTupleUtil.hxx>
 

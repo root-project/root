@@ -1,5 +1,5 @@
 /// \file ROOT/RField/STLMisc.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-09
 
@@ -11,10 +11,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RField_STLMisc
-#define ROOT7_RField_STLMisc
+#ifndef ROOT_RField_STLMisc
+#define ROOT_RField_STLMisc
 
-#ifndef ROOT7_RField
+#ifndef ROOT_RField
 #error "Please include RField.hxx!"
 #endif
 

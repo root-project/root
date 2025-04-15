@@ -1,5 +1,5 @@
 /// \file ROOT/RNTupleModel.hxx
-/// \ingroup NTuple ROOT7
+/// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2018-10-04
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleModel
-#define ROOT7_RNTupleModel
+#ifndef ROOT_RNTupleModel
+#define ROOT_RNTupleModel
 
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
