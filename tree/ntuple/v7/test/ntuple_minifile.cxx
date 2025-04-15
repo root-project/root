@@ -627,7 +627,7 @@ TEST(MiniFile, MultiKeyBlob_TooManyChunks)
       auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0x99, kTooBigDataSize);
       try {
-         writer->WriteBlob(data.get(), kTooBigDataSize, kTooBigDataSize), "");
+         writer->WriteBlob(data.get(), kTooBigDataSize, kTooBigDataSize);
       } catch (const ROOT::RException &ex) {
          EXPECT_THAT(ex.what(), testing::HasSubstr("nbytesChunkOffsets <= maxChunkSize"));
       }
