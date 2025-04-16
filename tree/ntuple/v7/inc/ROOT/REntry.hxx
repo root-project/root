@@ -20,9 +20,6 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldToken.hxx>
 #include <string_view>
-
-#include <TError.h>
-
 #include <algorithm>
 #include <iterator>
 #include <memory>

@@ -190,7 +190,7 @@ ROOT::Internal::GenerateColumnElement(std::type_index inMemoryType, ENTupleColum
    } else if (inMemoryType == std::type_index(typeid(RTestFutureColumn))) {
       return GenerateColumnElementInternal<RTestFutureColumn>(onDiskType);
    } else {
-      R__ASSERT(!"Invalid memory type in GenerateColumnElement");
+      R7__ASSERT(!"Invalid memory type in GenerateColumnElement");
    }
    // never here
    return nullptr;

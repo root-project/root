@@ -19,7 +19,6 @@
 #include <ROOT/RPageStorageFile.hxx>
 
 #include <TBuffer.h>
-#include <TError.h>
 #include <TFile.h>
 
 #include <xxhash.h>
@@ -40,7 +39,7 @@ void ROOT::RNTuple::Streamer(TBuffer &buf)
       if (expectedChecksum != onDiskChecksum)
          throw RException(R__FAIL("checksum mismatch in RNTuple anchor"));
 
-      R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
+      R7__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
       fFile = static_cast<TFile *>(buf.GetParent());
    } else {
       auto offCkData = buf.Length() + sizeof(UInt_t) + sizeof(Version_t);

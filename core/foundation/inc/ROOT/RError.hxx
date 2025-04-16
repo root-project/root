@@ -27,6 +27,16 @@
 #include <utility>
 #include <vector>
 
+/*! Checks condition `e` and throws an exception if it's false.
+ * \warning this check is NOT stripped in release mode, so it should not be used for hot paths.
+ * For those cases, prefer a regular `assert()`;
+ */
+#define R7__ASSERT(e)                                             \
+   do {                                                           \
+      if (R__unlikely(!(e)))                                      \
+         throw ROOT::RException(R__FAIL(_QUOTE_(e)));             \
+   } while (false)
+
 namespace ROOT {
 
 // clang-format off

@@ -16,8 +16,8 @@
 #ifndef ROOT7_RNTupleZip
 #define ROOT7_RNTupleZip
 
+#include <ROOT/RError.hxx>
 #include <RZip.h>
-#include <TError.h>
 
 #include <algorithm>
 #include <array>
@@ -47,8 +47,8 @@ public:
    /// Returns the size of the compressed data, written into the provided output buffer.
    static std::size_t Zip(const void *from, std::size_t nbytes, int compression, void *to)
    {
-      R__ASSERT(from != nullptr);
-      R__ASSERT(to != nullptr);
+      R7__ASSERT(from != nullptr);
+      R7__ASSERT(to != nullptr);
       auto cxLevel = compression % 100;
       if (cxLevel == 0) {
          memcpy(to, from, nbytes);
@@ -66,7 +66,7 @@ public:
       for (unsigned int i = 0; i < nZipBlocks; ++i) {
          int szSource = std::min(static_cast<int>(kMAXZIPBUF), szRemaining);
          R__zipMultipleAlgorithm(cxLevel, &szSource, source, &szTarget, target, &szOutBlock, cxAlgorithm);
-         R__ASSERT(szOutBlock >= 0);
+         R7__ASSERT(szOutBlock >= 0);
          if ((szOutBlock == 0) || (szOutBlock >= szSource)) {
             // Uncompressible block, we have to store the entire input data stream uncompressed
             memcpy(to, from, nbytes);
@@ -78,8 +78,8 @@ public:
          target += szOutBlock;
          szRemaining -= szSource;
       }
-      R__ASSERT(szRemaining == 0);
-      R__ASSERT(szZipData < nbytes);
+      R7__ASSERT(szRemaining == 0);
+      R7__ASSERT(szZipData < nbytes);
       return szZipData;
    }
 };
@@ -109,7 +109,7 @@ public:
          memcpy(to, from, nbytes);
          return;
       }
-      R__ASSERT(dataLen > nbytes);
+      R7__ASSERT(dataLen > nbytes);
 
       unsigned char *source = const_cast<unsigned char *>(static_cast<const unsigned char *>(from));
       unsigned char *target = static_cast<unsigned char *>(to);
@@ -118,21 +118,21 @@ public:
          int szSource;
          int szTarget;
          int retval = R__unzip_header(&szSource, source, &szTarget);
-         R__ASSERT(retval == 0);
-         R__ASSERT(szSource > 0);
-         R__ASSERT(szTarget > szSource);
-         R__ASSERT(static_cast<unsigned int>(szSource) <= nbytes);
-         R__ASSERT(static_cast<unsigned int>(szTarget) <= dataLen);
+         R7__ASSERT(retval == 0);
+         R7__ASSERT(szSource > 0);
+         R7__ASSERT(szTarget > szSource);
+         R7__ASSERT(static_cast<unsigned int>(szSource) <= nbytes);
+         R7__ASSERT(static_cast<unsigned int>(szTarget) <= dataLen);
 
          int unzipBytes = 0;
          R__unzip(&szSource, source, &szTarget, target, &unzipBytes);
-         R__ASSERT(unzipBytes == szTarget);
+         R7__ASSERT(unzipBytes == szTarget);
 
          target += szTarget;
          source += szSource;
          szRemaining -= unzipBytes;
       } while (szRemaining > 0);
-      R__ASSERT(szRemaining == 0);
+      R7__ASSERT(szRemaining == 0);
    }
 };
 
