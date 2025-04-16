@@ -1586,8 +1586,9 @@ void TClass::Init(const char *name, Version_t cversion,
          if (proto)
             proto->FillTClass(this);
       }
-      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
-         gInterpreter->SetClassInfo(this, kFALSE, silent);   // sets fClassInfo pointer
+      TDictionary::DeclId_t decl {};
+      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, decl, /* autoload = */ kTRUE, /* instantiateTemplate */ kTRUE)) {
+         gInterpreter->SetClassInfo(this, kFALSE, silent, decl, kTRUE);   // sets fClassInfo pointer
          if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
             // we tried this cause problem, in particular in the end-of-process operation.
@@ -3305,7 +3306,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       printf("TClass::GetClass: Header Parsing - The representation of %s was not found in the type system. A lookup in the interpreter is about to be tried: this can cause parsing. This can be avoided selecting %s in the linkdef/selection file.\n",normalizedName.c_str(), normalizedName.c_str());
    }
    if (normalizedName.length()) {
-      auto cci = gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */,
+      TDictionary::DeclId_t decl {};
+      auto cci = gInterpreter->CheckClassInfo(normalizedName.c_str(), decl, kTRUE /* autoload */,
                                               kTRUE /*Only class, structs and ns*/);
 
       // We could have an interpreted class with an inline ClassDef, in this case we do not
