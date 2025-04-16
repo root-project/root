@@ -533,7 +533,7 @@ struct Limits {
    template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); } /// Same as RMS
 
    template <typename T> Double_t Median(Long64_t n, const T *a, const Double_t *w=nullptr, Long64_t *work=nullptr);
-   template <typename T> Double_t ModeHalfSample(Long64_t n, const T *a, const Double_t *w=nullptr);
+   template <typename T> Double_t ModeHalfSample(Long64_t n, const T *a, const Double_t *w = nullptr);
 
    //k-th order statistic
    template <class Element, typename Size> Element KOrdStat(Size n, const Element *a, Size k, Size *work = 0);
@@ -1437,7 +1437,7 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// if all values of `a` are unique or have equal weights (or `w` is nullptr), then the Bickel half-sample-mode algorithm is applied; otherwise the
 /// value associated with the highest sum of weights (if `w` is not nullptr)
 /// is returned.
-template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w = nullptr)
+template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w)
 {
    if (n <= 0)
       return TMath::QuietNaN();
