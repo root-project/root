@@ -10,10 +10,10 @@
 from __future__ import annotations
 
 import enum
+import types
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Any, Callable, Iterator, Tuple, Union
-import types
 
 """
 Implementation of the module level helper functions for the UHI
@@ -155,6 +155,9 @@ def _process_index_for_axis(self, index, axis):
         return _get_axis_len(self, axis) if index is len else index(self, axis)
 
     if isinstance(index, int):
+        # -1 index returns the last valid bin
+        if index == -1:
+            return _overflow(self, axis) - 1
         # Shift the indices by 1 to align with the UHI convention,
         # where 0 corresponds to the first bin, unlike ROOT where 0 represents underflow and 1 is the first bin.
         index = index + 1
@@ -166,7 +169,7 @@ def _process_index_for_axis(self, index, axis):
     raise index
 
 
-def _compute_uhi_index(self, index, axis):
+def _compute_uhi_index(self, index, axis, include_flow_bins=True):
     """Convert tag functors to valid bin indices."""
     if isinstance(index, _rebin) or index is _sum:
         index = slice(None, None, index)
@@ -175,13 +178,13 @@ def _compute_uhi_index(self, index, axis):
         return _process_index_for_axis(self, index, axis)
 
     if isinstance(index, slice):
-        start, stop = _resolve_slice_indices(self, index, axis)
+        start, stop = _resolve_slice_indices(self, index, axis, include_flow_bins)
         return slice(start, stop, index.step)
 
     raise TypeError(f"Unsupported index type: {type(index).__name__}")
 
 
-def _compute_common_index(self, index):
+def _compute_common_index(self, index, include_flow_bins=True):
     """Normalize and expand the index to match the histogram dimension."""
     dim = self.GetDimension()
     if isinstance(index, dict):
@@ -209,7 +212,7 @@ def _compute_common_index(self, index):
     if len(index) != dim:
         raise IndexError(f"Expected {dim} indices, got {len(index)}")
 
-    return [_compute_uhi_index(self, idx, axis) for axis, idx in enumerate(index)]
+    return [_compute_uhi_index(self, idx, axis, include_flow_bins) for axis, idx in enumerate(index)]
 
 
 def _setbin(self, index, value):
@@ -217,11 +220,19 @@ def _setbin(self, index, value):
     self.SetBinContent(index, value)
 
 
-def _resolve_slice_indices(self, index, axis):
+def _resolve_slice_indices(self, index, axis, include_flow_bins=True):
     """Resolve slice start and stop indices for a given axis"""
     start, stop = index.start, index.stop
-    start = _process_index_for_axis(self, start, axis) if start is not None else _underflow(self, axis)
-    stop = _process_index_for_axis(self, stop, axis) if stop is not None else _overflow(self, axis) + 1
+    start = (
+        _process_index_for_axis(self, start, axis)
+        if start is not None
+        else _underflow(self, axis) + (0 if include_flow_bins else 1)
+    )
+    stop = (
+        _process_index_for_axis(self, stop, axis)
+        if stop is not None
+        else _overflow(self, axis) + (1 if include_flow_bins else 0)
+    )
     if start < _underflow(self, axis) or stop > (_overflow(self, axis) + 1) or start > stop:
         raise IndexError(f"Slice indices {start, stop} out of range for axis {axis}")
     return start, stop
@@ -251,15 +262,15 @@ def _get_processed_slices(self, index):
     if len(index) != self.GetDimension():
         raise IndexError(f"Expected {self.GetDimension()} indices, got {len(index)}")
     processed_slices, out_of_range_indices, actions = [], [], [None] * self.GetDimension()
-    for i, idx in enumerate(index):
-        axis_bins = range(_get_axis(self, i).GetNbins() + 2)
+    for axis, idx in enumerate(index):
+        axis_bins = range(_overflow(self, axis) + 1)
         if isinstance(idx, slice):
             slice_range = range(idx.start, idx.stop)
             processed_slices.append(slice_range)
             uflow = [b for b in axis_bins if b < idx.start]
             oflow = [b for b in axis_bins if b >= idx.stop]
             out_of_range_indices.append((uflow, oflow))
-            actions[i] = idx.step
+            actions[axis] = idx.step
         else:
             processed_slices.append([idx])
 
@@ -288,7 +299,8 @@ def _get_slice_indices(slices):
     """
     import numpy as np
 
-    return np.array(np.meshgrid(*slices)).T.reshape(-1, len(slices))
+    grids = np.meshgrid(*slices, indexing="ij")
+    return np.array(grids).reshape(len(slices), -1).T
 
 
 def _set_flow_bins(self, target_hist, out_of_range_indices):
@@ -347,13 +359,21 @@ def _slice_get(self, index):
     return _apply_actions(target_hist, actions)
 
 
-def _slice_set(self, index, value):
+def _slice_set(self, index, unprocessed_index, value):
     """
     This method modifies the histogram by updating the bin contents for the
     specified slice. It supports assigning a scalar value to all bins or
     assigning an array of values, provided the array's shape matches the slice.
     """
     import numpy as np
+
+    # Depending on the shape of the array provided, we can set or not the flow bins
+    # Setting with a scalar does not set the flow bins
+    include_flow_bins = not (
+        (isinstance(value, np.ndarray) and value.shape == _shape(self, include_flow_bins=False)) or np.isscalar(value)
+    )
+    if not include_flow_bins:
+        index = _compute_common_index(self, unprocessed_index, include_flow_bins=False)
 
     processed_slices, _, actions = _get_processed_slices(self, index)
     slice_indices = _get_slice_indices(processed_slices)
@@ -377,25 +397,36 @@ def _slice_set(self, index, value):
 
 
 def _getitem(self, index):
-    index = _compute_common_index(self, index)
-    if all(isinstance(i, int) for i in index):
-        return self.GetBinContent(*index)
+    uhi_index = _compute_common_index(self, index)
+    if all(isinstance(i, int) for i in uhi_index):
+        return self.GetBinContent(*uhi_index)
 
-    if any(isinstance(i, slice) for i in index):
-        return _slice_get(self, index)
+    if any(isinstance(i, slice) for i in uhi_index):
+        return _slice_get(self, uhi_index)
 
 
 def _setitem(self, index, value):
-    index = _compute_common_index(self, index)
-    if all(isinstance(i, int) for i in index):
-        _setbin(self, self.GetBin(*index), value)
-    elif any(isinstance(i, slice) for i in index):
-        _slice_set(self, index, value)
+    uhi_index = _compute_common_index(self, index)
+    if all(isinstance(i, int) for i in uhi_index):
+        _setbin(self, self.GetBin(*uhi_index), value)
+    elif any(isinstance(i, slice) for i in uhi_index):
+        _slice_set(self, uhi_index, index, value)
+
+
+def _eq(self, other):
+    import numpy as np
+
+    return (
+        isinstance(other, type(self))
+        and _shape(self) == _shape(other)
+        and np.array_equal(_values_default(self), _values_default(other))
+    )
 
 
 def _add_indexing_features(klass: Any) -> None:
     klass.__getitem__ = _getitem
     klass.__setitem__ = _setitem
+    klass.__eq__ = _eq
 
 
 """
