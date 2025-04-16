@@ -351,7 +351,6 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 CreateLMFromTTree(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                   const std::vector<std::string> &defaultColumns, bool checkFile = true);
 
-#ifdef R__HAS_ROOT7
 /// \brief Create an RLoopManager that reads an RNTuple.
 /// \param[in] datasetName Name of the RNTuple
 /// \param[in] fileNameGlob File name (or glob) in which the RNTuple is stored.
@@ -393,7 +392,6 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromFile(std::string_vi
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromFile(std::string_view datasetName,
                                                                   const std::vector<std::string> &fileNameGlobs,
                                                                   const std::vector<std::string> &defaultColumns);
-#endif
 
 } // namespace RDF
 } // namespace Detail

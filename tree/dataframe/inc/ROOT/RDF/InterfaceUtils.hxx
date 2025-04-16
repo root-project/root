@@ -813,10 +813,7 @@ AddSizeBranches(const std::vector<std::string> &branches, ROOT::RDF::RDataSource
                 std::vector<std::string> &&colsWithoutAliases, std::vector<std::string> &&colsWithAliases);
 
 void RemoveDuplicates(ColumnNames_t &columnNames);
-
-#ifdef R__HAS_ROOT7
 void RemoveRNTupleSubFields(ColumnNames_t &columnNames);
-#endif
 
 } // namespace RDF
 } // namespace Internal
