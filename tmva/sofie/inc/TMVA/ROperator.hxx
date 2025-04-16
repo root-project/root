@@ -21,8 +21,8 @@ class ROperator{
 public:
    virtual std::vector<std::string> GetBlasRoutines() { return {}; }
    virtual std::vector<std::string> GetStdLibs() { return {}; }
-   virtual std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) = 0;
-   virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) = 0;
+   virtual std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) { return {}; };
+   virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) { return {}; };
    virtual void Initialize(RModel&) = 0;
    virtual std::string Generate(std::string OpName) = 0;  //expect unique opName for each operator within the same RModel
    // generate initialization code for session constructor
