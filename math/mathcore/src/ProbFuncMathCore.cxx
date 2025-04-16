@@ -102,7 +102,7 @@ namespace Math {
       // If alpha < 0 is the left tail integrals which are always finite for finite x.     
       // parameters:
       // alpha : is non equal to zero, define the # of sigma from which it becomes a power-law function (from mean-alpha*sigma)
-      // n > 1 : is integrer, is the power of the low tail
+      // n > 1 : is integer, is the power of the low tail
       // add a value xmin for cases when n <=1 the integral diverges 
       if (sigma == 0)   return 0;
       if (alpha==0)
