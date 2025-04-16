@@ -102,7 +102,7 @@ namespace Math {
       // If alpha < 0 is the left tail integrals which are always finite for finite x.     
       // parameters:
       // alpha : is non equal to zero, define the # of sigma from which it becomes a power-law function (from mean-alpha*sigma)
-      // n > 1 : is integrer, is the power of the low  tail
+      // n > 1 : is integer, is the power of the low tail
       // add a value xmin for cases when n <=1 the integral diverges 
       if (sigma == 0)   return 0;
       if (alpha==0)
@@ -128,18 +128,18 @@ namespace Math {
       const double oneoversqrt2 = 1./sqrt(2.);
       if (z <= -abs_alpha)
       {
-         double A = std::pow(n/abs_alpha,n) * std::exp(-0.5 * alpha*alpha);
-         double B = n/abs_alpha - abs_alpha;
+         double r = n/abs_alpha;
+         double A = r * std::exp(-0.5 * alpha*alpha);
+         double B = r - abs_alpha;
 
          if (!useLog) {
-            double C = (n/abs_alpha) * (1./(n-1)) * std::exp(-alpha*alpha/2.);
-            intpow  = C - A /(n-1.) * std::pow(B-z,-n+1) ;
+            intpow  = A * (1 - std::pow(r / (B - z), n - 1)) / (n - 1) ;
          }
          else {
             // for n=1 the primitive of 1/x is log(x)
-            intpow = -A * std::log( n / abs_alpha ) + A * std::log( B -z );
+            intpow = A * std::pow(r, n - 1) * ( std::log(B - z) - std::log(r) );
          }
-         intgaus =  sqrtpiover2*(1.+ROOT::Math::erf(abs_alpha*oneoversqrt2));
+         intgaus =  sqrtpiover2 * (1. + ROOT::Math::erf(abs_alpha * oneoversqrt2));
       }
       else
       {
