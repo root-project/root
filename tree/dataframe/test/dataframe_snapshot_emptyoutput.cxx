@@ -6,6 +6,8 @@
 
 #include <ROOT/RDataFrame.hxx>
 
+#include <thread>
+
 class RDFManyBranchTypesTTree : public ::testing::TestWithParam<std::pair<bool, bool>> {
 protected:
    inline constexpr static auto fgNEvents = 10u;
