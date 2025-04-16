@@ -9,10 +9,10 @@ on:
   workflow_dispatch:
     inputs:
       incremental:
-        description: 'Do incremental build'
+        description: 'Do full build'
         type: boolean
-        required: true
-        default: true
+        required: false
+        default: false
       # docu_input: # opportunity: overwrite makeinput.sh with these args
       #   description: Folders to build documentation for. All folders are built if empty.
       #   type: string
