@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <limits>
 #include <cmath>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -515,7 +516,7 @@ struct Limits {
    /////////////////////////////////////////////////////////////////////////////
    // Statistics over arrays
 
-   //Mean, Geometric Mean, Median, RMS(sigma)
+   // Mean, Geometric Mean, Median, RMS(sigma), ModeHalfSample
 
    template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=nullptr);
    template <typename Iterator> Double_t Mean(Iterator first, Iterator last);
@@ -532,7 +533,10 @@ struct Limits {
    template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); } /// Same as RMS
    template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); } /// Same as RMS
 
-   template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=nullptr, Long64_t *work=nullptr);
+   template <typename T>
+   Double_t Median(Long64_t n, const T *a, const Double_t *w = nullptr, Long64_t *work = nullptr);
+   template <typename T>
+   Double_t ModeHalfSample(Long64_t n, const T *a, const Double_t *w = nullptr);
 
    //k-th order statistic
    template <class Element, typename Size> Element KOrdStat(Size n, const Element *a, Size k, Size *work = 0);
@@ -1413,6 +1417,128 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
    if (isAllocated)
       delete [] ind;
    return median;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the half-sample mode of the array a where each entry i has weight w[i].
+/// Both arrays must have a length of n. The mode is a number obtained
+/// according to the paper http://arxiv.org/ftp/math/papers/0505/0505419.pdf (page 19).
+/// The algorithm searches for the smallest range of sorted a values that
+/// contains ~n/2 values. Then it re-applies the same algorithm to
+/// that range until the range has <= 3 elements in it.
+///
+/// \note See David R. Bickel: "On a Fast, Robust Estimator of the Mode"
+/// http://arxiv.org/ftp/math/papers/0505/0505419.pdf (page 19)
+/// Initial implementation suggestion by Jean-Fran\c{c}ois Caron, 2014 on JIRA-6849
+///
+/// \tparam T data type of the values array `a`
+/// \param n Number of elements in array `a`
+/// \param a Pointer to array of values (owned by user, preallocated), must have length of n, and none of them should be
+/// NaN. The array must not be necessarily sorted nor contain unique values. \param w Pointer to array of weights (owned
+/// by user, preallocated), must have length of n. If the weights are supplied (w not nullptr) all weights must be >= 0
+/// to properly work. \return NaN if n <= 0, a[0] if n == 1, TMath::Mean(n,a,w) if n == 2, the (weighted) mean of the
+/// closest two if n == 3; for the rest of the cases, if all values of `a` are unique or have equal weights (or `w` is
+/// nullptr), then the Bickel half-sample-mode algorithm is applied; otherwise the value associated with the highest sum
+/// of weights (if `w` is not nullptr) is returned.
+template <typename T>
+Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w)
+{
+   if (n <= 0)
+      return TMath::QuietNaN();
+   else if (n == 1)
+      return a[0];
+   else if (n == 2)
+      return TMath::Mean(n, a, w);
+
+   if (w && std::adjacent_find(w, w + n, std::not_equal_to<>()) == w + n) // If all weights are equal, ignore those
+      w = nullptr;
+
+   // Sort the array and remove duplicates (if w != nullptr)
+   std::vector<T> values;
+   std::vector<Double_t> weights;
+   values.reserve(n);
+   weights.reserve(n);
+   for (Long64_t i = 0; i < n; ++i) {
+      const T value = a[i];
+      const Double_t weight = w ? w[i] : 1;
+      const auto vstart = values.begin();
+      const auto vstop = values.end();
+      const auto viter = std::lower_bound(vstart, vstop, value);
+      const auto vidx = std::distance(vstart, viter);
+      if (viter != vstop && w) {
+         weights[vidx] += weight;
+      } else {
+         values.insert(viter, value);
+         weights.insert(weights.begin() + vidx, weight);
+      }
+   }
+
+   const size_t sn = values.size();
+   if (sn <= 0)
+      return TMath::QuietNaN();
+   else if (sn == 1)
+      return values[0];
+   else if (sn == 2)
+      return TMath::Mean(sn, values.data(), weights.data());
+
+   if (sn == 3) {
+      const double d1_0 = values[1] - values[0];
+      const double d2_1 = values[2] - values[1];
+      if (d2_1 < d1_0)
+         return TMath::Mean(2, values.data() + 1, weights.data() + 1);
+      else if (d2_1 > d1_0)
+         return TMath::Mean(2, values.data(), weights.data());
+      else
+         return values[1];
+   }
+
+   const auto wstart = weights.begin();
+   const auto wstop = weights.end();
+   if (std::adjacent_find(wstart, wstop, std::not_equal_to<>()) == wstop) {
+      // All elements are unique and have equal weights
+
+      // Initialize search
+      Double_t min_v_range = values[sn - 1] - values[0];
+      n = sn;
+      size_t jMin = 0;
+
+      // Do recursive calls dividing each time the interval by two
+      while (n > 3) {
+         const size_t N = std::ceil(n * 0.5);
+         const size_t start = jMin;
+         const size_t stop = start + n - N + 1; // +1 since we use < and not <=
+         // Find sequentally what v_range is smallest by sliding the half-window
+         for (size_t i = start; i < stop; i++) {
+            Double_t range = values[i + N - 1] - values[i];
+            if (range < min_v_range) {
+               min_v_range = range;
+               jMin = i;
+            }
+         }
+         // assert(min_v_range == values[N - 1 + start] - values[start]);
+         n = N;
+      }
+      if (n == 3) {
+         const double d1_0 = values[jMin + 1] - values[jMin + 0];
+         const double d2_1 = values[jMin + 2] - values[jMin + 1];
+         if (d2_1 < d1_0)
+            return (values[jMin + 1] + values[jMin + 2]) * 0.5;
+         else if (d2_1 > d1_0)
+            return (values[jMin] + values[jMin + 1]) * 0.5;
+         else
+            return values[jMin + 1];
+      } else if (n == 2) {
+         return (values[jMin] + values[jMin + 1]) * 0.5;
+      } else {
+         Error("ModeHalfSample", "Error in recursive algorithm, returning NaN"); // this should not happen
+         return TMath::QuietNaN();
+      }
+   } else {
+      // Get highest (sum of) weight element
+      const auto wmaxiter = std::max_element(wstart, wstop);
+      const auto wmaxidx = std::distance(wstart, wmaxiter);
+      return values[wmaxidx];
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
