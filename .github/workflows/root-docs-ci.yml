@@ -116,10 +116,12 @@ jobs:
 
     - name: Build ROOT - Workflow Dispatch
       if:   github.event_name == 'workflow_dispatch'
+      env:
+          INCREMENTAL: ${{ inputs.incremental == 'true' }}
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ inputs.incremental }}
+                  --incremental    ${{ env.INCREMENTAL }}
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
