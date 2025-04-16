@@ -50,7 +50,7 @@ class SnapshotResult(object):
         return another distributed RDataFrame build from a Spark backend
         instance. And so on for all other DistRDF backends.
 
-        If MERGE_OUTPUT is True, it will merge all partial fils into a single ouptut file
+        If MERGE_OUTPUT is True, it will merge all partial files into a single output file
         """
         snapshot_chain = ROOT.TChain(self.treename)
         # Add partial snapshot files to the chain
@@ -98,7 +98,7 @@ class SnapshotResult(object):
         output_tree = Chai.CloneTree(-1, "fast")
         if not output_tree:
             print("Error: Failed to clone tree")
-            #output_file.close()
+            output_file.close()
             return ""
         print(f"Writing tree with {output_tree.GetEntries()} entries")
         output_tree.Write()
