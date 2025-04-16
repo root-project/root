@@ -27,6 +27,9 @@
 #include "Cast_FromONNX.hxx"
 #include "input_models/references/Cast.ref.hxx"
 
+#include "CastLike_FromONNX.hxx"
+#include "input_models/references/CastLike.ref.hxx"
+
 #include "ReduceMean_FromONNX.hxx"
 #include "input_models/references/ReduceMean.ref.hxx"
 
@@ -271,6 +274,9 @@
 #include "Log_FromONNX.hxx"
 #include "input_models/references/Log.ref.hxx"
 
+#include "Round_FromONNX.hxx"
+#include "input_models/references/Round.ref.hxx"
+
 #include "Elu_FromONNX.hxx"
 #include "input_models/references/Elu.ref.hxx"
 
@@ -322,6 +328,9 @@
 #include "Split_2_FromONNX.hxx"
 
 #include "ScatterElements_FromONNX.hxx"
+
+#include "Not_FromONNX.hxx"
+#include "input_models/references/Not.ref.hxx"
 
 #include "gtest/gtest.h"
 
@@ -518,6 +527,27 @@ TEST(ONNX, Neg)
       }
    }
 
+   TEST(ONNX, Not)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input({-0.7077, 1.0645, -0.8607, 0.2085, 4.5335, -3.4592});
+
+      TMVA_SOFIE_Not::Session s("Not_FromONNX.dat");
+      std::vector<float> output = s.infer(input.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Not_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Not_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
 TEST(ONNX, Elu)
    {
       constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -690,6 +720,28 @@ TEST(ONNX, Cast)
    }
 }
 
+TEST(ONNX, CastLike)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<int64_t> input_1({3, 23, -8, 1});
+
+   TMVA_SOFIE_CastLike::Session s("CastLike_FromONNX.dat");
+
+   auto output = s.infer(input_1.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(CastLike_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = CastLike_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
 TEST(ONNX, Linear64)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -801,6 +853,28 @@ TEST(ONNX, Log)
    EXPECT_EQ(output.size(), sizeof(Log_ExpectedOutput::outputs) / sizeof(float));
 
    float *correct = Log_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Round)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({1.3, -4.5, 7.9, -2.6});
+
+   TMVA_SOFIE_Round::Session s("Round_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Round_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Round_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {

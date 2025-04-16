@@ -81,7 +81,7 @@ ParserFuncSignature ParseAbs = [](RModelParser_ONNX &parser, const onnx::NodePro
 };
 
 // Parse Round
-ParserFuncSignature ParseAbs = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+ParserFuncSignature ParseRound = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    return ParseBasicUnary<EBasicUnaryOperator::kRound>(parser, nodeproto);
 };
 

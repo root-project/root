@@ -9,7 +9,17 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos, kAbs };
+enum class EBasicUnaryOperator {
+   kReciprocal,
+   kSqrt,
+   kNeg,
+   kExp,
+   kLog,
+   kSin,
+   kCos,
+   kAbs,
+   kRound
+};
 
 template <typename T, EBasicUnaryOperator Op>
 struct UnaryOpTraits {
@@ -66,7 +76,10 @@ struct UnaryOpTraits<T, EBasicUnaryOperator::kAbs> {
 template <typename T>
 struct UnaryOpTraits<T, EBasicUnaryOperator::kRound> {
    static std::string Name() { return "Round"; }
-   static std::string Op(const std::string &X) { return "std::round(" + X + ")"; }
+   static std::string Op(const std::string &X)
+   {
+      return "(std::fabs(" + X + "- std::trunc(" + X + ")) == 0.5) ? std::trunc(" + X + ") : std::round(" + X + ");";
+   }
 };
 
 template <typename T, EBasicUnaryOperator Op>
@@ -115,7 +128,8 @@ public:
    }
 
    std::vector<std::string> GetStdLibs() override {
-      if (Op == EBasicUnaryOperator::kSqrt || Op == EBasicUnaryOperator::kExp || Op == EBasicUnaryOperator::kLog) {
+      if (Op == EBasicUnaryOperator::kSqrt || Op == EBasicUnaryOperator::kExp || Op == EBasicUnaryOperator::kLog ||
+          Op == EBasicUnaryOperator::kRound) {
          return { std::string("cmath") };
       } else {
          return {};

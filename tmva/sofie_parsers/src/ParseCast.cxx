@@ -46,19 +46,17 @@ ParserFuncSignature ParseCastLike = [](RModelParser_ONNX &parser, const onnx::No
    }
 
    std::unique_ptr<ROperator> op;
-   std::string target_type = parser.GetTensorType(target_type_tensor_name);
+   std::string target_type = ConvertTypeToString(parser.GetTensorType(target_type_tensor_name));
    std::string output_name = nodeproto.output(0);
    op.reset(new ROperator_Cast(target_type, input_name, output_name));
 
    if (!parser.IsRegisteredTensorType(output_name)) {
-      ETensorType output_type = ConvertStringToType(attr_type);
+      ETensorType output_type = ConvertStringToType(target_type);
       parser.RegisterTensorType(output_name, output_type);
    }
 
    return op;
 };
-
- 
 
 } // namespace SOFIE
 } // namespace Experimental
