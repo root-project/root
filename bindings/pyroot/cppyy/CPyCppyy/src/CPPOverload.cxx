@@ -1072,10 +1072,19 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
     if (name == "__init__")
         fMethodInfo->fFlags |= (CallContext::kIsCreator | CallContext::kIsConstructor);
 
-// special case, in heuristics mode also tag *Clone* methods as creators
-    if (CallContext::sMemoryPolicy == CallContext::kUseHeuristics && \
-            name.find("Clone") != std::string::npos)
-        fMethodInfo->fFlags |= CallContext::kIsCreator;
+// special case, in heuristics mode also tag *Clone* methods as creators. Only
+// check that Clone is present in the method name, not in the template argument
+// list.
+    if (CallContext::sMemoryPolicy == CallContext::kUseHeuristics) {
+        std::string_view name_maybe_template = name;
+        auto begin_template = name_maybe_template.find_first_of('<');
+        if (begin_template <= name_maybe_template.size()) {
+            name_maybe_template = name_maybe_template.substr(0, begin_template);
+        }
+        if (name_maybe_template.find("Clone") != std::string_view::npos) {
+            fMethodInfo->fFlags |= CallContext::kIsCreator;
+        }
+    }
 
 #if PY_VERSION_HEX >= 0x03080000
     fVectorCall = (vectorcallfunc)mp_vectorcall;
