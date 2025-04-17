@@ -446,9 +446,22 @@ void TClonesArray::Clear(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Clear a slot in the array with option opt, later nullify it and call Compress
+/// \param index the index of the array to clear, it must be in range of length of fCont, range-check is not performed
+/// \param opt the option passed to the Clear function
+void TClonesArray::ClearSlot(Int_t index, Option_t *opt)
+{
+   if (fCont[index]) {
+      fCont[index]->Clear(opt);
+      fCont[index] = nullptr;
+      Compress();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Clear the clones array. Use this routine when your objects allocate
 /// memory (e.g. objects inheriting from TNamed or containing TStrings
-/// allocate memory). If not you better use Clear() since if is faster.
+/// allocate memory). If not you better use Clear() since it is faster.
 
 void TClonesArray::Delete(Option_t *)
 {
