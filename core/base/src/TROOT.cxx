@@ -227,9 +227,36 @@ static Int_t ITIMQQ(const char *time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Write and Close all open writable TFiles, useful to be called when SIGTERM is caught.
+
+void TROOT::WriteCloseAllFiles()
+{
+   if (gROOT) {
+      R__LOCKGUARD(gROOTMutex);
+
+      if (gROOT->GetListOfFiles()) {
+         TIter next(gROOT->GetListOfFiles());
+         while (TObject *obj = next()) {
+            if (obj && obj->InheritsFrom(TClass::GetClass("TFile", kFALSE, kTRUE))) {
+               TMethodCall callIsWritable(obj->IsA(), "IsWritable", "");
+               Longptr_t retLong = 0;
+               callIsWritable.Execute((void *)(obj), retLong);
+               if (retLong == 1) {
+                  TMethodCall callWrite(obj->IsA(), "Write", "");
+                  callWrite.Execute((void *)(obj));
+                  TMethodCall callClose(obj->IsA(), "Close", "");
+                  callClose.Execute((void *)(obj));
+               }
+            }
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Clean up at program termination before global objects go out of scope.
 
-static void CleanUpROOTAtExit()
+void TROOT::CleanUpROOTAtExit()
 {
    if (gROOT) {
       R__LOCKGUARD(gROOTMutex);
