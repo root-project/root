@@ -277,7 +277,6 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
 
    std::unique_ptr<RActionBase> actionPtr;
    if (snapHelperArgs->fToNTuple) {
-#ifdef R__HAS_ROOT7
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Helper_t = SnapshotRNTupleHelper<ColTypes...>;
@@ -293,11 +292,6 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       }
 
       return actionPtr;
-#else
-      throw std::runtime_error(
-         "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
-         "components enabled.");
-#endif
    } else {
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot

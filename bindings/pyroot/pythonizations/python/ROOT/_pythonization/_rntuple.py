@@ -96,7 +96,7 @@ def _RNTupleReader_Open(maybe_model, *args):
         maybe_model = maybe_model.Clone()
     import ROOT
 
-    return ROOT.Experimental.RNTupleReader._Open(maybe_model, *args)
+    return ROOT.RNTupleReader._Open(maybe_model, *args)
 
 
 def _RNTupleReader_LoadEntry(self, *args):
@@ -105,7 +105,7 @@ def _RNTupleReader_LoadEntry(self, *args):
     return self._LoadEntry(*args)
 
 
-@pythonization("RNTupleReader", ns="ROOT::Experimental")
+@pythonization("RNTupleReader", ns="ROOT")
 def pythonize_RNTupleReader(klass):
     klass._Open = klass.Open
     klass.Open = _RNTupleReader_Open

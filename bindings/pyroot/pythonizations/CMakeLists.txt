@@ -67,11 +67,6 @@ if(tmva)
     endif()
 endif()
 
-if(root7)
-    list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
-        ROOT/_pythonization/_rntuple.py)
-endif()
-
 list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
@@ -93,6 +88,7 @@ set(py_sources
   ROOT/_pythonization/_generic.py
   ROOT/_pythonization/_memory_utils.py
   ROOT/_pythonization/_pyz_utils.py
+  ROOT/_pythonization/_rntuple.py
   ROOT/_pythonization/_runtime_error.py
   ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
