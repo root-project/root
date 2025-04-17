@@ -46,6 +46,7 @@ public:
    TClonesArray& operator=(const TClonesArray& tc);
    void             Compress() override;
    void             Clear(Option_t *option="") override;
+   void             ClearSlot(Int_t index, Option_t *opt = "");
    void             Delete(Option_t *option="") override;
    void             Expand(Int_t newSize) override;
    virtual void     ExpandCreate(Int_t n);
