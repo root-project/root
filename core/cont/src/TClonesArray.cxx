@@ -435,7 +435,7 @@ void TClonesArray::Clear(Option_t *option)
             if (obj->TestBit(TObject::kIsReferenced))
                if (auto pid = TProcessID::GetProcessWithUID(obj)) {
                   pid->RecursiveRemove(obj);
-                  obj->ResetBit(TObject::kIsReferenced))
+                  obj->ResetBit(TObject::kIsReferenced);
                }
             obj->ResetBit( kHasUUID );
             obj->SetUniqueID( 0 );
