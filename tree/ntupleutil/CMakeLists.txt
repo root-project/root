@@ -18,10 +18,14 @@ HEADERS
   ROOT/RNTupleImporter.hxx
   ROOT/RNTupleExporter.hxx
   ROOT/RNTupleInspector.hxx
+        ROOT/RNTupleTTreeChecker.hxx
+        ROOT/RNTupleTTreeCheckerCLI.hxx
 SOURCES
   v7/src/RNTupleImporter.cxx
   v7/src/RNTupleExporter.cxx
   v7/src/RNTupleInspector.cxx
+        v7/src/RNTupleTTreeChecker.cxx
+        v7/src/RNTupleTTreeCheckerCLI.cxx
 LINKDEF
   LinkDef.h
 DEPENDENCIES
