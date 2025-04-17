@@ -431,6 +431,7 @@ void TClonesArray::Clear(Option_t *option)
          TObject *obj = UncheckedAt(i);
          if (obj) {
             obj->Clear(cplus);
+            TProcessID::GetProcessWithUID(obj)->RecursiveRemove(obj);
             obj->ResetBit( kHasUUID );
             obj->ResetBit( kIsReferenced );
             obj->SetUniqueID( 0 );
