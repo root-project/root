@@ -134,7 +134,7 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
    }
 
-   if (std::set(joinFields.begin(), joinFields.end()).size() < joinFields.size()) {
+   if (std::unordered_set(joinFields.begin(), joinFields.end()).size() < joinFields.size()) {
       throw RException(R__FAIL("join fields must be unique"));
    }
 
@@ -194,7 +194,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleProcessor> ROOT::Experimental::RNTupl
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
    }
 
-   if (std::set(joinFields.begin(), joinFields.end()).size() < joinFields.size()) {
+   if (std::unordered_set(joinFields.begin(), joinFields.end()).size() < joinFields.size()) {
       throw RException(R__FAIL("join fields must be unique"));
    }
 
