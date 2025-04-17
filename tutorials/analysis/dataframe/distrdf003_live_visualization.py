@@ -19,10 +19,10 @@ from dask.distributed import LocalCluster, Client
 import ROOT
 
 # Import the live visualization function
-LiveVisualize = ROOT.RDF.Experimental.Distributed.LiveVisualize
+LiveVisualize = ROOT.RDF.Distributed.LiveVisualize
 
 # Point RDataFrame calls to Dask RDataFrame object
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
 
 # Function to create a Dask cluster and return the client
 def create_connection():

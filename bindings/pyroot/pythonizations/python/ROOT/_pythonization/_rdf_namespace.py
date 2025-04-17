@@ -14,9 +14,9 @@ namespace and the interaction between the C++ and Python functionalities
 """
 
 
-def _create_distributed_module(parent):
+def _create_distributed_module(parent, experimental: bool = False):
     """
-    Create the ROOT.RDF.Experimental.Distributed python module.
+    Create the ROOT.RDF.Distributed python module.
 
     This module will be injected into the ROOT.RDF namespace.
 
@@ -24,11 +24,11 @@ def _create_distributed_module(parent):
         parent: The ROOT.RDF namespace. Needed to define __package__.
 
     Returns:
-        types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
+        types.ModuleType: The ROOT.RDF.Distributed submodule.
     """
     import DistRDF
 
-    return DistRDF.create_distributed_module(parent)
+    return DistRDF.create_distributed_module(parent, experimental)
 
 
 def _rungraphs(distrdf_rungraphs, rdf_rungraphs):
