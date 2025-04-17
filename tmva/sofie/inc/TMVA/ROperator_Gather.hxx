@@ -138,6 +138,8 @@ public:
       // Indices of shape q
       size_t q = fShapeIndices.size();
       // Strides
+      std::cout << "shapes of Gather " << ConvertShapeToString(fShapeX) << "  " <<
+            ConvertShapeToString(fShapeY) << "  " << ConvertShapeToString(fShapeIndices) << std::endl;
       auto stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
       auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
       auto stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
