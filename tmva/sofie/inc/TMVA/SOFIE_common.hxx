@@ -155,6 +155,10 @@ template<>
 struct TensorType<uint64_t> {
    static const std::string Name() { return "uint64_t"; }
 };
+template<>
+struct TensorType<bool> {
+   static const std::string Name() { return "bool"; }
+};
 
 struct TensorMemoryInfo {
    std::string_view tensor_name;
