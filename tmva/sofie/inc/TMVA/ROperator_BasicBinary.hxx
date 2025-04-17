@@ -55,6 +55,7 @@ template<typename T, EBasicBinaryOperator Op>
 class ROperator_BasicBinary final : public ROperator{
 private:
 
+   int fBroadcastFlag = 0;
    std::string fNA;
    std::string fNB;
    std::string fNBroadcastedA;
@@ -114,12 +115,14 @@ public:
       // case of known shapes
       if (!fShapeA.empty() && !fShapeB.empty()) {
          auto ret = UTILITY::MultidirectionalBroadcastShape(fShapeA, fShapeB);
+         fBroadcastFlag = ret.first;
          fShapeY = ret.second;
+         std::cout << BinaryOperatorTrait<T, Op>::Name() << "checking for defined shapes " << fBroadcastFlag << "  " << ConvertShapeToString(fShapeY) << std::endl;
          bool broadcast =  ret.first > 0;
          if (broadcast) {
             // Y is the common shape of A and B
-            bool broadcastA = ret.first > 1;
-            bool broadcastB = ret.first == 1 || ret.first == 3;
+            bool broadcastA = ret.first & 2;
+            bool broadcastB = ret.first & 1;
             // Broadcast A to Y
             if (broadcastA) {
                fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
@@ -191,17 +194,28 @@ public:
       else {
          // case A or B have dynamic shapes. We need to broadcast if shape are not same
          auto ret = UTILITY::MultidirectionalBroadcastShape(fDimShapeA, fDimShapeB);
+         fBroadcastFlag = ret.first;
          fDimShapeY = ret.second;
-         if (ret.first > 1) {
+         std::cout << BinaryOperatorTrait<T, Op>::Name() << " : checking for Dim shapes " << fBroadcastFlag << "  " << ConvertShapeToString(fDimShapeY) << std::endl;
+         if (ret.first & 2) {
             // case we broadcast A
             fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
             model.AddIntermediateTensor(fNBroadcastedA, model.GetTensorType(fNA), fDimShapeY);
          }
-         if (ret.first == 1 || ret.first == 3)  {
+         if (ret.first & 1)  {
             // case we broadcast B
             fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
             model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fDimShapeY);
          }
+         // case of all parametric shapes and we know only at run time
+         // we don't add in this case an intermediate tensor for broadcasting
+         // if (ret.first == 4) {
+         //    for (auto & d : fDimShapeY) {
+         //       if (d.isParam && d.param.find("broadcast") != std::string::npos) {
+         //          d.param += fNY;
+         //       }
+         //    }
+         // }
          // add output tensor
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fDimShapeY);
       }
@@ -212,11 +226,11 @@ public:
       return out.str();
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
 
       if (fIsOutputConstant) return "";
 
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
 
       if (fDimShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Binary Op called to Generate without being initialized first");
@@ -225,21 +239,55 @@ public:
       out << SP << "\n//------ " << BinaryOperatorTrait<T,Op>::Name() << "\n";
       auto length = ConvertDimShapeToLength(fDimShapeY);
       std::string typeName = TensorType<T>::Name();
+      // we need to check if we can broadcast (case flag has bit 4 set)
+      if (fBroadcastFlag & 4) {
+         // need to check if shapes are the same
+         auto lengthA = ConvertDimShapeToLength(fDimShapeA);
+         auto lengthB = ConvertDimShapeToLength(fDimShapeB);
+         out << SP << "if (" << lengthA << "!=" << lengthB << ") {\n";
+         // check if A->B or B->A
+         //bool broadcastable = true;
+         for (size_t i = 0; i < fDimShapeY.size(); i++) {
+            if (fBroadcastFlag & 5 && fDimShapeY[i] == fDimShapeA[i] && fDimShapeA[i].dim > 1 && fDimShapeB[i].isParam) {
+               // B->A B[i] needs to be 1
+               out << SP << SP << "if (" << fDimShapeB[i] << "!= 1)\n";
+               out << SP << SP << SP << "throw std::runtime_error(\"SOFIE - Cannot broadcast B->A in operator "
+                                        << opName << "\");\n";
+            }
+            if (fBroadcastFlag & 6 && fDimShapeY[i] == fDimShapeB[i] && fDimShapeB[i].dim > 1 && fDimShapeA[i].isParam) {
+               //A-> B A[i] needs to be 1
+               out << SP << SP << "if (" << fDimShapeA[i] << "!= 1)\n";
+               out << SP << SP << SP << "throw std::runtime_error(\"SOFIE - Cannot broadcast A->B in operator "
+                                        << opName << "\");\n";
+            }
+            else if (fDimShapeA[i].isParam && fDimShapeB[i].isParam) {
+               // both shapes are parametric and we broadcast to maximum
+               // we allocate here output vector
+               out << SP << SP << "if (" << fDimShapeA[i] << " != " << fDimShapeB[i] << " && ("
+                   << fDimShapeA[i] << " != 1 || " << fDimShapeB[i] << " != 1))\n";
+               out << SP << SP << "throw std::runtime_error(\"SOFIE - Cannot broadcast shapes in operator "
+                                        << opName << "\");\n";
+            }
+         }
+      } else {
+         out << SP << "{\n";
+      }
       // Broadcast A if it's uninitialized
       // use broadcasting function where we pass an already allocated tensor to minimize memory allocations
       if (!fNBroadcastedA.empty()) {
-         out << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
-         out << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", "
+         out << SP << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
+         out << SP << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", "
                   << ConvertDimShapeToString(fDimShapeA) << ", " << ConvertDimShapeToString(fDimShapeY)
                   << ", fTensor_" << fNBroadcastedA << ");\n";
       }
       // Broadcast B if it's uninitialized
       if (!fNBroadcastedB.empty()) {
-         out << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", "
+         out << SP << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
+         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", "
                   << ConvertDimShapeToString(fDimShapeB) << ", " << ConvertDimShapeToString(fDimShapeY)
                   << ", fTensor_" << fNBroadcastedB << ");\n";
       }
+      out << SP << "}\n"; // end if on broadcasting
       const std::string& nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
       const std::string& nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
