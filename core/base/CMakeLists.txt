@@ -16,6 +16,7 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
 endif()
 
 set(BASE_HEADERS
+  ROOT/RFloat16.hxx
   ROOT/TErrorDefaultHandler.hxx
   ROOT/TExecutorCRTP.hxx
   ROOT/TSequentialExecutor.hxx
@@ -200,7 +201,6 @@ set(BASE_SOURCES
 if(root7)
   set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
-      ROOT/RFloat16.hxx
       ROOT/RIndexIter.hxx)
 endif()
 
