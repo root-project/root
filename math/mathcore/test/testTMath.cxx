@@ -274,7 +274,7 @@ void testTMath()
 
    testBreitWignerRelativistic();
 
-   cout << "\HalfSampleMode tests: " << endl;
+   cout << "HalfSampleMode tests: " << endl;
    testHalfSampleMode();
 }
 
