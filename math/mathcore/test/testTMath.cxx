@@ -5,8 +5,7 @@
 #include <typeinfo>
 
 #include <TMath.h>
-
-#include "gtest/gtest.h"
+#include <TError.h>
 
 using std::cout, std::endl, std::vector, std::sort;
 using namespace TMath;
@@ -203,7 +202,7 @@ void testHalfSampleMode()
    double testw[testdata_n] {}; // all equal zero weights
    
    const long testdata2_n = 16;
-   double testdata2[testdata2_n] = {0,0,0,0,0,
+   unsigned short testdata2[testdata2_n] = {0,0,0,0,0,
                                     1,1,1,1,1,
                                     2,2,2,2,2,2};
    
@@ -211,16 +210,16 @@ void testHalfSampleMode()
    double testdata3[testdata3_n] = {1,2,3,3.25};
    
    const long testdata4_n = 10;
-   double testdata4[testdata4_n] = {0,0,0,1,1,1,1,2,2,2};
+   unsigned short testdata4[testdata4_n] = {0,0,0,1,1,1,1,2,2,2};
 
-    ASSERT_EQ(TMath::ModeHalfSample(testdata_n, testdata, nullptr), TMath::ModeHalfSample(testdata_n, testdata, testw));
+    R__ASSERT(TMath::ModeHalfSample(testdata_n, testdata, nullptr) == TMath::ModeHalfSample(testdata_n, testdata, testw)); // Check equal weights is as no weights
 
     // Check that the low-n cases work as expected.
-    ASSERT_EQ(TMath::ModeHalfSample(1, testdata3), 1);
-    ASSERT_EQ(TMath::ModeHalfSample(2, testdata3), 1.5);
-    ASSERT_EQ(TMath::ModeHalfSample(3, testdata3), 2);
-    ASSERT_EQ(TMath::ModeHalfSample(3, testdata3+1), (3+3.25)/2.0);
-    ASSERT_EQ(TMath::ModeHalfSample(4, testdata3), (3+3.25)/2.0);
+    R__ASSERT(TMath::ModeHalfSample(1, testdata3) == 1.);
+    R__ASSERT(TMath::ModeHalfSample(2, testdata3) == 1.5);
+    R__ASSERT(TMath::ModeHalfSample(3, testdata3) == 2.);
+    R__ASSERT(TMath::ModeHalfSample(3, testdata3+1) == (3+3.25)/2.0);
+    R__ASSERT(TMath::ModeHalfSample(4, testdata3) == (3+3.25)/2.0);
 }
 
 void testTMath()
