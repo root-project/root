@@ -62,6 +62,11 @@ The following people have contributed to this new version:
 
 ## RooFit
 
+### RooCrystalBall improvements
+
+- Fitting instabilities in the RooCrystalBall class (as well as in TMath's cbShape function) with high N parameter have been mitigated by reorganizing the code implementation.
+- A [simpler alternative](http://arxiv.org/abs/1603.08591v1) to RooCrystalBall using a Gaussian with exponential tails has been implemented: `class RooGaussExpTails`.
+
 ### Breaking function signature changes
 
   * The `RooRealVar::format()` function was changed to return a `std::string` instead of a `TString *`.
