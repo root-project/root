@@ -131,6 +131,7 @@ When investigating misuse of TClonesArray, please make sure of the following:
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjectTable.h"
+#include "TProcessID.h"
 #include "snprintf.h"
 
 #include <cstdlib>
@@ -430,6 +431,7 @@ void TClonesArray::Clear(Option_t *option)
          TObject *obj = UncheckedAt(i);
          if (obj) {
             obj->Clear(cplus);
+            TProcessID::GetProcessWithUID(obj)->RecursiveRemove(obj);
             obj->ResetBit( kHasUUID );
             obj->ResetBit( kIsReferenced );
             obj->SetUniqueID( 0 );
