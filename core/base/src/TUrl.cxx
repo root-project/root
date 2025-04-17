@@ -646,7 +646,7 @@ void TUrl::ParseOptions() const
          fOptionsMap->Add(new TObjString(key), new TObjString(value));
       } else {
          TString key = ((TObjString *) objTags->At(0))->GetName();
-         fOptionsMap->Add(new TObjString(key), nullptr);
+         fOptionsMap->Add(new TObjString(key), static_cast<TObject *>(nullptr));
       }
       delete objTags;
    }
