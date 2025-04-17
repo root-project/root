@@ -420,6 +420,10 @@ std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> &
 }
 
 // for broadcasting Dim shapes
+// flag indicates also which vector needs to be broadcasted
+//    flag & 1 == 1 : broadcast B -> A
+//    flag & 2 == 2 : broadcast A -> B
+//    flag & 4 == 4 a run time check is needed on shapes with values
 std::pair<int, std::vector<Dim>> UTILITY::MultidirectionalBroadcastShape(std::vector<Dim> & shapeA, std::vector<Dim> & shapeB) {
    size_t sizeA = shapeA.size();
    size_t sizeB = shapeB.size();
@@ -450,30 +454,45 @@ std::pair<int, std::vector<Dim>> UTILITY::MultidirectionalBroadcastShape(std::ve
       // assume we broadcast to the parametric value
       if (shapeA[i] == shapeB[i]) {
          targetShape[i] = shapeA[i];
-      } else if (shapeA[i].isParam && !shapeB[i].isParam) {
-         // broadcast B to A
+      } else if (shapeA[i].isParam && shapeB[i].GetVal() == "1" ) {
+         // broadcast B to A (case A is parametric with )
          targetShape[i] = shapeA[i];
          broadcastFlag |= 1;
-      } else if (!shapeA[i].isParam && shapeB[i].isParam) {
+      } else if (shapeA[i].GetVal() == "1" && shapeB[i].isParam) {
          // broadcast A to B
          targetShape[i] = shapeB[i];
          broadcastFlag |= 2;
       } else if (!shapeA[i].isParam && !shapeB[i].isParam) {
-         if (shapeB[i].dim < shapeA[i].dim && shapeB[i].dim == 1) {
+         if (shapeB[i].dim == 1) {
             targetShape[i] = shapeA[i];
             broadcastFlag |= 1;
-         } else if (shapeA[i].dim < shapeB[i].dim && shapeA[i].dim == 1) {
+         } else if (shapeA[i].dim == 1) {
             targetShape[i] = shapeB[i];
             broadcastFlag |= 2;
-         } else { // non broadcastable case
+         } else {
+            // non broadcastable case cannot have A and B two different defined shapes different than one
             broadcastFlag = -1;
          }
+      } else if (shapeA[i].isParam && shapeB[i].isParam) {
+         // full dynamic case - we will decided at run time
+         std::stringstream s;
+         s <<  "std::max(" << shapeA[i] << "," << shapeB[i] << ")";
+         targetShape[i] = Dim { s.str() };
+         broadcastFlag |= 4;
+      } else if (shapeA[i].isParam && !shapeB[i].isParam) {
+         // A -> B need to check at run time if consistent
+         targetShape[i] = shapeB[i];
+         broadcastFlag |= 6;
+      } else if (!shapeA[i].isParam && shapeB[i].isParam) {
+         // B -> A need to check at run time if consistent
+         targetShape[i] = shapeA[i];
+         broadcastFlag |= 5;
       } else {
-         // two different parametric shape cannot be broadcasted
-         broadcastFlag = -1;
+         // all cases should be covered
+         throw std::runtime_error("TMVA::SOFIE - Fatal error in MultiDirectionalBroadCastDimShape");
       }
    }
-   if (broadcastFlag < 0) {
+   if (broadcastFlag == -1) {
       throw std::runtime_error("TMVA::SOFIE - Error multidirectional broadcasting tensors of shape " +
                                  ConvertDimShapeToString(shapeA) + " and " + ConvertDimShapeToString(shapeB) +
                                  " to a common shape.");
@@ -521,12 +540,14 @@ std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape)
    // assume row major layout
    const auto size = shape.size();
    std::vector<Dim> strides(size);
-   strides[size-1] = Dim{1};
-   for (std::size_t i = 1; i < size; i++) {
-      if (!shape[size-i].isParam && !strides[size-i].isParam)
-         strides[size - 1 - i] = Dim{strides[size-i].dim * shape[size-i].dim};
-      else
-         strides[size - 1 - i] = Dim{std::string(strides[size-i].GetVal() + "*" + shape[size-i].GetVal())};
+   if (size > 0) {
+      strides[size-1] = Dim{1};
+      for (std::size_t i = 1; i < size; i++) {
+         if (!shape[size-i].isParam && !strides[size-i].isParam)
+            strides[size - 1 - i] = Dim{strides[size-i].dim * shape[size-i].dim};
+         else
+            strides[size - 1 - i] = Dim{std::string(strides[size-i].GetVal() + "*" + shape[size-i].GetVal())};
+      }
    }
    return strides;
 }

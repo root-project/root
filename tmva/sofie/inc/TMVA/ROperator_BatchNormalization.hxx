@@ -32,12 +32,12 @@ private:
    std::string fNY;
    EActivationType fActivation;
 
-   std::vector<size_t> fShapeX;
+   std::vector<Dim> fShapeX;
    std::vector<size_t> fShapeScale;
    std::vector<size_t> fShapeB;
    std::vector<size_t> fShapeMean;
    std::vector<size_t> fShapeVar;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeY;
 
    std::string fType;
 
@@ -109,7 +109,7 @@ public:
             std::runtime_error("TMVA SOFIE BatchNormalization op Input Tensor " + fNVar + " fnv is not found in model");
       }
 
-      fShapeX = model.GetTensorShape(fNX);
+      fShapeX = model.GetDimTensorShape(fNX);
 
       if (fShapeX.size() <  2 || fShapeX.size() > 4) {
          throw
@@ -123,16 +123,17 @@ public:
       fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
 
-      if (fShapeB.size() == 1) {
+      if (fShapeB.size() == 1 && !model.IsDynamicTensor(fNX)) {
+         auto shapeX = model.GetTensorShape(fNX);
          // Broadcast scale, bias, input_mean and input_var to shape_X
          auto original_B = model.GetInitializedTensorData(fNB);
          auto original_S = model.GetInitializedTensorData(fNScale);
          auto original_M = model.GetInitializedTensorData(fNMean);
          auto original_V = model.GetInitializedTensorData(fNVar);
-         size_t batchSize = fShapeX[0];
-         size_t channels = fShapeX[1];
-         size_t height = (fShapeX.size() > 2) ? fShapeX[2] : 1;
-         size_t width = (fShapeX.size() > 3) ? fShapeX[3] : 1;
+         size_t batchSize = shapeX[0];
+         size_t channels = shapeX[1];
+         size_t height = (shapeX.size() > 2) ? shapeX[2] : 1;
+         size_t width = (shapeX.size() > 3) ? shapeX[3] : 1;
          size_t n = batchSize * channels * height * width;
          if (fType == "float") {
             float *original_bias = static_cast<float *>(original_B.get());
@@ -181,6 +182,8 @@ public:
             fShapeMean = model.GetTensorShape(fNMean);
             fShapeVar = model.GetTensorShape(fNVar);
          }
+      } else {
+         // we need to broadcast at run time
       }
    }
 
@@ -192,15 +195,15 @@ public:
 
       std::stringstream out;
       //// Batch Norm op
-      size_t batchSize = fShapeX[0];
-      size_t channels = fShapeX[1];
-      size_t height = (fShapeX.size() > 2) ? fShapeX[2] : 1;
-      size_t width = (fShapeX.size() > 3) ? fShapeX[3] : 1;
-      size_t n = batchSize * channels * height * width;
+      std::string batchSize = fShapeX[0].GetVal();
+      std::string channels = fShapeX[1].GetVal();
+      std::string height = (fShapeX.size() > 2) ? fShapeX[2].GetVal() : "1";
+      std::string width = (fShapeX.size() > 3) ? fShapeX[3].GetVal() : "1";
+      auto n = ConvertDimShapeToLength(fShapeX);
 
       //// copy X into Y
       out << "\n\n//---- BatchNorm\n";
-      out << SP << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
+      out << SP << "constexpr int " << OpName << "_N =" << n << ";\n";
       out << SP << "constexpr int "<<OpName<< "_incx = 1;\n";
       out << SP << "constexpr int "<<OpName<< "_incy = 1;\n";
       out << SP << "BLAS::scopy_(&" << OpName << "_N, " << "tensor_" << fNX << ", &" << OpName << "_incx," << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
@@ -222,7 +225,7 @@ public:
          << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
 
       if(fActivation == EActivationType::RELU){
-         out << SP << "for (int id = 0; id < " << ConvertShapeToLength(fShapeY) << " ; id++){\n";
+         out << SP << "for (int id = 0; id < " << n << " ; id++){\n";
          out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNY << "[id] > 0 )? tensor_" << fNY << "[id] : 0);\n";
          out << SP << "}\n";
       }
