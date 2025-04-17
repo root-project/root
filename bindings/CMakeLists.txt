@@ -10,7 +10,7 @@ if(pyroot)
 
   if(dataframe)
     message(STATUS "Distributed RDataFrame enabled")
-    add_subdirectory(experimental/distrdf)
+    add_subdirectory(distrdf)
   else()
     message(STATUS "Requirements to enable distributed RDataFrame:")
     message(STATUS "    dataframe: required:ON, actual:${dataframe}")

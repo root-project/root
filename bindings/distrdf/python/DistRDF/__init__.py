@@ -12,8 +12,9 @@
 from __future__ import annotations
 
 import logging
-import os
 import types
+import warnings
+import textwrap
 
 import concurrent.futures
 
@@ -192,17 +193,42 @@ def FromSpec(jsonfile : str, *args, **kwargs) -> RDataFrame:
         f"The client object of type '{type(executor)}' is not a supported "
         "connection type for distributed RDataFrame.")
 
-def create_distributed_module(parentmodule):
+
+class _DeprecatedModule(types.ModuleType):
+    """A simple module type to raise a warning before usage."""
+
+    def __getattribute__(self, name):
+        msg_warng = textwrap.dedent(
+            """
+            In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. ROOT 6.38
+            will remove the 'Experimental' keyword completely, so it is suggested to move to the stable API in user 
+            code. You can now change lines such as:
+            ```
+            connection = ... # your distributed Dask client or SparkContext
+            RDataFrame = ROOT.RDF.Experimental.Distributed.[Backend].RDataFrame
+            df = RDataFrame(..., [daskclient,sparkcontext] = connection)
+            ```
+            to simply:
+            ```
+            connection = ... # your distributed Dask client or SparkContext
+            df = ROOT.RDataFrame(..., executor = connection)
+            ```
+            """
+        )
+        warnings.warn(msg_warng, FutureWarning)
+        return super().__getattribute__(name)
+
+def create_distributed_module(parentmodule, experimental: bool = False):
     """
-    Helper function to create the ROOT.RDF.Experimental.Distributed module.
+    Helper function to create the ROOT.RDF.Distributed module.
 
     Users will see this module as the entry point of functions to create and
     run an RDataFrame computation distributedly.
     """
-    distributed = types.ModuleType("ROOT.RDF.Experimental.Distributed")
+    distributed = types.ModuleType("ROOT.RDF.Distributed")
 
     # PEP302 attributes
-    distributed.__file__ = "<module ROOT.RDF.Experimental>"
+    distributed.__file__ = "<module ROOT.RDF>"
     # distributed.__name__ is the constructor argument
     distributed.__path__ = []  # this makes it a package
     # distributed.__loader__ is not defined
@@ -220,7 +246,10 @@ def create_distributed_module(parentmodule):
     distributed.DistributeSharedLibs = DistributeSharedLibs
     distributed.DistributeCppCode = DistributeCppCode
     distributed.FromSpec = FromSpec
-    
+
+    if experimental:
+        distributed.__class__ = _DeprecatedModule
+
     return distributed
 
 def RDataFrame(*args, **kwargs):

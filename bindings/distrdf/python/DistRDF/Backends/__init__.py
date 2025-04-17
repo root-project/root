@@ -26,11 +26,11 @@ def build_backends_submodules(parentmodule: types.ModuleType) -> types.ModuleTyp
             # The actual python package with the backend implementation
             actual = importlib.import_module(__name__ + "." + module_name)
             # A dummy module to inject in the parent module
-            fullmodulename = "ROOT.RDF.Experimental.Distributed." + module_name
+            fullmodulename = "ROOT.RDF.Distributed." + module_name
             dummy = types.ModuleType(fullmodulename)
 
             # PEP302 attributes
-            dummy.__file__ = "<module ROOT.RDF.Experimental.Distributed>"
+            dummy.__file__ = "<module ROOT.RDF.Distributed>"
             # dummy.__name__ is the constructor argument
             dummy.__path__ = []  # this makes it a package
             # dummy.__loader__ is not defined

@@ -841,7 +841,7 @@ class RNTupleHeadNode(HeadNode):
             if not filenames:
                 return TaskObjects(None, None)
 
-            return TaskObjects(ROOT.RDF.Experimental.FromRNTuple(ntuplename, filenames), None)
+            return TaskObjects(ROOT.RDF.FromRNTuple(ntuplename, filenames), None)
 
         return build_rdf_from_range
 
