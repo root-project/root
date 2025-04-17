@@ -11,21 +11,18 @@
 ################################################################################
 from __future__ import annotations
 
+import concurrent.futures
 import logging
+import textwrap
 import types
 import warnings
-import textwrap
-
-import concurrent.futures
-
-from typing import Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from DistRDF.Backends import build_backends_submodules
 from DistRDF.LiveVisualize import LiveVisualize
 
-
 if TYPE_CHECKING:
-    from DistRDF.Proxy import ResultPtrProxy, ResultMapProxy
+    from DistRDF.Proxy import ResultMapProxy, ResultPtrProxy
 
 logger = logging.getLogger(__name__)
 
@@ -48,55 +45,63 @@ def initialize(fun, *args, **kwargs):
         **kwargs (dict): Keyword arguments used to execute the function.
     """
     from DistRDF.Backends import Base
+
     Base.BaseBackend.register_initialization(fun, *args, **kwargs)
+
 
 def DistributeCppCode(code_to_declare: str) -> None:
     """
-    Declare the C++ code that has to be processed on each worker. 
+    Declare the C++ code that has to be processed on each worker.
     Args:
         codeToDeclare (str): cpp code to be declared on the workers
-        
+
     """
     from DistRDF.Backends import Base
+
     Base.BaseBackend.register_declaration(code_to_declare)
 
-    
+
 def DistributeHeaders(paths_to_headers: Iterable[str]):
     """
-    This function allows users to directly load C++ custom headers 
+    This function allows users to directly load C++ custom headers
     onto the workers. The headers are declared locally first.
 
     Args:
         paths_to_headers (list): list of paths to headers to be distributed to each worker
 
-    """    
+    """
     from DistRDF.Backends import Base
-    Base.BaseBackend.register_headers(paths_to_headers) 
+
+    Base.BaseBackend.register_headers(paths_to_headers)
+
 
 def DistributeFiles(paths_to_files: Iterable[str]):
     """
     This function allows users to directly load arbitrary files
-    onto the workers. 
+    onto the workers.
 
     Args:
         paths_to_files (list): list of paths to files to be distributed
-        
+
     """
     from DistRDF.Backends import Base
+
     Base.BaseBackend.register_files(paths_to_files)
 
-    
+
 def DistributeSharedLibs(paths_to_shared_libraries: Iterable[str]) -> None:
     """
-    This function allows users to directly load pre-compiled shared libraries 
-    onto the workers. The shared libraries are loaded locally first. 
+    This function allows users to directly load pre-compiled shared libraries
+    onto the workers. The shared libraries are loaded locally first.
 
     Args:
         paths_to_shared_libraries (list): list of paths to shared libraries to be distributed
-        
+
     """
     from DistRDF.Backends import Base
+
     Base.BaseBackend.register_shared_lib(paths_to_shared_libraries)
+
 
 def RunGraphs(proxies: Iterable) -> int:
     """
@@ -137,6 +142,7 @@ def RunGraphs(proxies: Iterable) -> int:
     """
     # Import here to avoid circular dependencies in main module
     from DistRDF.Proxy import execute_graph
+
     if not proxies:
         logger.warning("RunGraphs: Got an empty list of handles, now quitting.")
         return 0
@@ -152,6 +158,7 @@ def RunGraphs(proxies: Iterable) -> int:
 
     return len(uniqueproxies)
 
+
 def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
     """
     Equivalent of ROOT.RDF.Experimental.VariationsFor in distributed mode.
@@ -159,15 +166,17 @@ def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
     # similar to resPtr.fActionPtr->MakeVariedAction()
     return actionproxy.create_variations()
 
-def FromSpec(jsonfile : str, *args, **kwargs) -> RDataFrame:
+
+def FromSpec(jsonfile: str, *args, **kwargs) -> RDataFrame:
     """
     Equivalent of ROOT.RDF.Experimental.FromSpec in distributed mode.
-    """     
+    """
     import ROOT
+
     spec = ROOT.Internal.RDF.RetrieveSpecFromJson(jsonfile)
-    
+
     executor = kwargs.get("executor", None)
-    if executor is None:        
+    if executor is None:
         raise ValueError(
             "Missing keyword argument 'executor'. Please provide a connection object "
             "to one of the schedulers supported by distributed RDataFrame."
@@ -175,7 +184,9 @@ def FromSpec(jsonfile : str, *args, **kwargs) -> RDataFrame:
     # Try to dispatch to the correct distributed scheduler implementation
     try:
         from distributed import Client
+
         from DistRDF.Backends.Dask import RDataFrame
+
         if isinstance(executor, Client):
             return RDataFrame(spec, *args, **kwargs)
     except ImportError:
@@ -183,15 +194,17 @@ def FromSpec(jsonfile : str, *args, **kwargs) -> RDataFrame:
 
     try:
         from pyspark import SparkContext
+
         from DistRDF.Backends.Spark import RDataFrame
+
         if isinstance(executor, SparkContext):
             return RDataFrame(spec, *args, **kwargs)
     except ImportError:
         pass
 
     raise TypeError(
-        f"The client object of type '{type(executor)}' is not a supported "
-        "connection type for distributed RDataFrame.")
+        f"The client object of type '{type(executor)}' is not a supported connection type for distributed RDataFrame."
+    )
 
 
 class _DeprecatedModule(types.ModuleType):
@@ -217,6 +230,7 @@ class _DeprecatedModule(types.ModuleType):
         )
         warnings.warn(msg_warng, FutureWarning)
         return super().__getattribute__(name)
+
 
 def create_distributed_module(parentmodule, experimental: bool = False):
     """
@@ -252,6 +266,7 @@ def create_distributed_module(parentmodule, experimental: bool = False):
 
     return distributed
 
+
 def RDataFrame(*args, **kwargs):
     executor = kwargs.get("executor", None)
     if executor is None:
@@ -263,7 +278,9 @@ def RDataFrame(*args, **kwargs):
     # Try to dispatch to the correct distributed scheduler implementation
     try:
         from distributed import Client
+
         from DistRDF.Backends.Dask import RDataFrame
+
         if isinstance(executor, Client):
             return RDataFrame(*args, **kwargs)
     except ImportError:
@@ -271,12 +288,14 @@ def RDataFrame(*args, **kwargs):
 
     try:
         from pyspark import SparkContext
+
         from DistRDF.Backends.Spark import RDataFrame
+
         if isinstance(executor, SparkContext):
             return RDataFrame(*args, **kwargs)
     except ImportError:
         pass
 
     raise TypeError(
-        f"The client object of type '{type(executor)}' is not a supported "
-        "connection type for distributed RDataFrame.")    
+        f"The client object of type '{type(executor)}' is not a supported connection type for distributed RDataFrame."
+    )
