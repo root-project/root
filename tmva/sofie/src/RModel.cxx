@@ -244,6 +244,8 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
             // register it
             if (d.dim != size_t(-1)) {
               fShapeParams[d.param] = std::to_string(d.dim);
+              // add also in teh vector list (used to keep the order)
+              fDimShapeNames.push_back(d.param);
             }
          }
       }
@@ -446,8 +448,12 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       else {
          // store the found parametric shape parameters
          for (auto &d : input.second.shape) {
-            if (d.isParam)
-               fShapeParams[d.param] = std::to_string(d.dim);
+            if (d.isParam) {
+               if (fShapeParams.count(d.param) == 0) {
+                  fDimShapeNames.push_back(d.param);
+                  fShapeParams[d.param] = std::to_string(d.dim);
+               }
+            }
          }
       }
    }
@@ -864,10 +870,10 @@ void RModel::GenerateSessionCode()
       }
       // add initialization of shape parameters
       // assume all parameters are of type size_t
-      if (!fShapeParams.empty()) {
-         for (auto &p : fShapeParams) {
+      if (!fDimShapeNames.empty()) {
+         for (auto &p : fDimShapeNames) {
             fGC += ",\n";
-            fGC += "        size_t " + p.first + " = " + p.second;
+            fGC += "        size_t " + p + " = " + fShapeParams[p];
          }
       }
       fGC += ") {\n";
