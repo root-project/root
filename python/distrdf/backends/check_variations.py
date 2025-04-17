@@ -94,10 +94,10 @@ class TestVariations:
     def test_variationsfor_novary(self, payload):
         connection, backend = payload
         if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+            RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
             df = RDataFrame(1, npartitions=1, daskclient=connection)
         elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+            RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
             df = RDataFrame(1, npartitions=1, sparkcontext=connection)
 
         df = df.Define("x", "1")
