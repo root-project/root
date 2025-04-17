@@ -29,3 +29,8 @@ _th2_derived_classes_to_pythonize = [
 
 for klass in _th2_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
+
+    from ROOT._pythonization._uhi import _add_plotting_features
+
+    # Add UHI plotting features
+    pythonization(klass)(_add_plotting_features)

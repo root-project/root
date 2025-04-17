@@ -144,8 +144,8 @@ def _get_axis(self, axis):
     return getattr(self, f"Get{['X', 'Y', 'Z'][axis]}axis")()
 
 
-def _get_axis_len(self, axis):
-    return _get_axis(self, axis).GetNbins()
+def _get_axis_len(self, axis, include_flow_bins=False):
+    return _get_axis(self, axis).GetNbins() + (2 if include_flow_bins else 0)
 
 
 def _process_index_for_axis(self, index, axis):
@@ -516,7 +516,7 @@ def _hasWeights(hist: Any) -> bool:
 
 
 def _shape(hist: Any, include_flow_bins: bool = True) -> Tuple[int, ...]:
-    return tuple(_get_axis(hist, i).GetNbins() + (2 if include_flow_bins else 0) for i in range(hist.GetDimension()))
+    return tuple(_get_axis_len(hist, i, include_flow_bins) for i in range(hist.GetDimension()))
 
 
 def _axes(self) -> Tuple[Union[PlottableAxisContinuous, PlottableAxisDiscrete], ...]:
@@ -538,44 +538,79 @@ def _values_default(self) -> np.typing.NDArray[Any]:  # noqa: F821
 # Special case for TH1K: we need the array length to correspond to the number of bins
 # according to the UHI plotting protocol
 def _values_by_copy(self) -> np.typing.NDArray[Any]:  # noqa: F821
+    from itertools import product
+
     import numpy as np
 
-    return np.array([self.GetBinContent(i) for i in range(1, self.GetNbinsX() + 1)])
+    dimensions = [
+        range(1, _get_axis_len(self, axis, include_flow_bins=False) + 1) for axis in range(self.GetDimension())
+    ]
+    bin_combinations = product(*dimensions)
+
+    return np.array([self.GetBinContent(*bin) for bin in bin_combinations]).reshape(
+        _shape(self, include_flow_bins=False)
+    )
 
 
 def _variances(self) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
-    if not _hasWeights(self):
-        return self.values()
+    sum_of_weights = self.values()
 
-    sumw2_array = self.GetSumw2()
-    size = sumw2_array.GetSize()
-    arr = np.frombuffer(sumw2_array.GetArray(), dtype=np.float64, count=size)
+    if not _hasWeights(self) and _kind(self) == Kind.COUNT:
+        return sum_of_weights
 
-    reshaped = arr.reshape(_shape(self), order="F")
-    return reshaped[tuple([slice(1, -1)] * len(_shape(self)))]
+    sum_of_weights_squared = _get_sum_of_weights_squared(self)
+
+    if _kind(self) == Kind.MEAN:
+        counts = self.counts()
+        variances = sum_of_weights_squared.copy()
+        variances[counts <= 1] = np.nan
+        return variances
+
+    return sum_of_weights_squared
 
 
 def _counts(self) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
-    if not _hasWeights(self):
-        return self.values()
+    sum_of_weights = self.values()
 
-    sumw = self.values()
+    if not _hasWeights(self):
+        return sum_of_weights
+
+    sum_of_weights_squared = _get_sum_of_weights_squared(self)
+
     return np.divide(
-        self.values() ** 2,
-        self.variances(),
-        out=np.zeros_like(sumw, dtype=np.float64),
-        where=self.variances() != 0,
+        sum_of_weights**2,
+        sum_of_weights_squared,
+        out=np.zeros_like(sum_of_weights, dtype=np.float64),
+        where=sum_of_weights_squared != 0,
     )
+
+
+def _get_sum_of_weights_squared(self) -> np.typing.NDArray[Any]:  # noqa: F821
+    import numpy as np
+
+    shape = _shape(self, include_flow_bins=False)
+    return np.frombuffer(
+        self.GetSumw2().GetArray(),
+        dtype=self.GetSumw2().GetArray().typecode,
+        count=self.GetSumw2().GetSize(),
+    ).reshape(shape, order="F")[tuple([slice(1, -1)] * len(shape))]
 
 
 values_func_dict: dict[str, Callable] = {
     "TH1C": _values_by_copy,
+    "TH2C": _values_by_copy,
+    "TH3C": _values_by_copy,
     "TH1K": _values_by_copy,
+    "TH2K": _values_by_copy,
+    "TH3K": _values_by_copy,
     "TProfile": _values_by_copy,
+    "TProfile2D": _values_by_copy,
+    "TProfile2Poly": _values_by_copy,
+    "TProfile3D": _values_by_copy,
 }
 
 
