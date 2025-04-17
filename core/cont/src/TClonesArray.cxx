@@ -131,6 +131,7 @@ When investigating misuse of TClonesArray, please make sure of the following:
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjectTable.h"
+#include "TProcessID.h"
 #include "snprintf.h"
 
 #include <cstdlib>
