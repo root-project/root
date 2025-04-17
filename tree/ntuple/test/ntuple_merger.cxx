@@ -1720,6 +1720,76 @@ TEST(RNTupleMerger, MergeProjectedFieldsOnlySecond)
    }
 }
 
+TEST(RNTupleMerger, MergeProjectedFieldsDifferent)
+{
+   // Merge two files where both the first and the second have a projection with the same name, but different source.
+   // Should refuse to merge.
+   FileRaii fileGuard1("test_ntuple_merge_proj_diff_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<std::vector<CustomStruct>>("foo");
+      auto fieldBar = model->MakeField<std::vector<CustomStruct>>("bar");
+      auto projBaz = RFieldBase::Create("baz", "std::vector<CustomStruct>").Unwrap();
+      const auto mapping = [](const std::string &name) {
+         std::string replaced = name;
+         replaced.replace(0, 3, "bar");
+         return replaced;
+      };
+      model->AddProjectedField(std::move(projBaz), mapping);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct s;
+         s.v1.push_back(i);
+         s.s = std::to_string(i);
+         *fieldFoo = {s};
+         ntuple->Fill();
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_proj_diff_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<std::vector<CustomStruct>>("foo");
+      auto fieldBar = model->MakeField<std::vector<CustomStruct>>("bar");
+      auto projBaz = RFieldBase::Create("baz", "std::vector<CustomStruct>").Unwrap();
+      const auto mapping = [](const std::string &name) {
+         std::string replaced = name;
+         replaced.replace(0, 3, "foo");
+         return replaced;
+      };
+      model->AddProjectedField(std::move(projBaz), mapping);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct s;
+         s.v2.push_back({(float)i});
+         s.b = static_cast<std::byte>(i);
+         ntuple->Fill();
+      }
+   }
+
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         FileRaii fileGuardOut("test_ntuple_merge_proj_diff_out.root");
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         RNTupleMerger merger{std::move(destination)};
+         RNTupleMergeOptions opts;
+         opts.fMergingMode = mmode;
+         auto res = merger.Merge(sourcePtrs, opts);
+         ASSERT_FALSE(bool(res));
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("projected to a different field"));
+      }
+   }
+}
+
 struct RNTupleMergerCheckEncoding : public ::testing::TestWithParam<std::tuple<int, int, int, bool>> {};
 
 TEST_P(RNTupleMergerCheckEncoding, CorrectEncoding)
