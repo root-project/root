@@ -1870,17 +1870,10 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
 /// \note see ROOT::RDF::RInterface for the documentation of the methods available.
-#ifdef R__HAS_ROOT7
 RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
    : RInterface(ROOT::Detail::RDF::CreateLMFromFile(treeName, fileNameGlob, defaultColumns))
 {
 }
-#else
-RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
-   : RInterface(ROOT::Detail::RDF::CreateLMFromTTree(treeName, fileNameGlob, defaultColumns))
-{
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
@@ -1893,19 +1886,11 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob,
 ///
 /// The default columns are looked at in case no column is specified in the booking of actions or transformations.
 /// \note see ROOT::RDF::RInterface for the documentation of the methods available.
-#ifdef R__HAS_ROOT7
 RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                        const ColumnNames_t &defaultColumns)
    : RInterface(ROOT::Detail::RDF::CreateLMFromFile(datasetName, fileNameGlobs, defaultColumns))
 {
 }
-#else
-RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
-                       const ColumnNames_t &defaultColumns)
-   : RInterface(ROOT::Detail::RDF::CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns))
-{
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.

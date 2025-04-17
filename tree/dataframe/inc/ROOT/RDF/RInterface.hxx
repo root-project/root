@@ -1345,7 +1345,6 @@ public:
       RResultPtr<RInterface<RLoopManager>> resPtr;
 
       if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
-#ifdef R__HAS_ROOT7
          if (RDFInternal::GetDataSourceLabel(*this) == "TTreeDS") {
             throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
                                      "way to convert TTrees to RNTuple is through the RNTupleImporter.");
@@ -1366,11 +1365,6 @@ public:
          resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
             colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
             colListNoAliasesWithSizeBranches.size());
-#else
-         throw std::runtime_error(
-            "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
-            "components enabled.");
-#endif
       } else {
          if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
              options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
@@ -3235,7 +3229,6 @@ private:
       RResultPtr<RInterface<RLoopManager>> resPtr;
 
       if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
-#ifdef R__HAS_ROOT7
          if (RDFInternal::GetDataSourceLabel(*this) == "TTreeDS") {
             throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
                                      "way to convert TTrees to RNTuple is through the RNTupleImporter.");
@@ -3253,11 +3246,6 @@ private:
          // names.
          resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
                                                                                   fProxiedPtr);
-#else
-         throw std::runtime_error(
-            "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
-            "components enabled.");
-#endif
       } else {
          if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
              options.fOutputFormat == ESnapshotOutputFormat::kDefault) {

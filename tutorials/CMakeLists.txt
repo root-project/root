@@ -403,6 +403,13 @@ else()
   endif()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ experimental/*.py experimental/*.cxx experimental/*/*.cxx experimental/*.C experimental/*/*.C experimental/rcanvas/*.py experimental/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
+  # This depends on ntupleutil
+  list(APPEND root7_veto io/ntuple/ntpl008_import.C)
+  # This depends on RCanvas
+  list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
+  if((NOT davix) OR (NOT dataframe))
+    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
+  endif()
 endif()
 
 if (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)

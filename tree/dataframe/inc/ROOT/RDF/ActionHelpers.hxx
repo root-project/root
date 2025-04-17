@@ -48,10 +48,8 @@
 #include "ROOT/RDF/RMergeableValue.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 
-#ifdef R__HAS_ROOT7
 #include "ROOT/RNTupleDS.hxx"
 #include "ROOT/RNTupleWriter.hxx" // for SnapshotRNTupleHelper
-#endif
 #include "ROOT/RTTreeDS.hxx"
 
 #include <algorithm>
@@ -1968,7 +1966,6 @@ public:
    }
 };
 
-#ifdef R__HAS_ROOT7
 /// Ensure that the RNTuple with the resulting snapshot can be written to the target TFile. This means checking that the
 /// TFile can be opened in the mode specified in `opts`, deleting any existing RNTuples in case
 /// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
@@ -2118,7 +2115,6 @@ public:
                                    std::vector<bool>(fIsDefine)};
    }
 };
-#endif
 
 template <typename Acc, typename Merge, typename R, typename T, typename U,
           bool MustCopyAssign = std::is_same<R, U>::value>
