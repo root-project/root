@@ -470,10 +470,10 @@ class TestReducerMerge:
         # A simple dataframe with ten sequential numbers from 0 to 9
         connection, backend = payload
         if backend == "dask":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+            RDataFrame = ROOT.RDF.Distributed.Dask.RDataFrame
             df = RDataFrame(10, daskclient=connection)
         elif backend == "spark":
-            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+            RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
             df = RDataFrame(10, sparkcontext=connection)
         df = df.Define("x", "1")
         df_alias = df.Alias("myalias", "x")

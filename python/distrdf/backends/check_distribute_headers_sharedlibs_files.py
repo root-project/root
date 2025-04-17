@@ -91,7 +91,7 @@ class TestInterfaceHeadersLibrariesFiles:
         """
         rdf = ROOT.RDataFrame(10, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeHeaders(
+        ROOT.RDF.Distributed.DistributeHeaders(
             "../test_headers/header1.hxx"
         )
 
@@ -108,7 +108,7 @@ class TestInterfaceHeadersLibrariesFiles:
         # Create an RDataFrame with 100 integers from 0 to 99
         rdf = ROOT.RDataFrame(100, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeHeaders(header_folder)
+        ROOT.RDF.Distributed.DistributeHeaders(header_folder)
         # Get list of include paths seen by ROOT
         ROOT_include_path = ROOT.gInterpreter.GetIncludePath().split(" ")
 
@@ -134,10 +134,10 @@ class TestInterfaceHeadersLibrariesFiles:
         """
         rdf = ROOT.RDataFrame(15, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeHeaders(
+        ROOT.RDF.Distributed.DistributeHeaders(
             "../test_shared_libs/myheader7.h"
         )
-        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs(
+        ROOT.RDF.Distributed.DistributeSharedLibs(
             "../test_shared_libs/mylib7.so"
         )
         self._check_rdf_histos_7(rdf)
@@ -149,10 +149,10 @@ class TestInterfaceHeadersLibrariesFiles:
         """
         rdf = ROOT.RDataFrame(15, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeHeaders(
+        ROOT.RDF.Distributed.DistributeHeaders(
             "../test_shared_libs/myheader6.h"
         )
-        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs(
+        ROOT.RDF.Distributed.DistributeSharedLibs(
             "../test_shared_libs/")
         self._check_rdf_histos_6(rdf)
 
@@ -165,10 +165,10 @@ class TestInterfaceHeadersLibrariesFiles:
         """
         rdf = ROOT.RDataFrame(15, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeHeaders(
+        ROOT.RDF.Distributed.DistributeHeaders(
             ["../test_shared_libs/myheader7.h", "../test_shared_libs/myheader6.h"]
         )
-        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs(
+        ROOT.RDF.Distributed.DistributeSharedLibs(
             ["../test_shared_libs/mylib7.so", "../test_shared_libs/mylib6.so"]
         )
         self._check_rdf_histos_6(rdf)
@@ -183,10 +183,10 @@ class TestInterfaceHeadersLibrariesFiles:
         """
         rdf = ROOT.RDataFrame(15, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeHeaders(
+        ROOT.RDF.Distributed.DistributeHeaders(
             ["../test_shared_libs/myheader7.h", "../test_shared_libs/myheader6.h"]
         )
-        ROOT.RDF.Experimental.Distributed.DistributeSharedLibs(
+        ROOT.RDF.Distributed.DistributeSharedLibs(
             "../test_shared_libs/")
         self._check_rdf_histos_6(rdf)
         self._check_rdf_histos_7(rdf)
@@ -197,7 +197,7 @@ class TestInterfaceHeadersLibrariesFiles:
 
         rdf = ROOT.RDataFrame(10, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeFiles(
+        ROOT.RDF.Distributed.DistributeFiles(
             "../test_files/file.txt")
 
         if backend == "dask":
@@ -221,7 +221,7 @@ class TestInterfaceHeadersLibrariesFiles:
                 """
                 )
 
-            ROOT.RDF.Experimental.Distributed.initialize(Foo)
+            ROOT.RDF.Distributed.initialize(Foo)
             df_flag = rdf.Define("flags", "isEnv()")
             countFlags = df_flag.Sum("flags").GetValue()
             assert countFlags == 10.0
@@ -232,7 +232,7 @@ class TestInterfaceHeadersLibrariesFiles:
 
         rdf = ROOT.RDataFrame(10, executor=connection)
 
-        ROOT.RDF.Experimental.Distributed.DistributeFiles(
+        ROOT.RDF.Distributed.DistributeFiles(
             ["../test_files/file.txt", "../test_files/file_1.txt"]
         )
 
@@ -258,7 +258,7 @@ class TestInterfaceHeadersLibrariesFiles:
                 """
                 )
 
-            ROOT.RDF.Experimental.Distributed.initialize(Foo)
+            ROOT.RDF.Distributed.initialize(Foo)
             df_flag = rdf.Define("flags", "isEnv()")
             countFlags = df_flag.Sum("flags").GetValue()
             assert countFlags == 10.0
