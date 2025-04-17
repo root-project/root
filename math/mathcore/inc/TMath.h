@@ -1488,7 +1488,6 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
          return values[1];
    }
 
-   Double_t mode;
    const auto wstart = weights.begin();
    const auto wstop = weights.end();
    if ( std::adjacent_find(wstart, wstop, std::not_equal_to<>() ) == wstop ) {
@@ -1544,8 +1543,6 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
       const auto wmaxidx = std::distance(wstart, wmaxiter);
       return values[wmaxidx];
    }
-
-   return mode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
