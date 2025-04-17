@@ -458,7 +458,7 @@ void TClonesArray::ClearSlot(Int_t index, Option_t *opt)
    if (fCont[index]) {
       fCont[index]->Clear(opt);
       fCont[index] = nullptr;
-      Compress();
+      Changed();
    }
 }
 
