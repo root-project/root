@@ -29,6 +29,7 @@ The following people have contributed to this new version:
  Manuel Tobias Schiller, University of Glasgow,\
  Surya Somayyajula, UMass Amherst,\
  Petr Stepanov, @petrstepanov,\
+ Silia Taider, CERN/EP-SFT,\
  Dongliang Zhang, University of Science and Technology of China
 
 ## Deprecation and Removal
@@ -45,6 +46,14 @@ The following people have contributed to this new version:
 * The `RooStats::HLFactory` class was deprecated will be removed in ROOT 6.38. It provided little advantage over using the RooWorkspace directly or any of the other higher-level frameworks that exist in the RooFit ecosystem.
 
 ## Python Interface
+
+### UHI
+* ROOT histograms now comply with the [Unified Histogram Interface (UHI)](https://uhi.readthedocs.io/en/latest/index.html) specification, enhancing interoperability with other UHI-compatible libraries and standardizing histogram operations.
+  The following features were added:
+  * Implemented the UHI `PlottableHistogram` protocol enabling ROOT histograms to be plotted by any library supporting `PlottableHistogram` objects.
+  * Introduced UHI-style indexing for access and setting bin values.
+  * Introduced UHI-style slicing for selecting histogram ranges.
+  * Implemented the `ROOT.uhi.loc`, `ROOT.uhi.underflow`, `ROOT.uhi.overflow`, `ROOT.uhi.rebin`, and `ROOT.uhi.sum` tags.
 
 ## RDataFrame
 - When running multiple computation graphs run concurrently using [`RunGraphs()`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a526d77d018bf69462d736bbdd1a695c4),
