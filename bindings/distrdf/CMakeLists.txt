@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -14,6 +14,7 @@ set(py_sources
   DistRDF/ComputationGraphGenerator.py
   DistRDF/DataFrame.py
   DistRDF/HeadNode.py
+  DistRDF/LiveVisualize.py
   DistRDF/Node.py
   DistRDF/Operation.py
   DistRDF/Proxy.py
@@ -22,11 +23,10 @@ set(py_sources
   DistRDF/Backends/__init__.py
   DistRDF/Backends/Base.py
   DistRDF/Backends/Utils.py
-  DistRDF/Backends/Spark/__init__.py
-  DistRDF/Backends/Spark/Backend.py
   DistRDF/Backends/Dask/__init__.py
   DistRDF/Backends/Dask/Backend.py
-  DistRDF/LiveVisualize.py
+  DistRDF/Backends/Spark/__init__.py
+  DistRDF/Backends/Spark/Backend.py
 )
 
 # Add custom rules to copy the Python sources into the build directory

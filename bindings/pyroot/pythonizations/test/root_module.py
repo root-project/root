@@ -97,7 +97,7 @@ class ROOTModule(unittest.TestCase):
         #
 
         if root_module_has("RDF.Experimental.Distributed"):
-            import ROOT.RDF.Experimental.Distributed
+            import ROOT.RDF.Distributed
 
         if root_module_has("RNTuple"):
             from ROOT import RNTuple

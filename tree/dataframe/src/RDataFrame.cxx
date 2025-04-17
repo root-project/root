@@ -703,11 +703,10 @@ of execution of the operations of nodes in this branch of the computation graph 
 ## Distributed execution
 
 RDataFrame applications can be executed in parallel through distributed computing frameworks on a set of remote machines
-thanks to the Python package `ROOT.RDF.Experimental.Distributed`. This experimental, **Python-only** package allows to scale the
+thanks to the Python package `ROOT.RDF.Distributed`. This **Python-only** package allows to scale the
 optimized performance RDataFrame can achieve on a single machine to multiple nodes at the same time. It is designed so
 that different backends can be easily plugged in, currently supporting [Apache Spark](http://spark.apache.org/) and
-[Dask](https://dask.org/). To make use of distributed RDataFrame, you only need to switch `ROOT.RDataFrame` with
-the backend-specific `RDataFrame` of your choice, for example:
+[Dask](https://dask.org/). Here is a minimal example usage of distributed RDataFrame:
 
 ~~~{.py}
 import ROOT
@@ -755,8 +754,6 @@ parts of the RDataFrame API currently work with this package. The subset that is
 
 with support for more operations coming in the future. Currently, to the supported data sources belong TTree, TChain, RNTuple and RDatasetSpec.
 
-\note The distributed RDataFrame module requires at least Python version 3.8.
-
 ### Connecting to a Spark cluster
 
 In order to distribute the RDataFrame workload, you can connect to a Spark cluster you have access to through the
@@ -773,11 +770,11 @@ sc = SparkContext(conf=conf)
 
 # The Spark RDataFrame constructor accepts an optional "sparkcontext" parameter
 # and it will distribute the application to the connected cluster
-df = RDataFrame("mytree", "myfile.root", executor = sc)
+df = ROOT.RDataFrame("mytree", "myfile.root", executor = sc)
 ~~~
 
 Note that with the usage above the case of `executor = None` is not supported. One
-can explicitly create a `ROOT.RDF.Experimental.Distributed.Spark.RDataFrame` object
+can explicitly create a `ROOT.RDF.Distributed.Spark.RDataFrame` object
 in order to get a default instance of 
 [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
 in case it is not already provided as argument.
@@ -798,13 +795,13 @@ if __name__ == "__main__":
     client = Client("dask_scheduler.domain.com:8786")
 
     # The Dask RDataFrame constructor accepts the Dask Client object as an optional argument
-    df = RDataFrame("mytree","myfile.root", executor=client)
+    df = ROOT.RDataFrame("mytree","myfile.root", executor=client)
     # Proceed as usual
     df.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
 Note that with the usage above the case of `executor = None` is not supported. One
-can explicitly create a `ROOT.RDF.Experimental.Distributed.Dask.RDataFrame` object
+can explicitly create a `ROOT.RDF.Distributed.Dask.RDataFrame` object
 in order to get a default instance of 
 [distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client)
 in case it is not already provided as argument. This will run multiple processes
@@ -937,12 +934,12 @@ of a distributed RDataFrame application.
 It enables visualizing intermediate results as they are computed across multiple nodes of a Dask cluster
 by creating a canvas and continuously updating it as partial results become available. 
 
-The LiveVisualize() function can be imported from the Python package **ROOT.RDF.Experimental.Distributed**:
+The LiveVisualize() function can be imported from the Python package **ROOT.RDF.Distributed**:
 
 ~~~{.py}
 import ROOT
 
-LiveVisualize = ROOT.RDF.Experimental.Distributed.LiveVisualize
+LiveVisualize = ROOT.RDF.Distributed.LiveVisualize
 ~~~
 
 The function takes drawable objects (e.g. histograms) and optional callback functions as argument, it accepts 4 different input formats:
@@ -1008,7 +1005,7 @@ ROOT.gInterpreter.AddIncludePath("myheader.hxx")
 df.Define(...)
 
 # Distributed RDF script
-ROOT.RDF.Experimental.Distributed.DistributeHeaders("myheader.hxx")
+ROOT.RDF.Distributed.DistributeHeaders("myheader.hxx")
 df.Define(...)
 ~~~
 
@@ -1020,7 +1017,7 @@ ROOT.gSystem.Load("my_library.so")
 df.Define(...)
 
 # Distributed RDF script
-ROOT.RDF.Experimental.Distributed.DistributeSharedLibs("my_library.so")
+ROOT.RDF.Distributed.DistributeSharedLibs("my_library.so")
 df.Define(...)
 ~~~
 
@@ -1034,7 +1031,7 @@ ROOT.gInterpreter.Declare("my_code")
 df.Define(...)
 
 # Distributed RDF script
-ROOT.RDF.Experimental.Distributed.DistributeCppCode("my_code")
+ROOT.RDF.Distributed.DistributeCppCode("my_code")
 df.Define(...)
 ~~~
 
@@ -1044,7 +1041,7 @@ df.Define(...)
 # Local RDataFrame script is not applicable here as local RDF application can simply access the external files it needs. 
 
 # Distributed RDF script
-ROOT.RDF.Experimental.Distributed.DistributeFiles("my_file")
+ROOT.RDF.Distributed.DistributeFiles("my_file")
 df.Define(...)
 ~~~
 
