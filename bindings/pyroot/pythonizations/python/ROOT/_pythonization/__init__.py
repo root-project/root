@@ -250,6 +250,24 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
             # Pythonize right away!
             _invoke(user_pythonizor, npars, klass, klass.__cpp_name__)
 
+    def get_class_name(instantiation):
+        # Get the right class name for the input instantiation
+
+        # Template instantiation such as cppyy.gbl.MyClass["SomeType"]
+        if isinstance(instantiation, str):
+            return instantiation
+
+        # Template instantiation such as cppyy.gbl.MyClass[cppyy.gbl.SomeType]
+        # use the more specialized attribute first, then a more generic one
+        if hasattr(instantiation, "__cpp_name__"):
+            return instantiation.__cpp_name__
+
+        if hasattr(instantiation, "__name__"):
+            return instantiation.__name__
+
+        raise RuntimeError(
+            f"The template instantiation '{instantiation}' cannot be properly pythonized. Please report this as a bug.")
+
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
         if str(var_value).startswith('<class cppyy.gbl.'):
@@ -267,7 +285,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
                 # use a version of cppyy that caches both in the namespace and
                 # in the _instantiations attribute.
                 if not instance in ns_vars:
-                    instance_name = var_name + "<" + ",".join(args) + ">"
+                    instance_name = var_name + "<" + ",".join(map(get_class_name, args)) + ">"
                     pythonize_if_match(instance_name, instance)
 
 def _find_namespace(ns):
