@@ -81,18 +81,20 @@ foreach(dict ${stldicts})
 endforeach()
 
 if (builtin_clang)
-    set(CLANG_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR})
+  set(CLANG_LIBRARY_DIR ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR}/lib)
 else ()
-  # If no explicit Clang prefix is set, assume it lives inside LLVM prefix.
-  if(NOT DEFINED CLANG_INSTALL_PREFIX)
-    set(CLANG_INSTALL_PREFIX ${LLVM_DIR})
+  if(DEFINED CLANG_INSTALL_PREFIX)
+    set(CLANG_LIBRARY_DIR ${CLANG_INSTALL_PREFIX}/lib)
+  else()
+    # If no explicit Clang prefix is set, assume it lives inside LLVM prefix.
+    set(CLANG_LIBRARY_DIR ${LLVM_LIBRARY_DIR})
   endif()
 endif()
 
 # We only look for the Clang version that matches the LLVM version, because other setups are not supported.
 set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION_MAJOR})
 
-set(CLANG_RESOURCE_DIR ${CLANG_INSTALL_PREFIX}/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include)
+set(CLANG_RESOURCE_DIR ${CLANG_LIBRARY_DIR}/clang/${CLANG_RESOURCE_DIR_VERSION}/include)
 
 #---Deal with clang resource here----------------------------------------------
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/
