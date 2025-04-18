@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # Create an RDataFrame that will use Dask as a backend for computations
     num_entries = 100000000
-    d = RDataFrame(num_entries, daskclient=connection, npartitions=30)
+    d = RDataFrame(num_entries, executor=connection, npartitions=30)
 
     # Define a gaussean distribution with a variable mean
     dd = d.Define("x", f"gRandom->Gaus(10*rdfentry_/{num_entries}, 2)")\
