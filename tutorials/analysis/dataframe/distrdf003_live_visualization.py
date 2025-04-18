@@ -32,7 +32,7 @@ def create_connection():
 
 # Function to fit a Gaussian function to the plot
 def fit_gaus(plot):
-    plot.Fit("gaus")
+    plot.Fit("gaus", "Q")
 
 if __name__ == "__main__":
     # Setup connection to a Dask cluster
