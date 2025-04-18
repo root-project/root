@@ -84,7 +84,6 @@ void Analyze() {
 
    std::cout << "The first entry in JSON format:" << std::endl;
    reader->Show(0);
-   // In a future version of RNTuple, there will be support for ntuple->Scan()
 
    auto c = new TCanvas("c", "", 200, 10, 700, 500);
    TH1I h("h", "Age Distribution CERN, 1988", 100, 0, 100);
