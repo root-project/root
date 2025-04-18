@@ -106,6 +106,7 @@ jobs:
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           - platform: mac-beta
+            is_special: true
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
 
@@ -172,7 +173,7 @@ jobs:
                     --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
-        if:   github.event_name == 'workflow_dispatch'
+        if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
