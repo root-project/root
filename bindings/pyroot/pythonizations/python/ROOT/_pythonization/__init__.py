@@ -7,24 +7,22 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-
 import importlib
 import inspect
 import pkgutil
-import re
-import sys
 import traceback
 
 import cppyy
+
+from ._generic import pythonize_generic
+
 # \cond INTERNALS
 gbl_namespace = cppyy.gbl
 # \endcond
 
-from ._generic import pythonize_generic
 
-
-def pythonization(class_name, ns='::', is_prefix=False):
-    r'''
+def pythonization(class_name, ns="::", is_prefix=False):
+    r"""
     \ingroup Pythonizations
     Decorator that allows to pythonize C++ classes. To pythonize means to add
     some extra behaviour to a C++ class that is used from Python via PyROOT,
@@ -56,7 +54,7 @@ def pythonization(class_name, ns='::', is_prefix=False):
         function: function that receives the user-defined function and
             decorates it.
 
-    '''
+    """
 
     # Type check and parsing of target argument.
     # Retrieve the scope(s) of the class(es)/prefix(es) to register the
@@ -64,20 +62,21 @@ def pythonization(class_name, ns='::', is_prefix=False):
     target = _check_target(class_name)
 
     # Remove trailing '::' from namespace
-    if ns.endswith('::'):
+    if ns.endswith("::"):
         ns = ns[:-2]
 
     # Create a filter lambda for the target class(es)/prefix(es)
     if is_prefix:
+
         def passes_filter(class_name):
-            return any(class_name.startswith(prefix)
-                       for prefix in target)
+            return any(class_name.startswith(prefix) for prefix in target)
     else:
+
         def passes_filter(class_name):
             return class_name in target
 
     def pythonization_impl(user_pythonizor):
-        '''
+        """
         The real decorator. Accepts a user-provided function and decorates it.
         An inner function - a wrapper of the user function - is registered in
         cppyy as a pythonizor.
@@ -93,7 +92,7 @@ def pythonization(class_name, ns='::', is_prefix=False):
         Returns:
             function: the user function, after being registered as a
                 pythonizor.
-        '''
+        """
 
         npars = _check_num_pars(user_pythonizor)
 
@@ -103,7 +102,7 @@ def pythonization(class_name, ns='::', is_prefix=False):
         _find_used_classes(ns, passes_filter, user_pythonizor, npars)
 
         def cppyy_pythonizor(klass, name):
-            '''
+            """
             Wrapper function with the parameters that cppyy requires for a
             pythonizor function (class proxy and class name). It invokes the
             user function only if the current class - a candidate for being
@@ -114,7 +113,7 @@ def pythonization(class_name, ns='::', is_prefix=False):
                     current candidate to be pythonized.
                 name (string): name of the class that is the current candidate
                     to be pythonized.
-            '''
+            """
 
             fqn = klass.__cpp_name__
 
@@ -136,10 +135,12 @@ def pythonization(class_name, ns='::', is_prefix=False):
 
     return pythonization_impl
 
+
 # \cond INTERNALS
 
+
 def _check_target(target):
-    '''
+    """
     Helper function to check the type of the `class name` argument specified by
     the user in a @pythonization decorator.
 
@@ -148,41 +149,45 @@ def _check_target(target):
 
     Returns:
         list[string]: class name(s)/prefix(es) in `target`, with no repetitions.
-    '''
+    """
 
     if isinstance(target, str):
         _check_no_namespace(target)
-        target = [ target ]
+        target = [target]
     else:
         for name in target:
             if isinstance(name, str):
                 _check_no_namespace(name)
             else:
-                raise TypeError('Invalid type of "target" argument in '
-                                '@pythonization: must be string or iterable of '
-                                'strings')
+                raise TypeError(
+                    'Invalid type of "target" argument in @pythonization: must be string or iterable of strings'
+                )
         # Remove possible duplicates
         target = list(set(target))
 
     return target
 
+
 def _check_no_namespace(target):
-    '''
+    """
     Checks that a given target of a pythonizor does not specify a namespace
     (only the class name / prefix of a class name should be present).
 
     Args:
         target (string): class name/prefix.
-    '''
+    """
 
-    if target.find('::') >= 0:
-        raise ValueError('Invalid value of "class_name" argument in '
-                         '@pythonization: namespace definition found ("{}"). '
-                         'Please use the "ns" parameter to specify the '
-                         'namespace'.format(target))
+    if target.find("::") >= 0:
+        raise ValueError(
+            'Invalid value of "class_name" argument in '
+            '@pythonization: namespace definition found ("{}"). '
+            'Please use the "ns" parameter to specify the '
+            "namespace".format(target)
+        )
+
 
 def _check_num_pars(f):
-    '''
+    """
     Checks the number of parameters of the `f` function.
 
     Args:
@@ -190,18 +195,20 @@ def _check_num_pars(f):
 
     Returns:
         int: number of positional parameters of `f`.
-    '''
+    """
     npars = len(inspect.getfullargspec(f).args)
     if npars == 0 or npars > 2:
-        raise TypeError('Pythonizor function {} has a wrong number of '
-                        'parameters ({}). Allowed parameters are the class to '
-                        'be pythonized and (optionally) its name.'
-                        .format(f.__name__, npars))
+        raise TypeError(
+            "Pythonizor function {} has a wrong number of "
+            "parameters ({}). Allowed parameters are the class to "
+            "be pythonized and (optionally) its name.".format(f.__name__, npars)
+        )
 
     return npars
 
+
 def _invoke(user_pythonizor, npars, klass, fqn):
-    '''
+    """
     Invokes the given user pythonizor function with the right arguments.
 
     Args:
@@ -209,22 +216,23 @@ def _invoke(user_pythonizor, npars, klass, fqn):
         npars (int): number of parameters of the user pythonizor function.
         klass (class type): cppyy proxy of the class to be pythonized.
         fqn (string): fully-qualified name of the class to be pythonized.
-    '''
+    """
 
     try:
         if npars == 1:
             user_pythonizor(klass)
         else:
             user_pythonizor(klass, fqn)
-    except Exception as e:
-        print('Error pythonizing class {}:'.format(fqn))
+    except Exception:
+        print("Error pythonizing class {}:".format(fqn))
         traceback.print_exc()
         # Propagate the error so that the class lookup that triggered this
         # pythonization fails too and the application stops
         raise RuntimeError
 
+
 def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
-    '''
+    """
     Finds already instantiated classes in namespace `ns` that pass the filter
     of `passes_filter`. Every matching class is pythonized with the
     `user_pythonizor` function.
@@ -237,7 +245,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
             is the target of `user_pythonizor`.
         user_pythonizor (function): user pythonizor function.
         npars (int): number of parameters of the user pythonizor function.
-    '''
+    """
 
     ns_obj = _find_namespace(ns)
     if ns_obj is None:
@@ -250,13 +258,32 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
             # Pythonize right away!
             _invoke(user_pythonizor, npars, klass, klass.__cpp_name__)
 
+    def get_class_name(instantiation):
+        # Get the right class name for the input instantiation
+
+        # Template instantiation such as cppyy.gbl.MyClass["SomeType"]
+        if isinstance(instantiation, str):
+            return instantiation
+
+        # Template instantiation such as cppyy.gbl.MyClass[cppyy.gbl.SomeType]
+        # use the more specialized attribute first, then a more generic one
+        if hasattr(instantiation, "__cpp_name__"):
+            return instantiation.__cpp_name__
+
+        if hasattr(instantiation, "__name__"):
+            return instantiation.__name__
+
+        raise RuntimeError(
+            f"The template instantiation '{instantiation}' cannot be properly pythonized. Please report this as a bug."
+        )
+
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
-        if str(var_value).startswith('<class cppyy.gbl.'):
+        if str(var_value).startswith("<class cppyy.gbl."):
             # It's a class proxy
             pythonize_if_match(var_name, var_value)
 
-        if str(var_value).startswith('<cppyy.Template'):
+        if str(var_value).startswith("<cppyy.Template"):
             # If this is a template, pythonize the instances. Note that in
             # older cppyy, template instantiations are cached by
             # fully-qualified name directly in the namespace, so they are
@@ -266,12 +293,13 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
                 # Make sure we don't do any redundant pythonization, e.g. if we
                 # use a version of cppyy that caches both in the namespace and
                 # in the _instantiations attribute.
-                if not instance in ns_vars:
-                    instance_name = var_name + "<" + ",".join(args) + ">"
+                if instance not in ns_vars:
+                    instance_name = var_name + "<" + ",".join(map(get_class_name, args)) + ">"
                     pythonize_if_match(instance_name, instance)
 
+
 def _find_namespace(ns):
-    '''
+    """
     Finds and returns the proxy object of the `ns` namespace, if it has already
     been accessed.
 
@@ -281,29 +309,32 @@ def _find_namespace(ns):
     Returns:
         namespace proxy object, if the namespace has already been accessed,
             otherwise None.
-    '''
+    """
 
-    if ns == '':
+    if ns == "":
         return gbl_namespace
 
     ns_obj = gbl_namespace
     # Get all namespaces in a list
-    every_ns = ns.split('::')
+    every_ns = ns.split("::")
     for ns in every_ns:
         ns_vars = vars(ns_obj)
-        if not ns in ns_vars:
+        if ns not in ns_vars:
             return None
         ns_obj = getattr(ns_obj, ns)
 
     return ns_obj
 
-def _register_pythonizations():
-    '''
-    Registers the ROOT pythonizations with cppyy for lazy injection.
-    '''
 
-    exclude = [ '_rdf_utils', '_rdf_pyz', '_rdf_conversion_maps' ]
-    for _, module_name, _ in  pkgutil.walk_packages(__path__):
+def _register_pythonizations():
+    """
+    Registers the ROOT pythonizations with cppyy for lazy injection.
+    """
+
+    exclude = ["_rdf_utils", "_rdf_pyz", "_rdf_conversion_maps"]
+    for _, module_name, _ in pkgutil.walk_packages(__path__):
         if module_name not in exclude:
-            importlib.import_module(__name__ + '.' + module_name)
+            importlib.import_module(__name__ + "." + module_name)
+
+
 # \endcond
