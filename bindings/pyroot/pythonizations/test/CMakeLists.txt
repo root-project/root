@@ -192,3 +192,5 @@ ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 if (NOT MSVC AND Python3_VERSION VERSION_LESS 3.12)
   ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy tensorflow torch)
 endif()
+
+ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
