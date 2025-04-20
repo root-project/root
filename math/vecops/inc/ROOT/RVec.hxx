@@ -3253,12 +3253,11 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * value (\p end) omitted; in this case, \f$\text{step} = \frac{\text{end} - \text{start}}{n}\f$.
  *
  * The function is templated to allow for different arithmetic types. The deduced type \c Common_t is
- * determined as follows: if the common type of \p T1 and \p T2 is a floating point type, that type is used;
+ * determined as follows: if \p T is a floating point type, that type is used;
  * otherwise, the arithmetic is performed using \c double.
  *
- * \tparam T1 Type of the start value. Default is double.
- * \tparam T2 Type of the end value. Default is double.
- * \tparam Common_t Deduced type used for arithmetic, which is std::common_type_t<T1, T2> if that is a
+ * \tparam T Type of the start and end value. Default is double.
+ * \tparam Common_t Deduced type used for arithmetic, which is \p T if that is a
  * floating point type, or double otherwise.
  *
  * \param start The first value in the sequence.
@@ -3294,12 +3293,12 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * // { 3, 5.25, 7.5, 9.75, 12 }
  * cout << Linspace(3, 12, 5, false) << "\n";
  * // { 3, 4.8, 6.6, 8.4, 10.2 }
- * Linspace<int, int, int>(1, 10, 3) << "\n";
+ * Linspace<int, int>(1, 10, 3) << "\n";
  * // { 1, 5, 9 }
  * ~~~
  */
-template <typename T1 = double, typename T2 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2>>, std::common_type_t<T1, T2>, double>>
-inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, const bool endpoint = true)
+template <typename T = double, typename Common_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Common_t> Linspace(T start, T end, unsigned long long n = 128, const bool endpoint = true)
 {
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
@@ -3326,12 +3325,10 @@ inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, con
  * and the final value (\f$base^{end}\f$) is excluded, resulting in a sequence of n values.
  *
  * The function is templated to allow for different arithmetic types. The deduced type \c Common_t is determined as follows:
- * if the common type of \p T1, \p T2, and \p T3 is a floating point type, that type is used; otherwise, the arithmetic is performed using \c double.
+ * if \p T is a floating point type, that type is used; otherwise, the arithmetic is performed using \c double.
  *
- * \tparam T1 Type of the start exponent. Default is double.
- * \tparam T2 Type of the end exponent. Default is double.
- * \tparam T3 Type of the base (and auxiliary type for deducing common type). Default is double.
- * \tparam Common_t Deduced type used for arithmetic, which is std::common_type_t<T1, T2, T3> if that is a floating point type, or double otherwise.
+ * \tparam T Type of the start and end exponents and the base. Default is double.
+ * \tparam Common_t Deduced type used for arithmetic, which is \p T if that is a floating point type, or double otherwise.
  *
  * \param start The exponent corresponding to the first element (i.e., the first element is \f$base^{start}\f$).
  * \param end The exponent corresponding to the final element if \p endpoint is true; otherwise, \p end is excluded.
@@ -3369,12 +3366,12 @@ inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, con
  * // {  }
  * cout << Logspace(4, 10, 12, 10.0, false) << '\n';
  * // { 10000, 31622.8, 100000, 316228, 1e+06, 3.16228e+06, 1e+07, 3.16228e+07, 1e+08, 3.16228e+08, 1e+09, 3.16228e+09 }
- * cout << Logspace<int, int, int, int>(1, 5, 3) << '\n';
+ * cout << Logspace<int, int>(1, 5, 3) << '\n';
  * // { 10, 1000, 100000 }
  * ~~~
  */
-template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
-inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, const bool endpoint = true, T3 base = 10.0)
+template <typename T = double, typename Common_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Common_t> Logspace(T start, T end, unsigned long long n = 128, const bool endpoint = true, T base = 10.0)
 {
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
@@ -3408,14 +3405,12 @@ inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, con
  * ensuring that the arithmetic is performed in a floating-point context when needed.
  *
  * The function is templated to allow for different arithmetic types. The deduced type \c Common_t is
- * determined as follows: if the common type of \p T1, \p T2, and \p T3 is a floating point type, that type is used;
+ * determined as follows: if \p T is a floating point type, that type is used;
  * otherwise, the arithmetic is performed using \c double.
  *
- * \tparam T1 Type of the start value. Default is double.
- * \tparam T2 Type of the end value. Default is double.
- * \tparam T3 Type of the step value. Default is double.
+ * \tparam T Type of the start, end, and step values. Default is double.
  * \tparam Common_t Deduced type used for arithmetic, which is
- * std::common_type_t<T1, T2, T3> if that is a floating point type, or double otherwise.
+ * \p T if that is a floating point type, or double otherwise.
  *
  * \param start The first value in the range.
  * \param end The end of the range (exclusive).
@@ -3449,12 +3444,12 @@ inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, con
  * // { -7, -3, 1, 5, 9, 13, 17 }
  * cout << Arange(1, 13, 5) << '\n';
  * // { 1, 6, 11 }
- * cout << Arange<unsigned int, unsigned int, unsigned int, unsigned int>(5, 9, 1) << '\n';
+ * cout << Arange<unsigned int, unsigned int>(5, 9, 1) << '\n';
  * // { 5, 6, 7, 8 }
  * ~~~
  */
-template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
-inline RVec<Common_t> Arange(T1 start, T2 end, T3 step)
+template <typename T = double, typename Common_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Common_t> Arange(T start, T end, T step)
 {
     unsigned long long n = std::ceil(static_cast<Common_t>(end-start)/static_cast<Common_t>(step)); // Ensure floating-point division.
 
