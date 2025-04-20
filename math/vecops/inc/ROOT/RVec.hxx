@@ -3269,7 +3269,7 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * \return A vector (RVec<Common_t>) containing \p n evenly spaced values.
  *
  * \note If \p n is 1, the resulting vector will contain only the value \p start.
- * \note The check `if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
+ * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
  *   - division by zero is avoided when calculating `step`
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
@@ -3301,20 +3301,17 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
 template <typename T1 = double, typename T2 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2>>, std::common_type_t<T1, T2>, double>>
 inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, const bool endpoint = true)
 {
-    RVec<Common_t> temp;
-    
-    if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return temp;
+        return RVec<Common_t>{};
     }
     
     Common_t step = (static_cast<Common_t>(end) - static_cast<Common_t>(start)) / static_cast<Common_t>(n - endpoint);
-    
-    temp.reserve(n);
-    temp.push_back(static_cast<Common_t>(start));
+    RVec<Common_t> temp(n);
+    temp[0] = static_cast<Common_t>(start);
     for (unsigned long long i = 1; i < n; i++)
     {
-        temp.push_back(static_cast<Common_t>(start) + static_cast<Common_t>(i) * step);
+        temp[i] = static_cast<Common_t>(start) + static_cast<Common_t>(i) * step;
     }
     return temp;
 }
@@ -3345,7 +3342,7 @@ inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, con
  * \return A vector (RVec<Common_t>) containing n log-spaced values.
  *
  * \note If \p n is 1, the resulting vector will contain only the value \f$base^{start}\f$.
- * \note The check `if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
+ * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
  *   - division by zero is avoided when calculating `step`
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
@@ -3379,23 +3376,22 @@ inline RVec<Common_t> Linspace(T1 start, T2 end, unsigned long long n = 128, con
 template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
 inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, const bool endpoint = true, T3 base = 10.0)
 {
-    RVec<Common_t> temp;
-    
-    if (!n || (endpoint && n == 1) || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return temp;
+        return RVec<Common_t>{};
     }
+    RVec<Common_t> temp(n);
     
     Common_t start_c = static_cast<Common_t>(start);
     Common_t end_c   = static_cast<Common_t>(end);
     Common_t base_c  = static_cast<Common_t>(base);
     Common_t step = static_cast<Common_t>(end_c - start_c)/static_cast<Common_t>(n - endpoint);
-    temp.reserve(n);
-    temp.push_back(static_cast<Common_t>(std::pow(base_c, start_c)));
+    
+    temp[0] = static_cast<Common_t>(std::pow(base_c, start_c));
     for (unsigned long long i = 1; i < n; i++)
     {
         Common_t exponent = start_c + i * step;
-        temp.push_back(static_cast<Common_t>(std::pow(base_c, exponent)));
+        temp[i] = static_cast<Common_t>(std::pow(base_c, exponent));
     }
     return temp;
 }
@@ -3460,21 +3456,22 @@ inline RVec<Common_t> Logspace(T1 start, T2 end, unsigned long long n = 128, con
 template <typename T1 = double, typename T2 = double, typename T3 = double, typename Common_t = std::conditional_t<std::is_floating_point_v<std::common_type_t<T1, T2, T3>>, std::common_type_t<T1, T2, T3>, double>>
 inline RVec<Common_t> Arange(T1 start, T2 end, T3 step)
 {
-    RVec<Common_t> temp;
     unsigned long long n = std::ceil(static_cast<Common_t>(end-start)/static_cast<Common_t>(step)); // Ensure floating-point division.
-    
+
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return temp;
+        return RVec<Common_t>{};
     }
+    
+    RVec<Common_t> temp(n);
     
     Common_t start_c = static_cast<Common_t>(start);
     Common_t step_c = static_cast<Common_t>(step);
-    temp.reserve(n);
-    temp.push_back(start_c);
+    
+    temp[0] = start_c;
     for (unsigned long long i = 1; i < n; i++)
     {
-        temp.push_back(start_c + i * step_c);
+        temp[i] = start_c + i * step_c;
     }
     return temp;
 }
