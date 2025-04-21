@@ -452,6 +452,7 @@ void TClonesArray::Clear(Option_t *option)
 /// Clear a slot in the array with option opt, later nullify it and call Compress
 /// \param index the index of the array to clear, it must be in range of length of fCont, range-check is not performed
 /// \param opt the option passed to the Clear function
+/// \note Consider calling Compress() after this operation
 void TClonesArray::ClearSlot(Int_t index, Option_t *opt)
 {
    if (fCont[index]) {
