@@ -9,12 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TROOT.h"
 #include "TStreamerElement.h"
 #include "TVirtualStreamerInfo.h"
@@ -308,8 +302,15 @@ TClass *TStreamerElement::GetClassPointer() const
 
 Int_t TStreamerElement::GetExecID() const
 {
-   //check if element is a TRef or TRefArray
-   if (strncmp(fTypeName.Data(),"TRef",4) != 0) return 0;
+   TString typeName = fTypeName;
+   if (typeName != "TRef" && typeName != "TRefArray") {
+      // It's not a ROOT standard TRef or TRefArray class, but it could be a user class
+      // inheriting from it (see ROOT-7052)
+      const TString clName = ExtractClassName(fTypeName);
+      const auto cl = TClass::GetClass(clName, kFALSE, kTRUE);
+      if (!cl || (nullptr == cl->GetBaseClass("TRef") && nullptr == cl->GetBaseClass("TRefArray")))
+         return 0;
+   }
 
    //if the UniqueID of this element has already been set, we assume
    //that it contains the exec id of a TRef object.
