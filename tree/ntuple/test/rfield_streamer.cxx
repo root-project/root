@@ -305,3 +305,25 @@ TEST(RField, StreamerMergeIncremental)
    EXPECT_TRUE(seenStreamerInfos[2]);
    EXPECT_TRUE(seenStreamerInfos[3]);
 }
+
+TEST(RField, StreamerSchemaEvolution)
+{
+   FileRaii fileGuard("test_ntuple_rfield_streamer_schema_evolution.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "OldStreamerName<int>").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto ptrF = writer->GetModel().GetDefaultEntry().GetPtr<OldStreamerName<int>>("f");
+      ptrF->fValue = 137;
+      writer->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   model->AddField(RFieldBase::Create("f", "NewStreamerName<int>").Unwrap());
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+   ASSERT_EQ(1U, reader->GetNEntries());
+   auto ptrF = reader->GetModel().GetDefaultEntry().GetPtr<NewStreamerName<int>>("f");
+   reader->LoadEntry(0);
+   EXPECT_EQ(137, ptrF->fValue);
+}
