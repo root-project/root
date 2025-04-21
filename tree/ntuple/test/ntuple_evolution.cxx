@@ -863,3 +863,60 @@ struct RenamedIntermediateDerived : public RenamedIntermediate2 {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }
+
+TEST(RNTupleEvolution, StreamerField)
+{
+   FileRaii fileGuard("test_ntuple_evolution_streamer_field.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct StreamerField {
+   int fInt = 1;
+   int fAnotherInt = 3;
+
+   ClassDefNV(StreamerField, 2)
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("f", "StreamerField"));
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("StreamerField", "ptrStreamerField", ptr);
+      ProcessLine("ptrStreamerField->fInt = 2;");
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      writer.reset();
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct StreamerField {
+   int fInt = 0;
+   int fAdded = 137;
+   // removed fAnotherInt
+
+   ClassDefNV(StreamerField, 3)
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2, reader->GetNEntries());
+
+   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+   DeclarePointer("StreamerField", "ptrStreamerField", ptr);
+
+   reader->LoadEntry(0);
+   EXPECT_EVALUATE_EQ("ptrStreamerField->fInt", 1);
+   EXPECT_EVALUATE_EQ("ptrStreamerField->fAdded", 137);
+
+   reader->LoadEntry(1);
+   EXPECT_EVALUATE_EQ("ptrStreamerField->fInt", 2);
+   EXPECT_EVALUATE_EQ("ptrStreamerField->fAdded", 137);
+}
