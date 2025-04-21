@@ -8,7 +8,7 @@
 class TestRefObj : public TObject {
 protected:
    TRefArray lChildren;
-    
+
 public:
    TestRefObj() : lChildren() {}
    virtual ~TestRefObj() {}
