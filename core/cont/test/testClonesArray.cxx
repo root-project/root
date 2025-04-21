@@ -14,12 +14,13 @@
 class TestRefObj : public TObject {
 protected:
    TRefArray lChildren;
+
 public:
    TestRefObj() : lChildren() {}
    virtual ~TestRefObj() {}
    virtual void Clear(Option_t *opt = "C") { lChildren.Clear(opt); }
    virtual void SetChild(TestRefObj *aChild) { lChildren.Add(aChild); }
-   virtual const TestRefObj* GetChild(Int_t idx = 0) const { return static_cast<TestRefObj *>(lChildren.At(idx)); }
+   virtual const TestRefObj *GetChild(Int_t idx = 0) const { return static_cast<TestRefObj *>(lChildren.At(idx)); }
    virtual Bool_t HasChild() const { return (lChildren.GetEntriesFast() > 0); }
    ClassDef(TestRefObj, 1);
 };
@@ -35,10 +36,10 @@ TEST(TClonesArray, RefArrayClearChildren)
    {
       TFile testFile(filename, "RECREATE");
       TTree dataTree(treename, treename);
-   
+
       TClonesArray particles(TestRefObj::Class(), 100);
       TClonesArray children(TestRefObj::Class(), 100);
-   
+
       dataTree.Branch("particles", &particles, 32768, splitLevel);
       dataTree.Branch("children",  &children, 32768, splitLevel);
       if (activateBranchRef) {
@@ -48,7 +49,7 @@ TEST(TClonesArray, RefArrayClearChildren)
       for (Int_t e = 0; e < 1000; e++) {
          // For each "event".
          UInt_t objCount = TProcessID::GetObjectCount();
-   
+
          TestRefObj *motherPart = static_cast<TestRefObj *>(particles.ConstructedAt(0));
          TestRefObj *childPart = static_cast<TestRefObj *>(children.ConstructedAt(0));
          motherPart->SetChild(childPart);
@@ -90,16 +91,16 @@ TEST(TClonesArray, RefArrayClearChildren)
    
          // For each "event".
          UInt_t objCount = TProcessID::GetObjectCount();
-   
-         UInt_t parts = particles->GetEntries();
+
+         //UInt_t parts = particles->GetEntries();
          UInt_t childs = children->GetEntries();
-   
+
          auto parti = static_cast<TestRefObj *>(particles->UncheckedAt(0));
          if (pruneSecondChildren && (e % 2 != 0)) {
-            ASSERT_EQ(childs, nullptr);
+            ASSERT_EQ(childs, 0);
             ASSERT_FALSE(parti->HasChild());
          } else {
-            ASSERT_NE(childs, nullptr);
+            ASSERT_NE(childs, 0);
             ASSERT_TRUE(parti->HasChild());
          }
 
