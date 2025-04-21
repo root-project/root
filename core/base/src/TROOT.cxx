@@ -960,8 +960,7 @@ TROOT::~TROOT()
       SafeDelete(fGlobalFunctions);
       fEnums.load()->Delete();
 
-      // FIXME: Causes segfault in rootcling, debug and uncomment
-      // fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
+      fClasses->Delete(); SafeDelete(fClasses);     // TClass'es must be deleted last
 #endif
 
       // Remove shared libraries produced by the TSystem::CompileMacro() call
