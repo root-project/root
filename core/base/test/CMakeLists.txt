@@ -23,6 +23,7 @@ ROOT_ADD_GTEST(CoreBaseTests
   TStringTest.cxx
   TUrlTest.cxx
   TBitsTests.cxx
+  TRefTests.cxx
   LIBRARIES ${extralibs} RIO Core)
 
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
