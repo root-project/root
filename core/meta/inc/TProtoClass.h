@@ -82,6 +82,7 @@ private:
    Long_t   fProperty;       // Class properties, see EProperties
    Long_t   fClassProperty;  // Class C++ properties, see EClassProperties
    Long_t   fOffsetStreamer; // Offset to streamer function
+   bool     fOwner = true;   //! True if owns its content, false if it got a reference to the TClass content.
 
    TProtoClass(const TProtoClass &) = delete;
    TProtoClass &operator=(const TProtoClass &) = delete;
