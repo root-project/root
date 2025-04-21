@@ -10,4 +10,5 @@ public:
    int    i;
    double *d; //[i]
 };
+
 #endif
