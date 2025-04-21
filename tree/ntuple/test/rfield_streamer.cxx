@@ -327,3 +327,31 @@ TEST(RField, StreamerSchemaEvolution)
    reader->LoadEntry(0);
    EXPECT_EQ(137, ptrF->fValue);
 }
+
+TEST(RField, StreamerClassMismatch)
+{
+   FileRaii fileGuard("test_ntuple_rfield_streamer_class_mismatch.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "TemperatureCelsius").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto ptrF = writer->GetModel().GetDefaultEntry().GetPtr<TemperatureCelsius>("f");
+      ptrF->fValue = 100.;
+      writer->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   model->AddField(RFieldBase::Create("f", "TemperatureKelvin").Unwrap());
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+   ASSERT_EQ(1U, reader->GetNEntries());
+   auto ptrF = reader->GetModel().GetDefaultEntry().GetPtr<TemperatureKelvin>("f");
+
+   // TODO(jblomer): this should fail with an exception when we connect the page source
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "TBufferFile::ReadVersion", "Could not find the StreamerInfo with a checksum of",
+                         false /* matchFullMessage */);
+   diagRAII.requiredDiag(kError, "TBufferFile::CheckByteCount", "object of class TemperatureKelvin read too few bytes",
+                         false /* matchFullMessage */);
+   reader->LoadEntry(0);
+}
