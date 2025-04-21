@@ -55,7 +55,7 @@ TProtoClass::TProtoClass(TClass* cl):
    TNamed(*cl), fBase(cl->GetListOfBases()),
    fEnums(cl->GetListOfEnums()), fSizeof(cl->Size()), fCheckSum(cl->fCheckSum),
    fCanSplit(cl->fCanSplit), fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
-   fClassProperty(cl->fClassProperty)
+   fClassProperty(cl->fClassProperty), fOwner(false)
 {
    if (cl->Property() & kIsNamespace){
       //fData=new TListOfDataMembers();
@@ -168,15 +168,20 @@ TProtoClass::~TProtoClass()
 
 void TProtoClass::Delete(Option_t* opt /*= ""*/)
 {
-   if (fBase) fBase->Delete(opt);
-   delete fBase; fBase = nullptr;
+   if (fOwner && fBase) {
+      fBase->Delete(opt);
+      delete fBase; fBase = nullptr;
+   }
 
-   for (auto dm: fData)
-      delete dm;
+   if (fOwner)
+      for (auto dm: fData)
+         delete dm;
    fData.clear();
 
-   if (fEnums) fEnums->Delete(opt);
-   delete fEnums; fEnums = nullptr;
+   if (fOwner && fEnums) {
+      fEnums->Delete(opt);
+      delete fEnums; fEnums = nullptr;
+   }
 
    if (gErrorIgnoreLevel==-2) printf("Delete the protoClass %s \n",GetName());
 }
@@ -261,6 +266,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fName  = this->fName;
    cl->fTitle = this->fTitle;
    cl->fBase = fBase;
+   fBase = nullptr;
 
    // fill list of data members in TClass
    //if (cl->fData) { cl->fData->Delete(); delete cl->fData;  }
