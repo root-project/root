@@ -612,6 +612,7 @@ private:
    REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
    bool fHasStructure = false; ///< Set to true once `LoadStructure()` is called
    bool fIsAttached = false;   ///< Set to true once `Attach()` is called
+   bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
    /// Remembers the last cluster id from which a page was requested
    ROOT::DescriptorId_t fLastUsedCluster = ROOT::kInvalidDescriptorId;
@@ -817,6 +818,10 @@ public:
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
    RResult<ROOT::Internal::RPage>
    UnsealPage(const RSealedPage &sealedPage, const ROOT::Internal::RColumnElementBase &element);
+
+   /// Builds the streamer info records from the descriptor's extra type info section. This is necessary when
+   /// connecting streamer fields so that emulated classes can be read.
+   void RegisterStreamerInfos();
 }; // class RPageSource
 
 } // namespace Internal
