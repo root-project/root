@@ -436,8 +436,8 @@ void TClonesArray::Clear(Option_t *option)
                   pid->RecursiveRemove(obj);
                   obj->ResetBit(TObject::kIsReferenced);
                }
-            obj->ResetBit( kHasUUID );
-            obj->SetUniqueID( 0 );
+            obj->ResetBit(kHasUUID);
+            obj->SetUniqueID(0);
          }
       }
    }
