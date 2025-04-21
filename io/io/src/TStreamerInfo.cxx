@@ -6034,6 +6034,15 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
    gErrorIgnoreLevel = kError;
    i->BuildCheck(nullptr, kFALSE); // Skipping the loading part (it would leads to infinite recursion on this very routine)
    gErrorIgnoreLevel = oldlevel;
+   if (i->TestBit(kCanDelete)) {
+      // The StreamerInfo was deemed to be a duplicated (most likely case is
+      // that we have the interpreter information already loaded for the
+      // pair), so we need to delete it and return the one we already have.
+      auto cl = i->GetClass();
+      delete i;
+      return cl->GetStreamerInfo();
+   }
+
    // In the state emulated, BuildOld would recalculate the offset and undo the offset update.
    // Note: we should consider adding a new state just for this (the hints indicates that we are mapping a compiled class but
    // then we would have to investigate all use of the state with <= and >= condition to make sure they are still appropriate).
