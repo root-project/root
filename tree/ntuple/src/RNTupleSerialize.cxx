@@ -2146,13 +2146,12 @@ ROOT::Internal::RNTupleSerializer::DeserializeStreamerInfos(const std::string &e
    TBufferFile buffer(TBuffer::kRead, extraTypeInfoContent.length(), const_cast<char *>(extraTypeInfoContent.data()),
                       false /* adopt */);
    auto infoList = reinterpret_cast<TList *>(buffer.ReadObject(TList::Class()));
-   infoList->SetOwner(); // delete the TStreamerInfo items of the list
 
    TObjLink *lnk = infoList->FirstLink();
    while (lnk) {
       auto info = reinterpret_cast<TStreamerInfo *>(lnk->GetObject());
       info->BuildCheck();
-      infoMap[info->GetNumber()] = info->GetClass()->GetStreamerInfo();
+      infoMap[info->GetNumber()] = info->GetClass()->GetStreamerInfo(info->GetClassVersion());
       assert(info->GetNumber() == infoMap[info->GetNumber()]->GetNumber());
       lnk = lnk->Next();
    }
