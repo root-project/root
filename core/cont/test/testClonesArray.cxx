@@ -41,7 +41,7 @@ TEST(TClonesArray, RefArrayClearChildren)
       TClonesArray children(TestRefObj::Class(), 100);
 
       dataTree.Branch("particles", &particles, 32768, splitLevel);
-      dataTree.Branch("children",  &children, 32768, splitLevel);
+      dataTree.Branch("children", &children, 32768, splitLevel);
       if (activateBranchRef) {
          dataTree.BranchRef();
       }
@@ -88,11 +88,11 @@ TEST(TClonesArray, RefArrayClearChildren)
       const Long64_t entries = dataTree->GetEntriesFast();
       for (Long64_t e = 0; e < entries; e++) {
          dataTree->GetEntry(e);
-   
+
          // For each "event".
          UInt_t objCount = TProcessID::GetObjectCount();
 
-         //UInt_t parts = particles->GetEntries();
+         // UInt_t parts = particles->GetEntries();
          UInt_t childs = children->GetEntries();
 
          auto parti = static_cast<TestRefObj *>(particles->UncheckedAt(0));
