@@ -54,4 +54,14 @@ struct PolyContainer {
    std::unique_ptr<PolyBase> fPoly;
 };
 
+template <typename T>
+struct OldStreamerName {
+   T fValue;
+};
+
+template <typename T>
+struct NewStreamerName {
+   T fValue;
+};
+
 #endif // ROOT_RNTuple_Test_StreamerField
