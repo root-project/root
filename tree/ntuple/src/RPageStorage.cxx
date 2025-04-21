@@ -589,6 +589,22 @@ ROOT::RResult<ROOT::Internal::RPage> ROOT::Internal::RPageSource::UnsealPage(con
    return page;
 }
 
+void ROOT::Internal::RPageSource::RegisterStreamerInfos()
+{
+   if (fHasStreamerInfosRegistered)
+      return;
+
+   for (const auto &extraTypeInfo : fDescriptor.GetExtraTypeInfoIterable()) {
+      if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
+         continue;
+      // We don't need the result, it's enough that during deserialization, BuildCheck() is called for every
+      // streamer info record.
+      RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap();
+   }
+
+   fHasStreamerInfosRegistered = true;
+}
+
 //------------------------------------------------------------------------------
 
 bool ROOT::Internal::RWritePageMemoryManager::RColumnInfo::operator>(const RColumnInfo &other) const
