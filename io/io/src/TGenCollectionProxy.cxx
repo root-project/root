@@ -579,6 +579,7 @@ TGenCollectionProxy::TGenCollectionProxy(const TGenCollectionProxy& copy)
    fKey            = copy.fKey   ? new Value(*copy.fKey)   : 0;
    fOnFileClass    = copy.fOnFileClass;
    fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
+   fReadMemberWise->SetOwner(true);
    fConversionReadMemberWise = 0;
    fWriteMemberWise = 0;
    fProperties     = copy.fProperties;
@@ -625,6 +626,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
             (Long_t)sizeof(e.fIterator));
    }
    fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
+   fReadMemberWise->SetOwner(true);
    fConversionReadMemberWise   = 0;
    fWriteMemberWise            = 0;
    fFunctionCreateIterators    = 0;
@@ -676,6 +678,7 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::Detail::TCollectionProxyInf
             (Long_t)sizeof(e.fIterator));
    }
    fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
+   fReadMemberWise->SetOwner(true);
    fConversionReadMemberWise   = 0;
    fWriteMemberWise            = 0;
    fFunctionCreateIterators    = info.fCreateIterators;
