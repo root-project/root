@@ -12,4 +12,8 @@
 #pragma link C++ class PolyB + ;
 #pragma link C++ options = rntupleStreamerMode(true) class PolyContainer + ;
 
+#pragma link C++ options = rntupleStreamerMode(true), version(3) class OldStreamerName < int> + ;
+#pragma link C++ options = rntupleStreamerMode(true), version(3) class NewStreamerName < int> + ;
+#pragma read sourceClass = "OldStreamerName<int>" targetClass = "NewStreamerName<int>" version = "[3]"
+
 #endif
