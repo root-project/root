@@ -6,13 +6,18 @@
 
 
 ROOT_GENERATE_DICTIONARY(ElementStructDict ElementStruct.h LINKDEF ElementStructLinkDef.h OPTIONS -inlineInputHeader)
+ROOT_GENERATE_DICTIONARY(TestRefObjDict TestRefObj.h LINKDEF TestRefObjLinkDef.h OPTIONS -inlineInputHeader)
 ROOT_ADD_GTEST(testTOffsetGeneration TOffsetGeneration.cxx ElementStruct.cxx ElementStructDict.cxx
   LIBRARIES RIO Tree MathCore
 )
+ROOT_ADD_GTEST(testClonesArray testClonesArray.cxx TestRefObj.cxx TestRefObjDict.cxx LIBRARIES RIO Tree)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET testTOffsetGeneration POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libElementStructDict_rdict.pcm
                                      ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libElementStructDict_rdict.pcm)
+  add_custom_command(TARGET testClonesArray POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libTestRefObjDict_rdict.pcm
+                                     ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTestRefObjDict_rdict.pcm)
 endif()
 target_include_directories(testTOffsetGeneration PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 ROOT_STANDARD_LIBRARY_PACKAGE(SillyStruct NO_INSTALL_HEADERS HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/SillyStruct.h SOURCES SillyStruct.cxx LINKDEF SillyStructLinkDef.h DEPENDENCIES RIO)
