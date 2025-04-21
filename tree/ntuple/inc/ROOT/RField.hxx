@@ -238,6 +238,8 @@ protected:
    // Returns the list of seen streamer infos
    ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
+   void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+
 public:
    RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
    RStreamerField(RStreamerField &&other) = default;

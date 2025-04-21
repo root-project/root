@@ -834,6 +834,11 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
       fTraits |= kTraitTriviallyDestructible;
 }
 
+void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
+{
+   pageSource.RegisterStreamerInfos();
+}
+
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::CloneImpl(std::string_view newName) const
 {
    return std::unique_ptr<RStreamerField>(new RStreamerField(newName, GetTypeName(), GetTypeAlias()));
