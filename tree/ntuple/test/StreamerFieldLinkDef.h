@@ -16,4 +16,7 @@
 #pragma link C++ options = rntupleStreamerMode(true), version(3) class NewStreamerName < int> + ;
 #pragma read sourceClass = "OldStreamerName<int>" targetClass = "NewStreamerName<int>" version = "[3]"
 
+#pragma link C++ options = rntupleStreamerMode(true) class TemperatureCelsius + ;
+#pragma link C++ options = rntupleStreamerMode(true) class TemperatureKelvin + ;
+
 #endif

@@ -64,4 +64,12 @@ struct NewStreamerName {
    T fValue;
 };
 
+struct TemperatureCelsius {
+   float fValue;
+};
+
+struct TemperatureKelvin {
+   float fValue;
+};
+
 #endif // ROOT_RNTuple_Test_StreamerField
