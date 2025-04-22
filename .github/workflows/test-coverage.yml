@@ -134,7 +134,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
                     --platform       alma9
-                    --incremental    false
+                    --incremental    true
                     --coverage       true
                     --base_ref       ${{ github.base_ref }}
                     --sha            ${{ github.sha }}
