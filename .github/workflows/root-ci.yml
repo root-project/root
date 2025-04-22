@@ -96,19 +96,19 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac13   
-            arch: ARM64
-            overrides: ["builtin_zlib=ON"]
-          - platform: mac14
-            arch: X64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
-          - platform: mac15
-            arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
-          - platform: mac-beta
-            is_special: true
-            arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
+#          - platform: mac13   
+#            arch: ARM64
+#            overrides: ["builtin_zlib=ON"]
+#          - platform: mac14
+#            arch: X64
+#            overrides: ["CMAKE_CXX_STANDARD=20"]
+#          - platform: mac15
+#            arch: ARM64
+#            overrides: ["CMAKE_CXX_STANDARD=20"]
+#          - platform: mac-beta
+#            is_special: true
+#            arch: ARM64
+#            overrides: ["CMAKE_CXX_STANDARD=20"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
