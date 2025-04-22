@@ -7956,12 +7956,14 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
-   const Int_t start = (includeUnderOverflow ? 0 : 1);
-   const Int_t lastX = fXaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
-   const Int_t lastY = fYaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
-   const Int_t lastZ = fZaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
-
    const auto ndims = GetDimension();
+   const Int_t startX = (includeUnderOverflow ? 0 : 1);
+   const Int_t startY = ndims < 2 ? 1 : startX;
+   const Int_t startZ = ndims < 3 ? 1 : startX;
+   const Int_t lastX = fXaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastY = ndims < 2 ? 1 : fYaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastZ = ndims < 3 ? 1 : fZaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+
    R__ASSERT(dim == 0 || dim == 1 || dim == 2);
    if (ndims == 1) {
       R__ASSERT(dim == 0);
@@ -7972,10 +7974,10 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
    }
 
    if (dim == 0) {
-      first = start;
-      for(Int_t binx = start; binx <= lastX; binx++) {
-         for(auto biny = start; biny <= lastY; biny++) {
-            for(auto binz = start; binz <= lastZ; binz++) {
+      first = startX;
+      for(Int_t binx = startX; binx <= lastX; binx++) {
+         for(auto biny = startY; biny <= lastY; biny++) {
+            for(auto binz = startZ; binz <= lastZ; binz++) {
                auto bin = GetBin(binx, biny, binz);
                if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
                {
@@ -7989,15 +7991,15 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
          }
       }
       last = lastX;
-      for(Int_t binx = lastX; binx >= start; binx--) {
-          for(auto biny = start; biny <= lastY; biny++) {
-             for(auto binz = start; binz <= lastZ; binz++) {
+      for(Int_t binx = lastX; binx >= startX; binx--) {
+          for(auto biny = startY; biny <= lastY; biny++) {
+             for(auto binz = startZ; binz <= lastZ; binz++) {
                 auto bin = GetBin(binx, biny, binz);
                 if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
                 {
                    last = binx;
                    // Break:
-                   binx = start;
+                   binx = startX;
                    biny = lastY;
                    binz = lastZ;
                 }
@@ -8005,10 +8007,10 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
           }
       }
    } else if (dim == 1) {
-      first = start;
-      for(auto biny = start; biny <= lastY; biny++) {
-         for(Int_t binx = start; binx <= lastX; binx++) {
-            for(auto binz = start; binz <= lastZ; binz++) {
+      first = startY;
+      for(auto biny = startY; biny <= lastY; biny++) {
+         for(Int_t binx = startX; binx <= lastX; binx++) {
+            for(auto binz = startZ; binz <= lastZ; binz++) {
                auto bin = GetBin(binx, biny, binz);
                if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
                {
@@ -8022,26 +8024,26 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
          }
       }
       last = lastY;
-      for(Int_t biny = lastY; biny >= start; biny--) {
-          for(auto binx = start; binx <= lastX; binx++) {
-             for(auto binz = start; binz <= lastZ; binz++) {
+      for(Int_t biny = lastY; biny >= startY; biny--) {
+          for(auto binx = startX; binx <= lastX; binx++) {
+             for(auto binz = startZ; binz <= lastZ; binz++) {
                 auto bin = GetBin(binx, biny, binz);
                 if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
                 {
                    last = biny;
                    // Break:
                    binx = lastX;
-                   biny = start;
+                   biny = startY;
                    binz = lastZ;
                 }
              }
           }
       }
    } else if (dim == 2) {
-      first = start;
-      for(auto binz = start; binz <= lastZ; binz++) {
-         for(Int_t binx = start; binx <= lastX; binx++) {
-            for(auto biny = start; biny <= lastY; biny++) {
+      first = startZ;
+      for(auto binz = startZ; binz <= lastZ; binz++) {
+         for(Int_t binx = startX; binx <= lastX; binx++) {
+            for(auto biny = startY; biny <= lastY; biny++) {
                auto bin = GetBin(binx, biny, binz);
                if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
                {
@@ -8055,9 +8057,9 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
          }
       }
       last = lastZ;
-      for(Int_t binz = lastZ; binz >= start; binz--) {
-          for(auto binx = start; binx <= lastX; binx++) {
-             for(auto biny = start; biny <= lastY; biny++) {
+      for(Int_t binz = lastZ; binz >= startZ; binz--) {
+          for(auto binx = startX; binx <= lastX; binx++) {
+             for(auto biny = startY; biny <= lastY; biny++) {
                 auto bin = GetBin(binx, biny, binz);
                 if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
                 {
@@ -8065,7 +8067,7 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
                    // Break:
                    binx = lastX;
                    biny = lastY;
-                   binz = start;
+                   binz = startZ;
                 }
              }
           }
@@ -8082,13 +8084,14 @@ Double_t TH1::GetSumOfAllWeights(const bool includeUnderOverflow) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
+   const auto ndims = GetDimension();
    const Int_t start = (includeUnderOverflow ? 0 : 1);
    const Int_t lastX = fXaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
-   const Int_t lastY = fYaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
-   const Int_t lastZ = fZaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastY = ndims < 2 ? 1 : fYaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastZ = ndims < 3 ? 1 : fZaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
    Double_t sum =0;
-   for(auto binz = start; binz <= lastZ; binz++) {
-      for(auto biny = start; biny <= lastY; biny++) {
+   for(auto binz = ndims < 3 ? 1 : start; binz <= lastZ; binz++) {
+      for(auto biny = ndims < 2 ? 1 : start; biny <= lastY; biny++) {
          for(auto binx = start; binx <= lastX; binx++) {
             const auto bin = GetBin(binx, biny, binz);
             sum += RetrieveBinContent(bin);
