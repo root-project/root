@@ -66,6 +66,12 @@ jobs:
         PYTHONUNBUFFERED: true
 
     steps:
+      - name: Set up Python Virtual Env
+      # if the `if` expr is false, `if` still has exit code 0.
+      # if the `if` block is entered, the block's exit code becomes the exit
+      # code of the `if`.
+      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
       # This should be part of the container image
       - name: Install cov packages
         run: |
@@ -88,7 +94,7 @@ jobs:
 
       - name: Apply option override from matrix for this job
         env:
-          OVERRIDE: "coverage=On"
+          OVERRIDE: "coverage=ON"
           FILE: .github/workflows/root-ci-config/buildconfig/alma9.txt
         shell: bash
         run: |
