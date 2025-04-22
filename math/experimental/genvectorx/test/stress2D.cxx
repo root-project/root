@@ -41,9 +41,9 @@
 #include "TRandom3.h"
 #include "TVector2.h"
 
-#include "Math/Vector2D.h"
-#include "Math/Point2D.h"
-#include "Math/SVector.h"
+#include "MathX/Vector2D.h"
+#include "MathX/Point2D.h"
+#include "MathX/SVector.h"
 
 #include <cmath>
 

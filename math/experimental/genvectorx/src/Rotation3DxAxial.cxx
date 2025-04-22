@@ -1,15 +1,15 @@
 // @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#include "Math/GenVector/Rotation3D.h"
+#include "MathX/GenVectorX/Rotation3D.h"
 
-#include "Math/GenVector/RotationX.h"
-#include "Math/GenVector/RotationY.h"
-#include "Math/GenVector/RotationZ.h"
+#include "MathX/GenVectorX/RotationX.h"
+#include "MathX/GenVectorX/RotationY.h"
+#include "MathX/GenVectorX/RotationZ.h"
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 

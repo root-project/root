@@ -1,15 +1,15 @@
 // @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#include "Math/GenVector/BitReproducible.h"
+#include "MathX/GenVectorX/BitReproducible.h"
 
 #include <sstream>
 #include <iomanip>
 #include <exception>
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
 

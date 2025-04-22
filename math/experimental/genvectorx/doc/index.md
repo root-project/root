@@ -75,21 +75,21 @@ The table below lists the `double` versions; the `float` counterpart ends on an 
 
 ### Point2D
 
-Type definitions for points in two dimensions, based on ROOT::Math::PositionVector2D, are defined by `Math/Point2D.h`:
+Type definitions for points in two dimensions, based on ROOT::Math::PositionVector2D, are defined by `MathX/Point2D.h`:
 
 *   ROOT::Math::XYPoint vector based on x,y coordinates (cartesian)
 *   ROOT::Math::Polar2DPoint vector based on r,phi coordinates (polar)
 
 ### Vector2D
 
-Type definitions for vectors in two dimensions, based on ROOT::Math::DisplacementVector2D, are defined by `Math/Vector2D.h`:
+Type definitions for vectors in two dimensions, based on ROOT::Math::DisplacementVector2D, are defined by `MathX/Vector2D.h`:
 
 *   ROOT::Math::XYVector vector based on x,y coordinates (cartesian)
 *   ROOT::Math::Polar2DVector vector based on r,phi coordinates (polar)
 
 ### Point3D
 
-Type definitions for points in three dimensions, based on ROOT::Math::PositionVector3D, are defined by `Math/Point3D.h`:
+Type definitions for points in three dimensions, based on ROOT::Math::PositionVector3D, are defined by `MathX/Point3D.h`:
 
 *   ROOT::Math::XYZPoint point based on x,y,z coordinates (cartesian)
 *   ROOT::Math::Polar3DPoint point based on r,theta,phi coordinates (polar)
@@ -98,7 +98,7 @@ Type definitions for points in three dimensions, based on ROOT::Math::PositionVe
 
 ### Vector3D
 
-Type definitions for vectors in three dimensions, based on ROOT::Math::DisplacementVector3D, are defined by `Math/Vector3D.h`:
+Type definitions for vectors in three dimensions, based on ROOT::Math::DisplacementVector3D, are defined by `MathX/Vector3D.h`:
 
 *   ROOT::Math::XYZVector vector based on x,y,z coordinates (cartesian)
 *   ROOT::Math::Polar3DVector vector based on r,theta,phi coordinates (polar)
@@ -107,7 +107,7 @@ Type definitions for vectors in three dimensions, based on ROOT::Math::Displacem
 
 ### LorentzVector
 
-Type definitions for Lorentz vectors in four dimensions, based on ROOT::Math::LorentzVector, are defined by `Math/Vector4D.h`:
+Type definitions for Lorentz vectors in four dimensions, based on ROOT::Math::LorentzVector, are defined by `MathX/Vector4D.h`:
 
 *   ROOT::Math::XYZTVector vector based on x,y,z,t coordinates (cartesian)
 *   ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates
