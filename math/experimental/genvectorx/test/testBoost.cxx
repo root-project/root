@@ -1,8 +1,8 @@
-#include "Math/BoostX.h"
-#include "Math/Boost.h"
-#include "Math/VectorUtil.h"
-#include "Math/Vector3D.h"
-#include "Math/Vector4D.h"
+#include "MathX/BoostX.h"
+#include "MathX/Boost.h"
+#include "MathX/VectorUtil.h"
+#include "MathX/Vector3D.h"
+#include "MathX/Vector4D.h"
 
 #include <iterator>
 

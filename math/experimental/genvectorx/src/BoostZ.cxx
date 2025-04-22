@@ -13,19 +13,19 @@
 //
 // Created by: Mark Fischler Mon Nov 1  2005
 //
-#include "Math/GenVector/BoostZ.h"
-#include "Math/GenVector/LorentzVector.h"
-#include "Math/GenVector/PxPyPzE4D.h"
-#include "Math/GenVector/DisplacementVector3D.h"
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/GenVector_exception.h"
+#include "MathX/GenVectorX/BoostZ.h"
+#include "MathX/GenVectorX/LorentzVector.h"
+#include "MathX/GenVectorX/PxPyPzE4D.h"
+#include "MathX/GenVectorX/DisplacementVector3D.h"
+#include "MathX/GenVectorX/Cartesian3D.h"
+#include "MathX/GenVectorX/GenVector_exception.h"
 
 #include <cmath>
 #include <algorithm>
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 
