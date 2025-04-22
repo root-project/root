@@ -66,10 +66,11 @@ jobs:
         PYTHONUNBUFFERED: true
 
     steps:
+      # This should be part of the container image
       - name: Install cov packages
         run: |
-          sudo dnf -y update
-          sudo dnf -y install lcov
+          dnf -y update
+          dnf -y install lcov
           pip3 install gcovr
 
       - name: Checkout
@@ -88,7 +89,7 @@ jobs:
       - name: Apply option override from matrix for this job
         env:
           OVERRIDE: "coverage=On"
-          FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
+          FILE: .github/workflows/root-ci-config/buildconfig/alma9.txt
         shell: bash
         run: |
           set -x
@@ -103,7 +104,7 @@ jobs:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
-                    --platform       fedora38
+                    --platform       alma9
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ github.base_ref }}
@@ -115,7 +116,7 @@ jobs:
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
-                    --platform       fedora38
+                    --platform       alma9
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ inputs.base_ref }}
@@ -127,7 +128,7 @@ jobs:
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
-                    --platform       fedora38
+                    --platform       alma9
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ github.ref_name }}
