@@ -130,7 +130,7 @@ void TestReadWithoutGlobalRegistrationIfPossible(const char *fname)
 // https://github.com/root-project/root/issues/10742
 #ifndef R__WIN32
 // We prefer not to read remotely files from Windows, if possible
-#ifdef R__DAVIX_SUPPORT
+#ifdef R__HAS_DAVIX
 TEST(TFile, ReadWithoutGlobalRegistrationWeb)
 {
    const auto webFile = "http://root.cern/files/h1/dstarmb.root";
