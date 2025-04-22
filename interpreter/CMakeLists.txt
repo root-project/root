@@ -408,6 +408,9 @@ if (builtin_clang)
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
+
+  # Forward CLANG_INSTALL_PREFIX so it can be used by core/clingutils/CMakeLists.txt
+  set(CLANG_INSTALL_PREFIX ${CLANG_INSTALL_PREFIX} PARENT_SCOPE)
 endif()
 
 # Reset the compiler flags after compiling LLVM and Clang
