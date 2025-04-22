@@ -173,6 +173,8 @@ public:
    virtual void       SetTimeDisplay(Int_t value) {fTimeDisplay = (value != 0);} // *TOGGLE*
    virtual void       SetTimeFormat(const char *format="");  // *MENU*
    virtual void       SetTimeOffset(Double_t toffset, Option_t *option="local");
+   virtual void       AutoZoom();  // *MENU*
+   virtual void       AutoZoomAll();  // *MENU*
    virtual void       UnZoom();  // *MENU*
    virtual void       ZoomOut(Double_t factor=0, Double_t offset=0);  // *MENU*
 
