@@ -28,7 +28,7 @@
 
 #ifdef DIM_2
 #ifdef USE_POINT
-#include "Math/Point2D.h"
+#include "MathX/Point2D.h"
 typedef ROOT::Math::XYPoint VecType;
 #elif USE_CLHEP
 #include "CLHEP/Vector/TwoVector.h"
@@ -37,7 +37,7 @@ typedef Hep2Vector VecType;
 #include "TVector2.h"
 typedef TVector2 VecType;
 #else
-#include "Math/Vector2D.h"
+#include "MathX/Vector2D.h"
 typedef ROOT::Math::XYVector VecType;
 #endif
 
@@ -50,7 +50,7 @@ typedef ROOT::Math::XYVector VecType;
 #elif DIM_3 // 3 Dimensions
 
 #ifdef USE_POINT
-#include "Math/Point3D.h"
+#include "MathX/Point3D.h"
 typedef ROOT::Math::XYZPoint VecType;
 #elif USE_CLHEP
 #include "CLHEP/Vector/ThreeVector.h"
@@ -59,7 +59,7 @@ typedef Hep3Vector VecType;
 #include "TVector3.h"
 typedef TVector3 VecType;
 #else
-#include "Math/Vector3D.h"
+#include "MathX/Vector3D.h"
 typedef ROOT::Math::XYZVector VecType;
 #endif
 
@@ -79,7 +79,7 @@ typedef HepLorentzVector VecType;
 #include "TLorentzVector.h"
 typedef TLorentzVector VecType;
 #else
-#include "Math/Vector4D.h"
+#include "MathX/Vector4D.h"
 typedef ROOT::Math::XYZTVector VecType;
 #endif
 

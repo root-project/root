@@ -14,23 +14,23 @@
 //
 // Last update: $Id$
 //
-#include "Math/GenVector/EulerAngles.h"
+#include "MathX/GenVectorX/EulerAngles.h"
 
 #include <cmath>
 
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/DisplacementVector3D.h"
-#include "Math/GenVector/Rotation3D.h"
-#include "Math/GenVector/Quaternion.h"
-#include "Math/GenVector/RotationX.h"
-#include "Math/GenVector/RotationY.h"
-#include "Math/GenVector/RotationZ.h"
+#include "MathX/GenVectorX/Cartesian3D.h"
+#include "MathX/GenVectorX/DisplacementVector3D.h"
+#include "MathX/GenVectorX/Rotation3D.h"
+#include "MathX/GenVectorX/Quaternion.h"
+#include "MathX/GenVectorX/RotationX.h"
+#include "MathX/GenVectorX/RotationY.h"
+#include "MathX/GenVectorX/RotationZ.h"
 
-#include "Math/GenVector/AxisAnglefwd.h"
+#include "MathX/GenVectorX/AxisAnglefwd.h"
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 

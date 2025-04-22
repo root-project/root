@@ -1,7 +1,7 @@
 // dummy track class for testing I/o of matric
 
-#include "Math/Point3D.h"
-#include "Math/Vector4D.h"
+#include "MathX/Point3D.h"
+#include "MathX/Vector4D.h"
 
 #include <vector>
 

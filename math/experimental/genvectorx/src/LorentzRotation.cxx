@@ -14,24 +14,24 @@
 // Created by: Mark Fischler Mon Aug 8  2005
 //
 
-#include "Math/GenVector/GenVectorIO.h"
+#include "MathX/GenVectorX/GenVectorIO.h"
 
-#include "Math/GenVector/LorentzRotation.h"
-#include "Math/GenVector/LorentzVector.h"
-#include "Math/GenVector/PxPyPzE4D.h"
-#include "Math/GenVector/GenVector_exception.h"
+#include "MathX/GenVectorX/LorentzRotation.h"
+#include "MathX/GenVectorX/LorentzVector.h"
+#include "MathX/GenVectorX/PxPyPzE4D.h"
+#include "MathX/GenVectorX/GenVector_exception.h"
 
 #include <cmath>
 #include <algorithm>
 
-#include "Math/GenVector/Rotation3D.h"
-#include "Math/GenVector/RotationX.h"
-#include "Math/GenVector/RotationY.h"
-#include "Math/GenVector/RotationZ.h"
+#include "MathX/GenVectorX/Rotation3D.h"
+#include "MathX/GenVectorX/RotationX.h"
+#include "MathX/GenVectorX/RotationY.h"
+#include "MathX/GenVectorX/RotationZ.h"
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 

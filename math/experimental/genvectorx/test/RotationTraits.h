@@ -13,14 +13,14 @@
 
 #include <string>
 #include <typeinfo>
-#include "Math/GenVector/Rotation3D.h"
-#include "Math/GenVector/AxisAngle.h"
-#include "Math/GenVector/EulerAngles.h"
-#include "Math/GenVector/Quaternion.h"
-#include "Math/GenVector/RotationX.h"
-#include "Math/GenVector/RotationY.h"
-#include "Math/GenVector/RotationZ.h"
-#include "Math/GenVector/LorentzRotation.h"
+#include "MathX/GenVectorX/Rotation3D.h"
+#include "MathX/GenVectorX/AxisAngle.h"
+#include "MathX/GenVectorX/EulerAngles.h"
+#include "MathX/GenVectorX/Quaternion.h"
+#include "MathX/GenVectorX/RotationX.h"
+#include "MathX/GenVectorX/RotationY.h"
+#include "MathX/GenVectorX/RotationZ.h"
+#include "MathX/GenVectorX/LorentzRotation.h"
 
 namespace ROOT {
 namespace Math {
