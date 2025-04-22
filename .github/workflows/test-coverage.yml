@@ -59,7 +59,7 @@ jobs:
     name: Build and test to determine coverage
 
     container:
-      image: alma9
+      image: registry.cern.ch/root-ci/alma9:buildready
       options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
