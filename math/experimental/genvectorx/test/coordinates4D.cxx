@@ -8,20 +8,20 @@
 //
 // =================================================================
 
-#include "Math/GenVector/DisplacementVector3D.h"
-#include "Math/GenVector/PositionVector3D.h"
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/Polar3D.h"
-#include "Math/GenVector/CylindricalEta3D.h"
-#include "Math/GenVector/etaMax.h"
+#include "MathX/GenVectorX/DisplacementVector3D.h"
+#include "MathX/GenVectorX/PositionVector3D.h"
+#include "MathX/GenVectorX/Cartesian3D.h"
+#include "MathX/GenVectorX/Polar3D.h"
+#include "MathX/GenVectorX/CylindricalEta3D.h"
+#include "MathX/GenVectorX/etaMax.h"
 
-#include "Math/GenVector/PxPyPzE4D.h"
-#include "Math/GenVector/PxPyPzM4D.h"
-#include "Math/GenVector/PtEtaPhiE4D.h"
-#include "Math/GenVector/PtEtaPhiM4D.h"
-#include "Math/GenVector/LorentzVector.h"
+#include "MathX/GenVectorX/PxPyPzE4D.h"
+#include "MathX/GenVectorX/PxPyPzM4D.h"
+#include "MathX/GenVectorX/PtEtaPhiE4D.h"
+#include "MathX/GenVectorX/PtEtaPhiM4D.h"
+#include "MathX/GenVectorX/LorentzVector.h"
 
-#include "Math/Vector4Dfwd.h" // for typedefs definitions
+#include "MathX/Vector4Dfwd.h" // for typedefs definitions
 
 #include "CoordinateTraits.h"
 

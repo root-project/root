@@ -12,11 +12,11 @@
 //
 // Created by: Lorenzo Moneta 22 Aug 2006
 //
-#include "Math/GenVector/VectorUtil.h"
+#include "MathX/GenVectorX/VectorUtil.h"
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 

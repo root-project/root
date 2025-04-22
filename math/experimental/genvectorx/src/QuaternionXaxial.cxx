@@ -15,11 +15,11 @@
 //
 // Last update: $Id$
 //
-#include "Math/GenVector/Quaternion.h"
+#include "MathX/GenVectorX/Quaternion.h"
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 
