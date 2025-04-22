@@ -1,11 +1,11 @@
-#include "Math/Vector3D.h"
-#include "Math/Point3D.h"
+#include "MathX/Vector3D.h"
+#include "MathX/Point3D.h"
 #include "TVector3.h"
 
-#include "Math/Transform3D.h"
-#include "Math/Rotation3D.h"
-#include "Math/Translation3D.h"
-#include "Math/RotationZYX.h"
+#include "MathX/Transform3D.h"
+#include "MathX/Rotation3D.h"
+#include "MathX/Translation3D.h"
+#include "MathX/RotationZYX.h"
 #include "TRotation.h"
 
 #include "TStopwatch.h"

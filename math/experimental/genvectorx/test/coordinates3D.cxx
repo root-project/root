@@ -10,15 +10,15 @@
 //
 // =================================================================
 
-#include "Math/GenVector/DisplacementVector3D.h"
-#include "Math/GenVector/PositionVector3D.h"
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/Polar3D.h"
-#include "Math/GenVector/CylindricalEta3D.h"
-#include "Math/GenVector/Cylindrical3D.h"
-#include "Math/GenVector/etaMax.h"
+#include "MathX/GenVectorX/DisplacementVector3D.h"
+#include "MathX/GenVectorX/PositionVector3D.h"
+#include "MathX/GenVectorX/Cartesian3D.h"
+#include "MathX/GenVectorX/Polar3D.h"
+#include "MathX/GenVectorX/CylindricalEta3D.h"
+#include "MathX/GenVectorX/Cylindrical3D.h"
+#include "MathX/GenVectorX/etaMax.h"
 
-#include "Math/Vector3Dfwd.h"
+#include "MathX/Vector3Dfwd.h"
 
 #include "CoordinateTraits.h"
 

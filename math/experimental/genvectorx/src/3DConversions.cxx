@@ -19,24 +19,24 @@
 //        The intention is to seraparte them into a few .cpp files instead,
 //        so that users needing one form need not incorporate code for them all.
 
-#include "Math/GenVector/3DConversions.h"
+#include "MathX/GenVectorX/3DConversions.h"
 
 #include "Math/Math.h"
 
-#include "Math/GenVector/Rotation3D.h"
-#include "Math/GenVector/AxisAngle.h"
-#include "Math/GenVector/EulerAngles.h"
-#include "Math/GenVector/Quaternion.h"
-#include "Math/GenVector/RotationZYX.h"
-#include "Math/GenVector/RotationX.h"
-#include "Math/GenVector/RotationY.h"
-#include "Math/GenVector/RotationZ.h"
+#include "MathX/GenVectorX/Rotation3D.h"
+#include "MathX/GenVectorX/AxisAngle.h"
+#include "MathX/GenVectorX/EulerAngles.h"
+#include "MathX/GenVectorX/Quaternion.h"
+#include "MathX/GenVectorX/RotationZYX.h"
+#include "MathX/GenVectorX/RotationX.h"
+#include "MathX/GenVectorX/RotationY.h"
+#include "MathX/GenVectorX/RotationZ.h"
 
 #include <limits>
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 namespace ROOT_MATH_ARCH {

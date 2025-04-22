@@ -12,17 +12,17 @@
 //
 // Created by: Mark Fischler Tues July 5 2005
 //
-#include "Math/GenVector/Rotation3D.h"
+#include "MathX/GenVectorX/Rotation3D.h"
 
 #include <cmath>
 #include <algorithm>
 
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/DisplacementVector3D.h"
+#include "MathX/GenVectorX/Cartesian3D.h"
+#include "MathX/GenVectorX/DisplacementVector3D.h"
 
-#include "Math/GenVector/AccHeaders.h"
+#include "MathX/GenVectorX/AccHeaders.h"
 
-#include "Math/GenVector/MathHeaders.h"
+#include "MathX/GenVectorX/MathHeaders.h"
 
 namespace ROOT {
 

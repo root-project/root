@@ -1,21 +1,21 @@
 
-#include "Math/Vector3D.h"
-#include "Math/Point3D.h"
-#include "Math/Vector4D.h"
-#include "Math/EulerAngles.h"
+#include "MathX/Vector3D.h"
+#include "MathX/Point3D.h"
+#include "MathX/Vector4D.h"
+#include "MathX/EulerAngles.h"
 
-#include "Math/Transform3D.h"
-#include "Math/LorentzRotation.h"
-#include "Math/Boost.h"
+#include "MathX/Transform3D.h"
+#include "MathX/LorentzRotation.h"
+#include "MathX/Boost.h"
 
-#include "Math/Rotation3D.h"
-#include "Math/RotationX.h"
-#include "Math/RotationY.h"
-#include "Math/RotationZ.h"
-#include "Math/Quaternion.h"
-#include "Math/AxisAngle.h"
+#include "MathX/Rotation3D.h"
+#include "MathX/RotationX.h"
+#include "MathX/RotationY.h"
+#include "MathX/RotationZ.h"
+#include "MathX/Quaternion.h"
+#include "MathX/AxisAngle.h"
 
-#include "Math/VectorUtil.h"
+#include "MathX/VectorUtil.h"
 
 #include <iostream>
 #include <iterator>

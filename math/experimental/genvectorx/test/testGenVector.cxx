@@ -1,28 +1,28 @@
 
-#include "Math/Vector3D.h"
-#include "Math/Point3D.h"
+#include "MathX/Vector3D.h"
+#include "MathX/Point3D.h"
 
-#include "Math/Vector2D.h"
-#include "Math/Point2D.h"
+#include "MathX/Vector2D.h"
+#include "MathX/Point2D.h"
 
-#include "Math/EulerAngles.h"
+#include "MathX/EulerAngles.h"
 
-#include "Math/Transform3D.h"
-#include "Math/Translation3D.h"
+#include "MathX/Transform3D.h"
+#include "MathX/Translation3D.h"
 
-#include "Math/Rotation3D.h"
-#include "Math/RotationX.h"
-#include "Math/RotationY.h"
-#include "Math/RotationZ.h"
-#include "Math/Quaternion.h"
-#include "Math/AxisAngle.h"
-#include "Math/RotationZYX.h"
+#include "MathX/Rotation3D.h"
+#include "MathX/RotationX.h"
+#include "MathX/RotationY.h"
+#include "MathX/RotationZ.h"
+#include "MathX/Quaternion.h"
+#include "MathX/AxisAngle.h"
+#include "MathX/RotationZYX.h"
 
-#include "Math/LorentzRotation.h"
+#include "MathX/LorentzRotation.h"
 
-#include "Math/VectorUtil.h"
+#include "MathX/VectorUtil.h"
 #ifndef NO_SMATRIX
-#include "Math/SMatrix.h"
+#include "MathX/SMatrix.h"
 #endif
 
 #include <vector>
