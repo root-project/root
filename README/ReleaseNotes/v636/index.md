@@ -158,6 +158,8 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 
 ## Tutorials and Code Examples
 
+* add `tutorials/visualisation/webgui/bootstrap` example showing usage of `RWebWindow` with [bootstrap](https://getbootstrap.com/) framework, including embeding of `TWebCanvas` in the widget
+
 ## Core
 
 ## Histograms
@@ -166,11 +168,55 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 
 ## Graphics
 
+* SavePrimitive methods of all graphics-related classes were revised and modernized. Objects with large arrays are stored more
+efficiently. Many small bugs were found and fixed.
+* extend `stressGraphics` test on more use-cases, including `TSpline`, `TScatter`, `TEfficiency`, `TProfile2D`, `TProfile3D`, `TGraph2DErrors`, `TGraph2DAsymmErrors` classes
+* enable `stressGraphics` tests for web-based graphics
+
 ## Geometry
 
 ## Montecarlo
 
 ## JavaScript ROOT
+
+ROOT 6.36 will use JSROOT 7.9.x release series. It includes following important changes:
+
+* Implement 'nmatch' parameter for `TTree::Draw` to limit processed events
+* Implement 'elist' parameter for `TTree::Draw` to specify entries list for processing
+* Implement 'staged' algorithm for `TTree::Draw` to first select entries and then process only these entries
+* Implement 'cont5' draw option for `TGraph2D` using Delaunay algorithm
+* Implement 'pol' and 'arr_colz' draw option for `TH2`
+* Only 'col7' draw option uses bar offset and width for color `TH2` drawing
+* Interactive zooming and context menu on 'chord' `TH2` drawing
+* Implement 'box1' for `TH3` with negative bins
+* Introduce `settings.FilesTimeout` to configure global timeout for file reading operations
+* Introduce `settings.FilesRemap` to let provide fallback address for http server, used for `root.cern`
+* Introduce `settings.TreeReadBunchSize` to configure bunch read size for `TTree` processing
+* Adjust histogram title drawing with native implementation
+* Improve float to string conversion when 'g' is specified
+* Support 'same' option for first histogram, draw directly on pad
+* Display underflow/overflow bins when configured for the axis, implement 'allbins' draw option for histograms
+* Support different angle coordinates in `TGraphPolargram`, handle 'N' and 'O' draw options
+* Support fAxisAngle in `TGraphPolargram`, provide 'rangleNN' draw option
+* Implement 'arc' draw option for `TPave`
+* Provide context menus for all derived from `TPave` classes
+* Let edit histograms and graphs title via context menu
+* Support Poisson errors for `TH1`/`TH2`, https://root-forum.cern.ch/t/62335/
+* Test fSumw2 when detect empty `TH2` bin, sync with https://github.com/root-project/root/pull/17948
+* Support `TLink` and `TButton` object, used in `TInspectCanvas`
+* Support `TF12` - projection of `TF2`
+* Upgrade three.js r168 -> r174
+* Remove support of qt5 webengine, only qt6web can be used
+* Set 'user-select: none' style in drawings to exclude text selection, using `settings.UserSelect` value
+* Internals - use private members and methods
+* Internals - use `WeakRef` class for cross-referencing of painters
+* Internals - use negative indexes in arrays and Strings
+* Fix - handle `TPave` NDC position also when fInit is not set
+* Fix - properly handle image sizes in svg2pdf
+* Fix - drawing `TPaveText` with zero text size
+* Fix - correct axis range in `TScatter` drawing
+* Fix - use draw option also for graph drawing in `TTree::Draw`
+
 
 ## Class Reference Guide
 
