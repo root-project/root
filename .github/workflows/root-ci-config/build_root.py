@@ -99,7 +99,7 @@ def main():
     platform_machine = platform.machine()
 
     obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
-    if args.coverage
+    if args.coverage:
         obj_prefix = obj_prefix + "-coverage"
 
     # Make testing of CI in forks not impact artifacts
@@ -155,7 +155,7 @@ def main():
     # later on.
     if not pull_request and not args.incremental and not args.coverage:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
-    if args.coverage # for now, force it.
+    if args.coverage: # for now, force it.
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
