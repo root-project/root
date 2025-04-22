@@ -8004,7 +8004,6 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
              }
           }
       }
-      return;
    } else if (dim == 1) {
       first = start;
       for(auto biny = start; biny <= lastY; biny++) {
@@ -8038,7 +8037,6 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
              }
           }
       }
-      return;
    } else if (dim == 2) {
       first = start;
       for(auto binz = start; binz <= lastZ; binz++) {
@@ -8072,7 +8070,6 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
              }
           }
       }
-      return;
    }
 }
 
