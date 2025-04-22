@@ -1379,7 +1379,7 @@ void TAxis::AutoZoom()
       hobj1->GetRangeOfFilledWeights(dim, first, last, false);
       SetRange(first, last);
    }
-   if (first == -1 && last == -1) {
+   if (first == -1 && last == -1) { // This only happens if parent histogram was missing, or if it was called "hframe"
       // Must autozoom all histograms in the pad
       Double_t globalMin = DBL_MAX;
       Double_t globalMax = DBL_MIN;
