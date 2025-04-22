@@ -317,63 +317,69 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         self._finalSetup()
         ns = self._fallback_getattr("RDF")
-        try:
-            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
+        def MakeCSVDataFrame(fileName, readHeaders=True, delimiter=",", linesChunkSize=-1, colTypes={}, **kwargs):
+            options = ns.RCsvDS.ROptions()
+            options.fHeaders = readHeaders
+            options.fDelimiter = delimiter
+            options.fLinesChunkSize = linesChunkSize
+            options.fColumnTypes = colTypes
+            for key, val in kwargs.items():
+                structMemberName = "f" + key[0].upper() + key[1:]
+                if hasattr(options, structMemberName):
+                    setattr(options, structMemberName, val)
+            return ns._FromCSV(fileName, options)
+
+        if hasattr(ns, "FromCSV"):
             # Provide a FromCSV factory method that uses keyword arguments instead of the ROptions config struct.
             # In Python, the RCsvDS::ROptions struct members are available without the leading 'f' and in camelCase,
             # e.g. fDelimiter --> delimiter.
             # We need to keep the parameters of the old FromCSV signature for backward compatibility.
             ns._FromCSV = ns.FromCSV
-            def MakeCSVDataFrame(
-                    fileName, readHeaders = True, delimiter = ',', linesChunkSize = -1, colTypes = {}, **kwargs):
-                options = ns.RCsvDS.ROptions()
-                options.fHeaders = readHeaders
-                options.fDelimiter = delimiter
-                options.fLinesChunkSize = linesChunkSize
-                options.fColumnTypes = colTypes
-                for key, val in kwargs.items():
-                    structMemberName = 'f' + key[0].upper() + key[1:]
-                    if hasattr(options, structMemberName):
-                        setattr(options, structMemberName, val)
-                return ns._FromCSV(fileName, options)
             ns.FromCSV = MakeCSVDataFrame
 
-            # Make a copy of the arrays that have strides to make sure we read the correct values
-            # TODO a cleaner fix
-            def MakeNumpyDataFrameCopy(np_dict):
-                import numpy
+        # Make a copy of the arrays that have strides to make sure we read the correct values
+        # TODO a cleaner fix
+        def MakeNumpyDataFrameCopy(np_dict):
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
+            import numpy
 
-                for key in np_dict.keys():
-                    if (np_dict[key].__array_interface__["strides"]) is not None:
-                        np_dict[key] = numpy.copy(np_dict[key])
-                return _MakeNumpyDataFrame(np_dict)
+            for key in np_dict.keys():
+                if (np_dict[key].__array_interface__["strides"]) is not None:
+                    np_dict[key] = numpy.copy(np_dict[key])
+            return _MakeNumpyDataFrame(np_dict)
 
-            ns.FromNumpy = MakeNumpyDataFrameCopy
+        ns.FromNumpy = MakeNumpyDataFrameCopy
 
-            # make a RDataFrame from a Pandas dataframe
-            def MakePandasDataFrame(df):
-                np_dict = {}
-                for key in df.columns:
-                    np_dict[key] = df[key].to_numpy()
-                return _MakeNumpyDataFrame(np_dict)
+        # make a RDataFrame from a Pandas dataframe
+        def MakePandasDataFrame(df):
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
-            ns.FromPandas = MakePandasDataFrame
+            np_dict = {}
+            for key in df.columns:
+                np_dict[key] = df[key].to_numpy()
+            return _MakeNumpyDataFrame(np_dict)
 
-            try:
-                # Inject Pythonizations to interact between local and distributed RDF package
-                from ._pythonization._rdf_namespace import _create_distributed_module, _rungraphs, _variationsfor, _fromspec
-                ns.Distributed = _create_distributed_module(ns)
-                # Inject the experimental package which shows a warning before usage
-                ns.Experimental.Distributed = _create_distributed_module(ns, True)
-                ns.RunGraphs = _rungraphs(ns.Distributed.RunGraphs, ns.RunGraphs)
-                ns.Experimental.VariationsFor = _variationsfor(ns.Distributed.VariationsFor, ns.Experimental.VariationsFor)
-                ns.Experimental.FromSpec = _fromspec(ns.Distributed.FromSpec, ns.Experimental.FromSpec)
-            except ImportError:
-                pass
-                
-        except:
-            raise Exception("Failed to pythonize the namespace RDF")
+        ns.FromPandas = MakePandasDataFrame
+
+        try:
+            # Inject Pythonizations to interact between local and distributed RDF package
+            from ._pythonization._rdf_namespace import (
+                _create_distributed_module,
+                _rungraphs,
+                _variationsfor,
+                _fromspec,
+            )
+
+            ns.Distributed = _create_distributed_module(ns)
+            # Inject the experimental package which shows a warning before usage
+            ns.Experimental.Distributed = _create_distributed_module(ns, True)
+            ns.RunGraphs = _rungraphs(ns.Distributed.RunGraphs, ns.RunGraphs)
+            ns.Experimental.VariationsFor = _variationsfor(ns.Distributed.VariationsFor, ns.Experimental.VariationsFor)
+            ns.Experimental.FromSpec = _fromspec(ns.Distributed.FromSpec, ns.Experimental.FromSpec)
+        except ImportError:
+            pass
+
         del type(self).RDF
         return ns
 
@@ -387,11 +393,10 @@ class ROOTFacade(types.ModuleType):
         try:
             import DistRDF
             from ._pythonization._rdf_namespace import _rdataframe
+
             return _rdataframe(local_rdf, DistRDF.RDataFrame)
         except ImportError:
             return local_rdf
-        
-
 
     # Overload RooFit namespace
     @property
