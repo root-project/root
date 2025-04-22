@@ -117,7 +117,7 @@ public:
          auto ret = UTILITY::MultidirectionalBroadcastShape(fShapeA, fShapeB);
          fBroadcastFlag = ret.first;
          fShapeY = ret.second;
-         std::cout << BinaryOperatorTrait<T, Op>::Name() << "checking for defined shapes " << fBroadcastFlag << "  " << ConvertShapeToString(fShapeY) << std::endl;
+         std::cout << BinaryOperatorTrait<T, Op>::Name() << " : checking for defined shapes " << fBroadcastFlag << "  " << ConvertShapeToString(fShapeY) << std::endl;
          bool broadcast =  ret.first > 0;
          if (broadcast) {
             // Y is the common shape of A and B
@@ -182,11 +182,18 @@ public:
             model.SetNotWritableInitializedTensor(nameA);
             model.SetNotWritableInitializedTensor(nameB);
             fIsOutputConstant = true;
-            if (model.Verbose())
-               std::cout << "Binary op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
-                         << ConvertValuesToString(dataY) << std::endl;
+            if (model.Verbose()) {
+               std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << fNA <<  "  " << ConvertShapeToString(fShapeA)
+                     << " , " << fNB << "  " << ConvertShapeToString(fShapeB) << " ---> " << fNY
+                     << "  " << ConvertShapeToString(fShapeY) << " : " << ConvertValuesToString(dataY) << std::endl;
+            }
          } else {
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
+            if (model.Verbose()) {
+               std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << fNA <<  "  " << ConvertShapeToString(fShapeA)
+                     << " , " << fNB << "  " << ConvertShapeToString(fShapeB) << " ---> " << fNY
+                     << "  " << ConvertShapeToString(fShapeY) << std::endl;
+            }
          }
          // we convert non-dim shapes to Dim shapes
          fDimShapeY = ConvertShapeToDim(fShapeY);
@@ -197,6 +204,38 @@ public:
          fBroadcastFlag = ret.first;
          fDimShapeY = ret.second;
          std::cout << BinaryOperatorTrait<T, Op>::Name() << " : checking for Dim shapes " << fBroadcastFlag << "  " << ConvertShapeToString(fDimShapeY) << std::endl;
+         // case of all parametric shapes and MultiDirectionalBroadcastShape  return the max of the 2
+         // need to do before we declare the output tensor shape and the broadcasted ones
+         if (ret.first & 4) {
+            // check if one of the parameter is an input dimension
+            // define function to find this
+            auto IsInputDimParam = [&](const std::string & p) {
+               auto inputNames = model.GetInputTensorNames();
+               for (auto & input : inputNames) {
+                  for (auto & i_s : model.GetDimTensorShape(input)) {
+                     if (i_s.isParam && i_s.param == p) return true;
+                  }
+               }
+               return false;
+            };
+            for (size_t i = 0; i < fDimShapeY.size(); i++) {
+               auto & s = fDimShapeY[i];
+               if (s.isParam && s.param.find("std::max") != std::string::npos) {
+                  if (IsInputDimParam(fDimShapeA[i].param)) {
+                     // case dim is 1 we indicate that the input parameter is equal to 1
+                     if (fDimShapeA[i].dim != 1)
+                        s = fDimShapeA[i];
+                     else
+                        s = fDimShapeB[i];
+                  } else if (IsInputDimParam(fDimShapeB[i].param)) {
+                     if (fDimShapeB[i].dim != 1)
+                        s = fDimShapeB[i];
+                     else
+                        s = fDimShapeA[i];
+                  }
+               }
+            }
+         }
          if (ret.first & 2) {
             // case we broadcast A
             fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
@@ -207,17 +246,12 @@ public:
             fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
             model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fDimShapeY);
          }
-         // case of all parametric shapes and we know only at run time
-         // we don't add in this case an intermediate tensor for broadcasting
-         // if (ret.first == 4) {
-         //    for (auto & d : fDimShapeY) {
-         //       if (d.isParam && d.param.find("broadcast") != std::string::npos) {
-         //          d.param += fNY;
-         //       }
-         //    }
-         // }
-         // add output tensor
+
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fDimShapeY);
+         if (model.Verbose()) {
+            std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << ConvertShapeToString(fDimShapeA) << " , "
+                      << ConvertShapeToString(fDimShapeB) << " --> " << ConvertShapeToString(fDimShapeY) << std::endl;
+         }
       }
    }
 
