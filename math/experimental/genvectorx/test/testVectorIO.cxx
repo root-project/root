@@ -19,9 +19,9 @@
 
 #include "TLorentzVector.h"
 
-#include "Math/Vector4D.h"
-#include "Math/Vector3D.h"
-#include "Math/Point3D.h"
+#include "MathX/Vector4D.h"
+#include "MathX/Vector3D.h"
+#include "MathX/Point3D.h"
 
 #include "Track.h"
 
