@@ -358,7 +358,7 @@ namespace ROOT {
             const double dy = axis.Y()/ll;
             const double dz = axis.Z()/ll;
             const double rot00 = (1-ca)*dx*dx+ca   , rot01 = (1-ca)*dx*dy-sa*dz, rot02 = (1-ca)*dx*dz+sa*dy,
-                         rot10 = (1-ca)*dy*dx+sa*dz, rot11 = (1-ca)*dy*dy+ca,    rot12 = (1-ca)*dy*dz-sa*dx,
+                         rot10 = (1-ca)*dy*dx+sa*dz, rot11 = (1-ca)*dy*dy+ca   , rot12 = (1-ca)*dy*dz-sa*dx,
                          rot20 = (1-ca)*dz*dx-sa*dy, rot21 = (1-ca)*dz*dy+sa*dx, rot22 = (1-ca)*dz*dz+ca;
             const double xX = v.X();
             const double yY = v.Y();
