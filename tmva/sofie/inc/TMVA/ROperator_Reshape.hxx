@@ -213,8 +213,10 @@ public:
             } else {
                // we cannot get shape at initialization time but at run-time
                fDynamicShape = true;
-               fShapeOutput.resize(fShapeInput.size());
-               for (size_t i = 0; i < fShapeInput.size(); i++) {
+               // size of shape output us given by size of shape input tensor
+               auto shapeInput2 = model.GetTensorShape(fNInput2);
+               fShapeOutput.resize(shapeInput2[0]);
+               for (size_t i = 0; i < fShapeOutput.size(); i++) {
                   fShapeOutput[i] = Dim{ std::string("s_") + fNOutput + "_" + std::to_string(i)};
                }
             }
@@ -268,9 +270,11 @@ public:
       // and take case of the zero values
       if (fDynamicShape) {
          for (size_t i = 0; i < fShapeOutput.size(); i++) {
-            out << SP << "int64_t " << fShapeOutput[i].param << " = " << "tensor_" << fNInput2 << "[" << i << "];\n";
+            // since fNInput2 values are int64_t, should we check if they are negative?
+            out << SP << "size_t " << fShapeOutput[i].param << " = " << "tensor_" << fNInput2 << "[" << i << "];\n";
             if (!fAllowZero)
-               out << "if (" << fShapeOutput[i].param << " <= 0) " <<  fShapeOutput[i].param << " = " <<  fShapeInput[i] << ";\n";
+               out << SP << "if (tensor_" << fNInput2 << "[" << i << "] <= 0 ) "
+                         <<  fShapeOutput[i].param << " = " <<  fShapeInput[i] << ";\n";
          }
       }
 
@@ -280,9 +284,7 @@ public:
       if (lengthOut != lengthIn) {
          // check needs to be done at run-time
          out << SP << "if (" << lengthOut << "!=" << lengthIn << ")\n";
-         out << "throw std::runtime_error(\"TMVA SOFIE Reshape Op : wrong output shape - is "
-               << ConvertShapeToString(fShapeOutput) << " and input is "
-               << ConvertShapeToString(fShapeInput) << ");\n";
+         out << "throw std::runtime_error(\"TMVA SOFIE Reshape Op : output lengths is different than input one\");\n";
       }
 
 
