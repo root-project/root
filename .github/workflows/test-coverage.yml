@@ -24,6 +24,9 @@ on:
         type: string
         required: true
         default: master
+      ref_name:
+        type: string
+        default: master
 
   # Enables manual start of workflow
   workflow_dispatch:
@@ -79,8 +82,11 @@ jobs:
           dnf -y install lcov
           pip3 install gcovr
 
+      # This checks out the merge commit if this is a PR
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Dump GitHub context
         env:
@@ -114,7 +120,9 @@ jobs:
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ github.base_ref }}
+                    --sha            ${{ github.sha }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha       ${{ github.event.pull_request.head.sha }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
@@ -126,7 +134,9 @@ jobs:
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ inputs.base_ref }}
+                    --sha            ${{ github.sha }}
                     --head_ref       ${{ inputs.head_ref }}
+                    --head_sha       ${{ inputs.head_ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
@@ -138,6 +148,7 @@ jobs:
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ github.ref_name }}
+                    --sha            ${{ github.sha }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
