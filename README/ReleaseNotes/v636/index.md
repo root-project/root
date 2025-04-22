@@ -158,13 +158,21 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 
 ## Tutorials and Code Examples
 
-* add `tutorials/visualisation/webgui/bootstrap` example showing usage of `RWebWindow` with [bootstrap](https://getbootstrap.com/) framework, including embeding of `TWebCanvas` in the widget
+* add `tutorials/visualisation/webgui/bootstrap` example showing usage of `RWebWindow` with [bootstrap](https://getbootstrap.com/) framework, including embedding of `TWebCanvas` in the widget
 
 ## Core
 
 ## Histograms
 
 ## Math
+
+### Performance improvements in Minuit2 for the case of parameters with limits
+
+For variable parameters with limits, Minuit2 applies trigonometric transformations into an internal space for the minimization.
+This can be a significant bottleneck for highly-optimized function, to the point that this is also mentioned in section 1.3.1 of the [old MINUIT user's guide](https://inspirehep.net/files/c92c2ba4dac7c0a665cce687fb19b29c).
+One prominent case of highly-optimized functions are RooFit likelihoods, which are heavily caching intermediate results to make numeric gradients and Hessians as efficient as possible.
+This meant that e.g. for HistFactory likelihoods, a significant fraction of the gradients and Hessians evaluation time was spent in the parameter transformations.
+To alleviate this bottleneck, Minuit2 is now also caching the result of the trigonometric transformations, only recomputing them if a parameters value was changed. As a result, the time spent in in parameter transformations when minimizing RooFit likelihoods and evaluating the Hessian becomes negligible.
 
 ## Graphics
 
