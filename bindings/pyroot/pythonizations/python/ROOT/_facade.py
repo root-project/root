@@ -1,16 +1,14 @@
 import importlib
-import types
-import sys
 import os
+import sys
+import types
 from functools import partial
 
 import cppyy
-
 import cppyy.ll
 
 from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
-
 from ._pythonization import pythonization
 
 
@@ -240,7 +238,7 @@ class ROOTFacade(types.ModuleType):
         # Run custom logon file (must be after creation of ROOT globals)
         hasargv = hasattr(sys, "argv")
         # -n disables the reading of the logon file, just like with root
-        if hasargv and not "-n" in sys.argv and not self.PyConfig.DisableRootLogon:
+        if hasargv and "-n" not in sys.argv and not self.PyConfig.DisableRootLogon:
             file_path_home = os.path.expanduser("~/.rootlogon.py")
             file_path_local = os.path.join(os.getcwd(), ".rootlogon.py")
             if os.path.exists(file_path_home):
@@ -307,7 +305,7 @@ class ROOTFacade(types.ModuleType):
             from ._pythonization._rvec import _AsRVec
 
             ns.AsRVec = _AsRVec
-        except:
+        except Exception:
             raise Exception("Failed to pythonize the namespace VecOps")
         del type(self).VecOps
         return ns
@@ -341,8 +339,9 @@ class ROOTFacade(types.ModuleType):
         # Make a copy of the arrays that have strides to make sure we read the correct values
         # TODO a cleaner fix
         def MakeNumpyDataFrameCopy(np_dict):
-            from ._pythonization._rdataframe import _MakeNumpyDataFrame
             import numpy
+
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
             for key in np_dict.keys():
                 if (np_dict[key].__array_interface__["strides"]) is not None:
@@ -366,9 +365,9 @@ class ROOTFacade(types.ModuleType):
             # Inject Pythonizations to interact between local and distributed RDF package
             from ._pythonization._rdf_namespace import (
                 _create_distributed_module,
+                _fromspec,
                 _rungraphs,
                 _variationsfor,
-                _fromspec,
             )
 
             ns.Distributed = _create_distributed_module(ns)
@@ -392,6 +391,7 @@ class ROOTFacade(types.ModuleType):
         local_rdf = self.__getattr__("RDataFrame")
         try:
             import DistRDF
+
             from ._pythonization._rdf_namespace import _rdataframe
 
             return _rdataframe(local_rdf, DistRDF.RDataFrame)
@@ -406,7 +406,7 @@ class ROOTFacade(types.ModuleType):
         ns = self._fallback_getattr("RooFit")
         try:
             pythonize_roofit_namespace(ns)
-        except:
+        except Exception:
             raise Exception("Failed to pythonize the namespace RooFit")
         del type(self).RooFit
         return ns
@@ -414,19 +414,20 @@ class ROOTFacade(types.ModuleType):
     # Overload TMVA namespace
     @property
     def TMVA(self):
-        # this line is needed to import the pythonizations in _tmva directory
-        from ._pythonization import _tmva
+        # This line is needed to import the pythonizations in _tmva directory.
+        # The comment suppresses linter errors about unused imports.
+        from ._pythonization import _tmva  # noqa: F401
 
         ns = self._fallback_getattr("TMVA")
         hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
+                from ._pythonization._tmva import SaveXGBoost, _AsRTensor, inject_rbatchgenerator
 
                 inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
                 ns.Experimental.SaveXGBoost = SaveXGBoost
-            except:
+            except Exception:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA
         return ns
@@ -447,7 +448,8 @@ class ROOTFacade(types.ModuleType):
         if not hasattr(numba, "version_info") or numba.version_info < (0, 54):
             raise Exception("NumbaExt requires Numba version 0.54 or higher")
 
-        import cppyy.numba_ext
+        # The comment in the next line suppresses linter errors about unused imports
+        import cppyy.numba_ext  # noqa: F401
 
         # Return something as it is a property function
         return self
