@@ -6,9 +6,6 @@
 
 ROOT_ADD_GTEST(RRawFile RRawFile.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TFile TFileTests.cxx LIBRARIES RIO)
-if (davix)
-  target_compile_definitions(TFile PRIVATE R__DAVIX_SUPPORT)
-endif()
 ROOT_ADD_GTEST(TBufferFile TBufferFileTests.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TBufferMerger TBufferMerger.cxx LIBRARIES RIO Imt Tree)
 ROOT_ADD_GTEST(TBufferJSON TBufferJSONTests.cxx LIBRARIES RIO)
