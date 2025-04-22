@@ -41,6 +41,7 @@ namespace SOFIE{
       std::vector<Dim> fShapeB;
       std::vector<size_t> fShapeC;
       std::vector<Dim> fShapeY;
+      RModel * fModel = nullptr;
 
    public:
 
@@ -74,7 +75,7 @@ namespace SOFIE{
       }
 
       template <typename U>
-      std::vector<std::vector<U>> DoShapeInference(const std::vector<std::vector<U>> & input){
+      std::vector<U> DoShapeInference(const std::vector<std::vector<U>> & input){
          if (input.size() > 3) throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only need 2 or 3 input tensor");
          // accept tensor with input dimensions > 2
          // example: A = (d1,d2,...,N1,N2)  B = (d1,d2,...,N2,N3)    --> Y = (d1,d2,..,N1,N3)
@@ -84,11 +85,10 @@ namespace SOFIE{
             }
          }
 
-         std::vector<std::vector<U>> ret;
          // when there are 3 inputs shape of Y is the one of C
          if (input.size() == 3){
-            ret.push_back(input[2]);   //shape of C is shape of Y
-            return ret;
+            //shape of C is shape of Y
+            return input[2];
          }
          // ioffset cannot be less than 2
          int ioffset = input[0].size()-2;  // in case of tensors with dim > 2
@@ -115,24 +115,41 @@ namespace SOFIE{
                      s_y.push_back(input[0][i]);
                   else if (valueA.GetVal() == "1")
                      s_y.push_back(input[1][i]);
+                  else if (!valueA.isParam && !valueB.isParam)
+                     throw std::runtime_error("TMVA SOFIE Gemm Op - invalid input shapes " + valueA.GetVal() + " and "
+                        + valueB.GetVal());
+                  else if (valueA.isParam && valueB.isParam){
+                      // check which parameter is first in RModel list
+                     auto & dimNames = fModel->GetDimShapeNames();
+                     auto p1 = std::find(dimNames.begin(), dimNames.end(), valueA.param);
+                     auto p2 = std::find(dimNames.begin(), dimNames.end(), valueB.param);
+                     if (p1 < p2) s_y.push_back(input[0][i]);
+                     else  s_y.push_back(input[1][i]);
+                  }
+                  else if (!valueA.isParam)
+                     s_y.push_back(input[0][i]);
+                  else if (!valueB.isParam)
+                     s_y.push_back(input[1][i]);
                   else
                      throw std::runtime_error("TMVA SOFIE Gemm Op - invalid input shapes " + valueA.GetVal() + " and "
                         + valueB.GetVal());
                }
-               s_y.push_back(input[0][i]);
+               else
+                  s_y.push_back(input[0][i]);
             }
          }
 
          s_y.push_back(s_a[0]);
          s_y.push_back(s_b[1]);
-         ret.push_back(s_y);
-         return ret;
+         return s_y;
       }
 
       std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-         return DoShapeInference<size_t>(input);
+         std::vector<std::vector<size_t>> ret;
+         ret.push_back(DoShapeInference<size_t>(input));
+         return ret;
       }
-      std::vector<std::vector<Dim>> DynamicShapeInference(const std::vector<std::vector<Dim>> & input){
+      std::vector<Dim> DynamicShapeInference(const std::vector<std::vector<Dim>> & input){
          return DoShapeInference<Dim>(input);
       }
 
@@ -140,6 +157,7 @@ namespace SOFIE{
 
       void Initialize(RModel& model) override {
          //TODO: propagate A or B as specified by ONNX standard
+         fModel = &model;
 
          if ((model.CheckIfTensorAlreadyExist(fNA) == false) || (model.CheckIfTensorAlreadyExist(fNB) == false) ){   //input must be a graph input, or already initialized intermediate tensor
             throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor " + fNA + " or " + fNB + " is not found in model");
@@ -188,7 +206,7 @@ namespace SOFIE{
             }
          }
 
-         fShapeY = DynamicShapeInference({fShapeA, fShapeB})[0];
+         fShapeY = DynamicShapeInference({fShapeA, fShapeB});
          std::vector<size_t> shapeY;
          if (!fIsDynamic) {
             shapeY = ConvertShapeToInt(fShapeY);

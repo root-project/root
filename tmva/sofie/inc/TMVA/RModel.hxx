@@ -58,20 +58,6 @@ public:
 
    const ETensorType &GetTensorType(std::string name) const;
 
-   // template<class T>
-   // void GetTensorShape(const std::string & name, std::vector<T> & shape) {
-   //    if (TensorShape<T>::IsDim()) {
-   //       if (model.IsDynamicTensor(name)) {
-   //          shape = model.GetDynamicTensorShape(name);
-   //       } else {
-   //          intShape = model.GetTensorShape(name);
-   //          shape = ConvertShapeToDim(intShape);
-   //       }
-   //    } else {
-   //       shape = model.GetTensorShape(name);
-   //    }
-
-   // }
 
    bool CheckIfTensorAlreadyExist(std::string tensor_name);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<Dim> shape);
@@ -180,8 +166,9 @@ protected:
    void GenerateSessionCode();
 
 public:
-   const std::vector<std::string> &GetInputTensorNames() const { return fInputTensorNames; }
-   const std::vector<std::string> &GetOutputTensorNames() const { return fOutputTensorNames; }
+   const std::vector<std::string> & GetInputTensorNames() const { return fInputTensorNames; }
+   const std::vector<std::string> & GetOutputTensorNames() const { return fOutputTensorNames; }
+   const std::vector<std::string> & GetDimShapeNames() const { return fDimShapeNames; }
 
    void ReadInitializedTensorsFromFile(long);
    long WriteInitializedTensorsToFile(std::string filename = "");
