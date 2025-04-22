@@ -3712,8 +3712,7 @@ GetCollectionReadAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopConf
          if (baseEl) {
             auto baseinfo = (TStreamerInfo *)baseEl->GetBaseStreamerInfo();
             assert(baseinfo);
-            TLoopConfiguration *baseLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
-            auto baseActions = Looper::CreateReadActionSequence(*baseinfo, baseLoopConfig);
+            auto baseActions = Looper::CreateReadActionSequence(*baseinfo, loopConfig);
             baseActions->AddToOffset(baseEl->GetOffset());
             return TConfiguredAction( Looper::SubSequenceAction, new TConfSubSequence(info, i, compinfo, 0, std::move(baseActions)));
 
@@ -4032,8 +4031,7 @@ GetCollectionWriteAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopCon
          if (baseEl) {
             auto baseinfo = (TStreamerInfo *)baseEl->GetBaseStreamerInfo();
             assert(baseinfo);
-            TLoopConfiguration *baseLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
-            auto baseActions = Looper::CreateWriteActionSequence(*baseinfo, baseLoopConfig);
+            auto baseActions = Looper::CreateWriteActionSequence(*baseinfo, loopConfig);
             baseActions->AddToOffset(baseEl->GetOffset());
             return TConfiguredAction( Looper::SubSequenceAction, new TConfSubSequence(info, i, compinfo, 0, std::move(baseActions)));
 
