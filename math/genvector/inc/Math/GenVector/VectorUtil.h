@@ -279,11 +279,13 @@ namespace ROOT {
          /**
           rotation along X axis for a generic vector by an Angle alpha
           returning a new vector.
-          The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
           and SetXYZ methods.
           */
          template <class Vector>
          Vector RotateX(const Vector & v, double alpha) {
+            if (alpha == 0.)
+               return v;
             using std::sin;
             double sina = sin(alpha);
             using std::cos;
@@ -298,11 +300,13 @@ namespace ROOT {
          /**
           rotation along Y axis for a generic vector by an Angle alpha
           returning a new vector.
-          The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
           and SetXYZ methods.
           */
          template <class Vector>
          Vector RotateY(const Vector & v, double alpha) {
+            if (alpha == 0.)
+               return v;
             using std::sin;
             double sina = sin(alpha);
             using std::cos;
@@ -317,11 +321,13 @@ namespace ROOT {
          /**
           rotation along Z axis for a generic vector by an Angle alpha
           returning a new vector.
-          The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
           and SetXYZ methods.
           */
          template <class Vector>
          Vector RotateZ(const Vector & v, double alpha) {
+            if (alpha == 0.)
+               return v;
             using std::sin;
             double sina = sin(alpha);
             using std::cos;
@@ -330,6 +336,38 @@ namespace ROOT {
             double y2 = v.Y() * cosa + v.X() * sina;
             Vector vrot;
             vrot.SetXYZ(x2, y2, v.Z());
+            return vrot;
+         }
+         
+         /**
+          rotation along a custom axis for a generic vector by an Angle alpha (in rad)
+          returning a new vector.
+          The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
+          and SetXYZ methods.
+          */
+         template <class Vector>
+         Vector Rotate(const Vector & v, double alpha, const Vector & axis) {
+            if (alpha == 0.)
+               return v;
+            const double ll = std::sqrt(axis.X()*axis.X() + axis.Y()*axis.Y() + axis.Z()*axis.Z());
+            if (ll == 0.)
+               GenVector::Throw("Axis Vector has zero magnitude");
+            const double sa = std::sin(alpha);
+            const double ca = std::cos(alpha);
+            const double dx = axis.X()/ll;
+            const double dy = axis.Y()/ll;
+            const double dz = axis.Z()/ll;
+            const double rot00 = (1-ca)*dx*dx+ca   , rot01 = (1-ca)*dx*dy-sa*dz, rot02 = (1-ca)*dx*dz+sa*dy,
+                         rot10 = (1-ca)*dy*dx+sa*dz, rot11 = (1-ca)*dy*dy+ca,    rot12 = (1-ca)*dy*dz-sa*dx,
+                         rot20 = (1-ca)*dz*dx-sa*dy, rot21 = (1-ca)*dz*dy+sa*dx, rot22 = (1-ca)*dz*dz+ca;
+            const double xX = v.X();
+            const double yY = v.Y();
+            const double zZ = v.Z();
+            const double x2 =  rot00*xX + rot01*yY + rot02*zZ;
+            const double y2 =  rot10*xX + rot11*yY + rot12*zZ;
+            const double z2 =  rot20*xX + rot21*yY + rot22*zZ;
+            Vector vrot;
+            vrot.SetXYZ(x2,y2,z2);
             return vrot;
          }
 
