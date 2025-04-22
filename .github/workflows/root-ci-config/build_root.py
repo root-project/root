@@ -24,19 +24,18 @@ import sys
 import tarfile
 import time
 
+import build_utils
 import openstack
-
 from build_utils import (
+    calc_options_hash,
     die,
     github_log_group,
+    is_macos,
     load_config,
-    calc_options_hash,
-    subprocess_with_log,
     subprocess_with_capture,
+    subprocess_with_log,
     upload_file,
-    is_macos
 )
-import build_utils
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
