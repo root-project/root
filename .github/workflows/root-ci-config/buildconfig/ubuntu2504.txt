@@ -1,2 +1,4 @@
+experimental_adaptivecpp=ON
+experimental_genvectorx=ON
 ccache=ON
 pythia8=OFF
