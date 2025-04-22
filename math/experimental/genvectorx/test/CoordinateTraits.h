@@ -14,14 +14,14 @@
 
 #include <string>
 #include <typeinfo>
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/Cylindrical3D.h"
-#include "Math/GenVector/CylindricalEta3D.h"
-#include "Math/GenVector/Polar3D.h"
-#include "Math/GenVector/PxPyPzE4D.h"
-#include "Math/GenVector/PxPyPzM4D.h"
-#include "Math/GenVector/PtEtaPhiE4D.h"
-#include "Math/GenVector/PtEtaPhiM4D.h"
+#include "MathX/GenVectorX/Cartesian3D.h"
+#include "MathX/GenVectorX/Cylindrical3D.h"
+#include "MathX/GenVectorX/CylindricalEta3D.h"
+#include "MathX/GenVectorX/Polar3D.h"
+#include "MathX/GenVectorX/PxPyPzE4D.h"
+#include "MathX/GenVectorX/PxPyPzM4D.h"
+#include "MathX/GenVectorX/PtEtaPhiE4D.h"
+#include "MathX/GenVectorX/PtEtaPhiM4D.h"
 
 namespace ROOT {
 namespace Math {
