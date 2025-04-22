@@ -7,12 +7,12 @@ on:
 
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
   # DISABLED: takes 4 hours! Might clang-coverage be a solution?
-  #pull_request:
-  #  branches:
-  #    - 'master'
-  #  paths-ignore:
-  #    - 'doc/**'
-  #    - 'documentation/**'
+  pull_request:
+    branches:
+      - 'master'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
 
   workflow_call:
     inputs:
