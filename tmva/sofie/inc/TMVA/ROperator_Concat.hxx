@@ -56,6 +56,7 @@
                throw std::runtime_error("TMVA SOFIE Concat Op - invalid axis value ");
 
             int concat_dim=0;
+            // case of Concat (fNewAxis = 0) and not ConcatFromSequence
             if(fnewAxis == 0){
                for (size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i - 1].size())
@@ -76,6 +77,7 @@
                ret[0][fAxis] = concat_dim;
             }
             std::vector<int> stack;
+            // case ConCatFromSequence
             if(fnewAxis == 1){
                for(size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i-1].size() )
@@ -99,8 +101,8 @@
          }
 
          // get shape of output given inputs. It is going to be called after initialized
-         std::vector<std::vector<Dim>> ShapeInference(const std::vector<std::vector<Dim>> & inputs) {
-            std::vector<std::vector<Dim>> ret(1);
+         std::vector<Dim> ShapeInference(const std::vector<std::vector<Dim>> & inputs, const RModel & model) {
+            std::vector<Dim> ret(inputs[0].size());
             // treat negative axis case
             if (fAxis<0) {
                fAxis = inputs[0].size()+fAxis;
@@ -108,8 +110,7 @@
             if (fAxis < 0 || fAxis >= (int) inputs[0].size())
                throw std::runtime_error("TMVA SOFIE Concat Op - invalid axis value ");
 
-            std::string concat_dim;
-            size_t i_concat_dim = 0;
+            Dim concat_dim;
             if(fnewAxis == 0){
                for (size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i - 1].size())
@@ -117,40 +118,57 @@
                                               ConvertShapeToString(inputs[i]) + " and " + fInputs[i-1] + " : " + ConvertShapeToString(inputs[i - 1]));
                   for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
                      if ((int)iaxis == fAxis) {
-                        // support only non-params shape for the concatenation axis
-                        if (inputs[i][iaxis].isParam) {
-                           if (concat_dim.empty())
-                              concat_dim = inputs[i][iaxis].GetVal();
-                           else
-                              concat_dim += std::string("+ ") + inputs[i][iaxis].GetVal();
+                        // support both integer and params shape for the concatenation axis
+                        if (concat_dim.param.empty() && concat_dim.dim == 0)
+                           concat_dim = inputs[i][iaxis];
+                        else if (inputs[i][iaxis].isParam || concat_dim.isParam) {
+                           concat_dim =
+                              Dim{ concat_dim.GetVal() + std::string("+ ") + inputs[i][iaxis].GetVal(),
+                                 static_cast<size_t>(-1)};
                         } else {
-                           i_concat_dim += inputs[i][iaxis].dim;
-                           concat_dim = std::to_string(i_concat_dim);
+                           concat_dim = Dim { concat_dim.dim + inputs[i][iaxis].dim };
                         }
                      }
-                     // other dimensions must be the same
-                     else if (i > 0 && inputs[i][iaxis].GetVal() != inputs[i - 1][iaxis].GetVal())
+                     else if (i == 0) {
+                        ret[iaxis] = inputs[i][iaxis];
+                     }
+                     else if ((!inputs[i][iaxis].isParam && !ret[iaxis].isParam) && (inputs[i][iaxis].dim != ret[iaxis].dim)) {
                         throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have wrong shapes " +
                                                  ConvertShapeToString(inputs[i]) + " and " +
                                                  ConvertShapeToString(inputs[i - 1]));
+                     }
+                     else if (!inputs[i][iaxis].isParam && ret[iaxis].isParam){
+                        // if shape is not parametric use it
+                        ret[iaxis] = inputs[i][iaxis];
+                     }
+                     else if (inputs[i][iaxis].isParam && ret[iaxis].isParam) {
+                        // check which parameter is first in RModel list
+                        auto & dimNames = model.GetDimShapeNames();
+                        auto p1 = std::find(dimNames.begin(), dimNames.end(), inputs[i][iaxis].param);
+                        auto p2 = std::find(dimNames.begin(), dimNames.end(), ret[iaxis].param);
+                        if (p1 < p2) ret[iaxis] = inputs[i][iaxis];
+                     }
+
                   }
                }
 
-               // output shape
-               ret[0] = inputs[0];
-               // check if concat_dim is an integer
-               // case like "2+n" can be converted to an integer so need to check the length
-               size_t pos = 0;
-               try {
-                  i_concat_dim = std::stoi(concat_dim, &pos);
-                  if (pos == concat_dim.length())
-                     ret[0][fAxis] = Dim{i_concat_dim}; // dimension is integer
-                  else
-                     ret[0][fAxis] = Dim{concat_dim};
-               }
-               catch (std::invalid_argument const& ex) {
-                  ret[0][fAxis] = Dim{concat_dim};
-               }
+               // output shape for concatenated axis
+               ret[fAxis] = Dim{concat_dim};
+               // //ret[0] = inputs[0];
+               // // check if concat_dim is an integer
+               // // case like "2+n" can be converted to an integer so need to check the length
+               // size_t pos = 0;
+               // try {
+               //    i_concat_dim = std::stoi(concat_dim, &pos);
+               //    if (pos == concat_dim.length())
+               //       ret[fAxis] = Dim{i_concat_dim}; // dimension is integer
+               //    else {
+               //       // check if a composite expression
+               //       ret[fAxis] = Dim{concat_dim};
+               // }
+               // catch (std::invalid_argument const& ex) {
+
+               // }
 
             }
             // case of stacking (not supported yet)
@@ -170,7 +188,7 @@
                }
                fInputShapes.push_back(model.GetDimTensorShape(it));
             }
-            fOutputShape = ShapeInference(fInputShapes)[0];
+            fOutputShape = ShapeInference(fInputShapes, model);
             if (model.Verbose())
                std::cout << "Output of concat operator has shape " << ConvertDimShapeToString(fOutputShape) << std::endl;
 

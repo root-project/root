@@ -69,6 +69,7 @@ struct Dim{
    Dim() {}
 
    // constructor for a parametric dimension with the option to pass a default dim value
+   // We use -1 for dim to indicate that the param dimension is an expression (e.g. "d1+d2")
    // in case the string represents a number make Dim not parametric
    Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p)
    {

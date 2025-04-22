@@ -919,7 +919,7 @@ void RModel::GenerateSessionCode()
       // larger size) in that case better to copy
       bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
       std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
-                                     : ConvertDynamicShapeToLength(GetDynamicTensorShape(name));
+                                     : ConvertDimShapeToLength(GetDimTensorShape(name));
       fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
    }
 

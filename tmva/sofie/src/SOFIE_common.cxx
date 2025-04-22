@@ -477,7 +477,8 @@ std::pair<int, std::vector<Dim>> UTILITY::MultidirectionalBroadcastShape(std::ve
          // full dynamic case - we will decided at run time
          std::stringstream s;
          s <<  "std::max(" << shapeA[i] << "," << shapeB[i] << ")";
-         targetShape[i] = Dim { s.str() };
+         // use -1 for dim to indicate is an expression
+         targetShape[i] = Dim { s.str() , static_cast<size_t>(-1)};
          broadcastFlag |= 4;
       } else if (shapeA[i].isParam && !shapeB[i].isParam) {
          // A -> B need to check at run time if consistent
