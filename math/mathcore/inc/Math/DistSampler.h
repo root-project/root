@@ -17,6 +17,7 @@
 
 #include "Math/WrappedFunction.h"
 
+#include <algorithm>
 #include <vector>
 #include <cassert>
 

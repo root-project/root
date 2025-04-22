@@ -23,6 +23,7 @@
 #include "TError.h"
 #include <vector>
 #include <forward_list>
+#include <typeinfo>
 #include <utility>
 
 #if defined(_WIN32)
