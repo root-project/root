@@ -24,6 +24,9 @@ on:
         type: string
         required: true
         default: master
+      ref_name:
+        type: string
+        default: master
 
   # Enables manual start of workflow
   workflow_dispatch:
@@ -79,8 +82,11 @@ jobs:
           dnf -y install lcov
           pip3 install gcovr
 
+      # This checks out the merge commit if this is a PR
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Dump GitHub context
         env:
