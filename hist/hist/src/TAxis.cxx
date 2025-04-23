@@ -17,6 +17,7 @@
 #include "TList.h"
 #include "TAxisModLab.h"
 #include "TH1.h"
+#include "THStack.h"
 #include "TObjString.h"
 #include "TDatime.h"
 #include "TTimeStamp.h"
@@ -1417,23 +1418,41 @@ void TAxis::AutoZoomAll()
    Double_t globalMax = -DBL_MAX;
    TIter next(gPad->GetListOfPrimitives());
    while (TObject *obj= next()) {
-      if (!obj || !obj->InheritsFrom(TH1::Class()))
+      if (!obj)
          continue;
-      TH1 *hobj = static_cast<TH1*>(obj);
-      if (dim > hobj->GetDimension())
-         continue;
-      hobj->GetRangeOfFilledWeights(dim, first, last, 1, false);
-      TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
-      if (ax) {
-         globalMin = std::min(globalMin, ax->GetBinLowEdge(first));
-         globalMax = std::max(globalMax, ax->GetBinUpEdge(last));
+      if (obj->InheritsFrom(TH1::Class())) {
+         TH1 *hobj = static_cast<TH1*>(obj);
+         if (dim > hobj->GetDimension())
+            continue;
+         hobj->GetRangeOfFilledWeights(dim, first, last, 1, false);
+         TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
+         if (ax) {
+            globalMin = std::min(globalMin, ax->GetBinLowEdge(first));
+            globalMax = std::max(globalMax, ax->GetBinUpEdge(last));
+         }
+      } else if (obj->InheritsFrom(THStack::Class())) {
+         THStack *hs = static_cast<THStack*>(obj);
+         TIter hsnext(hs->begin());
+         while (TObject *hsobj= hsnext()) {
+            if (!hsobj)
+               continue;
+            TH1 *hobj = static_cast<TH1*>(hsobj);
+            if (dim > hobj->GetDimension())
+               continue;
+            hobj->GetRangeOfFilledWeights(dim, first, last, 1, false);
+            TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
+            if (ax) {
+               globalMin = std::min(globalMin, ax->GetBinLowEdge(first));
+               globalMax = std::max(globalMax, ax->GetBinUpEdge(last));
+            }
+         }
       }
    }
    next.Reset();
    while (TObject *obj = next()) {
-      if (!obj || !obj->InheritsFrom(TH1::Class()))
+      if (!obj || (!obj->InheritsFrom(TH1::Class()) && !obj->InheritsFrom(THStack::Class())))
          continue;
-      TH1 *hobj = static_cast<TH1 *>(obj);
+      TH1 *hobj = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : static_cast<THStack *>(obj)->GetHistogram();
       if (dim > hobj->GetDimension())
          continue;
       TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
