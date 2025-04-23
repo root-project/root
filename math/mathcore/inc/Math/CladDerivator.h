@@ -1137,9 +1137,17 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
 } // namespace Math
 } // namespace ROOT
 
-namespace TMVA {
-namespace Experimental {
-namespace SOFIE {
+} // namespace custom_derivatives
+} // namespace clad
+
+// Forward declare BLAS functions.
+extern "C" void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+                       const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
+                       const float *beta, float *C, const int *ldc);
+
+namespace clad::custom_derivatives {
+
+namespace TMVA::Experimental::SOFIE {
 
 inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, int n, int k, float alpha,
                                const float *A, const float *B, float beta, const float *C, float *_d_output, bool *,
@@ -1148,7 +1156,7 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
 {
    // TODO:
    //    - handle transa and transb cases correctly
-   if ( transa || transb ) {
+   if (transa || transb) {
       return;
    }
 
@@ -1161,8 +1169,8 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
 
    // _d_A, _d_B
    // note: beta needs to be one because we want to add to _d_A and _d_B instead of overwriting it.
-   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &m, B, &k, &one, _d_A, &m);
-   ::TMVA::Experimental::SOFIE::BLAS::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &m, _d_output, &m, &one, _d_B, &k);
+   ::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &m, B, &k, &one, _d_A, &m);
+   ::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &m, _d_output, &m, &one, _d_B, &k);
 
    // _d_alpha, _d_beta, _d_C
    int sizeC = n * m;
@@ -1173,11 +1181,8 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
    }
 }
 
-} // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
+} // namespace TMVA::Experimental::SOFIE
 
-} // namespace custom_derivatives
-} // namespace clad
+} // namespace clad::custom_derivatives
 
 #endif // CLAD_DERIVATOR
