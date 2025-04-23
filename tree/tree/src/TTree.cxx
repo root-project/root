@@ -6003,6 +6003,7 @@ Long64_t TTree::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 ///  the index values (major,minor) is read. Note that the master Tree
 ///  and its friend may have different entry serial numbers corresponding
 ///  to (major,minor).
+/// \note See TTreeIndex::GetEntryNumberWithIndex for information about the maximum values accepted for major and minor
 
 Int_t TTree::GetEntryWithIndex(Long64_t major, Long64_t minor)
 {

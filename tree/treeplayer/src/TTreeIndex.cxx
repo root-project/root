@@ -423,7 +423,9 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// (with an internal intermediate cast to LongDouble)
 /// The function performs binary search in this sorted table.
 /// If it finds a pair that maches val, it returns directly the
-/// index in the table.
+/// index in the table, otherwise it returns -1.
+/// \warning Due to internal architecture details, the maximum value for `(major, minor)`
+/// for which the function works correctly and consistently in all platforms is `0xFFFFFFFFFFFF0`, which is less than `kMaxLong64`.
 /// If an entry corresponding to major and minor is not found, the function
 /// returns the index of the major,minor pair immediately lower than the
 /// requested value, ie it will return -1 if the pair is lower than
@@ -452,6 +454,8 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor)
 /// The function performs binary search in this sorted table.
 /// If it finds a pair that maches val, it returns directly the
 /// index in the table, otherwise it returns -1.
+/// \warning Due to internal architecture details, the maximum value for `(major, minor)`
+/// for which the function works correctly and consistently in all platforms is `0xFFFFFFFFFFFF0`, which is less than `kMaxLong64`.
 ///
 /// See also GetEntryNumberWithBestIndex
 
