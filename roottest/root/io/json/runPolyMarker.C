@@ -13,5 +13,5 @@ void runPolyMarker()
 
    TString json = TBufferJSON::ToJSON(&marker);
 
-   cout << json << endl;
+   std::cout << json << std::endl;
 }
