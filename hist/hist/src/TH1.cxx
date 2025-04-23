@@ -7952,7 +7952,16 @@ void TH1::ResetStats()
    if (fSumw2.fN > 0 && fTsumw > 0 && stats[1] > 0 ) fEntries = stats[0]*stats[0]/ stats[1];
 }
 
-void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, const bool includeUnderOverflow) const
+////////////////////////////////////////////////////////////////////////////////
+/// Get the range of the histogram that is filled with non-empty contents (i.e. 
+/// non-zero content and non-zero error).
+/// \param dim 0 for the x-axis, 1 for the y-axis, 2 for the z-axis, must be <= GetDimension()
+/// \param first where the first non-empty bin index will be stored (minus margin)
+/// \param last where the last non-empty bin index will be stored (plus margin)
+/// \param margin number of bins to enlarge each side of the range, to leave some room
+/// \param includeUnderOverflow when searching for non-empty bins, set to true to include the under/overflow bins
+
+void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, const Int_t margin, const bool includeUnderOverflow) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
@@ -8073,6 +8082,9 @@ void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, co
           }
       }
    }
+   // Apply some margins 
+   first = std::max(dim == 0 ? startX : dim == 1 ? startY : startZ, first - margin);
+   last = std::min(dim == 0 ? lastX : dim == 1 ? lastY : lastZ, last + margin);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
