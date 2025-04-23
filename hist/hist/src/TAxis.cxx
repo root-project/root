@@ -1340,6 +1340,10 @@ void TAxis::AutoZoom()
       Warning("TAxis::AutoZoom","Cannot AutoZoom if parent does not exist. Did you mean to draw the TAxis first?");
       return;
    }
+   if (!GetParent()->InheritsFrom(TH1::Class())) {
+      Warning("TAxis::AutoZoom","Cannot AutoZoom if axis parent (of type `%s`) does not derive from TH1.", GetParent()->ClassName());
+      return;
+   } 
    auto dim = strstr(GetName(), "xaxis") ? 0 : strstr(GetName(), "yaxis") ? 1 : strstr(GetName(), "zaxis") ? 2 : -1;
    TH1 *hobj1 = static_cast<TH1 *>(GetParent());
    Int_t first = -1, last = -1;
