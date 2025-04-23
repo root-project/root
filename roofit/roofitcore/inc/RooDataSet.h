@@ -26,8 +26,6 @@ class TDirectory;
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 
-#include <ROOT/RConfig.hxx> // for R__DEPRECATED
-
 #include <list>
 #include <string_view>
 
@@ -41,17 +39,6 @@ public:
   RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
              const RooCmdArg& arg3={}, const RooCmdArg& arg4={},const RooCmdArg& arg5={},
              const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
-
-    // Constructor for subset of existing dataset
-  RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
-             const char *cuts=nullptr, const char* wgtVarName=nullptr)
-#ifndef ROOFIT_BUILDS_ITSELF
-  R__DEPRECATED(6,38, "Use RooAbsData::reduce(), or if you need to change the weight column, the universal constructor with the Import(), Cut(), and WeightVar() arguments.")
-#endif
-  ;
-  RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
-             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr)
-  R__DEPRECATED(6,38, "Use RooAbsData::reduce(), or if you need to change the weight column, the universal constructor with the Import(), Cut(), and WeightVar() arguments.");
 
   RooDataSet(RooDataSet const & other, const char* newname=nullptr) ;
   TObject* Clone(const char* newname = "") const override {
