@@ -66,7 +66,6 @@ jobs:
       options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
-        PYTHONUNBUFFERED: true
 
     steps:
       - name: Set up Python Virtual Env
@@ -91,7 +90,14 @@ jobs:
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          ENV_CONTEXT: ${{ toJSON(env) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+          echo "--------------------------"
+          echo "$JOB_CONTEXT"
+          echo "--------------------------"
+          echo "$ENV_CONTEXT"
 
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
