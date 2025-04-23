@@ -191,9 +191,8 @@ namespace TStreamerInfoActions {
             SetBit((UInt_t)EStatusBits::kVectorPtrLooper);
          fActions.reserve(maxdata);
       };
-      ~TActionSequence() override {
-         delete fLoopConfig;
-      }
+      // We have no owner pointer, so the default is perfect.
+      ~TActionSequence() override = default;
 
       template <typename action_t>
       void AddAction( action_t action, TConfiguration *conf ) {
@@ -208,7 +207,7 @@ namespace TStreamerInfoActions {
       }
 
       TVirtualStreamerInfo *fStreamerInfo; ///< StreamerInfo used to derive these actions.
-      TLoopConfiguration   *fLoopConfig;   ///< If this is a bundle of memberwise streaming action, this configures the looping
+      std::unique_ptr<TLoopConfiguration> fLoopConfig;   ///< If this is a bundle of memberwise streaming action, this configures the looping
       ActionContainer_t     fActions;
 
       void AddToOffset(Int_t delta);
@@ -216,9 +215,9 @@ namespace TStreamerInfoActions {
 
       TActionSequence *CreateCopy();
       static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
-      static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig);  // 2nd arg should be unique_ptr
+      static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo &info, std::unique_ptr<TLoopConfiguration> loopConfig);
       static TActionSequence *CreateWriteMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
-      static TActionSequence *CreateWriteMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig);  // 2nd arg should be unique_ptr
+      static TActionSequence *CreateWriteMemberWiseActions(TVirtualStreamerInfo &info, std::unique_ptr<TLoopConfiguration> loopConfig);
       TActionSequence *CreateSubSequence(const std::vector<Int_t> &element_ids, size_t offset);
 
       TActionSequence *CreateSubSequence(const TIDs &element_ids, size_t offset, SequenceGetter_t create);

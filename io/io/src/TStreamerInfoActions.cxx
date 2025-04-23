@@ -1520,9 +1520,9 @@ namespace TStreamerInfoActions
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
       CreateReadActionSequence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
       {
-         TLoopConfiguration *localLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
+         std::unique_ptr<TLoopConfiguration> localLoopConfig{ loopConfig ? loopConfig->Copy() : nullptr };
          std::unique_ptr<TStreamerInfoActions::TActionSequence> actions(
-            TActionSequence::CreateReadMemberWiseActions(info, localLoopConfig));
+            TActionSequence::CreateReadMemberWiseActions(info, std::move(localLoopConfig)));
          return actions;
       }
 
@@ -1532,9 +1532,9 @@ namespace TStreamerInfoActions
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
       CreateWriteActionSequence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
       {
-         TLoopConfiguration *localLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
+         std::unique_ptr<TLoopConfiguration> localLoopConfig{ loopConfig ? loopConfig->Copy() : nullptr };
          std::unique_ptr<TStreamerInfoActions::TActionSequence> actions(
-            TActionSequence::CreateWriteMemberWiseActions(info, localLoopConfig));
+            TActionSequence::CreateWriteMemberWiseActions(info, std::move(localLoopConfig)));
          return actions;
       }
 
@@ -5171,7 +5171,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       return new TStreamerInfoActions::TActionSequence(0,0);
    }
 
-   TLoopConfiguration *loopConfig = nullptr;
+   std::unique_ptr<TLoopConfiguration> loopConfig;
    if (IsDefaultVector(proxy))
    {
       if (proxy.HasPointers()) {
@@ -5182,30 +5182,31 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
       // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
       Long_t increment = proxy.GetIncrement();
-      loopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
+      loopConfig = std::make_unique<TVectorLoopConfig>(&proxy, increment, /* read */ kTRUE);
    } else if (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLunorderedset
               || proxy.GetCollectionType() == ROOT::kSTLmultiset || proxy.GetCollectionType() == ROOT::kSTLunorderedmultiset
               || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap
               || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap)
    {
       Long_t increment = proxy.GetIncrement();
-      loopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kTRUE);
+      loopConfig = std::make_unique<TVectorLoopConfig>(&proxy, increment, /* read */ kTRUE);
       // sequence->fLoopConfig = new TAssocLoopConfig(proxy);
    } else {
-      loopConfig = new TGenericLoopConfig(&proxy, /* read */ kTRUE);
+      loopConfig = std::make_unique<TGenericLoopConfig>(&proxy, /* read */ kTRUE);
    }
 
-   return CreateReadMemberWiseActions(*info, loopConfig);
+   return CreateReadMemberWiseActions(*info, std::move(loopConfig));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
 
-TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig)
+TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(TVirtualStreamerInfo &info, std::unique_ptr<TLoopConfiguration> inLoopConfig)
 {
    UInt_t ndata = info.GetElements()->GetEntriesFast();
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(&info, ndata);
-   sequence->fLoopConfig = loopConfig;
+   sequence->fLoopConfig = std::move(inLoopConfig);
+   TLoopConfiguration *loopConfig = sequence->fLoopConfig.get();
 
    for (UInt_t i = 0; i < ndata; ++i) {
       TStreamerElement *element = (TStreamerElement*) info.GetElements()->At(i);
@@ -5294,7 +5295,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       return new TStreamerInfoActions::TActionSequence(0,0);
    }
 
-   TLoopConfiguration *loopConfig = nullptr;
+   std::unique_ptr<TLoopConfiguration> loopConfig;
    if (IsDefaultVector(proxy))
    {
       if (proxy.HasPointers()) {
@@ -5305,11 +5306,11 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
       // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
       Long_t increment = proxy.GetIncrement();
-      loopConfig = new TVectorLoopConfig(&proxy, increment, /* read */ kFALSE);
+      loopConfig = std::make_unique<TVectorLoopConfig>(&proxy, increment, /* read */ kFALSE);
    } else {
-      loopConfig = new TGenericLoopConfig(&proxy, /* read */ kFALSE);
+      loopConfig = std::make_unique<TGenericLoopConfig>(&proxy, /* read */ kFALSE);
    }
-   return CreateWriteMemberWiseActions(*info, loopConfig);
+   return CreateWriteMemberWiseActions(*info, std::move(loopConfig));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5318,11 +5319,12 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 /// TActionSequence class (stored as public fLoopConfig internally, will be deleted in destructor) \return new
 /// `sequence` pointer of type TActionSequence, the memory ownership is transferred to caller, must delete it later
 
-TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig)
+TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(TVirtualStreamerInfo &info, std::unique_ptr<TLoopConfiguration> inLoopConfig)
 {
    UInt_t ndata = info.GetElements()->GetEntriesFast();
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(&info, ndata);
-   sequence->fLoopConfig = loopConfig;
+   sequence->fLoopConfig = std::move(inLoopConfig);
+   TLoopConfiguration *loopConfig = sequence->fLoopConfig.get();
 
    for (UInt_t i = 0; i < ndata; ++i) {
       TStreamerElement *element = (TStreamerElement*) info.GetElements()->At(i);
@@ -5434,7 +5436,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, fActions.size(), IsForVectorPtrLooper());
 
-   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
+   sequence->fLoopConfig.reset(fLoopConfig ? fLoopConfig->Copy() : nullptr);
 
    TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
    for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
@@ -5516,7 +5518,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, element_ids.size(), IsForVectorPtrLooper());
 
-   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
+   sequence->fLoopConfig = std::unique_ptr<TLoopConfiguration>(fLoopConfig ? fLoopConfig->Copy() : 0);
 
    AddToSubSequence(sequence, element_ids, offset, create);
 
@@ -5530,7 +5532,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, element_ids.size(), IsForVectorPtrLooper());
 
-   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
+   sequence->fLoopConfig.reset(fLoopConfig ? fLoopConfig->Copy() : 0);
 
    for(UInt_t id = 0; id < element_ids.size(); ++id) {
       if ( element_ids[id] < 0 ) {
