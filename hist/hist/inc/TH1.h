@@ -325,7 +325,7 @@ public:
 
    virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
    virtual Double_t GetRandom(TRandom * rng = nullptr) const;
-   void             GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, const bool includeUnderOverflow) const;
+   void             GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, const Int_t margin, const bool includeUnderOverflow) const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;

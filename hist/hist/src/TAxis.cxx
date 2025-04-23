@@ -1371,7 +1371,7 @@ void TAxis::AutoZoom()
       }
    }
 
-   hobj1->GetRangeOfFilledWeights(dim, first, last, false);
+   hobj1->GetRangeOfFilledWeights(dim, first, last, 1, false);
    SetRange(first, last);
 
    if (gPad)
@@ -1403,7 +1403,7 @@ void TAxis::AutoZoomAll()
       TH1 *hobj = static_cast<TH1*>(obj);
       if (dim > hobj->GetDimension())
          continue;
-      hobj->GetRangeOfFilledWeights(dim, first, last, false);
+      hobj->GetRangeOfFilledWeights(dim, first, last, 1, false);
       TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
       if (ax) {
          globalMin = std::min(globalMin, ax->GetBinLowEdge(first));
