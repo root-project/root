@@ -10,6 +10,7 @@ on:
   pull_request:
     branches:
       - 'master'
+      - 'v6-36-00-patches'
     paths-ignore:
       - 'doc/**'
       - 'documentation/**'
