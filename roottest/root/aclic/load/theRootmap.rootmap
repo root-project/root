@@ -1,0 +1,6 @@
+{ decls }
+namespace MyNamespace { }
+
+[MyClass_cxx.so]
+class MyNamespace::MyClass
+class MyRegularClass

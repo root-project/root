@@ -1,0 +1,6 @@
+
+Processing execStlInheritNew.cxx+...
+Warning in <TClass::Init>: no dictionary for class Container is available
+Warning in <TClass::Init>: no dictionary for class ContainerInt is available
+Info in <readfile>: The vector has the size 1 and content 3
+Info in <readfile>: The vector of int has the size 1 and content 5

@@ -1,0 +1,13 @@
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
+Warning in <TClass::PostLoadCheck>: 
+   The StreamerInfo version 1 for the class Tdata which was read
+   from a file previously opened has the same version as the active class
+   but a different checksum. You should update the version to ClassDef(Tdata,2).
+   Do not try to write objects with the current class definition,
+   the files will not be readable.
+
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the in-memory layout version 1 of class 'Tdata' is missing from 
+the on-file layout version 1:
+   int myvar_one; //

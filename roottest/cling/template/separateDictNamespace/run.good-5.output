@@ -1,0 +1,89 @@
+
+Processing run.C...
+===========================================================================
+class Master::Container
+ size=n/a FILE:libmaster.so LINE:-1
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in Container
+libmaster.so     -1 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in Container)
+libmaster.so     -1:-1   0 public: void ~Container(void);
+libmaster.so     -1:-1   0 public: Master::Container Container(void);
+libmaster.so     -1:-1   0 public: virtual void Print(Option_t*) const;
+libmaster.so     -1:-1   0 public: static TClass* Class(void);
+libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
+libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
+libmaster.so     -1:-1   0 public: static void Dictionary(void);
+libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
+libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector&);
+libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer&);
+libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b);
+libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
+libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
+libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
+libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
+libmaster.so     -1:-1   0 public: Master::Object& func(Master::Object* t);
+libmaster.so     -1:-1   0 public: Master::Container Container(const Master::Container&);
+libmaster.so     -1:-1   0 public: Master::Container& operator=(const Master::Container&);
+===========================================================================
+class Master::Container
+ size=n/a FILE:libmaster.so LINE:-1
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in Container
+libmaster.so     -1 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in Container)
+libmaster.so     -1:-1   0 public: void ~Container(void);
+libmaster.so     -1:-1   0 public: Master::Container Container(void);
+libmaster.so     -1:-1   0 public: virtual void Print(Option_t*) const;
+libmaster.so     -1:-1   0 public: static TClass* Class(void);
+libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
+libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
+libmaster.so     -1:-1   0 public: static void Dictionary(void);
+libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
+libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector&);
+libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer&);
+libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b);
+libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
+libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
+libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
+libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
+libmaster.so     -1:-1   0 public: Master::Object& func(Master::Object* t);
+libmaster.so     -1:-1   0 public: Master::Container Container(const Master::Container&);
+libmaster.so     -1:-1   0 public: Master::Container& operator=(const Master::Container&);
+libmaster.so     -1:-1   0 public: Slave1::Object& func(Slave1::Object* t);
+===========================================================================
+class Master::Container
+ size=n/a FILE:libmaster.so LINE:-1
+List of base class--------------------------------------------------------
+0x0        public: TObject //Basic ROOT object
+List of member variable---------------------------------------------------
+Defined in Container
+libmaster.so     -1 0x0        private: static TClass* fgIsA
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in Container)
+libmaster.so     -1:-1   0 public: void ~Container(void);
+libmaster.so     -1:-1   0 public: Master::Container Container(void);
+libmaster.so     -1:-1   0 public: virtual void Print(Option_t*) const;
+libmaster.so     -1:-1   0 public: static TClass* Class(void);
+libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
+libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
+libmaster.so     -1:-1   0 public: static void Dictionary(void);
+libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
+libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector&);
+libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer&);
+libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b);
+libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
+libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
+libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
+libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
+libmaster.so     -1:-1   0 public: Master::Object& func(Master::Object* t);
+libmaster.so     -1:-1   0 public: Master::Container Container(const Master::Container&);
+libmaster.so     -1:-1   0 public: Master::Container& operator=(const Master::Container&);
+libmaster.so     -1:-1   0 public: Slave1::Object& func(Slave1::Object* t);
+libmaster.so     -1:-1   0 public: Slave2::Object& func(Slave2::Object* t);

@@ -1,0 +1,26 @@
+<lcgdict>
+	<class name="AFP_TDSimHit_p1" />
+	<class name="std::vector<AFP_TDSimHit_p1>" />
+	<class name="AFP_TDSimHitCollection_p1" id="F38ED236-94F3-483B-A015-C95EA7B194AE" />
+       
+      <class name="AFP_TDDigi_p1" />
+      <class name="std::vector<AFP_TDDigi_p1>" />
+      <class name="AFP_TDDigiCollection_p1" id="352BE1B9-96FA-46BB-B1AE-51DDF56380EB" />
+	
+	<class name="AFP_SIDSimHit_p1" />
+	<class name="std::vector<AFP_SIDSimHit_p1>" />
+	<class name="AFP_SIDSimHitCollection_p1" id="AAA03560-D4CC-40C3-80D6-165448375201" />	
+
+      <class name="AFP_SiDigi_p1" />
+      <class name="std::vector<AFP_SiDigi_p1>" />
+      <class name="AFP_SiDigiCollection_p1" id="513B266D-BD55-4603-A064-8E6F24042707" />
+	
+	<class name="AFP_TDLocRecoEvent_p1" /> 
+	<class name="std::vector<AFP_TDLocRecoEvent_p1>" /> 
+	<class name="AFP_TDLocRecoEvCollection_p1" id="3149C8A8-DEED-4922-8705-1D727A280B9E" />
+
+	<class name="AFP_SIDLocRecoEvent_p1" /> 
+	<class name="std::vector<AFP_SIDLocRecoEvent_p1>" /> 
+	<class name="AFP_SIDLocRecoEvCollection_p1" id="D0C144F2-E82E-44B3-84BC-22C7D10F262E" />	
+	
+</lcgdict>

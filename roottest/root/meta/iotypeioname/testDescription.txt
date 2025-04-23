@@ -1,0 +1,42 @@
+Summary
+=======
+
+This test aims to read a rootfile written with Root5 and using a selection xml
+which featured an iotype tag.
+
+How to produce the input file
+=============================
+Here the instructions to create the example.xml file are reported.
+
+Files needed:
+
+classes.h
+---------
+This is the same in this test directory.
+
+classes_selection.xml
+---------
+This is the same in this test directory.
+
+writeFile.C
+-----------
+    void writeFile(){
+       gSystem->Load("libCintex.so");
+       ROOT::Cintex::Cintex::Enable();
+
+       Container cont;
+       TFile* ofile = TFile::Open("example.xml","RECREATE");   
+       cont.Write();
+       ofile->Close();
+    }
+
+How to arrive to the file (note that it is produced with genreflex):
+
+    genreflex classes.h -s classes_selection.xml --rootmap al.rootmap -I $ROOTSYS/include 
+    clang++ -fPIC -shared -o libclasses.so classes_rflx.cpp `root-config --cflags --libs` -lReflex -lCintex
+
+    root -b
+    gSystem->Load("libclasses.so")
+    ROOT::Cintex::Cintex::Enable();
+    .x writeFile.C
+    .q

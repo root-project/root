@@ -1,0 +1,18 @@
+struct Marker { ~Marker() { fprintf(stdout,"dest\n"); } };
+.L lib/libEdm.so 
+.L lib/libStrip.so 
+Marker m1;
+Marker m2;
+gInterpreter->AutoParse("SiStripCluster");
+.undo 3
+// The undo used to triggering an infinite loop because a function decl
+// inside a namespace decl was being unloaded _after_ the namespace decl
+// had been removed from the decl chain.   The loop appeared because
+// the iterator over the redecl chain is set up to loop around after the end
+// if the list and continue until it reach the initial caller (this is so that
+// one can start from any point in the list and still iterate through all the
+// node).  However in this case the initial point (the already removed namespace
+// decl) is actually *not* in the list and thus it infinite loops.
+SiStripCluster *s;
+SiStripCluster obj;
+printf("The [almost] end.\n");

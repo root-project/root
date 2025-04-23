@@ -1,0 +1,19 @@
+
+Processing execLHEF.C...
+direct
+Warning in <TClass::Init>: no dictionary for class TRootLHEFEvent is available
+Warning in <TClass::Init>: no dictionary for class TRootWeight is available
+Warning in <TClass::Init>: no dictionary for class TRootLHEFParticle is available
+Warning in <TClass::Init>: no dictionary for class TSortableObject is available
+all=79618 zero=60000 low=9599 high=10019
+reader
+all=79618 zero=60000 low=9599 high=10019
+legacySelector
+Info in <TTreePlayer::MakeClass>: Files: lhef_leg_sel_gen.h and lhef_leg_sel_gen.C generated from TTree: LHEF
+Info in <TTreePlayer::MakeClass>: Files: lhef_mc_gen.h and lhef_mc_gen.C generated from TTree: LHEF
+all=79618 zero=60000 low=9599 high=10019
+selector
+all=79618 zero=60000 low=9599 high=10019
+makeClass
+all=79618 zero=60000 low=9599 high=10019
+(int) 0

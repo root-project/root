@@ -1,0 +1,15 @@
+<lcgdict>
+   <class name="StoreGate"/>
+   <class name="StoreGateSvc"/>
+
+   <namespace name="AthenaInternal"/>
+   <function name="AthenaInternal::retrieveObjectFromStore"/>
+   <function name="AthenaInternal::recordObjectToStore"/>
+   <function name="AthenaInternal::py_sg_contains"/>
+   <function name="AthenaInternal::py_sg_getitem"/>
+   <function name="AthenaInternal::py_sg_clearProxyPayload" />
+   <function name="AthenaInternal::thinContainer" />
+   <function name="AthenaInternal::thinIdxContainer" />
+   <function name="AthenaInternal::thinRemovedIdx" />
+
+</lcgdict>

@@ -1,0 +1,5 @@
+
+Processing badOperator.C...
+calling operator[] with index 33
+calling operator[] with index 33
+val==33

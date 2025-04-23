@@ -1,0 +1,116 @@
+<lcgdict>
+<class name="TRTStrawStatusData" id="BA31F478-CBCB-4F6D-8F45-7D347261215D" />
+<class name="std::less<Identifier>" />
+<class name="std::binary_function<Identifier,Identifier,bool>" />
+<class name="FloatArrayStore" id="37D741BF-3CA2-48D2-A4D9-F415CB862969" />
+<!-- <class name="FloatArrayStoreContainer" id="1CD3187D-33CF-4526-9896-221ECB1BAA2C" /> -->
+<!-- <class name="std::vector<FloatArrayStore*> >" /> -->
+<!-- <class name="DataVector<FloatArrayStore> >" /> -->
+<!-- <class name="std::vector< std::vector< std::vector<float> >* >" /> -->
+<class pattern="*iterator*FloatArrayStore" />
+
+<class name="TRTCond::RtRelation"/>
+<class name="TRTCond::BasicRtRelation"/>
+<class name="TRTCond::DinesRtRelation"/>
+<class name="TRTCond::BinnedRtRelation"/>
+<class name="TRTCond::StrawT0Container" id="CA55C79E-F64B-4195-AFF7-6A135433EB08" />
+<class name="TRTCond::StrawStatusContainer" id="9724CE3C-F277-4807-8C34-02BCCF5F2E4E" />
+<class name="TRTCond::LinearPacker<float,unsigned char>"/>
+<class name="TRTCond::StrawT0"/>
+<class name="TRTCond::StrawT0Trait"/>
+<class name="TRTCond::StrawStatus"/>
+<class name="TRTCond::DeadStrawTrait"/>
+
+<class name="TRTCond::NestedContainer<0,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainer<1,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainer<2,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainer<3,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainer<4,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainerBase<0,TRTCond::NestedContainer<1,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainerBase<1,TRTCond::NestedContainer<2,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainerBase<2,TRTCond::NestedContainer<3,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainerBase<3,TRTCond::NestedContainer<4,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="TRTCond::NestedContainerBase<4,TRTCond::StrawStatus,TRTCond::StrawStatus,TRTCond::DeadStrawTrait>"/>
+<class name="std::vector<TRTCond::NestedContainer<1,TRTCond::StrawStatus,TRTCond::DeadStrawTrait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<2,TRTCond::StrawStatus,TRTCond::DeadStrawTrait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<3,TRTCond::StrawStatus,TRTCond::DeadStrawTrait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<4,TRTCond::StrawStatus,TRTCond::DeadStrawTrait> >"/>
+<class name="std::vector<TRTCond::StrawStatus>"/>
+
+
+<class name="TRTCond::NestedContainer<0,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainer<1,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainer<2,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainer<3,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainer<4,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainerBase<0,TRTCond::NestedContainer<1,TRTCond::StrawT0,TRTCond::StrawT0Trait>,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainerBase<1,TRTCond::NestedContainer<2,TRTCond::StrawT0,TRTCond::StrawT0Trait>,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainerBase<2,TRTCond::NestedContainer<3,TRTCond::StrawT0,TRTCond::StrawT0Trait>,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainerBase<3,TRTCond::NestedContainer<4,TRTCond::StrawT0,TRTCond::StrawT0Trait>,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="TRTCond::NestedContainerBase<4,TRTCond::StrawT0,TRTCond::StrawT0,TRTCond::StrawT0Trait>"/>
+<class name="std::vector<TRTCond::NestedContainer<1,TRTCond::StrawT0,TRTCond::StrawT0Trait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<2,TRTCond::StrawT0,TRTCond::StrawT0Trait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<3,TRTCond::StrawT0,TRTCond::StrawT0Trait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<4,TRTCond::StrawT0,TRTCond::StrawT0Trait> >"/>
+<class name="std::vector<TRTCond::StrawT0>"/>
+
+<class name="TRTCond::StrawDxContainer" id="0B6DAFEB-F6AF-4ED9-B4AC-8F963565D17E" />
+<class name="TRTCond::StrawDx"/>
+<class name="TRTCond::StrawDxTrait"/>
+<class name="TRTCond::NestedContainer<0,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainer<1,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainer<2,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainer<3,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainer<4,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainerBase<0,TRTCond::NestedContainer<1,TRTCond::StrawDx,TRTCond::StrawDxTrait>,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainerBase<1,TRTCond::NestedContainer<2,TRTCond::StrawDx,TRTCond::StrawDxTrait>,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainerBase<2,TRTCond::NestedContainer<3,TRTCond::StrawDx,TRTCond::StrawDxTrait>,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainerBase<3,TRTCond::NestedContainer<4,TRTCond::StrawDx,TRTCond::StrawDxTrait>,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="TRTCond::NestedContainerBase<4,TRTCond::StrawDx,TRTCond::StrawDx,TRTCond::StrawDxTrait>"/>
+<class name="std::vector<TRTCond::NestedContainer<1,TRTCond::StrawDx,TRTCond::StrawDxTrait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<2,TRTCond::StrawDx,TRTCond::StrawDxTrait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<3,TRTCond::StrawDx,TRTCond::StrawDxTrait> >"/>
+<class name="std::vector<TRTCond::NestedContainer<4,TRTCond::StrawDx,TRTCond::StrawDxTrait> >"/>
+<class name="std::vector<TRTCond::StrawDx>"/>
+
+
+<class name="TRTCond::RtRelationContainer" id="D2F84ECD-FD12-4D3D-BAF8-7BDAA61061E7" />
+<class name="TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*>"/>
+<class name="TRTCond::NestedContainer<0,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainer<1,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainer<2,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" id="3C7382CF-36FA-41EF-8005-1B9EA83FB924"/>
+<class name="TRTCond::NestedContainer<3,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainer<4,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainerBase<0,TRTCond::NestedContainer<1,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainerBase<1,TRTCond::NestedContainer<2,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainerBase<2,TRTCond::NestedContainer<3,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainerBase<3,TRTCond::NestedContainer<4,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >" />
+<class name="TRTCond::NestedContainerBase<4,TRTCond::RtRelation*,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> >"/>
+<class name="std::vector<TRTCond::NestedContainer<1,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> > >"/>
+<class name="std::vector<TRTCond::NestedContainer<2,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> > >"/>
+<class name="std::vector<TRTCond::NestedContainer<3,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> > >"/>
+<class name="std::vector<TRTCond::NestedContainer<4,TRTCond::RtRelation*,TRTCond::NestedContainerPointerTrait<TRTCond::RtRelation*> > >"/>
+<class name="std::vector<TRTCond::RtRelation*>"/>
+
+<class name="TRTCond::StrawT0ContainerTemplate<0>" />
+<class name="TRTCond::StrawT0ContainerTemplate<2>" id="773DFAFD-DFE8-4D95-A4B2-1FBE7D488AC4"/>
+<class name="TRTCond::MultChanContainer<TRTCond::StrawT0ContainerTemplate<2> >" />
+<class name="TRTCond::StrawT0MultChanContainer" id="98EF6053-C576-4AEA-B58C-0E57EDB74E2B" />
+
+<class name="TRTCond::StrawDxContainerTemplate<0>" />
+<class name="TRTCond::StrawDxContainerTemplate<2>" />
+<class name="TRTCond::MultChanContainer<TRTCond::StrawDxContainerTemplate<2> >" />
+<class name="TRTCond::StrawDxMultChanContainer" id="6C236AB0-DC97-4324-B5CA-B5BC8787E707" />
+
+<class name="TRTCond::RtRelationMultChanContainer" id="7FC6EBDA-8DA8-40CC-B40A-BA1C9D7347BC" />
+
+<class name="TRTCond::StrawStatusContainerTemplate<0>" />
+<class name="TRTCond::StrawStatusContainerTemplate<2>" id="ED8DD42D-1A67-4B82-93F4-4462D9E11705"/>
+<class name="TRTCond::MultChanContainer<TRTCond::StrawStatusContainerTemplate<2> >" />
+<class name="TRTCond::StrawStatusMultChanContainer" id="F4DAED02-1987-4C00-ACAD-FEE9BE845D9B" />
+
+
+<!-- <class pattern="*map*" /> -->
+<!-- <class pattern="*pair*" /> -->
+<!-- <class pattern="*_Rb_tree*" /> -->
+</lcgdict>

@@ -1,0 +1,62 @@
+<!-- $Id: selection.xml 594315 2014-04-25 17:34:40Z krasznaa $ -->
+<lcgdict>
+
+  <class name="xAOD::EventInfo_v1"
+         id="AE8BED6D-1D41-4CAF-994B-42613FC91A0A" >
+    <field name="m_streamTags" transient="true" />
+    <field name="m_updateStreamTags" transient="true" />
+    <field name="m_subEvents" transient="true" />
+    <field name="m_updateSubEvents" transient="true" />
+  </class>
+  <class name="xAOD::EventAuxInfo_v1"
+         id="2CFD72A2-D3AA-4C18-9B40-E5ACBA20D785" />
+
+  <read sourceClass="xAOD::EventInfo_v1" version="[1-]"
+        targetClass="xAOD::EventInfo_v1" source="" target="" >
+    <![CDATA[
+       newObj->setStore( ( SG::IAuxStore* ) 0 );
+     ]]>
+  </read>
+
+  <read sourceClass="xAOD::EventInfo_v1" version="[1-]"
+        targetClass="xAOD::EventInfo_v1" source=""
+        target="m_updateStreamTags" >
+    <![CDATA[
+       m_updateStreamTags = true;
+     ]]>
+  </read>
+
+  <read sourceClass="xAOD::EventInfo_v1" version="[1-]"
+        targetClass="xAOD::EventInfo_v1" source=""
+        target="m_updateSubEvents" >
+    <![CDATA[
+       m_updateSubEvents = true;
+     ]]>
+  </read>
+
+  <class name="xAOD::EventInfoContainer_v1"
+         id="8F061263-D744-4D72-9377-1573FE21CDCE" />
+  <class name="xAOD::EventInfoAuxContainer_v1"
+         id="742479C0-2699-4949-A9D0-01DBC421BE5B" />
+
+  <!-- Smart pointer dictionaries: -->
+  <class name="DataLink<xAOD::EventInfo_v1>" />
+  <class name="std::vector<DataLink<xAOD::EventInfo_v1> >" />
+
+  <class name="ElementLink<xAOD::EventInfoContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::EventInfoContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::EventInfoContainer_v1> > >" />
+
+  <!-- Additional dictionaries for the payload: -->
+  <class name="std::pair<std::string,std::string>" />
+  <class name="std::vector<std::pair<std::string,std::string> >" />
+  <class name="std::vector<std::vector<std::pair<std::string,std::string> > >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+  </exclusion>
+
+</lcgdict>

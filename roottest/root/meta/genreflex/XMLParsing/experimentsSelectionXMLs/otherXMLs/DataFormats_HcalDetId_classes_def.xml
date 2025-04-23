@@ -1,0 +1,35 @@
+<lcgdict>
+  <class name="HcalElectronicsId" ClassVersion="10">
+   <version ClassVersion="10" checksum="4189456723"/>
+  </class>
+  <class name="HcalFrontEndId" ClassVersion="10">
+   <version ClassVersion="10" checksum="1241522245"/>
+  </class>
+  <class name="HcalDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="193306378"/>
+  </class>
+  <class name="HcalTrigTowerDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3049681583"/>
+  </class>
+  <class name="HcalCalibDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="173148569"/>
+  </class>
+  <class name="HcalOtherDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="4099723506"/>
+  </class>
+  <class name="HcalDcsDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="4165221916"/>
+  </class>
+  <class name="HcalZDCDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="927247167"/>
+  </class>
+  <class name="HcalCastorDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3473198120"/>
+  </class>
+  <class name="CastorElectronicsId" ClassVersion="10">
+   <version ClassVersion="10" checksum="849697027"/>
+  </class>
+  <class name="std::vector<HcalElectronicsId>"/>
+  <class name="std::vector<HcalFrontEndId>"/>
+  <class name="std::vector<CastorElectronicsId>"/>
+</lcgdict>

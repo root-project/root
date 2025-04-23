@@ -1,0 +1,7 @@
+
+Processing execReadOldCSC.C...
+Warning in <TClass::Init>: no dictionary for class TCSCEventInfo is available
+Warning in <TClass::Init>: no dictionary for class TCSCTrack is available
+Warning in <TClass::Init>: no dictionary for class TCSCChargedLV is available
+Warning in <TClass::Init>: no dictionary for class TCSCJet is available
+Warning in <TClass::Init>: no dictionary for class TCSCTriggerBits is available

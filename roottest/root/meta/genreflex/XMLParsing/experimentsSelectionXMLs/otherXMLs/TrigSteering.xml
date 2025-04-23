@@ -1,0 +1,15 @@
+<lcgdict>
+
+  <class name="HLT::Chain" />
+  <class name="std::vector<HLT::Chain*>" />
+  <class name="std::vector<const HLT::Chain*>" />
+
+  <class name="HLT::Signature" />
+  <class name="std::vector<HLT::Signature*>" />
+  <class name="std::vector<const HLT::Signature*>" />
+
+  <class name="HLT::Sequence" />
+  <class name="std::vector<HLT::Sequence*>" />
+  <class name="std::vector<const HLT::Sequence*>" />
+
+</lcgdict>

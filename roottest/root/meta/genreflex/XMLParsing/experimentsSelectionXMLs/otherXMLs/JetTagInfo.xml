@@ -1,0 +1,54 @@
+<lcgdict>
+
+  <class name="Analysis::BaseTagInfo" />
+  <class name="Analysis::SecVtxInfo" >
+    <field name="m_fittedTrks" transient="true" />
+  </class>  
+  <class name="Analysis::LifetimeInfo" />
+
+  <class name="Analysis::SoftElectronInfo" />
+  <class name="std::vector<Analysis::SETrackInfo>" />
+  <class name="Analysis::SETrackInfo" />
+  <class name="Analysis::SoftMuonInfo" />
+  <class name="std::vector<Analysis::SMTrackInfo>" />
+  <class name="Analysis::SMTrackInfo" />
+
+  <class name="Analysis::TruthInfo" />
+  <class name="Analysis::SoftLeptonTruthInfo" />
+  <class name="std::vector<Analysis::SLTrueInfo>" />
+  <class name="Analysis::SLTrueInfo" />
+
+  <class name="Analysis::IPInfoBase" />
+  <class name="Analysis::IPInfoPlus" />
+  <class name="std::vector<Analysis::IPTrackInfo>" />
+  <class name="Analysis::IPTrackInfo" />
+
+  <class name="Analysis::SVInfoBase" />
+  <class name="Analysis::SVInfoPlus" />
+  <class name="std::vector<Analysis::SVTrackInfo>" />
+  <class name="Analysis::SVTrackInfo" />
+
+  <class name="Analysis::JetProbInfoBase" />
+
+  <class name="Analysis::TrackGrade" >
+    <field name="m_gradeNumber" transient="false" />
+    <field name="m_gradeName" transient="false" />
+  </class>
+
+  <class name="Analysis::TrackGradesDefinition" />
+
+  <class name="Analysis::AtlfInfo" />
+
+  <class name="Analysis::TrackCountingInfo" />
+
+  <class name="Analysis::JetFitterTagInfo" />
+  <class name="Analysis::IJetFitterTagInfo" />
+
+  <class name="Analysis::MSVVtxInfo" />
+  <class name="std::vector<Analysis::MSVVtxInfo*>" />
+  <class name="Analysis::MultiSVInfoPlus" />
+
+  <class name="Analysis::GbbNNTagInfo" />
+
+
+</lcgdict>

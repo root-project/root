@@ -1,0 +1,7 @@
+<lcgdict>
+<class name="LTCDigi" ClassVersion="10">
+ <version ClassVersion="10" checksum="3405171392"/>
+</class>
+<class name="std::vector<LTCDigi>"/>
+<class name="edm::Wrapper<std::vector<LTCDigi> >" splitLevel="0"/>
+</lcgdict>

@@ -1,0 +1,16 @@
+
+Processing execNestedClasses.C...
+RootmapContent:
+{ decls }
+namespace ns {  }
+
+[ libnestedClasses_dictrflx.so ]
+# List of selected classes
+class A
+class B
+class CastorElectronicsMap
+class TheTypedef
+class ns::C
+class ns::TheTypedef
+# List of selected typedefs and outer classes
+(int) 0

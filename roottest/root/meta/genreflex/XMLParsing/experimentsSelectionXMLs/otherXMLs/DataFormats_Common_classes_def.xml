@@ -1,0 +1,149 @@
+<lcgdict>
+ <class name="edm::EDProductGetter" ClassVersion="10">
+  <version ClassVersion="10" checksum="2702412727"/>
+ </class>
+ <class name="edm::RefCore" ClassVersion="11">
+  <version ClassVersion="10" checksum="641105393"/>
+  <version ClassVersion="11" checksum="3425324092"/>
+   <field name="cachePtr_" transient = "true"/>
+ </class>
+ <ioread sourceClass = "edm::RefCore" version="[1-]" targetClass="edm::RefCore" source="" target="cachePtr_">
+   <![CDATA[
+     edm::EDProductGetter::assignEDProductGetter(reinterpret_cast<edm::EDProductGetter const*&>(cachePtr_));
+      ]]>
+ </ioread>
+  <class name="edm::RefCoreWithIndex" ClassVersion="11">
+    <version ClassVersion="11" checksum="2602044085"/>
+    <field name="cachePtr_" transient = "true"/>
+  </class>
+  <ioread sourceClass = "edm::RefCoreWithIndex" version="[1-]" targetClass="edm::RefCoreWithIndex" source="" target="cachePtr_">
+    <![CDATA[
+      edm::EDProductGetter::assignEDProductGetter(reinterpret_cast<edm::EDProductGetter const*&>(cachePtr_));
+    ]]>
+  </ioread>
+ <class name="edm::ConstPtrCache" ClassVersion="10">
+  <version ClassVersion="10" checksum="2166959629"/>
+   <field name="ptr_" transient="true"/>
+ </class>
+ <ioread sourceClass = "edm::ConstPtrCache" version="[1-]" targetClass="edm::ConstPtrCache" source = "" target="ptr_">
+    <![CDATA[ptr_=0;
+    ]]>
+ </ioread>
+ <class name="edm::BoolCache" ClassVersion="10">
+  <version ClassVersion="10" checksum="238838498"/>
+   <field name="isCached_" transient="true"/>
+ </class>
+ <ioread sourceClass = "edm::BoolCache" version="[1-]" targetClass="edm::BoolCache" source = "" target="isCached_">
+    <![CDATA[isCached_=0;
+    ]]>
+ </ioread>
+ <class name="edm::reftobase::RefHolderBase" ClassVersion="10">
+  <version ClassVersion="10" checksum="133255391"/>
+ </class>
+ <class name="edm::RefVectorBase<unsigned int>"/>
+ <class name="edm::RefVectorBase<unsigned long>"/>
+ <class name="edm::RefVectorBase<int>"/>
+ <class name="edm::Ref<std::vector<int>,int,edm::refhelper::FindUsingAdvance<std::vector<int>,int> >"/>
+ <class name="edm::RefVector<std::vector<int>,int,edm::refhelper::FindUsingAdvance<std::vector<int>,int> >"/>
+ <class name="edm::RefToBaseVector<int>"/>
+ <class name="edm::PtrVector<int>"/>
+ <class name="edm::Ptr<int>"/>
+ <class name="edm::reftobase::BaseVectorHolder<int>"/>
+ <class name="edm::reftobase::RefVectorHolderBase" ClassVersion="10">
+  <version ClassVersion="10" checksum="2803110946"/>
+ </class>
+ <class name="edm::reftobase::IndirectVectorHolder<int>"/>
+ <class name="edm::reftobase::VectorHolder<int, edm::RefVector<std::vector<int>,int,edm::refhelper::FindUsingAdvance<std::vector<int>,int> > >"/>
+ <class name="edm::Wrapper<edm::RefToBaseVector<int> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::PtrVector<int> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::RefVector<std::vector<int>,int,edm::refhelper::FindUsingAdvance<std::vector<int>,int> > >" splitLevel="0"/>
+ <class name="edm::PtrVectorBase" ClassVersion="10">
+  <version ClassVersion="10" checksum="2381000311"/>
+   <field name ="cachedItems_" transient = "true"/>
+ </class>
+  <!-- -->
+  <ioread sourceClass = "edm::PtrVectorBase" version="[1-]" targetClass="edm::PtrVectorBase" source = "" target="cachedItems_">
+    <![CDATA[cachedItems_.clear();
+    ]]>
+  </ioread>
+   <!-- -->
+<class name="edmNew::dstvdetails::DetSetVectorTrans" ClassVersion="10">
+ <version ClassVersion="10" checksum="1132971359"/>
+   <field name="filling" transient="true"/>
+   <field name="getter" transient="true"/>
+</class>
+<class name="edmNew::dstvdetails::DetSetVectorTrans::Item" ClassVersion="10">
+ <version ClassVersion="10" checksum="1062438024"/>
+</class>
+<class name="std::vector<edmNew::dstvdetails::DetSetVectorTrans::Item>"/>
+
+
+<class name="edm::DataFrame" ClassVersion="10">
+ <version ClassVersion="10" checksum="1632285442"/>
+</class>
+<class name="edm::DataFrameContainer" ClassVersion="10">
+ <version ClassVersion="10" checksum="2404115677"/>
+</class>
+<class name="edm::Wrapper<edm::DataFrameContainer>" splitLevel="0"/>
+
+ <class name="edm::HLTPathStatus" ClassVersion="10">
+  <version ClassVersion="10" checksum="1011460161"/>
+ </class>
+ <class name="edm::Wrapper<edm::HLTPathStatus>" splitLevel="0"/>
+ <class name="std::vector<edm::HLTPathStatus>"/>
+ <class name="edm::Wrapper<std::vector<edm::HLTPathStatus> >" splitLevel="0"/>
+ <class name="edm::HLTGlobalStatus" ClassVersion="10">
+  <version ClassVersion="10" checksum="1354441856"/>
+ </class>
+ <class name="edm::Wrapper<edm::HLTGlobalStatus>" splitLevel="0"/>
+ <class name="edm::TriggerResults" ClassVersion="10">
+  <version ClassVersion="10" checksum="547571379"/>
+ </class>
+ <class name="edm::Wrapper<edm::TriggerResults>" splitLevel="0"/>
+ <class name="edm::Other" ClassVersion="10">
+  <version ClassVersion="10" checksum="2949726"/>
+ </class>
+ <class name="edm::DoNotSortUponInsertion" ClassVersion="10">
+  <version ClassVersion="10" checksum="862111625"/>
+ </class>
+ <class name="edm::DoNotRecordParents" ClassVersion="10">
+  <version ClassVersion="10" checksum="2234517662"/>
+ </class>
+ <class name="edm::RangeMap<int,std::vector<float>,edm::CopyPolicy<float> >"/>
+ <class name="edm::ValueMap<int>" />
+ <class name="edm::ValueMap<unsigned int>" />
+ <class name="edm::ValueMap<bool>" />
+ <class name="edm::ValueMap<float>" />
+ <class name="edm::ValueMap<double>" />
+ <class name="edm::Wrapper<edm::ValueMap<int> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::ValueMap<bool> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::ValueMap<unsigned int> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::ValueMap<float> >" splitLevel="0"/>
+ <class name="edm::Wrapper<edm::ValueMap<double> >" splitLevel="0"/>
+ <class name="std::vector<edm::EventAuxiliary>"/>
+ <class name="edm::Wrapper<std::vector<edm::EventAuxiliary> >"/>
+ <class name="edm::Wrapper<std::vector<edm::ErrorSummaryEntry> >"/>
+ <class name="edm::MergeableCounter" ClassVersion="10">
+  <version ClassVersion="10" checksum="3792606006"/>
+ </class>
+ <class name="edm::Wrapper<edm::MergeableCounter>"/>
+
+ <class name="edm::ConditionsInEventBlock" ClassVersion="10">
+  <version ClassVersion="10" checksum="28865621"/>
+ </class>
+ <class name="edm::ConditionsInRunBlock" ClassVersion="10">
+  <version ClassVersion="10" checksum="2978236528"/>
+ </class>
+ <class name="edm::ConditionsInLumiBlock" ClassVersion="10">
+  <version ClassVersion="10" checksum="3061695978"/>
+ </class>
+ <class name="edm::Wrapper<edm::ConditionsInEventBlock>"/>
+ <class name="edm::Wrapper<edm::ConditionsInRunBlock>"/>
+ <class name="edm::Wrapper<edm::ConditionsInLumiBlock>"/>
+ <class name="test_with_dictionaries::IntValue" ClassVersion="10">
+  <version ClassVersion="10" checksum="894112631"/>
+ </class>
+ <class name="test_with_dictionaries::IntValue2" ClassVersion="10">
+  <version ClassVersion="10" checksum="3452516682"/>
+ </class>
+</lcgdict>

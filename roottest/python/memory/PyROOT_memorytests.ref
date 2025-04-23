@@ -1,0 +1,8 @@
+Test object creation and destruction ... ok
+Test ROOT notification on object destruction ... ok
+Test memory mgmt heuristics for object calls ... ok
+Derived classes should call base dtor automatically ... ok
+
+----------------------------------------------------------------------
+
+OK

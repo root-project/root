@@ -1,0 +1,14 @@
+
+Processing SimpleRead.C...
+Warning in <TClass::Init>: no dictionary for class Simple is available
+Warning in <TClass::Init>: no dictionary for class Content is available
+************************
+*    Row   * simple.fD *
+************************
+*        0 *         0 *
+*        1 *         1 *
+*        2 *         2 *
+*        3 *         0 *
+*        4 *         1 *
+*        5 *         2 *
+************************

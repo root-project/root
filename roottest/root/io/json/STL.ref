@@ -1,0 +1,2139 @@
+
+Processing runSTL.C...
+ ====== different STL containers TJsonEx7 ===== 
+TJsonEx7 store/read/store MATCHED len1:19577 len2:19577
+{
+  "_typename" : "TJsonEx7",
+  "fStr1" : "String with special characters: \" & < >",
+  "fStr2" : "Very long Value of STL string\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8",
+  "fStrPtr1" : "Value of < >  &lt; &gt; string fStrPtr1",
+  "fStrPtr2" : null,
+  "fStrArr" : ["Value of fStrArr[0]", "Value of fStrArr[1]", "Value of fStrArr[2]"],
+  "fStrPtrArr" : ["value of fStrPtrArr[0]", "value of fStrPtrArr[1]", "value of fStrPtrArr[2]"],
+  "fBoolArr" : [false, true, false, false, true, false, false, true, false, false],
+  "fVectDouble" : [0, 3, 6, 9, 12],
+  "fVectBool" : [false, true, false, true, false],
+  "fVectDoubleArr" : [[0, 1, 2, 3, 4], [10, 11, 12, 13, 14], [20, 21, 22, 23, 24]],
+  "fVectPtrDouble" : [0, 3, 6, 9, 12],
+  "fVectPtrDoubleArr" : [[0, 3, 6, 9, 12], [100, 103, 106, 109, 112], [200, 203, 206, 209, 212]],
+  "fVectEx1" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 492,
+    "fInt" : 493824,
+    "fLong" : 30617284,
+    "fFloat" : 4.8,
+    "fDouble" : 15.2
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 615,
+    "fInt" : 617280,
+    "fLong" : 38271605,
+    "fFloat" : 6,
+    "fDouble" : 19
+  }],
+  "fVectEx1Ptr" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }, {"$ref":6}, {"$ref":6}],
+  "fVectEx2" : [{
+    "_typename" : "TJsonEx2",
+    "fTest1" : [11111, 22222, 33333, 44444],
+    "fTest2" : [[1, 2], [3, 4]],
+    "fBool" : [[[false, true, false, true], [true, false, true, false], [false, true, false, true]], [[true, false, true, false], [false, true, false, true], [true, false, true, false]]],
+    "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+    "fShort" : [[[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]], [[2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]]],
+    "fInt" : [[[3, 4, 5, 6], [4, 5, 6, 7], [5, 6, 7, 8]], [[5, 6, 7, 8], [7, 8, 9, 10], [9, 10, 11, 12]]],
+    "fLong" : [[[6, 8, 10, 12], [9, 12, 15, 18], [12, 16, 20, 24]], [[12, 16, 20, 24], [18, 24, 30, 36], [24, 32, 40, 48]]],
+    "fFloat" : [[[24, 36, 48, 60], [32, 48, 64, 80], [40, 60, 80, 100]], [[30, 45, 60, 75], [40, 60, 80, 100], [50, 75, 100, 125]]],
+    "fDouble" : [[[45, 50, 55, 60], [54, 60, 66, 72], [63, 70, 77, 84]], [[90, 100, 110, 120], [108, 120, 132, 144], [126, 140, 154, 168]]]
+  }, {
+    "_typename" : "TJsonEx2",
+    "fTest1" : [22222, 44444, 66666, 88888],
+    "fTest2" : [[2, 4], [6, 8]],
+    "fBool" : [[[false, true, false, true], [true, false, true, false], [false, true, false, true]], [[true, false, true, false], [false, true, false, true], [true, false, true, false]]],
+    "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+    "fShort" : [[[2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]], [[3, 4, 5, 6], [4, 5, 6, 7], [5, 6, 7, 8]]],
+    "fInt" : [[[4, 5, 6, 7], [5, 6, 7, 8], [6, 7, 8, 9]], [[6, 7, 8, 9], [8, 9, 10, 11], [10, 11, 12, 13]]],
+    "fLong" : [[[12, 16, 20, 24], [18, 24, 30, 36], [24, 32, 40, 48]], [[24, 32, 40, 48], [36, 48, 60, 72], [48, 64, 80, 96]]],
+    "fFloat" : [[[48, 72, 96, 120], [64, 96, 128, 160], [80, 120, 160, 200]], [[60, 90, 120, 150], [80, 120, 160, 200], [100, 150, 200, 250]]],
+    "fDouble" : [[[90, 100, 110, 120], [108, 120, 132, 144], [126, 140, 154, 168]], [[180, 200, 220, 240], [216, 240, 264, 288], [252, 280, 308, 336]]]
+  }, {
+    "_typename" : "TJsonEx2",
+    "fTest1" : [33333, 66666, 99999, 133332],
+    "fTest2" : [[3, 6], [9, 12]],
+    "fBool" : [[[false, true, false, true], [true, false, true, false], [false, true, false, true]], [[true, false, true, false], [false, true, false, true], [true, false, true, false]]],
+    "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+    "fShort" : [[[3, 4, 5, 6], [4, 5, 6, 7], [5, 6, 7, 8]], [[4, 5, 6, 7], [5, 6, 7, 8], [6, 7, 8, 9]]],
+    "fInt" : [[[5, 6, 7, 8], [6, 7, 8, 9], [7, 8, 9, 10]], [[7, 8, 9, 10], [9, 10, 11, 12], [11, 12, 13, 14]]],
+    "fLong" : [[[18, 24, 30, 36], [27, 36, 45, 54], [36, 48, 60, 72]], [[36, 48, 60, 72], [54, 72, 90, 108], [72, 96, 120, 144]]],
+    "fFloat" : [[[72, 108, 144, 180], [96, 144, 192, 240], [120, 180, 240, 300]], [[90, 135, 180, 225], [120, 180, 240, 300], [150, 225, 300, 375]]],
+    "fDouble" : [[[135, 150, 165, 180], [162, 180, 198, 216], [189, 210, 231, 252]], [[270, 300, 330, 360], [324, 360, 396, 432], [378, 420, 462, 504]]]
+  }, {
+    "_typename" : "TJsonEx2",
+    "fTest1" : [44444, 88888, 133332, 177776],
+    "fTest2" : [[4, 8], [12, 16]],
+    "fBool" : [[[false, true, false, true], [true, false, true, false], [false, true, false, true]], [[true, false, true, false], [false, true, false, true], [true, false, true, false]]],
+    "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+    "fShort" : [[[4, 5, 6, 7], [5, 6, 7, 8], [6, 7, 8, 9]], [[5, 6, 7, 8], [6, 7, 8, 9], [7, 8, 9, 10]]],
+    "fInt" : [[[6, 7, 8, 9], [7, 8, 9, 10], [8, 9, 10, 11]], [[8, 9, 10, 11], [10, 11, 12, 13], [12, 13, 14, 15]]],
+    "fLong" : [[[24, 32, 40, 48], [36, 48, 60, 72], [48, 64, 80, 96]], [[48, 64, 80, 96], [72, 96, 120, 144], [96, 128, 160, 192]]],
+    "fFloat" : [[[96, 144, 192, 240], [128, 192, 256, 320], [160, 240, 320, 400]], [[120, 180, 240, 300], [160, 240, 320, 400], [200, 300, 400, 500]]],
+    "fDouble" : [[[180, 200, 220, 240], [216, 240, 264, 288], [252, 280, 308, 336]], [[360, 400, 440, 480], [432, 480, 528, 576], [504, 560, 616, 672]]]
+  }, {
+    "_typename" : "TJsonEx2",
+    "fTest1" : [55555, 111110, 166665, 222220],
+    "fTest2" : [[5, 10], [15, 20]],
+    "fBool" : [[[false, true, false, true], [true, false, true, false], [false, true, false, true]], [[true, false, true, false], [false, true, false, true], [true, false, true, false]]],
+    "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+    "fShort" : [[[5, 6, 7, 8], [6, 7, 8, 9], [7, 8, 9, 10]], [[6, 7, 8, 9], [7, 8, 9, 10], [8, 9, 10, 11]]],
+    "fInt" : [[[7, 8, 9, 10], [8, 9, 10, 11], [9, 10, 11, 12]], [[9, 10, 11, 12], [11, 12, 13, 14], [13, 14, 15, 16]]],
+    "fLong" : [[[30, 40, 50, 60], [45, 60, 75, 90], [60, 80, 100, 120]], [[60, 80, 100, 120], [90, 120, 150, 180], [120, 160, 200, 240]]],
+    "fFloat" : [[[120, 180, 240, 300], [160, 240, 320, 400], [200, 300, 400, 500]], [[150, 225, 300, 375], [200, 300, 400, 500], [250, 375, 500, 625]]],
+    "fDouble" : [[[225, 250, 275, 300], [270, 300, 330, 360], [315, 350, 385, 420]], [[450, 500, 550, 600], [540, 600, 660, 720], [630, 700, 770, 840]]]
+  }],
+  "fVectEx3" : [{
+    "_typename" : "TJsonEx3",
+    "fSize" : 3,
+    "fBool" : [false, false, false],
+    "fChar" : "123",
+    "fShort" : [0, 2, 4],
+    "fInt" : [0, 5, 10],
+    "fLong" : [0, 123, 246],
+    "fFloat" : [0, 3, 6],
+    "fDouble" : [0, 7, 14]
+  }, {
+    "_typename" : "TJsonEx3",
+    "fSize" : 4,
+    "fBool" : [false, false, false, false],
+    "fChar" : "1234",
+    "fShort" : [0, 2, 4, 6],
+    "fInt" : [0, 5, 10, 15],
+    "fLong" : [0, 123, 246, 369],
+    "fFloat" : [0, 3, 6, 9],
+    "fDouble" : [0, 7, 14, 21]
+  }, {
+    "_typename" : "TJsonEx3",
+    "fSize" : 5,
+    "fBool" : [false, false, false, false, false],
+    "fChar" : "12345",
+    "fShort" : [0, 2, 4, 6, 8],
+    "fInt" : [0, 5, 10, 15, 20],
+    "fLong" : [0, 123, 246, 369, 492],
+    "fFloat" : [0, 3, 6, 9, 12],
+    "fDouble" : [0, 7, 14, 21, 28]
+  }, {
+    "_typename" : "TJsonEx3",
+    "fSize" : 6,
+    "fBool" : [false, false, false, false, false, false],
+    "fChar" : "123456",
+    "fShort" : [0, 2, 4, 6, 8, 10],
+    "fInt" : [0, 5, 10, 15, 20, 25],
+    "fLong" : [0, 123, 246, 369, 492, 615],
+    "fFloat" : [0, 3, 6, 9, 12, 15],
+    "fDouble" : [0, 7, 14, 21, 28, 35]
+  }, {
+    "_typename" : "TJsonEx3",
+    "fSize" : 7,
+    "fBool" : [false, false, false, false, false, false, false],
+    "fChar" : "1234567",
+    "fShort" : [0, 2, 4, 6, 8, 10, 12],
+    "fInt" : [0, 5, 10, 15, 20, 25, 30],
+    "fLong" : [0, 123, 246, 369, 492, 615, 738],
+    "fFloat" : [0, 3, 6, 9, 12, 15, 18],
+    "fDouble" : [0, 7, 14, 21, 28, 35, 42]
+  }],
+  "fVectBox" : [{
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 0,
+    "fY1" : 0,
+    "fX2" : 0,
+    "fY2" : 0
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 11,
+    "fY1" : 22,
+    "fX2" : 33,
+    "fY2" : 44
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 22,
+    "fY1" : 44,
+    "fX2" : 66,
+    "fY2" : 88
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 33,
+    "fY1" : 66,
+    "fX2" : 99,
+    "fY2" : 132
+  }, {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 44,
+    "fY1" : 88,
+    "fX2" : 132,
+    "fY2" : 176
+  }],
+  "fVectNames" : [{
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name0",
+    "fTitle" : "Title0"
+  }, {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name1",
+    "fTitle" : "Title1"
+  }, {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name2",
+    "fTitle" : "Title2"
+  }, {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name3",
+    "fTitle" : "Title3"
+  }, {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "Name4",
+    "fTitle" : "Title4"
+  }],
+  "fVectEx11" : [{
+    "_typename" : "TJsonEx11",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8,
+    "fInt2" : 27
+  }, {
+    "_typename" : "TJsonEx11",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6,
+    "fInt2" : 54
+  }, {
+    "_typename" : "TJsonEx11",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4,
+    "fInt2" : 81
+  }, {
+    "_typename" : "TJsonEx11",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 492,
+    "fInt" : 493824,
+    "fLong" : 30617284,
+    "fFloat" : 4.8,
+    "fDouble" : 15.2,
+    "fInt2" : 108
+  }, {
+    "_typename" : "TJsonEx11",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 615,
+    "fInt" : 617280,
+    "fLong" : 38271605,
+    "fFloat" : 6,
+    "fDouble" : 19,
+    "fInt2" : 135
+  }],
+  "fABC" : 5,
+  "fVectString" : ["string 0 content", "string 1 content"],
+  "fVectStringPtr" : ["string pointer 0 content", "string pointer 1 content"],
+  "fListDouble" : [0, 4, 8, 12, 16],
+  "fListBool" : [false, true, false, true, false],
+  "fListEx1" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 492,
+    "fInt" : 493824,
+    "fLong" : 30617284,
+    "fFloat" : 4.8,
+    "fDouble" : 15.2
+  }],
+  "fListEx1Ptr" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 861,
+    "fInt" : 864192,
+    "fLong" : 53580247,
+    "fFloat" : 8.4,
+    "fDouble" : 26.6
+  }, {"$ref":37}, null, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 1230,
+    "fInt" : 1234560,
+    "fLong" : 76543210,
+    "fFloat" : 12,
+    "fDouble" : 38
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 1353,
+    "fInt" : 1358016,
+    "fLong" : 84197531,
+    "fFloat" : 13.2,
+    "fDouble" : 41.8
+  }],
+  "fDequeDouble" : [0, 4, 8, 12, 16],
+  "fDequeBool" : [false, true, false, true, false],
+  "fDequeEx1" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 1353,
+    "fInt" : 1358016,
+    "fLong" : 84197531,
+    "fFloat" : 13.2,
+    "fDouble" : 41.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 1476,
+    "fInt" : 1481472,
+    "fLong" : 91851852,
+    "fFloat" : 14.4,
+    "fDouble" : 45.6
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 1599,
+    "fInt" : 1604928,
+    "fLong" : 99506173,
+    "fFloat" : 15.6,
+    "fDouble" : 49.4
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 1722,
+    "fInt" : 1728384,
+    "fLong" : 107160494,
+    "fFloat" : 16.8,
+    "fDouble" : 53.2
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 1845,
+    "fInt" : 1851840,
+    "fLong" : 114814815,
+    "fFloat" : 18,
+    "fDouble" : 57
+  }],
+  "fDequeEx1Ptr" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, null, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }, {"$ref":45}, null],
+  "fMapIntDouble" : [{"$pair" : "pair<int,double>", "first" : 0, "second" : 0}, {"$pair" : "pair<int,double>", "first" : 1, "second" : 5}, {"$pair" : "pair<int,double>", "first" : 2, "second" : 10}, {"$pair" : "pair<int,double>", "first" : 3, "second" : 15}, {"$pair" : "pair<int,double>", "first" : 4, "second" : 20}],
+  "fMapStrInt" : [{"$pair" : "pair<TString,int>", "first" : "Str0", "second" : 10}, {"$pair" : "pair<TString,int>", "first" : "Str1", "second" : 11}, {"$pair" : "pair<TString,int>", "first" : "Str2", "second" : 12}, {"$pair" : "pair<TString,int>", "first" : "Str3", "second" : 13}, {"$pair" : "pair<TString,int>", "first" : "Str4", "second" : 14}],
+  "fMapIntEx1" : [{"$pair" : "pair<int,TJsonEx1>", "first" : 0, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 984,
+    "fInt" : 987648,
+    "fLong" : 61234568,
+    "fFloat" : 9.6,
+    "fDouble" : 30.4
+  }}, {"$pair" : "pair<int,TJsonEx1>", "first" : 1, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 1107,
+    "fInt" : 1111104,
+    "fLong" : 68888889,
+    "fFloat" : 10.8,
+    "fDouble" : 34.2
+  }}, {"$pair" : "pair<int,TJsonEx1>", "first" : 2, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 1230,
+    "fInt" : 1234560,
+    "fLong" : 76543210,
+    "fFloat" : 12,
+    "fDouble" : 38
+  }}, {"$pair" : "pair<int,TJsonEx1>", "first" : 3, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 1353,
+    "fInt" : 1358016,
+    "fLong" : 84197531,
+    "fFloat" : 13.2,
+    "fDouble" : 41.8
+  }}, {"$pair" : "pair<int,TJsonEx1>", "first" : 4, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 1476,
+    "fInt" : 1481472,
+    "fLong" : 91851852,
+    "fFloat" : 14.4,
+    "fDouble" : 45.6
+  }}],
+  "fMapIntEx1Ptr" : [{"$pair" : "pair<int,TJsonEx1*>", "first" : 0, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }}, {"$pair" : "pair<int,TJsonEx1*>", "first" : 1, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 492,
+    "fInt" : 493824,
+    "fLong" : 30617284,
+    "fFloat" : 4.8,
+    "fDouble" : 15.2
+  }}, {"$pair" : "pair<int,TJsonEx1*>", "first" : 2, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 615,
+    "fInt" : 617280,
+    "fLong" : 38271605,
+    "fFloat" : 6,
+    "fDouble" : 19
+  }}, {"$pair" : "pair<int,TJsonEx1*>", "first" : 3, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 738,
+    "fInt" : 740736,
+    "fLong" : 45925926,
+    "fFloat" : 7.2,
+    "fDouble" : 22.8
+  }}, {"$pair" : "pair<int,TJsonEx1*>", "first" : 4, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 861,
+    "fInt" : 864192,
+    "fLong" : 53580247,
+    "fFloat" : 8.4,
+    "fDouble" : 26.6
+  }}],
+  "fMultimapIntDouble" : [{"$pair" : "pair<int,double>", "first" : 0, "second" : 0}, {"$pair" : "pair<int,double>", "first" : 0, "second" : 1000}, {"$pair" : "pair<int,double>", "first" : 1, "second" : 6}, {"$pair" : "pair<int,double>", "first" : 1, "second" : 1006}, {"$pair" : "pair<int,double>", "first" : 2, "second" : 12}, {"$pair" : "pair<int,double>", "first" : 2, "second" : 1012}, {"$pair" : "pair<int,double>", "first" : 3, "second" : 18}, {"$pair" : "pair<int,double>", "first" : 3, "second" : 1018}, {"$pair" : "pair<int,double>", "first" : 4, "second" : 24}, {"$pair" : "pair<int,double>", "first" : 4, "second" : 1024}],
+  "fSetDouble" : [2, 3, 4, 5, 6],
+  "fMultisetDouble" : [17, 34, 51, 68, 85],
+  "fBitsSet16" : [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true],
+  "fBitsSet64" : [false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false]
+}
+
+ ====== STL as base class TJsonEx8 ===== 
+TJsonEx8 store/read/store MATCHED len1:170 len2:170
+{
+  "_typename" : "TJsonEx8",
+  "fVector" : [46, 69, 92, 115, 138, 161, 184, 207, 230, 253, 276],
+  "fInt" : 12345,
+  "fStdString" : "Value of STL string, numelem = 11"
+}
+
+ ====== STL vector of complex classes TJsonEx12 ===== 
+TJsonEx12 store/read/store MATCHED len1:39076 len2:39076
+{
+  "_typename" : "TJsonEx12",
+  "vect1" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 492,
+    "fInt" : 493824,
+    "fLong" : 30617284,
+    "fFloat" : 4.8,
+    "fDouble" : 15.2
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 615,
+    "fInt" : 617280,
+    "fLong" : 38271605,
+    "fFloat" : 6,
+    "fDouble" : 19
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 738,
+    "fInt" : 740736,
+    "fLong" : 45925926,
+    "fFloat" : 7.2,
+    "fDouble" : 22.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 861,
+    "fInt" : 864192,
+    "fLong" : 53580247,
+    "fFloat" : 8.4,
+    "fDouble" : 26.6
+  }],
+  "vect9" : [{
+    "_typename" : "TJsonEx9",
+    "fCnt" : 1,
+    "fStr" : ["String0"],
+    "fStr2" : [["String[0][0]"], ["String[1][0]"], ["String[2][0]"]],
+    "fStr4" : [[["String[0][0][0]"], ["String[0][1][0]"], ["String[0][2][0]"], ["String[0][3][0]"], ["String[0][4][0]"]], [["String[1][0][0]"], ["String[1][1][0]"], ["String[1][2][0]"], ["String[1][3][0]"], ["String[1][4][0]"]]],
+    "fStr6" : [[null], ["String[1][0]"], ["String[2][0]"]],
+    "fNm2" : [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0]",
+      "fTitle" : "Title[0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }]],
+    "fNm4" : [[[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][0]",
+      "fTitle" : "Name[0][0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][0]",
+      "fTitle" : "Name[0][1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][0]",
+      "fTitle" : "Name[0][2][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][0]",
+      "fTitle" : "Name[0][3][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][0]",
+      "fTitle" : "Name[0][4][0]"
+    }]], [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][0]",
+      "fTitle" : "Name[1][0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][0]",
+      "fTitle" : "Name[1][1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][0]",
+      "fTitle" : "Name[1][2][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][0]",
+      "fTitle" : "Name[1][3][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][0]",
+      "fTitle" : "Name[1][4][0]"
+    }]]],
+    "fNm6" : [[null], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }]],
+    "fArr2" : [[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]],
+    "fArr4" : [[[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]], [[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]]],
+    "fArr6" : [[null], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]]
+  }, {
+    "_typename" : "TJsonEx9",
+    "fCnt" : 2,
+    "fStr" : ["String0", "String1"],
+    "fStr2" : [["String[0][0]", "String[0][1]"], ["String[1][0]", "String[1][1]"], ["String[2][0]", "String[2][1]"]],
+    "fStr4" : [[["String[0][0][0]", "String[0][0][1]"], ["String[0][1][0]", "String[0][1][1]"], ["String[0][2][0]", "String[0][2][1]"], ["String[0][3][0]", "String[0][3][1]"], ["String[0][4][0]", "String[0][4][1]"]], [["String[1][0][0]", "String[1][0][1]"], ["String[1][1][0]", "String[1][1][1]"], ["String[1][2][0]", "String[1][2][1]"], ["String[1][3][0]", "String[1][3][1]"], ["String[1][4][0]", "String[1][4][1]"]]],
+    "fStr6" : [[null, "String[0][1]"], ["String[1][0]", "String[1][1]"], ["String[2][0]", null]],
+    "fNm2" : [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0]",
+      "fTitle" : "Title[0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][1]",
+      "fTitle" : "Title[2][1]"
+    }]],
+    "fNm4" : [[[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][0]",
+      "fTitle" : "Name[0][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][1]",
+      "fTitle" : "Name[0][0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][0]",
+      "fTitle" : "Name[0][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][1]",
+      "fTitle" : "Name[0][1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][0]",
+      "fTitle" : "Name[0][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][1]",
+      "fTitle" : "Name[0][2][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][0]",
+      "fTitle" : "Name[0][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][1]",
+      "fTitle" : "Name[0][3][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][0]",
+      "fTitle" : "Name[0][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][1]",
+      "fTitle" : "Name[0][4][1]"
+    }]], [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][0]",
+      "fTitle" : "Name[1][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][1]",
+      "fTitle" : "Name[1][0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][0]",
+      "fTitle" : "Name[1][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][1]",
+      "fTitle" : "Name[1][1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][0]",
+      "fTitle" : "Name[1][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][1]",
+      "fTitle" : "Name[1][2][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][0]",
+      "fTitle" : "Name[1][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][1]",
+      "fTitle" : "Name[1][3][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][0]",
+      "fTitle" : "Name[1][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][1]",
+      "fTitle" : "Name[1][4][1]"
+    }]]],
+    "fNm6" : [[null, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, null]],
+    "fArr2" : [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]]],
+    "fArr4" : [[[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]]], [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]]]],
+    "fArr6" : [[null, [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], null]]
+  }, {
+    "_typename" : "TJsonEx9",
+    "fCnt" : 3,
+    "fStr" : ["String0", "String1", "String2"],
+    "fStr2" : [["String[0][0]", "String[0][1]", "String[0][2]"], ["String[1][0]", "String[1][1]", "String[1][2]"], ["String[2][0]", "String[2][1]", "String[2][2]"]],
+    "fStr4" : [[["String[0][0][0]", "String[0][0][1]", "String[0][0][2]"], ["String[0][1][0]", "String[0][1][1]", "String[0][1][2]"], ["String[0][2][0]", "String[0][2][1]", "String[0][2][2]"], ["String[0][3][0]", "String[0][3][1]", "String[0][3][2]"], ["String[0][4][0]", "String[0][4][1]", "String[0][4][2]"]], [["String[1][0][0]", "String[1][0][1]", "String[1][0][2]"], ["String[1][1][0]", "String[1][1][1]", "String[1][1][2]"], ["String[1][2][0]", "String[1][2][1]", "String[1][2][2]"], ["String[1][3][0]", "String[1][3][1]", "String[1][3][2]"], ["String[1][4][0]", "String[1][4][1]", "String[1][4][2]"]]],
+    "fStr6" : [[null, "String[0][1]", "String[0][2]"], ["String[1][0]", "String[1][1]", null], ["String[2][0]", null, "String[2][2]"]],
+    "fNm2" : [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0]",
+      "fTitle" : "Title[0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2]",
+      "fTitle" : "Title[0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2]",
+      "fTitle" : "Title[1][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][1]",
+      "fTitle" : "Title[2][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][2]",
+      "fTitle" : "Title[2][2]"
+    }]],
+    "fNm4" : [[[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][0]",
+      "fTitle" : "Name[0][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][1]",
+      "fTitle" : "Name[0][0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][2]",
+      "fTitle" : "Name[0][0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][0]",
+      "fTitle" : "Name[0][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][1]",
+      "fTitle" : "Name[0][1][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][2]",
+      "fTitle" : "Name[0][1][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][0]",
+      "fTitle" : "Name[0][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][1]",
+      "fTitle" : "Name[0][2][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][2]",
+      "fTitle" : "Name[0][2][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][0]",
+      "fTitle" : "Name[0][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][1]",
+      "fTitle" : "Name[0][3][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][2]",
+      "fTitle" : "Name[0][3][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][0]",
+      "fTitle" : "Name[0][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][1]",
+      "fTitle" : "Name[0][4][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][2]",
+      "fTitle" : "Name[0][4][2]"
+    }]], [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][0]",
+      "fTitle" : "Name[1][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][1]",
+      "fTitle" : "Name[1][0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][2]",
+      "fTitle" : "Name[1][0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][0]",
+      "fTitle" : "Name[1][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][1]",
+      "fTitle" : "Name[1][1][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][2]",
+      "fTitle" : "Name[1][1][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][0]",
+      "fTitle" : "Name[1][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][1]",
+      "fTitle" : "Name[1][2][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][2]",
+      "fTitle" : "Name[1][2][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][0]",
+      "fTitle" : "Name[1][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][1]",
+      "fTitle" : "Name[1][3][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][2]",
+      "fTitle" : "Name[1][3][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][0]",
+      "fTitle" : "Name[1][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][1]",
+      "fTitle" : "Name[1][4][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][2]",
+      "fTitle" : "Name[1][4][2]"
+    }]]],
+    "fNm6" : [[null, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2]",
+      "fTitle" : "Title[0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }, null], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, null, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][2]",
+      "fTitle" : "Title[2][2]"
+    }]],
+    "fArr2" : [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]]],
+    "fArr4" : [[[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]]], [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]]]],
+    "fArr6" : [[null, [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], null], [[0, 0, 0, 0, 0], null, [2, 2, 2, 2, 2]]]
+  }, {
+    "_typename" : "TJsonEx9",
+    "fCnt" : 1,
+    "fStr" : ["String0"],
+    "fStr2" : [["String[0][0]"], ["String[1][0]"], ["String[2][0]"]],
+    "fStr4" : [[["String[0][0][0]"], ["String[0][1][0]"], ["String[0][2][0]"], ["String[0][3][0]"], ["String[0][4][0]"]], [["String[1][0][0]"], ["String[1][1][0]"], ["String[1][2][0]"], ["String[1][3][0]"], ["String[1][4][0]"]]],
+    "fStr6" : [[null], ["String[1][0]"], ["String[2][0]"]],
+    "fNm2" : [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0]",
+      "fTitle" : "Title[0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }]],
+    "fNm4" : [[[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][0]",
+      "fTitle" : "Name[0][0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][0]",
+      "fTitle" : "Name[0][1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][0]",
+      "fTitle" : "Name[0][2][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][0]",
+      "fTitle" : "Name[0][3][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][0]",
+      "fTitle" : "Name[0][4][0]"
+    }]], [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][0]",
+      "fTitle" : "Name[1][0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][0]",
+      "fTitle" : "Name[1][1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][0]",
+      "fTitle" : "Name[1][2][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][0]",
+      "fTitle" : "Name[1][3][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][0]",
+      "fTitle" : "Name[1][4][0]"
+    }]]],
+    "fNm6" : [[null], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }]],
+    "fArr2" : [[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]],
+    "fArr4" : [[[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]], [[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]]],
+    "fArr6" : [[null], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]]
+  }, {
+    "_typename" : "TJsonEx9",
+    "fCnt" : 2,
+    "fStr" : ["String0", "String1"],
+    "fStr2" : [["String[0][0]", "String[0][1]"], ["String[1][0]", "String[1][1]"], ["String[2][0]", "String[2][1]"]],
+    "fStr4" : [[["String[0][0][0]", "String[0][0][1]"], ["String[0][1][0]", "String[0][1][1]"], ["String[0][2][0]", "String[0][2][1]"], ["String[0][3][0]", "String[0][3][1]"], ["String[0][4][0]", "String[0][4][1]"]], [["String[1][0][0]", "String[1][0][1]"], ["String[1][1][0]", "String[1][1][1]"], ["String[1][2][0]", "String[1][2][1]"], ["String[1][3][0]", "String[1][3][1]"], ["String[1][4][0]", "String[1][4][1]"]]],
+    "fStr6" : [[null, "String[0][1]"], ["String[1][0]", "String[1][1]"], ["String[2][0]", null]],
+    "fNm2" : [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0]",
+      "fTitle" : "Title[0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][1]",
+      "fTitle" : "Title[2][1]"
+    }]],
+    "fNm4" : [[[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][0]",
+      "fTitle" : "Name[0][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][1]",
+      "fTitle" : "Name[0][0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][0]",
+      "fTitle" : "Name[0][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][1]",
+      "fTitle" : "Name[0][1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][0]",
+      "fTitle" : "Name[0][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][1]",
+      "fTitle" : "Name[0][2][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][0]",
+      "fTitle" : "Name[0][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][1]",
+      "fTitle" : "Name[0][3][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][0]",
+      "fTitle" : "Name[0][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][1]",
+      "fTitle" : "Name[0][4][1]"
+    }]], [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][0]",
+      "fTitle" : "Name[1][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][1]",
+      "fTitle" : "Name[1][0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][0]",
+      "fTitle" : "Name[1][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][1]",
+      "fTitle" : "Name[1][1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][0]",
+      "fTitle" : "Name[1][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][1]",
+      "fTitle" : "Name[1][2][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][0]",
+      "fTitle" : "Name[1][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][1]",
+      "fTitle" : "Name[1][3][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][0]",
+      "fTitle" : "Name[1][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][1]",
+      "fTitle" : "Name[1][4][1]"
+    }]]],
+    "fNm6" : [[null, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, null]],
+    "fArr2" : [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]]],
+    "fArr4" : [[[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]]], [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]]]],
+    "fArr6" : [[null, [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1]], [[0, 0, 0, 0, 0], null]]
+  }, {
+    "_typename" : "TJsonEx9",
+    "fCnt" : 3,
+    "fStr" : ["String0", "String1", "String2"],
+    "fStr2" : [["String[0][0]", "String[0][1]", "String[0][2]"], ["String[1][0]", "String[1][1]", "String[1][2]"], ["String[2][0]", "String[2][1]", "String[2][2]"]],
+    "fStr4" : [[["String[0][0][0]", "String[0][0][1]", "String[0][0][2]"], ["String[0][1][0]", "String[0][1][1]", "String[0][1][2]"], ["String[0][2][0]", "String[0][2][1]", "String[0][2][2]"], ["String[0][3][0]", "String[0][3][1]", "String[0][3][2]"], ["String[0][4][0]", "String[0][4][1]", "String[0][4][2]"]], [["String[1][0][0]", "String[1][0][1]", "String[1][0][2]"], ["String[1][1][0]", "String[1][1][1]", "String[1][1][2]"], ["String[1][2][0]", "String[1][2][1]", "String[1][2][2]"], ["String[1][3][0]", "String[1][3][1]", "String[1][3][2]"], ["String[1][4][0]", "String[1][4][1]", "String[1][4][2]"]]],
+    "fStr6" : [[null, "String[0][1]", "String[0][2]"], ["String[1][0]", "String[1][1]", null], ["String[2][0]", null, "String[2][2]"]],
+    "fNm2" : [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0]",
+      "fTitle" : "Title[0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2]",
+      "fTitle" : "Title[0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2]",
+      "fTitle" : "Title[1][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][1]",
+      "fTitle" : "Title[2][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][2]",
+      "fTitle" : "Title[2][2]"
+    }]],
+    "fNm4" : [[[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][0]",
+      "fTitle" : "Name[0][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][1]",
+      "fTitle" : "Name[0][0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][2]",
+      "fTitle" : "Name[0][0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][0]",
+      "fTitle" : "Name[0][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][1]",
+      "fTitle" : "Name[0][1][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][2]",
+      "fTitle" : "Name[0][1][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][0]",
+      "fTitle" : "Name[0][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][1]",
+      "fTitle" : "Name[0][2][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][2]",
+      "fTitle" : "Name[0][2][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][0]",
+      "fTitle" : "Name[0][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][1]",
+      "fTitle" : "Name[0][3][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][2]",
+      "fTitle" : "Name[0][3][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][0]",
+      "fTitle" : "Name[0][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][1]",
+      "fTitle" : "Name[0][4][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][2]",
+      "fTitle" : "Name[0][4][2]"
+    }]], [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][0]",
+      "fTitle" : "Name[1][0][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][1]",
+      "fTitle" : "Name[1][0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][2]",
+      "fTitle" : "Name[1][0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][0]",
+      "fTitle" : "Name[1][1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][1]",
+      "fTitle" : "Name[1][1][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][2]",
+      "fTitle" : "Name[1][1][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][0]",
+      "fTitle" : "Name[1][2][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][1]",
+      "fTitle" : "Name[1][2][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][2]",
+      "fTitle" : "Name[1][2][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][0]",
+      "fTitle" : "Name[1][3][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][1]",
+      "fTitle" : "Name[1][3][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][2]",
+      "fTitle" : "Name[1][3][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][0]",
+      "fTitle" : "Name[1][4][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][1]",
+      "fTitle" : "Name[1][4][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][2]",
+      "fTitle" : "Name[1][4][2]"
+    }]]],
+    "fNm6" : [[null, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1]",
+      "fTitle" : "Title[0][1]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2]",
+      "fTitle" : "Title[0][2]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1]",
+      "fTitle" : "Title[1][1]"
+    }, null], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }, null, {
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][2]",
+      "fTitle" : "Title[2][2]"
+    }]],
+    "fArr2" : [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]]],
+    "fArr4" : [[[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]]], [[[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]]]],
+    "fArr6" : [[null, [1, 1, 1, 1, 1], [2, 2, 2, 2, 2]], [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], null], [[0, 0, 0, 0, 0], null, [2, 2, 2, 2, 2]]]
+  }, {
+    "_typename" : "TJsonEx9",
+    "fCnt" : 1,
+    "fStr" : ["String0"],
+    "fStr2" : [["String[0][0]"], ["String[1][0]"], ["String[2][0]"]],
+    "fStr4" : [[["String[0][0][0]"], ["String[0][1][0]"], ["String[0][2][0]"], ["String[0][3][0]"], ["String[0][4][0]"]], [["String[1][0][0]"], ["String[1][1][0]"], ["String[1][2][0]"], ["String[1][3][0]"], ["String[1][4][0]"]]],
+    "fStr6" : [[null], ["String[1][0]"], ["String[2][0]"]],
+    "fNm2" : [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0]",
+      "fTitle" : "Title[0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }]],
+    "fNm4" : [[[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][0][0]",
+      "fTitle" : "Name[0][0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][1][0]",
+      "fTitle" : "Name[0][1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][2][0]",
+      "fTitle" : "Name[0][2][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][3][0]",
+      "fTitle" : "Name[0][3][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[0][4][0]",
+      "fTitle" : "Name[0][4][0]"
+    }]], [[{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0][0]",
+      "fTitle" : "Name[1][0][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][1][0]",
+      "fTitle" : "Name[1][1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][2][0]",
+      "fTitle" : "Name[1][2][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][3][0]",
+      "fTitle" : "Name[1][3][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][4][0]",
+      "fTitle" : "Name[1][4][0]"
+    }]]],
+    "fNm6" : [[null], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[1][0]",
+      "fTitle" : "Title[1][0]"
+    }], [{
+      "_typename" : "TNamed",
+      "fUniqueID" : 0,
+      "fBits" : 0,
+      "fName" : "Name[2][0]",
+      "fTitle" : "Title[2][0]"
+    }]],
+    "fArr2" : [[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]],
+    "fArr4" : [[[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]], [[[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]]],
+    "fArr6" : [[null], [[0, 0, 0, 0, 0]], [[0, 0, 0, 0, 0]]]
+  }]
+}
+
+ ====== More exotic STL containers as set or map with TRef inside TJsonEx13 ===== 
+TJsonEx13 store/read/store MATCHED len1:5144 len2:5144
+{
+  "_typename" : "TJsonEx13",
+  "set1" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }],
+  "map1" : [{"$pair" : "pair<TJsonEx1,set<TJsonEx1> >", "first" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }, "second" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }]}, {"$pair" : "pair<TJsonEx1,set<TJsonEx1> >", "first" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, "second" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }]}, {"$pair" : "pair<TJsonEx1,set<TJsonEx1> >", "first" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6
+  }, "second" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6
+  }]}, {"$pair" : "pair<TJsonEx1,set<TJsonEx1> >", "first" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }, "second" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 246,
+    "fInt" : 246912,
+    "fLong" : 15308642,
+    "fFloat" : 2.4,
+    "fDouble" : 7.6
+  }, {
+    "_typename" : "TJsonEx1",
+    "fBool" : true,
+    "fChar" : 67,
+    "fShort" : 369,
+    "fInt" : 370368,
+    "fLong" : 22962963,
+    "fFloat" : 3.6,
+    "fDouble" : 11.4
+  }]}],
+  "map2" : [{"$pair" : "pair<int,TNamed>", "first" : 0, "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name0",
+    "fTitle" : "title0"
+  }}, {"$pair" : "pair<int,TNamed>", "first" : 1, "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name1",
+    "fTitle" : "title1"
+  }}, {"$pair" : "pair<int,TNamed>", "first" : 2, "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name2",
+    "fTitle" : "title2"
+  }}, {"$pair" : "pair<int,TNamed>", "first" : 3, "second" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name3",
+    "fTitle" : "title3"
+  }}],
+  "vect1" : [{
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name0",
+    "fTitle" : "title0"
+  }, {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name1",
+    "fTitle" : "title1"
+  }, {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name2",
+    "fTitle" : "title2"
+  }, {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 0,
+    "fName" : "name3",
+    "fTitle" : "title3"
+  }],
+  "vvvv" : [[[[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]], [[[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]]],
+  "map_obj" : {"_typename": "map<string,int>", "name0": 0, "name1": 11, "name2": 22, "name3": 33}
+}
+

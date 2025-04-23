@@ -1,0 +1,1 @@
+KCC +K0 -g --no_exceptions --strict -D__wcstoll_internal_defined -D__wcstoull_internal_defined

@@ -1,0 +1,6 @@
+<lcgdict>
+ <class name="LumiBlockRange_p1" />
+ <class name="std::vector<LumiBlockRange_p1>" />
+
+ <class name="LumiBlockCollection_p1" id="CF1F40C9-6125-4C35-87FF-DDA2C319000C" />
+</lcgdict>

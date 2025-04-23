@@ -1,0 +1,9 @@
+<lcgdict>
+
+  <class name="SgTests::PayLoadDv" />
+  <class name="DataVector<SgTests::PayLoad>" />
+  <class name="std::vector<SgTests::PayLoad*>" />
+  <class name="SgTests::PayLoad" />
+
+</lcgdict>
+

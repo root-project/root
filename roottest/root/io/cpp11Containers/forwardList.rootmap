@@ -1,0 +1,27 @@
+{ decls }
+namespace std {  }
+
+[ libforwardList_dictrflx ]
+# List of selected classes
+class deque<TH1F>
+class deque<complex<double> >
+class deque<complex<float> >
+class deque<deque<TH1F> >
+class deque<vector<TH1F> >
+class forward_list<TH1F>
+class forward_list<complex<double> >
+class forward_list<complex<float> >
+class forward_list<forward_list<TH1F> >
+class forward_list<vector<TH1F> >
+class list<TH1F>
+class list<complex<double> >
+class list<complex<float> >
+class list<list<TH1F> >
+class list<vector<TH1F> >
+class vector<TH1F>
+class vector<complex<double> >
+class vector<complex<float> >
+class vector<deque<TH1F> >
+class vector<forward_list<TH1F> >
+class vector<list<TH1F> >
+class vector<vector<TH1F> >

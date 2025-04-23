@@ -1,0 +1,51 @@
+
+Processing execWithAbort.C...
+Warning in <TClass::TClass>: no dictionary for class Event is available
+Warning in <TClass::TClass>: no dictionary for class EventHeader is available
+Warning in <TClass::TClass>: no dictionary for class Track is available
+My option are thefirstoption
+My name is T
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 1 T2
+Info in <TSelector::AbortFile>: We want to avoid T2
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+My option are theoptions
+My name is T
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 0 T1
+tree number: 1 T2
+Info in <TSelector::AbortFile>: We want to avoid T2
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3
+tree number: 2 T3

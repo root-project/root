@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<connectionlist>
+
+<!-- Oracle server for COOL tests -->
+<connection name="oracle://lcg_cool_nightly/lcg_cool_nightly">
+  <parameter name="user" value="lcg_cool_nightly" />
+  <parameter name="password" value="PASSWORD" />
+</connection>
+
+<!-- MySQL server for COOL tests -->
+<connection name="mysql://itrac424.cern.ch:3306/LCG_COOL_NIGHTLY">
+  <parameter name="user" value="LCG_COOL_NIGHTLY" />
+  <parameter name="password" value="PASSWORD" />
+</connection>
+
+</connectionlist>

@@ -1,0 +1,74 @@
+<lcgdict>
+  <class name="ElementLinkInt_p1"/>
+  <class name="ElementLinkStr_p1"/>
+  <class name="ElementLinkInt_p2"/>
+  <class name="ElementLinkStr_p2"/>
+  <class name="ElementLinkInt_p3"/>
+  <class name="ElementLinkStr_p3"/>
+
+  <class name="ElementLinkContNames_p2"/>
+
+  <class name="ElementLinkIntVector_p1"/>
+  <class name="ElementLinkVector_p1<unsigned int>::ElementRef"/>
+  <class name="std::vector<ElementLinkIntVector_p1::ElementRef>"/>
+  <class name="ElementLinkStrVector_p1"/>
+  <class name="ElementLinkVector_p1<std::string>::ElementRef"/>
+  <class name="std::vector<ElementLinkStrVector_p1::ElementRef>"/>
+
+
+  <class name="std::vector<ElementLinkInt_p3>" />
+  <class name="std::vector<ElementLinkStr_p3>" />
+
+
+  <class name="DataLink_p1"/>
+  <!--  <class name="DataLinkVector_p1"/> -->
+  <class name="std::vector<DataLink_p1>"/>
+  <class name="DataLink_p2"/>
+  <class name="std::vector<DataLink_p2>"/>
+
+  <class name="NavigableInt_p1"/>	
+  <class name="Navigable_p1<unsigned int, float>"/>
+  <class name="Navigable_p1<unsigned int, double>"/>
+  <class name="NavigableStr_p1"/>		
+  <class name="Navigable_p1<std::string, float>"/>
+  <class name="Navigable_p1<std::string, double>"/>
+
+  <class name="NavigableVectorInt_p1"/>	
+  <class name="NavigableVector_p1<unsigned int, float>"/>
+  <class name="NavigableVector_p1<unsigned int, double>"/>
+  <class name="NavigableVectorStr_p1"/>		
+  <class name="NavigableVector_p1<std::string, float>"/>
+  <class name="NavigableVector_p1<std::string, double>"/>
+
+  <class name="NavigableInt_p2"/>	
+  <class name="Navigable_p2<unsigned int, float>"/>
+  <class name="Navigable_p2<unsigned int, double>"/>
+  <class name="NavigableStr_p2"/>		
+  <class name="Navigable_p2<std::string, float>"/>
+  <class name="Navigable_p2<std::string, double>"/>
+
+  <class name="NavigableVectorInt_p2"/>	
+  <class name="NavigableVector_p2<unsigned int, float>"/>
+  <class name="NavigableVector_p2<unsigned int, double>"/>
+  <class name="NavigableVectorStr_p2"/>		
+  <class name="NavigableVector_p2<std::string, float>"/>
+  <class name="NavigableVector_p2<std::string, double>"/>
+
+  <!-- Trigger the dict generation for a few STL containers -->
+  <class name="std::vector<ElementLink_p1<unsigned int> >" />
+  <class name="std::vector<ElementLink_p2<unsigned int> >" />
+  <class name="std::vector<ElementLinkVector_p1<unsigned int> >" />
+  <class name="std::vector<ElementLink_p1<std::string> >" />
+  <class name="std::vector<ElementLink_p2<std::string> >" />
+
+  <class name="DataModelAthenaPool::DataVectorConvert"/>
+  <class name="DataModelAthenaPool::CLHEPConverters"/>
+
+  <class name="AthenaBarCode_p1" />
+
+  <class name="UserDataStore_p1" id="1D3E6FC1-54CD-4239-9714-9C467160F3FA"/>
+
+  <class name="UDSLabelHashTable_p1" />
+
+
+</lcgdict>

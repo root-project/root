@@ -1,0 +1,19 @@
+Info in <hadd>: target file: result.root
+Info in <hadd>: compression setting for all output: 101
+hadd Source file 1: cmsJets_0.root
+Warning in <TClass::Init>: no dictionary for class edm::EDProduct is available
+Warning in <TClass::Init>: no dictionary for class edm::EventAux is available
+Warning in <TClass::Init>: no dictionary for class CaloCrystal is available
+Warning in <TClass::Init>: no dictionary for class CaloLayer is available
+Warning in <TClass::Init>: no dictionary for class CaloTower is available
+Warning in <TClass::Init>: no dictionary for class edm::EDCollection<CaloTower> is available
+Warning in <TClass::Init>: no dictionary for class edm::PS_ID is available
+Warning in <TClass::Init>: no dictionary for class edm::ModuleDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::Provenance is available
+Warning in <TClass::Init>: no dictionary for class edm::EventProvenance is available
+Warning in <TClass::Init>: no dictionary for class CommonJetData is available
+Warning in <TClass::Init>: no dictionary for class Jet is available
+Warning in <TClass::Init>: no dictionary for class CaloJet is available
+Warning in <TClass::Init>: no dictionary for class edm::EDCollection<CaloJet> is available
+hadd Source file 2: cmsJets_1.root
+hadd Target path: result.root:/

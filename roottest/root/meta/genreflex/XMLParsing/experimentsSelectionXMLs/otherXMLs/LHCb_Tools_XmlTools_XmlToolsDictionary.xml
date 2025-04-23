@@ -1,0 +1,6 @@
+<lcgdict>
+  
+  <class name="IXmlParserSvc"      />
+  <class name="IXmlEntityResolver" />
+
+</lcgdict>

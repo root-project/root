@@ -1,0 +1,24 @@
+<lcgdict>
+
+  <class name="LArTTCell_P::LArTTCell_P_t" />
+  <class name="std::vector<LArTTCell_P::LArTTCell_P_t>" />
+  <class name="LArTTCell_P" id="DF8C509C-A91A-40B5-B76C-5B57EEE21EC3" />
+
+  <class name="CaloTriggerTowerService" />
+
+  <class name="CaloTTOnOffId_P::CaloTTOnOffId_P_t" />
+  <class name="std::vector<CaloTTOnOffId_P::CaloTTOnOffId_P_t>" />
+  <class name="CaloTTOnOffId_P" id="4D161CB2-C62E-41A5-B60C-43E46FDD9DDE" />
+
+  <class name="CaloTTOnAttrId_P::CaloTTOnAttrId_P_t" />
+  <class name="std::vector<CaloTTOnAttrId_P::CaloTTOnAttrId_P_t>" />
+  <class name="CaloTTOnAttrId_P" id="357C5310-D3C5-48B9-A2E9-D54CCC13FBE9" />
+
+  <class name="CaloTTPpmRxId_P::CaloTTPpmRxId_P_t" />
+  <class name="std::vector<CaloTTPpmRxId_P::CaloTTPpmRxId_P_t>" />
+  <class name="CaloTTPpmRxId_P" id="869AE421-3864-4B12-8609-D1C91B75D9B2" />
+
+  <class name="ICaloSuperCellIDTool"/>
+
+</lcgdict>
+

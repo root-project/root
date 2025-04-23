@@ -1,0 +1,45 @@
+
+Processing runstring.C+...
+======> EVENT:0
+ sone            = topsone
+ stwo            = topstwo
+ sthree          = (vector<TString>*)0xRemoved
+ sfour           = (vector<string>*)0xRemoved
+ obj.            = (myclass*)0xRemoved
+ obj.sone        = sone
+ obj.stwo        = stwo
+ obj.sthree      = (vector<TString>*)0xRemoved
+ obj.sfour       = (vector<string>*)0xRemoved
+ obj.sfive       = (vector<bool>*)0xRemoved
+ sfive           = (vector<bool>*)0xRemoved
+ ssix            = (vector<int>*)0xRemoved
+***********************************************************************************************************************************************************
+*    Row   * Instance *      sone *      stwo *    sthree *     sfour *  obj.sone *  obj.stwo * obj.sthre * obj.sfour * obj.sfive *     sfive *      ssix *
+***********************************************************************************************************************************************************
+*        0 *        0 *   topsone *   topstwo *  sthree_1 *   sfour_1 *      sone *      stwo *  sthree_1 *   sfour_1 *         1 *         0 *        33 *
+*        0 *        1 *           *           *  sthree_2 *   sfour_2 *           *           *  sthree_2 *   sfour_2 *         0 *         1 *           *
+*        0 *        2 *           *           *           *           *           *           *           *           *         1 *         0 *           *
+*        0 *        3 *           *           *           *           *           *           *           *           *         0 *           *           *
+***********************************************************************************************************************************************************
+************************
+*    Row   *      sone *
+************************
+*        0 *   topsone *
+************************
+************************
+*    Row   *      stwo *
+************************
+*        0 *   topstwo *
+************************
+***********************************
+*    Row   * Instance * sthree.Da *
+***********************************
+*        0 *        0 *  sthree_1 *
+*        0 *        1 *  sthree_2 *
+***********************************
+***********************************
+*    Row   * Instance * sfour.c_s *
+***********************************
+*        0 *        0 *   sfour_1 *
+*        0 *        1 *   sfour_2 *
+***********************************

@@ -1,0 +1,62 @@
+<!-- 
+     * $Id: PartProp.xml 95074 2010-10-22 15:06:40Z ibelyaev $ 
+     * ========================================================================
+     * CVS tag:$Name: not supported by cvs2svn $, version $Revision: 95074 $ 
+     * ======================================================================== 
+     * @file
+     * The seleciton file to build Reflex dictionaries for 
+     * Kernel/PartProp package 
+     * @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
+     * @date 2008-12-01
+     * ========================================================================
+-->
+
+<lcgdict>
+  
+
+  <class name = "LHCb::ParticleID"                />
+  <class name = "LHCb::ParticleProperty"          />
+  <class name = "LHCb::IParticlePropertySvc"      />
+  <class name = "LHCb::IParticlePropertySvc::ParticleProperties" />
+  <class name = "LHCb::IParticlePropertySvc::iterator"           />
+  
+  <class name = "std::vector<LHCb::ParticleID>"              />
+  <class name = "std::vector<const LHCb::ParticleProperty*>" />
+
+
+  <enum name = "LHCb::ParticleID::Quark"    />
+  <enum name = "LHCb::ParticleID::Location" />
+  
+  <function name = "LHCb::ParticleProperties::printAsTable"   />
+  <function name = "LHCb::ParticleProperties::particle"       />
+  <function name = "LHCb::ParticleProperties::particleID"     />
+  <function name = "LHCb::ParticleProperties::byPythiaID"     />
+  <function name = "LHCb::ParticleProperties::byEvtGenName"   />
+  <function name = "LHCb::ParticleProperties::allProperties"  />
+  <function name = "LHCb::ParticleProperties::index"          />
+
+  <class name = "Decays::Symbols"/>
+
+  <class name = "Decays::Decay"       />
+  <class name = "Decays::Decay::Item" />
+  <class name = "std::vector<Decays::Decay>"       />
+  <class name = "std::vector<Decays::Decay::Item>" />
+  
+  <class name    = "std::unary_function<LHCb::ParticleID,bool>"  />
+  <class name    = "Decays::iNode"    />
+  <class name    = "Decays::Node"     />
+  <class pattern = "Decays::Nodes::*" />
+  <class name    = "Decays::Dict::NodeOps" />
+  <class name    = "Decays::NodeList" />
+  <class name    = "std::vector<Decays::Nodes::_Node>" />
+  
+
+  <exclusion>
+    <class name = "LHCb::ParticleID">
+      <method name="digit_"/>
+      <method name="digits_"/>
+    </class>
+  </exclusion>
+
+</lcgdict>
+

@@ -1,0 +1,138 @@
+<lcgdict>
+ <class name="CSCPedestals" id="7C1F7D6C-BE30-DA11-95EF-0008743F7CC7"/>
+ <class name="CSCPedestals::Item"/>
+ <class name="std::vector<CSCPedestals::Item>"/>
+ <class name="std::map<int,std::vector<CSCPedestals::Item> >"/>
+
+ <class name="CSCDBPedestals">
+   <field name = "pedestals" mapping = "blob"/>
+ </class>
+ <class name="CSCDBPedestals::Item"/>
+ <class name="std::vector<CSCDBPedestals::Item>"/>
+
+ <class name="CSCDBChipSpeedCorrection">
+   <field name = "chipSpeedCorr" mapping = "blob"/>
+ </class>
+ <class name="CSCDBChipSpeedCorrection::Item"/>
+ <class name="std::vector<CSCDBChipSpeedCorrection::Item>"/>
+ 
+ <class name="CSCDBGasGainCorrection">
+   <field name = "gasGainCorr" mapping = "blob"/>
+ </class>
+ <class name="CSCDBGasGainCorrection::Item"/>
+ <class name="std::vector<CSCDBGasGainCorrection::Item>"/>
+ 
+ <class name="CSCGains" id="24647172-BE30-DA11-888A-0008743F7CC7"/>
+ <class name="CSCGains::Item"/>
+ <class name="std::vector<CSCGains::Item>"/>
+ <class name="std::map<int, std::vector<CSCGains::Item> >"/>
+
+ <class name="CSCDBGains">
+   <field name = "gains" mapping = "blob"/>
+ </class>
+ <class name="CSCDBGains::Item"/>
+ <class name="std::vector<CSCDBGains::Item>"/>
+
+ <class name="CSCNoiseMatrix" id="E885ACBB-5EA8-DA11-A44A-001320A4DDB1"/>
+ <class name="CSCNoiseMatrix::Item"/>
+ <class name="std::vector<CSCNoiseMatrix::Item>"/>
+ <class name="std::map<int, std::vector<CSCNoiseMatrix::Item> >"/>
+
+ <class name="CSCDBNoiseMatrix">
+   <field name = "matrix" mapping = "blob"/>
+ </class>
+ <class name="CSCDBNoiseMatrix::Item"/>
+ <class name="std::vector<CSCDBNoiseMatrix::Item>"/>
+
+ <class name="CSCcrosstalk" id="DA52D078-BE30-DA11-9387-0008743F7CC7"/>
+ <class name="CSCcrosstalk::Item"/>
+ <class name="std::vector<CSCcrosstalk::Item>"/>
+ <class name="std::map<int,std::vector<CSCcrosstalk::Item> >"/>
+
+ <class name="CSCDBCrosstalk">
+   <field name = "crosstalk" mapping = "blob"/>
+ </class>
+ <class name="CSCDBCrosstalk::Item"/>
+ <class name="std::vector<CSCDBCrosstalk::Item>"/>
+
+ <class name="CSCBadStrips">
+   <field name ="channels" mapping = "blob"/>
+ </class>
+ <class name="CSCBadStrips::BadChamber"/>
+ <class name="CSCBadStrips::BadChannel"/>
+ <class name="std::vector<CSCBadStrips::BadChamber>"/>
+ <class name="std::vector<CSCBadStrips::BadChannel>"/>
+
+ <class name="CSCBadWires"/>
+ <class name="CSCBadWires::BadChamber"/>
+ <class name="CSCBadWires::BadChannel"/>
+ <class name="std::vector<CSCBadWires::BadChamber>"/>
+ <class name="std::vector<CSCBadWires::BadChannel>"/>
+
+ <class name="CSCBadChambers"/>
+
+ <class name="CSCChamberMap">
+   <field name ="ch_map" mapping = "blob"/>
+ </class>
+
+ <class name="CSCCrateMap">
+   <field name ="crate_map" mapping = "blob"/>
+ </class>
+
+ <class name="CSCDDUMap">
+   <field name ="ddu_map" mapping = "blob"/>
+ </class>
+
+ <class name="std::map< int, CSCMapItem::MapItem >"/>
+ <class name="std::pair< const int, CSCMapItem::MapItem >"/>
+
+ <class name="CSCChamberIndex">
+   <field name ="ch_index" mapping = "blob"/>
+ </class>
+ <class name="std::vector< CSCMapItem::MapItem >"/>
+
+ <class name="CSCMapItem"/>
+ <class name="CSCMapItem::MapItem"/>
+
+ <class name="CSCChamberTimeCorrections">
+   <field name = "chamberCorrections" mapping = "blob"/>
+ </class>
+ <class name="CSCChamberTimeCorrections::ChamberTimeCorrections"/>
+ <class name="std::vector< CSCChamberTimeCorrections::ChamberTimeCorrections >"/>
+ 
+ <class name="CSCL1TPParameters"/>
+
+ <class name="CSCDBL1TPParameters"/>
+
+ <class name="CSCIdentifier" id="DC949595-1360-DA11-86C4-000E0C4DE689"/>
+ <class name="CSCIdentifier::Item"/>
+
+<class name="CSCReadoutMapping" id="7AFAC964-9B62-DA11-BB7B-0008743F7CC7">
+  <field name="myName_" transient="true"/>
+  <field name="debugV_" transient="true"/>
+  <field name="hw2sw_" transient="true"/>
+</class>
+<class name="CSCReadoutMapping::CSCLabel"/>
+
+<class name="CSCTriggerMapping" id="4D94740A-14CB-EA87-72D2-7C083C473C32">
+  <field name="myName_" transient="true"/>
+  <field name="debugV_" transient="true"/>
+  <field name="hw2sw_" transient="true"/>
+</class>
+<class name="CSCTriggerMapping::CSCTriggerConnection"/>
+
+  <class name="cscdqm::DCSAddressType"/>
+  <class name="std::vector<cscdqm::DCSAddressType>"/>
+  <class name="cscdqm::DCSData"/>
+  <class name="std::vector<cscdqm::DCSData>"/>
+  <class name="cscdqm::TempMeasType"/>
+  <class name="std::vector<cscdqm::TempMeasType>"/>
+  <class name="cscdqm::HVVMeasType"/>
+  <class name="std::vector<cscdqm::HVVMeasType>"/>
+  <class name="cscdqm::LVVMeasType"/>
+  <class name="std::vector<cscdqm::LVVMeasType>"/>
+  <class name="cscdqm::LVIMeasType"/>
+  <class name="std::vector<cscdqm::LVIMeasType>"/>
+
+</lcgdict>  
+

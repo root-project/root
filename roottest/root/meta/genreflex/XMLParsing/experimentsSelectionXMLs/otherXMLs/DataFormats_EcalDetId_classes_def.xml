@@ -1,0 +1,51 @@
+<lcgdict>
+  <class name="EBDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="18462289"/>
+  </class>
+  <class name="EEDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="18639436"/>
+  </class>
+  <class name="ESDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="19466122"/>
+  </class>
+  <class name="EcalTrigTowerDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3395783268"/>
+  </class>
+  <class name="EcalScDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="1698524437"/>
+  </class>
+  <class name="EcalPnDiodeDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="461847292"/>
+  </class>
+  <class name="EcalElectronicsId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3118976079"/>
+  </class>
+  <class name="EcalTriggerElectronicsId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3310361981"/>
+  </class>
+  <class name="std::vector<EBDetId>"/>
+  <class name="std::vector<EEDetId>"/>
+  <class name="std::vector<EcalTrigTowerDetId>"/>
+  <class name="std::vector<EcalElectronicsId>"/>
+  <class name="std::vector<EcalTriggerElectronicsId>"/>
+  <class name="std::set<EBDetId>"/>
+  <class name="std::set<EEDetId>"/>
+  <class name="std::set<EcalTrigTowerDetId>"/>
+  <class name="std::set<EcalScDetId>"/>
+  <class name="edm::Wrapper<std::set<EBDetId> > "/>
+  <class name="edm::Wrapper<std::set<EEDetId> > "/>
+  <class name="edm::Wrapper<std::set<EcalTrigTowerDetId> > "/>
+  <class name="edm::Wrapper<std::set<EcalScDetId> > "/>
+  <class name="edm::EDCollection<EBDetId> "/>
+  <class name="edm::EDCollection<EEDetId> "/>
+  <class name="edm::EDCollection<EcalTrigTowerDetId> "/>
+  <class name="edm::EDCollection<EcalScDetId> "/>
+  <class name="edm::EDCollection<EcalElectronicsId> " />
+  <class name="edm::EDCollection<EcalTriggerElectronicsId> " />
+  <class name="edm::Wrapper<edm::EDCollection<EBDetId> > " id="EF1C41A8-6FCA-DDC6-7463-3208C2AEE68F"/>
+  <class name="edm::Wrapper<edm::EDCollection<EEDetId> > " id="182A27B1-7C9F-3114-027F-BF26932C6CD0"/>
+  <class name="edm::Wrapper<edm::EDCollection<EcalTrigTowerDetId> > " id="3177FB3F-B69D-07EC-D5BE-A0AFF6A4D78F"/>
+  <class name="edm::Wrapper<edm::EDCollection<EcalScDetId> > " id="364d0ca9-8daa-4baf-8203-9d86881b51ff"/>
+  <class name="edm::Wrapper<edm::EDCollection<EcalElectronicsId> > " id="1CCDC3B0-D381-60A8-E3B1-B75C4D0F6802"/>
+  <class name="edm::Wrapper<edm::EDCollection<EcalTriggerElectronicsId> > " id="D9FCAC56-29E2-54B9-2F75-EDC0D2E534F0"/>
+</lcgdict>

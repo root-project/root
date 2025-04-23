@@ -1,0 +1,1 @@
+Warning: Class or struct MyClass::MyStruct was selected but its dictionary cannot be generated: this is a private or protected class and this is not supported. No direct I/O operation of MyClass::MyStruct instances will be possible.

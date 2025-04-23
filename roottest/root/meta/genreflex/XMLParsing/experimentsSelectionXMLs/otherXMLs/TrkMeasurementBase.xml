@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="Trk::MeasurementBase" >
+    <field name="m_localParams" transient="false" />
+    <field name="m_localErrMat" transient="false" />
+  </class>
+  <class name="DataVector<const Trk::MeasurementBase>"  />
+  <class name="std::vector<const Trk::MeasurementBase*>"  />
+</lcgdict>
+

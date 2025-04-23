@@ -1,0 +1,108 @@
+
+Processing execLeaflist.C...
+******************************************************************************
+*Tree    :VBF       : New VBF samples with matrix inserted on struct         *
+*Entries :       10 : Total =            6697 bytes  File  Size =       3022 *
+*        :          : Tree compression factor =   1.71                       *
+******************************************************************************
+*Br    0 :Particle  : pt[6]/D :pt_res[6]/D :eta[6]/D :eta_res[6]/D :         *
+*         | phi[6]/D :phi_res[6]/D :id[6]/I                                  *
+*Entries :       10 : Total  Size=       4262 bytes  File Size  =       1675 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.91     *
+*............................................................................*
+*Br    1 :Zon_mass  : Zon_mass/D                                             *
+*Entries :       10 : Total  Size=        659 bytes  File Size  =        154 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :Zoff_mass : Zoff_mass/D                                            *
+*Entries :       10 : Total  Size=        664 bytes  File Size  =        155 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :ZZ_mass   : ZZ_mass/D                                              *
+*Entries :       10 : Total  Size=        654 bytes  File Size  =        153 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+First way of setting the addresses
+Particle: 216.836 |  0.712952 |  -0.338195
+Zon_mass: 91.2281
+Particle: 47.2996 |  -0.74823 |  3.1262
+Zon_mass: 91.6321
+Particle: 55.2419 |  -0.613707 |  -2.78338
+Zon_mass: 91.5438
+Particle: 27.9755 |  2.35167 |  -0.433395
+Zon_mass: 90.6082
+Particle: 84.136 |  0.794386 |  0.534024
+Zon_mass: 95.6951
+Particle: 62.3051 |  -1.81361 |  -2.3867
+Zon_mass: 92.1643
+Particle: 28.0471 |  -1.44138 |  -1.04475
+Zon_mass: 93.0892
+Particle: 35.2712 |  2.44459 |  2.8921
+Zon_mass: 91.2534
+Particle: 37.8263 |  0.252282 |  -1.77323
+Zon_mass: 91.1314
+Particle: 21.1561 |  0.330393 |  0.263883
+Zon_mass: 90.4063
+Second way of setting the addresses
+Particle: 216.836 |  0.712952 |  -0.338195
+Zon_mass: 91.2281
+Particle: 47.2996 |  -0.74823 |  3.1262
+Zon_mass: 91.6321
+Particle: 55.2419 |  -0.613707 |  -2.78338
+Zon_mass: 91.5438
+Particle: 27.9755 |  2.35167 |  -0.433395
+Zon_mass: 90.6082
+Particle: 84.136 |  0.794386 |  0.534024
+Zon_mass: 95.6951
+Particle: 62.3051 |  -1.81361 |  -2.3867
+Zon_mass: 92.1643
+Particle: 28.0471 |  -1.44138 |  -1.04475
+Zon_mass: 93.0892
+Particle: 35.2712 |  2.44459 |  2.8921
+Zon_mass: 91.2534
+Particle: 37.8263 |  0.252282 |  -1.77323
+Zon_mass: 91.1314
+Particle: 21.1561 |  0.330393 |  0.263883
+Zon_mass: 90.4063
+Third way of setting the addresses
+Particle: 216.836 |  0.712952 |  -0.338195
+Zon_mass: 91.2281
+Particle: 47.2996 |  -0.74823 |  3.1262
+Zon_mass: 91.6321
+Particle: 55.2419 |  -0.613707 |  -2.78338
+Zon_mass: 91.5438
+Particle: 27.9755 |  2.35167 |  -0.433395
+Zon_mass: 90.6082
+Particle: 84.136 |  0.794386 |  0.534024
+Zon_mass: 95.6951
+Particle: 62.3051 |  -1.81361 |  -2.3867
+Zon_mass: 92.1643
+Particle: 28.0471 |  -1.44138 |  -1.04475
+Zon_mass: 93.0892
+Particle: 35.2712 |  2.44459 |  2.8921
+Zon_mass: 91.2534
+Particle: 37.8263 |  0.252282 |  -1.77323
+Zon_mass: 91.1314
+Particle: 21.1561 |  0.330393 |  0.263883
+Zon_mass: 90.4063
+Fourth way of setting the addresses
+Particle: 216.836 |  0.712952 |  -0.338195
+Zon_mass: 91.2281
+Particle: 47.2996 |  -0.74823 |  3.1262
+Zon_mass: 91.6321
+Particle: 55.2419 |  -0.613707 |  -2.78338
+Zon_mass: 91.5438
+Particle: 27.9755 |  2.35167 |  -0.433395
+Zon_mass: 90.6082
+Particle: 84.136 |  0.794386 |  0.534024
+Zon_mass: 95.6951
+Particle: 62.3051 |  -1.81361 |  -2.3867
+Zon_mass: 92.1643
+Particle: 28.0471 |  -1.44138 |  -1.04475
+Zon_mass: 93.0892
+Particle: 35.2712 |  2.44459 |  2.8921
+Zon_mass: 91.2534
+Particle: 37.8263 |  0.252282 |  -1.77323
+Zon_mass: 91.1314
+Particle: 21.1561 |  0.330393 |  0.263883
+Zon_mass: 90.4063

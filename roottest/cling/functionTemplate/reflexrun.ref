@@ -1,0 +1,38 @@
+
+Processing reflexrun.C...
+IsA()
+ShowMembers(TMemberInspector&)
+__getNewDelFunctions()
+get() const
+get<double>() const
+get<float>() const
+get<int>() const
+getfloat() const
+operator=(const t&)
+set(double)
+set(float)
+set(int)
+set<double>(double)
+set<float>(float)
+set<int>(int)
+t()
+t(const t&)
+~t()
+
+called get<double>()
+called get<int>()
+called get<float>()
+t now 3 1 2
+t now 42.31
+called set<int>()
+called get<double>()
+called get<int>()
+called get<float>()
+t now 3 1 2
+t now 7
+called set<double>()
+called get<double>()
+called get<int>()
+called get<float>()
+t now 3 1 2
+t now 9

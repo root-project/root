@@ -1,0 +1,36 @@
+<lcgdict>
+<selection>
+ <class name="FastL1BitInfo" ClassVersion="11">
+  <version ClassVersion="11" checksum="3393018205"/>
+  <version ClassVersion="10" checksum="908664039"/>
+ </class>
+ <class name="std::vector<FastL1BitInfo>"/>
+ <class name="edm::Wrapper<std::vector<FastL1BitInfo> >"/>
+
+ <class name="FastTrackerCluster" ClassVersion="10">
+  <version ClassVersion="10" checksum="2829380995"/>
+ </class>
+ <class name="std::vector<FastTrackerCluster*>"/>
+ <class name="edm::OwnVector<FastTrackerCluster,edm::ClonePolicy<FastTrackerCluster> >"/>
+
+ <class name="edm::RangeMap <unsigned int, 
+edm::OwnVector<FastTrackerCluster,
+edm::ClonePolicy<FastTrackerCluster> >,
+edm::ClonePolicy<FastTrackerCluster> >" />
+
+ <class name="edm::Wrapper< edm::RangeMap <unsigned int, 
+edm::OwnVector<FastTrackerCluster, 
+edm::ClonePolicy<FastTrackerCluster> >,
+edm::ClonePolicy<FastTrackerCluster> > > " />
+
+<class name="edm::Ref<edm::RangeMap<unsigned int,edm::OwnVector<FastTrackerCluster,edm::ClonePolicy<FastTrackerCluster> >,
+edm::ClonePolicy<FastTrackerCluster> >,FastTrackerCluster,
+edm::refhelper::FindUsingAdvance<edm::RangeMap<unsigned int,edm::OwnVector<FastTrackerCluster,edm::ClonePolicy<FastTrackerCluster> >,
+edm::ClonePolicy<FastTrackerCluster> >,FastTrackerCluster> >" />
+
+
+</selection>
+
+
+
+</lcgdict>

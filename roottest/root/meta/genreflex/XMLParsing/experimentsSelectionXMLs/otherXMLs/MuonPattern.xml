@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="Muon::MuonPatternCombination" >
+  </class>
+  <class name="DataVector<Muon::MuonPatternCombination>" />
+</lcgdict>

@@ -1,0 +1,11 @@
+<lcgdict>
+ <class name="ZDC_SimStripHit_Collection" id="1082F8C1-BA19-47AF-83D7-4669BD12E9AC" />
+ <class name="AtlasHitsVector<ZDC_SimStripHit>" />
+ <class name="std::vector<ZDC_SimStripHit>" />
+ <class name="ZDC_SimStripHit" />
+
+ <class name="ZDC_SimPixelHit_Collection" id="EBCA37BF-38FF-4F19-B577-E5D0EFFA51D0" />
+ <class name="AtlasHitsVector<ZDC_SimPixelHit>" />
+ <class name="std::vector<ZDC_SimPixelHit>" />
+ <class name="ZDC_SimPixelHit" />
+</lcgdict>

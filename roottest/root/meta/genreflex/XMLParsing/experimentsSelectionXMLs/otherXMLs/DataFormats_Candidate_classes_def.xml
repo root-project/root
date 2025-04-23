@@ -1,0 +1,197 @@
+<lcgdict>
+<selection>
+  <class name="reco::Particle" ClassVersion="11">
+   <field name="vertex_" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+   <field name="p4Polar_" transient="true" />
+   <field name="p4Cartesian_" transient="true" />
+   <field name="cachePolarFixed_" transient="true" />
+   <field name="cacheCartesianFixed_" transient="true" />
+   <version ClassVersion="11" checksum="2698562380"/>
+   <version ClassVersion="10" checksum="2605909260"/>
+  </class>
+  <ioread sourceClass = "reco::Particle" version="[1-]" targetClass="reco::Particle" source = "" target="cachePolarFixed_">
+    <![CDATA[cachePolarFixed_ = false;]]>
+  </ioread>
+  <ioread sourceClass = "reco::Particle" version="[1-]" targetClass="reco::Particle" source = "" target="cacheCartesianFixed_">
+    <![CDATA[cacheCartesianFixed_ = false;]]>
+  </ioread>
+  <class name="reco::Candidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="783896264"/>
+    <!-- <field name="mothers_" transient="true"/> -->
+  </class>
+  <class name="reco::LeafCandidate"  ClassVersion="11">
+   <field name="vertex_" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+   <field name="p4Polar_" transient="true" />
+   <field name="p4Cartesian_" transient="true" />
+   <field name="cachePolarFixed_" transient="true" />
+   <field name="cacheCartesianFixed_" transient="true" />
+   <version ClassVersion="11" checksum="1947948955"/>
+   <version ClassVersion="10" checksum="4128105563"/>
+  </class>
+  <ioread sourceClass = "reco::LeafCandidate" version="[1-]" targetClass="reco::LeafCandidate" source = "" target="cachePolarFixed_">
+    <![CDATA[cachePolarFixed_ = false;]]>
+  </ioread>
+  <ioread sourceClass = "reco::LeafCandidate" version="[1-]" targetClass="reco::LeafCandidate" source = "" target="cacheCartesianFixed_">
+    <![CDATA[cacheCartesianFixed_ = false;]]>
+  </ioread>
+  <class name="reco::CompositeCandidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="2953566340"/>
+  </class>
+  <class name="reco::VertexCompositeCandidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="4177206274"/>
+  </class>
+  <class name="reco::CompositeRefCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="502055765"/>
+  </class>
+  <class name="reco::CompositePtrCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="240358262"/>
+  </class>
+  <class name="reco::CompositeRefBaseCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="382235387"/>
+  </class>
+  <class name="reco::ShallowCloneCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="4127213986"/>
+  </class>
+  <class name="reco::ShallowClonePtrCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2575892329"/>
+  </class>
+  <class name="reco::NamedCompositeCandidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="604924170"/>
+  </class>
+  <class name="reco::candidate::iterator"  ClassVersion="10">
+   <version ClassVersion="10" checksum="547616838"/>
+  </class>
+  <class name="reco::candidate::const_iterator"  ClassVersion="10">
+   <version ClassVersion="10" checksum="473157534"/>
+  </class>
+  <class name="reco::candidate::const_iterator_imp"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3984591915"/>
+  </class>
+  <class name="reco::candidate::iterator_imp"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3317687219"/>
+  </class>
+
+  <class name="reco::CandidateRef" />
+  <class name="reco::CandidatePtr" />
+  <class name="reco::CandidateRefVector" />
+  <class name="reco::CompositeCandidateRef" />
+  <class name="reco::CompositeCandidateRefVector" />
+  <class name="reco::VertexCompositeCandidateRefVector" />
+  <class name="reco::CandidateRefProd" />
+
+  <class name="edm::reftobase::BaseHolder<reco::Candidate>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::CandidateRef>" />
+  <class name="edm::reftobase::IndirectHolder<reco::Candidate>"/>
+  <class name="edm::reftobase::RefHolder<reco::CandidateRef>"/>
+
+  <class name="edm::RefToBase<reco::Candidate>" />
+  <class name="std::vector<edm::RefToBase<reco::Candidate> >" />
+  <class name="std::vector<edm::Ptr<reco::Candidate> >" />
+  <class name="std::vector<edm::PtrVector<reco::Candidate> >" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::Candidate>" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::Candidate>::const_iterator_imp" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::Candidate>::const_iterator" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::CandidateRefVector>" />
+  <class name="edm::reftobase::IndirectVectorHolder<reco::Candidate>"/>
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::CandidateRefVector>::const_iterator_imp_specific" />
+  <class name="edm::reftobase::RefVectorHolder<reco::CandidateRefVector>"/>
+
+  <class name="edm::RefToBaseVector<reco::Candidate>" />
+  <class name="edm::PtrVector<reco::Candidate>" />
+
+  <class name="edm::RefToBaseProd<reco::Candidate>">
+    <!-- <field name="view_" transient="true" /> -->
+  </class>
+  <class name="std::map<const reco::Candidate *, const reco::Candidate *>" />
+  <class name="std::vector<const reco::Candidate *>" />
+
+  <class name="edm::helpers::KeyVal<reco::CandidateRef, reco::CandidateRef>" /> 
+  <class name="edm::helpers::KeyVal<reco::CandidateRefProd, reco::CandidateRefProd>" />
+  <class name="edm::helpers::KeyVal<reco::CandidateBaseRefProd, reco::CandidateBaseRefProd>" />
+  <class name="edm::helpers::KeyVal<reco::CandidateBaseRef, reco::CandidateBaseRef>" />
+  <class name="std::map<unsigned int,edm::helpers::KeyVal<reco::CandidateBaseRef, reco::CandidateBaseRef> >" />
+  <class name="edm::AssociationMap<edm::OneToOne<edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,unsigned int> >">
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::AssociationMap<edm::OneToOneGeneric<edm::View<reco::Candidate>,edm::View<reco::Candidate>,unsigned int,edm::RefToBaseProd<reco::Candidate>,edm::RefToBaseProd<reco::Candidate>,edm::RefToBase<reco::Candidate>,edm::RefToBase<reco::Candidate> > >">
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::AssociationMap<edm::OneToManyWithQuality<edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,double,unsigned int> >">
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class pattern="edm::AssociationVector<*>">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::CandRefValueMap" /> 
+
+  <class name="std::vector<reco::Particle>" />
+  <class name="std::vector<reco::Candidate *>" />
+  <class name="std::vector<reco::LeafCandidate>" />
+  <class name="reco::CandidateCollection" />
+  <class name="reco::CandidateBaseRef" />
+
+  <class name="edm::Wrapper<reco::CandidateCollection>" />
+  <class name="edm::Wrapper<std::vector<reco::Particle> >" />
+  <class name="edm::Wrapper<std::vector<reco::LeafCandidate> >" />
+  <class name="edm::Wrapper<reco::CandidateRefVector>"/>
+  <class name="edm::Wrapper<reco::CandidateBaseRefVector>" />
+  <class name="edm::Wrapper<reco::CandidatePtrVector>" />
+  <class name="edm::Wrapper<reco::CandMatchMap>" />
+  <class name="edm::Wrapper<reco::CandViewMatchMap>" />
+  <class name="edm::Wrapper<reco::CandMatchMapMany>" /> 
+  <class name="edm::Wrapper<reco::CandRefValueMap>" /> 
+  <class name="edm::Wrapper<std::vector<edm::RefToBase<reco::Candidate> > >" />
+  <class name="edm::Wrapper<std::vector<edm::Ptr<reco::Candidate> > >" />
+  <class pattern="edm::AssociationMap<*>::const_iterator" />
+  <class pattern="edm::Wrapper<edm::AssociationVector<*>"/>
+  <class name="edm::Association<edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> > >" />
+  <class name="edm::Wrapper<edm::Association<edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> > > >" />
+
+  <class name="std::vector<edm::Ref<std::vector<reco::CompositeCandidate>,reco::CompositeCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::CompositeCandidate>,reco::CompositeCandidate> > >"/>
+  <class name="reco::CompositeCandidateCollection" />
+  <class name="edm::Wrapper<reco::CompositeCandidateCollection>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::CompositeCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::CompositeCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::CompositeCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::CompositeCandidateRefVector>" />
+
+  <class name="reco::VertexCompositeCandidateCollection" />
+  <class name="edm::Wrapper<reco::VertexCompositeCandidateCollection>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::VertexCompositeCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::VertexCompositeCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::VertexCompositeCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::VertexCompositeCandidateRefVector>" />
+
+  <class name="reco::NamedCompositeCandidateCollection" />
+  <class name="edm::Wrapper<reco::NamedCompositeCandidateCollection>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::NamedCompositeCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::NamedCompositeCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::NamedCompositeCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::NamedCompositeCandidateRefVector>" />
+
+   <class name="edm::Wrapper<reco::CandViewCandViewAssociation>"/>
+   <class name="reco::CandViewCandViewAssociation"/>
+
+   <class name="std::vector<std::pair<edm::RefToBase<reco::Candidate>,bool> >" />
+   <class name="std::map<unsigned int,edm::helpers::KeyVal<edm::RefToBase<reco::Candidate>,std::vector<std::pair<edm::RefToBase<reco::Candidate>,bool> > > >" />
+
+   <class name="edm::helpers::KeyVal<edm::RefToBase<reco::Candidate>,std::vector<std::pair<edm::RefToBase<reco::Candidate>,bool> > >" /> 
+ 
+   <class name="std::pair<edm::RefToBase<reco::Candidate>,bool>" />
+   <class name="std::pair<edm::RefToBase<reco::Candidate>,double>" />
+   <class name="std::pair<edm::RefToBaseProd<reco::Candidate>,double>" />
+
+  <class name="edm::ValueMap<reco::CandidatePtr>" />
+  <class name="edm::Wrapper<edm::ValueMap<reco::CandidatePtr> >" />
+  <class name="std::pair<std::basic_string<char>,edm::Ptr<reco::Candidate> >" />
+  <class name="std::vector<std::pair<std::basic_string<char>,edm::Ptr<reco::Candidate> > >" />
+
+  <class pattern="std::iterator<std::random_access_iterator_tag,edm::RefToBase<reco::Candidate>*>" />
+</selection>
+<exclusion>
+  <class name="edm::OwnVector<reco::Candidate, edm::ClonePolicy<reco::Candidate> >">
+    <method name="sort" />
+  </class>
+</exclusion>
+</lcgdict>

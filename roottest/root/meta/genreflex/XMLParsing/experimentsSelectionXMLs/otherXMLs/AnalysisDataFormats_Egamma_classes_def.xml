@@ -1,0 +1,21 @@
+<lcgdict>
+   <class name="reco::ElectronID" ClassVersion="10">
+    <version ClassVersion="10" checksum="3416557521"/>
+   </class>
+   <class name="std::vector<reco::ElectronID>"/>
+   <class name="edm::Wrapper<std::vector<reco::ElectronID> >"/>
+   <class name="edm::Ref<std::vector<reco::ElectronID>, reco::ElectronID, edm::refhelper::FindUsingAdvance<std::vector<reco::ElectronID>, reco::ElectronID> >" />
+   <class name="edm::RefProd<std::vector<reco::ElectronID> >" />
+   <class name="edm::RefVector<std::vector<reco::ElectronID>, reco::ElectronID, edm::refhelper::FindUsingAdvance<std::vector<reco::ElectronID>, reco::ElectronID> >"/>
+
+   <class name="edm::AssociationMap<edm::OneToOne<std::vector<reco::GsfElectron>, std::vector<reco::ElectronID>, unsigned int > >">
+     <field name="transientMap_" transient="true" />
+   </class>
+   <class pattern="edm::KeyVal<*>" />
+   <class pattern="edm::Wrapper<edm::AssociationMap<*>" />
+   <class pattern="edm::Ref<edm::AssociationMap<*>" />
+   <class pattern="edm::RefProd<edm::AssociationMap<*>" />
+   <class pattern="edm::RefVector<edm::AssociationMap<*>" />
+   <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::GsfElectron> > , edm::RefProd<std::vector<reco::ElectronID> > >"/> 
+
+</lcgdict>

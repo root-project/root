@@ -1,0 +1,12 @@
+
+Processing runlonglong.C+...
+======> EVENT:-1
+ A               = 13
+ B               = 14
+ C               = 15
+ D               = 16
+ takptr.         = (aap*)0xRemoved
+ takptr.A        = 13
+ takptr.B        = 14
+ takptr.C        = 15
+ takptr.D        = 16

@@ -1,0 +1,4 @@
+
+Processing execLoadLibs.C...
+Warning in <TClassTable::Add>: class A already in TClassTable
+(int) 0

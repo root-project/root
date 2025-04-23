@@ -1,0 +1,6 @@
+<lcgdict>
+    <class name="ISelectorCore" />
+    <class name="KinematicSelectorCore" />
+    <class name="ElectronIDSelectorCore" />
+    <class name="ContainerFilterCore" />
+</lcgdict>

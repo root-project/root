@@ -1,0 +1,179 @@
+
+Processing runnamespace.C...
+OBJ: TClass	MySpace::MyClass	
+OBJ: TClass	MySpace::MyClass	
+
+StreamerInfo for class: MySpace::MyClass, checksum=0xda58546c
+  int            a               offset=  0 type= 3                     
+   i= 0, a               type=  3, offset=  0, len=1, method=0
+
+StreamerInfo for class: MySpace::MyClass, checksum=0xda58546c
+  int            a               offset=  0 type= 3                     
+   i= 0, a               type=  3, offset=  0, len=1, method=0
+OBJ: TMethod	funcInNS	
+OBJ: TFunction	globalFunc	
+OBJ: TFunction	globalFuncInline	
+TFile**		fornamespace.root	
+ TFile*		fornamespace.root	
+  KEY: Outer::Inner::Cl	cl;1	
+
+StreamerInfo for class: Outer::Inner::Cl, version=1, checksum=0xc5ae9b03
+  Outer::Inner::InInner<int> I               offset=  0 type=62                     
+  Outer::Inner::InInner<int> II              offset=  0 type=62                     
+  Outer::Inner::InInner<Outer::Inner::InInner<int> > I_I             offset=  0 type=62                     
+  Outer::Inner::InInner<Outer::Inner::InInner<int> > II_II           offset=  0 type=62                     
+  Outer::Inner::InInner<int> OII             offset=  0 type=62                     
+  Outer::Inner::InInner<Outer::Inner::InInner<int> > OII_OII         offset=  0 type=62                     
+  Outer::InOuter<int> O               offset=  0 type=62                     
+  Outer::InOuter<int> OO              offset=  0 type=62                     
+  Outer::InOuter<Outer::InOuter<int> > O_O             offset=  0 type=62                     
+  Outer::InOuter<Outer::InOuter<int> > OO_OO           offset=  0 type=62                     
+  Outer::InOuter<Outer::Inner::InInner<int> > OO_I            offset=  0 type=62                     
+  Outer::InOuter<Outer::Inner::InInner<int> > OO_II           offset=  0 type=62                     
+  Outer::InOuter<Outer::Inner::InInner<int> > OO_OII          offset=  0 type=62                     
+  Outer::Second::InSecond<int> S               offset=  0 type=62                     
+  Outer::Second::InSecond<int> OS              offset=  0 type=62                     
+  Outer::Second::InSecond<Outer::Second::InSecond<int> > OS_S            offset=  0 type=62                     
+  Outer::Second::InSecond<Outer::Second::InSecond<int> > OS_OS           offset=  0 type=62                     
+==> Dumping object at: 0x0000000000000000, class=Outer::Inner::Cl
+
+I                                                 
+I.S                                               
+I.S.I                                             
+I.S.I.Storage                 -42                 
+I.S.I.Also                    0                   
+I.O                                               
+I.O.Storage                   -42                 
+I.O.Also                      0                   
+II                                                
+II.S                                              
+II.S.I                                            
+II.S.I.Storage                -42                 
+II.S.I.Also                   0                   
+II.O                                              
+II.O.Storage                  -42                 
+II.O.Also                     0                   
+I_I                                               
+I_I.S                                             
+I_I.S.I                                           
+I_I.S.I.Storage               -42                 
+I_I.S.I.Also                                      
+I_I.S.I.Also.S                                    
+I_I.S.I.Also.S.I                                  
+I_I.S.I.Also.S.I.Storage      -42                 
+I_I.S.I.Also.S.I.Also         0                   
+I_I.S.I.Also.O                                    
+I_I.S.I.Also.O.Storage        -42                 
+I_I.S.I.Also.O.Also           0                   
+I_I.O                                             
+I_I.O.Storage                 -42                 
+I_I.O.Also                    0                   
+II_II                                             
+II_II.S                                           
+II_II.S.I                                         
+II_II.S.I.Storage             -42                 
+II_II.S.I.Also                                    
+II_II.S.I.Also.S                                  
+II_II.S.I.Also.S.I                                
+II_II.S.I.Also.S.I.Storage    -42                 
+II_II.S.I.Also.S.I.Also       0                   
+II_II.S.I.Also.O                                  
+II_II.S.I.Also.O.Storage      -42                 
+II_II.S.I.Also.O.Also         0                   
+II_II.O                                           
+II_II.O.Storage               -42                 
+II_II.O.Also                  0                   
+OII                                               
+OII.S                                             
+OII.S.I                                           
+OII.S.I.Storage               -42                 
+OII.S.I.Also                  0                   
+OII.O                                             
+OII.O.Storage                 -42                 
+OII.O.Also                    0                   
+OII_OII                                           
+OII_OII.S                                         
+OII_OII.S.I                                       
+OII_OII.S.I.Storage           -42                 
+OII_OII.S.I.Also                                  
+OII_OII.S.I.Also.S                                
+OII_OII.S.I.Also.S.I                              
+OII_OII.S.I.Also.S.I.Storage  -42                 
+OII_OII.S.I.Also.S.I.Also     0                   
+OII_OII.S.I.Also.O                                
+OII_OII.S.I.Also.O.Storage    -42                 
+OII_OII.S.I.Also.O.Also       0                   
+OII_OII.O                                         
+OII_OII.O.Storage             -42                 
+OII_OII.O.Also                0                   
+O                                                 
+O.Storage                     -42                 
+O.Also                        0                   
+OO                                                
+OO.Storage                    -42                 
+OO.Also                       0                   
+O_O                                               
+O_O.Storage                   -42                 
+O_O.Also                                          
+O_O.Also.Storage              -42                 
+O_O.Also.Also                 0                   
+OO_OO                                             
+OO_OO.Storage                 -42                 
+OO_OO.Also                                        
+OO_OO.Also.Storage            -42                 
+OO_OO.Also.Also               0                   
+OO_I                                              
+OO_I.Storage                  -42                 
+OO_I.Also                                         
+OO_I.Also.S                                       
+OO_I.Also.S.I                                     
+OO_I.Also.S.I.Storage         -42                 
+OO_I.Also.S.I.Also            0                   
+OO_I.Also.O                                       
+OO_I.Also.O.Storage           -42                 
+OO_I.Also.O.Also              0                   
+OO_II                                             
+OO_II.Storage                 -42                 
+OO_II.Also                                        
+OO_II.Also.S                                      
+OO_II.Also.S.I                                    
+OO_II.Also.S.I.Storage        -42                 
+OO_II.Also.S.I.Also           0                   
+OO_II.Also.O                                      
+OO_II.Also.O.Storage          -42                 
+OO_II.Also.O.Also             0                   
+OO_OII                                            
+OO_OII.Storage                -42                 
+OO_OII.Also                                       
+OO_OII.Also.S                                     
+OO_OII.Also.S.I                                   
+OO_OII.Also.S.I.Storage       -42                 
+OO_OII.Also.S.I.Also          0                   
+OO_OII.Also.O                                     
+OO_OII.Also.O.Storage         -42                 
+OO_OII.Also.O.Also            0                   
+S                                                 
+S.I                                               
+S.I.Storage                   -42                 
+S.I.Also                      0                   
+OS                                                
+OS.I                                              
+OS.I.Storage                  -42                 
+OS.I.Also                     0                   
+OS_S                                              
+OS_S.I                                            
+OS_S.I.Storage                -42                 
+OS_S.I.Also                                       
+OS_S.I.Also.I                                     
+OS_S.I.Also.I.Storage         -42                 
+OS_S.I.Also.I.Also            0                   
+OS_OS                                             
+OS_OS.I                                           
+OS_OS.I.Storage               -42                 
+OS_OS.I.Also                                      
+OS_OS.I.Also.I                                    
+OS_OS.I.Also.I.Storage        -42                 
+OS_OS.I.Also.I.Also           0                   
+Empty A: got 0 funs
+More A: got 1 funs
+Full A: there are 2 A::f() overloads.

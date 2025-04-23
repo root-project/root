@@ -1,0 +1,51 @@
+2005.07.14
+
+Problem with pthread_mutex_lock is solved!
+
+It was indeed enough to remove OCI_THREADED in OracleSession.cpp.
+
+This was tested using a private version of POOL.
+With respect to POOL_2_1_1-beta, the following changes were made:
+
+  // AV 2005.07.13 - start
+  // Test if OCI_THREADED __alone__ is responsible for COOL pthread_mutex_lock
+  //sword status = OCIEnvCreate( &m_environmentHandle,
+  //                             OCI_OBJECT,
+  //                             0,0,0,0,0,0 );
+  sword status;
+  if ( getenv ( "COOL_OCI_THREADED" ) )
+    status = OCIEnvCreate( &m_environmentHandle,
+                           OCI_THREADED | OCI_OBJECT,
+                           0,0,0,0,0,0 );
+  else
+    status = OCIEnvCreate( &m_environmentHandle,
+                           OCI_OBJECT,
+                           0,0,0,0,0,0 );
+  // AV 2005.07.13 - end
+
+The test RalDatabaseTest::dropDatabase was executed alone
+(all tests but dropDatabase were disabled in RalDatabaseTest),
+with and without COOL_OCI_THREADED set:
+
+coolDropDatabase.csh $COOLTESTDB
+unsetenv COOL_OCI_THREADED
+date ; unitTest_RelationalCool_RalDatabase > & dropDatabaseTest.out.OCI_DEFAULT ; date
+setenv COOL_OCI_THREADED on
+date ; unitTest_RelationalCool_RalDatabase > & dropDatabaseTest.out.OCI_THREADED ; date
+[Interrupted by Ctrl-C]
+date
+unsetenv COOL_OCI_THREADED
+date ; unitTest_RelationalCool_RalDatabase > & dropDatabaseTest.out.OCI_DEFAULT.2 ; date
+
+The first and third job, with OCI_THREADED disabled, completed successfully
+in around 30 seconds. The second job, with OCI_THREADED enabled, got stuck
+and was killed with Ctrl-C after 2 minutes. The stack dump shows indeed
+the problem with pthread_mutex_lock.
+
+The outputs from the first and second jobs are included in CVS
+(not the output from the third job, which is similar to that 
+of the first one and was only meant as an additional cross-check).
+
+Problem solved!! :-)
+
+

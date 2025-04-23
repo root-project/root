@@ -1,0 +1,10 @@
+<lcgdict>
+  <class name="Trk::TrackParameters" />
+  <class name="Trk::CurvilinearParameters" />
+  <class name="Trk::AtaCone" />
+  <class name="Trk::AtaCylinder" />
+  <class name="Trk::AtaDisc" />
+  <class name="Trk::Perigee" />
+  <class name="Trk::AtaPlane" />
+  <class name="Trk::AtaStraightLine" />
+</lcgdict>

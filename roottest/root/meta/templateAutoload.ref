@@ -1,0 +1,9 @@
+
+Processing runtemplateAutoload.C...
+Float template instance object created.
+Int0 template instance object created.
+Int1 template instance object created.
+The library TmpltNoSpec_C has been loaded!
+The TClass for Template<short, 0, Tag_t, int, 1> is loaded
+Int0 ANamespace::Template object created.
+Int1 ANamespace::Template object created.

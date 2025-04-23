@@ -1,0 +1,32 @@
+<lcgdict>
+  <class name="ICaloCluster_OnTrackBuilder" />
+  <class name="IEMAmbiguityTool" />
+  <class name="IEMBremCollectionBuilder" />
+  <class name="IEMClusterTool" />
+  <class name="IEMConversionBuilder" />
+  <class name="IEMExtrapolCaloConversion" />
+  <class name="IEMExtrapolationTools" />
+  <class name="IEMFourMomBuilder" />
+  <class name="IEMShowerBuilder" />
+  <class name="IEMTrackIsolationTool" />
+  <class name="IEMTrackMatchBuilder" />
+  <class name="IEMVertexBuilder" />
+  <class name="IFourMomCombiner" />
+  <class name="IegammaBackShape" />
+  <class name="IegammaBaseTool" />
+  <class name="IegammaBremsstrahlungHelix" />
+  <class name="IegammaCheckEnergyDepositTool" />
+  <class name="IegammaEnergyPositionAllSamples" />
+  <class name="IegammaIso" />
+  <class name="IegammaIsoPtCorrection" />
+  <class name="IegammaMiddleShape" />
+  <class name="IegammaPreSamplerShape" />
+  <class name="IegammaShowerShape" />
+  <class name="IegammaStripsShape" />
+  <class name="IegammaSwTool" />
+  <class name="IegammaTopoIso" />
+  <class name="IegammaTrkRefitterTool" />
+  <class name="Iegammaqweta1c" />
+  <class name="Iegammaqweta2c" />
+</lcgdict>
+

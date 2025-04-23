@@ -1,0 +1,93 @@
+<lcgdict>
+
+  <class name = "LHCb::RichRecSegment" />
+  <class name = "LHCb::RichRecTrack" />
+  <class name = "LHCb::RichRecPixel" />
+  <class name = "LHCb::RichRecPhoton" />
+  <class name = "LHCb::RichRecRing" />
+  <class name = "LHCb::RichRecStatus" />
+
+  <class name = "Rich::Rec::FastRingFitter" />
+  <class name = "Rich::Rec::FastRingFitter::Result" />
+
+  <class name = "Rich::Rec::RadCorrLocalPositions" />
+  <class name = "Rich::ObjPtn&lt;Rich::Rec::RadCorrLocalPositions&gt;" />
+
+  <class name = "LHCb::RichRecPixel::Tracks" />
+  <class name = "Rich::ObjPtn&lt;LHCb::RichRecPixel::Tracks&gt;" />
+  <class name = "LHCb::RichRecPixel::Photons" />
+  <class name = "Rich::ObjPtn&lt;LHCb::RichRecPixel::Photons&gt;" />
+  <class name = "LHCb::RichRecRingOnPixel" />
+  <class name = "LHCb::RichRecPixel::RingsOnPixel" />
+  <class name = "Rich::ObjPtn&lt;LHCb::RichRecPixel::RingsOnPixel&gt;" />
+  <class name = "Rich::ObjPtn&lt;Rich::HPDPixelCluster&gt;" />
+
+  <class name = "Rich::HypoData&lt;LHCb::RichRecSegment::FloatType&gt;" />
+  <class name = "Rich::ObjPtn&lt;Rich::HypoData&lt;LHCb::RichRecSegment::FloatType&gt; &gt;" />
+  <class name = "Rich::PhotonSpectra&lt;LHCb::RichRecSegment::FloatType&gt;" />
+  <class name = "Rich::HypoData&lt;LHCb::RichRecRing*&gt;" />
+  <class name = "Rich::ObjPtn&lt;Rich::HypoData&lt;LHCb::RichRecRing*&gt; &gt;" />
+
+  <class name = "LHCb::RichRecTrack::Segments" />
+  <class name = "LHCb::RichRecTrack::Pixels" />
+  <class name = "LHCb::RichRecTrack::Photons" />
+
+  <class name = "Rich::Rec::TrackID" />
+
+  <class name = "Rich::Rec::PhotonKey" />
+  <class name = "Rich::Rec::PhotonKey::PackedType" />
+  <class name = "Rich::Rec::PhotonKey::KeyType" />
+
+  <class name = "LHCb::RichRecPointOnRing" />
+  <class name = "LHCb::RichRecPointOnRing::Vector" />
+  <class name = "LHCb::RichRecPixelOnRing::Vector" />
+
+  <class name = "Rich::ObjPtn&lt;LHCb::RichGeomPhoton&gt;" />
+  <class name = "Rich::ObjPtn&lt;LHCb::RichTrackSegment&gt;" />
+
+  <class name = "LHCb::RichRecSegments" />
+  <class name = "LHCb::RichRecTracks" />
+  <class name = "LHCb::RichRecPixels" />
+  <class name = "LHCb::RichRecPhotons" />
+  <class name = "LHCb::RichRecRings" />
+
+  <class name = "LHCb::RichRecSegment::PDGeomEffs" />
+  <class name = "LHCb::RichRecSegment::PDGeomEffsVector" />
+  <class name = "LHCb::RichRecSegment::Pixels" />
+  <class name = "LHCb::RichRecSegment::Photons" />
+
+  <class name = "Rich::Rec::IBaseTrackSelector" />
+  <class name = "Rich::Rec::ICherenkovAngle" />
+  <class name = "Rich::Rec::ICherenkovResolution" />
+  <class name = "Rich::Rec::IExpectedTrackSignal" />
+  <class name = "Rich::Rec::IGasQuartzWindowAbs" />
+  <class name = "Rich::Rec::IGeomEff" />
+  <class name = "Rich::Rec::IMassHypothesisRingCreator" />
+  <class name = "Rich::Rec::IPhotonCreator" />
+  <class name = "Rich::Rec::IPhotonPredictor" />
+  <class name = "Rich::Rec::IPhotonReconstruction" />
+  <class name = "Rich::Rec::IPhotonSignal" />
+  <class name = "Rich::Rec::IPixelBackgroundEsti" />
+  <class name = "Rich::Rec::IPixelCreator" />
+  <class name = "Rich::Rec::IRayTraceCherenkovCone" />
+  <class name = "Rich::Rec::IRayleighScatter" />
+  <class name = "Rich::Rec::IRichPID" />
+  <class name = "Rich::Rec::IGeomTool" />
+  <class name = "Rich::Rec::ISegmentCreator" />
+  <class name = "Rich::Rec::ISellmeirFunc" />
+  <class name = "Rich::Rec::ISignalDetectionEff" />
+  <class name = "Rich::Rec::IStatusCreator" />
+  <class name = "Rich::Rec::ITrSegMaker" />
+  <class name = "Rich::Rec::ITrackCreator" />
+  <class name = "Rich::Rec::ITrackSelector" />
+  <class name = "Rich::Rec::IPhotonEmissionPoint" />
+  <class name = "Rich::Rec::IPIDPlots" />
+  <class name = "Rich::Rec::IPIDPlots::Configuration" />
+  <class name = "Rich::Rec::IStereoFitter" />
+  <class name = "Rich::Rec::IStereoFitter::Result" />
+  <class name = "Rich::Rec::IStereoFitter::Configuration" />
+  <class name = "Rich::Rec::IStereoProjection" />
+  <class name = "Rich::Rec::IIsolatedTrack" />
+  <class name = "Rich::Rec::ITrackEffectiveRefractiveIndex" />
+
+</lcgdict>

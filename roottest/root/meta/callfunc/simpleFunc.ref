@@ -1,0 +1,35 @@
+
+Processing runsimpleFunc.C...
+Running through TInterpreter public interfaces...
+void VoidFuncNoArgs().
+int IntFuncNoArgs().
+Result of IntFuncNoArgs = -1
+Int_t IntTFuncNoArgs().
+Result of IntFuncNoArgs = 0
+double DoubleFuncNoArgs().
+Result of IntFuncNoArgs = -1.000000
+MyClassReturn* MyClassReturnNoArgs().
+Result of MyClassReturnNoArgs = a=1
+FloatPtrOneArg(int p).
+p=3
+Result of FloatPtrOneArg = 3.000000
+Double32PtrOneArg(int p, float f, double* d).
+Result of A::Double32TPtrThreeArgs = -1.000000
+Result of A::A1::A2::A3::NestedNamespaceIntOneArg = 14
+======================================================
+Running through TMethodCall...
+void VoidFuncNoArgs().
+int IntFuncNoArgs().
+Result of IntFuncNoArgs = -1
+Int_t IntTFuncNoArgs().
+Result of IntFuncNoArgs = 0
+double DoubleFuncNoArgs().
+Result of IntFuncNoArgs = -1.000000
+MyClassReturn* MyClassReturnNoArgs().
+Result of MyClassReturnNoArgs = a=1
+FloatPtrOneArg(int p).
+p=3
+Result of FloatPtrOneArg = 3.000000
+Double32PtrOneArg(int p, float f, double* d).
+Result of A::Double32TPtrThreeArgs = -1.000000
+Result of A::A1::A2::A3::NestedNamespaceIntOneArg = 14

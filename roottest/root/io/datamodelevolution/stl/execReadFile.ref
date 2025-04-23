@@ -1,0 +1,615 @@
+
+Processing execReadFile.C...
+Warning in <TClass::Init>: no dictionary for class Inside is available
+Reading a Track.
+Single value
+ x=7 y=9
+Reading a vector<int> into a vector<float>.
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+Reading a vector<Values> into a vector<Track>.
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+Reading a map<string,int> into a map<string,long>.
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading a Holder object.
+Holder:
+Holder::fX 1
+Single value
+ x=11 y=22
+Holder::fVec :
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+Holder::fValues :
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+listHolder::fMap :
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading from TTree entry #0.
+Reading a vector<int> into a vector<float>.
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+Reading a vector<Values> into a vector<Track>.
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+Reading a Holder object.
+Holder:
+Holder::fX 1
+Single value
+ x=11 y=22
+Holder::fVec :
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+Holder::fValues :
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+listHolder::fMap :
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading from TTree entry #1.
+Reading a vector<int> into a vector<float>.
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+ i=10 v=-10
+ i=11 v=-11
+ i=12 v=-12
+ i=13 v=-13
+ i=14 v=-14
+ i=15 v=-15
+ i=16 v=-16
+ i=17 v=-17
+ i=18 v=-18
+ i=19 v=-19
+Reading a vector<Values> into a vector<Track>.
+ i=0 x=200 y=2000
+ i=1 x=201 y=2001
+ i=2 x=202 y=2002
+ i=3 x=203 y=2003
+ i=4 x=204 y=2004
+ i=5 x=205 y=2005
+ i=6 x=206 y=2006
+ i=7 x=207 y=2007
+ i=8 x=208 y=2008
+ i=9 x=209 y=2009
+ i=10 x=210 y=2010
+ i=11 x=211 y=2011
+ i=12 x=212 y=2012
+ i=13 x=213 y=2013
+ i=14 x=214 y=2014
+ i=15 x=215 y=2015
+ i=16 x=216 y=2016
+ i=17 x=217 y=2017
+ i=18 x=218 y=2018
+ i=19 x=219 y=2019
+Reading a Holder object.
+Holder:
+Holder::fX 2
+Single value
+ x=22 y=44
+Holder::fVec :
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+ i=10 v=-10
+ i=11 v=-11
+ i=12 v=-12
+ i=13 v=-13
+ i=14 v=-14
+ i=15 v=-15
+ i=16 v=-16
+ i=17 v=-17
+ i=18 v=-18
+ i=19 v=-19
+Holder::fValues :
+ i=0 x=200 y=2000
+ i=1 x=201 y=2001
+ i=2 x=202 y=2002
+ i=3 x=203 y=2003
+ i=4 x=204 y=2004
+ i=5 x=205 y=2005
+ i=6 x=206 y=2006
+ i=7 x=207 y=2007
+ i=8 x=208 y=2008
+ i=9 x=209 y=2009
+ i=10 x=210 y=2010
+ i=11 x=211 y=2011
+ i=12 x=212 y=2012
+ i=13 x=213 y=2013
+ i=14 x=214 y=2014
+ i=15 x=215 y=2015
+ i=16 x=216 y=2016
+ i=17 x=217 y=2017
+ i=18 x=218 y=2018
+ i=19 x=219 y=2019
+listHolder::fMap :
+ i=0 key=one val=200
+ i=1 key=two val=-400
+Reading a Track.
+Single value
+ x=7 y=9
+Reading a vector<int> into a list<float>.
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+Reading a vector<Values> into a list<Track>.
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+Reading a map<string,int> into a map<string,long>.
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading a listHolder object.
+listHolder:
+listHolder::fX 1
+Single value
+ x=11 y=22
+listHolder::fVec :
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+listHolder::fValues :
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+listHolder::fMap :
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading from TTree entry #0.
+Reading a vector<int> into a list<float>.
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+Reading a vector<Values> into a list<Track>.
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+Reading a listHolder object.
+listHolder:
+listHolder::fX 1
+Single value
+ x=11 y=22
+listHolder::fVec :
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+listHolder::fValues :
+ i=0 x=100 y=1000
+ i=1 x=101 y=1001
+ i=2 x=102 y=1002
+ i=3 x=103 y=1003
+ i=4 x=104 y=1004
+ i=5 x=105 y=1005
+ i=6 x=106 y=1006
+ i=7 x=107 y=1007
+ i=8 x=108 y=1008
+ i=9 x=109 y=1009
+listHolder::fMap :
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading from TTree entry #1.
+Reading a vector<int> into a list<float>.
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+ i=10 v=-10
+ i=11 v=-11
+ i=12 v=-12
+ i=13 v=-13
+ i=14 v=-14
+ i=15 v=-15
+ i=16 v=-16
+ i=17 v=-17
+ i=18 v=-18
+ i=19 v=-19
+Reading a vector<Values> into a list<Track>.
+ i=0 x=200 y=2000
+ i=1 x=201 y=2001
+ i=2 x=202 y=2002
+ i=3 x=203 y=2003
+ i=4 x=204 y=2004
+ i=5 x=205 y=2005
+ i=6 x=206 y=2006
+ i=7 x=207 y=2007
+ i=8 x=208 y=2008
+ i=9 x=209 y=2009
+ i=10 x=210 y=2010
+ i=11 x=211 y=2011
+ i=12 x=212 y=2012
+ i=13 x=213 y=2013
+ i=14 x=214 y=2014
+ i=15 x=215 y=2015
+ i=16 x=216 y=2016
+ i=17 x=217 y=2017
+ i=18 x=218 y=2018
+ i=19 x=219 y=2019
+Reading a listHolder object.
+listHolder:
+listHolder::fX 2
+Single value
+ x=22 y=44
+listHolder::fVec :
+ i=0 v=0
+ i=1 v=-1
+ i=2 v=-2
+ i=3 v=-3
+ i=4 v=-4
+ i=5 v=-5
+ i=6 v=-6
+ i=7 v=-7
+ i=8 v=-8
+ i=9 v=-9
+ i=10 v=-10
+ i=11 v=-11
+ i=12 v=-12
+ i=13 v=-13
+ i=14 v=-14
+ i=15 v=-15
+ i=16 v=-16
+ i=17 v=-17
+ i=18 v=-18
+ i=19 v=-19
+listHolder::fValues :
+ i=0 x=200 y=2000
+ i=1 x=201 y=2001
+ i=2 x=202 y=2002
+ i=3 x=203 y=2003
+ i=4 x=204 y=2004
+ i=5 x=205 y=2005
+ i=6 x=206 y=2006
+ i=7 x=207 y=2007
+ i=8 x=208 y=2008
+ i=9 x=209 y=2009
+ i=10 x=210 y=2010
+ i=11 x=211 y=2011
+ i=12 x=212 y=2012
+ i=13 x=213 y=2013
+ i=14 x=214 y=2014
+ i=15 x=215 y=2015
+ i=16 x=216 y=2016
+ i=17 x=217 y=2017
+ i=18 x=218 y=2018
+ i=19 x=219 y=2019
+listHolder::fMap :
+ i=0 key=one val=200
+ i=1 key=two val=-400
+Reading a Track.
+Single value
+ x=7 y=9
+Reading a vector<int> into a set<float>.
+ i=0 v=-9
+ i=1 v=-8
+ i=2 v=-7
+ i=3 v=-6
+ i=4 v=-5
+ i=5 v=-4
+ i=6 v=-3
+ i=7 v=-2
+ i=8 v=-1
+ i=9 v=0
+Reading a vector<Values> into a set<Track>.
+ i=0 x=109 y=1009
+ i=1 x=108 y=1008
+ i=2 x=107 y=1007
+ i=3 x=106 y=1006
+ i=4 x=105 y=1005
+ i=5 x=104 y=1004
+ i=6 x=103 y=1003
+ i=7 x=102 y=1002
+ i=8 x=101 y=1001
+ i=9 x=100 y=1000
+Reading a map<string,int> into a map<string,long>.
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading a setHolder object.
+setHolder:
+setHolder::fX 1
+Single value
+ x=11 y=22
+setHolder::fVec :
+ i=0 v=-9
+ i=1 v=-8
+ i=2 v=-7
+ i=3 v=-6
+ i=4 v=-5
+ i=5 v=-4
+ i=6 v=-3
+ i=7 v=-2
+ i=8 v=-1
+ i=9 v=0
+setHolder::fValues :
+ i=0 x=109 y=1009
+ i=1 x=108 y=1008
+ i=2 x=107 y=1007
+ i=3 x=106 y=1006
+ i=4 x=105 y=1005
+ i=5 x=104 y=1004
+ i=6 x=103 y=1003
+ i=7 x=102 y=1002
+ i=8 x=101 y=1001
+ i=9 x=100 y=1000
+setHolder::fMap :
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading from TTree entry #0.
+Reading a vector<int> into a set<float>.
+ i=0 v=-9
+ i=1 v=-8
+ i=2 v=-7
+ i=3 v=-6
+ i=4 v=-5
+ i=5 v=-4
+ i=6 v=-3
+ i=7 v=-2
+ i=8 v=-1
+ i=9 v=0
+Reading a vector<Values> into a set<Track>.
+ i=0 x=109 y=1009
+ i=1 x=108 y=1008
+ i=2 x=107 y=1007
+ i=3 x=106 y=1006
+ i=4 x=105 y=1005
+ i=5 x=104 y=1004
+ i=6 x=103 y=1003
+ i=7 x=102 y=1002
+ i=8 x=101 y=1001
+ i=9 x=100 y=1000
+Reading a setHolder object.
+setHolder:
+setHolder::fX 1
+Single value
+ x=11 y=22
+setHolder::fVec :
+ i=0 v=-9
+ i=1 v=-8
+ i=2 v=-7
+ i=3 v=-6
+ i=4 v=-5
+ i=5 v=-4
+ i=6 v=-3
+ i=7 v=-2
+ i=8 v=-1
+ i=9 v=0
+setHolder::fValues :
+ i=0 x=109 y=1009
+ i=1 x=108 y=1008
+ i=2 x=107 y=1007
+ i=3 x=106 y=1006
+ i=4 x=105 y=1005
+ i=5 x=104 y=1004
+ i=6 x=103 y=1003
+ i=7 x=102 y=1002
+ i=8 x=101 y=1001
+ i=9 x=100 y=1000
+setHolder::fMap :
+ i=0 key=one val=100
+ i=1 key=two val=-200
+Reading from TTree entry #1.
+Reading a vector<int> into a set<float>.
+ i=0 v=-19
+ i=1 v=-18
+ i=2 v=-17
+ i=3 v=-16
+ i=4 v=-15
+ i=5 v=-14
+ i=6 v=-13
+ i=7 v=-12
+ i=8 v=-11
+ i=9 v=-10
+ i=10 v=-9
+ i=11 v=-8
+ i=12 v=-7
+ i=13 v=-6
+ i=14 v=-5
+ i=15 v=-4
+ i=16 v=-3
+ i=17 v=-2
+ i=18 v=-1
+ i=19 v=0
+Reading a vector<Values> into a set<Track>.
+ i=0 x=219 y=2019
+ i=1 x=218 y=2018
+ i=2 x=217 y=2017
+ i=3 x=216 y=2016
+ i=4 x=215 y=2015
+ i=5 x=214 y=2014
+ i=6 x=213 y=2013
+ i=7 x=212 y=2012
+ i=8 x=211 y=2011
+ i=9 x=210 y=2010
+ i=10 x=209 y=2009
+ i=11 x=208 y=2008
+ i=12 x=207 y=2007
+ i=13 x=206 y=2006
+ i=14 x=205 y=2005
+ i=15 x=204 y=2004
+ i=16 x=203 y=2003
+ i=17 x=202 y=2002
+ i=18 x=201 y=2001
+ i=19 x=200 y=2000
+Reading a setHolder object.
+setHolder:
+setHolder::fX 2
+Single value
+ x=22 y=44
+setHolder::fVec :
+ i=0 v=-19
+ i=1 v=-18
+ i=2 v=-17
+ i=3 v=-16
+ i=4 v=-15
+ i=5 v=-14
+ i=6 v=-13
+ i=7 v=-12
+ i=8 v=-11
+ i=9 v=-10
+ i=10 v=-9
+ i=11 v=-8
+ i=12 v=-7
+ i=13 v=-6
+ i=14 v=-5
+ i=15 v=-4
+ i=16 v=-3
+ i=17 v=-2
+ i=18 v=-1
+ i=19 v=0
+setHolder::fValues :
+ i=0 x=219 y=2019
+ i=1 x=218 y=2018
+ i=2 x=217 y=2017
+ i=3 x=216 y=2016
+ i=4 x=215 y=2015
+ i=5 x=214 y=2014
+ i=6 x=213 y=2013
+ i=7 x=212 y=2012
+ i=8 x=211 y=2011
+ i=9 x=210 y=2010
+ i=10 x=209 y=2009
+ i=11 x=208 y=2008
+ i=12 x=207 y=2007
+ i=13 x=206 y=2006
+ i=14 x=205 y=2005
+ i=15 x=204 y=2004
+ i=16 x=203 y=2003
+ i=17 x=202 y=2002
+ i=18 x=201 y=2001
+ i=19 x=200 y=2000
+setHolder::fMap :
+ i=0 key=one val=200
+ i=1 key=two val=-400

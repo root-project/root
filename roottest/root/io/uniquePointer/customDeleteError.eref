@@ -1,0 +1,1 @@
+Error in <CloseStreamerInfoROOTFile>: I/O is supported only for unique_ptrs with a default deleter. A::TH1FUPtr  appears to have a custom one, function<void(TH1F*)>.

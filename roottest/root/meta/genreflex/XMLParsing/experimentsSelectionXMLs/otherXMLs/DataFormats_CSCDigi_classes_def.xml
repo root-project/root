@@ -1,0 +1,108 @@
+<lcgdict>
+   <class name="CSCWireDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="2850817593"/>
+   </class>
+   <class name="CSCRPCDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="133698288"/>
+   </class>
+   <class name="CSCStripDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="432407273"/>
+   </class>
+   <class name="CSCComparatorDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="656608282"/>
+   </class>
+   <class name="CSCCorrelatedLCTDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="1301481852"/>
+   </class>
+   <class name="CSCCLCTDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3910057547"/>
+   </class>
+   <class name="CSCALCTDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="817473300"/>
+   </class>
+   <class name="CSCCFEBStatusDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3752412263"/>
+   </class>
+   <class name="CSCTMBStatusDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="192211156"/>
+   </class>
+   <class name="CSCDMBStatusDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="2414593123"/>
+   </class>
+   <class name="CSCDCCFormatStatusDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="734521968"/>
+   </class>
+   <class name="CSCDDUStatusDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3231645748"/>
+   </class>
+   <class name="CSCDCCStatusDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="1612132636"/>
+   </class>
+   <class name="CSCALCTStatusDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3333415454"/>
+   </class>
+
+   <class name="std::vector<CSCWireDigi>"/>
+   <class name="std::vector<CSCRPCDigi>"/>
+   <class name="std::vector<CSCStripDigi>"/>
+   <class name="std::vector<CSCComparatorDigi>"/>
+   <class name="std::vector<CSCCorrelatedLCTDigi>"/>
+   <class name="std::vector<CSCCLCTDigi>"/>
+   <class name="std::vector<CSCALCTDigi>"/>
+   <class name="std::vector<CSCCFEBStatusDigi>"/>
+   <class name="std::vector<CSCTMBStatusDigi>"/>
+   <class name="std::vector<CSCDMBStatusDigi>"/>
+   <class name="std::vector<CSCDCCFormatStatusDigi>"/>
+   <class name="std::vector<CSCDDUStatusDigi>"/>
+   <class name="std::vector<CSCDCCStatusDigi>"/>
+   <class name="std::vector<CSCALCTStatusDigi>"/>
+
+   <class name="std::map<CSCDetId,std::vector<CSCWireDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCRPCDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCStripDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCComparatorDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCCorrelatedLCTDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCCLCTDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCALCTDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCCFEBStatusDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCTMBStatusDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCDCCFormatStatusDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCDMBStatusDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCDDUStatusDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCDCCStatusDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCALCTStatusDigi> >"/>
+   <class name="std::map<CSCDetId,std::vector<CSCCLCTPreTrigger> >"/>
+
+   <class name="MuonDigiCollection<CSCDetId,CSCWireDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCRPCDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCStripDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCComparatorDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCCorrelatedLCTDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCCLCTDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCALCTDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCCFEBStatusDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCTMBStatusDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCDCCFormatStatusDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCDMBStatusDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCDCCStatusDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCDDUStatusDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCALCTStatusDigi>"/>
+   <class name="MuonDigiCollection<CSCDetId,CSCCLCTPreTrigger>"/>
+
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCWireDigi>>"  splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCRPCDigi>>" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCStripDigi>>"  splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCComparatorDigi>>"  splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCCorrelatedLCTDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCCLCTDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCALCTDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCCFEBStatusDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCTMBStatusDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCDCCFormatStatusDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCDMBStatusDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCDCCStatusDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCDDUStatusDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCALCTStatusDigi> >" splitLevel="0"/>
+   <class name="edm::Wrapper<MuonDigiCollection<CSCDetId,CSCCLCTPreTrigger> >" splitLevel="0"/>
+
+</lcgdict>

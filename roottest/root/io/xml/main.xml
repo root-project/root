@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE main [
+<!ENTITY child4 SYSTEM "include.xml">
+]>
+<main>
+  <child1>Content of child1 node</child1>
+  <child2 attr1="value1" attr2="value2"/>
+  <child3>
+    <subchild1>subchild1 content</subchild1>
+    <subchild2>subchild2 content</subchild2>
+    <subchild3>subchild3 content</subchild3>
+  </child3>
+  &child4;
+</main>

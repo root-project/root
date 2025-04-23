@@ -1,0 +1,49 @@
+TEST_TARGETS += twoscript
+
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log twoscript
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
+testWithFailure:
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+endif
+
+build1.log: link.C 
+	$(CMDECHO) rm -f script1_C.$(DllSuf) script2_C.$(DllSuf); root.exe -b -l -q link.C\(1\) > build1.log 2>&1
+
+load1.log: build1.log
+	$(CMDECHO) root.exe -b -l -q single.C+ > build0.log 2>&1 && root.exe -b -l -q script1.C+ > load1.log 2>&1
+	
+load2.log: build1.log
+	$(CMDECHO) root.exe -b -l -q single.C+  > build0.log 2>&1 && root.exe -b -l -q script2.C+ > load2.log 2>&1
+	
+load2b.log: load2.log
+	$(CMDECHO) root.exe -b -l -q single.C+  > build0.log 2>&1 && root.exe -b -l -q script2.C+ > load2b.log 2>&1
+
+load1b.log: load1.log load2b.log
+	$(CMDECHO) rm -f single_C.$(DllSuf); root.exe -b -l -q script1.C+ > load1b.log 2>&1
+
+
+build10.log: load1.log link.C
+	$(CMDECHO) root.exe -b -l -q link.C\(10\) > build10.log 2>&1
+
+load10.log: build10.log
+	$(CMDECHO) root.exe -b -l -q script.C+ > load10.log 2>&1
+
+twoscript.log: 
+	$(CMDECHO) 
+	
+twoscript: load1b.log
+	$(TestDiff)
+
+# twoscript.log
+#	$(TestDiff) && touch $@
+
+twoscript.test: twoscript
+
+

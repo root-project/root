@@ -1,0 +1,19 @@
+<lcgdict>  
+  <class name="Muon::MuonCoinDataContainer<Muon::MuonCoinDataCollection<Muon::TgcCoinData> >" />
+  <class name="Muon::MuonCoinDataCollection<Muon::TgcCoinData>" />
+  <class name="DataVector<Muon::MuonCoinDataCollection<Muon::TgcCoinData> >" id="F81C4564-B1C5-4053-A6F6-E0ED77907BE5"/>
+  <class name="std::vector<Muon::MuonCoinDataCollection<Muon::TgcCoinData>*>" />
+  <class name="Muon::TgcCoinData" > 
+    <field name="m_detElOut" transient="true" />
+    <field name="m_globalposIn" transient="true" />
+    <field name="m_globalposOut" transient="true" />
+  </class>
+  <class name="DataVector<Muon::TgcCoinData>" />
+  <class name="IdentifiableContainer<Muon::MuonCoinDataCollection<Muon::TgcCoinData>>" />
+
+  <class name="std::vector<Muon::TgcCoinData*>" />
+  <class name="DataLinkVector<Muon::MuonCoinDataCollection<Muon::TgcCoinData> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+</lcgdict>

@@ -1,0 +1,166 @@
+
+Warning in <TClass::Init>: no dictionary for class TCedarEvent is available
+Warning in <TClass::Init>: no dictionary for class TCedarHit is available
+Warning in <TClass::Init>: no dictionary for class TVChannelID is available
+Warning in <TClass::Init>: no dictionary for class CedarChannelID is available
+Warning in <TClass::Init>: no dictionary for class TCHANTIEvent is available
+Warning in <TClass::Init>: no dictionary for class TCHANTIHit is available
+Warning in <TClass::Init>: no dictionary for class CHANTIChannelID is available
+Warning in <TClass::Init>: no dictionary for class TCHODEvent is available
+Warning in <TClass::Init>: no dictionary for class TCHODHit is available
+Warning in <TClass::Init>: no dictionary for class CHODChannelID is available
+Warning in <TClass::Init>: no dictionary for class TGigaTrackerEvent is available
+Warning in <TClass::Init>: no dictionary for class TGigaTrackerHit is available
+Warning in <TClass::Init>: no dictionary for class GigaTrackerChannelID is available
+Warning in <TClass::Init>: no dictionary for class THACEvent is available
+Warning in <TClass::Init>: no dictionary for class THACHit is available
+Warning in <TClass::Init>: no dictionary for class HACChannelID is available
+Warning in <TClass::Init>: no dictionary for class TIRCEvent is available
+Warning in <TClass::Init>: no dictionary for class TIRCHit is available
+Warning in <TClass::Init>: no dictionary for class IRCChannelID is available
+Warning in <TClass::Init>: no dictionary for class TLAVEvent is available
+Warning in <TClass::Init>: no dictionary for class TLAVHit is available
+Warning in <TClass::Init>: no dictionary for class LAVChannelID is available
+Warning in <TClass::Init>: no dictionary for class TLKrEvent is available
+Warning in <TClass::Init>: no dictionary for class TLKrHit is available
+Warning in <TClass::Init>: no dictionary for class LKrChannelID is available
+Warning in <TClass::Init>: no dictionary for class TMUV0Event is available
+Warning in <TClass::Init>: no dictionary for class TMUV0Hit is available
+Warning in <TClass::Init>: no dictionary for class MUV0ChannelID is available
+Warning in <TClass::Init>: no dictionary for class TMUV1Event is available
+Warning in <TClass::Init>: no dictionary for class TMUV1Hit is available
+Warning in <TClass::Init>: no dictionary for class MUV1ChannelID is available
+Warning in <TClass::Init>: no dictionary for class TMUV2Event is available
+Warning in <TClass::Init>: no dictionary for class TMUV2Hit is available
+Warning in <TClass::Init>: no dictionary for class MUV2ChannelID is available
+Warning in <TClass::Init>: no dictionary for class TMUV3Event is available
+Warning in <TClass::Init>: no dictionary for class TMUV3Hit is available
+Warning in <TClass::Init>: no dictionary for class MUV3ChannelID is available
+Warning in <TClass::Init>: no dictionary for class TNewCHODEvent is available
+Warning in <TClass::Init>: no dictionary for class TNewCHODHit is available
+Warning in <TClass::Init>: no dictionary for class NewCHODChannelID is available
+Warning in <TClass::Init>: no dictionary for class TRICHEvent is available
+Warning in <TClass::Init>: no dictionary for class TRICHHit is available
+Warning in <TClass::Init>: no dictionary for class RICHChannelID is available
+Warning in <TClass::Init>: no dictionary for class TSACEvent is available
+Warning in <TClass::Init>: no dictionary for class TSACHit is available
+Warning in <TClass::Init>: no dictionary for class SACChannelID is available
+Warning in <TClass::Init>: no dictionary for class SlimEvent is available
+Warning in <TClass::Init>: no dictionary for class SlimGenePart is available
+Warning in <TClass::Init>: no dictionary for class SlimBasePart is available
+Warning in <TClass::Init>: no dictionary for class SlimKinePart is available
+Warning in <TClass::Init>: no dictionary for class Float4Vector is available
+Warning in <TClass::Init>: no dictionary for class Float3Vector is available
+Warning in <TClass::Init>: no dictionary for class EventBoundary is available
+File opened: pluto_oldpers.root
+Number of entries 10
+108
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+1 1
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+2 2
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+3 3
+(int)0
