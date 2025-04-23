@@ -501,9 +501,11 @@ def create_coverage_xml() -> None:
     builddir = os.path.join(WORKDIR, "build")
     ignore_directories="runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
     ignore_subpattern="runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter"
+    # The output of -v is huge (several 10s of MB at least), we could filter
+    # the output of -v to keep just the line with ` Processing file:`
     result = subprocess_with_log(f"""
         cd '{builddir}'
-        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/G__.*' --exclude='.*/({ignore_subpattern})/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
+        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/G__.*' --exclude='.*/({ignore_subpattern})/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -r ../src ../build
     """)
 
     if result != 0:
