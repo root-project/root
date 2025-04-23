@@ -499,7 +499,7 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
     builddir = os.path.join(WORKDIR, "build")
-    ignore_directories="runtutorials|interpreter|*-prefix"
+    ignore_directories="runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
     ignore_subpattern="runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter"
     result = subprocess_with_log(f"""
         cd '{builddir}'
