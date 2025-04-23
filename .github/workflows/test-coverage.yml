@@ -67,6 +67,13 @@ jobs:
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         PYTHONUNBUFFERED: true
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
 
     steps:
       - name: Set up Python Virtual Env
