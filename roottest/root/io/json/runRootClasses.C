@@ -1,13 +1,9 @@
-{
-// Fill out the code of the actual test
-#ifndef SECOND_RUN
-   gROOT->ProcessLine(".L test_classes.h+");
-#endif
+#include "test_classes.h"
 
-#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
-#define SECOND_RUN
-   gROOT->ProcessLine(".x runRootClasses.C");
-#else
+void runRootClasses()
+{
+   gSystem->Load("libJsonTestClasses");
+
 
    TH1I *h1 = new TH1I("histo1","histo title", 100, -10., 10.);
    for (Int_t bin=1;bin<=100;++bin)
@@ -39,34 +35,34 @@
 
    TString json;
 
-   cout << " ====== TObject representation ===== " << endl;
+   std::cout << " ====== TObject representation ===== " << std::endl;
    json = TBufferJSON::ToJSON(obj);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== TH1I representation ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== TH1I representation ===== " << std::endl;
    json = TBufferJSON::ToJSON(h1);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== TBox representation ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== TBox representation ===== " << std::endl;
    json = TBufferJSON::ToJSON(box);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== TList representation ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== TList representation ===== " << std::endl;
    json = TBufferJSON::ToJSON(arr);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== TClonesArray representation ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== TClonesArray representation ===== " << std::endl;
    json = TBufferJSON::ToJSON(clones);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== TMap representation ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== TMap representation ===== " << std::endl;
    json = TBufferJSON::ToJSON(map);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== TJsonEx14 with different ROOT collections ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== TJsonEx14 with different ROOT collections ===== " << std::endl;
    json = TBufferJSON::ToJSON(ex14);
    testJsonReading(json);
-   cout << json << endl << endl;
+   std::cout << json << std::endl << std::endl;
 
    delete obj;
    delete h1;
@@ -75,12 +71,4 @@
    delete clones;
    delete map;
    delete ex14;
-
-
-#endif
-#ifdef ClingWorkAroundBrokenUnnamedReturn
-   gApplication->Terminate(0);
-#else
-   return 0;
-#endif
 }
