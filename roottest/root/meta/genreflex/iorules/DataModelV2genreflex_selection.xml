@@ -1,0 +1,47 @@
+<rootdict>
+   <class name="ACache" version="9"/>
+   <class name="Container" version="2"/>
+
+<!-- IO readrules -->
+<!--Rule 1
+   #pragma read sourceClass="ACache" targetClass="ACache" source="int x; int y; char c"  version="[8]" target="z" include="TMath.h,math.h" \
+   code="{ z = onfile.x*1000 + onfile.y*10; }"-->
+<ioread sourceClass = "ACache"
+        version="[8]"
+        targetClass = "ACache"
+        source = "int x; int y; char c"
+        target = "z"
+        include = "TMath.h;math.h">
+   <![CDATA[z = onfile.x*1000 + onfile.y*10;
+   ]]>
+</ioread>
+
+<!--Rule 2
+  #pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
+   source      = "Int_t *fArray; Int_t fN;" \
+   target      = "fArray" \
+   code        = "{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; for(Int_t i=0; i<onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }"-->
+<ioread sourceClass = "ACache"
+        version="[8]"
+        targetClass = "ACache"
+        source = "Int_t *fArray; Int_t fN;"
+        target = "fArray">
+   <![CDATA[{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; for(Int_t i=0; i<onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }
+   ]]>
+</ioread>
+
+<!--Rule 3
+#pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
+   source      = "float fValues[3]" \
+   target      = "fValues" \
+   code        = "{ for(Int_t i=0; i<3; i++) fValues[i] = 1+onfile.fValues[i]; }"-->
+<ioread sourceClass = "ACache"
+        version="[8]"
+        targetClass = "ACache"
+        source = "float fValues[3]"
+        target = "fValues">
+   <![CDATA[for(Int_t i=0; i<3; i++) fValues[i] = 1+onfile.fValues[i];
+   ]]>
+</ioread>
+
+</rootdict>

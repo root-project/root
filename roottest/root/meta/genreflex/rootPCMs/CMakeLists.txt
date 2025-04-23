@@ -1,0 +1,1 @@
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(classesFindBackPCMNames_rflx classesFindBackPCMNames.h SELECTION classesFindBackPCMNames_selection.xml OPTIONS -m pcm1.pcm -m pcm2.pcm -m pcm3.pcm -m pcm4.pcm -m pcm5.pcm)

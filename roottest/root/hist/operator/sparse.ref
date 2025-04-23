@@ -1,0 +1,26 @@
+
+Processing runsparse.C...
+Projecting a THnSparse: SUCCESS
+Projecting a THnSparse to a TH1 (TH3::Project3D): SUCCESS
+Projecting a THnSparse to a TH1 (TH3::ProjectZ): SUCCESS
+Projecting a THnSparse to a TH2: SUCCESS
+Scaling of THnSparse: SUCCESS
+Cloning of THnSparse: SUCCESS
+Subtracting two THnSparse: SUCCESS
+Dividing two THnSparse: SUCCESS
+Error calculation: SUCCESS
+Dividing two THnSparse (binomial): SUCCESS
+Binomial errors of division result: SUCCESS
+Merging histograms: SUCCESS
+Projecting a THnSparse: SUCCESS
+Projecting a THnSparse to a TH1 (TH3::Project3D): SUCCESS
+Projecting a THnSparse to a TH1 (TH3::ProjectZ): SUCCESS
+Projecting a THnSparse to a TH2: SUCCESS
+Scaling of THnSparse: SUCCESS
+Cloning of THnSparse: SUCCESS
+Subtracting two THnSparse: SUCCESS
+Dividing two THnSparse: SUCCESS
+Error calculation: SUCCESS
+Dividing two THnSparse (binomial): SUCCESS
+Binomial errors of division result: SUCCESS
+Merging histograms: SUCCESS

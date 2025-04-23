@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="IExtrapolateToCaloTool" />
+  <class name="Rec::IMuonTrackThroughCalo" />
+  <class name="Rec::ITrackThroughDetectorBoundaries" />
+</lcgdict>

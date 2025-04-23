@@ -1,0 +1,7 @@
+<lcgdict>
+  <class name="PFBenchmarkAlgo"/>
+  <class name="GenericBenchmark"/>
+  <class name="PFJetBenchmark"/>
+  <class name="PFMETBenchmark"/>
+  <class name="BenchmarkTreeEntry"/>
+</lcgdict>

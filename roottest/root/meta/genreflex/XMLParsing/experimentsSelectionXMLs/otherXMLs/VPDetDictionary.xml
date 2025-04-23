@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="DeVP"        />
+  <class name="DeVPSensor"  />
+  <class name="DeVPYType" />
+  <class name="DeVPXType"   />
+  <class name="DeVPSquareType"   />
+  <class name="std::vector<DeVPSensor*>"  />
+  <variable pattern="DeVPLocation::*" />
+</lcgdict>

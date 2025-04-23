@@ -1,0 +1,37 @@
+<lcgdict>
+  <class name="EventBookkeeper_p1" id="A1550FE9-B52A-451D-A2B8-3B09E046A481" />
+  <class name="std::vector<EventBookkeeper_p1>" />
+  <class name="EventBookkeeperCollection_p1" id="461506EA-7376-448C-A4AF-640654D313C3" />
+
+  <class name="EventBookkeeper_p2" id="EACBE9F1-84F1-4A51-9303-A39619FE965A" />
+  <class name="std::vector<EventBookkeeper_p2>" />
+  <class name="std::vector<EventBookkeeper_p2*>" />
+  <class name="EventBookkeeperCollection_p2" id="4CB34AE0-ECE5-404B-8CB7-B2E20F509DBE" />
+
+  <class name="T_TPCnv<EventBookkeeperCollection,EventBookkeeperCollection_p2>"/>
+  <class name="EventBookkeeperCollectionCnv_p2"/>
+  <class name="T_AthenaPoolTPCnvBase<EventBookkeeperCollection,EventBookkeeperCollection_p2>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<EventBookkeeperCollection,EventBookkeeperCollection,EventBookkeeperCollection_p2>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<EventBookkeeperCollection,EventBookkeeperCollection,EventBookkeeperCollection_p2>"/>
+  <class name="ITPConverterFor<EventBookkeeperCollection>"/>
+  <class name="T_TPCnv<EventBookkeeper,EventBookkeeper_p2>"/>
+  <class name="EventBookkeeperCnv_p2"/>
+  <class name="T_AthenaPoolTPCnvBase<EventBookkeeper,EventBookkeeper_p2>"/>
+  <class name="ITPConverterFor<EventBookkeeper>"/>
+
+  <class name="SkimDecision_p1" id="61CEDFF0-46DD-42BD-B43A-12F850D3752E" />
+  <class name="std::vector<SkimDecision_p1>" />
+  <class name="SkimDecisionCollection_p1" id="5705559E-F062-4F15-A220-78A8542EFBF3" />
+
+  <class name="T_TPCnv<SkimDecisionCollection,SkimDecisionCollection_p1>"/>
+  <class name="SkimDecisionCollectionCnv_p1"/>
+  <class name="T_AthenaPoolTPCnvBase<SkimDecisionCollection,SkimDecisionCollection_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<SkimDecisionCollection,SkimDecisionCollection,SkimDecisionCollection_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<SkimDecisionCollection,SkimDecisionCollection,SkimDecisionCollection_p1>"/>
+  <class name="ITPConverterFor<SkimDecisionCollection>"/>
+  <class name="T_TPCnv<SkimDecision,SkimDecision_p1>"/>
+  <class name="SkimDecisionCnv_p1"/>
+  <class name="T_AthenaPoolTPCnvBase<SkimDecision,SkimDecision_p1>"/>
+  <class name="ITPConverterFor<SkimDecision>"/>
+
+</lcgdict>

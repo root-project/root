@@ -1,0 +1,74 @@
+
+Processing runmerging.C...
+******************************************************************************
+*Tree    :zzz       : Argument                                               *
+*Entries :        0 : Total =            1257 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :x         : x/D                                                    *
+*Entries :        0 : Total  Size=        477 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :y         : y/D                                                    *
+*Entries :        0 : Total  Size=        477 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+Error in <TTree::Show()>: Cannot read entry 19 (entry does not exist)
+******************************************************************************
+*Tree    :yyy       : Argument                                               *
+*Entries :      100 : Total =            3149 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :x         : x/D                                                    *
+*Entries :      100 : Total  Size=       1427 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :y         : y/D                                                    *
+*Entries :      100 : Total  Size=       1427 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+======> EVENT:29
+ x               = 29
+ y               = 841
+Result has 0 entries.
+Hello 1
+Hello 2
+100
+result entries = 100
+(int) 0
+******************************************************************************
+*Tree    :zzz       : Argument                                               *
+*Entries :        0 : Total =            1257 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :x         : x/D                                                    *
+*Entries :        0 : Total  Size=        477 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :y         : y/D                                                    *
+*Entries :        0 : Total  Size=        477 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+Error in <TTree::Show()>: Cannot read entry 19 (entry does not exist)
+******************************************************************************
+*Tree    :yyy       : Argument                                               *
+*Entries :      100 : Total =            3149 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :x         : x/D                                                    *
+*Entries :      100 : Total  Size=       1427 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :y         : y/D                                                    *
+*Entries :      100 : Total  Size=       1427 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+======> EVENT:29
+ x               = 29
+ y               = 841
+Result has 0 entries.
+Hello 1
+Hello 2
+100
+result entries = 100
+(int) 0

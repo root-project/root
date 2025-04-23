@@ -1,0 +1,22 @@
+
+
+<lcgdict>
+  <!--
+
+      Missing ET Event
+
+    -->
+  <class name="MissingET" id="14E6F88E-BA7F-4241-BF3D-99DE583B4709" />
+  <class name="MissingEtCalo" id="BD14D6E7-C771-4079-BF31-F43FE1068C95" />
+  <class name="MissingEtTruth" id="2147ED1C-7337-4717-900B-1B52BD8DC316" />
+  <class name="MissingEtRegions" />
+  <class name="MissingETComposition"  />
+  <class name="MissingETHandlers::Weight"  />
+  <class name="Navigable<INavigable4MomentumCollection,MissingETHandlers::Weight,std::vector<std::pair<ElementLink<INavigable4MomentumCollection>,MissingETHandlers::Weight> > >" >
+  </class> 
+  <class name="std::pair<ElementLink<INavigable4MomentumCollection>, MissingETHandlers::Weight >" >
+  </class> 
+  <class name="std::vector<std::pair<ElementLink<INavigable4MomentumCollection>,MissingETHandlers::Weight> >" >
+  </class>
+  <class name="NavigableIterator<DataVector<INavigable4Momentum>,MissingETHandlers::Weight,std::vector<std::pair<ElementLink<DataVector<INavigable4Momentum> >,MissingETHandlers::Weight> > >"/>
+ </lcgdict>

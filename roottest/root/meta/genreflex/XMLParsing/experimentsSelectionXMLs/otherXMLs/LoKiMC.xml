@@ -1,0 +1,179 @@
+<!-- 
+     * $Id: LoKiMC.xml 124226 2011-06-04 19:34:02Z ibelyaev $ 
+     * ========================================================================
+     * @file
+     * The seleciton file to build Reflex dictionaries for Phys/LoKiMC package
+     *
+     *  This file is a part of LoKi project - 
+     *    "C++ ToolKit  for Smart and Friendly Physics Analysis"
+     *
+     *  The package has been designed with the kind help from
+     *  Galina PAKHLOVA and Sergey BARSUK.  Many bright ideas, 
+     *  contributions and advices from G.Raven, J.van Tilburg, 
+     *  A.Golutvin, P.Koppenburg have been used in the design.
+     *
+     * @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     * @date 2006-02-06
+     * ========================================================================
+-->
+
+<lcgdict>
+  
+  <class name = "LoKi::MCFinderObj"  />
+  <class name = "LoKi::MCFinder"     />
+  <class name = "LoKi::MCDecayChain" />
+  
+  <class pattern   = "Gaudi::Range_<*LHCb::MC*>"      />
+  <class pattern   = "Gaudi::NamedRange_<*LHCb::MC*>" />
+  <class pattern   = "LoKi::RangeList_<*LHCb::MC*>"   />
+  
+  <class pattern   = "LoKi::Keeper<LHCb::MC*>"        />
+  <class pattern   = "LoKi::UniqueKeeper<LHCb::MC*>"  />
+  <class pattern   = "LoKi::Interface<*>"             />
+  
+  <class pattern   = "LoKi::Functor<*LHCb::MC*>"            />
+  <class pattern   = "LoKi::FunctorFromFunctor<*LHCb::MC*>" />
+  <class pattern   = "LoKi::BasicFunctors<*LHCb::MC*>"      />
+  
+  <class pattern   = "LoKi::Constant<*LHCb::MC*>"         />
+
+  <class pattern   = "LoKi::Valid<*LHCb::MC*>"            />
+  <class pattern   = "LoKi::TheSame<*LHCb::MC*>"          />
+
+  <class pattern   = "LoKi::Functors::Size<*LHCb::MC*>"     />
+  <class pattern   = "LoKi::Functors::Empty<*LHCb::MC*>"     />
+
+  <class pattern   = "LoKi::MCParticles::*"                />
+  <class pattern   = "LoKi::MCVertices::*"                 />
+  
+  <function pattern = "LoKi::MCKinematics::*"               />
+  <function pattern = "LoKi::MCVertices::*"                 />
+  <function pattern = "LoKi::PrintMC:*"                     />
+  <function pattern = "LoKi::MCChild::*"                    />
+  <function pattern = "LoKi::Dicts::MCAlgs::*"              />
+  <function pattern = "LoKi::Dicts::MCFinderDicts::*"       />
+  <function name    = "LoKi::MCExtract::mcParticles"        />
+
+  <class name       = "LoKi::MCChild::Selector" />
+
+  <class pattern   = "LoKi::Dicts::FuncOps<*LHCb::MC*>"    />
+  <class pattern   = "LoKi::Dicts::CutsOps<*LHCb::MC*>"    />
+  <class pattern   = "LoKi::Dicts::FuncOps_<*LHCb::MC*>"   />
+  <class pattern   = "LoKi::Dicts::CutsOps_<*LHCb::MC*>"   />
+  <class pattern   = "LoKi::Dicts::MapsOps<*LHCb::MC*>"    />
+  <class pattern   = "LoKi::Dicts::PipeOps<*LHCb::MC*>"    />
+  <class pattern   = "LoKi::Dicts::FunValOps<*LHCb::MC*>"  />
+  <class pattern   = "LoKi::Dicts::CutValOps<*LHCb::MC*>"  />
+  <class pattern   = "LoKi::Dicts::SourceOps<*LHCb::MC*>"  />
+
+  <class pattern   = "LoKi::Dicts::PIDOps<LoKi::MC*>"       />
+  <class pattern   = "LoKi::Dicts::FunCalls<LHCb::MC*>"     />
+  <class pattern   = "LoKi::Dicts::CutCalls<LHCb::MC*>"     />
+  
+  <class pattern   = "LoKi::Hybrid::*"          />
+  <class pattern   = "LoKi::IMCHybrid*"         />
+  
+  <class name = "Decays::Trees::Any_<const LHCb::MCParticle*>"    />
+  <class name = "Decays::Trees::None_<const LHCb::MCParticle*>"   />
+  <class name = "Decays::Trees::Stable_<const LHCb::MCParticle*>" />
+  <class name = "Decays::Trees::MCExclusive" />
+  <class name = "Decays::Trees::MCInclusive" />
+  <class name = "Decays::Trees::MCOptional"  />
+  <class name = "Decays::Trees::Photos"  />
+  <class name = "Decays::Trees::PhotosOptional"  />
+  <class name = "LoKi::Dicts::TreeOps<const LHCb::MCParticle*>" />
+  <class name = "Decays::iTree_<const LHCb::MCParticle*>"       />
+  <class name = "Decays::Tree_<const LHCb::MCParticle*>"        />
+  <class name = "Decays::Trees::_Tree_<const LHCb::MCParticle*>"/>
+  <class name = "Decays::TreeList_<const LHCb::MCParticle*>"    />
+  <class name = "Decays::TreeList_<const LHCb::MCParticle*>::Trees_" />
+  
+  <class name = "Decays::IMCDecay"         />
+  <class name = "Decays::IMCDecay::Finder" />
+  <class name = "Decays::IMCDecay::Tree"   />
+  <class name = "LoKi::Dicts::FinderDicts_<const LHCb::MCParticle*> "/>
+  
+  <exclusion>
+    <class name = "std::vector<const ContainedObject*>"           /> 
+    <class name = "std::vector<const LHCb::MCParticle*>"          /> 
+    <class name = "LoKi::MCParticles::IsParticle::Objects"        />  
+    <class name = "LoKi::MCParticles::IsContainedObject::Objects" /> 
+    <class name = "LoKi::MCParticles::FromMCDecayTree::MCCont"    /> 
+    
+    <class name = "LoKi::Interface<LoKi::IReporter>"  /> 
+    <class name = "LoKi::Interface<GaudiTool>"        /> 
+    <class name = "LoKi::Interface<GaudiAlgorithm>"   /> 
+    <class name = "LoKi::Interface<LoKi::ILoKiSvc>"   /> 
+    <class name = "LoKi::Interface<IDataProviderSvc>" /> 
+    
+    <class name="LoKi::MCFinder">
+      <method name="=" />
+    </class>
+    <class name="LoKi::MCFinderObj">
+      <method name="=" />
+    </class>
+    
+    <class pattern="LoKi::MCParticles::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::MCVertices::*">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::Dicts::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Interface&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::I*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Hybrid::*">
+      <method name="=" />
+    </class>
+    
+    <class pattern="LoKi::Functor&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Constant&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Valid&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::TheSame&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Identity&lt;*&gt;">
+      <method name="=" />
+    </class>
+    
+    <class pattern="Gaudi::Range_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="Gaudi::NamedRange_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::RangeList_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Keeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::UniqueKeeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::Functors::*">
+      <method name="=" />
+    </class>
+    
+    <class pattern="Decays::*">
+      <method name="=" />
+    </class>
+    
+  </exclusion>
+  
+</lcgdict>
+

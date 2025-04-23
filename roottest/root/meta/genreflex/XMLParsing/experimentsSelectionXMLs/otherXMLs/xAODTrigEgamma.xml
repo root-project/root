@@ -1,0 +1,64 @@
+<!-- $Id: selection.xml 602892 2014-06-20 12:23:53Z krasznaa $ -->
+<lcgdict>
+
+  <!-- TrigPhoton_v1 dictionaries: -->
+  <class name="xAOD::TrigPhoton_v1">
+    <field name="m_p4" transient="true" />
+    <field name="m_p4Cached" transient="true" />
+  </class>
+
+  <read sourceClass="xAOD::TrigPhoton_v1" version="[1-]"
+        targetClass="xAOD::TrigPhoton_v1"
+        source="" target="m_p4Cached">
+    <![CDATA[
+          m_p4Cached = false;
+    ]]>
+  </read>
+
+  <class name="xAOD::TrigPhotonContainer_v1"
+         id="DA2CDAF5-B0E8-4502-89A3-E342DFA9C250" />
+  <class name="xAOD::TrigPhotonAuxContainer_v1"
+         id="36B8B9E3-8F5E-4356-9315-EF4FA6959624" />
+
+  <class name="DataLink<xAOD::TrigPhotonContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::TrigPhotonContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::TrigPhotonContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TrigPhotonContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TrigPhotonContainer_v1> > >" />
+
+  <!-- TrigElectron_v1 dictionaries: -->
+  <class name="xAOD::TrigElectron_v1">
+    <field name="m_p4" transient="true" />
+    <field name="m_p4Cached" transient="true" />
+  </class>
+
+  <read sourceClass="xAOD::TrigElectron_v1" version="[1-]"
+        targetClass="xAOD::TrigElectron_v1"
+        source="" target="m_p4Cached">
+    <![CDATA[
+          m_p4Cached = false;
+    ]]>
+  </read>
+
+  <class name="xAOD::TrigElectronContainer_v1"
+         id="3492BB27-3ED8-45E3-9A5B-7266949CEDA9" />
+  <class name="xAOD::TrigElectronAuxContainer_v1"
+         id="173425E6-51BB-4015-B960-3F7F83F26B9E" />
+
+  <class name="DataLink<xAOD::TrigElectronContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::TrigElectronContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::TrigElectronContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TrigElectronContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TrigElectronContainer_v1> > >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+  </exclusion>
+
+</lcgdict>

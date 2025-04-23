@@ -1,0 +1,57 @@
+
+Processing execChainElementStatus.C...
+Error in <TFile::TFile>: file st-doesnotexist.root does not exist
+Error in <TChain::LoadTree>: Cannot find tree with name tester in file st-notree.root
+Filename:   st4.root
+Entries:    4
+LoadResult: 0
+
+Filename:   st-empty.root
+Entries:    0
+LoadResult: 0
+
+Filename:   st2.root
+Entries:    2
+LoadResult: 0
+
+Filename:   st-doesnotexist.root
+Entries:    0
+LoadResult: -3
+
+Filename:   st-notree.root
+Entries:    0
+LoadResult: -4
+
+Filename:   st8.root
+Entries:    8
+LoadResult: 0
+
+
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+Error in <TFile::TFile>: file st-doesnotexist.root does not exist
+Error in <TChain::LoadTree>: Cannot find tree with name tester in file st-notree.root
+Filename:   st4.root
+Entries:    4
+LoadResult: 0
+
+Filename:   st-empty.root
+Entries:    0
+LoadResult: 0
+
+Filename:   st2.root
+Entries:    2
+LoadResult: 0
+
+Filename:   st-doesnotexist.root
+Entries:    0
+LoadResult: -3
+
+Filename:   st-notree.root
+Entries:    0
+LoadResult: -4
+
+Filename:   st8.root
+Entries:    8
+LoadResult: 0
+
+

@@ -1,0 +1,14 @@
+
+Processing runPolyMarker.C...
+{
+  "_typename" : "TPolyMarker3D",
+  "fUniqueID" : 0,
+  "fBits" : 1,
+  "fMarkerColor" : 1,
+  "fMarkerStyle" : 1,
+  "fMarkerSize" : 1,
+  "fN" : 10,
+  "fP" : [0, 0, 0, 2, 3, 4, 4, 6, 8, 6, 9, 12, 8, 12, 16, 10, 15, 20, 12, 18, 24, 14, 21, 28, 16, 24, 32, 18, 27, 36],
+  "fOption" : "",
+  "fName" : "TPolyMarker3D"
+}

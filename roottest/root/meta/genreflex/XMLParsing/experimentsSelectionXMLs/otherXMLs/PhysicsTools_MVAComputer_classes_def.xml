@@ -1,0 +1,12 @@
+<lcgdict>
+	<class name="PhysicsTools::MVAComputer"/>
+	<class name="PhysicsTools::BitSet"/>
+	<class name="PhysicsTools::BitSet::Manipulator"/>
+	<class name="PhysicsTools::Variable"/>
+	<class name="PhysicsTools::Variable::Value"/>
+	<class name="PhysicsTools::Variable::ValueList"/>
+	<class name="std::vector&lt;PhysicsTools::Variable::Value&gt;"/>
+	<class name="PhysicsTools::AtomicId"/>
+	<class name="PhysicsTools::TreeReader"/>
+	<function name="PhysicsTools::Calibration::convert"/>
+</lcgdict>

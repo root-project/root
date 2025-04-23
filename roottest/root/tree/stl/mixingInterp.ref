@@ -1,0 +1,5 @@
+Automatic building of dictionaries now off
+
+Processing runmixing.C...
+Error in <TTree::Branch>: The class requested (vector<MyClass>) for the branch "checked_value" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (vector<MyClass>) to avoid to write corrupted data.
+Error in <TTree::SetBranchAddress>: The class requested (vector<MyClass>) for the branch "value" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (vector<MyClass>) to avoid to write corrupted data.

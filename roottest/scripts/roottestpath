@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Wrapper around cygpath able to handle multiple arguments
+
+if [ $# -gt 0 ] ; then
+   # convert \ to /
+   sedrootsys=`echo $ROOTSYS | sed -e 's:[\\]\+:/:g' -e 's:/\+:/:g'`
+   if [ "x`echo $sedrootsys | cut -c 2`" = "x:" ]; then
+      # get the drive letter, say H
+      sedrootsysdrive=`echo $sedrootsys | cut -c 1`
+      # build a regexp allowing for lower or upper case drive letter, e.g. [Hh]
+      # First, get upper and lower case version of the drive letter...
+      sedrootsysdrive=`echo $sedrootsysdrive | tr [:lower:] [:upper:];echo $sedrootsysdrive | tr [:upper:] [:lower:]`
+      # ..., remove spaces...
+      sedrootsysdrive=`echo $sedrootsysdrive | sed -e 's, *,,g'`
+      # and then convert sedrootsys into sedrootsys-with-drive-casing-regexp.
+      sedrootsys_pat=`echo $sedrootsys | sed -e "s,^[a-zA-Z]:,[${sedrootsysdrive}]:,"`
+   else
+      sedrootsys_pat=$sedrootsys
+   fi
+   # now convert all libraries' lib to bin directories, whatever the drive letter's case is
+   cygpath -m "$@" | sed -e "s?$sedrootsys_pat/lib?$sedrootsys/bin?g"
+fi

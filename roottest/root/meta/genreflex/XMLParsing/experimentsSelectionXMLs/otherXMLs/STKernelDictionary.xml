@@ -1,0 +1,31 @@
+<lcgdict>
+
+  <class name = "ISTReadoutTool"       />
+  <class name = "ST::ISTNoiseCalculationTool" />
+  <class name = "ISTClusterSelector" />
+  <class name = "ISTChannelIDSelector" />
+  <class name = "ISTRawADCInfo" />
+  <class name = "STTell1ID" />
+  <class name = "STTell1Board" />
+  <class name = "STBitsPolicy" />
+  <class name = "STDAQ::BeetleRepresentation" />
+  <class name = "STDAQ::PPRepresentation" />
+  <class name = "STDAQ::StripRepresentation" />
+  <class name = "ST::ITDetectorPlot" />
+  <class name = "ST::TTDetectorPlot" />
+  <class name = "ST::UTDetectorPlot" />
+  <struct name = "ST::TTDetectorPlot::Bins" />
+  <struct name = "ST::UTDetectorPlot::Bins" />
+  <struct name = "ST::ITDetectorPlot::Bins" />
+  <class name = "std::pair<STTell1ID, unsigned int>" /> 
+
+  <enum pattern = "STDAQ::version" />
+  <enum pattern="STBitsPolicy::bits" />
+  <enum pattern="STBitsPolicy::masks" />
+  <function pattern="STFun::*" />
+  <function pattern= "STBoardMapping::printTTMap" />
+  <function pattern= "STBoardMapping::printITMap" />
+  <function pattern= "STBoardMapping::printUTMap" />
+  <function pattern = "STBoardMapping::find" />
+  <function pattern = "ST::XMLUtils*" />
+</lcgdict>

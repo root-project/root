@@ -1,0 +1,15 @@
+['get', 'getfloat', 'set']
+called get<double>()
+called get<int>()
+called get<float>()
+t now 3 1 2
+called set<int>()
+called get<double>()
+called get<int>()
+called get<float>()
+t now 3 1 2
+called set<double>()
+called get<double>()
+called get<int>()
+called get<float>()
+t now 3 1 2

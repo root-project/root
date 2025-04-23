@@ -1,0 +1,10 @@
+<lcgdict>
+  <class pattern="edm::Wrapper<*>"/>
+  <class name="std::vector<RandomEngineState>"/>  
+  <class name="RandomEngineState" ClassVersion="10">
+   <version ClassVersion="10" checksum="3726981328"/>
+  </class>
+  <class name="edm::RandomEngineStates" ClassVersion="10">
+   <version ClassVersion="10" checksum="669222241"/>
+  </class>
+</lcgdict>

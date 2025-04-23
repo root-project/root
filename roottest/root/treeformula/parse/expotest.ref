@@ -1,0 +1,58 @@
+
+Processing runexpotest.C...
+              testing : (var1e)+(var2e) Ndim= 1, Npar= 0, Noper= 3
+ fExpr[0] = var1e  action = 150 action param = 0 
+ fExpr[1] = var2e  action = 150 action param = 1 
+ fExpr[2] = +  action = 1 action param = 0 
+              testing : (var1e+var2e) Ndim= 1, Npar= 0, Noper= 3
+ fExpr[0] = var1e  action = 150 action param = 0 
+ fExpr[1] = var2e  action = 150 action param = 1 
+ fExpr[2] = +  action = 1 action param = 0 
+              testing : (var1e+1e+3+var2e+3e-4) Ndim= 1, Npar= 0, Noper= 7
+ fExpr[0] = var1e  action = 150 action param = 0 
+ fExpr[1] = 1e+3  action = 141 action param = 0 
+ fExpr[2] = +  action = 1 action param = 0 
+ fExpr[3] = var2e  action = 150 action param = 1 
+ fExpr[4] = +  action = 1 action param = 0 
+ fExpr[5] = 3e-4  action = 141 action param = 1 
+ fExpr[6] = +  action = 1 action param = 0 
+              testing : (var1e-3+var2e+4) Ndim= 1, Npar= 0, Noper= 7
+ fExpr[0] = var1e  action = 150 action param = 0 
+ fExpr[1] = 3  action = 141 action param = 0 
+ fExpr[2] = -  action = 2 action param = 0 
+ fExpr[3] = var2e  action = 150 action param = 1 
+ fExpr[4] = +  action = 1 action param = 0 
+ fExpr[5] = 4  action = 141 action param = 1 
+ fExpr[6] = +  action = 1 action param = 0 
+              testing : (3e-4) Ndim= 1, Npar= 0, Noper= 1
+ fExpr[0] = 3e-4  action = 141 action param = 0 
+              testing : (var1e+1e+3+var2e-3) Ndim= 1, Npar= 0, Noper= 7
+ fExpr[0] = var1e  action = 150 action param = 0 
+ fExpr[1] = 1e+3  action = 141 action param = 0 
+ fExpr[2] = +  action = 1 action param = 0 
+ fExpr[3] = var2e  action = 150 action param = 1 
+ fExpr[4] = 3  action = 141 action param = 1 
+ fExpr[5] = -  action = 2 action param = 0 
+ fExpr[6] = +  action = 1 action param = 0 
+              testing : (var2e-3) Ndim= 1, Npar= 0, Noper= 3
+ fExpr[0] = var2e  action = 150 action param = 0 
+ fExpr[1] = 3  action = 141 action param = 0 
+ fExpr[2] = -  action = 2 action param = 0 
+              testing : e3 Ndim= 1, Npar= 0, Noper= 1
+ fExpr[0] = e3  action = 150 action param = 0 
+                   t1 : e*e-pp*pp Ndim= 1, Npar= 0, Noper= 7
+ fExpr[0] = e  action = 150 action param = 0 
+ fExpr[1] = e  action = 150 action param = 1 
+ fExpr[2] = *  action = 3 action param = 0 
+ fExpr[3] = pp  action = 150 action param = 2 
+ fExpr[4] = pp  action = 150 action param = 3 
+ fExpr[5] = *  action = 3 action param = 0 
+ fExpr[6] = -  action = 2 action param = 0 
+                   t2 : (e*e)-pp*pp Ndim= 1, Npar= 0, Noper= 7
+ fExpr[0] = e  action = 150 action param = 0 
+ fExpr[1] = e  action = 150 action param = 1 
+ fExpr[2] = *  action = 3 action param = 0 
+ fExpr[3] = pp  action = 150 action param = 2 
+ fExpr[4] = pp  action = 150 action param = 3 
+ fExpr[5] = *  action = 3 action param = 0 
+ fExpr[6] = -  action = 2 action param = 0 

@@ -1,0 +1,10 @@
+
+Processing runrecurse.C...
+Formula based function:     f2 
+                   f2 : [0]+f1 Ndim= 0, Npar= 2, Number= 0 
+ Formula expression: 
+	[p0]+([p1]) 
+Formula based function:     f3 
+                   f3 : [0]+[1]+f2 Ndim= 0, Npar= 4, Number= 0 
+ Formula expression: 
+	[p0]+[p1]+([p2]+([p3])) 

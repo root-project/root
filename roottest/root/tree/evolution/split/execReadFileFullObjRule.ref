@@ -1,0 +1,42 @@
+
+Processing execReadFileFullObjRule.cxx+...
+Read directly: 
+ d value : 1
+ d value : 2
+ d value : 3
+ h value : 4
+Read Object: 
+ d value : 1
+ d value : 2
+ d value : 3
+ h value : 4
+Read Vector: 
+ d value : 1
+ d value : 2
+ d value : 3
+ h value : 4
+ d value : 1
+ d value : 2
+ d value : 3
+ h value : 4
+Read SetPointMC vector: 
+position:     { 1.25,  2.50,  5.00,  1.00}
+postPosition: { 2.50,  5.00, 10.00,  2.00}
+momentum:     {{ 3.75,  7.50, 15.00,  3.00}, 66.00}
+postMomentum: { 5.00, 10.00, 20.00,  4.00}
+Read SetPointMC vector without dot: 
+position:     { 1.25,  2.50,  5.00,  1.00}
+postPosition: { 2.50,  5.00, 10.00,  2.00}
+momentum:     {{ 3.75,  7.50, 15.00,  3.00}, 66.00}
+postMomentum: { 5.00, 10.00, 20.00,  4.00}
+Read SetPointMC direct vector: 
+position:     { 1.25,  2.50,  5.00,  1.00}
+postPosition: { 2.50,  5.00, 10.00,  2.00}
+momentum:     {{ 3.75,  7.50, 15.00,  3.00}, 66.00}
+postMomentum: {15.00, 20.00, 30.00,  5.00}
+Read SetPointMC direct vector without dot: 
+position:     { 1.25,  2.50,  5.00,  1.00}
+postPosition: { 2.50,  5.00, 10.00,  2.00}
+momentum:     {{ 3.75,  7.50, 15.00,  3.00}, 66.00}
+postMomentum: {15.00, 20.00, 30.00,  5.00}
+(int) 0

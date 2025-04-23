@@ -1,0 +1,19 @@
+
+Processing execNestedFail.C...
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "do_not_exist"
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "values[do_not_exist]"
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "do_not_exist"
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "values[do_not_exist]"
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "do_not_exist"
+************************
+*    Row   * values[do *
+************************
+*        0 *           *
+*        1 *           *
+************************
+************************
+*    Row   * values[0] *
+************************
+*        0 *           *
+*        1 *           *
+************************

@@ -1,0 +1,23 @@
+<lcgdict>
+ <class name="AlignableTransform" id="E779C6B5-3F2A-473E-B35E-6CCB345E0665" /> 
+
+<!-- Temporarily commented out - done by hand in ../src/ DetDescrConditionsDict_dict_fixes.cxx -->
+<!-- Put back in as fix removed for ROOT5 migration (RJH) -->
+ <class name="AlignableTransform::AlignTransMember" />
+
+ <class name="std::vector<AlignableTransform::AlignTransMember>" />
+ <class name="AlignableTransformContainer" id="E6740904-E6F2-4D41-944A-C8EF92FE4B17" />
+ <class name="DataVector<AlignableTransform>" />
+ <class name="std::vector<AlignableTransform*>" />
+ <class name="DetCondFloat" id="C2CDCE81-DF11-4F14-97AA-B6618376ABFC" />
+ <class name="DetCondCFloat" id="DCE158E2-27A7-4A78-9778-D3E4D4F740CB" />
+ <class name="DetCondKeyTrans" id="A6DA54AC-D54E-4B6C-8489-C6D015277AD0" />
+ <class name="std::map<std::string,HepGeom::Transform3D>" />
+ <!-- <class name="std::set<unsigned long>"/> -->
+ <class name="DetStatusMap" id="CB1BFF00-64B1-4693-8035-19BB18867AF1" />
+ <class name="DetStatus" />
+ <class name="std::pair<std::string,DetStatus>" />
+ <class name="std::vector<std::pair<std::string,DetStatus> >" />
+ <class name="DetStatusMap::iterator"/>
+ <class name="__gnu_cxx::__normal_iterator<std::pair<std::string,DetStatus>*,std::vector<std::pair<std::string,DetStatus> > >"/>
+</lcgdict>

@@ -1,0 +1,8 @@
+
+Processing runtestLoadingSelector.C...
+Executed testSelector ctor from JITed code
+testSelector result is 1 1 1
+Info in <ACLiC>: script has already been loaded in interpreted mode
+Info in <ACLiC>: unloading testSelector.C and compiling it
+Executed testSelector ctor from externally compiled code
+testSelector result is 1 1 1

@@ -1,0 +1,24 @@
+<lcgdict>
+ <class name="std::allocator<char>"/>
+ <class name="std::allocator<double>"/>
+ <class name="std::allocator<int>"/>
+ <class name="std::allocator<short>"/>
+ <class name="std::basic_string<char>"/>
+ <class name="std::bidirectional_iterator_tag"/>
+ <class name="std::bitset<7>"/>
+ <class name="std::deque<int>"/>
+ <class name="std::forward_iterator_tag"/>
+ <class name="std::input_iterator_tag"/>
+ <class name="std::less<int>"/>
+ <class name="std::list<int>"/>
+ <class name="std::multimap<double,double>"/>
+ <class name="std::output_iterator_tag"/>
+ <class name="std::random_access_iterator_tag"/>
+ <class name="std::set<int>"/>
+ <class name="std::set<std::basic_string<char> >"/>
+ <class name="__gnu_cxx::new_allocator<char>"/>
+ <class name="__gnu_cxx::new_allocator<double>"/>
+ <class name="__gnu_cxx::new_allocator<int>"/>
+ <class name="__gnu_cxx::new_allocator<short>"/>
+ <class name="std::binary_function<int,int,bool>"/>
+</lcgdict>

@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="HPDNoiseDataFrame"/>
+  <class name="HPDNoiseData"/>
+  <class name="HPDNoiseDataCatalog"/>
+</lcgdict>

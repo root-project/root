@@ -1,0 +1,8 @@
+Error: in this version of ROOT, the option '!' used in a linkdef file
+       implies the actual existence of customized operators.
+       The following declaration is now required:
+   TBuffer &operator>>(TBuffer &,Sash::EnvelopeEntry<Sash::Telescope,Reco::HillasParameters> *&);
+Error: in this version of ROOT, the option '!' used in a linkdef file
+       implies the actual existence of customized operators.
+       The following declaration is now required:
+   TBuffer &operator<<(TBuffer &,const Sash::EnvelopeEntry<Sash::Telescope,Reco::HillasParameters> *);

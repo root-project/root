@@ -1,0 +1,78 @@
+<lcgdict>
+  
+  <class name="IDetectorElement"  />
+  <class name="std::vector&lt;IDetectorElement*&gt;"  />
+  <class name="IDetElemFinder"    />
+  <class name="IGeometryInfo"     />
+  <class name="ILVolume"          />
+  <class name="IPVolume"          />
+  <class name="ISolid"            />
+  <class name="ITransportSvc"     />
+  <class name="DetDesc::IGeometryErrorSvc" />
+
+  <class name="IAlignment"        />
+  <class name="ICalibration"      />
+  <class name="IConditionInfo"    />
+  <class name="IFastControl"      />
+  <class name="ISlowControl"      />
+  <class name="IReadOut"          />
+
+  <class name="Material"         />
+  <class name="Mixture"          />
+  <class name="Element"          />
+  <class name="Isotope"          />
+
+  <class name="LogVolBase"       />
+  <class name="LVolume"          />
+  <class name="LAssembly"        />
+
+  <class pattern="*Condition"        />
+  <class name="SmartRef&lt;Condition&gt;"  />
+  <class name="SmartRef&lt;AlignmentCondition&gt;"  />
+  <class name="Surface"              />
+  <class name="DetectorElement"      />
+  <class name="TabulatedProperty"    />
+  <class name="ValidDataObject"      />
+  <class name="ParamValidDataObject" />
+
+  <class name="PVolume"              />
+  <class name="GeometryInfoPlus"     />
+  <class name="AlignmentInfo"        />
+  <class name="CalibrationInfo"      />
+  <class name="ConditionInfo"        />
+  <class name="FastControlInfo"      />
+  <class name="ReadOutInfo"          />
+  <class name="SlowControlInfo"      />
+  <class name="SimpleValidity"       />
+  
+  <class pattern="Solid*" />
+
+  <class name="std::pair&lt;double,SmartRef&lt;Element&gt; &gt;" />
+  <class name="std::pair&lt;double,SmartRef&lt;Isotope&gt; &gt;" />
+
+
+  <class name="ILVolume::PVolumes"      />
+  <class name="ILVolume::PVolumePath"   />
+  <class name="ILVolume::Interval"      />
+  <class name="ILVolume::Intersection"  />
+  <class name="ILVolume::Intersections" />
+
+  <function pattern="DetDesc::*" />
+  <function name="DetDesc::Params::paramAsHisto1D" />
+  <function name="DetDesc::Params::paramAsHisto2D" />
+
+  <exclusion>
+    <class name="SolidPolycone::CmpZ" />
+    <class name="SolidPolycone::Pair" />
+    <class name="SolidPolycone::Iterator" />
+    <class name="SolidPolycone::Triplet"  />
+    <class name="SolidPolycone::Triplets" />
+    <class name="SolidBoolean::SolidChildrens" />
+    <class name="SolidTrap::VERTICES" />
+    <class name="SolidPolyHedronHelper::VERTICES" />
+    <class name="SolidPolyHedronHelper::PLANES" />
+    <function name="DetDesc::print" />
+    <function name="DetDesc::services" />
+  </exclusion>
+
+</lcgdict>

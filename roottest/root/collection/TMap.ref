@@ -1,0 +1,6 @@
+
+Processing runTMap.C+...
+Own key=false - key object survived || Own value=false - value object survived
+Own key=false - key object survived || Own value=true  - value object deleted
+Own key=true  - key object deleted  || Own value=false - value object survived
+Own key=true  - key object deleted  || Own value=true  - value object deleted

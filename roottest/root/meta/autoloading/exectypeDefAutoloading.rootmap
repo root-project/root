@@ -1,0 +1,9 @@
+{ decls }
+template <typename T, int> class myTemplateClass ;
+
+[libclasses_dictrflx]
+class myClass
+class myTemplateClass<float***,4>
+# List of selected typedefs
+class myTypedef
+class foo

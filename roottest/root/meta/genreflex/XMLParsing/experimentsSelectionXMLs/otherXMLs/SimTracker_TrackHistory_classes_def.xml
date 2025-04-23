@@ -1,0 +1,19 @@
+<lcgdict>
+
+    <!-- Dictionary for track categories-->
+    <class name="TrackCategories">
+        <field name="flags_" transient="true"/>
+    </class>
+    <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+    <class name="std::vector<TrackCategories>" persistent="false"/>
+    <class name="edm::Wrapper<std::vector<TrackCategories> >" persistent="false"/>
+
+    <!-- Dictionary for vertex categories -->
+    <class name="VertexCategories">
+        <field name="flags_" transient="true"/>
+    </class>
+    <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+    <class name="std::vector<VertexCategories>" persistent="false"/>
+    <class name="edm::Wrapper<std::vector<VertexCategories> >" persistent="false"/>
+
+</lcgdict>

@@ -1,0 +1,11 @@
+<lcgdict>
+
+  <class name = "ICaloDataProvider"       />
+  <class name = "ICaloEnergyFromRaw"      />
+  <class name = "ICaloL0DataProvider"     />
+  <class name = "ICaloReadoutTool"        />
+  <class name = "ICaloTriggerAdcsFromRaw" />
+  <class name = "ICaloTriggerBitsFromRaw" />
+  <class name = "ICaloDigitFilterTool" />
+
+</lcgdict>

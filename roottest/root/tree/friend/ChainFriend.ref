@@ -1,0 +1,6 @@
+
+Processing runChainFriend.C...
+Warning in <TClass::Init>: no dictionary for class Event is available
+Warning in <TClass::Init>: no dictionary for class EventHeader is available
+Warning in <TClass::Init>: no dictionary for class Track is available
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1

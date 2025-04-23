@@ -1,0 +1,17 @@
+<lcgdict>
+  <class name="EventShapeStore_p2"
+         id="0A7A3BF6-050C-41B1-938F-762860313908" />
+  <class name="EventShapeStoreCnv_p2" />
+  <class name="T_TPCnv<EventShapeStore, EventShapeStore_p2>"/>
+  <class name="T_AthenaPoolTPCnvBase<EventShapeStore, EventShapeStore_p2>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<EventShapeStore,EventShapeStore,EventShapeStore_p2>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<EventShapeStore,EventShapeStore,EventShapeStore_p2>"/>
+  <class name="EventShapeStore_p1"
+         id="730C49D9-47C2-45D4-A755-1313F4A2ACB1" />
+  <class name="EventShapeStoreCnv_p1" />
+  <class name="T_TPCnv<EventShapeStore, EventShapeStore_p1>"/>
+  <class name="T_AthenaPoolTPCnvBase<EventShapeStore, EventShapeStore_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<EventShapeStore,EventShapeStore,EventShapeStore_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<EventShapeStore,EventShapeStore,EventShapeStore_p1>"/>
+  <class name="ITPConverterFor<EventShapeStore>"/>
+</lcgdict>

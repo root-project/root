@@ -1,0 +1,61 @@
+
+Processing execStlPtrLeak.cxx+...
+writing tree
+creating serial:1 counter:1 
+creating serial:2 counter:2 
+creating serial:3 counter:3 
+creating serial:4 counter:4 
+creating serial:5 counter:5 
+creating serial:6 counter:6 
+delete serial:1 counter:6 
+delete serial:2 counter:5 
+creating serial:7 counter:5 
+delete serial:3 counter:5 
+delete serial:4 counter:4 
+creating serial:8 counter:4 
+delete serial:5 counter:4 
+delete serial:6 counter:3 
+creating serial:9 counter:3 
+delete serial:7 counter:3 
+delete serial:8 counter:2 
+delete serial:9 counter:1 
+reading tree
+creating for I/O counter:1 
+creating for I/O counter:2 
+creating for I/O counter:3 
+creating for I/O counter:4 
+creating for I/O counter:5 
+creating for I/O counter:6 
+delete serial:1 counter:6 
+delete serial:2 counter:5 
+creating for I/O counter:5 
+delete serial:3 counter:5 
+delete serial:4 counter:4 
+creating for I/O counter:4 
+delete serial:5 counter:4 
+delete serial:6 counter:3 
+creating for I/O counter:3 
+delete serial:7 counter:3 
+creating for I/O counter:3 
+creating for I/O counter:4 
+delete serial:8 counter:4 
+creating for I/O counter:4 
+creating for I/O counter:5 
+delete serial:9 counter:5 
+creating for I/O counter:5 
+creating for I/O counter:6 
+delete serial:1 counter:6 
+delete serial:2 counter:5 
+creating for I/O counter:5 
+delete serial:3 counter:5 
+delete serial:4 counter:4 
+creating for I/O counter:4 
+delete serial:5 counter:4 
+delete serial:6 counter:3 
+creating for I/O counter:3 
+deleting tree
+delete serial:7 counter:3 
+delete serial:8 counter:2 
+delete serial:9 counter:1 
+Final counter 0
+(int) 0

@@ -1,0 +1,44 @@
+<lcgdict>
+
+
+   <!-- Track top level collection -->
+    <class name="Rec::TrackParticleContainer_tlp1" id="4A8CEB2C-0833-4C83-8514-A69928DE4672" />
+    <class name="Rec::TrackParticleContainer_tlp2" id="170211F9-C4E1-4173-B0FB-71322899C8B9" />
+    <class name="Rec::TrackParticleContainer_tlp3" id="8C84D957-1899-4C98-A49D-D6AC0F85C5EC" />
+    
+    <!-- TrkParticleBase -->
+    <class name="Rec::TrackParticleContainer_p1" id="4D6BCD0F-95D5-448C-B68C-737AE25D7497" />
+    <class name="std::vector<Rec::TrackParticleContainer_p1>" />
+
+    <class name="Rec::TrackParticleContainer_p2"/>
+    <class name="std::vector<Rec::TrackParticleContainer_p2>" />
+
+    <class name="Rec::TrackParticle_p1" />
+    <class name="std::vector<Rec::TrackParticle_p1>" />
+    <class name="Rec::TrackParticle_p2" />
+    <class name="std::vector<Rec::TrackParticle_p2>" />
+    <class name="Rec::TrackParticle_p3" />
+    <class name="std::vector<Rec::TrackParticle_p3>" />
+
+    <class name="T_TPCnv<Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp1>"/>
+    <class name="TrackParticleContainerCnv_tlp1"/>
+    <class name="AthenaPoolTopLevelTPConverter<TrackParticleContainerCnv_p1,Rec::TrackParticleContainer_tlp1>"/>
+    <class name="AthenaPoolTopLevelExtTPConverter<Rec::TrackParticleContainer_tlp1>"/>
+    <class name="T_AthenaPoolTPCnvBase<Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp1>"/>
+    <class name="T_AthenaPoolTPPolyCnvBase<Rec::TrackParticleContainer,Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp1>"/>
+    <class name="T_AthenaPoolTPAbstractPolyCnvBase<Rec::TrackParticleContainer,Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp1>"/>
+
+    <class name="T_TPCnv<Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp2>"/>
+    <class name="TrackParticleContainerCnv_tlp2"/>
+    <class name="AthenaPoolTopLevelTPConverter<TrackParticleContainerCnv_p2,Rec::TrackParticleContainer_tlp2>"/>
+    <class name="AthenaPoolTopLevelExtTPConverter<Rec::TrackParticleContainer_tlp2>"/>
+    <class name="T_AthenaPoolTPCnvBase<Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp2>"/>
+    <class name="T_AthenaPoolTPPolyCnvBase<Rec::TrackParticleContainer,Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp2>"/>
+    <class name="T_AthenaPoolTPAbstractPolyCnvBase<Rec::TrackParticleContainer,Rec::TrackParticleContainer,Rec::TrackParticleContainer_tlp2>"/>
+
+    <class name="ITPConverterFor<Rec::TrackParticleContainer>"/>
+
+</lcgdict>
+
+
+

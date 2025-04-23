@@ -1,0 +1,5 @@
+
+Processing execROOT_6277.cxx+...
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TBaseClass	boo::equality_comparable<UserClass,UserClass,boo::detail::empty_base<UserClass>,boo::detail::false_t>	 : 0
+(int) 0

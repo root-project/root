@@ -1,0 +1,52 @@
+<lcgdict>
+ <class name="CastorPedestal"/>
+ <class name="std::vector<CastorPedestal>"/>
+ <class name="CastorPedestals"/>
+
+ <class name="CastorPedestalWidth"/>
+ <class name="std::vector<CastorPedestalWidth>"/>
+ <class name="CastorPedestalWidths"/>
+
+ <class name="CastorGain"/>
+ <class name="std::vector<CastorGain>"/>
+ <class name="CastorGains"/>
+
+ <class name="CastorGainWidth"/>
+ <class name="std::vector<CastorGainWidth>"/>
+ <class name="CastorGainWidths"/>
+
+ <class name="CastorQIECoder"/>
+ <class name="std::vector<CastorQIECoder>"/>
+ <class name="CastorQIEData"/>
+
+ <class name="CastorCalibrationQIECoder"/>
+ <class name="std::vector<CastorCalibrationQIECoder>"/>
+ <class name="CastorCalibrationQIEData"/>
+
+ <class name="CastorElectronicsMap">
+  <field name="mPItemsById" transient="true"/>
+  <field name="sortedByPId" transient="true"/>
+  <field name="mTItemsByTrigId" transient="true"/>
+  <field name="sortedByTId" transient="true"/>
+ </class>
+ <class name="CastorElectronicsMap::PrecisionItem"/>
+ <class name="CastorElectronicsMap::TriggerItem"/>
+ <class name="std::vector<CastorElectronicsMap::PrecisionItem>"/>
+ <class name="std::vector<CastorElectronicsMap::TriggerItem>"/>
+
+ <class name="CastorChannelStatus"/>
+ <class name="std::vector<CastorChannelStatus>"/>
+ <class name="CastorChannelQuality"/>
+
+ <class name="CastorRecoParam"/>
+ <class name="std::vector<CastorRecoParam>"/>
+ <class name="CastorRecoParams" class_version="0"/>
+ 
+ <class name="CastorSaturationCorr"/>
+ <class name="std::vector<CastorSaturationCorr>"/>
+ <class name="CastorSaturationCorrs"/>
+
+ <class pattern="*CastorCondObjectContainer*">
+  <field name="CASTORcontainer" mapping="blob" />
+ </class>
+</lcgdict>   

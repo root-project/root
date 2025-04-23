@@ -1,0 +1,49 @@
+<!-- $Id$ -->
+<lcgdict>
+
+  <!-- TauJet_v1 dictionaries: -->
+  <class name="xAOD::TauJet_v1" >
+    <field name="m_p4" transient="true" />
+    <field name="m_p4Cached" transient="true" />
+  </class>
+  <read sourceClass="xAOD::TauJet_v1" version="[1-]"
+        targetClass="xAOD::TauJet_v1" source="" target="m_p4Cached" >
+    <![CDATA[
+       m_p4Cached = false;
+    ]]>
+  </read>
+
+  <class name="xAOD::TauJetContainer_v1"
+         id="93CCE680-47C0-11E3-997C-02163E00A614" />
+  <class name="xAOD::TauJetAuxContainer_v1"
+         id="EA3CE9A0-18D8-49FD-B978-62857D8D8FD0" />
+
+  <class name="DataLink<xAOD::TauJetContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::TauJetContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::TauJetContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TauJetContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TauJetContainer_v1> > >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+    <class name="ElementLink<DataVector<xAOD::IParticle> >" />
+    <class pattern="xAOD::TrackParticle*" />
+    <class pattern="DataVector<xAOD::TrackParticle*" />
+    <class pattern="ElementLink<DataVector<xAOD::TrackParticle*" />
+    <class pattern="xAOD::Vertex*" />
+    <class pattern="DataVector<xAOD::Vertex*" />
+    <class pattern="ElementLink<DataVector<xAOD::Vertex*" />
+    <class pattern="xAOD::Jet*" />
+    <class pattern="DataVector<xAOD::Jet*" />
+    <class pattern="ElementLink<DataVector<xAOD::Jet*" />
+    <class pattern="xAOD::PFO*" />
+    <class pattern="DataVector<xAOD::PFO*" />
+    <class pattern="ElementLink<DataVector<xAOD::PFO*" />
+  </exclusion>
+
+</lcgdict>

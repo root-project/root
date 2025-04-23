@@ -1,0 +1,48 @@
+Warning in <TClass::Init>: no dictionary for class AliFMDMap is available
+Warning in <TClass::Init>: no dictionary for class AliESDVertex is available
+Warning in <TClass::Init>: no dictionary for class AliVertex is available
+Warning in <TClass::Init>: no dictionary for class AliVVertex is available
+Warning in <TClass::Init>: no dictionary for class AliFMDFloatMap is available
+Warning in <TClass::Init>: no dictionary for class AliESDRun is available
+Warning in <TClass::Init>: no dictionary for class AliESDHeader is available
+Warning in <TClass::Init>: no dictionary for class AliVHeader is available
+Warning in <TClass::Init>: no dictionary for class AliESDZDC is available
+Warning in <TClass::Init>: no dictionary for class AliESDFMD is available
+Warning in <TClass::Init>: no dictionary for class AliESDVZERO is available
+Warning in <TClass::Init>: no dictionary for class AliESDTZERO is available
+Warning in <TClass::Init>: no dictionary for class AliMultiplicity is available
+Warning in <TClass::Init>: no dictionary for class AliESDCaloTrigger is available
+Warning in <TClass::Init>: no dictionary for class AliESDtrack is available
+Warning in <TClass::Init>: no dictionary for class AliExternalTrackParam is available
+Warning in <TClass::Init>: no dictionary for class AliVTrack is available
+Warning in <TClass::Init>: no dictionary for class AliVParticle is available
+Warning in <TClass::Init>: no dictionary for class AliESDMuonTrack is available
+Warning in <TClass::Init>: no dictionary for class AliESDPmdTrack is available
+Warning in <TClass::Init>: no dictionary for class AliESDTrdTrack is available
+Warning in <TClass::Init>: no dictionary for class AliESDv0 is available
+Warning in <TClass::Init>: no dictionary for class AliESDcascade is available
+Warning in <TClass::Init>: no dictionary for class AliESDkink is available
+Warning in <TClass::Init>: no dictionary for class AliESDCaloCluster is available
+Warning in <TClass::Init>: no dictionary for class AliESDCaloCells is available
+Warning in <TClass::Init>: no dictionary for class AliRawDataErrorLog is available
+Warning in <TClass::Init>: no dictionary for class AliESDACORDE is available
+Warning in <TClass::Init>: no dictionary for class AliESDfriend is available
+Warning in <TClass::Init>: no dictionary for class AliESDVZEROfriend is available
+Warning in <TClass::Init>: no dictionary for class AliESDfriendTrack is available
+Warning in <TClass::Init>: no dictionary for class AliTrackPointArray is available
+Warning in <TClass::Init>: no dictionary for class AliESDEvent is available
+Warning in <TClass::Init>: no dictionary for class AliVEvent is available
+Warning in <TClass::Init>: no dictionary for class AliESDMuonCluster is available
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)
+Warning in <TTree::SetCacheSizeAux>: A TTreeCache could not be created because the TTree has no file
+Error in <TBufferFile::ReadObject>: trying to read an emulated class (AliESDEvent) to store in a compiled pointer (TObject)

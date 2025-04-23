@@ -1,0 +1,70 @@
+<lcgdict>
+  <class name="UserDataStore"/>
+
+  <class name="SG::AuxTypeRegistry"/>
+  <class name="SG::AuxVectorBase"/>
+  <class name="SG::AuxVectorData">
+    <field name="m_cache" transient="true"/>
+    <field name="m_constCache" transient="true"/>
+    <field name="m_store" transient="true"/>
+    <field name="m_constStore" transient="true"/>
+    <field name="m_constStoreLink" transient="true"/>
+    <field name="m_mutex" transient="true"/>
+  </class>
+  <class name="SG::AuxElement">
+    <field name="m_index" transient="true"/>
+    <field name="m_container" transient="true"/>
+    <field name="m_privateData" transient="true"/>
+  </class>
+  <class name="SG::IAuxElement">
+    <field name="m_dummy" transient="true"/>
+  </class>
+  <class name="SG::IAuxStore"/>
+  <class name="SG::IConstAuxStore"/>
+  <class name="DataLink<SG::IConstAuxStore>" />
+  <class name="SG::IAuxStoreIO"/>
+  <class name="SG::IAuxStoreHolder"/>
+  <class name="SG::IAuxTypeVectorFactory"/>
+  <class name="SG::AuxStoreInternal" id="77039D3D-4E24-46C1-B5D1-9AD5F17D3B09">
+    <field name="m_vecs" transient="true"/>
+    <field name="m_isDecoration" transient="true"/>
+    <!-- <field name="m_auxids" transient="true"/> -->
+    <field name="m_tick" transient="true"/>
+    <field name="m_locked" transient="true"/>
+    <field name="m_mutex" transient="true"/>
+    <field name="m_tsAuxids" transient="true"/>
+  </class>
+  <class name="SG::auxid_set_t"/>
+  <class pattern="SG::hashtable<unsigned long*"/>
+  <class pattern="SG::hashtable_const_iterator<unsigned long*"/>
+  <class pattern="SG::hashtable_iterator<unsigned long*"/>
+  <class pattern="std::pair<*hashtable<unsigned long*"/>
+//  <function proto_pattern="*operator!=*hashtable_iterator<unsigned long*"/>
+//  <function proto_pattern="*operator!=*hashtable_const_iterator<unsigned long*"/>
+//  <function proto_pattern="*operator==*hashtable_iterator<unsigned long*"/>
+//  <function proto_pattern="*operator==*hashtable_const_iterator<unsigned long*"/>
+
+  <class name="SG::AuxElement::TypelessConstAccessor"/>
+  <class name="SG::AuxElement::ConstAccessor<int>"/>
+  <class name="SG::AuxElement::ConstAccessor<unsigned int>"/>
+  <class name="SG::AuxElement::ConstAccessor<float>"/>
+  <class name="SG::AuxElement::ConstAccessor<double>"/>
+  <class name="SG::AuxElement::ConstAccessor<bool>"/>
+  <class name="SG::AuxElement::ConstAccessor<std::string>"/>
+
+  <class name="SG::AuxElement::Accessor<int>"/>
+  <class name="SG::AuxElement::Accessor<unsigned int>"/>
+  <class name="SG::AuxElement::Accessor<float>"/>
+  <class name="SG::AuxElement::Accessor<double>"/>
+  <class name="SG::AuxElement::Accessor<bool>"/>
+  <class name="SG::AuxElement::Accessor<std::string>"/>
+
+  <class name="SG::AuxElement::Decorator<int>"/>
+  <class name="SG::AuxElement::Decorator<unsigned int>"/>
+  <class name="SG::AuxElement::Decorator<float>"/>
+  <class name="SG::AuxElement::Decorator<double>"/>
+  <class name="SG::AuxElement::Decorator<bool>"/>
+  <class name="SG::AuxElement::Decorator<std::string>"/>
+  <enum name="SG::OwnershipPolicy"/>
+
+</lcgdict>

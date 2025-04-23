@@ -1,0 +1,13 @@
+<lcgdict>
+  <class name="DetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="1024501242"/>
+  </class>
+  <class name="std::vector<DetId>"/>
+  <class name="edm::EDCollection<DetId>"/>
+  <class name="DetIdCollection"/>
+  <class name="edm::Wrapper<edm::EDCollection<DetId> >"/>
+  <class name="std::vector<std::pair<DetId,float> >"/>  
+  <class name="std::pair<DetId,float>"/>               
+  <class name="std::map<DetId, std::pair<unsigned int, unsigned int> >"/>
+  <class name="std::map<DetId, std::pair<unsigned long, unsigned long> >"/>
+</lcgdict>

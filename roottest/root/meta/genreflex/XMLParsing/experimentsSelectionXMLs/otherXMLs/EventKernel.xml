@@ -1,0 +1,13 @@
+
+
+<lcgdict>
+  <class name="I4Momentum" />
+  <class name="INavigable4Momentum" id="860C42B3-13CB-4B82-B9AD-8BB29267418F"/>
+  <class name="IParticle" />
+  <class name="P4SignalState" />
+  <class name="ISignalState" />
+  <class name="SignalStateHelper" />
+  <enum pattern="P4SignalState::*" />
+
+</lcgdict>
+

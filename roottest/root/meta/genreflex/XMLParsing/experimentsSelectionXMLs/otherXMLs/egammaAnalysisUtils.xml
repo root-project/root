@@ -1,0 +1,20 @@
+<lcgdict>
+  <class name="eg2011::EnergyRescaler" />
+  <class name="egRescaler::EnergyRescalerUpgrade" />
+  <class name="egammaOQ" />
+  <class name="ConvertedPhotonScaleTool" />
+  <class name="EisoTool" />
+  <class name="EisoTool2012" />
+  <class name="FsrPhotons" />
+  <class name="VertexPositionReweightingTool" />
+  <class name="BosonPtReweightingTool" />
+  <class name="ElectronMCChargeCorrector" />
+  <class name="DiphotonVertexIDTool" />
+  <enum name="egammaForwardMenu::egForwardMenu" />
+  <enum name="egammaForwardMenu::egForwardCut" />
+  <function name="isForward_Loose" />
+  <function name="isForward_Medium" />
+  <function name="isForward_Tight" /> 
+  <function name="Forward_IsEM" /> 
+  
+</lcgdict>

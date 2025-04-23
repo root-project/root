@@ -1,0 +1,6 @@
+<lcgdict>
+  <class name="reco::BeamSpot" ClassVersion="10">
+   <version ClassVersion="10" checksum="915260007"/>
+  </class>
+  <class name="edm::Wrapper<reco::BeamSpot>"/>
+</lcgdict>

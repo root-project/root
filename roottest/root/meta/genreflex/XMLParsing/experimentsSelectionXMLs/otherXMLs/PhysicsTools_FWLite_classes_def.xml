@@ -1,0 +1,20 @@
+<lcgdict>
+ <class name="reco::parser::ExpressionBase" transient="true" />
+ <class name="reco::parser::SelectorBase" transient="true" />
+ <class name="reco::parser::ExpressionPtr" transient="true" />
+ <class name="reco::parser::SelectorPtr" transient="true" />
+ <class name="reco::parser::ExpressionPtrs" transient="true" />
+ <class name="reco::parser::SelectorPtrs" transient="true" />
+ <class name="helper::Parser" transient="true" />
+ <class name="helper::ScannerBase" transient="true" />
+ <!--
+ <class name="fwlite::helper::CandScanner" transient="true" />
+ <class name="CandidateSelector" transient="true" />
+ <class name="CandidateFunction" transient="true" />
+ <class name="std::vector<CandidateFunction>" transient="true" />
+
+ <class name="Selector" transient="true" />
+ <class name="CandidateSelector" transient="true" />
+ <class name="CandidateSelector" transient="true" />
+ -->
+</lcgdict>

@@ -1,0 +1,1 @@
+Warning: IO rule for class UserData data member: posx; posy; was specified as a target in the rule but doesn't seem to appear in target class

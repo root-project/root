@@ -1,0 +1,20 @@
+TFile::Get pythonization checks classes ... ok
+Test writing of a single branched TTree with an std::vector<double> ... ok
+Test reading of a single branched TTree with an std::vector<double> ... ok
+Test writing of a complex data object ... ok
+Test reading of a complex data object ... ok
+Test writing of a complex object across different branches ... ok
+Test reading of a complex object across different branches ... ok
+Test writing of a non-TObject derived instance ... ok
+Test reading of a non-TObject derived instance ... ok
+Test writing of a builtin array ... ok
+Test reading of a builtin array ... ok
+Test writing of a TObjArray ... ok
+Test reading of a TObjArray ... ok
+Test writing of an differently named leaf ... ok
+Test reading of an differently named leaf ... ok
+Templated call when creating a branch ... ok
+
+----------------------------------------------------------------------
+
+OK

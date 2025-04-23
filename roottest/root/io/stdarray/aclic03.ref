@@ -1,0 +1,49 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/stdarray/aclic03.C+...
+Class edm3::A state is kHasTClassInit
+List of data members of edm3::A
+Name: a0
+Type Name: array<unique_ptr<edm3::B,default_delete<edm3::B> >,3>
+Array Dim: 0
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a1
+Type Name: array<edm3::B*,3>
+Array Dim: 0
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a2
+Type Name: edm3::B
+Array Dim: 1
+Max Index [0]: 3
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+List of streamer elements of edm3::A
+Name: a0
+Type Name: edm3::B
+Array Dim: 1
+Max Index [0]: 3
+Is Pointer: 0
+Is Basic: 82
+---------
+Name: a1
+Type Name: edm3::B
+Array Dim: 1
+Max Index [0]: 3
+Is Pointer: 0
+Is Basic: 82
+---------
+Name: a2
+Type Name: edm3::B
+Array Dim: 1
+Max Index [0]: 3
+Is Pointer: 0
+Is Basic: 82
+---------
+(int) 0

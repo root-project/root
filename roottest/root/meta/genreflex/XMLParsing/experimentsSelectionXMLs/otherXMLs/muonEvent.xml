@@ -1,0 +1,30 @@
+<lcgdict>
+
+  <enum pattern="MuonParameters::*"/>
+
+  <class name="DepositInCalo" />
+  <class name="std::vector<DepositInCalo>" />
+  <class name="std::vector<DepositInCalo*>" />
+
+  <class name="Rec::MuonSpShowerContainer" id="64AE1E07-67EC-549C-DE00-A953259EBC9E" />
+  <class name="DataVector<Rec::MuonSpShower>" />
+  <class name="std::vector<Rec::MuonSpShower*>" />
+  <class name="Rec::MuonSpShower" />
+
+  <class name="Analysis::MuonContainer" id="593BF720-EC9D-4615-8C5B-0A04BEF90A00" />
+  <class name="DataVector<Analysis::Muon>" />
+  <class name="std::vector<Analysis::Muon*>" />
+  <class name="Analysis::Muon" >
+    <field name="m_muonSegments"  transient="true"/>
+  </class>
+  <class name="std::vector<std::pair<MuonParameters::ParamDef,float> >" />
+  <class name="std::pair<MuonParameters::ParamDef,float>" />
+
+  <class name="MuonCaloEnergyContainer" id="CADD1FF7-EEEC-5CCC-DEBA-CA5BB59EBC9E" />
+  <class name="DataVector<CaloEnergy>" />
+  <class name="std::vector<CaloEnergy*>" />
+  <class name="CaloEnergy" />
+  <class name="MuonQualityWord" />
+  
+</lcgdict>
+

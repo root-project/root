@@ -1,0 +1,21 @@
+<lcgdict>
+
+  <!-- TrackParticleTruth p0 , Rec::TrackParticleTruthCollection_p0 is a typedef of TrackParticleTruthVector (do not ask me why, just copying from TrackTruth) -->
+  <class name="TrackParticleTruthVector"  id="B35041E8-D980-458E-AC06-79028CF79D5D" />
+  <class name="std::vector<std::pair<ElementLink<Rec::TrackParticleContainer>,TrackParticleTruth> >" />
+  <class name="std::pair<ElementLink<Rec::TrackParticleContainer>,TrackParticleTruth>" /> 
+
+  <!-- TrackParticleTruth p1 --> 
+  <class name="Rec::TrackParticleTruthCollection_p1"  id="D62AFEEE-EF2C-437A-B7BE-CA926D38CCFA" />
+  <class name="std::vector<Rec::TrackParticleTruthCollection_p1::Entry>" />
+  <class name="std::vector<Rec::TrackParticleTruthCollection_p1>" />
+  <class name="Rec::TrackParticleTruthCollection_p1::Entry" />
+
+
+  <!-- TrackParticleTruthCollectionContainer tlp1 -->
+  <class name="TrackParticleTruthCollectionContainer_tlp1" id="9F47124C-0033-4556-B14A-D7F28E4249EC"/>
+  <class name="TrackParticleTruthCollectionContainer_p1"  id="E11595FB-BFA4-4906-B882-9C63B0AB42E2"/>
+  <class name="std::vector<TrackParticleTruthCollectionContainer_p1>" id="9E753324-456A-4F7B-B95A-07E302ACB73A"/>
+
+</lcgdict>
+

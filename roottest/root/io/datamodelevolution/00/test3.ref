@@ -1,0 +1,61 @@
+
+Processing test3.cxx+...
+Warning in <TClass::Init>: no dictionary for class ACache is available
+Warning in <TClass::Init>: no dictionary for class Unversioned is available
+Stream out object
+Axis::x 6
+Axis::y 7
+Axis::z 6070
+Axis::c 13
+Axis::fN    6
+Axis::fArray[0] 10
+Axis::fArray[1] 11
+Axis::fArray[2] 12
+Axis::fArray[3] 13
+Axis::fArray[4] 14
+Axis::fArray[5] 15
+ACache::fValues[0] 0
+ACache::fValues[1] 0.01
+ACache::fValues[2] 0.02
+Stream out embedded object
+Axis::x 9
+Axis::y 10
+Axis::z 9100
+Axis::c 19
+Axis::fN    9
+Axis::fArray[0] 10
+Axis::fArray[1] 11
+Axis::fArray[2] 12
+Axis::fArray[3] 13
+Axis::fArray[4] 14
+Axis::fArray[5] 15
+Axis::fArray[6] 16
+Axis::fArray[7] 17
+Axis::fArray[8] 18
+ACache::fValues[0] 0
+ACache::fValues[1] 0.01
+ACache::fValues[2] 0.02
+***********************************************************************************************************
+*    Row   * Instance *     obj.x *     obj.y *     obj.c * obj.persi *    obj.fN * obj.fArra * obj.fValu *
+***********************************************************************************************************
+*        0 *        0 *         6 *         7 *        13 *         0 *         6 *        10 *         0 *
+*        0 *        1 *         6 *         7 *        13 *         0 *         6 *        11 * 0.0099999 *
+*        0 *        2 *         6 *         7 *        13 *         0 *         6 *        12 * 0.0199999 *
+*        0 *        3 *         6 *         7 *        13 *         0 *         6 *        13 *           *
+*        0 *        4 *         6 *         7 *        13 *         0 *         6 *        14 *           *
+*        0 *        5 *         6 *         7 *        13 *         0 *         6 *        15 *           *
+***********************************************************************************************************
+Axis::x 6
+Axis::y 7
+Axis::z 6070
+Axis::c 13
+Axis::fN    6
+Axis::fArray[0] 10
+Axis::fArray[1] 11
+Axis::fArray[2] 12
+Axis::fArray[3] 13
+Axis::fArray[4] 14
+Axis::fArray[5] 15
+ACache::fValues[0] 0
+ACache::fValues[1] 0.01
+ACache::fValues[2] 0.02

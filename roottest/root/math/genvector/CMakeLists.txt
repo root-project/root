@@ -1,0 +1,5 @@
+if(ROOT_genvector_FOUND)
+  foreach(test coordinates3D coordinates4D rotationApplication testGenVector)
+    ROOTTEST_ADD_TEST(${test} MACRO ${ROOT_SOURCE_DIR}/math/genvector/test/${test}.cxx+)
+  endforeach()
+endif()

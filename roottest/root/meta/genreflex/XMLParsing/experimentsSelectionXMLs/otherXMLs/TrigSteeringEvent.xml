@@ -1,0 +1,56 @@
+<lcgdict>
+ <class name="TrigOperationalInfo" id="D5A5494B-9210-490A-8B6D-405008EC07E0" /> 
+ <class name="TrigOperationalInfoCollection" id="EFECF1AB-F767-4EBA-AE4F-995384D27CA1" /> 
+ <class name="DataVector<TrigOperationalInfo>" /> 
+ <class name="std::vector<TrigOperationalInfo*>" /> 
+
+ <class name="TrigRoiDescriptor" id="B2C86E23-8421-4F34-8014-AE4A7E4BA0A7" >
+   <field name="m_serialized" transient="true" />
+ </class>
+
+ <class name="TrigRoiDescriptorCollection" id="A2E10999-9B32-4510-8483-0BCB9E5B857F" />
+ <class name="DataVector<TrigRoiDescriptor>" />
+ <class name="std::vector<TrigRoiDescriptor*>" />
+ <class name="std::vector<const TrigRoiDescriptor*>" />
+
+ <class name="TrigPassBits" id="AE9EA3A9-5E80-4DCA-90D0-A40BBC5F68DD">
+   <field name="m_container_ptr" transient="true" />
+ </class>
+ <class name="TrigPassBitsCollection" id="BA1B111C-2142-44C3-B7AC-0F0EDB898649"/>
+ <class name="DataVector<TrigPassBits>"/>
+ <class name="std::vector<TrigPassBits*>"/>
+ <class name="std::vector<const TrigPassBits*>"/>
+
+ <class name="TrigPassFlags" id="A84F3B31-1135-4C6F-BADE-E823A9C73242">
+   <field name="m_container_ptr" transient="true" />
+ </class>
+ <class name="TrigPassFlagsCollection" id="3DD12D9E-0C76-4F30-AD8A-CFE084C07008"/>
+ <class name="DataVector<TrigPassFlags>"/>
+ <class name="std::vector<TrigPassFlags*>"/>
+ <class name="std::vector<const TrigPassFlags*>"/>
+ 
+ <class name="LVL1CTP::Lvl1Result" id="18DE165E-3DB5-4EAC-867D-807DA3E217C0" >
+ </class>
+
+ <class name="LVL1CTP::Lvl1Item" id="12E2D4A4-1CD7-46E0-89D9-6C193AD33585" />
+ <class name="std::vector<LVL1CTP::Lvl1Item*>" />
+ <class name="std::vector<const LVL1CTP::Lvl1Item*>" />
+
+ <class name="GenericResult" id="B62E2E5B-3EE2-4FF1-ABFE-B86FD314E272" >
+ </class>
+
+ <class name="HLT::HLTResult" id="559D6CB9-9A54-4284-A03D-9C745352281D" >
+   <field name="m_navigationResultCuts" transient="true" />
+   <field name="m_HLTResultClassVersion" transient="true" />
+ </class>
+
+ <class name="HLT::HLTExtraData"/>
+
+ <class name="HLT::ErrorCode"/>
+ <class name="HLT::Action"/>
+ <enum name="HLT::Action::Code"/>
+ <class name="HLT::Reason"/>
+ <enum name="HLT::Reason::Code"/>
+ <class name="HLT::SteeringInternalReason"/>
+ <enum name="HLT::SteeringInternalReason::Code"/>
+</lcgdict>

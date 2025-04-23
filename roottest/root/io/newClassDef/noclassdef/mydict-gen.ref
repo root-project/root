@@ -1,0 +1,1 @@
+Warning in <RootPCmisClDef>: The data members of RootPCmisClDef will not be stored, because it inherits from TObject but does not have its own ClassDef.

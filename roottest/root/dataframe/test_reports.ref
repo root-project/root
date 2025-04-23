@@ -1,0 +1,14 @@
+mtf       : pass=100        all=100000     -- eff=0.10 % cumulative eff=0.10 %
+mtf2      : pass=94999      all=100000     -- eff=95.00 % cumulative eff=95.00 %
+--
+mtf       : pass=100        all=100000     -- eff=0.10 % cumulative eff=0.10 %
+--
+--
+mtf2      : pass=94999      all=100000     -- eff=95.00 % cumulative eff=95.00 %
+--
+fx1       : pass=6          all=10         -- eff=60.00 % cumulative eff=60.00 %
+fx2       : pass=4          all=6          -- eff=66.67 % cumulative eff=40.00 %
+--
+fx1       : pass=6          all=10         -- eff=60.00 % cumulative eff=60.00 %
+fx2       : pass=4          all=6          -- eff=66.67 % cumulative eff=40.00 %
+fx3       : pass=1          all=4          -- eff=25.00 % cumulative eff=10.00 %

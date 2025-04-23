@@ -1,0 +1,27 @@
+<lcgdict>
+
+  <class name="AthExIParticles" id="DFE5A7E3-EFCA-4333-AC3D-BB1818DBF3DC" />
+  <class name="DataVector<AthExIParticle>" />
+  <class name="std::vector<AthExIParticle*>" />
+  <class name="AthExIParticle" />
+
+  <class name="AthExParticles" id="D52DF52C-0157-43DA-8AC2-10C6007A429D" />
+  <class name="DataVector<AthExParticle>" />
+  <class name="std::vector<AthExParticle*>" />
+  <class name="AthExParticle" />
+
+  <class name="AthExDecay" id="374004CC-718A-4A9C-BA28-5A47BEAEF37B" />
+  <class name="AthExElephantino" id="F5471845-4822-495C-BDEB-D391E8B1D3B5" />
+
+  <class name="AthExParticles_p1" id="F64F4C19-DBDB-4347-9908-6BB69554EC64" />
+  <class name="std::vector<AthExParticle_p1>" />
+  <class name="AthExParticle_p1" />
+
+  <class name="AthExDecay_p1" id="FD6FC38A-2EE4-4EC6-916B-DBF6A8E88A03" />
+  <class name="AthExElephantino_p1" id="F90BE215-64AD-45E3-B5E4-6AD7DE35BDF9"/>
+
+  <class name="AthExFatObjectSlimmer" />
+  <class name="AthExFatObject" id="915F2D59-7D36-45A3-8DBF-2774DF616E7C" />
+  <class name="AthExFatObject_p1" id="C757B4CB-7C1F-4E79-895E-C77D76FB960B" />
+
+</lcgdict>

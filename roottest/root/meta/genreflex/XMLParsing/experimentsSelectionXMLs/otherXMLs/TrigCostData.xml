@@ -1,0 +1,7 @@
+<lcgdict>
+
+<class name="Anp::EventMBTS" />
+<class name="Trig::Vertex" />
+<class name="std::vector<Trig::Vertex>" />
+
+</lcgdict>

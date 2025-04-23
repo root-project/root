@@ -1,0 +1,2222 @@
+/* The -*- C++ -*- 2D, 3D, 4D Vector and 2x2, 3x3, 4x4 Matrix classes.
+   (Based on the "Graphics Gems IV", Edited by Paul S. Heckbert, Academic
+   Press, 1994, ISBN 0-12-336156-9, original source code files algebra3.h
+   and algebra3aux.h by Jean-Francois Doue and John Nagle.
+   Modified by Jacek M. Holeczek, 05.2001, 01.2011.)
+   You are free to use and modify this code in any way you like.
+   No warranty of any kind. No liability for any defects or damages. */
+
+#ifndef __ALGEBRA3__
+#define __ALGEBRA3__
+
+#include <cstdlib>
+#include <cctype>
+#include <cmath>
+#include <cassert>
+#include <complex>
+#include <iostream>
+
+namespace aux {
+
+#ifndef __CINT__
+  using std::size_t;
+  using std::complex;
+  using std::istream;
+  using std::ostream;
+  using std::cerr;
+  using std::endl;
+  using std::ios;
+  using std::abs;
+  using std::sqrt;
+  using std::cos;
+  using std::sin;
+//  using std::conj;
+  using std::norm;
+#endif /* __CINT__ */
+
+  /* ****************** algebra3.h begins here ****************** */
+
+  /****************************************************************
+   *                                                               *
+   * C++ Vector and Matrix Algebra routines                        *
+   * Author: Jean-Francois DOUE                                    *
+   * Version 3.1 --- October 1993                                  *
+   *                                                               *
+   ****************************************************************/
+  //
+  //  From "Graphics Gems IV" / Edited by Paul S. Heckbert
+  //  Academic Press, 1994, ISBN 0-12-336156-9
+  //  "You are free to use and modify this code in any way
+  //  you like." (p. xv)
+  //
+  //  Modified by J. Nagle, March 1997
+  //  -   All functions are inline.
+  //  -   All functions are const-correct.
+  //  -   All checking is via the standard "assert" macro.
+  //
+
+#ifdef min
+#undef min                  // allow as function names
+#endif /* min */
+
+#ifdef max
+#undef max                  // allow as function names
+#endif /* max */
+
+  //
+  //  Interface
+  //
+
+  /****************************************************************
+   *                                                               *
+   *                enum types                                     *
+   *                                                               *
+   ****************************************************************/
+
+  enum EAxisXYZW {VX, VY, VZ, VW};          // axes
+  enum EAxis1234 {A1, A2, A3, A4};          // axes
+  enum EPlaneABCD {PA, PB, PC, PD};         // planes
+  enum EColorRGB {RED, GREEN, BLUE};        // colors
+  enum EPhongADSS {KA, KD, KS, ES};         // phong coefficients
+
+  /****************************************************************
+   *                                                               *
+   *                declarations of all defined classes            *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> class rtti;
+  template<typename _Tp> class vec2;
+  template<typename _Tp> class vec3;
+  template<typename _Tp> class vec4;
+  template<typename _Tp> class mat2;
+  template<typename _Tp> class mat3;
+  template<typename _Tp> class mat4;
+
+  /****************************************************************
+   *                                                               *
+   *                rtti class                                     *
+   *                                                               *
+   ****************************************************************/
+
+  template <typename _Tp> class rtti { public: typedef _Tp value_type; };
+  template <typename _Tp> class rtti< complex<_Tp> > { public: typedef _Tp value_type; };
+  template <typename _Tp> class rtti< vec2<_Tp> > { public: typedef _Tp value_type; };
+  template <typename _Tp> class rtti< vec3<_Tp> > { public: typedef _Tp value_type; };
+  template <typename _Tp> class rtti< vec4<_Tp> > { public: typedef _Tp value_type; };
+  template <typename _Tp> class rtti< mat2<_Tp> > { public: typedef _Tp value_type; };
+  template <typename _Tp> class rtti< mat3<_Tp> > { public: typedef _Tp value_type; };
+  template <typename _Tp> class rtti< mat4<_Tp> > { public: typedef _Tp value_type; };
+
+  /****************************************************************
+   *                                                               *
+   *                necessary friend declarations                  *
+   *                                                               *
+   ****************************************************************/
+
+  // 2D Vector friends
+
+  template<typename _Tp> vec2<_Tp> operator - (const vec2<_Tp>& v);                     // -v1
+  template<typename _Tp> vec2<_Tp> operator + (const vec2<_Tp>& a, const vec2<_Tp>& b);      // v1 + v2
+  template<typename _Tp> vec2<_Tp> operator - (const vec2<_Tp>& a, const vec2<_Tp>& b);      // v1 - v2
+  template<typename _Tp> vec2<_Tp> operator * (const vec2<_Tp>& a, const _Tp d);     // v1 * 3.0
+  template<typename _Tp> vec2<_Tp> operator * (const _Tp d, const vec2<_Tp>& a);     // 3.0 * v1
+  template<typename _Tp> vec2<_Tp> operator / (const vec2<_Tp>& a, const _Tp d);     // v1 / 3.0
+  template<typename _Tp> vec2<_Tp> operator * (const mat2<_Tp>& a, const vec2<_Tp>& v);      // linear transform
+  template<typename _Tp> vec2<_Tp> operator * (const mat3<_Tp>& a, const vec2<_Tp>& v);      // M . v
+  template<typename _Tp> vec2<_Tp> operator * (const vec2<_Tp>& v, const mat3<_Tp>& a);      // v . M
+  template<typename _Tp> vec3<_Tp> operator ^ (const vec2<_Tp>& a, const vec2<_Tp>& b);      // cross product
+  template<typename _Tp> _Tp operator * (const vec2<_Tp>& a, const vec2<_Tp>& b);    // dot product
+  template<typename _Tp> bool operator == (const vec2<_Tp>& a, const vec2<_Tp>& b);      // v1 == v2 ?
+  template<typename _Tp> bool operator != (const vec2<_Tp>& a, const vec2<_Tp>& b);      // v1 != v2 ?
+
+  template<typename _Tp> ostream& operator << (ostream& s, const vec2<_Tp>& v);    // output to stream
+  template<typename _Tp> istream& operator >> (istream& s, vec2<_Tp>& v);      // input from stream
+
+  template<typename _Tp> void swap(vec2<_Tp>& a, vec2<_Tp>& b);                     // swap v1 & v2
+  template<typename _Tp> vec2<_Tp> min(const vec2<_Tp>& a, const vec2<_Tp>& b);          // min(v1, v2)
+  template<typename _Tp> vec2<_Tp> max(const vec2<_Tp>& a, const vec2<_Tp>& b);          // max(v1, v2)
+  template<typename _Tp> vec2<_Tp> prod(const vec2<_Tp>& a, const vec2<_Tp>& b);         // term by term *
+  template<typename _Tp> vec2<_Tp> conj(const vec2<_Tp>& a);
+
+  // 3D Vector friends
+
+  template<typename _Tp> vec3<_Tp> operator - (const vec3<_Tp>& v);                     // -v1
+  template<typename _Tp> vec3<_Tp> operator + (const vec3<_Tp>& a, const vec3<_Tp>& b);      // v1 + v2
+  template<typename _Tp> vec3<_Tp> operator - (const vec3<_Tp>& a, const vec3<_Tp>& b);      // v1 - v2
+  template<typename _Tp> vec3<_Tp> operator * (const vec3<_Tp>& a, const _Tp d);     // v1 * 3.0
+  template<typename _Tp> vec3<_Tp> operator * (const _Tp d, const vec3<_Tp>& a);     // 3.0 * v1
+  template<typename _Tp> vec3<_Tp> operator / (const vec3<_Tp>& a, const _Tp d);     // v1 / 3.0
+  template<typename _Tp> vec3<_Tp> operator * (const mat3<_Tp>& a, const vec3<_Tp>& v);      // linear transform
+  template<typename _Tp> vec3<_Tp> operator * (const mat4<_Tp>& a, const vec3<_Tp>& v);      // M . v
+  template<typename _Tp> vec3<_Tp> operator * (const vec3<_Tp>& v, const mat4<_Tp>& a);      // v . M
+  template<typename _Tp> vec3<_Tp> operator ^ (const vec3<_Tp>& a, const vec3<_Tp>& b);      // cross product
+  template<typename _Tp> _Tp operator * (const vec3<_Tp>& a, const vec3<_Tp>& b);    // dot product
+  template<typename _Tp> bool operator == (const vec3<_Tp>& a, const vec3<_Tp>& b);      // v1 == v2 ?
+  template<typename _Tp> bool operator != (const vec3<_Tp>& a, const vec3<_Tp>& b);      // v1 != v2 ?
+
+  template<typename _Tp> ostream& operator << (ostream& s, const vec3<_Tp>& v);       // output to stream
+  template<typename _Tp> istream& operator >> (istream& s, vec3<_Tp>& v);      // input from stream
+
+  template<typename _Tp> void swap(vec3<_Tp>& a, vec3<_Tp>& b);                     // swap v1 & v2
+  template<typename _Tp> vec3<_Tp> min(const vec3<_Tp>& a, const vec3<_Tp>& b);          // min(v1, v2)
+  template<typename _Tp> vec3<_Tp> max(const vec3<_Tp>& a, const vec3<_Tp>& b);          // max(v1, v2)
+  template<typename _Tp> vec3<_Tp> prod(const vec3<_Tp>& a, const vec3<_Tp>& b);         // term by term *
+  template<typename _Tp> vec3<_Tp> conj(const vec3<_Tp>& a);
+
+  // 4D Vector friends
+
+  template<typename _Tp> vec4<_Tp> operator - (const vec4<_Tp>& v);                     // -v1
+  template<typename _Tp> vec4<_Tp> operator + (const vec4<_Tp>& a, const vec4<_Tp>& b);      // v1 + v2
+  template<typename _Tp> vec4<_Tp> operator - (const vec4<_Tp>& a, const vec4<_Tp>& b);      // v1 - v2
+  template<typename _Tp> vec4<_Tp> operator * (const vec4<_Tp>& a, const _Tp d);     // v1 * 3.0
+  template<typename _Tp> vec4<_Tp> operator * (const _Tp d, const vec4<_Tp>& a);     // 3.0 * v1
+  template<typename _Tp> vec4<_Tp> operator / (const vec4<_Tp>& a, const _Tp d);     // v1 / 3.0
+  template<typename _Tp> vec4<_Tp> operator * (const mat4<_Tp>& a, const vec4<_Tp>& v);      // M . v
+  template<typename _Tp> vec4<_Tp> operator * (const vec4<_Tp>& v, const mat4<_Tp>& a);      // v . M
+  template<typename _Tp> _Tp operator * (const vec4<_Tp>& a, const vec4<_Tp>& b);    // dot product
+  template<typename _Tp> bool operator == (const vec4<_Tp>& a, const vec4<_Tp>& b);      // v1 == v2 ?
+  template<typename _Tp> bool operator != (const vec4<_Tp>& a, const vec4<_Tp>& b);      // v1 != v2 ?
+
+  template<typename _Tp> ostream& operator << (ostream& s, const vec4<_Tp>& v);    // output to stream
+  template<typename _Tp> istream& operator >> (istream& s, vec4<_Tp>& v);      // input from stream
+
+  template<typename _Tp> void swap(vec4<_Tp>& a, vec4<_Tp>& b);                     // swap v1 & v2
+  template<typename _Tp> vec4<_Tp> min(const vec4<_Tp>& a, const vec4<_Tp>& b);          // min(v1, v2)
+  template<typename _Tp> vec4<_Tp> max(const vec4<_Tp>& a, const vec4<_Tp>& b);          // max(v1, v2)
+  template<typename _Tp> vec4<_Tp> prod(const vec4<_Tp>& a, const vec4<_Tp>& b);         // term by term *
+  template<typename _Tp> vec4<_Tp> conj(const vec4<_Tp>& a);
+
+  // 2x2 Matrix friends
+
+  template<typename _Tp> mat2<_Tp> operator - (const mat2<_Tp>& a);                     // -m1
+  template<typename _Tp> mat2<_Tp> operator + (const mat2<_Tp>& a, const mat2<_Tp>& b);      // m1 + m2
+  template<typename _Tp> mat2<_Tp> operator - (const mat2<_Tp>& a, const mat2<_Tp>& b);      // m1 - m2
+  template<typename _Tp> mat2<_Tp> operator * (const mat2<_Tp>& a, const mat2<_Tp>& b);      // m1 * m2
+  template<typename _Tp> mat2<_Tp> operator * (const mat2<_Tp>& a, const _Tp d);     // m1 * 3.0
+  template<typename _Tp> mat2<_Tp> operator * (const _Tp d, const mat2<_Tp>& a);     // 3.0 * m1
+  template<typename _Tp> mat2<_Tp> operator / (const mat2<_Tp>& a, const _Tp d);     // m1 / 3.0
+  template<typename _Tp> bool operator == (const mat2<_Tp>& a, const mat2<_Tp>& b);      // m1 == m2 ?
+  template<typename _Tp> bool operator != (const mat2<_Tp>& a, const mat2<_Tp>& b);      // m1 != m2 ?
+
+  template<typename _Tp> ostream& operator << (ostream& s, const mat2<_Tp>& m);    // output to stream
+  template<typename _Tp> istream& operator >> (istream& s, mat2<_Tp>& m);      // input from stream
+
+  template<typename _Tp> void swap(mat2<_Tp>& a, mat2<_Tp>& b);             // swap m1 & m2
+  template<typename _Tp> mat2<_Tp> conj(const mat2<_Tp>& a);
+  template<typename _Tp> mat2<_Tp> diagonal(const vec2<_Tp>& v);
+  template<typename _Tp> mat2<_Tp> diagonal(const _Tp x0, const _Tp y1);
+  template<typename _Tp> _Tp trace(const mat2<_Tp>& a);
+
+  // 3x3 Matrix friends
+
+  template<typename _Tp> mat3<_Tp> operator - (const mat3<_Tp>& a);                     // -m1
+  template<typename _Tp> mat3<_Tp> operator + (const mat3<_Tp>& a, const mat3<_Tp>& b);      // m1 + m2
+  template<typename _Tp> mat3<_Tp> operator - (const mat3<_Tp>& a, const mat3<_Tp>& b);      // m1 - m2
+  template<typename _Tp> mat3<_Tp> operator * (const mat3<_Tp>& a, const mat3<_Tp>& b);      // m1 * m2
+  template<typename _Tp> mat3<_Tp> operator * (const mat3<_Tp>& a, const _Tp d);     // m1 * 3.0
+  template<typename _Tp> mat3<_Tp> operator * (const _Tp d, const mat3<_Tp>& a);     // 3.0 * m1
+  template<typename _Tp> mat3<_Tp> operator / (const mat3<_Tp>& a, const _Tp d);     // m1 / 3.0
+  template<typename _Tp> bool operator == (const mat3<_Tp>& a, const mat3<_Tp>& b);      // m1 == m2 ?
+  template<typename _Tp> bool operator != (const mat3<_Tp>& a, const mat3<_Tp>& b);      // m1 != m2 ?
+
+  template<typename _Tp> ostream& operator << (ostream& s, const mat3<_Tp>& m);    // output to stream
+  template<typename _Tp> istream& operator >> (istream& s, mat3<_Tp>& m);      // input from stream
+
+  template<typename _Tp> void swap(mat3<_Tp>& a, mat3<_Tp>& b);             // swap m1 & m2
+  template<typename _Tp> mat3<_Tp> conj(const mat3<_Tp>& a);
+  template<typename _Tp> mat3<_Tp> diagonal(const vec3<_Tp>& v);
+  template<typename _Tp> mat3<_Tp> diagonal(const _Tp x0, const _Tp y1, const _Tp z2);
+  template<typename _Tp> _Tp trace(const mat3<_Tp>& a);
+
+  // 4x4 Matrix friends
+
+  template<typename _Tp> mat4<_Tp> operator - (const mat4<_Tp>& a);                     // -m1
+  template<typename _Tp> mat4<_Tp> operator + (const mat4<_Tp>& a, const mat4<_Tp>& b);      // m1 + m2
+  template<typename _Tp> mat4<_Tp> operator - (const mat4<_Tp>& a, const mat4<_Tp>& b);      // m1 - m2
+  template<typename _Tp> mat4<_Tp> operator * (const mat4<_Tp>& a, const mat4<_Tp>& b);      // m1 * m2
+  template<typename _Tp> mat4<_Tp> operator * (const mat4<_Tp>& a, const _Tp d);     // m1 * 3.0
+  template<typename _Tp> mat4<_Tp> operator * (const _Tp d, const mat4<_Tp>& a);     // 3.0 * m1
+  template<typename _Tp> mat4<_Tp> operator / (const mat4<_Tp>& a, const _Tp d);     // m1 / 3.0
+  template<typename _Tp> bool operator == (const mat4<_Tp>& a, const mat4<_Tp>& b);      // m1 == m2 ?
+  template<typename _Tp> bool operator != (const mat4<_Tp>& a, const mat4<_Tp>& b);      // m1 != m2 ?
+
+  template<typename _Tp> ostream& operator << (ostream& s, const mat4<_Tp>& m);    // output to stream
+  template<typename _Tp> istream& operator >> (istream& s, mat4<_Tp>& m);          // input from stream
+
+  template<typename _Tp> void swap(mat4<_Tp>& a, mat4<_Tp>& b);                         // swap m1 & m2
+  template<typename _Tp> mat4<_Tp> conj(const mat4<_Tp>& a);
+  template<typename _Tp> mat4<_Tp> diagonal(const vec4<_Tp>& v);
+  template<typename _Tp> mat4<_Tp> diagonal(const _Tp x0, const _Tp y1, const _Tp z2, const _Tp w3);
+  template<typename _Tp> _Tp trace(const mat4<_Tp>& a);
+
+  /****************************************************************
+   *                                                               *
+   *                2D Vector                                      *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> class vec2
+  {
+  protected:
+
+    _Tp n[2];
+
+  public:
+
+    // constructors
+
+    vec2();
+    vec2(const _Tp x, const _Tp y);
+    vec2(const _Tp d);
+    vec2(const vec2& v);                // copy constructor
+    vec2(const vec3<_Tp>& v);                // cast v3 to v2
+    vec2(const vec3<_Tp>& v, size_t dropAxis);  // cast v3 to v2
+
+    // assignment operators
+
+    vec2& operator  = ( const vec2& v );    // assignment of a vec2
+    vec2& operator += ( const vec2& v );    // incrementation by a vec2
+    vec2& operator -= ( const vec2& v );    // decrementation by a vec2
+    vec2& operator *= ( const _Tp d );   // multiplication by a constant
+    vec2& operator /= ( const _Tp d );   // division by a constant
+    _Tp& operator [] (size_t i);            // indexing
+    _Tp operator [] (size_t i) const;       // read-only indexing
+
+    // special functions
+
+    typename rtti<_Tp>::value_type length() const;          // length of a vec2
+    typename rtti<_Tp>::value_type length2() const;         // squared length of a vec2
+    vec2& normalize();              // normalize a vec2 in place
+    vec2 conjugate() const;
+    vec2& apply(_Tp (*fcn)(_Tp));     // apply a function to each component
+
+    // friends
+
+    friend vec2 operator - <> (const vec2& v);                     // -v1
+    friend vec2 operator + <> (const vec2& a, const vec2& b);      // v1 + v2
+    friend vec2 operator - <> (const vec2& a, const vec2& b);      // v1 - v2
+    friend vec2 operator * <> (const vec2& a, const _Tp d);     // v1 * 3.0
+    friend vec2 operator * <> (const _Tp d, const vec2& a);     // 3.0 * v1
+    friend vec2 operator / <> (const vec2& a, const _Tp d);     // v1 / 3.0
+    friend vec2 operator * <> (const mat2<_Tp>& a, const vec2& v);      // linear transform
+    friend vec2 operator * <> (const mat3<_Tp>& a, const vec2& v);      // M . v
+    friend vec2 operator * <> (const vec2& v, const mat3<_Tp>& a);      // v . M
+    friend vec3<_Tp> operator ^ <> (const vec2& a, const vec2& b);      // cross product
+    friend _Tp operator * <> (const vec2& a, const vec2& b);    // dot product
+    friend bool operator == <> (const vec2& a, const vec2& b);      // v1 == v2 ?
+    friend bool operator != <> (const vec2& a, const vec2& b);      // v1 != v2 ?
+
+    friend ostream& operator << <> (ostream& s, const vec2& v);    // output to stream
+    friend istream& operator >> <> (istream& s, vec2& v);      // input from stream
+
+    friend void swap<>(vec2& a, vec2& b);                     // swap v1 & v2
+    friend vec2 min<>(const vec2& a, const vec2& b);          // min(v1, v2)
+    friend vec2 max<>(const vec2& a, const vec2& b);          // max(v1, v2)
+    friend vec2 prod<>(const vec2& a, const vec2& b);         // term by term *
+    friend vec2 conj<>(const vec2& a);
+
+    // necessary friend declarations
+
+    friend class vec3<_Tp>;
+    friend class mat2<_Tp>;
+    friend mat2<_Tp> operator * <> (const mat2<_Tp>& a, const mat2<_Tp>& b);  // matrix 2 product
+  };
+
+  /****************************************************************
+   *                                                               *
+   *                3D Vector                                      *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> class vec3
+  {
+  protected:
+
+    _Tp n[3];
+
+  public:
+
+    // constructors
+
+    vec3();
+    vec3(const _Tp x, const _Tp y, const _Tp z);
+    vec3(const _Tp d);
+    vec3(const vec3& v);                    // copy constructor
+    vec3(const vec2<_Tp>& v);                    // cast v2 to v3
+    vec3(const vec2<_Tp>& v, _Tp d);          // cast v2 to v3
+    vec3(const vec4<_Tp>& v);                    // cast v4 to v3
+    vec3(const vec4<_Tp>& v, size_t dropAxis);      // cast v4 to v3
+
+    // assignment operators
+
+    vec3& operator  = ( const vec3& v );        // assignment of a vec3
+    vec3& operator += ( const vec3& v );        // incrementation by a vec3
+    vec3& operator -= ( const vec3& v );        // decrementation by a vec3
+    vec3& operator *= ( const _Tp d );       // multiplication by a constant
+    vec3& operator /= ( const _Tp d );       // division by a constant
+    _Tp& operator [] (size_t i);                // indexing
+    _Tp operator [] (size_t i) const;           // read-only indexing
+
+    // special functions
+
+    typename rtti<_Tp>::value_type length() const;              // length of a vec3
+    typename rtti<_Tp>::value_type length2() const;             // squared length of a vec3
+    vec3& normalize();                  // normalize a vec3 in place
+    vec3 conjugate() const;
+    vec3& apply(_Tp (*fcn)(_Tp));         // apply a function to each component
+
+    // friends
+
+    friend vec3 operator - <> (const vec3& v);                     // -v1
+    friend vec3 operator + <> (const vec3& a, const vec3& b);      // v1 + v2
+    friend vec3 operator - <> (const vec3& a, const vec3& b);      // v1 - v2
+    friend vec3 operator * <> (const vec3& a, const _Tp d);     // v1 * 3.0
+    friend vec3 operator * <> (const _Tp d, const vec3& a);     // 3.0 * v1
+    friend vec3 operator / <> (const vec3& a, const _Tp d);     // v1 / 3.0
+    friend vec3 operator * <> (const mat3<_Tp>& a, const vec3& v);      // linear transform
+    friend vec3 operator * <> (const mat4<_Tp>& a, const vec3& v);      // M . v
+    friend vec3 operator * <> (const vec3& v, const mat4<_Tp>& a);      // v . M
+    friend vec3 operator ^ <> (const vec3& a, const vec3& b);      // cross product
+    friend _Tp operator * <> (const vec3& a, const vec3& b);    // dot product
+    friend bool operator == <> (const vec3& a, const vec3& b);      // v1 == v2 ?
+    friend bool operator != <> (const vec3& a, const vec3& b);      // v1 != v2 ?
+
+    friend ostream& operator << <> (ostream& s, const vec3& v);       // output to stream
+    friend istream& operator >> <> (istream& s, vec3& v);      // input from stream
+
+    friend void swap<>(vec3& a, vec3& b);                     // swap v1 & v2
+    friend vec3 min<>(const vec3& a, const vec3& b);          // min(v1, v2)
+    friend vec3 max<>(const vec3& a, const vec3& b);          // max(v1, v2)
+    friend vec3 prod<>(const vec3& a, const vec3& b);         // term by term *
+    friend vec3 conj<>(const vec3& a);
+
+    // necessary friend declarations
+
+    friend class vec2<_Tp>;
+    friend class vec4<_Tp>;
+    friend class mat3<_Tp>;
+    friend vec2<_Tp> operator * <> (const mat3<_Tp>& a, const vec2<_Tp>& v);  // linear transform
+    friend mat3<_Tp> operator * <> (const mat3<_Tp>& a, const mat3<_Tp>& b);  // matrix 3 product
+  };
+
+  /****************************************************************
+   *                                                               *
+   *                4D Vector                                      *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> class vec4
+  {
+  protected:
+
+    _Tp n[4];
+
+  public:
+
+    // constructors
+
+    vec4();
+    vec4(const _Tp x, const _Tp y, const _Tp z, const _Tp w);
+    vec4(const _Tp d);
+    vec4(const vec4& v);                // copy constructor
+    vec4(const vec3<_Tp>& v);                // cast vec3 to vec4
+    vec4(const vec3<_Tp>& v, const _Tp d);        // cast vec3 to vec4
+
+    // assignment operators
+
+    vec4& operator  = ( const vec4& v );        // assignment of a vec4
+    vec4& operator += ( const vec4& v );        // incrementation by a vec4
+    vec4& operator -= ( const vec4& v );        // decrementation by a vec4
+    vec4& operator *= ( const _Tp d );       // multiplication by a constant
+    vec4& operator /= ( const _Tp d );       // division by a constant
+    _Tp& operator [] (size_t i);                // indexing
+    _Tp operator [] (size_t i) const;           // read-only indexing
+
+    // special functions
+
+    typename rtti<_Tp>::value_type length() const;          // length of a vec4
+    typename rtti<_Tp>::value_type length2() const;         // squared length of a vec4
+    vec4& normalize();              // normalize a vec4 in place
+    vec4 conjugate() const;
+    vec4& apply(_Tp (*fcn)(_Tp));     // apply a function to each component
+
+    // friends
+
+    friend vec4 operator - <> (const vec4& v);                     // -v1
+    friend vec4 operator + <> (const vec4& a, const vec4& b);      // v1 + v2
+    friend vec4 operator - <> (const vec4& a, const vec4& b);      // v1 - v2
+    friend vec4 operator * <> (const vec4& a, const _Tp d);     // v1 * 3.0
+    friend vec4 operator * <> (const _Tp d, const vec4& a);     // 3.0 * v1
+    friend vec4 operator / <> (const vec4& a, const _Tp d);     // v1 / 3.0
+    friend vec4 operator * <> (const mat4<_Tp>& a, const vec4& v);      // M . v
+    friend vec4 operator * <> (const vec4& v, const mat4<_Tp>& a);      // v . M
+    friend _Tp operator * <> (const vec4& a, const vec4& b);    // dot product
+    friend bool operator == <> (const vec4& a, const vec4& b);      // v1 == v2 ?
+    friend bool operator != <> (const vec4& a, const vec4& b);      // v1 != v2 ?
+
+    friend ostream& operator << <> (ostream& s, const vec4& v);    // output to stream
+    friend istream& operator >> <> (istream& s, vec4& v);      // input from stream
+
+    friend void swap<>(vec4& a, vec4& b);                     // swap v1 & v2
+    friend vec4 min<>(const vec4& a, const vec4& b);          // min(v1, v2)
+    friend vec4 max<>(const vec4& a, const vec4& b);          // max(v1, v2)
+    friend vec4 prod<>(const vec4& a, const vec4& b);         // term by term *
+    friend vec4 conj<>(const vec4& a);
+
+    // necessary friend declarations
+
+    friend class vec3<_Tp>;
+    friend class mat4<_Tp>;
+    friend vec3<_Tp> operator * <> (const mat4<_Tp>& a, const vec3<_Tp>& v);  // linear transform
+    friend mat4<_Tp> operator * <> (const mat4<_Tp>& a, const mat4<_Tp>& b);  // matrix 4 product
+  };
+
+  /****************************************************************
+   *                                                               *
+   *                2x2 Matrix                                     *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> class mat2
+  {
+  protected:
+
+    vec2<_Tp> v[2];
+
+  public:
+
+    // constructors
+
+    mat2();
+    mat2(const vec2<_Tp>& v0, const vec2<_Tp>& v1);
+    mat2(const _Tp x0, const _Tp y0, const _Tp x1, const _Tp y1);
+    mat2(const _Tp d);
+    mat2(const mat2& m);
+
+    // assignment operators
+
+    mat2& operator  = ( const mat2& m );        // assignment of a mat2
+    mat2& operator += ( const mat2& m );        // incrementation by a mat2
+    mat2& operator -= ( const mat2& m );        // decrementation by a mat2
+    mat2& operator *= ( const _Tp d );       // multiplication by a constant
+    mat2& operator /= ( const _Tp d );       // division by a constant
+    vec2<_Tp>& operator [] (size_t i);                 // indexing
+    const vec2<_Tp>& operator [] (size_t i) const;     // read-only indexing
+
+    // special functions
+
+    mat2 transpose() const;             // transpose
+    mat2 hermitian() const;             // hermitian transpose
+    mat2 inverse() const;               // inverse
+    mat2 conjugate() const;
+    mat2& apply(_Tp (*fcn)(_Tp));         // apply a function to each element
+    static mat2 identity();
+    static mat2 rotation(const typename rtti<_Tp>::value_type angleDeg, const typename rtti<_Tp>::value_type phaseDeg);
+    static mat2 rotation(const typename rtti<_Tp>::value_type angleDeg);
+
+    // friends
+
+    friend mat2 operator - <> (const mat2& a);                     // -m1
+    friend mat2 operator + <> (const mat2& a, const mat2& b);      // m1 + m2
+    friend mat2 operator - <> (const mat2& a, const mat2& b);      // m1 - m2
+    friend mat2 operator * <> (const mat2& a, const mat2& b);      // m1 * m2
+    friend mat2 operator * <> (const mat2& a, const _Tp d);     // m1 * 3.0
+    friend mat2 operator * <> (const _Tp d, const mat2& a);     // 3.0 * m1
+    friend mat2 operator / <> (const mat2& a, const _Tp d);     // m1 / 3.0
+    friend bool operator == <> (const mat2& a, const mat2& b);      // m1 == m2 ?
+    friend bool operator != <> (const mat2& a, const mat2& b);      // m1 != m2 ?
+
+    friend ostream& operator << <> (ostream& s, const mat2& m);    // output to stream
+    friend istream& operator >> <> (istream& s, mat2& m);      // input from stream
+
+    friend void swap<>(mat2& a, mat2& b);             // swap m1 & m2
+    friend mat2 conj<>(const mat2& a);
+    friend mat2 diagonal<>(const vec2<_Tp>& v);
+    friend mat2 diagonal<>(const _Tp x0, const _Tp y1);
+    friend _Tp trace<>(const mat2& a);
+
+    // necessary friend declarations
+
+    friend vec2<_Tp> operator * <> (const mat2& a, const vec2<_Tp>& v);      // linear transform
+  };
+
+  /****************************************************************
+   *                                                               *
+   *                3x3 Matrix                                     *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> class mat3
+  {
+  protected:
+
+    vec3<_Tp> v[3];
+
+  public:
+
+    // constructors
+
+    mat3();
+    mat3(const vec3<_Tp>& v0, const vec3<_Tp>& v1, const vec3<_Tp>& v2);
+    mat3(const _Tp x0, const _Tp y0, const _Tp z0,
+	 const _Tp x1, const _Tp y1, const _Tp z1,
+	 const _Tp x2, const _Tp y2, const _Tp z2);
+    mat3(const _Tp d);
+    mat3(const mat3& m);
+
+    // assignment operators
+
+    mat3& operator  = ( const mat3& m );        // assignment of a mat3
+    mat3& operator += ( const mat3& m );        // incrementation by a mat3
+    mat3& operator -= ( const mat3& m );        // decrementation by a mat3
+    mat3& operator *= ( const _Tp d );       // multiplication by a constant
+    mat3& operator /= ( const _Tp d );       // division by a constant
+    vec3<_Tp>& operator [] (size_t i);                 // indexing
+    const vec3<_Tp>& operator [] (size_t i) const;     // read-only indexing
+
+    // special functions
+
+    mat3 transpose() const;             // transpose
+    mat3 hermitian() const;             // hermitian transpose
+    mat3 inverse() const;               // inverse
+    mat3 conjugate() const;
+    mat3& apply(_Tp (*fcn)(_Tp));         // apply a function to each element
+    static mat3 identity();
+    static mat3 rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg, const typename rtti<_Tp>::value_type phaseDeg);
+    static mat3 rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg);
+    static mat3 rotation(size_t rotationAxis, const typename rtti<_Tp>::value_type angleDeg);
+
+    // friends
+
+    friend mat3 operator - <> (const mat3& a);                     // -m1
+    friend mat3 operator + <> (const mat3& a, const mat3& b);      // m1 + m2
+    friend mat3 operator - <> (const mat3& a, const mat3& b);      // m1 - m2
+    friend mat3 operator * <> (const mat3& a, const mat3& b);      // m1 * m2
+    friend mat3 operator * <> (const mat3& a, const _Tp d);     // m1 * 3.0
+    friend mat3 operator * <> (const _Tp d, const mat3& a);     // 3.0 * m1
+    friend mat3 operator / <> (const mat3& a, const _Tp d);     // m1 / 3.0
+    friend bool operator == <> (const mat3& a, const mat3& b);      // m1 == m2 ?
+    friend bool operator != <> (const mat3& a, const mat3& b);      // m1 != m2 ?
+
+    friend ostream& operator << <> (ostream& s, const mat3& m);    // output to stream
+    friend istream& operator >> <> (istream& s, mat3& m);      // input from stream
+
+    friend void swap<>(mat3& a, mat3& b);             // swap m1 & m2
+    friend mat3 conj<>(const mat3& a);
+    friend mat3 diagonal<>(const vec3<_Tp>& v);
+    friend mat3 diagonal<>(const _Tp x0, const _Tp y1, const _Tp z2);
+    friend _Tp trace<>(const mat3& a);
+
+    // necessary friend declarations
+
+    friend vec3<_Tp> operator * <> (const mat3& a, const vec3<_Tp>& v);      // linear transform
+    friend vec2<_Tp> operator * <> (const mat3& a, const vec2<_Tp>& v);      // linear transform
+  };
+
+  /****************************************************************
+   *                                                               *
+   *                4x4 Matrix                                     *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> class mat4
+  {
+  protected:
+
+    vec4<_Tp> v[4];
+
+  public:
+
+    // constructors
+
+    mat4();
+    mat4(const vec4<_Tp>& v0, const vec4<_Tp>& v1, const vec4<_Tp>& v2, const vec4<_Tp>& v3);
+    mat4(const _Tp x0, const _Tp y0, const _Tp z0, const _Tp w0,
+	 const _Tp x1, const _Tp y1, const _Tp z1, const _Tp w1,
+	 const _Tp x2, const _Tp y2, const _Tp z2, const _Tp w2,
+	 const _Tp x3, const _Tp y3, const _Tp z3, const _Tp w3);
+    mat4(const _Tp d);
+    mat4(const mat4& m);
+
+    // assignment operators
+
+    mat4& operator  = ( const mat4& m );        // assignment of a mat4
+    mat4& operator += ( const mat4& m );        // incrementation by a mat4
+    mat4& operator -= ( const mat4& m );        // decrementation by a mat4
+    mat4& operator *= ( const _Tp d );       // multiplication by a constant
+    mat4& operator /= ( const _Tp d );       // division by a constant
+    vec4<_Tp>& operator [] (size_t i);                 // indexing
+    const vec4<_Tp>& operator [] (size_t i) const;     // read-only indexing
+
+    // special functions
+
+    mat4 transpose() const;                     // transpose
+    mat4 hermitian() const;             // hermitian transpose
+    mat4 inverse() const;                       // inverse
+    mat4 conjugate() const;
+    mat4& apply(_Tp (*fcn)(_Tp));                 // apply a function to each element
+    static mat4 identity();
+    static mat4 rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg, const typename rtti<_Tp>::value_type phaseDeg);
+    static mat4 rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg);
+
+    // friends
+
+    friend mat4 operator - <> (const mat4& a);                     // -m1
+    friend mat4 operator + <> (const mat4& a, const mat4& b);      // m1 + m2
+    friend mat4 operator - <> (const mat4& a, const mat4& b);      // m1 - m2
+    friend mat4 operator * <> (const mat4& a, const mat4& b);      // m1 * m2
+    friend mat4 operator * <> (const mat4& a, const _Tp d);     // m1 * 3.0
+    friend mat4 operator * <> (const _Tp d, const mat4& a);     // 3.0 * m1
+    friend mat4 operator / <> (const mat4& a, const _Tp d);     // m1 / 3.0
+    friend bool operator == <> (const mat4& a, const mat4& b);      // m1 == m2 ?
+    friend bool operator != <> (const mat4& a, const mat4& b);      // m1 != m2 ?
+
+    friend ostream& operator << <> (ostream& s, const mat4& m);    // output to stream
+    friend istream& operator >> <> (istream& s, mat4& m);          // input from stream
+
+    friend void swap<>(mat4& a, mat4& b);                         // swap m1 & m2
+    friend mat4 conj<>(const mat4& a);
+    friend mat4 diagonal<>(const vec4<_Tp>& v);
+    friend mat4 diagonal<>(const _Tp x0, const _Tp y1, const _Tp z2, const _Tp w3);
+    friend _Tp trace<>(const mat4& a);
+
+    // necessary friend declarations
+
+    friend vec4<_Tp> operator * <> (const mat4& a, const vec4<_Tp>& v);      // linear transform
+    friend vec3<_Tp> operator * <> (const mat4& a, const vec3<_Tp>& v);      // linear transform
+  };
+
+  /****************************************************************
+   *                                                               *
+   *                2D functions and 3D functions                  *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> mat2<_Tp> identity1D(void);                              // identity 1D
+  template<typename _Tp> mat2<_Tp> translation1D(const _Tp& v);                   // translation 1D
+  template<typename _Tp> mat2<_Tp> scaling1D(const _Tp& scaleVal);             // scaling 1D
+  template<typename _Tp> mat3<_Tp> identity2D(void);                              // identity 2D
+  template<typename _Tp> mat3<_Tp> translation2D(const vec2<_Tp>& v);              // translation 2D
+  template<typename _Tp> mat3<_Tp> rotation2D(const vec2<_Tp>& Center, const typename rtti<_Tp>::value_type angleDeg); // rotation 2D
+  template<typename _Tp> mat3<_Tp> scaling2D(const vec2<_Tp>& scaleVec);        // scaling 2D
+  template<typename _Tp> mat4<_Tp> identity3D(void);                              // identity 3D
+  template<typename _Tp> mat4<_Tp> translation3D(const vec3<_Tp>& v);              // translation 3D
+  template<typename _Tp> mat4<_Tp> rotation3D(vec3<_Tp> Axis, const typename rtti<_Tp>::value_type angleDeg);          // rotation 3D
+  template<typename _Tp> mat4<_Tp> scaling3D(const vec3<_Tp>& scaleVec);        // scaling 3D
+  template<typename _Tp> mat4<_Tp> perspective3D(const _Tp d);             // perspective 3D
+
+  //
+  //  Implementation
+  //
+
+#ifndef __CINT__
+
+  /****************************************************************
+   *                                                               *
+   *                ALGEBRA3 aide macros                           *
+   *                                                               *
+   ****************************************************************/
+
+  // rowcol macro is used in different routines below
+#ifdef ALGEBRA3_ROWCOL
+#undef ALGEBRA3_ROWCOL
+#endif /* ALGEBRA3_ROWCOL */
+
+#ifndef ALGEBRA3_MIN
+#define ALGEBRA3_MIN(A,B) ((A) < (B) ? (A) : (B))
+#endif /* ALGEBRA3_MIN */
+
+#ifndef ALGEBRA3_MAX
+#define ALGEBRA3_MAX(A,B) ((A) > (B) ? (A) : (B))
+#endif /* ALGEBRA3_MAX */
+
+  // error handling macro
+#ifndef ALGEBRA3_ERROR
+#define ALGEBRA3_ERROR(E) { cerr << (E) << endl; abort(); }
+#endif /* ALGEBRA3_ERROR */
+
+#ifndef ALGEBRA3_PI
+#define ALGEBRA3_PI 3.1415926535897932384626433832795029L
+#endif /* ALGEBRA3_PI */
+
+#ifndef ALGEBRA3_PI_2
+#define ALGEBRA3_PI_2 1.5707963267948966192313216916397514L
+#endif /* ALGEBRA3_PI_2 */
+
+  /****************************************************************
+   *                                                               *
+   *                ALGEBRA3 aide functions                        *
+   *                                                               *
+   ****************************************************************/
+
+  static inline float conj(const float& x) { return float(x); }
+  static inline double conj(const double& x) { return double(x); }
+  static inline long double conj(const long double& x) { return ((long double)(x)); }
+
+  template<typename _Tp> static inline bool operator < (const complex<_Tp>& x, const complex<_Tp>& y)
+  { return (norm(x) < norm(y)); }
+  template<typename _Tp> static inline bool operator > (const complex<_Tp>& x, const complex<_Tp>& y)
+  { return (norm(x) > norm(y)); }
+
+  template<typename _Tp> static inline void ALGEBRA3_eip_emip(const typename rtti<_Tp>::value_type phaseDeg, _Tp& eip, _Tp& emip) {
+    typename rtti<_Tp>::value_type phaseRad = ( phaseDeg * ((typename rtti<_Tp>::value_type)(ALGEBRA3_PI)) ) / ((typename rtti<_Tp>::value_type)180);
+    typename rtti<_Tp>::value_type c = ((typename rtti<_Tp>::value_type)cos(phaseRad));
+    eip = ((_Tp)c);
+    emip = ((_Tp)c);
+    // if (phaseDeg != ((typename rtti<_Tp>::value_type)0)) { ALGEBRA3_ERROR("matX<_Tp>::rotation: phaseDeg parameter allowed in complex related rotations only\n"); }
+  }
+
+  template<typename _Tp> static inline void ALGEBRA3_eip_emip(_Tp phaseDeg, complex<_Tp>& eip, complex<_Tp>& emip) {
+    _Tp phaseRad = ( phaseDeg * ((_Tp)(ALGEBRA3_PI)) ) / ((_Tp)180);
+    _Tp c = ((_Tp)cos(phaseRad));
+    _Tp s = ((_Tp)sin(phaseRad));
+    eip = complex<_Tp>(c, s);
+    emip = complex<_Tp>(c, -s);
+    return;
+  }
+
+  /****************************************************************
+   *                                                               *
+   *                2D Vector member functions                     *
+   *                                                               *
+   ****************************************************************/
+
+  // constructors
+
+  template<typename _Tp> inline vec2<_Tp>::vec2() {}
+
+  template<typename _Tp> inline vec2<_Tp>::vec2(const _Tp x, const _Tp y)
+  { n[VX] = x; n[VY] = y; }
+
+  template<typename _Tp> inline vec2<_Tp>::vec2(const _Tp d)
+  { n[VX] = n[VY] = d; }
+
+  template<typename _Tp> inline vec2<_Tp>::vec2(const vec2<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; }
+
+  template<typename _Tp> inline vec2<_Tp>::vec2(const vec3<_Tp>& v) // it is up to caller to avoid divide-by-zero
+  { n[VX] = v.n[VX] / v.n[VZ]; n[VY] = v.n[VY] / v.n[VZ]; };
+
+  template<typename _Tp> inline vec2<_Tp>::vec2(const vec3<_Tp>& v, size_t dropAxis) {
+    switch (dropAxis) {
+    case VX: n[VX] = v.n[VY]; n[VY] = v.n[VZ]; break;
+    case VY: n[VX] = v.n[VX]; n[VY] = v.n[VZ]; break;
+    default: n[VX] = v.n[VX]; n[VY] = v.n[VY]; break;
+    }
+  }
+
+  // assignment operators
+
+  template<typename _Tp> inline vec2<_Tp>& vec2<_Tp>::operator = (const vec2<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; return *this; }
+
+  template<typename _Tp> inline vec2<_Tp>& vec2<_Tp>::operator += ( const vec2<_Tp>& v )
+  { n[VX] += v.n[VX]; n[VY] += v.n[VY]; return *this; }
+
+  template<typename _Tp> inline vec2<_Tp>& vec2<_Tp>::operator -= ( const vec2<_Tp>& v )
+  { n[VX] -= v.n[VX]; n[VY] -= v.n[VY]; return *this; }
+
+  template<typename _Tp> inline vec2<_Tp>& vec2<_Tp>::operator *= ( const _Tp d )
+  { n[VX] *= d; n[VY] *= d; return *this; }
+
+  template<typename _Tp> inline vec2<_Tp>& vec2<_Tp>::operator /= ( const _Tp d )
+  { _Tp d_inv = ((_Tp)1) / d; n[VX] *= d_inv; n[VY] *= d_inv; return *this; }
+
+  template<typename _Tp> inline _Tp& vec2<_Tp>::operator [] (size_t i) {
+    assert( (((long int)i) >= VX && i <= VY) );        // subscript check
+    return n[i];
+  }
+
+  template<typename _Tp> inline _Tp vec2<_Tp>::operator [] (size_t i) const {
+    assert( (((long int)i) >= VX && i <= VY) );
+    return n[i];
+  }
+
+  // special functions
+
+  template<typename _Tp> inline typename rtti<_Tp>::value_type vec2<_Tp>::length() const
+  { return ((typename rtti<_Tp>::value_type)sqrt(length2())); }
+
+  template<typename _Tp> inline typename rtti<_Tp>::value_type vec2<_Tp>::length2() const
+  { return abs(n[VX]*n[VX]) + abs(n[VY]*n[VY]); }
+
+  template<typename _Tp> inline vec2<_Tp>& vec2<_Tp>::normalize() // it is up to caller to avoid divide-by-zero
+  { *this /= length(); return *this; }
+
+  template<typename _Tp> inline vec2<_Tp> vec2<_Tp>::conjugate() const
+  { return vec2<_Tp>(conj(n[VX]), conj(n[VY])); }
+
+  template<typename _Tp> inline vec2<_Tp>& vec2<_Tp>::apply(_Tp (*fcn)(_Tp))
+  { n[VX] = (*fcn)(n[VX]); n[VY] = (*fcn)(n[VY]); return *this; }
+
+  // friends
+
+  template<typename _Tp> inline vec2<_Tp> operator - (const vec2<_Tp>& a)
+  { return vec2<_Tp>(-a.n[VX],-a.n[VY]); }
+
+  template<typename _Tp> inline vec2<_Tp> operator + (const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return vec2<_Tp>(a.n[VX]+ b.n[VX], a.n[VY] + b.n[VY]); }
+
+  template<typename _Tp> inline vec2<_Tp> operator - (const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return vec2<_Tp>(a.n[VX]-b.n[VX], a.n[VY]-b.n[VY]); }
+
+  template<typename _Tp> inline vec2<_Tp> operator * (const vec2<_Tp>& a, const _Tp d)
+  { return vec2<_Tp>(d*a.n[VX], d*a.n[VY]); }
+
+  template<typename _Tp> inline vec2<_Tp> operator * (const _Tp d, const vec2<_Tp>& a)
+  { return a*d; }
+
+  template<typename _Tp> inline vec2<_Tp> operator / (const vec2<_Tp>& a, const _Tp d)
+  { _Tp d_inv = ((_Tp)1) / d; return vec2<_Tp>(a.n[VX]*d_inv, a.n[VY]*d_inv); }
+
+  template<typename _Tp> inline vec2<_Tp> operator * (const mat2<_Tp>& a, const vec2<_Tp>& v) {
+#define ALGEBRA3_ROWCOL(i) a.v[i].n[0]*v.n[VX] + a.v[i].n[1]*v.n[VY]
+    return vec2<_Tp>(ALGEBRA3_ROWCOL(0), ALGEBRA3_ROWCOL(1));
+#undef ALGEBRA3_ROWCOL // (i)
+  }
+
+  template<typename _Tp> inline vec2<_Tp> operator * (const mat3<_Tp>& a, const vec2<_Tp>& v) {
+    vec3<_Tp> av;
+    av.n[VX] = a.v[0].n[VX]*v.n[VX] + a.v[0].n[VY]*v.n[VY] + a.v[0].n[VZ];
+    av.n[VY] = a.v[1].n[VX]*v.n[VX] + a.v[1].n[VY]*v.n[VY] + a.v[1].n[VZ];
+    av.n[VZ] = a.v[2].n[VX]*v.n[VX] + a.v[2].n[VY]*v.n[VY] + a.v[2].n[VZ];
+    return av;
+  }
+
+  template<typename _Tp> inline vec2<_Tp> operator * (const vec2<_Tp>& v, const mat3<_Tp>& a) 
+  { return a.transpose() * v; }
+
+  template<typename _Tp> inline vec3<_Tp> operator ^ (const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return vec3<_Tp>(((_Tp)0), ((_Tp)0), a.n[VX] * b.n[VY] - b.n[VX] * a.n[VY]); }
+
+  template<typename _Tp> inline _Tp operator * (const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return (a.n[VX]*b.n[VX] + a.n[VY]*b.n[VY]); }
+
+  template<typename _Tp> inline bool operator == (const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return (a.n[VX] == b.n[VX]) && (a.n[VY] == b.n[VY]); }
+
+  template<typename _Tp> inline bool operator != (const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return !(a == b); }
+
+  template<typename _Tp> inline ostream& operator << (ostream& s, const vec2<_Tp>& v)
+  { return s << "[ " << v.n[VX] << ' ' << v.n[VY] << " ]"; }
+
+  template<typename _Tp> inline istream& operator >> (istream& s, vec2<_Tp>& v) {
+    vec2<_Tp>    v_tmp(((_Tp)0));
+    char    c = ' ';
+
+    while (isspace(c))
+      s >> c;
+    // The vectors can be formatted either as x y or [ x y ]
+    if (c == '[') {
+      s >> v_tmp[VX] >> v_tmp[VY];
+      while (s >> c && isspace(c)) ;
+      if (c != ']')
+	s.setstate (ios::failbit);
+    }
+    else {
+      s.putback(c);
+      s >> v_tmp[VX] >> v_tmp[VY];
+    }
+    if (s)
+      v = v_tmp;
+    return s;
+  }
+
+  template<typename _Tp> inline void swap(vec2<_Tp>& a, vec2<_Tp>& b)
+  { vec2<_Tp> tmp(a); a = b; b = tmp; }
+
+  template<typename _Tp> inline vec2<_Tp> min(const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return vec2<_Tp>(ALGEBRA3_MIN(a.n[VX], b.n[VX]), ALGEBRA3_MIN(a.n[VY], b.n[VY])); }
+
+  template<typename _Tp> inline vec2<_Tp> max(const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return vec2<_Tp>(ALGEBRA3_MAX(a.n[VX], b.n[VX]), ALGEBRA3_MAX(a.n[VY], b.n[VY])); }
+
+  template<typename _Tp> inline vec2<_Tp> prod(const vec2<_Tp>& a, const vec2<_Tp>& b)
+  { return vec2<_Tp>(a.n[VX] * b.n[VX], a.n[VY] * b.n[VY]); }
+
+  template<typename _Tp> inline vec2<_Tp> conj(const vec2<_Tp>& a) { return a.conjugate(); }
+
+  /****************************************************************
+   *                                                               *
+   *                3D Vector member functions                     *
+   *                                                               *
+   ****************************************************************/
+
+  // constructors
+
+  template<typename _Tp> inline vec3<_Tp>::vec3() {}
+
+  template<typename _Tp> inline vec3<_Tp>::vec3(const _Tp x, const _Tp y, const _Tp z)
+  { n[VX] = x; n[VY] = y; n[VZ] = z; }
+
+  template<typename _Tp> inline vec3<_Tp>::vec3(const _Tp d)
+  { n[VX] = n[VY] = n[VZ] = d; }
+
+  template<typename _Tp> inline vec3<_Tp>::vec3(const vec3<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VZ]; }
+
+  template<typename _Tp> inline vec3<_Tp>::vec3(const vec2<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = ((_Tp)1); }
+
+  template<typename _Tp> inline vec3<_Tp>::vec3(const vec2<_Tp>& v, _Tp d)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = d; }
+
+  template<typename _Tp> inline vec3<_Tp>::vec3(const vec4<_Tp>& v) // it is up to caller to avoid divide-by-zero
+  { n[VX] = v.n[VX] / v.n[VW]; n[VY] = v.n[VY] / v.n[VW];
+  n[VZ] = v.n[VZ] / v.n[VW]; }
+
+  template<typename _Tp> inline vec3<_Tp>::vec3(const vec4<_Tp>& v, size_t dropAxis) {
+    switch (dropAxis) {
+    case VX: n[VX] = v.n[VY]; n[VY] = v.n[VZ]; n[VZ] = v.n[VW]; break;
+    case VY: n[VX] = v.n[VX]; n[VY] = v.n[VZ]; n[VZ] = v.n[VW]; break;
+    case VZ: n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VW]; break;
+    default: n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VZ]; break;
+    }
+  }
+
+  // assignment operators
+
+  template<typename _Tp> inline vec3<_Tp>& vec3<_Tp>::operator = (const vec3<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VZ]; return *this; }
+
+  template<typename _Tp> inline vec3<_Tp>& vec3<_Tp>::operator += ( const vec3<_Tp>& v )
+  { n[VX] += v.n[VX]; n[VY] += v.n[VY]; n[VZ] += v.n[VZ]; return *this; }
+
+  template<typename _Tp> inline vec3<_Tp>& vec3<_Tp>::operator -= ( const vec3<_Tp>& v )
+  { n[VX] -= v.n[VX]; n[VY] -= v.n[VY]; n[VZ] -= v.n[VZ]; return *this; }
+
+  template<typename _Tp> inline vec3<_Tp>& vec3<_Tp>::operator *= ( const _Tp d )
+  { n[VX] *= d; n[VY] *= d; n[VZ] *= d; return *this; }
+
+  template<typename _Tp> inline vec3<_Tp>& vec3<_Tp>::operator /= ( const _Tp d )
+  { _Tp d_inv = ((_Tp)1) / d; n[VX] *= d_inv; n[VY] *= d_inv; n[VZ] *= d_inv;
+  return *this; }
+
+  template<typename _Tp> inline _Tp& vec3<_Tp>::operator [] (size_t i) {
+    assert( (((long int)i) >= VX && i <= VZ) );
+    return n[i];
+  }
+
+  template<typename _Tp> inline _Tp vec3<_Tp>::operator [] (size_t i) const {
+    assert( (((long int)i) >= VX && i <= VZ) );
+    return n[i];
+  }
+
+  // special functions
+
+  template<typename _Tp> inline typename rtti<_Tp>::value_type vec3<_Tp>::length() const
+  {  return ((typename rtti<_Tp>::value_type)sqrt(length2())); }
+
+  template<typename _Tp> inline typename rtti<_Tp>::value_type vec3<_Tp>::length2() const
+  {  return abs(n[VX]*n[VX]) + abs(n[VY]*n[VY]) + abs(n[VZ]*n[VZ]); }
+
+  template<typename _Tp> inline vec3<_Tp>& vec3<_Tp>::normalize() // it is up to caller to avoid divide-by-zero
+  { *this /= length(); return *this; }
+
+  template<typename _Tp> inline vec3<_Tp> vec3<_Tp>::conjugate() const
+  { return vec3<_Tp>(conj(n[VX]), conj(n[VY]), conj(n[VZ])); }
+
+  template<typename _Tp> inline vec3<_Tp>& vec3<_Tp>::apply(_Tp (*fcn)(_Tp))
+  { n[VX] = (*fcn)(n[VX]); n[VY] = (*fcn)(n[VY]); n[VZ] = (*fcn)(n[VZ]);
+  return *this; }
+
+  // friends
+
+  template<typename _Tp> inline vec3<_Tp> operator - (const vec3<_Tp>& a)
+  {  return vec3<_Tp>(-a.n[VX],-a.n[VY],-a.n[VZ]); }
+
+  template<typename _Tp> inline vec3<_Tp> operator + (const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return vec3<_Tp>(a.n[VX]+ b.n[VX], a.n[VY] + b.n[VY], a.n[VZ] + b.n[VZ]); }
+
+  template<typename _Tp> inline vec3<_Tp> operator - (const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return vec3<_Tp>(a.n[VX]-b.n[VX], a.n[VY]-b.n[VY], a.n[VZ]-b.n[VZ]); }
+
+  template<typename _Tp> inline vec3<_Tp> operator * (const vec3<_Tp>& a, const _Tp d)
+  { return vec3<_Tp>(d*a.n[VX], d*a.n[VY], d*a.n[VZ]); }
+
+  template<typename _Tp> inline vec3<_Tp> operator * (const _Tp d, const vec3<_Tp>& a)
+  { return a*d; }
+
+  template<typename _Tp> inline vec3<_Tp> operator / (const vec3<_Tp>& a, const _Tp d)
+  { _Tp d_inv = ((_Tp)1) / d; return vec3<_Tp>(a.n[VX]*d_inv, a.n[VY]*d_inv,
+					       a.n[VZ]*d_inv); }
+
+  template<typename _Tp> inline vec3<_Tp> operator * (const mat3<_Tp>& a, const vec3<_Tp>& v) {
+#define ALGEBRA3_ROWCOL(i) a.v[i].n[0]*v.n[VX] + a.v[i].n[1]*v.n[VY] \
+    + a.v[i].n[2]*v.n[VZ]
+    return vec3<_Tp>(ALGEBRA3_ROWCOL(0), ALGEBRA3_ROWCOL(1), ALGEBRA3_ROWCOL(2));
+#undef ALGEBRA3_ROWCOL // (i)
+  }
+
+  template<typename _Tp> inline vec3<_Tp> operator * (const mat4<_Tp>& a, const vec3<_Tp>& v)
+  { return a * vec4<_Tp>(v); }
+
+  template<typename _Tp> inline vec3<_Tp> operator * (const vec3<_Tp>& v, const mat4<_Tp>& a)
+  { return a.transpose() * v; }
+
+  template<typename _Tp> inline vec3<_Tp> operator ^ (const vec3<_Tp>& a, const vec3<_Tp>& b) {
+    return vec3<_Tp>(a.n[VY]*b.n[VZ] - a.n[VZ]*b.n[VY],
+		     a.n[VZ]*b.n[VX] - a.n[VX]*b.n[VZ],
+		     a.n[VX]*b.n[VY] - a.n[VY]*b.n[VX]);
+  }
+
+  template<typename _Tp> inline _Tp operator * (const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return (a.n[VX]*b.n[VX] + a.n[VY]*b.n[VY] + a.n[VZ]*b.n[VZ]); }
+
+  template<typename _Tp> inline bool operator == (const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return (a.n[VX] == b.n[VX]) && (a.n[VY] == b.n[VY]) && (a.n[VZ] == b.n[VZ]);
+  }
+
+  template<typename _Tp> inline bool operator != (const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return !(a == b); }
+
+  template<typename _Tp> inline ostream& operator << (ostream& s, const vec3<_Tp>& v)
+  { return s << "[ " << v.n[VX] << ' ' << v.n[VY] << ' ' << v.n[VZ] << " ]"; }
+
+  template<typename _Tp> inline istream& operator >> (istream& s, vec3<_Tp>& v) {
+    vec3<_Tp>    v_tmp(((_Tp)0));
+    char    c = ' ';
+
+    while (isspace(c))
+      s >> c;
+    // The vectors can be formatted either as x y z or [ x y z ]
+    if (c == '[') {
+      s >> v_tmp[VX] >> v_tmp[VY] >> v_tmp[VZ];
+      while (s >> c && isspace(c)) ;
+      if (c != ']')
+	s.setstate (ios::failbit);
+    }
+    else {
+      s.putback(c);
+      s >> v_tmp[VX] >> v_tmp[VY] >> v_tmp[VZ];
+    }
+    if (s)
+      v = v_tmp;
+    return s;
+  }
+
+  template<typename _Tp> inline void swap(vec3<_Tp>& a, vec3<_Tp>& b)
+  { vec3<_Tp> tmp(a); a = b; b = tmp; }
+
+  template<typename _Tp> inline vec3<_Tp> min(const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return vec3<_Tp>(ALGEBRA3_MIN(a.n[VX], b.n[VX]), ALGEBRA3_MIN(a.n[VY], b.n[VY]),
+		     ALGEBRA3_MIN(a.n[VZ], b.n[VZ])); }
+
+  template<typename _Tp> inline vec3<_Tp> max(const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return vec3<_Tp>(ALGEBRA3_MAX(a.n[VX], b.n[VX]), ALGEBRA3_MAX(a.n[VY], b.n[VY]),
+		     ALGEBRA3_MAX(a.n[VZ], b.n[VZ])); }
+
+  template<typename _Tp> inline vec3<_Tp> prod(const vec3<_Tp>& a, const vec3<_Tp>& b)
+  { return vec3<_Tp>(a.n[VX] * b.n[VX], a.n[VY] * b.n[VY], a.n[VZ] * b.n[VZ]); }
+
+  template<typename _Tp> inline vec3<_Tp> conj(const vec3<_Tp>& a) { return a.conjugate(); }
+
+  /****************************************************************
+   *                                                               *
+   *                4D Vector member functions                     *
+   *                                                               *
+   ****************************************************************/
+
+  // constructors
+
+  template<typename _Tp> inline vec4<_Tp>::vec4() {}
+
+  template<typename _Tp> inline vec4<_Tp>::vec4(const _Tp x, const _Tp y, const _Tp z, const _Tp w)
+  { n[VX] = x; n[VY] = y; n[VZ] = z; n[VW] = w; }
+
+  template<typename _Tp> inline vec4<_Tp>::vec4(const _Tp d)
+  {  n[VX] = n[VY] = n[VZ] = n[VW] = d; }
+
+  template<typename _Tp> inline vec4<_Tp>::vec4(const vec4<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VZ]; n[VW] = v.n[VW]; }
+
+  template<typename _Tp> inline vec4<_Tp>::vec4(const vec3<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VZ]; n[VW] = ((_Tp)1); }
+
+  template<typename _Tp> inline vec4<_Tp>::vec4(const vec3<_Tp>& v, const _Tp d)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VZ];  n[VW] = d; }
+
+  // assignment operators
+
+  template<typename _Tp> inline vec4<_Tp>& vec4<_Tp>::operator = (const vec4<_Tp>& v)
+  { n[VX] = v.n[VX]; n[VY] = v.n[VY]; n[VZ] = v.n[VZ]; n[VW] = v.n[VW];
+  return *this; }
+
+  template<typename _Tp> inline vec4<_Tp>& vec4<_Tp>::operator += ( const vec4<_Tp>& v )
+  { n[VX] += v.n[VX]; n[VY] += v.n[VY]; n[VZ] += v.n[VZ]; n[VW] += v.n[VW];
+  return *this; }
+
+  template<typename _Tp> inline vec4<_Tp>& vec4<_Tp>::operator -= ( const vec4<_Tp>& v )
+  { n[VX] -= v.n[VX]; n[VY] -= v.n[VY]; n[VZ] -= v.n[VZ]; n[VW] -= v.n[VW];
+  return *this; }
+
+  template<typename _Tp> inline vec4<_Tp>& vec4<_Tp>::operator *= ( const _Tp d )
+  { n[VX] *= d; n[VY] *= d; n[VZ] *= d; n[VW] *= d; return *this; }
+
+  template<typename _Tp> inline vec4<_Tp>& vec4<_Tp>::operator /= ( const _Tp d )
+  { _Tp d_inv = ((_Tp)1) / d; n[VX] *= d_inv; n[VY] *= d_inv; n[VZ] *= d_inv;
+  n[VW] *= d_inv; return *this; }
+
+  template<typename _Tp> inline _Tp& vec4<_Tp>::operator [] (size_t i) {
+    assert( (((long int)i) >= VX && i <= VW) );
+    return n[i];
+  }
+
+  template<typename _Tp> inline _Tp vec4<_Tp>::operator [] (size_t i) const {
+    assert( (((long int)i) >= VX && i <= VW) );
+    return n[i];
+  }
+
+  // special functions
+
+  template<typename _Tp> inline typename rtti<_Tp>::value_type vec4<_Tp>::length() const
+  { return ((typename rtti<_Tp>::value_type)sqrt(length2())); }
+
+  template<typename _Tp> inline typename rtti<_Tp>::value_type vec4<_Tp>::length2() const
+  { return abs(n[VX]*n[VX]) + abs(n[VY]*n[VY]) + abs(n[VZ]*n[VZ]) + abs(n[VW]*n[VW]); }
+
+  template<typename _Tp> inline vec4<_Tp>& vec4<_Tp>::normalize() // it is up to caller to avoid divide-by-zero
+  { *this /= length(); return *this; }
+
+  template<typename _Tp> inline vec4<_Tp> vec4<_Tp>::conjugate() const
+  { return vec4<_Tp>(conj(n[VX]), conj(n[VY]), conj(n[VZ]), conj(n[VW])); }
+
+  template<typename _Tp> inline vec4<_Tp>& vec4<_Tp>::apply(_Tp (*fcn)(_Tp))
+  { n[VX] = (*fcn)(n[VX]); n[VY] = (*fcn)(n[VY]); n[VZ] = (*fcn)(n[VZ]);
+  n[VW] = (*fcn)(n[VW]); return *this; }
+
+  // friends
+
+  template<typename _Tp> inline vec4<_Tp> operator - (const vec4<_Tp>& a)
+  { return vec4<_Tp>(-a.n[VX],-a.n[VY],-a.n[VZ],-a.n[VW]); }
+
+  template<typename _Tp> inline vec4<_Tp> operator + (const vec4<_Tp>& a, const vec4<_Tp>& b)
+  { return vec4<_Tp>(a.n[VX] + b.n[VX], a.n[VY] + b.n[VY], a.n[VZ] + b.n[VZ],
+		     a.n[VW] + b.n[VW]); }
+
+  template<typename _Tp> inline vec4<_Tp> operator - (const vec4<_Tp>& a, const vec4<_Tp>& b)
+  {  return vec4<_Tp>(a.n[VX] - b.n[VX], a.n[VY] - b.n[VY], a.n[VZ] - b.n[VZ],
+		      a.n[VW] - b.n[VW]); }
+
+  template<typename _Tp> inline vec4<_Tp> operator * (const vec4<_Tp>& a, const _Tp d)
+  { return vec4<_Tp>(d*a.n[VX], d*a.n[VY], d*a.n[VZ], d*a.n[VW]); }
+
+  template<typename _Tp> inline vec4<_Tp> operator * (const _Tp d, const vec4<_Tp>& a)
+  { return a*d; }
+
+  template<typename _Tp> inline vec4<_Tp> operator / (const vec4<_Tp>& a, const _Tp d)
+  { _Tp d_inv = ((_Tp)1) / d; return vec4<_Tp>(a.n[VX]*d_inv, a.n[VY]*d_inv, a.n[VZ]*d_inv,
+					       a.n[VW]*d_inv); }
+
+  template<typename _Tp> inline vec4<_Tp> operator * (const mat4<_Tp>& a, const vec4<_Tp>& v) {
+#define ALGEBRA3_ROWCOL(i) a.v[i].n[0]*v.n[VX] + a.v[i].n[1]*v.n[VY] \
+    + a.v[i].n[2]*v.n[VZ] + a.v[i].n[3]*v.n[VW]
+    return vec4<_Tp>(ALGEBRA3_ROWCOL(0), ALGEBRA3_ROWCOL(1), ALGEBRA3_ROWCOL(2), ALGEBRA3_ROWCOL(3));
+#undef ALGEBRA3_ROWCOL // (i)
+  }
+
+  template<typename _Tp> inline vec4<_Tp> operator * (const vec4<_Tp>& v, const mat4<_Tp>& a)
+  { return a.transpose() * v; }
+
+  template<typename _Tp> inline _Tp operator * (const vec4<_Tp>& a, const vec4<_Tp>& b)
+  { return (a.n[VX]*b.n[VX] + a.n[VY]*b.n[VY] + a.n[VZ]*b.n[VZ] +
+	    a.n[VW]*b.n[VW]); }
+
+  template<typename _Tp> inline bool operator == (const vec4<_Tp>& a, const vec4<_Tp>& b)
+  { return (a.n[VX] == b.n[VX]) && (a.n[VY] == b.n[VY]) && (a.n[VZ] == b.n[VZ])
+      && (a.n[VW] == b.n[VW]); }
+
+  template<typename _Tp> inline bool operator != (const vec4<_Tp>& a, const vec4<_Tp>& b)
+  { return !(a == b); }
+
+  template<typename _Tp> inline ostream& operator << (ostream& s, const vec4<_Tp>& v)
+  { return s << "[ " << v.n[VX] << ' ' << v.n[VY] << ' ' << v.n[VZ] << ' '
+	     << v.n[VW] << " ]"; }
+
+  template<typename _Tp> inline istream& operator >> (istream& s, vec4<_Tp>& v) {
+    vec4<_Tp>    v_tmp(((_Tp)0));
+    char    c = ' ';
+
+    while (isspace(c))
+      s >> c;
+    // The vectors can be formatted either as x y z w or [ x y z w ]
+    if (c == '[') {
+      s >> v_tmp[VX] >> v_tmp[VY] >> v_tmp[VZ] >> v_tmp[VW];
+      while (s >> c && isspace(c)) ;
+      if (c != ']')
+	s.setstate (ios::failbit);
+    }
+    else {
+      s.putback(c);
+      s >> v_tmp[VX] >> v_tmp[VY] >> v_tmp[VZ] >> v_tmp[VW];
+    }
+    if (s)
+      v = v_tmp;
+    return s;
+  }
+
+  template<typename _Tp> inline void swap(vec4<_Tp>& a, vec4<_Tp>& b)
+  { vec4<_Tp> tmp(a); a = b; b = tmp; }
+
+  template<typename _Tp> inline vec4<_Tp> min(const vec4<_Tp>& a, const vec4<_Tp>& b)
+  { return vec4<_Tp>(ALGEBRA3_MIN(a.n[VX], b.n[VX]), ALGEBRA3_MIN(a.n[VY], b.n[VY]),
+		     ALGEBRA3_MIN(a.n[VZ], b.n[VZ]), ALGEBRA3_MIN(a.n[VW], b.n[VW])); }
+
+  template<typename _Tp> inline vec4<_Tp> max(const vec4<_Tp>& a, const vec4<_Tp>& b)
+  { return vec4<_Tp>(ALGEBRA3_MAX(a.n[VX], b.n[VX]), ALGEBRA3_MAX(a.n[VY], b.n[VY]),
+		     ALGEBRA3_MAX(a.n[VZ], b.n[VZ]), ALGEBRA3_MAX(a.n[VW], b.n[VW])); }
+
+  template<typename _Tp> inline vec4<_Tp> prod(const vec4<_Tp>& a, const vec4<_Tp>& b)
+  { return vec4<_Tp>(a.n[VX] * b.n[VX], a.n[VY] * b.n[VY], a.n[VZ] * b.n[VZ],
+		     a.n[VW] * b.n[VW]); }
+
+  template<typename _Tp> inline vec4<_Tp> conj(const vec4<_Tp>& a) { return a.conjugate(); }
+
+  /****************************************************************
+   *                                                               *
+   *                2x2 Matrix member functions                    *
+   *                                                               *
+   ****************************************************************/
+
+  // constructors
+
+  template<typename _Tp> inline mat2<_Tp>::mat2() {}
+
+  template<typename _Tp> inline mat2<_Tp>::mat2(const vec2<_Tp>& v0, const vec2<_Tp>& v1)
+  { v[0] = v0; v[1] = v1; }
+
+  template<typename _Tp> inline mat2<_Tp>::mat2(const _Tp x0, const _Tp y0, const _Tp x1, const _Tp y1)
+  { v[0][0] = x0; v[0][1] = y0; v[1][0] = x1; v[1][1] = y1; }
+
+  template<typename _Tp> inline mat2<_Tp>::mat2(const _Tp d)
+  { v[0] = v[1] = vec2<_Tp>(d); }
+
+  template<typename _Tp> inline mat2<_Tp>::mat2(const mat2<_Tp>& m)
+  { v[0] = m.v[0]; v[1] = m.v[1]; }
+
+  // assignment operators
+
+  template<typename _Tp> inline mat2<_Tp>& mat2<_Tp>::operator = ( const mat2<_Tp>& m )
+  { v[0] = m.v[0]; v[1] = m.v[1]; return *this; }
+
+  template<typename _Tp> inline mat2<_Tp>& mat2<_Tp>::operator += ( const mat2<_Tp>& m )
+  { v[0] += m.v[0]; v[1] += m.v[1]; return *this; }
+
+  template<typename _Tp> inline mat2<_Tp>& mat2<_Tp>::operator -= ( const mat2<_Tp>& m )
+  { v[0] -= m.v[0]; v[1] -= m.v[1]; return *this; }
+
+  template<typename _Tp> inline mat2<_Tp>& mat2<_Tp>::operator *= ( const _Tp d )
+  { v[0] *= d; v[1] *= d; return *this; }
+
+  template<typename _Tp> inline mat2<_Tp>& mat2<_Tp>::operator /= ( const _Tp d )
+  { v[0] /= d; v[1] /= d; return *this; }
+
+  template<typename _Tp> inline vec2<_Tp>& mat2<_Tp>::operator [] (size_t i) {
+    assert( (((long int)i) >= VX && i <= VY) );
+    return v[i];
+  }
+
+  template<typename _Tp> inline const vec2<_Tp>& mat2<_Tp>::operator [] (size_t i) const {
+    assert( (((long int)i) >= VX && i <= VY) );
+    return v[i];
+  }
+
+  // special functions
+
+  template<typename _Tp> inline mat2<_Tp> mat2<_Tp>::transpose() const {
+    return mat2<_Tp>(v[0][0], v[1][0],
+		     v[0][1], v[1][1]);
+  }
+
+  template<typename _Tp> inline mat2<_Tp> mat2<_Tp>::hermitian() const {
+    return mat2<_Tp>(conj(v[0][0]), conj(v[1][0]),
+		     conj(v[0][1]), conj(v[1][1]));
+  }
+
+  template<typename _Tp> inline mat2<_Tp> mat2<_Tp>::inverse() const    // Gauss-Jordan elimination with partial pivoting
+  {
+    mat2<_Tp> a(*this),      // As a evolves from original mat into identity
+      b(identity1D<_Tp>());   // b evolves from identity into inverse(a)
+    size_t i, j, i1;
+
+    // Loop over cols of a from left to right, eliminating above and below diag
+    for (j=0; j<2; j++) {   // Find largest pivot in column j among rows j..1
+      i1 = j;         // Row with largest pivot candidate
+      for (i=j+1; i<2; i++)
+	if (abs(a.v[i].n[j]) > abs(a.v[i1].n[j]))
+	  i1 = i;
+
+      // Swap rows i1 and j in a and b to put pivot on diagonal
+      swap(a.v[i1], a.v[j]);
+      swap(b.v[i1], b.v[j]);
+
+      // Scale row j to have a unit diagonal
+      if (a.v[j].n[j]==((_Tp)0))
+	ALGEBRA3_ERROR("mat2<_Tp>::inverse: singular matrix; can't invert\n");
+      b.v[j] /= a.v[j].n[j];
+      a.v[j] /= a.v[j].n[j];
+
+      // Eliminate off-diagonal elems in col j of a, doing identical ops to b
+      for (i=0; i<2; i++)
+	if (i!=j) {
+	  b.v[i] -= a.v[i].n[j]*b.v[j];
+	  a.v[i] -= a.v[i].n[j]*a.v[j];
+	}
+    }
+    return b;
+  }
+
+  template<typename _Tp> inline mat2<_Tp> mat2<_Tp>::conjugate() const {
+    return mat2<_Tp>(conj(v[0][0]), conj(v[0][1]),
+		     conj(v[1][0]), conj(v[1][1]));
+  }
+
+  template<typename _Tp> inline mat2<_Tp>& mat2<_Tp>::apply(_Tp (*fcn)(_Tp)) {
+    v[VX].apply(fcn);
+    v[VY].apply(fcn);
+    return *this;
+  }
+
+  template<typename _Tp> inline mat2<_Tp> mat2<_Tp>::identity()
+  { return mat2<_Tp>(((_Tp)1), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat2<_Tp> mat2<_Tp>::rotation(const typename rtti<_Tp>::value_type angleDeg, const typename rtti<_Tp>::value_type phaseDeg) {
+    typename rtti<_Tp>::value_type  angleRad = ( angleDeg * ((typename rtti<_Tp>::value_type)(ALGEBRA3_PI)) ) / ((typename rtti<_Tp>::value_type)180);
+    _Tp c = ((_Tp)cos(angleRad)),
+      s = ((_Tp)sin(angleRad));
+    _Tp eip, emip;
+    ALGEBRA3_eip_emip<typename rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+
+    return mat2<_Tp>(c, s * emip, -s * eip, c);
+  }
+
+  template<typename _Tp> inline mat2<_Tp> mat2<_Tp>::rotation(const typename rtti<_Tp>::value_type angleDeg) {
+    return rotation(angleDeg, ((typename rtti<_Tp>::value_type)0));
+  }
+
+  // friends
+
+  template<typename _Tp> inline mat2<_Tp> operator - (const mat2<_Tp>& a)
+  { return mat2<_Tp>(-a.v[0], -a.v[1]); }
+
+  template<typename _Tp> inline mat2<_Tp> operator + (const mat2<_Tp>& a, const mat2<_Tp>& b)
+  { return mat2<_Tp>(a.v[0] + b.v[0], a.v[1] + b.v[1]); }
+
+  template<typename _Tp> inline mat2<_Tp> operator - (const mat2<_Tp>& a, const mat2<_Tp>& b)
+  { return mat2<_Tp>(a.v[0] - b.v[0], a.v[1] - b.v[1]); }
+
+  template<typename _Tp> inline mat2<_Tp> operator * (const mat2<_Tp>& a, const mat2<_Tp>& b) {
+#define ALGEBRA3_ROWCOL(i, j) \
+    a.v[i].n[0]*b.v[0][j] + a.v[i].n[1]*b.v[1][j]
+    return mat2<_Tp>(ALGEBRA3_ROWCOL(0,0), ALGEBRA3_ROWCOL(0,1),
+		     ALGEBRA3_ROWCOL(1,0), ALGEBRA3_ROWCOL(1,1));
+#undef ALGEBRA3_ROWCOL // (i, j)
+  }
+
+  template<typename _Tp> inline mat2<_Tp> operator * (const mat2<_Tp>& a, const _Tp d)
+  { return mat2<_Tp>(a.v[0] * d, a.v[1] * d); }
+
+  template<typename _Tp> inline mat2<_Tp> operator * (const _Tp d, const mat2<_Tp>& a)
+  { return a*d; }
+
+  template<typename _Tp> inline mat2<_Tp> operator / (const mat2<_Tp>& a, const _Tp d)
+  { return mat2<_Tp>(a.v[0] / d, a.v[1] / d); }
+
+  template<typename _Tp> inline bool operator == (const mat2<_Tp>& a, const mat2<_Tp>& b)
+  { return (a.v[0] == b.v[0]) && (a.v[1] == b.v[1]); }
+
+  template<typename _Tp> inline bool operator != (const mat2<_Tp>& a, const mat2<_Tp>& b)
+  { return !(a == b); }
+
+  template<typename _Tp> inline ostream& operator << (ostream& s, const mat2<_Tp>& m)
+  { return s << m.v[VX] << '\n' << m.v[VY]; }
+
+  template<typename _Tp> inline istream& operator >> (istream& s, mat2<_Tp>& m) {
+    mat2<_Tp>    m_tmp(((_Tp)0));
+
+    s >> m_tmp[VX] >> m_tmp[VY];
+    if (s)
+      m = m_tmp;
+    return s;
+  }
+
+  template<typename _Tp> inline void swap(mat2<_Tp>& a, mat2<_Tp>& b)
+  { mat2<_Tp> tmp(a); a = b; b = tmp; }
+
+  template<typename _Tp> inline mat2<_Tp> conj(const mat2<_Tp>& a) { return a.conjugate(); }
+
+  template<typename _Tp> inline mat2<_Tp> diagonal(const vec2<_Tp>& v)
+  { return mat2<_Tp>(v[0], ((_Tp)0),
+		     ((_Tp)0), v[1]); }
+
+  template<typename _Tp> inline mat2<_Tp> diagonal(const _Tp x0, const _Tp y1)
+  { return mat2<_Tp>(x0, ((_Tp)0),
+		     ((_Tp)0), y1); }
+
+  template<typename _Tp> inline _Tp trace(const mat2<_Tp>& a) { return a[0][0] + a[1][1]; }
+
+  /****************************************************************
+   *                                                               *
+   *                3x3 Matrix member functions                    *
+   *                                                               *
+   ****************************************************************/
+
+  // constructors
+
+  template<typename _Tp> inline mat3<_Tp>::mat3() {}
+
+  template<typename _Tp> inline mat3<_Tp>::mat3(const vec3<_Tp>& v0, const vec3<_Tp>& v1, const vec3<_Tp>& v2)
+  { v[0] = v0; v[1] = v1; v[2] = v2; }
+
+  template<typename _Tp> inline mat3<_Tp>::mat3(const _Tp x0, const _Tp y0, const _Tp z0,
+						const _Tp x1, const _Tp y1, const _Tp z1,
+						const _Tp x2, const _Tp y2, const _Tp z2)
+  { v[0][0] = x0; v[0][1] = y0; v[0][2] = z0;
+  v[1][0] = x1; v[1][1] = y1; v[1][2] = z1;
+  v[2][0] = x2; v[2][1] = y2; v[2][2] = z2; }
+
+  template<typename _Tp> inline mat3<_Tp>::mat3(const _Tp d)
+  { v[0] = v[1] = v[2] = vec3<_Tp>(d); }
+
+  template<typename _Tp> inline mat3<_Tp>::mat3(const mat3<_Tp>& m)
+  { v[0] = m.v[0]; v[1] = m.v[1]; v[2] = m.v[2]; }
+
+  // assignment operators
+
+  template<typename _Tp> inline mat3<_Tp>& mat3<_Tp>::operator = ( const mat3<_Tp>& m )
+  { v[0] = m.v[0]; v[1] = m.v[1]; v[2] = m.v[2]; return *this; }
+
+  template<typename _Tp> inline mat3<_Tp>& mat3<_Tp>::operator += ( const mat3<_Tp>& m )
+  { v[0] += m.v[0]; v[1] += m.v[1]; v[2] += m.v[2]; return *this; }
+
+  template<typename _Tp> inline mat3<_Tp>& mat3<_Tp>::operator -= ( const mat3<_Tp>& m )
+  { v[0] -= m.v[0]; v[1] -= m.v[1]; v[2] -= m.v[2]; return *this; }
+
+  template<typename _Tp> inline mat3<_Tp>& mat3<_Tp>::operator *= ( const _Tp d )
+  { v[0] *= d; v[1] *= d; v[2] *= d; return *this; }
+
+  template<typename _Tp> inline mat3<_Tp>& mat3<_Tp>::operator /= ( const _Tp d )
+  { v[0] /= d; v[1] /= d; v[2] /= d; return *this; }
+
+  template<typename _Tp> inline vec3<_Tp>& mat3<_Tp>::operator [] (size_t i) {
+    assert( (((long int)i) >= VX && i <= VZ) );
+    return v[i];
+  }
+
+  template<typename _Tp> inline const vec3<_Tp>& mat3<_Tp>::operator [] (size_t i) const {
+    assert( (((long int)i) >= VX && i <= VZ) );
+    return v[i];
+  }
+
+  // special functions
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::transpose() const {
+    return mat3<_Tp>(v[0][0], v[1][0], v[2][0],
+		     v[0][1], v[1][1], v[2][1],
+		     v[0][2], v[1][2], v[2][2]);
+  }
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::hermitian() const {
+    return mat3<_Tp>(conj(v[0][0]), conj(v[1][0]), conj(v[2][0]),
+		     conj(v[0][1]), conj(v[1][1]), conj(v[2][1]),
+		     conj(v[0][2]), conj(v[1][2]), conj(v[2][2]));
+  }
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::inverse() const    // Gauss-Jordan elimination with partial pivoting
+  {
+    mat3<_Tp> a(*this),      // As a evolves from original mat into identity
+      b(identity2D<_Tp>());   // b evolves from identity into inverse(a)
+    size_t i, j, i1;
+
+    // Loop over cols of a from left to right, eliminating above and below diag
+    for (j=0; j<3; j++) {   // Find largest pivot in column j among rows j..2
+      i1 = j;         // Row with largest pivot candidate
+      for (i=j+1; i<3; i++)
+	if (abs(a.v[i].n[j]) > abs(a.v[i1].n[j]))
+	  i1 = i;
+
+      // Swap rows i1 and j in a and b to put pivot on diagonal
+      swap(a.v[i1], a.v[j]);
+      swap(b.v[i1], b.v[j]);
+
+      // Scale row j to have a unit diagonal
+      if (a.v[j].n[j]==((_Tp)0))
+	ALGEBRA3_ERROR("mat3<_Tp>::inverse: singular matrix; can't invert\n");
+      b.v[j] /= a.v[j].n[j];
+      a.v[j] /= a.v[j].n[j];
+
+      // Eliminate off-diagonal elems in col j of a, doing identical ops to b
+      for (i=0; i<3; i++)
+	if (i!=j) {
+	  b.v[i] -= a.v[i].n[j]*b.v[j];
+	  a.v[i] -= a.v[i].n[j]*a.v[j];
+	}
+    }
+    return b;
+  }
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::conjugate() const {
+    return mat3<_Tp>(conj(v[0][0]), conj(v[0][1]), conj(v[0][2]),
+		     conj(v[1][0]), conj(v[1][1]), conj(v[1][2]),
+		     conj(v[2][0]), conj(v[2][1]), conj(v[2][2]));
+  }
+
+  template<typename _Tp> inline mat3<_Tp>& mat3<_Tp>::apply(_Tp (*fcn)(_Tp)) {
+    v[VX].apply(fcn);
+    v[VY].apply(fcn);
+    v[VZ].apply(fcn);
+    return *this;
+  }
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::identity()
+  { return mat3<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)1), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg, const typename rtti<_Tp>::value_type phaseDeg) {
+    typename rtti<_Tp>::value_type  angleRad = ( angleDeg * ((typename rtti<_Tp>::value_type)(ALGEBRA3_PI)) ) / ((typename rtti<_Tp>::value_type)180);
+    _Tp c = ((_Tp)cos(angleRad)),
+      s = ((_Tp)sin(angleRad));
+    _Tp eip, emip;
+    ALGEBRA3_eip_emip<typename rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+
+    if ((Axis1 == VY) && (Axis2 == VZ))
+      return mat3<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0),
+		       ((_Tp)0), c, s * emip,
+		       ((_Tp)0), -s * eip, c);
+    else if ((Axis1 == VX) && (Axis2 == VZ))
+      return mat3<_Tp>(c, ((_Tp)0), s * emip,
+		       ((_Tp)0), ((_Tp)1), ((_Tp)0),
+		       -s * eip, ((_Tp)0), c);
+    else if ((Axis1 == VX) && (Axis2 == VY))
+      return mat3<_Tp>(c, s * emip, ((_Tp)0),
+		       -s * eip, c, ((_Tp)0),
+		       ((_Tp)0), ((_Tp)0), ((_Tp)1));
+    else
+      ALGEBRA3_ERROR("mat3<_Tp>::rotation: incorrect Axis1 and/or Axis2 given\n");
+  }
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg) {
+    return rotation(Axis1, Axis2, angleDeg, ((typename rtti<_Tp>::value_type)0));
+  }
+
+  template<typename _Tp> inline mat3<_Tp> mat3<_Tp>::rotation(size_t rotationAxis, const typename rtti<_Tp>::value_type angleDeg) {
+    switch (rotationAxis) {
+    case VX: return rotation(VY, VZ, angleDeg, ((typename rtti<_Tp>::value_type)0));
+    case VY: return rotation(VX, VZ, angleDeg, ((typename rtti<_Tp>::value_type)0));
+    case VZ: return rotation(VX, VY, angleDeg, ((typename rtti<_Tp>::value_type)0));
+    default: ALGEBRA3_ERROR("mat3<_Tp>::rotation: incorrect rotationAxis given\n");
+    }
+  }
+
+  // friends
+
+  template<typename _Tp> inline mat3<_Tp> operator - (const mat3<_Tp>& a)
+  { return mat3<_Tp>(-a.v[0], -a.v[1], -a.v[2]); }
+
+  template<typename _Tp> inline mat3<_Tp> operator + (const mat3<_Tp>& a, const mat3<_Tp>& b)
+  { return mat3<_Tp>(a.v[0] + b.v[0], a.v[1] + b.v[1], a.v[2] + b.v[2]); }
+
+  template<typename _Tp> inline mat3<_Tp> operator - (const mat3<_Tp>& a, const mat3<_Tp>& b)
+  { return mat3<_Tp>(a.v[0] - b.v[0], a.v[1] - b.v[1], a.v[2] - b.v[2]); }
+
+  template<typename _Tp> inline mat3<_Tp> operator * (const mat3<_Tp>& a, const mat3<_Tp>& b) {
+#define ALGEBRA3_ROWCOL(i, j) \
+    a.v[i].n[0]*b.v[0][j] + a.v[i].n[1]*b.v[1][j] + a.v[i].n[2]*b.v[2][j]
+    return mat3<_Tp>(ALGEBRA3_ROWCOL(0,0), ALGEBRA3_ROWCOL(0,1), ALGEBRA3_ROWCOL(0,2),
+		     ALGEBRA3_ROWCOL(1,0), ALGEBRA3_ROWCOL(1,1), ALGEBRA3_ROWCOL(1,2),
+		     ALGEBRA3_ROWCOL(2,0), ALGEBRA3_ROWCOL(2,1), ALGEBRA3_ROWCOL(2,2));
+#undef ALGEBRA3_ROWCOL // (i, j)
+  }
+
+  template<typename _Tp> inline mat3<_Tp> operator * (const mat3<_Tp>& a, const _Tp d)
+  { return mat3<_Tp>(a.v[0] * d, a.v[1] * d, a.v[2] * d); }
+
+  template<typename _Tp> inline mat3<_Tp> operator * (const _Tp d, const mat3<_Tp>& a)
+  { return a*d; }
+
+  template<typename _Tp> inline mat3<_Tp> operator / (const mat3<_Tp>& a, const _Tp d)
+  { return mat3<_Tp>(a.v[0] / d, a.v[1] / d, a.v[2] / d); }
+
+  template<typename _Tp> inline bool operator == (const mat3<_Tp>& a, const mat3<_Tp>& b)
+  { return (a.v[0] == b.v[0]) && (a.v[1] == b.v[1]) && (a.v[2] == b.v[2]); }
+
+  template<typename _Tp> inline bool operator != (const mat3<_Tp>& a, const mat3<_Tp>& b)
+  { return !(a == b); }
+
+  template<typename _Tp> inline ostream& operator << (ostream& s, const mat3<_Tp>& m)
+  { return s << m.v[VX] << '\n' << m.v[VY] << '\n' << m.v[VZ]; }
+
+  template<typename _Tp> inline istream& operator >> (istream& s, mat3<_Tp>& m) {
+    mat3<_Tp>    m_tmp(((_Tp)0));
+
+    s >> m_tmp[VX] >> m_tmp[VY] >> m_tmp[VZ];
+    if (s)
+      m = m_tmp;
+    return s;
+  }
+
+  template<typename _Tp> inline void swap(mat3<_Tp>& a, mat3<_Tp>& b)
+  { mat3<_Tp> tmp(a); a = b; b = tmp; }
+
+  template<typename _Tp> inline mat3<_Tp> conj(const mat3<_Tp>& a) { return a.conjugate(); }
+
+  template<typename _Tp> inline mat3<_Tp> diagonal(const vec3<_Tp>& v)
+  { return mat3<_Tp>(v[0], ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), v[1], ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), v[2]); }
+
+  template<typename _Tp> inline mat3<_Tp> diagonal(const _Tp x0, const _Tp y1, const _Tp z2)
+  { return mat3<_Tp>(x0, ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), y1, ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), z2); }
+
+  template<typename _Tp> inline _Tp trace(const mat3<_Tp>& a) { return a[0][0] + a[1][1] + a[2][2]; }
+
+  /****************************************************************
+   *                                                               *
+   *                4x4 Matrix member functions                    *
+   *                                                               *
+   ****************************************************************/
+
+  // constructors
+
+  template<typename _Tp> inline mat4<_Tp>::mat4() {}
+
+  template<typename _Tp> inline mat4<_Tp>::mat4(const vec4<_Tp>& v0, const vec4<_Tp>& v1, const vec4<_Tp>& v2, const vec4<_Tp>& v3)
+  { v[0] = v0; v[1] = v1; v[2] = v2; v[3] = v3; }
+
+  template<typename _Tp> inline mat4<_Tp>::mat4(const _Tp x0, const _Tp y0, const _Tp z0, const _Tp w0,
+						const _Tp x1, const _Tp y1, const _Tp z1, const _Tp w1,
+						const _Tp x2, const _Tp y2, const _Tp z2, const _Tp w2,
+						const _Tp x3, const _Tp y3, const _Tp z3, const _Tp w3)
+  { v[0][0] = x0; v[0][1] = y0; v[0][2] = z0; v[0][3] = w0;
+  v[1][0] = x1; v[1][1] = y1; v[1][2] = z1; v[1][3] = w1;
+  v[2][0] = x2; v[2][1] = y2; v[2][2] = z2; v[2][3] = w2;
+  v[3][0] = x3; v[3][1] = y3; v[3][2] = z3; v[3][3] = w3; }
+
+  template<typename _Tp> inline mat4<_Tp>::mat4(const _Tp d)
+  { v[0] = v[1] = v[2] = v[3] = vec4<_Tp>(d); }
+
+  template<typename _Tp> inline mat4<_Tp>::mat4(const mat4<_Tp>& m)
+  { v[0] = m.v[0]; v[1] = m.v[1]; v[2] = m.v[2]; v[3] = m.v[3]; }
+
+  // assignment operators
+
+  template<typename _Tp> inline mat4<_Tp>& mat4<_Tp>::operator = ( const mat4<_Tp>& m )
+  { v[0] = m.v[0]; v[1] = m.v[1]; v[2] = m.v[2]; v[3] = m.v[3];
+  return *this; }
+
+  template<typename _Tp> inline mat4<_Tp>& mat4<_Tp>::operator += ( const mat4<_Tp>& m )
+  { v[0] += m.v[0]; v[1] += m.v[1]; v[2] += m.v[2]; v[3] += m.v[3];
+  return *this; }
+
+  template<typename _Tp> inline mat4<_Tp>& mat4<_Tp>::operator -= ( const mat4<_Tp>& m )
+  { v[0] -= m.v[0]; v[1] -= m.v[1]; v[2] -= m.v[2]; v[3] -= m.v[3];
+  return *this; }
+
+  template<typename _Tp> inline mat4<_Tp>& mat4<_Tp>::operator *= ( const _Tp d )
+  { v[0] *= d; v[1] *= d; v[2] *= d; v[3] *= d; return *this; }
+
+  template<typename _Tp> inline mat4<_Tp>& mat4<_Tp>::operator /= ( const _Tp d )
+  { v[0] /= d; v[1] /= d; v[2] /= d; v[3] /= d; return *this; }
+
+  template<typename _Tp> inline vec4<_Tp>& mat4<_Tp>::operator [] (size_t i) {
+    assert( (((long int)i) >= VX && i <= VW) );
+    return v[i];
+  }
+
+  template<typename _Tp> inline const vec4<_Tp>& mat4<_Tp>::operator [] (size_t i) const {
+    assert( (((long int)i) >= VX && i <= VW) );
+    return v[i];
+  }
+
+  // special functions
+
+  template<typename _Tp> inline mat4<_Tp> mat4<_Tp>::transpose() const{
+    return mat4<_Tp>(v[0][0], v[1][0], v[2][0], v[3][0],
+		     v[0][1], v[1][1], v[2][1], v[3][1],
+		     v[0][2], v[1][2], v[2][2], v[3][2],
+		     v[0][3], v[1][3], v[2][3], v[3][3]);
+  }
+
+  template<typename _Tp> inline mat4<_Tp> mat4<_Tp>::hermitian() const{
+    return mat4<_Tp>(conj(v[0][0]), conj(v[1][0]), conj(v[2][0]), conj(v[3][0]),
+		     conj(v[0][1]), conj(v[1][1]), conj(v[2][1]), conj(v[3][1]),
+		     conj(v[0][2]), conj(v[1][2]), conj(v[2][2]), conj(v[3][2]),
+		     conj(v[0][3]), conj(v[1][3]), conj(v[2][3]), conj(v[3][3]));
+  }
+
+  template<typename _Tp> inline mat4<_Tp> mat4<_Tp>::inverse() const    // Gauss-Jordan elimination with partial pivoting
+  {
+    mat4<_Tp> a(*this),      // As a evolves from original mat into identity
+      b(identity3D<_Tp>());   // b evolves from identity into inverse(a)
+    size_t i, j, i1;
+
+    // Loop over cols of a from left to right, eliminating above and below diag
+    for (j=0; j<4; j++) {   // Find largest pivot in column j among rows j..3
+      i1 = j;         // Row with largest pivot candidate
+      for (i=j+1; i<4; i++)
+	if (abs(a.v[i].n[j]) > abs(a.v[i1].n[j]))
+	  i1 = i;
+
+      // Swap rows i1 and j in a and b to put pivot on diagonal
+      swap(a.v[i1], a.v[j]);
+      swap(b.v[i1], b.v[j]);
+
+      // Scale row j to have a unit diagonal
+      if (a.v[j].n[j]==((_Tp)0))
+	ALGEBRA3_ERROR("mat4<_Tp>::inverse: singular matrix; can't invert\n");
+      b.v[j] /= a.v[j].n[j];
+      a.v[j] /= a.v[j].n[j];
+
+      // Eliminate off-diagonal elems in col j of a, doing identical ops to b
+      for (i=0; i<4; i++)
+	if (i!=j) {
+	  b.v[i] -= a.v[i].n[j]*b.v[j];
+	  a.v[i] -= a.v[i].n[j]*a.v[j];
+	}
+    }
+    return b;
+  }
+
+  template<typename _Tp> inline mat4<_Tp> mat4<_Tp>::conjugate() const {
+    return mat4<_Tp>(conj(v[0][0]), conj(v[0][1]), conj(v[0][2]), conj(v[0][3]),
+		     conj(v[1][0]), conj(v[1][1]), conj(v[1][2]), conj(v[1][3]),
+		     conj(v[2][0]), conj(v[2][1]), conj(v[2][2]), conj(v[2][3]),
+		     conj(v[3][0]), conj(v[3][1]), conj(v[3][2]), conj(v[3][3]));
+  }
+
+  template<typename _Tp> inline mat4<_Tp>& mat4<_Tp>::apply(_Tp (*fcn)(_Tp))
+  { v[VX].apply(fcn); v[VY].apply(fcn); v[VZ].apply(fcn); v[VW].apply(fcn);
+  return *this; }
+
+  template<typename _Tp> inline mat4<_Tp> mat4<_Tp>::identity()
+  { return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)1), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat4<_Tp> mat4<_Tp>::rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg, const typename rtti<_Tp>::value_type phaseDeg) {
+    typename rtti<_Tp>::value_type  angleRad = ( angleDeg * ((typename rtti<_Tp>::value_type)(ALGEBRA3_PI)) ) / ((typename rtti<_Tp>::value_type)180);
+    _Tp c = ((_Tp)cos(angleRad)),
+      s = ((_Tp)sin(angleRad));
+    _Tp eip, emip;
+    ALGEBRA3_eip_emip<typename rtti<_Tp>::value_type>(phaseDeg, eip, emip); // calculate e^(i*phaseDeg), e^(-i*phaseDeg)
+
+    if ((Axis1 == VZ) && (Axis2 == VW))
+      return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		       ((_Tp)0), ((_Tp)1), ((_Tp)0), ((_Tp)0),
+		       ((_Tp)0), ((_Tp)0), c, s * emip,
+		       ((_Tp)0), ((_Tp)0), -s * eip, c);
+    else if ((Axis1 == VY) && (Axis2 == VW))
+      return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		       0, c, ((_Tp)0), s * emip,
+		       ((_Tp)0), ((_Tp)0), ((_Tp)1), ((_Tp)0),
+		       ((_Tp)0), -s * eip, ((_Tp)0), c);
+    else if ((Axis1 == VY) && (Axis2 == VZ))
+      return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		       ((_Tp)0), c, s * emip, ((_Tp)0),
+		       ((_Tp)0), -s * eip, c, ((_Tp)0),
+		       ((_Tp)0), ((_Tp)0), ((_Tp)0), ((_Tp)1));
+    else if ((Axis1 == VX) && (Axis2 == VW))
+      return mat4<_Tp>(c, ((_Tp)0), ((_Tp)0), s * emip,
+		       ((_Tp)0), ((_Tp)1), ((_Tp)0), ((_Tp)0),
+		       ((_Tp)0), ((_Tp)0), ((_Tp)1), ((_Tp)0),
+		       -s * eip, ((_Tp)0), ((_Tp)0), c);
+    else if ((Axis1 == VX) && (Axis2 == VZ))
+      return mat4<_Tp>(c, ((_Tp)0), s * emip, ((_Tp)0),
+		       ((_Tp)0), ((_Tp)1), ((_Tp)0), ((_Tp)0),
+		       -s * eip, ((_Tp)0), c, ((_Tp)0),
+		       ((_Tp)0), ((_Tp)0), ((_Tp)0), ((_Tp)1));
+    else if ((Axis1 == VX) && (Axis2 == VY))
+      return mat4<_Tp>(c, s * emip, ((_Tp)0), ((_Tp)0),
+		       -s * eip, c, ((_Tp)0), ((_Tp)0),
+		       ((_Tp)0), ((_Tp)0), ((_Tp)1), ((_Tp)0),
+		       ((_Tp)0), ((_Tp)0), ((_Tp)0), ((_Tp)1));
+    else
+      ALGEBRA3_ERROR("mat4<_Tp>::rotation: incorrect Axis1 and/or Axis2 given\n");
+  }
+
+  template<typename _Tp> inline mat4<_Tp> mat4<_Tp>::rotation(size_t Axis1, size_t Axis2, const typename rtti<_Tp>::value_type angleDeg) {
+    return rotation(Axis1, Axis2, angleDeg, ((typename rtti<_Tp>::value_type)0));
+  }
+
+  // friends
+
+  template<typename _Tp> inline mat4<_Tp> operator - (const mat4<_Tp>& a)
+  { return mat4<_Tp>(-a.v[0], -a.v[1], -a.v[2], -a.v[3]); }
+
+  template<typename _Tp> inline mat4<_Tp> operator + (const mat4<_Tp>& a, const mat4<_Tp>& b)
+  { return mat4<_Tp>(a.v[0] + b.v[0], a.v[1] + b.v[1], a.v[2] + b.v[2],
+		     a.v[3] + b.v[3]); }
+
+  template<typename _Tp> inline mat4<_Tp> operator - (const mat4<_Tp>& a, const mat4<_Tp>& b)
+  { return mat4<_Tp>(a.v[0] - b.v[0], a.v[1] - b.v[1], a.v[2] - b.v[2], a.v[3] - b.v[3]); }
+
+  template<typename _Tp> inline mat4<_Tp> operator * (const mat4<_Tp>& a, const mat4<_Tp>& b) {
+#define ALGEBRA3_ROWCOL(i, j) a.v[i].n[0]*b.v[0][j] + a.v[i].n[1]*b.v[1][j] + \
+    a.v[i].n[2]*b.v[2][j] + a.v[i].n[3]*b.v[3][j]
+    return mat4<_Tp>(
+		     ALGEBRA3_ROWCOL(0,0), ALGEBRA3_ROWCOL(0,1), ALGEBRA3_ROWCOL(0,2), ALGEBRA3_ROWCOL(0,3),
+		     ALGEBRA3_ROWCOL(1,0), ALGEBRA3_ROWCOL(1,1), ALGEBRA3_ROWCOL(1,2), ALGEBRA3_ROWCOL(1,3),
+		     ALGEBRA3_ROWCOL(2,0), ALGEBRA3_ROWCOL(2,1), ALGEBRA3_ROWCOL(2,2), ALGEBRA3_ROWCOL(2,3),
+		     ALGEBRA3_ROWCOL(3,0), ALGEBRA3_ROWCOL(3,1), ALGEBRA3_ROWCOL(3,2), ALGEBRA3_ROWCOL(3,3)
+		     );
+#undef ALGEBRA3_ROWCOL
+  }
+
+  template<typename _Tp> inline mat4<_Tp> operator * (const mat4<_Tp>& a, const _Tp d)
+  { return mat4<_Tp>(a.v[0] * d, a.v[1] * d, a.v[2] * d, a.v[3] * d); }
+
+  template<typename _Tp> inline mat4<_Tp> operator * (const _Tp d, const mat4<_Tp>& a)
+  { return a*d; }
+
+  template<typename _Tp> inline mat4<_Tp> operator / (const mat4<_Tp>& a, const _Tp d)
+  { return mat4<_Tp>(a.v[0] / d, a.v[1] / d, a.v[2] / d, a.v[3] / d); }
+
+  template<typename _Tp> inline bool operator == (const mat4<_Tp>& a, const mat4<_Tp>& b)
+  { return (a.v[0] == b.v[0]) && (a.v[1] == b.v[1]) && (a.v[2] == b.v[2]) &&
+      (a.v[3] == b.v[3]); }
+
+  template<typename _Tp> inline bool operator != (const mat4<_Tp>& a, const mat4<_Tp>& b)
+  { return !(a == b); }
+
+  template<typename _Tp> inline ostream& operator << (ostream& s, const mat4<_Tp>& m)
+  { return s << m.v[VX] << '\n' << m.v[VY] << '\n' << m.v[VZ] << '\n' << m.v[VW]; }
+
+  template<typename _Tp> inline istream& operator >> (istream& s, mat4<_Tp>& m) {
+    mat4<_Tp>    m_tmp(((_Tp)0));
+
+    s >> m_tmp[VX] >> m_tmp[VY] >> m_tmp[VZ] >> m_tmp[VW];
+    if (s)
+      m = m_tmp;
+    return s;
+  }
+
+  template<typename _Tp> inline void swap(mat4<_Tp>& a, mat4<_Tp>& b)
+  { mat4<_Tp> tmp(a); a = b; b = tmp; }
+
+  template<typename _Tp> inline mat4<_Tp> conj(const mat4<_Tp>& a) { return a.conjugate(); }
+
+  template<typename _Tp> inline mat4<_Tp> diagonal(const vec4<_Tp>& v)
+  { return mat4<_Tp>(v[0], ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), v[1], ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), v[2], ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)0), v[3]); }
+
+  template<typename _Tp> inline mat4<_Tp> diagonal(const _Tp x0, const _Tp y1, const _Tp z2, const _Tp w3)
+  { return mat4<_Tp>(x0, ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), y1, ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), z2, ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)0), w3); }
+
+  template<typename _Tp> inline _Tp trace(const mat4<_Tp>& a) { return a[0][0] + a[1][1] + a[2][2] + a[3][3]; }
+
+  /****************************************************************
+   *                                                               *
+   *                2D functions and 3D functions                  *
+   *                                                               *
+   ****************************************************************/
+
+  template<typename _Tp> inline mat2<_Tp> identity1D(void)
+  { return mat2<_Tp>::identity(); }
+
+  template<typename _Tp> inline mat2<_Tp> translation1D(const _Tp& v)
+  { return mat2<_Tp>(((_Tp)1), v,
+		     ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat2<_Tp> scaling1D(const _Tp& scaleVal)
+  { return mat2<_Tp>(scaleVal, ((_Tp)0),
+		     ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat3<_Tp> identity2D(void)
+  { return mat3<_Tp>::identity(); }
+
+  template<typename _Tp> inline mat3<_Tp> translation2D(const vec2<_Tp>& v)
+  { return mat3<_Tp>(((_Tp)1), ((_Tp)0), v[VX],
+		     ((_Tp)0), ((_Tp)1), v[VY],
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat3<_Tp> rotation2D(const vec2<_Tp>& Center, const typename rtti<_Tp>::value_type angleDeg) {
+    typename rtti<_Tp>::value_type  angleRad = ( angleDeg * ((typename rtti<_Tp>::value_type)(ALGEBRA3_PI)) ) / ((typename rtti<_Tp>::value_type)180);
+    _Tp c = ((_Tp)cos(angleRad)),
+      s = ((_Tp)sin(angleRad));
+
+    return mat3<_Tp>(c, s, Center[VX] * (((_Tp)1) - c) - Center[VY] * s,
+		     -s, c, Center[VY] * (((_Tp)1) - c) + Center[VX] * s,
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1));
+  }
+
+  template<typename _Tp> inline mat3<_Tp> scaling2D(const vec2<_Tp>& scaleVec)
+  { return mat3<_Tp>(scaleVec[VX], ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), scaleVec[VY], ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat4<_Tp> identity3D(void)
+  { return mat4<_Tp>::identity(); }
+
+  template<typename _Tp> inline mat4<_Tp> translation3D(const vec3<_Tp>& v)
+  { return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), v[VX],
+		     ((_Tp)0), ((_Tp)1), ((_Tp)0), v[VY],
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1), v[VZ],
+		     ((_Tp)0), ((_Tp)0), ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat4<_Tp> rotation3D(vec3<_Tp> Axis, const typename rtti<_Tp>::value_type angleDeg) {
+    typename rtti<_Tp>::value_type  angleRad = ( angleDeg * ((typename rtti<_Tp>::value_type)(ALGEBRA3_PI)) ) / ((typename rtti<_Tp>::value_type)180);
+    _Tp c = ((_Tp)cos(angleRad)),
+      s = ((_Tp)sin(angleRad)),
+      t = ((_Tp)1) - c;
+
+    Axis.normalize();
+    return mat4<_Tp>(t * Axis[VX] * Axis[VX] + c,
+		     t * Axis[VX] * Axis[VY] + s * Axis[VZ],
+		     t * Axis[VX] * Axis[VZ] + s * Axis[VY],
+		     ((_Tp)0),
+		     t * Axis[VX] * Axis[VY] - s * Axis[VZ],
+		     t * Axis[VY] * Axis[VY] + c,
+		     t * Axis[VY] * Axis[VZ] + s * Axis[VX],
+		     ((_Tp)0),
+		     t * Axis[VX] * Axis[VZ] - s * Axis[VY],
+		     t * Axis[VY] * Axis[VZ] - s * Axis[VX],
+		     t * Axis[VZ] * Axis[VZ] + c,
+		     ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)0), ((_Tp)1));
+  }
+
+  template<typename _Tp> inline mat4<_Tp> scaling3D(const vec3<_Tp>& scaleVec)
+  { return mat4<_Tp>(scaleVec[VX], ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), scaleVec[VY], ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), scaleVec[VZ], ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)0), ((_Tp)1)); }
+
+  template<typename _Tp> inline mat4<_Tp> perspective3D(const _Tp d)
+  { return mat4<_Tp>(((_Tp)1), ((_Tp)0), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)1), ((_Tp)0), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1), ((_Tp)0),
+		     ((_Tp)0), ((_Tp)0), ((_Tp)1) / d, ((_Tp)0)); }
+
+#endif /* __CINT__ */
+
+  /* ******************* algebra3.h ends here ******************* */
+
+  /* ***************** algebra3aux.h begins here **************** */
+
+  //
+  //	Functions of general utility for use with "algebra3.h".
+  //
+  //	John Nagle
+  //	nagle@animats.com
+  //	This code may be freely used by others.
+  //
+
+  //
+  //	Vector utilities
+  //
+  //
+  //	MultiplyElementwise  --  element by element multiplication
+  //
+  template<typename _Tp> inline vec2<_Tp> MultiplyElementwise(const vec2<_Tp>& v1, const vec2<_Tp>& v2)
+  { return vec2<_Tp>(v1[0]*v2[0],v1[1]*v2[1]); }
+  template<typename _Tp> inline vec3<_Tp> MultiplyElementwise(const vec3<_Tp>& v1, const vec3<_Tp>& v2)
+  { return vec3<_Tp>(v1[0]*v2[0],v1[1]*v2[1],v1[2]*v2[2]); }
+  template<typename _Tp> inline vec4<_Tp> MultiplyElementwise(const vec4<_Tp>& v1, const vec4<_Tp>& v2)
+  { return vec4<_Tp>(v1[0]*v2[0],v1[1]*v2[1],v1[2]*v2[2],v1[3]*v2[3]); }
+
+  //
+  //	Matrix utilities
+  //
+
+  template<typename _Tp> mat3<_Tp> rotation2D(const mat2<_Tp>& m); // convert 2x2 rotation matrix to 3x3
+  template<typename _Tp> vec2<_Tp> ExtractTranslation(const mat3<_Tp>& pose); // extract translation vector
+  template<typename _Tp> vec2<_Tp> ExtractScaling(const mat3<_Tp>& mat);
+  template<typename _Tp> mat2<_Tp> ExtractRotation(const mat3<_Tp>& pose); // extract rotation matrix from transformation matrix
+  template<typename _Tp> typename rtti<_Tp>::value_type PointToLine(const vec2<_Tp>& point, const vec3<_Tp>& line); // unsigned distance from a point to a line (2D)
+  template<typename _Tp> mat4<_Tp> rotation3D(const mat3<_Tp>& m); // convert 3x3 rotation matrix to 4x4
+  template<typename _Tp> vec3<_Tp> ExtractTranslation(const mat4<_Tp>& pose); // extract translation vector
+  template<typename _Tp> vec3<_Tp> ExtractScaling(const mat4<_Tp>& mat);
+  template<typename _Tp> mat3<_Tp> ExtractRotation(const mat4<_Tp>& pose); // extract rotation matrix from transformation matrix
+  template<typename _Tp> typename rtti<_Tp>::value_type PointToPlane(const vec3<_Tp>& point, const vec4<_Tp>& plane); // unsigned distance from a point to a plane (3D)
+
+#ifndef __CINT__
+
+  //
+  //	rotation2D -- convert 2x2 rotation matrix to 3x3
+  //
+  template<typename _Tp> inline mat3<_Tp> rotation2D(const mat2<_Tp>& m)
+  { return mat3<_Tp>(m[0][0],m[0][1],((_Tp)0),
+		     m[1][0],m[1][1],((_Tp)0),
+		     ((_Tp)0),((_Tp)0),((_Tp)1));
+  }
+
+  //
+  //	Matrix utilities for affine matrices.
+  //
+  //	The input matrix must be affine, but need not be orthogonal.
+  //	In other words, it may contain scaling, rotation, and translation,
+  //	but not perspective projection.
+  //
+  //	ExtractTranslation  --  extract translation vector
+  //
+  template<typename _Tp> inline vec2<_Tp> ExtractTranslation(const mat3<_Tp>& pose)
+  {	//	Ref. Foley and Van Dam, 2nd ed, p. 217.
+    return vec2<_Tp>(pose[0][2],pose[1][2]);
+  }
+
+  //
+  //	ExtractScaling
+  //
+  template<typename _Tp> inline vec2<_Tp> ExtractScaling(const mat3<_Tp>& mat)
+  {
+    //	Per Valerie Demers, Softimage.
+    //	Transposed for mat3<_Tp> matrices
+    return vec2<_Tp>(
+		     sqrt( abs( mat[ 0 ][ 0 ] * mat[ 0 ][ 0 ] ) + abs( mat[ 1 ][ 0 ] * mat[ 1 ][ 0 ] ) ),
+		     sqrt( abs( mat[ 0 ][ 1 ] * mat[ 0 ][ 1 ] ) + abs( mat[ 1 ][ 1 ] * mat[ 1 ][ 1 ] ) ));
+  }
+
+  //
+  //
+  //	ExtractRotation  --  extract rotation matrix from transformation matrix
+  //
+  template<typename _Tp> inline mat2<_Tp> ExtractRotation(const mat3<_Tp>& pose)
+  {
+    vec2<_Tp> scale(ExtractScaling(pose));	// get scaling
+    //	Compute inverse of scaling
+    vec2<_Tp> invscale(((_Tp)1) / scale[0],((_Tp)1) / scale[1]);
+    //	Apply inverse of scaling as a transformation, to get unit scaling.
+    mat3<_Tp> unscaled(pose*scaling2D(invscale)); // unscale pose
+    //	Return pure rotation matrix
+    return mat2<_Tp>(						// drop last column and row
+		     vec2<_Tp>(unscaled[VX],VZ),
+		     vec2<_Tp>(unscaled[VY],VZ));
+  }
+
+  //
+  //	PointToLine  --  unsigned distance from a point to a line (2D)
+  //
+  //	Outside the line yields positive values
+  //
+  template<typename _Tp> inline typename rtti<_Tp>::value_type PointToLine(const vec2<_Tp>& point, const vec3<_Tp>& line)
+  {
+    vec2<_Tp> lineNormal(line[0],line[1]);
+    // assert(((double)(abs(lineNormal.length2() - ((typename rtti<_Tp>::value_type)1)))) < ((double)0.00001)); // check normalized
+    typename rtti<_Tp>::value_type dist = abs(point * lineNormal + line[2]) / lineNormal.length();
+    return dist;
+  }
+
+  //
+  //	rotation3D -- convert 3x3 rotation matrix to 4x4
+  //
+  template<typename _Tp> inline mat4<_Tp> rotation3D(const mat3<_Tp>& m)
+  { return mat4<_Tp>(m[0][0],m[0][1],m[0][2],((_Tp)0),
+		     m[1][0],m[1][1],m[1][2],((_Tp)0),
+		     m[2][0],m[2][1],m[2][2],((_Tp)0),
+		     ((_Tp)0),((_Tp)0),((_Tp)0),((_Tp)1));
+  }
+
+  //
+  //	Matrix utilities for affine matrices.
+  //
+  //	The input matrix must be affine, but need not be orthogonal.
+  //	In other words, it may contain scaling, rotation, and translation,
+  //	but not perspective projection.
+  //
+  //	ExtractTranslation  --  extract translation vector
+  //
+  template<typename _Tp> inline vec3<_Tp> ExtractTranslation(const mat4<_Tp>& pose)
+  {	//	Ref. Foley and Van Dam, 2nd ed, p. 217.
+    return vec3<_Tp>(pose[0][3],pose[1][3],pose[2][3]);
+  }
+
+  //
+  //	ExtractScaling
+  //
+  template<typename _Tp> inline vec3<_Tp> ExtractScaling(const mat4<_Tp>& mat)
+  {
+    //	Per Valerie Demers, Softimage.
+    //	Transposed for mat4<_Tp> matrices
+    return vec3<_Tp>(
+		     sqrt( abs( mat[ 0 ][ 0 ] * mat[ 0 ][ 0 ] ) + abs( mat[ 1 ][ 0 ] * mat[ 1 ][ 0 ] ) + abs( mat[ 2 ][ 0 ] * mat[ 2 ][ 0 ] ) ),
+		     sqrt( abs( mat[ 0 ][ 1 ] * mat[ 0 ][ 1 ] ) + abs( mat[ 1 ][ 1 ] * mat[ 1 ][ 1 ] ) + abs( mat[ 2 ][ 1 ] * mat[ 2 ][ 1 ] ) ),
+		     sqrt( abs( mat[ 0 ][ 2 ] * mat[ 0 ][ 2 ] ) + abs( mat[ 1 ][ 2 ] * mat[ 1 ][ 2 ] ) + abs( mat[ 2 ][ 2 ] * mat[ 2 ][ 2 ] ) ));
+  }
+
+  //
+  //
+  //	ExtractRotation  --  extract rotation matrix from transformation matrix
+  //
+  template<typename _Tp> inline mat3<_Tp> ExtractRotation(const mat4<_Tp>& pose)
+  {
+    vec3<_Tp> scale(ExtractScaling(pose));	// get scaling
+    //	Compute inverse of scaling
+    vec3<_Tp> invscale(((_Tp)1) / scale[0],((_Tp)1) / scale[1],((_Tp)1) / scale[2]);
+    //	Apply inverse of scaling as a transformation, to get unit scaling.
+    mat4<_Tp> unscaled(pose*scaling3D(invscale)); // unscale pose
+    //	Return pure rotation matrix
+    return mat3<_Tp>(						// drop last column and row
+		     vec3<_Tp>(unscaled[VX],VW),
+		     vec3<_Tp>(unscaled[VY],VW),
+		     vec3<_Tp>(unscaled[VZ],VW));
+  }
+
+  //
+  //	PointToPlane  --  unsigned distance from a point to a plane (3D)
+  //
+  //	Outside the plane yields positive values
+  //
+  template<typename _Tp> inline typename rtti<_Tp>::value_type PointToPlane(const vec3<_Tp>& point, const vec4<_Tp>& plane)
+  {
+    vec3<_Tp> planeNormal(plane[0],plane[1],plane[2]);
+    // assert(((double)(abs(planeNormal.length2() - ((typename rtti<_Tp>::value_type)1)))) < ((double)0.00001)); // check normalized
+    typename rtti<_Tp>::value_type dist = abs(point * planeNormal + plane[3]) / planeNormal.length();
+    return dist;
+  }
+
+#endif /* __CINT__ */
+
+#ifdef fmin
+#undef fmin                 // allow as function names
+#endif /* fmin */
+
+#ifdef fmax
+#undef fmax                 // allow as function names
+#endif /* fmax */
+
+  //
+  //	fmin, fmax  -- min, max for various types
+  //
+  //
+  template<typename _Tp> inline _Tp fmin(_Tp x, _Tp y) { return (x < y ? x : y); }
+  template<typename _Tp> inline _Tp fmax(_Tp x, _Tp y) { return (x > y ? x : y); }
+
+  template<typename _Tp> inline vec2<_Tp> fmin(const vec2<_Tp>& v1, const vec2<_Tp>& v2)
+  { return vec2<_Tp>(fmin(v1[0],v2[0]),fmin(v1[1],v2[1])); }
+  template<typename _Tp> inline vec2<_Tp> fmax(const vec2<_Tp>& v1, const vec2<_Tp>& v2)
+  { return vec2<_Tp>(fmax(v1[0],v2[0]),fmax(v1[1],v2[1])); }
+
+  template<typename _Tp> inline vec3<_Tp> fmin(const vec3<_Tp>& v1, const vec3<_Tp>& v2)
+  { return vec3<_Tp>(fmin(v1[0],v2[0]),fmin(v1[1],v2[1]),fmin(v1[2],v2[2])); }
+  template<typename _Tp> inline vec3<_Tp> fmax(const vec3<_Tp>& v1, const vec3<_Tp>& v2)
+  { return vec3<_Tp>(fmax(v1[0],v2[0]),fmax(v1[1],v2[1]),fmax(v1[2],v2[2])); }
+
+  template<typename _Tp> inline vec4<_Tp> fmin(const vec4<_Tp>& v1, const vec4<_Tp>& v2)
+  { return vec4<_Tp>(fmin(v1[0],v2[0]),fmin(v1[1],v2[1]),fmin(v1[2],v2[2]),fmin(v1[3],v2[3])); }
+  template<typename _Tp> inline vec4<_Tp> fmax(const vec4<_Tp>& v1, const vec4<_Tp>& v2)
+  { return vec4<_Tp>(fmax(v1[0],v2[0]),fmax(v1[1],v2[1]),fmax(v1[2],v2[2]),fmax(v1[3],v2[3])); }
+
+  /* ****************** algebra3aux.h ends here ***************** */
+
+  /* Declarations of functions in algebra3.cxx */
+
+  /* Nothing there !!! All functions are inline !!! */
+
+} /* namespace aux */
+
+#endif /* __ALGEBRA3__ */
+
+/* End of file algebra3 */
+

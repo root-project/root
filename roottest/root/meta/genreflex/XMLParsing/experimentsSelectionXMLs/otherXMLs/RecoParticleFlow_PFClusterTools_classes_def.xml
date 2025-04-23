@@ -1,0 +1,19 @@
+<lcgdict>
+  <class name="pftools::TreeUtility"/>
+  <class name="pftools::Calibrator"/>
+  <class name="pftools::DetectorElement"/>    
+  <class name="pftools::LinearCalibrator"/>     
+  <class name="pftools::SpaceManager"/> 
+  <class name="pftools::Deposition"/>
+  <class name="pftools::PFToolsException"/> 
+  <class name="pftools::ParticleDeposit"/>
+  <class name="pftools::SpaceVoxel"/>
+  <class name="pftools::Exercises3"/>
+  <class name="pftools::IO" />
+  <class name="pftools::PFClusterCalibration" />
+  <class name="pftools::Erl_mlp" />
+  <class name="pftools::CalibCompare" />
+  <class name="std::vector<pftools::ParticleDeposit*>"/>
+  <class name="std::vector<boost::shared_ptr<pftools::DetectorElement> >"/>
+  <class name="std::vector<boost::shared_ptr<pftools::ParticleDeposit> >"/>
+ </lcgdict>

@@ -1,0 +1,18 @@
+<lcgdict>
+  <class name="Trk::Vertex" >
+    <field name="s_numberOfInstantiations" transient="true" />
+  </class>
+  <class name="Trk::RecVertex" />
+  <class name="Trk::LinearizedTrack" />
+  <class name="VxContainer" id="639B478A-7355-4430-B6FC-F0A6148A2E87" />
+  <class name="DataVector<Trk::VxCandidate>" />
+  <class name="std::vector<Trk::VxCandidate*>" />
+  <class name="Trk::VxCandidate" />
+  <class name="Trk::VxTrackAtVertex" >
+    <field name="m_linState" transient="true" />
+    <field name="m_ImpactPoint3dAtaPlane" transient="true" />
+    <field name="m_trackOrParticleLink" transient="true" />
+  </class>
+  <class name="std::vector<Trk::VxTrackAtVertex*>" />
+  <class name="Trk::ExtendedVxCandidate" />
+</lcgdict>

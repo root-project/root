@@ -1,0 +1,382 @@
+<lcgdict>
+
+  <!-- Lower Level Classes -->
+
+
+  <class name="TopRec::TTbarJetsBase" />
+
+  <class name="TopRec::TTbarHadronicTop" />
+  <class name="TopRec::TTbarHadronicTopB" />
+
+  <class name="TopRec::TTbarLeptonicTop<ElectronContainer>" />
+  <class name="TopRec::TTbarLeptonicTop<Analysis::MuonContainer>" />
+  <class name="TopRec::TTbarLeptonicTop<Analysis::TauJetContainer>" />
+  <class name="TopRec::TTbarLeptonicTop<TruthParticleContainer>" />
+
+
+  <!-- Fully Hadronic TTbar Classes -->
+
+
+  <!-- TTbarJJ -->
+  <class name="TopRec::TTbarJJ" />
+  <class name="std::vector<TopRec::TTbarJJ>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarJJ*,std::vector<TopRec::TTbarJJ> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarJJ*,std::vector<TopRec::TTbarJJ> >" />
+  <class name="TopRec::TTbarJJContainer" id="5AF11B70-E265-4A29-9851-0B1A4B6A6C73" />
+
+  <!-- TTbarJJTop -->
+  <class name="TopRec::TTbarJJTop" />
+  <class name="std::vector<TopRec::TTbarJJTop>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarJJTop*,std::vector<TopRec::TTbarJJTop> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarJJTop*,std::vector<TopRec::TTbarJJTop> >" />
+  <class name="TopRec::TTbarJJTopContainer" id="5F05F6E0-0C43-4742-BADA-9FD2E1C5514F" />
+
+
+  <!-- Single Lepton Classes -->
+
+  
+  <!-- TTbarLJ -->
+  <class name="TopRec::TTbarEJ" />
+  <class name="std::vector<TopRec::TTbarEJ>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEJ*,std::vector<TopRec::TTbarEJ> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEJ*,std::vector<TopRec::TTbarEJ> >" />
+  <class name="TopRec::TTbarEJContainer" id="553D385C-696C-4263-9C05-DEC55BF8A7C1" />
+
+  <class name="TopRec::TTbarMuJ" />
+  <class name="std::vector<TopRec::TTbarMuJ>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuJ*,std::vector<TopRec::TTbarMuJ> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuJ*,std::vector<TopRec::TTbarMuJ> >" />
+  <class name="TopRec::TTbarMuJContainer" id="B08BB276-F86A-4579-8F3C-95504C5E86BC" />
+
+  <class name="TopRec::TTbarTauJ" />
+  <class name="std::vector<TopRec::TTbarTauJ>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauJ*,std::vector<TopRec::TTbarTauJ> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauJ*,std::vector<TopRec::TTbarTauJ> >" />
+  <class name="TopRec::TTbarTauJContainer" id="3B6709EE-E684-4CE4-8DD7-6D662A504937" />
+
+  <class name="TopRec::TTbarTruthJ" />
+  <class name="std::vector<TopRec::TTbarTruthJ>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthJ*,std::vector<TopRec::TTbarTruthJ> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthJ*,std::vector<TopRec::TTbarTruthJ> >" />
+  <class name="TopRec::TTbarTruthJContainer" id="CDAD1649-4B6B-4958-9CE4-A3BAFB496760" />
+
+
+  <!-- TTbarLJMet -->
+  <class name="TopRec::TTbarEJMet" />
+  <class name="std::vector<TopRec::TTbarEJMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEJMet*,std::vector<TopRec::TTbarEJMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEJMet*,std::vector<TopRec::TTbarEJMet> >" />
+  <class name="TopRec::TTbarEJMetContainer" id="51164AB3-15B3-4AD9-A016-B6C29B1504E7" />
+
+  <class name="TopRec::TTbarMuJMet" />
+  <class name="std::vector<TopRec::TTbarMuJMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuJMet*,std::vector<TopRec::TTbarMuJMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuJMet*,std::vector<TopRec::TTbarMuJMet> >" />
+  <class name="TopRec::TTbarMuJMetContainer" id="8D55C481-CC0C-41A9-B51A-2B25EC35718A" />
+
+  <class name="TopRec::TTbarTauJMet" />
+  <class name="std::vector<TopRec::TTbarTauJMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauJMet*,std::vector<TopRec::TTbarTauJMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauJMet*,std::vector<TopRec::TTbarTauJMet> >" />
+  <class name="TopRec::TTbarTauJMetContainer" id="22432819-272F-4C2A-A940-EE047178651B" />
+
+  <class name="TopRec::TTbarTruthJMet" />
+  <class name="std::vector<TopRec::TTbarTruthJMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthJMet*,std::vector<TopRec::TTbarTruthJMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthJMet*,std::vector<TopRec::TTbarTruthJMet> >" />
+  <class name="TopRec::TTbarTruthJMetContainer" id="4F095542-198B-49A0-BF94-56E267FF51ED" />
+
+
+  <!-- TTbarLJTop -->
+  <class name="TopRec::TTbarEJTop" />
+  <class name="std::vector<TopRec::TTbarEJTop>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEJTop*,std::vector<TopRec::TTbarEJTop> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEJTop*,std::vector<TopRec::TTbarEJTop> >" />
+  <class name="TopRec::TTbarEJTopContainer" id="F835CE04-D8B8-4A6A-A8F8-BE6CCD0660EC" />
+
+  <class name="TopRec::TTbarMuJTop" />
+  <class name="std::vector<TopRec::TTbarMuJTop>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuJTop*,std::vector<TopRec::TTbarMuJTop> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuJTop*,std::vector<TopRec::TTbarMuJTop> >" />
+  <class name="TopRec::TTbarMuJTopContainer" id="3E669F7D-1296-478E-B547-13B470F74F20" />
+
+  <class name="TopRec::TTbarTauJTop" />
+  <class name="std::vector<TopRec::TTbarTauJTop>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauJTop*,std::vector<TopRec::TTbarTauJTop> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauJTop*,std::vector<TopRec::TTbarTauJTop> >" />
+  <class name="TopRec::TTbarTauJTopContainer" id="CE0B56A4-BA5A-484D-A5C8-1D38899BF2C2" />
+
+  <class name="TopRec::TTbarTruthJTop" />
+  <class name="std::vector<TopRec::TTbarTruthJTop>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthJTop*,std::vector<TopRec::TTbarTruthJTop> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthJTop*,std::vector<TopRec::TTbarTruthJTop> >" />
+  <class name="TopRec::TTbarTruthJTopContainer" id="C860710B-84DD-4D00-A950-D50B1E4222ED" />
+
+  <!-- Classes Needed for TTbarLJDiTops(Fitted) -->
+  <class name="TopRec::TTbarHadronicTopBAccessor" />
+  <class name="TopRec::RescaledJetCollectionBase" />
+  <!-- <class name="boost::shared_ptr<JetCollection> " /> -->
+
+  <!-- TTbarLJDiTops -->
+  <class name="TopRec::TTbarEJDiTops" />
+  <class name="std::vector<TopRec::TTbarEJDiTops>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEJDiTops*,std::vector<TopRec::TTbarEJDiTops> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEJDiTops*,std::vector<TopRec::TTbarEJDiTops> >" />
+  <class name="TopRec::TTbarEJDiTopsContainer" id="6EA3A669-CE5F-4A38-A467-6B3E9F7FB376" />
+
+  <class name="TopRec::TTbarMuJDiTops" />
+  <class name="std::vector<TopRec::TTbarMuJDiTops>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuJDiTops*,std::vector<TopRec::TTbarMuJDiTops> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuJDiTops*,std::vector<TopRec::TTbarMuJDiTops> >" />
+  <class name="TopRec::TTbarMuJDiTopsContainer" id="9C0639B1-FB77-40BD-B20C-6E1E390BCD98" />
+
+  <class name="TopRec::TTbarTauJDiTops" />
+  <class name="std::vector<TopRec::TTbarTauJDiTops>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauJDiTops*,std::vector<TopRec::TTbarTauJDiTops> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauJDiTops*,std::vector<TopRec::TTbarTauJDiTops> >" />
+  <class name="TopRec::TTbarTauJDiTopsContainer" id="DC56F30C-96D4-4076-9B65-FDB44B43CEA6" />
+
+  <class name="TopRec::TTbarTruthJDiTops" />
+  <class name="std::vector<TopRec::TTbarTruthJDiTops>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthJDiTops*,std::vector<TopRec::TTbarTruthJDiTops> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthJDiTops*,std::vector<TopRec::TTbarTruthJDiTops> >" />
+  <class name="TopRec::TTbarTruthJDiTopsContainer" id="731230CA-1F4C-48DF-90C7-3FA5E8287CD2" />
+  
+
+  <!-- TTbarLJDiTopsFitted -->
+  <class name="TopRec::TTbarEJDiTopsFitted" />
+  <class name="std::vector<TopRec::TTbarEJDiTopsFitted>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEJDiTopsFitted*,std::vector<TopRec::TTbarEJDiTopsFitted > >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEJDiTopsFitted*,std::vector<TopRec::TTbarEJDiTopsFitted > >" />
+  <class name="TopRec::TTbarEJDiTopsFittedContainer" id="E88922E9-0ECF-465D-A548-45741E7E922A" />
+
+  <class name="TopRec::TTbarMuJDiTopsFitted" />
+  <class name="std::vector<TopRec::TTbarMuJDiTopsFitted>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuJDiTopsFitted*,std::vector<TopRec::TTbarMuJDiTopsFitted> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuJDiTopsFitted*,std::vector<TopRec::TTbarMuJDiTopsFitted> >" />
+  <class name="TopRec::TTbarMuJDiTopsFittedContainer" id="A1A963F4-E538-4D61-8AF9-503B360307D5" />
+
+  <class name="TopRec::TTbarTauJDiTopsFitted" />
+  <class name="std::vector<TopRec::TTbarTauJDiTopsFitted>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauJDiTopsFitted*,std::vector<TopRec::TTbarTauJDiTopsFitted> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauJDiTopsFitted*,std::vector<TopRec::TTbarTauJDiTopsFitted> >" />
+  <class name="TopRec::TTbarTauJDiTopsFittedContainer" id="AA719221-4345-4B23-883A-FC4D1EE7DA63" />
+
+  <class name="TopRec::TTbarTruthJDiTopsFitted" />
+  <class name="std::vector<TopRec::TTbarTruthJDiTopsFitted>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthJDiTopsFitted*,std::vector<TopRec::TTbarTruthJDiTopsFitted> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthJDiTopsFitted*,std::vector<TopRec::TTbarTruthJDiTopsFitted> >" />
+  <class name="TopRec::TTbarTruthJDiTopsFittedContainer" id="0A10773E-46B8-49DD-862F-E3F614640520" />
+
+
+  <!-- Dilepton TTbar Classes -->
+
+
+  <!-- TTbarLL -->
+  <class name="TopRec::TTbarEE" />
+  <class name="std::vector<TopRec::TTbarEE>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEE*,std::vector<TopRec::TTbarEE> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEE*,std::vector<TopRec::TTbarEE> >" />
+  <class name="TopRec::TTbarEEContainer" id="D69A1DA8-6128-443D-BCFA-8BE39A66AEC7" />
+
+  <class name="TopRec::TTbarEMu" />
+  <class name="std::vector<TopRec::TTbarEMu>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEMu*,std::vector<TopRec::TTbarEMu> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEMu*,std::vector<TopRec::TTbarEMu> >" />
+  <class name="TopRec::TTbarEMuContainer" id="AAB22E66-A533-48FF-AFC2-33CFDEA26E6A" />
+
+  <class name="TopRec::TTbarETau" />
+  <class name="std::vector<TopRec::TTbarETau>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarETau*,std::vector<TopRec::TTbarETau> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarETau*,std::vector<TopRec::TTbarETau> >" />
+  <class name="TopRec::TTbarETauContainer" id="F93CE08E-DAF4-4D38-A3CB-CD2B6B9B7CD2" />
+
+  <class name="TopRec::TTbarETrack" />
+  <class name="std::vector<TopRec::TTbarETrack>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarETrack*,std::vector<TopRec::TTbarETrack> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarETrack*,std::vector<TopRec::TTbarETrack> >" />
+  <class name="TopRec::TTbarETrackContainer" id="8B34ECC4-AD88-4608-80EA-46157FA23DF3" />
+
+  <class name="TopRec::TTbarMuMu" />
+  <class name="std::vector<TopRec::TTbarMuMu>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuMu*,std::vector<TopRec::TTbarMuMu> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuMu*,std::vector<TopRec::TTbarMuMu> >" />
+  <class name="TopRec::TTbarMuMuContainer" id="BF419E72-4BD3-483B-9401-1A07AC2C9D71" />
+
+  <class name="TopRec::TTbarMuTau" />
+  <class name="std::vector<TopRec::TTbarMuTau>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuTau*,std::vector<TopRec::TTbarMuTau> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuTau*,std::vector<TopRec::TTbarMuTau> >" />
+  <class name="TopRec::TTbarMuTauContainer" id="B5EAFC1A-9F51-4D8F-8C06-4BC37EABCF46" />
+
+  <class name="TopRec::TTbarMuTrack" />
+  <class name="std::vector<TopRec::TTbarMuTrack>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuTrack*,std::vector<TopRec::TTbarMuTrack> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuTrack*,std::vector<TopRec::TTbarMuTrack> >" />
+  <class name="TopRec::TTbarMuTrackContainer" id="F9CB67C4-A2C0-46E6-8AC3-D72EC506B157" />
+
+  <class name="TopRec::TTbarTauTau" />
+  <class name="std::vector<TopRec::TTbarTauTau>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauTau*,std::vector<TopRec::TTbarTauTau> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauTau*,std::vector<TopRec::TTbarTauTau> >" />
+
+  <class name="TopRec::TTbarTruthTruth" />
+  <class name="std::vector<TopRec::TTbarTruthTruth>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthTruth*,std::vector<TopRec::TTbarTruthTruth> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthTruth*,std::vector<TopRec::TTbarTruthTruth> >" />
+  <class name="TopRec::TTbarTauTauContainer" id="C7CC0A3D-B5F5-43D9-810B-E071B33FC03C" />
+  <class name="TopRec::TTbarTruthTruthContainer" id="62A397B0-2BDC-4840-B00D-4563AA265632" />
+
+
+  <!-- TTbarLLJets -->
+  <class name="TopRec::TTbarEEJets" />
+  <class name="std::vector<TopRec::TTbarEEJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEEJets*,std::vector<TopRec::TTbarEEJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEEJets*,std::vector<TopRec::TTbarEEJets> >" />
+  <class name="TopRec::TTbarEEJetsContainer" id="BD5770C5-1CBF-4A5E-AF18-A25F6ACD9FAD" />
+
+  <class name="TopRec::TTbarEMuJets" />
+  <class name="std::vector<TopRec::TTbarEMuJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEMuJets*,std::vector<TopRec::TTbarEMuJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEMuJets*,std::vector<TopRec::TTbarEMuJets> >" />
+  <class name="TopRec::TTbarEMuJetsContainer" id="480845A3-DFC9-40E8-B14E-A96E4C15C8B9" />
+
+  <class name="TopRec::TTbarETauJets" />
+  <class name="std::vector<TopRec::TTbarETauJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarETauJets*,std::vector<TopRec::TTbarETauJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarETauJets*,std::vector<TopRec::TTbarETauJets> >" />
+  <class name="TopRec::TTbarETauJetsContainer" id="19A96A8A-085D-4B69-8BC9-5B55573500EF" />
+
+  <class name="TopRec::TTbarETrackJets" />
+  <class name="std::vector<TopRec::TTbarETrackJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarETrackJets*,std::vector<TopRec::TTbarETrackJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarETrackJets*,std::vector<TopRec::TTbarETrackJets> >" />
+  <class name="TopRec::TTbarETrackJetsContainer" id="65BB969C-BFC6-4FC3-9CDC-A5A6E811FCE8" />
+
+  <class name="TopRec::TTbarMuMuJets" />
+  <class name="std::vector<TopRec::TTbarMuMuJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuMuJets*,std::vector<TopRec::TTbarMuMuJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuMuJets*,std::vector<TopRec::TTbarMuMuJets> >" />
+  <class name="TopRec::TTbarMuMuJetsContainer" id="C63394D5-A180-4875-96A9-349EDB69A9A7" />
+
+  <class name="TopRec::TTbarMuTauJets" />
+  <class name="std::vector<TopRec::TTbarMuTauJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuTauJets*,std::vector<TopRec::TTbarMuTauJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuTauJets*,std::vector<TopRec::TTbarMuTauJets> >" />
+  <class name="TopRec::TTbarMuTauJetsContainer" id="CC139D23-F249-40FA-9527-D59DB80E0232" />
+
+  <class name="TopRec::TTbarMuTrackJets" />
+  <class name="std::vector<TopRec::TTbarMuTrackJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuTrackJets*,std::vector<TopRec::TTbarMuTrackJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuTrackJets*,std::vector<TopRec::TTbarMuTrackJets> >" />
+  <class name="TopRec::TTbarMuTrackJetsContainer" id="5C097364-62AE-4891-B500-0BBB6AF519B0" />
+
+  <class name="TopRec::TTbarTauTauJets" />
+  <class name="std::vector<TopRec::TTbarTauTauJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauTauJets*,std::vector<TopRec::TTbarTauTauJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauTauJets*,std::vector<TopRec::TTbarTauTauJets> >" />
+  <class name="TopRec::TTbarTauTauJetsContainer" id="08F0DB5F-81FF-435B-89A0-CBAE73ACA184" />
+
+  <class name="TopRec::TTbarTruthTruthJets" />
+  <class name="std::vector<TopRec::TTbarTruthTruthJets>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthTruthJets*,std::vector<TopRec::TTbarTruthTruthJets> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthTruthJets*,std::vector<TopRec::TTbarTruthTruthJets> >" />
+  <class name="TopRec::TTbarTruthTruthJetsContainer" id="3652B300-310D-45ED-8BEE-9B1D013BE343" />
+
+
+  <!-- TTbarLLJetsMet -->
+  <class name="TopRec::TTbarEEJetsMet" />
+  <class name="std::vector<TopRec::TTbarEEJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEEJetsMet*,std::vector<TopRec::TTbarEEJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEEJetsMet*,std::vector<TopRec::TTbarEEJetsMet> >" />
+  <class name="TopRec::TTbarEEJetsMetContainer" id="9FE73A4C-B311-4B99-A2ED-BAD227A740CB" />
+
+  <class name="TopRec::TTbarEMuJetsMet" />
+  <class name="std::vector<TopRec::TTbarEMuJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarEMuJetsMet*,std::vector<TopRec::TTbarEMuJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarEMuJetsMet*,std::vector<TopRec::TTbarEMuJetsMet> >" />
+  <class name="TopRec::TTbarEMuJetsMetContainer" id="D06ACF94-29D3-41C1-830F-A4E9E2FE758A" />
+
+  <class name="TopRec::TTbarETauJetsMet" />
+  <class name="std::vector<TopRec::TTbarETauJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarETauJetsMet*,std::vector<TopRec::TTbarETauJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarETauJetsMet*,std::vector<TopRec::TTbarETauJetsMet> >" />
+  <class name="TopRec::TTbarETauJetsMetContainer" id="D342BCF8-9C71-47F2-8437-69B9AC43AE2E" />
+
+  <class name="TopRec::TTbarETrackJetsMet" />
+  <class name="std::vector<TopRec::TTbarETrackJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarETrackJetsMet*,std::vector<TopRec::TTbarETrackJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarETrackJetsMet*,std::vector<TopRec::TTbarETrackJetsMet> >" />
+  <class name="TopRec::TTbarETrackJetsMetContainer" id="0573765D-3BD7-469E-B922-3E3720AF65E8" />
+
+  <class name="TopRec::TTbarMuMuJetsMet" />
+  <class name="std::vector<TopRec::TTbarMuMuJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuMuJetsMet*,std::vector<TopRec::TTbarMuMuJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuMuJetsMet*,std::vector<TopRec::TTbarMuMuJetsMet> >" />
+  <class name="TopRec::TTbarMuMuJetsMetContainer" id="BC742BE8-94A4-46CE-A40C-B0EC7B95A0F2" />
+
+  <class name="TopRec::TTbarMuTauJetsMet" />
+  <class name="std::vector<TopRec::TTbarMuTauJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuTauJetsMet*,std::vector<TopRec::TTbarMuTauJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuTauJetsMet*,std::vector<TopRec::TTbarMuTauJetsMet> >" />
+  <class name="TopRec::TTbarMuTauJetsMetContainer" id="E864AD8E-7F2A-4C1F-B83F-95B2ECF33F73" />
+
+  <class name="TopRec::TTbarMuTrackJetsMet" />
+  <class name="std::vector<TopRec::TTbarMuTrackJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarMuTrackJetsMet*,std::vector<TopRec::TTbarMuTrackJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarMuTrackJetsMet*,std::vector<TopRec::TTbarMuTrackJetsMet> >" />
+  <class name="TopRec::TTbarMuTrackJetsMetContainer" id="96817829-54C6-4034-B4AC-669993CCFB8A" />
+
+  <class name="TopRec::TTbarTauTauJetsMet" />
+  <class name="std::vector<TopRec::TTbarTauTauJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTauTauJetsMet*,std::vector<TopRec::TTbarTauTauJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTauTauJetsMet*,std::vector<TopRec::TTbarTauTauJetsMet> >" />
+  <class name="TopRec::TTbarTauTauJetsMetContainer" id="75ED3B18-4930-4755-9ADE-30C8A2450D4C" />
+
+  <class name="TopRec::TTbarTruthTruthJetsMet" />
+  <class name="std::vector<TopRec::TTbarTruthTruthJetsMet>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TTbarTruthTruthJetsMet*,std::vector<TopRec::TTbarTruthTruthJetsMet> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TTbarTruthTruthJetsMet*,std::vector<TopRec::TTbarTruthTruthJetsMet> >" />
+  <class name="TopRec::TTbarTruthTruthJetsMetContainer" id="0A3F5CDC-60D6-4CD5-9B4E-83F64D7AA27E" />
+
+
+  <!-- High Pt TopJet Classes -->
+
+
+  <class name="TopRec::TopJet" />
+
+
+  <!-- TopJetHadronic -->
+  <class name="TopRec::TopJetHadronic" />
+  <class name="std::vector<TopRec::TopJetHadronic>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopJetHadronic*,std::vector<TopRec::TopJetHadronic> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopJetHadronic*,std::vector<TopRec::TopJetHadronic> >" />
+  <class name="TopRec::TopJetHadronicContainer" id="C3055468-5A2D-4C6C-B1B9-65D297F2E1A4" />
+
+  
+  <!-- TopJetLeptonic -->
+  <class name="TopRec::TopJetElectron" />
+  <class name="std::vector<TopRec::TopJetElectron>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopJetElectron*,std::vector<TopRec::TopJetElectron> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopJetElectron*,std::vector<TopRec::TopJetElectron> >" />
+  <class name="TopRec::TopJetElectronContainer" id="1A5DBC3E-6AEF-4A4B-BA92-0A4F34BE219E" />
+
+  <class name="TopRec::TopJetMuon" />
+  <class name="std::vector<TopRec::TopJetMuon>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopJetMuon*,std::vector<TopRec::TopJetMuon> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopJetMuon*,std::vector<TopRec::TopJetMuon> >" />
+  <class name="TopRec::TopJetMuonContainer" id="797897D3-8DF5-4795-9C23-19001E33C0B6" />
+
+  <class name="TopRec::TopJetTau" />
+  <class name="std::vector<TopRec::TopJetTau>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopJetTau*,std::vector<TopRec::TopJetTau> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopJetTau*,std::vector<TopRec::TopJetTau> >" />
+  <class name="TopRec::TopJetTauContainer" id="B104B104-4AD0-4B16-8738-FD20A35B8E0B" />
+
+  <class name="TopRec::TopJetTruth" />
+  <class name="std::vector<TopRec::TopJetTruth>" />
+  <class name="__gnu_cxx::__normal_iterator<TopRec::TopJetTruth*,std::vector<TopRec::TopJetTruth> >" />
+  <class name="__gnu_cxx::__normal_iterator<const TopRec::TopJetTruth*,std::vector<TopRec::TopJetTruth> >" />
+  <class name="TopRec::TopJetTruthContainer" id="47A7E455-F13B-4668-8AEC-866F807A64D7" />
+
+</lcgdict>

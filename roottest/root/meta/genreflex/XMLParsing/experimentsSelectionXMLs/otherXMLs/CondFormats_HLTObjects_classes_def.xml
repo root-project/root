@@ -1,0 +1,8 @@
+<lcgdict>
+ <class name="AlCaRecoTriggerBits"/>
+ <class name="std::pair<const std::string,std::vector<unsigned int> >" />
+ <class name="trigger::HLTPrescaleTableCond">
+   <field name ="hltPrescaleTable_" mapping ="blob"/>
+ </class>
+</lcgdict>   
+

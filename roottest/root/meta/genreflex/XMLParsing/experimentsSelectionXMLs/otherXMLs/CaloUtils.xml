@@ -1,0 +1,52 @@
+<!-- 
+     * $Id: CaloUtils.xml,v 1.5 2010-03-18 13:58:42 ibelyaev Exp $ 
+     * ========================================================================
+     * CVS tag:$Name: not supported by cvs2svn $, version $Revision: 1.5 $ 
+     * ======================================================================== 
+     * @file
+     * The seleciton file to build Reflex dictionaries for 
+     * Calo/CaloUtils package 
+     * @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
+     * @date 2008-05-15
+     * ========================================================================
+-->
+
+
+<lcgdict>
+  
+  <class name      = "ICaloElectron"      />
+  <class name      = "LHCb::CaloMomentum" />
+  <class name      = "LHCb::CaloParticle" />
+
+  <class    name   = "CaloCellCode::Cell2String" />
+  <function name   = "CaloCellCode::caloName"    />
+  <function name   = "CaloCellCode::caloNum"     />
+  <function name   = "CaloCellCode::caloArea"    />
+
+  
+  <function name = "LHCb::CaloHelpers::toSet"     />
+  <function name = "LHCb::CaloHelpers::toVector"  />
+  <function name = "LHCb::CaloHelpers::_get_at_"  />
+  <function name = "LHCb::CaloHelpers::_insert_"  />
+  <class    name = "std::vector<LHCb::CaloCellID>"       />
+  <class    name = "std::vector<const LHCb::CaloDigit*>" />
+  <class    name = "std::set<LHCb::CaloCellID>"          />
+  <class    name = "std::set<const LHCb::CaloDigit*>"    />
+  
+  <class pattern = "CaloVector<LHCb::CaloDigit*>"  /> 
+  <class pattern = "CaloVector<LHCb::CaloAdc*>"    /> 
+
+  <function name = "Calo::Kinematics::momentum"    />
+  
+  <exclusion>
+
+    <class pattern="LHCb::CaloMomentum::CaloPositions"/>
+    
+    <class pattern="LHCb::Calo*">
+      <field  name="m_caloPositions" />
+      <method name="caloPositions"   />
+    </class>
+
+  </exclusion>
+  
+</lcgdict>

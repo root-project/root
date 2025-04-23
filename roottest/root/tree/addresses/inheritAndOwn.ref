@@ -1,0 +1,22 @@
+
+Processing runinheritAndOwn.C...
+ObjectInitialization: OK
+WriteObject:          OK
+ReadObject:           OK
+WriteObjectInTree:    OK
+ReadObjectInTree:     OK
+Filling: 
+**** Write finished...
+Reading
+Reading 10 entries
+Getting 16 DerivedClass:0 0 
+Getting 16 DerivedClass:1 10 
+Getting 16 DerivedClass:2 20 
+Getting 16 DerivedClass:3 30 
+Getting 16 DerivedClass:4 40 
+Getting 16 DerivedClass:5 50 
+Getting 16 DerivedClass:6 60 
+Getting 16 DerivedClass:7 70 
+Getting 16 DerivedClass:8 80 
+Getting 16 DerivedClass:9 90 
+**** Read finished...

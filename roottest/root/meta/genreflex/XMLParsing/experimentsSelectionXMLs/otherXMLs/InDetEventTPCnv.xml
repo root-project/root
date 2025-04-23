@@ -1,0 +1,101 @@
+<lcgdict>
+
+    <class name="InDet::Track_tlp1" id="8380F7AC-4A8F-4382-95A5-1234E43D3B08" />
+    <class name="InDet::Track_tlp2" id="4E3778E2-1497-4F10-8746-AA02319FAC83" />
+
+    <!-- InDetHits -->
+    <class name="SiHit_p1" />
+    <class name="std::vector<SiHit_p1>" />
+    <class name="SiHitCollection_p1" id="36D1FF8E-5734-4A93-A133-F286CF47DB72" />
+    <class name="SiHitCollection_p2" id="BD1469C5-C904-40B8-82B9-43D25888D884" />
+    <class name="TRT_Hit_p1" />
+    <class name="std::vector<TRT_Hit_p1>" />
+    <class name="TRT_HitCollection_p1" id="6688E934-157E-421A-B6D1-A35FC8BD651C" />
+    <class name="TRT_HitCollection_p2" id="473FF621-3466-4D87-9469-4780A6A77023" />
+    <class name="TRT_HitCollection_p3" id="FB5F5BFC-43E5-44E1-B79C-C330C1480E2E" />
+
+    <!-- InDetRIO_OnTrack -->
+    <class name="InDet::SiClusterOnTrack_p1" />
+    <class name="std::vector<InDet::SiClusterOnTrack_p1>" />
+    <!-- <class name="InDet::SiClusterOnTrack_p2" /> -->
+    <!-- <class name="std::vector<InDet::SiClusterOnTrack_p2>" /> -->
+    <class name="InDet::PixelClusterOnTrack_p1" />
+    <class name="std::vector<InDet::PixelClusterOnTrack_p1>" />
+    <class name="InDet::PixelClusterOnTrack_p2" />
+    <class name="std::vector<InDet::PixelClusterOnTrack_p2>" />
+    <class name="InDet::SCT_ClusterOnTrack_p1" />
+    <class name="std::vector<InDet::SCT_ClusterOnTrack_p1>" />
+    <class name="InDet::SCT_ClusterOnTrack_p2" />
+    <class name="std::vector<InDet::SCT_ClusterOnTrack_p2>" />
+    <class name="InDet::TRT_DriftCircleOnTrack_p1" />
+    <class name="std::vector<InDet::TRT_DriftCircleOnTrack_p1>" />
+    <class name="InDet::TRT_DriftCircleOnTrack_p2" />
+    <class name="std::vector<InDet::TRT_DriftCircleOnTrack_p2>" />
+    
+    <!--InDetCompetingRIOsOnTrack -->
+    <class name="InDet::CompetingPixelClustersOnTrack_p1" />
+    <class name="std::vector<InDet::CompetingPixelClustersOnTrack_p1>" />
+    <class name="InDet::CompetingSCT_ClustersOnTrack_p1" />
+    <class name="std::vector<InDet::CompetingSCT_ClustersOnTrack_p1>" />
+    <class name="InDet::CompetingTRT_DriftCirclesOnTrack_p1" />
+    <class name="std::vector<InDet::CompetingTRT_DriftCirclesOnTrack_p1>" />
+ 
+    
+    <!-- InDetPrepRawData -->
+    <class name="InDet::SiCluster_p1" />
+    <class name="std::vector<InDet::SiCluster_p1>" />
+    <class name="InDet::SCT_Cluster_p2" />
+    <class name="std::vector<InDet::SCT_Cluster_p2>" />
+    <class name="InDet::SiWidth_p1" />
+    <class name="InDet::SiWidth_p2" />
+    <class name="std::vector<InDet::SiWidth_p1>" />
+    <class name="InDet::InDetPRD_Collection_p1" />
+    <class name="InDet::InDetPRD_Collection_p2" />
+    <class name="InDet::InDetPRD_Container_p1" />
+    <class name="std::vector<InDet::InDetPRD_Collection_p1>" />
+    <class name="std::vector<InDet::InDetPRD_Collection_p2>" />
+    <class name="std::vector<InDet::InDetPRD_Container_p1>" />
+    <class name="InDet::PixelCluster_p1" />
+    <class name="InDet::PixelCluster_p2" />
+    <class name="InDet::PixelCluster_p3" />
+    <class name="std::vector<InDet::PixelCluster_p1>" />
+    <class name="std::vector<InDet::PixelCluster_p2>" />
+    <class name="std::vector<InDet::PixelCluster_p3>" />
+    <class name="InDet::PixelClusterContainer_tlp1" id="9DB54746-8C4E-4A56-8B4C-0E5D42905218" />
+    <class name="InDet::PixelClusterContainer_p2" id="DE48E26B-9E03-4EAD-86B9-351AD88D060E" />
+    <class name="InDet::PixelClusterContainer_p3" id="7BF0F163-B227-434C-86A6-16130E005E6C" />
+    <class name="InDet::SCT_Cluster_p1" />
+    <class name="std::vector<InDet::SCT_Cluster_p1>" />
+    <class name="InDet::SCT_ClusterContainer_tlp1" id="657F6546-F5CD-4166-9567-16AD9C96D286" />
+    <class name="InDet::SCT_ClusterContainer_p2" id="ECE7D831-0F31-4E6F-A6BE-2ADDE90083BA" />
+    <class name="InDet::TRT_DriftCircle_p1" />
+    <class name="std::vector<InDet::TRT_DriftCircle_p1>" />
+    <class name="InDet::TRT_DriftCircle_p2" />
+    <class name="std::vector<InDet::TRT_DriftCircle_p2>" />
+    <class name="InDet::TRT_DriftCircleContainer_p2" id="36195EDE-941C-424B-81A1-E04C867C35D8" />
+    <class name="InDet::TRT_DriftCircleContainer_tlp1" id="42B48D79-AF4E-4D45-AAA9-A2BA5A033534" />
+
+    <class name="InDet::PixelGangedClusterAmbiguities_p1" id="FE36CE7E-EADF-481F-A55A-26DA0030DFAA"/>
+<!--     <class name="uint32_t" /> -->
+<!--     <class name="std::vector<uint32_t>" />  -->
+<!--    <class name="std::pair<unsigned int,std::vector<unsigned int> >" />  -->
+    <class name="std::vector< std::pair<unsigned int, std::vector<unsigned int> > >" /> 
+
+<!-- InDetLowBetaContainer -->
+    <class name="InDetLowBetaContainer_tlp1" id="2EBE2034-8157-477B-B327-D37BE8A0317D" />
+    <class name="InDetLowBetaContainer_p1" id="5F85902F-0517-4E47-9740-620010AD2DFD"/>
+    <class name="std::vector<InDetLowBetaContainer_p1>" />
+<!-- InDetLowBetaCandidates -->
+    <class name="InDetLowBetaCandidate_tlp1" id="8C24589F-FBAA-4686-9254-B5C360A94733" />
+    <class name="InDetLowBetaCandidate_p1" id="73F01124-41A4-4148-8B81-58CBA9716026"/>
+    <class name="std::vector<InDetLowBetaCandidate_p1>" />
+    <class name="T_TPCnv<InDet::InDetLowBetaContainer, InDetLowBetaContainer_tlp1>"/>
+    <class name="InDetLowBetaContainerCnv_tlp1"/>
+    <class name="AthenaPoolTopLevelTPConverter<InDetLowBetaContainerCnv_p1, InDetLowBetaContainer_tlp1>"/>
+    <class name="T_AthenaPoolTPCnvBase<InDet::InDetLowBetaContainer, InDetLowBetaContainer_tlp1>"/>
+    <class name="T_AthenaPoolTPPolyCnvBase<InDet::InDetLowBetaContainer, InDet::InDetLowBetaContainer, InDetLowBetaContainer_tlp1>"/>
+    <class name="T_AthenaPoolTPAbstractPolyCnvBase<InDet::InDetLowBetaContainer, InDet::InDetLowBetaContainer, InDetLowBetaContainer_tlp1>"/>
+    <class name="ITPConverterFor<InDet::InDetLowBetaContainer>"/>
+    
+     
+</lcgdict>

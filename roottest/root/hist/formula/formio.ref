@@ -1,0 +1,14 @@
+
+Processing runformio.C...
+fxn->GetParameter(0) = 10
+fxn->GetParameter(1) = 1.5
+fxn->GetParameter(2) = 1
+fxn->GetParName(0) = a
+fxn->GetParName(1) = b
+fxn->GetParName(2) = c
+fxn->GetParameter(0) = 10
+fxn->GetParameter(1) = 1.5
+fxn->GetParameter(2) = 1
+fxn->GetParName(0) = a
+fxn->GetParName(1) = b
+fxn->GetParName(2) = c

@@ -1,0 +1,10 @@
+TTree  Aug 13 14:56 2015 events;1 "Fake events"
+  tracks  "tracks_"   131
+    tracks.fCoordinates.fX  "fX[tracks_]"  24003
+    tracks.fCoordinates.fY  "fY[tracks_]"  24003
+    tracks.fCoordinates.fZ  "fZ[tracks_]"  24003
+    tracks.fCoordinates.fT  "fT[tracks_]"  24003
+  evtNum  "evtNum/I"  99
+  Cluster INCLUSIVE ranges:
+   - # 0: [0, 5]
+  The total number of clusters is 1

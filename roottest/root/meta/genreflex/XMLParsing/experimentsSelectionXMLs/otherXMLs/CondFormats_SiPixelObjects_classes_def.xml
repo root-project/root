@@ -1,0 +1,62 @@
+<lcgdict>
+  
+  <class name="sipixelobjects::PixelROC">
+  <field name="theFrameConverter" transient="true"/>
+  <!-- <field name="theNRows" transient="true"/> -->
+  <!-- <field name="theNCols" transient="true"/> -->
+  </class>
+
+  <class name="SiPixelFedCabling"/>
+  <class name="SiPixelFedCablingMap::Key"/>
+  <class name="std::map<SiPixelFedCablingMap::Key,sipixelobjects::PixelROC>"/>
+  <class name="std::pair<const SiPixelFedCablingMap::Key,sipixelobjects::PixelROC>"/>
+  <class name="SiPixelFedCablingMap" class_version="0"/>
+
+  <class name="SiPixelCPEGenericErrorParm" class_version="0"/>
+  <class name="SiPixelCPEGenericErrorParm::DbEntry"/>
+  <class name="SiPixelCPEGenericErrorParm::DbEntryBinSize"/>
+  <class name="std::vector<SiPixelCPEGenericErrorParm::DbEntry>"/> 
+  <class name="std::vector<SiPixelCPEGenericErrorParm::DbEntryBinSize>"/>
+
+  <class name="SiPixelTemplateDBObject" class_version="0">
+     <field name="sVector_" mapping="blob"/>
+  </class>
+
+  <class name="SiPixelGainCalibration" class_version="0"/>
+  <class name="SiPixelGainCalibration::DetRegistry"/>
+  <class name="std::vector<SiPixelGainCalibration::DetRegistry>"/>
+
+  <class name="SiPixelGainCalibrationForHLT" class_version="0">
+     <field name="v_pedestals" mapping="blob"/>
+  </class>
+  <class name="SiPixelGainCalibrationForHLT::DetRegistry"/>
+  <class name="std::vector<SiPixelGainCalibrationForHLT::DetRegistry>"/>
+     
+  <class name="SiPixelGainCalibrationOffline" class_version="0">
+     <field name="v_pedestals" mapping="blob"/>
+  </class>
+  <class name="SiPixelGainCalibrationOffline::DetRegistry"/>
+  <class name="std::vector<SiPixelGainCalibrationOffline::DetRegistry>"/>
+     
+  <class name="SiPixelDbItem"/>
+  <class name="std::vector<SiPixelDbItem>"/>
+  <class name="std::map<int,std::vector<SiPixelDbItem> >"/>
+  <class name="SiPixelPedestals" id="5bfc61c7aebd27b50882b745cb0d5365" class_version="0"/>
+
+  <class name="SiPixelLorentzAngle" class_version="0"/>
+
+  <class name="SiPixelPerformanceSummary" class_version="0"/>
+  <class name="SiPixelPerformanceSummary::DetSummary"/>
+  <class name="std::vector<SiPixelPerformanceSummary::DetSummary>"/>
+
+  <class name="SiPixelCalibConfiguration" class_version="0"/>
+
+  <class name="SiPixelQuality" class_version="0"/>
+  <class name="SiPixelQuality::disabledModuleType"/>
+  <class name="std::vector<SiPixelQuality::disabledModuleType>"/>  
+
+  <class pattern="PixelDCSObject<*>"/> 
+  <class pattern="PixelDCSObject<*>::Item"/> 
+  <class pattern="PixelDCSObject<*>::Type"/> 
+
+</lcgdict>   

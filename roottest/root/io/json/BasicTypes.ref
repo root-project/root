@@ -1,0 +1,62 @@
+
+Processing runBasicTypes.C...
+ ====== basic data types TJsonEx1 ===== 
+TJsonEx1 store/read/store MATCHED len1:159 len2:159
+{
+  "_typename" : "TJsonEx1",
+  "fBool" : true,
+  "fChar" : 67,
+  "fShort" : 123,
+  "fInt" : 123456,
+  "fLong" : 7654321,
+  "fFloat" : 1.2,
+  "fDouble" : 3.8
+}
+
+ ====== inheritance from TJsonEx1, TJsonEx11 ===== 
+TJsonEx11 store/read/store MATCHED len1:176 len2:176
+{
+  "_typename" : "TJsonEx11",
+  "fBool" : true,
+  "fChar" : 67,
+  "fShort" : 123,
+  "fInt" : 123456,
+  "fLong" : 7654321,
+  "fFloat" : 1.2,
+  "fDouble" : 3.8,
+  "fInt2" : 27
+}
+
+ ====== arrays of basic data types TJsonEx2 ===== 
+TJsonEx2 store/read/store MATCHED len1:957 len2:957
+{
+  "_typename" : "TJsonEx2",
+  "fTest1" : [11111, 22222, 33333, 44444],
+  "fTest2" : [[1, 2], [3, 4]],
+  "fBool" : [[[false, true, false, true], [true, false, true, false], [false, true, false, true]], [[true, false, true, false], [false, true, false, true], [true, false, true, false]]],
+  "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+  "fShort" : [[[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]], [[2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]]],
+  "fInt" : [[[3, 4, 5, 6], [4, 5, 6, 7], [5, 6, 7, 8]], [[5, 6, 7, 8], [7, 8, 9, 10], [9, 10, 11, 12]]],
+  "fLong" : [[[6, 8, 10, 12], [9, 12, 15, 18], [12, 16, 20, 24]], [[12, 16, 20, 24], [18, 24, 30, 36], [24, 32, 40, 48]]],
+  "fFloat" : [[[24, 36, 48, 60], [32, 48, 64, 80], [40, 60, 80, 100]], [[30, 45, 60, 75], [40, 60, 80, 100], [50, 75, 100, 125]]],
+  "fDouble" : [[[45, 50, 55, 60], [54, 60, 66, 72], [63, 70, 77, 84]], [[90, 100, 110, 120], [108, 120, 132, 144], [126, 140, 154, 168]]]
+}
+
+ ====== dynamic arrays of basic data types TJsonEx3 ===== 
+TJsonEx3 store/read/store MATCHED len1:336 len2:336
+{
+  "_typename" : "TJsonEx3",
+  "fSize" : 7,
+  "fBool" : [false, false, false, false, false, false, false],
+  "fChar" : "1234567",
+  "fShort" : [0, 2, 4, 6, 8, 10, 12],
+  "fInt" : [0, 5, 10, 15, 20, 25, 30],
+  "fLong" : [0, 123, 246, 369, 492, 615, 738],
+  "fFloat" : [0, 3, 6, 9, 12, 15, 18],
+  "fDouble" : [0, 7, 14, 21, 28, 35, 42]
+}
+
+ ============ selected data members ======== 
+ex2.fInt = [[[3, 4, 5, 6], [4, 5, 6, 7], [5, 6, 7, 8]], [[5, 6, 7, 8], [7, 8, 9, 10], [9, 10, 11, 12]]]
+ex3.fChar = "1234567"
+ex3.fLong = [0, 123, 246, 369, 492, 615, 738]

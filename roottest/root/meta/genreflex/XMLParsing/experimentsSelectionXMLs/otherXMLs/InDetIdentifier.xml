@@ -1,0 +1,6 @@
+<lcgdict>
+  <class name="PixelID" />
+  <class name="SCT_ID" />
+  <class name="SiliconID" />
+  <class name="TRT_ID" />
+</lcgdict>

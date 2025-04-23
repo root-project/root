@@ -1,0 +1,51 @@
+<!--
+   - File: AthenaROOTAccess/selection.xml
+   - Author: scott snyder
+   - Date: Apr 2007
+   -
+   - Reflex selection file.
+  -->
+
+<lcgdict>
+    <class name="AthenaROOTAccess::DVCollectionProxy" />
+    <class name="AthenaROOTAccess::DVCollectionProxyDummy" />
+    <class name="DataVector<AthenaROOTAccess::DVCollectionProxyDummy>" />
+    <class name="AthenaROOTAccess::ScanForEL" />
+    <class name="AthenaROOTAccess::TBranchAlias">
+      <field name="m_targ_tree" transient="true" />
+      <field name="m_targ_branch" transient="true" />
+      <field name="m_addrtmp" transient="true" />
+      <field name="m_notify_chain" transient="true" />
+    </class>
+    <class name="AthenaROOTAccess::TTreeBranchMap">
+      <field name="m_map" transient="true" />
+      <field name="m_aliasmap" transient="true" />
+      <field name="m_clidaliasmap" transient="true" />
+    </class>
+    <class name="AthenaROOTAccess::TTreeTrans">
+      <field name="m_proxyMap" transient="true" />
+      <field name="m_pers_tree" transient="true" />
+      <field name="m_notify_chain" transient="true" />
+      <field name="m_primary_tree" transient="true" />
+      <field name="m_filesSeen" transient="true" />
+    </class>
+    <class name="AthenaROOTAccess::TBranchTPConvert">
+      <field name="m_trans_tree" transient="true" />
+      <field name="m_pers_tree" transient="true" />
+      <field name="m_pers_tree_primary" transient="true" />
+      <field name="m_pers_branch" transient="true" />
+      <field name="m_cnv" transient="true" />
+      <field name="m_class" transient="true" />
+      <field name="m_arena" transient="true" />
+      <field name="m_notify_chain" transient="true" />
+      <field name="m_extmap" transient="true" />
+      <field name="m_extCnv" transient="true" />
+      <field name="m_obj_ptr" transient="true" />
+      <field name="m_msg" transient="true" />
+    </class>
+    <class name="AthenaROOTAccess::ISetSGKey" />
+    <class name="AthenaROOTAccess::TChainROOTAccess"/>
+    <class name="AthenaROOTAccess::addDVProxy"/>
+    <class name="AthenaROOTAccess::TPCnv::Registry"/>
+    <class name="TChainROOTAccess"/>
+</lcgdict>

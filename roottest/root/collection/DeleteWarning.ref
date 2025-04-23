@@ -1,0 +1,4 @@
+
+Processing runDeleteWarning.C...
+Error in <TList::Clear>: A list is accessing an object (0xRemoved) already deleted (list name = my own list)
+Error in <TList::Delete>: A list is accessing an object (0xRemoved) already deleted (list name = my own list)

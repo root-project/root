@@ -1,0 +1,1 @@
+Error: Union FdUtil::Fd::_PixelNumber has been selected for I/O. This is not supported. Interactive usage of unions is supported, as all C++ entities, without the need of dictionaries.

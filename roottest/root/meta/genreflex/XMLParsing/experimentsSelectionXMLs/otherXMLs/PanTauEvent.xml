@@ -1,0 +1,12 @@
+<lcgdict>
+
+    <class name="PanTau::TauSeed" />
+    <class name="PanTau::PanTauDetails" />
+    
+    <class name="PanTau::TauSeedCollection" id="99EA0874-6FFE-4571-9E64-59A6B9F48B4A" />
+    <class name="DataVector<PanTau::TauSeed>" />
+    <class name="std::vector<PanTau::TauSeed*>" />
+    
+    
+
+</lcgdict>

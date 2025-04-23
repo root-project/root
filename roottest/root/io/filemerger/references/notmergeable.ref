@@ -1,0 +1,5 @@
+hadd Target file: freidt_merge.root
+hadd compression setting for all output: 1
+hadd Source file 1: freidt_CDMeson_0000.root
+hadd Source file 2: freidt_CDMeson_0001.root
+hadd Target path: freidt_merge.root:/

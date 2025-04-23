@@ -1,0 +1,6 @@
+<lcgdict>
+
+  <class name="Trk::IExtrapolator" />
+  <class name="Trk::IPropagator" />
+
+</lcgdict>

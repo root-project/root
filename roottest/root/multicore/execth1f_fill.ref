@@ -1,0 +1,18 @@
+Reading file file1.root
+Reading file file2.root
+Reading file file3.root
+
+--------Histogram file1.root
+- Num entries: 100.000000
+- Mean: 1.309981
+- RMS: 0.606250
+
+--------Histogram file2.root
+- Num entries: 100.000000
+- Mean: 1.372880
+- RMS: 0.707433
+
+--------Histogram file3.root
+- Num entries: 100.000000
+- Mean: 1.175421
+- RMS: 0.590110

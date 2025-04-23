@@ -1,0 +1,39 @@
+
+Processing runretobjTest.C...
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TClass	Dictionary containing class information
+OBJ: TClass	TClass	Dictionary containing class information
+OBJ: TClass	Track	A track segment
+OBJ: TClass	Track	A track segment
+OBJ: TClass	Track	A track segment
+OBJ: TClass	Track	A track segment
+Warning in <TClass::Init>: no dictionary for class edm::ProductRegistry is available
+Warning in <TClass::Init>: no dictionary for class edm::BranchKey is available
+Warning in <TClass::Init>: no dictionary for class edm::BranchDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::ModuleDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::PS_ID is available
+Warning in <TClass::Init>: no dictionary for class edm::ProductID is available
+Warning in <TClass::Init>: no dictionary for class edm::EventAux is available
+Warning in <TClass::Init>: no dictionary for class edm::EventID is available
+Warning in <TClass::Init>: no dictionary for class edm::Timestamp is available
+Warning in <TClass::Init>: no dictionary for class edm::Wrapper<edm::HepMCProduct> is available
+Warning in <TClass::Init>: no dictionary for class edm::EDProduct is available
+Warning in <TClass::Init>: no dictionary for class edm::HepMCProduct is available
+Warning in <TClass::Init>: no dictionary for class edm::EventProvenance is available
+Warning in <TClass::Init>: no dictionary for class edm::BranchEntryDescription is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::GenEvent is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::GenVertex is available
+Warning in <TClass::Init>: no dictionary for class HepMC::WeightContainer is available
+Warning in <TClass::Init>: no dictionary for class CLHEP::HepLorentzVector is available
+Warning in <TClass::Init>: no dictionary for class CLHEP::Hep3Vector is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::GenParticle is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::Flow is available
+Warning in <TClass::Init>: no dictionary for class HepMC::Polarization is available
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1

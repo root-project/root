@@ -1,0 +1,105 @@
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 0
+1
+4
+9
+16
+25
+36
+49
+64
+81
+100
+121
+144
+169
+196
+225
+256
+289
+324
+361
+c 20
+0
+1
+2
+3
+4
+c2 5
+c3 4
+c4 1
+Histo1: nEntries 20
+Histo2: nEntries 20
+Histo3: nEntries 290
+Histo4: nEntries 290
+10
+Define Histo entries: 10
+Define Histo mean: 60.9524
+Min b2: 0
+Min dv: -1
+Max b2: 361
+Max dv: 19
+Sum b2: 2470
+Sum dv: 1490
+Sum b2 init: 2471
+Sum dv init: 1491
+Mean b2: 123.5
+Mean dv: 5.13793
+0
+4
+16
+36
+64
+100
+144
+196
+256
+324
+61.0508
+61.0952
+34.6024
+39.6674
+77.2068
+28.8421
+90.5761
+115.616
+50.1965
+50.6713
+Count for the first run is 18
+Count for the second run after adding a filter is 8
+Count for the first run was 18
+18
+Count with action pointers which went out of scope: 20
+Wh1 Histo entries: 20
+Wh1 Histo mean: 14.6154
+Wh2 Histo entries: 290
+Wh2 Histo mean: 9.05882
+h12d Histo entries: 20
+h22d Histo entries: 290
+h32d Histo entries: 20 sum of weights: 671.354
+h13d Histo entries: 20
+h23d Histo entries: 290
+h33d Histo entries: 20 sum of weights: 190
+Entry 0
+1
+2
+3

@@ -1,0 +1,9 @@
+
+Processing execsearch.C...
+Warning in <TClass::Init>: no dictionary for class ND::P0D::NueEvtInfo is available
+Warning in <TClass::Init>: no dictionary for class ND::P0D::TVertex is available
+Warning in <TClass::Init>: no dictionary for class ND::P0D::TPID is available
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+trajPos.fP.fX[1]=635.86
+trajPos.fP[1].fX=635.86
+trajPos[1].fP.fX=635.86

@@ -1,0 +1,23 @@
+<lcgdict>
+<class name="CIoType">
+  <field name="vd32" iotype="std::vector<Double32_t>"/>
+  <field name="d32" iotype="Double32_t"/>
+  <field name="vTd32" iotype="std::vector<Template<Double32_t> >"/>
+  <field name="Tvd32" iotype="Template<std::vector<Double32_t> >"/>
+  <field name="Td32" iotype="Template<Double32_t>"/>
+
+  <field name="vdd32" iotype="std::vector<Double32_t>"/>
+  <field name="dd32" iotype="Double32_t"/>
+  <field name="vTdd32" iotype="std::vector<Template<Double32_t> >"/>
+  <field name="Tvdd32" iotype="Template<std::vector<Double32_t> >"/>
+  <field name="Tdd32" iotype="Template<Double32_t>"/>
+</class>
+<class name="Template<double>"/>
+<class name="Template<float>"/>
+<class name="Template<std::vector<double> >"/>
+<class name="Template<std::vector<float> >"/>
+
+<class name="vector<Double32_t>" />
+<class name="vector<Template<Double32_t> >" />
+<class name="vector<Template<float> >" />
+</lcgdict>

@@ -1,0 +1,51 @@
+
+Processing runPolyMarker.C...
+<Object class="TPolyMarker3D">
+  <TPolyMarker3D version="3">
+    <TObject fUniqueID="0" fBits="1"/>
+    <TAttMarker version="3">
+      <fMarkerColor v="1"/>
+      <fMarkerStyle v="1"/>
+      <fMarkerSize v="1.000000e+00"/>
+    </TAttMarker>
+    <fN v="10"/>
+    <fP>
+      <Array>
+        <Float_t v="0.000000e+00"/>
+        <Float_t v="0.000000e+00"/>
+        <Float_t v="0.000000e+00"/>
+        <Float_t v="2.000000e+00"/>
+        <Float_t v="3.000000e+00"/>
+        <Float_t v="4.000000e+00"/>
+        <Float_t v="4.000000e+00"/>
+        <Float_t v="6.000000e+00"/>
+        <Float_t v="8.000000e+00"/>
+        <Float_t v="6.000000e+00"/>
+        <Float_t v="9.000000e+00"/>
+        <Float_t v="1.200000e+01"/>
+        <Float_t v="8.000000e+00"/>
+        <Float_t v="1.200000e+01"/>
+        <Float_t v="1.600000e+01"/>
+        <Float_t v="1.000000e+01"/>
+        <Float_t v="1.500000e+01"/>
+        <Float_t v="2.000000e+01"/>
+        <Float_t v="1.200000e+01"/>
+        <Float_t v="1.800000e+01"/>
+        <Float_t v="2.400000e+01"/>
+        <Float_t v="1.400000e+01"/>
+        <Float_t v="2.100000e+01"/>
+        <Float_t v="2.800000e+01"/>
+        <Float_t v="1.600000e+01"/>
+        <Float_t v="2.400000e+01"/>
+        <Float_t v="3.200000e+01"/>
+        <Float_t v="1.800000e+01"/>
+        <Float_t v="2.700000e+01"/>
+        <Float_t v="3.600000e+01"/>
+      </Array>
+    </fP>
+    <fOption str=""/>
+    <fName str="TestMarker"/>
+  </TPolyMarker3D>
+</Object>
+
+Read TestMarker GetN = 10

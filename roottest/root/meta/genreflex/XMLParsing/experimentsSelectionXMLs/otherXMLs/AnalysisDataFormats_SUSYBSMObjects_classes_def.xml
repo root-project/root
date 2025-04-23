@@ -1,0 +1,55 @@
+<lcgdict>
+   <class name="susybsm::HSCParticle" ClassVersion="11">
+    <version ClassVersion="11" checksum="2205741811"/>
+   </class>
+   <class name="susybsm::RPCBetaMeasurement" ClassVersion="10">
+    <version ClassVersion="10" checksum="2621605308"/>
+   </class>
+   <class name="susybsm::HSCParticleCollection"/>
+   <class name="susybsm::HSCParticleRef"/>
+   <class name="susybsm::HSCParticleRefProd"/>
+   <class name="susybsm::HSCParticleRefVector"/>
+   <class name="edm::Wrapper<susybsm::HSCParticleCollection>"/>
+   <class name="susybsm::TracksEcalRecHitsMap"/>
+   <class name="edm::Wrapper<susybsm::TracksEcalRecHitsMap>"/>
+   <class name="susybsm::HSCPIsolation" ClassVersion="10">
+    <version ClassVersion="10" checksum="3676296078"/>
+   </class>
+   <class name="susybsm::HSCPIsolationCollection"/>
+   <class name="susybsm::HSCPIsolationValueMap"/>
+   <class name="edm::Wrapper<susybsm::HSCPIsolation>"/>
+   <class name="edm::Wrapper<susybsm::HSCPIsolationCollection>"/>
+   <class name="edm::Wrapper<susybsm::HSCPIsolationValueMap>"/>
+   <class name="susybsm::HSCPCaloInfo" ClassVersion="11">
+    <version ClassVersion="11" checksum="1170741674"/>
+   </class>
+   <class name="susybsm::HSCPCaloInfoCollection"/>
+   <class name="susybsm::HSCPCaloInfoValueMap"/>
+   <class name="susybsm::HSCPCaloInfoRef"/>
+   <class name="susybsm::HSCPCaloInfoRefProd"/>
+   <class name="susybsm::HSCPCaloInfoRefVector"/>
+   <class name="edm::Wrapper<susybsm::HSCPCaloInfo>"/>
+   <class name="edm::Wrapper<susybsm::HSCPCaloInfoCollection>"/>
+   <class name="edm::Wrapper<susybsm::HSCPCaloInfoValueMap>"/>
+
+   <class name="susybsm::HSCPDeDxInfo" ClassVersion="12">
+    <version ClassVersion="12" checksum="3128834551"/>
+   </class>
+   <class name="susybsm::HSCPDeDxInfoCollection"/>
+   <class name="susybsm::HSCPDeDxInfoValueMap"/>
+   <class name="susybsm::HSCPDeDxInfoRef"/>
+   <class name="susybsm::HSCPDeDxInfoRefProd"/>
+   <class name="susybsm::HSCPDeDxInfoRefVector"/>
+   <class name="edm::Wrapper<susybsm::HSCPDeDxInfo>"/>
+   <class name="edm::Wrapper<susybsm::HSCPDeDxInfoCollection>"/>
+   <class name="edm::Wrapper<susybsm::HSCPDeDxInfoValueMap>"/>
+
+   <class name="susybsm::MuonSegment" ClassVersion="10">
+    <version ClassVersion="10" checksum="3541168201"/>
+   </class>
+   <class name="susybsm::MuonSegmentCollection"/>
+   <class name="susybsm::MuonSegmentRef"/>
+   <class name="susybsm::MuonSegmentRefProd"/>
+   <class name="susybsm::MuonSegmentRefVector"/>
+   <class name="edm::Wrapper<susybsm::MuonSegmentCollection>"/>
+</lcgdict>

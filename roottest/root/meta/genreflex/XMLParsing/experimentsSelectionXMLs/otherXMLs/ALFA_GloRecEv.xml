@@ -1,0 +1,13 @@
+ 
+<lcgdict>
+  <class name="ALFA_GloRecEvCollection" id="90579D8C-DA29-44F4-B93D-9D8AED07557E"/>
+  <class name="std::vector<ALFA_GloRecEvent*>" />
+  <class name="DataVector<ALFA_GloRecEvent>" />
+  <class name="ALFA_GloRecEvent" />
+  
+  <class name="ALFA_GloRecODEvCollection" id="D3442093-B9EB-42B9-B12C-A2AF65F5BA6E"/>
+  <class name="std::vector<ALFA_GloRecODEvent*>" />
+  <class name="DataVector<ALFA_GloRecODEvent>" />
+  <class name="ALFA_GloRecODEvent" />
+</lcgdict>
+

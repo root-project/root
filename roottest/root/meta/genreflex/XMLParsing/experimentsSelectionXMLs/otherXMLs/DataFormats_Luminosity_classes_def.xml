@@ -1,0 +1,23 @@
+<lcgdict>
+  <class pattern="edm::Wrapper<*>"/>
+  <class name="LumiSummaryRunHeader" ClassVersion="10">
+   <version ClassVersion="10" checksum="2308070716"/>
+  </class>
+  <class name="LumiSummary" ClassVersion="11">
+   <version ClassVersion="11" checksum="2908285481"/>
+   <version ClassVersion="10" checksum="2670120703"/>
+  </class>
+  <class name="LumiDetails" ClassVersion="10">
+   <version ClassVersion="10" checksum="3520498663"/>
+  </class>
+  <class name="LumiSummary::HLT" ClassVersion="11">
+   <version ClassVersion="11" checksum="4065059464"/>
+   <version ClassVersion="10" checksum="2862036727"/>
+  </class>
+  <class name="LumiSummary::L1" ClassVersion="11">
+   <version ClassVersion="11" checksum="3404293530"/>
+   <version ClassVersion="10" checksum="3790082860"/>
+  </class>
+  <class name="std::vector<LumiSummary::L1>"/>
+  <class name="std::vector<LumiSummary::HLT>"/>
+</lcgdict>

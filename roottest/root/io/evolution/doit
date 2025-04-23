@@ -1,0 +1,3 @@
+$(CALLROOTEXE) -q -l -b write.C
+$(CALLROOTEXE) -q -l -b readold.C
+$(CALLROOTEXE) -q -l -b readnew.C

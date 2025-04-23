@@ -1,0 +1,18 @@
+<lcgdict>
+
+  <class name="Atlas::ClassA<Atlas::ClassB>" />
+  <class name="Atlas::ClassA<Atlas::ClassC>" />
+  <class name="std::vector<Atlas::ClassA<Atlas::ClassB> >" />
+  <class name="std::vector<Atlas::ClassA<Atlas::ClassC> >" />
+
+  <class name="Atlas::ClassD<Atlas::ClassB>" />
+  <class name="Atlas::ClassD<Atlas::ClassC>" />
+
+  <class name="Atlas::ClassA<Atlas::ClassD<Atlas::ClassB> >" />
+  <class name="Atlas::ClassA<Atlas::ClassD<Atlas::ClassC> >" />
+  <class name="std::vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassB> > >" />
+  <class name="std::vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassC> > >" />
+
+  <class pattern="MyDataVector<float, *>" />
+
+</lcgdict>

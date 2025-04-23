@@ -1,0 +1,52 @@
+<!-- $Id: selection.xml 602916 2014-06-20 15:08:25Z vacavant $ -->
+<lcgdict>
+
+  <!-- BTagging_v1 dictionaries: -->
+  <class name="xAOD::BTagging_v1" />
+  <class name="xAOD::BTaggingContainer_v1"
+         id="5D19F171-E07E-4F65-BC1F-FC4F4099E9F1" />
+  <class name="xAOD::BTaggingAuxContainer_v1"
+         id="5E1973D2-D860-4BB1-B8EF-C9AD8E6C66A2" />
+
+  <!-- Smart pointers to BTagging_v1 objects: -->
+  <class name="DataLink<xAOD::BTaggingContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::BTaggingContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::BTaggingContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::BTaggingContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::BTaggingContainer_v1> > >" />
+
+  <!-- BTagVertex_v1 dictionaries: -->
+  <class name="xAOD::BTagVertex_v1" />
+  <class name="xAOD::BTagVertexContainer_v1" 
+         id="E225A9EC-9782-43F7-B7BF-1B215187C11C" />
+  <class name="xAOD::BTagVertexAuxContainer_v1"
+         id="09CD44BA-0F40-4FDB-BB30-2F4226FF3E18" />
+
+  <!-- Smart pointers to BTagVertex_v1 objects: -->
+  <class name="DataLink<xAOD::BTagVertexContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::BTagVertexContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::BTagVertexContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::BTagVertexContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::BTagVertexContainer_v1> > >" />
+
+
+  <class name="std::vector< std::vector< bool > >" />
+  <class name="std::vector< std::vector< int > >" />
+
+  <!--Add Helper Functions -->
+  <function pattern="xAOD::SecVtxHelper::*" /> 
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class pattern="xAOD::TrackParticle*" />
+    <class pattern="DataVector<xAOD::TrackParticle*" />
+    <class pattern="ElementLink<DataVector<xAOD::TrackParticle*" />
+    <class name="DataVector<xAOD::IParticle>" />
+  </exclusion>
+
+</lcgdict>

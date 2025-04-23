@@ -1,0 +1,6 @@
+rootcint -f MyDict1.cxx MyClass1.h
+g++ -c `root-config --cflags` MyDict1.cxx
+rootcint -f MyDict2.cxx MyClass2.h
+g++ -c `root-config --cflags` MyDict2.cxx
+rootcint -f MyDict3.cxx MyClass3.h
+g++ -c `root-config --cflags` MyDict3.cxx

@@ -1,0 +1,18 @@
+<lcgdict>
+
+	<class name="TBLArDigitContainer_p1"      id="9F58DDD2-ACDC-4ECF-A714-779B05F94649" />
+	<class name="TBEventInfo_p1"              id="1E398439-74B3-457E-BC0B-DD69201AE463" />
+	<class name="TBScintillatorCont_p1"       id="5887098D-DBFE-4634-92AB-CC9968CCB09A" />
+	<class name="TBTrack_p1"                  id="9E50CAA3-CCDF-4BB9-96E9-E376B16963E8" />
+	<class name="TBTailCatcher_p1"            id="B304A3B8-5FC1-415D-AE97-E3E7B6769213" />
+	<class name="TBPhase_p1"                  id="40443E91-053F-41C1-84F8-0A7F03F1DEC4" />
+	<class name="TBTriggerPatternUnit_p1"     id="7630C108-3B5F-4ED3-97C8-F3148AF1B84F" />
+	<class name="TBTDC_p1"                    id="D909CCF6-CE91-4401-98FC-C1C41BD06513" />
+	<class name="TBTDCRawCont_p1"             id="C05FD0A4-E5AD-41C8-9EA5-2A71378BB247" />
+	<class name="TBADCRawCont_p1"             id="4D0407FD-A534-4595-B5BD-4A8DB797A094" />
+	<class name="TBBPCCont_p1"                id="89A09260-F284-4694-8687-3C6C72989A96" />
+	<class name="TBMWPCCont_p1"               id="E1F16B8A-9D8B-4906-83EE-E38EBE63768A" />
+	<class name="TBTrackInfo_p1"              id="A49F674F-25AD-496B-BEBE-DE1EBEAFE990" />
+
+</lcgdict>
+

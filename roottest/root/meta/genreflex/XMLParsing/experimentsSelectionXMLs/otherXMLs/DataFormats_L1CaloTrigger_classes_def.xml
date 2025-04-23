@@ -1,0 +1,15 @@
+<lcgdict>
+  <class name="L1CaloEmCand" ClassVersion="10">
+   <version ClassVersion="10" checksum="2666522574"/>
+  </class>
+  <class name="L1CaloRegionDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="2412488094"/>
+  </class>
+  <class name="L1CaloRegion" ClassVersion="10">
+   <version ClassVersion="10" checksum="2354390681"/>
+  </class>
+  <class name="std::vector<L1CaloEmCand>"/>
+  <class name="std::vector<L1CaloRegion>"/>
+  <class name="edm::Wrapper<std::vector<L1CaloEmCand>>" splitLevel="0"/>
+  <class name="edm::Wrapper<std::vector<L1CaloRegion>>" splitLevel="0"/>
+</lcgdict>

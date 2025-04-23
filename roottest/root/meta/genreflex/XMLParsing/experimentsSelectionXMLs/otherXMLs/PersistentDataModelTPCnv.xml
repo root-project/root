@@ -1,0 +1,32 @@
+<lcgdict>
+   <class name="DataHeader_p3" id="EC1318F0-8E28-45F8-9A2D-2597C1CC87A6" />
+   <class name="std::vector<DataHeaderElement_p3>" />
+   <class name="DataHeaderElement_p3" />
+   <class name="DataHeader_p4" id="9630EB7B-CCD7-47D9-A39B-CBBF4133CDF2" />
+   <class name="std::vector<DataHeaderElement_p4>" />
+   <class name="DataHeaderElement_p4" />
+   <class name="DataHeader_p5" id="D82968A1-CF91-4320-B2DD-E0F739CBC7E6">
+      <field name="m_dhForm" transient="true" />
+   </class>
+   <class name="std::vector<DataHeaderElement_p5>" />
+   <class name="DataHeaderElement_p5" />
+   <class name="DataHeaderForm_p5" id="3397D8A3-BBE6-463C-9F8E-4B3DFD8831FE">
+      <field name="m_entry" transient="true" />
+   </class>
+   <class name="DataHeaderCnv_p5"/>
+   <class name="DataHeader_p6" id="4DDBD295-EFCE-472A-9EC8-15CD35A9EB8D">
+      <field name="m_dhForm" transient="true" />
+   </class>
+   <class name="std::vector<DataHeaderElement_p6>" />
+   <class name="DataHeaderElement_p6" />
+   <class name="DataHeaderForm_p6" id="7BE56CEF-C866-4BEE-9348-A5F34B5F1DAD">
+      <field name="m_entry" transient="true" />
+   </class>
+   <class name="std::vector<std::pair<Guid, unsigned int> >" />
+   <class name="std::pair<Guid, unsigned int>" />
+   <class name="Guid" />
+   <class name="std::vector<std::pair<Guid, std::pair<std::string, unsigned int> > >" />
+   <class name="std::pair<Guid, std::pair<std::string, unsigned int> >" />
+   <class name="std::pair<std::string, unsigned int>" />
+   <class name="DataHeaderCnv_p6"/>
+</lcgdict>

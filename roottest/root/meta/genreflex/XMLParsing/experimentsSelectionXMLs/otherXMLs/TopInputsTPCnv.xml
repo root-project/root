@@ -1,0 +1,17 @@
+<lcgdict>
+    <!-- TopInputs -->
+
+    <class name="TopInputs_p1" id="D47D19A7-273F-4234-87B6-A3023C531DCD"/>
+    <class name="TopInputs_p2" id="AB362400-29B6-4004-87AB-195943F9858D"/>
+
+    <class name="TopInputMap_p1" id="70BEDDD3-F4B3-42F2-BD81-850060A53C3C"/>
+    <class name="TopInputMapTrigger_p1" id="D6AFF34C-B924-4B37-900B-A28075337EBA"/>
+
+    <class name="TopOverlapVector_p1" id="7C657996-5D16-41C1-AAF6-789DFB653D13"/>
+    <class name="std::vector<TopOverlap_p1>" />
+    <class name="TopOverlapTriggerVector_p1" id="79B8AE41-A3D3-4B3F-864A-07FF1E1D2AA9"/>
+    <class name="std::vector<TopOverlapTrigger_p1>" />
+    <class name="TopOverlap_p1" id="543978D6-EB05-4234-B24B-98B901F8F2E2"/>
+    <class name="TopOverlapTrigger_p1" id="B0B39CA4-43B7-43E2-A240-B15A6F68D257"/>
+ 
+</lcgdict>

@@ -1,0 +1,4 @@
+<rootdict>
+   <enum name="myNamespace::A" />
+   <enum name="myNamespace2::C" />
+</rootdict>

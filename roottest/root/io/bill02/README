@@ -1,0 +1,15 @@
+Philippe,
+
+The example enclosed is used as follows:
+
+1) Set ROOTSYS to point to ROOT 3.0.3.
+2) Run 'buildit' to build 'x'.  This first runs rootcint.
+3) Run x (no arguments).
+4) Note the size of "mytest.root" indicates that the int[10000] array is not written to disk.
+Note that compression is turned off.
+This doesn't work, but gives no error.
+If ClassDef() and ClassImp() are uncommented, everything works.
+
+This is a more serious problem than the one with STL vectors.
+
+Bill

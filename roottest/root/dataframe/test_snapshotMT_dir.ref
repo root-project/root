@@ -1,0 +1,18 @@
+
++++++++++ Now MT
+---- Now with a tree in the root directory
+Branch: b1
+Branch: b1_square
+Branch: b2_vector
+Branch: a
+Means:49 49
+Jitted branch: b1
+Jitted branch: b1_square
+Jitted branch: b2_vector
+Jitted branch: a
+Jitted means:49 49
+Jitted branch: b1_square
+Jitted branch: b2_vector
+Jitted branch: b1
+Jitted branch: b2
+(int) 0

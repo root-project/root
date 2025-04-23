@@ -1,0 +1,11 @@
+{ decls }
+template <class T> class myClass ;
+
+[libclasses_dictrflx]
+class myClass<double>
+
+{ decls }
+template <class T,class U,unsigned int I> class myClass2 ;
+
+[libclasses2_dictrflx]
+class myClass2<double,double,4>

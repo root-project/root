@@ -1,0 +1,27 @@
+
+Processing test.C...
+fBits settings A: 0x3010000
+fBits settings B: 0x3010000
+
+Processing test1.C...
+******************************************
+fBits settings A: 0x3010000
+Readback for testA->GetRef()
+Calling GetRef() from class: A
+Test class called on demand
+0
+******************************************
+
+Processing test2.C...
+fBits settings B: 0x3010000
+Readback for testB->GetRef()
+Calling GetRef() from class: B
+Test class called on demand
+0
+******************************************
+
+Processing test3.C...
+Readback for testB->GetRef()
+Calling GetRef() from class: B
+1
+******************************************

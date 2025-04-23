@@ -1,0 +1,14 @@
+
+Processing runEqualTest.C...
+===========================================================================
+class privateOp2
+ size=0x4 FILE:equal_C.so LINE:-1
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in privateOp2
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in privateOp2)
+equal_C.so  -1:-1   0 private: privateOp2& operator=(const int&);
+equal_C.so  -1:-1   0 public: privateOp2 privateOp2(void);
+equal_C.so  -1:-1   0 public: privateOp2 privateOp2(const privateOp2&);
+equal_C.so  -1:-1   0 public: privateOp2& operator=(const privateOp2&);

@@ -1,0 +1,29 @@
+<lcgdict>
+  <class name="fwlite::EventBase" ClassVersion="10">
+   <version ClassVersion="10" checksum="446550501"/>
+  </class>
+  <class name="fwlite::Event" ClassVersion="10">
+   <version ClassVersion="10" checksum="4235158529"/>
+  </class>
+  <class name="fwlite::ChainEvent" ClassVersion="10">
+   <version ClassVersion="10" checksum="3186044134"/>
+  </class>
+  <class name="fwlite::MultiChainEvent" ClassVersion="10">
+   <version ClassVersion="10" checksum="1750442807"/>
+  </class>
+  <class name="fwlite::ErrorThrower" ClassVersion="10">
+   <version ClassVersion="10" checksum="730281206"/>
+  </class>
+  <class name="fwlite::LuminosityBlockBase" ClassVersion="10">
+   <version ClassVersion="10" checksum="3045691697"/>
+  </class>
+  <class name="fwlite::LuminosityBlock" ClassVersion="10">
+   <version ClassVersion="10" checksum="2000450836"/>
+  </class>
+  <class name="fwlite::RunBase" ClassVersion="10">
+   <version ClassVersion="10" checksum="3966228119"/>
+  </class>
+  <class name="fwlite::Run" ClassVersion="10">
+   <version ClassVersion="10" checksum="1215046249"/>
+  </class>
+</lcgdict>

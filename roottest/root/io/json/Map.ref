@@ -1,0 +1,8 @@
+
+Processing runMap.C...
+DEFAULT: [{"$pair" : "pair<string,int>", "first" : "field0", "second" : 0}, {"$pair" : "pair<string,int>", "first" : "field1", "second" : 7}, {"$pair" : "pair<string,int>", "first" : "field2", "second" : 14}, {"$pair" : "pair<string,int>", "first" : "field3", "second" : 21}, {"$pair" : "pair<string,int>", "first" : "field4", "second" : 28}, {"$pair" : "pair<string,int>", "first" : "field5", "second" : 35}, {"$pair" : "pair<string,int>", "first" : "field6", "second" : 42}, {"$pair" : "pair<string,int>", "first" : "field7", "second" : 49}, {"$pair" : "pair<string,int>", "first" : "field8", "second" : 56}, {"$pair" : "pair<string,int>", "first" : "field9", "second" : 63}]
+Data matches
+OBJECT: {"_typename": "map<string,int>", "field0": 0, "field1": 7, "field2": 14, "field3": 21, "field4": 28, "field5": 35, "field6": 42, "field7": 49, "field8": 56, "field9": 63}
+Data matches
+MINIMAL: {"field0":0,"field1":7,"field2":14,"field3":21,"field4":28,"field5":35,"field6":42,"field7":49,"field8":56,"field9":63}
+Data matches

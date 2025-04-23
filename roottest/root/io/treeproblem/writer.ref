@@ -1,0 +1,24 @@
+
+Processing writer.C...
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :      100 : Total =            8777 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :foo       : Int_t foo_                                             *
+*Entries :      100 : Total  Size=       8901 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :foo.fUniqueID : UInt_t fUniqueID[foo_]                             *
+*Entries :      100 : Total  Size=       2373 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :foo.fBits : UInt_t fBits[foo_]                                     *
+*Entries :      100 : Total  Size=       2349 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :foo.fFoo  : Int_t fFoo[foo_]                                       *
+*Entries :      100 : Total  Size=       2343 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+(int) 0

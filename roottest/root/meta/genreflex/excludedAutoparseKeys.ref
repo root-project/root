@@ -1,0 +1,11 @@
+Info: Class vector<float> is not included in the set of autoparse keys.
+Info: Class vector<vector<bitset<3> > > is not included in the set of autoparse keys.
+Info: Class vector<int> is not included in the set of autoparse keys.
+Info: Class vector<unsigned int> is not included in the set of autoparse keys.
+Info: Class vector<short> is not included in the set of autoparse keys.
+Info: Class vector<string> is not included in the set of autoparse keys.
+Info: Class vector<pair<int,int> > is not included in the set of autoparse keys.
+Info: Class vector<map<int,set<double> > > is not included in the set of autoparse keys.
+Info: Class set<int> is not included in the set of autoparse keys.
+Info: Class list<unordered_set<float> > is not included in the set of autoparse keys.
+Info: Class forward_list<unordered_map<string,vector<int> > > is not included in the set of autoparse keys.

@@ -1,0 +1,11 @@
+<lcgdict>
+
+  <class name="DeFTDetector"     />
+  <class name="DeFTStation"      />
+  <class name="std::vector<DeFTStation*>" />    
+  <class name="DeFTBiLayer"      />
+  <class name="std::vector<DeFTBiLayer*>" />    
+  <class name="DeFTLayer"        />
+  <class name="std::vector<DeFTLayer*>"   />    
+
+</lcgdict>

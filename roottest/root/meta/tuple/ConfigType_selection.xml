@@ -1,0 +1,8 @@
+<!--  Copyright (C) 2002-2023 CERN for the benefit of the ATLAS collaboration -->
+<lcgdict>
+
+  <class name="std::tuple<ConfigType, std::string>" />
+  <class name="std::map<std::string, std::tuple<ConfigType, std::string> >" />
+  <class name="ConfigType" />
+
+</lcgdict>

@@ -1,0 +1,3 @@
+This test is located in the genreflex directory and not in meta since it aims 
+to test the percolation of the information in the selection file into 
+TClass.

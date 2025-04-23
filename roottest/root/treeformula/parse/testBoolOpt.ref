@@ -1,0 +1,36 @@
+
+Processing testBoolOpt.C...
+regular C++: left() || right()
+running left side
+TFormula: left() || right()
+running left side
+regular C++: !left() && !right()
+running left side
+TFormula: !left() && !right()
+running left side
+regular C++: !left() || right()
+running left side
+running right side
+TFormula: !left() || right()
+running left side
+running right side
+regular C++: left() && !right()
+running left side
+running right side
+TFormula: left() && !right()
+running left side
+running right side
+regular C++: left()+ (!left() && !right()) + right()
+running left side
+running left side
+running right side
+TFormula: left()+ (!left() && !right()) + right()
+running left side
+running left side
+running right side
+                  for : left() || right() Ndim= 0, Npar= 0, Number= 0 
+ Formula expression: 
+	left()||right() 
+                 fand : !left() && !right() Ndim= 0, Npar= 0, Number= 0 
+ Formula expression: 
+	!left()&&!right() 

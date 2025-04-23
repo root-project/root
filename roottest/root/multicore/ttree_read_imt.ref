@@ -1,0 +1,6 @@
+SUCCESS [IMT] - Bytes sequential1: 232750000 - parallel1: 232750000
+SUCCESS [IMT] - Checked state of global IMT
+SUCCESS [IMT] - Bytes sequential2: 232750000 - parallel2: 232750000
+Warning in <TClass::Init>: no dictionary for class A is available
+Warning in <TClass::Init>: no dictionary for class B is available
+NUM TASKS: 100000

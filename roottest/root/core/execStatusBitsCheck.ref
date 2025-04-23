@@ -1,0 +1,19 @@
+Processing /Users/pcanal/root_working/roottest/root/core/execStatusBitsCheck.C...
+First verify verbose output in the case of TStreamerElement
+Bit   0 declared in TObject as kCanDelete
+Bit   3 declared in TObject as kMustCleanup
+Bit   4 declared in TObject as kIsReferenced
+Bit   5 declared in TObject as kHasUUID
+Bit   6 declared in TStreamerElement as kHasRange
+Bit   6 declared in TObject as kCannotPick
+Bit   8 declared in TObject as kNoContextMenu
+Bit   9 declared in TStreamerElement as kCache
+Bit  10 declared in TStreamerElement as kRepeat
+Bit  11 declared in TStreamerElement as kRead
+Bit  12 declared in TStreamerElement as kWrite
+Bit  13 declared in TStreamerElement as kDoNotDelete
+Bit  13 declared in TObject as kInvalidObject
+Bit  14 declared in TStreamerElement as kWholeObject
+Bit  21 declared in TStreamerElement as kWarned
+Second verify all classes for any overlaps
+(int) 0

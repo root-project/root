@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<root setup="2xoo" ref="null" created="2014-03-06 16:32:28" modified="2014-03-06 16:32:28" uuid="86b671d2-a544-11e3-9717-0101007fbeef" version="2">
+  <XmlKey name="Container" cycle="1" created="2014-03-06 16:32:28">
+    <Object class="Container">
+      <Container version="1">
+        <TObject fUniqueID="0" fBits="3000000"/>
+        <m_sc>
+          <SuperCluster version="1">
+            <energy2 v="1.230000e+02"/>
+          </SuperCluster>
+        </m_sc>
+        <m_part>
+          <Particle version="1">
+            <vertex>
+              <ROOT__Math__Cartesian3D_Double32_t_ version="1">
+                <fX v="1.000000e-01"/>
+                <fY v="2.000000e-01"/>
+                <fZ v="3.000000e-01"/>
+              </ROOT__Math__Cartesian3D_Double32_t_>
+            </vertex>
+          </Particle>
+        </m_part>
+      </Container>
+    </Object>
+  </XmlKey>
+  <StreamerInfos>
+    <TStreamerInfo name="Container" title="" v="9" classversion="1" canoptimize="true" checksum="866396786">
+      <TStreamerBase name="TObject" title="Basic ROOT object" v="3" type="66" typename="BASE" size="16" baseversion="1"/>
+      <TStreamerObjectAny name="m_sc" v="2" type="62" typename="SuperCluster" size="8"/>
+      <TStreamerObjectAny name="m_part" v="2" type="62" typename="Particle" size="24"/>
+    </TStreamerInfo>
+    <TStreamerInfo name="SuperCluster" title="" v="9" classversion="-1" canoptimize="true" checksum="2016884484">
+      <TStreamerBasicType name="energy2" v="2" type="8" typename="double" size="8"/>
+    </TStreamerInfo>
+    <TStreamerInfo name="Particle" title="" v="9" classversion="-1" canoptimize="true" checksum="62764506">
+      <TStreamerObjectAny name="vertex" v="2" type="62" typename="ROOT::Math::Cartesian3D&lt;Double32_t&gt;" size="24"/>
+    </TStreamerInfo>
+    <TStreamerInfo name="ROOT::Math::Cartesian3D&lt;Double32_t&gt;" title="" v="9" classversion="-1" canoptimize="true" checksum="-312572960">
+      <TStreamerBasicType name="fX" title="x coordinate" v="2" type="9" typename="Double32_t" size="8"/>
+      <TStreamerBasicType name="fY" title="y coordinate" v="2" type="9" typename="Double32_t" size="8"/>
+      <TStreamerBasicType name="fZ" title="z coordinate" v="2" type="9" typename="Double32_t" size="8"/>
+    </TStreamerInfo>
+  </StreamerInfos>
+</root>

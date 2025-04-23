@@ -1,0 +1,195 @@
+
+Processing runClasses.C...
+Testing tree TreeClass0
+Ev: 201, Px: 101.0
+Ev: 202, Px: 102.0
+Ev: 203, Px: 103.0
+Ev: 204, Px: 104.0
+Ev: 205, Px: 105.0
+Ev: 206, Px: 106.0
+Ev: 207, Px: 107.0
+Ev: 208, Px: 108.0
+Ev: 209, Px: 109.0
+Ev: 210, Px: 110.0
+Testing tree TreeClass2
+Ev: 201, Px: 101.0
+Ev: 202, Px: 102.0
+Ev: 203, Px: 103.0
+Ev: 204, Px: 104.0
+Ev: 205, Px: 105.0
+Ev: 206, Px: 106.0
+Ev: 207, Px: 107.0
+Ev: 208, Px: 108.0
+Ev: 209, Px: 109.0
+Ev: 210, Px: 110.0
+Testing tree TreeClassNested0
+Ev: 201, Px: 101.0, Py: 301.0
+Ev: 202, Px: 102.0, Py: 302.0
+Ev: 203, Px: 103.0, Py: 303.0
+Ev: 204, Px: 104.0, Py: 304.0
+Ev: 205, Px: 105.0, Py: 305.0
+Ev: 206, Px: 106.0, Py: 306.0
+Ev: 207, Px: 107.0, Py: 307.0
+Ev: 208, Px: 108.0, Py: 308.0
+Ev: 209, Px: 109.0, Py: 309.0
+Ev: 210, Px: 110.0, Py: 310.0
+Testing tree TreeClassNested1
+Ev: 201, Px: 101.0, Py: 301.0
+Ev: 202, Px: 102.0, Py: 302.0
+Ev: 203, Px: 103.0, Py: 303.0
+Ev: 204, Px: 104.0, Py: 304.0
+Ev: 205, Px: 105.0, Py: 305.0
+Ev: 206, Px: 106.0, Py: 306.0
+Ev: 207, Px: 107.0, Py: 307.0
+Ev: 208, Px: 108.0, Py: 308.0
+Ev: 209, Px: 109.0, Py: 309.0
+Ev: 210, Px: 110.0, Py: 310.0
+Testing tree TreeClassNested2
+Ev: 201, Px: 101.0, Py: 301.0
+Ev: 202, Px: 102.0, Py: 302.0
+Ev: 203, Px: 103.0, Py: 303.0
+Ev: 204, Px: 104.0, Py: 304.0
+Ev: 205, Px: 105.0, Py: 305.0
+Ev: 206, Px: 106.0, Py: 306.0
+Ev: 207, Px: 107.0, Py: 307.0
+Ev: 208, Px: 108.0, Py: 308.0
+Ev: 209, Px: 109.0, Py: 309.0
+Ev: 210, Px: 110.0, Py: 310.0
+Testing tree TreeEventTreeSimple0
+EventSize: 248
+Px: 110.0 111.0 112.0 113.0 114.0
+Py: 120.0 121.0 122.0 123.0 124.0
+Pz: 130.0 131.0 132.0 133.0 134.0
+EventSize: 248
+Px: 210.0 211.0 212.0 213.0 214.0
+Py: 220.0 221.0 222.0 223.0 224.0
+Pz: 230.0 231.0 232.0 233.0 234.0
+EventSize: 248
+Px: 310.0 311.0 312.0 313.0 314.0
+Py: 320.0 321.0 322.0 323.0 324.0
+Pz: 330.0 331.0 332.0 333.0 334.0
+EventSize: 248
+Px: 410.0 411.0 412.0 413.0 414.0
+Py: 420.0 421.0 422.0 423.0 424.0
+Pz: 430.0 431.0 432.0 433.0 434.0
+EventSize: 248
+Px: 510.0 511.0 512.0 513.0 514.0
+Py: 520.0 521.0 522.0 523.0 524.0
+Pz: 530.0 531.0 532.0 533.0 534.0
+EventSize: 248
+Px: 610.0 611.0 612.0 613.0 614.0
+Py: 620.0 621.0 622.0 623.0 624.0
+Pz: 630.0 631.0 632.0 633.0 634.0
+EventSize: 248
+Px: 710.0 711.0 712.0 713.0 714.0
+Py: 720.0 721.0 722.0 723.0 724.0
+Pz: 730.0 731.0 732.0 733.0 734.0
+EventSize: 248
+Px: 810.0 811.0 812.0 813.0 814.0
+Py: 820.0 821.0 822.0 823.0 824.0
+Pz: 830.0 831.0 832.0 833.0 834.0
+EventSize: 248
+Px: 910.0 911.0 912.0 913.0 914.0
+Py: 920.0 921.0 922.0 923.0 924.0
+Pz: 930.0 931.0 932.0 933.0 934.0
+EventSize: 248
+Px: 1010.0 1011.0 1012.0 1013.0 1014.0
+Py: 1020.0 1021.0 1022.0 1023.0 1024.0
+Pz: 1030.0 1031.0 1032.0 1033.0 1034.0
+Testing tree TreeEventTreeSimple1
+EventSize: 248
+Px: 110.0 111.0 112.0 113.0 114.0
+Py: 120.0 121.0 122.0 123.0 124.0
+Pz: 130.0 131.0 132.0 133.0 134.0
+EventSize: 248
+Px: 210.0 211.0 212.0 213.0 214.0
+Py: 220.0 221.0 222.0 223.0 224.0
+Pz: 230.0 231.0 232.0 233.0 234.0
+EventSize: 248
+Px: 310.0 311.0 312.0 313.0 314.0
+Py: 320.0 321.0 322.0 323.0 324.0
+Pz: 330.0 331.0 332.0 333.0 334.0
+EventSize: 248
+Px: 410.0 411.0 412.0 413.0 414.0
+Py: 420.0 421.0 422.0 423.0 424.0
+Pz: 430.0 431.0 432.0 433.0 434.0
+EventSize: 248
+Px: 510.0 511.0 512.0 513.0 514.0
+Py: 520.0 521.0 522.0 523.0 524.0
+Pz: 530.0 531.0 532.0 533.0 534.0
+EventSize: 248
+Px: 610.0 611.0 612.0 613.0 614.0
+Py: 620.0 621.0 622.0 623.0 624.0
+Pz: 630.0 631.0 632.0 633.0 634.0
+EventSize: 248
+Px: 710.0 711.0 712.0 713.0 714.0
+Py: 720.0 721.0 722.0 723.0 724.0
+Pz: 730.0 731.0 732.0 733.0 734.0
+EventSize: 248
+Px: 810.0 811.0 812.0 813.0 814.0
+Py: 820.0 821.0 822.0 823.0 824.0
+Pz: 830.0 831.0 832.0 833.0 834.0
+EventSize: 248
+Px: 910.0 911.0 912.0 913.0 914.0
+Py: 920.0 921.0 922.0 923.0 924.0
+Pz: 930.0 931.0 932.0 933.0 934.0
+EventSize: 248
+Px: 1010.0 1011.0 1012.0 1013.0 1014.0
+Py: 1020.0 1021.0 1022.0 1023.0 1024.0
+Pz: 1030.0 1031.0 1032.0 1033.0 1034.0
+Testing tree TreeEventTreeSimple2
+EventSize: 248
+Px: 110.0 111.0 112.0 113.0 114.0
+Py: 120.0 121.0 122.0 123.0 124.0
+Pz: 130.0 131.0 132.0 133.0 134.0
+EventSize: 248
+Px: 210.0 211.0 212.0 213.0 214.0
+Py: 220.0 221.0 222.0 223.0 224.0
+Pz: 230.0 231.0 232.0 233.0 234.0
+EventSize: 248
+Px: 310.0 311.0 312.0 313.0 314.0
+Py: 320.0 321.0 322.0 323.0 324.0
+Pz: 330.0 331.0 332.0 333.0 334.0
+EventSize: 248
+Px: 410.0 411.0 412.0 413.0 414.0
+Py: 420.0 421.0 422.0 423.0 424.0
+Pz: 430.0 431.0 432.0 433.0 434.0
+EventSize: 248
+Px: 510.0 511.0 512.0 513.0 514.0
+Py: 520.0 521.0 522.0 523.0 524.0
+Pz: 530.0 531.0 532.0 533.0 534.0
+EventSize: 248
+Px: 610.0 611.0 612.0 613.0 614.0
+Py: 620.0 621.0 622.0 623.0 624.0
+Pz: 630.0 631.0 632.0 633.0 634.0
+EventSize: 248
+Px: 710.0 711.0 712.0 713.0 714.0
+Py: 720.0 721.0 722.0 723.0 724.0
+Pz: 730.0 731.0 732.0 733.0 734.0
+EventSize: 248
+Px: 810.0 811.0 812.0 813.0 814.0
+Py: 820.0 821.0 822.0 823.0 824.0
+Pz: 830.0 831.0 832.0 833.0 834.0
+EventSize: 248
+Px: 910.0 911.0 912.0 913.0 914.0
+Py: 920.0 921.0 922.0 923.0 924.0
+Pz: 930.0 931.0 932.0 933.0 934.0
+EventSize: 248
+Px: 1010.0 1011.0 1012.0 1013.0 1014.0
+Py: 1020.0 1021.0 1022.0 1023.0 1024.0
+Pz: 1030.0 1031.0 1032.0 1033.0 1034.0
+Testing tree TreeDuplicateName
+Warning in <AddReader>: Ignored branch fUniqueID because a branch with the same name already exists. TTreeReader requires an unique name for the branches. You may need to put a dot at the end of the name of top-level branches.
+Warning in <AddReader>: Ignored branch fBits because a branch with the same name already exists. TTreeReader requires an unique name for the branches. You may need to put a dot at the end of the name of top-level branches.
+Warning in <AddReader>: Ignored branch fPx because a branch with the same name already exists. TTreeReader requires an unique name for the branches. You may need to put a dot at the end of the name of top-level branches.
+Warning in <AddReader>: Ignored branch fEv because a branch with the same name already exists. TTreeReader requires an unique name for the branches. You may need to put a dot at the end of the name of top-level branches.
+Ev: 201, Px: 101.0
+Ev: 202, Px: 102.0
+Ev: 203, Px: 103.0
+Ev: 204, Px: 104.0
+Ev: 205, Px: 105.0
+Ev: 206, Px: 106.0
+Ev: 207, Px: 107.0
+Ev: 208, Px: 108.0
+Ev: 209, Px: 109.0
+Ev: 210, Px: 110.0

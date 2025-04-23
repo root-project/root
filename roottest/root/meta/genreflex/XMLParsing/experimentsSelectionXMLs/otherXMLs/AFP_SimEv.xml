@@ -1,0 +1,12 @@
+ 
+<lcgdict>
+  <class name="AFP_TDSimHitCollection" id="B037C5AA-3A39-4AAF-BF82-79F7C988317E"/>
+  <class name="AtlasHitsVector<AFP_TDSimHit>" />
+  <class name="std::vector<AFP_TDSimHit>" />
+  <class name="AFP_TDSimHit" />
+  <class name="AFP_SIDSimHitCollection" id="5F778506-5C95-4DDC-AA9A-C32C834EFBD9"/>
+  <class name="AtlasHitsVector<AFP_SIDSimHit>" />
+  <class name="std::vector<AFP_SIDSimHit>" />
+  <class name="AFP_SIDSimHit" />
+</lcgdict>
+

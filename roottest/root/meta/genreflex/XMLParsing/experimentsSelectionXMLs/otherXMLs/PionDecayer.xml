@@ -1,0 +1,9 @@
+<lcgdict>
+   <class name="PionDecayer"/>
+<exclusion>
+   <class name="PionDecayer">
+        <method name="EventInitialization"/>
+	<method name="EventAnalysis"/>
+   </class>
+</exclusion>
+</lcgdict>

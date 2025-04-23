@@ -1,0 +1,15 @@
+<lcgdict>
+
+  <class name="TruthHandler" />
+
+  <class name="RecoHandler" />
+
+  <class name="MatchingTools" />
+
+  <class name="TauExamples" />
+
+  <class name="TauToolCompiledARAExample" />
+
+  <class name="TauCalibrationTools" />
+
+</lcgdict>

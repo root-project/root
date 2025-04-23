@@ -1,0 +1,8 @@
+
+Processing runInterpreterValue.C...
+WithDtor(): 1
+About to return a WithDtor
+Ident: IAmWithDtor!
+Now deleting TInterpreterValue
+~WithDtor() 0
+Now all WithDor should be gone; we have 0 left

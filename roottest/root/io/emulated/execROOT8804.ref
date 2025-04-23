@@ -1,0 +1,57 @@
+
+Processing execROOT8804.C...
+Warning in <TClass::Init>: no dictionary for class art::BranchKey is available
+Warning in <TClass::Init>: no dictionary for class art::BranchDescription is available
+Warning in <TClass::Init>: no dictionary for class art::BranchID is available
+Warning in <TClass::Init>: no dictionary for class fhicl::ParameterSetID is available
+Warning in <TClass::Init>: no dictionary for class boost::array<unsigned char,20> is available
+Warning in <TClass::Init>: no dictionary for class art::Hash<3> is available
+Warning in <TClass::Init>: no dictionary for class art::Transient<art::BranchDescription::Transients> is available
+Warning in <TClass::Init>: no dictionary for class art::Hash<2> is available
+Warning in <TClass::Init>: no dictionary for class art::ProcessHistory is available
+Warning in <TClass::Init>: no dictionary for class art::ProcessConfiguration is available
+Warning in <TClass::Init>: no dictionary for class art::Transient<art::ProcessHistory::Transients> is available
+Warning in <TClass::Init>: no dictionary for class art::EventAuxiliary is available
+Warning in <TClass::Init>: no dictionary for class art::EventID is available
+Warning in <TClass::Init>: no dictionary for class art::RunID is available
+Warning in <TClass::Init>: no dictionary for class art::SubRunID is available
+Warning in <TClass::Init>: no dictionary for class art::Timestamp is available
+Warning in <TClass::Init>: no dictionary for class art::SubRunAuxiliary is available
+Warning in <TClass::Init>: no dictionary for class art::RunAuxiliary is available
+Warning in <TClass::Init>: no dictionary for class art::Wrapper<vector<artdaq::Fragment> > is available
+Warning in <TClass::Init>: no dictionary for class art::EDProduct is available
+Warning in <TClass::Init>: no dictionary for class artdaq::Fragment is available
+Warning in <TClass::Init>: no dictionary for class artdaq::QuickVec<ULong64_t> is available
+Warning in <TClass::Init>: no dictionary for class art::Wrapper<art::TriggerResults> is available
+Warning in <TClass::Init>: no dictionary for class art::TriggerResults is available
+Warning in <TClass::Init>: no dictionary for class art::HLTGlobalStatus is available
+Warning in <TClass::Init>: no dictionary for class art::DoNotRecordParents is available
+Warning in <TClass::Init>: no dictionary for class art::Wrapper<vector<artdaq::PackageBuildInfo> > is available
+Warning in <TClass::Init>: no dictionary for class artdaq::PackageBuildInfo is available
+Warning in <TClass::Init>: no dictionary for class art::History is available
+Warning in <TClass::Init>: no dictionary for class art::ProductProvenance is available
+Warning in <TClass::Init>: no dictionary for class art::Hash<5> is available
+Warning in <TClass::Init>: no dictionary for class art::Transient<art::ProductProvenance::Transients> is available
+Warning in <TClass::Init>: no dictionary for class art::HLTPathStatus is available
+Warning in <TClass::Init>: no dictionary for class art::FileFormatVersion is available
+Warning in <TClass::Init>: no dictionary for class art::FileIndex is available
+Warning in <TClass::Init>: no dictionary for class art::Transient<art::FileIndex::Transients> is available
+Warning in <TClass::Init>: no dictionary for class art::FileIndex::Element is available
+Warning in <TClass::Init>: no dictionary for class pair<const art::Hash<2>,art::ProcessHistory> is available
+Warning in <TClass::Init>: no dictionary for class art::ProductRegistry is available
+Warning in <TClass::Init>: no dictionary for class pair<art::BranchKey,art::BranchDescription> is available
+Warning in <TClass::Init>: no dictionary for class art::Parentage is available
+Warning in <TClass::Init>: no dictionary for class art::BranchChildren is available
+Warning in <TClass::Init>: no dictionary for class pair<art::BranchID,set<art::BranchID> > is available
+
+StreamerInfo for class: artdaq::QuickVec<ULong64_t>, version=5, checksum=0xf87044d1
+  unsigned int   size_           offset=  8 type=13                     
+  unsigned long long* data_           offset= 16 type=57 [size_]             
+  unsigned int   capacity_       offset= 24 type=13                     
+   i= 0, size_           type= 13, offset=  8, len=1, method=0
+   i= 1, data_           type= 57, offset= 16, len=1, method=8
+   i= 2, capacity_       type= 13, offset= 24, len=1, method=0
+
+StreamerInfo for class: artdaq::Fragment, version=15, checksum=0x82b85e3a
+  artdaq::QuickVec<unsigned long long> vals_           offset=  8 type=62                     
+   i= 0, vals_           type= 62, offset=  8, len=1, method=0

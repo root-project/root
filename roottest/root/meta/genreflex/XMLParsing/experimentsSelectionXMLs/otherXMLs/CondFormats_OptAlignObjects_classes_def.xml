@@ -1,0 +1,43 @@
+<lcgdict>
+ <class name="OpticalAlignments"/>
+ <class name="OpticalAlignInfo"/>
+ <class name="OpticalAlignParam"/>
+
+
+ <!-- class name="MBAForkData"/-->
+ <class name="MBAChBenchCalPlateData"/>
+ <class name="MBAChBenchSurveyPlateData"/>
+
+ <class name="OpticalAlignMeasurements"/>
+ <class name="OpticalAlignMeasurementInfo"/>
+
+ <class name="CSCZSensors"/>
+ <class name="CSCZSensorData"/>
+ <class name="std::vector<CSCZSensorData>"/>
+ 
+<class name="CSCRSensors"/> 	 
+ <class name="CSCRSensorData"/> 	 
+ <class name="std::vector<CSCRSensorData>"/>
+
+ <class name="std::vector<OpticalAlignInfo>"/>
+ <class name="std::vector<OpticalAlignMeasurementInfo>"/>
+ <class name="std::vector<OpticalAlignParam>"/>
+
+ <!--class name="std::vector<MBAForkData>"/-->
+ <class name="std::vector<MBAChBenchCalPlateData>"/>
+ <class name="std::vector<MBAChBenchSurveyPlateData>"/>
+
+ <!--class name="MBAFork"/-->
+ <class name="MBAChBenchCalPlate"/>
+ <class name="MBAChBenchSurveyPlate"/>
+ <class name="edm::Wrapper<OpticalAlignments>"/>
+ <class name="edm::Wrapper<OpticalAlignMeasurements>"/>
+
+ <class name="Inclinometers"/> 	 
+ <class name="Inclinometers::Item"/> 	 
+ <class name="std::vector<Inclinometers::Item>"/> 	 
+ <class name="PXsensors"/> 	 
+ <class name="PXsensors::Item"/> 	 
+ <class name="std::vector<PXsensors::Item>" />
+
+</lcgdict>

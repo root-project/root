@@ -1,0 +1,17 @@
+<lcgdict>
+  <class name="edm::EventBase" ClassVersion="10">
+   <version ClassVersion="10" checksum="238869833"/>
+  </class>
+  <class name="edm::LuminosityBlockBase" ClassVersion="10">
+   <version ClassVersion="10" checksum="3262495779"/>
+  </class>
+  <class name="edm::RunBase" ClassVersion="10">
+   <version ClassVersion="10" checksum="26549798"/>
+  </class>
+  <class name="edm::TriggerNames" ClassVersion="10">
+   <version ClassVersion="10" checksum="2872088986"/>
+  </class>
+  <class name="edm::TriggerResultsByName" ClassVersion="10">
+   <version ClassVersion="10" checksum="1282053882"/>
+  </class>
+</lcgdict>

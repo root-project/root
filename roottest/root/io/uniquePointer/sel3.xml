@@ -1,0 +1,10 @@
+<rootdict>
+   <class name="Class01" />
+   <class pattern="Class0*"/>
+   <class name="std::vector<std::unique_ptr<const double>>" />
+   <class pattern="std::set<*" />
+   <class pattern="std::map<*" />
+   <class name="std::vector<std::unique_ptr<TrackingRegion>>" />
+   <class pattern="std::vector<*" />
+   <class name="edm::Wrapper<std::vector<std::unique_ptr<TrackingRegion> > >" />
+</rootdict>

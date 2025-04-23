@@ -1,0 +1,9 @@
+Test writing of a histogram into a pickle file ... ok
+Test writing of an std::vector<double> into a pickle file ... ok
+Test writing of a user-defined object into a pickle file ... ok
+Test writing of a ROOT object in a namespace into a pickle file ... ok
+Test writing PyROOT custom types ... ok
+
+----------------------------------------------------------------------
+
+OK

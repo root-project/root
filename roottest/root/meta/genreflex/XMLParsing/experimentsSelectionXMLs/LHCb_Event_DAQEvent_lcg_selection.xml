@@ -1,0 +1,22 @@
+<lcgdict>
+  <class name="LHCb::RawEvent" id="000003EA-0000-0000-0000-000000000000">
+    <field name="m_eventMap" transient="true"/>  
+    <field name="m_mapped" transient="true"/>  
+  </class>
+  <class name="LHCb::RawBank"/>
+  <class name="LHCb::RawEvent::Bank">
+    <field name="m_owns" transient="true"/>  
+  </class>
+  <class name="std::vector<LHCb::RawEvent::Bank>"/>
+  <class name="std::vector<LHCb::RawBank*>"/>
+  <class name="std::map<LHCb::RawBank::BankType, std::vector<LHCb::RawBank*> >"/>
+
+<!-- From generated file -->
+
+  <class name="LHCb::ODIN" id="000003ed-0000-0000-0000-000000000000"/>
+  <class name="SmartRef<LHCb::ODIN>"> <field name="m_target" transient="true"/> </class>
+  <class name="SmartRefVector<LHCb::ODIN>"> <field name="m_contd" transient="true"/> <field name="m_data" transient="true"/> </class>
+  <class name="std::vector<SmartRef<LHCb::ODIN> >"/>
+
+
+</lcgdict>

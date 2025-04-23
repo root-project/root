@@ -1,0 +1,132 @@
+<lcgdict>
+ <class name="edmtest::DummyProduct" ClassVersion="10">
+  <version ClassVersion="10" checksum="4017626975"/>
+ </class>
+ <class name="edmtest::IntProduct" ClassVersion="10">
+  <version ClassVersion="10" checksum="4286676158"/>
+ </class>
+ <class name="edmtest::EnumProduct" ClassVersion="10">
+  <version ClassVersion="10" checksum="3025325436"/>
+ </class>
+ <enum name="edmtest::TheEnumProduct"/>
+ <class name="edmtest::TransientIntProduct" ClassVersion="10">
+  <version ClassVersion="10" checksum="304339852"/>
+ </class>
+ <class name="edmtest::Int16_tProduct" ClassVersion="10">
+  <version ClassVersion="10" checksum="1443289058"/>
+ </class>
+ <class name="edmtest::DoubleProduct" ClassVersion="10">
+  <version ClassVersion="10" checksum="927325064"/>
+ </class>
+ <class name="edmtest::StringProduct" ClassVersion="10">
+  <version ClassVersion="10" checksum="2737503723"/>
+ </class>
+ <class name="edmtest::Prodigal" ClassVersion="10">
+  <version ClassVersion="10" checksum="3510691703"/>
+ </class>
+ <class name="edmtest::Simple" ClassVersion="10">
+  <version ClassVersion="10" checksum="2533881336"/>
+ </class>
+ <class name="edmtest::SimpleDerived" ClassVersion="10">
+  <version ClassVersion="10" checksum="3753531674"/>
+ </class>
+ <class name="edmtest::Sortable" ClassVersion="10">
+  <version ClassVersion="10" checksum="1166695033"/>
+ </class>
+ <class name="edmtest::Unsortable" ClassVersion="10">
+  <version ClassVersion="10" checksum="2720085305"/>
+ </class>
+ <class name="edm::SortedCollection<edmtest::Simple, edm::StrictWeakOrdering<edmtest::Simple> >"/>
+ <class name="edm::OwnVector<edmtest::Simple, edm::ClonePolicy<edmtest::Simple> >"/>
+ <class name="edm::OwnVector<edmtest::SimpleDerived, edm::ClonePolicy<edmtest::SimpleDerived> >"/>
+ <class name="std::vector<edmtest::Simple>"/>
+ <class name="edm::Wrapper<std::vector<edmtest::Simple> >"/>
+ <class name="std::vector<edmtest::Simple*>"/>
+ <class name="std::vector<edmtest::SimpleDerived>"/>
+ <class name="std::vector<edmtest::SimpleDerived*>"/>
+ <class name="edm::RefProd<std::vector<edmtest::Simple> >"/>
+ <class name="edm::DetSet<edmtest::Sortable>"/>
+ <class name="std::vector<edm::DetSet<edmtest::Sortable> >"/>
+ <class name="edm::DetSet<edmtest::Unsortable>"/>
+ <class name="std::vector<edm::DetSet<edmtest::Unsortable> >"/>
+ <class name="std::vector<edmtest::Sortable>"/>
+ <class name="std::vector<edmtest::Unsortable>"/>
+ <class name="edm::DetSetVector<edmtest::Sortable>"/>
+ <class name="edm::DetSetVector<edmtest::Unsortable>"/>
+ <class pattern="class edm::AssociationVector<edm::RefProd<std::vector<edmtest::Simple> >,std::vector<edmtest::Simple>,edm::Ref<std::vector<edmtest::Simple>,edmtest::Simple,edm::refhelper::FindUsingAdvance<std::vector<edmtest::Simple>,edmtest::Simple> >,unsigned int>">
+   <field name="transientVector_" transient="true"/>
+   <field name="fixed_" transient="true"/>
+ </class>
+ <class name="edm::Wrapper<edmtest::DummyProduct>"/>
+ <class name="edm::Wrapper<edmtest::IntProduct>"/>
+ <class name="edm::Wrapper<edmtest::TransientIntProduct>" persistent="false"/>
+ <class name="edm::Wrapper<edmtest::Int16_tProduct>"/>
+ <class name="edm::Wrapper<edmtest::DoubleProduct>"/>
+ <class name="edm::Wrapper<edmtest::StringProduct>"/>
+ <class name="edm::Wrapper<edmtest::Prodigal>"/>
+ <class name="edm::Wrapper<edm::SortedCollection<edmtest::Simple, edm::StrictWeakOrdering<edmtest::Simple> > >"/>
+ <class name="edm::Wrapper<edm::OwnVector<edmtest::Simple, edm::ClonePolicy<edmtest::Simple> > >"/>
+ <class name="edm::Wrapper<edm::OwnVector<edmtest::SimpleDerived, edm::ClonePolicy<edmtest::SimpleDerived> > >"/>
+<!--
+ <class name="edm::Wrapper<edm::AssociationVector<edm::RefProd<std::vector<edmtest::Simple> >, std::vector<edmtest::Simple> > >"/>
+-->
+ <class name="edm::Wrapper<edm::DetSetVector<edmtest::Sortable> >"/>
+ <class name="edm::Wrapper<edm::DetSetVector<edmtest::Unsortable> >"/>
+
+ <class name="edmNew::DetSetVector<edmtest::Sortable>"/>
+ <class name="edmNew::DetSetVector<edmtest::SimpleDerived>"/>
+ <class name="edm::Wrapper<edmNew::DetSetVector<edmtest::Sortable> >"/>
+ <class name="edm::Wrapper<edmNew::DetSetVector<edmtest::SimpleDerived> >"/>
+
+
+ <class name="edmtest::Thing" ClassVersion="10">
+  <version ClassVersion="10" checksum="2534966692"/>
+ </class>
+ <class name="edmtest::ThingWithMerge" ClassVersion="10">
+  <version ClassVersion="10" checksum="1109971102"/>
+ </class>
+ <class name="edmtest::ThingWithIsEqual" ClassVersion="10">
+  <version ClassVersion="10" checksum="1399583220"/>
+ </class>
+ <class name="edmtest::OtherThing" ClassVersion="10">
+  <version ClassVersion="10" checksum="3424405714"/>
+ </class>
+ <class name="std::vector<edmtest::Thing>"/>
+ <class name="std::vector<edmtest::OtherThing>"/>
+ <class name="edm::RefProd<std::vector<edmtest::Thing> >"/>
+ <class name="edm::RefToBaseProd<edmtest::Thing>"/>
+ <class name="edm::reftobase::BaseHolder<edmtest::Thing>"/>
+ <class name="edm::reftobase::Holder<edmtest::Thing,edm::Ref<std::vector<edmtest::Thing>,edmtest::Thing,edm::refhelper::FindUsingAdvance<std::vector<edmtest::Thing>,edmtest::Thing> > >"/>
+ <class name="edm::RefToBase<edmtest::Thing>"/>
+ <class name="edm::Ptr<edmtest::Thing>"/>
+ <class name="edm::PtrVector<edmtest::Thing>"/>
+ <class name="edm::Ref<std::vector<edmtest::Thing>,edmtest::Thing,edm::refhelper::FindUsingAdvance<std::vector<edmtest::Thing>,edmtest::Thing> >"/>
+ <class name="edm::RefVector<std::vector<edmtest::Thing>,edmtest::Thing,edm::refhelper::FindUsingAdvance<std::vector<edmtest::Thing>,edmtest::Thing> >"/>
+ <class name="edm::Wrapper<edmtest::Thing>"/>
+ <class name="edm::Wrapper<edmtest::ThingWithMerge>"/>
+ <class name="edm::Wrapper<edmtest::ThingWithIsEqual>"/>
+ <class name="edm::Wrapper<std::vector<edmtest::Thing> >"/>
+ <class name="edm::Wrapper<std::vector<edmtest::OtherThing> >"/>
+
+ <class name="edmtestprod::Simple" ClassVersion="10">
+  <version ClassVersion="10" checksum="2751437416"/>
+ </class>
+ <class name="edmtestprod::Ord<edmtestprod::Simple>"/>
+ <class name="edmtestprod::StreamTestTmpl<edmtestprod::Ord<edmtestprod::Simple> >"/>
+ <class name="edm::Wrapper<edmtestprod::StreamTestTmpl<edmtestprod::Ord<edmtestprod::Simple> > >"/>
+ <class name="std::vector<edmtestprod::Simple>"/>
+ <class name="edm::SortedCollection<edmtestprod::Simple,edm::StrictWeakOrdering<edmtestprod::Simple> >"/>
+ <class name="edm::Wrapper<edm::SortedCollection<edmtestprod::Simple,edm::StrictWeakOrdering<edmtestprod::Simple> > >"/>
+ <class name="edmtestprod::StreamTestThing" ClassVersion="10">
+  <version ClassVersion="10" checksum="1618121316"/>
+ </class>
+ <class name="edm::Wrapper<edmtestprod::StreamTestThing>"/>
+ <class name="edmtestprod::X0123456789012345678901234567890123456789012345678901234567890123456789012345678901" ClassVersion="10">
+  <version ClassVersion="10" checksum="3326113499"/>
+ </class>
+ <class name="edm::Wrapper<edmtestprod::X0123456789012345678901234567890123456789012345678901234567890123456789012345678901>"/>
+ <class name="edmtest::DeleteEarly" ClassVersion="3">
+   <version ClassVersion="3" checksum="1338867524"/>
+</class>   
+ <class name="edm::Wrapper<edmtest::DeleteEarly>"/>
+</lcgdict>

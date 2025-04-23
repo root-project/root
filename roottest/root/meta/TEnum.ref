@@ -1,0 +1,17 @@
+
+Processing runTEnum.C...
+Enums in A::B::C:
+Collection name='TListOfEnums', class='TListOfEnums', size=2
+ OBJ: TEnum	enumC1	
+ OBJ: TEnum	enumC2	
+Collection name='THashList', class='THashList', size=2
+ OBJ: TEnumConstant	kClassEnumC1A	
+ OBJ: TEnumConstant	kClassEnumC1B	
+
+
+Enums in N:
+Collection name='TListOfEnumsWithLock', class='TListOfEnumsWithLock', size=1
+ OBJ: TEnum	namespaceEnum	
+Collection name='THashList', class='THashList', size=1
+ OBJ: TEnumConstant	kNamespace	
+(int) 0

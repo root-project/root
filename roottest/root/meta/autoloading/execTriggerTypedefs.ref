@@ -1,0 +1,36 @@
+
+Processing execTriggerTypedefs.C...
+Enum: TriggerObjectType
+ - Constant TriggerL1Mu has value -81
+ - Constant TriggerL1NoIsoEG has value -82
+ - Constant TriggerL1IsoEG has value -83
+ - Constant TriggerL1CenJet has value -84
+ - Constant TriggerL1ForJet has value -85
+ - Constant TriggerL1TauJet has value -86
+ - Constant TriggerL1ETM has value -87
+ - Constant TriggerL1ETT has value -88
+ - Constant TriggerL1HTT has value -89
+ - Constant TriggerL1HTM has value -90
+ - Constant TriggerL1JetCounts has value -91
+ - Constant TriggerL1HfBitCounts has value -92
+ - Constant TriggerL1HfRingEtSums has value -93
+ - Constant TriggerL1TechTrig has value -94
+ - Constant TriggerL1Castor has value -95
+ - Constant TriggerL1BPTX has value -96
+ - Constant TriggerL1GtExternal has value -97
+ - Constant TriggerPhoton has value 81
+ - Constant TriggerElectron has value 82
+ - Constant TriggerMuon has value 83
+ - Constant TriggerTau has value 84
+ - Constant TriggerJet has value 85
+ - Constant TriggerBJet has value 86
+ - Constant TriggerMET has value 87
+ - Constant TriggerTET has value 88
+ - Constant TriggerTHT has value 89
+ - Constant TriggerMHT has value 90
+ - Constant TriggerTrack has value 91
+ - Constant TriggerCluster has value 92
+ - Constant TriggerMETSig has value 93
+ - Constant TriggerELongit has value 94
+ - Constant TriggerMHTSig has value 95
+ - Constant TriggerHLongit has value 96

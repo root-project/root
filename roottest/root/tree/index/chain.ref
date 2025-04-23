@@ -1,0 +1,13 @@
+
+Processing runchain.C...
+Entries in chain: 100
+BuildIndex returns 100
+Try to get value that is not in the chain, this should return a -1:
+-1
+-1
+Entries in chain: 100
+BuildIndex returns 1
+Try to get value that is not in the chain, this should return a -1:
+-1
+-1
+(int)0

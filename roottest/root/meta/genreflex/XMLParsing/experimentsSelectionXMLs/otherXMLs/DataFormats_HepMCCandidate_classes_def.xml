@@ -1,0 +1,44 @@
+<lcgdict>
+  <class name="reco::CompositeRefCandidateT<reco::GenParticleRefVector>" />
+  <class name="reco::GenParticle"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2736964676"/>
+  </class>
+  <class name="std::vector<reco::GenParticle>" />
+  <class name="reco::GenParticleCollection" />
+  <class name="edm::Wrapper<std::vector<reco::GenParticle> >" />
+  <class name="edm::Association<std::vector<reco::GenParticle> >" />
+  <class name="edm::Wrapper<edm::Association<std::vector<reco::GenParticle> > >" />
+
+  <class name="reco::GenParticleRef" />
+  <class name="reco::GenParticleRefProd" />
+  <class name="reco::GenParticleRefVector" />
+  <class name="std::vector<std::vector<reco::GenParticleRef> >"/>
+  <class name="std::vector<reco::GenParticleRef>" />
+  <class name="edm::Wrapper<reco::GenParticleRefVector>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::GenParticleRef>" />
+  <class name="edm::reftobase::RefHolder<reco::GenParticleRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::GenParticleRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::GenParticleRefVector>" />
+  <class name="reco::PdfInfo"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1002280074"/>
+  </class>
+  <class name="edm::Wrapper<reco::PdfInfo>" />
+  <class name="reco::FlavorHistory"  ClassVersion="10">
+   <version ClassVersion="10" checksum="425358630"/>
+  </class>
+  <class name="std::vector<reco::FlavorHistory>" />
+  <class name="edm::Wrapper<std::vector<reco::FlavorHistory> >" />
+  <class name="edm::ValueMap<reco::FlavorHistory >" />
+  <class name="edm::Wrapper<edm::ValueMap<reco::FlavorHistory > >" />
+  <class name="reco::FlavorHistoryEvent"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3632760022"/>
+  </class>
+  <class name="std::vector<reco::FlavorHistoryEvent>" />
+  <class name="edm::Wrapper<std::vector<reco::FlavorHistoryEvent> >" />
+  <class name="edm::Wrapper<reco::FlavorHistoryEvent >" />
+  <class name="edm::ValueMap<reco::FlavorHistoryEvent >" />
+  <class name="edm::Wrapper<edm::ValueMap<reco::FlavorHistoryEvent > >" />
+  <class name="edm::RefVectorIterator<std::vector<reco::GenParticle>,reco::GenParticle,edm::refhelper::FindUsingAdvance<std::vector<reco::GenParticle>,reco::GenParticle> >"/>
+  <class pattern="std::iterator<*edm::Ref*GenParticle*>"/>
+</lcgdict>
+ 

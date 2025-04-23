@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="pat::strbitset"/>
+  <class name="edm::Wrapper<pat::strbitset>"/>
+  <class name="std::vector<pat::strbitset>"/>
+  <class name="edm::Wrapper< std::vector< pat::strbitset> >"/>
+  <class name="JetIDSelectionFunctor"/>
+  <class name="PFJetIDSelectionFunctor"/>
+  <class name="ElectronVPlusJetsIDSelectionFunctor"/>
+  <class name="MuonVPlusJetsIDSelectionFunctor"/>
+  <class name="PVSelector"/>
+  <class name="RunLumiSelector"/>
+</lcgdict>

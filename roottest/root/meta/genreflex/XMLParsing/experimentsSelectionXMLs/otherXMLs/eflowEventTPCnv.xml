@@ -1,0 +1,59 @@
+<lcgdict>
+
+<class name="eflowObject_tlp1"/>
+<class name="eflowObjectContainer_p1" id="1DE97911-24C0-429D-9041-258A2F1CA7DF" />
+<class name="eflowObjectContainerCnv_p1" />
+<class name="std::vector<eflowObject_p1>" />
+<class name="eflowObject_p1" />
+
+<class name="eflowObject_tlp2"/>
+<class name="eflowObjectContainer_p2" id="E9674EC4-80D0-4616-AE98-26488ADE726B" />
+<class name="eflowObjectContainerCnv_p2" />
+<class name="std::vector<eflowObject_p2>" />
+<class name="eflowObject_p2" />
+
+<class name="eflowObject_tlp3"/>
+<class name="eflowObjectContainer_p3" id="2DF2EC16-AA4D-4BF9-82F8-7DFCE3BE00A0" />
+<class name="eflowObjectContainerCnv_p3" />
+<class name="std::vector<eflowObject_p3>" />
+<class name="eflowObject_p3" />
+
+<class name="eflowObject_tlp4"/>
+<class name="eflowObjectContainer_p4" id="75CC8E85-4CA8-4FE9-A001-26856E3D44C6" />
+<class name="eflowObjectContainerCnv_p4" />
+<class name="std::vector<eflowObject_p4>" />
+<class name="eflowObject_p4" />
+
+<class name="eflowObject_tlp5"/>
+<class name="eflowObjectContainer_p5" id="A38F4620-AB4A-11E2-90EB-00241D7D6914" />
+<class name="eflowObjectContainerCnv_p5" />
+<class name="std::vector<eflowObject_p5>" />
+<class name="eflowObject_p5" />
+
+<class name="T_TPCnv<eflowObjectContainer,eflowObjectContainer_p1>"/>
+<class name="T_AthenaPoolTPCnvBase<eflowObjectContainer,eflowObjectContainer_p1>"/>
+<class name="T_AthenaPoolTPPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p1>"/>
+<class name="T_AthenaPoolTPAbstractPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p1>"/>
+<class name="ITPConverterFor<eflowObjectContainer>"/>
+
+<class name="T_TPCnv<eflowObjectContainer,eflowObjectContainer_p2>"/>
+<class name="T_AthenaPoolTPCnvBase<eflowObjectContainer,eflowObjectContainer_p2>"/>
+<class name="T_AthenaPoolTPPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p2>"/>
+<class name="T_AthenaPoolTPAbstractPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p2>"/>
+
+<class name="T_TPCnv<eflowObjectContainer,eflowObjectContainer_p3>"/>
+<class name="T_AthenaPoolTPCnvBase<eflowObjectContainer,eflowObjectContainer_p3>"/>
+<class name="T_AthenaPoolTPPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p3>"/>
+<class name="T_AthenaPoolTPAbstractPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p3>"/>
+
+<class name="T_TPCnv<eflowObjectContainer,eflowObjectContainer_p4>"/>
+<class name="T_AthenaPoolTPCnvBase<eflowObjectContainer,eflowObjectContainer_p4>"/>
+<class name="T_AthenaPoolTPPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p4>"/>
+<class name="T_AthenaPoolTPAbstractPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p4>"/>
+
+<class name="T_TPCnv<eflowObjectContainer,eflowObjectContainer_p5>"/>
+<class name="T_AthenaPoolTPCnvBase<eflowObjectContainer,eflowObjectContainer_p5>"/>
+<class name="T_AthenaPoolTPPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p5>"/>
+<class name="T_AthenaPoolTPAbstractPolyCnvBase<eflowObjectContainer,eflowObjectContainer,eflowObjectContainer_p5>"/>
+
+</lcgdict>

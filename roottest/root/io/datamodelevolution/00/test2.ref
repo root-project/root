@@ -1,0 +1,77 @@
+
+Processing test2.cxx+...
+Warning in <TClass::Init>: no dictionary for class Unversioned is available
+Stream out object
+ACache::x 6
+ACache::y 7
+ACache::z 6070
+ACache::c 13
+ACache::fN    6
+ACache::fArray[0] 20
+ACache::fArray[1] 21
+ACache::fArray[2] 22
+ACache::fArray[3] 23
+ACache::fArray[4] 24
+ACache::fArray[5] 25
+ACache::fValues[0] 1
+ACache::fValues[1] 1.01
+ACache::fValues[2] 1.02
+Stream out embedded object
+ACache::x 9
+ACache::y 10
+ACache::z 9100
+ACache::c 19
+ACache::fN    9
+ACache::fArray[0] 20
+ACache::fArray[1] 21
+ACache::fArray[2] 22
+ACache::fArray[3] 23
+ACache::fArray[4] 24
+ACache::fArray[5] 25
+ACache::fArray[6] 26
+ACache::fArray[7] 27
+ACache::fArray[8] 28
+ACache::fValues[0] 1
+ACache::fValues[1] 1.01
+ACache::fValues[2] 1.02
+TTree::Scan object branch
+***********************************************************************************************************
+*    Row   * Instance *     obj.x *     obj.y *     obj.c * obj.persi *    obj.fN * obj.fArra * obj.fValu *
+***********************************************************************************************************
+*        0 *        0 *         6 *         7 *        13 *         0 *         6 *        10 *         0 *
+*        0 *        1 *         6 *         7 *        13 *         0 *         6 *        11 * 0.0099999 *
+*        0 *        2 *         6 *         7 *        13 *         0 *         6 *        12 * 0.0199999 *
+*        0 *        3 *         6 *         7 *        13 *         0 *         6 *        13 *           *
+*        0 *        4 *         6 *         7 *        13 *         0 *         6 *        14 *           *
+*        0 *        5 *         6 *         7 *        13 *         0 *         6 *        15 *           *
+***********************************************************************************************************
+TTree::GetEntry object branch
+ACache::x 6
+ACache::y 7
+ACache::z 6070
+ACache::c 13
+ACache::fN    6
+ACache::fArray[0] 20
+ACache::fArray[1] 21
+ACache::fArray[2] 22
+ACache::fArray[3] 23
+ACache::fArray[4] 24
+ACache::fArray[5] 25
+ACache::fValues[0] 1
+ACache::fValues[1] 1.01
+ACache::fValues[2] 1.02
+TTree::GetEntry object branch with 'new' object.
+ACache::x 6
+ACache::y 7
+ACache::z 6070
+ACache::c 13
+ACache::fN    6
+ACache::fArray[0] 20
+ACache::fArray[1] 21
+ACache::fArray[2] 22
+ACache::fArray[3] 23
+ACache::fArray[4] 24
+ACache::fArray[5] 25
+ACache::fValues[0] 1
+ACache::fValues[1] 1.01
+ACache::fValues[2] 1.02

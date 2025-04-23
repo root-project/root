@@ -1,0 +1,21 @@
+
+Processing execrefDefaultParams.C...
+Direct loading
+creating a yy with def-xx
+xx -- arg='def-xx'
+Copying yy into zz with def-xx
+ROOT loading
+creating a yy with def-xx
+xx -- arg='def-xx'
+Copying yy into zz with def-xx
+ACLiC loading
+creating a yy with def-xx
+xx -- arg='def-xx'
+Copying yy into zz with def-xx
+deleting a yy with def-xx
+deleting a zz with def-xx
+deleting a zz with def-xx
+deleting a zz with def-xx
+deleting a yy with def-xx
+deleting a zz with def-xx
+deleting a yy with def-xx

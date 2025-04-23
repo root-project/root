@@ -1,0 +1,8 @@
+ 
+<lcgdict>
+  <class name="SimulationHitCollection" id="B4026665-EC42-4CBF-A78F-24742674C54C"/>
+  <class name="AtlasHitsVector<SimulationHit>" />
+  <class name="std::vector<SimulationHit>" />
+  <class name="SimulationHit" />
+</lcgdict>
+

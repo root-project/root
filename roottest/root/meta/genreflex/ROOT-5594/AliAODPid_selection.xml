@@ -1,0 +1,18 @@
+<lcgdict>
+   <class name="AliAODPid"/>
+   <read sourceClass="AliAODPid"
+         targetClass="AliAODPid"
+         source="UShort_t fTPCsignalN"
+         version="[-10]"
+         target="fTPCsignalN"
+         targetType="UChar_t"
+         code="fTPCsignalN=(UChar_t)onfile.fTPCsignalN;">
+</lcgdict>
+<!--
+#pragma read sourceClass="AliAODPid" \
+             targetClass="AliAODPid" \
+             source="UShort_t fTPCsignalN" \
+             version="[-10]" \
+             target="fTPCsignalN" \
+             targetType="UChar_t" \
+             code="{fTPCsignalN=(UChar_t)onfile.fTPCsignalN;}"-->

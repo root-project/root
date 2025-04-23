@@ -1,0 +1,6 @@
+
+Processing runComplexTest.C...
+The complex object was set properly:
+3 6
+The complex object was read properly:
+3 6

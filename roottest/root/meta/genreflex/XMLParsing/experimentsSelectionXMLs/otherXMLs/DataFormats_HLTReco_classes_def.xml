@@ -1,0 +1,78 @@
+<lcgdict>
+
+  <class name="edm::ModuleTime" ClassVersion="10">
+   <version ClassVersion="10" checksum="1426984345"/>
+  </class>
+  <class name="std::vector<edm::ModuleTime>"/>
+  <class name="edm::EventTime" ClassVersion="10">
+   <version ClassVersion="10" checksum="4025404982"/>
+  </class>
+  <class name="edm::Wrapper<edm::EventTime>" splitLevel="0"/>
+
+  <class name="HLTPerformanceInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="3666102048"/>
+  </class>
+  <class name="edm::Wrapper<HLTPerformanceInfo >" splitLevel="0"/>
+
+  <class name="HLTPerformanceInfo::Module" ClassVersion="10">
+   <version ClassVersion="10" checksum="3885654529"/>
+  </class>
+  <class name="std::vector<HLTPerformanceInfo::Module>"/>
+  <class name="std::vector<HLTPerformanceInfo::Module>::const_iterator"/>
+
+  <class name="HLTPerformanceInfo::Path" ClassVersion="11">
+   <version ClassVersion="10" checksum="3100415018"/>
+   <version ClassVersion="11" checksum="131259281"/>
+  </class>
+  <class name="std::vector<HLTPerformanceInfo::Path>"/>
+  <class name="std::vector<HLTPerformanceInfo::Path>::const_iterator"/>
+
+
+  <class name="std::vector<edm::Ref<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoEcalCandidate>,reco::RecoEcalCandidate> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<reco::Electron>,reco::Electron,edm::refhelper::FindUsingAdvance<std::vector<reco::Electron>,reco::Electron> > >"/>
+  <class name="std::vector<edm::Ref<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoChargedCandidate>,reco::RecoChargedCandidate> > >"/>
+
+  <class name="std::vector<edm::Ref<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> > >"/>
+
+  <enum name="trigger::TriggerObjectType" />
+  <class name="std::vector<trigger::TriggerObjectType>" />
+  <class name="std::vector<trigger::TriggerObjectType>::const_iterator" />
+
+  <class name="trigger::TriggerObject" ClassVersion="10">
+   <version ClassVersion="10" checksum="2923979599"/>
+  </class>
+  <class name="trigger::TriggerObjectCollection"/>
+  <class name="trigger::TriggerRefsCollections" ClassVersion="12">
+   <version ClassVersion="12" checksum="4231679693"/>
+  </class>
+  <class name="trigger::TriggerFilterObjectWithRefs" ClassVersion="10">
+   <version ClassVersion="10" checksum="1741228815"/>
+  </class>
+
+  <class name="trigger::TriggerEvent::TriggerFilterObject" ClassVersion="10">
+   <version ClassVersion="10" checksum="886279077"/>
+  </class>
+  <class name="std::vector<trigger::TriggerEvent::TriggerFilterObject>"/>
+  <class name="trigger::TriggerEvent" ClassVersion="10">
+   <version ClassVersion="10" checksum="1112210423"/>
+  </class>
+  <class name="trigger::TriggerEventWithRefs::TriggerFilterObject" ClassVersion="12">
+   <version ClassVersion="12" checksum="2301242282"/>
+  </class>
+  <class name="std::vector<trigger::TriggerEventWithRefs::TriggerFilterObject>"/>
+  <class name="trigger::TriggerEventWithRefs" ClassVersion="10">
+   <version ClassVersion="10" checksum="4075310205"/>
+  </class>
+
+  <class name="edm::Wrapper<trigger::TriggerObjectCollection>" splitLevel="0"/>
+  <class name="edm::Wrapper<trigger::TriggerFilterObjectWithRefs>" splitLevel="0"/>
+  <class name="edm::Wrapper<trigger::TriggerEvent>" splitLevel="0"/>
+  <class name="edm::Wrapper<trigger::TriggerEventWithRefs>" splitLevel="0"/>
+
+  <class name="std::map<std::string,std::vector<unsigned int> >"/>
+  <class name="trigger::HLTPrescaleTable" ClassVersion="10">
+   <version ClassVersion="10" checksum="2181075001"/>
+  </class>
+  <class name="edm::Wrapper<trigger::HLTPrescaleTable>"/>
+
+</lcgdict>

@@ -1,0 +1,45 @@
+<lcgdict>
+
+  <class name="DataVector< IAthenaPoolTestData >" id="04010D3C-DB4A-4B5C-BBEF-5A735FCFDEE7" />
+  <class name="std::vector< IAthenaPoolTestData* >" />
+  <class name="AthenaPoolTestA" />
+  <class name="AthenaPoolTestB" />
+  <class name="AthenaPoolTestC" >
+      <field name="m_a" transient="true"/>
+      <field name="m_b" transient="true"/>
+  </class>
+  <class name="AthenaPoolTestD" />
+  <class name="IAthenaPoolTestData" />
+  <class name="AthenaPoolTestMatrix" id="A9A2387C-2E8B-493C-B1C1-454582347C49"/>
+  <class name="std::vector<const CLHEP::HepMatrix*>"/>
+  <class name="FauxTriggerMap" id="17777E94-A2D2-4A80-B321-E3554040EA99" />
+<!--   <class name="TrigPath" id="39E60558-9229-4CAE-AAE7-C42A49CCCFD4" /> -->
+<!--   <class name="std::set<TrigPath>" /> -->
+  <class name="std::vector<std::map<unsigned int, CLHEP::HepMatrix> >" />
+  <class name="std::map<unsigned int, CLHEP::HepMatrix>" />
+
+  <class name="AthenaPoolTestMap" id="FC363BAF-A997-4260-86A6-5D029F6DEA65" />
+  <class name="AthenaPoolTestMapData" />
+  <class name="AthenaPoolTestMapDataLink" >
+   <field name="m_particle" transient="true" />
+  </class>
+  <class name="AthenaPoolTestMapDataLink::ExtendedBarCode" />
+  <class name="std::pair<AthenaPoolTestMapDataLink, float>" /> 
+  <class name="std::vector<std::pair< AthenaPoolTestMapDataLink , float> >" />
+  <class name="std::map<unsigned int,AthenaPoolTestMapData>" />
+
+  <class name="dummy_A" id="0283910F-B636-4E69-BE22-59DD7B5E8C2B" />
+  <class name="dummy_B" />
+  <class name="dummy_C" />
+  <class name="std::vector<dummy_B>" />
+  <class name="std::vector<dummy_C>" />
+  <class name="dummy_D" />
+  <class name="dummy_E" id="66ADAB5A-0D48-4A46-A475-464381639917" />
+  <class name="std::vector<const dummy_D*>" />
+
+  <!--
+  <class name="PixelRDOElemLinkVec.h" />
+  <class name="std::vector<ElementLink<PixelRDO_Container>>" />
+  -->
+</lcgdict>
+

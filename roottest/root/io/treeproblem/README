@@ -1,0 +1,73 @@
+
+To make the test, simply do 
+
+  make check 
+
+This is using ROOT 3.03/02 on a PIV, Red Hat 7.2. 
+
+----------------------------------------------------------------------
+
+`Foo' is a very simple class, just contains an integer.  
+
+`writer' makes the file `file.root' with `TTree' `tree' in it.  The
+`TTree' has one branch containing a `TClonesArray' of `Foo' objects.
+There are 100 entries in the `TTree'. 
+
+`reader' reads the file `file.root' an prints out the integer in the
+`Foo' objects directly.  This program gets `SIGSEGV' in
+`TTree::GetEntry(Int_t)'. 
+
+`tree' is the result of `tree->MakeClass()' and modified so that it
+does the same as `reader'.  Executed as 
+
+  root[0] .L tree.C
+  root[1] tree* t = new tree
+  root[2] t->Loop();
+
+works fine.  
+
+----------------------------------------------------------------------
+
+Writing the file, and then running the reader in GDB gives:
+
+  GNU gdb Red Hat Linux (5.1-1)
+  Copyright 2001 Free Software Foundation, Inc.
+  GDB is free software, covered by the GNU General Public License, and you are
+  welcome to change it and/or distribute copies of it under certain conditions.
+  Type "show copying" to see the conditions.
+  There is absolutely no warranty for GDB.  Type "show warranty" for details.
+  This GDB was configured as "i386-redhat-linux"...
+  (gdb) run 
+  Starting program: /nfs/hehi/hehi30/hehi/cholm/root/treeproblem/reader 
+  [New Thread 1024 (LWP 23986)]
+  
+  Program received signal SIGSEGV, Segmentation fault.
+  [Switching to Thread 1024 (LWP 23986)]
+  0x40324487 in TObjArray::UncheckedAt (this=0xbfffde50, i=0)
+      at include/TObjArray.h:72
+  72	include/TObjArray.h: No such file or directory.
+  	in include/TObjArray.h
+  #0  0x40324487 in TObjArray::UncheckedAt (this=0xbfffde50, i=0)
+      at include/TObjArray.h:72
+  #1  0x4018748e in TStreamerInfo::ReadBufferClones (this=0x84bcae0, 
+      b=@0x8580cd0, clones=0xbfffde50, nc=3, first=1, eoffset=0)
+      at meta/src/TStreamerInfo.cxx:2135
+  #2  0x40b6278f in TBranchElement::ReadLeaves (this=0x857f910, b=@0x8580cd0)
+      at tree/src/TBranchElement.cxx:950
+  #3  0x40b5c536 in TBranch::GetEntry (this=0x857f910, entry=0, getall=0)
+      at tree/src/TBranch.cxx:682
+  #4  0x40b6115d in TBranchElement::GetEntry (this=0x857f910, entry=0, getall=0)
+      at tree/src/TBranchElement.cxx:597
+  #5  0x40b610f2 in TBranchElement::GetEntry (this=0x8537b00, entry=0, getall=0)
+      at tree/src/TBranchElement.cxx:592
+  #6  0x40b7a7b9 in TTree::GetEntry (this=0x84e0eb8, entry=0, getall=0)
+      at tree/src/TTree.cxx:2210
+  #7  0x08048a12 in reader () at reader.C:32
+  #8  0x08048ae7 in main (argc=1, argv=0xbfffdef4) at reader.C:44
+  #9  0x40d95306 in __libc_start_main (main=0x8048adc <main>, argc=1, 
+      ubp_av=0xbfffdef4, init=0x804872c <_init>, fini=0x8048b30 <_fini>, 
+      rtld_fini=0x4000d2dc <_dl_fini>, stack_end=0xbfffdeec)
+      at ../sysdeps/generic/libc-start.c:129
+  
+----------------------------------------------------------------------
+

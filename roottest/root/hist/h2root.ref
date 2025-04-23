@@ -1,0 +1,12 @@
+ Converting directory //example
+TFile**		mb4i1.root	HBOOK file: mb4i1.hbook converted to ROOT
+ TFile*		mb4i1.root	HBOOK file: mb4i1.hbook converted to ROOT
+  KEY: TH1F	h1;1	DISTRIBUTION P  
+  KEY: TH1F	h102;1	Multiplicity B-E
+  KEY: TH1F	h103;1	Multiplicity Poisson
+  KEY: TH1F	h203;1	B.G. B-E Q, GeV, RL inc 
+  KEY: TH1F	h204;1	EFF. B-E Q, GeV, RL inc 
+  KEY: TH1F	h205;1	B.G. B-E Q, GeV, RL mul 
+  KEY: TH1F	h10;1	Inclusive Gaussian vs p 
+  KEY: TH1F	h11;1	Inclusive B-E vs p  
+  KEY: TH1F	h12;1	Inclusive B-E vs p  

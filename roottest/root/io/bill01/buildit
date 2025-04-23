@@ -1,0 +1,6 @@
+$ROOTSYS/bin/rootcint -f Dict.cc -I$ROOTSYS/include MyObject.h LinkDef.h
+g++ -I$ROOTSYS/include -c -g Dict.cc -o Dict.o && \
+g++ -I$ROOTSYS/include -c -g MyObject.cc -o MyObject.o && \
+g++ -I$ROOTSYS/include -c -g MemberMyObject.cc -o MemberMyObject.o && \
+g++ -I$ROOTSYS/include -g -shared -rdynamic  Dict.o MyObject.o MemberMyObject.o -o libDict.so && \
+g++ -g -o x -I$ROOTSYS/include main.cc ./libDict.so $ROOTSYS/lib/libCore.so $ROOTSYS/lib/libCint.so -ldl

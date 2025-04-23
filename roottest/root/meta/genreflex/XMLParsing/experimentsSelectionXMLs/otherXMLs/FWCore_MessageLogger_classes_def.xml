@@ -1,0 +1,10 @@
+<lcgdict>
+ <class name="edm::ErrorSummaryEntry" ClassVersion="10">
+  <version ClassVersion="10" checksum="3974422774"/>
+ </class>
+ <class name="edm::ELseverityLevel" ClassVersion="10">
+  <version ClassVersion="10" checksum="2388166397"/>
+ </class>
+ <class name="std::vector<edm::ErrorSummaryEntry>"/>
+</lcgdict>
+ 

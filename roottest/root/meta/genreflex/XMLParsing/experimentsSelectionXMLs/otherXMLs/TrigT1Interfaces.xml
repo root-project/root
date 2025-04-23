@@ -1,0 +1,45 @@
+<lcgdict>
+
+  <!-- MuCTPI CTP input -->
+  <class name="LVL1::MuCTPICTP" id="E3E51019-3F2A-480D-A301-61C3739FAA07" />
+
+  <!-- Energy CTP input -->
+  <class name="LVL1::EnergyCTP" id="C1AA60F7-C917-4045-8311-7803F35FD44B" />
+
+  <!-- EmTau CTP input -->
+  <class name="LVL1::EmTauCTP" id="C0A8C2ED-88A1-4DB2-917A-A63F4D8F09BB" />
+
+  <!-- Jet CTP input -->
+  <class name="LVL1::JetCTP" id="0E0F2E05-3238-4CA6-8975-8E604EB4B264" />
+
+  <!-- MBTS CTP input -->
+  <class name="LVL1::MbtsCTP" id="B71654BF-0D09-42AD-9531-187FDFEEDD6A"/>
+
+  <!-- BCM CTP input -->
+  <class name="LVL1::BcmCTP" id="2C1AC071-7948-48C9-B6C0-B3f913B4E790"/>
+
+  <!-- LUCID CTP input -->
+  <class name="LVL1::LucidCTP" id="BAC7215E-DEA2-4B43-B722-E170AC4223D5"/>
+
+  <!-- ZDC CTP input -->
+  <class name="LVL1::ZdcCTP" id="831C4E39-6C95-41B4-86CA-FF6F99C70CB6"/>
+
+  <!-- TRT CTP input -->
+  <class name="LVL1::TrtCTP" id="E55FADE4-21BC-47BF-AE93-EC40CD5BAB89"/>
+
+  <!-- Reconstructed RoI classes for the HLT -->
+  <class name="LVL1::RecMuonRoI" id="B61E8B53-846D-42F9-A730-5ADA865E3D99" />
+  <class name="LVL1::RecEmTauRoI" id="66F831E5-17BB-404B-9E4D-709317EF8B22" />
+  <class name="LVL1::RecJetRoI" id="52C0D5E8-24FE-4779-875B-F21FFC1FEEDF" />
+  <class name="LVL1::RecEnergyRoI" id="D160A742-577B-433D-912E-B49018E06E20" />
+  <class name="LVL1::RecJetEtRoI" id="F039DFB4-1AF2-416F-8158-208A3F96BF1B" />
+
+  <!-- Additional classes needed to persistify RecRoI objects -->
+  <class name="iRecCoordRoI" />
+  <class name="LVL1::CoordinateRange" />
+  <class name="LVL1::Coordinate" />
+  <class name="LVL1::PhiRange" />
+  <class name="LVL1::Range" />
+  <class name="std::map<int,LVL1::TrigT1CaloDefs::ClusterAlgorithm>" />
+
+</lcgdict>

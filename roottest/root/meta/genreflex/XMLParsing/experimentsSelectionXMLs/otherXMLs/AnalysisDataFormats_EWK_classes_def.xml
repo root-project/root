@@ -1,0 +1,48 @@
+<lcgdict>
+
+   <class name="reco::WMuNuCandidatePtr" ClassVersion="10">
+    <version ClassVersion="10" checksum="1846146489"/>
+   </class>
+   <class name="std::vector<reco::WMuNuCandidatePtr>"/>
+   <class name="edm::Wrapper<std::vector<reco::WMuNuCandidatePtr> >"/>
+   <class name="edm::Ref<std::vector<reco::WMuNuCandidatePtr>,reco::WMuNuCandidatePtr,edm::refhelper::FindUsingAdvance<std::vector<reco::WMuNuCandidatePtr>,reco::WMuNuCandidatePtr> >"/>
+   <class name="edm::RefProd<std::vector<reco::WMuNuCandidatePtr> >"/>
+   <class name="edm::helpers::Key<edm::RefProd<std::vector<reco::WMuNuCandidatePtr> > >"/>
+
+   <class name="edm::RefToBase<reco::WMuNuCandidatePtr>" />
+   <class name="edm::reftobase::IndirectHolder<reco::WMuNuCandidatePtr>" />
+   <class name="edm::RefToBaseProd<reco::WMuNuCandidatePtr>" />
+   <class name="edm::RefToBaseVector<reco::WMuNuCandidatePtr>" />
+   <class name="edm::Wrapper<edm::RefToBaseVector<reco::WMuNuCandidatePtr> >" />
+   <class name="edm::reftobase::BaseVectorHolder<reco::WMuNuCandidatePtr>" />
+
+
+   <class name="reco::WMuNuCandidate" ClassVersion="10">
+    <version ClassVersion="10" checksum="3365055629"/>
+   </class>
+   <class name="std::vector<reco::WMuNuCandidate>"/>
+   <class name="edm::Wrapper<std::vector<reco::WMuNuCandidate> >"/>
+   <class name="edm::Ref<std::vector<reco::WMuNuCandidate>,reco::WMuNuCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::WMuNuCandidate>,reco::WMuNuCandidate> >"/>
+   <class name="edm::RefProd<std::vector<reco::WMuNuCandidate> >"/>
+   <class name="edm::helpers::Key<edm::RefProd<std::vector<reco::WMuNuCandidate> > >"/>
+
+   <class name="edm::RefToBase<reco::WMuNuCandidate>" />
+   <class name="edm::reftobase::IndirectHolder<reco::WMuNuCandidate>" />
+   <class name="edm::RefToBaseProd<reco::WMuNuCandidate>" />
+   <class name="edm::RefToBaseVector<reco::WMuNuCandidate>" />
+   <class name="edm::Wrapper<edm::RefToBaseVector<reco::WMuNuCandidate> >" />
+   <class name="edm::reftobase::BaseVectorHolder<reco::WMuNuCandidate>" />
+
+
+
+   <!-- 
+   <class name="edm::reftobase::BaseHolder<reco::WMuNuCandidatePtr>" />
+   <class name="edm::reftobase::IndirectVectorHolder<reco::WMuNuCandidatePtr>" />
+ 
+    -->
+ 
+  
+
+</lcgdict>
+ 
+

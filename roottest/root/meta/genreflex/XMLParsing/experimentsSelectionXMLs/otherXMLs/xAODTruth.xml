@@ -1,0 +1,68 @@
+<!-- $Id: selection.xml 591889 2014-04-08 09:33:01Z krasznaa $ -->
+<lcgdict>
+
+  <!-- The TruthParticle_v1 class: -->
+  <class name="xAOD::TruthParticle_v1" >
+    <field name="m_p4" transient="true" />
+    <field name="m_p4Cached" transient="true" />
+  </class>
+  <read sourceClass="xAOD::TruthParticle_v1" version="[1-]"
+        targetClass="xAOD::TruthParticle_v1" source="" target="m_p4Cached" >
+    <![CDATA[
+       m_p4Cached = false;
+    ]]>
+  </read>
+
+  <!-- The TruthVertex_v1 class: -->
+  <class name="xAOD::TruthVertex_v1" >
+    <field name="m_v4" transient="true" />
+    <field name="m_v4Cached" transient="true" />
+  </class>
+  <read sourceClass="xAOD::TruthVertex_v1" version="[1-]"
+        targetClass="xAOD::TruthVertex_v1" source="" target="m_v4Cached" >
+    <![CDATA[
+       m_v4Cached = false;
+    ]]>
+  </read>
+
+  <!-- The TruthEvent_v1 class: -->
+  <class name="xAOD::TruthEvent_v1" />
+
+  <!-- The persistent classes: -->
+  <class name="xAOD::TruthParticleContainer_v1"
+         id="58F98A16-E465-4CA5-A099-73033206D8E3" />
+  <class name="xAOD::TruthVertexContainer_v1"
+         id="5FBAE0AB-09F7-4B6C-B066-0A003FC38ECF" />
+  <class name="xAOD::TruthEventContainer_v1"
+	 id="6290F297-F529-40EE-9FE5-1C577678306D" />
+
+  <class name="xAOD::TruthParticleAuxContainer_v1"
+         id="BA8FA08F-8DD6-420D-97D5-8B54EABECD65" />
+  <class name="xAOD::TruthVertexAuxContainer_v1"
+         id="B6BD3B02-C411-4EB9-903F-5B099D3B1A3E" />
+  <class name="xAOD::TruthEventAuxContainer_v1"
+	 id="1B945EFD-4F7D-4BDD-9FB1-6FB975315961" />
+
+  <!-- Smart pointers for TruthParticle_v1: -->
+  <class name="DataLink<xAOD::TruthParticleContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::TruthParticleContainer_v1> >" />
+  <class name="ElementLink<xAOD::TruthParticleContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TruthParticleContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TruthParticleContainer_v1> > >" />
+
+  <!-- Smart pointers for TruthVertex_v1: -->
+  <class name="DataLink<xAOD::TruthVertexContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::TruthVertexContainer_v1> >" />
+  <class name="ElementLink<xAOD::TruthVertexContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TruthVertexContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TruthVertexContainer_v1> > >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+  </exclusion>
+
+</lcgdict>

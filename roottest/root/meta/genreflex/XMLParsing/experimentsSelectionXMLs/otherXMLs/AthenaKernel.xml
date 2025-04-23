@@ -1,0 +1,21 @@
+<lcgdict>
+
+   <class name="MsgStream" />
+   <class name="IProxyDict" />
+   <class name="IEventSeek"/>
+   <class name="IEventShare"/>
+   <class name="ICollectionSize"/>
+   <class name="IAthenaSummarySvc"/>
+   <class name="errorcheck::ReportMessage"/>
+   <class name="ICutFlowSvc"/>
+
+   <class name="ITPCnvSvc" />
+   <class name="ITPCnvBase" />
+   <class name="ILockable" />
+
+   <class name="Ath::DsoDb" />
+   <class name="Ath::DsoDb::DsoMap_t" />
+
+   <function name="Athena::DsoUtils::inDso" />
+
+</lcgdict>

@@ -1,0 +1,13 @@
+
+Processing execTChainCleanup.cxx+...
+created TChain.
+   found in ListOfCleanups using member function FindObject()
+   found in ListOfCleanups while iterating over collection
+TChain written to file.
+deleted TChain.
+   NOT found in ListOfCleanups while iterating over collection
+read TChain from file.
+   found in ListOfCleanups using member function FindObject()
+   found in ListOfCleanups while iterating over collection
+deleted TChain.
+   NOT found in ListOfCleanups while iterating over collection

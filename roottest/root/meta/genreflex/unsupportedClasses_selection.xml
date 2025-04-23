@@ -1,0 +1,8 @@
+<rootdict>
+  <class name="vector<int>" />
+  <class name="std::array<int,3>" />
+  <class name="std::tuple<int,double,float>" />
+  <class name="std::chrono::duration<int>" />
+  <class name="std::ratio<1,1>" />
+  <class name="std::thread" />
+</rootdict>

@@ -1,0 +1,97 @@
+
+Processing /Users/pcanal/root_working/roottest/root/io/uniquePointer/rw.C...
+Writing out.root
+[Write Row-wise] Histogram RowWise information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Write Row-wise] Histogram RowWise_base information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Write Row-wise] Histogram RowWise_var information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Write Row-wise] Histogram RowWise_fixed information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Write Column-wise] Histogram meansPtr information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Write Column-wise] Histogram meansBaseUPtr information:
+ - Entries: 50
+ - Mean: 0.801612
+ - STD Deviation: less than 1e-6
+[Write Column-wise] Histogram meansUPtr information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Write Column-wise] Histogram meansFixedUPtr information:
+ - Entries: 50
+ - Mean: 0.801612
+ - STD Deviation: less than 1e-6
+[Write Column-wise 1] Histogram meansUPtr1 information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Write Column-wise 2] Histogram meansUPtr2 information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Write Column-wise 3] Histogram meansUPtr3 information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+Reading out.root
+[Read Row-wise] Histogram RowWise information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise] Histogram RowWise_base information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise] Histogram RowWise_var information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise] Histogram RowWise_fixed information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise 0] Histogram RowWise_unique1 information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise 1] Histogram RowWise_unique2 information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Row-wise 2] Histogram RowWise_unique3 information:
+ - Entries: 5000
+ - Mean: 0.801612
+ - STD Deviation: 0.600387
+[Read Column-wise] Histogram meansPtr information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Read Column-wise] Histogram meansUPtr information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Read Column-wise 1] Histogram meansUPtr1 information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Read Column-wise 2] Histogram meansUPtr2 information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+[Read Column-wise 3] Histogram meansUPtr3 information:
+ - Entries: 50
+ - Mean: 0.60323
+ - STD Deviation: 0.0619348
+(int) 0

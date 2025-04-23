@@ -1,0 +1,120 @@
+
+Processing runsubdir.C...
+TChain::AddFile
+Trying subdir.root/data1.root with a tree name
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=<not calculated>
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*
+Trying subdir.root/data2.root
+OBJ: TChain	tree	 : 0
+ subdir.root/data2.roottree:tree entries=<not calculated>
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*
+TChain::Add
+Trying subdir.root/data*.root
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=<not calculated>
+ subdir.root/data2.roottree:tree entries=<not calculated>
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*
+Trying subdir.root/data*.root/tree
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=<not calculated>
+ subdir.root/data2.roottree:tree entries=<not calculated>
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*
+Trying subdir.root/data1.root/tree
+OBJ: TChain	tree	 : 0
+ subdir.root/data1.roottree:tree entries=<not calculated>
+******************************************************************************
+*Chain   :tree      : subdir.root/data1.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*
+Trying subdir.root/data2.root
+OBJ: TChain	tree	 : 0
+ subdir.root/data2.roottree:tree entries=<not calculated>
+******************************************************************************
+*Chain   :tree      : subdir.root/data2.root                                 *
+******************************************************************************
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :var       : var/I                                                  *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
+*............................................................................*

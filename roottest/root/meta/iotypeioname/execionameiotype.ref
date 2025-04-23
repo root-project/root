@@ -1,0 +1,7 @@
+
+Processing execionameiotype.C...
+SuperCluster::energy2 type is Double32_t
+Particle::vertex type is ROOT::Math::Cartesian3D<Double32_t>
+The lenght of the buffer containing the Container instance is 80. If the iotypes were doubles, it would be 96.
+Supercluster energy: 123
+Particle vertex position: 0.1 0.2 0.3

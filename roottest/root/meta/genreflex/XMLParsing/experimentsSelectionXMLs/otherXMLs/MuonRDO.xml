@@ -1,0 +1,74 @@
+<lcgdict>
+
+  <class pattern="std::vector<short*int>" />
+
+  <class name="TgcRawData" />
+  <class name="MdtAmtHit" />
+  <class name="RpcFiredChannel" />
+  <class name="RpcCoinMatrix" />
+  <class name="CscRawData" >
+    <field name="m_hashId" transient="true" />
+  </class>
+
+
+  <class name="DataVector<TgcRawData>" />
+  <class name="std::vector<TgcRawData*>" />
+  <class name="DataVector<MdtAmtHit>" />
+  <class name="std::vector<MdtAmtHit*>" />
+  <class name="DataVector<RpcFiredChannel>" />
+  <class name="std::vector<RpcFiredChannel*>" />
+  <class name="DataVector<RpcCoinMatrix>" />
+  <class name="std::vector<RpcCoinMatrix*>" />
+  <class name="DataVector<CscRawData>" />
+  <class name="std::vector<CscRawData*>" />
+
+
+  <class name="IdentifiableContainer<TgcRdo>" />                                  
+  <class name="IdentifiableContainer<MdtCsm>" />                                 
+  <class name="IdentifiableContainer<RpcPad>" />
+  <class name="IdentifiableContainer<CscRawDataCollection>" />
+
+  <class name="DataLinkVector<TgcRdo>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="DataLinkVector<MdtCsm>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="DataLinkVector<RpcPad>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+  <class name="DataLinkVector<CscRawDataCollection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+  </class>
+
+
+  <class name="TgcRdo" />
+  <class name="MdtCsm" />
+  <class name="RpcPad" />
+  <class name="CscRawDataCollection" />
+
+
+  <class name="TgcRdoContainer" />
+  <class name="std::vector<TgcRdo * >" />
+  <class name="DataVector<TgcRdo>" id="FBF8D72D-A6B9-4689-8E02-BB0F435BF2F7" />
+
+  <class name="MdtCsmContainer" />
+  <class name="std::vector<MdtCsm * >" />
+  <class name="DataVector<MdtCsm>" id="CFDA6FF6-557F-40CB-9C54-B5A7404A9175" />
+
+  <class name="RpcPadContainer" />
+  <class name="std::vector<RpcPad * >" />
+  <class name="DataVector<RpcPad>" id="85B897F6-E15D-4215-9DAC-EA2828BCEEC9" />
+
+  <class name="CscRawDataContainer" />
+  <class name="std::vector<CscRawDataCollection * >" />
+  <class name="DataVector<CscRawDataCollection>" id="D7600810-31BC-4344-A3C6-9C59F47E5551" />
+
+
+</lcgdict>
+
+

@@ -1,0 +1,13 @@
+Warning in <TStreamerInfo::BuildCheck>: 
+   The StreamerInfo for version 1 of class Tdata read from the file data1.root
+   has a different checksum than the previously loaded StreamerInfo.
+   Reading objects of type Tdata from the file data1.root 
+   (and potentially other files) might not work correctly.
+   Most likely the version number of the class was not properly
+   updated [See ClassDef(Tdata,1)].
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the on-file layout version 1 of class 'Tdata' differs from 
+the in-memory layout version 1:
+   int myvar_one; //
+vs
+   double mydouble_two; //

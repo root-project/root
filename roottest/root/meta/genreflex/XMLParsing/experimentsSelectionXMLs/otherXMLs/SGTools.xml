@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="IProxyDictWithPool" />
+  <class name="IStringPool" />
+  <class name="DataBucketBase" />
+  <class name="SG::DataProxy" />
+  <exclusion>
+    <class pattern="*iterator*tuple*long*unsigned*int*"/>
+  </exclusion>
+  <class name="std::vector<SG::DataProxy*>" />
+  <class name="std::vector<const SG::DataProxy*>" />
+  <class name="SG::BaseInfoBase" />
+</lcgdict>

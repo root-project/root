@@ -1,0 +1,24 @@
+<lcgdict>
+  <class name = "std::vector<LHCb::LHCbID>"/>
+  <class name = "std::pair<SmartRef<LHCb::Particle>, std::vector<LHCb::LHCbID> >" />
+  <class name = "std::vector< std::pair<SmartRef<LHCb::Particle>, std::vector<LHCb::LHCbID> > >" />
+  <class name = "_P2LHCbIDs" />
+  <class name = "_P2LHCbIDMap" />
+  <class name = "DaVinci::Map::Particle2LHCbIDs"
+         id = "00000370-0000-0000-0000-000000000000"/>
+
+  <class name = "std::pair<SmartRef<LHCb::Particle>, SmartRef<LHCb::VertexBase> >" />
+  <class name = "std::vector< std::pair<SmartRef<LHCb::Particle>, SmartRef<LHCb::VertexBase> > >" />
+  <class name = "_P2PV" />
+  <class name = "DaVinci::Map::Particle2VertexBase"
+         id = "00000371-0000-0000-0000-000000000000"/>
+
+  <class name = "std::pair<SmartRef<LHCb::Particle>, std::vector<unsigned int> >" />
+  <class name = "std::vector< std::pair<SmartRef<LHCb::Particle>, std::vector<unsigned int> > >" />
+  <class name = "_P2UInts" />
+  <class name = "_P2UIntMap" />
+  <class name = "DaVinci::Map::Particle2UnsignedInts"
+         id = "00000372-0000-0000-0000-000000000000"/>
+
+
+</lcgdict>

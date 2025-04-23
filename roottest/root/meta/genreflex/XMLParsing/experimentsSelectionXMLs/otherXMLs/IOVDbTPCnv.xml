@@ -1,0 +1,13 @@
+<lcgdict>
+  <class name="IOVMetaDataContainer_p1"       id="6C2DE6DF-6D52-43F6-B435-9F29812F40C0" />
+  <class name="IOVPayloadContainer_p1" />
+  <class name="IOVPayloadContainer_p1::IOVRange_p1" />
+  <class name="IOVPayloadContainer_p1::CondAttrListEntry_p1" />
+  <class name="std::vector<IOVPayloadContainer_p1::CondAttrListEntry_p1>" />
+  <class name="IOVPayloadContainer_p1::CondAttrListCollection_p1" />
+  <class name="std::vector<IOVPayloadContainer_p1::CondAttrListCollection_p1>" />
+  <class name="AttrListIndexes" />
+  <class name="std::vector<AttrListIndexes>" />
+
+
+</lcgdict>

@@ -1,0 +1,5 @@
+<lcgdict>
+   <class name="myTypedef" />
+   <class pattern="myTempl*" />
+   <class pattern="foo*" />
+</lcgdict>

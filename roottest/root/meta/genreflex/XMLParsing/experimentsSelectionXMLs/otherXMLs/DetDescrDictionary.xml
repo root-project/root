@@ -1,0 +1,20 @@
+<lcgdict>
+  <class name="Identifiable" />
+  <class name="Identifier" />
+  <class name="Identifier32" />
+  <class name="HWIdentifier" />
+  <class name="IdentifierHash" />
+  <class name="IdHelper" />
+  <class name="DataVector<Identifier>" />
+  <class name="std::vector<Identifier>" />
+  <class name="std::vector<HWIdentifier>" />
+  <class name="std::vector<HWIdentifier>::iterator" />
+  <class name="std::vector<HWIdentifier>::const_iterator" />
+  <class name="std::map<Identifier,int>" />
+  <class name="std::pair<Identifier,int>" />
+  <class name="std::map<HWIdentifier, float>" />
+  <class name="std::pair<HWIdentifier, float>" />
+  <class name="std::pair < IdentifierHash, int >" /> 
+  <class name="DataVector<std::pair<IdentifierHash, int> >" />
+  <class name="std::vector<std::pair<IdentifierHash, int>* >"/>
+</lcgdict>

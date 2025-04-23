@@ -1,0 +1,13 @@
+#include "inc/Nothing.h"
+// gDebug=1;
+.L lib/libEdm.so
+.L lib/libStrip.so
+// step2.cxx does a lookup that provokes a auto-parsing following by
+// an (intentional) compilation error and thus a set of unloading.
+.x scripts/step2.cxx
+// This use to lead to a strange error (complain that a class is a being
+// defined a second time on the ... same line in the same file) which was
+// due to the unloading now removing the DefinitionData cached in the forward
+// declaration decls left (intentionally) by the unloading.
+gInterpreter->AutoParse("reco::utils::ClusterTotals");
+

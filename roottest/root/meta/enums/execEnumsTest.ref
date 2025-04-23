@@ -1,0 +1,82 @@
+
+Processing execEnumsTest.C...
+Begin test
+Checking enumerators...
+Enums found in testClass:
+  - testEnum1. The constants are:
+  - kLow. Its value is 0
+  - kMedium. Its value is 1
+  - kHigh. Its value is 2
+  - testEnum3. The constants are:
+  - kLow3. Its value is 0
+  - kMedium3. Its value is 1
+  - kHigh3. Its value is 2
+Enums found in EcalSeverityLevel:
+  - SeverityLevel. The constants are:
+  - kGood. Its value is 0
+  - kProblematic. Its value is 1
+  - kRecovered. Its value is 2
+  - kTime. Its value is 3
+  - kWeird. Its value is 4
+  - kBad. Its value is 5
+Seeking kLow, kMedium and kHigh in the global namespace...
+  - Constant kLow found. Its value is 0
+  - Constant kMedium found. Its value is 1
+  - Constant kHigh found. Its value is 2
+
+Triggering payload parsing on purpose...
+Checking enumerators...
+Enums found in testClass:
+  - testEnum1. The constants are:
+  - kLow. Its value is 0
+  - kMedium. Its value is 1
+  - kHigh. Its value is 2
+  - testEnum3. The constants are:
+  - kLow3. Its value is 0
+  - kMedium3. Its value is 1
+  - kHigh3. Its value is 2
+Enums found in EcalSeverityLevel:
+  - SeverityLevel. The constants are:
+  - kGood. Its value is 0
+  - kProblematic. Its value is 1
+  - kRecovered. Its value is 2
+  - kTime. Its value is 3
+  - kWeird. Its value is 4
+  - kBad. Its value is 5
+Seeking kLow, kMedium and kHigh in the global namespace...
+  - Constant kLow found. Its value is 0
+  - Constant kMedium found. Its value is 1
+  - Constant kHigh found. Its value is 2
+
+Adding enumerators by hand
+Checking enumerators...
+Enums found in testClass:
+  - testEnum1. The constants are:
+  - kLow. Its value is 0
+  - kMedium. Its value is 1
+  - kHigh. Its value is 2
+  - testEnum3. The constants are:
+  - kLow3. Its value is 0
+  - kMedium3. Its value is 1
+  - kHigh3. Its value is 2
+Enums found in EcalSeverityLevel:
+  - SeverityLevel. The constants are:
+  - kGood. Its value is 0
+  - kProblematic. Its value is 1
+  - kRecovered. Its value is 2
+  - kTime. Its value is 3
+  - kWeird. Its value is 4
+  - kBad. Its value is 5
+Enums found in testNs:
+  - Temperatures. The constants are:
+  - kCold. Its value is 0
+  - kMild. Its value is 1
+  - kHot. Its value is 2
+Seeking kLow, kMedium and kHigh in the global namespace...
+  - Constant kLow found. Its value is 0
+  - Constant kMedium found. Its value is 1
+  - Constant kHigh found. Its value is 2
+  - Constant kCold found. Its value is 0
+  - Constant kMild found. Its value is 1
+  - Constant kHot found. Its value is 2
+(int) 0
