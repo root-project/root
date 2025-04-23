@@ -284,7 +284,7 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateX(const Vector & v, double alpha) {
-            if (alpha == 0.)
+            if (std::fmod(alpha, 2*M_PI ) == 0.)
                return v;
             using std::sin;
             double sina = sin(alpha);
@@ -305,7 +305,7 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateY(const Vector & v, double alpha) {
-            if (alpha == 0.)
+            if (std::fmod(alpha, 2*M_PI ) == 0.)
                return v;
             using std::sin;
             double sina = sin(alpha);
@@ -326,7 +326,7 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateZ(const Vector & v, double alpha) {
-            if (alpha == 0.)
+            if (std::fmod(alpha, 2*M_PI ) == 0.)
                return v;
             using std::sin;
             double sina = sin(alpha);
@@ -347,7 +347,7 @@ namespace ROOT {
           */
          template <class Vector>
          Vector Rotate(const Vector & v, double alpha, const Vector & axis) {
-            if (alpha == 0.)
+            if (std::fmod(alpha, 2*M_PI ) == 0.)
                return v;
             const double ll = std::sqrt(axis.X()*axis.X() + axis.Y()*axis.Y() + axis.Z()*axis.Z());
             if (ll == 0.)
