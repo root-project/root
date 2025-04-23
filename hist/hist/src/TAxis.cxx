@@ -1395,7 +1395,7 @@ void TAxis::AutoZoomAll()
    Int_t first = -1, last = -1;
 
    Double_t globalMin = DBL_MAX;
-   Double_t globalMax = DBL_MIN;
+   Double_t globalMax = -DBL_MAX;
    TIter next(gPad->GetListOfPrimitives());
    while (TObject *obj= next()) {
       if (!obj || !obj->InheritsFrom(TH1::Class()))
@@ -1410,6 +1410,7 @@ void TAxis::AutoZoomAll()
          globalMax = std::max(globalMax, ax->GetBinUpEdge(last));
       }
    }
+   next.Reset();
    while (TObject *obj = next()) {
       if (!obj || !obj->InheritsFrom(TH1::Class()))
          continue;
