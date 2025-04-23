@@ -348,6 +348,7 @@ void TCling__PrintStackTrace() {
 
 extern "C" int TCling__LoadLibrary(const char *library)
 {
+   gCling->RegisterAutoLoadedLibrary(library);
    return gSystem->Load(library, "", false);
 }
 
