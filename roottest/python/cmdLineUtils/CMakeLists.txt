@@ -79,7 +79,7 @@ ROOTTEST_ADD_TEST(LongRootls4
                   OUTREF LongRootls4.ref
                   ENVIRONMENT ${test_env})
 
-if(NOT MSVC) # Windows cannot yet read https
+if(davix AND NOT MSVC) # davix is optional ; Windows cannot yet read https
     ROOTTEST_ADD_TEST(WebRootls1
                     COMMAND ${TOOLS_PREFIX}/rootls${pyext} -1 http://root.cern.ch/files/pippa.root
                     OUTREF WebRootls.ref
