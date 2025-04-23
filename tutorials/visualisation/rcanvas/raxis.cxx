@@ -26,7 +26,7 @@ void raxis()
 
    auto x1 = 0.08_normal, w1 = 0.36_normal, x2 = 0.57_normal, w2 = 0.36_normal;
 
-   auto draw0 = canvas->Draw<RAxisDrawable>(RPadPos(0.03_normal,0.1_normal), true, 0.8_normal);
+   auto draw0 = canvas->Draw<RAxisDrawable>(RPadPos(0.03_normal, 0.1_normal), true, 0.8_normal);
    draw0->axis.ticks.SetInvert();
    draw0->axis.ticks.size = 0.02_normal;
    draw0->axis.title = "vertical";
@@ -46,8 +46,8 @@ void raxis()
    draw3->axis.labels.center = true;
 
    auto draw4 = canvas->Draw<RAxisDrawable>(RPadPos(x1, 0.3_normal), false, w1);
-   draw4->axis.min = TDatime(2020,11,12,9,0,0).Convert();
-   draw4->axis.max = TDatime(2020,11,12,12,0,0).Convert();
+   draw4->axis.min = TDatime(2020, 11, 12, 9, 0, 0).Convert();
+   draw4->axis.max = TDatime(2020, 11, 12, 12, 0, 0).Convert();
    draw4->axis.SetTimeDisplay("%d/%m/%y %H:%M");
    draw4->axis.title = "time display";
    draw4->axis.labels.size = 0.01;
@@ -60,7 +60,7 @@ void raxis()
    draw5->axis.title = "labels, swap ticks side";
    draw5->axis.title.SetLeft();
 
-   auto draw6 = canvas->Draw<RAxisDrawable>(RPadPos(0.5_normal,0.9_normal), true, -0.8_normal);
+   auto draw6 = canvas->Draw<RAxisDrawable>(RPadPos(0.5_normal, 0.9_normal), true, -0.8_normal);
    draw6->axis.min = 0;
    draw6->axis.max = 10;
    draw6->axis.ending.SetArrow();
@@ -90,7 +90,7 @@ void raxis()
    draw9->axis.title = "ln scale";
    draw9->axis.title.SetCenter();
 
-   auto draw10 = canvas->Draw<RAxisDrawable>(RPadPos(x2+w2, 0.3_normal), false, -w2);
+   auto draw10 = canvas->Draw<RAxisDrawable>(RPadPos(x2 + w2, 0.3_normal), false, -w2);
    draw10->axis.ending.SetArrow();
    draw10->axis.title = "horizontal negative length";
    draw10->axis.title.SetCenter();

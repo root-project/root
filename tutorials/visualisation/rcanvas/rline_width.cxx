@@ -22,15 +22,15 @@ void rline_width()
    auto canvas = RCanvas::Create("Different line widths");
    double num = 0.3;
 
-   for (int i = 10; i > 0; i--){
+   for (int i = 10; i > 0; i--) {
       num = num + 0.05;
 
-      auto text = canvas->Add<RText>(RPadPos(.3_normal, 1_normal*num), std::to_string(i));
+      auto text = canvas->Add<RText>(RPadPos(.3_normal, 1_normal * num), std::to_string(i));
       text->text.size = 0.04;
       text->text.align = RAttrText::kRightCenter;
       text->text.font = RAttrFont::kArialOblique;
 
-      auto draw = canvas->Add<RLine>(RPadPos(.32_normal, 1_normal*num), RPadPos(.8_normal, 1_normal*num));
+      auto draw = canvas->Add<RLine>(RPadPos(.32_normal, 1_normal * num), RPadPos(.8_normal, 1_normal * num));
       draw->line.width = i;
    }
 

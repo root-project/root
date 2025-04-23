@@ -29,7 +29,7 @@ void rpad()
    using namespace ROOT::Experimental;
 
    auto canvas = RCanvas::Create("RCanvas::Divide example");
-   auto pads   = canvas->Divide(3, 3);
+   auto pads = canvas->Divide(3, 3);
 
    for (int i = 0; i < 3; ++i)
       for (int j = 0; j < 3; ++j) {

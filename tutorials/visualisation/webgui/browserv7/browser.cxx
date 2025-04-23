@@ -28,4 +28,3 @@ void browser()
    // clear when connection to client closed
    br->ClearOnClose(br);
 }
-

@@ -24,24 +24,24 @@ void rstyle()
    auto canvas = RCanvas::Create("Use RStyle for line styling");
    double num = 0.3;
 
-   for (int i = 10; i > 0; i--){
+   for (int i = 10; i > 0; i--) {
       num = num + 0.05;
 
-      auto text = canvas->Add<RText>(RPadPos{.3_normal, 1_normal*num}, std::to_string(i));
+      auto text = canvas->Add<RText>(RPadPos{.3_normal, 1_normal * num}, std::to_string(i));
       text->text.size = 0.04;
       text->text.align = RAttrText::kRightCenter;
       text->text.font = RAttrFont::kArialOblique;
 
-      auto line = canvas->Add<RLine>(RPadPos(.32_normal,1_normal*num), RPadPos(.8_normal, 1_normal*num));
+      auto line = canvas->Add<RLine>(RPadPos(.32_normal, 1_normal * num), RPadPos(.8_normal, 1_normal * num));
       line->SetId(std::string("obj") + std::to_string(i));
       line->SetCssClass(std::string("user_class_") + std::to_string(i % 3));
    }
 
    auto style = std::make_shared<RStyle>();
 
-   style->AddBlock(".user_class_1").AddInt("line_style", 4); // all lines with user_class_1 should get style 1
+   style->AddBlock(".user_class_1").AddInt("line_style", 4);     // all lines with user_class_1 should get style 1
    style->AddBlock(".user_class_2").AddDouble("line_width", 5.); // all lines with user_class_2 should get line width 5
-   style->AddBlock("#obj7").AddString("line_color", "#0000FF"); // line with id obj7 should be blue
+   style->AddBlock("#obj7").AddString("line_color", "#0000FF");  // line with id obj7 should be blue
 
    style->AddBlock("line").AddString("line_color", "red"); // all lines should get red color
 
