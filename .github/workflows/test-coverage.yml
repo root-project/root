@@ -51,8 +51,6 @@ jobs:
   build-linux:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
 
-    secrets: inherit
-
     permissions:
       contents: read
 
@@ -76,7 +74,9 @@ jobs:
         OS_IDENTITY_API_VERSION: 3
         OS_INTERFACE: 'public'
         OS_REGION_NAME: 'cern'
-
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        
     steps:
       - name: Set up Python Virtual Env
         # if the `if` expr is false, `if` still has exit code 0.
