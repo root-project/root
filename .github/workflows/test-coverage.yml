@@ -136,7 +136,7 @@ jobs:
                     --base_ref       ${{ inputs.base_ref }}
                     --sha            ${{ github.sha }}
                     --head_ref       ${{ inputs.head_ref }}
-                    --head_sha       ${{ github.event.pull_request.head.sha }}
+                    --head_sha       ${{ inputs.head_ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
