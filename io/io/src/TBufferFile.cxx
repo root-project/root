@@ -3788,7 +3788,7 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 
 Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection)
 {
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
+   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig.get();
    if (gDebug) {
 
       // Get the address of the first item for the PrintDebug.

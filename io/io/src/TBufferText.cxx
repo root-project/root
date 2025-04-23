@@ -140,7 +140,7 @@ Int_t TBufferText::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    TVirtualStreamerInfo *info = sequence.fStreamerInfo;
    IncrementLevel(info);
 
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
+   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig.get();
    if (gDebug) {
 
       // Get the address of the first item for the PrintDebug.
