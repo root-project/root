@@ -25,7 +25,7 @@ TEST_TARGETS += embedstl pair  stlString mapvector secondindex
 #  directory.
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

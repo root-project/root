@@ -10,7 +10,7 @@ TEST_TARGETS += PEvent functca cscan gaus aliases templateName BoolOrder \
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

@@ -7,7 +7,7 @@ CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 TEST_TARGETS += PyROOT_cpptests PyROOT_advancedtests PyROOT_cpp11tests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

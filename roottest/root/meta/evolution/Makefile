@@ -14,7 +14,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog data*.root mixedBase_v?.root base
 TEST_TARGETS += foreign warning $(BASE_SUCCESS)
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif
