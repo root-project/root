@@ -14,7 +14,6 @@
 #include "TMethod.h"
 #include "TF1.h"
 #include "TMethodCall.h" 
-#include <TBenchmark.h>
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
@@ -804,9 +803,9 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    TString prototypeArguments = "";
    if (HasVariables || HasParameters) {
       if (IsVectorized)
-         prototypeArguments.Append("ROOT::Double_v*");
+         prototypeArguments.Append("ROOT::Double_v const*");
       else
-         prototypeArguments.Append("Double_t*");
+         prototypeArguments.Append("Double_t const*");
    }
    auto AddDoublePtrParam = [&prototypeArguments]() {
      prototypeArguments.Append(",");
@@ -2387,7 +2386,7 @@ void TFormula::ProcessFormula(TString &formula)
          TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
 
          // valid input formula - try to put into Cling (in case of no variables but only parameter we need to add the standard signature)
-         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " *x").Data() : ""),
+         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " const *x").Data() : ""),
                                                       (hasParameters ? "," : ""), (hasParameters ? "Double_t *p" : ""));
 
          // set the name for Cling using the hash_function
@@ -3680,7 +3679,7 @@ TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
 
 TString TFormula::GetGradientFormula() const {
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
-   std::string s("(void (&)(Double_t *, Double_t *, Double_t *)) ");
+   std::string s("(void (&)(Double_t const *, Double_t *, Double_t *)) ");
    s += GetGradientFuncName();
    gInterpreter->Evaluate(s.c_str(), *v);
    return v->ToString();
