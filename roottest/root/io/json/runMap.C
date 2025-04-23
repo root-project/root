@@ -29,6 +29,9 @@ void testJson(std::map<std::string,int> &data, int compact, const char *name)
 
 void runMap()
 {
+   // for dictionary
+   gSystem->Load("libJsonTestClasses");
+
    std::map<std::string,int> data;
 
    for (int n=0;n<10;++n) {
