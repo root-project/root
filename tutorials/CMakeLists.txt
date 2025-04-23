@@ -911,6 +911,17 @@ if(ROOT_pyroot_FOUND)
       roofit/roofit/rf401_importttreethx.py
       roofit/roofit/rf409_NumPyPandasToRooFit.py
       roofit/roofit/rf617_simulation_based_inference_multidimensional.py
+      visualisation/graphs/gr001_simple.py
+      visualisation/graphs/gr002_errors.py
+      visualisation/graphs/gr003_errors2.py
+      visualisation/graphs/gr004_errors_asym.py
+      visualisation/graphs/gr005_apply.py
+      visualisation/graphs/gr006_scatter.py
+      visualisation/graphs/gr007_multigraph.py
+      visualisation/graphs/gr010_approx_smooth.py
+      visualisation/graphs/gr012_polar.py
+      visualisation/graphs/gr013_polar2.py
+      visualisation/graphs/gr014_polar3.py
   )
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/df038_NumbaDeclare.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
