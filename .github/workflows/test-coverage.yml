@@ -134,7 +134,9 @@ jobs:
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ inputs.base_ref }}
+                    --sha            ${{ github.sha }}
                     --head_ref       ${{ inputs.head_ref }}
+                    --head_sha       ${{ github.event.pull_request.head.sha }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
@@ -146,6 +148,7 @@ jobs:
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ github.ref_name }}
+                    --sha            ${{ github.sha }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 

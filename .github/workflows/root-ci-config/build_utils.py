@@ -258,7 +258,7 @@ def upload_file(connection: Connection, container: str, dest_object: str, src_fi
         except:
             success = False
             sleep_time = sleep_time_unit * attempt
-            build_utils.print_warning(f"""Attempt {attempt} to upload {src_file} to {dest_object} failed. Retrying in {sleep_time} seconds...""")
+            print_warning(f"""Attempt {attempt} to upload {src_file} to {dest_object} failed. Retrying in {sleep_time} seconds...""")
             time.sleep(sleep_time)
         if success: break
 
