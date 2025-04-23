@@ -3,7 +3,7 @@ CLEAN_TARGETS += *pcm *$(DllSuf) *log *o *cpp *summary dummy* *success
 TEST_TARGETS +=  execfwdDeclarations
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

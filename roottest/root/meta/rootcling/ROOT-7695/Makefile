@@ -2,7 +2,7 @@ CLEAN_TARGETS += *.log xr.* dummy* *pcm *o *rflx.* $(ALL_LIBRARIES)
 TEST_TARGETS += execdummy
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

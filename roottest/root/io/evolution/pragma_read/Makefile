@@ -10,7 +10,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) $(addprefix v2/,$(ALL_LIBRARIES)) $(addprefix 
 TEST_TARGETS += 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

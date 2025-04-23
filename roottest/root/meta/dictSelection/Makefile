@@ -10,7 +10,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *rflx*
 TEST_TARGETS += execDictSelection execAtlasTest execAtlasTest2
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

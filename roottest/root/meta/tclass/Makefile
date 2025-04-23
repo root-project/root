@@ -10,7 +10,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog myclass.root pairs.root tmpltd32.
 TEST_TARGETS += classref tempParse pairs
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif

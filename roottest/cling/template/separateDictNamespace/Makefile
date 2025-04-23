@@ -2,7 +2,7 @@ TEST_TARGETS += sepDictLibs
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.$(ObjSuf) *.$(DllSuf) *Dict*.h *Dict*.C run.log *.build.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/roottest/
    ifeq ($(strip $(ROOTTEST_HOME)),)
       export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif
