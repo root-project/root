@@ -592,6 +592,10 @@ OBJ: TList	TList	Doubly linked list : 0
 
 TH1::Class()->GetMenuItems():
 OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TMethod	AutoZoom	*MENU* : 0
+      void TH1::AutoZoom()
+ OBJ: TMethod	UnZoom	*MENU* : 0
+      void TH1::UnZoom()
  OBJ: TMethod	DrawPanel	*MENU* : 0
       void TH1::DrawPanel()
  OBJ: TMethod	Fit	*MENU* : 0
