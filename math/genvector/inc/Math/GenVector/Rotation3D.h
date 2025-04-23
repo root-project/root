@@ -34,6 +34,7 @@
 #include "Math/GenVector/RotationYfwd.h"
 #include "Math/GenVector/RotationZfwd.h"
 
+#include "Math/GenVector/GenVector_exception.h"
 
 #include <algorithm>
 #include <cassert>
@@ -345,6 +346,18 @@ public:
 
    // =========== operations ==============
 
+   /**
+      Access operator
+   */
+   Scalar operator()(size_t i, size_t j) const
+   {
+      if (i < 3 && j < 3)
+         return fM[i + 3 * j];
+      else
+         GenVector::Throw("Rotation3D::operator(size_t i, size_t j):\n"
+                          "    indices i and j must range in {0,1,2}");
+      return 0.0;
+   }
 
    /**
       Rotation operation on a displacement vector in any coordinate system
