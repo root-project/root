@@ -376,7 +376,7 @@ void stress2()
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
+      printf("%-8s last =%lld, comp=%f vs lastgood =%lld\n"," ", last, comp, lastgood);
    }
    if (gPrintSubBench) { printf("Test  2 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
