@@ -70,6 +70,7 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include <map>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 using namespace ROOT;
 using namespace llvm;
@@ -1071,6 +1072,17 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
 {
    // Make a code string that follows this pattern:
    //
+   // This can be a single line if nary and arena are not passed.
+   // TODO : split this into map with 4 wrappers per decl:
+   // *ret = new ClassName;
+   // *ret = new ClassName[nary];
+   // *ret = new (arena) ClassName;
+   // *ret = new (arena) ClassName[nary];
+   // Based on the incoming request
+
+   // Use https://llvm.org/doxygen/classllvm_1_1PointerIntPair.html
+
+
    // void
    // unique_wrapper_ddd(void** ret, void* arena, unsigned long nary)
    // {
@@ -1611,25 +1623,33 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
       ::Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return nullptr;
    }
-   auto D = info->GetDecl();
-   // bool is_rec = ;
-   if (Cpp::IsClass(D)) {
-      auto FD = Cpp::GetDefaultConstructorConst(D);
-      fJitCall = std::make_unique<Cpp::JitCall>(Cpp::MakeFunctionCallable(FD));
+   // Triage cases when nary is not 0, that is used for construction of multiple objects
+   // use Cpp::Construct 
+
+   if (nary) {
+      // std::cout<<"NARY used: "<<nary<<"\n";
    }
-   else if (Cpp::IsConstructor(D))
-      fJitCall = std::make_unique<Cpp::JitCall>(Cpp::MakeFunctionCallable(D));
 
-   else return nullptr;
+   const clang::Decl* D = info->GetDecl();
+   if (Cpp::IsClass(D))
+      D = (clang::Decl *)Cpp::GetDefaultConstructorConst(D);
+   if (!Cpp::IsConstructor(D))
+      return nullptr;
+
+   Cpp::JitCall JC = Cpp::MakeFunctionCallable(D);
    
-   if(fJitCall->getKind() == Cpp::JitCall::kUnknown) return nullptr;
+   if(JC.getKind() == Cpp::JitCall::kUnknown) return nullptr;
 
+   if(address) {
+      JC.Invoke(&address, {}, (void*)~0, nary);
+      return address;
+   }
+   else {
    // Invoke:
    void *obj = nullptr;
-   fJitCall->Invoke(&obj);
-   // (*wrapper)(&obj, address, nary);
+   JC.Invoke(&obj);
    return obj;
-   
+   }
    // ::Error("TClingCallFunc::ExecDefaultConstructor", "Called with no wrapper, not implemented!");
    // return nullptr;
 }
