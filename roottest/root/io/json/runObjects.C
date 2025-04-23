@@ -1,41 +1,29 @@
-{
-// Fill out the code of the actual test
-#ifndef SECOND_RUN
-   gROOT->ProcessLine(".L test_classes.h+");
-#endif
+#include "test_classes.h"
 
-#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
-#define SECOND_RUN
-   gROOT->ProcessLine(".x runObjects.C");
-#else
+void runObjects()
+{
+   gSystem->Load("libJsonTestClasses");
 
    TJsonEx5 ex5; ex5.Init();
    TJsonEx6 ex6; ex6.Init();
    TJsonEx10 ex10; ex10.Init();
    TString json;
 
-   cout << " ====== objects as class members TJsonEx5 ===== " << endl;
+   std::cout << " ====== objects as class members TJsonEx5 ===== " << std::endl;
    json = TBufferJSON::ToJSON(&ex5);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== arrays of objects as class members TJsonEx6 ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== arrays of objects as class members TJsonEx6 ===== " << std::endl;
    json = TBufferJSON::ToJSON(&ex6);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== ROOT TObject/TNamed/TString as class members TJsonEx10 ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== ROOT TObject/TNamed/TString as class members TJsonEx10 ===== " << std::endl;
    json = TBufferJSON::ToJSON(&ex10);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ============ selected data members ======== " << endl;
-   cout << "ex5.fObj1 = " << TBufferJSON::ToJSON(&ex5, 0, "fObj1") << endl;
-   cout << "ex5.fPtr1 = " << TBufferJSON::ToJSON(&ex5, 0, "fPtr1") << endl;
-   cout << "ex5.fSafePtr1 = " << TBufferJSON::ToJSON(&ex5, 0, "fSafePtr1") << endl;
-   cout << "ex6.fObj1 = " << TBufferJSON::ToJSON(&ex6, 0, "fObj1") << endl;
-
-#endif
-#ifdef ClingWorkAroundBrokenUnnamedReturn
-   gApplication->Terminate(0);
-#else
-   return 0;
-#endif
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ============ selected data members ======== " << std::endl;
+   std::cout << "ex5.fObj1 = " << TBufferJSON::ToJSON(&ex5, 0, "fObj1") << std::endl;
+   std::cout << "ex5.fPtr1 = " << TBufferJSON::ToJSON(&ex5, 0, "fPtr1") << std::endl;
+   std::cout << "ex5.fSafePtr1 = " << TBufferJSON::ToJSON(&ex5, 0, "fSafePtr1") << std::endl;
+   std::cout << "ex6.fObj1 = " << TBufferJSON::ToJSON(&ex6, 0, "fObj1") << std::endl;
 }
