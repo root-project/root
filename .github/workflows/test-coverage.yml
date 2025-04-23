@@ -65,7 +65,6 @@ jobs:
       image: registry.cern.ch/root-ci/alma9:buildready
       options: '--security-opt label=disable --rm'
       env:
-        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         PYTHONUNBUFFERED: true
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
