@@ -30,6 +30,6 @@ void scatter()
 
    auto scatter = new TScatter(n, x, y, c, s);
    scatter->SetMarkerStyle(20);
-   scatter->SetTitle("Scatter plot;X;Y");
+   scatter->SetTitle("Scatter plot;X;Y;Z");
    scatter->Draw("A");
 }
