@@ -51,6 +51,8 @@ jobs:
   build-linux:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
 
+    secrets: inherit
+
     permissions:
       contents: read
 
