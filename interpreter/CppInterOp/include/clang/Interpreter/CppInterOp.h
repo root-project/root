@@ -88,13 +88,17 @@ namespace Cpp {
 
   enum OperatorArity { kUnary = 1, kBinary, kBoth };
 
+  // enum CtorCallType : short 
+  //   { kArena = 0, kArray = 2
+  //   };
+
   /// A class modeling function calls for functions produced by the interpreter
   /// in compiled code. It provides an information if we are calling a standard
   /// function, constructor or destructor.
   class JitCall {
   public:
     friend CPPINTEROP_API JitCall
-    MakeFunctionCallable(TInterp_t I, TCppConstFunction_t func);
+    MakeFunctionCallable(TInterp_t I, TCppConstFunction_t func, bool is_arena, bool is_array);
     enum Kind : char {
       kUnknown = 0,
       kGenericCall,
@@ -111,7 +115,8 @@ namespace Cpp {
     // FIXME: Figure out how to unify the wrapper signatures.
     // FIXME: Hide these implementation details by moving wrapper generation in
     // this class.
-    using GenericCall = void (*)(void*, int, void**, void*);
+                             // (self,  nargs, args,   result, n_objs)
+    using GenericCall = void (*)(void*, int,   void**, void*,  unsigned long);
     using DestructorCall = void (*)(void*, unsigned long, int);
   private:
     union {
@@ -156,7 +161,7 @@ namespace Cpp {
     // self can go in the end and be nullptr by default; result can be a nullptr
     // by default. These changes should be synchronized with the wrapper if we
     // decide to directly.
-    void Invoke(void* result, ArgList args = {}, void* self = nullptr) const {
+    void Invoke(void* result, ArgList args = {}, void* self = nullptr, size_t n_objs = 0UL) const {
       // Forward if we intended to call a dtor with only 1 parameter.
       if (m_Kind == kDestructorCall && result && !args.m_Args)
         return InvokeDestructor(result, /*nary=*/0UL, /*withFree=*/true);
@@ -165,7 +170,7 @@ namespace Cpp {
       assert(AreArgumentsValid(result, args, self) && "Invalid args!");
       ReportInvokeStart(result, args, self);
 #endif // NDEBUG
-      m_GenericCall(self, args.m_ArgSize, args.m_Args, result);
+      m_GenericCall(self, args.m_ArgSize, args.m_Args, result, n_objs);
     }
     /// Makes a call to a destructor.
     ///\param[in] object - the pointer of the object whose destructor we call.
@@ -566,10 +571,10 @@ namespace Cpp {
 
   /// Creates a trampoline function by using the interpreter and returns a
   /// uniform interface to call it from compiled code.
-  CPPINTEROP_API JitCall MakeFunctionCallable(TCppConstFunction_t func);
+  CPPINTEROP_API JitCall MakeFunctionCallable(TCppConstFunction_t func, bool is_arena = false, bool is_array = false);
 
   CPPINTEROP_API JitCall MakeFunctionCallable(TInterp_t I,
-                                              TCppConstFunction_t func);
+                                              TCppConstFunction_t func, bool is_arena = false, bool is_array = false);
 
   /// Checks if a function declared is of const type or not.
   CPPINTEROP_API bool IsConstMethod(TCppFunction_t method);
@@ -757,7 +762,7 @@ namespace Cpp {
   CPPINTEROP_API std::vector<long int> GetDimensions(TCppType_t type);
 
   /// Allocates memory for a given class.
-  CPPINTEROP_API TCppObject_t Allocate(TCppScope_t scope);
+  CPPINTEROP_API TCppObject_t Allocate(TCppScope_t scope, int n = 1);
 
   /// Deallocates memory for a given class.
   CPPINTEROP_API void Deallocate(TCppScope_t scope, TCppObject_t address);
@@ -765,7 +770,7 @@ namespace Cpp {
   /// Creates an object of class \c scope and calls its default constructor. If
   /// \c arena is set it uses placement new.
   CPPINTEROP_API TCppObject_t Construct(TCppScope_t scope,
-                                        void* arena = nullptr);
+                                        void* arena = nullptr, unsigned long n_objs = 0UL);
 
   /// Calls the destructor of object of type \c type. When withFree is true it
   /// calls operator delete/free.
