@@ -949,16 +949,20 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
 
 Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc, Double_t *yc, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
+   if (n <= 0)
+      return 0;
+   
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
    std::vector<Double_t> xc2(nn), yc2(nn);
 
    // Clip against the left boundary
-   x1 = x[n-1]; y1 = y[n-1];
+   x1 = x[n - 1];
+   y1 = y[n - 1];
    nc2 = 0;
    Int_t i;
-   for (i=0; i<n; i++) {
+   for (i = 0; i < n; i++) {
       x2 = x[i]; y2 = y[i];
       if (x1 == x2) {
          slope = 0;
@@ -981,9 +985,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    }
 
    // Clip against the top boundary
-   x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+   if (nc2 > 0) {
+      x1 = xc2[nc2 - 1];
+      y1 = yc2[nc2 - 1];
+   }
    nc = 0;
-   for (i=0; i<nc2; i++) {
+   for (i = 0; i < nc2; i++) {
       x2 = xc2[i]; y2 = yc2[i];
       if (y1 == y2) {
          slope = 0;
@@ -1005,12 +1012,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       x1 = x2; y1 = y2;
    }
 
-   if (nc>0) {
-
-      // Clip against the right boundary
-      x1 = xc[nc-1]; y1 = yc[nc-1];
+   // Clip against the right boundary
+   if (nc > 0) {
+      x1 = xc[nc - 1];
+      y1 = yc[nc - 1];
       nc2 = 0;
-      for (i=0; i<nc; i++) {
+      for (i = 0; i < nc; i++) {
          x2 = xc[i]; y2 = yc[i];
          if (x1 == x2) {
             slope = 0;
@@ -1033,9 +1040,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       }
 
       // Clip against the bottom boundary
-      x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+      if (nc2 > 0) {
+         x1 = xc2[nc2 - 1];
+         y1 = yc2[nc2 - 1];
+      }
       nc = 0;
-      for (i=0; i<nc2; i++) {
+      for (i = 0; i < nc2; i++) {
          x2 = xc2[i]; y2 = yc2[i];
          if (y1 == y2) {
             slope = 0;
@@ -1058,7 +1068,8 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       }
    }
 
-   if (nc < 3) nc =0;
+   if (nc < 3)
+      nc = 0;
    return nc;
 }
 
