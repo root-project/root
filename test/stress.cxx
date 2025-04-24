@@ -366,7 +366,7 @@ void stress2()
          OK = kFALSE;
 #else
 #ifdef R__HAS_CLOUDFLARE_ZLIB
-      Long64_t lastgood = 9826; // changes for TH1 PR#18459
+      Long64_t lastgood = 9813;
 #else
       Long64_t lastgood = 10100;  // changes in TFormula (v13)
 #endif
