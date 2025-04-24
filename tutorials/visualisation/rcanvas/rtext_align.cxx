@@ -35,7 +35,7 @@ void rtext_align()
    box->border.style = RAttrLine::kStyle6;
 
    auto drawText = [&canvas](double x, double y, RAttrText::EAlign align, const std::string &lbl) {
-      auto dbox = canvas->Add<RBox>(RPadPos(x-0.003, y-0.003), RPadPos(x+0.003, y+0.003));
+      auto dbox = canvas->Add<RBox>(RPadPos(x - 0.003, y - 0.003), RPadPos(x + 0.003, y + 0.003));
       dbox->fill.color = RColor::kRed;
       dbox->fill.style = RAttrFill::kSolid;
 

@@ -65,7 +65,7 @@ void draw_canvas(const std::string &title, Int_t col1)
 
    canvas->Show();
 
-   std::cout << title << " started" <<std::endl;
+   std::cout << title << " started" << std::endl;
 
    for (int loop = 0; loop < maxloop; ++loop) {
 
@@ -86,7 +86,7 @@ void draw_canvas(const std::string &title, Int_t col1)
       //    canvas->SaveAs(title + "_last.png");
    }
 
-   std::cout << title << " completed" <<std::endl;
+   std::cout << title << " completed" << std::endl;
 
    // remove from global list, will be destroyed with thread exit
    canvas->Remove();

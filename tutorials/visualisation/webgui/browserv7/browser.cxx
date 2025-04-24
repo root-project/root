@@ -1,10 +1,10 @@
 /// \file
-/// \ingroup tutorial_exp
+/// \ingroup tutorial_webgui
 ///
+/// Example showing RBrowser, web-based ROOT files and objects browser.
 /// \macro_code
 ///
 /// \date 2019-05-29
-/// \warning This is part of the experimental API, which might change in the future. Feedback is welcome!
 /// \authors Bertrand Bellenot <Bertrand.Bellenot@cern.ch>, Sergey Linev <S.Linev@gsi.de>
 
 /*************************************************************************
@@ -28,4 +28,3 @@ void browser()
    // clear when connection to client closed
    br->ClearOnClose(br);
 }
-

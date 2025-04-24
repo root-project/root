@@ -39,8 +39,8 @@ void tobject()
    static constexpr int nth1points = 100;
    static constexpr int nth2points = 40;
 
-   double x[npoints] = { 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. };
-   double y[npoints] = { .1, .2, .3, .4, .3, .2, .1, .2, .3, .4 };
+   double x[npoints] = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
+   double y[npoints] = {.1, .2, .3, .4, .3, .2, .1, .2, .3, .4};
    auto gr = new TGraph(npoints, x, y);
 
    // create normal object to be able draw it once
@@ -53,11 +53,11 @@ void tobject()
    auto th2 = std::make_shared<TH2I>("gaus2", "Example of TH2", nth2points, -5, 5, nth2points, -5, 5);
    // is is highly recommended to set directory to nullptr to avoid ownership conflicts
    th2->SetDirectory(nullptr);
-   for (int n=0;n<nth2points;++n) {
-      for (int k=0;k<nth2points;++k) {
-         double x = 10.*n/nth2points-5.;
-         double y = 10.*k/nth2points-5.;
-         th2->SetBinContent(th2->GetBin(n+1, k+1), (int) (1000*TMath::Gaus(x)*TMath::Gaus(y)));
+   for (int n = 0; n < nth2points; ++n) {
+      for (int k = 0; k < nth2points; ++k) {
+         double x = 10. * n / nth2points - 5.;
+         double y = 10. * k / nth2points - 5.;
+         th2->SetBinContent(th2->GetBin(n + 1, k + 1), (int)(1000 * TMath::Gaus(x) * TMath::Gaus(y)));
       }
    }
 
@@ -77,7 +77,7 @@ void tobject()
    canvas->Draw<TObjectDrawable>(TObjectDrawable::kPalette);
 
    // Divide canvas on 2x2 sub-pads to show different draw options
-   auto subpads = canvas->Divide(2,2);
+   auto subpads = canvas->Divide(2, 2);
 
    // draw graph with "AL" option, drawable take over object ownership
    subpads[0][0]->Draw<TObjectDrawable>(gr, "AL");
