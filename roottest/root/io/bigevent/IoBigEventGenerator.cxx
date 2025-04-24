@@ -204,7 +204,7 @@ int main(int argc, char **argv)
          Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
          Float_t random = gRandom->Rndm(1);
 
-         sprintf(etype,"type%d",ev%5);
+         snprintf(etype, 20, "type%d", ev % 5);
          event->SetType(etype);
          event->SetHeader(ev, 200, 960312, random);
          event->SetNseg(Int_t(10*ntrack+20*sigmas));
