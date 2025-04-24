@@ -77,13 +77,14 @@ class _rebin:
         return rebin_method(*self.ngroup, newname=hist.GetName())
 
 
-def _sum(hist, axis):
+def _sum(hist, axis, args=None):
     """
-    Represents a summation operation for histograms, which either computes the integral
-    (1D histograms) or projects the histogram along specified axes (2D and 3D histograms).
+    Represents a summation operation for histograms, which either computes the integral (1D histograms)
+    or projects the histogram along specified axes (projection is only for 2D and 3D histograms).
 
     Example:
-        ans = h[::ROOT.uhi.sum]  # Compute the integral for a 1D histogram
+        ans = h[0:len:ROOT.uhi.sum]  # Compute the integral for a 1D histogram excluding flow bins
+        ans_2 = h[::ROOT.uhi.sum, ::ROOT.uhi.sum]  # Compute the integral for a 2D histogram including flow bins
         h_projected = h[:, ::ROOT.uhi.sum]  # Project the Y axis for a 2D histogram
         h_projected = h[:, :, ::ROOT.uhi.sum]  # Project the Z axis for a 3D histogram
     """
@@ -95,19 +96,28 @@ def _sum(hist, axis):
     if isinstance(axis, int):
         axis = (axis,)
     if dim == 1:
-        return hist.Integral()
+        return hist.Integral(*args) if axis == (0,) else _invalid_axis(axis, dim)
     if dim == 2:
-        return hist.ProjectionX() if axis == (0,) else hist.ProjectionY() if axis == (1,) else _invalid_axis(axis, dim)
+        if axis == (0,):
+            return hist.ProjectionY()
+        elif axis == (1,):
+            return hist.ProjectionX()
+        elif axis == (0, 1):
+            return hist.Integral()
+        else:
+            return _invalid_axis(axis, dim)
     if dim == 3:
-        # It is not possible from the interface to specify the options "yx", "zy", "zx"
+        # It is not possible from the interface to specify the options "xy", "yz", "xz"
         project_map = {
-            (0,): "yz",
-            (1,): "xz",
-            (2,): "xy",
+            (0,): "zy",
+            (1,): "zx",
+            (2,): "yx",
             (0, 1): "z",
             (0, 2): "y",
             (1, 2): "x",
         }
+        if axis == (0, 1, 2):
+            return hist.Integral()
         return hist.Project3D(project_map[axis]) if axis in project_map else _invalid_axis(axis, dim)
     raise NotImplementedError(f"Summing not implemented for {dim}D histograms")
 
@@ -148,22 +158,26 @@ def _get_axis_len(self, axis, include_flow_bins=False):
     return _get_axis(self, axis).GetNbins() + (2 if include_flow_bins else 0)
 
 
-def _process_index_for_axis(self, index, axis):
+def _process_index_for_axis(self, index, axis, include_flow_bins=False, is_slice_stop=False):
     """Process an index for a histogram axis handling callables and index shifting."""
     if callable(index):
         # If the index is a `loc`, `underflow`, `overflow`, or `len`
-        return _get_axis_len(self, axis) if index is len else index(self, axis)
+        return _get_axis_len(self, axis) + 1 if index is len else index(self, axis)
 
     if isinstance(index, int):
         # -1 index returns the last valid bin
         if index == -1:
             return _overflow(self, axis) - 1
+
+        if index == _overflow(self, axis):
+            return index + (1 if include_flow_bins else 0)
+
         # Shift the indices by 1 to align with the UHI convention,
         # where 0 corresponds to the first bin, unlike ROOT where 0 represents underflow and 1 is the first bin.
+        nbins = _get_axis_len(self, axis) + (1 if is_slice_stop else 0)
         index = index + 1
-        nbins = _get_axis_len(self, axis)
         if abs(index) > nbins:
-            raise IndexError(f"Histogram index {index} out of range for axis {axis}")
+            raise IndexError(f"Histogram index {index - 1} out of range for axis {axis}. Valid range: (0,{nbins})")
         return index
 
     raise index
@@ -200,14 +214,8 @@ def _compute_common_index(self, index, include_flow_bins=True):
         raise IndexError("Only one ellipsis is allowed in the index.")
 
     if any(idx is ... for idx in index):
-        expanded_index = []
-        for idx in index:
-            if idx is ...:
-                break
-            expanded_index.append(idx)
-        # fill remaining dimensions with `slice(None)`
-        expanded_index.extend([slice(None)] * (dim - len(expanded_index)))
-        index = tuple(expanded_index)
+        ellipsis_pos = index.index(...)
+        index = index[:ellipsis_pos] + (slice(None),) * (dim - len(index) + 1) + index[ellipsis_pos + 1 :]
 
     if len(index) != dim:
         raise IndexError(f"Expected {dim} indices, got {len(index)}")
@@ -224,34 +232,45 @@ def _resolve_slice_indices(self, index, axis, include_flow_bins=True):
     """Resolve slice start and stop indices for a given axis"""
     start, stop = index.start, index.stop
     start = (
-        _process_index_for_axis(self, start, axis)
+        _process_index_for_axis(self, start, axis, include_flow_bins)
         if start is not None
         else _underflow(self, axis) + (0 if include_flow_bins else 1)
     )
     stop = (
-        _process_index_for_axis(self, stop, axis)
+        _process_index_for_axis(self, stop, axis, include_flow_bins, is_slice_stop=True)
         if stop is not None
         else _overflow(self, axis) + (1 if include_flow_bins else 0)
     )
     if start < _underflow(self, axis) or stop > (_overflow(self, axis) + 1) or start > stop:
-        raise IndexError(f"Slice indices {start, stop} out of range for axis {axis}")
+        raise IndexError(
+            f"Slice indices {start, stop} out of range for axis {axis}. Valid range: {_underflow(self, axis), _overflow(self, axis) + 1}"
+        )
     return start, stop
 
 
-def _apply_actions(hist, actions):
+def _apply_actions(hist, actions, index, unprocessed_index, original_hist):
     """Apply rebinning or summing actions to the histogram, returns a new histogram"""
     if not actions or all(a is None for a in actions):
         return hist
 
-    if any(a is _sum for a in actions):
-        sum_axes = tuple(i for i, a in enumerate(actions) if a is _sum)
-        hist = _sum(hist, sum_axes)
+    if any(a is _sum or a is sum for a in actions):
+        sum_axes = tuple(i for i, a in enumerate(actions) if a is _sum or a is sum)
+        if original_hist.GetDimension() == 1:
+            # For the integral of a 1D histogram, we need special handling for the flow bins
+            # h[::sum] is equivalent to h.Integral(0, nbins+1)
+            # h[0:len:sum] is equivalent to h.Integral(1, nbins)
+            start, stop = index[0].start, index[0].stop
+            include_oflow = True if unprocessed_index.stop is None else False
+            args = [start, stop - (1 if not include_oflow else 0)]
+            hist = _sum(original_hist, sum_axes, args)
+        else:
+            hist = _sum(hist, sum_axes)
 
     if any(isinstance(a, _rebin) for a in actions):
         rebins = [a.ngroup if isinstance(a, _rebin) else 1 for a in actions if a is not _sum]
         hist = _rebin(rebins)(hist)
 
-    if any(a is not None and not (isinstance(a, _rebin) or a is _sum) for a in actions):
+    if any(a is not None and not (isinstance(a, _rebin) or a is _sum or a is sum) for a in actions):
         raise ValueError(f"Unsupported action detected in actions {actions}")
 
     return hist
@@ -261,102 +280,38 @@ def _get_processed_slices(self, index):
     """Process slices and extract actions for each axis"""
     if len(index) != self.GetDimension():
         raise IndexError(f"Expected {self.GetDimension()} indices, got {len(index)}")
-    processed_slices, out_of_range_indices, actions = [], [], [None] * self.GetDimension()
+    processed_slices, actions = [], [None] * self.GetDimension()
     for axis, idx in enumerate(index):
-        axis_bins = range(_overflow(self, axis) + 1)
         if isinstance(idx, slice):
-            slice_range = range(idx.start, idx.stop)
-            processed_slices.append(slice_range)
-            uflow = [b for b in axis_bins if b < idx.start]
-            oflow = [b for b in axis_bins if b >= idx.stop]
-            out_of_range_indices.append((uflow, oflow))
+            processed_slices.append((idx.start, idx.stop))
             actions[axis] = idx.step
+        elif isinstance(idx, int):
+            processed_slices.append((idx, idx + 1))
+            actions[axis] = _sum
         else:
-            processed_slices.append([idx])
+            raise TypeError(f"Unsupported index type: {type(idx).__name__}")
 
-    return processed_slices, out_of_range_indices, actions
-
-
-def _get_slice_indices(slices):
-    """
-    This function uses numpy's meshgrid to create a grid of indices from the input slices,
-    and reshapes the grid into a list of all possible index combinations.
-
-    Example:
-        slices = [range(2), range(3)]
-        # This represents two dimensions:
-        #   - The first dimension has indices [0, 1]
-        #   - The second dimension has indices [0, 1, 2]
-
-        result = _get_slice_indices(slices)
-        # result:
-        # [[0, 0],
-        #  [0, 1],
-        #  [0, 2],
-        #  [1, 0],
-        #  [1, 1],
-        #  [1, 2]]
-    """
-    import numpy as np
-
-    grids = np.meshgrid(*slices, indexing="ij")
-    return np.array(grids).reshape(len(slices), -1).T
+    return processed_slices, actions
 
 
-def _set_flow_bins(self, target_hist, out_of_range_indices):
-    """
-    Accumulate content from bins outside the slice range into flow bins.
-    """
-    dim = self.GetDimension()
-    uflow_bin = tuple(_underflow(self, axis) for axis in range(dim))
-    oflow_bin = tuple(_overflow(self, axis) for axis in range(dim))
-    flow_sum = 0
-
-    for axis, (underflow_indices, overflow_indices) in enumerate(out_of_range_indices):
-        all_axes = [range(_overflow(self, j)) for j in range(dim)]
-
-        def sum_bin_content(indices_list, target_bin):
-            current_val = target_hist.GetBinContent(*target_bin)
-            temp_axes = list(all_axes)
-            temp_axes[axis] = indices_list
-            for idx in _get_slice_indices(temp_axes):
-                current_val += self.GetBinContent(*tuple(map(int, idx)))
-            target_hist.SetBinContent(*target_bin, current_val)
-            return current_val
-
-        flow_sum += sum_bin_content(underflow_indices, uflow_bin)
-        flow_sum += sum_bin_content(overflow_indices, oflow_bin)
-
-    return flow_sum
-
-
-def _slice_get(self, index):
+def _slice_get(self, index, unprocessed_index):
     """
     This method creates a new histogram containing only the data from the
     specified slice.
 
     Steps:
     - Process the slices and extract the actions for each axis.
-    - Clone the original histogram and reset its contents.
-    - Set the bin content for each index in the slice.
-    - Update the number of entries in the cloned histogram (also updates the statistics).
+    - Get a new sliced histogram.
     - Apply any rebinning or summing actions to the resulting histogram.
     """
-    processed_slices, out_of_range_indices, actions = _get_processed_slices(self, index)
-    slice_indices = _get_slice_indices(processed_slices)
-    with _temporarily_disable_add_directory():
-        target_hist = self.Clone()
-        target_hist.Reset()
+    import ROOT
 
-    for indices in slice_indices:
-        indices = tuple(map(int, indices))
-        target_hist.SetBinContent(*indices, self.GetBinContent(self.GetBin(*indices)))
+    processed_slices, actions = _get_processed_slices(self, index)
+    args_vec = ROOT.std.vector("Int_t")([item for pair in processed_slices for item in pair])
 
-    flow_sum = _set_flow_bins(self, target_hist, out_of_range_indices)
+    target_hist = ROOT.Internal.Slice(self, args_vec)
 
-    target_hist.SetEntries(target_hist.GetEffectiveEntries() + flow_sum)
-
-    return _apply_actions(target_hist, actions)
+    return _apply_actions(target_hist, actions, index, unprocessed_index, self)
 
 
 def _slice_set(self, index, unprocessed_index, value):
@@ -367,42 +322,53 @@ def _slice_set(self, index, unprocessed_index, value):
     """
     import numpy as np
 
+    import ROOT
+
+    if not np.isscalar(value):
+        try:
+            value = np.asanyarray(value)
+        except AttributeError:
+            raise TypeError(f"Unsupported value type: {type(value).__name__}")
+
     # Depending on the shape of the array provided, we can set or not the flow bins
     # Setting with a scalar does not set the flow bins
-    include_flow_bins = not (
-        (isinstance(value, np.ndarray) and value.shape == _shape(self, include_flow_bins=False)) or np.isscalar(value)
-    )
+    # broadcasting an array to the shape of the slice does not set the flow bins neither
+    include_flow_bins = False
+    if isinstance(value, np.ndarray):
+        processed_slices, _ = _get_processed_slices(self, index)
+        slice_shape = tuple(stop - start for start, stop in processed_slices)
+        include_flow_bins = value.size == np.prod(slice_shape)
+
     if not include_flow_bins:
         index = _compute_common_index(self, unprocessed_index, include_flow_bins=False)
 
-    processed_slices, _, actions = _get_processed_slices(self, index)
-    slice_indices = _get_slice_indices(processed_slices)
-    if isinstance(value, np.ndarray):
-        if value.size != len(slice_indices):
-            raise ValueError(f"Expected {len(slice_indices)} bin values, got {value.size}")
+    processed_slices, actions = _get_processed_slices(self, index)
+    slice_shape = tuple(stop - start for start, stop in processed_slices)
+    slice_edges = ROOT.std.vector("std::pair<Int_t, Int_t>")()
+    for start, stop in processed_slices:
+        slice_edges.push_back(ROOT.std.pair("Int_t", "Int_t")(start, stop))
 
-        expected_shape = tuple(len(slice_range) for slice_range in processed_slices)
-        if value.shape != expected_shape:
-            raise ValueError(f"Shape mismatch: expected {expected_shape}, got {value.shape}")
-
-        for indices, val in zip(slice_indices, value.ravel()):
-            _setbin(self, self.GetBin(*map(int, indices)), val)
-    elif np.isscalar(value):
-        for indices in slice_indices:
-            _setbin(self, self.GetBin(*map(int, indices)), value)
+    if np.isscalar(value):
+        value = ROOT.std.vector("Double_t")([value] * np.prod(slice_shape))
     else:
-        raise TypeError(f"Unsupported value type: {type(value).__name__}")
+        if value.size != np.prod(slice_shape):
+            try:
+                value = np.broadcast_to(value, slice_shape)
+            except ValueError:
+                raise ValueError(f"Expected {np.prod(slice_shape)} bin values, got {value.size}")
+        value = ROOT.std.vector("Double_t")(value.flatten().astype(np.float64))
 
-    _apply_actions(self, actions)
+    ROOT.Internal.SetSliceContent(self, value, slice_edges)
+
+    _apply_actions(self, actions, index, unprocessed_index, self)
 
 
 def _getitem(self, index):
     uhi_index = _compute_common_index(self, index)
     if all(isinstance(i, int) for i in uhi_index):
         return self.GetBinContent(*uhi_index)
-
     if any(isinstance(i, slice) for i in uhi_index):
-        return _slice_get(self, uhi_index)
+        return _slice_get(self, uhi_index, index)
 
 
 def _setitem(self, index, value):
