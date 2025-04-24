@@ -725,7 +725,7 @@ Every item of the top-most list frame consists of an outer list frame where ever
 Every item of the outer list frame is an inner list frame
 whose items correspond to the pages of the column in the cluster.
 The inner list is followed by a 64bit signed integer element offset and,
-unless the column is suppressed, the 32bit compression settings
+unless the column is suppressed, the 32bit compression settings.
 See next Section on "Suppressed Columns" for additional details.
 Note that the size of the inner list frame includes the element offset and compression settings.
 The order of the outer items must match the order of columns in the header and the extension header (small to large).
@@ -756,7 +756,7 @@ without inspecting the metadata of all the previous clusters.
 
 The hierarchical structure of the frames in the page list envelope is as follows:
 
-    # this is `List frame of cluster group record frames` mentioned above
+    # this is `Nested list frame of page locations` mentioned above
     - Top-most cluster list frame (one item for each cluster in this RNTuple)
     |
     |---- Cluster 1 column list frame (outer list frame, one item for each column in this RNTuple)
