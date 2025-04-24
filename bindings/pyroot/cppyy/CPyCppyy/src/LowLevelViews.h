@@ -56,6 +56,15 @@ PyObject* CreateLowLevelView_i8(int8_t*,  cdims_t shape);
 PyObject* CreateLowLevelView_i8(int8_t**, cdims_t shape);
 PyObject* CreateLowLevelView_i8(uint8_t*,  cdims_t shape);
 PyObject* CreateLowLevelView_i8(uint8_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i16(int16_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i16(int16_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i16(uint16_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i16(uint16_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i32(int32_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i32(int32_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i32(uint32_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i32(uint32_t**, cdims_t shape);
+
 CPPYY_DECL_VIEW_CREATOR(short);
 CPPYY_DECL_VIEW_CREATOR(unsigned short);
 CPPYY_DECL_VIEW_CREATOR(int);
