@@ -97,7 +97,7 @@ public:
    friend class TH1Merger;
 
 protected:
-    Int_t         fNcells;          ///<  Number of bins (1D) / total of cells (2D) / voxels (3D) +Under/Overflows
+    Int_t         fNcells;          ///<  Number of bins(1D), cells (2D) +U/Overflows
     TAxis         fXaxis;           ///<  X axis descriptor
     TAxis         fYaxis;           ///<  Y axis descriptor
     TAxis         fZaxis;           ///<  Z axis descriptor
