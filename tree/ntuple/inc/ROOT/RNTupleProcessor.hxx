@@ -549,6 +549,13 @@ private:
    /// RNTuples are processed in the order in which they are specified.
    RNTupleChainProcessor(std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName,
                          std::unique_ptr<ROOT::RNTupleModel> model);
+
+public:
+   RNTupleChainProcessor(const RNTupleChainProcessor &) = delete;
+   RNTupleChainProcessor(RNTupleChainProcessor &&) = delete;
+   RNTupleChainProcessor &operator=(const RNTupleChainProcessor &) = delete;
+   RNTupleChainProcessor &operator=(RNTupleChainProcessor &&) = delete;
+   ~RNTupleChainProcessor() override = default;
 };
 
 // clang-format off
