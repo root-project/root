@@ -198,9 +198,12 @@ public:
                          ROOT::NTupleSize_t entryOffset = 0);
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get an entry index (if it exists) for the given join field (values), from any partition
+   /// \brief Get an entry index (if it exists) for the given join field value(s), from any partition.
    ///
    /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
+   ///
+   /// \note If one or more corresponding entries exist for the given value(s), the first entry index found in the join
+   /// table is returned. To get *all* the entry indexes, use GetEntryIndexes.
    ///
    /// \return An entry number that corresponds to `valuePtrs`. When there are no corresponding entries,
    /// `kInvalidNTupleIndex` is returned.
