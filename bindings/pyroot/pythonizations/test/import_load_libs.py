@@ -38,6 +38,8 @@ class ImportLoadLibs(unittest.TestCase):
             'libMultiProc',
             'libssl',
             'libcrypt.*', # by libssl
+            'oqsprovider', # loaded by libssl on e.g. centos10
+            'liboqs', # used by above
             'libtbb',
             'liburing', # by libRIO if uring option is enabled
             # On centos7 libssl links against kerberos pulling in all dependencies below, removed with libssl1.1.0
