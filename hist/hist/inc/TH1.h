@@ -97,7 +97,7 @@ public:
    friend class TH1Merger;
 
 protected:
-    Int_t         fNcells;          ///<  Number of bins(1D), cells (2D) +U/Overflows
+    Int_t         fNcells;          ///<  Number of bins (1D) / total of cells (2D) / voxels (3D) +Under/Overflows
     TAxis         fXaxis;           ///<  X axis descriptor
     TAxis         fYaxis;           ///<  Y axis descriptor
     TAxis         fZaxis;           ///<  Z axis descriptor
@@ -209,6 +209,8 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w) = 0;
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
+   virtual void     AutoZoom() {};  // *MENU*
+   virtual void     UnZoom() {};  // *MENU*
            void     Browse(TBrowser *b) override;
    virtual Bool_t   CanExtendAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = nullptr) const;
@@ -323,6 +325,7 @@ public:
 
    virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
    virtual Double_t GetRandom(TRandom * rng = nullptr) const;
+   void             GetRangeOfFilledWeights(const Int_t, Int_t, Int_t, bool) const {};
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
