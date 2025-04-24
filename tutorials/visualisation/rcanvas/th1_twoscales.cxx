@@ -9,7 +9,8 @@
 /// \macro_code
 ///
 /// \date 2021-07-05
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 /// \author Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
@@ -29,21 +30,21 @@ using namespace ROOT::Experimental;
 
 void th1_twoscales()
 {
-   //create/fill draw h1
-   auto h1 = std::make_shared<TH1F>("h1","Example histogram",100,-3,3);
+   // create/fill draw h1
+   auto h1 = std::make_shared<TH1F>("h1", "Example histogram", 100, -3, 3);
    h1->SetDirectory(nullptr);
    h1->SetStats(kFALSE);
-   for (int i=0;i<10000;i++)
-      h1->Fill(gRandom->Gaus(0,1));
+   for (int i = 0; i < 10000; i++)
+      h1->Fill(gRandom->Gaus(0, 1));
 
-   //create hint1 filled with the bins integral of h1
-   auto hint1 = std::make_shared<TH1F>("hint1","h1 bins integral",100,-3,3);
+   // create hint1 filled with the bins integral of h1
+   auto hint1 = std::make_shared<TH1F>("hint1", "h1 bins integral", 100, -3, 3);
    hint1->SetDirectory(nullptr);
    hint1->SetStats(kFALSE);
    Float_t sum = 0;
-   for (int i=1;i<=100;i++) {
+   for (int i = 1; i <= 100; i++) {
       sum += h1->GetBinContent(i);
-      hint1->SetBinContent(i,sum);
+      hint1->SetBinContent(i, sum);
    }
    hint1->SetLineColor(kRed);
    hint1->GetYaxis()->SetAxisColor(kRed);

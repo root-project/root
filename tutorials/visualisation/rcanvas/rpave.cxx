@@ -8,7 +8,8 @@
 /// \macro_code
 ///
 /// \date 2020-06-18
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 /// \author Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
@@ -64,8 +65,11 @@ void rpave()
 
    std::string fname = __FILE__;
    auto pos = fname.find("rpave.cxx");
-   if (pos > 0) { fname.resize(pos); fname.append("comic.woff2"); }
-           else fname = "comic.woff2";
+   if (pos > 0) {
+      fname.resize(pos);
+      fname.append("comic.woff2");
+   } else
+      fname = "comic.woff2";
    canvas->Draw<RFont>("CustomFont", fname);
 
    auto text2 = canvas->Draw<RPaveText>();

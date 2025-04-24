@@ -21,7 +21,18 @@
 
 import ROOT
 import os
-from ROOT.Experimental import RCanvas, RText, RAttrText, RAttrFont, RAttrFill, RAttrLine, RLegend, RPadPos, RPadExtent, TObjectDrawable
+from ROOT.Experimental import (
+    RCanvas,
+    RText,
+    RAttrText,
+    RAttrFont,
+    RAttrFill,
+    RAttrLine,
+    RLegend,
+    RPadPos,
+    RPadExtent,
+    TObjectDrawable,
+)
 
 # Enable multi-threading
 ROOT.ROOT.EnableImplicitMT()
@@ -29,15 +40,16 @@ ROOT.ROOT.EnableImplicitMT()
 # Create a ROOT dataframe for each dataset
 path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
 df = {}
-df["data"] = ROOT.RDataFrame("mini", (os.path.join(path, "GamGam/Data/data_{}.GamGam.root".format(x)) for x in ("A", "B", "C", "D")))
+df["data"] = ROOT.RDataFrame(
+    "mini", (os.path.join(path, "GamGam/Data/data_{}.GamGam.root".format(x)) for x in ("A", "B", "C", "D"))
+)
 df["ggH"] = ROOT.RDataFrame("mini", os.path.join(path, "GamGam/MC/mc_343981.ggH125_gamgam.GamGam.root"))
 df["VBF"] = ROOT.RDataFrame("mini", os.path.join(path, "GamGam/MC/mc_345041.VBFH125_gamgam.GamGam.root"))
 processes = list(df.keys())
 
 # Apply scale factors and MC weight for simulated events and a weight of 1 for the data
 for p in ["ggH", "VBF"]:
-    df[p] = df[p].Define("weight",
-            "scaleFactor_PHOTON * scaleFactor_PhotonTRIGGER * scaleFactor_PILEUP * mcWeight");
+    df[p] = df[p].Define("weight", "scaleFactor_PHOTON * scaleFactor_PhotonTRIGGER * scaleFactor_PILEUP * mcWeight")
 df["data"] = df["data"].Define("weight", "1.0")
 
 # Select the events for the analysis
@@ -46,39 +58,55 @@ for p in processes:
     df[p] = df[p].Filter("trigP")
 
     # Find two good muons with tight ID, pt > 25 GeV and not in the transition region between barrel and encap
-    df[p] = df[p].Define("goodphotons", "photon_isTightID && (photon_pt > 25000) && (abs(photon_eta) < 2.37) && ((abs(photon_eta) < 1.37) || (abs(photon_eta) > 1.52))")\
-                 .Filter("Sum(goodphotons) == 2")
+    df[p] = (
+        df[p]
+        .Define(
+            "goodphotons",
+            "photon_isTightID && (photon_pt > 25000) && (abs(photon_eta) < 2.37) && ((abs(photon_eta) < 1.37) || (abs(photon_eta) > 1.52))",
+        )
+        .Filter("Sum(goodphotons) == 2")
+    )
 
     # Take only isolated photons
-    df[p] = df[p].Filter("Sum(photon_ptcone30[goodphotons] / photon_pt[goodphotons] < 0.065) == 2")\
-                 .Filter("Sum(photon_etcone20[goodphotons] / photon_pt[goodphotons] < 0.065) == 2")
+    df[p] = (
+        df[p]
+        .Filter("Sum(photon_ptcone30[goodphotons] / photon_pt[goodphotons] < 0.065) == 2")
+        .Filter("Sum(photon_etcone20[goodphotons] / photon_pt[goodphotons] < 0.065) == 2")
+    )
 
 # Compile a function to compute the invariant mass of the diphoton system
 ROOT.gInterpreter.Declare(
-"""
+    """
 using Vec_t = const ROOT::VecOps::RVec<float>;
 float ComputeInvariantMass(Vec_t& pt, Vec_t& eta, Vec_t& phi, Vec_t& e) {
     ROOT::Math::PtEtaPhiEVector p1(pt[0], eta[0], phi[0], e[0]);
     ROOT::Math::PtEtaPhiEVector p2(pt[1], eta[1], phi[1], e[1]);
     return (p1 + p2).mass() / 1000.0;
 }
-""")
+"""
+)
 
 # Define a new column with the invariant mass and perform final event selection
 hists = {}
 for p in processes:
     # Make four vectors and compute invariant mass
-    df[p] = df[p].Define("m_yy", "ComputeInvariantMass(photon_pt[goodphotons], photon_eta[goodphotons], photon_phi[goodphotons], photon_E[goodphotons])")
+    df[p] = df[p].Define(
+        "m_yy",
+        "ComputeInvariantMass(photon_pt[goodphotons], photon_eta[goodphotons], photon_phi[goodphotons], photon_E[goodphotons])",
+    )
 
     # Make additional kinematic cuts and select mass window
-    df[p] = df[p].Filter("photon_pt[goodphotons][0] / 1000.0 / m_yy > 0.35")\
-                 .Filter("photon_pt[goodphotons][1] / 1000.0 / m_yy > 0.25")\
-                 .Filter("m_yy > 105 && m_yy < 160")
+    df[p] = (
+        df[p]
+        .Filter("photon_pt[goodphotons][0] / 1000.0 / m_yy > 0.35")
+        .Filter("photon_pt[goodphotons][1] / 1000.0 / m_yy > 0.25")
+        .Filter("m_yy > 105 && m_yy < 160")
+    )
 
     # Book histogram of the invariant mass with this selection
     hists[p] = df[p].Histo1D(
-            ROOT.RDF.TH1DModel(p, "Diphoton invariant mass; m_{#gamma#gamma} [GeV];Events", 30, 105, 160),
-            "m_yy", "weight")
+        ROOT.RDF.TH1DModel(p, "Diphoton invariant mass; m_{#gamma#gamma} [GeV];Events", 30, 105, 160), "m_yy", "weight"
+    )
 
 # Run the event loop
 
@@ -100,8 +128,8 @@ data = hists["data"].GetValue()
 # Create canvas with pads for main plot and data/MC ratio
 c = RCanvas.Create("df104_HiggsToTwoPhotons")
 
-lower_pad = c.AddPad(RPadPos(0,0.65), RPadExtent(1, 0.35))
-upper_pad = c.AddPad(RPadPos(0,0), RPadExtent(1, 0.65))
+lower_pad = c.AddPad(RPadPos(0, 0.65), RPadExtent(1, 0.35))
+upper_pad = c.AddPad(RPadPos(0, 0), RPadExtent(1, 0.65))
 
 upper_frame = upper_pad.AddFrame()
 upper_frame.margins.bottom = 0
@@ -239,5 +267,5 @@ c.SetSize(700, 780)
 c.Show()
 
 # Save plot in PNG file
-if c.SaveAs("df104.png") :
-   print("Saved figure to df104.png")
+if c.SaveAs("df104.png"):
+    print("Saved figure to df104.png")

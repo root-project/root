@@ -36,7 +36,7 @@ void rline_style()
 
       auto draw = canvas->Add<RLine>(RPadPos{.32_normal, posy}, RPadPos{.8_normal, posy});
       if (i < 11)
-         draw->line.style = (RAttrLine::EStyle) i;
+         draw->line.style = (RAttrLine::EStyle)i;
       else
          draw->line.pattern = "10,2,8,2,10,6,1,6";
 

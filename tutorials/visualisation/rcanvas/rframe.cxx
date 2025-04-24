@@ -31,9 +31,9 @@
 using namespace ROOT::Experimental;
 
 auto rframe_style = RStyle::Parse("frame { x_ticks_width: 3; y_ticks_width: 3; }"
-                                 "title { margin: 0.02; height: 0.1; text_color: blue; text_size: 0.07; }"
-                                 "line { line_width: 2; }"
-                                 "text { text_align: 13; text_size: 0.03; }");
+                                  "title { margin: 0.02; height: 0.1; text_color: blue; text_size: 0.07; }"
+                                  "line { line_width: 2; }"
+                                  "text { text_align: 13; text_size: 0.03; }");
 
 void rframe()
 {
@@ -70,7 +70,7 @@ void rframe()
    title->height = 0.1_normal;
 
    // draw line over the frame
-   auto line0 = canvas->Draw<RLine>(RPadPos(100_px, .9_normal), RPadPos(900_px , .9_normal));
+   auto line0 = canvas->Draw<RLine>(RPadPos(100_px, .9_normal), RPadPos(900_px, .9_normal));
    auto text0 = canvas->Draw<RText>(RPadPos(100_px, .9_normal + 5_px), "Line drawn on pad, fix pixel length");
    text0->text.align = RAttrText::kLeftBottom;
 
@@ -79,11 +79,12 @@ void rframe()
    auto text1 = canvas->Draw<RText>(RPadPos(.1_normal, .1_normal), "Line drawn on pad, normalized coordinates");
 
    // draw on left size of frame, but bound to frame, moved with frame
-   auto line2 = canvas->Draw<RLine>(RPadPos(-.2_normal, -.1_normal), RPadPos(-.2_normal , 1.1_normal));
+   auto line2 = canvas->Draw<RLine>(RPadPos(-.2_normal, -.1_normal), RPadPos(-.2_normal, 1.1_normal));
    line2->onFrame = true; // or via CSS "onFrame: true;"
    line2->line.color = RColor::kRed;
 
-   auto text2 = canvas->Draw<RText>(RPadPos(-.2_normal - 5_px, -.1_normal), "Line drawn on frame, normalized coordinates");
+   auto text2 =
+      canvas->Draw<RText>(RPadPos(-.2_normal - 5_px, -.1_normal), "Line drawn on frame, normalized coordinates");
    text2->onFrame = true; // or via CSS "onFrame: true;"
    text2->text.angle = 90;
    text2->text.align = RAttrText::kLeftBottom;
@@ -102,15 +103,15 @@ void rframe()
    box4->fill.color = RColor::kBlue;
    box4->fill.style = RAttrFill::kSolid;
    box4->clipping = true; // or via CSS "clipping: true;"
-   box4->onFrame = true; // or via CSS "onFrame: true;"
+   box4->onFrame = true;  // or via CSS "onFrame: true;"
 
    // draw line in the frame, allowed to set user coordinate
    auto line4 = canvas->Draw<RLine>(RPadPos(20_user, 20_user), RPadPos(80_user, 80_user));
    line4->clipping = true; // or via CSS "clipping: true;"
-   line4->onFrame = true; // or via CSS "onFrame: true;"
+   line4->onFrame = true;  // or via CSS "onFrame: true;"
 
    auto text4 = canvas->Draw<RText>(RPadPos(20_user, 20_user), "clipping on");
-   text4->onFrame = true; // or via CSS "onFrame: true;"
+   text4->onFrame = true;  // or via CSS "onFrame: true;"
    text4->clipping = true; // or via CSS "clipping: true;"
 
    // draw box before line at same position as line ending with 40x40 px size

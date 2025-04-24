@@ -38,7 +38,7 @@ void symlog()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Drawing with symlog");
 
-   auto pads   = canvas->Divide(1, 3);
+   auto pads = canvas->Divide(1, 3);
 
    // first pad with linear scales
    auto frame1 = pads[0][0]->AddFrame();
@@ -85,11 +85,14 @@ void symlog()
    frame3->y.title.SetCenter();
    pads[0][2]->Draw<RFrameTitle>("symlog scale");
 
-   for (int n=0;n<100;n++) {
+   for (int n = 0; n < 100; n++) {
       auto x1 = TMath::Power(10, gRandom->Uniform(1, 2.9));
       auto y1 = TMath::Power(10, gRandom->Uniform(1, 1.9));
 
-      if (n % 27 == 0) { x1 = 100; y1 *= 100; }
+      if (n % 27 == 0) {
+         x1 = 100;
+         y1 *= 100;
+      }
 
       RPadPos pm{RPadLength::User(x1), RPadLength::User(y1)};
       pads[0][0]->Draw<RMarker>(pm)->SetCssClass("group1");
@@ -97,7 +100,7 @@ void symlog()
       pads[0][2]->Draw<RMarker>(pm)->SetCssClass("group1");
    }
 
-   for (int n=0;n<75;n++) {
+   for (int n = 0; n < 75; n++) {
       auto x2 = gRandom->Uniform(-5., 5.);
       auto y2 = TMath::Power(10, gRandom->Uniform(2.2, 3.7));
 

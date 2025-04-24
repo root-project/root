@@ -2,7 +2,8 @@
 /// \ingroup tutorial_rcanvas
 ///
 /// This macro shows how ROOT RCanvas::Update method is working.
-/// One can do sync and/or async depending how important is that graphics is updated before next action will be performed
+/// One can do sync and/or async depending how important is that graphics is updated before next action will be
+/// performed
 ///
 /// \macro_image (rcanvas_js)
 /// \macro_code
@@ -31,8 +32,8 @@ using namespace ROOT::Experimental;
 void rcanvas_update()
 {
    static constexpr int npoints = 10;
-   double x[npoints] = { 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. };
-   double y[npoints] = { .1, .2, .3, .2, .1, .2, .3, .2, .1, .2 };
+   double x[npoints] = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
+   double y[npoints] = {.1, .2, .3, .2, .1, .2, .3, .2, .1, .2};
    auto gr = new TGraph(npoints, x, y);
 
    auto canvas = RCanvas::Create("Demo of RCanvas update");
@@ -43,7 +44,8 @@ void rcanvas_update()
    canvas->Show();
 
    // synchronous, wait until drawing is really finished
-   canvas->Update(false, [](bool res) { std::cout << "First sync update done = " << (res ? "true" : "false") << std::endl; });
+   canvas->Update(false,
+                  [](bool res) { std::cout << "First sync update done = " << (res ? "true" : "false") << std::endl; });
 
    // modify TGraph making different form
    gr->SetPoint(1, 1., .3);
@@ -56,7 +58,8 @@ void rcanvas_update()
    canvas->Modified();
 
    // call Update again, return before actual drawing will be performed by the browser
-   canvas->Update(true, [](bool res) { std::cout << "Second async update done = " << (res ? "true" : "false") << std::endl; });
+   canvas->Update(
+      true, [](bool res) { std::cout << "Second async update done = " << (res ? "true" : "false") << std::endl; });
 
    std::cout << "This message appear normally before second async update" << std::endl;
 }

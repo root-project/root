@@ -73,8 +73,11 @@ void rtext_font()
    posy -= 0.03;
    std::string fname = __FILE__;
    auto pos = fname.find("rtext_font.cxx");
-   if (pos > 0) { fname.resize(pos); fname.append("comic.woff2"); }
-           else fname = "comic.woff2";
+   if (pos > 0) {
+      fname.resize(pos);
+      fname.append("comic.woff2");
+   } else
+      fname = "comic.woff2";
    canvas->Draw<RFont>("Comic", fname);
    drawText(RAttrFont::kTimes, true);
 

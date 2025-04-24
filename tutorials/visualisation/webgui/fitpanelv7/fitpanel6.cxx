@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_exp
+/// \ingroup tutorial_webgui
 ///
 /// \macro_code
 ///
@@ -31,7 +31,7 @@ void fitpanel6()
    // create panel
    auto panel = std::make_shared<ROOT::Experimental::RFitPanel>("FitPanel");
 
-   TH1F *test = new TH1F("test","This is test histogram",100,-4,4);
+   TH1F *test = new TH1F("test", "This is test histogram", 100, -4, 4);
    test->FillRandom("gaus", 10000);
 
    panel->AssignHistogram(test);
@@ -40,4 +40,3 @@ void fitpanel6()
 
    panel->ClearOnClose(panel);
 }
-

@@ -193,8 +193,8 @@ if(NOT xrootd)
                   analysis/dataframe/df106_HiggsToFourLeptons.py
                   analysis/dataframe/df107_SingleTopAnalysis.py
                   roofit/roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
-                  experimental/rcanvas/df104.py
-                  experimental/rcanvas/df105.py
+                  visualisation/rcanvas/df104.py
+                  visualisation/rcanvas/df105.py
                   )
 endif()
 
@@ -293,7 +293,7 @@ set(gui_veto math/fit/fitpanel_playback.C
              visualisation/webgui/panel/webpanel.cxx
              visualisation/webgui/webwindow/webwindow.cxx)
 if (NOT webgui)
-  list(APPEND gui_veto visualisation/graphics/save_batch.C experimental/rcanvas/df104.py experimental/rcanvas/df105.py)
+  list(APPEND gui_veto visualisation/graphics/save_batch.C visualisation/rcanvas/df104.py visualisation/rcanvas/df105.py)
 endif()
 
 if (NOT ROOT_tmva_FOUND)
@@ -374,10 +374,9 @@ endif()
 
 if(root7)
   set(root7_veto analysis/dataframe/df013_InspectAnalysis.C
-                 experimental/browser.cxx
-                 experimental/filedialog.cxx
-                 experimental/fitpanel.cxx
-                 experimental/fitpanel6.cxx
+                 tutorials/visualisation/webgui/browserv7/browser.cxx
+                 tutorials/visualisation/webgui/browserv7/filedialog.cxx
+                 tutorials/visualisation/webgui/fitpanelv7/fitpanel6.cxx
       )
   if(NOT davix)
     list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
@@ -388,20 +387,20 @@ if(root7)
     list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
     list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
     list(APPEND root7_veto io/ntuple/ntpl008_import.C)
-    list(APPEND root7_veto experimental/rcanvas/df104.py)
-    list(APPEND root7_veto experimental/rcanvas/df105.py)
+    list(APPEND root7_veto visualisation/rcanvas/df104.py)
+    list(APPEND root7_veto visualisation/rcanvas/df105.py)
   endif()
   if(MSVC AND NOT win_broken_tests)
     #---EOS is not supported on Windows
-    list(APPEND root7_veto experimental/rcanvas/df104.py)
-    list(APPEND root7_veto experimental/rcanvas/df105.py)
-    list(APPEND root7_veto experimental/rcanvas/rbox.py)
+    list(APPEND root7_veto visualisation/rcanvas/df104.py)
+    list(APPEND root7_veto visualisation/rcanvas/df105.py)
+    list(APPEND root7_veto visualisation/rcanvas/rbox.py)
   endif()
 else()
   if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto analysis/dataframe/df013_InspectAnalysis.C)
   endif()
-  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ experimental/*.py experimental/*.cxx experimental/*/*.cxx experimental/*.C experimental/*/*.C experimental/rcanvas/*.py experimental/rcanvas/*.cxx)
+  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ visualisation/webgui/browserv7/*.cxx visualisation/webgui/fitpanelv7/*.cxx visualisation/rcanvas/*.py visualisation/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
   # This depends on ntupleutil
   list(APPEND root7_veto io/ntuple/ntpl008_import.C)
@@ -512,7 +511,7 @@ if(webgui)
   list(APPEND tutorials ${visualisation/tutorials_webcanv})
 endif()
 if(root7 AND webgui)
-  file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} experimental/*.cxx)
+  file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} visualisation/rcanvas/*.cxx tutorials/visualisation/webgui/browserv7/*.cxx tutorials/visualisation/webgui/fitpanelv7/*.cxx)
   list(APPEND tutorials ${tutorials_exp})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -640,7 +639,7 @@ file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 set(NProcessors 4)
 set (multithreaded_all_cores
      analysis/dataframe/df10[2-7]*
-     experimental/rcanvas/df10*
+     visualisation/rcanvas/df10*
     )
 set (multithreaded
      ${multithreaded_all_cores}
