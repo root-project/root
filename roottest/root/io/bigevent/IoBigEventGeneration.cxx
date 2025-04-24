@@ -286,7 +286,7 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
    if (i > 10000) nch += 3;
    if (fEventName) delete [] fEventName;
    fEventName = new char[nch];
-   sprintf(fEventName,"Event%d_Run%d",i,200);
+   snprintf(fEventName, nch, "Event%d_Run%d", i, 200);
    fNtrack = 0;
    fEvtHdr.Set(i, run, date);
    if (!fgHist) fgHist = new TH1F("hstat","Event Histogram",100,0,1);
@@ -299,7 +299,7 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
    char lachaud[64];
    string lac;
    for (Int_t j=0;j<nch;j++) {
-      sprintf(lachaud,"run%d event%d j%d",run,i,j);
+      snprintf(lachaud, 64, "run%d event%d j%d", run, i, j);
       lac = lachaud;
       fLachaud.push_back(lac);
    }
@@ -440,7 +440,7 @@ Track::Track(Float_t random) : TObject()
    if (trackNumber > 10000) nch += 3;
 //    if (fTrackName) delete [] fTrackName;
    fTrackName = new char[nch];
-   sprintf(fTrackName,"Track%d",trackNumber);
+   snprintf(fTrackName, nch, "Track%d", trackNumber);
    //Int_t i;
    //fHits.clear();
    //for (i=0;i<12;i++) fHits.push_back(i);
