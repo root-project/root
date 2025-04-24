@@ -209,23 +209,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w) = 0;
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
-   virtual void     AutoZoom() {};  // *MENU*
-   virtual void     AutoZoom1() {};  // *MENU*
-   virtual void     AutoZoom2() {};  // *MENU*
-   virtual void     AutoZoom3() {};  // *MENU*
-   virtual void     AutoZoom4() {};  // *MENU*
-   virtual void     AutoZoom5() {};  // *MENU*
-   virtual void     AutoZoom6() {};  // *MENU*
-   virtual void     AutoZoom7() {};  // *MENU*
-   virtual void     AutoZoom8() {};  // *MENU*
-   virtual void     AutoZoom9() {};  // *MENU*
-   virtual void     AutoZoom10() {};  // *MENU*
-   virtual void     AutoZoom11() {};  // *MENU*
-   virtual void     AutoZoom12() {};  // *MENU*
-   virtual void     AutoZoom13() {};  // *MENU*
-   virtual void     AutoZoom14() {};  // *MENU*
-   virtual void     AutoZoom15() {};  // *MENU*
-   virtual void     UnZoom() {};  // *MENU*
            void     Browse(TBrowser *b) override;
    virtual Bool_t   CanExtendAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = nullptr) const;
