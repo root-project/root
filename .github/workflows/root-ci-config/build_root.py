@@ -153,7 +153,7 @@ def main():
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental and not args.coverage:
+    if not pull_request and not args.incremental:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
     #if args.coverage:  # for now, force it.
         # if we were to actually upload the artefact we probably need to exclude all
