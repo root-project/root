@@ -22,7 +22,11 @@ struct Parameter {
     union Value {
         bool                 fBool;
         int8_t               fInt8;
+        int16_t              fInt16;
+        int32_t              fInt32;
         uint8_t              fUInt8;
+        uint16_t             fUInt16;
+        uint32_t             fUInt32;
         short                fShort;
         unsigned short       fUShort;
         int                  fInt;
