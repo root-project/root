@@ -955,10 +955,13 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    std::vector<Double_t> xc2(nn), yc2(nn);
 
    // Clip against the left boundary
-   x1 = x[n-1]; y1 = y[n-1];
+   if (n > 0) {
+      x1 = x[n - 1];
+      y1 = y[n - 1];
+   }
    nc2 = 0;
    Int_t i;
-   for (i=0; i<n; i++) {
+   for (i = 0; i < n; i++) {
       x2 = x[i]; y2 = y[i];
       if (x1 == x2) {
          slope = 0;
@@ -981,9 +984,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    }
 
    // Clip against the top boundary
-   x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+   if (nc2 > 0) {
+      x1 = xc2[nc2 - 1];
+      y1 = yc2[nc2 - 1];
+   }
    nc = 0;
-   for (i=0; i<nc2; i++) {
+   for (i = 0; i < nc2; i++) {
       x2 = xc2[i]; y2 = yc2[i];
       if (y1 == y2) {
          slope = 0;
@@ -1005,60 +1011,64 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       x1 = x2; y1 = y2;
    }
 
-   if (nc>0) {
-
-      // Clip against the right boundary
-      x1 = xc[nc-1]; y1 = yc[nc-1];
-      nc2 = 0;
-      for (i=0; i<nc; i++) {
-         x2 = xc[i]; y2 = yc[i];
-         if (x1 == x2) {
-            slope = 0;
-         } else {
-            slope = (y2-y1)/(x2-x1);
-         }
-         if (x1 <= xclipr) {
-            if (x2 > xclipr) {
-               xc2[nc2] = xclipr; yc2[nc2++] = slope*(xclipr-x1)+y1;
-            } else {
-               xc2[nc2] = x2; yc2[nc2++] = y2;
-            }
-         } else {
-            if (x2 <= xclipr) {
-               xc2[nc2] = xclipr; yc2[nc2++] = slope*(xclipr-x1)+y1;
-               xc2[nc2] = x2; yc2[nc2++] = y2;
-            }
-         }
-         x1 = x2; y1 = y2;
+   // Clip against the right boundary
+   if (nc > 0) {
+      x1 = xc[nc - 1];
+      y1 = yc[nc - 1];
+   }
+   nc2 = 0;
+   for (i = 0; i < nc; i++) {
+      x2 = xc[i]; y2 = yc[i];
+      if (x1 == x2) {
+         slope = 0;
+      } else {
+         slope = (y2-y1)/(x2-x1);
       }
-
-      // Clip against the bottom boundary
-      x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
-      nc = 0;
-      for (i=0; i<nc2; i++) {
-         x2 = xc2[i]; y2 = yc2[i];
-         if (y1 == y2) {
-            slope = 0;
+      if (x1 <= xclipr) {
+         if (x2 > xclipr) {
+            xc2[nc2] = xclipr; yc2[nc2++] = slope*(xclipr-x1)+y1;
          } else {
-            slope = (x2-x1)/(y2-y1);
+            xc2[nc2] = x2; yc2[nc2++] = y2;
          }
-         if (y1 >= yclipb) {
-            if (y2 < yclipb) {
-               xc[nc] = x1+(yclipb-y1)*slope; yc[nc++] = yclipb;
-            } else {
-               xc[nc] = x2; yc[nc++] = y2;
-            }
-         } else {
-            if (y2 >= yclipb) {
-               xc[nc] = x1+(yclipb-y1)*slope; yc[nc++] = yclipb;
-               xc[nc] = x2; yc[nc++] = y2;
-            }
+      } else {
+         if (x2 <= xclipr) {
+            xc2[nc2] = xclipr; yc2[nc2++] = slope*(xclipr-x1)+y1;
+            xc2[nc2] = x2; yc2[nc2++] = y2;
          }
-         x1 = x2; y1 = y2;
       }
+      x1 = x2; y1 = y2;
    }
 
-   if (nc < 3) nc =0;
+   // Clip against the bottom boundary
+   if (nc2 > 0) {
+      x1 = xc2[nc2 - 1];
+      y1 = yc2[nc2 - 1];
+   }
+   nc = 0;
+   for (i = 0; i < nc2; i++) {
+      x2 = xc2[i]; y2 = yc2[i];
+      if (y1 == y2) {
+         slope = 0;
+      } else {
+         slope = (x2-x1)/(y2-y1);
+      }
+      if (y1 >= yclipb) {
+         if (y2 < yclipb) {
+            xc[nc] = x1+(yclipb-y1)*slope; yc[nc++] = yclipb;
+         } else {
+            xc[nc] = x2; yc[nc++] = y2;
+         }
+      } else {
+         if (y2 >= yclipb) {
+            xc[nc] = x1+(yclipb-y1)*slope; yc[nc++] = yclipb;
+            xc[nc] = x2; yc[nc++] = y2;
+         }
+      }
+      x1 = x2; y1 = y2;
+   }
+
+   if (nc < 3)
+      nc = 0;
    return nc;
 }
 
