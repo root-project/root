@@ -71,7 +71,7 @@ if(NOT $ENV{ROOTSYS} STREQUAL "" AND NOT $ENV{ROOTSYS} STREQUAL "${CMAKE_BINARY_
     endif()
   endfunction()
   strip_path("PATH" "$ENV{ROOTSYS}/bin")
-  if(not WIN32)
+  if(NOT WIN32)
     strip_path("LD_LIBRARY_PATH" "$ENV{ROOTSYS}/lib")
   endif()
   if(APPLE)
