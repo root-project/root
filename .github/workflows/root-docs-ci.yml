@@ -34,11 +34,11 @@ jobs:
 
     env:
       PLATFORM: alma9
-      DOC_DIR: master
+      DOC_DIR: v6-36-00-patches
       DOC_LOCATION: /github/home
-      BASE_REF: master
-      WEB_DIR_NAME: master
-      TAR_NAME: htmlmaster.tar
+      BASE_REF: v6-36-00-patches
+      WEB_DIR_NAME: v636
+      TAR_NAME: html636.tar
 
     permissions:
       contents: read
