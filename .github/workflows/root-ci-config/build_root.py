@@ -297,9 +297,9 @@ def download_artifacts(obj_prefix: str):
         with tarfile.open(tar_path) as tar:
             # TODO: Simplify after ROOT is Python 3.12+ only
             # c.f. https://docs.python.org/3.12/library/tarfile.html#extraction-filters
-            #if hasattr(tarfile, "data_filter"):
-            #    tar.extractall(WORKDIR, filter="data")
-            #else:
+            if hasattr(tarfile, "data_filter"):
+                tar.extractall(WORKDIR, filter="data")
+            else:
                 tar.extractall(WORKDIR)
 
         build_utils.log.add(f'\ncd {WORKDIR} && tar -xf {tar_path}\n')
