@@ -39,6 +39,8 @@ class ImportLoadLibs(unittest.TestCase):
             'libMultiProc',
             'libssl',
             'libcrypt.*', # by libssl
+            'oqsprovider', # loaded by libssl on e.g. centos10
+            'liboqs', # used by above
             'libtbb',
             'libtbbmalloc',
             'liburing', # by libRIO if uring option is enabled
