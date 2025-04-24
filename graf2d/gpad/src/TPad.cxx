@@ -949,16 +949,17 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
 
 Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc, Double_t *yc, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
+   if (n <= 0)
+      return 0;
+   
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
    std::vector<Double_t> xc2(nn), yc2(nn);
 
    // Clip against the left boundary
-   if (n > 0) {
-      x1 = x[n - 1];
-      y1 = y[n - 1];
-   }
+   x1 = x[n - 1];
+   y1 = y[n - 1];
    nc2 = 0;
    Int_t i;
    for (i = 0; i < n; i++) {
