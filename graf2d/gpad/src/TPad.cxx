@@ -951,7 +951,7 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
 {
    if (n <= 0)
       return 0;
-   
+
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
@@ -4219,9 +4219,11 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
       if (yrot > ymax) ymax = yrot;
       if (yrot < ymin) ymin = yrot;
    }
-   ymax = (Double_t)((Int_t)(ymax/dy))*dy;
 
-   for (ycur=ymax; ycur>=ymin; ycur=ycur-dy) {
+   Int_t yindx = (Int_t) (ymax/dy);
+
+   while (dy * yindx >= ymin) {
+      ycur = dy * yindx--;
       nbi = 0;
       for (i=2; i<=nn+1; i++) {
          i2 = i;
