@@ -34,30 +34,31 @@ Two-dimensional ellipse that can be used to represent an error contour.
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 2-dimensional ellipse centered at (x1,x2) that represents the confidence
 /// level contour for a measurement with errors (s1,s2) and correlation coefficient rho.
-/// The resulting curve is defined as the unique ellipse that passes through these points:
+/// The resulting curve (for k=1) is defined as the unique ellipse that passes through these points:
 ///
 ///   (x1+rho*s1,x2+s2) , (x1-rho*s1,x2-s2) , (x1+s1,x2+rho*s2) , (x1-s1,x2-rho*s2)
 ///
 /// and is described by the implicit equation:
 ///
 ///   x*x      2*rho*x*y      y*y
-///  -----  -  ---------  +  -----  =  1 - rho*rho
+///  -----  -  ---------  +  -----  =  k * (1 - rho*rho)
 ///  s1*s1       s1*s2       s2*s2
 ///
-/// The input parameters s1,s2 must be > 0 and also |rho| <= 1.
+/// The input parameters s1,s2,k must be > 0 and also |rho| <= 1.
 /// The degenerate case |rho|=1 corresponds to a straight line and
 /// is handled as a special case.
+/// The default value of k = - 2 * nll ratio corresponds to the 39% CL contour. For 1 sigma (68%) set k ~ 2.3
 
-RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho, Int_t points)
+RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho, Int_t points, double k)
 {
   SetName(name);
   SetTitle(name);
 
-  if(s1 <= 0 || s2 <= 0) {
-    coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter s1 or s2 < 0" << std::endl;
+  if(s1 <= 0 || s2 <= 0 || k <= 0) {
+    coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter s1, s2 or k <= 0" << std::endl;
     return;
   }
-  double tmp= 1-rho*rho;
+  double tmp= k*(1-rho*rho);
   if(tmp < 0) {
     coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter |rho| > 1" << std::endl;
     return;
