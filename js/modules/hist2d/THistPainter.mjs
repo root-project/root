@@ -1104,8 +1104,12 @@ class THistPainter extends ObjectPainter {
          if (histo.TestBit(kNoStats) !== obj.TestBit(kNoStats)) {
             histo.SetBit(kNoStats, obj.TestBit(kNoStats));
             // here check only stats bit
-            if (statpainter)
+            if (statpainter) {
                statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
+               // remove immediately when redraw not called for disabled stats
+               if (!statpainter.Enabled)
+                  statpainter.removeG();
+            }
          }
 
          histo.SetBit(kIsZoomed, obj.TestBit(kIsZoomed));

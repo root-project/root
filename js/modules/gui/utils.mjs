@@ -97,7 +97,7 @@ function tryOpenOpenUI(sources, args) {
    element.setAttribute('src', src + (args.ui5dbg ? 'resources/sap-ui-core-dbg.js' : 'resources/sap-ui-core.js')); // latest openui5 version
 
    element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
-
+   // element.setAttribute('data-sap-ui-language', args.openui5language ?? 'en');
    element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
    element.setAttribute('data-sap-ui-async', 'true');
@@ -115,7 +115,7 @@ function tryOpenOpenUI(sources, args) {
    };
 
    element.onload = function() {
-      console.log(`Load openui5 from ${src}`);
+      args.load_src = src;
    };
 
    document.head.appendChild(element);
@@ -167,6 +167,8 @@ async function loadOpenui5(args) {
       args.rejectFunc = reject;
 
       globalThis.completeUI5Loading = function() {
+         console.log(`Load openui5 version ${globalThis.sap.ui.version} from ${args.load_src}`);
+
          globalThis.sap.ui.loader.config({
             paths: {
                jsroot: source_dir,
@@ -178,6 +180,8 @@ async function loadOpenui5(args) {
             args.resolveFunc(globalThis.sap);
             args.resolveFunc = null;
          }
+
+         delete globalThis.completeUI5Loading;
       };
 
       tryOpenOpenUI(openui5_sources, args);
