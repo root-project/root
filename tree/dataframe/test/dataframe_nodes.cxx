@@ -81,7 +81,7 @@ TEST(RDataFrameNodes, RSlotStackUnique)
       remove(slot.fSlot, threadId);
    };
 
-   auto runThreads = [&slotTask]() {
+   auto runThreads = [&slotTask, &N]() {
       std::vector<std::thread> ts;
       for (unsigned int i = 0; i < 2 * N; ++i) {
          ts.emplace_back(slotTask, i);
