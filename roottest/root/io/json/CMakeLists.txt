@@ -10,6 +10,7 @@ ROOTTEST_ADD_TEST(PolyMarker
 ROOTTEST_GENERATE_DICTIONARY(libJsonTestClasses
                   test_classes.h
                   LINKDEF LinkDef.h
+                  LIBS ROOT::Graf
                   NO_ROOTMAP NO_CXXMODULE
                   FIXTURES_SETUP jsonTestClasses_fixture)
 
