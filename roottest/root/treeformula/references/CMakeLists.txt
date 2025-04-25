@@ -7,7 +7,7 @@ ROOT_LINKER_LIBRARY(TreeFormulaReferencesGeneration
   G__TreeFormulaReferencesGeneration.cxx
   LIBRARIES Core Tree Hist MathCore)
 
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET TreeFormulaReferencesGeneration POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTreeFormulaReferencesGeneration.dll
                                      ${CMAKE_CURRENT_BINARY_DIR}/libTreeFormulaReferencesGeneration.dll

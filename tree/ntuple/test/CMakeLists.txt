@@ -117,7 +117,7 @@ target_compile_options(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_str
 target_compile_definitions(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_streamer,COMPILE_DEFINITIONS>)
 target_compile_features(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_streamer,COMPILE_FEATURES>)
 target_include_directories(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_streamer,INCLUDE_DIRECTORIES>)
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET rfield_streamer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/librfield_streamer_rdict.pcm
                              ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/librfield_streamer_rdict.pcm

@@ -7,7 +7,7 @@ ROOT_LINKER_LIBRARY(IoBigEventGeneration
   G__IoBigEventGeneration.cxx
   LIBRARIES Core Tree Hist MathCore Physics Graf Matrix)
 
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET IoBigEventGeneration POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libIoBigEventGeneration.dll
                                      ${CMAKE_CURRENT_BINARY_DIR}/libIoBigEventGeneration.dll
