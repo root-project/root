@@ -54,6 +54,7 @@
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
+#include "cling/Interpreter/InterpreterAccessRAII.h"
 
 #include "llvm/Support/Path.h"
 #include "llvm/Support/FileSystem.h"
@@ -569,6 +570,9 @@ void TClingLookupHelper::GetPartiallyDesugaredName(std::string &nameLong)
 bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nondef,
                                                          const std::string &nameLong)
 {
+   // We are going to use and possibly update the interpreter information.
+   cling::InterpreterAccessRAII LockAccess(*fInterpreter);
+
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(nondef.c_str(), ToLHDS(WantDiags()));
    if (!t.isNull()) {
@@ -584,6 +588,9 @@ bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nond
 
 bool TClingLookupHelper::IsDeclaredScope(const std::string &base, bool &isInlined)
 {
+   // We are going to use and possibly update the interpreter information.
+   cling::InterpreterAccessRAII LockAccess(*fInterpreter);
+
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::Decl *scope = lh.findScope(base.c_str(), ToLHDS(WantDiags()), nullptr);
 
@@ -617,6 +624,9 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    }
 
    if (fAutoParse) fAutoParse(tname.c_str());
+
+   // We are going to use and possibly update the interpreter information.
+   cling::InterpreterAccessRAII LockAccess(*fInterpreter);
 
    // Since we already check via other means (TClassTable which is populated by
    // the dictonary loading, and the gROOT list of classes and enums, which are
