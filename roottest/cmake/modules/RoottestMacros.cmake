@@ -307,7 +307,7 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LINKDEF;DEPENDS;LIBS;OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -348,7 +348,11 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   if(MSVC)
     set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   endif()
+
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
+  if(ARG_LIBS)
+    target_link_libraries(${targetname_libgen} ${ARG_LIBS})
+  endif()
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
 
@@ -1040,7 +1044,7 @@ function(ROOTTEST_ADD_TEST testname)
   if (ARG_PROPERTIES)
     set(properties ${ARG_PROPERTIES})
   endif()
-  
+
   ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
                         ${infile}
