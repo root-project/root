@@ -2120,7 +2120,7 @@ Double_t TMath::Binomial(Int_t n, Int_t k)
    auto k2 = static_cast<UInt_t>(n - k1);
    Double_t fact = k2 + 1;
    for (auto i = static_cast<UInt_t>(k1); i > 1; --i)
-      fact *= (k2 + i)/static_cast<Double_t>(i);
+      fact *= (k2 + i) / static_cast<Double_t>(i);
    return fact;
 }
 
