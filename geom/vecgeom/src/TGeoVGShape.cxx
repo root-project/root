@@ -427,7 +427,7 @@ Double_t TGeoVGShape::Capacity() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal computation.
 
-void TGeoVGShape::ComputeNormal(const Double_t *point, const Double_t * /*dir*/, Double_t *norm)
+void TGeoVGShape::ComputeNormal(const Double_t *point, const Double_t * /*dir*/, Double_t *norm) const
 {
    vecgeom::cxx::Vector3D<Double_t> vnorm;
    fVGShape->Normal(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]), vnorm);
