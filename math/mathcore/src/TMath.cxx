@@ -2109,7 +2109,7 @@ Double_t TMath::BetaIncomplete(Double_t x, Double_t a, Double_t b)
 /// Calculates the binomial coefficient n over k.
 /// \return the coefficient; or NaN if n < 0 or k < 0 or n < k; or 1 if k = 0 or n = k
 
-Double_t TMath::Binomial(Int_t n,Int_t k)
+Double_t TMath::Binomial(Int_t n, Int_t k)
 {
    if (n < 0 || k < 0 || n < k)
       return TMath::SignalingNaN();
