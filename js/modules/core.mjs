@@ -1,10 +1,10 @@
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = '7.9.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/04/2025',
+version_date = '25/04/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -330,6 +330,10 @@ settings = {
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
+   /** @summary Number of bytes requested once by TTree::Draw processing
+     * @desc TTree can be very large and data from baskets read by portion specified by this variable
+     * @default 1e6 */
+   TreeReadBunchSize: 1e6,
    /** @summary File read timeout in ms
      * @desc Configures timeout for each http operation for reading ROOT files
      * @default 0 */
