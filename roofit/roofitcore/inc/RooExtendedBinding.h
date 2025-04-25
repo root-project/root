@@ -14,6 +14,7 @@
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooCategoryProxy.h"
+#include "RooSetProxy.h"
 #include "RooAbsPdf.h"
 #include "RooAbsCategory.h"
 
@@ -21,12 +22,14 @@ class RooExtendedBinding : public RooAbsReal {
 public:
   RooExtendedBinding() {} ;
   RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf);
+  RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& _obs);
   RooExtendedBinding(const RooExtendedBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooExtendedBinding(*this,newname); }
 
 protected:
 
   RooRealProxy pdf ;
+  RooSetProxy _obsList;
 
   double evaluate() const override ;
 
