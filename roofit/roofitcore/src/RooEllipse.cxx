@@ -45,10 +45,10 @@ Two-dimensional ellipse that can be used to represent an error contour.
 /// As demonstrated in https://root-forum.cern.ch/t/drawing-convergence-ellipse-in-2d/61936/10, the
 /// "oriented" ellipse with semi-axis = (k * s_1, k * s_2) includes 39% (for k = 1) of
 /// all data, this confidence ellipse can thus be interpreted as a confidence contour level.
-/// This ellipse can be described by the implicit equation `z/(1-rho*rho) = k = - 2 * nll ratio`, or explictly:
+/// This ellipse can be described by the implicit equation `z/(1-rho*rho) = k^2 = - 2 * nll ratio`, or explictly:
 ///
 ///   x*x      2*rho*x*y      y*y
-///  -----  -  ---------  +  -----  =  k * (1 - rho*rho)
+///  -----  -  ---------  +  -----  =  k*k * (1 - rho*rho)
 ///  s1*s1       s1*s2       s2*s2
 ///
 /// The input parameters s1,s2,k must be > 0 and also |rho| <= 1.
@@ -66,7 +66,7 @@ RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double
     coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter s1, s2 or k <= 0" << std::endl;
     return;
   }
-  double tmp= k*(1-rho*rho);
+  double tmp = k*k*(1-rho*rho);
   if(tmp < 0) {
     coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter |rho| > 1" << std::endl;
     return;
