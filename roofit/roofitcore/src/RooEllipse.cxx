@@ -45,7 +45,7 @@ Two-dimensional ellipse that can be used to represent an error contour.
 /// As demonstrated in https://root-forum.cern.ch/t/drawing-convergence-ellipse-in-2d/61936/10, the
 /// "oriented" ellipse with semi-axis = (k * s_1, k * s_2) includes 39% (k = 1) and 86% (k = 2) of
 /// all data, this confidence ellipse can thus be interpreted as a confidence contour level.
-/// This ellipse can be described by the implicit equation `z/(1-rho*rho) = k  = - 2 * nll ratio`, or explictly:
+/// This ellipse can be described by the implicit equation `z/(1-rho*rho) = k = - 2 * nll ratio`, or explictly:
 ///
 ///   x*x      2*rho*x*y      y*y
 ///  -----  -  ---------  +  -----  =  k * (1 - rho*rho)
