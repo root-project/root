@@ -35,7 +35,7 @@ protected:
 
 private:
 
-  ClassDefOverride(RooExtendedBinding,1);
+  ClassDefOverride(RooExtendedBinding,2);
 };
 
 #endif
