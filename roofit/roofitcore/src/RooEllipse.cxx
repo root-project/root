@@ -32,13 +32,20 @@ Two-dimensional ellipse that can be used to represent an error contour.
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a 2-dimensional ellipse centered at (x1,x2) that represents the confidence
-/// level contour for a measurement with errors (s1,s2) and correlation coefficient rho.
-/// The resulting curve (for k=1) is defined as the unique ellipse that passes through these points:
-///
-///   (x1+rho*s1,x2+s2) , (x1-rho*s1,x2-s2) , (x1+s1,x2+rho*s2) , (x1-s1,x2-rho*s2)
-///
-/// and is described by the implicit equation:
+/// Create a 2-dimensional ellipse centered at `(x1,x2)` that represents the confidence
+/// level contour for a measurement with standard deviations`(s1,s2)` and correlation coefficient rho,
+/// and semiaxes corresponding to `k` standard deviations.
+/// It is assumed that the data are distributed according to a bivariate normal distribution:
+///  \f[ p(x,y) = {1 \over 2 \pi s_1 s_2 \sqrt{1-\rho^2}} \exp (-((x-x_1)^2/s_1^2 + (y-x_2)^2/s_2^2 - 2 \rho x y/(s_1s_2))/2(1-\rho^2)) \f]
+/// \see ROOT::Math::bigaussian_pdf
+/// Or in a split form:
+/// \f[ p(z(x,y)) = {1 \over 2 \pi s_1 s_2 \sqrt{1-\rho^2}} \exp (-z/2(1-\rho^2)) \f]
+/// with:
+///  \f[ z = ((x-x_1)^2/s_1^2 + (y-x_2)^2/s_2^2 - 2 \rho x y/(s_1s_2)) \f]
+/// As demonstrated in https://root-forum.cern.ch/t/drawing-convergence-ellipse-in-2d/61936/10, the
+/// "oriented" ellipse with semi-axis = (k * s_1, k * s_2) includes 39% (k = 1) and 86% (k = 2) of
+/// all data, this confidence ellipse can thus be interpreted as a confidence contour level.
+/// This ellipse can be described by the implicit equation `z/(1-rho*rho) = k  = - 2 * nll ratio`, or explictly:
 ///
 ///   x*x      2*rho*x*y      y*y
 ///  -----  -  ---------  +  -----  =  k * (1 - rho*rho)
@@ -47,7 +54,8 @@ Two-dimensional ellipse that can be used to represent an error contour.
 /// The input parameters s1,s2,k must be > 0 and also |rho| <= 1.
 /// The degenerate case |rho|=1 corresponds to a straight line and
 /// is handled as a special case.
-/// The default value of k = - 2 * nll ratio corresponds to the 39% CL contour. For 1 sigma (68%) set k ~ 2.3
+/// \warning The default value of k = 1 (semiaxes at +/-sigma) corresponds to the 39% CL contour. For a 1-sigma confidence
+/// level (68%), set instead k ~ 2.3 (semiaxes at +/-2.3sigma).
 
 RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho, Int_t points, double k)
 {
