@@ -136,10 +136,10 @@ def main():
     # later on.
     if not pull_request and not args.incremental:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
-    #if args.coverage:  # for now, force it.
+    if args.coverage:  # for now, force it.
         # if we were to actually upload the artefact we probably need to exclude all
         # coverage run-time files ('*.gcda' and `*.gcov`)
-    #    archive_and_upload(yyyy_mm_dd, obj_prefix)
+        archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
         create_binaries(args.buildtype)
