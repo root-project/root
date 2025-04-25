@@ -113,6 +113,9 @@ endif()
 
 if(root7)
   ROOT_ADD_GTEST(datasource_ntuple datasource_ntuple.cxx LIBRARIES ROOTDataFrame)
+  if(MSVC)
+    set_source_files_properties(datasource_ntuple.cxx PROPERTIES COMPILE_FLAGS /bigobj)
+  endif()
 
   if(NOT MSVC OR win_broken_tests)
     ROOT_ADD_GTEST(dataframe_snapshot_ntuple dataframe_snapshot_ntuple.cxx LIBRARIES ROOTDataFrame ROOTNTupleUtil)
