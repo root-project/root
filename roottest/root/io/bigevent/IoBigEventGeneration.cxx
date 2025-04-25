@@ -141,16 +141,18 @@ Event::Event()
    fDequePair.clear();
    
    fVectorshort.clear();
-   for (i = 0; i < 120; i++) fVectorshort.push_back(i);
+   for (i = 0; i < 120; i++)
+      fVectorshort.push_back(i);
 
    fVectorTobject = new vector<TObject>;
    TObject a1,a2,a3;
    fVectorTobject->push_back(a1);
    fVectorTobject->push_back(a2);
    fVectorTobject->push_back(a3);
-   
-   for (i = 0; i < 6; i++) fVectorTnamed[i] = new vector<TNamed>;
-      
+
+   for (i = 0; i < 6; i++)
+      fVectorTnamed[i] = new vector<TNamed>;
+
    TLine line;
    fVectorTLine.clear();
    for (i = 0; i < 40; i++) {
@@ -160,22 +162,22 @@ Event::Event()
       line.SetY2(gRandom->Rndm());
       line.SetLineColor(i); 
       fVectorTLine.push_back(line);
-   }  
-      
+   }
+
    TAttLine attline;
    fDeque.clear();
    for (i = 0; i < 4; i++) {
       attline.SetLineColor(i);
       fDeque.push_back(attline);
    }
-   
+
    fArrayF.Set(24);
    fArrayI = new TArrayI(24);
    for (i = 0; i < 24; i++) {
       fArrayI->fArray[i] = 24 - i;
       fArrayF.fArray[i] = 48 - 2 * i;
-   } 
-   
+   }
+
    fRefH = 0;
    fEventName = 0;
    fTracksInVertex = 0;
@@ -199,13 +201,14 @@ Event::Event(Int_t /*enumber*/)
          fMatrix[i0][i1] = 0.0;
       }
    }
-   for (i0 = 0; i0 < 10; i0++) fMeasures[i0] = 0;
+   for (i0 = 0; i0 < 10; i0++)
+      fMeasures[i0] = 0;
    fClosestDistance = 0;
    
    Int_t i;
    for (i = 0; i < 12; i++)
       fVectorint.push_back(i);
-   
+
    fString = "this is a C++ string";
    fTstringp = 0;
    fVaxis[0] = new TAxis();
@@ -217,7 +220,7 @@ Event::Event(Int_t /*enumber*/)
    fMapTAxisp = 0;
    fSetTAxisp = 0;
    fMultiSetTAxisp = 0;
-   
+
    fVectorshort.clear();
    for (i = 0; i < 120; i++)
       fVectorshort.push_back(i);
@@ -227,10 +230,10 @@ Event::Event(Int_t /*enumber*/)
    fVectorTobject->push_back(a1);
    fVectorTobject->push_back(a2);
    fVectorTobject->push_back(a3);
-   
+
    for (i = 0; i < 6; i++)
       fVectorTnamed[i] = new vector<TNamed>;
-      
+
    TAttLine attline;
    fDeque.clear();
    for (i = 0; i < 40; i++) {
@@ -253,9 +256,9 @@ Event::~Event()
    delete fVaxis[1];
    delete fVaxis[2];
    if (fEventName)
-      delete [] fEventName;
+      delete[] fEventName;
    if (fTracksInVertex)
-      delete [] fTracksInVertex;
+      delete[] fTracksInVertex;
 }
 
 //______________________________________________________________________________
@@ -268,8 +271,8 @@ void Event::AddTrack(Float_t random)
    // otherwise the previous Track[i] will be overwritten.
 
    TClonesArray &tracks = *fTracks;
-   //new(tracks[fNtrack++]) Track(random);
-   new(tracks[fNtrack]) BigTrack(random, fNtrack % 100);
+   // new (tracks[fNtrack++]) Track(random);
+   new (tracks[fNtrack]) BigTrack(random, fNtrack % 100);
    ++fNtrack;
 }
 
@@ -287,7 +290,7 @@ void Event::Reset(Option_t * /*option*/)
    // fgTracks->Delete(option);
    delete fgTracks;
    fgTracks = 0;
-   fgHist   = 0;
+   fgHist = 0;
 }
 
 //______________________________________________________________________________
@@ -303,7 +306,7 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
    if (i > 10000)
       nch += 3;
    if (fEventName)
-      delete [] fEventName;
+      delete[] fEventName;
    fEventName = new char[nch];
    snprintf(fEventName, nch, "Event%d_Run%d", i, 200);
    fNtrack = 0;
@@ -348,7 +351,7 @@ void Event::SetRandomVertex() {
    fMultiMapTNamedp.clear();
    fSetTAxis.clear();
    //delete fMapTAxisp;
-   fMapTAxisp = new map<TAxis*, int>;
+   fMapTAxisp = new map<TAxis *, int>;
    fSetTAxisp = new set<TAxis*>;
    fMultiSetTAxisp = new multiset<TAxis*>;
    for (Int_t k = 0; k < fNvertex; k++ ) {
@@ -362,10 +365,10 @@ void Event::SetRandomVertex() {
       fMultiMapTNamedp.insert(make_pair(new TNamed("ii", "jj"), k));
       fMultiSetTAxisp->insert(new TAxis());
    }
-   Double_t x=gRandom->Gaus(0, 1);
-   Double_t y=gRandom->Gaus(0, 1);
-   Double_t z=gRandom->Gaus(0, 100);
-   Double_t t=TMath::Sqrt(x * x + y * y + z * z);
+   Double_t x = gRandom->Gaus(0, 1);
+   Double_t y = gRandom->Gaus(0, 1);
+   Double_t z = gRandom->Gaus(0, 100);
+   Double_t t = TMath::Sqrt(x * x + y * y + z * z);
    fLorentz.SetXYZT(x, y, z, t);
 }
 
@@ -391,10 +394,10 @@ BigTrack::BigTrack(Float_t random, Int_t special) : Track(random)
 {
    // Create a big track object.
    fSpecial = special;
-   Double_t x=gRandom->Gaus(0, 1);
-   Double_t y=gRandom->Gaus(0, 1);
-   Double_t z=gRandom->Gaus(0, 100);
-   Double_t t=TMath::Sqrt(x * x + y * y + z * z);
+   Double_t x = gRandom->Gaus(0, 1);
+   Double_t y = gRandom->Gaus(0, 1);
+   Double_t z = gRandom->Gaus(0, 100);
+   Double_t t = TMath::Sqrt(x * x + y * y + z * z);
    fKine.SetXYZT(x, y, z, t);
 }
 
@@ -426,18 +429,18 @@ Track::Track(Float_t random) : TObject()
    fMeanCharge = 0.01 * gRandom->Rndm(1);
    gRandom->Rannor(a, b);
    fXfirst = a * 10;
-   fXlast  = b * 10;
+   fXlast = b * 10;
    gRandom->Rannor(a, b);
    fYfirst = a * 12;
-   fYlast  = b * 16;
+   fYlast = b * 16;
    gRandom->Rannor(a, b);
    fZfirst = 50 + 5 * a;
-   fZlast  = 200 + 10 * b;
+   fZlast = 200 + 10 * b;
    fCharge = Float_t(Int_t(3 * gRandom->Rndm(1)) - 1);
    fVertex[0] = gRandom->Gaus(0, 0.1);
    fVertex[1] = gRandom->Gaus(0, 0.2);
    fVertex[2] = gRandom->Gaus(0, 10);
-   for (Int_t i0(0), in(0); i0 <3; i0++) {
+   for (Int_t i0(0), in(0); i0 < 3; i0++) {
       for (Int_t i1 = 0; i1 < 4; i1++) {
          fCovar[i0][i1] = in;
          for (Int_t i2 = 0; i2 < 2; i2++) {
@@ -448,10 +451,11 @@ Track::Track(Float_t random) : TObject()
    }
 
    fNpoint = Int_t(60 + 10 * gRandom->Rndm(1));
-   fValid  = Int_t(0.6 + gRandom->Rndm(1));
+   fValid = Int_t(0.6 + gRandom->Rndm(1));
    if (fNpoint) {
       fPoints = new Short_t[fNpoint];
-      for (Int_t j = 0; j < fNpoint; j++) fPoints[j] = j;
+      for (Int_t j = 0; j < fNpoint; j++)
+         fPoints[j] = j;
    } else {
       fPoints = 0;
    }
@@ -466,7 +470,7 @@ Track::Track(Float_t random) : TObject()
       nch += 3;
    if (trackNumber > 10000)
       nch += 3;
-   //if (fTrackName) delete [] fTrackName;
+   // if (fTrackName) delete[] fTrackName;
    fTrackName = new char[nch];
    snprintf(fTrackName, nch, "Track%d", trackNumber);
    //Int_t i;
@@ -478,10 +482,10 @@ Track::Track(Float_t random) : TObject()
 //______________________________________________________________________________
 Track::~Track()
 {
-   delete [] fPoints;
+   delete[] fPoints;
    fPoints = 0;
    if (fTrackName)
-      delete [] fTrackName;
+      delete[] fTrackName;
    fTrackName = 0;
 }
 
@@ -495,26 +499,26 @@ HistogramManager::HistogramManager(TDirectory *dir)
    TDirectory *saved = gDirectory;
    dir->cd();
 
-   fNtrack      = new TH1F("hNtrack",    "Ntrack", 100, 575, 625);
-   fNseg        = new TH1F("hNseg",      "Nseg", 100, 5800, 6200);
-   fTemperature = new TH1F("hTemperature","Temperature", 100, 19.5, 20.5);
-   fPx          = new TH1F("hPx",        "Px", 100, -4, 4);
-   fPy          = new TH1F("hPy",        "Py", 100, -4, 4);
-   fPz          = new TH1F("hPz",        "Pz", 100, 0, 5);
-   fRandom      = new TH1F("hRandom",    "Random", 100, 0, 1000);
-   fMass2       = new TH1F("hMass2",     "Mass2", 100, 0, 12);
-   fBx          = new TH1F("hBx",        "Bx", 100, -0.5, 0.5);
-   fBy          = new TH1F("hBy",        "By", 100, -0.5, 0.5);
-   fMeanCharge  = new TH1F("hMeanCharge","MeanCharge", 100, 0, 0.01);
-   fXfirst      = new TH1F("hXfirst",    "Xfirst", 100, -40, 40);
-   fXlast       = new TH1F("hXlast",     "Xlast", 100, -40, 40);
-   fYfirst      = new TH1F("hYfirst",    "Yfirst", 100, -40, 40);
-   fYlast       = new TH1F("hYlast",     "Ylast", 100, -40, 40);
-   fZfirst      = new TH1F("hZfirst",    "Zfirst", 100, 0, 80);
-   fZlast       = new TH1F("hZlast",     "Zlast", 100, 0, 250);
-   fCharge      = new TH1F("hCharge",    "Charge", 100, -1.5, 1.5);
-   fNpoint      = new TH1F("hNpoint",    "Npoint", 100, 50, 80);
-   fValid       = new TH1F("hValid",     "Valid", 100, 0, 1.2);
+   fNtrack = new TH1F("hNtrack", "Ntrack", 100, 575, 625);
+   fNseg = new TH1F("hNseg", "Nseg", 100, 5800, 6200);
+   fTemperature = new TH1F("hTemperature", "Temperature", 100, 19.5, 20.5);
+   fPx = new TH1F("hPx", "Px", 100, -4, 4);
+   fPy = new TH1F("hPy", "Py", 100, -4, 4);
+   fPz = new TH1F("hPz", "Pz", 100, 0, 5);
+   fRandom = new TH1F("hRandom", "Random", 100, 0, 1000);
+   fMass2 = new TH1F("hMass2", "Mass2", 100, 0, 12);
+   fBx = new TH1F("hBx", "Bx", 100, -0.5, 0.5);
+   fBy = new TH1F("hBy", "By", 100, -0.5, 0.5);
+   fMeanCharge = new TH1F("hMeanCharge", "MeanCharge", 100, 0, 0.01);
+   fXfirst = new TH1F("hXfirst", "Xfirst", 100, -40, 40);
+   fXlast = new TH1F("hXlast", "Xlast", 100, -40, 40);
+   fYfirst = new TH1F("hYfirst", "Yfirst", 100, -40, 40);
+   fYlast = new TH1F("hYlast", "Ylast", 100, -40, 40);
+   fZfirst = new TH1F("hZfirst", "Zfirst", 100, 0, 80);
+   fZlast = new TH1F("hZlast", "Zlast", 100, 0, 250);
+   fCharge = new TH1F("hCharge", "Charge", 100, -1.5, 1.5);
+   fNpoint = new TH1F("hNpoint", "Npoint", 100, 50, 80);
+   fValid = new TH1F("hValid", "Valid", 100, 0, 1.2);
 
    // cd back to original directory
    saved->cd();
