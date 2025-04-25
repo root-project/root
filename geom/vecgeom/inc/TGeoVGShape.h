@@ -43,7 +43,7 @@ public:
    static TGeoVGShape *Create(TGeoShape *shape);
    Double_t Capacity() const override;
    void ComputeBBox() override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    Bool_t Contains(const Double_t *point) const override;
    Bool_t CouldBeCrossed(const Double_t *point, const Double_t *dir) const override
    {
