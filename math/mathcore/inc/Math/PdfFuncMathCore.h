@@ -439,7 +439,7 @@ namespace Math {
    /**
 
    Probability density function of the Landau distribution:
-  \f[ p(x) = \frac{1}{\xi} \phi (\lambda) \f]
+  \f[ p(x,y) = \frac{1}{\xi} \phi (\lambda) \f]
    with
    \f[  \phi(\lambda) = \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} e^{\lambda s + s \log{s}} ds\f]
    where \f$\lambda = (x-x_0)/\xi\f$. For a detailed description see
