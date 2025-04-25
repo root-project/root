@@ -141,8 +141,8 @@ def main():
 
       git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
 
-      if pull_request:
-        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
+      #if pull_request:
+      #  rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
 
     if not WINDOWS:
         show_node_state()
