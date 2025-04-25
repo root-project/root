@@ -1285,7 +1285,7 @@ void TAxis::UnZoom()
          hobj1->SetMinimum(fXmin);
          hobj1->SetMaximum(fXmax);
       } else {
-         if (fXmin==hobj1->GetMinimum() && fXmax==hobj1->GetMaximum()) {
+         if (fXmin==hobj1->GetMinimumStored() && fXmax==hobj1->GetMaximumStored()) {
             hobj1->SetMinimum(fXmin);
             hobj1->SetMaximum(fXmax);
          } else {
