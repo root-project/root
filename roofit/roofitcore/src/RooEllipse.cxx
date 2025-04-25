@@ -55,7 +55,7 @@ Two-dimensional ellipse that can be used to represent an error contour.
 /// The degenerate case |rho|=1 corresponds to a straight line and
 /// is handled as a special case.
 /// \warning The default value of k = 1 (semiaxes at +/-sigma) corresponds to the 39% CL contour. For a 1-sigma confidence
-/// level (68%), set instead k ~ 2.3 (semiaxes at +/-2.3sigma).
+/// level (68%), set instead k ~ 1.51 (semiaxes at +/-1.51sigma).
 
 RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho, Int_t points, double k)
 {
