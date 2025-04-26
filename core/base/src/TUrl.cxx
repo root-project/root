@@ -131,13 +131,20 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
    fHostFQ     = "";
 
    // if url starts with a / consider it as a file url
-   if (url[0] == '/')
+   if (url[0] == '/') {
       defaultIsFile = kTRUE;
+      // ROOT-5430: if url starts with two slashes but
+      // not three slashes, just remove the first of them
+      if (strlen(url) > 2 && url[1] == '/' && url[2] != '/') {
+         url = &url[1];
+      }
+   }
 
    // Find protocol
    char *s, sav;
 
    TString surl = url;
+
    char *u, *u0 = Strip(defaultIsFile && surl.EndsWith(":/") ? TString(surl(0,surl.Length()-2)).Data() : url);
 tryfile:
    u = u0;
