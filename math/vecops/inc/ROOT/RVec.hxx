@@ -3252,20 +3252,20 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * the sequence consists of n values computed as if there were n+1 evenly spaced samples, with the final
  * value (\p end) omitted; in this case, \f$\text{step} = \frac{\text{end} - \text{start}}{n}\f$.
  *
- * The function is templated to allow for different arithmetic types. The deduced type \c Common_t is
- * determined as follows: if \p T is a floating point type, that type is used;
+ * The function is templated to allow for different arithmetic types. The return type \c Ret_t, if
+ * not explicitly specified, is determined as follows: if \p T is a floating point type, that type is used;
  * otherwise, the arithmetic is performed using \c double.
  *
  * \tparam T Type of the start and end value. Default is double.
- * \tparam Common_t Deduced type used for arithmetic, which is \p T if that is a
- * floating point type, or double otherwise.
+ * \tparam Ret_t Return type used for arithmetic, which, if not explicitly specified
+ * in the template, is \p T if that is a floating point type, or double otherwise.
  *
  * \param start The first value in the sequence.
  * \param end The last value in the sequence if \p endpoint is true; otherwise, \p end is excluded.
  * \param n The number of evenly spaced entries to produce. The default value is 128, which is different than numpy's default value of 50.
  * \param endpoint If true (default), \p end is included as the final element; if false, \p end is excluded.
  *
- * \return A vector (RVec<Common_t>) containing \p n evenly spaced values.
+ * \return A vector (RVec<Ret_t>) containing \p n evenly spaced values.
  *
  * \note If \p n is 1, the resulting vector will contain only the value \p start.
  * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
@@ -3273,7 +3273,7 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Common_t is explicitly overridden with an integral type, the arithmetic may cause rounding issues. Consequently, the resulting sequence may not end exactly at \p end. To ensure that the sequence ends exactly at \p end, consider casting the result as follows: `RVec<integral_type>(Linspace(...))`. This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may cause rounding issues. Consequently, the resulting sequence may not end exactly at \p end. To ensure that the sequence ends exactly at \p end, consider casting the result as follows: `RVec<integral_type>(Linspace(...))`. This behavior is different than NumPy in Python.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3297,20 +3297,33 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * // { 1, 5, 9 }
  * ~~~
  */
-template <typename T = double, typename Common_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
-inline RVec<Common_t> Linspace(T start, T end, unsigned long long n = 128, const bool endpoint = true)
+template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bool endpoint = true)
 {
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return RVec<Common_t>{};
+        return RVec<Ret_t>{};
     }
     
-    Common_t step = (static_cast<Common_t>(end) - static_cast<Common_t>(start)) / static_cast<Common_t>(n - endpoint);
-    RVec<Common_t> temp(n);
-    temp[0] = static_cast<Common_t>(start);
-    for (unsigned long long i = 1; i < n; i++)
+    long double step = std::is_floating_point_v<Ret_t> ?
+    (static_cast<Ret_t>(end) - static_cast<Ret_t>(start)) / static_cast<Ret_t>(n - endpoint) :
+    static_cast<long double>(end - start) / (n - endpoint);
+        
+    RVec<Ret_t> temp(n);
+    temp[0] = static_cast<Ret_t>(start);
+    if (std::is_floating_point_v<Ret_t>)
     {
-        temp[i] = static_cast<Common_t>(start) + static_cast<Common_t>(i) * step;
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = static_cast<Ret_t>(start) + static_cast<Ret_t>(i) * step;
+        }
+    }
+    else
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = std::floor(start + i * step);
+        }
     }
     return temp;
 }
@@ -3324,11 +3337,11 @@ inline RVec<Common_t> Linspace(T start, T end, unsigned long long n = 128, const
  * sequence is computed as if there were n+1 evenly spaced samples over the interval in the exponent space,
  * and the final value (\f$base^{end}\f$) is excluded, resulting in a sequence of n values.
  *
- * The function is templated to allow for different arithmetic types. The deduced type \c Common_t is determined as follows:
- * if \p T is a floating point type, that type is used; otherwise, the arithmetic is performed using \c double.
+ * The function is templated to allow for different arithmetic types. The return type \c Ret_t, if not explicitly specified,
+ * iis determined as follows: if \p T is a floating point type, that type is used; otherwise, the arithmetic is performed using \c double.
  *
  * \tparam T Type of the start and end exponents and the base. Default is double.
- * \tparam Common_t Deduced type used for arithmetic, which is \p T if that is a floating point type, or double otherwise.
+ * \tparam Ret_t Deduced type used for arithmetic, which, if not explicitly specified, is \p T if that is a floating point type, or double otherwise.
  *
  * \param start The exponent corresponding to the first element (i.e., the first element is \f$base^{start}\f$).
  * \param end The exponent corresponding to the final element if \p endpoint is true; otherwise, \p end is excluded.
@@ -3336,7 +3349,7 @@ inline RVec<Common_t> Linspace(T start, T end, unsigned long long n = 128, const
  * \param endpoint If true (default), \f$base^{end}\f$ is included as the final element; if false, \f$base^{end}\f$ is excluded.
  * \param base The base to be used in the exponentiation (default is 10.0).
  *
- * \return A vector (RVec<Common_t>) containing n log-spaced values.
+ * \return A vector (RVec<Ret_t>) containing n log-spaced values.
  *
  * \note If \p n is 1, the resulting vector will contain only the value \f$base^{start}\f$.
  * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
@@ -3344,7 +3357,7 @@ inline RVec<Common_t> Linspace(T start, T end, unsigned long long n = 128, const
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Common_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the sequence may not end exactly at \f$base^{end}\f>. To ensure that the final element is exactly \f$base^{end}\f>, consider casting the result as follows: `RVec<integral_type>(Logspace(...))`. This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the sequence may not end exactly at \f$base^{end}\f>. To ensure that the final element is exactly \f$base^{end}\f>, consider casting the result as follows: `RVec<integral_type>(Logspace(...))`. This behavior is different than NumPy in Python.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3370,26 +3383,42 @@ inline RVec<Common_t> Linspace(T start, T end, unsigned long long n = 128, const
  * // { 10, 1000, 100000 }
  * ~~~
  */
-template <typename T = double, typename Common_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
-inline RVec<Common_t> Logspace(T start, T end, unsigned long long n = 128, const bool endpoint = true, T base = 10.0)
+template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bool endpoint = true, T base = 10.0)
 {
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return RVec<Common_t>{};
+        return RVec<Ret_t>{};
     }
-    RVec<Common_t> temp(n);
+    RVec<Ret_t> temp(n);
     
-    Common_t start_c = static_cast<Common_t>(start);
-    Common_t end_c   = static_cast<Common_t>(end);
-    Common_t base_c  = static_cast<Common_t>(base);
-    Common_t step = static_cast<Common_t>(end_c - start_c)/static_cast<Common_t>(n - endpoint);
+    Ret_t start_c = static_cast<Ret_t>(start);
+    Ret_t end_c   = static_cast<Ret_t>(end);
+    Ret_t base_c  = static_cast<Ret_t>(base);
     
-    temp[0] = static_cast<Common_t>(std::pow(base_c, start_c));
-    for (unsigned long long i = 1; i < n; i++)
+    long double step = std::is_floating_point_v<Ret_t> ?
+    (static_cast<Ret_t>(end_c - start_c) / static_cast<Ret_t>(n - endpoint)) :
+    static_cast<long double>(end - start) / (n - endpoint);
+
+    temp[0] = static_cast<Ret_t>(std::pow(base_c, start_c));
+     
+    if (std::is_floating_point_v<Ret_t>)
     {
-        Common_t exponent = start_c + i * step;
-        temp[i] = static_cast<Common_t>(std::pow(base_c, exponent));
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            Ret_t exponent = start_c + i * step;
+            temp[i] = static_cast<Ret_t>(std::pow(base_c, exponent));
+        }
     }
+    else
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            Ret_t exponent = start_c + i * step;
+            temp[i] = static_cast<Ret_t>(std::floor(std::pow(base_c, exponent)));
+        }
+    }
+     
     return temp;
 }
 
@@ -3404,19 +3433,19 @@ inline RVec<Common_t> Logspace(T start, T end, unsigned long long n = 128, const
  * \f]
  * ensuring that the arithmetic is performed in a floating-point context when needed.
  *
- * The function is templated to allow for different arithmetic types. The deduced type \c Common_t is
- * determined as follows: if \p T is a floating point type, that type is used;
+ * The function is templated to allow for different arithmetic types. The deduced type \c Ret_t, if not
+ * explicitly specified, is determined as follows: if \p T is a floating point type, that type is used;
  * otherwise, the arithmetic is performed using \c double.
  *
  * \tparam T Type of the start, end, and step values. Default is double.
- * \tparam Common_t Deduced type used for arithmetic, which is
- * \p T if that is a floating point type, or double otherwise.
+ * \tparam Ret_t Deduced type used for arithmetic, which, if not explicitly
+ * specified, is \p T if that is a floating point type, or double otherwise.
  *
  * \param start The first value in the range.
  * \param end The end of the range (exclusive).
  * \param step The increment between consecutive values.
  *
- * \return A vector (RVec<Common_t>) containing values starting at \p start, each incremented by \p step,
+ * \return A vector (RVec<Ret_t>) containing values starting at \p start, each incremented by \p step,
  *         up to but not including any value equal to or greater than \p end.
  *
  * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
@@ -3424,7 +3453,7 @@ inline RVec<Common_t> Logspace(T start, T end, unsigned long long n = 128, const
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Common_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the produced sequence may not strictly adhere to the intended progression. If an exact sequence is desired, consider casting the result as follows: `RVec<integral_type>(Arange(...))`. This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the produced sequence may not strictly adhere to the intended progression. If an exact sequence is desired, consider casting the result as follows: `RVec<integral_type>(Arange(...))`. This behavior is different than NumPy in Python.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3448,25 +3477,38 @@ inline RVec<Common_t> Logspace(T start, T end, unsigned long long n = 128, const
  * // { 5, 6, 7, 8 }
  * ~~~
  */
-template <typename T = double, typename Common_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
-inline RVec<Common_t> Arange(T start, T end, T step)
+template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Ret_t> Arange(T start, T end, T step)
 {
-    unsigned long long n = std::ceil(static_cast<Common_t>(end-start)/static_cast<Common_t>(step)); // Ensure floating-point division.
+    unsigned long long n = std::ceil(static_cast<Ret_t>(end-start)/static_cast<Ret_t>(step)); // Ensure floating-point division.
 
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return RVec<Common_t>{};
+        return RVec<Ret_t>{};
     }
     
-    RVec<Common_t> temp(n);
+    RVec<Ret_t> temp(n);
     
-    Common_t start_c = static_cast<Common_t>(start);
-    Common_t step_c = static_cast<Common_t>(step);
+    Ret_t start_c = static_cast<Ret_t>(start);
     
+    long double step_c = std::is_floating_point_v<Ret_t> ?
+    static_cast<Ret_t>(step) :
+    static_cast<long double>(step);
+
     temp[0] = start_c;
-    for (unsigned long long i = 1; i < n; i++)
+    if (std::is_floating_point_v<Ret_t>)
     {
-        temp[i] = start_c + i * step_c;
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = start_c + i * step_c;
+        }
+    }
+    else
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = std::floor(start_c + i * step_c);
+        }
     }
     return temp;
 }
