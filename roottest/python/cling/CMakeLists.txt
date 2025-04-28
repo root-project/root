@@ -1,9 +1,5 @@
 if(ROOT_pyroot_FOUND)
-  if (ROOT_pyroot_legacy_FOUND)
-    set(api_macro_file runPyAPITest.C)
-  else()
-    set(api_macro_file runPyAPITestCppyy.C) # Uses new Cppyy API
-  endif()
+  set(api_macro_file runPyAPITestCppyy.C) # Uses new Cppyy API
   ROOTTEST_ADD_TEST(api
                     MACRO ${api_macro_file}
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}

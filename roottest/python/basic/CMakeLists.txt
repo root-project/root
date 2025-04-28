@@ -2,8 +2,7 @@ if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(basic
                     MACRO PyROOT_basictests.py
                     COPY_TO_BUILDDIR ArgumentPassingCompiled.C ReturnValues.C SimpleClass.C ArgumentPassingInterpreted.C
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ ArgumentPassingCompiled.C+
-                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ ArgumentPassingCompiled.C+)
 
 if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(datatype
@@ -11,8 +10,7 @@ if(NOT MSVC OR win_broken_tests)
                     COPY_TO_BUILDDIR DataTypes.C DataTypes.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so
-                                ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 endif()
 
   ROOTTEST_ADD_TEST(operator
@@ -26,7 +24,6 @@ if(NOT MSVC OR win_broken_tests)
                     COPY_TO_BUILDDIR Overloads.C Overloads.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so
-                                ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
+                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 endif()
 endif()
