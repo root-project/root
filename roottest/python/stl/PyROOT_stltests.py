@@ -28,7 +28,6 @@ class TestClasSTLVECTOR:
         cls.test_dct = "StlTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = 13
-        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_builtin_vector_type(self):
         """Test access to a vector<int> (part of cintdlls)"""
@@ -92,13 +91,12 @@ class TestClasSTLVECTOR:
         for arg in a:
             pass
 
-        if not self.legacy_pyroot:
-            # ROOT-10118
-            # In current Cppyy, STL containers evaluate to True
-            # if they contain at least one element
-            assert not a
-            a.push_back(0)
-            assert a
+        # ROOT-10118
+        # In current Cppyy, STL containers evaluate to True
+        # if they contain at least one element
+        assert not a
+        a.push_back(0)
+        assert a
 
     def test05_pushback_iterables_with_iadd(self):
         """Test usage of += of iterable on push_back-able container"""
@@ -140,13 +138,12 @@ class TestClasSTLVECTOR:
     def test07_vector_bool_iter(self):
         """Iteration over a vector<bool>"""
         # ROOT-9397
-        if not self.legacy_pyroot:
-            from cppyy.gbl import std
-            v = std.vector[bool]()
-            l = [True, False]
-            for b in l:
-                v.push_back(b)
-            assert [ b for b in v ] == l
+        from cppyy.gbl import std
+        v = std.vector[bool]()
+        l = [True, False]
+        for b in l:
+            v.push_back(b)
+        assert [ b for b in v ] == l
 
 
 ### STL list test case =======================================================
@@ -317,7 +314,6 @@ class TestClasSTLSTRINGHANDLING:
         import cppyy
         cls.test_dct = "StlTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
-        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_string_argument_passing(self):
         """Test mapping of python strings and std::string"""
@@ -372,10 +368,7 @@ class TestClasSTLSTRINGHANDLING:
         t0 = "aap\0noot"
         assert t0 == "aap\0noot"
 
-        if not self.legacy_pyroot:
-           c, s = StringyClass(), std.string(t0, 0, len(t0))
-        else:
-           c, s = StringyClass(), std.string(t0, len(t0))
+        c, s = StringyClass(), std.string(t0, 0, len(t0))
 
         c.SetString1( s )
         assert t0 == c.GetString1()

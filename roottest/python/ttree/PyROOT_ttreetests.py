@@ -11,8 +11,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import ROOT
 from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, addressof, MakeNullPointer, TObjArray, TNamed
 
-legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
-
 from common import *
 
 __all__ = [
@@ -142,21 +140,10 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       fl = d.Floats
       t.Branch( 'floats', fl )
 
-      if not legacy_pyroot:
-          # The Branch pythonization expects an integer with the
-          # address of the field of the struct
-          addressof_nlabel = addressof( d, 'NLabel' )
-          addressof_label  = addressof( d, 'Label' )
-      else:
-          # Old PyROOT has a bug in AddressOf(o, 'field').
-          # Instead of returning a buffer whose first position
-          # contains the address of the field, it just returns the
-          # address of the field (which is what we need here).
-          # addressof(o, 'field'), which is what we should really
-          # use, is also broken in old PyROOT, so we need to use
-          # AddressOf here
-          addressof_nlabel = AddressOf( d, 'NLabel' )
-          addressof_label  = AddressOf( d, 'Label' )
+      # The Branch pythonization expects an integer with the
+      # address of the field of the struct
+      addressof_nlabel = addressof( d, 'NLabel' )
+      addressof_label  = addressof( d, 'Label' )
 
       t.Branch( 'nlabel', addressof_nlabel, 'NLabel/I' )
       t.Branch( 'label',  addressof_label,  'Label/C' )
@@ -207,11 +194,6 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       myarray = f.Get( 'myarray' )
       self.assertTrue( isinstance( myarray, TArrayI ) )
-
-      if legacy_pyroot:
-         # New PyROOT does not implement a pythonisation for GetObject.
-         myarray = MakeNullPointer( TArrayI )
-         f.GetObject( 'myarray', myarray )
 
       f.Close()
 
@@ -286,10 +268,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       s = SomeDataStruct()
 
       # Same reason for this difference as in test05WriteSomeDataObjectBranched
-      if not legacy_pyroot:
-         addressof_nlabel = addressof(s, 'NLabel')
-      else:
-         addressof_nlabel = AddressOf(s, 'NLabel')
+      addressof_nlabel = addressof(s, 'NLabel')
 
       t.Branch( 'cpu_packet_time', addressof_nlabel, 'time/I' );
 

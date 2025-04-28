@@ -107,30 +107,22 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
    def test5ReadCustomTypes( self ):
       """Test reading PyROOT custom types"""
 
-      legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
-
       p = pickle.load( self.in1 )
       cp = cPickle.load( self.in2 )
 
-      if not legacy_pyroot:
-         # Cppyy's Long and Double will be deprecated in favour of
-         # ctypes.c_long and ctypes.c_double, respectively
-         # https://bitbucket.org/wlav/cppyy/issues/101
-         import ctypes
+      # Cppyy's Long and Double will be deprecated in favour of
+      # ctypes.c_long and ctypes.c_double, respectively
+      # https://bitbucket.org/wlav/cppyy/issues/101
+      import ctypes
 
-         proto = [ctypes.c_long(123), ctypes.c_double(123.123)]
+      proto = [ctypes.c_long(123), ctypes.c_double(123.123)]
 
-         for e1, e2 in zip(p, proto):
-            self.assertEqual(e1.value, e2.value)
+      for e1, e2 in zip(p, proto):
+         self.assertEqual(e1.value, e2.value)
 
-         for e1, e2 in zip(cp, proto):
-            self.assertEqual(e1.value, e2.value)
+      for e1, e2 in zip(cp, proto):
+         self.assertEqual(e1.value, e2.value)
 
-      else:
-         proto = [ROOT.Long(123), ROOT.Double(123.123)]
-
-         self.assertEqual(p, [123, 123.123])
-         self.assertEqual(cp, [123, 123.123])
 
    def test6ReadCustomTypes( self ):
       """[ROOT-10810] Test reading a RooDataSet with weights"""
