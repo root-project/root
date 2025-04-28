@@ -369,11 +369,8 @@ class Basic5PythonizationTestCase( MyTestCase ):
       l.sort()
       self.assertEqual( list(l), ['2', '4', '5', '6', '8', 'a', 'b', 'i', 'j'] )
 
-      if sys.hexversion >= 0x3000000:
-         l.sort( key=TObjString.GetName )
-         l.reverse()
-      else:
-         l.sort( lambda a, b: cmp(b.GetName(),a.GetName()) )
+      l.sort( key=TObjString.GetName )
+      l.reverse()
       self.assertEqual( list(l), ['j', 'i', 'b', 'a', '8', '6', '5', '4', '2'] )
 
       l2 = l[:3]
@@ -387,15 +384,11 @@ class Basic5PythonizationTestCase( MyTestCase ):
       l3 = l[6:8]
       self.assertEqual( list(l2+l3), ['j', 'i', 'b', '5', '4'] )
 
-      if sys.hexversion >= 0x3000000:
-         next = '__next__'
-      else:
-         next = 'next'
       i = iter(l2)
-      self.assertEqual( getattr( i, next )(), 'j' )
-      self.assertEqual( getattr( i, next )(), 'i' )
-      self.assertEqual( getattr( i, next )(), 'b' )
-      self.assertRaises( StopIteration, getattr( i, next ) )
+      self.assertEqual( getattr( i, "__next__" )(), 'j' )
+      self.assertEqual( getattr( i, "__next__" )(), 'i' )
+      self.assertEqual( getattr( i, "__next__" )(), 'b' )
+      self.assertRaises( StopIteration, getattr( i, "__next__" ) )
 
    def test3TVector( self ):
       """Test TVector2/3/T behavior"""
