@@ -15,9 +15,11 @@ The following people have contributed to this new version:
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
  Philippe Canal, FNAL,\
+ Olivier Couet, CERN/EP-SFT,\
  Mattias Ellert, Uppsala University,\
  Florine de Geus, CERN/University of Twente,\
  Fernando Hueso Gonzalez, CSIC/University of Valencia,\
+ Sergey Linev, GSI Darmstadt,\
  Enrico Lusiani, INFN Padova,\
  Alberto Mecca, University of Turin,\
  Lorenzo Moneta, CERN/EP-SFT,\
@@ -183,7 +185,7 @@ efficiently. Many small bugs were found and fixed.
 
 ## JavaScript ROOT
 
-ROOT 6.36 will use JSROOT 7.9.x release series. It includes following important changes:
+ROOT 6.36 will use [JSROOT 7.9](https://github.com/root-project/jsroot/releases/tag/7.9.0) release series. It includes following important changes:
 
 * Implement 'nmatch' parameter for `TTree::Draw` to limit processed events
 * Implement 'elist' parameter for `TTree::Draw` to specify entries list for processing
@@ -220,6 +222,10 @@ ROOT 6.36 will use JSROOT 7.9.x release series. It includes following important 
 * Fix - drawing `TPaveText` with zero text size
 * Fix - correct axis range in `TScatter` drawing
 * Fix - use draw option also for graph drawing in `TTree::Draw`
+
+## Jupyter lab
+
+Use JSROOT 7.9.0 as fallback version.
 
 ## Build, Configuration and Testing Infrastructure
 
@@ -266,7 +272,7 @@ For this release, the following items have been addressed:
   * [[#18002](https://github.com/root-project/root/issues/18002)] - Memory issues reported by Valgrind when cloning `gROOT->GetListOfColors()`
   * [[#17992](https://github.com/root-project/root/issues/17992)] - Spurrious auto parsing when looking up a TClass
   * [[#17969](https://github.com/root-project/root/issues/17969)] - Failure of thisroot.sh on freebsd
-  * [[#17909](https://github.com/root-project/root/pull/17909)] - Prevent LLVM cmake from finding builtin zstd. 
+  * [[#17909](https://github.com/root-project/root/pull/17909)] - Prevent LLVM cmake from finding builtin zstd.
   * [[#17900](https://github.com/root-project/root/issues/17900)] - [ntuple] Add write API with const pointers
   * [[#17864](https://github.com/root-project/root/issues/17864)] - [Docs] TTree example is missing the critical lines
   * [[#17859](https://github.com/root-project/root/issues/17859)] - [CMake] JupyROOT sources not correctly tracked by CMake
@@ -309,7 +315,7 @@ For this release, the following items have been addressed:
   * [[#17346](https://github.com/root-project/root/issues/17346)] - I/O Customization rules fails in case of changes in the inputs types.
   * [[#17330](https://github.com/root-project/root/pull/17330)] - Text precision must be 2 in PaintText
   * [[#17323](https://github.com/root-project/root/pull/17323)] - [RF] Remove unused sel rule for RooStats::ToyMCPayload
-  * [[#17321](https://github.com/root-project/root/issues/17321)] - [RF] Unused Class rule 
+  * [[#17321](https://github.com/root-project/root/issues/17321)] - [RF] Unused Class rule
   * [[#17320](https://github.com/root-project/root/issues/17320)] - [RF] Race when testing RooStats with its tutorials via CTest
   * [[#17305](https://github.com/root-project/root/issues/17305)] - The ONNX.Tile5D test in tmva/sofie/test/TestCustomModelsFromONNX.cxx writes array elements beyond the last element in the array.
   * [[#17295](https://github.com/root-project/root/issues/17295)] - constprefix incorrectly set in TClassEdit
@@ -321,20 +327,20 @@ For this release, the following items have been addressed:
   * [[#17222](https://github.com/root-project/root/issues/17222)] - Regression in Python ownership for histograms within subdirectories with ROOT 6.34.00
   * [[#17214](https://github.com/root-project/root/issues/17214)] - [ntuple] Optimize `RArrayField` reading
   * [[#17190](https://github.com/root-project/root/issues/17190)] - Compiler error (GCC 14.2.0 on Linux)
-  * [[#17163](https://github.com/root-project/root/issues/17163)] - Warnings from  the deserialization of RooCrystalBall 
+  * [[#17163](https://github.com/root-project/root/issues/17163)] - Warnings from  the deserialization of RooCrystalBall
   * [[#17157](https://github.com/root-project/root/issues/17157)] - operator errors in cppyy
   * [[#17145](https://github.com/root-project/root/issues/17145)] - Distributed RDataFrame cannot deal with same column name in different branches
   * [[#17142](https://github.com/root-project/root/issues/17142)] - Check Python code formatting in CI
   * [[#17135](https://github.com/root-project/root/issues/17135)] - Add Alias transformation to distributed RDataFrame
   * [[#17109](https://github.com/root-project/root/issues/17109)] - [PyROOT] False positive in cppyy proxy cache
-  * [[#17076](https://github.com/root-project/root/issues/17076)] - Double shadow in `TPaveText` 
+  * [[#17076](https://github.com/root-project/root/issues/17076)] - Double shadow in `TPaveText`
   * [[#17040](https://github.com/root-project/root/issues/17040)] - Small difference between kp6Violet implementation and official value from Petroff paper
   * [[#16976](https://github.com/root-project/root/issues/16976)] - Strange overflow bin bar when plotting TH1D with X1 option
   * [[#16946](https://github.com/root-project/root/issues/16946)] - Crash in RDF constructor with empty file list
   * [[#16936](https://github.com/root-project/root/issues/16936)] - [ntuple] RClusterPool can crash on non-existing cluster
   * [[#16915](https://github.com/root-project/root/issues/16915)] - `TThreadExecutor::Map` is private, users can only run `MapReduce`.
   * [[#16841](https://github.com/root-project/root/issues/16841)] - Validate `REntry` belonging to right model when reading
-  * [[#16794](https://github.com/root-project/root/issues/16794)] - TFormula: Pol functions do not accept variable name as arguments 
+  * [[#16794](https://github.com/root-project/root/issues/16794)] - TFormula: Pol functions do not accept variable name as arguments
   * [[#16784](https://github.com/root-project/root/issues/16784)] - Remove default value of p from TH1::GetQuantiles() as is the case with TF1::GetQuantiles
   * [[#16736](https://github.com/root-project/root/issues/16736)] - Please improve documentation and/or argument names for TH1::GetQuantiles()
   * [[#16725](https://github.com/root-project/root/issues/16725)] - Pyroot crashes reading TClonesArray in a TTree
@@ -393,7 +399,7 @@ For this release, the following items have been addressed:
   * [[ROOT-10553](https://its.cern.ch/jira/browse/ROOT-10553)] - TSQLStatement::GetBinary is not consistently implemented
   * [[ROOT-10537](https://its.cern.ch/jira/browse/ROOT-10537)] - CMakeList.txt environment cleanup inaccurate
   * [[ROOT-10482](https://its.cern.ch/jira/browse/ROOT-10482)] - pullHist and residHist biased (or sampling biased)
-  * [[ROOT-10249](https://its.cern.ch/jira/browse/ROOT-10249)] - TDataMember::GetOptions returns empty list for enum members 
+  * [[ROOT-10249](https://its.cern.ch/jira/browse/ROOT-10249)] - TDataMember::GetOptions returns empty list for enum members
   * [[ROOT-10239](https://its.cern.ch/jira/browse/ROOT-10239)] - rootcling crashes on -Werror + unknown warning flag to clang
   * [[ROOT-9886](https://its.cern.ch/jira/browse/ROOT-9886)] - TTreeReader loads wrong entry from chain friend
   * [[ROOT-9833](https://its.cern.ch/jira/browse/ROOT-9833)] - TMVA crashes adding single event w/o prior var def
@@ -411,7 +417,7 @@ For this release, the following items have been addressed:
   * [[ROOT-7855](https://its.cern.ch/jira/browse/ROOT-7855)] - Inconsistent behaviour when cloning a tree using TChain and TTree
   * [[ROOT-7626](https://its.cern.ch/jira/browse/ROOT-7626)] - TRegexp::MakeWildcard should support escape sequence
   * [[ROOT-7372](https://its.cern.ch/jira/browse/ROOT-7372)] - Accessing complex map branches crashes in PyROOT
-  * [[ROOT-7322](https://its.cern.ch/jira/browse/ROOT-7322)] - Missing Overload for TF1 GetParError 
+  * [[ROOT-7322](https://its.cern.ch/jira/browse/ROOT-7322)] - Missing Overload for TF1 GetParError
   * [[ROOT-7067](https://its.cern.ch/jira/browse/ROOT-7067)] - tree->GetMaximum() not working with TChain and TEntryList
   * [[ROOT-6874](https://its.cern.ch/jira/browse/ROOT-6874)] - Suggested function TF1::EvalUncertainty()
   * [[ROOT-6636](https://its.cern.ch/jira/browse/ROOT-6636)] - Tab completion fails for CV-qualified pointers and objects
