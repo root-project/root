@@ -347,7 +347,9 @@ public:
    // =========== operations ==============
 
    /**
-      Access operator
+      Access operator, used to have direct access to rotation matrix's entries
+      \param i row index in {0,1,2}
+      \param j column index in {0,1,2}
    */
    Scalar operator()(size_t i, size_t j) const
    {
