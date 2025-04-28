@@ -98,13 +98,12 @@ Please ping people :wave: should you not get timely feedback, for instance with 
 As you contribute code, this code will likely fix an issue or add a feature.
 Whatever it is: this requires you to add a new test, or to extend an existing test. Depending on the size and complexity
 of this test, it exists either in the `test/` subdirectory of each part of ROOT (see for instance
-[`tree/dataframe/test`](https://github.com/root-project/root/tree/master/tree/dataframe/test)), or in
-[roottest](https://github.com/root-project/roottest.git). Tests in `test/` subdirectories are unit tests, mostly based on
+[`tree/dataframe/test`](https://github.com/root-project/root/tree/master/tree/dataframe/test)), or in the
+[roottest](https://github.com/root-project/root/tree/master/roottest) directory.
+Tests in `test/` subdirectories are unit tests, mostly based on
 [Google Test](https://github.com/google/googletest) and easily extended. Tests in
-[roottest](https://github.com/root-project/roottest.git) are more involved (e.g., tests requiring custom dictionaries or
-data files). When you create a branch in the main ROOT repository (i.e., this repository) and add a test to `roottest`,
-make sure to do this under the same branch name (and open a PR for it). Our CI infrastructure automatically picks up the
-changes defined in the `roottest` PR based on this branch name, and uses that for testing your PR here.
+[roottest](https://github.com/root-project/root/tree/master/roottest) are more involved (e.g., tests requiring custom dictionaries or
+data files).
 
 ## Continuous Integration
 
