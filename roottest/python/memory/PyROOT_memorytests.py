@@ -19,20 +19,16 @@ __all__ = [
    'Memory1TestCase'
 ]
 
-if sys.hexversion >= 0x3000000:
-   class MyTestCase( unittest.TestCase ):
-      def shortDescription( self ):
-         desc = str(self)
-         doc_first_line = None
+class MyTestCase( unittest.TestCase ):
+   def shortDescription( self ):
+      desc = str(self)
+      doc_first_line = None
 
-         if self._testMethodDoc:
-            doc_first_line = self._testMethodDoc.split("\n")[0].strip()
-         if doc_first_line:
-            desc = doc_first_line
-         return desc
-else:
-   class MyTestCase( unittest.TestCase ):
-      pass
+      if self._testMethodDoc:
+         doc_first_line = self._testMethodDoc.split("\n")[0].strip()
+      if doc_first_line:
+         desc = doc_first_line
+      return desc
 
 
 ### Memory management test cases =============================================
