@@ -4,5 +4,4 @@ builtin_zlib=ON
 builtin_zstd=ON
 ccache=ON
 pythia8=OFF
-unuran=OFF
 vdt=OFF
