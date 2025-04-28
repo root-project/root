@@ -3160,6 +3160,19 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    Bool_t nameChanged = kFALSE;
 
    if (!cl) {
+      // First look at known types but without triggering any loads
+      {
+         THashTable *typeTable = dynamic_cast<THashTable *>(gROOT->GetListOfTypes());
+         TDataType *type = (TDataType *)typeTable->THashTable::FindObject(name);
+         if (type) {
+            if (type->GetType() > 0)
+               // This is a numerical type
+               return nullptr;
+            // This is a typedef
+            normalizedName = type->GetTypeName();
+            nameChanged = kTRUE;
+         }
+      }
       {
          TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
          TClassEdit::GetNormalizedName(normalizedName, name);
