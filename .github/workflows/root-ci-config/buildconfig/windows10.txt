@@ -16,6 +16,7 @@ builtin_tbb=ON
 builtin_xxhash=ON
 builtin_zlib=ON
 builtin_zstd=ON
+ccache=OFF
 davix=OFF
 llvm13_broken_tests=OFF
 minuit2_mpi=OFF

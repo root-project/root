@@ -32,7 +32,6 @@ builtin_xxhash=OFF
 builtin_zeromq=ON
 builtin_zlib=OFF
 builtin_zstd=OFF
-ccache=OFF
 cefweb=OFF
 clad=ON
 clingtest=OFF
