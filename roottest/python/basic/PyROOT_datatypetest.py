@@ -38,14 +38,10 @@ class TestClassDATATYPES:
         cls.test_dct = "DataTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
-        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
-        if not cls.legacy_pyroot:
-            # In new Cppyy, nullptr can't be found in gbl.
-            # Take it from libcppyy (we could also use ROOT.nullptr)
-            import libcppyy
-            cls.nullptr = libcppyy.nullptr
-        else:
-            cls.nullptr = cppyy.gbl.nullptr
+        # In new Cppyy, nullptr can't be found in gbl.
+        # Take it from libcppyy (we could also use ROOT.nullptr)
+        import libcppyy
+        cls.nullptr = libcppyy.nullptr
 
     def test01_load_reflection_cache(self):
         """Loading reflection info twice should result in the same object"""
@@ -202,13 +198,9 @@ class TestClassDATATYPES:
         c.set_uchar(45);  assert c.m_uchar     == chr(45)
 
         # limits and checks
-        if not self.legacy_pyroot:
-           # This throws ValueError in new Cppyy
-           raises(ValueError,  c.set_char, "string")
-           raises(ValueError,  c.set_uchar, "string")
-        else:
-           raises(TypeError,  c.set_char, "string")
-           raises(TypeError,  c.set_uchar, "string")
+        # This throws ValueError in new Cppyy
+        raises(ValueError,  c.set_char, "string")
+        raises(ValueError,  c.set_uchar, "string")
         raises(ValueError, c.set_char, 500)
         raises(ValueError, c.set_uchar, -1)
         c.set_char_cr(-128); assert c.get_char()  == chr(0x80)
@@ -807,11 +799,8 @@ class TestClassDATATYPES:
 
         import cppyy
 
-        if not self.legacy_pyroot:
-            # New Cppyy does not allow conversion from None to null pointer anymore
-            t = (0, )
-        else:
-            t = (0, None)
+        # New Cppyy does not allow conversion from None to null pointer anymore
+        t = (0, )
         for o in t:
             c = cppyy.gbl.CppyyTestData()
             assert c.m_pod.m_int == 888
@@ -904,28 +893,14 @@ class TestClassDATATYPES:
             if not PYTEST_MIGRATION:
                 arr = arr.shape.fromaddress(arr.itemaddress(0), self.N)
             if PYTEST_MIGRATION:
-                if not self.legacy_pyroot:
-                    # In new Cppyy, buffers have a reshape method
-                    arr.reshape((self.N,))
+                # In new Cppyy, buffers have a reshape method
+                arr.reshape((self.N,))
 
-                    assert len(arr) == self.N
+                assert len(arr) == self.N
 
-                    l = list(arr)
-                    for i in range(self.N):
-                        assert arr[i] == l[i]
-                else:
-                    arr.SetSize(self.N)
-                    # Test forward compatibility
-                    arr2 = getattr(c, func)()
-                    arr2.reshape((self.N,))
-
-                    for a in arr,arr2:
-
-                        assert len(a) == self.N
-
-                        l = list(a)
-                        for i in range(self.N):
-                            assert a[i] == l[i]
+                l = list(arr)
+                for i in range(self.N):
+                    assert arr[i] == l[i]
 
     def test21_voidp(self):
         """Use of void* data"""
@@ -973,11 +948,8 @@ class TestClassDATATYPES:
         def null_test(null):
             c.m_voidp = null
             assert c.m_voidp is self.nullptr
-        if not self.legacy_pyroot:
-            # New Cppyy does not allow assignment of pointer type to None
-            null_list = [0, self.nullptr]
-        else:
-            null_list = [0, None, self.nullptr]
+        # New Cppyy does not allow assignment of pointer type to None
+        null_list = [0, self.nullptr]
         map(null_test, null_list)
 
         c.m_voidp = c2

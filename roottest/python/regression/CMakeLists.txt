@@ -1,9 +1,5 @@
 if(ROOT_pyroot_FOUND)
-  if (ROOT_pyroot_legacy_FOUND)
-    set(scott_file Scott.C)
-  else()
-    set(scott_file ScottCppyy.C) # Uses Cppyy header
-  endif()
+  set(scott_file ScottCppyy.C) # Uses Cppyy header
 
 if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(regression
@@ -19,8 +15,7 @@ if(NOT MSVC OR win_broken_tests)
                                          -e .L\ LoKiNamespace.C+
                                          -e .L\ ULongLong.C+
                                          -e .L\ Till.C+
-                                         -e .L\ CoralAttributeList.C+
-                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
+                                         -e .L\ CoralAttributeList.C+)
 endif()
 
   ROOTTEST_ADD_TEST(root_6023

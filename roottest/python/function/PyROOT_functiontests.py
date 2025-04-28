@@ -28,7 +28,6 @@ if not os.path.exists('InstallableFunction.C'):
 # needs to be early to prevent "ifunc_table overflow!"
 gROOT.LoadMacro( "InstallableFunction.C+" )
 
-legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
 ### helpers for general test cases -------------------------------------------
 def identity( x, par = None ):
@@ -65,12 +64,9 @@ def fcn( npar, gin, f, par, iflag ):
       delta  = (z[i]-func(x[i],y[i],par))/errorz[i]
       chisq += delta*delta
 
-   if not legacy_pyroot:
-      # In the new Cppyy, f is a ctypes.c_double (see ROOT-10029).
-      # Thus, the assignment needs to be done to its value attribute
-      f.value = chisq
-   else:
-      f[0] = chisq
+   # In the new Cppyy, f is a ctypes.c_double (see ROOT-10029).
+   # Thus, the assignment needs to be done to its value attribute
+   f.value = chisq
    ncount += 1
 
 def func( x, y, par ):
@@ -221,10 +217,7 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.SetFCN( fcn )
 
       arglist = array( 'd', 10*[0.] )
-      if legacy_pyroot and sys.hexversion < 0x3000000:
-         ierflg = ROOT.Long()
-      else:
-         ierflg = ctypes.c_int()
+      ierflg = ctypes.c_int()
 
       arglist[0] = 1
       gMinuit.mnexcm( "SET ERR", arglist, 1, ierflg )
@@ -243,21 +236,13 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.mnexcm( "MIGRAD", arglist, 2, ierflg )
 
     # verify results
-      if not legacy_pyroot:
-         Double = ctypes.c_double
-      else:
-         Double = ROOT.Double
+      Double = ctypes.c_double
       amin, edm, errdef = Double(), Double(), Double()
-      if legacy_pyroot and sys.hexversion < 0x3000000:
-         Long = ROOT.Long
-         nvpar, nparx, icstat = Long(), Long(), Long()
-      else:
-         nvpar, nparx, icstat = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
+      nvpar, nparx, icstat = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
       gMinuit.mnstat( amin, edm, errdef, nvpar, nparx, icstat )
     # gMinuit.mnprin( 3, amin )
 
-      if not legacy_pyroot or sys.hexversion >= 0x3000000:
-         nvpar, nparx, icstat = map(lambda x: x.value, [nvpar, nparx, icstat])
+      nvpar, nparx, icstat = map(lambda x: x.value, [nvpar, nparx, icstat])
       self.assertEqual( nvpar, 4 )
       self.assertEqual( nparx, 4 )
 
@@ -267,39 +252,22 @@ class Func5MinuitTestCase( MyTestCase ):
     # check results (somewhat debatable ... )
       par, err = Double(), Double()
 
-      if not legacy_pyroot:
-         # ctypes.c_double requires the explicit retrieval of the inner value
-         gMinuit.GetParameter( 0, par, err )
-         self.assertEqual( round( par.value - 2.15, 2 ), 0. )
-         self.assertEqual( round( err.value - 0.10, 2 ), 0. )
+      # ctypes.c_double requires the explicit retrieval of the inner value
+      gMinuit.GetParameter( 0, par, err )
+      self.assertEqual( round( par.value - 2.15, 2 ), 0. )
+      self.assertEqual( round( err.value - 0.10, 2 ), 0. )
 
-         gMinuit.GetParameter( 1, par, err )
-         self.assertEqual( round( par.value - 0.81, 2 ), 0. )
-         self.assertEqual( round( err.value - 0.25, 2 ), 0. )
+      gMinuit.GetParameter( 1, par, err )
+      self.assertEqual( round( par.value - 0.81, 2 ), 0. )
+      self.assertEqual( round( err.value - 0.25, 2 ), 0. )
 
-         gMinuit.GetParameter( 2, par, err )
-         self.assertEqual( round( par.value - 0.17, 2 ), 0. )
-         self.assertEqual( round( err.value - 0.40, 2 ), 0. )
+      gMinuit.GetParameter( 2, par, err )
+      self.assertEqual( round( par.value - 0.17, 2 ), 0. )
+      self.assertEqual( round( err.value - 0.40, 2 ), 0. )
 
-         gMinuit.GetParameter( 3, par, err )
-         self.assertEqual( round( par.value - 0.10, 2 ), 0. )
-         self.assertEqual( round( err.value - 0.16, 2 ), 0. )
-      else:
-         gMinuit.GetParameter( 0, par, err )
-         self.assertEqual( round( par - 2.15, 2 ), 0. )
-         self.assertEqual( round( err - 0.10, 2 ), 0. )
-
-         gMinuit.GetParameter( 1, par, err )
-         self.assertEqual( round( par - 0.81, 2 ), 0. )
-         self.assertEqual( round( err - 0.25, 2 ), 0. )
-
-         gMinuit.GetParameter( 2, par, err )
-         self.assertEqual( round( par - 0.17, 2 ), 0. )
-         self.assertEqual( round( err - 0.40, 2 ), 0. )
-
-         gMinuit.GetParameter( 3, par, err )
-         self.assertEqual( round( par - 0.10, 2 ), 0. )
-         self.assertEqual( round( err - 0.16, 2 ), 0. )
+      gMinuit.GetParameter( 3, par, err )
+      self.assertEqual( round( par.value - 0.10, 2 ), 0. )
+      self.assertEqual( round( err.value - 0.16, 2 ), 0. )
 
 
 ## actual test run

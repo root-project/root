@@ -44,8 +44,6 @@ GetD = ROOT.GetD
 T1 = ROOT.T1
 T2 = ROOT.T2
 
-legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
-
 
 ### C++ virtual inheritence test cases =======================================
 class Cpp01Inheritence( MyTestCase ):
@@ -205,43 +203,19 @@ class Cpp02TemplateLookup( MyTestCase ):
       try:
          m.GetSize()
       except TypeError as e:
-         if not legacy_pyroot:
-            # The error message has changed in new Cppyy
-            self.assertTrue( "Template method resolution failed" in str(e) )
-         else:
-            self.assertTrue( "must be explicit" in str(e) )
+         self.assertTrue( "Template method resolution failed" in str(e) )
 
-      if not legacy_pyroot:
-         # New cppyy needs square brackets for explicit instantiation here,
-         # otherwise it tries to call the template proxy with the passed
-         # argument and it fails, since no instantiation is available.
-         self.assertEqual( m.GetSize['char'](),   m.GetCharSize() )
-         self.assertEqual( m.GetSize[int](),      m.GetIntSize() )
-         self.assertEqual( m.GetSize['long'](),   m.GetLongSize() )
-         self.assertEqual( m.GetSize[float](),    m.GetFloatSize() )
-         self.assertEqual( m.GetSize['double'](), m.GetDoubleSize() )
+      # New cppyy needs square brackets for explicit instantiation here,
+      # otherwise it tries to call the template proxy with the passed
+      # argument and it fails, since no instantiation is available.
+      self.assertEqual( m.GetSize['char'](),   m.GetCharSize() )
+      self.assertEqual( m.GetSize[int](),      m.GetIntSize() )
+      self.assertEqual( m.GetSize['long'](),   m.GetLongSize() )
+      self.assertEqual( m.GetSize[float](),    m.GetFloatSize() )
+      self.assertEqual( m.GetSize['double'](), m.GetDoubleSize() )
 
-         self.assertEqual( m.GetSize['MyDoubleVector_t'](), m.GetVectorOfDoubleSize() )
-         self.assertEqual( m.GetSize['vector<double>'](), m.GetVectorOfDoubleSize() )
-      else:
-         self.assertEqual( m.GetSize('char')(),   m.GetCharSize() )
-         self.assertEqual( m.GetSize(int)(),      m.GetIntSize() )
-         self.assertEqual( m.GetSize('long')(),   m.GetLongSize() )
-         self.assertEqual( m.GetSize(float)(),    m.GetFloatSize() )
-         self.assertEqual( m.GetSize('double')(), m.GetDoubleSize() )
-
-         self.assertEqual( m.GetSize('MyDoubleVector_t')(), m.GetVectorOfDoubleSize() )
-         self.assertEqual( m.GetSize('vector<double>')(), m.GetVectorOfDoubleSize() )
-
-         # Test new support for square bracket syntax
-         self.assertEqual( m.GetSize['char'](),   m.GetCharSize() )
-         self.assertEqual( m.GetSize[int](),      m.GetIntSize() )
-         self.assertEqual( m.GetSize['long'](),   m.GetLongSize() )
-         self.assertEqual( m.GetSize[float](),    m.GetFloatSize() )
-         self.assertEqual( m.GetSize['double'](), m.GetDoubleSize() )
-
-         self.assertEqual( m.GetSize['MyDoubleVector_t'](), m.GetVectorOfDoubleSize() )
-         self.assertEqual( m.GetSize['vector<double>'](), m.GetVectorOfDoubleSize() )
+      self.assertEqual( m.GetSize['MyDoubleVector_t'](), m.GetVectorOfDoubleSize() )
+      self.assertEqual( m.GetSize['vector<double>'](), m.GetVectorOfDoubleSize() )
 
    def test05TemplateMemberFunctions( self ):
       """Test template member functions lookup and calls (set 2)"""
@@ -253,25 +227,16 @@ class Cpp02TemplateLookup( MyTestCase ):
 
     # note that the function and template arguments are reverted
       self.assertRaises( TypeError, m.GetSize2( 'char', 'long' ), 'a', 1 )
-      if not legacy_pyroot:
-         # In the new Cppyy, we need to use square brackets in this case for
-         # the bindings to know we are explicitly instantiating for char,long.
-         # Otherwise, the templated parameters are just (mis)interpreted as
-         # strings and a call to the string,string instantiation is made.
-         self.assertEqual(m.GetSize2['char', 'long']( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
-      else:
-         self.assertEqual(m.GetSize2('char', 'long')( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
-         # Test new support for square bracket syntax
-         self.assertEqual(m.GetSize2['char', 'long']( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
+      # In the new Cppyy, we need to use square brackets in this case for
+      # the bindings to know we are explicitly instantiating for char,long.
+      # Otherwise, the templated parameters are just (mis)interpreted as
+      # strings and a call to the string,string instantiation is made.
+      self.assertEqual(m.GetSize2['char', 'long']( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
 
-      if not legacy_pyroot:
-         # Cppyy's Long will be deprecated in favour of ctypes.c_long
-         # https://bitbucket.org/wlav/cppyy/issues/101
-         long_par = ctypes.c_long(256).value
-         self.assertEqual( m.GetSize2(long_par, 1.), m.GetDoubleSize() - m.GetIntSize() )
-      else:
-         long_par = ROOT.Long(256)
-         self.assertEqual( m.GetSize2(long_par, 1.), m.GetDoubleSize() - m.GetLongSize() )
+      # Cppyy's Long will be deprecated in favour of ctypes.c_long
+      # https://bitbucket.org/wlav/cppyy/issues/101
+      long_par = ctypes.c_long(256).value
+      self.assertEqual( m.GetSize2(long_par, 1.), m.GetDoubleSize() - m.GetIntSize() )
 
    def test06OverloadedTemplateMemberFunctions( self ):
       """Test overloaded template member functions lookup and calls"""
@@ -292,28 +257,17 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd )
 
     # use existing explicit instantiations
-      if not legacy_pyroot:
-         # New cppyy: use bracket syntax for explicit instantiation
-         self.assertEqual( m.GetSizeOL[float]( 3.14 ),  m.GetFloatSize() )
-      else:
-         self.assertEqual( m.GetSizeOL(float)( 3.14 ),  m.GetFloatSize() )
-         # Test new support for square bracket syntax
-         self.assertEqual( m.GetSizeOL[float]( 3.14 ),  m.GetFloatSize() )
+      # New cppyy: use bracket syntax for explicit instantiation
+      self.assertEqual( m.GetSizeOL[float]( 3.14 ),  m.GetFloatSize() )
       self.assertEqual( m.GetSizeOL( 3.14 ), m.GetDoubleSize() )
       num_new_inst = 2
 
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst)
 
     # explicit forced instantiation
-      if not legacy_pyroot:
-         # New cppyy: use bracket syntax for explicit instantiation
-         inst = m.GetSizeOL[int]
-         self.assertEqual( inst( 1 ),       m.GetIntSize() )
-      else:
-         inst = m.GetSizeOL(int)
-         self.assertEqual( inst( 1 ),       m.GetIntSize() )
-         # Test new support for square bracket syntax
-         self.assertEqual( m.GetSizeOL[int]( 1 ),       m.GetIntSize() )
+      # New cppyy: use bracket syntax for explicit instantiation
+      inst = m.GetSizeOL[int]
+      self.assertEqual( inst( 1 ),       m.GetIntSize() )
       num_new_inst += 1
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst )
       self.assertTrue( 'GetSizeOL<int>' in dir(MyTemplatedMethodClass) )
@@ -349,21 +303,13 @@ class Cpp02TemplateLookup( MyTestCase ):
       m = MyTemplatedMethodClass()
 
       # Test the templated overload
-      if not legacy_pyroot:
-         # In the new Cppyy, we need to use square brackets in this case for
-         # the bindings to know we are explicitly instantiating for char.
-         # Otherwise, the templated parameter is just (mis)interpreted as
-         # string and a call to the string instantiation is made.
-         self.assertEqual(m.GetSizeNEI['char']('c'), m.GetCharSize())
-         # This instantiation also needs square brackets in new Cppyy
-         self.assertEqual(m.GetSizeNEI[int](1), m.GetIntSize())
-      else:
-         self.assertEqual(m.GetSizeNEI('char')('c'), m.GetCharSize())
-         self.assertEqual(m.GetSizeNEI(int)(1), m.GetIntSize())
-
-         # Test new support for square bracket syntax
-         self.assertEqual(m.GetSizeNEI['char']('c'), m.GetCharSize())
-         self.assertEqual(m.GetSizeNEI[int](1), m.GetIntSize())
+      # In the new Cppyy, we need to use square brackets in this case for
+      # the bindings to know we are explicitly instantiating for char.
+      # Otherwise, the templated parameter is just (mis)interpreted as
+      # string and a call to the string instantiation is made.
+      self.assertEqual(m.GetSizeNEI['char']('c'), m.GetCharSize())
+      # This instantiation also needs square brackets in new Cppyy
+      self.assertEqual(m.GetSizeNEI[int](1), m.GetIntSize())
 
       # Test the non-templated overload (must have been added to
       # the template proxy too)
@@ -397,16 +343,10 @@ class Cpp02TemplateLookup( MyTestCase ):
       v = ROOT.std.vector("float")()
       v.push_back(val)
 
-      if not legacy_pyroot:
-         inst_float = f["float"]
-         inst_float_t = f["Float_t"]
-         inst_vec_float = f["vector<float>"]
-         inst_std_vec_float = f["std::vector<float>"]
-      else:
-         inst_float = f("float")
-         inst_float_t = f("Float_t")
-         inst_vec_float = f("vector<float>")
-         inst_std_vec_float = f("std::vector<float>")
+      inst_float = f["float"]
+      inst_float_t = f["Float_t"]
+      inst_vec_float = f["vector<float>"]
+      inst_std_vec_float = f["std::vector<float>"]
 
       # Test basic type
       self.assertEqual(inst_float(val), val)
@@ -439,21 +379,6 @@ class Cpp02TemplateLookup( MyTestCase ):
 
 ### C++ by-non-const-ref arguments tests =====================================
 class Cpp03PassByNonConstRef( MyTestCase ):
-   def test1TestPlaceHolders( self ):
-      """Test usage of Long/Double place holders"""
-
-      if legacy_pyroot:
-         # Cppyy's Long and Double are deprecated in favour of ctypes
-         # https://bitbucket.org/wlav/cppyy/issues/101
-         l = ROOT.Long( pylong(42) )
-         self.assertEqual( l, pylong(42) )
-         self.assertEqual( l/7, pylong(6) )
-         self.assertEqual( l*pylong(1), l )
-
-         import math
-         d = ROOT.Double( math.pi )
-         self.assertEqual( d, math.pi )
-         self.assertEqual( d*math.pi, math.pi*math.pi )
 
    def test2PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through non-const reference"""
@@ -462,30 +387,11 @@ class Cpp03PassByNonConstRef( MyTestCase ):
       SetDoubleThroughRef = ROOT.SetDoubleThroughRef
       SetIntThroughRef = ROOT.SetIntThroughRef
 
-      if legacy_pyroot and sys.hexversion < 0x3000000:
-         # Cppyy's Long is deprecated in favour of ctypes.c_long
-         # https://bitbucket.org/wlav/cppyy/issues/101
-         l = ROOT.Long( pylong(42) )
-         SetLongThroughRef( l, 41 )
-         self.assertEqual( l, 41 )
-
       if sys.hexversion >= 0x2050000:
          import ctypes
          l = ctypes.c_long(42)
          SetLongThroughRef( l, 41 )
          self.assertEqual( l.value, 41 )
-
-      if legacy_pyroot:
-         # Cppyy's Double is deprecated in favour of ctypes.c_double
-         # https://bitbucket.org/wlav/cppyy/issues/101
-         d = ROOT.Double( 3.14 )
-         SetDoubleThroughRef( d, 3.1415 )
-         self.assertEqual( d, 3.1415 )
-
-      if legacy_pyroot and sys.hexversion < 0x3000000:
-         i = ROOT.Long( pylong(42) )
-         SetIntThroughRef( i, 13 )
-         self.assertEqual( i, 13 )
 
       if sys.hexversion >= 0x2050000:
          i = ctypes.c_int(42)
@@ -546,11 +452,7 @@ class Cpp05AssignToRefArbitraryClass( MyTestCase ):
       try:
          a[0] = RefTesterNoAssign()
       except TypeError as e:
-         if not legacy_pyroot:
-            # Message has changed in new Cppyy
-            self.assertTrue( 'cannot assign' in str(e) )
-         else:
-            self.assertTrue( 'can not assign' in str(e) )
+         self.assertTrue( 'cannot assign' in str(e) )
 
 
 ### Check availability of math conversions ===================================

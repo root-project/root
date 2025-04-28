@@ -9,7 +9,7 @@ import platform
 import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-if not os.path.exists('Scott.C'):
+if not os.path.exists('ScottCppyy.C'):
     os.chdir(os.path.dirname(__file__))
 
 try:
@@ -57,8 +57,6 @@ __all__ = [
 ### "from ROOT import *" done in import-*-ed module ==========================
 from Amir import *
 
-legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
-
 
 class Regression01TwiceImportStar( MyTestCase ):
    def test1FromROOTImportStarInModule( self ):
@@ -75,10 +73,7 @@ class Regression02PyException(MyTestCase):
       # https://bugs.llvm.org/show_bug.cgi?id=49692 :
       # llvm JIT fails to catch exceptions on M1, so we disable their testing
       if platform.processor() != "arm" or platform.mac_ver()[0] == '':
-         if legacy_pyroot:
-            gROOT.LoadMacro("Scott.C+")
-         else:
-            gROOT.LoadMacro("ScottCppyy.C+")
+         gROOT.LoadMacro("ScottCppyy.C+")
 
          # test of not overloaded global function
          with self.assertRaisesRegex(SyntaxError, "test error message"):
@@ -339,13 +334,10 @@ class Regression08CheckEnumExactMatch( MyTestCase ):
       self.assertEqual( ROOT.cow,  a.testEnum2( ROOT.cow ) )
       self.assertEqual( ROOT.bird, a.testEnum3( ROOT.bird ) )
       self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.marsupilami ) )
-      if not legacy_pyroot:
-         # Cppyy's Long is deprecated in favour of ctypes.c_long
-         # https://bitbucket.org/wlav/cppyy/issues/101
-         import ctypes
-         self.assertEqual( ROOT.marsupilami, a.testEnum4( ctypes.c_long(ROOT.marsupilami).value ) )
-      else:
-         self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.Long(ROOT.marsupilami) ) )
+      # Cppyy's Long is deprecated in favour of ctypes.c_long
+      # https://bitbucket.org/wlav/cppyy/issues/101
+      import ctypes
+      self.assertEqual( ROOT.marsupilami, a.testEnum4( ctypes.c_long(ROOT.marsupilami).value ) )
 
 
 ### test pythonization and operators of TVector3 ===========================================
@@ -364,10 +356,9 @@ class Regression09TVector3Pythonize( MyTestCase ):
    def test2TVector3(self):
       """Verify that using one operator* overload does not mask the others"""
       # ROOT-10278
-      if not legacy_pyroot:
-         v = TVector3(1., 2., 3.)
-         v*2
-         self.assertEqual(v*v, 14.0)
+      v = TVector3(1., 2., 3.)
+      v*2
+      self.assertEqual(v*v, 14.0)
 
 
 ### test pythonization coral::AttributeList iterators ========================
@@ -400,11 +391,8 @@ class Regression11GlobalsLookup( MyTestCase ):
       """Test that ROOT.cout does not cause error messages"""
 
       import ROOT
-      if not legacy_pyroot:
-         # Look for cout in std
-         c = ROOT.std.cout
-      else:
-         c = ROOT.cout
+      # Look for cout in std
+      c = ROOT.std.cout
 
    def test2GlobalFromROOTNamespace( self ):
       """Entities in 'ROOT::' need no explicit 'ROOT.'"""
@@ -421,25 +409,10 @@ class Regression12WriteTGraph( MyTestCase ):
       gr = TGraph()
       ff = TFile( "test.root", "RECREATE" )
       ff.WriteObject( gr, "grname", "" )
-      if not legacy_pyroot:
-         # In new PyROOT, use a nicer way to get objects in files,
-         # the TDirectory::Get() pythonisation:
-         ff.Get("grname")
-      else:
-         gr2 = TGraph()
-         ff.GetObject( "grname", gr2 )
+      # In new PyROOT, use a nicer way to get objects in files,
+      # the TDirectory::Get() pythonisation:
+      ff.Get("grname")
       os.remove( "test.root" )
-
-
-### 'using' base class data members should make them accessible ==============
-class Regression13BaseClassUsing(MyTestCase):
-   def test1AccessUsingBaseClassDataMember( self ):
-      """Access a base class data member made availabe by 'using'"""
-
-      # The TPySelector class is only available in legacy PyROOT
-      if legacy_pyroot:
-         p = ROOT.TPySelector()
-         str(p.fInput)  # segfaults in case of failure
 
 
 ### TPyException had troubles due to its base class of std::exception ========
@@ -447,15 +420,12 @@ class Regression14TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
 
-      if not legacy_pyroot:
-         # In exp PyROOT, TPyException is called PyException and it belongs
-         # to the CPyCppyy namespace.
-         # Also, it is not included in the PCH, so we need to include the
-         # header first
-         ROOT.gInterpreter.Declare("#include \"CPyCppyy/PyException.h\"")
-         e = ROOT.CPyCppyy.PyException()
-      else:
-         e = ROOT.PyROOT.TPyException()
+      # In exp PyROOT, TPyException is called PyException and it belongs
+      # to the CPyCppyy namespace.
+      # Also, it is not included in the PCH, so we need to include the
+      # header first
+      ROOT.gInterpreter.Declare("#include \"CPyCppyy/PyException.h\"")
+      e = ROOT.CPyCppyy.PyException()
       self.assertTrue( e )
       self.assertEqual( e.what(), "python exception" )
 
@@ -531,22 +501,20 @@ else:
       def test1TGLVertex3OperatorPlus(self):
          """Try invoking TGLVertex3::operator+ twice"""
          # ROOT-10166
-         if not legacy_pyroot:
-            scatteringPoint = TGLVertex3(2., 3., 0.2)
-            glvec3 = TGLVector3(1,2,3)
+         scatteringPoint = TGLVertex3(2., 3., 0.2)
+         glvec3 = TGLVector3(1,2,3)
 
-            vertexEnd = scatteringPoint + glvec3
-            vertexEnd = scatteringPoint + glvec3
+         vertexEnd = scatteringPoint + glvec3
+         vertexEnd = scatteringPoint + glvec3
 
       def test2TGLLine3Constructor(self):
          """Check that the right constructor of TGLLine3 is called"""
          # ROOT-10102
-         if not legacy_pyroot:
-            trackAfterScattering = TGLLine3(TGLVertex3(2., 3., 0.2), TGLVector3(0., 0., -20.))
+         trackAfterScattering = TGLLine3(TGLVertex3(2., 3., 0.2), TGLVector3(0., 0., -20.))
 
-            self.assertEqual(trackAfterScattering.Vector().X(), .0)
-            self.assertEqual(trackAfterScattering.Vector().Y(), .0)
-            self.assertEqual(trackAfterScattering.Vector().Z(), -20.0)
+         self.assertEqual(trackAfterScattering.Vector().X(), .0)
+         self.assertEqual(trackAfterScattering.Vector().Y(), .0)
+         self.assertEqual(trackAfterScattering.Vector().Z(), -20.0)
 
 
 ### Getting and setting configuration options of gEnv ================
@@ -554,51 +522,48 @@ class Regression20gEnv(MyTestCase):
    def test1GetSetValue(self):
       """Set a value with gEnv and retrieve it afterwards"""
       # ROOT-10155
-      if not legacy_pyroot:
-         from ROOT import gEnv
+      from ROOT import gEnv
 
-         optname = "SomeOption"
-         defval = -1
-         self.assertEqual(gEnv.GetValue(optname, defval), defval)
-         newval = 0
-         gEnv.SetValue(optname, newval)
-         self.assertEqual(gEnv.GetValue(optname, defval), newval)
+      optname = "SomeOption"
+      defval = -1
+      self.assertEqual(gEnv.GetValue(optname, defval), defval)
+      newval = 0
+      gEnv.SetValue(optname, newval)
+      self.assertEqual(gEnv.GetValue(optname, defval), newval)
 
 ### Reuse of Python proxies in attribute lookups ================
 class Regression21ReuseProxies(MyTestCase):
    def test1ReuseProxies(self):
       """Test that Python proxies are reused in attribute lookups"""
       # ROOT-8843
-      if not legacy_pyroot:
-         import ROOT
-         ROOT.gInterpreter.LoadText("struct A { A* otherA=nullptr;};")
-         a1 = ROOT.A()
-         a2 = ROOT.A()
-         a1.otherA = a2
-         a3 = a1.otherA
-         self.assertEqual(a3, a2)
-         val = 4
-         a3.b = val
-         self.assertEqual(a2.b, val)
-         self.assertEqual(a1.otherA.b, val)
+      import ROOT
+      ROOT.gInterpreter.LoadText("struct A { A* otherA=nullptr;};")
+      a1 = ROOT.A()
+      a2 = ROOT.A()
+      a1.otherA = a2
+      a3 = a1.otherA
+      self.assertEqual(a3, a2)
+      val = 4
+      a3.b = val
+      self.assertEqual(a2.b, val)
+      self.assertEqual(a1.otherA.b, val)
 
 ### Tests related to cleanup of proxied objects ================
 class Regression22ObjectCleanup(MyTestCase):
    def test1GetListOfGraphs(self):
       """List returned by GetListOfGraphs should not have kMustCleanup set to true"""
       # ROOT-9040
-      if not legacy_pyroot:
-         mg = ROOT.TMultiGraph()
-         tg = ROOT.TGraph()
-         # The TMultiGraph will take the ownership of the added TGraphs
-         ROOT.SetOwnership(tg, False)
-         mg.Add(tg)
+      mg = ROOT.TMultiGraph()
+      tg = ROOT.TGraph()
+      # The TMultiGraph will take the ownership of the added TGraphs
+      ROOT.SetOwnership(tg, False)
+      mg.Add(tg)
 
-         l = mg.GetListOfGraphs()
-         self.assertEqual(l.TestBit(ROOT.kMustCleanup), False)
+      l = mg.GetListOfGraphs()
+      self.assertEqual(l.TestBit(ROOT.kMustCleanup), False)
 
-         c = ROOT.TCanvas()
-         mg.Draw()
+      c = ROOT.TCanvas()
+      mg.Draw()
 
 
 class Regression23TFractionFitter(MyTestCase):

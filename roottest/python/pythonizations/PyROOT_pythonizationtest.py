@@ -28,29 +28,19 @@ class TestClassPYTHONIZATIONS:
         import cppyy
         cls.test_dct = "Pythonizables_C"
         cls.pythonizables = cppyy.load_reflection_info(cls.test_dct)
-        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_size_mapping(self):
         """Use composites to map GetSize() onto buffer returns"""
 
         import cppyy
 
-        legacy_pyroot = self.legacy_pyroot
         def set_size(self, buf):
-            if not legacy_pyroot:
-                buf.reshape((self.GetN(),))
-            else:
-                buf.SetSize(self.GetN())
+            buf.reshape((self.GetN(),))
             return buf
 
-        if not legacy_pyroot:
-            cppyy.py.add_pythonization(
-                cppyy.py.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size)
-                )
-        else:
-            cppyy.add_pythonization(
-                cppyy.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size)
-                )
+        cppyy.py.add_pythonization(
+            cppyy.py.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size)
+            )
 
         bsize, xval, yval = 3, 2, 5
         m = cppyy.gbl.pythonizables.MyBufferReturner(bsize, xval, yval)
@@ -67,20 +57,13 @@ class TestClassPYTHONIZATIONS:
         """Verify pinnability of returns"""
 
         import cppyy
-        legacy_pyroot = self.legacy_pyroot
 
-        if not legacy_pyroot:
-            cppyy.gbl.pythonizables.GimeDerived.__creates__ = True
-        else:
-            cppyy.gbl.pythonizables.GimeDerived._creates = True
+        cppyy.gbl.pythonizables.GimeDerived.__creates__ = True
 
         result = cppyy.gbl.pythonizables.GimeDerived()
         assert type(result) == cppyy.gbl.pythonizables.MyDerived
 
-        if not legacy_pyroot:
-            cppyy.py.pin_type(cppyy.gbl.pythonizables.MyBase)
-        else:
-            cppyy.make_interface(cppyy.gbl.pythonizables.MyBase)
+        cppyy.py.pin_type(cppyy.gbl.pythonizables.MyBase)
         assert type(result) == cppyy.gbl.pythonizables.MyDerived
 
 
@@ -93,8 +76,6 @@ class TestClassPYTHONIZATIONS_FRAGILITY:
 
 
 class TestClassROOT_PYTHONIZATIONS:
-    def setup_class(cls):
-        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_tgraph(self):
         """TGraph has GetN() mapped as size to its various buffer returns"""

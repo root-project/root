@@ -30,10 +30,6 @@ class TestClassSMARTPTRS:
         cls.test_dct = "SmartPtr_C"
         cls.smartptr = cppyy.load_reflection_info(cls.test_dct)
 
-        # We need to introduce it in order to distinguish between
-        # _get_smart_ptr in old Cppyy and __smartptr__ in new Cppyy
-        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
-
     def test01_transparency(self):
         import cppyy
 
@@ -41,10 +37,7 @@ class TestClassSMARTPTRS:
         mine = cppyy.gbl.mine
 
         assert type(mine) == MyShareable
-        if not self.legacy_pyroot:
-            assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
-        else:
-            assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
+        assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
 
         assert mine.say_hi() == "Hi!"
 
@@ -60,18 +53,11 @@ class TestClassSMARTPTRS:
         cppyy.gbl.pass_mine_sp_ptr(mine)
         cppyy.gbl.pass_mine_sp_ref(mine)
 
-        if not self.legacy_pyroot:
-            cppyy.gbl.pass_mine_sp_ptr(mine.__smartptr__())
-            cppyy.gbl.pass_mine_sp_ref(mine.__smartptr__())
-        else:
-            cppyy.gbl.pass_mine_sp_ptr(mine._get_smart_ptr())
-            cppyy.gbl.pass_mine_sp_ref(mine._get_smart_ptr())
+        cppyy.gbl.pass_mine_sp_ptr(mine.__smartptr__())
+        cppyy.gbl.pass_mine_sp_ref(mine.__smartptr__())
 
         cppyy.gbl.pass_mine_sp(mine)
-        if not self.legacy_pyroot:
-            cppyy.gbl.pass_mine_sp(mine.__smartptr__())
-        else:
-            cppyy.gbl.pass_mine_sp(mine._get_smart_ptr())
+        cppyy.gbl.pass_mine_sp(mine.__smartptr__())
 
         # TODO:
         # cppyy.gbl.mine = mine
@@ -84,26 +70,17 @@ class TestClassSMARTPTRS:
 
         mine = cppyy.gbl.gime_mine_ptr()
         assert type(mine) == MyShareable
-        if not self.legacy_pyroot:
-            assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
-        else:
-            assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
+        assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
         mine = cppyy.gbl.gime_mine_ref()
         assert type(mine) == MyShareable
-        if not self.legacy_pyroot:
-            assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
-        else:
-            assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
+        assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
         mine = cppyy.gbl.gime_mine()
         assert type(mine) == MyShareable
-        if not self.legacy_pyroot:
-            assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
-        else:
-            assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
+        assert type(mine.__smartptr__()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
     def test04_reset(self):
