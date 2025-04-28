@@ -37,6 +37,12 @@ include(cmake/modules/CaptureCommandLine.cmake)
 
 project(ROOT)
 
+if(NOT WIN32)
+  # See https://gitlab.kitware.com/cmake/cmake/-/issues/23040
+  unset(MSVC_C_ARCHITECTURE_ID)
+  unset(MSVC_CXX_ARCHITECTURE_ID)
+endif()
+
 #---Set the locale to default C to prevent issued due to localization of commands---------------
 # This is necessary as we for example call `clang -v` and parse its output. But on a localized
 # program, the output parsing is much more error prone as certrain strings we're looking for
