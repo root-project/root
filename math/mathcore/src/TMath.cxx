@@ -2107,17 +2107,20 @@ Double_t TMath::BetaIncomplete(Double_t x, Double_t a, Double_t b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates the binomial coefficient n over k.
+/// \return the coefficient; or NaN if n < 0 or k < 0 or n < k; or 1 if k = 0 or n = k
 
-Double_t TMath::Binomial(Int_t n,Int_t k)
+Double_t TMath::Binomial(Int_t n, Int_t k)
 {
-   if (n<0 || k<0 || n<k) return TMath::SignalingNaN();
-   if (k==0 || n==k) return 1;
+   if (n < 0 || k < 0 || n < k)
+      return TMath::SignalingNaN();
+   if (k == 0 || n == k)
+      return 1;
 
-   Int_t k1=TMath::Min(k,n-k);
-   Int_t k2=n-k1;
-   Double_t fact=k2+1;
-   for (Double_t i=k1;i>1.;--i)
-      fact *= (k2+i)/i;
+   Int_t k1 = TMath::Min(k, n - k);
+   auto k2 = static_cast<UInt_t>(n - k1);
+   Double_t fact = k2 + 1;
+   for (auto i = static_cast<UInt_t>(k1); i > 1; --i)
+      fact *= (k2 + i) / static_cast<Double_t>(i);
    return fact;
 }
 
