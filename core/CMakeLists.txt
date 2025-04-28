@@ -48,6 +48,9 @@ target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
 )
 
+# This is used by rootcling_stage1 and dictgen.
+CHECK_CXX_COMPILER_FLAG("-fno-rtti" CXX_HAS_fno_rtti)
+
 # Must be first because it defines ROOTStaticSanitizerConfig which needs
 # to be linked into rootcling_stage1 (via ROOT_EXECUTABLE).
 add_subdirectory(sanitizer)
