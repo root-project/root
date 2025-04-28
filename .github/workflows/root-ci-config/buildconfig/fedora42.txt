@@ -1,5 +1,4 @@
 builtin_nlohmannjson=ON
-builtin_unuran=OFF
 builtin_zlib=ON
 builtin_zstd=ON
 ccache=ON
