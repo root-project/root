@@ -1,4 +1,3 @@
-from __future__ import print_function
 import distutils.sysconfig as conf, sys, os; 
 ldlib = conf.get_config_var('LDLIBRARY')
 if ldlib:
