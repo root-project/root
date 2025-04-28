@@ -387,16 +387,14 @@ class Cpp03PassByNonConstRef( MyTestCase ):
       SetDoubleThroughRef = ROOT.SetDoubleThroughRef
       SetIntThroughRef = ROOT.SetIntThroughRef
 
-      if sys.hexversion >= 0x2050000:
-         import ctypes
-         l = ctypes.c_long(42)
-         SetLongThroughRef( l, 41 )
-         self.assertEqual( l.value, 41 )
+      import ctypes
+      l = ctypes.c_long(42)
+      SetLongThroughRef( l, 41 )
+      self.assertEqual( l.value, 41 )
 
-      if sys.hexversion >= 0x2050000:
-         i = ctypes.c_int(42)
-         SetIntThroughRef( i, 13 )
-         self.assertEqual( i.value, 13 )
+      i = ctypes.c_int(42)
+      SetIntThroughRef( i, 13 )
+      self.assertEqual( i.value, 13 )
 
    def test3PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through const reference"""

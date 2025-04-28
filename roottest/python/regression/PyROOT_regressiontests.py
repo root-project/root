@@ -180,11 +180,6 @@ class Regression04Threading( MyTestCase ):
       if self.hasThread == self.noThread:
          cmd += " - -b"
 
-      # Do not test 'from ROOT import *' on Python 3.x, since it's not supported
-      if sys.hexversion < 0x300000:
-         stat, out = commands.getstatusoutput( cmd % "from ROOT import *" )
-         self.assertEqual( WEXITSTATUS(stat), self.hasThread )
-
       stat, out = commands.getstatusoutput( cmd % "from ROOT import gROOT" )
       self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
@@ -217,20 +212,6 @@ class Regression04Threading( MyTestCase ):
       stat, out = commands.getstatusoutput(
          cmd % 'from ROOT import PyConfig; PyConfig.StartGuiThread = 1; from ROOT import gDebug;' )
       self.assertEqual( WEXITSTATUS(stat), self.hasThread )
-
-      # Do not test 'from ROOT import *' on Python 3.x, since it's not supported
-      if sys.hexversion < 0x300000:
-         stat, out = commands.getstatusoutput( (cmd % 'from ROOT import *;') + ' - -b' )
-         self.assertEqual( WEXITSTATUS(stat), self.noThread )
-
-         stat, out = commands.getstatusoutput(
-            cmd % 'from ROOT import gROOT; gROOT.SetBatch( 1 ); from ROOT import *;' )
-         self.assertEqual( WEXITSTATUS(stat), self.noThread )
-
-         if not gROOT.IsBatch():               # can't test if no display ...
-            stat, out = commands.getstatusoutput(
-               cmd % 'from ROOT import gROOT; gROOT.SetBatch( 0 ); from ROOT import *;' )
-            self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
       # Restore the cleaned LD_PRELOAD for other tests
       if cleaned_preload is not None:

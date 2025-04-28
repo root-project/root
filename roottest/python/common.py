@@ -9,26 +9,19 @@ import os, sys, unittest, warnings
 import pytest
 
 
-if sys.hexversion >= 0x3000000:
-   pylong = int
-   maxvalue = sys.maxsize
+pylong = int
+maxvalue = sys.maxsize
 
-   class MyTestCase( unittest.TestCase ):
-      def shortDescription( self ):
-         desc = str(self)
-         doc_first_line = None
+class MyTestCase( unittest.TestCase ):
+   def shortDescription( self ):
+      desc = str(self)
+      doc_first_line = None
 
-         if self._testMethodDoc:
-            doc_first_line = self._testMethodDoc.split("\n")[0].strip()
-         if doc_first_line:
-            desc = doc_first_line
-         return desc
-else:
-   pylong = long
-   maxvalue = sys.maxint
-
-   class MyTestCase( unittest.TestCase ):
-      pass
+      if self._testMethodDoc:
+         doc_first_line = self._testMethodDoc.split("\n")[0].strip()
+      if doc_first_line:
+         desc = doc_first_line
+      return desc
 
 FIXCLING = '--fixcling' in sys.argv
 if 'FIXCLING' in os.environ:
