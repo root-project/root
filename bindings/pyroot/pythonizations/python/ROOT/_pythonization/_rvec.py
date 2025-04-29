@@ -56,10 +56,11 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 \endpythondoc
 """
 
-from . import pythonization
-import cppyy
 import sys
 
+import cppyy
+
+from . import pythonization
 
 _array_interface_dtype_map = {
     "Long64_t": "i",
@@ -75,9 +76,19 @@ _array_interface_dtype_map = {
 
 
 def _get_cpp_type_from_numpy_type(dtype):
-    cpptypes = {"i2": "Short_t", "u2": "UShort_t", "i4": "int", "u4": "unsigned int", "i8": "Long64_t", "u8": "ULong64_t", "f4": "float", "f8": "double", "b1": "bool"}
+    cpptypes = {
+        "i2": "Short_t",
+        "u2": "UShort_t",
+        "i4": "int",
+        "u4": "unsigned int",
+        "i8": "Long64_t",
+        "u8": "ULong64_t",
+        "f4": "float",
+        "f8": "double",
+        "b1": "bool",
+    }
 
-    if not dtype in cpptypes:
+    if dtype not in cpptypes:
         raise RuntimeError("Object not convertible: Python object has unknown data-type '" + dtype + "'.")
 
     return cpptypes[dtype]
@@ -93,10 +104,13 @@ def _AsRVec(arr):
     This function returns an RVec which adopts the memory of the given
     PyObject. The RVec takes the data pointer and the size from the array
     interface dictionary.
+    Note that for arrays of strings, the input strings are copied into the RVec.
     """
-    import ROOT
     import math
-    import platform
+
+    import numpy as np
+
+    import ROOT
 
     # Get array interface of object
     interface = arr.__array_interface__
@@ -110,6 +124,23 @@ def _AsRVec(arr):
 
     # Get the typestring and properties thereof
     typestr = interface["typestr"]
+    dtype = typestr[1:]
+
+    # Construct an RVec of strings
+    if dtype == "O" or dtype.startswith("U"):
+        underlying_object_types = {type(elem) for elem in arr}
+        if len(underlying_object_types) > 1:
+            raise TypeError(
+                "All elements in the numpy array must be of the same type. Found types: {}".format(
+                    underlying_object_types
+                )
+            )
+
+        if underlying_object_types and underlying_object_types.pop() in [str, np.str_]:
+            return ROOT.VecOps.RVec["std::string"](arr)
+        else:
+            raise TypeError("Cannot create an RVec from a numpy array of data type object.")
+
     if len(typestr) != 3:
         raise RuntimeError(
             "Object not convertible: __array_interface__['typestr'] returned '"
@@ -117,10 +148,8 @@ def _AsRVec(arr):
             + "' with invalid length unequal 3."
         )
 
-    dtype = typestr[1:]
-    cppdtype = _get_cpp_type_from_numpy_type(dtype)
-
     # Construct an RVec of the correct data-type
+    cppdtype = _get_cpp_type_from_numpy_type(dtype)
     out = ROOT.VecOps.RVec[cppdtype](ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data), size)
 
     # Bind pyobject holding adopted memory to the RVec
