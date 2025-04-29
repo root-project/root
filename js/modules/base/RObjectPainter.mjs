@@ -343,7 +343,7 @@ class RObjectPainter extends ObjectPainter {
      * kNormal is standard functionality with RCanvas on server side */
    v7CommMode() {
       const canp = this.getCanvPainter();
-      if (!canp || !canp.submitDrawableRequest || !canp._websocket)
+      if (!canp || !canp.submitDrawableRequest || !canp.getWebsocket())
          return kOffline;
 
       return kNormal;

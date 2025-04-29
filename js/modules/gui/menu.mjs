@@ -1320,7 +1320,7 @@ class StandaloneMenu extends JSRootMenu {
                anchor.title = url;
                anchor.addEventListener('click', () => {
                   const cp = this.painter?.getCanvPainter();
-                  if (cp?.canSendWebSocket())
+                  if (cp?.canSendWebsocket())
                      cp.sendWebsocket(`SHOWURL:${url}`);
                   else
                      window.open(url);
