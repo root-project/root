@@ -11,7 +11,6 @@ ROOT_ADD_GTEST(testSimple testSimple.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooAddPdf testRooAddPdf.cxx LIBRARIES RooFitCore RooFit RooStats)
 ROOT_ADD_GTEST(testRooCacheManager testRooCacheManager.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooCategory testRooCategory.cxx LIBRARIES RooFitCore)
-ROOT_ADD_GTEST(testWorkspace testWorkspace.cxx LIBRARIES RooFitCore RooStats)
 ROOT_ADD_GTEST(testRooDataHist testRooDataHist.cxx LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv4_ref.root
                    ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv5_ref.root
@@ -109,3 +108,15 @@ endif()
 if(dataframe)
   ROOT_ADD_GTEST(testActionHelpers testActionHelpers.cxx LIBRARIES ROOTDataFrame RooFitCore)
 endif()
+
+ROOT_ADD_GTEST(loadOldWorkspace loadOldWorkspace.cxx LIBRARIES RooFit
+               COPY_TO_BUILDDIR
+               ${CMAKE_CURRENT_SOURCE_DIR}/data/rf502_workspace_v5.34.root
+               ${CMAKE_CURRENT_SOURCE_DIR}/data/rf502_workspace_v6.04.root
+               ${CMAKE_CURRENT_SOURCE_DIR}/data/rf502_workspace_v6.14.root
+               )
+
+ROOT_ADD_GTEST(testRooWorkspace testRooWorkspace.cxx LIBRARIES RooFit RooStats
+               COPY_TO_BUILDDIR
+               ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
+               )
