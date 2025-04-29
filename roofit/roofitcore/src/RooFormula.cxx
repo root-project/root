@@ -72,20 +72,6 @@ using std::sregex_iterator, std::ostream;
 
 namespace {
 
-////////////////////////////////////////////////////////////////////////////////
-/// Find all input arguments which are categories, and save this information in
-/// with the names of the variables that are being used to evaluate it.
-std::vector<bool> findCategoryServers(const RooAbsCollection& collection) {
-  std::vector<bool> output;
-  output.reserve(collection.size());
-
-  for (unsigned int i = 0; i < collection.size(); ++i) {
-    output.push_back(collection[i]->InheritsFrom(RooAbsCategory::Class()));
-  }
-
-  return output;
-}
-
 /// Convert `@i`-style references to `x[i]`.
 void convertArobaseReferences(std::string &formula)
 {
@@ -232,7 +218,6 @@ RooFormula::RooFormula(const char *name, const char *formula, const RooArgList &
    : TNamed(name, formula)
 {
    _origList.add(varList);
-   _isCategory = findCategoryServers(_origList);
 
    installFormulaOrThrow(formula);
 }
@@ -243,7 +228,6 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
   TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other)
 {
   _origList.add(other._origList);
-  _isCategory = findCategoryServers(_origList);
 
   std::unique_ptr<TFormula> newTF;
   if (other._tFormula) {
@@ -380,8 +364,6 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
     }
   }
 
-  _isCategory = findCategoryServers(_origList);
-
   return errorStat;
 }
 
@@ -405,7 +387,7 @@ double RooFormula::eval(const RooArgSet* nset) const
   std::vector<double> pars;
   pars.reserve(_origList.size());
   for (unsigned int i = 0; i < _origList.size(); ++i) {
-    if (_isCategory[i]) {
+    if (_origList[i].isCategory()) {
       const auto& cat = static_cast<RooAbsCategory&>(_origList[i]);
       pars.push_back(cat.getCurrentIndex());
     } else {

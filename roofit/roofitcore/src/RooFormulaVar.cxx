@@ -162,7 +162,14 @@ double RooFormulaVar::evaluate() const
 
 void RooFormulaVar::doEval(RooFit::EvalContext &ctx) const
 {
+   std::cout << "RooFormulaVar::doEval " << GetName() << std::endl;
+
+   for (auto *arg : _actualVars) {
+     std::cout << arg->GetName() << "   " << ctx.at(arg)[0] << std::endl;
+   }
+
    getFormula().doEval(ctx);
+   std::cout << ctx.output()[0] << std::endl;
 }
 
 
