@@ -395,8 +395,8 @@ class TPadPainter extends ObjectPainter {
 
       for (let k = this.painters.length - 1; k >= 0; --k) {
          const subp = this.painters[k];
-         if (selector(subp)) {
-            subp.cleanup();
+         if (!subp || selector(subp)) {
+            subp?.cleanup();
             this.painters.splice(k, 1);
             is_any = true;
          }
@@ -556,7 +556,8 @@ class TPadPainter extends ObjectPainter {
          this.is_active_pad = is_active;
       }
 
-      if (this.is_active_pad === undefined) return;
+      if (this.is_active_pad === undefined)
+         return;
 
       if (!svg_rect)
          svg_rect = this.iscan ? this.getCanvSvg().selectChild('.canvas_fillrect') : this.svg_this_pad().selectChild('.root_pad_border');
@@ -1370,11 +1371,16 @@ class TPadPainter extends ObjectPainter {
          const do_divide = arg => {
             if (!arg || !isStr(arg))
                return;
-            const arr = arg.split('x');
+            // workaround - prevent full deletion of canvas
+            if (this.normal_canvas === false)
+               this.normal_canvas = true;
             this.cleanPrimitives(true);
+            if (arg === 'reset')
+               return;
+            const arr = arg.split('x');
             if (arr.length === 1)
                this.divide(Number.parseInt(arr[0]));
-            if (arr.length === 2)
+            else if (arr.length === 2)
                this.divide(Number.parseInt(arr[0]), Number.parseInt(arr[1]));
          };
 
@@ -1382,7 +1388,7 @@ class TPadPainter extends ObjectPainter {
             menu.add('Build legend', () => this.buildLegend());
 
          menu.sub('Divide', () => menu.input('Input divide arg', '2x2').then(do_divide), 'Divide on sub-pads');
-         ['1x2', '2x1', '2x2', '2x3', '3x2', '3x3', '4x4', '0'].forEach(item => menu.add(item, item, do_divide));
+         ['1x2', '2x1', '2x2', '2x3', '3x2', '3x3', '4x4', 'reset'].forEach(item => menu.add(item, item, do_divide));
          menu.endsub();
 
          menu.add('Save to gStyle', () => {
