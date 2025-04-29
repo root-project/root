@@ -304,25 +304,6 @@ if (JEMALLOC_FOUND)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ljemalloc -L${JEMALLOC_LIBRARY_PATH}")
 endif()
 
-#---Populate the configure arguments returned by 'root-config --config'-------------------------
-get_cmake_property(variables CACHE_VARIABLES)
-foreach(var ${variables})
-  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
-     (NOT ${${var}} STREQUAL "") AND
-     (NOT ${var} MATCHES "NOTFOUND"))
-    if (var MATCHES "^QT_")
-      # filter out the very long list of Qt libraries and include dirs
-      if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")
-        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
-      endif()
-    else()
-      if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_"))
-        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
-      endif()
-    endif()
-  endif()
-endforeach()
-
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
@@ -590,6 +571,27 @@ endif()
 #---distribution commands------------------------------------------------------------------------
 add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
+
+#---Populate the configure arguments returned by 'root-config --config'-------------------------
+get_cmake_property(variables CACHE_VARIABLES)
+foreach(var ${variables})
+  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
+     (NOT ${${var}} STREQUAL "") AND
+     (NOT ${var} MATCHES "NOTFOUND"))
+    if (var MATCHES "^QT_")
+      # filter out the very long list of Qt libraries and include dirs
+      if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    else()
+      if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_")
+          AND NOT(var MATCHES "^CMAKE_PROJECT_VERSION")
+          AND NOT(var MATCHES "^CMAKE_CACHE_"))
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    endif()
+  endif()
+endforeach()
 
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
