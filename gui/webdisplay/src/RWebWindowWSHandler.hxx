@@ -108,6 +108,8 @@ protected:
          more_args.append("winW:"s + std::to_string(fWindow.GetWidth()) + ",winH:"s + std::to_string(fWindow.GetHeight()) + ","s);
       if ((fWindow.GetX() >= 0) && (fWindow.GetY() >= 0))
          more_args.append("winX:"s + std::to_string(fWindow.GetX()) + ",winY:"s + std::to_string(fWindow.GetY()) + ","s);
+      if (GetBoolEnv("WebGui.Debug") == 1)
+         more_args.append("debug: true,");
       auto user_args = fWindow.GetUserArgs();
       if (!user_args.empty())
          more_args.append("user_args: "s + user_args + ","s);
