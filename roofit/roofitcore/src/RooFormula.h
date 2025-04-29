@@ -44,7 +44,7 @@ public:
    bool ok() const { return _tFormula != nullptr; }
    /// Evaluate all parameters/observables, and then evaluate formula.
    double eval(const RooArgSet *nset = nullptr) const;
-   void doEval(RooFit::EvalContext &) const;
+   void doEval(RooArgList const &actualVars, RooFit::EvalContext &) const;
 
    void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const;
 
@@ -56,6 +56,7 @@ private:
    RooArgList usedVariables() const;
    void installFormulaOrThrow(const std::string &formula);
 
+   std::vector<bool> _varIsUsed;        ///<! Track whether a given variable is in use or not
    RooArgList _origList;                ///<! Original list of dependents
    std::unique_ptr<TFormula> _tFormula; ///<! The formula used to compute values
 };
