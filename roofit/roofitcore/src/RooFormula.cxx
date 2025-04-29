@@ -218,14 +218,37 @@ RooFormula::RooFormula(const char *name, const char *formula, const RooArgList &
    : TNamed(name, formula)
 {
    _origList.add(varList);
+   _varIsUsed.resize(varList.size());
 
    installFormulaOrThrow(formula);
+
+   if (_tFormula == nullptr)
+      return;
+
+   const std::string processedFormula(_tFormula->GetTitle());
+
+   std::set<unsigned int> matchedOrdinals;
+   static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
+   for (sregex_iterator matchIt = sregex_iterator(processedFormula.begin(), processedFormula.end(), newOrdinalRegex);
+        matchIt != sregex_iterator(); ++matchIt) {
+      assert(matchIt->size() == 2);
+      std::stringstream matchString((*matchIt)[1]);
+      unsigned int i;
+      matchString >> i;
+
+      matchedOrdinals.insert(i);
+   }
+
+   for (unsigned int i : matchedOrdinals) {
+      _varIsUsed[i] = true;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 RooFormula::RooFormula(const RooFormula& other, const char* name) :
-  TNamed(name ? name : other.GetName(), other.GetTitle())
+  TNamed(name ? name : other.GetName(), other.GetTitle()),
+  _varIsUsed{other._varIsUsed}
 {
   _origList.add(other._origList);
 
@@ -306,25 +329,11 @@ std::string RooFormula::processFormula(std::string formula) const {
 /// Analyse internal formula to find out which variables are actually in use.
 RooArgList RooFormula::usedVariables() const {
   RooArgList useList;
-  if (_tFormula == nullptr)
-    return useList;
 
-  const std::string formula(_tFormula->GetTitle());
-
-  std::set<unsigned int> matchedOrdinals;
-  static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
-  for (sregex_iterator matchIt = sregex_iterator(formula.begin(), formula.end(), newOrdinalRegex);
-      matchIt != sregex_iterator(); ++matchIt) {
-    assert(matchIt->size() == 2);
-    std::stringstream matchString((*matchIt)[1]);
-    unsigned int i;
-    matchString >> i;
-
-    matchedOrdinals.insert(i);
-  }
-
-  for (unsigned int i : matchedOrdinals) {
-    useList.add(_origList[i]);
+  for (std::size_t i = 0; i < _varIsUsed.size(); ++i) {
+    if (_varIsUsed[i]) {
+      useList.add(_origList[i]);
+    }
   }
 
   return useList;
@@ -394,15 +403,19 @@ double RooFormula::eval(const RooArgSet* nset) const
   return _tFormula->EvalPar(pars.data());
 }
 
-void RooFormula::doEval(RooFit::EvalContext &ctx) const
+void RooFormula::doEval(RooArgList const &actualVars, RooFit::EvalContext &ctx) const
 {
    std::span<double> output = ctx.output();
 
    const int nPars = _origList.size();
    std::vector<std::span<const double>> inputSpans(nPars);
+   int iActual = 0;
    for (int i = 0; i < nPars; i++) {
-      std::span<const double> rhs = ctx.at(static_cast<const RooAbsReal *>(&_origList[i]));
-      inputSpans[i] = rhs;
+      if(_varIsUsed[i]) {
+         std::span<const double> rhs = ctx.at(static_cast<const RooAbsReal *>(&actualVars[iActual]));
+         inputSpans[i] = rhs;
+         ++iActual;
+      }
    }
 
    std::vector<double> pars(nPars);
