@@ -18,6 +18,7 @@ ExternalProject_Add(BUILTIN_ZeroMQ
     URL ${lcgpackages}/libzmq-7c2df78b49a3aa63e654b3f3526adf71ed091534.tar.gz
     URL_HASH SHA256=fcc1b0648afa5d92e0ff0e6e93beb28cbbe008a5f98c228ff97144ba6e4a6c3e
     CMAKE_ARGS
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
         -DCMAKE_INSTALL_LIBDIR=lib
         -DWITH_PERF_TOOL=OFF
