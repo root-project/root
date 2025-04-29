@@ -784,6 +784,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
 ///      WebGui.ForceHttp: "no" (default), "yes" - always create real http server to run web window
 ///      WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
+///      WebGui.Debug: "no" (default), "yes" - enable more debug output on JSROOT side
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
 ///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.128.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
