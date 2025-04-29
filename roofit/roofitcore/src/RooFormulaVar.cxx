@@ -162,7 +162,7 @@ double RooFormulaVar::evaluate() const
 
 void RooFormulaVar::doEval(RooFit::EvalContext &ctx) const
 {
-   getFormula().doEval(ctx);
+   getFormula().doEval(_actualVars, ctx);
 }
 
 
