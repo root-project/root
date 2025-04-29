@@ -79,7 +79,6 @@ private:
    void installFormulaOrThrow(const std::string &formula);
 
    RooArgList _origList;                ///<! Original list of dependents
-   std::vector<bool> _isCategory;       ///<! Whether an element of the _origList is a category.
    std::unique_ptr<TFormula> _tFormula; ///<! The formula used to compute values
 };
 
