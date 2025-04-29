@@ -26,7 +26,7 @@
 
 class RooAbsReal;
 
-class RooFormula : public TNamed, public RooPrintable {
+class RooFormula : public TNamed {
 public:
    // Constructors etc.
    RooFormula(const char *name, const char *formula, const RooArgList &varList, bool checkVariables = true);
@@ -41,34 +41,12 @@ public:
    RooArgSet actualDependents() const { return usedVariables(); }
    bool changeDependents(const RooAbsCollection &newDeps, bool mustReplaceAll, bool nameChange);
 
-   /// Return pointer to the parameter with given name.
-   /// \return Parameter if in use, nullptr if not in use.
-   RooAbsArg *getParameter(const char *name) const { return usedVariables().find(name); }
-
-   /// Return pointer to parameter at given index. This returns
-   /// irrespective of whether the parameter is in use.
-   RooAbsArg *getParameter(Int_t index) const { return _origList.at(index); }
-
    bool ok() const { return _tFormula != nullptr; }
    /// Evaluate all parameters/observables, and then evaluate formula.
    double eval(const RooArgSet *nset = nullptr) const;
    void doEval(RooFit::EvalContext &) const;
 
-   /// DEBUG: Dump state information
-   void dump() const;
-
-   void printValue(std::ostream &os) const override;
-   void printName(std::ostream &os) const override;
-   void printTitle(std::ostream &os) const override;
-   void printClassName(std::ostream &os) const override;
-   void printArgs(std::ostream &os) const override;
-   void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const override;
-
-   void Print(Option_t *options = nullptr) const override
-   {
-      // Printing interface (human readable)
-      printStream(defaultPrintStream(), defaultPrintContents(options), defaultPrintStyle(options));
-   }
+   void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const;
 
    std::string formulaString() const { return _tFormula ? _tFormula->GetTitle() : ""; }
    TFormula* getTFormula() const { return _tFormula.get(); }
