@@ -215,6 +215,12 @@ class TPadPainter extends ObjectPainter {
    #custom_colors;  // custom colors
    #custom_palette_indexes; // custom palette indexes
    #custom_palette_colors; // custom palette colors
+   #frame_painter_ref; // frame painter
+   #main_painter_ref; // main painter on the pad
+   #snap_primitives; // stored snap primitives from web canvas
+   #has_execs; // indicate is pad has TExec objects assigned
+   #deliver_move_events; // deliver move events to server
+   #readonly; // if changes on pad is not allowed
 
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
@@ -264,6 +270,17 @@ class TPadPainter extends ObjectPainter {
    /** @summary Returns true if button */
    isButton() { return this.matchObjectType(clTButton); }
 
+   /** @summary Returns true if read-only mode is enabled */
+   isReadonly() { return this.#readonly; }
+
+   /** @summary Returns true if it is canvas
+    * @param {Boolean} [is_online = false] - if specified, checked if it is canvas with configured connection to server */
+   isCanvas(is_online = false) {
+      if (!this.iscan)
+         return false;
+      return is_online ? isFunc(this.getWebsocket) && this.getWebsocket() : true;
+   }
+
    /** @summary Returns SVG element for the pad itself
     * @private */
    svg_this_pad() { return this.getPadSvg(this.this_pad_name); }
@@ -271,14 +288,14 @@ class TPadPainter extends ObjectPainter {
    /** @summary Returns main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
     * @private */
-   getMainPainter() { return this.main_painter_ref || null; }
+   getMainPainter() { return this.#main_painter_ref || null; }
 
    /** @summary Assign main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
     * @private */
    setMainPainter(painter, force) {
-      if (!this.main_painter_ref || force)
-         this.main_painter_ref = painter;
+      if (!this.#main_painter_ref || force)
+         this.#main_painter_ref = painter;
    }
 
    /** @summary cleanup pad and all primitives inside */
@@ -294,14 +311,14 @@ class TPadPainter extends ObjectPainter {
          if (!this.iscan) svg_p.remove();
       }
 
-      delete this.main_painter_ref;
-      delete this.frame_painter_ref;
+      this.#main_painter_ref = undefined;
+      this.#frame_painter_ref = undefined;
       const cp = this.iscan || !this.has_canvas ? this : this.getCanvPainter();
       if (cp) delete cp.pads_cache;
       this.#pad_x = this.#pad_y = this.#pad_width = this.#pad_height = undefined;
       this.#doing_draw = undefined;
       delete this._interactively_changed;
-      delete this._snap_primitives;
+      this.#snap_primitives = undefined;
       this.#last_grayscale = undefined;
       this.#custom_palette = this.#custom_colors = this.#custom_palette_indexes = this.#custom_palette_colors = undefined;
 
@@ -317,7 +334,16 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Returns frame painter inside the pad
      * @private */
-   getFramePainter() { return this.frame_painter_ref; }
+   getFramePainter() { return this.#frame_painter_ref; }
+
+   /** @summary Assign actual frame painter
+     * @private */
+   setFramePainter(fp, on) {
+      if (on)
+         this.#frame_painter_ref = fp;
+      else if (this.#frame_painter_ref === fp)
+         this.#frame_painter_ref = undefined;
+   }
 
    /** @summary get pad width */
    getPadWidth() { return this.#pad_width || 0; }
@@ -395,8 +421,8 @@ class TPadPainter extends ObjectPainter {
 
       for (let k = this.painters.length - 1; k >= 0; --k) {
          const subp = this.painters[k];
-         if (selector(subp)) {
-            subp.cleanup();
+         if (!subp || selector(subp)) {
+            subp?.cleanup();
             this.painters.splice(k, 1);
             is_any = true;
          }
@@ -442,8 +468,8 @@ class TPadPainter extends ObjectPainter {
       arr.forEach(painter => {
          if ((painter !== prim) || !clean_only_secondary)
             painter.cleanup();
-         if (this.main_painter_ref === painter) {
-            delete this.main_painter_ref;
+         if (this.getMainPainter() === painter) {
+            this.setMainPainter(undefined, true);
             resindx = -111;
          }
       });
@@ -556,7 +582,8 @@ class TPadPainter extends ObjectPainter {
          this.is_active_pad = is_active;
       }
 
-      if (this.is_active_pad === undefined) return;
+      if (this.is_active_pad === undefined)
+         return;
 
       if (!svg_rect)
          svg_rect = this.iscan ? this.getCanvSvg().selectChild('.canvas_fillrect') : this.svg_this_pad().selectChild('.root_pad_border');
@@ -817,8 +844,8 @@ class TPadPainter extends ObjectPainter {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
-      // ignore double click on canvas itself for enlarge
-      if (is_dblclick && this._websocket && (this.enlargeMain('state') === 'off'))
+      // ignore double click on online canvas itself for enlarge
+      if (is_dblclick && this.isCanvas(true) && (this.enlargeMain('state') === 'off'))
          return;
 
       const svg_can = this.getCanvSvg(),
@@ -1107,7 +1134,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    findInPrimitives(objname, objtype) {
       const match = obj => obj && (obj?.fName === objname) && (objtype ? (obj?._typename === objtype) : true),
-            snap = this._snap_primitives?.find(s => match((s.fKind === webSnapIds.kObject) ? s.fSnapshot : null));
+            snap = this.#snap_primitives?.find(s => match((s.fKind === webSnapIds.kObject) ? s.fSnapshot : null));
 
       return snap ? snap.fSnapshot : this.pad?.fPrimitives?.arr.find(match);
    }
@@ -1227,6 +1254,14 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} when finished
      * @private */
    async divide(nx, ny, use_existing) {
+      let color = this.pad.fFillColor;
+      if (!use_existing) {
+         if (color < 15)
+            color = 19;
+         else if (color < 20)
+            color--;
+      }
+
       if (nx && !ny && use_existing) {
          for (let k = 0; k < nx; ++k) {
             if (!this.getSubPadPainter(k+1)) {
@@ -1243,7 +1278,7 @@ class TPadPainter extends ObjectPainter {
          this.pad.fPrimitives = create(clTList);
       this.pad.fPrimitives.Clear();
 
-      if ((!nx && !ny) || !this.pad.Divide(nx, ny))
+      if ((!nx && !ny) || !this.pad.Divide(nx, ny, 0.01, 0.01, color))
          return this;
 
       const drawNext = indx => {
@@ -1366,15 +1401,20 @@ class TPadPainter extends ObjectPainter {
 
       menu.addAttributesMenu(this);
 
-      if (!this._websocket) {
+      if (!this.isCanvas(true)) {
+         // if not online canvas -
          const do_divide = arg => {
             if (!arg || !isStr(arg))
                return;
-            const arr = arg.split('x');
+            // delete auto_canvas flag to prevent deletion
+            delete this._auto_canvas;
             this.cleanPrimitives(true);
+            if (arg === 'reset')
+               return;
+            const arr = arg.split('x');
             if (arr.length === 1)
                this.divide(Number.parseInt(arr[0]));
-            if (arr.length === 2)
+            else if (arr.length === 2)
                this.divide(Number.parseInt(arr[0]), Number.parseInt(arr[1]));
          };
 
@@ -1382,7 +1422,7 @@ class TPadPainter extends ObjectPainter {
             menu.add('Build legend', () => this.buildLegend());
 
          menu.sub('Divide', () => menu.input('Input divide arg', '2x2').then(do_divide), 'Divide on sub-pads');
-         ['1x2', '2x1', '2x2', '2x3', '3x2', '3x3', '4x4', '0'].forEach(item => menu.add(item, item, do_divide));
+         ['1x2', '2x1', '2x2', '2x3', '3x2', '3x3', '4x4', 'reset'].forEach(item => menu.add(item, item, do_divide));
          menu.endsub();
 
          menu.add('Save to gStyle', () => {
@@ -1850,9 +1890,9 @@ class TPadPainter extends ObjectPainter {
          padpainter.addToPadPrimitives();
          padpainter.assignSnapId(snap.fObjectID);
          padpainter.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
-         padpainter._readonly = snap.fReadOnly ?? false; // readonly flag
-         padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
-         padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
+         padpainter.#readonly = snap.fReadOnly ?? false; // readonly flag
+         padpainter.#snap_primitives = snap.fPrimitives; // keep list to be able find primitive
+         padpainter.#has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
 
          if (subpad.$disable_drawing)
             padpainter.pad_draw_disabled = true;
@@ -1909,15 +1949,15 @@ class TPadPainter extends ObjectPainter {
          return this;
 
       this.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
-      this._readonly = snap.fReadOnly ?? false; // readonly flag
-      this._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
-      this._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
+      this.#readonly = snap.fReadOnly ?? false; // readonly flag
+      this.#snap_primitives = snap.fPrimitives; // keep list to be able find primitive
+      this.#has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
 
       const first = snap.fSnapshot;
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
       // if there are execs in the pad, deliver events to the server
-      this._deliver_move_events = first.fExecs?.arr?.length > 0;
+      this.#deliver_move_events = this.#has_execs || (first.fExecs?.arr?.length > 0);
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
@@ -2033,7 +2073,7 @@ class TPadPainter extends ObjectPainter {
          const old_painters = this.painters;
          this.painters = [];
          old_painters.forEach(objp => objp.cleanup());
-         delete this.main_painter_ref;
+         this.setMainPainter(undefined, true);
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);
@@ -2054,10 +2094,10 @@ class TPadPainter extends ObjectPainter {
    deliverWebCanvasEvent(kind, x, y, snapid) {
       if (!this.is_active_pad || this.doingDraw() || x === undefined || y === undefined)
          return;
-      if ((kind === 'move') && !this._deliver_move_events)
+      if ((kind === 'move') && !this.#deliver_move_events)
          return;
       const cp = this.getCanvPainter();
-      if (!cp || !cp._websocket || !cp._websocket.canSend(2) || cp._readonly)
+      if (!cp || !cp.canSendWebsocket(2) || cp.isReadonly())
          return;
 
       const msg = JSON.stringify([this.snapid, kind, x.toString(), y.toString(), snapid ? snapid.toString() : '']);
@@ -2087,7 +2127,7 @@ class TPadPainter extends ObjectPainter {
    getWebPadOptions(arg, cp) {
       let is_top = (arg === undefined), elem = null, scan_subpads = true;
       // no any options need to be collected in readonly mode
-      if (is_top && this._readonly)
+      if (is_top && this.isReadonly())
          return '';
       if (arg === 'only_this') {
          is_top = true;

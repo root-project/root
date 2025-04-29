@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/04/2025',
+version_date = '29/04/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -330,6 +330,10 @@ settings = {
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
+   /** @summary Number of bytes requested once by TTree::Draw processing
+     * @desc TTree can be very large and data from baskets read by portion specified by this variable
+     * @default 1e6 */
+   TreeReadBunchSize: 1e6,
    /** @summary File read timeout in ms
      * @desc Configures timeout for each http operation for reading ROOT files
      * @default 0 */
@@ -363,7 +367,9 @@ settings = {
    /** @summary Extra parameters which will be append to the url when item shown in new tab */
    NewTabUrlPars: '',
    /** @summary Export different settings in output URL */
-   NewTabUrlExportSettings: false
+   NewTabUrlExportSettings: false,
+   /** @summary Enable more debug output, also via 'WebGui.Debug: yes' on ROOT side */
+   Debug: false
 },
 
 /** @namespace
@@ -1741,7 +1747,7 @@ function getMethods(typename, obj) {
    }
 
    if (typename === clTPad || typename === clTCanvas) {
-      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01) {
+      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01, color = 0) {
          if (!ny) {
             const ndiv = nx;
             if (ndiv < 2) return this;
@@ -1770,13 +1776,15 @@ function getMethods(typename, obj) {
                   pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
                   pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
                   pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
-                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsHNDC;
                } else {
                   pad.fAbsWNDC = x2 - x1;
                   pad.fAbsHNDC = y2 - y1;
                   pad.fAbsXlowNDC = x1;
                   pad.fAbsYlowNDC = y1;
                }
+
+               pad.fFillColor = color || this.fFillColor;
 
                this.fPrimitives.Add(pad);
             }

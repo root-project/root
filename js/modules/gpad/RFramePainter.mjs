@@ -626,9 +626,7 @@ class RFramePainter extends RObjectPainter {
       delete this._click_handler;
       delete this._dblclick_handler;
 
-      const pp = this.getPadPainter();
-      if (pp?.frame_painter_ref === this)
-         delete pp.frame_painter_ref;
+      this.getPadPainter()?.setFramePainter(this, false);
 
       super.cleanup();
    }
@@ -637,7 +635,7 @@ class RFramePainter extends RObjectPainter {
      * @private */
    redraw() {
       const pp = this.getPadPainter();
-      if (pp) pp.frame_painter_ref = this;
+      pp?.setFramePainter(this, true);
 
       // first update all attributes from objects
       this.updateAttributes();

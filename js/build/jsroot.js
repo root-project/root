@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.8.99
+// https://root.cern/js/ v7.9.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/04/2025',
+version_date = '29/04/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -338,6 +338,10 @@ settings = {
      * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
+   /** @summary Number of bytes requested once by TTree::Draw processing
+     * @desc TTree can be very large and data from baskets read by portion specified by this variable
+     * @default 1e6 */
+   TreeReadBunchSize: 1e6,
    /** @summary File read timeout in ms
      * @desc Configures timeout for each http operation for reading ROOT files
      * @default 0 */
@@ -371,7 +375,9 @@ settings = {
    /** @summary Extra parameters which will be append to the url when item shown in new tab */
    NewTabUrlPars: '',
    /** @summary Export different settings in output URL */
-   NewTabUrlExportSettings: false
+   NewTabUrlExportSettings: false,
+   /** @summary Enable more debug output, also via 'WebGui.Debug: yes' on ROOT side */
+   Debug: false
 },
 
 /** @namespace
@@ -1749,7 +1755,7 @@ function getMethods(typename, obj) {
    }
 
    if (typename === clTPad || typename === clTCanvas) {
-      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01) {
+      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01, color = 0) {
          if (!ny) {
             const ndiv = nx;
             if (ndiv < 2) return this;
@@ -1778,13 +1784,15 @@ function getMethods(typename, obj) {
                   pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
                   pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
                   pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
-                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsHNDC;
                } else {
                   pad.fAbsWNDC = x2 - x1;
                   pad.fAbsHNDC = y2 - y1;
                   pad.fAbsXlowNDC = x1;
                   pad.fAbsYlowNDC = y1;
                }
+
+               pad.fFillColor = color || this.fFillColor;
 
                this.fPrimitives.Add(pad);
             }
@@ -1845,7 +1853,7 @@ function getMethods(typename, obj) {
                err2 = this.fSumw2[bin],               // sum of bin w * y^2
                neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
          if (sum < 1e-300) return 0;                  // for empty bins
-         const EErrorType = { kERRORMEAN: 0, kERRORSPREAD: 1, kERRORSPREADI: 2, kERRORSPREADG: 3 };
+         const EErrorType = { kERRORSPREAD: 1, kERRORSPREADI: 2, kERRORSPREADG: 3 };
          // case the values y are gaussian distributed y +/- sigma and w = 1/sigma^2
          if (this.fErrorMode === EErrorType.kERRORSPREADG)
             return 1.0/Math.sqrt(sum);
@@ -11835,7 +11843,7 @@ class TAttFillHandler {
                   while (yy + hside > 0) {
                      let x1 = 0, y1 = yy, x2 = w, y2 = yy + hside;
 
-                     if (y1 < -0.00001) {
+                     if (y1 < -1e-5) {
                         // cut at the begin
                         x1 = -y1 / hside * w;
                         y1 = 0;
@@ -12334,7 +12342,7 @@ class ObjectPainter extends BasePainter {
 
       if (this.isMainPainter()) {
          const pp = this.getPadPainter();
-         if (!pp || (pp.normal_canvas === false))
+         if (!pp || pp._auto_canvas)
             keep_origin = false;
       }
 
@@ -13631,7 +13639,7 @@ class ObjectPainter extends BasePainter {
 
       const canvp = this.getCanvPainter();
 
-      if (!this.snapid || !canvp || canvp?._readonly || !canvp?._websocket)
+      if (!this.snapid || !canvp || canvp?.isReadonly() || !canvp?.getWebsocket())
          return menu;
 
       function doExecMenu(arg) {
@@ -14032,7 +14040,7 @@ Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
  */
 const REVISION = '174';
 
-const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
+const MOUSE = { ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
 const CullFaceNone = 0;
 const CullFaceBack = 1;
@@ -63375,10 +63383,6 @@ class RenderPass extends Pass {
 
 const LuminosityHighPassShader = {
 
-	name: 'LuminosityHighPassShader',
-
-	shaderID: 'luminosityHighPass',
-
 	uniforms: {
 
 		'tDiffuse': { value: null },
@@ -66859,7 +66863,7 @@ function createTextGeometry(lbl, size) {
 /* eslint-disable eqeqeq */
 
 const kMACHEP = 1.11022302462515654042363166809e-16,
-      kMINLOG = -708.396418532264078748994506896,
+      kMINLOG = -708.3964185322641,
       kMAXLOG = 709.782712893383973096206318587,
       kMAXSTIR = 108.116855767857671821730036754,
       kBig = 4.503599627370496e15,
@@ -66901,31 +66905,31 @@ function lgam(x) {
          LS2PI = 0.91893853320467274178,
    A = [
       8.11614167470508450300E-4,
-      -5.95061904284301438324E-4,
+      -5950619042843014e-19,
       7.93650340457716943945E-4,
-      -2.77777777730099687205E-3,
+      -0.002777777777300997,
       8.33333333333331927722E-2
    ], B = [
-      -1.37825152569120859100E3,
-      -3.88016315134637840924E4,
-      -3.31612992738871184744E5,
-      -1.16237097492762307383E6,
-      -1.72173700820839662146E6,
-      -8.53555664245765465627E5
+      -1378.2515256912086,
+      -38801.631513463784,
+      -331612.9927388712,
+      -1162370.974927623,
+      -1721737.0082083966,
+      -853555.6642457654
    ], C = [
    /* 1.00000000000000000000E0, */
-      -3.51815701436523470549E2,
-      -1.70642106651881159223E4,
-      -2.20528590553854454839E5,
-      -1.13933444367982507207E6,
-      -2.53252307177582951285E6,
-      -2.01889141433532773231E6
+      -351.81570143652345,
+      -17064.210665188115,
+      -220528.59055385445,
+      -1139334.4436798252,
+      -2532523.0717758294,
+      -2018891.4143353277
    ];
 
    if ((x >= Number.MAX_VALUE) || (x == Number.POSITIVE_INFINITY))
       return Number.POSITIVE_INFINITY;
 
-   if ( x < -34.0 ) {
+   if ( x < -34 ) {
       q = -x;
       w = lgam(q);
       p = Math.floor(q);
@@ -66992,8 +66996,8 @@ function stirf(x) {
 
    const STIR = [
       7.87311395793093628397E-4,
-      -2.29549961613378126380E-4,
-      -2.68132617805781232825E-3,
+      -22954996161337813e-20,
+      -0.0026813261780578124,
       3.47222221605458667310E-3,
       8.33333333333482257126E-2
    ], SQTPI = Math.sqrt(2*Math.PI);
@@ -67067,7 +67071,7 @@ function erfc(a) {
 
    z = -a * a;
 
-   if (z < -kMAXLOG)
+   if (z < -709.782712893384)
       return (a < 0) ? 2.0 : 0.0;
 
    z = Math.exp(z);
@@ -67128,7 +67132,7 @@ function lognormal_cdf_c(x, m, s, x0) {
   * @memberof Math */
 function lognormal_cdf(x, m, s, x0 = 0) {
    const z = (Math.log((x-x0))-m)/(s*kSqrt2);
-   if (z < -1.) return 0.5*erfc(-z);
+   if (z < -1) return 0.5*erfc(-z);
    else return 0.5*(1.0 + erf(z));
 }
 
@@ -67144,7 +67148,7 @@ function normal_cdf_c(x, sigma, x0 = 0) {
   * @memberof Math */
 function normal_cdf(x, sigma, x0 = 0) {
    const z = (x-x0)/(sigma*kSqrt2);
-   if (z < -1.) return 0.5*erfc(-z);
+   if (z < -1) return 0.5*erfc(-z);
    else return 0.5*(1.0 + erf(z));
 }
 
@@ -67214,7 +67218,7 @@ function gamma(x) {
   let small = false;
 
    while (( x < 0.0 ) && !small) {
-      if ( x > -1.E-9 )
+      if ( x > -1e-9 )
          small = true;
       else {
          z /= x;
@@ -67250,12 +67254,12 @@ function gamma(x) {
       4.94214826801497100753E-1,
       9.99999999999999996796E-1
    ], Q = [
-      -2.31581873324120129819E-5,
+      -23158187332412014e-21,
       5.39605580493303397842E-4,
-      -4.45641913851797240494E-3,
+      -0.004456419138517973,
       1.18139785222060435552E-2,
       3.58236398605498653373E-2,
-      -2.34591795718243348568E-1,
+      -0.23459179571824335,
       7.14304917030273074085E-2,
       1.00000000000000000320E0];
 
@@ -67274,20 +67278,20 @@ function ndtri(y0) {
       return Number.POSITIVE_INFINITY;
 
    const P0 = [
-        -5.99633501014107895267E1,
+        -59.96335010141079,
          9.80010754185999661536E1,
-        -5.66762857469070293439E1,
+        -56.67628574690703,
          1.39312609387279679503E1,
-        -1.23916583867381258016E0
+        -1.2391658386738125
    ], Q0 = [
          1.95448858338141759834E0,
          4.67627912898881538453E0,
          8.63602421390890590575E1,
-        -2.25462687854119370527E2,
+        -225.46268785411937,
          2.00260212380060660359E2,
-        -8.20372256168333339912E1,
+        -82.03722561683334,
          1.59056225126211695515E1,
-        -1.18331621121330003142E0
+        -1.1833162112133
    ], P1 = [
          4.05544892305962419923E0,
          3.15251094599893866154E1,
@@ -67295,18 +67299,18 @@ function ndtri(y0) {
          4.40805073893200834700E1,
          1.46849561928858024014E1,
          2.18663306850790267539E0,
-        -1.40256079171354495875E-1,
-        -3.50424626827848203418E-2,
-        -8.57456785154685413611E-4
+        -0.1402560791713545,
+        -0.03504246268278482,
+        -8574567851546854e-19
    ], Q1 = [
          1.57799883256466749731E1,
          4.53907635128879210584E1,
          4.13172038254672030440E1,
          1.50425385692907503408E1,
          2.50464946208309415979E0,
-        -1.42182922854787788574E-1,
-        -3.80806407691578277194E-2,
-        -9.33259480895457427372E-4
+        -0.14218292285478779,
+        -0.03808064076915783,
+        -9332594808954574e-19
    ], P2 = [
          3.23774891776946035970E0,
          6.91522889068984211695E0,
@@ -67341,7 +67345,7 @@ function ndtri(y0) {
       x = x * s2pi;
       return x;
    }
-   x = Math.sqrt(-2.0 * Math.log(y));
+   x = Math.sqrt(-2 * Math.log(y));
    const x0 = x - Math.log(x)/x,
          z = 1.0/x;
    if ( x < 8.0 )
@@ -67379,7 +67383,7 @@ function igamc(a,x) {
       return (1.0 - igam(a,x));
 
    let ax = a * Math.log(x) - x - lgam(a);
-   if ( ax < -kMAXLOG )
+   if ( ax < -709.782712893384 )
       return 0.0;
 
    ax = Math.exp(ax);
@@ -67440,7 +67444,7 @@ function igam(a, x) {
 
    /* Compute  x**a * exp(-x) / gamma(a)  */
    let ax = a * Math.log(x) - x - lgam(a);
-   if ( ax < -kMAXLOG )
+   if ( ax < -709.782712893384 )
       return 0.0;
 
    ax = Math.exp(ax);
@@ -67498,7 +67502,7 @@ function igami(a, y0) {
       }
       /* compute the derivative of the function at this point */
       d = (a - 1.0) * Math.log(x) - x - lgm;
-      if ( d < -kMAXLOG )
+      if ( d < -709.782712893384 )
          break;
       d = -Math.exp(d);
       /* compute the step to the next approximation of x */
@@ -67575,20 +67579,20 @@ function landau_pdf(x, xi, x0 = 0) {
    if (xi <= 0) return 0;
    const v = (x - x0)/xi;
    let u, ue, us, denlan;
-   const p1 = [0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635, 0.001511162253],
+   const p1 = [0.4259894875,-0.124976255, 0.03984243700, -0.006298287635, 0.001511162253],
          q1 = [1.0 ,-0.3388260629, 0.09594393323, -0.01608042283, 0.003778942063],
          p2 = [0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411, 0.0001283617211],
          q2 = [1.0 , 0.7428795082, 0.3153932961, 0.06694219548, 0.008790609714],
-         p3 = [0.1788544503, 0.09359161662,0.006325387654, 0.00006611667319,-0.000002031049101],
+         p3 = [0.1788544503, 0.09359161662,0.006325387654, 0.00006611667319,-2031049101e-15],
          q3 = [1.0 , 0.6097809921, 0.2560616665, 0.04746722384, 0.006957301675],
          p4 = [0.9874054407, 118.6723273, 849.2794360, -743.7792444, 427.0262186],
          q4 = [1.0 , 106.8615961, 337.6496214, 2016.712389, 1597.063511],
-         p5 = [1.003675074, 167.5702434, 4789.711289, 21217.86767, -22324.94910],
+         p5 = [1.003675074, 167.5702434, 4789.711289, 21217.86767, -22324.9491],
          q5 = [1.0 , 156.9424537, 3745.310488, 9834.698876, 66924.28357],
          p6 = [1.000827619, 664.9143136, 62972.92665, 475554.6998, -5743609.109],
          q6 = [1.0 , 651.4101098, 56974.73333, 165917.4725, -2815759.939],
          a1 = [0.04166666667,-0.01996527778, 0.02709538966],
-         a2 = [-1.845568670,-4.284640743];
+         a2 = [-1.84556867,-4.284640743];
 
    if (v < -5.5) {
       u = Math.exp(v+1.0);
@@ -69105,7 +69109,7 @@ function tryOpenOpenUI(sources, args) {
    element.setAttribute('src', src + (args.ui5dbg ? 'resources/sap-ui-core-dbg.js' : 'resources/sap-ui-core.js')); // latest openui5 version
 
    element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
-
+   // element.setAttribute('data-sap-ui-language', args.openui5language ?? 'en');
    element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
    element.setAttribute('data-sap-ui-async', 'true');
@@ -69123,7 +69127,7 @@ function tryOpenOpenUI(sources, args) {
    };
 
    element.onload = function() {
-      console.log(`Load openui5 from ${src}`);
+      args.load_src = src;
    };
 
    document.head.appendChild(element);
@@ -69175,6 +69179,8 @@ async function loadOpenui5(args) {
       args.rejectFunc = reject;
 
       globalThis.completeUI5Loading = function() {
+         console.log(`Load openui5 version ${globalThis.sap.ui.version} from ${args.load_src}`);
+
          globalThis.sap.ui.loader.config({
             paths: {
                jsroot: exports.source_dir,
@@ -69186,6 +69192,8 @@ async function loadOpenui5(args) {
             args.resolveFunc(globalThis.sap);
             args.resolveFunc = null;
          }
+
+         delete globalThis.completeUI5Loading;
       };
 
       tryOpenOpenUI(openui5_sources, args);
@@ -70968,7 +70976,7 @@ class StandaloneMenu extends JSRootMenu {
                anchor.title = url;
                anchor.addEventListener('click', () => {
                   const cp = this.painter?.getCanvPainter();
-                  if (cp?.canSendWebSocket())
+                  if (cp?.canSendWebsocket())
                      cp.sendWebsocket(`SHOWURL:${url}`);
                   else
                      window.open(url);
@@ -71375,7 +71383,7 @@ function getTimeOffset(axis) {
       sof = sof.slice(4).trim();
       if (sof.length > 3) {
          let p = 0, sign = 1000;
-         if (sof[0] === '-') { p = 1; sign = -1000; }
+         if (sof[0] === '-') { p = 1; sign = -1e3; }
          offset -= sign * (parseInt(sof.slice(p, p + 2)) * 3600 + parseInt(sof.slice(p + 2, p + 4)) * 60);
       }
    }
@@ -75252,9 +75260,7 @@ class TFramePainter extends ObjectPainter {
       delete this._dblclick_handler;
       delete this.enabledKeys;
 
-      const pp = this.getPadPainter();
-      if (pp?.frame_painter_ref === this)
-         delete pp.frame_painter_ref;
+      this.getPadPainter()?.setFramePainter(this, false);
 
       super.cleanup();
    }
@@ -75262,7 +75268,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary Redraw TFrame */
    redraw(/* reason */) {
       const pp = this.getPadPainter();
-      if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
+      pp?.setFramePainter(this, true);
 
       // first update all attributes from objects
       this.updateAttributes();
@@ -77885,7 +77891,7 @@ const PadButtonsHandler = {
 }, // PadButtonsHandler
 
 // identifier used in TWebCanvas painter
-webSnapIds = { kNone: 0, kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5, kFont: 6 };
+webSnapIds = { kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5, kFont: 6 };
 
 
 /** @summary Fill TWebObjectOptions for painter
@@ -77919,6 +77925,12 @@ class TPadPainter extends ObjectPainter {
    #custom_colors;  // custom colors
    #custom_palette_indexes; // custom palette indexes
    #custom_palette_colors; // custom palette colors
+   #frame_painter_ref; // frame painter
+   #main_painter_ref; // main painter on the pad
+   #snap_primitives; // stored snap primitives from web canvas
+   #has_execs; // indicate is pad has TExec objects assigned
+   #deliver_move_events; // deliver move events to server
+   #readonly; // if changes on pad is not allowed
 
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
@@ -77968,6 +77980,17 @@ class TPadPainter extends ObjectPainter {
    /** @summary Returns true if button */
    isButton() { return this.matchObjectType(clTButton); }
 
+   /** @summary Returns true if read-only mode is enabled */
+   isReadonly() { return this.#readonly; }
+
+   /** @summary Returns true if it is canvas
+    * @param {Boolean} [is_online = false] - if specified, checked if it is canvas with configured connection to server */
+   isCanvas(is_online = false) {
+      if (!this.iscan)
+         return false;
+      return is_online ? isFunc(this.getWebsocket) && this.getWebsocket() : true;
+   }
+
    /** @summary Returns SVG element for the pad itself
     * @private */
    svg_this_pad() { return this.getPadSvg(this.this_pad_name); }
@@ -77975,14 +77998,14 @@ class TPadPainter extends ObjectPainter {
    /** @summary Returns main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
     * @private */
-   getMainPainter() { return this.main_painter_ref || null; }
+   getMainPainter() { return this.#main_painter_ref || null; }
 
    /** @summary Assign main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
     * @private */
    setMainPainter(painter, force) {
-      if (!this.main_painter_ref || force)
-         this.main_painter_ref = painter;
+      if (!this.#main_painter_ref || force)
+         this.#main_painter_ref = painter;
    }
 
    /** @summary cleanup pad and all primitives inside */
@@ -77998,14 +78021,14 @@ class TPadPainter extends ObjectPainter {
          if (!this.iscan) svg_p.remove();
       }
 
-      delete this.main_painter_ref;
-      delete this.frame_painter_ref;
+      this.#main_painter_ref = undefined;
+      this.#frame_painter_ref = undefined;
       const cp = this.iscan || !this.has_canvas ? this : this.getCanvPainter();
       if (cp) delete cp.pads_cache;
       this.#pad_x = this.#pad_y = this.#pad_width = this.#pad_height = undefined;
       this.#doing_draw = undefined;
       delete this._interactively_changed;
-      delete this._snap_primitives;
+      this.#snap_primitives = undefined;
       this.#last_grayscale = undefined;
       this.#custom_palette = this.#custom_colors = this.#custom_palette_indexes = this.#custom_palette_colors = undefined;
 
@@ -78021,7 +78044,16 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Returns frame painter inside the pad
      * @private */
-   getFramePainter() { return this.frame_painter_ref; }
+   getFramePainter() { return this.#frame_painter_ref; }
+
+   /** @summary Assign actual frame painter
+     * @private */
+   setFramePainter(fp, on) {
+      if (on)
+         this.#frame_painter_ref = fp;
+      else if (this.#frame_painter_ref === fp)
+         this.#frame_painter_ref = undefined;
+   }
 
    /** @summary get pad width */
    getPadWidth() { return this.#pad_width || 0; }
@@ -78099,8 +78131,8 @@ class TPadPainter extends ObjectPainter {
 
       for (let k = this.painters.length - 1; k >= 0; --k) {
          const subp = this.painters[k];
-         if (selector(subp)) {
-            subp.cleanup();
+         if (!subp || selector(subp)) {
+            subp?.cleanup();
             this.painters.splice(k, 1);
             is_any = true;
          }
@@ -78146,8 +78178,8 @@ class TPadPainter extends ObjectPainter {
       arr.forEach(painter => {
          if ((painter !== prim) || !clean_only_secondary)
             painter.cleanup();
-         if (this.main_painter_ref === painter) {
-            delete this.main_painter_ref;
+         if (this.getMainPainter() === painter) {
+            this.setMainPainter(undefined, true);
             resindx = -111;
          }
       });
@@ -78260,7 +78292,8 @@ class TPadPainter extends ObjectPainter {
          this.is_active_pad = is_active;
       }
 
-      if (this.is_active_pad === undefined) return;
+      if (this.is_active_pad === undefined)
+         return;
 
       if (!svg_rect)
          svg_rect = this.iscan ? this.getCanvSvg().selectChild('.canvas_fillrect') : this.svg_this_pad().selectChild('.root_pad_border');
@@ -78521,8 +78554,8 @@ class TPadPainter extends ObjectPainter {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
-      // ignore double click on canvas itself for enlarge
-      if (is_dblclick && this._websocket && (this.enlargeMain('state') === 'off'))
+      // ignore double click on online canvas itself for enlarge
+      if (is_dblclick && this.isCanvas(true) && (this.enlargeMain('state') === 'off'))
          return;
 
       const svg_can = this.getCanvSvg(),
@@ -78811,7 +78844,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    findInPrimitives(objname, objtype) {
       const match = obj => obj && (obj?.fName === objname) && (objtype ? (obj?._typename === objtype) : true),
-            snap = this._snap_primitives?.find(s => match((s.fKind === webSnapIds.kObject) ? s.fSnapshot : null));
+            snap = this.#snap_primitives?.find(s => match((s.fKind === webSnapIds.kObject) ? s.fSnapshot : null));
 
       return snap ? snap.fSnapshot : this.pad?.fPrimitives?.arr.find(match);
    }
@@ -78931,6 +78964,14 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} when finished
      * @private */
    async divide(nx, ny, use_existing) {
+      let color = this.pad.fFillColor;
+      if (!use_existing) {
+         if (color < 15)
+            color = 19;
+         else if (color < 20)
+            color--;
+      }
+
       if (nx && !ny && use_existing) {
          for (let k = 0; k < nx; ++k) {
             if (!this.getSubPadPainter(k+1)) {
@@ -78947,7 +78988,7 @@ class TPadPainter extends ObjectPainter {
          this.pad.fPrimitives = create$1(clTList);
       this.pad.fPrimitives.Clear();
 
-      if ((!nx && !ny) || !this.pad.Divide(nx, ny))
+      if ((!nx && !ny) || !this.pad.Divide(nx, ny, 0.01, 0.01, color))
          return this;
 
       const drawNext = indx => {
@@ -79070,15 +79111,20 @@ class TPadPainter extends ObjectPainter {
 
       menu.addAttributesMenu(this);
 
-      if (!this._websocket) {
+      if (!this.isCanvas(true)) {
+         // if not online canvas -
          const do_divide = arg => {
             if (!arg || !isStr(arg))
                return;
-            const arr = arg.split('x');
+            // delete auto_canvas flag to prevent deletion
+            delete this._auto_canvas;
             this.cleanPrimitives(true);
+            if (arg === 'reset')
+               return;
+            const arr = arg.split('x');
             if (arr.length === 1)
                this.divide(Number.parseInt(arr[0]));
-            if (arr.length === 2)
+            else if (arr.length === 2)
                this.divide(Number.parseInt(arr[0]), Number.parseInt(arr[1]));
          };
 
@@ -79086,7 +79132,7 @@ class TPadPainter extends ObjectPainter {
             menu.add('Build legend', () => this.buildLegend());
 
          menu.sub('Divide', () => menu.input('Input divide arg', '2x2').then(do_divide), 'Divide on sub-pads');
-         ['1x2', '2x1', '2x2', '2x3', '3x2', '3x3', '4x4', '0'].forEach(item => menu.add(item, item, do_divide));
+         ['1x2', '2x1', '2x2', '2x3', '3x2', '3x3', '4x4', 'reset'].forEach(item => menu.add(item, item, do_divide));
          menu.endsub();
 
          menu.add('Save to gStyle', () => {
@@ -79554,9 +79600,9 @@ class TPadPainter extends ObjectPainter {
          padpainter.addToPadPrimitives();
          padpainter.assignSnapId(snap.fObjectID);
          padpainter.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
-         padpainter._readonly = snap.fReadOnly ?? false; // readonly flag
-         padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
-         padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
+         padpainter.#readonly = snap.fReadOnly ?? false; // readonly flag
+         padpainter.#snap_primitives = snap.fPrimitives; // keep list to be able find primitive
+         padpainter.#has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
 
          if (subpad.$disable_drawing)
             padpainter.pad_draw_disabled = true;
@@ -79613,15 +79659,15 @@ class TPadPainter extends ObjectPainter {
          return this;
 
       this.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
-      this._readonly = snap.fReadOnly ?? false; // readonly flag
-      this._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
-      this._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
+      this.#readonly = snap.fReadOnly ?? false; // readonly flag
+      this.#snap_primitives = snap.fPrimitives; // keep list to be able find primitive
+      this.#has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
 
       const first = snap.fSnapshot;
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
       // if there are execs in the pad, deliver events to the server
-      this._deliver_move_events = first.fExecs?.arr?.length > 0;
+      this.#deliver_move_events = this.#has_execs || (first.fExecs?.arr?.length > 0);
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
@@ -79737,7 +79783,7 @@ class TPadPainter extends ObjectPainter {
          const old_painters = this.painters;
          this.painters = [];
          old_painters.forEach(objp => objp.cleanup());
-         delete this.main_painter_ref;
+         this.setMainPainter(undefined, true);
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);
@@ -79758,10 +79804,10 @@ class TPadPainter extends ObjectPainter {
    deliverWebCanvasEvent(kind, x, y, snapid) {
       if (!this.is_active_pad || this.doingDraw() || x === undefined || y === undefined)
          return;
-      if ((kind === 'move') && !this._deliver_move_events)
+      if ((kind === 'move') && !this.#deliver_move_events)
          return;
       const cp = this.getCanvPainter();
-      if (!cp || !cp._websocket || !cp._websocket.canSend(2) || cp._readonly)
+      if (!cp || !cp.canSendWebsocket(2) || cp.isReadonly())
          return;
 
       const msg = JSON.stringify([this.snapid, kind, x.toString(), y.toString(), snapid ? snapid.toString() : '']);
@@ -79791,7 +79837,7 @@ class TPadPainter extends ObjectPainter {
    getWebPadOptions(arg, cp) {
       let is_top = (arg === undefined), elem = null, scan_subpads = true;
       // no any options need to be collected in readonly mode
-      if (is_top && this._readonly)
+      if (is_top && this.isReadonly())
          return '';
       if (arg === 'only_this') {
          is_top = true;
@@ -80386,10 +80432,12 @@ function directDrawTFrame(dom, obj, opt) {
 
 class TCanvasPainter extends TPadPainter {
 
+   #websocket; // WebWindow handle used for communication with server
+
    /** @summary Constructor */
    constructor(dom, canvas) {
       super(dom, canvas, true);
-      this._websocket = null;
+      this.#websocket = null;
       this.tooltip_allowed = settings.Tooltip;
    }
 
@@ -80617,23 +80665,28 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Submit object exec request
      * @private */
    submitExec(painter, exec, snapid) {
-      if (this._readonly || !painter) return;
+      if (this.isReadonly() || !painter)
+         return;
 
       if (!snapid) snapid = painter.snapid;
       if (snapid && isStr(snapid) && exec)
          return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
+   /** @summary Return assigned web socket
+    * @private */
+   getWebsocket() { return this.#websocket; }
+
    /** @summary Return true if message can be send via web socket
     * @private */
-   canSendWebSocket() { return this._websocket?.canSend(); }
+   canSendWebsocket(noper = 1) { return this.#websocket?.canSend(noper); }
 
    /** @summary Send text message with web socket
      * @desc used for communication with server-side of web canvas
      * @private */
    sendWebsocket(msg) {
-      if (this._websocket?.canSend()) {
-         this._websocket.send(msg);
+      if (this.#websocket?.canSend()) {
+         this.#websocket.send(msg);
          return true;
       }
       console.warn(`DROP SEND: ${msg}`);
@@ -80643,10 +80696,10 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Close websocket connection to canvas
      * @private */
    closeWebsocket(force) {
-      if (this._websocket) {
-         this._websocket.close(force);
-         this._websocket.cleanup();
-         delete this._websocket;
+      if (this.#websocket) {
+         this.#websocket.close(force);
+         this.#websocket.cleanup();
+         this.#websocket = undefined;
       }
    }
 
@@ -80655,27 +80708,27 @@ class TCanvasPainter extends TPadPainter {
    useWebsocket(handle) {
       this.closeWebsocket();
 
-      this._websocket = handle;
-      this._websocket.setReceiver(this);
-      this._websocket.connect();
+      this.#websocket = handle;
+      this.#websocket.setReceiver(this);
+      this.#websocket.connect();
    }
 
    /** @summary set, test or reset timeout of specified name
      * @desc Used to prevent overloading of websocket for specific function */
    websocketTimeout(name, tm) {
-      if (!this._websocket)
+      if (!this.#websocket)
          return;
-      if (!this._websocket._tmouts)
-         this._websocket._tmouts = {};
+      if (!this.#websocket._tmouts)
+         this.#websocket._tmouts = {};
 
-      const handle = this._websocket._tmouts[name];
+      const handle = this.#websocket._tmouts[name];
       if (tm === undefined)
          return handle !== undefined;
 
       if (tm === 'reset') {
-         if (handle) { clearTimeout(handle); delete this._websocket._tmouts[name]; }
+         if (handle) { clearTimeout(handle); delete this.#websocket._tmouts[name]; }
       } else if (!handle && Number.isInteger(tm))
-         this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
+         this.#websocket._tmouts[name] = setTimeout(() => { delete this.#websocket._tmouts[name]; }, tm);
    }
 
    /** @summary Handler for websocket open event
@@ -80972,10 +81025,10 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Send command to start fit panel code on the server
      * @private */
    startFitPanel(standalone) {
-      if (!this._websocket)
+      if (!this.getWebsocket())
          return false;
 
-      const new_conn = standalone ? null : this._websocket.createChannel();
+      const new_conn = standalone ? null : this.getWebsocket().createChannel();
 
       this.sendWebsocket('FITPANEL:' + (standalone ? 'standalone' : new_conn.getChannelId()));
 
@@ -80989,7 +81042,7 @@ class TCanvasPainter extends TPadPainter {
 
       this.addPadInteractive();
 
-      if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
+      if ((typeof document !== 'undefined') && !this.embed_canvas && this.getWebsocket())
          document.title = this.pad.fTitle;
 
       if (this._all_sections_showed) return;
@@ -81011,7 +81064,7 @@ class TCanvasPainter extends TPadPainter {
      * @private */
    processHighlightConnect(hints) {
       if (!hints || hints.length === 0 || !this._highlight_connect ||
-           !this._websocket || this.doingDraw() || !this._websocket.canSend(2)) return;
+          this.doingDraw() || !this.canSendWebsocket(2)) return;
 
       const hint = hints[0] || hints[1];
       if (!hint || !hint.painter || !hint.painter.snapid || !hint.user_info) return;
@@ -81040,7 +81093,8 @@ class TCanvasPainter extends TPadPainter {
      * @private */
    processChanges(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || this._readonly || !this._websocket.canSend(2) || !isStr(kind)) return;
+      if (this.isReadonly() || !this.canSendWebsocket(2) || !isStr(kind))
+         return;
 
       let msg = '';
       if (!painter) painter = this;
@@ -81091,19 +81145,20 @@ class TCanvasPainter extends TPadPainter {
 
       if (msg) {
          // console.log(`Sending ${msg.length} ${msg.slice(0,40)}`);
-         this._websocket.send(msg);
+         this.sendWebsocket(msg);
       } else
          console.log(`Unprocessed changes ${kind} for painter of ${painter?.getObject()?._typename} subelem ${subelem}`);
    }
 
    /** @summary Select active pad on the canvas */
    selectActivePad(pad_painter, obj_painter, click_pos) {
-      if (!this.snapid || !pad_painter) return; // only interactive canvas
+      if (!this.snapid || !pad_painter)
+         return; // only interactive canvas
 
       let arg = null, ischanged = false;
       const is_button = pad_painter.matchObjectType(clTButton);
 
-      if (pad_painter.snapid && this._websocket)
+      if (pad_painter.snapid && this.getWebsocket())
          arg = { _typename: 'TWebPadClick', padid: pad_painter.snapid.toString(), objid: '', x: -1, y: -1, dbl: false };
 
       if (!pad_painter.is_active_pad && !is_button) {
@@ -81139,21 +81194,41 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary produce JSON for TCanvas, which can be used to display canvas once again */
    produceJSON(spacing) {
-      const canv = this.getObject(),
-            fill0 = (canv.fFillStyle === 0),
-            axes = [], hists = [];
+      const canv = this.getObject();
 
-      if (fill0) canv.fFillStyle = 1001;
+      if (canv._typename !== clTCanvas)
+         return;
 
-      // write selected range into TAxis properties
+      const fill0 = (canv.fFillStyle === 0),
+            axes = [], hists = [], prims = [];
+
+      if (fill0)
+         canv.fFillStyle = 1001;
+
       this.forEachPainterInPad(pp => {
+         if (pp.painters.length && pp.pad.fPrimitives && !pp.pad.fPrimitives.arr.length) {
+            // create list of primitives when missing
+            prims.push(pp.pad.fPrimitives);
+            pp.forEachPainterInPad(p => {
+               // ignore all secondary painters
+               if (p.isSecondary())
+                  return;
+               const subobj = p.getObject();
+               if (subobj?._typename)
+                  pp.pad.fPrimitives.Add(subobj, p.getDrawOpt());
+            }, 'objects');
+         }
+
          const main = pp.getMainPainter(),
                fp = pp.getFramePainter();
-         if (!isFunc(main?.getHisto) || !isFunc(main?.getDimension)) return;
+         if (!isFunc(main?.getHisto) || !isFunc(main?.getDimension))
+            return;
 
+         // write selected range into TAxis properties
          const hist = main.getHisto(),
                ndim = main.getDimension();
-         if (!hist?.fXaxis) return;
+         if (!hist?.fXaxis)
+            return;
 
          const setAxisRange = (name, axis) => {
             if (fp?.zoomChangedInteractive(name)) {
@@ -81165,8 +81240,10 @@ class TCanvasPainter extends TPadPainter {
          };
 
          setAxisRange('x', hist.fXaxis);
-         if (ndim > 1) setAxisRange('y', hist.fYaxis);
-         if (ndim > 2) setAxisRange('z', hist.fZaxis);
+         if (ndim > 1)
+            setAxisRange('y', hist.fYaxis);
+         if (ndim > 2)
+            setAxisRange('z', hist.fZaxis);
          if ((ndim === 2) && fp?.zoomChangedInteractive('z')) {
             hists.push({ hist, min: hist.fMinimum, max: hist.fMaximum });
             hist.fMinimum = fp.zoom_zmin ?? fp.zmin;
@@ -81174,24 +81251,10 @@ class TCanvasPainter extends TPadPainter {
          }
       }, 'pads');
 
-      if (!this.normal_canvas) {
-         // fill list of primitives from painters
-         this.forEachPainterInPad(p => {
-            // ignore all secondary painters
-            if (p.isSecondary())
-               return;
-            const subobj = p.getObject();
-            if (subobj?._typename)
-               canv.fPrimitives.Add(subobj, p.getDrawOpt());
-         }, 'objects');
-      }
-
-      // const fp = this.getFramePainter();
-      // fp?.setRootPadRange(this.getRootPad());
-
       const res = toJSON(canv, spacing);
 
-      if (fill0) canv.fFillStyle = 0;
+      if (fill0)
+         canv.fFillStyle = 0;
 
       axes.forEach(e => {
          e.axis.fFirst = e.f;
@@ -81204,8 +81267,7 @@ class TCanvasPainter extends TPadPainter {
          e.hist.fMaximum = e.max;
       });
 
-      if (!this.normal_canvas)
-         canv.fPrimitives.Clear();
+      prims.forEach(lst => lst.Clear());
 
       return res;
    }
@@ -81221,7 +81283,7 @@ class TCanvasPainter extends TPadPainter {
          fullH -= 30;
       }
 
-      this._websocket?.resizeWindow(fullW, fullH);
+      this.getWebsocket()?.resizeWindow(fullW, fullH);
    }
 
    /** @summary draw TCanvas */
@@ -81250,7 +81312,7 @@ class TCanvasPainter extends TPadPainter {
       }
 
       painter.decodeOptions(opt);
-      painter.normal_canvas = !nocanvas;
+      painter._auto_canvas = nocanvas;
       painter.createCanvasSvg(0);
 
       painter.addPadButtons();
@@ -81314,7 +81376,6 @@ async function ensureTCanvas(painter, frame_kind) {
 async function drawTPadSnapshot(dom, snap /* , opt */) {
    const can = create$1(clTCanvas),
          painter = new TCanvasPainter(dom, can);
-   painter.normal_canvas = false;
    painter.addPadButtons();
 
    return painter.syncDraw(true).then(() => painter.redrawPadSnap(snap)).then(() => {
@@ -83201,6 +83262,8 @@ class THistDrawOptions {
          this.omaximum = false;
          this.maximum = histo.fMaximum;
       }
+      if (!this.ominimum && !this.omaximum && this.minimum === this.maximum)
+         this.minimum = this.maximum = kNoZoom;
       if (d.check('HMIN:', true)) {
          this.ohmin = true;
          this.hmin = parseFloat(d.part);
@@ -84172,8 +84235,12 @@ class THistPainter extends ObjectPainter {
          if (histo.TestBit(kNoStats) !== obj.TestBit(kNoStats)) {
             histo.SetBit(kNoStats, obj.TestBit(kNoStats));
             // here check only stats bit
-            if (statpainter)
+            if (statpainter) {
                statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
+               // remove immediately when redraw not called for disabled stats
+               if (!statpainter.Enabled)
+                  statpainter.removeG();
+            }
          }
 
          histo.SetBit(kIsZoomed$1, obj.TestBit(kIsZoomed$1));
@@ -84224,8 +84291,10 @@ class THistPainter extends ObjectPainter {
          histo.fMaximum = obj.fMaximum;
          histo.fSumw2 = obj.fSumw2;
 
-         if (!o.ominimum) o.minimum = histo.fMinimum;
-         if (!o.omaximum) o.maximum = histo.fMaximum;
+         if (!o.ominimum)
+            o.minimum = histo.fMinimum;
+         if (!o.omaximum)
+            o.maximum = histo.fMaximum;
 
          if (this.getDimension() === 1)
             o.decodeSumw2(histo);
@@ -84252,6 +84321,9 @@ class THistPainter extends ObjectPainter {
          o.minimum = histo.fMinimum;
       if (!o.omaximum)
          o.maximum = histo.fMaximum;
+
+      if (!o.ominimum && !o.omaximum && o.minimum === o.maximum)
+         o.minimum = o.maximum = kNoZoom;
 
       if (!fp || !fp.zoomChangedInteractive())
          this.checkPadRange();
@@ -85095,11 +85167,22 @@ class THistPainter extends ObjectPainter {
       let nlevels = 0, apply_min,
           zmin = src.minbin, zmax = src.maxbin, zminpos = src.minposbin,
           custom_levels;
-      if (zmin === zmax) { zmin = src.gminbin; zmax = src.gmaxbin; zminpos = src.gminposbin; }
+      if (zmin === zmax) {
+         if (this.options.ohmin && this.options.ohmax && this.options.Zscale) {
+            zmin = this.options.hmin;
+            zmax = this.options.hmax;
+            zminpos = Math.max(zmin, zmax * 1e-10);
+         } else {
+            zmin = src.gminbin;
+            zmax = src.gmaxbin;
+            zminpos = src.gminposbin;
+         }
+      }
 
       let gzmin = zmin, gzmax = zmax;
       if (this.options.minimum !== kNoZoom) { zmin = this.options.minimum; gzmin = Math.min(gzmin, zmin); apply_min = true; }
       if (this.options.maximum !== kNoZoom) { zmax = this.options.maximum; gzmax = Math.max(gzmax, zmax); apply_min = false; }
+
       if (zmin >= zmax) {
          if (apply_min || !zmin)
             zmax = zmin + 1;
@@ -85215,7 +85298,7 @@ class THistPainter extends ObjectPainter {
       }
 
       if (!enabled) {
-         if (pal_painter) {
+         if (pal_painter && !this.options.Same) {
             this.options.Zvert = pal_painter._palette_vertical;
             pal_painter.Enabled = false;
             pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
@@ -85227,8 +85310,11 @@ class THistPainter extends ObjectPainter {
       if (!pal) {
          pal = create$1(clTPaletteAxis);
 
+         if (!can_move)
+            can_move = !this.options.Same;
+
          pal.fInit = 1;
-         pal.$can_move = true;
+         pal.$can_move = can_move;
          pal.$generated = true;
 
          if (this.options.Zvert)
@@ -85249,8 +85335,6 @@ class THistPainter extends ObjectPainter {
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.addFunction(pal, true);
-
-         can_move = true;
       } else if (pp?._palette_vertical !== undefined)
          this.options.Zvert = pp._palette_vertical;
 
@@ -86301,7 +86385,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       const canp = this.getCanvPainter();
 
-      if (canp && !canp._readonly && (this.snapid !== undefined)) {
+      if (canp && !canp.isReadonly() && (this.snapid !== undefined)) {
          // this is when projection should be created on the server side
          if (((this.is_projection === 'X') || (this.is_projection === 'XY')) && !canp.websocketTimeout('projX')) {
             if (canp.sendWebsocket(`EXECANDSEND:DXPROJ:${this.snapid}:ProjectionX("_projx",${jj1+1},${jj2},"")`))
@@ -88423,8 +88507,13 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       } else if (this.options.Same && this._ignore_frame)
          this.getFrameSvg().style('display', 'none');
 
-      if (!this.draw_content)
+      if (!this.draw_content) {
+         if (this.options.Zscale && this.options.ohmin && this.options.ohmax) {
+            this.getContour(true);
+            this.getHistPalette();
+         }
          return this.removeG();
+      }
 
       this.createHistDrawAttributes();
 
@@ -89356,7 +89445,7 @@ function createLatexGeometry(painter, lbl, size) {
    } // class TextParseWrapper
 
    const node = new TextParseWrapper(),
-         arg = { font_size, latex: 1, x: 0, y: 0, text: lbl, align: ['start', 'top'], fast: true, font: { size: font_size, isMonospace: () => false, aver_width: 0.9 } };
+         arg = { font_size, text: lbl, fast: true, font: { size: font_size, isMonospace: () => false, aver_width: 0.9 } };
 
    produceLatex(painter, node, arg);
 
@@ -92344,17 +92433,17 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                path_err += `M${midx},${my-yerr1+dend}v${yerr1+yerr2-2*dend}`;
             if (hints_err !== null) {
                const he1 = Math.max(yerr1, 5), he2 = Math.max(yerr2, 5);
-               hints_err += `M${midx-edx},${my-he1}h${2*edx}v${he1+he2}h${-2*edx}z`;
+               hints_err += `M${midx-edx},${my-he1}h${2*edx}v${he1+he2}h${ -2*edx}z`;
             }
          }, draw_marker = () => {
             if (funcs.swap_xy) {
                path_marker += this.markeratt.create(my, midx);
                if (hints_marker !== null)
-                  hints_marker += `M${my-hsz},${midx-hsz}v${2*hsz}h${2*hsz}v${-2*hsz}z`;
+                  hints_marker += `M${my-hsz},${midx-hsz}v${2*hsz}h${2*hsz}v${ -2*hsz}z`;
             } else {
                path_marker += this.markeratt.create(midx, my);
                if (hints_marker !== null)
-                  hints_marker += `M${midx-hsz},${my-hsz}h${2*hsz}v${2*hsz}h${-2*hsz}z`;
+                  hints_marker += `M${midx-hsz},${my-hsz}h${2*hsz}v${2*hsz}h${ -2*hsz}z`;
             }
          }, draw_bin = bin => {
             if (extract_bin(bin)) {
@@ -92675,7 +92764,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }, GetBinGrY = i => {
          const yy = histo.getBinContent(i + 1);
          if (funcs.logy && (yy < funcs.scale_ymin))
-            return funcs.swap_xy ? -1000 : 10*height;
+            return funcs.swap_xy ? -1e3 : 10*height;
          return Math.round(funcs.gry(yy));
       };
 
@@ -94921,8 +95010,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (options.Errors) {
          // to show end of error markers, use line width attribute
          let lw = lineatt.width + gStyle.fEndErrorSize;
-         const vv = options.Ends ? `m0,${lw}v${-2*lw}` : '',
-               hh = options.Ends ? `m${lw},0h${-2*lw}` : '';
+         const vv = options.Ends ? `m0,${lw}v${ -2*lw}` : '',
+               hh = options.Ends ? `m${lw},0h${ -2*lw}` : '';
          let vleft = vv, vright = vv, htop = hh, hbottom = hh, bb;
 
          const mainLine = (dx, dy) => {
@@ -94935,24 +95024,24 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          switch (options.Ends) {
             case 2:  // option []
                bb = Math.max(lineatt.width+1, Math.round(lw*0.66));
-               vleft = `m${bb},${lw}h${-bb}v${-2*lw}h${bb}`;
-               vright = `m${-bb},${lw}h${bb}v${-2*lw}h${-bb}`;
+               vleft = `m${bb},${lw}h${-bb}v${ -2*lw}h${bb}`;
+               vright = `m${-bb},${lw}h${bb}v${ -2*lw}h${-bb}`;
                htop = `m${-lw},${bb}v${-bb}h${2*lw}v${bb}`;
                hbottom = `m${-lw},${-bb}v${bb}h${2*lw}v${-bb}`;
                break;
             case 3: // option |>
                lw = Math.max(lw, Math.round(graph.fMarkerSize*8*0.66));
                bb = Math.max(lineatt.width+1, Math.round(lw*0.66));
-               vleft = `l${bb},${lw}v${-2*lw}l${-bb},${lw}`;
-               vright = `l${-bb},${lw}v${-2*lw}l${bb},${lw}`;
+               vleft = `l${bb},${lw}v${ -2*lw}l${-bb},${lw}`;
+               vright = `l${-bb},${lw}v${ -2*lw}l${bb},${lw}`;
                htop = `l${-lw},${bb}h${2*lw}l${-lw},${-bb}`;
                hbottom = `l${-lw},${-bb}h${2*lw}l${-lw},${bb}`;
                break;
             case 4: // option >
                lw = Math.max(lw, Math.round(graph.fMarkerSize*8*0.66));
                bb = Math.max(lineatt.width+1, Math.round(lw*0.66));
-               vleft = `l${bb},${lw}m0,${-2*lw}l${-bb},${lw}`;
-               vright = `l${-bb},${lw}m0,${-2*lw}l${bb},${lw}`;
+               vleft = `l${bb},${lw}m0,${ -2*lw}l${-bb},${lw}`;
+               vright = `l${-bb},${lw}m0,${ -2*lw}l${bb},${lw}`;
                htop = `l${-lw},${bb}m${2*lw},0l${-lw},${-bb}`;
                hbottom = `l${-lw},${-bb}m${2*lw},0l${-lw},${bb}`;
                break;
@@ -95012,7 +95101,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                gry = funcs.gry(pnt.y);
                if ((gry > -this.marker_size) && (gry < h + this.marker_size)) {
                   path += this.markeratt.create(grx, gry);
-                  if (want_tooltip) hints_marker += `M${grx-hsz},${gry-hsz}h${2*hsz}v${2*hsz}h${-2*hsz}z`;
+                  if (want_tooltip) hints_marker += `M${grx-hsz},${gry-hsz}h${2*hsz}v${2*hsz}h${ -2*hsz}z`;
                }
             }
          }
@@ -95585,7 +95674,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       const canp = this.getCanvPainter(), pmain = this.get_main();
 
       if ((method.fName === 'RemovePoint') || (method.fName === 'InsertPoint')) {
-         if (!canp || canp._readonly) return true; // ignore function
+         if (!canp || canp.isReadonly())
+            return true; // ignore function
 
          const pnt = isFunc(pmain?.getLastEventPos) ? pmain.getLastEventPos() : null,
              hint = this.extractTooltip(pnt);
@@ -95725,7 +95815,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       const st = gStyle;
 
       // do not create stats box when drawing canvas
-      if (!st.fOptFit || this.getCanvPainter()?.normal_canvas)
+      if (!st.fOptFit || this.getCanvPainter()?.pad?.fPrimitives?.arr.length)
          return null;
 
       this.create_stats = true;
@@ -96072,7 +96162,7 @@ let Polygon$1 = class Polygon {
    classifyVertex(vertex) {
       const side_value = this.nsign * (this.normal.dot(vertex) - this.w);
 
-      if (side_value < -EPSILON) return BACK;
+      if (side_value < -1e-5) return BACK;
       if (side_value > EPSILON) return FRONT;
       return COPLANAR;
    }
@@ -96694,19 +96784,10 @@ const kindGeo = 0,    // TGeoNode / TGeoShape
       /** @summary TGeo-related bits
        * @private */
       geoBITS = {
-         kVisOverride: BIT(0),  // volume's vis. attributes are overwritten
          kVisNone: BIT(1),  // the volume/node is invisible, as well as daughters
          kVisThis: BIT(2),  // this volume/node is visible
          kVisDaughters: BIT(3),  // all leaves are visible
-         kVisOneLevel: BIT(4),  // first level daughters are visible (not used)
-         kVisStreamed: BIT(5),  // true if attributes have been streamed
-         kVisTouched: BIT(6),  // true if attributes are changed after closing geom
-         kVisOnScreen: BIT(7),  // true if volume is visible on screen
-         kVisContainers: BIT(12), // all containers visible
-         kVisOnly: BIT(13), // just this visible
-         kVisBranch: BIT(14), // only a given branch visible
-         kVisRaytrace: BIT(15)  // raytracing flag
-      },
+         kVisOnScreen: BIT(7)},
 
       clTGeoBBox = 'TGeoBBox',
       clTGeoArb8 = 'TGeoArb8',
@@ -99743,9 +99824,8 @@ class ClonedNodes {
    setDefaultColors(on) {
       this.use_dflt_colors = on;
       if (this.use_dflt_colors && !this.dflt_table) {
-         const dflt = { kWhite: 0, kBlack: 1, kGray: 920,
-                        kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kCyan: 432,
-                        kOrange: 800, kSpring: 820, kTeal: 840, kAzure: 860, kViolet: 880, kPink: 900 },
+         const dflt = { kGray: 920,
+                        kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kOrange: 800},
 
           nmax = 110, col = [];
          for (let i=0; i<nmax; i++) col.push(dflt.kGray);
@@ -111614,7 +111694,7 @@ class TBuffer {
             this.mapClass(this.fTagOffset + startpos + kMapOffset, classInfo.name);
       } else {
          // got a tag to an already seen class
-         const clTag = (tag & ~kClassMask) + this.fDisplacement;
+         const clTag = (tag & 2147483647) + this.fDisplacement;
          classInfo.name = this.getMappedClass(clTag);
 
          if (classInfo.name === -1)
@@ -111707,7 +111787,7 @@ DirectStreamers[clTBasket] = function(buf, obj) {
          obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
          if ((flag > 20) && (flag < 40)) {
             for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
-               obj.fEntryOffset[i] &= ~kDisplacementMask;
+               obj.fEntryOffset[i] &= 16777215;
          }
       }
 
@@ -113698,9 +113778,9 @@ class TDrawSelector extends TSelector {
       this.vars = []; // array of expression variables
       this.cut = null; // cut variable
       this.hist = null;
-      this.histo_drawopt = '';
+      this.drawopt = '';
       this.hist_name = '$htemp';
-      this.hist_title = 'Result of TTree::Draw';
+      this.draw_title = 'Result of TTree::Draw';
       this.graph = false;
       this.hist_args = []; // arguments for histogram creation
       this.arr_limit = 1000;  // number of accumulated items before create histogram
@@ -113719,7 +113799,8 @@ class TDrawSelector extends TSelector {
 
    /** @summary Parse parameters */
    parseParameters(tree, args, expr) {
-      if (!expr || !isStr(expr)) return '';
+      if (!expr || !isStr(expr))
+         return '';
 
       // parse parameters which defined at the end as expression;par1name:par1value;par2name:par2value
       let pos = expr.lastIndexOf(';');
@@ -113732,11 +113813,48 @@ class TDrawSelector extends TSelector {
          if (separ > 0) { parvalue = parname.slice(separ + 1); parname = parname.slice(0, separ); }
 
          let intvalue = parseInt(parvalue);
-         if (!parvalue || !Number.isInteger(intvalue)) intvalue = undefined;
+         if (!parvalue || !Number.isInteger(intvalue))
+            intvalue = undefined;
 
          switch (parname) {
-            case 'num':
+            case 'elist':
+               if ((parvalue.at(0) === '[') && (parvalue.at(-1) === ']')) {
+                  parvalue = parvalue.slice(1, parvalue.length - 1).replaceAll(/\s/g, '');
+                  args.elist = [];
+                  let p = 0, last_v = -1;
+                  const getInt = () => {
+                     const p0 = p;
+                     while ((p < parvalue.length) && (parvalue.charCodeAt(p) >= 48) && (parvalue.charCodeAt(p) < 58))
+                        p++;
+                     return parseInt(parvalue.slice(p0, p));
+                  };
+
+                  while (p < parvalue.length) {
+                     const v1 = getInt();
+                     if (v1 <= last_v) {
+                        console.log('position', p);
+                        throw Error(`Wrong entry id ${v1} in elist last ${last_v}`);
+                     }
+                     let v2 = v1;
+                     if (parvalue[p] === '.' && parvalue[p + 1] === '.') {
+                        p += 2;
+                        v2 = getInt();
+                        if (v2 < v1)
+                           throw Error(`Wrong entry id ${v2} in range ${v1}`);
+                     }
+                     if (parvalue[p] === ',' || p === parvalue.length) {
+                        for (let v = v1; v <= v2; ++v) {
+                           args.elist.push(v);
+                           last_v = v;
+                        }
+                        p++;
+                     } else
+                        throw Error('Wrong syntax for elist');
+                  }
+               }
+               break;
             case 'entries':
+            case 'num':
             case 'numentries':
                if (parvalue === 'all')
                   args.numentries = tree.fEntries;
@@ -113746,7 +113864,12 @@ class TDrawSelector extends TSelector {
                   args.numentries = intvalue;
                break;
             case 'first':
-               if (intvalue !== undefined) args.firstentry = intvalue;
+               if (intvalue !== undefined)
+                  args.firstentry = intvalue;
+               break;
+            case 'nmatch':
+               if (intvalue !== undefined)
+                  this.nmatch = intvalue;
                break;
             case 'mon':
             case 'monitor':
@@ -113758,12 +113881,17 @@ class TDrawSelector extends TSelector {
             case 'dump':
                args.dump = true;
                break;
+            case 'staged':
+               args.staged = true;
+               break;
             case 'maxseg':
             case 'maxrange':
-               if (intvalue) tree.$file.fMaxRanges = intvalue;
+               if (intvalue)
+                  tree.$file.fMaxRanges = intvalue;
                break;
             case 'accum':
-               if (intvalue) this.arr_limit = intvalue;
+               if (intvalue)
+                  this.arr_limit = intvalue;
                break;
             case 'htype':
                if (parvalue && (parvalue.length === 1)) {
@@ -113799,6 +113927,8 @@ class TDrawSelector extends TSelector {
          }
          if (harg === 'dump')
             args.dump = true;
+         else if (harg === 'elist')
+            args.dump_entries = true;
          else if (harg.indexOf('Graph') === 0)
             args.graph = true;
          else if (pos < 0) {
@@ -113812,17 +113942,75 @@ class TDrawSelector extends TSelector {
                harg[n] = (n % 3 === 0) ? parseInt(harg[n]) : parseFloat(harg[n]);
                if (!Number.isFinite(harg[n])) isok = false;
             }
-            if (isok) this.hist_args = harg;
+            if (isok)
+               this.hist_args = harg;
          }
       }
 
       if (args.dump) {
          this.dump_values = true;
          args.reallocate_objects = true;
-         if (args.numentries === undefined) args.numentries = 10;
+         if (args.numentries === undefined) {
+            args.numentries = 10;
+            args._dflt_entries = true;
+         }
       }
 
       return expr;
+   }
+
+   /** @summary Create draw expression for N-dim with cut */
+   createDrawExpression(tree, names, cut, args) {
+      if (args.dump && names.length === 1 && names[0] === 'Entry$') {
+         args.dump_entries = true;
+         args.dump = false;
+      }
+
+      if (args.dump_entries) {
+         this.dump_entries = true;
+         this.hist = [];
+         if (args._dflt_entries) {
+            delete args._dflt_entries;
+            delete args.numentries;
+         }
+      }
+
+      let is_direct = !cut && !this.dump_entries;
+
+      this.ndim = names.length;
+
+      for (let n = 0; n < this.ndim; ++n) {
+         this.vars[n] = new TDrawVariable(this.globals);
+         if (!this.vars[n].parse(tree, this, names[n])) return false;
+         if (!this.vars[n].direct_branch) is_direct = false;
+      }
+
+      this.cut = new TDrawVariable(this.globals);
+      if (cut && !this.cut.parse(tree, this, cut))
+         return false;
+
+      if (!this.numBranches()) {
+         console.warn('no any branch is selected');
+         return false;
+      }
+
+      if (is_direct)
+         this.ProcessArrays = this.ProcessArraysFunc;
+
+      this.monitoring = args.monitoring;
+
+      // force TPolyMarker3D drawing for 3D case
+      if ((this.ndim === 3) && !this.want_hist && !args.dump)
+         args.graph = true;
+
+      this.graph = args.graph;
+
+      if (args.drawopt !== undefined)
+         this.drawopt = args.drawopt;
+      else
+         args.drawopt = this.drawopt = this.graph ? 'P' : '';
+
+      return true;
    }
 
    /** @summary Parse draw expression */
@@ -113831,14 +114019,14 @@ class TDrawSelector extends TSelector {
       let expr = this.parseParameters(tree, args, args.expr), cut = '';
 
       // parse option for histogram creation
-      this.hist_title = `drawing '${expr}' from ${tree.fName}`;
+      this.draw_title = `drawing '${expr}' from ${tree.fName}`;
 
       let pos;
       if (args.cut)
          cut = args.cut;
       else {
          pos = expr.replace(/TMath::/g, 'TMath__').lastIndexOf('::'); // avoid confusion due-to :: in the namespace
-         if (pos > 0) {
+         if (pos >= 0) {
             cut = expr.slice(pos + 2).trim();
             expr = expr.slice(0, pos).trim();
          }
@@ -113848,8 +114036,7 @@ class TDrawSelector extends TSelector {
       args.parse_cut = cut;
 
       // let names = expr.split(':'); // to allow usage of ? operator, we need to handle : as well
-      const names = [];
-      let nbr1 = 0, nbr2 = 0, prev = 0;
+      let names = [], nbr1 = 0, nbr2 = 0, prev = 0;
       for (pos = 0; pos < expr.length; ++pos) {
          switch (expr[pos]) {
             case '(': nbr1++; break;
@@ -113863,52 +114050,27 @@ class TDrawSelector extends TSelector {
                break;
          }
       }
-      if (!nbr1 && !nbr2 && (pos > prev)) names.push(expr.slice(prev, pos));
+      if (!nbr1 && !nbr2 && (pos > prev))
+         names.push(expr.slice(prev, pos));
 
-      if ((names.length < 1) || (names.length > 3)) return false;
-
-      this.ndim = names.length;
-
-      let is_direct = !cut;
-
-      for (let n = 0; n < this.ndim; ++n) {
-         this.vars[n] = new TDrawVariable(this.globals);
-         if (!this.vars[n].parse(tree, this, names[n])) return false;
-         if (!this.vars[n].direct_branch) is_direct = false;
-      }
-
-      this.cut = new TDrawVariable(this.globals);
-      if (cut)
-         if (!this.cut.parse(tree, this, cut)) return false;
-
-      if (!this.numBranches()) {
-         console.warn('no any branch is selected');
+      if (args.staged) {
+         args.staged_names = names;
+         names = ['Entry$'];
+         args.dump_entries = true;
+      } else if (cut && args.dump_entries)
+         names = ['Entry$'];
+      else if ((names.length < 1) || (names.length > 3))
          return false;
-      }
 
-      if (is_direct) this.ProcessArrays = this.ProcessArraysFunc;
-
-      this.monitoring = args.monitoring;
-
-      // force TPolyMarker3D drawing for 3D case
-      if ((this.ndim === 3) && !this.want_hist && !args.dump)
-         args.graph = true;
-
-      this.graph = args.graph;
-
-      if (args.drawopt !== undefined)
-         this.histo_drawopt = args.drawopt;
-      else
-         this.histo_drawopt = (this.ndim === 2) ? 'col' : '';
-
-      return true;
+      return this.createDrawExpression(tree, names, cut, args);
    }
 
    /** @summary Draw only specified branch */
    drawOnlyBranch(tree, branch, expr, args) {
       this.ndim = 1;
 
-      if (expr.indexOf('dump') === 0) expr = ';' + expr;
+      if (expr.indexOf('dump') === 0)
+         expr = ';' + expr;
 
       expr = this.parseParameters(tree, args, expr);
 
@@ -113936,12 +114098,14 @@ class TDrawSelector extends TSelector {
       }
 
       this.vars[0] = new TDrawVariable(this.globals);
-      if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch)) return false;
-      this.hist_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName}`;
+      if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch))
+         return false;
+      this.draw_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName}`;
 
       this.cut = new TDrawVariable(this.globals);
 
-      if (this.vars[0].direct_branch) this.ProcessArrays = this.ProcessArraysFunc;
+      if (this.vars[0].direct_branch)
+         this.ProcessArrays = this.ProcessArraysFunc;
 
       return true;
    }
@@ -114114,8 +114278,8 @@ class TDrawSelector extends TSelector {
       hist.fZaxis.fLabels = z.fLabels;
 
       hist.fName = this.hist_name;
-      hist.fTitle = this.hist_title;
-      hist.fOption = this.histo_drawopt;
+      hist.fTitle = this.draw_title;
+      hist.fOption = this.drawopt;
       hist.$custom_stat = (this.hist_name === '$htemp') ? 111110 : 111111;
 
       if (set_hist) {
@@ -114131,7 +114295,8 @@ class TDrawSelector extends TSelector {
 
    /** @summary Create output object - histogram, graph, dump array */
    createOutputObject() {
-      if (this.hist || !this.vars[0].buf) return;
+      if (this.hist || !this.vars[0].buf)
+         return;
 
       if (this.dump_values) {
          // just create array where dumped values will be collected
@@ -114147,11 +114312,11 @@ class TDrawSelector extends TSelector {
             // A 1-dimensional graph will just have the x axis as an index
             res = createTGraph(N, Array.from(Array(N).keys()), this.vars[0].buf);
             res.fName = 'Graph';
-            res.fTitle = this.hist_title;
+            res.fTitle = this.draw_title;
          } else if (this.ndim === 2) {
             res = createTGraph(N, this.vars[0].buf, this.vars[1].buf);
             res.fName = 'Graph';
-            res.fTitle = this.hist_title;
+            res.fTitle = this.draw_title;
             delete this.vars[1].buf;
          } else if (this.ndim === 3) {
             res = create$1(clTPolyMarker3D);
@@ -114374,14 +114539,17 @@ class TDrawSelector extends TSelector {
       this.globals.entry = entry; // can be used in any expression
 
       this.cut.produce(this.tgtobj);
-      if (!this.dump_values && !this.cut.value) return;
+      if (!this.dump_values && !this.cut.value)
+         return;
 
       for (let n = 0; n < this.ndim; ++n)
          this.vars[n].produce(this.tgtobj);
 
       const var0 = this.vars[0], var1 = this.vars[1], var2 = this.vars[2], cut = this.cut;
 
-      if (this.graph || this.arr_limit) {
+      if (this.dump_entries)
+         this.hist.push(entry);
+      else if (this.graph || this.arr_limit) {
          switch (this.ndim) {
             case 1:
                for (let n0 = 0; n0 < var0.length; ++n0) {
@@ -114445,6 +114613,12 @@ class TDrawSelector extends TSelector {
             if (isFunc(this.progress_callback))
                this.progress_callback(this.hist);
          }
+      }
+
+      if ((this.nmatch !== undefined) && (--this.nmatch <= 0)) {
+         if (!this.hist)
+            this.createOutputObject();
+         this.Abort();
       }
    }
 
@@ -114534,6 +114708,7 @@ function detectBranchMemberClass(brlst, prefix, start) {
   * @param {object} [args] - different arguments
   * @param {number} [args.firstentry] - first entry to process, 0 when not specified
   * @param {number} [args.numentries] - number of entries to process, all when not specified
+  * @param {Array} [args.elist] - arrays of entries id to process
   * @return {Promise} with TSelector instance */
 async function treeProcess(tree, selector, args) {
    if (!args) args = {};
@@ -114549,7 +114724,6 @@ async function treeProcess(tree, selector, args) {
       file: tree.$file, // keep file reference
       selector, // reference on selector
       arr: [], // list of branches
-      curr: -1,  // current entry ID
       current_entry: -1, // current processed entry
       simple_read: true, // all baskets in all used branches are in sync,
       process_arrays: true // one can process all branches as arrays
@@ -114625,6 +114799,8 @@ async function treeProcess(tree, selector, args) {
          staged_entry: -1, // entry which is staged for reading
          first_readentry: -1, // first entry to read
          staged_basket: 0,  // last basket staged for reading
+         eindx: 0, // index of last checked entry when selecting baskets
+         selected_baskets: [],   // array of selected baskets, used when specific events are selected
          numentries: branch.fEntries,
          numbaskets: branch.fWriteBasket, // number of baskets which can be read from the file
          counters: null, // branch indexes used as counters
@@ -115159,6 +115335,14 @@ async function treeProcess(tree, selector, args) {
 
    let resolveFunc, rejectFunc; // Promise methods
 
+   if (args.elist) {
+      args.firstentry = args.elist.at(0);
+      args.numentries = args.elist.at(-1) - args.elist.at(0) + 1;
+      handle.process_entries = args.elist;
+      handle.process_entries_indx = 0;
+      handle.process_arrays = false; // do not use arrays process for selected entries
+   }
+
    if (Number.isInteger(args.firstentry) && (args.firstentry > handle.firstentry) && (args.firstentry < handle.lastentry))
       handle.process_min = args.firstentry;
 
@@ -115315,10 +115499,11 @@ async function treeProcess(tree, selector, args) {
    let processBaskets = null;
 
    function readNextBaskets() {
-      const bitems = [];
-      let totalsz = 0, isany = true, is_direct = false, min_staged = handle.process_max;
+      const bitems = [], max_ranges = tree.$file?.fMaxRanges || settings.MaxRanges,
+            select_entries = handle.process_entries !== undefined;
+      let total_size = 0, total_nsegm = 0, isany = true, is_direct = false, min_staged = handle.process_max;
 
-      while ((totalsz < 1e6) && isany) {
+      while (isany && (total_size < settings.TreeReadBunchSize) && (!total_nsegm || (total_nsegm + handle.arr.length <= max_ranges))) {
          isany = false;
          // very important, loop over branches in reverse order
          // let check counter branch after reading of normal branch is prepared
@@ -115326,26 +115511,45 @@ async function treeProcess(tree, selector, args) {
             const elem = handle.arr[n];
 
             while (elem.staged_basket < elem.numbaskets) {
-               const k = elem.staged_basket++;
+               const k = elem.staged_basket++,
+                     bskt_emin = elem.getBasketEntry(k),
+                     bskt_emax = k < elem.numbaskets - 1 ? elem.getBasketEntry(k + 1) : bskt_emin + 1e6;
+
+               // first baskets can be ignored
+               if (bskt_emax <= handle.process_min)
+                  continue;
 
                // no need to read more baskets, process_max is not included
-               if (elem.getBasketEntry(k) >= handle.process_max) break;
+               if (bskt_emin >= handle.process_max)
+                  break;
 
-               // check which baskets need to be read
                if (elem.first_readentry < 0) {
-                  const lmt = elem.getBasketEntry(k + 1),
-                        not_needed = (lmt <= handle.process_min);
-
-                  // for (let d=0;d<elem.ascounter.length;++d) {
-                  //    let dep = handle.arr[elem.ascounter[d]]; // dependent element
-                  //    if (dep.first_readentry < lmt) not_needed = false; // check that counter provide required data
-                  // }
-
-                  if (not_needed) continue; // if that basket not required, check next
-
-                  elem.curr_basket = k; // basket where reading will start
+                  // basket where reading will start
+                  elem.curr_basket = k;
 
                   elem.first_readentry = elem.getBasketEntry(k); // remember which entry will be read first
+               } else if (select_entries) {
+                  // all entries from process entries are analyzed
+                  if (elem.eindx >= handle.process_entries.length)
+                     break;
+
+                  // check if this basket required
+                  if ((handle.process_entries[elem.eindx] < bskt_emin) || (handle.process_entries[elem.eindx] >= bskt_emax))
+                      continue;
+
+                  // when all previous baskets were processed, continue with selected
+                  if (elem.curr_basket < 0)
+                     elem.curr_basket = k;
+               }
+
+               if (select_entries) {
+                  // also check next entries which may belong to this basket
+                  do
+                     elem.eindx++;
+                  while ((elem.eindx < handle.process_entries.length) && (handle.process_entries[elem.eindx] >= bskt_emin) && (handle.process_entries[elem.eindx] < bskt_emax));
+
+                  // remember which baskets are required
+                  elem.selected_baskets.push(k);
                }
 
                // check if basket already loaded in the branch
@@ -115372,7 +115576,8 @@ async function treeProcess(tree, selector, args) {
                   elem.baskets[k] = bitem;
                } else {
                   bitems.push(bitem);
-                  totalsz += elem.branch.fBasketBytes[k];
+                  total_size += elem.branch.fBasketBytes[k];
+                  total_nsegm++;
                   isany = true;
                }
 
@@ -115385,7 +115590,7 @@ async function treeProcess(tree, selector, args) {
          }
       }
 
-      if ((totalsz === 0) && !is_direct) {
+      if ((total_size === 0) && !is_direct) {
          handle.selector.Terminate(true);
          return resolveFunc(handle.selector);
       }
@@ -115404,7 +115609,7 @@ async function treeProcess(tree, selector, args) {
 
       handle.progress_showtm = new Date().getTime();
 
-      if (totalsz > 0)
+      if (total_size > 0)
          return readBaskets(bitems).then(processBaskets);
 
       if (is_direct)
@@ -115448,7 +115653,7 @@ async function treeProcess(tree, selector, args) {
                   continue; // ignore non-master branch
                }
 
-               // this is single response from the tree, includes branch, bakset number, raw data
+               // this is single response from the tree, includes branch, basket number, raw data
                const bitem = elem.baskets[elem.curr_basket];
 
                // basket not read
@@ -115472,6 +115677,12 @@ async function treeProcess(tree, selector, args) {
                bitem.branch = null; // remove reference on the branch
                bitem.bskt_obj = null; // remove reference on the branch
                elem.baskets[elem.curr_basket++] = undefined; // remove from array
+
+               if (handle.process_entries !== undefined) {
+                  elem.selected_baskets.shift();
+                  // -1 means that basket is not yet found for following entries
+                  elem.curr_basket = (elem.selected_baskets.length > 0) ? elem.selected_baskets[0] : -1;
+               }
             }
 
             // define how much entries can be processed before next raw buffer will be finished
@@ -115505,7 +115716,7 @@ async function treeProcess(tree, selector, args) {
             isanyprocessed = true;
          } else {
             // main processing loop
-            while (loopentries--) {
+            while (loopentries > 0) {
                for (n = 0; n < handle.arr.length; ++n) {
                   elem = handle.arr[n];
 
@@ -115517,9 +115728,23 @@ async function treeProcess(tree, selector, args) {
 
                handle.selector.Process(handle.current_entry);
 
-               handle.current_entry++;
-
                isanyprocessed = true;
+
+               if (handle.process_entries) {
+                  handle.process_entries_indx++;
+                  if (handle.process_entries_indx >= handle.process_entries.length) {
+                     handle.current_entry++;
+                     loopentries = 0;
+                  } else {
+                     const next_entry = handle.process_entries[handle.process_entries_indx],
+                           diff = next_entry - handle.current_entry;
+                     handle.current_entry = next_entry;
+                     loopentries -= diff;
+                  }
+               } else {
+                  handle.current_entry++;
+                  loopentries--;
+               }
             }
          }
 
@@ -115544,17 +115769,21 @@ async function treeProcess(tree, selector, args) {
 /** @summary implementation of TTree::Draw
   * @param {object|string} args - different setting or simply draw expression
   * @param {string} args.expr - draw expression
-  * @param {string} [args.cut=undefined]   - cut expression (also can be part of 'expr' after '::')
+  * @param {string} [args.cut=undefined] - cut expression (also can be part of 'expr' after '::')
   * @param {string} [args.drawopt=undefined] - draw options for result histogram
   * @param {number} [args.firstentry=0] - first entry to process
   * @param {number} [args.numentries=undefined] - number of entries to process, all by default
+  * @param {Array} [args.elist=undefined] - array of entries id to process, all by default
+  * @param {boolean} [args.staged] - staged processing, first apply cut to select entries and then perform drawing for selected entries
   * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
   * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
   * @return {Promise} with produced object */
 async function treeDraw(tree, args) {
-   if (isStr(args)) args = { expr: args };
+   if (isStr(args))
+      args = { expr: args };
 
-   if (!isStr(args.expr)) args.expr = '';
+   if (!isStr(args.expr))
+      args.expr = '';
 
    const selector = new TDrawSelector();
 
@@ -115566,7 +115795,22 @@ async function treeDraw(tree, args) {
 
    selector.setCallback(null, args.progress);
 
-   return treeProcess(tree, selector, args).then(() => selector.hist);
+   return treeProcess(tree, selector, args).then(sel => {
+      if (!args.staged)
+         return sel;
+
+      delete args.dump_entries;
+
+      const selector2 = new TDrawSelector(),
+            args2 = Object.assign({}, args);
+      args2.staged = false;
+      args2.elist = sel.hist; // assign entries found in first selection
+      if (!selector2.createDrawExpression(tree, args.staged_names, '', args2))
+         return Promise.reject(Error(`Fail to create final draw expression ${args.expr}`));
+      ['arr_limit', 'htype', 'nmatch', 'want_hist', 'hist_nbins', 'hist_name', 'hist_args', 'draw_title']
+        .forEach(name => { selector2[name] = selector[name]; });
+      return treeProcess(tree, selector2, args2);
+   }).then(sel => sel.hist);
 }
 
 /** @summary Performs generic I/O test for all branches in the TTree
@@ -131160,7 +131404,7 @@ function parseFontFamily(input) {
     var curves = [];
 
     // clockwise or counterclockwise
-    var sgn = anticlockwise ? -1 : +1;
+    var sgn = anticlockwise ? -1 : 1;
 
     var a1 = startAngle;
     for (; totalAngle > EPSILON; ) {
@@ -132023,7 +132267,7 @@ var adler = function () {
 };
 // deflate with opts
 var dopt = function (dat, opt, pre, post, st) {
-    return dflt(dat, opt.level == null ? 6 : opt.level, opt.mem == null ? Math.ceil(Math.max(8, Math.min(13, Math.log(dat.length))) * 1.5) : (12 + opt.mem), pre, post, !st);
+    return dflt(dat, opt.level == null ? 6 : opt.level, opt.mem == null ? Math.ceil(Math.max(8, Math.min(13, Math.log(dat.length))) * 1.5) : (12 + opt.mem), pre, post, true);
 };
 // write bytes
 var wbytes = function (d, b, v) {
@@ -135860,8 +136104,8 @@ function WebPDecoder(imageData) {
     if (!F) throw Error("assert :P");
   }
   function fa(F, L, J) {
-    for (var H = 0; 4 > H; H++) if (F[L + H] != J.charCodeAt(H)) return !0;
-    return !1;
+    for (var H = 0; 4 > H; H++) if (F[L + H] != J.charCodeAt(H)) return true;
+    return false;
   }
   function I(F, L, J, H, Z) {
     for (var O = 0; O < Z; O++) F[L + O] = J[H + O];
@@ -136823,7 +137067,7 @@ function WebPDecoder(imageData) {
         w = n < q ? ha(m, k, h) : null;
       x(a.C < f);
       x(q <= e);
-      var y = !1;
+      var y = false;
       a: for (;;) {
         for (; y || n < q; ) {
           var A = 0;
@@ -136838,7 +137082,7 @@ function WebPDecoder(imageData) {
           }
           k & u || (w = ha(m, k, h));
           x(null != w);
-          w.Qb && ((b[n] = w.qb), (y = !0));
+          w.Qb && ((b[n] = w.qb), (y = true));
           if (!y)
             if ((Sa(l), w.jc)) {
               var A = l,
@@ -136849,7 +137093,7 @@ function WebPDecoder(imageData) {
               256 > C.g
                 ? (qb(A, A.u + C.g), (E[B] = C.value), (A = 0))
                 : (qb(A, A.u + C.g - 256), x(256 <= C.value), (A = C.value));
-              0 == A && (y = !0);
+              0 == A && (y = true);
             } else A = ua(w.G[0], w.H[0], l);
           if (l.h) break;
           if (y || 256 > A) {
@@ -136864,7 +137108,7 @@ function WebPDecoder(imageData) {
                 if (l.h) break;
                 b[n] = ((B << 24) | (y << 16) | (A << 8) | E) >>> 0;
               }
-            y = !1;
+            y = false;
             ++n;
             ++k;
             if (
@@ -136903,7 +137147,7 @@ function WebPDecoder(imageData) {
             E = p;
             x(!(y >>> E.Xa));
             b[A] = E.X[y];
-            y = !0;
+            y = true;
           } else break a;
           y || x(l.h == db(l));
         }
@@ -137983,7 +138227,7 @@ function WebPDecoder(imageData) {
               a.D.wa = a.wa;
               a.D.Y = a.Y;
               0 < a.Aa && (a.D.Y += k);
-              x(!0);
+              x(true);
               a.oc = g;
               a.pc = h;
               h += 832;
@@ -138949,7 +139193,7 @@ function WebPDecoder(imageData) {
       P[Bb] = qd;
     }
     function Sb(a) {
-      return a & ~Pf ? (0 > a ? 0 : 255) : a >> rd;
+      return a & -16384 ? (0 > a ? 0 : 255) : a >> rd;
     }
     function bb(a, b) {
       return Sb(((19077 * a) >> 8) + ((26149 * b) >> 8) - 14234);
@@ -140883,7 +141127,6 @@ function WebPDecoder(imageData) {
       ta = -227,
       Eb = 482,
       rd = 6,
-      Pf = (256 << rd) - 1,
       jc = 0,
       Yd = V(256),
       ae = V(256),
@@ -142170,7 +142413,7 @@ WebPDecoder.prototype.getData = function() {
           if (mappingUncompress.hasOwnProperty(ch)) {
             keyparts += mappingUncompress[ch];
             key = parseInt(keyparts, 16) * sign;
-            sign = +1;
+            sign = 1;
             keyparts = "";
           } else {
             keyparts += ch;
@@ -142179,7 +142422,7 @@ WebPDecoder.prototype.getData = function() {
           if (mappingUncompress.hasOwnProperty(ch)) {
             valueparts += mappingUncompress[ch];
             activeobject[key] = parseInt(valueparts, 16) * sign;
-            sign = +1;
+            sign = 1;
             key = undefined;
             valueparts = "";
           } else {
@@ -151710,7 +151953,7 @@ function requireA2c () {
 
 	  // rounding errors, e.g. -1.0000000000000002 can screw up this
 	  if (dot >  1.0) { dot =  1.0; }
-	  if (dot < -1.0) { dot = -1.0; }
+	  if (dot < -1) { dot = -1; }
 
 	  return sign * Math.acos(dot);
 	}
@@ -156937,10 +157180,14 @@ class HierarchyPainter extends BasePainter {
          const cp = getElementCanvPainter(dom);
 
          if (cp) {
-            if (sett?.has_same)
+            if (sett?.has_same && mp)
                opt = 'same ' + opt;
          } else
             this.cleanupFrame(dom);
+
+         // if drop on sub-pad painter - call add pad buttons
+         if (isFunc(dom?.addPadButtons))
+            dom.addPadButtons();
 
          return draw(dom, res.obj, opt).then(p => drop_complete(p, mp === p));
       });
@@ -159613,8 +159860,9 @@ async function treeDrawProgress(obj, final) {
    if (!final && !this.last_pr)
       return;
 
-   if (this.dump || this.testio) {
-      if (!final) return;
+   if (this.dump || this.dump_entries || this.testio) {
+      if (!final)
+         return;
       if (isBatchMode()) {
          const painter = new BasePainter(this.drawid);
          painter.selectDom().property('_json_object_', obj);
@@ -159633,7 +159881,8 @@ async function treeDrawProgress(obj, final) {
    // critical is last drawing which should wait for previous one
    // therefore last_pr is kept as indication that promise is not yet processed
 
-   if (!this.last_pr) this.last_pr = Promise.resolve(true);
+   if (!this.last_pr)
+      this.last_pr = Promise.resolve(true);
 
    return this.last_pr.then(() => {
       if (this.obj_painter)
@@ -159642,7 +159891,7 @@ async function treeDrawProgress(obj, final) {
          if (final) console.log('no result after tree drawing');
          this.last_pr = false; // return false indicating no drawing is done
       } else {
-         this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
+         this.last_pr = drawTreeDrawResult(this.drawid, obj, this.drawopt).then(p => {
             this.obj_painter = p;
             if (!final) this.last_pr = null;
             return p; // return painter for histogram
@@ -159673,7 +159922,7 @@ function createTreePlayer(player) {
 
    player.showExtraButtons = function(args) {
       const main = this.selectDom(),
-         numentries = this.local_tree?.fEntries || 0;
+            numentries = this.local_tree?.fEntries || 0;
 
       main.select('.treedraw_more').remove(); // remove more button first
 
@@ -160193,6 +160442,11 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
          hopt += ' ' + this.options.hopt;
       if (this.options.draw_errors && !hopt)
          hopt = 'E';
+      if (this.options.zscale) {
+         const p = hopt.toUpperCase().indexOf('COLZ');
+         if (p >= 0)
+            hopt = hopt.slice(0, p + 3) + hopt.slice(p + 4);
+      }
       if (!this.options.pads)
          hopt += ' same nostat' + this.options.auto;
       return hopt;
@@ -160246,20 +160500,12 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
 
    /** @summary Decode draw options of THStack painter */
    decodeOptions(opt) {
-      if (!this.options) this.options = {};
+      if (!this.options)
+         this.options = {};
       Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '', auto: '' });
 
       const stack = this.getObject(),
-            hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (this.fStack ? this.fStack.arr[0] : null),
-
-       hasErrors = hist2 => {
-         const len = hist2.fSumw2?.length ?? 0;
-         for (let n = 0; n < len; ++n) {
-            if (hist2.fSumw2[n] > 0)
-               return true;
-         }
-         return false;
-      };
+            hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (this.fStack ? this.fStack.arr[0] : null);
 
       if (hist?._typename.indexOf(clTH2) === 0)
          this.options.ndim = 2;
@@ -160267,9 +160513,16 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       if ((this.options.ndim === 2) && !opt)
          opt = 'lego1';
 
-      if (stack.fHists && !this.options.nostack) {
-         for (let k = 0; k < stack.fHists.arr.length; ++k)
-            this.options.has_errors = this.options.has_errors || hasErrors(stack.fHists.arr[k]);
+      if (!this.options.nostack) {
+         stack.fHists?.arr.forEach(h => {
+            const len = h.fSumw2?.length ?? 0;
+            for (let n = 0; n < len; ++n) {
+               if (h.fSumw2[n] > 0) {
+                  this.options.has_errors = true;
+                  break;
+               }
+            }
+         });
       }
 
       this.options.nhist = stack.fHists?.arr?.length ?? 1;
@@ -160288,11 +160541,13 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       this.options.pads = d.check('PADS');
       if (this.options.pads) this.options.nostack = true;
 
-      this.options.hopt = d.remain(); // use remaining draw options for histogram draw
+      this.options.hopt = d.remain().trim(); // use remaining draw options for histogram draw
 
       const dolego = d.check('LEGO');
 
       this.options.errors = d.check('E');
+
+      this.options.zscale = d.check('COLZ');
 
       // if any histogram appears with pre-calculated errors, use E for all histograms
       if (!this.options.nostack && this.options.has_errors && !dolego && !d.check('HIST') && (this.options.hopt.indexOf('E') < 0))
@@ -160304,7 +160559,7 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
    /** @summary Create main histogram for THStack axis drawing */
    createHistogram(stack) {
       const histos = stack.fHists,
-            numhistos = histos ? histos.arr.length : 0;
+            numhistos = histos?.arr.length ?? 0;
 
       if (!numhistos) {
          const histo = createHistogram(clTH1F, 100);
@@ -160315,6 +160570,7 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
 
       const h0 = histos.arr[0],
             histo = createHistogram((this.options.ndim === 1) ? clTH1F : clTH2F, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+
       histo.fName = 'axis_hist';
       histo.fBits |= kNoStats;
       Object.assign(histo.fXaxis, h0.fXaxis);
@@ -160454,7 +160710,6 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       const func = (this.options.ndim === 1) ? TH1Painter$2.draw : TH2Painter$2.draw;
       return func(dom, hist, hopt);
    }
-
 
    /** @summary Access or modify histogram min/max
     * @private */
@@ -161538,7 +161793,7 @@ class TGraphDelaunay {
                   sin_sum = c1*Math.sqrt(1-c2*c2)+c2*Math.sqrt(1-c1*c1);
 
                   // sin_sum doesn't always come out as zero when it should do.
-                  if (sin_sum < -1.e-6) {
+                  if (sin_sum < -1e-6) {
                      // z is inside the circle, this is not a Delaunay triangle
                      skip_this_triangle = true;
                      break;
@@ -164791,7 +165046,7 @@ class TWebPaintingPainter extends ObjectPainter {
                   continue;
                case 'o':
                   attr = read_attr(arr[k], ['fTextColor', 'fTextFont', 'fTextSize', 'fTextAlign', 'fTextAngle']);
-                  if (attr.fTextSize < 0) attr.fTextSize *= -0.001;
+                  if (attr.fTextSize < 0) attr.fTextSize *= -1e-3;
                   check_attributes();
                   continue;
                case 'r':
@@ -167158,7 +167413,7 @@ class RObjectPainter extends ObjectPainter {
      * kNormal is standard functionality with RCanvas on server side */
    v7CommMode() {
       const canp = this.getCanvPainter();
-      if (!canp || !canp.submitDrawableRequest || !canp._websocket)
+      if (!canp || !canp.submitDrawableRequest || !canp.getWebsocket())
          return kOffline;
 
       return kNormal;
@@ -168889,9 +169144,7 @@ class RFramePainter extends RObjectPainter {
       delete this._click_handler;
       delete this._dblclick_handler;
 
-      const pp = this.getPadPainter();
-      if (pp?.frame_painter_ref === this)
-         delete pp.frame_painter_ref;
+      this.getPadPainter()?.setFramePainter(this, false);
 
       super.cleanup();
    }
@@ -168900,7 +169153,7 @@ class RFramePainter extends RObjectPainter {
      * @private */
    redraw() {
       const pp = this.getPadPainter();
-      if (pp) pp.frame_painter_ref = this;
+      pp?.setFramePainter(this, true);
 
       // first update all attributes from objects
       this.updateAttributes();
@@ -169468,6 +169721,8 @@ class RPadPainter extends RObjectPainter {
    #pad_height; // pad height
    #doing_draw; // drawing handles
    #custom_palette; // custom palette
+   #frame_painter_ref; // frame painter
+   #main_painter_ref; // main painter on the pad
 
    /** @summary constructor */
    constructor(dom, pad, iscan) {
@@ -169512,27 +169767,31 @@ class RPadPainter extends RObjectPainter {
    /** @summary Returns true if pad is editable */
    isEditable() { return true; }
 
-      /** @summary Returns true if button */
+   /** @summary Returns true if button */
    isButton() { return false; }
 
-  /** @summary Returns SVG element for the pad itself
-    * @private */
-   svg_this_pad() {
-      return this.getPadSvg(this.this_pad_name);
+   /** @summary Returns true if it is canvas
+    * @param {Boolean} [is_online = false] - if specified, checked if it is canvas with configured connection to server */
+   isCanvas(is_online = false) {
+      if (!this.iscan)
+         return false;
+      return is_online ? isFunc(this.getWebsocket) && this.getWebsocket() : true;
    }
+
+   /** @summary Returns SVG element for the pad itself
+     * @private */
+   svg_this_pad() { return this.getPadSvg(this.this_pad_name); }
 
    /** @summary Returns main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
-    * @private */
-   getMainPainter() {
-      return this.main_painter_ref || null;
-   }
+     * @private */
+   getMainPainter() { return this.#main_painter_ref || null; }
 
    /** @summary Assign main painter on the pad
     * @private */
    setMainPainter(painter, force) {
-      if (!this.main_painter_ref || force)
-         this.main_painter_ref = painter;
+      if (!this.#main_painter_ref || force)
+         this.#main_painter_ref = painter;
    }
 
    /** @summary cleanup pad and all primitives inside */
@@ -169551,8 +169810,8 @@ class RPadPainter extends RObjectPainter {
       const cp = this.iscan || !this.has_canvas ? this : this.getCanvPainter();
       if (cp) delete cp.pads_cache;
 
-      delete this.main_painter_ref;
-      delete this.frame_painter_ref;
+      this.#main_painter_ref = undefined;
+      this.#frame_painter_ref = undefined;
       this.#pad_x = this.#pad_y = this.#pad_width = this.#pad_height = undefined;
       this.#doing_draw = undefined;
       delete this._dfltRFont;
@@ -169571,7 +169830,16 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Returns frame painter inside the pad
     * @private */
-   getFramePainter() { return this.frame_painter_ref; }
+   getFramePainter() { return this.#frame_painter_ref; }
+
+   /** @summary Assign actual frame painter
+     * @private */
+   setFramePainter(fp, on) {
+      if (on)
+         this.#frame_painter_ref = fp;
+      else if (this.#frame_painter_ref === fp)
+         this.#frame_painter_ref = undefined;
+   }
 
    /** @summary get pad width */
    getPadWidth() { return this.#pad_width || 0; }
@@ -169685,8 +169953,8 @@ class RPadPainter extends RObjectPainter {
       arr.forEach(painter => {
          if ((painter !== prim) || !clean_only_secondary)
             painter.cleanup();
-         if (this.main_painter_ref === painter) {
-            delete this.main_painter_ref;
+         if (this.getMainPainter() === painter) {
+            delete this.setMainPainter(undefined, true);
             resindx = -111;
          }
       });
@@ -169978,8 +170246,8 @@ class RPadPainter extends RObjectPainter {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
-      // ignore double click on canvas itself for enlarge
-      if (is_dblclick && this._websocket && (this.enlargeMain('state') === 'off'))
+      // ignore double click on online canvas itself for enlarge
+      if (is_dblclick && this.isCanvas(true) && (this.enlargeMain('state') === 'off'))
          return;
 
       const svg_can = this.getCanvSvg(),
@@ -170240,7 +170508,8 @@ class RPadPainter extends RObjectPainter {
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
-      if (!this._websocket) {
+      if (!this.isCanvas(true)) {
+         // if not online canvas
          menu.addAttributesMenu(this);
          if (this.iscan) {
             menu.addSettingsMenu(false, false, arg => {
@@ -170643,7 +170912,7 @@ class RPadPainter extends RObjectPainter {
       if (!snap || !snap.fPrimitives)
          return this;
 
-      if (this.iscan && this._websocket && snap.fTitle && !this.embed_canvas && (typeof document !== 'undefined'))
+      if (this.isCanvas(true) && snap.fTitle && !this.embed_canvas && (typeof document !== 'undefined'))
          document.title = snap.fTitle;
 
       if (this.snapid === undefined) {
@@ -170730,7 +170999,7 @@ class RPadPainter extends RObjectPainter {
          const old_painters = this.painters;
          this.painters = [];
          old_painters.forEach(objp => objp.cleanup());
-         delete this.main_painter_ref;
+         this.setMainPainter(undefined, true);
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);
@@ -171170,17 +171439,19 @@ class RPadPainter extends RObjectPainter {
 
 class RCanvasPainter extends RPadPainter {
 
+   #websocket; // WebWindow handle used for communication with server
+
    /** @summary constructor */
    constructor(dom, canvas) {
       super(dom, canvas, true);
-      this._websocket = null;
+      this.#websocket = null;
       this.tooltip_allowed = settings.Tooltip;
       this.v7canvas = true;
    }
 
    /** @summary Cleanup canvas painter */
    cleanup() {
-      delete this._websocket;
+      this.#websocket = undefined;
       delete this._submreq;
 
      if (this._changed_layout)
@@ -171346,19 +171617,21 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Send command to server to save canvas with specified name
      * @desc Should be only used in web-based canvas
      * @private */
-   sendSaveCommand(fname) {
-      this.sendWebsocket('PRODUCE:' + fname);
-   }
+   sendSaveCommand(fname) { this.sendWebsocket('PRODUCE:' + fname); }
+
+   /** @summary Return assigned web socket
+    * @private */
+   getWebsocket() { return this.#websocket; }
 
    /** @summary Return true if message can be send via web socket
     * @private */
-   canSendWebSocket() { return this._websocket?.canSend(); }
+   canSendWebsocket(noper = 1) { return this.#websocket?.canSend(noper); }
 
    /** @summary Send message via web socket
      * @private */
    sendWebsocket(msg) {
-      if (this._websocket?.canSend()) {
-         this._websocket.send(msg);
+      if (this.#websocket?.canSend()) {
+         this.#websocket.send(msg);
          return true;
       }
 
@@ -171368,10 +171641,10 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Close websocket connection to canvas
      * @private */
    closeWebsocket(force) {
-      if (this._websocket) {
-         this._websocket.close(force);
-         this._websocket.cleanup();
-         delete this._websocket;
+      if (this.#websocket) {
+         this.#websocket.close(force);
+         this.#websocket.cleanup();
+         this.#websocket = undefined;
       }
    }
 
@@ -171380,27 +171653,27 @@ class RCanvasPainter extends RPadPainter {
    useWebsocket(handle) {
       this.closeWebsocket();
 
-      this._websocket = handle;
-      this._websocket.setReceiver(this);
-      this._websocket.connect();
+      this.#websocket = handle;
+      this.#websocket.setReceiver(this);
+      this.#websocket.connect();
    }
 
    /** @summary set, test or reset timeout of specified name
      * @desc Used to prevent overloading of websocket for specific function */
    websocketTimeout(name, tm) {
-      if (!this._websocket)
+      if (!this.#websocket)
          return;
-      if (!this._websocket._tmouts)
-         this._websocket._tmouts = {};
+      if (!this.#websocket._tmouts)
+         this.#websocket._tmouts = {};
 
-      const handle = this._websocket._tmouts[name];
+      const handle = this.#websocket._tmouts[name];
       if (tm === undefined)
          return handle !== undefined;
 
       if (tm === 'reset') {
-         if (handle) { clearTimeout(handle); delete this._websocket._tmouts[name]; }
+         if (handle) { clearTimeout(handle); delete this.#websocket._tmouts[name]; }
       } else if (!handle && Number.isInteger(tm))
-         this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
+         this.#websocket._tmouts[name] = setTimeout(() => { delete this.#websocket._tmouts[name]; }, tm);
    }
 
    /** @summary Handler for websocket open event
@@ -171510,8 +171783,8 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Submit request to RDrawable object on server side */
    submitDrawableRequest(kind, req, painter, method) {
-      if (!this._websocket || !req || !req._typename ||
-          !painter.snapid || !isStr(painter.snapid)) return null;
+      if (!this.getWebsocket() || !req?._typename || !painter.snapid || !isStr(painter.snapid))
+         return null;
 
       if (kind && method) {
          // if kind specified - check if such request already was submitted
@@ -171570,9 +171843,6 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Submit executable command for given painter */
    submitExec(painter, exec, subelem) {
-      // snapid is intentionally ignored - only painter.snapid has to be used
-      if (!this._websocket) return;
-
       if (subelem && isStr(subelem)) {
          const len = subelem.length;
          if ((len > 2) && (subelem.indexOf('#x') === len - 2)) subelem = 'x'; else
@@ -171582,7 +171852,7 @@ class RCanvasPainter extends RPadPainter {
          if ((subelem === 'x') || (subelem === 'y') || (subelem === 'z'))
             exec = subelem + 'axis#' + exec;
          else
-            return console.log(`not recoginzed subelem ${subelem} in SubmitExec`);
+            return console.log(`not recoginzed subelem ${subelem} in submitExec`);
        }
 
       this.submitDrawableRequest('', { _typename: `${nsREX}RDrawableExecRequest`, exec }, painter);
@@ -171630,7 +171900,8 @@ class RCanvasPainter extends RPadPainter {
      * @private */
    processChanges(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || !this._websocket.canSend(2) || !isStr(kind)) return;
+      if (!this.canSendWebsocket(2) || !isStr(kind))
+         return;
       if (!painter) painter = this;
       switch (kind) {
          case 'sbits':
@@ -171804,7 +172075,7 @@ class RCanvasPainter extends RPadPainter {
    resizeBrowser(fullW, fullH) {
       if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
-      this._websocket?.resizeWindow(fullW, fullH);
+      this.getWebsocket()?.resizeWindow(fullW, fullH);
    }
 
    /** @summary draw RCanvas object */
@@ -171814,7 +172085,6 @@ class RCanvasPainter extends RPadPainter {
          can = create$1(`${nsREX}RCanvas`);
 
       const painter = new RCanvasPainter(dom, can);
-      painter.normal_canvas = !nocanvas;
       painter.createCanvasSvg(0);
 
       selectActivePad({ pp: painter, active: false });
@@ -171834,7 +172104,6 @@ class RCanvasPainter extends RPadPainter {
   * @private */
 function drawRPadSnapshot(dom, snap /* , opt */) {
    const painter = new RCanvasPainter(dom, null);
-   painter.normal_canvas = false;
    painter.batch_mode = isBatchMode();
    return painter.syncDraw(true).then(() => painter.redrawPadSnap(snap)).then(() => {
       painter.confirmDraw();
@@ -174228,8 +174497,8 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
 
          if (options.ErrorKind === 1) {
             const lw = this.lineatt.width + gStyle.fEndErrorSize;
-            endx = `m0,${lw}v${-2*lw}m0,${lw}`;
-            endy = `m${lw},0h${-2*lw}m${lw},0`;
+            endx = `m0,${lw}v${ -2*lw}m0,${lw}`;
+            endy = `m${lw},0h${ -2*lw}m${lw},0`;
             dend = Math.floor((this.lineatt.width-1)/2);
          }
 
@@ -174278,7 +174547,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
                         }
                         path_err += `M${midx},${my-yerr1+dend}${endy}v${yerr1+yerr2-2*dend}${endy}`;
                         if (hints_err !== null)
-                           hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${-2*edx}z`;
+                           hints_err += `M${midx-edx},${my-yerr1}h${2*edx}v${yerr1+yerr2}h${ -2*edx}z`;
                      }
                   }
                }
@@ -174485,7 +174754,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
       function GetBinGrY(i) {
          const yy = histo.getBinContent(i + 1);
          if (funcs.logy && (yy < funcs.scale_ymin))
-            return funcs.swap_xy ? -1000 : 10*height;
+            return funcs.swap_xy ? -1e3 : 10*height;
          return Math.round(funcs.gry(yy));
       }
 

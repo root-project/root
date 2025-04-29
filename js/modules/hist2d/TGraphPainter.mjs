@@ -1413,7 +1413,8 @@ class TGraphPainter extends ObjectPainter {
       const canp = this.getCanvPainter(), pmain = this.get_main();
 
       if ((method.fName === 'RemovePoint') || (method.fName === 'InsertPoint')) {
-         if (!canp || canp._readonly) return true; // ignore function
+         if (!canp || canp.isReadonly())
+            return true; // ignore function
 
          const pnt = isFunc(pmain?.getLastEventPos) ? pmain.getLastEventPos() : null,
              hint = this.extractTooltip(pnt);
@@ -1553,7 +1554,7 @@ class TGraphPainter extends ObjectPainter {
       const st = gStyle;
 
       // do not create stats box when drawing canvas
-      if (!st.fOptFit || this.getCanvPainter()?.normal_canvas)
+      if (!st.fOptFit || this.getCanvPainter()?.pad?.fPrimitives?.arr.length)
          return null;
 
       this.create_stats = true;

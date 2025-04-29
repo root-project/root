@@ -34,10 +34,12 @@ function directDrawTFrame(dom, obj, opt) {
 
 class TCanvasPainter extends TPadPainter {
 
+   #websocket; // WebWindow handle used for communication with server
+
    /** @summary Constructor */
    constructor(dom, canvas) {
       super(dom, canvas, true);
-      this._websocket = null;
+      this.#websocket = null;
       this.tooltip_allowed = settings.Tooltip;
    }
 
@@ -265,23 +267,28 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Submit object exec request
      * @private */
    submitExec(painter, exec, snapid) {
-      if (this._readonly || !painter) return;
+      if (this.isReadonly() || !painter)
+         return;
 
       if (!snapid) snapid = painter.snapid;
       if (snapid && isStr(snapid) && exec)
          return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
+   /** @summary Return assigned web socket
+    * @private */
+   getWebsocket() { return this.#websocket; }
+
    /** @summary Return true if message can be send via web socket
     * @private */
-   canSendWebSocket() { return this._websocket?.canSend(); }
+   canSendWebsocket(noper = 1) { return this.#websocket?.canSend(noper); }
 
    /** @summary Send text message with web socket
      * @desc used for communication with server-side of web canvas
      * @private */
    sendWebsocket(msg) {
-      if (this._websocket?.canSend()) {
-         this._websocket.send(msg);
+      if (this.#websocket?.canSend()) {
+         this.#websocket.send(msg);
          return true;
       }
       console.warn(`DROP SEND: ${msg}`);
@@ -291,10 +298,10 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Close websocket connection to canvas
      * @private */
    closeWebsocket(force) {
-      if (this._websocket) {
-         this._websocket.close(force);
-         this._websocket.cleanup();
-         delete this._websocket;
+      if (this.#websocket) {
+         this.#websocket.close(force);
+         this.#websocket.cleanup();
+         this.#websocket = undefined;
       }
    }
 
@@ -303,27 +310,27 @@ class TCanvasPainter extends TPadPainter {
    useWebsocket(handle) {
       this.closeWebsocket();
 
-      this._websocket = handle;
-      this._websocket.setReceiver(this);
-      this._websocket.connect();
+      this.#websocket = handle;
+      this.#websocket.setReceiver(this);
+      this.#websocket.connect();
    }
 
    /** @summary set, test or reset timeout of specified name
      * @desc Used to prevent overloading of websocket for specific function */
    websocketTimeout(name, tm) {
-      if (!this._websocket)
+      if (!this.#websocket)
          return;
-      if (!this._websocket._tmouts)
-         this._websocket._tmouts = {};
+      if (!this.#websocket._tmouts)
+         this.#websocket._tmouts = {};
 
-      const handle = this._websocket._tmouts[name];
+      const handle = this.#websocket._tmouts[name];
       if (tm === undefined)
          return handle !== undefined;
 
       if (tm === 'reset') {
-         if (handle) { clearTimeout(handle); delete this._websocket._tmouts[name]; }
+         if (handle) { clearTimeout(handle); delete this.#websocket._tmouts[name]; }
       } else if (!handle && Number.isInteger(tm))
-         this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
+         this.#websocket._tmouts[name] = setTimeout(() => { delete this.#websocket._tmouts[name]; }, tm);
    }
 
    /** @summary Handler for websocket open event
@@ -620,10 +627,10 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Send command to start fit panel code on the server
      * @private */
    startFitPanel(standalone) {
-      if (!this._websocket)
+      if (!this.getWebsocket())
          return false;
 
-      const new_conn = standalone ? null : this._websocket.createChannel();
+      const new_conn = standalone ? null : this.getWebsocket().createChannel();
 
       this.sendWebsocket('FITPANEL:' + (standalone ? 'standalone' : new_conn.getChannelId()));
 
@@ -637,7 +644,7 @@ class TCanvasPainter extends TPadPainter {
 
       this.addPadInteractive();
 
-      if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
+      if ((typeof document !== 'undefined') && !this.embed_canvas && this.getWebsocket())
          document.title = this.pad.fTitle;
 
       if (this._all_sections_showed) return;
@@ -659,7 +666,7 @@ class TCanvasPainter extends TPadPainter {
      * @private */
    processHighlightConnect(hints) {
       if (!hints || hints.length === 0 || !this._highlight_connect ||
-           !this._websocket || this.doingDraw() || !this._websocket.canSend(2)) return;
+          this.doingDraw() || !this.canSendWebsocket(2)) return;
 
       const hint = hints[0] || hints[1];
       if (!hint || !hint.painter || !hint.painter.snapid || !hint.user_info) return;
@@ -688,7 +695,8 @@ class TCanvasPainter extends TPadPainter {
      * @private */
    processChanges(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || this._readonly || !this._websocket.canSend(2) || !isStr(kind)) return;
+      if (this.isReadonly() || !this.canSendWebsocket(2) || !isStr(kind))
+         return;
 
       let msg = '';
       if (!painter) painter = this;
@@ -739,19 +747,20 @@ class TCanvasPainter extends TPadPainter {
 
       if (msg) {
          // console.log(`Sending ${msg.length} ${msg.slice(0,40)}`);
-         this._websocket.send(msg);
+         this.sendWebsocket(msg);
       } else
          console.log(`Unprocessed changes ${kind} for painter of ${painter?.getObject()?._typename} subelem ${subelem}`);
    }
 
    /** @summary Select active pad on the canvas */
    selectActivePad(pad_painter, obj_painter, click_pos) {
-      if (!this.snapid || !pad_painter) return; // only interactive canvas
+      if (!this.snapid || !pad_painter)
+         return; // only interactive canvas
 
       let arg = null, ischanged = false;
       const is_button = pad_painter.matchObjectType(clTButton);
 
-      if (pad_painter.snapid && this._websocket)
+      if (pad_painter.snapid && this.getWebsocket())
          arg = { _typename: 'TWebPadClick', padid: pad_painter.snapid.toString(), objid: '', x: -1, y: -1, dbl: false };
 
       if (!pad_painter.is_active_pad && !is_button) {
@@ -787,21 +796,41 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary produce JSON for TCanvas, which can be used to display canvas once again */
    produceJSON(spacing) {
-      const canv = this.getObject(),
-            fill0 = (canv.fFillStyle === 0),
-            axes = [], hists = [];
+      const canv = this.getObject();
 
-      if (fill0) canv.fFillStyle = 1001;
+      if (canv._typename !== clTCanvas)
+         return;
 
-      // write selected range into TAxis properties
+      const fill0 = (canv.fFillStyle === 0),
+            axes = [], hists = [], prims = [];
+
+      if (fill0)
+         canv.fFillStyle = 1001;
+
       this.forEachPainterInPad(pp => {
+         if (pp.painters.length && pp.pad.fPrimitives && !pp.pad.fPrimitives.arr.length) {
+            // create list of primitives when missing
+            prims.push(pp.pad.fPrimitives);
+            pp.forEachPainterInPad(p => {
+               // ignore all secondary painters
+               if (p.isSecondary())
+                  return;
+               const subobj = p.getObject();
+               if (subobj?._typename)
+                  pp.pad.fPrimitives.Add(subobj, p.getDrawOpt());
+            }, 'objects');
+         }
+
          const main = pp.getMainPainter(),
                fp = pp.getFramePainter();
-         if (!isFunc(main?.getHisto) || !isFunc(main?.getDimension)) return;
+         if (!isFunc(main?.getHisto) || !isFunc(main?.getDimension))
+            return;
 
+         // write selected range into TAxis properties
          const hist = main.getHisto(),
                ndim = main.getDimension();
-         if (!hist?.fXaxis) return;
+         if (!hist?.fXaxis)
+            return;
 
          const setAxisRange = (name, axis) => {
             if (fp?.zoomChangedInteractive(name)) {
@@ -813,8 +842,10 @@ class TCanvasPainter extends TPadPainter {
          };
 
          setAxisRange('x', hist.fXaxis);
-         if (ndim > 1) setAxisRange('y', hist.fYaxis);
-         if (ndim > 2) setAxisRange('z', hist.fZaxis);
+         if (ndim > 1)
+            setAxisRange('y', hist.fYaxis);
+         if (ndim > 2)
+            setAxisRange('z', hist.fZaxis);
          if ((ndim === 2) && fp?.zoomChangedInteractive('z')) {
             hists.push({ hist, min: hist.fMinimum, max: hist.fMaximum });
             hist.fMinimum = fp.zoom_zmin ?? fp.zmin;
@@ -822,24 +853,10 @@ class TCanvasPainter extends TPadPainter {
          }
       }, 'pads');
 
-      if (!this.normal_canvas) {
-         // fill list of primitives from painters
-         this.forEachPainterInPad(p => {
-            // ignore all secondary painters
-            if (p.isSecondary())
-               return;
-            const subobj = p.getObject();
-            if (subobj?._typename)
-               canv.fPrimitives.Add(subobj, p.getDrawOpt());
-         }, 'objects');
-      }
-
-      // const fp = this.getFramePainter();
-      // fp?.setRootPadRange(this.getRootPad());
-
       const res = toJSON(canv, spacing);
 
-      if (fill0) canv.fFillStyle = 0;
+      if (fill0)
+         canv.fFillStyle = 0;
 
       axes.forEach(e => {
          e.axis.fFirst = e.f;
@@ -852,8 +869,7 @@ class TCanvasPainter extends TPadPainter {
          e.hist.fMaximum = e.max;
       });
 
-      if (!this.normal_canvas)
-         canv.fPrimitives.Clear();
+      prims.forEach(lst => lst.Clear());
 
       return res;
    }
@@ -869,7 +885,7 @@ class TCanvasPainter extends TPadPainter {
          fullH -= 30;
       }
 
-      this._websocket?.resizeWindow(fullW, fullH);
+      this.getWebsocket()?.resizeWindow(fullW, fullH);
    }
 
    /** @summary draw TCanvas */
@@ -898,7 +914,7 @@ class TCanvasPainter extends TPadPainter {
       }
 
       painter.decodeOptions(opt);
-      painter.normal_canvas = !nocanvas;
+      painter._auto_canvas = nocanvas;
       painter.createCanvasSvg(0);
 
       painter.addPadButtons();
@@ -962,7 +978,6 @@ async function ensureTCanvas(painter, frame_kind) {
 async function drawTPadSnapshot(dom, snap /* , opt */) {
    const can = create(clTCanvas),
          painter = new TCanvasPainter(dom, can);
-   painter.normal_canvas = false;
    painter.addPadButtons();
 
    return painter.syncDraw(true).then(() => painter.redrawPadSnap(snap)).then(() => {

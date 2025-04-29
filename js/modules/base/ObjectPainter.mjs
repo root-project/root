@@ -85,7 +85,7 @@ class ObjectPainter extends BasePainter {
 
       if (this.isMainPainter()) {
          const pp = this.getPadPainter();
-         if (!pp || (pp.normal_canvas === false))
+         if (!pp || pp._auto_canvas)
             keep_origin = false;
       }
 
@@ -1382,7 +1382,7 @@ class ObjectPainter extends BasePainter {
 
       const canvp = this.getCanvPainter();
 
-      if (!this.snapid || !canvp || canvp?._readonly || !canvp?._websocket)
+      if (!this.snapid || !canvp || canvp?.isReadonly() || !canvp?.getWebsocket())
          return menu;
 
       function doExecMenu(arg) {

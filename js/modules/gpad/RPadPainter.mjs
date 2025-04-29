@@ -25,6 +25,8 @@ class RPadPainter extends RObjectPainter {
    #pad_height; // pad height
    #doing_draw; // drawing handles
    #custom_palette; // custom palette
+   #frame_painter_ref; // frame painter
+   #main_painter_ref; // main painter on the pad
 
    /** @summary constructor */
    constructor(dom, pad, iscan) {
@@ -69,27 +71,31 @@ class RPadPainter extends RObjectPainter {
    /** @summary Returns true if pad is editable */
    isEditable() { return true; }
 
-      /** @summary Returns true if button */
+   /** @summary Returns true if button */
    isButton() { return false; }
 
-  /** @summary Returns SVG element for the pad itself
-    * @private */
-   svg_this_pad() {
-      return this.getPadSvg(this.this_pad_name);
+   /** @summary Returns true if it is canvas
+    * @param {Boolean} [is_online = false] - if specified, checked if it is canvas with configured connection to server */
+   isCanvas(is_online = false) {
+      if (!this.iscan)
+         return false;
+      return is_online ? isFunc(this.getWebsocket) && this.getWebsocket() : true;
    }
+
+   /** @summary Returns SVG element for the pad itself
+     * @private */
+   svg_this_pad() { return this.getPadSvg(this.this_pad_name); }
 
    /** @summary Returns main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
-    * @private */
-   getMainPainter() {
-      return this.main_painter_ref || null;
-   }
+     * @private */
+   getMainPainter() { return this.#main_painter_ref || null; }
 
    /** @summary Assign main painter on the pad
     * @private */
    setMainPainter(painter, force) {
-      if (!this.main_painter_ref || force)
-         this.main_painter_ref = painter;
+      if (!this.#main_painter_ref || force)
+         this.#main_painter_ref = painter;
    }
 
    /** @summary cleanup pad and all primitives inside */
@@ -108,8 +114,8 @@ class RPadPainter extends RObjectPainter {
       const cp = this.iscan || !this.has_canvas ? this : this.getCanvPainter();
       if (cp) delete cp.pads_cache;
 
-      delete this.main_painter_ref;
-      delete this.frame_painter_ref;
+      this.#main_painter_ref = undefined;
+      this.#frame_painter_ref = undefined;
       this.#pad_x = this.#pad_y = this.#pad_width = this.#pad_height = undefined;
       this.#doing_draw = undefined;
       delete this._dfltRFont;
@@ -128,7 +134,16 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Returns frame painter inside the pad
     * @private */
-   getFramePainter() { return this.frame_painter_ref; }
+   getFramePainter() { return this.#frame_painter_ref; }
+
+   /** @summary Assign actual frame painter
+     * @private */
+   setFramePainter(fp, on) {
+      if (on)
+         this.#frame_painter_ref = fp;
+      else if (this.#frame_painter_ref === fp)
+         this.#frame_painter_ref = undefined;
+   }
 
    /** @summary get pad width */
    getPadWidth() { return this.#pad_width || 0; }
@@ -242,8 +257,8 @@ class RPadPainter extends RObjectPainter {
       arr.forEach(painter => {
          if ((painter !== prim) || !clean_only_secondary)
             painter.cleanup();
-         if (this.main_painter_ref === painter) {
-            delete this.main_painter_ref;
+         if (this.getMainPainter() === painter) {
+            delete this.setMainPainter(undefined, true);
             resindx = -111;
          }
       });
@@ -535,8 +550,8 @@ class RPadPainter extends RObjectPainter {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
-      // ignore double click on canvas itself for enlarge
-      if (is_dblclick && this._websocket && (this.enlargeMain('state') === 'off'))
+      // ignore double click on online canvas itself for enlarge
+      if (is_dblclick && this.isCanvas(true) && (this.enlargeMain('state') === 'off'))
          return;
 
       const svg_can = this.getCanvSvg(),
@@ -797,7 +812,8 @@ class RPadPainter extends RObjectPainter {
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
-      if (!this._websocket) {
+      if (!this.isCanvas(true)) {
+         // if not online canvas
          menu.addAttributesMenu(this);
          if (this.iscan) {
             menu.addSettingsMenu(false, false, arg => {
@@ -1201,7 +1217,7 @@ class RPadPainter extends RObjectPainter {
       if (!snap || !snap.fPrimitives)
          return this;
 
-      if (this.iscan && this._websocket && snap.fTitle && !this.embed_canvas && (typeof document !== 'undefined'))
+      if (this.isCanvas(true) && snap.fTitle && !this.embed_canvas && (typeof document !== 'undefined'))
          document.title = snap.fTitle;
 
       if (this.snapid === undefined) {
@@ -1288,7 +1304,7 @@ class RPadPainter extends RObjectPainter {
          const old_painters = this.painters;
          this.painters = [];
          old_painters.forEach(objp => objp.cleanup());
-         delete this.main_painter_ref;
+         this.setMainPainter(undefined, true);
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);

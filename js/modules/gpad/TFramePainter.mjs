@@ -2481,9 +2481,7 @@ class TFramePainter extends ObjectPainter {
       delete this._dblclick_handler;
       delete this.enabledKeys;
 
-      const pp = this.getPadPainter();
-      if (pp?.frame_painter_ref === this)
-         delete pp.frame_painter_ref;
+      this.getPadPainter()?.setFramePainter(this, false);
 
       super.cleanup();
    }
@@ -2491,7 +2489,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary Redraw TFrame */
    redraw(/* reason */) {
       const pp = this.getPadPainter();
-      if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
+      pp?.setFramePainter(this, true);
 
       // first update all attributes from objects
       this.updateAttributes();
