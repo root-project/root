@@ -728,11 +728,16 @@ else()
     string (REPLACE ";" " " ASAN_EXTRA_CXX_FLAGS_STR "${ASAN_EXTRA_CXX_FLAGS}")
     set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS_STR}")
   endif()
+  if(ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES)
+    # Only set the compiledata parameter if the CMake variable is 'true'
+    set(local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES ${ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES})
+  endif()
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
+        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
+        "${local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES}")
 endif()
 
 #---Get the values of ROOT_ALL_OPTIONS and CMAKE_CXX_FLAGS provided by the user in the command line

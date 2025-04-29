@@ -359,6 +359,12 @@ def archive_and_upload(archive_name, prefix):
 def cmake_configure(options, buildtype):
     srcdir = os.path.join(WORKDIR, "src")
     builddir = os.path.join(WORKDIR, "build")
+
+    # Add a private option to make the CI build faster by not changing the
+    # BUILD_NODE line of compiledata.h (which leads to all the dictionary
+    # being rebuild when re-using a previous build on a different node)
+    options = f"{options} -DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
+
     result = subprocess_with_log(f"""
         cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
     """)
