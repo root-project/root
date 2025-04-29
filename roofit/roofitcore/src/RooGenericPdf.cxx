@@ -136,7 +136,7 @@ double RooGenericPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 void RooGenericPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  formula().doEval(ctx);
+  formula().doEval(_actualVars, ctx);
 }
 
 
