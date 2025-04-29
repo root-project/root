@@ -190,6 +190,9 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
 
     // Use HistFactory to combine the individual channel workspaces
     std::unique_ptr<RooWorkspace> ws{factory.MakeCombinedModel(channel_names, channel_workspaces)};
+    if (!ws) {
+      return nullptr;
+    }
 
     // Configure that workspace
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
