@@ -400,7 +400,7 @@ def build(options, buildtype):
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
+    if True: # or not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
         cmake_configure(options, buildtype)
     else:
         cmake_dump_config()
