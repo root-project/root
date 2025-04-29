@@ -225,7 +225,7 @@ RooFormula::RooFormula(const char *name, const char *formula, const RooArgList &
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 RooFormula::RooFormula(const RooFormula& other, const char* name) :
-  TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other)
+  TNamed(name ? name : other.GetName(), other.GetTitle())
 {
   _origList.add(other._origList);
 
@@ -330,11 +330,6 @@ RooArgList RooFormula::usedVariables() const {
   return useList;
 }
 
-void RooFormula::dump() const
-{
-  printMultiline(std::cout, 0);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change used variables to those with the same name in given list.
 /// \param[in] newDeps New dependents to replace the old ones.
@@ -430,50 +425,6 @@ void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*
   indent.Append("  ");
   os << indent << "Servers: " << _origList << "\n";
   os << indent << "In use : " << actualDependents() << std::endl;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print value of formula
-
-void RooFormula::printValue(ostream& os) const
-{
-  os << const_cast<RooFormula*>(this)->eval(nullptr) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print name of formula
-
-void RooFormula::printName(ostream& os) const
-{
-  os << GetName() ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print title of formula
-
-void RooFormula::printTitle(ostream& os) const
-{
-  os << GetTitle() ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print class name of formula
-
-void RooFormula::printClassName(ostream& os) const
-{
-  os << ClassName() ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print arguments of formula, i.e. dependents that are actually used
-
-void RooFormula::printArgs(ostream& os) const
-{
-  os << "[ actualVars=";
-  for (const auto arg : usedVariables()) {
-     os << " " << arg->GetName();
-  }
-  os << " ]";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
