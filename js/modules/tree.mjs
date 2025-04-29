@@ -1,4 +1,4 @@
-import { BIT, isArrayProto, isRootCollection, isObject, isFunc, isStr, getMethods,
+import { BIT, settings, isArrayProto, isRootCollection, isObject, isFunc, isStr, getMethods,
          create, createHistogram, createTGraph, prROOT,
          clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3, kNoStats } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
@@ -731,9 +731,9 @@ class TDrawSelector extends TSelector {
       this.vars = []; // array of expression variables
       this.cut = null; // cut variable
       this.hist = null;
-      this.histo_drawopt = '';
+      this.drawopt = '';
       this.hist_name = '$htemp';
-      this.hist_title = 'Result of TTree::Draw';
+      this.draw_title = 'Result of TTree::Draw';
       this.graph = false;
       this.hist_args = []; // arguments for histogram creation
       this.arr_limit = 1000;  // number of accumulated items before create histogram
@@ -752,7 +752,8 @@ class TDrawSelector extends TSelector {
 
    /** @summary Parse parameters */
    parseParameters(tree, args, expr) {
-      if (!expr || !isStr(expr)) return '';
+      if (!expr || !isStr(expr))
+         return '';
 
       // parse parameters which defined at the end as expression;par1name:par1value;par2name:par2value
       let pos = expr.lastIndexOf(';');
@@ -765,11 +766,48 @@ class TDrawSelector extends TSelector {
          if (separ > 0) { parvalue = parname.slice(separ + 1); parname = parname.slice(0, separ); }
 
          let intvalue = parseInt(parvalue);
-         if (!parvalue || !Number.isInteger(intvalue)) intvalue = undefined;
+         if (!parvalue || !Number.isInteger(intvalue))
+            intvalue = undefined;
 
          switch (parname) {
-            case 'num':
+            case 'elist':
+               if ((parvalue.at(0) === '[') && (parvalue.at(-1) === ']')) {
+                  parvalue = parvalue.slice(1, parvalue.length - 1).replaceAll(/\s/g, '');
+                  args.elist = [];
+                  let p = 0, last_v = -1;
+                  const getInt = () => {
+                     const p0 = p;
+                     while ((p < parvalue.length) && (parvalue.charCodeAt(p) >= 48) && (parvalue.charCodeAt(p) < 58))
+                        p++;
+                     return parseInt(parvalue.slice(p0, p));
+                  };
+
+                  while (p < parvalue.length) {
+                     const v1 = getInt();
+                     if (v1 <= last_v) {
+                        console.log('position', p);
+                        throw Error(`Wrong entry id ${v1} in elist last ${last_v}`);
+                     }
+                     let v2 = v1;
+                     if (parvalue[p] === '.' && parvalue[p + 1] === '.') {
+                        p += 2;
+                        v2 = getInt();
+                        if (v2 < v1)
+                           throw Error(`Wrong entry id ${v2} in range ${v1}`);
+                     }
+                     if (parvalue[p] === ',' || p === parvalue.length) {
+                        for (let v = v1; v <= v2; ++v) {
+                           args.elist.push(v);
+                           last_v = v;
+                        }
+                        p++;
+                     } else
+                        throw Error('Wrong syntax for elist');
+                  }
+               }
+               break;
             case 'entries':
+            case 'num':
             case 'numentries':
                if (parvalue === 'all')
                   args.numentries = tree.fEntries;
@@ -779,7 +817,12 @@ class TDrawSelector extends TSelector {
                   args.numentries = intvalue;
                break;
             case 'first':
-               if (intvalue !== undefined) args.firstentry = intvalue;
+               if (intvalue !== undefined)
+                  args.firstentry = intvalue;
+               break;
+            case 'nmatch':
+               if (intvalue !== undefined)
+                  this.nmatch = intvalue;
                break;
             case 'mon':
             case 'monitor':
@@ -791,12 +834,17 @@ class TDrawSelector extends TSelector {
             case 'dump':
                args.dump = true;
                break;
+            case 'staged':
+               args.staged = true;
+               break;
             case 'maxseg':
             case 'maxrange':
-               if (intvalue) tree.$file.fMaxRanges = intvalue;
+               if (intvalue)
+                  tree.$file.fMaxRanges = intvalue;
                break;
             case 'accum':
-               if (intvalue) this.arr_limit = intvalue;
+               if (intvalue)
+                  this.arr_limit = intvalue;
                break;
             case 'htype':
                if (parvalue && (parvalue.length === 1)) {
@@ -832,6 +880,8 @@ class TDrawSelector extends TSelector {
          }
          if (harg === 'dump')
             args.dump = true;
+         else if (harg === 'elist')
+            args.dump_entries = true;
          else if (harg.indexOf('Graph') === 0)
             args.graph = true;
          else if (pos < 0) {
@@ -845,17 +895,75 @@ class TDrawSelector extends TSelector {
                harg[n] = (n % 3 === 0) ? parseInt(harg[n]) : parseFloat(harg[n]);
                if (!Number.isFinite(harg[n])) isok = false;
             }
-            if (isok) this.hist_args = harg;
+            if (isok)
+               this.hist_args = harg;
          }
       }
 
       if (args.dump) {
          this.dump_values = true;
          args.reallocate_objects = true;
-         if (args.numentries === undefined) args.numentries = 10;
+         if (args.numentries === undefined) {
+            args.numentries = 10;
+            args._dflt_entries = true;
+         }
       }
 
       return expr;
+   }
+
+   /** @summary Create draw expression for N-dim with cut */
+   createDrawExpression(tree, names, cut, args) {
+      if (args.dump && names.length === 1 && names[0] === 'Entry$') {
+         args.dump_entries = true;
+         args.dump = false;
+      }
+
+      if (args.dump_entries) {
+         this.dump_entries = true;
+         this.hist = [];
+         if (args._dflt_entries) {
+            delete args._dflt_entries;
+            delete args.numentries;
+         }
+      }
+
+      let is_direct = !cut && !this.dump_entries;
+
+      this.ndim = names.length;
+
+      for (let n = 0; n < this.ndim; ++n) {
+         this.vars[n] = new TDrawVariable(this.globals);
+         if (!this.vars[n].parse(tree, this, names[n])) return false;
+         if (!this.vars[n].direct_branch) is_direct = false;
+      }
+
+      this.cut = new TDrawVariable(this.globals);
+      if (cut && !this.cut.parse(tree, this, cut))
+         return false;
+
+      if (!this.numBranches()) {
+         console.warn('no any branch is selected');
+         return false;
+      }
+
+      if (is_direct)
+         this.ProcessArrays = this.ProcessArraysFunc;
+
+      this.monitoring = args.monitoring;
+
+      // force TPolyMarker3D drawing for 3D case
+      if ((this.ndim === 3) && !this.want_hist && !args.dump)
+         args.graph = true;
+
+      this.graph = args.graph;
+
+      if (args.drawopt !== undefined)
+         this.drawopt = args.drawopt;
+      else
+         args.drawopt = this.drawopt = this.graph ? 'P' : '';
+
+      return true;
    }
 
    /** @summary Parse draw expression */
@@ -864,14 +972,14 @@ class TDrawSelector extends TSelector {
       let expr = this.parseParameters(tree, args, args.expr), cut = '';
 
       // parse option for histogram creation
-      this.hist_title = `drawing '${expr}' from ${tree.fName}`;
+      this.draw_title = `drawing '${expr}' from ${tree.fName}`;
 
       let pos;
       if (args.cut)
          cut = args.cut;
       else {
          pos = expr.replace(/TMath::/g, 'TMath__').lastIndexOf('::'); // avoid confusion due-to :: in the namespace
-         if (pos > 0) {
+         if (pos >= 0) {
             cut = expr.slice(pos + 2).trim();
             expr = expr.slice(0, pos).trim();
          }
@@ -881,8 +989,7 @@ class TDrawSelector extends TSelector {
       args.parse_cut = cut;
 
       // let names = expr.split(':'); // to allow usage of ? operator, we need to handle : as well
-      const names = [];
-      let nbr1 = 0, nbr2 = 0, prev = 0;
+      let names = [], nbr1 = 0, nbr2 = 0, prev = 0;
       for (pos = 0; pos < expr.length; ++pos) {
          switch (expr[pos]) {
             case '(': nbr1++; break;
@@ -896,52 +1003,27 @@ class TDrawSelector extends TSelector {
                break;
          }
       }
-      if (!nbr1 && !nbr2 && (pos > prev)) names.push(expr.slice(prev, pos));
+      if (!nbr1 && !nbr2 && (pos > prev))
+         names.push(expr.slice(prev, pos));
 
-      if ((names.length < 1) || (names.length > 3)) return false;
-
-      this.ndim = names.length;
-
-      let is_direct = !cut;
-
-      for (let n = 0; n < this.ndim; ++n) {
-         this.vars[n] = new TDrawVariable(this.globals);
-         if (!this.vars[n].parse(tree, this, names[n])) return false;
-         if (!this.vars[n].direct_branch) is_direct = false;
-      }
-
-      this.cut = new TDrawVariable(this.globals);
-      if (cut)
-         if (!this.cut.parse(tree, this, cut)) return false;
-
-      if (!this.numBranches()) {
-         console.warn('no any branch is selected');
+      if (args.staged) {
+         args.staged_names = names;
+         names = ['Entry$'];
+         args.dump_entries = true;
+      } else if (cut && args.dump_entries)
+         names = ['Entry$'];
+      else if ((names.length < 1) || (names.length > 3))
          return false;
-      }
 
-      if (is_direct) this.ProcessArrays = this.ProcessArraysFunc;
-
-      this.monitoring = args.monitoring;
-
-      // force TPolyMarker3D drawing for 3D case
-      if ((this.ndim === 3) && !this.want_hist && !args.dump)
-         args.graph = true;
-
-      this.graph = args.graph;
-
-      if (args.drawopt !== undefined)
-         this.histo_drawopt = args.drawopt;
-      else
-         this.histo_drawopt = (this.ndim === 2) ? 'col' : '';
-
-      return true;
+      return this.createDrawExpression(tree, names, cut, args);
    }
 
    /** @summary Draw only specified branch */
    drawOnlyBranch(tree, branch, expr, args) {
       this.ndim = 1;
 
-      if (expr.indexOf('dump') === 0) expr = ';' + expr;
+      if (expr.indexOf('dump') === 0)
+         expr = ';' + expr;
 
       expr = this.parseParameters(tree, args, expr);
 
@@ -969,12 +1051,14 @@ class TDrawSelector extends TSelector {
       }
 
       this.vars[0] = new TDrawVariable(this.globals);
-      if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch)) return false;
-      this.hist_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName}`;
+      if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch))
+         return false;
+      this.draw_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName}`;
 
       this.cut = new TDrawVariable(this.globals);
 
-      if (this.vars[0].direct_branch) this.ProcessArrays = this.ProcessArraysFunc;
+      if (this.vars[0].direct_branch)
+         this.ProcessArrays = this.ProcessArraysFunc;
 
       return true;
    }
@@ -1147,8 +1231,8 @@ class TDrawSelector extends TSelector {
       hist.fZaxis.fLabels = z.fLabels;
 
       hist.fName = this.hist_name;
-      hist.fTitle = this.hist_title;
-      hist.fOption = this.histo_drawopt;
+      hist.fTitle = this.draw_title;
+      hist.fOption = this.drawopt;
       hist.$custom_stat = (this.hist_name === '$htemp') ? 111110 : 111111;
 
       if (set_hist) {
@@ -1164,7 +1248,8 @@ class TDrawSelector extends TSelector {
 
    /** @summary Create output object - histogram, graph, dump array */
    createOutputObject() {
-      if (this.hist || !this.vars[0].buf) return;
+      if (this.hist || !this.vars[0].buf)
+         return;
 
       if (this.dump_values) {
          // just create array where dumped values will be collected
@@ -1180,11 +1265,11 @@ class TDrawSelector extends TSelector {
             // A 1-dimensional graph will just have the x axis as an index
             res = createTGraph(N, Array.from(Array(N).keys()), this.vars[0].buf);
             res.fName = 'Graph';
-            res.fTitle = this.hist_title;
+            res.fTitle = this.draw_title;
          } else if (this.ndim === 2) {
             res = createTGraph(N, this.vars[0].buf, this.vars[1].buf);
             res.fName = 'Graph';
-            res.fTitle = this.hist_title;
+            res.fTitle = this.draw_title;
             delete this.vars[1].buf;
          } else if (this.ndim === 3) {
             res = create(clTPolyMarker3D);
@@ -1407,14 +1492,17 @@ class TDrawSelector extends TSelector {
       this.globals.entry = entry; // can be used in any expression
 
       this.cut.produce(this.tgtobj);
-      if (!this.dump_values && !this.cut.value) return;
+      if (!this.dump_values && !this.cut.value)
+         return;
 
       for (let n = 0; n < this.ndim; ++n)
          this.vars[n].produce(this.tgtobj);
 
       const var0 = this.vars[0], var1 = this.vars[1], var2 = this.vars[2], cut = this.cut;
 
-      if (this.graph || this.arr_limit) {
+      if (this.dump_entries)
+         this.hist.push(entry);
+      else if (this.graph || this.arr_limit) {
          switch (this.ndim) {
             case 1:
                for (let n0 = 0; n0 < var0.length; ++n0) {
@@ -1478,6 +1566,12 @@ class TDrawSelector extends TSelector {
             if (isFunc(this.progress_callback))
                this.progress_callback(this.hist);
          }
+      }
+
+      if ((this.nmatch !== undefined) && (--this.nmatch <= 0)) {
+         if (!this.hist)
+            this.createOutputObject();
+         this.Abort();
       }
    }
 
@@ -1567,6 +1661,7 @@ function detectBranchMemberClass(brlst, prefix, start) {
   * @param {object} [args] - different arguments
   * @param {number} [args.firstentry] - first entry to process, 0 when not specified
   * @param {number} [args.numentries] - number of entries to process, all when not specified
+  * @param {Array} [args.elist] - arrays of entries id to process
   * @return {Promise} with TSelector instance */
 async function treeProcess(tree, selector, args) {
    if (!args) args = {};
@@ -1658,6 +1753,8 @@ async function treeProcess(tree, selector, args) {
          staged_entry: -1, // entry which is staged for reading
          first_readentry: -1, // first entry to read
          staged_basket: 0,  // last basket staged for reading
+         eindx: 0, // index of last checked entry when selecting baskets
+         selected_baskets: [],   // array of selected baskets, used when specific events are selected
          numentries: branch.fEntries,
          numbaskets: branch.fWriteBasket, // number of baskets which can be read from the file
          counters: null, // branch indexes used as counters
@@ -2192,6 +2289,14 @@ async function treeProcess(tree, selector, args) {
 
    let resolveFunc, rejectFunc; // Promise methods
 
+   if (args.elist) {
+      args.firstentry = args.elist.at(0);
+      args.numentries = args.elist.at(-1) - args.elist.at(0) + 1;
+      handle.process_entries = args.elist;
+      handle.process_entries_indx = 0;
+      handle.process_arrays = false; // do not use arrays process for selected entries
+   }
+
    if (Number.isInteger(args.firstentry) && (args.firstentry > handle.firstentry) && (args.firstentry < handle.lastentry))
       handle.process_min = args.firstentry;
 
@@ -2348,10 +2453,11 @@ async function treeProcess(tree, selector, args) {
    let processBaskets = null;
 
    function readNextBaskets() {
-      const bitems = [];
-      let totalsz = 0, isany = true, is_direct = false, min_staged = handle.process_max;
+      const bitems = [], max_ranges = tree.$file?.fMaxRanges || settings.MaxRanges,
+            select_entries = handle.process_entries !== undefined;
+      let total_size = 0, total_nsegm = 0, isany = true, is_direct = false, min_staged = handle.process_max;
 
-      while ((totalsz < 1e6) && isany) {
+      while (isany && (total_size < settings.TreeReadBunchSize) && (!total_nsegm || (total_nsegm + handle.arr.length <= max_ranges))) {
          isany = false;
          // very important, loop over branches in reverse order
          // let check counter branch after reading of normal branch is prepared
@@ -2359,26 +2465,45 @@ async function treeProcess(tree, selector, args) {
             const elem = handle.arr[n];
 
             while (elem.staged_basket < elem.numbaskets) {
-               const k = elem.staged_basket++;
+               const k = elem.staged_basket++,
+                     bskt_emin = elem.getBasketEntry(k),
+                     bskt_emax = k < elem.numbaskets - 1 ? elem.getBasketEntry(k + 1) : bskt_emin + 1e6;
+
+               // first baskets can be ignored
+               if (bskt_emax <= handle.process_min)
+                  continue;
 
                // no need to read more baskets, process_max is not included
-               if (elem.getBasketEntry(k) >= handle.process_max) break;
+               if (bskt_emin >= handle.process_max)
+                  break;
 
-               // check which baskets need to be read
                if (elem.first_readentry < 0) {
-                  const lmt = elem.getBasketEntry(k + 1),
-                        not_needed = (lmt <= handle.process_min);
-
-                  // for (let d=0;d<elem.ascounter.length;++d) {
-                  //    let dep = handle.arr[elem.ascounter[d]]; // dependent element
-                  //    if (dep.first_readentry < lmt) not_needed = false; // check that counter provide required data
-                  // }
-
-                  if (not_needed) continue; // if that basket not required, check next
-
-                  elem.curr_basket = k; // basket where reading will start
+                  // basket where reading will start
+                  elem.curr_basket = k;
 
                   elem.first_readentry = elem.getBasketEntry(k); // remember which entry will be read first
+               } else if (select_entries) {
+                  // all entries from process entries are analyzed
+                  if (elem.eindx >= handle.process_entries.length)
+                     break;
+
+                  // check if this basket required
+                  if ((handle.process_entries[elem.eindx] < bskt_emin) || (handle.process_entries[elem.eindx] >= bskt_emax))
+                      continue;
+
+                  // when all previous baskets were processed, continue with selected
+                  if (elem.curr_basket < 0)
+                     elem.curr_basket = k;
+               }
+
+               if (select_entries) {
+                  // also check next entries which may belong to this basket
+                  do
+                     elem.eindx++;
+                  while ((elem.eindx < handle.process_entries.length) && (handle.process_entries[elem.eindx] >= bskt_emin) && (handle.process_entries[elem.eindx] < bskt_emax));
+
+                  // remember which baskets are required
+                  elem.selected_baskets.push(k);
                }
 
                // check if basket already loaded in the branch
@@ -2405,7 +2530,8 @@ async function treeProcess(tree, selector, args) {
                   elem.baskets[k] = bitem;
                } else {
                   bitems.push(bitem);
-                  totalsz += elem.branch.fBasketBytes[k];
+                  total_size += elem.branch.fBasketBytes[k];
+                  total_nsegm++;
                   isany = true;
                }
 
@@ -2418,7 +2544,7 @@ async function treeProcess(tree, selector, args) {
          }
       }
 
-      if ((totalsz === 0) && !is_direct) {
+      if ((total_size === 0) && !is_direct) {
          handle.selector.Terminate(true);
          return resolveFunc(handle.selector);
       }
@@ -2437,7 +2563,7 @@ async function treeProcess(tree, selector, args) {
 
       handle.progress_showtm = new Date().getTime();
 
-      if (totalsz > 0)
+      if (total_size > 0)
          return readBaskets(bitems).then(processBaskets);
 
       if (is_direct)
@@ -2481,7 +2607,7 @@ async function treeProcess(tree, selector, args) {
                   continue; // ignore non-master branch
                }
 
-               // this is single response from the tree, includes branch, bakset number, raw data
+               // this is single response from the tree, includes branch, basket number, raw data
                const bitem = elem.baskets[elem.curr_basket];
 
                // basket not read
@@ -2505,6 +2631,12 @@ async function treeProcess(tree, selector, args) {
                bitem.branch = null; // remove reference on the branch
                bitem.bskt_obj = null; // remove reference on the branch
                elem.baskets[elem.curr_basket++] = undefined; // remove from array
+
+               if (handle.process_entries !== undefined) {
+                  elem.selected_baskets.shift();
+                  // -1 means that basket is not yet found for following entries
+                  elem.curr_basket = (elem.selected_baskets.length > 0) ? elem.selected_baskets[0] : -1;
+               }
             }
 
             // define how much entries can be processed before next raw buffer will be finished
@@ -2538,7 +2670,7 @@ async function treeProcess(tree, selector, args) {
             isanyprocessed = true;
          } else {
             // main processing loop
-            while (loopentries--) {
+            while (loopentries > 0) {
                for (n = 0; n < handle.arr.length; ++n) {
                   elem = handle.arr[n];
 
@@ -2550,9 +2682,23 @@ async function treeProcess(tree, selector, args) {
 
                handle.selector.Process(handle.current_entry);
 
-               handle.current_entry++;
-
                isanyprocessed = true;
+
+               if (handle.process_entries) {
+                  handle.process_entries_indx++;
+                  if (handle.process_entries_indx >= handle.process_entries.length) {
+                     handle.current_entry++;
+                     loopentries = 0;
+                  } else {
+                     const next_entry = handle.process_entries[handle.process_entries_indx],
+                           diff = next_entry - handle.current_entry;
+                     handle.current_entry = next_entry;
+                     loopentries -= diff;
+                  }
+               } else {
+                  handle.current_entry++;
+                  loopentries--;
+               }
             }
          }
 
@@ -2577,17 +2723,21 @@ async function treeProcess(tree, selector, args) {
 /** @summary implementation of TTree::Draw
   * @param {object|string} args - different setting or simply draw expression
   * @param {string} args.expr - draw expression
-  * @param {string} [args.cut=undefined]   - cut expression (also can be part of 'expr' after '::')
+  * @param {string} [args.cut=undefined] - cut expression (also can be part of 'expr' after '::')
   * @param {string} [args.drawopt=undefined] - draw options for result histogram
   * @param {number} [args.firstentry=0] - first entry to process
   * @param {number} [args.numentries=undefined] - number of entries to process, all by default
+  * @param {Array} [args.elist=undefined] - array of entries id to process, all by default
+  * @param {boolean} [args.staged] - staged processing, first apply cut to select entries and then perform drawing for selected entries
   * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
   * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
   * @return {Promise} with produced object */
 async function treeDraw(tree, args) {
-   if (isStr(args)) args = { expr: args };
+   if (isStr(args))
+      args = { expr: args };
 
-   if (!isStr(args.expr)) args.expr = '';
+   if (!isStr(args.expr))
+      args.expr = '';
 
    const selector = new TDrawSelector();
 
@@ -2599,7 +2749,22 @@ async function treeDraw(tree, args) {
 
    selector.setCallback(null, args.progress);
 
-   return treeProcess(tree, selector, args).then(() => selector.hist);
+   return treeProcess(tree, selector, args).then(sel => {
+      if (!args.staged)
+         return sel;
+
+      delete args.dump_entries;
+
+      const selector2 = new TDrawSelector(),
+            args2 = Object.assign({}, args);
+      args2.staged = false;
+      args2.elist = sel.hist; // assign entries found in first selection
+      if (!selector2.createDrawExpression(tree, args.staged_names, '', args2))
+         return Promise.reject(Error(`Fail to create final draw expression ${args.expr}`));
+      ['arr_limit', 'htype', 'nmatch', 'want_hist', 'hist_nbins', 'hist_name', 'hist_args', 'draw_title']
+        .forEach(name => { selector2[name] = selector[name]; });
+      return treeProcess(tree, selector2, args2);
+   }).then(sel => sel.hist);
 }
 
 /** @summary Performs generic I/O test for all branches in the TTree

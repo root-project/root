@@ -2251,10 +2251,14 @@ class HierarchyPainter extends BasePainter {
          const cp = getElementCanvPainter(dom);
 
          if (cp) {
-            if (sett?.has_same)
+            if (sett?.has_same && mp)
                opt = 'same ' + opt;
          } else
             this.cleanupFrame(dom);
+
+         // if drop on sub-pad painter - call add pad buttons
+         if (isFunc(dom?.addPadButtons))
+            dom.addPadButtons();
 
          return draw(dom, res.obj, opt).then(p => drop_complete(p, mp === p));
       });
