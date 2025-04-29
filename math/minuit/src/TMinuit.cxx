@@ -5960,19 +5960,14 @@ void TMinuit::mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t 
    x2 = x3 = 0;
    Int_t i;
 
-   /* Parameter adjustments */
-   --coef2p;
-   --pary2p;
-   --parx2p;
-
    /* Function Body */
-   for (i = 1; i <= 3; ++i) { cz[i-1] = 0; }
+   for (i = 1; i <= 3; ++i) { cz[i - 1] = 0; }
    sdev2p = 0;
    if (npar2p < 3) goto L10;
    f = (Double_t) (npar2p);
 // center x values for reasons of machine precision
    xm  = 0;
-   for (i = 1; i <= npar2p; ++i) { xm += parx2p[i]; }
+   for (i = 1; i <= npar2p; ++i) { xm += parx2p[i - 1]; }
    xm /= f;
    x2  = 0;
    x3  = 0;
@@ -5982,8 +5977,8 @@ void TMinuit::mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t 
    xy  = 0;
    x2y = 0;
    for (i = 1; i <= npar2p; ++i) {
-      s    = parx2p[i] - xm;
-      t    = pary2p[i];
+      s    = parx2p[i - 1] - xm;
+      t    = pary2p[i - 1];
       s2   = s*s;
       x2  += s2;
       x3  += s*s2;
@@ -6006,7 +6001,7 @@ L6:
    cz[0] += xm*(xm*cz[2] - cz[1]);
    cz[1] -= xm*2*cz[2];
 L10:
-   for (i = 1; i <= 3; ++i) { coef2p[i] = cz[i-1]; }
+   for (i = 1; i <= 3; ++i) { coef2p[i - 1] = cz[i - 1]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
