@@ -1,5 +1,11 @@
 # JSROOT changelog
 
+## Changes in 7.9.x
+1. Fix - colz handling on `THStack`, avoid multiple palette drawings
+2. Fix - bug in pad.Divide context menu command
+3. Fix - drag and drop of histograms on empty sub-pads
+
+
 ## Changes in 7.9.0
 1. New draw options:
    - 'pol' and 'arr_colz' draw option for `TH2`

@@ -1,10 +1,10 @@
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.9.0',
+const version_id = '7.9.x',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '25/04/2025',
+version_date = '29/04/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1774,7 +1774,7 @@ function getMethods(typename, obj) {
                   pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
                   pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
                   pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
-                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsHNDC;
                } else {
                   pad.fAbsWNDC = x2 - x1;
                   pad.fAbsHNDC = y2 - y1;

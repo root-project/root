@@ -2750,8 +2750,13 @@ class TH2Painter extends THistPainter {
       } else if (this.options.Same && this._ignore_frame)
          this.getFrameSvg().style('display', 'none');
 
-      if (!this.draw_content)
+      if (!this.draw_content) {
+         if (this.options.Zscale && this.options.ohmin && this.options.ohmax) {
+            this.getContour(true);
+            this.getHistPalette();
+         }
          return this.removeG();
+      }
 
       this.createHistDrawAttributes();
 

@@ -2251,7 +2251,7 @@ class HierarchyPainter extends BasePainter {
          const cp = getElementCanvPainter(dom);
 
          if (cp) {
-            if (sett?.has_same)
+            if (sett?.has_same && mp)
                opt = 'same ' + opt;
          } else
             this.cleanupFrame(dom);
