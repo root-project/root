@@ -266,6 +266,7 @@ else()
   # Make some LLVM variables globally available.
   set(LLVM_INCLUDE_DIRS ${LLVM_INCLUDE_DIRS} CACHE PATH "Path to llvm/include")
   set(LLVM_LIBRARY_DIR ${LLVM_LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
+  set(LLVM_LIBDIR_SUFFIX ${LLVM_LIBDIR_SUFFIX} CACHE STRING "Suffix of library directory name")
 
   find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
     NO_DEFAULT_PATH)
@@ -403,7 +404,7 @@ if (builtin_clang)
     ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
-  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib/cmake/clang/")
+  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
