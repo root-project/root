@@ -585,8 +585,9 @@ foreach(var ${variables})
       endif()
     else()
       if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_")
-          AND NOT(var MATCHES "^CMAKE_PROJECT_VERSION")
-          AND NOT(var MATCHES "^CMAKE_CACHE_"))
+          AND NOT(var MATCHES "^CMAKE_PROJECT_VERSION") # Created by the 'latest' call to project()
+          AND NOT(var MATCHES "^CMAKE_CACHE_") # related to previous CMake invocation eg CMAKE_CACHE_MAJOR_VERSION
+          AND NOT(var MATCHES "^ROOT_.*_LIBRARY$")) # Created for users in ROOTConfig.cmake
         set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
       endif()
     endif()
