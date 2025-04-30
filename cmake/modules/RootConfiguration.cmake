@@ -434,7 +434,6 @@ set(use${compression_default} define)
 # for other platforms we have available builtin zlib 1.2.8
 if(builtin_zlib AND ZLIB_CF)
   set(usecloudflarezlib define)
-  set(usezlib undef)
 endif()
 if(runtime_cxxmodules)
   set(usecxxmodules define)
