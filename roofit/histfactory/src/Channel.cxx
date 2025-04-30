@@ -27,6 +27,7 @@
 #include "TFile.h"
 #include "TKey.h"
 #include "TTimeStamp.h"
+#include "TDirectory.h"
 
 #include "RooStats/HistFactory/HistFactoryException.h"
 
@@ -464,7 +465,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
     throw hf_exc();
   }
 
-
+  TDirectory::TContext ctx{nullptr};
   TH1 * ptr = static_cast<TH1 *>(hist->Clone());
 
   if(!ptr){
@@ -474,9 +475,6 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
          << "obj: " << HistoName << std::endl;
     throw hf_exc();
   }
-
-  ptr->SetDirectory(nullptr);
-
 
 #ifdef DEBUG
   std::cout << "Found Histogram: " << HistoName " at address: " << ptr
