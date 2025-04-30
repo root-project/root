@@ -425,16 +425,16 @@ endif()
 
 set(uselz4 undef)
 set(usezlib undef)
+set(usecloudflarezlib undef)
 set(uselzma undef)
 set(usezstd undef)
 set(use${compression_default} define)
 
 # cloudflare zlib is available only on x86 and aarch64 platforms with Linux
 # for other platforms we have available builtin zlib 1.2.8
-if(ZLIB_CF)
+if(builtin_zlib AND ZLIB_CF)
   set(usecloudflarezlib define)
-else()
-  set(usecloudflarezlib undef)
+  set(usezlib undef)
 endif()
 if(runtime_cxxmodules)
   set(usecxxmodules define)
