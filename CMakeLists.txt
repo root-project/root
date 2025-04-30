@@ -658,48 +658,6 @@ if(testing)
   set(upstreamprefix https://github.com/root-project)
 
   if(roottest)
-    find_package(Git REQUIRED)
-
-    # Check whether the repository exists in the source directory or its parent
-    get_filename_component(source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
-    if(IS_DIRECTORY ${source_dir}/roottest/.git)
-      set(repo_dir ${source_dir}/roottest)
-    elseif(IS_DIRECTORY ${source_dir}/../roottest/.git)
-      set(repo_dir ${source_dir}/../roottest)
-    endif()
-    if(DEFINED repo_dir)
-      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${repo_dir}/.git
-                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE
-                      RESULT_VARIABLE query_result
-                      ERROR_VARIABLE query_error)
-      if(NOT query_result EQUAL 0)
-        message(STATUS "Searching for \"origin\" repo of roottest: ${query_error}")
-      endif()
-    else()
-       # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
-       # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
-       # value is used instead.
-       if(DEFINED ENV{GITHUB_PR_ORIGIN})
-         set(originurl $ENV{GITHUB_PR_ORIGIN})
-       else()
-         execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                         remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
-       endif()
-    endif()
-    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix "${originurl}")
-    relatedrepo_GetClosestMatch(REPO_NAME roottest
-                                ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
-                                FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
-    # Use `-Droottest_force_checkout=ON` to force fetch and checkout in an existing repository
-    if(roottest_force_checkout)
-       set(roottest_opts FORCE)
-    endif()
-    relatedrepo_Checkout(REPO_NAME roottest FETCHURL ${roottest_url} FETCHREF "${roottest_ref}"
-                         REPO_DIR_VARIABLE roottest_dir ${roottest_opts})
-    if(NOT IS_DIRECTORY ${roottest_dir})
-      message(FATAL_ERROR "Expected roottest at '${roottest_dir}' (not a directory?)")
-    endif()
-    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
     add_subdirectory(${roottest_dir} roottest)
   endif()
 
