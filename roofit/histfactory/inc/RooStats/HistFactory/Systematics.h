@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "TH1.h"
+#include "TDirectory.h"
 #include "RooStats/HistFactory/HistRef.h"
 
 namespace RooStats{
@@ -107,7 +108,10 @@ namespace HistFactory {
     fInputFileHigh{oth.fInputFileHigh}, fHistoNameHigh{oth.fHistoNameHigh}, fHistoPathHigh{oth.fHistoPathHigh},
     fhLow{oth.fhLow ? static_cast<TH1*>(oth.fhLow->Clone()) : nullptr},
     fhHigh{oth.fhHigh ? static_cast<TH1*>(oth.fhHigh->Clone()) : nullptr} {
-
+       if (fhLow)
+          fhLow->SetDirectory(nullptr);
+       if (fhHigh)
+          fhHigh->SetDirectory(nullptr);
     }
     HistogramUncertaintyBase(HistogramUncertaintyBase&&) = default;
 
@@ -123,6 +127,8 @@ namespace HistFactory {
       fInputFileHigh = oth.fInputFileHigh;
       fHistoNameHigh = oth.fHistoNameHigh;
       fHistoPathHigh = oth.fHistoPathHigh;
+
+      TDirectory::TContext ctx{nullptr}; // Don't associate clones to directories
       fhLow.reset(oth.fhLow ? static_cast<TH1*>(oth.fhLow->Clone()) : nullptr);
       fhHigh.reset(oth.fhHigh ? static_cast<TH1*>(oth.fhHigh->Clone()) : nullptr);
 
