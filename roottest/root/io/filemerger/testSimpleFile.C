@@ -2,6 +2,8 @@
 constexpr int expectedcomplevel = 404;
 #elif defined R__HAS_DEFAULT_ZLIB
 constexpr int expectedcomplevel = 101;
+#elif defined R__HAS_CLOUDFLARE_ZLIB
+constexpr int expectedcomplevel = 101;
 #endif
 
 int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Long64_t fileSize, UInt_t tolerance = 0)
