@@ -279,7 +279,7 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
 {
    std::stringstream code;
 
-   auto declareIntermediateTensor = [this, &code](std::string const &name, int size, int location) {
+   auto declareIntermediateTensor = [this, &code](std::string const &name, size_t size, size_t location) {
       std::string typeName = ConvertTypeToString(GetTensorType(name));
       code << "\n // Allocating memory for intermediate tensor " << name << " with size " << size << " bytes";
       code << "\n"
@@ -577,7 +577,7 @@ void RModel::GenerateIntermediateMemoryPool() {
    // char memory block is allocated since char takes 1 byte, thus easier to allocate tensors
    // of other data types
    auto const &totalStack = fIntermediateMemoryInfo.total_stack;
-   const int memPoolSize = totalStack.rbegin()->first + totalStack.rbegin()->second.tensor_size;
+   const size_t memPoolSize = totalStack.rbegin()->first + totalStack.rbegin()->second.tensor_size;
    fGC += "std::vector<char> fIntermediateMemoryPool = std::vector<char>(" + std::to_string(memPoolSize) + ");\n\n";
 }
 
