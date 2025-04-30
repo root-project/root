@@ -61,11 +61,21 @@ jobs:
 
     name: Build and test to determine coverage
 
+    env:
+      PYTHONUNBUFFERED: true
+      OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+      OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+      OS_AUTH_TYPE: 'v3applicationcredential'
+      OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+      OS_IDENTITY_API_VERSION: 3
+      OS_INTERFACE: 'public'
+      OS_REGION_NAME: 'cern'
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
     container:
       image: registry.cern.ch/root-ci/alma9:buildready
       options: '--security-opt label=disable --rm'
-      env:
-        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
 
     steps:
       - name: Set up Python Virtual Env
