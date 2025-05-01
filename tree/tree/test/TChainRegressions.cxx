@@ -148,7 +148,7 @@ TEST(TChain, GetEntriesSingleFileDeactivateBranches)
             float random = 0.333333;
             TBranch *b_random;
             chain.SetBranchAddress("random", &random, &b_random); // initialize one branch only
-            for (long i = 0; i < (DoGetEntries ? nEntries : chain.GetEntries()); ++i) {
+            for (long i = 0; i < (DoGetEntries ? nEntries : chain.GetEntriesFast()); ++i) {
                auto bytes = chain.GetEntry(i);
                ASSERT_GT(bytes, 0);
             }
