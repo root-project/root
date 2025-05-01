@@ -127,3 +127,31 @@ TEST(TChain, UncommonFileExtension)
    gSystem->Unlink(filename);
    gSystem->Unlink(dirname);
 }
+
+// https://github.com/root-project/root/issues/7567
+TEST(TChain, GetEntriesSingleFileDeactivateBranches)
+{
+   const auto treename = "ntuple";
+   const auto filename = "$ROOTSYS/tutorials/hsimple.root";
+   for(auto nFiles : {2, 1}) {
+      for (auto DoGetEntries : {false, true}) {
+         for (auto DoDeactivateBranches : {false, true}) {
+            TChain chain(treename);
+            for (auto i = 0 ; i < nFiles; ++i) {
+               chain.Add(filename);
+            }
+            const long nEntries = DoGetEntries ? chain.GetEntries() : -1;
+            if (DoDeactivateBranches)
+               chain.SetBranchStatus("*",0); // before the fix, this line, together with a previous GetEntries() caused a bug, but only if a single file is passed to the TChain!
+            // read a single branch
+            float random = 0.333333;
+            TBranch *b_random;
+            chain.SetBranchAddress("random", &random, &b_random); // initialize one branch only
+            for (long i = 0 ; i < (DoGetEntries ? nEntries : chain.GetEntries()); ++i) {
+               auto bytes = chain.GetEntry(i);
+               ASSERT_GT(bytes, 0);
+            }
+         }
+      }
+   }
+}
