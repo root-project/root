@@ -1644,8 +1644,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (err==0) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter>=0) {
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res == 1 && inter >= 0) {
                                  inter += offset;
                                  actionCode = kexpo + inter2;
                                  actionParam = inter;
@@ -1655,10 +1655,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                                  if (fNpar>=gMAXPAR) err=7; // too many parameters
                                  if (!err) fNoper++;
                                  if (fNpar == 2) SetNumber(200);
-                              } else err=20;
-                           } else err = 20; // non integer value for parameter number
+                              } else
+                                 err = 20;
+                           } else
+                              err = 20; // non integer value for parameter number
                         } else {
-                           err=26; // unknown name
+                           err = 26; // unknown name
                            chaine_error=chaine;
                         }
 
@@ -1730,8 +1732,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (err==0) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter >= 0) {
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res == 1 && inter >= 0) {
                                  inter += offset;
                                  actionCode = kgaus + inter2;
                                  actionParam = inter;
@@ -1741,11 +1743,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                                  if (fNpar>=gMAXPAR) err=7; // too many parameters
                                  if (!err) fNoper++;
                                  if(fNpar == 3) SetNumber(100);
-                              } else err = 20; // non integer value for parameter number
+                              } else
+                                 err = 20; // non integer value for parameter number
                            }
-                        } else if (err==0) {
-                           err=26; // unknown name
-                           chaine_error=chaine1ST;
+                        } else if (err == 0) {
+                           err = 26; // unknown name
+                           chaine_error = chaine1ST;
                         }
 
    // Look for landau, xlandau,ylandau,xylandau
@@ -1815,8 +1818,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (err==0) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter >= 0) {
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res == 1 && inter >= 0) {
                                  inter += offset;
                                  actionCode = klandau + inter2;
                                  actionParam = inter;
@@ -1826,11 +1829,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                                  if (fNpar>=gMAXPAR) err=7; // too many parameters
                                  if (!err) fNoper++;
                                  if (fNpar == 3) SetNumber(400);
-                              } else err = 20; // non integer value for parameter number
+                              } else
+                                 err = 20; // non integer value for parameter number
                            }
-                        } else if (err==0) {
-                           err=26; // unknown name
-                           chaine_error=chaine1ST;
+                        } else if (err == 0) {
+                           err = 26; // unknown name
+                           chaine_error = chaine1ST;
                         }
 
    // Look for a polynomial
@@ -1872,8 +1876,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (!err) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter < 0) err = 20;
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res != 1 || inter < 0)
+                                 err = 20;
                            }
                         }
                         else {
@@ -2088,12 +2093,14 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            }
                         }
                         if (!err) {
-                           sscanf(ctemp.Data(),"%d",&valeur);
-                           actionCode = kParameter;
-                           actionParam = offset + valeur;
-                           SetAction(fNoper-1, actionCode, actionParam);
-                           fExpr[fNoper-1] = "[";
-                           fExpr[fNoper-1] = (fExpr[fNoper-1] + (long int)(valeur+offset)) + "]";
+                           auto res = sscanf(ctemp.Data(), "%d", &valeur);
+                           if (res == 1) {
+                              actionCode = kParameter;
+                              actionParam = offset + valeur;
+                              SetAction(fNoper - 1, actionCode, actionParam);
+                              fExpr[fNoper - 1] = "[";
+                              fExpr[fNoper - 1] = (fExpr[fNoper - 1] + (long int)(valeur + offset)) + "]";
+                           }
                         }
                      } else if (chaine == "pi") {
                         fExpr[fNoper] = "pi";
@@ -2357,9 +2364,13 @@ Int_t TFormula::Compile(const char *expression)
             if (chaine(j+i-1,1) == "]" || j+i > chaine.Length()) break;
          }
          ctemp = chaine(i,j-1);
-         valeur=0;
-         sscanf(ctemp.Data(),"%d",&valeur);
-         if (valeur >= fNpar) fNpar = valeur+1;
+         if (ctemp.IsDigit()) {
+            valeur = 0;
+            auto res = sscanf(ctemp.Data(), "%d", &valeur);
+            if (res == 1 && valeur >= fNpar) {
+               fNpar = valeur + 1;
+            }
+         }
       } else if (chaine(i-1,1) == " ") {
          chaine = chaine(0,i-1)+chaine(i,lc-i);
          i=0;
@@ -3594,8 +3605,8 @@ void TFormula::Convert(UInt_t /* fromVersion */)
          newActionCode = kSignInv;
 
          Float_t aresult = 99.99;
-         sscanf((const char*)fExpr[i],"%g",&aresult);
-         R__ASSERT((aresult+1)<0.001);
+         auto res = sscanf((const char *)fExpr[i], "%g", &aresult);
+         R__ASSERT(res == 1 && (aresult + 1) < 0.001);
 
          ++i; // skip the implied multiplication.
 
