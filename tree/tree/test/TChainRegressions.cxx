@@ -142,7 +142,8 @@ TEST(TChain, GetEntriesSingleFileDeactivateBranches)
             }
             const long nEntries = DoGetEntries ? chain.GetEntries() : -1;
             if (DoDeactivateBranches)
-               chain.SetBranchStatus("*", 0); // before the fix, this line, together with a previous GetEntries() caused a bug, but only if a single file is passed to the TChain!
+               chain.SetBranchStatus("*", 0); // before the fix, this line, together with a previous GetEntries() caused
+                                              // a bug, but only if a single file is passed to the TChain!
             // read a single branch
             float random = 0.333333;
             TBranch *b_random;
