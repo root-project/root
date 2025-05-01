@@ -2357,9 +2357,13 @@ Int_t TFormula::Compile(const char *expression)
             if (chaine(j+i-1,1) == "]" || j+i > chaine.Length()) break;
          }
          ctemp = chaine(i,j-1);
-         valeur=0;
-         sscanf(ctemp.Data(),"%d",&valeur);
-         if (valeur >= fNpar) fNpar = valeur+1;
+         if (ctemp.IsDigit()) {
+            valeur = 0;
+            auto res = sscanf(ctemp.Data(), "%d", &valeur);
+            if (res == 1 && valeur >= fNpar) {
+               fNpar = valeur + 1;
+            }
+         }
       } else if (chaine(i-1,1) == " ") {
          chaine = chaine(0,i-1)+chaine(i,lc-i);
          i=0;
