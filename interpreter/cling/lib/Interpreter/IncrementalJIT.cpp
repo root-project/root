@@ -478,6 +478,40 @@ IncrementalJIT::~IncrementalJIT() {
   }
 }
 
+class DebuggingSimpleCompiler : public llvm::orc::SimpleCompiler {
+public:
+  DebuggingSimpleCompiler(llvm::TargetMachine& TM,
+                          llvm::ObjectCache* ObjCache = nullptr)
+      : llvm::orc::SimpleCompiler(TM, ObjCache) {}
+  llvm::Expected<CompileResult> operator()(llvm::Module& M) override {
+    auto R = llvm::orc::SimpleCompiler::operator()(M);
+
+#ifndef NDEBUG
+#define DEBUG_TYPE "orc"
+    bool Debugging = DebugFlag && isCurrentDebugType(DEBUG_TYPE);
+    if (R && Debugging) {
+      std::string FileStem;
+      {
+        static unsigned counter = 0;
+        llvm::raw_string_ostream FileStemStream(FileStem);
+        FileStemStream << M.getModuleIdentifier() << "." << ++counter;
+      }
+      std::error_code EC;
+      llvm::raw_fd_ostream ModuleStream(FileStem + ".ll", EC);
+      ModuleStream << M;
+      llvm::raw_fd_ostream ObjectStream(FileStem + ".o", EC);
+      ObjectStream << (*R)->getBuffer();
+      LLVM_DEBUG(dbgs() << "Created file '" << FileStem + ".ll"
+                        << "'\n");
+      LLVM_DEBUG(dbgs() << "Created file '" << FileStem + ".o"
+                        << "'\n");
+    }
+#undef DEBUG_TYPE
+#endif // NDEBUG
+    return R;
+  }
+};
+
 IncrementalJIT::IncrementalJIT(
     IncrementalExecutor& Executor, const clang::CompilerInstance &CI,
     std::unique_ptr<llvm::orc::ExecutorProcessControl> EPC, Error& Err,
@@ -540,10 +574,12 @@ IncrementalJIT::IncrementalJIT(
     return Layer;
   });
 
-  Builder.setCompileFunctionCreator([&](llvm::orc::JITTargetMachineBuilder)
-  -> llvm::Expected<std::unique_ptr<llvm::orc::IRCompileLayer::IRCompiler>> {
-    return std::make_unique<SimpleCompiler>(*m_TM);
-  });
+  Builder.setCompileFunctionCreator(
+      [&](llvm::orc::JITTargetMachineBuilder)
+          -> llvm::Expected<
+              std::unique_ptr<llvm::orc::IRCompileLayer::IRCompiler>> {
+        return std::make_unique<DebuggingSimpleCompiler>(*m_TM);
+      });
 
   char LinkerPrefix = this->m_TM->createDataLayout().getGlobalPrefix();
 
