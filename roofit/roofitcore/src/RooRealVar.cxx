@@ -255,6 +255,23 @@ inline void throwOutOfRangeError(RooRealVar const &var, double value, const char
    throw std::invalid_argument(ss.str());
 }
 
+void printOutOfRangeWarning(RooRealVar const &var, double value, const char *rangeName)
+{
+   std::stringstream ss;
+   ss << "Value " << value;
+   if (rangeName) {
+      ss << " is slightly outside the range \"" << rangeName << "\" ";
+   } else {
+      ss << " is slightly outside the default range ";
+   }
+   ss << "[" << var.getMin() << ", " << var.getMax() << "] of the variable \"";
+   ss << var.GetName() << "\"!";
+   ss << "\nThe value will be clipped. To restore the dangerous old behavior of silently clipping the value to the "
+         "range,"
+      << " call `RooRealVar::enableSilentClipping()`.";
+   oocoutW(&var, InputArguments) << ss.str() << std::endl;
+}
+
 }
 
 
@@ -268,7 +285,11 @@ void RooRealVar::setVal(double value)
   bool isInRange = inRange(value,0,&clipValue) ;
 
   if(!isInRange && !isSilentClippingEnabled()) {
-    throwOutOfRangeError(*this, value, nullptr);
+      if (std::abs(clipValue - value) > std::numeric_limits<double>::epsilon()) {
+         throwOutOfRangeError(*this, value, nullptr);
+      } else {
+         printOutOfRangeWarning(*this, value, nullptr);
+      }
   }
 
   if (clipValue != _value) {
@@ -289,7 +310,11 @@ void RooRealVar::setVal(double value, const char* rangeName)
   bool isInRange = inRange(value,rangeName,&clipValue) ;
 
   if(!isInRange && !isSilentClippingEnabled()) {
-    throwOutOfRangeError(*this, value, rangeName);
+      if (std::abs(clipValue - value) > std::numeric_limits<double>::epsilon()) {
+         throwOutOfRangeError(*this, value, rangeName);
+      } else {
+         printOutOfRangeWarning(*this, value, rangeName);
+      }
   }
 
   if (clipValue != _value) {
