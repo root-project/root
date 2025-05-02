@@ -110,7 +110,7 @@ endif()
 if(NOT builtin_zlib)
   message(STATUS "Looking for ZLib")
   # Clear cache variables, or LLVM may use old values for ZLIB
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE CF)
     unset(ZLIB_${suffix} CACHE)
   endforeach()
   if(fail-on-missing)
