@@ -725,6 +725,10 @@ function render3D(tmout) {
    }
 }
 
+/** @summary Returns assigned render object
+  * @private */
+function getRenderer() { return this.renderer; }
+
 /** @summary Check is 3D drawing need to be resized
   * @private */
 function resize3D() {
@@ -1609,7 +1613,7 @@ function convert3DtoPadNDC(x, y, z) {
 /** @summary Assign 3D methods for frame painter
   * @private */
 function assignFrame3DMethods(fpainter) {
-   Object.assign(fpainter, { create3DScene, add3DMesh, remove3DMeshes, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
+   Object.assign(fpainter, { create3DScene, add3DMesh, remove3DMeshes, getRenderer, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
 function _meshLegoToolTip(intersect) {

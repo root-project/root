@@ -1,4 +1,4 @@
-import { isObject, isFunc, BIT } from '../core.mjs';
+import { isObject, isFunc, isStr, BIT } from '../core.mjs';
 import { THREE } from '../base/base3d.mjs';
 import { createBufferGeometry, createNormal,
          Vertex as CsgVertex, Geometry as CsgGeometry, Polygon as CsgPolygon } from './csg.mjs';
@@ -3019,7 +3019,8 @@ class ClonedNodes {
 
    /** @summary Returns ids array which correspond to the stack */
    buildIdsByStack(stack) {
-      if (!stack) return null;
+      if (!stack)
+         return null;
       let node = this.nodes[0];
       const ids = [0];
       for (let k = 0; k < stack.length; ++k) {
@@ -3064,7 +3065,8 @@ class ClonedNodes {
       const names = fullname.split('/'), stack = [];
       let currid = 0;
 
-      if (this.getNodeName(currid) !== names[0]) return null;
+      if (this.getNodeName(currid) !== names[0])
+         return null;
 
       for (let n = 1; n < names.length; ++n) {
          const node = this.nodes[currid];
@@ -3080,7 +3082,8 @@ class ClonedNodes {
          }
 
          // no new entry - not found stack
-         if (stack.length === n - 1) return null;
+         if (stack.length === n - 1)
+            return null;
       }
 
       return stack;
@@ -3090,12 +3093,11 @@ class ClonedNodes {
    setDefaultColors(on) {
       this.use_dflt_colors = on;
       if (this.use_dflt_colors && !this.dflt_table) {
-         const dflt = { kWhite: 0, kBlack: 1, kGray: 920,
-                        kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kCyan: 432,
-                        kOrange: 800, kSpring: 820, kTeal: 840, kAzure: 860, kViolet: 880, kPink: 900 },
-
-          nmax = 110, col = [];
-         for (let i=0; i<nmax; i++) col.push(dflt.kGray);
+         const nmax = 110, col = [], dflt = { kWhite: 0, kBlack: 1, kGray: 920,
+               kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kCyan: 432,
+               kOrange: 800, kSpring: 820, kTeal: 840, kAzure: 860, kViolet: 880, kPink: 900 };
+         for (let i = 0; i < nmax; i++)
+            col.push(dflt.kGray);
 
          //  here we should create a new TColor with the same rgb as in the default
          //  ROOT colors used below
@@ -3276,7 +3278,8 @@ class ClonedNodes {
             }
          }
 
-         if ((options === 'mesh') || !mesh) return mesh;
+         if ((options === 'mesh') || !mesh)
+            return mesh;
 
          const res = three_prnt;
          while (mesh && (mesh !== toplevel)) {
@@ -4090,9 +4093,107 @@ function getShapeIcon(shape) {
    return 'img_geotube';
 }
 
+function runGeoWorker(ctxt, data, doPost) {
+   if (isStr(data)) {
+      console.log(`Worker get message ${data}`);
+      return;
+   }
+
+   if (!isObject(data))
+      return;
+
+   data.tm1 = new Date().getTime();
+
+   if (data.init) {
+      // console.log(`start worker ${data.tm1 -  data.tm0}`);
+
+      if (data.clones) {
+         // console.log(`get clones ${nodes.length}`);
+         ctxt.clones = new ClonedNodes(null, data.clones);
+         ctxt.clones.setVisLevel(data.vislevel);
+         ctxt.clones.setMaxVisNodes(data.maxvisnodes);
+         ctxt.clones.sortmap = data.sortmap;
+         delete data.clones;
+      }
+
+      data.tm2 = new Date().getTime();
+
+      return doPost(data);
+   }
+
+   if (data.shapes) {
+      // this is task to create geometries in the worker
+
+      const shapes = data.shapes, transferables = [];
+
+      // build all shapes up to specified limit, also limit execution time
+      for (let n = 0; n < 100; ++n) {
+         const res = ctxt.clones.buildShapes(shapes, data.limit, 1000);
+         if (res.done) break;
+         doPost({ progress: `Worker creating: ${res.shapes} / ${shapes.length} shapes, ${res.faces} faces` });
+      }
+
+      for (let n = 0; n < shapes.length; ++n) {
+         const item = shapes[n];
+
+         if (item.geom) {
+            let bufgeom;
+            if (item.geom instanceof THREE.BufferGeometry)
+               bufgeom = item.geom;
+            else
+               bufgeom = new THREE.BufferGeometry().fromGeometry(item.geom);
+
+            item.buf_pos = bufgeom.attributes.position.array;
+            item.buf_norm = bufgeom.attributes.normal.array;
+
+            // use nice feature of HTML workers with transferable
+            // we allow to take ownership of buffer from local array
+            // therefore buffer content not need to be copied
+            transferables.push(item.buf_pos.buffer, item.buf_norm.buffer);
+
+            delete item.geom;
+         }
+
+         delete item.shape; // no need to send back shape
+      }
+
+      data.tm2 = new Date().getTime();
+
+      return doPost(data, transferables);
+   }
+
+   if (data.collect !== undefined) {
+      // this is task to collect visible nodes using camera position
+
+      // first mark all visible flags
+      ctxt.clones.setVisibleFlags(data.flags);
+      ctxt.clones.setVisLevel(data.vislevel);
+      ctxt.clones.setMaxVisNodes(data.maxvisnodes);
+
+      delete data.flags;
+
+      ctxt.clones.produceIdShifts();
+
+      let matrix = null;
+      if (data.matrix)
+         matrix = new THREE.Matrix4().fromArray(data.matrix);
+      delete data.matrix;
+
+      const res = ctxt.clones.collectVisibles(data.collect, createFrustum(matrix));
+
+      data.new_nodes = res.lst;
+      data.complete = res.complete; // inform if all nodes are selected
+
+      data.tm2 = new Date().getTime();
+
+      return doPost(data);
+   }
+}
+
 export { kindGeo, kindEve, kindShape,
          clTGeoBBox, clTGeoCompositeShape,
          geoCfg, geoBITS, ClonedNodes, isSameStack, checkDuplicates, getObjectName, testGeoBit, setGeoBit, toggleGeoBit,
          setInvisibleAll, countNumShapes, getNodeKind, produceRenderOrder, createFlippedGeom, createFlippedMesh, cleanupShape,
          createGeometry, numGeometryFaces, numGeometryVertices, createServerGeometry, createMaterial,
-         projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix, getBoundingBox, provideObjectInfo, getShapeIcon };
+         projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix,
+         getBoundingBox, provideObjectInfo, getShapeIcon, runGeoWorker };
