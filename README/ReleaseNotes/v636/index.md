@@ -20,6 +20,8 @@ The following people have contributed to this new version:
  Florine de Geus, CERN/EP-SFT and University of Twente,\
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, CSIC/University of Valencia,\
+ Stephan Hageboeck, CERN/EP-SFT,\
+ Sergey Linev, GSI Darmstadt,\
  Enrico Lusiani, INFN Padova,\
  Alberto Mecca, University of Turin,\
  Lorenzo Moneta, CERN/EP-SFT,\
@@ -40,7 +42,7 @@ The following people have contributed to this new version:
 * The `TPython::Eval()` function that was deprecated in ROOT 6.34 and scheduled for removal in ROOT 6.36 is removed.
 * The `RooDataSet` constructors to construct a dataset from a part of an existing dataset are deprecated and will be removed in ROOT 6.38. This is to avoid interface duplication. Please use `RooAbsData::reduce()` instead, or if you need to change the weight column, use the universal constructor with the `Import()`, `Cut()`, and `WeightVar()` arguments.
 * The ROOT splash screen was removed for Linux and macOS
-* Proof support has been completely removed form RooFit and RooStats, after it was already not working anymore for several releases
+* Proof support has been completely removed from RooFit and RooStats, after it was already not working anymore for several releases
 * The build options `mysql`, `odbc`, `pgsql` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
 * The build options `html` and `qt5web` have been removed.
 * The ClassImp macro and derived macros have no effect now and will be deprecated in ROOT 6.38.
@@ -61,6 +63,7 @@ The following people have contributed to this new version:
 - When running multiple computation graphs concurrently using [`RunGraphs()`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a526d77d018bf69462d736bbdd1a695c4),
   the pool of slot numbers that a thread can pick from is now shared across all graphs. This enables use cases where a single resource, which may be expensive to create or copy,
   is shared across tasks belonging to different computation graphs.
+- RDataFrame's RResultPtr now allow direct access to the underlying shared_ptr using [GetSharedPtr()](https://root.cern.ch/doc/v636/classROOT_1_1RDF_1_1RResultPtr.html#a633d680942845d91c10a48f62918f908). See also the new tutorial [df040](https://root.cern.ch/doc/v636/df040__RResultPtr__lifetimeManagement_8C.html) for details of lifetime management of RDataFrame results.
 - Support for single-threaded snapshotting to RNTuple has been added. This can be enabled through `RSnapshotOptions`. Note that snapshotting from a TTree-based RDataFrame to RNTuple is not yet supported in this release, but will be added in a future version. The current recommended way to convert from TTree to RNTuple is through the [RNTupleImporter](https://root.cern/doc/v636/classROOT_1_1Experimental_1_1RNTupleImporter.html).
 - The support for reading CSV file inputs has been extended with the following capabilities:
   - Left/right trimming
@@ -264,6 +267,10 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 ## Histograms
 
 ## Math
+
+### RooFit / HistFactory
+
+An important bottleneck in HistFactory was removed when many histograms are used to construct a measurement.
 
 ### Performance improvements in Minuit2 for the case of parameters with limits
 
