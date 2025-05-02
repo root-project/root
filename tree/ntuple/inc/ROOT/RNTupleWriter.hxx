@@ -111,8 +111,6 @@ class RNTupleWriter {
 private:
    Experimental::RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
-   /// All the Attribute Sets created from this Writer
-   std::unordered_map<std::string, std::unique_ptr<Experimental::RNTupleAttributeSet>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 

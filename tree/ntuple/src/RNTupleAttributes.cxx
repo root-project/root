@@ -18,6 +18,20 @@
 #include <ROOT/RNTupleFillContext.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
+static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &model)
+{
+   const auto &projFields = ROOT::Internal::GetProjectedFieldsOfModel(model);
+   if (!projFields.IsEmpty())
+      return R__FAIL("The Model passed to CreateAttributeSet cannot contain projected fields.");
+
+   for (const auto &field : model.GetConstFieldZero()) {
+      if (field.GetStructure() == ROOT::ENTupleStructure::kStreamer)
+         return R__FAIL(std::string("The Model passed to CreateAttributeSet cannot contain Streamer field '") +
+                        field.GetQualifiedFieldName());
+   }
+   return ROOT::RResult<void>::Success();
+}
+
 //
 //  RNTupleAttributeRange
 //
@@ -30,10 +44,15 @@ ROOT::Experimental::RNTupleAttributeRange::RNTupleAttributeRange(std::unique_ptr
 //
 //  RNTupleAttributeSet
 //
-ROOT::Experimental::RNTupleAttributeSet::RNTupleAttributeSet(std::string_view name, std::unique_ptr<RNTupleModel> model,
-                                                             const RNTupleFillContext *fillContext, TDirectory &dir)
-   : fMainFillContext(fillContext)
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSet>
+ROOT::Experimental::RNTupleAttributeSet::Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
+                                                const RNTupleFillContext *mainFillContext, TDirectory &dir)
+
 {
+   // Validate model
+   if (auto modelValid = ValidateAttributeModel(*model); !modelValid)
+      return R__FORWARD_ERROR(modelValid);
+
    // Add an internal EntryRange field to the model.
    // TODO: the entry range field name is not guaranteed to not be already taken!
    // TODO: do we need a bespoke field type?
@@ -43,12 +62,19 @@ ROOT::Experimental::RNTupleAttributeSet::RNTupleAttributeSet(std::string_view na
    // Create a sink that points to the same TDirectory as the main RNTuple
    auto opts = ROOT::RNTupleWriteOptions{};
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
-   fFillContext = std::unique_ptr<RNTupleFillContext>(new RNTupleFillContext(std::move(model), std::move(sink)));
+   RNTupleFillContext fillContext{std::move(model), std::move(sink)};
+   return RNTupleAttributeSet(mainFillContext, std::move(fillContext));
+}
+
+ROOT::Experimental::RNTupleAttributeSet::RNTupleAttributeSet(const RNTupleFillContext *mainFillContext,
+                                                             RNTupleFillContext fillContext)
+   : fFillContext(std::move(fillContext)), fMainFillContext(mainFillContext)
+{
 }
 
 ROOT::Experimental::RNTupleAttributeRange ROOT::Experimental::RNTupleAttributeSet::BeginRange()
 {
-   auto entry = fFillContext->GetModel().CreateEntry();
+   auto entry = fFillContext.GetModel().CreateEntry();
    const auto start = fMainFillContext->GetNEntries();
    auto range = RNTupleAttributeRange(std::move(entry), start);
    return range;
@@ -61,5 +87,5 @@ void ROOT::Experimental::RNTupleAttributeSet::EndRange(ROOT::Experimental::RNTup
    auto pRange = range.fEntry->GetPtr<REntryRange>(kEntryRangeFieldName);
    R__ASSERT(pRange);
    *pRange = {range.fStart, end};
-   fFillContext->Fill(*range.fEntry);
+   fFillContext.Fill(*range.fEntry);
 }

@@ -21,6 +21,7 @@
 #include <string_view>
 
 #include <ROOT/REntry.hxx>
+#include <ROOT/RNTupleFillContext.hxx>
 
 namespace ROOT {
 
@@ -61,21 +62,23 @@ TODO: code sample here
 */
 // clang-format on
 class RNTupleAttributeSet final {
+   friend class ::ROOT::Experimental::RNTupleFillContext;
+
    static constexpr const char *const kEntryRangeFieldName = "__ROOT_entryRange";
 
    using REntryRange = std::pair<NTupleSize_t, NTupleSize_t>;
 
    /// Our own fill context.
-   std::unique_ptr<RNTupleFillContext> fFillContext;
+   RNTupleFillContext fFillContext;
    /// Fill context of the main RNTuple being written (i.e. the RNTuple whose attributes we are).
    const RNTupleFillContext *fMainFillContext = nullptr;
 
-   RNTupleAttributeSet() = default;
+   static ROOT::RResult<RNTupleAttributeSet> Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
+                                                    const RNTupleFillContext *mainFillContext, TDirectory &dir);
+
+   RNTupleAttributeSet(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext);
 
 public:
-   RNTupleAttributeSet(std::string_view name, std::unique_ptr<RNTupleModel> model,
-                       const RNTupleFillContext *fillContext, TDirectory &dir);
-
    RNTupleAttributeRange BeginRange();
    void EndRange(RNTupleAttributeRange range);
 };
