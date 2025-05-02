@@ -37,6 +37,24 @@ void CheckEqual(const ROOT::RVecD &a, const ROOT::RVecD &b, std::string_view msg
    }
 }
 
+// Checks if all the elements in `v1` are at most `percentage` percent different
+// from `v2`
+void CheckNear(const RVecD &v1, const RVecD &v2, double percentage = 0.01)
+{
+    ASSERT_EQ(v1.size(), v2.size());
+    for (size_t i = 0; i < v1.size(); i++) {
+        double expected = v2[i];
+        double actual = v1[i];
+        // Compute tolerance as percentage of expected value.
+        double tol = std::abs(expected) * percentage;
+        // Fallback: if expected is zero, use the percentage as an absolute tolerance.
+        if (expected == 0.0) {
+            tol = percentage;
+        }
+        ASSERT_NEAR(actual, expected, tol);
+    }
+}
+
 void CheckEqual(const ROOT::Math::PtEtaPhiMVector &a, const ROOT::Math::PtEtaPhiMVector &b) {
    EXPECT_DOUBLE_EQ(a.Pt(), b.Pt());
    EXPECT_DOUBLE_EQ(a.Eta(), b.Eta());

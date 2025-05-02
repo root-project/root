@@ -3306,16 +3306,16 @@ inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bo
     }
     
     long double step = std::is_floating_point_v<Ret_t> ?
-    (static_cast<Ret_t>(end) - static_cast<Ret_t>(start)) / static_cast<Ret_t>(n - endpoint) :
-    static_cast<long double>(end - start) / (n - endpoint);
+    (end - start) / static_cast<long double>(n - endpoint) :
+    (end >= start ? static_cast<long double>(end - start) / (n - endpoint) : (static_cast<long double>(end) - start) / (n - endpoint));
         
     RVec<Ret_t> temp(n);
-    temp[0] = static_cast<Ret_t>(start);
+    temp[0] = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
     if (std::is_floating_point_v<Ret_t>)
     {
         for (unsigned long long i = 1; i < n; i++)
         {
-            temp[i] = static_cast<Ret_t>(start) + static_cast<Ret_t>(i) * step;
+            temp[i] = static_cast<Ret_t>(start + i * step);
         }
     }
     else
@@ -3397,17 +3397,19 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
     Ret_t base_c  = static_cast<Ret_t>(base);
     
     long double step = std::is_floating_point_v<Ret_t> ?
-    (static_cast<Ret_t>(end_c - start_c) / static_cast<Ret_t>(n - endpoint)) :
-    static_cast<long double>(end - start) / (n - endpoint);
-
-    temp[0] = static_cast<Ret_t>(std::pow(base_c, start_c));
+    (end_c - start_c) / static_cast<long double>(n - endpoint) :
+    (end >= start ? static_cast<long double>(end - start) / (n - endpoint) : (static_cast<long double>(end) - start) / (n - endpoint));
+    
+    temp[0] = std::is_floating_point_v<Ret_t> ?
+    static_cast<Ret_t>(std::pow(base_c, start_c)) :
+    std::floor(std::pow(base_c, start_c));
      
     if (std::is_floating_point_v<Ret_t>)
     {
         for (unsigned long long i = 1; i < n; i++)
         {
             Ret_t exponent = start_c + i * step;
-            temp[i] = static_cast<Ret_t>(std::pow(base_c, exponent));
+            temp[i] = std::pow(base_c, exponent);
         }
     }
     else
@@ -3415,7 +3417,7 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
         for (unsigned long long i = 1; i < n; i++)
         {
             Ret_t exponent = start_c + i * step;
-            temp[i] = static_cast<Ret_t>(std::floor(std::pow(base_c, exponent)));
+            temp[i] = std::floor(std::pow(base_c, exponent));
         }
     }
      
@@ -3480,7 +3482,7 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
 template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
 inline RVec<Ret_t> Arange(T start, T end, T step)
 {
-    unsigned long long n = std::ceil(static_cast<Ret_t>(end-start)/static_cast<Ret_t>(step)); // Ensure floating-point division.
+    unsigned long long n = std::ceil(static_cast<Ret_t>(end-start)/static_cast<long double>(step)); // Ensure floating-point division.
 
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
@@ -3489,11 +3491,9 @@ inline RVec<Ret_t> Arange(T start, T end, T step)
     
     RVec<Ret_t> temp(n);
     
-    Ret_t start_c = static_cast<Ret_t>(start);
-    
-    long double step_c = std::is_floating_point_v<Ret_t> ?
-    static_cast<Ret_t>(step) :
-    static_cast<long double>(step);
+    Ret_t start_c = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
+        
+    long double step_c = step;
 
     temp[0] = start_c;
     if (std::is_floating_point_v<Ret_t>)
