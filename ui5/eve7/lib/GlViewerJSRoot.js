@@ -62,22 +62,21 @@ sap.ui.define([
          this.geo_painter._geom_viewer = true; // disable several JSROOT features
 
          // function used by TGeoPainter to create OutlineShader - for the moment remove from JSROOT
-         this.geo_painter.createOutline = function(w,h) {
-            // this here will be TGeoPainter!
-
-            this.outline_pass = new THREE.OutlinePassEve( new THREE.Vector2( w, h ), this._scene, this._camera );
+         this.geo_painter.createOutline = function(scene, camera, w, h) {
+            // 'this' here will be TGeoPainter!
+            this.outline_pass = new THREE.OutlinePassEve( new THREE.Vector2( w, h ), scene, camera );
             this.outline_pass.edgeStrength = 5.5;
             this.outline_pass.edgeGlow = 0.7;
             this.outline_pass.edgeThickness = 1.5;
             this.outline_pass.usePatternTexture = false;
             this.outline_pass.downSampleRatio = 1;
             this.outline_pass.glowDownSampleRatio = 3;
-            this._effectComposer.addPass( this.outline_pass );
+            this.getEffectComposer().addPass( this.outline_pass );
 
             this.fxaa_pass = new THREE.ShaderPass( THREE.FXAAShader );
             this.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / w, 1 / h );
             this.fxaa_pass.renderToScreen = true;
-            this._effectComposer.addPass( this.fxaa_pass );
+            this.getEffectComposer().addPass( this.fxaa_pass );
          };
 
          this.geo_painter.setMouseTmout(this.controller.htimeout);
@@ -93,13 +92,13 @@ sap.ui.define([
       onGeoPainterReady(painter)
       {
          // AMT temporary here, should be set in camera instantiation time
-         if (this.geo_painter._camera.type == "OrthographicCamera")
-         {
-            this.geo_painter._camera.left   = -this.get_width();
-            this.geo_painter._camera.right  =  this.get_width();
-            this.geo_painter._camera.top    =  this.get_height();
-            this.geo_painter._camera.bottom = -this.get_height();
-            this.geo_painter._camera.updateProjectionMatrix();
+         const camera = this.geo_painter?.getCamera();
+         if (camera?.isOrthographicCamera) {
+            camera.left   = -this.get_width();
+            camera.right  =  this.get_width();
+            camera.top    =  this.get_height();
+            camera.bottom = -this.get_height();
+            camera.updateProjectionMatrix();
          }
 
          painter.eveGLcontroller = this.controller;
@@ -179,14 +178,14 @@ sap.ui.define([
                return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
             }
 
-         // this.geo_painter._highlight_handlers = [ this ]; // register ourself for highlight handling
+         // this.geo_painter.addHighlightHandler(this); // register ourself for highlight handling
          this.last_highlight = null;
 
          // outline_pass passthrough
          this.outline_pass = this.geo_painter.outline_pass;
 
          let sz = this.geo_painter.getSizeFor3d();
-         this.geo_painter._effectComposer.setSize( sz.width, sz.height);
+         this.geo_painter.getEffectComposer()?.setSize( sz.width, sz.height);
          this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
 
          if (this.geo_painter._controls)
@@ -272,8 +271,10 @@ sap.ui.define([
       onResizeTimeout()
       {
          this.geo_painter.checkResize();
-         if (this.geo_painter.fxaa_pass)
-            this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / this.geo_painter._scene_width, 1 / this.geo_painter._scene_height );
+         if (this.geo_painter.fxaa_pass) {
+            const sz = this.geo_painter.getSizeFor3d()
+            this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
+         }
       }
 
    } // class GlViewerJSRoot
