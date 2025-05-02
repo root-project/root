@@ -500,12 +500,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Hide physical (seen in graphics) node */
       hidePhysicalNode(itemnames) {
-         if (itemnames?.length > 0)
+         if (itemnames?.length > 0) {
             if (!this.standalone)
                this.websocket.send('HIDE_ITEMS:' + JSON.stringify(itemnames));
             else
                for (let i = 0; i < itemnames.length; ++i)
                   this.changeNodeVisibilityOffline(itemnames[i], true, false);
+         }
       },
 
       /** @summary when new draw options send from server */
@@ -530,7 +531,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         let changed = false;
 
-        this.geo_painter._toplevel?.traverse(node => {
+        this.geo_painter.getTopObject3D()?.traverse(node => {
            if (node.stack && match_func(node)) {
                changed = changed || (node.visible != flag)
                node.visible = flag;
@@ -546,27 +547,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!this.isInfoPageActive() || !path)
             return;
 
-         let model = new JSONModel({ path, strpath: path.join("/")  });
+         const model = new JSONModel({ path, strpath: path.join('/') });
 
          this.byId("geomInfo").setModel(model);
 
          if (this.geo_clones && path) {
-            let stack = this.geo_clones.findStackByName(path.join("/"));
-
-            let info = stack ? this.geo_clones.resolveStack(stack) : null;
-
-            let build_shape = null;
-
-            // this can be moved into GeoPainter later
-            if (info && (info.id !== undefined) && this.geo_painter && this.geo_painter._draw_nodes) {
-               for (let k = 0; k < this.geo_painter._draw_nodes.length; ++k) {
-                  let item = this.geo_painter._draw_nodes[k];
-                  if ((item.nodeid == info.id) && item.server_shape) {
-                     build_shape = item.server_shape;
-                     break;
-                  }
-               }
-            }
+            const stack = this.geo_clones.findStackByName(path.join('/')),
+                  info = stack ? this.geo_clones.resolveStack(stack) : null,
+                  build_shape = this.geo_painter?.findNodeShape(info?.id);
 
             this.drawNodeShape(build_shape, true);
          }
@@ -574,7 +562,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary This is reply on INFO request */
       provideNodeInfo(info) {
-
          info.strpath = info.path.join("/"); // only for display
 
          let model = new JSONModel(info);
@@ -587,7 +574,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       drawNodeShape(server_shape, skip_cleanup) {
-
          let nodeDrawing = this.byId("nodeDrawing");
 
          nodeDrawing.setGeomPainter(null);
