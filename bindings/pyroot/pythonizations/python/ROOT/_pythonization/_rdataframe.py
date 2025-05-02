@@ -203,7 +203,7 @@ df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 
 \endpythondoc
 '''
-import sys
+
 from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
@@ -246,8 +246,8 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
 
     # Early check for numpy
     try:
-        import numpy
-    except:
+        import numpy  # noqa: F401
+    except ImportError:
         raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
     # Find all column names in the dataframe if no column are specified
@@ -255,9 +255,9 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
         columns = [str(c) for c in df.GetColumnNames()]
 
     # Exclude the specified columns
-    if exclude == None:
+    if exclude is None:
         exclude = []
-    columns = [col for col in columns if not col in exclude]
+    columns = [col for col in columns if col not in exclude]
 
     # Register Take action for each column
     result_ptrs = {}
@@ -321,6 +321,7 @@ class AsNumpyResult(object):
 
         if self._py_arrays is None:
             import numpy
+
             from ROOT._pythonization._rdf_utils import ndarray
 
             # Convert the C++ vectors to numpy arrays
@@ -474,7 +475,7 @@ def pythonize_rdataframe(klass):
 
     klass._OriginalFilter = klass.Filter
     klass._OriginalDefine = klass.Define
-    from ._rdf_pyz import _PyFilter, _PyDefine
+    from ._rdf_pyz import _PyDefine, _PyFilter
 
     klass.Filter = _PyFilter
     klass.Define = _PyDefine
@@ -487,10 +488,16 @@ def _make_name_rvec_pair(key, value):
     if not isinstance(key, str):
         raise RuntimeError("Object not convertible: Dictionary key is not convertible to a string.")
 
-    # Convert value to RVec and attach to dictionary
-    pyvec = ROOT.VecOps.AsRVec(value)
-    if not pyvec:
-        raise RuntimeError("Object not convertible: Dictionary entry " + key + " is not convertible with AsRVec.")
+    try:
+        # Convert value to RVec and attach to dictionary
+        pyvec = ROOT.VecOps.AsRVec(value)
+    except TypeError as e:
+        if "Cannot create an RVec from a numpy array of data type object" in str(e):
+            raise RuntimeError(
+                f"Failure in creating column '{key}' for RDataFrame: the input column type is 'object', which is not supported. Make sure your column type is supported."
+            ) from e
+        else:
+            raise
 
     # Add pairs of column name and associated RVec to signature
     return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
