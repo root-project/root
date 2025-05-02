@@ -72,7 +72,7 @@ namespace cling {
     // add included files to the cling ptx
     for (const char* c : invocationOptions.CompilerOpts.Remaining) {
       std::string s(c);
-      if (s.find("-include") == 0)
+      if (s == "-include")
         argv.push_back(s);
     }
 
