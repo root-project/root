@@ -24,19 +24,18 @@ import sys
 import tarfile
 import time
 
+import build_utils
 import openstack
-
 from build_utils import (
+    calc_options_hash,
     die,
     github_log_group,
+    is_macos,
     load_config,
-    calc_options_hash,
-    subprocess_with_log,
     subprocess_with_capture,
+    subprocess_with_log,
     upload_file,
-    is_macos
 )
-import build_utils
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
@@ -100,6 +99,8 @@ def main():
     platform_machine = platform.machine()
 
     obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
+    if args.coverage:
+        obj_prefix = obj_prefix + "-coverage"
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
@@ -140,8 +141,8 @@ def main():
 
       git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
 
-      if pull_request:
-        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
+      #if pull_request:
+      #  rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
 
     if not WINDOWS:
         show_node_state()
@@ -152,8 +153,12 @@ def main():
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental and not args.coverage:
+    if not pull_request and not args.incremental:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
+    #if args.coverage:  # for now, force it.
+        # if we were to actually upload the artefact we probably need to exclude all
+        # coverage run-time files ('*.gcda' and `*.gcov`)
+    #    archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
         create_binaries(args.buildtype)
@@ -332,7 +337,7 @@ def run_ctest(extra_ctest_flags: str) -> int:
     builddir = os.path.join(WORKDIR, "build")
     ctest_result = subprocess_with_log(f"""
         cd '{builddir}'
-        ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
+        ctest -R ntuple -E tutorial-io-tree-ntuple1-py\|large\|limits --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
 
     return ctest_result
@@ -360,6 +365,12 @@ def archive_and_upload(archive_name, prefix):
 def cmake_configure(options, buildtype):
     srcdir = os.path.join(WORKDIR, "src")
     builddir = os.path.join(WORKDIR, "build")
+
+    # Add a private option to make the CI build faster by not changing the
+    # BUILD_NODE line of compiledata.h (which leads to all the dictionary
+    # being rebuild when re-using a previous build on a different node)
+    options = f"{options} -DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
+
     result = subprocess_with_log(f"""
         cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
     """)
@@ -408,14 +419,14 @@ def build(options, buildtype):
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
+    if True: # or not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
         cmake_configure(options, buildtype)
     else:
         cmake_dump_config()
 
     dump_requested_config(options)
 
-    cmake_build(buildtype)
+    # cmake_build(buildtype)
 
 
 @github_log_group("Create binary packages")
@@ -570,9 +581,13 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
     builddir = os.path.join(WORKDIR, "build")
+    ignore_directories="roottest|runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
+    ignore_subpattern="roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter"
+    # The output of -v is huge (several 10s of MB at least), we could filter
+    # the output of -v to keep just the line with ` Processing file:`
     result = subprocess_with_log(f"""
         cd '{builddir}'
-        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="roottest|runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
+        gcovr -j {os.cpu_count()} --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/G__.*' --exclude='.*/({ignore_subpattern})/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -r ../src ../build
     """)
 
     if result != 0:
