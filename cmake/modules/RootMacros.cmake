@@ -18,7 +18,7 @@ elseif(APPLE)
   set(ld_library_path DYLD_LIBRARY_PATH)
   set(ld_preload DYLD_INSERT_LIBRARIES)
   set(libprefix ${CMAKE_SHARED_LIBRARY_PREFIX})
-  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT OR PROJECT_NAME MATCHES "^ROOT::.+")
     set(libsuffix .so)
   else()
     set(libsuffix ${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -391,7 +391,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     set(headerdirs_dflt)
 
-    if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    if(CMAKE_PROJECT_NAME STREQUAL ROOT OR PROJECT_NAME MATCHES "^ROOT::.+")
       if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
         list(APPEND headerdirs_dflt ${CMAKE_CURRENT_SOURCE_DIR}/inc)
       endif()
@@ -468,7 +468,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       message(FATAL_ERROR "No headers nor LinkDef.h supplied / found for dictionary ${dictionary}!")
     endif()
 
-    if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    if(CMAKE_PROJECT_NAME STREQUAL ROOT OR PROJECT_NAME MATCHES "^ROOT::.+")
       list(APPEND incdirs ${CMAKE_BINARY_DIR}/include)
       list(APPEND incdirs ${CMAKE_BINARY_DIR}/etc/cling) # This is for the RuntimeUniverse
       # list(APPEND incdirs ${CMAKE_SOURCE_DIR})
@@ -628,6 +628,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       endif()
     else()
       set(command ${CMAKE_COMMAND} -E env rootcling)
+      if(ROOT_BASE_DIR)
+        set(command ${CMAKE_COMMAND} -E env ${ROOT_BASE_DIR}/bin/rootcling)
+      else()
+        set(command ${CMAKE_COMMAND} -E env rootcling)
+      endif()
     endif()
   endif()
 
@@ -873,7 +878,12 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
 
   else()
-    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+    #set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_SPLIT_MODULEMAP_CONTENT "extern module ${library} \"ROOT.modulemap.d/${library}.modulemap\"\n")
+    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT "extern module ${library} \"${library}.modulemap\"\n")
+
+    file(WRITE "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.d/${library}.modulemap" "${modulemap_entry}")
+    file(WRITE "${CMAKE_BINARY_DIR}/include/${library}.modulemap" "${modulemap_entry}")
   endif()
 endfunction()
 
@@ -917,7 +927,7 @@ function(ROOT_LINKER_LIBRARY library)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
   endif()
 
-  if(PROJECT_NAME STREQUAL "ROOT")
+  if(PROJECT_NAME STREQUAL "ROOT" OR PROJECT_NAME MATCHES "^ROOT::.+")
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
     endif()
@@ -925,7 +935,7 @@ function(ROOT_LINKER_LIBRARY library)
 
   ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
-  if(PROJECT_NAME STREQUAL "ROOT")
+  if(PROJECT_NAME STREQUAL "ROOT" OR PROJECT_NAME MATCHES "^ROOT::.+")
     set(dep_list)
     if(ARG_DEPENDENCIES)
       foreach(lib ${ARG_DEPENDENCIES})
@@ -956,7 +966,7 @@ function(ROOT_LINKER_LIBRARY library)
     endforeach()
   endif()
 
-  if(PROJECT_NAME STREQUAL "ROOT")
+  if(PROJECT_NAME STREQUAL "ROOT" OR PROJECT_NAME MATCHES "^ROOT::.+")
     set(dep_inc_list)
     if(ARG_LIBRARIES)
       foreach(lib ${ARG_LIBRARIES})
@@ -1040,7 +1050,7 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
 
-  if(PROJECT_NAME STREQUAL "ROOT")
+  if(PROJECT_NAME STREQUAL "ROOT" OR PROJECT_NAME MATCHES "^ROOT::.+")
 
       if(TARGET Core)
         get_target_property(lib_incdirs Core INCLUDE_DIRECTORIES)
@@ -1377,12 +1387,29 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(ROOT_LIBRARY_TARGETS "${ROOT_LIBRARY_TARGETS};${libname}" CACHE STRING "List of ROOT targets generated from ROOT_STANDARD_LIBRARY_PACKAGE()" FORCE)
   endif()
 
-  if (PROJECT_NAME STREQUAL ROOT)
+  if (PROJECT_NAME STREQUAL ROOT OR PROJECT_NAME MATCHES "^ROOT::.+")
     include_directories(BEFORE "inc")
     if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/v7/inc")
       include_directories(BEFORE "v7/inc")
     endif()
   endif()
+
+  # looking for pre-compiled libraries in ROOT_BASE_DIR
+  foreach(DEP ${ARG_DEPENDENCIES})
+    set(DEP_EXISTS 0)
+    if(TARGET ${DEP})
+      set(DEP_EXISTS 1)
+    endif()
+    if(DEP_EXISTS EQUAL 0)
+	    if(ROOT_BASE_DIR AND EXISTS ${ROOT_BASE_DIR}/lib/lib${DEP}.so)
+         add_library(${DEP} SHARED IMPORTED)
+	 set_property(TARGET ${DEP} PROPERTY IMPORTED_LOCATION ${ROOT_BASE_DIR}/lib/lib${DEP}.so)
+       elseif(ROOT_GLOBAL_BINARY_DIR AND ROOT_GLOBAL_BINARY_DIR/lib/lib${DEP}.so)
+         add_library(${DEP} SHARED IMPORTED)
+        set_property(TARGET ${DEP} PROPERTY IMPORTED_LOCATION ${ROOT_GLOBAL_BINARY_DIR}/lib/lib${DEP}.so)
+       endif()
+    endif()
+  endforeach()
 
   if (ARG_OBJECT_LIBRARY)
     ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES}
@@ -1420,7 +1447,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Dictionary might include things from the current src dir, e.g. tests. Alas
   # there is no way to set the include directory for a source file (except for
   # the generic COMPILE_FLAGS), so this needs to be glued to the target.
-  if(NOT (CMAKE_PROJECT_NAME STREQUAL ROOT))
+  if(NOT (CMAKE_PROJECT_NAME STREQUAL ROOT OR PROJECT_NAME MATCHES "^ROOT::.+"))
      target_include_directories(${libname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   endif()
 
@@ -1445,7 +1472,7 @@ function(ROOT_EXECUTABLE executable)
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
-  if(NOT (PROJECT_NAME STREQUAL "ROOT"))
+  if(NOT (PROJECT_NAME STREQUAL "ROOT" OR PROJECT_NAME MATCHES "^ROOT::.+"))
     # only for non-ROOT executable use $ROOTSYS/include
     include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   elseif(MSVC)
@@ -1454,7 +1481,7 @@ function(ROOT_EXECUTABLE executable)
   add_executable(${executable} ${_all} ${exe_srcs})
   target_link_libraries(${executable} ${ARG_LIBRARIES})
 
-  if(PROJECT_NAME STREQUAL "ROOT")
+  if(PROJECT_NAME STREQUAL "ROOT" OR PROJECT_NAME MATCHES "^ROOT::.+")
     set(dep_list)
     if(ARG_LIBRARIES)
       foreach(lib ${ARG_LIBRARIES})
@@ -1559,6 +1586,11 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                       )
 #
 function(ROOT_ADD_TEST test)
+  # FIXME: We should re-enable the tests per component after fixing their dependencies.
+  if(ROOT_ENABLE_PROJECTS NOT STREQUAL "All" )
+    return()
+  endif()
+
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
                             "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC;RESOURCE_LOCK"
                             "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
@@ -2119,4 +2151,14 @@ function(generateManual name input output)
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+endfunction()
+
+
+
+function(root_add_subdirectory subdirectory)
+  set(ROOT_ESSENTIAL_PROJECTS "core;math/mathcore;io;main")
+
+  if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR (ROOT_ENABLE_PROJECTS STREQUAL "Essentials" AND ${subdirectory} IN_LIST ROOT_ESSENTIAL_PROJECTS ))
+    add_subdirectory(${subdirectory})
+  endif()
 endfunction()

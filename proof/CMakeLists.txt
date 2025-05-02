@@ -4,6 +4,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+if(NOT proof)
+  return()
+endif()
+
 add_subdirectory(proof)
 add_subdirectory(proofplayer) # special CMakeListst.txt
 if(NOT WIN32)

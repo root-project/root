@@ -56,6 +56,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# setting some extra variables needed by external projects
+set(ROOT_GLOBAL_SOURCE_DIR "${CMAKE_SOURCE_DIR}")
+set(ROOT_GLOBAL_BINARY_DIR "${CMAKE_BINARY_DIR}")
+
 # Set permissions for installed folders and subfolders that come from the source tree in case
 # the permissions in the source tree are wrong since the install command will preserve them
 set(DIR_PERMISSIONS DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
@@ -355,35 +359,34 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SY
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
-add_subdirectory (core)
-add_subdirectory (math)
-add_subdirectory (hist)
-add_subdirectory (tree)
-add_subdirectory (io)
-add_subdirectory (net)
-add_subdirectory (graf2d)
-add_subdirectory (graf3d)
-add_subdirectory (gui)
-add_subdirectory (montecarlo)
-if(geom)
-  add_subdirectory (geom)
+if(NOT ROOT_ENABLE_PROJECTS)
+       set(ROOT_ENABLE_PROJECTS "All")
 endif()
+
+
+root_add_subdirectory (core)
+root_add_subdirectory (math/mathcore)
+root_add_subdirectory (io)
+root_add_subdirectory (main)
+root_add_subdirectory (net)
+root_add_subdirectory (math)
+root_add_subdirectory (hist)
+root_add_subdirectory (graf2d)
+root_add_subdirectory (graf3d)
+root_add_subdirectory (gui)
+#root_add_subdirectory (html)
+root_add_subdirectory (tree)
+root_add_subdirectory (montecarlo)
+root_add_subdirectory (geom)
 if(NOT WIN32)
-  add_subdirectory (rootx)
+  root_add_subdirectory (rootx)
 endif()
-add_subdirectory (misc)
-add_subdirectory (main)
-add_subdirectory (bindings)
-add_subdirectory (sql)
-if(proof)
-  add_subdirectory(proof)
-endif()
-if(tmva)
-  add_subdirectory(tmva)
-endif()
-if(roofit)
-  add_subdirectory(roofit)
-endif()
+root_add_subdirectory (misc)
+root_add_subdirectory (bindings)
+root_add_subdirectory (sql)
+root_add_subdirectory(proof)
+root_add_subdirectory(tmva)
+root_add_subdirectory(roofit)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
@@ -402,17 +405,29 @@ if(MSVC)
 else()
   set(_os_cat "cat")
 endif()
+
 file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra" _from_native_split)
+
+# we use this modulemap for compilation because modules can not be located in case
+# of a distributed file. Should be fixed in the future.
 file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
+# this modulemap is installed together with its partial components
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split" _to_native_split)
+
+make_directory("${CMAKE_BINARY_DIR}/include/ROOT.modulemap.d")
 
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
 		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+		  DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
 		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split"
                   COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
+                  COMMAND ${_os_cat} "${_from_native_split}" >> "${_to_native_split}"
 )
-install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+install(DIRECTORY "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.d" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES  "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.split" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} RENAME "ROOT.modulemap")
 
 add_dependencies(move_headers copymodulemap)
 
@@ -420,12 +435,21 @@ add_dependencies(move_headers copymodulemap)
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
 get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+get_property(__modulemap_split_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_SPLIT_MODULEMAP_CONTENT)
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+string(REPLACE ";" "" __modulemap_split_extra_content "${__modulemap_split_extra_content}")
+
 # Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
 # if it's unchanged.
 file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra.tmp" "${__modulemap_split_extra_content}")
+
 configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
     "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+    COPYONLY)
+
+configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra.tmp"
+    "${CMAKE_BINARY_DIR}/include/module.modulemap.split.extra"
     COPYONLY)
 
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
@@ -524,12 +548,24 @@ if(runtime_cxxmodules)
     set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
+
+  set(INDEX_DEPS "Hist Tree Gpad Graf HistPainter")
+
+  add_custom_target(modules_idx_dependencies)
+  set(MODULES_IDX_DEPS_LIST "Cling;Hist;Tree;Gpad;Graf;HistPainter;move_artifacts")
+  foreach(modules_idx_dep ${MODULES_IDX_DEPS_LIST})
+    if(TARGET ${modules_idx_dep})
+      add_dependencies(modules_idx_dependencies ${modules_idx_dep})
+    endif()
+  endforeach()
+
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
-                     COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                     ${modules_idx_cmd}
-                     WORKING_DIRECTORY ${library_output_dir}
-                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
-                             ${modules_idx_deps})
+         COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
+         ${modules_idx_cmd}
+         WORKING_DIRECTORY ${library_output_dir}
+     DEPENDS $<TARGET_FILE:root.exe> modules_idx_dependencies
+           ${modules_idx_deps})
+
   add_custom_target(modules_idx ALL DEPENDS ${library_output_dir}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
@@ -537,22 +573,24 @@ if(runtime_cxxmodules)
 endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
-add_dependencies(hsimple onepcm)
-if(WIN32)
-  set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
-                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
-else()
-  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
-                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
+if(ROOT_ENABLE_PROJECTS STREQUAL "All")
+	add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
+	add_dependencies(hsimple onepcm)
+	if(WIN32)
+	  set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
+				  ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
+	else()
+	  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+				  ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
+	endif()
+	add_custom_command(OUTPUT tutorials/hsimple.root
+			   ${hsimple_cmd}
+			   WORKING_DIRECTORY tutorials
+			   DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
+	install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
-add_custom_command(OUTPUT tutorials/hsimple.root
-                   ${hsimple_cmd}
-                   WORKING_DIRECTORY tutorials
-                   DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
-install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
-if(runtime_cxxmodules)
+if(runtime_cxxmodules AND TARGET hsimple)
   add_dependencies(hsimple modules_idx)
 endif()
 

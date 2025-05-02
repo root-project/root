@@ -4,6 +4,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+if(NOT roofit)
+  return()
+endif()
+
 set(roofit_legacy_eval_backend ON CACHE BOOL "" FORCE)
 
 add_subdirectory(batchcompute)
