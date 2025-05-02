@@ -23,6 +23,9 @@ class ObjectPainter extends BasePainter {
    #primary_ref;     // reference of primary painter - if any
    #secondary_id;    // id of this painter in relation to primary painter
    #options_store;   // stored draw options used to check changes
+   #user_tooltip_handler; // configured user tooltip handler
+   #user_tooltip_timeout; // timeout configured with tooltip handler
+   #special_draw_area; // current special draw area like projection
 
    /** @summary constructor
      * @param {object|string} dom - dom element or identifier or pad painter
@@ -283,8 +286,7 @@ class ObjectPainter extends BasePainter {
    /** @summary change tooltip allowed flag
      * @param {boolean|string} [on = true] set tooltip allowed state or 'toggle'
      * @private */
-   setTooltipAllowed(on) {
-      if (on === undefined) on = true;
+   setTooltipAllowed(on = true) {
       const src = this.getCanvPainter() || this;
       src.tooltip_allowed = (on === 'toggle') ? !src.tooltip_allowed : on;
    }
@@ -796,7 +798,8 @@ class ObjectPainter extends BasePainter {
          pp.forEachPainterInPad(userfunc, kind);
       else {
          const painter = this.getTopPainter();
-         if (painter && (kind !== 'pads')) userfunc(painter);
+         if (painter && (kind !== 'pads'))
+            userfunc(painter);
       }
    }
 
@@ -1506,13 +1509,13 @@ class ObjectPainter extends BasePainter {
      * when mouse leave frame area, handler(null) will be called
      * @param {function} handler - function called when tooltip is produced
      * @param {number} [tmout = 100] - delay in ms before tooltip delivered */
-   configureUserTooltipHandler(handler, tmout) {
+   configureUserTooltipHandler(handler, tmout = 100) {
       if (!handler || !isFunc(handler)) {
-         delete this._user_tooltip_handler;
-         delete this._user_tooltip_timeout;
+         this.#user_tooltip_handler = undefined;
+         this.#user_tooltip_timeout = undefined;
       } else {
-         this._user_tooltip_handler = handler;
-         this._user_tooltip_timeout = tmout || 100;
+         this.#user_tooltip_handler = handler;
+         this.#user_tooltip_timeout = tmout;
       }
    }
 
@@ -1541,7 +1544,7 @@ class ObjectPainter extends BasePainter {
    /** @summary Check if user-defined tooltip function was configured
      * @return {boolean} flag is user tooltip handler was configured */
    hasUserTooltip() {
-      return isFunc(this._user_tooltip_handler);
+      return isFunc(this.#user_tooltip_handler);
    }
 
    /** @summary Provide tooltips data to user-defined function
@@ -1550,8 +1553,8 @@ class ObjectPainter extends BasePainter {
    provideUserTooltip(data) {
       if (!this.hasUserTooltip()) return;
 
-      if (this._user_tooltip_timeout <= 0)
-         return this._user_tooltip_handler(data);
+      if (this.#user_tooltip_timeout <= 0)
+         return this.#user_tooltip_handler(data);
 
       if (this._user_tooltip_handle) {
          clearTimeout(this._user_tooltip_handle);
@@ -1559,25 +1562,25 @@ class ObjectPainter extends BasePainter {
       }
 
       if (!data)
-         return this._user_tooltip_handler(data);
+         return this.#user_tooltip_handler(data);
 
       // only after timeout user function will be called
       this._user_tooltip_handle = setTimeout(() => {
          delete this._user_tooltip_handle;
-         if (this._user_tooltip_handler)
-            this._user_tooltip_handler(data);
-      }, this._user_tooltip_timeout);
+         if (this.#user_tooltip_handler)
+            this.#user_tooltip_handler(data);
+      }, this.#user_tooltip_timeout);
    }
 
    /** @summary Provide projection areas
      * @param kind - 'X', 'Y', 'XY' or ''
      * @private */
    async provideSpecialDrawArea(kind) {
-      if (kind === this._special_draw_area)
+      if (kind === this.#special_draw_area)
          return true;
 
       return this.getCanvPainter().toggleProjection(kind).then(() => {
-         this._special_draw_area = kind;
+         this.#special_draw_area = kind;
          return true;
       });
    }
@@ -1589,8 +1592,8 @@ class ObjectPainter extends BasePainter {
      * @private */
    async drawInSpecialArea(obj, opt, kind) {
       const canp = this.getCanvPainter();
-      if (this._special_draw_area && isFunc(canp?.drawProjection))
-         return canp.drawProjection(kind || this._special_draw_area, obj, opt);
+      if (this.#special_draw_area && isFunc(canp?.drawProjection))
+         return canp.drawProjection(kind || this.#special_draw_area, obj, opt);
 
       return false;
    }
