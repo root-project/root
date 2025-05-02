@@ -690,8 +690,8 @@ RNTuple's footer.
 An Attribute Set RNTuple has a number of restrictions compared to a regular RNTuple, most notably it cannot have
 linked Attribute RNTuples itself.
 
-The payload of each list element is a 64 bit integer, containing the offset of the Attribute RNTuple's Anchor
-into the file.
+The payload of each list element is a Locator pointing to the Attribute RNTuple's Anchor followed by a string
+containing the Attribute Set's name.
 
 ### Page List Envelope
 
