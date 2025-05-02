@@ -295,32 +295,25 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 Int_t TAxis::FindBin(Double_t x)
 {
-   Int_t bin;
    // NOTE: This should not be allowed for Alphanumeric histograms,
    // but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
    // but in case of alphanumeric do-not extend the axis. It makes no sense
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
-      bin = 0;
+      Int_t bin = 0;
       if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
-      bin = fNbins+1;
+      Int_t bin = fNbins+1;
       if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
-   } else {
-      if (!fXbins.fN) {        //*-* fix bins
-         bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
-      } else {                  //*-* variable bin sizes
-         //for (bin =1; x >= fXbins.fArray[bin]; bin++);
-         bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
-      }
    }
-   return bin;
+   return DoFindFixBin(x);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -412,6 +405,28 @@ Int_t TAxis::FindFixBin(const char *label) const
    return -1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Internal function to find the fix bin
+////////////////////////////////////////////////////////////////////////////////
+Int_t TAxis::DoFindFixBin(Double_t x) const
+{
+   if (!fXbins.fN) {        //*-* fix bins
+      // shift x and fXmax by fXmin:
+      x = x - fXmin;
+      const double b = fXmax - fXmin;
+      const double s = fNbins * x; // scaled version of x
+      double m = std::floor(s / b);
+      // iterative correction in case of floating point errors due to floating point division
+      while (m * b > s) // if left bin boundary is greater then x, decrement
+         m = m - 1;
+      while ((m + 1) * b <= s) //if right bin boundary is smaller or equal, increment
+         m = m + 1;
+      return 1 + Int_t(m);
+   } else { //*-* variable bin sizes
+      // for (bin =1; x >= fXbins.fArray[bin]; bin++);
+      return 1 + TMath::BinarySearch(fXbins.fN, fXbins.fArray, x);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find bin number corresponding to abscissa `x`
@@ -422,18 +437,13 @@ Int_t TAxis::FindFixBin(const char *label) const
 
 Int_t TAxis::FindFixBin(Double_t x) const
 {
-   Int_t bin;
+   Int_t bin = 0;
    if (x < fXmin) {              //*-* underflow
       bin = 0;
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
    } else {
-      if (!fXbins.fN) {        //*-* fix bins
-         bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
-      } else {                  //*-* variable bin sizes
-//         for (bin =1; x >= fXbins.fArray[bin]; bin++);
-         bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
-      }
+      bin = DoFindFixBin(x);
    }
    return bin;
 }
