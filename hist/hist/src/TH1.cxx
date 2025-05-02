@@ -9002,6 +9002,21 @@ void TH1::SetStats(Bool_t stats)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///
+
+#ifdef ROOT_RDF_CUDA
+void TH1::SetStatsData(Double_t *stats)
+{
+   if (getenv("CUDA_HIST")) {
+      fTsumw = stats[0];
+      fTsumw2 = stats[1];
+      fTsumwx = stats[2];
+      fTsumwx2 = stats[3];
+   }
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create structure to store sum of squares of weights.
 ///
 /// if histogram is already filled, the sum of squares of weights

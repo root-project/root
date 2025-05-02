@@ -155,6 +155,10 @@ if(arrow)
   target_link_libraries(ROOTDataFrame PRIVATE ${ARROW_SHARED_LIB})
 endif()
 
+if (cuda)
+  target_link_libraries(ROOTDataFrame PRIVATE CUDAHist)
+endif()
+
 if(sqlite)
   target_sources(ROOTDataFrame PRIVATE src/RSqliteDS.cxx)
   target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
