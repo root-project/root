@@ -294,7 +294,8 @@ void ROOT::Internal::RPageSinkBuf::CommitClusterGroup()
    fInnerSink->CommitClusterGroup();
 }
 
-void ROOT::Internal::RPageSinkBuf::CommitDatasetImpl(std::span<const std::size_t> linkedAttributeSets)
+void ROOT::Internal::RPageSinkBuf::CommitDatasetImpl(
+   std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttributeSets)
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
    RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
