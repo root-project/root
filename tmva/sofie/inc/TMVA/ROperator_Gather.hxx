@@ -24,7 +24,7 @@ private:
    std::string fNY;
 
    std::vector<Dim> fShapeX;
-   std::vector<size_t> fShapeIndices;
+   std::vector<Dim> fShapeIndices;
    std::vector<Dim> fShapeY;
 
    std::vector<int64_t> fIndices;  // indices vector in case they are known at initialization
@@ -53,8 +53,10 @@ public:
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");
       }
       fShapeX = model.GetDimTensorShape(fNX);
-      // assume fShapeIndices is not dynamic
-      fShapeIndices = model.GetTensorShape(fNIndices);
+      std::cout << "Gather - initial shape " << ConvertShapeToString(fShapeX) << " indices "
+            << ConvertShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
+      //  fShapeIndices can be  dynamic
+      fShapeIndices = model.GetDimTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
       // Axis in range [0, r) where r=rank(X)
       size_t r = fShapeX.size();
@@ -62,11 +64,12 @@ public:
       if (fAttrAxis < 0) {
          fAttrAxis = fAttrAxis + int64_t(r);
       }
-      // empty fShapeIndices is a scalar value for the indices
-      size_t indicesLength = ConvertShapeToLength(fShapeIndices);
+
 
       // case indices tensor is initialized
       if (model.IsInitializedTensor(fNIndices)) {
+          // empty shape Indices is a scalar value for the indices
+         size_t indicesLength = ConvertShapeToLength(model.GetTensorShape(fNIndices));
          int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
          //flag index tensor as not writable (not sure this is needed since index tensor might be used in generated code)
          model.SetNotWritableInitializedTensor(fNIndices);
@@ -89,14 +92,14 @@ public:
       if (fShapeY.empty()) {
          fShapeY.resize(q + r - 1);
          if (fAttrAxis > 0) {
-            // Copy shape of X[0, ..., axis) to Shape of Y[0, ..., axis)
+            // Copy shape of X[0, ..., axis-1) to Shape of Y[0, ..., axis-1)
             std::copy(fShapeX.begin(), fShapeX.begin() + fAttrAxis, fShapeY.begin());
          }
          // Set shape of Y[axis, ..., axis + q)
          for (size_t i = 0; i < q; i++) {
             fShapeY[fAttrAxis + i] = Dim{ fShapeIndices[i]};
          }
-         // Copy shape of X[axis + 1, ..., axis + r) to shape of Y[axis + q, ... q + r - 1)
+         // Copy shape of X[axis + 1, ..., r) to shape of Y[axis + q, ... q + r - 1)
          std::copy(fShapeX.begin() + fAttrAxis + 1, fShapeX.end(), fShapeY.begin() + fAttrAxis + q);
       }
       // case input is known (type is an integer) and input indices is a scalar (or vector of size 1)
@@ -120,8 +123,8 @@ public:
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          fType = ConvertTypeToString(model.GetTensorType(fNX));
          if (model.Verbose())
-               std::cout <<  "Gather: " << fNX << " " << ConvertDimShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
-                  << std::endl;
+               std::cout <<  "Gather: input " << fNX << " " << ConvertShapeToString(fShapeX) << " indices " << fNIndices << ConvertShapeToString(fShapeIndices)
+                         << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY) << std::endl;
       }
    }
 
@@ -146,7 +149,7 @@ public:
 
       // case fIndices is not known we need to correct for negative axis indices at run-time
       if (fIndices.empty()) {
-         size_t indicesLength = ConvertShapeToLength(fShapeIndices);
+         auto indicesLength = ConvertDimShapeToLength(fShapeIndices);
          out << SP << "// correct in case of negative gather indices\n";
          out << SP << "for (size_t i = 0; i < " << indicesLength << "; i++){\n";
          out << SP << SP << "if (tensor_" << fNIndices << "[i] < 0)\n";
@@ -161,62 +164,82 @@ public:
       // for j_0, j_1, ..., j_{axis-1}
       for (size_t j = 0; j < size_t(fAttrAxis); j++) {
          std::string index = "j_" + std::to_string(j);
-         out << SP << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[j] << "; " << index << "++) {\n";
+         for (size_t k = 0; k <= j; k++) out << SP;
+         out << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[j] << "; " << index << "++) {\n";
       }
       // for i_0, i_1, ..., i_{q - 1}
-      if (q == 0)
-         out << SP << SP << "{\n";  // add a scope for local variables
+      if (q == 0 && fAttrAxis == 0)
+         out << SP << "{\n";  // add a scope for local variables in case is not in a for loop
       for (size_t i = 0; i < q; i++) {
          std::string index = "i_" + std::to_string(i);
-         out << SP << SP << "for (size_t " << index << " = " << 0 << "; " << index << " < " << fShapeIndices[i] << "; " << index << "++) {\n";
+         for (size_t k = 0; k <= i + fAttrAxis; k++) out << SP;
+         out << "for (size_t " << index << " = " << 0 << "; " << index << " < " << fShapeIndices[i] << "; " << index << "++) {\n";
       }
       // for j_axis, j_{axis + 1}, ..., j_{r - 1}
       for (size_t j = fAttrAxis; j + 1 < r; j++) {
-         std::string index = "j_" + std::to_string(j);
-         out << SP << SP << SP << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[q + j] << "; " << index << "++) {\n";
+         std::string index = "j_" + std::to_string(q+j); // annotate index using output axis
+         for (size_t k = 0; k <= q + j; k++) out << SP;
+         out << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[q + j] << "; " << index << "++) {\n";
       }
 
-      out << SP << SP << SP << "size_t y_index = 0;\n";
+      // output index
+      for (size_t k = 0; k < q + r; k++) out << SP;
+      out << "size_t y_index = ";
       for (size_t j = 0; j < size_t(fAttrAxis); j++) {
-         out << SP << SP << SP << "y_index += j_" + std::to_string(j) + " * " << stridesY[j] << ";\n";
+         if (j > 0) out << " + ";
+         out << "j_" << j;
+         if (stridesY[j].dim != 1) out << " * " << stridesY[j];
       }
       for (size_t i = 0; i < q; i++) {
-         out << SP << SP << SP << "y_index += i_" + std::to_string(i) + " * " << stridesY[fAttrAxis + i] << ";\n";
+         if (fAttrAxis + i > 0) out << " + ";
+         out << "i_" << i;
+         if (stridesY[fAttrAxis + i].dim != 1) out << " * " << stridesY[fAttrAxis + i];
       }
       for (size_t j = fAttrAxis; j + 1 < r; j++) {
-         out << SP << SP << SP << "y_index += j_" + std::to_string(j) + " * " << stridesY[q + j] << ";\n";
+         if (j + q > 0) out << " + ";
+         out << "j_" << q+j;
+         if (stridesY[q+j].dim != 1) out << " * " << stridesY[q+j];
       }
-      // Indices
-      out << SP << SP << SP << "size_t i_index = 0;\n";
+      out << ";\n";
+
+      // input Indices
+      for (size_t k = 0; k < q + r; k++) out << SP;
+      out << "size_t i_index = ";
       for (size_t i = 0; i < q; i++) {
-         out << SP << SP << SP << "i_index += i_" + std::to_string(i) + " * " << stridesIndices[i] << ";\n";
+         if (i > 0) out << " + ";
+         out << "i_" << i;
+         if (stridesIndices[i].dim != 1) out << " * " << stridesIndices[i];
       }
+      out << ";\n";
       // K
-      out << SP << SP << SP << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
+      for (size_t k = 0; k < q + r; k++) out << SP;
+      out << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
       // Input
-      out << SP << SP << SP << "size_t x_index = k * " << stridesX[fAttrAxis] << ";\n";
+      for (size_t k = 0; k < q + r; k++) out << SP;
+      out << "size_t x_index = k";
+      if (stridesX[fAttrAxis].dim != 1) out << " * " << stridesX[fAttrAxis];
       for (size_t j = 0; j < size_t(fAttrAxis); j++) {
-         out << SP << SP << SP << "x_index += j_" + std::to_string(j) + " * " << stridesX[j] << ";\n";
+         out << " + ";
+         out << " j_" << j;
+         if (stridesX[j].dim != 1) out << " * " << stridesX[j];
       }
-      for (size_t j = fAttrAxis + 1; j < r; j++) {
-         out << SP << SP << SP << "x_index += j_" + std::to_string(j - 1) + " * " << stridesX[j] << ";\n";
+      // for input corresponding stride is axis+1,.... r
+      // loop is on j from fAttrAxis, so consider stridesX[j+1]
+      for (size_t j = fAttrAxis; j+1 < r; j++) {
+         out << " + ";
+         out << " j_" << q+j;
+         if (stridesX[j+1].dim != 1) out << " * " << stridesX[j+1];
       }
-      out << SP << SP << SP << "tensor_" << fNY << "[y_index] = tensor_" << fNX << "[x_index];\n";
+      out << ";\n";
+      for (size_t k = 0; k < q + r; k++) out << SP;
+      out << "tensor_" << fNY << "[y_index] = tensor_" << fNX << "[x_index];\n";
 
       // end loops j_k, j_{k + 1}, ..., j_{r - 2}
-      for (size_t j = fAttrAxis; j + 1 < r; j++) {
-         out << SP << SP << SP << "}\n";
+      for (size_t j = q+r-1; j > 0; j--) {
+         for (size_t k = 0; k <j; k++) out << SP;
+         out << "}\n";
       }
-      // end loops i_0, i_1, ..., i_{q - 1}
-      if (q == 0)
-         out << SP << SP << "}\n";  // end of scope for q = 0
-      for (size_t i = 0; i < q; i++) {
-         out << SP << SP << "}\n";
-      }
-      // end loops j_0, j_1, ..., j_{axis - 1}
-      for (size_t j = 0; j < size_t(fAttrAxis); j++) {
-         out << SP << "}\n";
-      }
+
 
       return out.str();
    }
