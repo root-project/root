@@ -62,6 +62,8 @@ private:
    std::string fNY;
    std::vector<size_t> fShapeX1;
    std::vector<size_t> fShapeX2;
+   std::vector<Dim> fDimShapeX1;
+   std::vector<Dim> fDimShapeX2;
    std::vector<size_t> fShapeY;
    std::string fNBroadcastedX1;
    std::string fNBroadcastedX2;
@@ -75,7 +77,7 @@ public:
    ROperator_Comparision(const std::string & nameX1, const std::string & nameX2, const std::string & nameY):
       fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){
          fInputTensorNames = { fNX1, fNX2 };
-         
+
          // output will be a boolean vector so should not be considered for memory optimized pool
          fOutputTensorNames = { fNY };
       }
@@ -99,8 +101,18 @@ public:
       if (!model.CheckIfTensorAlreadyExist(fNX2)) {
          throw std::runtime_error(std::string("TMVA SOFIE Comparision Op Input Tensor ") + fNX2 + "is not found in model");
       }
-      fShapeX1 = model.GetTensorShape(fNX1);
-      fShapeX2 = model.GetTensorShape(fNX2);
+      if (model.IsDynamicTensor(fNX1))
+         fDimShapeX1 = model.GetDynamicTensorShape(fNX1);
+      else {
+         fShapeX1 = model.GetTensorShape(fNX1);
+         fDimShapeX1 = ConvertShapeToDim(fShapeX1);
+      }
+      if (model.IsDynamicTensor(fNX2))
+         fDimShapeX2 = model.GetDynamicTensorShape(fNX2);
+      else {
+         fShapeX2 = model.GetTensorShape(fNX2);
+         fDimShapeX2 = ConvertShapeToDim(fShapeX2);
+      }
       fTensorType1 = model.GetTensorType(fNX1);
       fTensorType2 = model.GetTensorType(fNX2);
       bool broadcast = !UTILITY::AreSameShape(fShapeX1, fShapeX2);

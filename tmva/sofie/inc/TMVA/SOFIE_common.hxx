@@ -83,7 +83,8 @@ struct Dim{
    Dim(size_t d) : dim(d) {}
 
    std::string GetVal() const {
-      return (isParam) ? param : std::to_string(dim);
+      // cast to int64_t for negative shape values
+      return (isParam) ? param : std::to_string(static_cast<int64_t>(dim));
    }
 
    std::ostream& operator<< (std::ostream& os) const {
@@ -93,6 +94,9 @@ struct Dim{
 
    bool operator==(const Dim& rhs) const {
        return (isParam && rhs.isParam) ? param == rhs.param : dim == rhs.dim;
+   }
+   bool operator!=(const Dim& rhs) const {
+       return !(*this == rhs);
    }
 };
 

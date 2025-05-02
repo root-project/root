@@ -23,9 +23,9 @@ private:
    std::string fNY;
    std::string fReduction;
 
-   std::vector<size_t> fShapeX;
-   std::vector<size_t> fShapeI;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeI;
+   std::vector<Dim> fShapeY;
 
    // define reduction function. Possibilities are:
    // none (default), add, mul, max, min
@@ -60,16 +60,6 @@ public:
          fOutputTensorNames = { fNY };
       }
 
-   // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = std::vector<std::vector<size_t>>(1, input[0]); // return vector size 1 with first input
-      return ret;
-   }
 
    void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
@@ -84,10 +74,18 @@ public:
       }
       //tbd check for constant tensors
 
-      fShapeX = model.GetTensorShape(fNX);
-      fShapeI = model.GetTensorShape(fNI);
-      if (model.GetTensorShape(fNU) != fShapeI)
-         throw std::runtime_error(std::string("TMVA SOFIE ScatterElements - update tensor has invalid shape ")) ;
+      fShapeX = model.GetDimTensorShape(fNX);
+      fShapeI = model.GetDimTensorShape(fNI);
+      auto shapeU = model.GetDimTensorShape(fNU);
+      if (model.Verbose()) {
+         std::cout << "ScatterElements: input: " << ConvertShapeToString(fShapeX)
+                                                << " indices " << ConvertShapeToString(fShapeI)
+                                                << " update " <<  ConvertShapeToString(shapeU) << std::endl;
+      }
+      if (!model.IsDynamicTensor(fNI) && !model.IsDynamicTensor(fNU)) {
+         if (shapeU != fShapeI)
+           throw std::runtime_error(std::string("TMVA SOFIE ScatterElements - update tensor has invalid shape ")) ;
+      }
       if (fShapeX.size() == 0)
          throw std::runtime_error(std::string("TMVA SOFIE ScatterElements - input tensor has zero rank  ")) ;
       if (fShapeX.size() != fShapeI.size())
@@ -98,6 +96,8 @@ public:
       // assume output shape is identical to input shape
       fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      if (model.Verbose())
+         std::cout << "\t----> " << ConvertDimShapeToString(fShapeY) << std::endl;
    }
 
    std::string GenerateInitCode() override {
@@ -118,15 +118,15 @@ public:
       auto strideY = UTILITY::ComputeStrideFromShape(fShapeY);
       auto strideI = UTILITY::ComputeStrideFromShape(fShapeI);
 
-      size_t length = ConvertShapeToLength(fShapeY);
+      auto length = ConvertDimShapeToLength(fShapeY);
 
       // function to write compute expression for global index from axes indices
-      auto tensorIndex = [](const std::vector<size_t> & stride, const std::vector<std::string> & idx) {
+      auto tensorIndex = [](const std::vector<Dim> & stride, const std::vector<std::string> & idx) {
          std::stringstream strst;
          int dims = idx.size();
          assert (dims == (int) stride.size());
          for (int i = 0; i < dims; i++) {
-            if (stride[i] != 1)
+            if (stride[i].GetVal() != "1")
                strst << stride[i] << "*" << idx[i];
             else
                strst << idx[i];
