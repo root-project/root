@@ -5971,10 +5971,10 @@ void TClass::LoadClassInfo() const
 
    bool autoParse = !gInterpreter->IsAutoParsingSuspended();
 
-   if (autoParse)
+   if (autoParse && !fClassInfo)
       gInterpreter->AutoParse(GetName());
 
-   if (!fClassInfo)
+   if (!fClassInfo) // Could be indirectly set by the parsing
       gInterpreter->SetClassInfo(const_cast<TClass *>(this));
 
    if (autoParse && !fClassInfo) {
@@ -5987,10 +5987,13 @@ void TClass::LoadClassInfo() const
                                           " even though it has a TClass initialization routine.",
                  fName.Data());
       }
-      return;
    }
 
-   fCanLoadClassInfo = false;
+   // Keep trying to load the ClassInfo, since we have no ClassInfo yet,
+   // we will get an update even when there is an explicit load.  So whether
+   // or not the autoparsing is on, we will need to keep trying to load
+   // the ClassInfo.
+   fCanLoadClassInfo = !fClassInfo;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
