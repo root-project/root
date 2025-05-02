@@ -67,6 +67,13 @@ struct RNTupleClusterBoundaries {
 std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
 } // namespace Internal
 
+namespace Experimental::Internal {
+struct RNTupleAttributeSetDescriptor {
+   std::string fName;
+   RNTupleLocator fLocator;
+};
+} // namespace Experimental::Internal
+
 // clang-format off
 /**
 \class ROOT::RFieldDescriptor
@@ -697,6 +704,8 @@ private:
    std::vector<ROOT::DescriptorId_t> fSortedClusterGroupIds;
    /// Potentially a subset of all the available clusters
    std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
+
+   std::unordered_map<std::string, RNTupleLocator> fAttributeSets;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
    ROOT::DescriptorId_t FindClusterId(ROOT::NTupleSize_t entryIdx) const;
@@ -1604,6 +1613,8 @@ public:
 
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
    void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
+
+   RResult<void> AddAttributeSet(Experimental::Internal::RNTupleAttributeSetDescriptor &&attrSetDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine RNTupleDescriptor
    void Reset();

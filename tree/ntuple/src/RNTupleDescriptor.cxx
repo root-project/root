@@ -1378,6 +1378,15 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(RExtraTypeIn
       fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
 }
 
+ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(
+   Experimental::Internal::RNTupleAttributeSetDescriptor &&attrSetDesc)
+{
+   const auto &[_, inserted] = fDescriptor.fAttributeSets.try_emplace(attrSetDesc.fName, attrSetDesc.fLocator);
+   if (!inserted)
+      return R__FAIL("attribute sets with duplicate names");
+   return RResult<void>::Success();
+}
+
 RNTupleSerializer::StreamerInfoMap_t ROOT::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() const
 {
    RNTupleSerializer::StreamerInfoMap_t streamerInfoMap;

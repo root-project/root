@@ -756,7 +756,8 @@ ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RCo
    return SealPage(config);
 }
 
-void ROOT::Internal::RPageSink::CommitDataset(std::span<const std::size_t> linkedAttrSets)
+void ROOT::Internal::RPageSink::CommitDataset(
+   std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttrSets)
 {
    for (const auto &cb : fOnDatasetCommitCallbacks)
       cb(*this);
@@ -1251,7 +1252,8 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
-void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl(std::span<const std::size_t> linkedAttributeSets)
+void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl(
+   std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttributeSets)
 {
    if (!fStreamerInfos.empty()) {
       // De-duplicate extra type infos before writing. Usually we won't have them already in the descriptor, but

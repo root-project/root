@@ -109,7 +109,7 @@ public:
    {
       throw ROOT::RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDatasetImpl(std::span<const std::size_t>) final
+   void CommitDatasetImpl(std::span<const ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor>) final
    {
       throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
