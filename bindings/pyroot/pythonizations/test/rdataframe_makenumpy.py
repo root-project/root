@@ -36,6 +36,26 @@ class DataFrameFromNumpy(unittest.TestCase):
         entries = df.AsNumpy()["x"]
         self.assertTrue(np.array_equal(entries, np.array(["test_string_1", "test_string_2"], dtype=object)))
 
+    def test_empty_arrays(self):
+        """
+        Test creating an RDataFrame from an empty numpy array with different data types
+        """
+        for dtype in self.dtypes:
+            data = {"x": np.array([], dtype=dtype)}
+            df = ROOT.RDF.FromNumpy(data)
+            colnames = df.GetColumnNames()
+            self.assertIn("x", colnames)
+            self.assertEqual(df.Count().GetValue(), 0)
+
+        data_obj = {"x": np.array([], dtype="object")}
+        with self.assertRaises(RuntimeError) as context:
+            df = ROOT.RDF.FromNumpy(data_obj)
+
+        self.assertIn(
+            "Failure in creating column 'x' for RDataFrame: the input column type is 'object', which is not supported. Make sure your column type is supported",
+            str(context.exception),
+        )
+
     def test_multiple_columns(self):
         """
         Test reading multiple columns
