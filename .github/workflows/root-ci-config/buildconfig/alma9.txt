@@ -1,5 +1,6 @@
 builtin_nlohmannjson=ON
 builtin_vdt=ON
-ccache=ON
 pythia8=OFF
 tmva-sofie=ON
+vecgeom=ON
+vc=ON
