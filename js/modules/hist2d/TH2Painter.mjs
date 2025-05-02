@@ -1962,7 +1962,7 @@ class TH2Painter extends THistPainter {
 
                if (loop === 0)
                   dn = Math.max(dn, Math.abs(dx), Math.abs(dy));
-                else {
+               else {
                   xc = (handle.grx[i] + handle.grx[i+1])/2;
                   yc = (handle.gry[j] + handle.gry[j+1])/2;
                   dxn = scale_x*dx/dn;
@@ -2028,23 +2028,12 @@ class TH2Painter extends THistPainter {
    /** @summary Draw TH2 bins as boxes */
    drawBinsBox() {
       const histo = this.getObject(),
-          handle = this.prepareDraw({ rounding: false }),
-          main = this.getMainPainter();
-
-      if (main === this) {
-         if (main.maxbin === main.minbin) {
-            main.maxbin = main.gmaxbin;
-            main.minbin = main.gminbin;
-            main.minposbin = main.gminposbin;
-         }
-         if (main.maxbin === main.minbin)
-            main.minbin = Math.min(0, main.maxbin-1);
-      }
-
-      const absmax = Math.max(Math.abs(main.maxbin), Math.abs(main.minbin)),
-            absmin = Math.max(0, main.minbin),
+            handle = this.prepareDraw({ rounding: false, zrange: true }),
+            absmax = Math.max(Math.abs(handle.zmin), Math.abs(handle.zmax)),
+            absmin = Math.max(0, handle.zmin),
             pad = this.getPadPainter().getRootPad(true),
             test_cutg = this.options.cutg;
+
       let i, j, binz, absz, res = '', cross = '', btn1 = '', btn2 = '',
           zdiff, dgrx, dgry, xx, yy, ww, hh, xyfactor,
           uselogz = false, logmin = 0;
@@ -2054,11 +2043,12 @@ class TH2Painter extends THistPainter {
          const logmax = Math.log(absmax);
          if (absmin > 0)
             logmin = Math.log(absmin);
-         else if ((main.minposbin >= 1) && (main.minposbin < 100))
+         else if ((handle.zminpos >= 1) && (handle.zminpos < 100))
             logmin = Math.log(0.7);
          else
-            logmin = (main.minposbin > 0) ? Math.log(0.7*main.minposbin) : logmax - 10;
-         if (logmin >= logmax) logmin = logmax - 10;
+            logmin = (handle.zminpos > 0) ? Math.log(0.7 * handle.zminpos) : logmax - 10;
+         if (logmin >= logmax)
+            logmin = logmax - 10;
          xyfactor = 1.0 / (logmax - logmin);
       } else
          xyfactor = 1.0 / (absmax - absmin);
@@ -2609,7 +2599,7 @@ class TH2Painter extends THistPainter {
 
       handle.ScatterPlot = true;
 
-      if (scale*handle.sumz < 1e5) {
+      if (scale * handle.sumz < 1e5) {
          // one can use direct drawing of scatter plot without any patterns
 
          this.createAttMarker({ attr: histo });
@@ -2646,7 +2636,8 @@ class TH2Painter extends THistPainter {
       }
 
       // limit filling factor, do not try to produce as many points as filled area;
-      if (this.maxbin > 0.7) factor = 0.7/this.maxbin;
+      if (this.maxbin > 0.7)
+         factor = 0.7 / this.maxbin;
 
       const nlevels = Math.round(handle.max - handle.min),
             cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
@@ -2695,48 +2686,47 @@ class TH2Painter extends THistPainter {
 
       for (colindx = 0; colindx < colPaths.length; ++colindx) {
          if ((colPaths[colindx] !== undefined) && (colindx < cntr.arr.length)) {
-           const pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`;
-           let pattern = defs.selectChild(`#${pattern_id}`);
-           if (pattern.empty()) {
-              pattern = defs.append('svg:pattern')
-                            .attr('id', pattern_id)
-                            .attr('patternUnits', 'userSpaceOnUse');
-           } else
-              pattern.selectAll('*').remove();
+            const pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`;
+            let pattern = defs.selectChild(`#${pattern_id}`);
+            if (pattern.empty()) {
+               pattern = defs.append('svg:pattern')
+                             .attr('id', pattern_id)
+                             .attr('patternUnits', 'userSpaceOnUse');
+            } else
+               pattern.selectAll('*').remove();
 
-           let npix = Math.round(factor*cntr.arr[colindx]*cell_w[colindx]*cell_h[colindx]);
-           if (npix < 1) npix = 1;
+            let npix = Math.round(factor*cntr.arr[colindx]*cell_w[colindx]*cell_h[colindx]);
+            if (npix < 1) npix = 1;
 
-           const arrx = new Float32Array(npix), arry = new Float32Array(npix);
+            const arrx = new Float32Array(npix), arry = new Float32Array(npix);
 
-           if (npix === 1)
+            if (npix === 1)
               arrx[0] = arry[0] = 0.5;
             else {
               for (let n = 0; n < npix; ++n) {
                  arrx[n] = rnd.random();
                  arry[n] = rnd.random();
               }
-           }
+            }
 
-           this.markeratt.resetPos();
+            this.markeratt.resetPos();
 
-           let path = '';
+            let path = '';
+            for (let n = 0; n < npix; ++n)
+               path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
 
-           for (let n = 0; n < npix; ++n)
-              path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
+            pattern.attr('width', cell_w[colindx])
+                   .attr('height', cell_h[colindx])
+                   .append('svg:path')
+                   .attr('d', path)
+                   .call(this.markeratt.func);
 
-           pattern.attr('width', cell_w[colindx])
-                  .attr('height', cell_h[colindx])
-                  .append('svg:path')
-                  .attr('d', path)
-                  .call(this.markeratt.func);
-
-           this.draw_g
-               .append('svg:path')
-               .attr('scatter-index', colindx)
-               .style('fill', `url(#${pattern_id})`)
-               .attr('d', colPaths[colindx]);
-        }
+            this.draw_g
+                .append('svg:path')
+                .attr('scatter-index', colindx)
+                .style('fill', `url(#${pattern_id})`)
+                .attr('d', colPaths[colindx]);
+         }
       }
 
       return handle;

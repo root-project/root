@@ -219,7 +219,8 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Divide pad on sub-pads */
    async divide(/* nx, ny, use_existing */) {
-      console.warn('RPadPainter.divide not implemented');
+      if (settings.Debug)
+         console.warn('RPadPainter.divide not implemented');
       return this;
    }
 
@@ -270,7 +271,8 @@ class RPadPainter extends RObjectPainter {
      * @desc used to find title drawing
      * @private */
    findInPrimitives(/* objname, objtype */) {
-      console.warn('findInPrimitives not implemented for RPad');
+      if (settings.Debug)
+         console.warn('findInPrimitives not implemented for RPad');
       return null;
    }
 
@@ -534,7 +536,7 @@ class RPadPainter extends RObjectPainter {
 
       this.setFastDrawing(rect.width, rect.height);
 
-      if (this.alignButtons && btns)
+      if (isFunc(this.alignButtons) && btns)
          this.alignButtons(btns, rect.width, rect.height);
 
       return true;
@@ -1437,20 +1439,17 @@ class RPadPainter extends RObjectPainter {
             }
 
             const fp = pp.getFramePainter();
-            if (!isFunc(fp?.access3dKind)) return;
+            if (!isFunc(fp?.access3dKind))
+               return;
 
             const can3d = fp.access3dKind();
-            if ((can3d !== constants.Embed3D.Overlay) && (can3d !== constants.Embed3D.Embed)) return;
+            if ((can3d !== constants.Embed3D.Overlay) && (can3d !== constants.Embed3D.Embed))
+               return;
 
-            let main, canvas;
-            if (isFunc(fp.render3D)) {
-               main = fp;
-               canvas = fp.renderer?.domElement;
-            } else {
-               main = fp.getMainPainter();
-               canvas = main?._renderer?.domElement;
-            }
-            if (!isFunc(main?.render3D) || !isObject(canvas)) return;
+            const main = isFunc(fp.getRenderer) ? fp : fp.getMainPainter(),
+                  canvas = isFunc(main.getRenderer) ? main.getRenderer()?.domElement : null;
+            if (!isFunc(main?.render3D) || !isObject(canvas))
+               return;
 
             const sz2 = fp.getSizeFor3d(constants.Embed3D.Embed); // get size and position of DOM element as it will be embed
             main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately

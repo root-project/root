@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '29/04/2025',
+version_date = '2/05/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -12280,6 +12280,9 @@ class ObjectPainter extends BasePainter {
    #primary_ref;     // reference of primary painter - if any
    #secondary_id;    // id of this painter in relation to primary painter
    #options_store;   // stored draw options used to check changes
+   #user_tooltip_handler; // configured user tooltip handler
+   #user_tooltip_timeout; // timeout configured with tooltip handler
+   #special_draw_area; // current special draw area like projection
 
    /** @summary constructor
      * @param {object|string} dom - dom element or identifier or pad painter
@@ -12540,8 +12543,7 @@ class ObjectPainter extends BasePainter {
    /** @summary change tooltip allowed flag
      * @param {boolean|string} [on = true] set tooltip allowed state or 'toggle'
      * @private */
-   setTooltipAllowed(on) {
-      if (on === undefined) on = true;
+   setTooltipAllowed(on = true) {
       const src = this.getCanvPainter() || this;
       src.tooltip_allowed = (on === 'toggle') ? !src.tooltip_allowed : on;
    }
@@ -13053,7 +13055,8 @@ class ObjectPainter extends BasePainter {
          pp.forEachPainterInPad(userfunc, kind);
       else {
          const painter = this.getTopPainter();
-         if (painter && (kind !== 'pads')) userfunc(painter);
+         if (painter && (kind !== 'pads'))
+            userfunc(painter);
       }
    }
 
@@ -13763,13 +13766,13 @@ class ObjectPainter extends BasePainter {
      * when mouse leave frame area, handler(null) will be called
      * @param {function} handler - function called when tooltip is produced
      * @param {number} [tmout = 100] - delay in ms before tooltip delivered */
-   configureUserTooltipHandler(handler, tmout) {
+   configureUserTooltipHandler(handler, tmout = 100) {
       if (!handler || !isFunc(handler)) {
-         delete this._user_tooltip_handler;
-         delete this._user_tooltip_timeout;
+         this.#user_tooltip_handler = undefined;
+         this.#user_tooltip_timeout = undefined;
       } else {
-         this._user_tooltip_handler = handler;
-         this._user_tooltip_timeout = tmout || 100;
+         this.#user_tooltip_handler = handler;
+         this.#user_tooltip_timeout = tmout;
       }
    }
 
@@ -13798,7 +13801,7 @@ class ObjectPainter extends BasePainter {
    /** @summary Check if user-defined tooltip function was configured
      * @return {boolean} flag is user tooltip handler was configured */
    hasUserTooltip() {
-      return isFunc(this._user_tooltip_handler);
+      return isFunc(this.#user_tooltip_handler);
    }
 
    /** @summary Provide tooltips data to user-defined function
@@ -13807,8 +13810,8 @@ class ObjectPainter extends BasePainter {
    provideUserTooltip(data) {
       if (!this.hasUserTooltip()) return;
 
-      if (this._user_tooltip_timeout <= 0)
-         return this._user_tooltip_handler(data);
+      if (this.#user_tooltip_timeout <= 0)
+         return this.#user_tooltip_handler(data);
 
       if (this._user_tooltip_handle) {
          clearTimeout(this._user_tooltip_handle);
@@ -13816,25 +13819,25 @@ class ObjectPainter extends BasePainter {
       }
 
       if (!data)
-         return this._user_tooltip_handler(data);
+         return this.#user_tooltip_handler(data);
 
       // only after timeout user function will be called
       this._user_tooltip_handle = setTimeout(() => {
          delete this._user_tooltip_handle;
-         if (this._user_tooltip_handler)
-            this._user_tooltip_handler(data);
-      }, this._user_tooltip_timeout);
+         if (this.#user_tooltip_handler)
+            this.#user_tooltip_handler(data);
+      }, this.#user_tooltip_timeout);
    }
 
    /** @summary Provide projection areas
      * @param kind - 'X', 'Y', 'XY' or ''
      * @private */
    async provideSpecialDrawArea(kind) {
-      if (kind === this._special_draw_area)
+      if (kind === this.#special_draw_area)
          return true;
 
       return this.getCanvPainter().toggleProjection(kind).then(() => {
-         this._special_draw_area = kind;
+         this.#special_draw_area = kind;
          return true;
       });
    }
@@ -13846,8 +13849,8 @@ class ObjectPainter extends BasePainter {
      * @private */
    async drawInSpecialArea(obj, opt, kind) {
       const canp = this.getCanvPainter();
-      if (this._special_draw_area && isFunc(canp?.drawProjection))
-         return canp.drawProjection(kind || this._special_draw_area, obj, opt);
+      if (this.#special_draw_area && isFunc(canp?.drawProjection))
+         return canp.drawProjection(kind || this.#special_draw_area, obj, opt);
 
       return false;
    }
@@ -14038,166 +14041,1266 @@ Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
  * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '174';
+const REVISION = '176';
 
+/**
+ * Represents mouse buttons and interaction types in context of controls.
+ *
+ * @type {ConstantsMouse}
+ * @constant
+ */
 const MOUSE = { ROTATE: 0, DOLLY: 1, PAN: 2 };
+
+/**
+ * Represents touch interaction types in context of controls.
+ *
+ * @type {ConstantsTouch}
+ * @constant
+ */
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
+
+/**
+ * Disables face culling.
+ *
+ * @type {number}
+ * @constant
+ */
 const CullFaceNone = 0;
+
+/**
+ * Culls back faces.
+ *
+ * @type {number}
+ * @constant
+ */
 const CullFaceBack = 1;
+
+/**
+ * Culls front faces.
+ *
+ * @type {number}
+ * @constant
+ */
 const CullFaceFront = 2;
+
+/**
+ * Filters shadow maps using the Percentage-Closer Filtering (PCF) algorithm.
+ *
+ * @type {number}
+ * @constant
+ */
 const PCFShadowMap = 1;
+
+/**
+ * Filters shadow maps using the Percentage-Closer Filtering (PCF) algorithm with
+ * better soft shadows especially when using low-resolution shadow maps.
+ *
+ * @type {number}
+ * @constant
+ */
 const PCFSoftShadowMap = 2;
+
+/**
+ * Filters shadow maps using the Variance Shadow Map (VSM) algorithm.
+ * When using VSMShadowMap all shadow receivers will also cast shadows.
+ *
+ * @type {number}
+ * @constant
+ */
 const VSMShadowMap = 3;
+
+/**
+ * Only front faces are rendered.
+ *
+ * @type {number}
+ * @constant
+ */
 const FrontSide = 0;
+
+/**
+ * Only back faces are rendered.
+ *
+ * @type {number}
+ * @constant
+ */
 const BackSide = 1;
+
+/**
+ * Both front and back faces are rendered.
+ *
+ * @type {number}
+ * @constant
+ */
 const DoubleSide = 2;
+
+/**
+ * No blending is performed which effectively disables
+ * alpha transparency.
+ *
+ * @type {number}
+ * @constant
+ */
 const NoBlending = 0;
+
+/**
+ * The default blending.
+ *
+ * @type {number}
+ * @constant
+ */
 const NormalBlending = 1;
+
+/**
+ * Represents additive blending.
+ *
+ * @type {number}
+ * @constant
+ */
 const AdditiveBlending = 2;
+
+/**
+ * Represents subtractive blending.
+ *
+ * @type {number}
+ * @constant
+ */
 const SubtractiveBlending = 3;
+
+/**
+ * Represents multiply blending.
+ *
+ * @type {number}
+ * @constant
+ */
 const MultiplyBlending = 4;
+
+/**
+ * Represents custom blending.
+ *
+ * @type {number}
+ * @constant
+ */
 const CustomBlending = 5;
+
+/**
+ * A `source + destination` blending equation.
+ *
+ * @type {number}
+ * @constant
+ */
 const AddEquation = 100;
+
+/**
+ * A `source - destination` blending equation.
+ *
+ * @type {number}
+ * @constant
+ */
 const SubtractEquation = 101;
+
+/**
+ * A `destination - source` blending equation.
+ *
+ * @type {number}
+ * @constant
+ */
 const ReverseSubtractEquation = 102;
+
+/**
+ * A blend equation that uses the minimum of source and destination.
+ *
+ * @type {number}
+ * @constant
+ */
 const MinEquation = 103;
+
+/**
+ * A blend equation that uses the maximum of source and destination.
+ *
+ * @type {number}
+ * @constant
+ */
 const MaxEquation = 104;
+
+/**
+ * Multiplies all colors by `0`.
+ *
+ * @type {number}
+ * @constant
+ */
 const ZeroFactor = 200;
+
+/**
+ * Multiplies all colors by `1`.
+ *
+ * @type {number}
+ * @constant
+ */
 const OneFactor = 201;
+
+/**
+ * Multiplies all colors by the source colors.
+ *
+ * @type {number}
+ * @constant
+ */
 const SrcColorFactor = 202;
+
+/**
+ * Multiplies all colors by `1` minus each source color.
+ *
+ * @type {number}
+ * @constant
+ */
 const OneMinusSrcColorFactor = 203;
+
+/**
+ * Multiplies all colors by the source alpha value.
+ *
+ * @type {number}
+ * @constant
+ */
 const SrcAlphaFactor = 204;
+
+/**
+ * Multiplies all colors by 1 minus the source alpha value.
+ *
+ * @type {number}
+ * @constant
+ */
 const OneMinusSrcAlphaFactor = 205;
+
+/**
+ * Multiplies all colors by the destination alpha value.
+ *
+ * @type {number}
+ * @constant
+ */
 const DstAlphaFactor = 206;
+
+/**
+ * Multiplies all colors by `1` minus the destination alpha value.
+ *
+ * @type {number}
+ * @constant
+ */
 const OneMinusDstAlphaFactor = 207;
+
+/**
+ * Multiplies all colors by the destination color.
+ *
+ * @type {number}
+ * @constant
+ */
 const DstColorFactor = 208;
+
+/**
+ * Multiplies all colors by `1` minus each destination color.
+ *
+ * @type {number}
+ * @constant
+ */
 const OneMinusDstColorFactor = 209;
+
+/**
+ * Multiplies the RGB colors by the smaller of either the source alpha
+ * value or the value of `1` minus the destination alpha value. The alpha
+ * value is multiplied by `1`.
+ *
+ * @type {number}
+ * @constant
+ */
 const SrcAlphaSaturateFactor = 210;
+
+/**
+ * Multiplies all colors by a constant color.
+ *
+ * @type {number}
+ * @constant
+ */
 const ConstantColorFactor = 211;
+
+/**
+ * Multiplies all colors by `1` minus a constant color.
+ *
+ * @type {number}
+ * @constant
+ */
 const OneMinusConstantColorFactor = 212;
+
+/**
+ * Multiplies all colors by a constant alpha value.
+ *
+ * @type {number}
+ * @constant
+ */
 const ConstantAlphaFactor = 213;
+
+/**
+ * Multiplies all colors by 1 minus a constant alpha value.
+ *
+ * @type {number}
+ * @constant
+ */
 const OneMinusConstantAlphaFactor = 214;
+
+/**
+ * Never pass.
+ *
+ * @type {number}
+ * @constant
+ */
 const NeverDepth = 0;
+
+/**
+ * Always pass.
+ *
+ * @type {number}
+ * @constant
+ */
 const AlwaysDepth = 1;
+
+/**
+ * Pass if the incoming value is less than the depth buffer value.
+ *
+ * @type {number}
+ * @constant
+ */
 const LessDepth = 2;
+
+/**
+ * Pass if the incoming value is less than or equal to the depth buffer value.
+ *
+ * @type {number}
+ * @constant
+ */
 const LessEqualDepth = 3;
+
+/**
+ * Pass if the incoming value equals the depth buffer value.
+ *
+ * @type {number}
+ * @constant
+ */
 const EqualDepth = 4;
+
+/**
+ * Pass if the incoming value is greater than or equal to the depth buffer value.
+ *
+ * @type {number}
+ * @constant
+ */
 const GreaterEqualDepth = 5;
+
+/**
+ * Pass if the incoming value is greater than the depth buffer value.
+ *
+ * @type {number}
+ * @constant
+ */
 const GreaterDepth = 6;
+
+/**
+ * Pass if the incoming value is not equal to the depth buffer value.
+ *
+ * @type {number}
+ * @constant
+ */
 const NotEqualDepth = 7;
+
+/**
+ * Multiplies the environment map color with the surface color.
+ *
+ * @type {number}
+ * @constant
+ */
 const MultiplyOperation = 0;
+
+/**
+ * Uses reflectivity to blend between the two colors.
+ *
+ * @type {number}
+ * @constant
+ */
 const MixOperation = 1;
+
+/**
+ * Adds the two colors.
+ *
+ * @type {number}
+ * @constant
+ */
 const AddOperation = 2;
+
+/**
+ * No tone mapping is applied.
+ *
+ * @type {number}
+ * @constant
+ */
 const NoToneMapping = 0;
+
+/**
+ * Linear tone mapping.
+ *
+ * @type {number}
+ * @constant
+ */
 const LinearToneMapping = 1;
+
+/**
+ * Reinhard tone mapping.
+ *
+ * @type {number}
+ * @constant
+ */
 const ReinhardToneMapping = 2;
+
+/**
+ * Cineon tone mapping.
+ *
+ * @type {number}
+ * @constant
+ */
 const CineonToneMapping = 3;
+
+/**
+ * ACES Filmic tone mapping.
+ *
+ * @type {number}
+ * @constant
+ */
 const ACESFilmicToneMapping = 4;
+
+/**
+ * Custom tone mapping.
+ *
+ * Expects a custom implementation by modifying shader code of the material's fragment shader.
+ *
+ * @type {number}
+ * @constant
+ */
 const CustomToneMapping = 5;
+
+/**
+ * AgX tone mapping.
+ *
+ * @type {number}
+ * @constant
+ */
 const AgXToneMapping = 6;
+
+/**
+ * Neutral tone mapping.
+ *
+ * Implementation based on the Khronos 3D Commerce Group standard tone mapping.
+ *
+ * @type {number}
+ * @constant
+ */
 const NeutralToneMapping = 7;
 
+/**
+ * Maps textures using the geometry's UV coordinates.
+ *
+ * @type {number}
+ * @constant
+ */
 const UVMapping = 300;
+
+/**
+ * Reflection mapping for cube textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const CubeReflectionMapping = 301;
+
+/**
+ * Refraction mapping for cube textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const CubeRefractionMapping = 302;
+
+/**
+ * Reflection mapping for equirectangular textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const EquirectangularReflectionMapping = 303;
+
+/**
+ * Refraction mapping for equirectangular textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const EquirectangularRefractionMapping = 304;
+
+/**
+ * Reflection mapping for PMREM textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const CubeUVReflectionMapping = 306;
+
+/**
+ * The texture will simply repeat to infinity.
+ *
+ * @type {number}
+ * @constant
+ */
 const RepeatWrapping = 1000;
+
+/**
+ * The last pixel of the texture stretches to the edge of the mesh.
+ *
+ * @type {number}
+ * @constant
+ */
 const ClampToEdgeWrapping = 1001;
+
+/**
+ * The texture will repeats to infinity, mirroring on each repeat.
+ *
+ * @type {number}
+ * @constant
+ */
 const MirroredRepeatWrapping = 1002;
+
+/**
+ * Returns the value of the texture element that is nearest (in Manhattan distance)
+ * to the specified texture coordinates.
+ *
+ * @type {number}
+ * @constant
+ */
 const NearestFilter = 1003;
+
+/**
+ * Chooses the mipmap that most closely matches the size of the pixel being textured
+ * and uses the `NearestFilter` criterion (the texel nearest to the center of the pixel)
+ * to produce a texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const NearestMipmapNearestFilter = 1004;
+
+/**
+ * Chooses the two mipmaps that most closely match the size of the pixel being textured and
+ * uses the `NearestFilter` criterion to produce a texture value from each mipmap.
+ * The final texture value is a weighted average of those two values.
+ *
+ * @type {number}
+ * @constant
+ */
 const NearestMipmapLinearFilter = 1005;
+
+/**
+ * Returns the weighted average of the four texture elements that are closest to the specified
+ * texture coordinates, and can include items wrapped or repeated from other parts of a texture,
+ * depending on the values of `wrapS` and `wrapT`, and on the exact mapping.
+ *
+ * @type {number}
+ * @constant
+ */
 const LinearFilter = 1006;
+
+/**
+ * Chooses the mipmap that most closely matches the size of the pixel being textured and uses
+ * the `LinearFilter` criterion (a weighted average of the four texels that are closest to the
+ * center of the pixel) to produce a texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const LinearMipmapNearestFilter = 1007;
+
+/**
+ * Chooses the two mipmaps that most closely match the size of the pixel being textured and uses
+ * the `LinearFilter` criterion to produce a texture value from each mipmap. The final texture value
+ * is a weighted average of those two values.
+ *
+ * @type {number}
+ * @constant
+ */
 const LinearMipmapLinearFilter = 1008;
+
+/**
+ * An unsigned byte data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const UnsignedByteType = 1009;
+
+/**
+ * A byte data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const ByteType = 1010;
+
+/**
+ * A short data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const ShortType = 1011;
+
+/**
+ * An unsigned short data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const UnsignedShortType = 1012;
+
+/**
+ * An int data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const IntType = 1013;
+
+/**
+ * An unsigned int data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const UnsignedIntType = 1014;
+
+/**
+ * A float data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const FloatType = 1015;
+
+/**
+ * A half float data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const HalfFloatType = 1016;
+
+/**
+ * An unsigned short 4_4_4_4 (packed) data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const UnsignedShort4444Type = 1017;
+
+/**
+ * An unsigned short 5_5_5_1 (packed) data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const UnsignedShort5551Type = 1018;
+
+/**
+ * An unsigned int 24_8 data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const UnsignedInt248Type = 1020;
+
+/**
+ * An unsigned int 5_9_9_9 (packed) data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
 const UnsignedInt5999Type = 35902;
+
+/**
+ * Discards the red, green and blue components and reads just the alpha component.
+ *
+ * @type {number}
+ * @constant
+ */
 const AlphaFormat = 1021;
+
+/**
+ * Discards the alpha component and reads the red, green and blue component.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBFormat = 1022;
+
+/**
+ * Reads the red, green, blue and alpha components.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBAFormat = 1023;
-const LuminanceFormat = 1024;
-const LuminanceAlphaFormat = 1025;
+
+/**
+ * Reads each element as a single depth value, converts it to floating point, and clamps to the range `[0,1]`.
+ *
+ * @type {number}
+ * @constant
+ */
 const DepthFormat = 1026;
+
+/**
+ * Reads each element is a pair of depth and stencil values. The depth component of the pair is interpreted as
+ * in `DepthFormat`. The stencil component is interpreted based on the depth + stencil internal format.
+ *
+ * @type {number}
+ * @constant
+ */
 const DepthStencilFormat = 1027;
+
+/**
+ * Discards the green, blue and alpha components and reads just the red component.
+ *
+ * @type {number}
+ * @constant
+ */
 const RedFormat = 1028;
+
+/**
+ * Discards the green, blue and alpha components and reads just the red component. The texels are read as integers instead of floating point.
+ *
+ * @type {number}
+ * @constant
+ */
 const RedIntegerFormat = 1029;
+
+/**
+ * Discards the alpha, and blue components and reads the red, and green components.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGFormat = 1030;
+
+/**
+ * Discards the alpha, and blue components and reads the red, and green components. The texels are read as integers instead of floating point.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGIntegerFormat = 1031;
+
+/**
+ * Reads the red, green, blue and alpha components. The texels are read as integers instead of floating point.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBAIntegerFormat = 1033;
 
+/**
+ * A DXT1-compressed image in an RGB image format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGB_S3TC_DXT1_Format = 33776;
+
+/**
+ * A DXT1-compressed image in an RGB image format with a simple on/off alpha value.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_S3TC_DXT1_Format = 33777;
+
+/**
+ * A DXT3-compressed image in an RGBA image format. Compared to a 32-bit RGBA texture, it offers 4:1 compression.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_S3TC_DXT3_Format = 33778;
+
+/**
+ * A DXT5-compressed image in an RGBA image format. It also provides a 4:1 compression, but differs to the DXT3
+ * compression in how the alpha compression is done.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_S3TC_DXT5_Format = 33779;
+
+/**
+ * PVRTC RGB compression in 4-bit mode. One block for each 4×4 pixels.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGB_PVRTC_4BPPV1_Format = 35840;
+
+/**
+ * PVRTC RGB compression in 2-bit mode. One block for each 8×4 pixels.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGB_PVRTC_2BPPV1_Format = 35841;
+
+/**
+ * PVRTC RGBA compression in 4-bit mode. One block for each 4×4 pixels.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_PVRTC_4BPPV1_Format = 35842;
+
+/**
+ * PVRTC RGBA compression in 2-bit mode. One block for each 8×4 pixels.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_PVRTC_2BPPV1_Format = 35843;
+
+/**
+ * ETC1 RGB format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGB_ETC1_Format = 36196;
+
+/**
+ * ETC2 RGB format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGB_ETC2_Format = 37492;
+
+/**
+ * ETC2 RGBA format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ETC2_EAC_Format = 37496;
+
+/**
+ * ASTC RGBA 4x4 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_4x4_Format = 37808;
+
+/**
+ * ASTC RGBA 5x4 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_5x4_Format = 37809;
+
+/**
+ * ASTC RGBA 5x5 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_5x5_Format = 37810;
+
+/**
+ * ASTC RGBA 6x5 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_6x5_Format = 37811;
+
+/**
+ * ASTC RGBA 6x6 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_6x6_Format = 37812;
+
+/**
+ * ASTC RGBA 8x5 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_8x5_Format = 37813;
+
+/**
+ * ASTC RGBA 8x6 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_8x6_Format = 37814;
+
+/**
+ * ASTC RGBA 8x8 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_8x8_Format = 37815;
+
+/**
+ * ASTC RGBA 10x5 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_10x5_Format = 37816;
+
+/**
+ * ASTC RGBA 10x6 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_10x6_Format = 37817;
+
+/**
+ * ASTC RGBA 10x8 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_10x8_Format = 37818;
+
+/**
+ * ASTC RGBA 10x10 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_10x10_Format = 37819;
+
+/**
+ * ASTC RGBA 12x10 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_12x10_Format = 37820;
+
+/**
+ * ASTC RGBA 12x12 format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_ASTC_12x12_Format = 37821;
+
+/**
+ * BPTC RGBA format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBA_BPTC_Format = 36492;
+
+/**
+ * BPTC Signed RGB format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGB_BPTC_SIGNED_Format = 36494;
+
+/**
+ * BPTC Unsigned RGB format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGB_BPTC_UNSIGNED_Format = 36495;
+
+/**
+ * RGTC1 Red format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RED_RGTC1_Format = 36283;
+
+/**
+ * RGTC1 Signed Red format.
+ *
+ * @type {number}
+ * @constant
+ */
 const SIGNED_RED_RGTC1_Format = 36284;
+
+/**
+ * RGTC2 Red Green format.
+ *
+ * @type {number}
+ * @constant
+ */
 const RED_GREEN_RGTC2_Format = 36285;
+
+/**
+ * RGTC2 Signed Red Green format.
+ *
+ * @type {number}
+ * @constant
+ */
 const SIGNED_RED_GREEN_RGTC2_Format = 36286;
+
+/**
+ * Basic depth packing.
+ *
+ * @type {number}
+ * @constant
+ */
 const BasicDepthPacking = 3200;
+
+/**
+ * A depth value is packed into 32 bit RGBA.
+ *
+ * @type {number}
+ * @constant
+ */
 const RGBADepthPacking = 3201;
+
+/**
+ * Normal information is relative to the underlying surface.
+ *
+ * @type {number}
+ * @constant
+ */
 const TangentSpaceNormalMap = 0;
+
+/**
+ * Normal information is relative to the object orientation.
+ *
+ * @type {number}
+ * @constant
+ */
 const ObjectSpaceNormalMap = 1;
 
 // Color space string identifiers, matching CSS Color Module Level 4 and WebGPU names where available.
+
+/**
+ * No color space.
+ *
+ * @type {string}
+ * @constant
+ */
 const NoColorSpace = '';
+
+/**
+ * sRGB color space.
+ *
+ * @type {string}
+ * @constant
+ */
 const SRGBColorSpace = 'srgb';
+
+/**
+ * sRGB-linear color space.
+ *
+ * @type {string}
+ * @constant
+ */
 const LinearSRGBColorSpace = 'srgb-linear';
 
+/**
+ * Linear transfer function.
+ *
+ * @type {string}
+ * @constant
+ */
 const LinearTransfer = 'linear';
+
+/**
+ * sRGB transfer function.
+ *
+ * @type {string}
+ * @constant
+ */
 const SRGBTransfer = 'srgb';
+
+/**
+ * Keeps the current value.
+ *
+ * @type {number}
+ * @constant
+ */
 const KeepStencilOp = 7680;
+
+/**
+ * Will always return true.
+ *
+ * @type {number}
+ * @constant
+ */
 const AlwaysStencilFunc = 519;
 
+/**
+ * Never pass.
+ *
+ * @type {number}
+ * @constant
+ */
 const NeverCompare = 512;
+
+/**
+ * Pass if the incoming value is less than the texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const LessCompare = 513;
+
+/**
+ * Pass if the incoming value equals the texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const EqualCompare = 514;
+
+/**
+ * Pass if the incoming value is less than or equal to the texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const LessEqualCompare = 515;
+
+/**
+ * Pass if the incoming value is greater than the texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const GreaterCompare = 516;
+
+/**
+ * Pass if the incoming value is not equal to the texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const NotEqualCompare = 517;
+
+/**
+ * Pass if the incoming value is greater than or equal to the texture value.
+ *
+ * @type {number}
+ * @constant
+ */
 const GreaterEqualCompare = 518;
+
+/**
+ * Always pass.
+ *
+ * @type {number}
+ * @constant
+ */
 const AlwaysCompare = 519;
 
+/**
+ * The contents are intended to be specified once by the application, and used many
+ * times as the source for drawing and image specification commands.
+ *
+ * @type {number}
+ * @constant
+ */
 const StaticDrawUsage = 35044;
+
+/**
+ * GLSL 3 shader code.
+ *
+ * @type {string}
+ * @constant
+ */
 const GLSL3 = '300 es';
 
+/**
+ * WebGL coordinate system.
+ *
+ * @type {number}
+ * @constant
+ */
 const WebGLCoordinateSystem = 2000;
+
+/**
+ * WebGPU coordinate system.
+ *
+ * @type {number}
+ * @constant
+ */
 const WebGPUCoordinateSystem = 2001;
+
+/**
+ * This type represents mouse buttons and interaction types in context of controls.
+ *
+ * @typedef {Object} ConstantsMouse
+ * @property {number} MIDDLE - The left mouse button.
+ * @property {number} LEFT - The middle mouse button.
+ * @property {number} RIGHT - The right mouse button.
+ * @property {number} ROTATE - A rotate interaction.
+ * @property {number} DOLLY - A dolly interaction.
+ * @property {number} PAN - A pan interaction.
+ **/
+
+/**
+ * This type represents touch interaction types in context of controls.
+ *
+ * @typedef {Object} ConstantsTouch
+ * @property {number} ROTATE - A rotate interaction.
+ * @property {number} PAN - A pan interaction.
+ * @property {number} DOLLY_PAN - The dolly-pan interaction.
+ * @property {number} DOLLY_ROTATE - A dolly-rotate interaction.
+ **/
+
+/**
+ * This type represents the different timestamp query types.
+ *
+ * @typedef {Object} ConstantsTimestampQuery
+ * @property {string} COMPUTE - A `compute` timestamp query.
+ * @property {string} RENDER - A `render` timestamp query.
+ **/
+
+/**
+ * Represents the different interpolation sampling types.
+ *
+ * @typedef {Object} ConstantsInterpolationSamplingType
+ * @property {string} PERSPECTIVE - Perspective-correct interpolation.
+ * @property {string} LINEAR - Linear interpolation.
+ * @property {string} FLAT - Flat interpolation.
+ */
+
+/**
+ * Represents the different interpolation sampling modes.
+ *
+ * @typedef {Object} ConstantsInterpolationSamplingMode
+ * @property {string} NORMAL - Normal sampling mode.
+ * @property {string} CENTROID - Centroid sampling mode.
+ * @property {string} SAMPLE - Sample-specific sampling mode.
+ * @property {string} FLAT_FIRST - Flat interpolation using the first vertex.
+ * @property {string} FLAT_EITHER - Flat interpolation using either vertex.
+ */
 
 /**
  * This modules allows to dispatch event objects on custom JavaScript objects.
@@ -14800,30 +15903,253 @@ function normalize$1( value, array ) {
 
 }
 
+/**
+ * @class
+ * @classdesc A collection of math utility functions.
+ * @hideconstructor
+ */
 const MathUtils = {
 	DEG2RAD: DEG2RAD,
 	RAD2DEG: RAD2DEG,
+	/**
+	 * Generate a [UUID]{@link https://en.wikipedia.org/wiki/Universally_unique_identifier}
+	 * (universally unique identifier).
+	 *
+	 * @static
+	 * @method
+	 * @return {string} The UUID.
+	 */
 	generateUUID: generateUUID,
+	/**
+	 * Clamps the given value between min and max.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} value - The value to clamp.
+	 * @param {number} min - The min value.
+	 * @param {number} max - The max value.
+	 * @return {number} The clamped value.
+	 */
 	clamp: clamp,
+	/**
+	 * Computes the Euclidean modulo of the given parameters that
+	 * is `( ( n % m ) + m ) % m`.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} n - The first parameter.
+	 * @param {number} m - The second parameter.
+	 * @return {number} The Euclidean modulo.
+	 */
 	euclideanModulo: euclideanModulo,
+	/**
+	 * Performs a linear mapping from range `<a1, a2>` to range `<b1, b2>`
+	 * for the given value.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} x - The value to be mapped.
+	 * @param {number} a1 - Minimum value for range A.
+	 * @param {number} a2 - Maximum value for range A.
+	 * @param {number} b1 - Minimum value for range B.
+	 * @param {number} b2 - Maximum value for range B.
+	 * @return {number} The mapped value.
+	 */
 	mapLinear: mapLinear,
+	/**
+	 * Returns the percentage in the closed interval `[0, 1]` of the given value
+	 * between the start and end point.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} x - The start point
+	 * @param {number} y - The end point.
+	 * @param {number} value - A value between start and end.
+	 * @return {number} The interpolation factor.
+	 */
 	inverseLerp: inverseLerp,
+	/**
+	 * Returns a value linearly interpolated from two known points based on the given interval -
+	 * `t = 0` will return `x` and `t = 1` will return `y`.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} x - The start point
+	 * @param {number} y - The end point.
+	 * @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
+	 * @return {number} The interpolated value.
+	 */
 	lerp: lerp,
+	/**
+	 * Smoothly interpolate a number from `x` to `y` in  a spring-like manner using a delta
+	 * time to maintain frame rate independent movement. For details, see
+	 * [Frame rate independent damping using lerp]{@link http://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/}.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} x - The current point.
+	 * @param {number} y - The target point.
+	 * @param {number} lambda - A higher lambda value will make the movement more sudden,
+	 * and a lower value will make the movement more gradual.
+	 * @param {number} dt - Delta time in seconds.
+	 * @return {number} The interpolated value.
+	 */
 	damp: damp,
+	/**
+	 * Returns a value that alternates between `0` and the given `length` parameter.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} x - The value to pingpong.
+	 * @param {number} [length=1] - The positive value the function will pingpong to.
+	 * @return {number} The alternated value.
+	 */
 	pingpong: pingpong,
+	/**
+	 * Returns a value in the range `[0,1]` that represents the percentage that `x` has
+	 * moved between `min` and `max`, but smoothed or slowed down the closer `x` is to
+	 * the `min` and `max`.
+	 *
+	 * See [Smoothstep]{@link http://en.wikipedia.org/wiki/Smoothstep} for more details.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} x - The value to evaluate based on its position between min and max.
+	 * @param {number} min - The min value. Any x value below min will be `0`.
+	 * @param {number} max - The max value. Any x value above max will be `1`.
+	 * @return {number} The alternated value.
+	 */
 	smoothstep: smoothstep,
+	/**
+	 * A [variation on smoothstep]{@link https://en.wikipedia.org/wiki/Smoothstep#Variations}
+	 * that has zero 1st and 2nd order derivatives at x=0 and x=1.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} x - The value to evaluate based on its position between min and max.
+	 * @param {number} min - The min value. Any x value below min will be `0`.
+	 * @param {number} max - The max value. Any x value above max will be `1`.
+	 * @return {number} The alternated value.
+	 */
 	smootherstep: smootherstep,
+	/**
+	 * Returns a random integer from `<low, high>` interval.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} low - The lower value boundary.
+	 * @param {number} high - The upper value boundary
+	 * @return {number} A random integer.
+	 */
 	randInt: randInt,
+	/**
+	 * Returns a random float from `<low, high>` interval.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} low - The lower value boundary.
+	 * @param {number} high - The upper value boundary
+	 * @return {number} A random float.
+	 */
 	randFloat: randFloat,
+	/**
+	 * Returns a random integer from `<-range/2, range/2>` interval.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} range - Defines the value range.
+	 * @return {number} A random float.
+	 */
 	randFloatSpread: randFloatSpread,
+	/**
+	 * Returns a deterministic pseudo-random float in the interval `[0, 1]`.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} [s] - The integer seed.
+	 * @return {number} A random float.
+	 */
 	seededRandom: seededRandom,
+	/**
+	 * Converts degrees to radians.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} degrees - A value in degrees.
+	 * @return {number} The converted value in radians.
+	 */
 	degToRad: degToRad,
+	/**
+	 * Converts radians to degrees.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} radians - A value in radians.
+	 * @return {number} The converted value in degrees.
+	 */
 	radToDeg: radToDeg,
+	/**
+	 * Returns `true` if the given number is a power of two.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} value - The value to check.
+	 * @return {boolean} Whether the given number is a power of two or not.
+	 */
 	isPowerOfTwo: isPowerOfTwo,
+	/**
+	 * Returns the smallest power of two that is greater than or equal to the given number.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} value - The value to find a POT for.
+	 * @return {number} The smallest power of two that is greater than or equal to the given number.
+	 */
 	ceilPowerOfTwo: ceilPowerOfTwo,
+	/**
+	 * Returns the largest power of two that is less than or equal to the given number.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} value - The value to find a POT for.
+	 * @return {number} The largest power of two that is less than or equal to the given number.
+	 */
 	floorPowerOfTwo: floorPowerOfTwo,
+	/**
+	 * Sets the given quaternion from the [Intrinsic Proper Euler Angles]{@link https://en.wikipedia.org/wiki/Euler_angles}
+	 * defined by the given angles and order.
+	 *
+	 * Rotations are applied to the axes in the order specified by order:
+	 * rotation by angle `a` is applied first, then by angle `b`, then by angle `c`.
+	 *
+	 * @static
+	 * @method
+	 * @param {Quaternion} q - The quaternion to set.
+	 * @param {number} a - The rotation applied to the first axis, in radians.
+	 * @param {number} b - The rotation applied to the second axis, in radians.
+	 * @param {number} c - The rotation applied to the third axis, in radians.
+	 * @param {('XYX'|'XZX'|'YXY'|'YZY'|'ZXZ'|'ZYZ')} order - A string specifying the axes order.
+	 */
 	setQuaternionFromProperEuler: setQuaternionFromProperEuler,
+	/**
+	 * Normalizes the given value according to the given typed array.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} value - The float value in the range `[0,1]` to normalize.
+	 * @param {TypedArray} array - The typed array that defines the data type of the value.
+	 * @return {number} The normalize value.
+	 */
 	normalize: normalize$1,
+	/**
+	 * Denormalizes the given value according to the given typed array.
+	 *
+	 * @static
+	 * @method
+	 * @param {number} value - The value to denormalize.
+	 * @param {TypedArray} array - The typed array that defines the data type of the value.
+	 * @return {number} The denormalize (float) value in the range `[0,1]`.
+	 */
 	denormalize: denormalize
 };
 
@@ -16633,9 +17959,10 @@ class ImageUtils {
 	 * Returns a data URI containing a representation of the given image.
 	 *
 	 * @param {(HTMLImageElement|HTMLCanvasElement)} image - The image object.
+	 * @param {string} [type='image/png'] - Indicates the image format.
 	 * @return {string} The data URI.
 	 */
-	static getDataURL( image ) {
+	static getDataURL( image, type = 'image/png' ) {
 
 		if ( /^data:/i.test( image.src ) ) {
 
@@ -16678,7 +18005,7 @@ class ImageUtils {
 
 		}
 
-		return canvas.toDataURL( 'image/png' );
+		return canvas.toDataURL( type );
 
 	}
 
@@ -16754,29 +18081,98 @@ class ImageUtils {
 
 let _sourceId = 0;
 
+/**
+ * Represents the data source of a texture.
+ *
+ * The main purpose of this class is to decouple the data definition from the texture
+ * definition so the same data can be used with multiple texture instances.
+ */
 class Source {
 
+	/**
+	 * Constructs a new video texture.
+	 *
+	 * @param {any} [data=null] - The data definition of a texture.
+	 */
 	constructor( data = null ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isSource = true;
 
+		/**
+		 * The ID of the source.
+		 *
+		 * @name Source#id
+		 * @type {number}
+		 * @readonly
+		 */
 		Object.defineProperty( this, 'id', { value: _sourceId ++ } );
 
+		/**
+		 * The UUID of the source.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.uuid = generateUUID();
 
+		/**
+		 * The data definition of a texture.
+		 *
+		 * @type {any}
+		 */
 		this.data = data;
+
+		/**
+		 * This property is only relevant when {@link Source#needsUpdate} is set to `true` and
+		 * provides more control on how texture data should be processed. When `dataReady` is set
+		 * to `false`, the engine performs the memory allocation (if necessary) but does not transfer
+		 * the data into the GPU memory.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.dataReady = true;
 
+		/**
+		 * This starts at `0` and counts how many times {@link Source#needsUpdate} is set to `true`.
+		 *
+		 * @type {number}
+		 * @readonly
+		 * @default 0
+		 */
 		this.version = 0;
 
 	}
 
+	/**
+	 * When the property is set to `true`, the engine allocates the memory
+	 * for the texture (if necessary) and triggers the actual texture upload
+	 * to the GPU next time the source is used.
+	 *
+	 * @type {boolean}
+	 * @default false
+	 * @param {boolean} value
+	 */
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
 
 	}
 
+	/**
+	 * Serializes the source into JSON.
+	 *
+	 * @param {?(Object|string)} meta - An optional value holding meta information about the serialization.
+	 * @return {Object} A JSON object representing the serialized source.
+	 * @see {@link ObjectLoader#parse}
+	 */
 	toJSON( meta ) {
 
 		const isRootObject = ( meta === undefined || typeof meta === 'string' );
@@ -16896,11 +18292,11 @@ class Texture extends EventDispatcher {
 	 * @param {number} [wrapS=ClampToEdgeWrapping] - The wrapS value.
 	 * @param {number} [wrapT=ClampToEdgeWrapping] - The wrapT value.
 	 * @param {number} [magFilter=LinearFilter] - The mag filter value.
-	 * @param {number} [minFilter=LinearFilter] - The min filter value.
-	 * @param {number} [format=RGBAFormat] - The min filter value.
-	 * @param {number} [type=UnsignedByteType] - The min filter value.
-	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The min filter value.
-	 * @param {string} [colorSpace=NoColorSpace] - The min filter value.
+	 * @param {number} [minFilter=LinearMipmapLinearFilter] - The min filter value.
+	 * @param {number} [format=RGBAFormat] - The texture format.
+	 * @param {number} [type=UnsignedByteType] - The texture type.
+	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The anisotropy value.
+	 * @param {string} [colorSpace=NoColorSpace] - The color space.
 	 */
 	constructor( image = Texture.DEFAULT_IMAGE, mapping = Texture.DEFAULT_MAPPING, wrapS = ClampToEdgeWrapping, wrapT = ClampToEdgeWrapping, magFilter = LinearFilter, minFilter = LinearMipmapLinearFilter, format = RGBAFormat, type = UnsignedByteType, anisotropy = Texture.DEFAULT_ANISOTROPY, colorSpace = NoColorSpace ) {
 
@@ -17199,6 +18595,15 @@ class Texture extends EventDispatcher {
 		this.isRenderTargetTexture = false;
 
 		/**
+		 * Indicates if a texture should be handled like a texture array.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default false
+		 */
+		this.isTextureArray = false;
+
+		/**
 		 * Indicates whether this texture should be processed by `PMREMGenerator` or not
 		 * (only relevant for render target textures).
 		 *
@@ -17292,6 +18697,7 @@ class Texture extends EventDispatcher {
 
 		this.renderTarget = source.renderTarget;
 		this.isRenderTargetTexture = source.isRenderTargetTexture;
+		this.isTextureArray = source.isTextureArray;
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 
@@ -18601,29 +20007,111 @@ class Vector4 {
 
 }
 
-/*
- In options, we can specify:
- * Texture parameters for an auto-generated target texture
- * depthBuffer/stencilBuffer: Booleans to indicate if we should generate these buffers
-*/
+/**
+ * A render target is a buffer where the video card draws pixels for a scene
+ * that is being rendered in the background. It is used in different effects,
+ * such as applying postprocessing to a rendered image before displaying it
+ * on the screen.
+ *
+ * @augments EventDispatcher
+ */
 class RenderTarget extends EventDispatcher {
 
+	/**
+	 * Render target options.
+	 *
+	 * @typedef {Object} RenderTarget~Options
+	 * @property {boolean} [generateMipmaps=false] - Whether to generate mipmaps or not.
+	 * @property {number} [magFilter=LinearFilter] - The mag filter.
+	 * @property {number} [minFilter=LinearFilter] - The min filter.
+	 * @property {number} [format=RGBAFormat] - The texture format.
+	 * @property {number} [type=UnsignedByteType] - The texture type.
+	 * @property {?string} [internalFormat=null] - The texture's internal format.
+	 * @property {number} [wrapS=ClampToEdgeWrapping] - The texture's uv wrapping mode.
+	 * @property {number} [wrapT=ClampToEdgeWrapping] - The texture's uv wrapping mode.
+	 * @property {number} [anisotropy=1] - The texture's anisotropy value.
+	 * @property {string} [colorSpace=NoColorSpace] - The texture's color space.
+	 * @property {boolean} [depthBuffer=true] - Whether to allocate a depth buffer or not.
+	 * @property {boolean} [stencilBuffer=false] - Whether to allocate a stencil buffer or not.
+	 * @property {boolean} [resolveDepthBuffer=true] - Whether to resolve the depth buffer or not.
+	 * @property {boolean} [resolveStencilBuffer=true] - Whether  to resolve the stencil buffer or not.
+	 * @property {?Texture} [depthTexture=null] - Reference to a depth texture.
+	 * @property {number} [samples=0] - The MSAA samples count.
+	 * @property {number} [count=1] - Defines the number of color attachments . Must be at least `1`.
+	 * @property {boolean} [multiview=false] - Whether this target is used for multiview rendering.
+	 */
+
+	/**
+	 * Constructs a new render target.
+	 *
+	 * @param {number} [width=1] - The width of the render target.
+	 * @param {number} [height=1] - The height of the render target.
+	 * @param {RenderTarget~Options} [options] - The configuration object.
+	 */
 	constructor( width = 1, height = 1, options = {} ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isRenderTarget = true;
 
+		/**
+		 * The width of the render target.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.width = width;
-		this.height = height;
-		this.depth = 1;
 
+		/**
+		 * The height of the render target.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
+		this.height = height;
+
+		/**
+		 * The depth of the render target.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
+		this.depth = options.depth ? options.depth : 1;
+
+		/**
+		 * A rectangular area inside the render target's viewport. Fragments that are
+		 * outside the area will be discarded.
+		 *
+		 * @type {Vector4}
+		 * @default (0,0,width,height)
+		 */
 		this.scissor = new Vector4( 0, 0, width, height );
+
+		/**
+		 * Indicates whether the scissor test should be enabled when rendering into
+		 * this render target or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.scissorTest = false;
 
+		/**
+		 * A rectangular area representing the render target's viewport.
+		 *
+		 * @type {Vector4}
+		 * @default (0,0,width,height)
+		 */
 		this.viewport = new Vector4( 0, 0, width, height );
 
-		const image = { width: width, height: height, depth: 1 };
+		const image = { width: width, height: height, depth: this.depth };
 
 		options = Object.assign( {
 			generateMipmaps: false,
@@ -18635,7 +20123,8 @@ class RenderTarget extends EventDispatcher {
 			resolveStencilBuffer: true,
 			depthTexture: null,
 			samples: 0,
-			count: 1
+			count: 1,
+			multiview: false
 		}, options );
 
 		const texture = new Texture( image, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.colorSpace );
@@ -18644,6 +20133,12 @@ class RenderTarget extends EventDispatcher {
 		texture.generateMipmaps = options.generateMipmaps;
 		texture.internalFormat = options.internalFormat;
 
+		/**
+		 * An array of textures. Each color attachment is represented as a separate texture.
+		 * Has at least a single entry for the default color attachment.
+		 *
+		 * @type {Array<Texture>}
+		 */
 		this.textures = [];
 
 		const count = options.count;
@@ -18655,19 +20150,66 @@ class RenderTarget extends EventDispatcher {
 
 		}
 
+		/**
+		 * Whether to allocate a depth buffer or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.depthBuffer = options.depthBuffer;
+
+		/**
+		 * Whether to allocate a stencil buffer or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.stencilBuffer = options.stencilBuffer;
 
+		/**
+		 * Whether to resolve the depth buffer or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.resolveDepthBuffer = options.resolveDepthBuffer;
+
+		/**
+		 * Whether to resolve the stencil buffer or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.resolveStencilBuffer = options.resolveStencilBuffer;
 
 		this._depthTexture = null;
 		this.depthTexture = options.depthTexture;
 
+		/**
+		 * The number of MSAA samples.
+		 *
+		 * A value of `0` disables MSAA.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.samples = options.samples;
+
+		/**
+		 * Whether to this target is used in multiview rendering.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.multiview = options.multiview;
 
 	}
 
+	/**
+	 * The texture representing the default color attachment.
+	 *
+	 * @type {Texture}
+	 */
 	get texture() {
 
 		return this.textures[ 0 ];
@@ -18689,12 +20231,27 @@ class RenderTarget extends EventDispatcher {
 
 	}
 
+	/**
+	 * Instead of saving the depth in a renderbuffer, a texture
+	 * can be used instead which is useful for further processing
+	 * e.g. in context of post-processing.
+	 *
+	 * @type {?DepthTexture}
+	 * @default null
+	 */
 	get depthTexture() {
 
 		return this._depthTexture;
 
 	}
 
+	/**
+	 * Sets the size of this render target.
+	 *
+	 * @param {number} width - The width.
+	 * @param {number} height - The height.
+	 * @param {number} [depth=1] - The depth.
+	 */
 	setSize( width, height, depth = 1 ) {
 
 		if ( this.width !== width || this.height !== height || this.depth !== depth ) {
@@ -18720,12 +20277,25 @@ class RenderTarget extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a new render target with copied values from this instance.
+	 *
+	 * @return {RenderTarget} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the settings of the given render target. This is a structural copy so
+	 * no resources are shared between render targets after the copy. That includes
+	 * all MRT textures and the depth texture.
+	 *
+	 * @param {RenderTarget} source - The render target to copy.
+	 * @return {RenderTarget} A reference to this instance.
+	 */
 	copy( source ) {
 
 		this.width = source.width;
@@ -18766,6 +20336,12 @@ class RenderTarget extends EventDispatcher {
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 *
+	 * @fires RenderTarget#dispose
+	 */
 	dispose() {
 
 		this.dispatchEvent( { type: 'dispose' } );
@@ -18774,12 +20350,31 @@ class RenderTarget extends EventDispatcher {
 
 }
 
+/**
+ * A render target used in context of {@link WebGLRenderer}.
+ *
+ * @augments RenderTarget
+ */
 class WebGLRenderTarget extends RenderTarget {
 
+	/**
+	 * Constructs a new 3D render target.
+	 *
+	 * @param {number} [width=1] - The width of the render target.
+	 * @param {number} [height=1] - The height of the render target.
+	 * @param {RenderTarget~Options} [options] - The configuration object.
+	 */
 	constructor( width = 1, height = 1, options = {} ) {
 
 		super( width, height, options );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isWebGLRenderTarget = true;
 
 	}
@@ -19343,7 +20938,7 @@ class Color {
 	 * Converts the colors RGB values into the HSL format and stores them into the
 	 * given target object.
 	 *
-	 * @param {{h:0,s:0,l:0}} target - The target object that is used to store the method's result.
+	 * @param {{h:number,s:number,l:number}} target - The target object that is used to store the method's result.
 	 * @param {string} [colorSpace=ColorManagement.workingColorSpace] - The color space.
 	 * @return {{h:number,s:number,l:number}} The HSL representation of this color.
 	 */
@@ -25294,8 +26889,23 @@ const _vector2 = /*@__PURE__*/ new Vector2();
 
 let _id$2 = 0;
 
+/**
+ * This class stores data for an attribute (such as vertex positions, face
+ * indices, normals, colors, UVs, and any custom attributes ) associated with
+ * a geometry, which allows for more efficient passing of data to the GPU.
+ *
+ * When working with vector-like data, the `fromBufferAttribute( attribute, index )`
+ * helper methods on vector and color class might be helpful. E.g. {@link Vector3#fromBufferAttribute}.
+ */
 class BufferAttribute {
 
+	/**
+	 * Constructs a new buffer attribute.
+	 *
+	 * @param {TypedArray} array - The array holding the attribute data.
+	 * @param {number} itemSize - The item size.
+	 * @param {boolean} [normalized=false] - Whether the data are normalized or not.
+	 */
 	constructor( array, itemSize, normalized = false ) {
 
 		if ( Array.isArray( array ) ) {
@@ -25304,33 +26914,133 @@ class BufferAttribute {
 
 		}
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isBufferAttribute = true;
 
+		/**
+		 * The ID of the buffer attribute.
+		 *
+		 * @name BufferAttribute#id
+		 * @type {number}
+		 * @readonly
+		 */
 		Object.defineProperty( this, 'id', { value: _id$2 ++ } );
 
+		/**
+		 * The name of the buffer attribute.
+		 *
+		 * @type {string}
+		 */
 		this.name = '';
 
+		/**
+		 * The array holding the attribute data. It should have `itemSize * numVertices`
+		 * elements, where `numVertices` is the number of vertices in the associated geometry.
+		 *
+		 * @type {TypedArray}
+		 */
 		this.array = array;
+
+		/**
+		 * The number of values of the array that should be associated with a particular vertex.
+		 * For instance, if this attribute is storing a 3-component vector (such as a position,
+		 * normal, or color), then the value should be `3`.
+		 *
+		 * @type {number}
+		 */
 		this.itemSize = itemSize;
+
+		/**
+		 * Represents the number of items this buffer attribute stores. It is internally computed
+		 * by dividing the `array` length by the `itemSize`.
+		 *
+		 * @type {number}
+		 * @readonly
+		 */
 		this.count = array !== undefined ? array.length / itemSize : 0;
+
+		/**
+		 * Applies to integer data only. Indicates how the underlying data in the buffer maps to
+		 * the values in the GLSL code. For instance, if `array` is an instance of `UInt16Array`,
+		 * and `normalized` is `true`, the values `0 -+65535` in the array data will be mapped to
+		 * `0.0f - +1.0f` in the GLSL attribute. If `normalized` is `false`, the values will be converted
+		 * to floats unmodified, i.e. `65535` becomes `65535.0f`.
+		 *
+		 * @type {boolean}
+		 */
 		this.normalized = normalized;
 
+		/**
+		 * Defines the intended usage pattern of the data store for optimization purposes.
+		 *
+		 * Note: After the initial use of a buffer, its usage cannot be changed. Instead,
+		 * instantiate a new one and set the desired usage before the next render.
+		 *
+		 * @type {(StaticDrawUsage|DynamicDrawUsage|StreamDrawUsage|StaticReadUsage|DynamicReadUsage|StreamReadUsage|StaticCopyUsage|DynamicCopyUsage|StreamCopyUsage)}
+		 * @default StaticDrawUsage
+		 */
 		this.usage = StaticDrawUsage;
+
+		/**
+		 * This can be used to only update some components of stored vectors (for example, just the
+		 * component related to color). Use the `addUpdateRange()` function to add ranges to this array.
+		 *
+		 * @type {Array<Object>}
+		 */
 		this.updateRanges = [];
+
+		/**
+		 * Configures the bound GPU type for use in shaders.
+		 *
+		 * Note: this only has an effect for integer arrays and is not configurable for float arrays.
+		 * For lower precision float types, use `Float16BufferAttribute`.
+		 *
+		 * @type {(FloatType|IntType)}
+		 * @default FloatType
+		 */
 		this.gpuType = FloatType;
 
+		/**
+		 * A version number, incremented every time the `needsUpdate` is set to `true`.
+		 *
+		 * @type {number}
+		 */
 		this.version = 0;
 
 	}
 
+	/**
+	 * A callback function that is executed after the renderer has transferred the attribute
+	 * array data to the GPU.
+	 */
 	onUploadCallback() {}
 
+	/**
+	 * Flag to indicate that this attribute has changed and should be re-sent to
+	 * the GPU. Set this to `true` when you modify the value of the array.
+	 *
+	 * @type {number}
+	 * @default false
+	 * @param {boolean} value
+	 */
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
 
 	}
 
+	/**
+	 * Sets the usage of this buffer attribute.
+	 *
+	 * @param {(StaticDrawUsage|DynamicDrawUsage|StreamDrawUsage|StaticReadUsage|DynamicReadUsage|StreamReadUsage|StaticCopyUsage|DynamicCopyUsage|StreamCopyUsage)} value - The usage to set.
+	 * @return {BufferAttribute} A reference to this buffer attribute.
+	 */
 	setUsage( value ) {
 
 		this.usage = value;
@@ -25339,18 +27049,33 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Adds a range of data in the data array to be updated on the GPU.
+	 *
+	 * @param {number} start - Position at which to start update.
+	 * @param {number} count - The number of components to update.
+	 */
 	addUpdateRange( start, count ) {
 
 		this.updateRanges.push( { start, count } );
 
 	}
 
+	/**
+	 * Clears the update ranges.
+	 */
 	clearUpdateRanges() {
 
 		this.updateRanges.length = 0;
 
 	}
 
+	/**
+	 * Copies the values of the given buffer attribute to this instance.
+	 *
+	 * @param {BufferAttribute} source - The buffer attribute to copy.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	copy( source ) {
 
 		this.name = source.name;
@@ -25366,6 +27091,16 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Copies a vector from the given buffer attribute to this one. The start
+	 * and destination position in the attribute buffers are represented by the
+	 * given indices.
+	 *
+	 * @param {number} index1 - The destination index into this buffer attribute.
+	 * @param {BufferAttribute} attribute - The buffer attribute to copy from.
+	 * @param {number} index2 - The source index into the given buffer attribute.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	copyAt( index1, attribute, index2 ) {
 
 		index1 *= this.itemSize;
@@ -25381,6 +27116,12 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Copies the given array data into this buffer attribute.
+	 *
+	 * @param {(TypedArray|Array)} array - The array to copy.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	copyArray( array ) {
 
 		this.array.set( array );
@@ -25389,6 +27130,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Applies the given 3x3 matrix to the given attribute. Works with
+	 * item size `2` and `3`.
+	 *
+	 * @param {Matrix3} m - The matrix to apply.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	applyMatrix3( m ) {
 
 		if ( this.itemSize === 2 ) {
@@ -25419,6 +27167,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Applies the given 4x4 matrix to the given attribute. Only works with
+	 * item size `3`.
+	 *
+	 * @param {Matrix4} m - The matrix to apply.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	applyMatrix4( m ) {
 
 		for ( let i = 0, l = this.count; i < l; i ++ ) {
@@ -25435,6 +27190,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Applies the given 3x3 normal matrix to the given attribute. Only works with
+	 * item size `3`.
+	 *
+	 * @param {Matrix3} m - The normal matrix to apply.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	applyNormalMatrix( m ) {
 
 		for ( let i = 0, l = this.count; i < l; i ++ ) {
@@ -25451,6 +27213,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Applies the given 4x4 matrix to the given attribute. Only works with
+	 * item size `3` and with direction vectors.
+	 *
+	 * @param {Matrix4} m - The matrix to apply.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	transformDirection( m ) {
 
 		for ( let i = 0, l = this.count; i < l; i ++ ) {
@@ -25467,6 +27236,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the given array data in the buffer attribute.
+	 *
+	 * @param {(TypedArray|Array)} value - The array data to set.
+	 * @param {number} [offset=0] - The offset in this buffer attribute's array.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	set( value, offset = 0 ) {
 
 		// Matching BufferAttribute constructor, do not normalize the array.
@@ -25476,6 +27252,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Returns the given component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} component - The component index.
+	 * @return {number} The returned value.
+	 */
 	getComponent( index, component ) {
 
 		let value = this.array[ index * this.itemSize + component ];
@@ -25486,6 +27269,14 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the given value to the given component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} component - The component index.
+	 * @param {number} value - The value to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setComponent( index, component, value ) {
 
 		if ( this.normalized ) value = normalize$1( value, this.array );
@@ -25496,6 +27287,12 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Returns the x component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @return {number} The x component.
+	 */
 	getX( index ) {
 
 		let x = this.array[ index * this.itemSize ];
@@ -25506,6 +27303,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the x component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} x - The value to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setX( index, x ) {
 
 		if ( this.normalized ) x = normalize$1( x, this.array );
@@ -25516,6 +27320,12 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Returns the y component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @return {number} The y component.
+	 */
 	getY( index ) {
 
 		let y = this.array[ index * this.itemSize + 1 ];
@@ -25526,6 +27336,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the y component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} y - The value to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setY( index, y ) {
 
 		if ( this.normalized ) y = normalize$1( y, this.array );
@@ -25536,6 +27353,12 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Returns the z component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @return {number} The z component.
+	 */
 	getZ( index ) {
 
 		let z = this.array[ index * this.itemSize + 2 ];
@@ -25546,6 +27369,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the z component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} z - The value to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setZ( index, z ) {
 
 		if ( this.normalized ) z = normalize$1( z, this.array );
@@ -25556,6 +27386,12 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Returns the w component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @return {number} The w component.
+	 */
 	getW( index ) {
 
 		let w = this.array[ index * this.itemSize + 3 ];
@@ -25566,6 +27402,13 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the w component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} w - The value to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setW( index, w ) {
 
 		if ( this.normalized ) w = normalize$1( w, this.array );
@@ -25576,6 +27419,14 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the x and y component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} x - The value for the x component to set.
+	 * @param {number} y - The value for the y component to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setXY( index, x, y ) {
 
 		index *= this.itemSize;
@@ -25594,6 +27445,15 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the x, y and z component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} x - The value for the x component to set.
+	 * @param {number} y - The value for the y component to set.
+	 * @param {number} z - The value for the z component to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setXYZ( index, x, y, z ) {
 
 		index *= this.itemSize;
@@ -25614,6 +27474,16 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the x, y, z and w component of the vector at the given index.
+	 *
+	 * @param {number} index - The index into the buffer attribute.
+	 * @param {number} x - The value for the x component to set.
+	 * @param {number} y - The value for the y component to set.
+	 * @param {number} z - The value for the z component to set.
+	 * @param {number} w - The value for the w component to set.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	setXYZW( index, x, y, z, w ) {
 
 		index *= this.itemSize;
@@ -25636,6 +27506,14 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Sets the given callback function that is executed after the Renderer has transferred
+	 * the attribute array data to the GPU. Can be used to perform clean-up operations after
+	 * the upload when attribute data are not needed anymore on the CPU side.
+	 *
+	 * @param {Function} callback - The `onUpload()` callback.
+	 * @return {BufferAttribute} A reference to this instance.
+	 */
 	onUpload( callback ) {
 
 		this.onUploadCallback = callback;
@@ -25644,12 +27522,22 @@ class BufferAttribute {
 
 	}
 
+	/**
+	 * Returns a new buffer attribute with copied values from this instance.
+	 *
+	 * @return {BufferAttribute} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor( this.array, this.itemSize ).copy( this );
 
 	}
 
+	/**
+	 * Serializes the buffer attribute into JSON.
+	 *
+	 * @return {Object} A JSON object representing the serialized buffer attribute.
+	 */
 	toJSON() {
 
 		const data = {
@@ -25668,8 +27556,21 @@ class BufferAttribute {
 
 }
 
+/**
+ * Convenient class that can be used when creating a `UInt16` buffer attribute with
+ * a plain `Array` instance.
+ *
+ * @augments BufferAttribute
+ */
 class Uint16BufferAttribute extends BufferAttribute {
 
+	/**
+	 * Constructs a new buffer attribute.
+	 *
+	 * @param {(Array<number>|Uint16Array)} array - The array holding the attribute data.
+	 * @param {number} itemSize - The item size.
+	 * @param {boolean} [normalized=false] - Whether the data are normalized or not.
+	 */
 	constructor( array, itemSize, normalized ) {
 
 		super( new Uint16Array( array ), itemSize, normalized );
@@ -25678,8 +27579,21 @@ class Uint16BufferAttribute extends BufferAttribute {
 
 }
 
+/**
+ * Convenient class that can be used when creating a `UInt32` buffer attribute with
+ * a plain `Array` instance.
+ *
+ * @augments BufferAttribute
+ */
 class Uint32BufferAttribute extends BufferAttribute {
 
+	/**
+	 * Constructs a new buffer attribute.
+	 *
+	 * @param {(Array<number>|Uint32Array)} array - The array holding the attribute data.
+	 * @param {number} itemSize - The item size.
+	 * @param {boolean} [normalized=false] - Whether the data are normalized or not.
+	 */
 	constructor( array, itemSize, normalized ) {
 
 		super( new Uint32Array( array ), itemSize, normalized );
@@ -25688,9 +27602,21 @@ class Uint32BufferAttribute extends BufferAttribute {
 
 }
 
-
+/**
+ * Convenient class that can be used when creating a `Float32` buffer attribute with
+ * a plain `Array` instance.
+ *
+ * @augments BufferAttribute
+ */
 class Float32BufferAttribute extends BufferAttribute {
 
+	/**
+	 * Constructs a new buffer attribute.
+	 *
+	 * @param {(Array<number>|Float32Array)} array - The array holding the attribute data.
+	 * @param {number} itemSize - The item size.
+	 * @param {boolean} [normalized=false] - Whether the data are normalized or not.
+	 */
 	constructor( array, itemSize, normalized ) {
 
 		super( new Float32Array( array ), itemSize, normalized );
@@ -26142,59 +28068,120 @@ class Euler {
  */
 Euler.DEFAULT_ORDER = 'XYZ';
 
+/**
+ * A layers object assigns an 3D object to 1 or more of 32
+ * layers numbered `0` to `31` - internally the layers are stored as a
+ * bit mask], and by default all 3D objects are a member of layer `0`.
+ *
+ * This can be used to control visibility - an object must share a layer with
+ * a camera to be visible when that camera's view is
+ * rendered.
+ *
+ * All classes that inherit from {@link Object3D} have an `layers` property which
+ * is an instance of this class.
+ */
 class Layers {
 
+	/**
+	 * Constructs a new layers instance, with membership
+	 * initially set to layer `0`.
+	 */
 	constructor() {
 
+		/**
+		 * A bit mask storing which of the 32 layers this layers object is currently
+		 * a member of.
+		 *
+		 * @type {number}
+		 */
 		this.mask = 1 | 0;
 
 	}
 
-	set( channel ) {
+	/**
+	 * Sets membership to the given layer, and remove membership all other layers.
+	 *
+	 * @param {number} layer - The layer to set.
+	 */
+	set( layer ) {
 
-		this.mask = ( 1 << channel | 0 ) >>> 0;
+		this.mask = ( 1 << layer | 0 ) >>> 0;
 
 	}
 
-	enable( channel ) {
+	/**
+	 * Adds membership of the given layer.
+	 *
+	 * @param {number} layer - The layer to enable.
+	 */
+	enable( layer ) {
 
-		this.mask |= 1 << channel | 0;
+		this.mask |= 1 << layer | 0;
 
 	}
 
+	/**
+	 * Adds membership to all layers.
+	 */
 	enableAll() {
 
 		this.mask = 0xffffffff | 0;
 
 	}
 
-	toggle( channel ) {
+	/**
+	 * Toggles the membership of the given layer.
+	 *
+	 * @param {number} layer - The layer to toggle.
+	 */
+	toggle( layer ) {
 
-		this.mask ^= 1 << channel | 0;
+		this.mask ^= 1 << layer | 0;
 
 	}
 
-	disable( channel ) {
+	/**
+	 * Removes membership of the given layer.
+	 *
+	 * @param {number} layer - The layer to enable.
+	 */
+	disable( layer ) {
 
-		this.mask &= ~ ( 1 << channel | 0 );
+		this.mask &= ~ ( 1 << layer | 0 );
 
 	}
 
+	/**
+	 * Removes the membership from all layers.
+	 */
 	disableAll() {
 
 		this.mask = 0;
 
 	}
 
+	/**
+	 * Returns `true` if this and the given layers object have at least one
+	 * layer in common.
+	 *
+	 * @param {Layers} layers - The layers to test.
+	 * @return {boolean } Whether this and the given layers object have at least one layer in common or not.
+	 */
 	test( layers ) {
 
 		return ( this.mask & layers.mask ) !== 0;
 
 	}
 
-	isEnabled( channel ) {
+	/**
+	 * Returns `true` if the given layer is enabled.
+	 *
+	 * @param {number} layer - The layer to test.
+	 * @return {boolean } Whether the given layer is enabled or not.
+	 */
+	isEnabled( layer ) {
 
-		return ( this.mask & ( 1 << channel | 0 ) ) !== 0;
+		return ( this.mask & ( 1 << layer | 0 ) ) !== 0;
 
 	}
 
@@ -26522,6 +28509,29 @@ class Object3D extends EventDispatcher {
 		 * @type {Array<AnimationClip>}
 		 */
 		this.animations = [];
+
+		/**
+		 * Custom depth material to be used when rendering to the depth map. Can only be used
+		 * in context of meshes. When shadow-casting with a {@link DirectionalLight} or {@link SpotLight},
+		 * if you are modifying vertex positions in the vertex shader you must specify a custom depth
+		 * material for proper shadows.
+		 *
+		 * Only relevant in context of {@link WebGLRenderer}.
+		 *
+		 * @type {(Material|undefined)}
+		 * @default undefined
+		 */
+		this.customDepthMaterial = undefined;
+
+		/**
+		 * Same as {@link Object3D#customDepthMaterial}, but used with {@link PointLight}.
+		 *
+		 * Only relevant in context of {@link WebGLRenderer}.
+		 *
+		 * @type {(Material|undefined)}
+		 * @default undefined
+		 */
+		this.customDistanceMaterial = undefined;
 
 		/**
 		 * An object that can be used to store custom data about the 3D object. It
@@ -27464,34 +29474,47 @@ class Object3D extends EventDispatcher {
 			object.drawRanges = this._drawRanges;
 			object.reservedRanges = this._reservedRanges;
 
-			object.visibility = this._visibility;
-			object.active = this._active;
-			object.bounds = this._bounds.map( bound => ( {
-				boxInitialized: bound.boxInitialized,
-				boxMin: bound.box.min.toArray(),
-				boxMax: bound.box.max.toArray(),
-
-				sphereInitialized: bound.sphereInitialized,
-				sphereRadius: bound.sphere.radius,
-				sphereCenter: bound.sphere.center.toArray()
+			object.geometryInfo = this._geometryInfo.map( info => ( {
+				...info,
+				boundingBox: info.boundingBox ? {
+					min: info.boundingBox.min.toArray(),
+					max: info.boundingBox.max.toArray()
+				} : undefined,
+				boundingSphere: info.boundingSphere ? {
+					radius: info.boundingSphere.radius,
+					center: info.boundingSphere.center.toArray()
+				} : undefined
 			} ) );
+			object.instanceInfo = this._instanceInfo.map( info => ( { ...info } ) );
+
+			object.availableInstanceIds = this._availableInstanceIds.slice();
+			object.availableGeometryIds = this._availableGeometryIds.slice();
+
+			object.nextIndexStart = this._nextIndexStart;
+			object.nextVertexStart = this._nextVertexStart;
+			object.geometryCount = this._geometryCount;
 
 			object.maxInstanceCount = this._maxInstanceCount;
 			object.maxVertexCount = this._maxVertexCount;
 			object.maxIndexCount = this._maxIndexCount;
 
 			object.geometryInitialized = this._geometryInitialized;
-			object.geometryCount = this._geometryCount;
 
 			object.matricesTexture = this._matricesTexture.toJSON( meta );
 
-			if ( this._colorsTexture !== null ) object.colorsTexture = this._colorsTexture.toJSON( meta );
+			object.indirectTexture = this._indirectTexture.toJSON( meta );
+
+			if ( this._colorsTexture !== null ) {
+
+				object.colorsTexture = this._colorsTexture.toJSON( meta );
+
+			}
 
 			if ( this.boundingSphere !== null ) {
 
 				object.boundingSphere = {
-					center: object.boundingSphere.center.toArray(),
-					radius: object.boundingSphere.radius
+					center: this.boundingSphere.center.toArray(),
+					radius: this.boundingSphere.radius
 				};
 
 			}
@@ -27499,8 +29522,8 @@ class Object3D extends EventDispatcher {
 			if ( this.boundingBox !== null ) {
 
 				object.boundingBox = {
-					min: object.boundingBox.min.toArray(),
-					max: object.boundingBox.max.toArray()
+					min: this.boundingBox.min.toArray(),
+					max: this.boundingBox.max.toArray()
 				};
 
 			}
@@ -27793,45 +29816,191 @@ const _box$1 = /*@__PURE__*/ new Box3();
 const _boxMorphTargets = /*@__PURE__*/ new Box3();
 const _vector$4 = /*@__PURE__*/ new Vector3();
 
+/**
+ * A representation of mesh, line, or point geometry. Includes vertex
+ * positions, face indices, normals, colors, UVs, and custom attributes
+ * within buffers, reducing the cost of passing all this data to the GPU.
+ *
+ * ```js
+ * const geometry = new THREE.BufferGeometry();
+ * // create a simple square shape. We duplicate the top left and bottom right
+ * // vertices because each vertex needs to appear once per triangle.
+ * const vertices = new Float32Array( [
+ * 	-1.0, -1.0,  1.0, // v0
+ * 	 1.0, -1.0,  1.0, // v1
+ * 	 1.0,  1.0,  1.0, // v2
+ *
+ * 	 1.0,  1.0,  1.0, // v3
+ * 	-1.0,  1.0,  1.0, // v4
+ * 	-1.0, -1.0,  1.0  // v5
+ * ] );
+ * // itemSize = 3 because there are 3 values (components) per vertex
+ * geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+ * const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+ * const mesh = new THREE.Mesh( geometry, material );
+ * ```
+ *
+ * @augments EventDispatcher
+ */
 class BufferGeometry extends EventDispatcher {
 
+	/**
+	 * Constructs a new geometry.
+	 */
 	constructor() {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isBufferGeometry = true;
 
+		/**
+		 * The ID of the geometry.
+		 *
+		 * @name BufferGeometry#id
+		 * @type {number}
+		 * @readonly
+		 */
 		Object.defineProperty( this, 'id', { value: _id$1 ++ } );
 
+		/**
+		 * The UUID of the geometry.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.uuid = generateUUID();
 
+		/**
+		 * The name of the geometry.
+		 *
+		 * @type {string}
+		 */
 		this.name = '';
 		this.type = 'BufferGeometry';
 
+		/**
+		 * Allows for vertices to be re-used across multiple triangles; this is
+		 * called using "indexed triangles". Each triangle is associated with the
+		 * indices of three vertices. This attribute therefore stores the index of
+		 * each vertex for each triangular face. If this attribute is not set, the
+		 * renderer assumes that each three contiguous positions represent a single triangle.
+		 *
+		 * @type {?BufferAttribute}
+		 * @default null
+		 */
 		this.index = null;
+
+		/**
+		 * A (storage) buffer attribute which was generated with a compute shader and
+		 * now defines indirect draw calls.
+		 *
+		 * Can only be used with {@link WebGPURenderer} and a WebGPU backend.
+		 *
+		 * @type {?BufferAttribute}
+		 * @default null
+		 */
 		this.indirect = null;
+
+		/**
+		 * This dictionary has as id the name of the attribute to be set and as value
+		 * the buffer attribute to set it to. Rather than accessing this property directly,
+		 * use `setAttribute()` and `getAttribute()` to access attributes of this geometry.
+		 *
+		 * @type {Object<string,(BufferAttribute|InterleavedBufferAttribute)>}
+		 */
 		this.attributes = {};
 
+		/**
+		 * This dictionary holds the morph targets of the geometry.
+		 *
+		 * Note: Once the geometry has been rendered, the morph attribute data cannot
+		 * be changed. You will have to call `dispose()?, and create a new geometry instance.
+		 *
+		 * @type {Object}
+		 */
 		this.morphAttributes = {};
+
+		/**
+		 * Used to control the morph target behavior; when set to `true`, the morph
+		 * target data is treated as relative offsets, rather than as absolute
+		 * positions/normals.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.morphTargetsRelative = false;
 
+		/**
+		 * Split the geometry into groups, each of which will be rendered in a
+		 * separate draw call. This allows an array of materials to be used with the geometry.
+		 *
+		 * Use `addGroup()` and `clearGroups()` to edit groups, rather than modifying this array directly.
+		 *
+		 * Every vertex and index must belong to exactly one group — groups must not share vertices or
+		 * indices, and must not leave vertices or indices unused.
+		 *
+		 * @type {Array<Object>}
+		 */
 		this.groups = [];
 
+		/**
+		 * Bounding box for the geometry which can be calculated with `computeBoundingBox()`.
+		 *
+		 * @type {Box3}
+		 * @default null
+		 */
 		this.boundingBox = null;
+
+		/**
+		 * Bounding sphere for the geometry which can be calculated with `computeBoundingSphere()`.
+		 *
+		 * @type {Sphere}
+		 * @default null
+		 */
 		this.boundingSphere = null;
 
+		/**
+		 * Determines the part of the geometry to render. This should not be set directly,
+		 * instead use `setDrawRange()`.
+		 *
+		 * @type {{start:number,count:number}}
+		 */
 		this.drawRange = { start: 0, count: Infinity };
 
+		/**
+		 * An object that can be used to store custom data about the geometry.
+		 * It should not hold references to functions as these will not be cloned.
+		 *
+		 * @type {Object}
+		 */
 		this.userData = {};
 
 	}
 
+	/**
+	 * Returns the index of this geometry.
+	 *
+	 * @return {?BufferAttribute} The index. Returns `null` if no index is defined.
+	 */
 	getIndex() {
 
 		return this.index;
 
 	}
 
+	/**
+	 * Sets the given index to this geometry.
+	 *
+	 * @param {Array<number>|BufferAttribute} index - The index to set.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	setIndex( index ) {
 
 		if ( Array.isArray( index ) ) {
@@ -27848,6 +30017,12 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Sets the given indirect attribute to this geometry.
+	 *
+	 * @param {BufferAttribute} indirect - The attribute holding indirect draw calls.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	setIndirect( indirect ) {
 
 		this.indirect = indirect;
@@ -27856,18 +30031,37 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns the indirect attribute of this geometry.
+	 *
+	 * @return {?BufferAttribute} The indirect attribute. Returns `null` if no indirect attribute is defined.
+	 */
 	getIndirect() {
 
 		return this.indirect;
 
 	}
 
+	/**
+	 * Returns the buffer attribute for the given name.
+	 *
+	 * @param {string} name - The attribute name.
+	 * @return {BufferAttribute|InterleavedBufferAttribute|undefined} The buffer attribute.
+	 * Returns `undefined` if not attribute has been found.
+	 */
 	getAttribute( name ) {
 
 		return this.attributes[ name ];
 
 	}
 
+	/**
+	 * Sets the given attribute for the given name.
+	 *
+	 * @param {string} name - The attribute name.
+	 * @param {BufferAttribute|InterleavedBufferAttribute} attribute - The attribute to set.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	setAttribute( name, attribute ) {
 
 		this.attributes[ name ] = attribute;
@@ -27876,6 +30070,12 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Deletes the attribute for the given name.
+	 *
+	 * @param {string} name - The attribute name to delete.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	deleteAttribute( name ) {
 
 		delete this.attributes[ name ];
@@ -27884,12 +30084,26 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns `true` if this geometry has an attribute for the given name.
+	 *
+	 * @param {string} name - The attribute name.
+	 * @return {boolean} Whether this geometry has an attribute for the given name or not.
+	 */
 	hasAttribute( name ) {
 
 		return this.attributes[ name ] !== undefined;
 
 	}
 
+	/**
+	 * Adds a group to this geometry.
+	 *
+	 * @param {number} start - The first element in this draw call. That is the first
+	 * vertex for non-indexed geometry, otherwise the first triangle index.
+	 * @param {number} count - Specifies how many vertices (or indices) are part of this group.
+	 * @param {number} [materialIndex=0] - The material array index to use.
+	 */
 	addGroup( start, count, materialIndex = 0 ) {
 
 		this.groups.push( {
@@ -27902,12 +30116,22 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Clears all groups.
+	 */
 	clearGroups() {
 
 		this.groups = [];
 
 	}
 
+	/**
+	 * Sets the draw range for this geometry.
+	 *
+	 * @param {number} start - The first vertex for non-indexed geometry, otherwise the first triangle index.
+	 * @param {number} count - For non-indexed BufferGeometry, `count` is the number of vertices to render.
+	 * For indexed BufferGeometry, `count` is the number of indices to render.
+	 */
 	setDrawRange( start, count ) {
 
 		this.drawRange.start = start;
@@ -27915,6 +30139,12 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Applies the given 4x4 transformation matrix to the geometry.
+	 *
+	 * @param {Matrix4} matrix - The matrix to apply.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	applyMatrix4( matrix ) {
 
 		const position = this.attributes.position;
@@ -27965,6 +30195,12 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Applies the rotation represented by the Quaternion to the geometry.
+	 *
+	 * @param {Quaternion} q - The Quaternion to apply.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	applyQuaternion( q ) {
 
 		_m1$2.makeRotationFromQuaternion( q );
@@ -27975,6 +30211,14 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the geometry about the X axis. This is typically done as a one time
+	 * operation, and not during a loop. Use {@link Object3D#rotation} for typical
+	 * real-time mesh rotation.
+	 *
+	 * @param {number} angle - The angle in radians.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	rotateX( angle ) {
 
 		// rotate geometry around world x-axis
@@ -27987,6 +30231,14 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the geometry about the Y axis. This is typically done as a one time
+	 * operation, and not during a loop. Use {@link Object3D#rotation} for typical
+	 * real-time mesh rotation.
+	 *
+	 * @param {number} angle - The angle in radians.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	rotateY( angle ) {
 
 		// rotate geometry around world y-axis
@@ -27999,6 +30251,14 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the geometry about the Z axis. This is typically done as a one time
+	 * operation, and not during a loop. Use {@link Object3D#rotation} for typical
+	 * real-time mesh rotation.
+	 *
+	 * @param {number} angle - The angle in radians.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	rotateZ( angle ) {
 
 		// rotate geometry around world z-axis
@@ -28011,6 +30271,16 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Translates the geometry. This is typically done as a one time
+	 * operation, and not during a loop. Use {@link Object3D#position} for typical
+	 * real-time mesh rotation.
+	 *
+	 * @param {number} x - The x offset.
+	 * @param {number} y - The y offset.
+	 * @param {number} z - The z offset.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	translate( x, y, z ) {
 
 		// translate geometry
@@ -28023,6 +30293,16 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Scales the geometry. This is typically done as a one time
+	 * operation, and not during a loop. Use {@link Object3D#scale} for typical
+	 * real-time mesh rotation.
+	 *
+	 * @param {number} x - The x scale.
+	 * @param {number} y - The y scale.
+	 * @param {number} z - The z scale.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	scale( x, y, z ) {
 
 		// scale geometry
@@ -28035,6 +30315,14 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the geometry to face a point in 3D space. This is typically done as a one time
+	 * operation, and not during a loop. Use {@link Object3D#lookAt} for typical
+	 * real-time mesh rotation.
+	 *
+	 * @param {Vector3} vector - The target point.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	lookAt( vector ) {
 
 		_obj.lookAt( vector );
@@ -28047,6 +30335,11 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Center the geometry based on its bounding box.
+	 *
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	center() {
 
 		this.computeBoundingBox();
@@ -28059,6 +30352,17 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Defines a geometry by creating a `position` attribute based on the given array of points. The array
+	 * can hold 2D or 3D vectors. When using two-dimensional data, the `z` coordinate for all vertices is
+	 * set to `0`.
+	 *
+	 * If the method is used with an existing `position` attribute, the vertex data are overwritten with the
+	 * data from the array. The length of the array must match the vertex count.
+	 *
+	 * @param {Array<Vector2>|Array<Vector3>} points - The points.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	setFromPoints( points ) {
 
 		const positionAttribute = this.getAttribute( 'position' );
@@ -28101,6 +30405,11 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Computes the bounding box of the geometry, and updates the `boundingBox` member.
+	 * The bounding box is not computed by the engine; it must be computed by your app.
+	 * You may need to recompute the bounding box if the geometry vertices are modified.
+	 */
 	computeBoundingBox() {
 
 		if ( this.boundingBox === null ) {
@@ -28171,6 +30480,11 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Computes the bounding sphere of the geometry, and updates the `boundingSphere` member.
+	 * The engine automatically computes the bounding sphere when it is needed, e.g., for ray casting or view frustum culling.
+	 * You may need to recompute the bounding sphere if the geometry vertices are modified.
+	 */
 	computeBoundingSphere() {
 
 		if ( this.boundingSphere === null ) {
@@ -28283,6 +30597,13 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Calculates and adds a tangent attribute to this geometry.
+	 *
+	 * The computation is only supported for indexed geometries and if position, normal, and uv attributes
+	 * are defined. When using a tangent space normal map, prefer the MikkTSpace algorithm provided by
+	 * {@link BufferGeometryUtils#computeMikkTSpaceTangents} instead.
+	 */
 	computeTangents() {
 
 		const index = this.index;
@@ -28442,6 +30763,12 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Computes vertex normals for the given vertex data. For indexed geometries, the method sets
+	 * each vertex normal to be the average of the face normals of the faces that share that vertex.
+	 * For non-indexed geometries, vertices are not shared, and the method sets each vertex normal
+	 * to be the same as the face normal.
+	 */
 	computeVertexNormals() {
 
 		const index = this.index;
@@ -28534,6 +30861,10 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Ensures every normal vector in a geometry will have a magnitude of `1`. This will
+	 * correct lighting on the geometry surfaces.
+	 */
 	normalizeNormals() {
 
 		const normals = this.attributes.normal;
@@ -28550,6 +30881,12 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Return a new non-index version of this indexed geometry. If the geometry
+	 * is already non-indexed, the method is a NOOP.
+	 *
+	 * @return {BufferGeometry} The non-indexed version of this indexed geometry.
+	 */
 	toNonIndexed() {
 
 		function convertBufferAttribute( attribute, indices ) {
@@ -28652,6 +30989,11 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Serializes the geometry into JSON.
+	 *
+	 * @return {Object} A JSON object representing the serialized geometry.
+	 */
 	toJSON() {
 
 		const data = {
@@ -28765,12 +31107,23 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a new geometry with copied values from this instance.
+	 *
+	 * @return {BufferGeometry} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the values of the given geometry to this instance.
+	 *
+	 * @param {BufferGeometry} source - The geometry to copy.
+	 * @return {BufferGeometry} A reference to this instance.
+	 */
 	copy( source ) {
 
 		// reset
@@ -28796,7 +31149,7 @@ class BufferGeometry extends EventDispatcher {
 
 		if ( index !== null ) {
 
-			this.setIndex( index.clone( data ) );
+			this.setIndex( index.clone() );
 
 		}
 
@@ -28876,6 +31229,12 @@ class BufferGeometry extends EventDispatcher {
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 *
+	 * @fires BufferGeometry#dispose
+	 */
 	dispose() {
 
 		this.dispatchEvent( { type: 'dispose' } );
@@ -29373,7 +31732,7 @@ class Material extends EventDispatcher {
 		 * Defines the blending equation.
 		 *
 		 * @type {(AddEquation|SubtractEquation|ReverseSubtractEquation|MinEquation|MaxEquation)}
-		 * @default OneMinusSrcAlphaFactor
+		 * @default AddEquation
 		 */
 		this.blendEquation = AddEquation;
 
@@ -29396,8 +31755,8 @@ class Material extends EventDispatcher {
 		/**
 		 * Defines the blending equation of the alpha channel.
 		 *
-		 * @type {(AddEquation|SubtractEquation|ReverseSubtractEquation|MinEquation|MaxEquation)}
-		 * @default OneMinusSrcAlphaFactor
+		 * @type {?(AddEquation|SubtractEquation|ReverseSubtractEquation|MinEquation|MaxEquation)}
+		 * @default null
 		 */
 		this.blendEquationAlpha = null;
 
@@ -29650,6 +32009,14 @@ class Material extends EventDispatcher {
 		this.forceSinglePass = false;
 
 		/**
+		 * Whether it's possible to override the material with {@link Scene#overrideMaterial} or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.allowOverride = true;
+
+		/**
 		 * Defines whether 3D objects using this material are visible.
 		 *
 		 * @type {boolean}
@@ -29758,6 +32125,13 @@ class Material extends EventDispatcher {
 
 	}
 
+	/**
+	 * This method can be used to set default values from parameter objects.
+	 * It is a generic implementation so it can be used with different types
+	 * of materials.
+	 *
+	 * @param {Object} [values] - The material values to set.
+	 */
 	setValues( values ) {
 
 		if ( values === undefined ) return;
@@ -30204,17 +32578,9 @@ class Material extends EventDispatcher {
 
 	}
 
-	onBuild( /* shaderobject, renderer */ ) {
-
-		console.warn( 'Material: onBuild() has been removed.' ); // @deprecated, r166
-
-	}
-
 }
 
-/**
- * Uniform Utilities
- */
+// Uniform Utilities
 
 function cloneUniforms( src ) {
 
@@ -30326,50 +32692,248 @@ var default_vertex = "void main() {\n\tgl_Position = projectionMatrix * modelVie
 
 var default_fragment = "void main() {\n\tgl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );\n}";
 
+/**
+ * A material rendered with custom shaders. A shader is a small program written in GLSL.
+ * that runs on the GPU. You may want to use a custom shader if you need to implement an
+ * effect not included with any of the built-in materials.
+ *
+ * There are the following notes to bear in mind when using a `ShaderMaterial`:
+ *
+ * - `ShaderMaterial` can only be used with {@link WebGLRenderer}.
+ * - Built in attributes and uniforms are passed to the shaders along with your code. If
+ * you don't want that, use {@link RawShaderMaterial} instead.
+ * - You can use the directive `#pragma unroll_loop_start` and `#pragma unroll_loop_end`
+ * in order to unroll a `for` loop in GLSL by the shader preprocessor. The directive has
+ * to be placed right above the loop. The loop formatting has to correspond to a defined standard.
+ *   - The loop has to be [normalized]{@link https://en.wikipedia.org/wiki/Normalized_loop}.
+ *   - The loop variable has to be *i*.
+ *   - The value `UNROLLED_LOOP_INDEX` will be replaced with the explicitly
+ * value of *i* for the given iteration and can be used in preprocessor
+ * statements.
+ *
+ * ```js
+ * const material = new THREE.ShaderMaterial( {
+ * 	uniforms: {
+ * 		time: { value: 1.0 },
+ * 		resolution: { value: new THREE.Vector2() }
+ * 	},
+ * 	vertexShader: document.getElementById( 'vertexShader' ).textContent,
+ * 	fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+ * } );
+ * ```
+ *
+ * @augments Material
+ */
 class ShaderMaterial extends Material {
 
+	/**
+	 * Constructs a new shader material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isShaderMaterial = true;
 
 		this.type = 'ShaderMaterial';
 
+		/**
+		 * Defines custom constants using `#define` directives within the GLSL code
+		 * for both the vertex shader and the fragment shader; each key/value pair
+		 * yields another directive.
+		 * ```js
+		 * defines: {
+		 * 	FOO: 15,
+		 * 	BAR: true
+		 * }
+		 * ```
+		 * Yields the lines:
+		 * ```
+		 * #define FOO 15
+		 * #define BAR true
+		 * ```
+		 *
+		 * @type {Object}
+		 */
 		this.defines = {};
+
+		/**
+		 * An object of the form:
+		 * ```js
+		 * {
+		 * 	"uniform1": { value: 1.0 },
+		 * 	"uniform2": { value: 2 }
+		 * }
+		 * ```
+		 * specifying the uniforms to be passed to the shader code; keys are uniform
+		 * names, values are definitions of the form
+		 * ```
+		 * {
+		 * 	value: 1.0
+		 * }
+		 * ```
+		 * where `value` is the value of the uniform. Names must match the name of
+		 * the uniform, as defined in the GLSL code. Note that uniforms are refreshed
+		 * on every frame, so updating the value of the uniform will immediately
+		 * update the value available to the GLSL code.
+		 *
+		 * @type {Object}
+		 */
 		this.uniforms = {};
+
+		/**
+		 * An array holding uniforms groups for configuring UBOs.
+		 *
+		 * @type {Array<UniformsGroup>}
+		 */
 		this.uniformsGroups = [];
 
+		/**
+		 * Vertex shader GLSL code. This is the actual code for the shader.
+		 *
+		 * @type {string}
+		 */
 		this.vertexShader = default_vertex;
+
+		/**
+		 * Fragment shader GLSL code. This is the actual code for the shader.
+		 *
+		 * @type {string}
+		 */
 		this.fragmentShader = default_fragment;
 
+		/**
+		 * Controls line thickness or lines.
+		 *
+		 * WebGL and WebGPU ignore this setting and always render line primitives with a
+		 * width of one pixel.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.linewidth = 1;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * WebGL and WebGPU ignore this property and always render
+		 * 1 pixel wide lines.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
 
-		this.fog = false; // set to use scene fog
-		this.lights = false; // set to use scene lights
-		this.clipping = false; // set to use user-defined clipping planes
+		/**
+		 * Define whether the material color is affected by global fog settings; `true`
+		 * to pass fog uniforms to the shader.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.fog = false;
 
+		/**
+		 * Defines whether this material uses lighting; `true` to pass uniform data
+		 * related to lighting to this shader.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.lights = false;
+
+		/**
+		 * Defines whether this material supports clipping; `true` to let the renderer
+		 * pass the clippingPlanes uniform.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.clipping = false;
+
+		/**
+		 * Overwritten and set to `true` by default.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.forceSinglePass = true;
 
+		/**
+		 * This object allows to enable certain WebGL 2 extensions.
+		 *
+		 * - clipCullDistance: set to `true` to use vertex shader clipping
+		 * - multiDraw: set to `true` to use vertex shader multi_draw / enable gl_DrawID
+		 *
+		 * @type {{clipCullDistance:false,multiDraw:false}}
+		 */
 		this.extensions = {
 			clipCullDistance: false, // set to use vertex shader clipping
 			multiDraw: false // set to use vertex shader multi_draw / enable gl_DrawID
 		};
 
-		// When rendered geometry doesn't include these attributes but the material does,
-		// use these default values in WebGL. This avoids errors when buffer data is missing.
+		/**
+		 * When the rendered geometry doesn't include these attributes but the
+		 * material does, these default values will be passed to the shaders. This
+		 * avoids errors when buffer data is missing.
+		 *
+		 * - color: [ 1, 1, 1 ]
+		 * - uv: [ 0, 0 ]
+		 * - uv1: [ 0, 0 ]
+		 *
+		 * @type {Object}
+		 */
 		this.defaultAttributeValues = {
 			'color': [ 1, 1, 1 ],
 			'uv': [ 0, 0 ],
 			'uv1': [ 0, 0 ]
 		};
 
+		/**
+		 * If set, this calls [gl.bindAttribLocation]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindAttribLocation}
+		 * to bind a generic vertex index to an attribute variable.
+		 *
+		 * @type {string|undefined}
+		 * @default undefined
+		 */
 		this.index0AttributeName = undefined;
+
+		/**
+		 * Can be used to force a uniform update while changing uniforms in
+		 * {@link Object3D#onBeforeRender}.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.uniformsNeedUpdate = false;
 
+		/**
+		 * Defines the GLSL version of custom shader code.
+		 *
+		 * @type {?(GLSL1|GLSL3)}
+		 * @default null
+		 */
 		this.glslVersion = null;
 
 		if ( parameters !== undefined ) {
@@ -31689,41 +34253,206 @@ class Triangle {
 
 }
 
+/**
+ * A material for drawing geometries in a simple shaded (flat or wireframe) way.
+ *
+ * This material is not affected by lights.
+ *
+ * @augments Material
+ */
 class MeshBasicMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh basic material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshBasicMaterial = true;
 
 		this.type = 'MeshBasicMaterial';
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff ); // emissive
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The light map. Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.lightMap = null;
+
+		/**
+		 * Intensity of the baked light.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.lightMapIntensity = 1.0;
 
+		/**
+		 * The red channel of this texture is used as the ambient occlusion map.
+		 * Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.aoMap = null;
+
+		/**
+		 * Intensity of the ambient occlusion effect. Range is `[0,1]`, where `0`
+		 * disables ambient occlusion. Where intensity is `1` and the AO map's
+		 * red channel is also `1`, ambient light is fully occluded on a surface.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.aoMapIntensity = 1.0;
 
+		/**
+		 * Specular map used by the material.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.specularMap = null;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * The environment map.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.envMap = null;
+
+		/**
+		 * The rotation of the environment map in radians.
+		 *
+		 * @type {Euler}
+		 * @default (0,0,0)
+		 */
 		this.envMapRotation = new Euler();
+
+		/**
+		 * How to combine the result of the surface's color with the environment map, if any.
+		 *
+		 * When set to `MixOperation`, the {@link MeshBasicMaterial#reflectivity} is used to
+		 * blend between the two colors.
+		 *
+		 * @type {(MultiplyOperation|MixOperation|AddOperation)}
+		 * @default MultiplyOperation
+		 */
 		this.combine = MultiplyOperation;
+
+		/**
+		 * How much the environment map affects the surface.
+		 * The valid range is between `0` (no reflections) and `1` (full reflections).
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.reflectivity = 1;
+
+		/**
+		 * The index of refraction (IOR) of air (approximately 1) divided by the
+		 * index of refraction of the material. It is used with environment mapping
+		 * modes {@link CubeRefractionMapping} and {@link EquirectangularRefractionMapping}.
+		 * The refraction ratio should not exceed `1`.
+		 *
+		 * @type {number}
+		 * @default 0.98
+		 */
 		this.refractionRatio = 0.98;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
+
+		/**
+		 * Defines appearance of wireframe ends.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinecap = 'round';
+
+		/**
+		 * Defines appearance of wireframe joints.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinejoin = 'round';
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
@@ -32669,10 +35398,7 @@ const ShaderChunk = {
 	sprite_frag: fragment$1
 };
 
-/**
- * Uniforms library for shared webgl shaders
- */
-
+// Uniforms library for shared webgl shaders
 const UniformsLib = {
 
 	common: {
@@ -33340,7 +36066,8 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 						side: BackSide,
 						depthTest: false,
 						depthWrite: false,
-						fog: false
+						fog: false,
+						allowOverride: false
 					} )
 				);
 
@@ -33419,7 +36146,8 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 						side: FrontSide,
 						depthTest: false,
 						depthWrite: false,
-						fog: false
+						fog: false,
+						allowOverride: false
 					} )
 				);
 
@@ -35265,21 +37993,69 @@ class CubeCamera extends Object3D {
 
 }
 
+/**
+ * Creates a cube texture made up of six images.
+ *
+ * ```js
+ * const loader = new THREE.CubeTextureLoader();
+ * loader.setPath( 'textures/cube/pisa/' );
+ *
+ * const textureCube = loader.load( [
+ * 	'px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'
+ * ] );
+ *
+ * const material = new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: textureCube } );
+ * ```
+ *
+ * @augments Texture
+ */
 class CubeTexture extends Texture {
 
-	constructor( images, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, colorSpace ) {
-
-		images = images !== undefined ? images : [];
-		mapping = mapping !== undefined ? mapping : CubeReflectionMapping;
+	/**
+	 * Constructs a new cube texture.
+	 *
+	 * @param {Array<Image>} [images=[]] - An array holding a image for each side of a cube.
+	 * @param {number} [mapping=CubeReflectionMapping] - The texture mapping.
+	 * @param {number} [wrapS=ClampToEdgeWrapping] - The wrapS value.
+	 * @param {number} [wrapT=ClampToEdgeWrapping] - The wrapT value.
+	 * @param {number} [magFilter=LinearFilter] - The mag filter value.
+	 * @param {number} [minFilter=LinearMipmapLinearFilter] - The min filter value.
+	 * @param {number} [format=RGBAFormat] - The texture format.
+	 * @param {number} [type=UnsignedByteType] - The texture type.
+	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The anisotropy value.
+	 * @param {string} [colorSpace=NoColorSpace] - The color space value.
+	 */
+	constructor( images = [], mapping = CubeReflectionMapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, colorSpace ) {
 
 		super( images, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, colorSpace );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isCubeTexture = true;
 
+		/**
+		 * If set to `true`, the texture is flipped along the vertical axis when
+		 * uploaded to the GPU.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flipY = false;
 
 	}
 
+	/**
+	 * Alias for {@link CubeTexture#image}.
+	 *
+	 * @type {Array<Image>}
+	 */
 	get images() {
 
 		return this.image;
@@ -35294,17 +38070,40 @@ class CubeTexture extends Texture {
 
 }
 
+/**
+ * A cube render target used in context of {@link WebGLRenderer}.
+ *
+ * @augments WebGLRenderTarget
+ */
 class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
+	/**
+	 * Constructs a new cube render target.
+	 *
+	 * @param {number} [size=1] - The size of the render target.
+	 * @param {RenderTarget~Options} [options] - The configuration object.
+	 */
 	constructor( size = 1, options = {} ) {
 
 		super( size, size, options );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isWebGLCubeRenderTarget = true;
 
 		const image = { width: size, height: size, depth: 1 };
 		const images = [ image, image, image, image, image, image ];
 
+		/**
+		 * Overwritten with a different texture type.
+		 *
+		 * @type {DataArrayTexture}
+		 */
 		this.texture = new CubeTexture( images, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.colorSpace );
 
 		// By convention -- likely based on the RenderMan spec from the 1990's -- cube maps are specified by WebGL (and three.js)
@@ -35322,6 +38121,13 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
 	}
 
+	/**
+	 * Converts the given equirectangular texture to a cube map.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {Texture} texture - The equirectangular texture.
+	 * @return {WebGLCubeRenderTarget} A reference to this cube render target.
+	 */
 	fromEquirectangularTexture( renderer, texture ) {
 
 		this.texture.type = texture.type;
@@ -35412,7 +38218,15 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
 	}
 
-	clear( renderer, color, depth, stencil ) {
+	/**
+	 * Clears this cube render target.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {boolean} [color=true] - Whether the color buffer should be cleared or not.
+	 * @param {boolean} [depth=true] - Whether the depth buffer should be cleared or not.
+	 * @param {boolean} [stencil=true] - Whether the stencil buffer should be cleared or not.
+	 */
+	clear( renderer, color = true, depth = true, stencil = true ) {
 
 		const currentRenderTarget = renderer.getRenderTarget();
 
@@ -35817,12 +38631,16 @@ const _origin = /*@__PURE__*/ new Vector3();
  * higher roughness levels. In this way we maintain resolution to smoothly
  * interpolate diffuse lighting while limiting sampling computation.
  *
- * Paper: Fast, Accurate Image-Based Lighting
- * https://drive.google.com/file/d/15y8r_UpKlU9SvV4ILb0C3qCPecS8pvLz/view
+ * Paper: Fast, Accurate Image-Based Lighting:
+ * {@link https://drive.google.com/file/d/15y8r_UpKlU9SvV4ILb0C3qCPecS8pvLz/view}
 */
-
 class PMREMGenerator {
 
+	/**
+	 * Constructs a new PMREM generator.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 */
 	constructor( renderer ) {
 
 		this._renderer = renderer;
@@ -35848,12 +38666,14 @@ class PMREMGenerator {
 	 * in radians to be applied to the scene before PMREM generation. Optional near
 	 * and far planes ensure the scene is rendered in its entirety.
 	 *
-	 * @param {Scene} scene
-	 * @param {number} sigma
-	 * @param {number} near
-	 * @param {number} far
-	 * @param {Object} [options={}]
-	 * @return {WebGLRenderTarget}
+	 * @param {Scene} scene - The scene to be captured.
+	 * @param {number} [sigma=0] - The blur radius in radians.
+	 * @param {number} [near=0.1] - The near plane distance.
+	 * @param {number} [far=100] - The far plane distance.
+	 * @param {Object} [options={}] - The configuration options.
+	 * @param {number} [options.size=256] - The texture size of the PMREM.
+	 * @param {Vector3} [options.renderTarget=origin] - The position of the internal cube camera that renders the scene.
+	 * @return {WebGLRenderTarget} The resulting PMREM.
 	 */
 	fromScene( scene, sigma = 0, near = 0.1, far = 100, options = {} ) {
 
@@ -35893,11 +38713,10 @@ class PMREMGenerator {
 	 * Generates a PMREM from an equirectangular texture, which can be either LDR
 	 * or HDR. The ideal input image size is 1k (1024 x 512),
 	 * as this matches best with the 256 x 256 cubemap output.
-	 * The smallest supported equirectangular image size is 64 x 32.
 	 *
-	 * @param {Texture} equirectangular
-	 * @param {?WebGLRenderTarget} [renderTarget=null] - Optional render target.
-	 * @return {WebGLRenderTarget}
+	 * @param {Texture} equirectangular - The equirectangular texture to be converted.
+	 * @param {?WebGLRenderTarget} [renderTarget=null] - The render target to use.
+	 * @return {WebGLRenderTarget} The resulting PMREM.
 	 */
 	fromEquirectangular( equirectangular, renderTarget = null ) {
 
@@ -35909,11 +38728,10 @@ class PMREMGenerator {
 	 * Generates a PMREM from an cubemap texture, which can be either LDR
 	 * or HDR. The ideal input cube size is 256 x 256,
 	 * as this matches best with the 256 x 256 cubemap output.
-	 * The smallest supported cube size is 16 x 16.
 	 *
-	 * @param {Texture} cubemap
-	 * @param {null} [renderTarget=null] - Optional render target.
-	 * @return {WebGLRenderTarget}
+	 * @param {Texture} cubemap - The cubemap texture to be converted.
+	 * @param {?WebGLRenderTarget} [renderTarget=null] - The render target to use.
+	 * @return {WebGLRenderTarget} The resulting PMREM.
 	 */
 	fromCubemap( cubemap, renderTarget = null ) {
 
@@ -36236,6 +39054,7 @@ class PMREMGenerator {
 	 * the poles) to approximate the orthogonally-separable blur. It is least
 	 * accurate at the poles, but still does a decent job.
 	 *
+	 * @private
 	 * @param {WebGLRenderTarget} cubeUVRenderTarget
 	 * @param {number} lodIn
 	 * @param {number} lodOut
@@ -37245,35 +40064,128 @@ function WebGLInfo( gl ) {
 
 }
 
+/**
+ * Creates an array of textures directly from raw buffer data.
+ *
+ * @augments Texture
+ */
 class DataArrayTexture extends Texture {
 
+	/**
+	 * Constructs a new data array texture.
+	 *
+	 * @param {?TypedArray} [data=null] - The buffer data.
+	 * @param {number} [width=1] - The width of the texture.
+	 * @param {number} [height=1] - The height of the texture.
+	 * @param {number} [depth=1] - The depth of the texture.
+	 */
 	constructor( data = null, width = 1, height = 1, depth = 1 ) {
 
 		super( null );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isDataArrayTexture = true;
 
+		/**
+		 * The image definition of a data texture.
+		 *
+		 * @type {{data:TypedArray,width:number,height:number,depth:number}}
+		 */
 		this.image = { data, width, height, depth };
 
+		/**
+		 * How the texture is sampled when a texel covers more than one pixel.
+		 *
+		 * Overwritten and set to `NearestFilter` by default.
+		 *
+		 * @type {(NearestFilter|NearestMipmapNearestFilter|NearestMipmapLinearFilter|LinearFilter|LinearMipmapNearestFilter|LinearMipmapLinearFilter)}
+		 * @default NearestFilter
+		 */
 		this.magFilter = NearestFilter;
+
+		/**
+		 * How the texture is sampled when a texel covers less than one pixel.
+		 *
+		 * Overwritten and set to `NearestFilter` by default.
+		 *
+		 * @type {(NearestFilter|NearestMipmapNearestFilter|NearestMipmapLinearFilter|LinearFilter|LinearMipmapNearestFilter|LinearMipmapLinearFilter)}
+		 * @default NearestFilter
+		 */
 		this.minFilter = NearestFilter;
 
+		/**
+		 * This defines how the texture is wrapped in the depth and corresponds to
+		 * *W* in UVW mapping.
+		 *
+		 * @type {(RepeatWrapping|ClampToEdgeWrapping|MirroredRepeatWrapping)}
+		 * @default ClampToEdgeWrapping
+		 */
 		this.wrapR = ClampToEdgeWrapping;
 
+		/**
+		 * Whether to generate mipmaps (if possible) for a texture.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.generateMipmaps = false;
+
+		/**
+		 * If set to `true`, the texture is flipped along the vertical axis when
+		 * uploaded to the GPU.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flipY = false;
+
+		/**
+		 * Specifies the alignment requirements for the start of each pixel row in memory.
+		 *
+		 * Overwritten and set to `1` by default.
+		 *
+		 * @type {boolean}
+		 * @default 1
+		 */
 		this.unpackAlignment = 1;
 
+		/**
+		 * A set of all layers which need to be updated in the texture.
+		 *
+		 * @type {Set<number>}
+		 */
 		this.layerUpdates = new Set();
 
 	}
 
+	/**
+	 * Describes that a specific layer of the texture needs to be updated.
+	 * Normally when {@link Texture#needsUpdate} is set to `true`, the
+	 * entire data texture array is sent to the GPU. Marking specific
+	 * layers will only transmit subsets of all mipmaps associated with a
+	 * specific depth in the array which is often much more performant.
+	 *
+	 * @param {number} layerIndex - The layer index that should be updated.
+	 */
 	addLayerUpdate( layerIndex ) {
 
 		this.layerUpdates.add( layerIndex );
 
 	}
 
+	/**
+	 * Resets the layer updates registry.
+	 */
 	clearLayerUpdates() {
 
 		this.layerUpdates.clear();
@@ -37533,8 +40445,22 @@ function WebGLObjects( gl, geometries, attributes, info ) {
 
 }
 
+/**
+ * Creates a three-dimensional texture from raw data, with parameters to
+ * divide it into width, height, and depth.
+ *
+ * @augments Texture
+ */
 class Data3DTexture extends Texture {
 
+	/**
+	 * Constructs a new data array texture.
+	 *
+	 * @param {?TypedArray} [data=null] - The buffer data.
+	 * @param {number} [width=1] - The width of the texture.
+	 * @param {number} [height=1] - The height of the texture.
+	 * @param {number} [depth=1] - The depth of the texture.
+	 */
 	constructor( data = null, width = 1, height = 1, depth = 1 ) {
 
 		// We're going to add .setXXX() methods for setting properties later.
@@ -37547,26 +40473,109 @@ class Data3DTexture extends Texture {
 
 		super( null );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isData3DTexture = true;
 
+		/**
+		 * The image definition of a data texture.
+		 *
+		 * @type {{data:TypedArray,width:number,height:number,depth:number}}
+		 */
 		this.image = { data, width, height, depth };
 
+		/**
+		 * How the texture is sampled when a texel covers more than one pixel.
+		 *
+		 * Overwritten and set to `NearestFilter` by default.
+		 *
+		 * @type {(NearestFilter|NearestMipmapNearestFilter|NearestMipmapLinearFilter|LinearFilter|LinearMipmapNearestFilter|LinearMipmapLinearFilter)}
+		 * @default NearestFilter
+		 */
 		this.magFilter = NearestFilter;
+
+		/**
+		 * How the texture is sampled when a texel covers less than one pixel.
+		 *
+		 * Overwritten and set to `NearestFilter` by default.
+		 *
+		 * @type {(NearestFilter|NearestMipmapNearestFilter|NearestMipmapLinearFilter|LinearFilter|LinearMipmapNearestFilter|LinearMipmapLinearFilter)}
+		 * @default NearestFilter
+		 */
 		this.minFilter = NearestFilter;
 
+		/**
+		 * This defines how the texture is wrapped in the depth and corresponds to
+		 * *W* in UVW mapping.
+		 *
+		 * @type {(RepeatWrapping|ClampToEdgeWrapping|MirroredRepeatWrapping)}
+		 * @default ClampToEdgeWrapping
+		 */
 		this.wrapR = ClampToEdgeWrapping;
 
+		/**
+		 * Whether to generate mipmaps (if possible) for a texture.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.generateMipmaps = false;
+
+		/**
+		 * If set to `true`, the texture is flipped along the vertical axis when
+		 * uploaded to the GPU.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flipY = false;
+
+		/**
+		 * Specifies the alignment requirements for the start of each pixel row in memory.
+		 *
+		 * Overwritten and set to `1` by default.
+		 *
+		 * @type {boolean}
+		 * @default 1
+		 */
 		this.unpackAlignment = 1;
 
 	}
 
 }
 
+/**
+ * This class can be used to automatically save the depth information of a
+ * rendering into a texture.
+ *
+ * @augments Texture
+ */
 class DepthTexture extends Texture {
 
-	constructor( width, height, type, mapping, wrapS, wrapT, magFilter, minFilter, anisotropy, format = DepthFormat ) {
+	/**
+	 * Constructs a new depth texture.
+	 *
+	 * @param {number} width - The width of the texture.
+	 * @param {number} height - The height of the texture.
+	 * @param {number} [type=UnsignedIntType] - The texture type.
+	 * @param {number} [mapping=Texture.DEFAULT_MAPPING] - The texture mapping.
+	 * @param {number} [wrapS=ClampToEdgeWrapping] - The wrapS value.
+	 * @param {number} [wrapT=ClampToEdgeWrapping] - The wrapT value.
+	 * @param {number} [magFilter=LinearFilter] - The mag filter value.
+	 * @param {number} [minFilter=LinearFilter] - The min filter value.
+	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The anisotropy value.
+	 * @param {number} [format=DepthFormat] - The texture format.
+	 */
+	constructor( width, height, type = UnsignedIntType, mapping, wrapS, wrapT, magFilter = NearestFilter, minFilter = NearestFilter, anisotropy, format = DepthFormat ) {
 
 		if ( format !== DepthFormat && format !== DepthStencilFormat ) {
 
@@ -37574,21 +40583,51 @@ class DepthTexture extends Texture {
 
 		}
 
-		if ( type === undefined && format === DepthFormat ) type = UnsignedIntType;
-		if ( type === undefined && format === DepthStencilFormat ) type = UnsignedInt248Type;
-
 		super( null, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isDepthTexture = true;
 
+		/**
+		 * The image property of a depth texture just defines its dimensions.
+		 *
+		 * @type {{width:number,height:number}}
+		 */
 		this.image = { width: width, height: height };
 
-		this.magFilter = magFilter !== undefined ? magFilter : NearestFilter;
-		this.minFilter = minFilter !== undefined ? minFilter : NearestFilter;
-
+		/**
+		 * If set to `true`, the texture is flipped along the vertical axis when
+		 * uploaded to the GPU.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flipY = false;
+
+		/**
+		 * Whether to generate mipmaps (if possible) for a texture.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.generateMipmaps = false;
 
+		/**
+		 * Code corresponding to the depth compare function.
+		 *
+		 * @type {?(NeverCompare|LessCompare|EqualCompare|LessEqualCompare|GreaterCompare|NotEqualCompare|GreaterEqualCompare|AlwaysCompare)}
+		 * @default null
+		 */
 		this.compareFunction = null;
 
 	}
@@ -41597,27 +44636,120 @@ function WebGLRenderStates( extensions ) {
 
 }
 
+/**
+ * A material for drawing geometry by depth. Depth is based off of the camera
+ * near and far plane. White is nearest, black is farthest.
+ *
+ * @augments Material
+ */
 class MeshDepthMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh depth material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshDepthMaterial = true;
 
 		this.type = 'MeshDepthMaterial';
 
+		/**
+		 * Type for depth packing.
+		 *
+		 * @type {(BasicDepthPacking|RGBADepthPacking|RGBDepthPacking|RGDepthPacking)}
+		 * @default BasicDepthPacking
+		 */
 		this.depthPacking = BasicDepthPacking;
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * WebGL and WebGPU ignore this property and always render
+		 * 1 pixel wide lines.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
 
 		this.setValues( parameters );
@@ -41647,22 +44779,98 @@ class MeshDepthMaterial extends Material {
 
 }
 
+/**
+ * A material used internally for implementing shadow mapping with
+ * point lights.
+ *
+ * Can also be used to customize the shadow casting of an object by assigning
+ * an instance of `MeshDistanceMaterial` to {@link Object3D#customDistanceMaterial}.
+ * The following examples demonstrates this approach in order to ensure
+ * transparent parts of objects do no cast shadows.
+ *
+ * @augments Material
+ */
 class MeshDistanceMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh distance material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshDistanceMaterial = true;
 
 		this.type = 'MeshDistanceMaterial';
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
 		this.setValues( parameters );
@@ -41936,7 +45144,8 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 			if ( ( renderer.localClippingEnabled && material.clipShadows === true && Array.isArray( material.clippingPlanes ) && material.clippingPlanes.length !== 0 ) ||
 				( material.displacementMap && material.displacementScale !== 0 ) ||
 				( material.alphaMap && material.alphaTest > 0 ) ||
-				( material.map && material.alphaTest > 0 ) ) {
+				( material.map && material.alphaTest > 0 ) ||
+				( material.alphaToCoverage === true ) ) {
 
 				// in this case we need a unique material instance reflecting the
 				// appropriate state
@@ -41982,7 +45191,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 		}
 
 		result.alphaMap = material.alphaMap;
-		result.alphaTest = material.alphaTest;
+		result.alphaTest = ( material.alphaToCoverage === true ) ? 0.5 : material.alphaTest; // approximate alphaToCoverage by using a fixed alphaTest value
 		result.map = material.map;
 
 		result.clipShadows = material.clipShadows;
@@ -42175,17 +45384,17 @@ function WebGLState( gl, extensions ) {
 	function DepthBuffer() {
 
 		let locked = false;
-		let reversed = false;
 
+		let currentReversed = false;
 		let currentDepthMask = null;
 		let currentDepthFunc = null;
 		let currentDepthClear = null;
 
 		return {
 
-			setReversed: function ( value ) {
+			setReversed: function ( reversed ) {
 
-				if ( reversed !== value ) {
+				if ( currentReversed !== reversed ) {
 
 					const ext = extensions.get( 'EXT_clip_control' );
 
@@ -42199,19 +45408,19 @@ function WebGLState( gl, extensions ) {
 
 					}
 
+					currentReversed = reversed;
+
 					const oldDepth = currentDepthClear;
 					currentDepthClear = null;
 					this.setClear( oldDepth );
 
 				}
 
-				reversed = value;
-
 			},
 
 			getReversed: function () {
 
-				return reversed;
+				return currentReversed;
 
 			},
 
@@ -42242,7 +45451,7 @@ function WebGLState( gl, extensions ) {
 
 			setFunc: function ( depthFunc ) {
 
-				if ( reversed ) depthFunc = reversedFuncs[ depthFunc ];
+				if ( currentReversed ) depthFunc = reversedFuncs[ depthFunc ];
 
 				if ( currentDepthFunc !== depthFunc ) {
 
@@ -42310,7 +45519,7 @@ function WebGLState( gl, extensions ) {
 
 				if ( currentDepthClear !== depth ) {
 
-					if ( reversed ) {
+					if ( currentReversed ) {
 
 						depth = 1 - depth;
 
@@ -42330,7 +45539,7 @@ function WebGLState( gl, extensions ) {
 				currentDepthMask = null;
 				currentDepthFunc = null;
 				currentDepthClear = null;
-				reversed = false;
+				currentReversed = false;
 
 			}
 
@@ -43443,10 +46652,6 @@ function getByteLength( width, height, format, type ) {
 		// https://registry.khronos.org/OpenGL-Refpages/es3.0/html/glTexImage2D.xhtml
 		case AlphaFormat:
 			return width * height;
-		case LuminanceFormat:
-			return width * height;
-		case LuminanceAlphaFormat:
-			return width * height * 2;
 		case RedFormat:
 			return ( ( width * height ) / typeByteLength.components ) * typeByteLength.byteLength;
 		case RedIntegerFormat:
@@ -45189,7 +48394,17 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			if ( isCube ) throw new Error( 'target.depthTexture not supported in Cube render targets' );
 
-			setupDepthTexture( renderTargetProperties.__webglFramebuffer, renderTarget );
+			const mipmaps = renderTarget.texture.mipmaps;
+
+			if ( mipmaps && mipmaps.length > 0 ) {
+
+				setupDepthTexture( renderTargetProperties.__webglFramebuffer[ 0 ], renderTarget );
+
+			} else {
+
+				setupDepthTexture( renderTargetProperties.__webglFramebuffer, renderTarget );
+
+			}
 
 		} else {
 
@@ -45220,7 +48435,17 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			} else {
 
-				state.bindFramebuffer( _gl.FRAMEBUFFER, renderTargetProperties.__webglFramebuffer );
+				const mipmaps = renderTarget.texture.mipmaps;
+
+				if ( mipmaps && mipmaps.length > 0 ) {
+
+					state.bindFramebuffer( _gl.FRAMEBUFFER, renderTargetProperties.__webglFramebuffer[ 0 ] );
+
+				} else {
+
+					state.bindFramebuffer( _gl.FRAMEBUFFER, renderTargetProperties.__webglFramebuffer );
+
+				}
 
 				if ( renderTargetProperties.__webglDepthbuffer === undefined ) {
 
@@ -45550,7 +48775,18 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 				}
 
 				state.bindFramebuffer( _gl.READ_FRAMEBUFFER, renderTargetProperties.__webglMultisampledFramebuffer );
-				state.bindFramebuffer( _gl.DRAW_FRAMEBUFFER, renderTargetProperties.__webglFramebuffer );
+
+				const mipmaps = renderTarget.texture.mipmaps;
+
+				if ( mipmaps && mipmaps.length > 0 ) {
+
+					state.bindFramebuffer( _gl.DRAW_FRAMEBUFFER, renderTargetProperties.__webglFramebuffer[ 0 ] );
+
+				} else {
+
+					state.bindFramebuffer( _gl.DRAW_FRAMEBUFFER, renderTargetProperties.__webglFramebuffer );
+
+				}
 
 				for ( let i = 0; i < textures.length; i ++ ) {
 
@@ -45766,8 +49002,6 @@ function WebGLUtils( gl, extensions ) {
 		if ( p === AlphaFormat ) return gl.ALPHA;
 		if ( p === RGBFormat ) return gl.RGB;
 		if ( p === RGBAFormat ) return gl.RGBA;
-		if ( p === LuminanceFormat ) return gl.LUMINANCE;
-		if ( p === LuminanceAlphaFormat ) return gl.LUMINANCE_ALPHA;
 		if ( p === DepthFormat ) return gl.DEPTH_COMPONENT;
 		if ( p === DepthStencilFormat ) return gl.DEPTH_STENCIL;
 
@@ -45983,12 +49217,20 @@ class ArrayCamera extends PerspectiveCamera {
 		this.isArrayCamera = true;
 
 		/**
+		 * Whether this camera is used with multiview rendering or not.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default false
+		 */
+		this.isMultiViewCamera = false;
+
+		/**
 		 * An array of perspective sub cameras.
 		 *
 		 * @type {Array<PerspectiveCamera>}
 		 */
 		this.cameras = array;
-		this.index = 0;
 
 	}
 
@@ -46034,16 +49276,56 @@ let Group$1 = class Group extends Object3D {
 
 const _moveEvent = { type: 'move' };
 
+/**
+ * Class for representing a XR controller with its
+ * different coordinate systems.
+ *
+ * @private
+ */
 class WebXRController {
 
+	/**
+	 * Constructs a new XR controller.
+	 */
 	constructor() {
 
+		/**
+		 * A group representing the target ray space
+		 * of the XR controller.
+		 *
+		 * @private
+		 * @type {?Group}
+		 * @default null
+		 */
 		this._targetRay = null;
+
+		/**
+		 * A group representing the grip space
+		 * of the XR controller.
+		 *
+		 * @private
+		 * @type {?Group}
+		 * @default null
+		 */
 		this._grip = null;
+
+		/**
+		 * A group representing the hand space
+		 * of the XR controller.
+		 *
+		 * @private
+		 * @type {?Group}
+		 * @default null
+		 */
 		this._hand = null;
 
 	}
 
+	/**
+	 * Returns a group representing the hand space of the XR controller.
+	 *
+	 * @return {Group} A group representing the hand space of the XR controller.
+	 */
 	getHandSpace() {
 
 		if ( this._hand === null ) {
@@ -46061,6 +49343,11 @@ class WebXRController {
 
 	}
 
+	/**
+	 * Returns a group representing the target ray space of the XR controller.
+	 *
+	 * @return {Group} A group representing the target ray space of the XR controller.
+	 */
 	getTargetRaySpace() {
 
 		if ( this._targetRay === null ) {
@@ -46079,6 +49366,11 @@ class WebXRController {
 
 	}
 
+	/**
+	 * Returns a group representing the grip space of the XR controller.
+	 *
+	 * @return {Group} A group representing the grip space of the XR controller.
+	 */
 	getGripSpace() {
 
 		if ( this._grip === null ) {
@@ -46097,6 +49389,13 @@ class WebXRController {
 
 	}
 
+	/**
+	 * Dispatches the given event to the groups representing
+	 * the different coordinate spaces of the XR controller.
+	 *
+	 * @param {Object} event - The event to dispatch.
+	 * @return {WebXRController} A reference to this instance.
+	 */
 	dispatchEvent( event ) {
 
 		if ( this._targetRay !== null ) {
@@ -46121,6 +49420,12 @@ class WebXRController {
 
 	}
 
+	/**
+	 * Connects the controller with the given XR input source.
+	 *
+	 * @param {XRInputSource} inputSource - The input source.
+	 * @return {WebXRController} A reference to this instance.
+	 */
 	connect( inputSource ) {
 
 		if ( inputSource && inputSource.hand ) {
@@ -46146,6 +49451,12 @@ class WebXRController {
 
 	}
 
+	/**
+	 * Disconnects the controller from the given XR input source.
+	 *
+	 * @param {XRInputSource} inputSource - The input source.
+	 * @return {WebXRController} A reference to this instance.
+	 */
 	disconnect( inputSource ) {
 
 		this.dispatchEvent( { type: 'disconnected', data: inputSource } );
@@ -46172,6 +49483,16 @@ class WebXRController {
 
 	}
 
+	/**
+	 * Updates the controller with the given input source, XR frame and reference space.
+	 * This updates the transformations of the groups that represent the different
+	 * coordinate systems of the controller.
+	 *
+	 * @param {XRInputSource} inputSource - The input source.
+	 * @param {XRFrame} frame - The XR frame.
+	 * @param {XRReferenceSpace} referenceSpace - The reference space.
+	 * @return {WebXRController} A reference to this instance.
+	 */
 	update( inputSource, frame, referenceSpace ) {
 
 		let inputPose = null;
@@ -46349,8 +49670,14 @@ class WebXRController {
 
 	}
 
-	// private method
-
+	/**
+	 * Returns a group representing the hand joint for the given input joint.
+	 *
+	 * @private
+	 * @param {Group} hand - The group representing the hand space.
+	 * @param {XRJointSpace} inputjoint - The hand joint data.
+	 * @return {Group} A group representing the hand joint for the given input joint.
+	 */
 	_getHandJoint( hand, inputjoint ) {
 
 		if ( hand.joints[ inputjoint.jointName ] === undefined ) {
@@ -46398,18 +49725,53 @@ void main() {
 
 }`;
 
+/**
+ * A XR module that manages the access to the Depth Sensing API.
+ */
 class WebXRDepthSensing {
 
+	/**
+	 * Constructs a new depth sensing module.
+	 */
 	constructor() {
 
+		/**
+		 * A texture representing the depth of the user's environment.
+		 *
+		 * @type {?Texture}
+		 */
 		this.texture = null;
+
+		/**
+		 * A plane mesh for visualizing the depth texture.
+		 *
+		 * @type {?Mesh}
+		 */
 		this.mesh = null;
 
+		/**
+		 * The depth near value.
+		 *
+		 * @type {number}
+		 */
 		this.depthNear = 0;
+
+		/**
+		 * The depth near far.
+		 *
+		 * @type {number}
+		 */
 		this.depthFar = 0;
 
 	}
 
+	/**
+	 * Inits the depth sensing module
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {XRWebGLDepthInformation} depthData - The XR depth data.
+	 * @param {XRRenderState} renderState - The XR render state.
+	 */
 	init( renderer, depthData, renderState ) {
 
 		if ( this.texture === null ) {
@@ -46432,6 +49794,12 @@ class WebXRDepthSensing {
 
 	}
 
+	/**
+	 * Returns a plane mesh that visualizes the depth texture.
+	 *
+	 * @param {ArrayCamera} cameraXR - The XR camera.
+	 * @return {?Mesh} The plane mesh.
+	 */
 	getMesh( cameraXR ) {
 
 		if ( this.texture !== null ) {
@@ -46459,6 +49827,9 @@ class WebXRDepthSensing {
 
 	}
 
+	/**
+	 * Resets the module
+	 */
 	reset() {
 
 		this.texture = null;
@@ -46466,6 +49837,11 @@ class WebXRDepthSensing {
 
 	}
 
+	/**
+	 * Returns a texture representing the depth of the user's environment.
+	 *
+	 * @return {?Texture} The depth texture.
+	 */
 	getDepthTexture() {
 
 		return this.texture;
@@ -46474,8 +49850,23 @@ class WebXRDepthSensing {
 
 }
 
+/**
+ * This class represents an abstraction of the WebXR Device API and is
+ * internally used by {@link WebGLRenderer}. `WebXRManager` also provides a public
+ * interface that allows users to enable/disable XR and perform XR related
+ * tasks like for instance retrieving controllers.
+ *
+ * @augments EventDispatcher
+ * @hideconstructor
+ */
 class WebXRManager extends EventDispatcher {
 
+	/**
+	 * Constructs a new WebGL renderer.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGL2RenderingContext} gl - The rendering context.
+	 */
 	constructor( renderer, gl ) {
 
 		super();
@@ -46527,11 +49918,40 @@ class WebXRManager extends EventDispatcher {
 
 		//
 
+		/**
+		 * Whether the manager's XR camera should be automatically updated or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.cameraAutoUpdate = true;
+
+		/**
+		 * This flag notifies the renderer to be ready for XR rendering. Set it to `true`
+		 * if you are going to use XR in your app.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.enabled = false;
 
+		/**
+		 * Whether XR presentation is active or not.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default false
+		 */
 		this.isPresenting = false;
 
+		/**
+		 * Returns a group representing the `target ray` space of the XR controller.
+		 * Use this space for visualizing 3D objects that support the user in pointing
+		 * tasks like UI interaction.
+		 *
+		 * @param {number} index - The index of the controller.
+		 * @return {Group} A group representing the `target ray` space.
+		 */
 		this.getController = function ( index ) {
 
 			let controller = controllers[ index ];
@@ -46547,6 +49967,21 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Returns a group representing the `grip` space of the XR controller.
+		 * Use this space for visualizing 3D objects that support the user in pointing
+		 * tasks like UI interaction.
+		 *
+		 * Note: If you want to show something in the user's hand AND offer a
+		 * pointing ray at the same time, you'll want to attached the handheld object
+		 * to the group returned by `getControllerGrip()` and the ray to the
+		 * group returned by `getController()`. The idea is to have two
+		 * different groups in two different coordinate spaces for the same WebXR
+		 * controller.
+		 *
+		 * @param {number} index - The index of the controller.
+		 * @return {Group} A group representing the `grip` space.
+		 */
 		this.getControllerGrip = function ( index ) {
 
 			let controller = controllers[ index ];
@@ -46562,6 +49997,14 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Returns a group representing the `hand` space of the XR controller.
+		 * Use this space for visualizing 3D objects that support the user in pointing
+		 * tasks like UI interaction.
+		 *
+		 * @param {number} index - The index of the controller.
+		 * @return {Group} A group representing the `hand` space.
+		 */
 		this.getHand = function ( index ) {
 
 			let controller = controllers[ index ];
@@ -46651,6 +50094,13 @@ class WebXRManager extends EventDispatcher {
 
 		}
 
+		/**
+		 * Sets the framebuffer scale factor.
+		 *
+		 * This method can not be used during a XR session.
+		 *
+		 * @param {number} value - The framebuffer scale factor.
+		 */
 		this.setFramebufferScaleFactor = function ( value ) {
 
 			framebufferScaleFactor = value;
@@ -46663,6 +50113,16 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Sets the reference space type. Can be used to configure a spatial relationship with the user's physical
+		 * environment. Depending on how the user moves in 3D space, setting an appropriate reference space can
+		 * improve tracking. Default is `local-floor`. Valid values can be found here
+		 * https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpace#reference_space_types.
+		 *
+		 * This method can not be used during a XR session.
+		 *
+		 * @param {string} value - The reference space type.
+		 */
 		this.setReferenceSpaceType = function ( value ) {
 
 			referenceSpaceType = value;
@@ -46675,42 +50135,81 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Returns the XR reference space.
+		 *
+		 * @return {XRReferenceSpace} The XR reference space.
+		 */
 		this.getReferenceSpace = function () {
 
 			return customReferenceSpace || referenceSpace;
 
 		};
 
+		/**
+		 * Sets a custom XR reference space.
+		 *
+		 * @param {XRReferenceSpace} space - The XR reference space.
+		 */
 		this.setReferenceSpace = function ( space ) {
 
 			customReferenceSpace = space;
 
 		};
 
+		/**
+		 * Returns the current base layer.
+		 *
+		 * @return {?(XRWebGLLayer|XRProjectionLayer)} The XR base layer.
+		 */
 		this.getBaseLayer = function () {
 
 			return glProjLayer !== null ? glProjLayer : glBaseLayer;
 
 		};
 
+		/**
+		 * Returns the current XR binding.
+		 *
+		 * @return {?XRWebGLBinding} The XR binding.
+		 */
 		this.getBinding = function () {
 
 			return glBinding;
 
 		};
 
+		/**
+		 * Returns the current XR frame.
+		 *
+		 * @return {?XRFrame} The XR frame. Returns `null` when used outside a XR session.
+		 */
 		this.getFrame = function () {
 
 			return xrFrame;
 
 		};
 
+		/**
+		 * Returns the current XR session.
+		 *
+		 * @return {?XRSession} The XR session. Returns `null` when used outside a XR session.
+		 */
 		this.getSession = function () {
 
 			return session;
 
 		};
 
+		/**
+		 * After a XR session has been requested usually with one of the `*Button` modules, it
+		 * is injected into the renderer with this method. This method triggers the start of
+		 * the actual XR rendering.
+		 *
+		 * @async
+		 * @param {XRSession} value - The XR session to set.
+		 * @return {Promise} A Promise that resolves when the session has been set.
+		 */
 		this.setSession = async function ( value ) {
 
 			session = value;
@@ -46835,6 +50334,11 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Returns the environment blend mode from the current XR session.
+		 *
+		 * @return {'opaque'|'additive'|'alpha-blend'|undefined} The environment blend mode. Returns `undefined` when used outside of a XR session.
+		 */
 		this.getEnvironmentBlendMode = function () {
 
 			if ( session !== null ) {
@@ -46845,6 +50349,11 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Returns the current depth texture computed via depth sensing.
+		 *
+		 * @return {?Texture} The depth texture.
+		 */
 		this.getDepthTexture = function () {
 
 			return depthSensing.getDepthTexture();
@@ -47011,6 +50520,15 @@ class WebXRManager extends EventDispatcher {
 
 		}
 
+		/**
+		 * Updates the state of the XR camera. Use this method on app level if you
+		 * set cameraAutoUpdate` to `false`. The method requires the non-XR
+		 * camera of the scene as a parameter. The passed in camera's transformation
+		 * is automatically adjusted to the position of the XR camera when calling
+		 * this method.
+		 *
+		 * @param {Camera} camera - The camera.
+		 */
 		this.updateCamera = function ( camera ) {
 
 			if ( session === null ) return;
@@ -47106,12 +50624,27 @@ class WebXRManager extends EventDispatcher {
 
 		}
 
+		/**
+		 * Returns an instance of {@link ArrayCamera} which represents the XR camera
+		 * of the active XR session. For each view it holds a separate camera object.
+		 *
+		 * The camera's `fov` is currently not used and does not reflect the fov of
+		 * the XR camera. If you need the fov on app level, you have to compute in
+		 * manually from the XR camera's projection matrices.
+		 *
+		 * @return {ArrayCamera} The XR camera.
+		 */
 		this.getCamera = function () {
 
 			return cameraXR;
 
 		};
 
+		/**
+		 * Returns the amount of foveation used by the XR compositor for the projection layer.
+		 *
+		 * @return {number} The amount of foveation.
+		 */
 		this.getFoveation = function () {
 
 			if ( glProjLayer === null && glBaseLayer === null ) {
@@ -47124,6 +50657,12 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Sets the foveation value.
+		 *
+		 * @param {number} value - A number in the range `[0,1]` where `0` means no foveation (full resolution)
+		 * and `1` means maximum foveation (the edges render at lower resolution).
+		 */
 		this.setFoveation = function ( value ) {
 
 			// 0 = no foveation = full resolution
@@ -47145,12 +50684,22 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		/**
+		 * Returns `true` if depth sensing is supported.
+		 *
+		 * @return {boolean} Whether depth sensing is supported or not.
+		 */
 		this.hasDepthSensing = function () {
 
 			return depthSensing.texture !== null;
 
 		};
 
+		/**
+		 * Returns the depth sensing mesh.
+		 *
+		 * @return {Mesh} The depth sensing mesh.
+		 */
 		this.getDepthSensingMesh = function () {
 
 			return depthSensing.getMesh( cameraXR );
@@ -47209,7 +50758,7 @@ class WebXRManager extends EventDispatcher {
 							renderer.setRenderTargetTextures(
 								newRenderTarget,
 								glSubImage.colorTexture,
-								glProjLayer.ignoreDepthValues ? undefined : glSubImage.depthStencilTexture );
+								glSubImage.depthStencilTexture );
 
 							renderer.setRenderTarget( newRenderTarget );
 
@@ -48288,8 +51837,18 @@ function WebGLUniformsGroups( gl, info, capabilities, state ) {
 
 }
 
+/**
+ * This renderer uses WebGL 2 to display scenes.
+ *
+ * WebGL 1 is not supported since `r163`.
+ */
 class WebGLRenderer {
 
+	/**
+	 * Constructs a new WebGL renderer.
+	 *
+	 * @param {WebGLRenderer~Options} [parameters] - The configuration parameter.
+	 */
 	constructor( parameters = {} ) {
 
 		const {
@@ -48306,6 +51865,13 @@ class WebGLRenderer {
 			reverseDepthBuffer = false,
 		} = parameters;
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isWebGLRenderer = true;
 
 		let _alpha;
@@ -48340,13 +51906,36 @@ class WebGLRenderer {
 
 		// public properties
 
+		/**
+		 * A canvas where the renderer draws its output.This is automatically created by the renderer
+		 * in the constructor (if not provided already); you just need to add it to your page like so:
+		 * ```js
+		 * document.body.appendChild( renderer.domElement );
+		 * ```
+		 *
+		 * @type {DOMElement}
+		 */
 		this.domElement = canvas;
 
-		// Debug configuration container
+		/**
+		 * A object with debug configuration settings.
+		 *
+		 * - `checkShaderErrors`: If it is `true`, defines whether material shader programs are
+		 * checked for errors during compilation and linkage process. It may be useful to disable
+		 * this check in production for performance gain. It is strongly recommended to keep these
+		 * checks enabled during development. If the shader does not compile and link - it will not
+		 * work and associated material will not render.
+		 * - `onShaderError(gl, program, glVertexShader,glFragmentShader)`: A callback function that
+		 * can be used for custom error reporting. The callback receives the WebGL context, an instance
+		 * of WebGLProgram as well two instances of WebGLShader representing the vertex and fragment shader.
+		 * Assigning a custom function disables the default error reporting.
+		 *
+		 * @type {Object}
+		 */
 		this.debug = {
 
 			/**
-			 * Enables error checking and reporting when shader programs are being compiled
+			 * Enables error checking and reporting when shader programs are being compiled.
 			 * @type {boolean}
 			 */
 			checkShaderErrors: true,
@@ -48359,28 +51948,104 @@ class WebGLRenderer {
 
 		// clearing
 
+		/**
+		 * Whether the renderer should automatically clear its output before rendering a frame or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoClear = true;
+
+		/**
+		 * If {@link WebGLRenderer#autoClear} set to `true`, whether the renderer should clear
+		 * the color buffer or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoClearColor = true;
+
+		/**
+		 * If {@link WebGLRenderer#autoClear} set to `true`, whether the renderer should clear
+		 * the depth buffer or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoClearDepth = true;
+
+		/**
+		 * If {@link WebGLRenderer#autoClear} set to `true`, whether the renderer should clear
+		 * the stencil buffer or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoClearStencil = true;
 
 		// scene graph
 
+		/**
+		 * Whether the renderer should sort objects or not.
+		 *
+		 * Note: Sorting is used to attempt to properly render objects that have some
+		 * degree of transparency. By definition, sorting objects may not work in all
+		 * cases. Depending on the needs of application, it may be necessary to turn
+		 * off sorting and use other methods to deal with transparency rendering e.g.
+		 * manually determining each object's rendering order.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.sortObjects = true;
 
 		// user-defined clipping
 
+		/**
+		 * User-defined clipping planes specified in world space. These planes apply globally.
+		 * Points in space whose dot product with the plane is negative are cut away.
+		 *
+		 * @type {Array<Plane>}
+		 */
 		this.clippingPlanes = [];
+
+		/**
+		 * Whether the renderer respects object-level clipping planes or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.localClippingEnabled = false;
-
-		// physically based shading
-
-		this._outputColorSpace = SRGBColorSpace;
 
 		// tone mapping
 
+		/**
+		 * The tone mapping technique of the renderer.
+		 *
+		 * @type {(NoToneMapping|LinearToneMapping|ReinhardToneMapping|CineonToneMapping|ACESFilmicToneMapping|CustomToneMapping|AgXToneMapping|NeutralToneMapping)}
+		 * @default NoToneMapping
+		 */
 		this.toneMapping = NoToneMapping;
+
+		/**
+		 * Exposure level of tone mapping.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.toneMappingExposure = 1.0;
+
+		// transmission
+
+		/**
+		 * The normalized resolution scale for the transmission render target, measured in percentage
+		 * of viewport dimensions. Lowering this value can result in significant performance improvements
+		 * when using {@link MeshPhysicalMaterial#transmission}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
+		this.transmissionResolutionScale = 1.0;
 
 		// internal properties
 
@@ -48389,6 +52054,8 @@ class WebGLRenderer {
 		let _isContextLost = false;
 
 		// internal state cache
+
+		this._outputColorSpace = SRGBColorSpace;
 
 		let _currentActiveCubeFace = 0;
 		let _currentActiveMipmapLevel = 0;
@@ -48425,9 +52092,6 @@ class WebGLRenderer {
 
 		let _clippingEnabled = false;
 		let _localClippingEnabled = false;
-
-		// transmission render target scale
-		this.transmissionResolutionScale = 1.0;
 
 		// camera matrices cache
 
@@ -48557,12 +52221,79 @@ class WebGLRenderer {
 
 			info.programs = programCache.programs;
 
+			/**
+			 * Holds details about the capabilities of the current rendering context.
+			 *
+			 * @name WebGLRenderer#capabilities
+			 * @type {WebGLRenderer~Capabilities}
+			 */
 			_this.capabilities = capabilities;
+
+			/**
+			 * Provides methods for retrieving and testing WebGL extensions.
+			 *
+			 * - `get(extensionName:string)`: Used to check whether a WebGL extension is supported
+			 * and return the extension object if available.
+			 * - `has(extensionName:string)`: returns `true` if the extension is supported.
+			 *
+			 * @name WebGLRenderer#extensions
+			 * @type {Object}
+			 */
 			_this.extensions = extensions;
+
+			/**
+			 * Used to track properties of other objects like native WebGL objects.
+			 *
+			 * @name WebGLRenderer#properties
+			 * @type {Object}
+			 */
 			_this.properties = properties;
+
+			/**
+			 * Manages the render lists of the renderer.
+			 *
+			 * @name WebGLRenderer#renderLists
+			 * @type {Object}
+			 */
 			_this.renderLists = renderLists;
+
+
+
+			/**
+			 * Interface for managing shadows.
+			 *
+			 * @name WebGLRenderer#shadowMap
+			 * @type {WebGLRenderer~ShadowMap}
+			 */
 			_this.shadowMap = shadowMap;
+
+			/**
+			 * Interface for managing the WebGL state.
+			 *
+			 * @name WebGLRenderer#state
+			 * @type {Object}
+			 */
 			_this.state = state;
+
+			/**
+			 * Holds a series of statistical information about the GPU memory
+			 * and the rendering process. Useful for debugging and monitoring.
+			 *
+			 * By default these data are reset at each render call but when having
+			 * multiple render passes per frame (e.g. when using post processing) it can
+			 * be preferred to reset with a custom pattern. First, set `autoReset` to
+			 * `false`.
+			 * ```js
+			 * renderer.info.autoReset = false;
+			 * ```
+			 * Call `reset()` whenever you have finished to render a single frame.
+			 * ```js
+			 * renderer.info.reset();
+			 * ```
+			 *
+			 * @name WebGLRenderer#info
+			 * @type {WebGLRenderer~Info}
+			 */
 			_this.info = info;
 
 		}
@@ -48573,22 +52304,38 @@ class WebGLRenderer {
 
 		const xr = new WebXRManager( _this, _gl );
 
+		/**
+		 * A reference to the XR manager.
+		 *
+		 * @type {WebXRManager}
+		 */
 		this.xr = xr;
 
-		// API
-
+		/**
+		 * Returns the rendering context.
+		 *
+		 * @return {WebGL2RenderingContext} The rendering context.
+		 */
 		this.getContext = function () {
 
 			return _gl;
 
 		};
 
+		/**
+		 * Returns the rendering context attributes.
+		 *
+		 * @return {WebGLContextAttributes} The rendering context attributes.
+		 */
 		this.getContextAttributes = function () {
 
 			return _gl.getContextAttributes();
 
 		};
 
+		/**
+		 * Simulates a loss of the WebGL context. This requires support for the `WEBGL_lose_context` extension.
+		 */
 		this.forceContextLoss = function () {
 
 			const extension = extensions.get( 'WEBGL_lose_context' );
@@ -48596,6 +52343,9 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Simulates a restore of the WebGL context. This requires support for the `WEBGL_lose_context` extension.
+		 */
 		this.forceContextRestore = function () {
 
 			const extension = extensions.get( 'WEBGL_lose_context' );
@@ -48603,12 +52353,22 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Returns the pixel ratio.
+		 *
+		 * @return {number} The pixel ratio.
+		 */
 		this.getPixelRatio = function () {
 
 			return _pixelRatio;
 
 		};
 
+		/**
+		 * Sets the given pixel ratio and resizes the canvas if necessary.
+		 *
+		 * @param {number} value - The pixel ratio.
+		 */
 		this.setPixelRatio = function ( value ) {
 
 			if ( value === undefined ) return;
@@ -48619,12 +52379,27 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Returns the renderer's size in logical pixels. This method does not honor the pixel ratio.
+		 *
+		 * @param {Vector2} target - The method writes the result in this target object.
+		 * @return {Vector2} The renderer's size in logical pixels.
+		 */
 		this.getSize = function ( target ) {
 
 			return target.set( _width, _height );
 
 		};
 
+		/**
+		 * Resizes the output canvas to (width, height) with device pixel ratio taken
+		 * into account, and also sets the viewport to fit that size, starting in (0,
+		 * 0). Setting `updateStyle` to false prevents any style changes to the output canvas.
+		 *
+		 * @param {number} width - The width in logical pixels.
+		 * @param {number} height - The height in logical pixels.
+		 * @param {boolean} [updateStyle=true] - Whether to update the `style` attribute of the canvas or not.
+		 */
 		this.setSize = function ( width, height, updateStyle = true ) {
 
 			if ( xr.isPresenting ) {
@@ -48651,12 +52426,31 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Returns the drawing buffer size in physical pixels. This method honors the pixel ratio.
+		 *
+		 * @param {Vector2} target - The method writes the result in this target object.
+		 * @return {Vector2} The drawing buffer size.
+		 */
 		this.getDrawingBufferSize = function ( target ) {
 
 			return target.set( _width * _pixelRatio, _height * _pixelRatio ).floor();
 
 		};
 
+		/**
+		 * This method allows to define the drawing buffer size by specifying
+		 * width, height and pixel ratio all at once. The size of the drawing
+		 * buffer is computed with this formula:
+		 * ```js
+		 * size.x = width * pixelRatio;
+		 * size.y = height * pixelRatio;
+		 * ```
+		 *
+		 * @param {number} width - The width in logical pixels.
+		 * @param {number} height - The height in logical pixels.
+		 * @param {number} pixelRatio - The pixel ratio.
+		 */
 		this.setDrawingBufferSize = function ( width, height, pixelRatio ) {
 
 			_width = width;
@@ -48671,18 +52465,39 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Returns the current viewport definition.
+		 *
+		 * @param {Vector2} target - The method writes the result in this target object.
+		 * @return {Vector2} The current viewport definition.
+		 */
 		this.getCurrentViewport = function ( target ) {
 
 			return target.copy( _currentViewport );
 
 		};
 
+		/**
+		 * Returns the viewport definition.
+		 *
+		 * @param {Vector4} target - The method writes the result in this target object.
+		 * @return {Vector4} The viewport definition.
+		 */
 		this.getViewport = function ( target ) {
 
 			return target.copy( _viewport );
 
 		};
 
+		/**
+		 * Sets the viewport to render from `(x, y)` to `(x + width, y + height)`.
+		 *
+		 * @param {number | Vector4} x - The horizontal coordinate for the lower left corner of the viewport origin in logical pixel unit.
+		 * Or alternatively a four-component vector specifying all the parameters of the viewport.
+		 * @param {number} y - The vertical coordinate for the lower left corner of the viewport origin  in logical pixel unit.
+		 * @param {number} width - The width of the viewport in logical pixel unit.
+		 * @param {number} height - The height of the viewport in logical pixel unit.
+		 */
 		this.setViewport = function ( x, y, width, height ) {
 
 			if ( x.isVector4 ) {
@@ -48699,12 +52514,27 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Returns the scissor region.
+		 *
+		 * @param {Vector4} target - The method writes the result in this target object.
+		 * @return {Vector4} The scissor region.
+		 */
 		this.getScissor = function ( target ) {
 
 			return target.copy( _scissor );
 
 		};
 
+		/**
+		 * Sets the scissor region to render from `(x, y)` to `(x + width, y + height)`.
+		 *
+		 * @param {number | Vector4} x - The horizontal coordinate for the lower left corner of the scissor region origin in logical pixel unit.
+		 * Or alternatively a four-component vector specifying all the parameters of the scissor region.
+		 * @param {number} y - The vertical coordinate for the lower left corner of the scissor region origin  in logical pixel unit.
+		 * @param {number} width - The width of the scissor region in logical pixel unit.
+		 * @param {number} height - The height of the scissor region in logical pixel unit.
+		 */
 		this.setScissor = function ( x, y, width, height ) {
 
 			if ( x.isVector4 ) {
@@ -48721,24 +52551,48 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Returns `true` if the scissor test is enabled.
+		 *
+		 * @return {boolean} Whether the scissor test is enabled or not.
+		 */
 		this.getScissorTest = function () {
 
 			return _scissorTest;
 
 		};
 
+		/**
+		 * Enable or disable the scissor test. When this is enabled, only the pixels
+		 * within the defined scissor area will be affected by further renderer
+		 * actions.
+		 *
+		 * @param {boolean} boolean - Whether the scissor test is enabled or not.
+		 */
 		this.setScissorTest = function ( boolean ) {
 
 			state.setScissorTest( _scissorTest = boolean );
 
 		};
 
+		/**
+		 * Sets a custom opaque sort function for the render lists. Pass `null`
+		 * to use the default `painterSortStable` function.
+		 *
+		 * @param {?Function} method - The opaque sort function.
+		 */
 		this.setOpaqueSort = function ( method ) {
 
 			_opaqueSort = method;
 
 		};
 
+		/**
+		 * Sets a custom transparent sort function for the render lists. Pass `null`
+		 * to use the default `reversePainterSortStable` function.
+		 *
+		 * @param {?Function} method - The opaque sort function.
+		 */
 		this.setTransparentSort = function ( method ) {
 
 			_transparentSort = method;
@@ -48747,30 +52601,60 @@ class WebGLRenderer {
 
 		// Clearing
 
+		/**
+		 * Returns the clear color.
+		 *
+		 * @param {Color} target - The method writes the result in this target object.
+		 * @return {Color} The clear color.
+		 */
 		this.getClearColor = function ( target ) {
 
 			return target.copy( background.getClearColor() );
 
 		};
 
+		/**
+		 * Sets the clear color and alpha.
+		 *
+		 * @param {Color} color - The clear color.
+		 * @param {number} [alpha=1] - The clear alpha.
+		 */
 		this.setClearColor = function () {
 
 			background.setClearColor( ...arguments );
 
 		};
 
+		/**
+		 * Returns the clear alpha. Ranges within `[0,1]`.
+		 *
+		 * @return {number} The clear alpha.
+		 */
 		this.getClearAlpha = function () {
 
 			return background.getClearAlpha();
 
 		};
 
+		/**
+		 * Sets the clear alpha.
+		 *
+		 * @param {number} alpha - The clear alpha.
+		 */
 		this.setClearAlpha = function () {
 
 			background.setClearAlpha( ...arguments );
 
 		};
 
+		/**
+		 * Tells the renderer to clear its color, depth or stencil drawing buffer(s).
+		 * This method initializes the buffers to the current clear color values.
+		 *
+		 * @param {boolean} [color=true] - Whether the color buffer should be cleared or not.
+		 * @param {boolean} [depth=true] - Whether the depth buffer should be cleared or not.
+		 * @param {boolean} [stencil=true] - Whether the stencil buffer should be cleared or not.
+		 */
 		this.clear = function ( color = true, depth = true, stencil = true ) {
 
 			let bits = 0;
@@ -48849,26 +52733,37 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Clears the color buffer. Equivalent to calling `renderer.clear( true, false, false )`.
+		 */
 		this.clearColor = function () {
 
 			this.clear( true, false, false );
 
 		};
 
+		/**
+		 * Clears the depth buffer. Equivalent to calling `renderer.clear( false, true, false )`.
+		 */
 		this.clearDepth = function () {
 
 			this.clear( false, true, false );
 
 		};
 
+		/**
+		 * Clears the stencil buffer. Equivalent to calling `renderer.clear( false, false, true )`.
+		 */
 		this.clearStencil = function () {
 
 			this.clear( false, false, true );
 
 		};
 
-		//
-
+		/**
+		 * Frees the GPU-related resources allocated by this instance. Call this
+		 * method whenever this instance is no longer used in your app.
+		 */
 		this.dispose = function () {
 
 			canvas.removeEventListener( 'webglcontextlost', onContextLost, false );
@@ -49174,6 +53069,18 @@ class WebGLRenderer {
 
 		}
 
+		/**
+		 * Compiles all materials in the scene with the camera. This is useful to precompile shaders
+		 * before the first rendering. If you want to add a 3D object to an existing scene, use the third
+		 * optional parameter for applying the target scene.
+		 *
+		 * Note that the (target) scene's lighting and environment must be configured before calling this method.
+		 *
+		 * @param {Object3D} scene - The scene or another type of 3D object to precompile.
+		 * @param {Camera} camera - The camera.
+		 * @param {?Scene} [targetScene=null] - The target scene.
+		 * @return {Set<Material>} The precompiled materials.
+		 */
 		this.compile = function ( scene, camera, targetScene = null ) {
 
 			if ( targetScene === null ) targetScene = scene;
@@ -49269,6 +53176,18 @@ class WebGLRenderer {
 
 		// compileAsync
 
+		/**
+		 * Asynchronous version of {@link WebGLRenderer#compile}.
+		 *
+		 * This method makes use of the `KHR_parallel_shader_compile` WebGL extension. Hence,
+		 * it is recommended to use this version of `compile()` whenever possible.
+		 *
+		 * @async
+		 * @param {Object3D} scene - The scene or another type of 3D object to precompile.
+		 * @param {Camera} camera - The camera.
+		 * @param {?Scene} [targetScene=null] - The target scene.
+		 * @return {Promise} A Promise that resolves when the given scene can be rendered without unnecessary stalling due to shader compilation.
+		 */
 		this.compileAsync = function ( scene, camera, targetScene = null ) {
 
 			const materials = this.compile( scene, camera, targetScene );
@@ -49370,6 +53289,20 @@ class WebGLRenderer {
 
 		// Rendering
 
+		/**
+		 * Renders the given scene (or other type of 3D object) using the given camera.
+		 *
+		 * The render is done to a previously specified render target set by calling {@link WebGLRenderer#setRenderTarget}
+		 * or to the canvas as usual.
+		 *
+		 * By default render buffers are cleared before rendering but you can prevent
+		 * this by setting the property `autoClear` to `false`. If you want to prevent
+		 * only certain buffers being cleared you can `autoClearColor`, `autoClearDepth`
+		 * or `autoClearStencil` to `false`. To force a clear, use {@link WebGLRenderer#clear}.
+		 *
+		 * @param {Object3D} scene - The scene to render.
+		 * @param {Camera} camera - The camera.
+		 */
 		this.render = function ( scene, camera ) {
 
 			if ( camera !== undefined && camera.isCamera !== true ) {
@@ -49828,8 +53761,14 @@ class WebGLRenderer {
 
 				const object = renderItem.object;
 				const geometry = renderItem.geometry;
-				const material = overrideMaterial === null ? renderItem.material : overrideMaterial;
 				const group = renderItem.group;
+				let material = renderItem.material;
+
+				if ( material.allowOverride === true && overrideMaterial !== null ) {
+
+					material = overrideMaterial;
+
+				}
 
 				if ( object.layers.test( camera.layers ) ) {
 
@@ -50450,18 +54389,34 @@ class WebGLRenderer {
 
 		}
 
+		/**
+		 * Returns the active cube face.
+		 *
+		 * @return {number} The active cube face.
+		 */
 		this.getActiveCubeFace = function () {
 
 			return _currentActiveCubeFace;
 
 		};
 
+		/**
+		 * Returns the active mipmap level.
+		 *
+		 * @return {number} The active mipmap level.
+		 */
 		this.getActiveMipmapLevel = function () {
 
 			return _currentActiveMipmapLevel;
 
 		};
 
+		/**
+		 * Returns the active render target.
+		 *
+		 * @return {?WebGLRenderTarget} The active render target. Returns `null` if no render target
+		 * is currently set.
+		 */
 		this.getRenderTarget = function () {
 
 			return _currentRenderTarget;
@@ -50470,26 +54425,21 @@ class WebGLRenderer {
 
 		this.setRenderTargetTextures = function ( renderTarget, colorTexture, depthTexture ) {
 
-			properties.get( renderTarget.texture ).__webglTexture = colorTexture;
-			properties.get( renderTarget.depthTexture ).__webglTexture = depthTexture;
-
 			const renderTargetProperties = properties.get( renderTarget );
-			renderTargetProperties.__hasExternalTextures = true;
 
-			renderTargetProperties.__autoAllocateDepthBuffer = depthTexture === undefined;
-
-			if ( ! renderTargetProperties.__autoAllocateDepthBuffer ) {
+			renderTargetProperties.__autoAllocateDepthBuffer = renderTarget.resolveDepthBuffer === false;
+			if ( renderTargetProperties.__autoAllocateDepthBuffer === false ) {
 
 				// The multisample_render_to_texture extension doesn't work properly if there
 				// are midframe flushes and an external depth buffer. Disable use of the extension.
-				if ( extensions.has( 'WEBGL_multisampled_render_to_texture' ) === true ) {
-
-					console.warn( 'THREE.WebGLRenderer: Render-to-texture extension was disabled because an external texture was provided' );
-					renderTargetProperties.__useRenderToTexture = false;
-
-				}
+				renderTargetProperties.__useRenderToTexture = false;
 
 			}
+
+			properties.get( renderTarget.texture ).__webglTexture = colorTexture;
+			properties.get( renderTarget.depthTexture ).__webglTexture = renderTargetProperties.__autoAllocateDepthBuffer ? undefined : depthTexture;
+
+			renderTargetProperties.__hasExternalTextures = true;
 
 		};
 
@@ -50502,6 +54452,16 @@ class WebGLRenderer {
 		};
 
 		const _scratchFrameBuffer = _gl.createFramebuffer();
+
+		/**
+		 * Sets the active rendertarget.
+		 *
+		 * @param {?WebGLRenderTarget} renderTarget - The render target to set. When `null` is given,
+		 * the canvas is set as the active render target instead.
+		 * @param {number} [activeCubeFace=0] - The active cube face when using a cube render target.
+		 * Indicates the z layer to render in to when using 3D or array render targets.
+		 * @param {number} [activeMipmapLevel=0] - The active mipmap level.
+		 */
 		this.setRenderTarget = function ( renderTarget, activeCubeFace = 0, activeMipmapLevel = 0 ) {
 
 			_currentRenderTarget = renderTarget;
@@ -50654,6 +54614,17 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Reads the pixel data from the given render target into the given buffer.
+		 *
+		 * @param {WebGLRenderTarget} renderTarget - The render target to read from.
+		 * @param {number} x - The `x` coordinate of the copy region's origin.
+		 * @param {number} y - The `y` coordinate of the copy region's origin.
+		 * @param {number} width - The width of the copy region.
+		 * @param {number} height - The height of the copy region.
+		 * @param {TypedArray} buffer - The result buffer.
+		 * @param {number} [activeCubeFaceIndex] - The active cube face index.
+		 */
 		this.readRenderTargetPixels = function ( renderTarget, x, y, width, height, buffer, activeCubeFaceIndex ) {
 
 			if ( ! ( renderTarget && renderTarget.isWebGLRenderTarget ) ) {
@@ -50716,6 +54687,21 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Asynchronous, non-blocking version of {@link WebGLRenderer#readRenderTargetPixels}.
+		 *
+		 * It is recommended to use this version of `readRenderTargetPixels()` whenever possible.
+		 *
+		 * @async
+		 * @param {WebGLRenderTarget} renderTarget - The render target to read from.
+		 * @param {number} x - The `x` coordinate of the copy region's origin.
+		 * @param {number} y - The `y` coordinate of the copy region's origin.
+		 * @param {number} width - The width of the copy region.
+		 * @param {number} height - The height of the copy region.
+		 * @param {TypedArray} buffer - The result buffer.
+		 * @param {number} [activeCubeFaceIndex] - The active cube face index.
+		 * @return {Promise<TypedArray>} A Promise that resolves when the read has been finished. The resolve provides the read data as a typed array.
+		 */
 		this.readRenderTargetPixelsAsync = async function ( renderTarget, x, y, width, height, buffer, activeCubeFaceIndex ) {
 
 			if ( ! ( renderTarget && renderTarget.isWebGLRenderTarget ) ) {
@@ -50733,27 +54719,27 @@ class WebGLRenderer {
 
 			if ( framebuffer ) {
 
-				const texture = renderTarget.texture;
-				const textureFormat = texture.format;
-				const textureType = texture.type;
-
-				if ( ! capabilities.textureFormatReadable( textureFormat ) ) {
-
-					throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in RGBA or implementation defined format.' );
-
-				}
-
-				if ( ! capabilities.textureTypeReadable( textureType ) ) {
-
-					throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in UnsignedByteType or implementation defined type.' );
-
-				}
-
 				// the following if statement ensures valid read requests (no out-of-bounds pixels, see #8604)
 				if ( ( x >= 0 && x <= ( renderTarget.width - width ) ) && ( y >= 0 && y <= ( renderTarget.height - height ) ) ) {
 
 					// set the active frame buffer to the one we want to read
 					state.bindFramebuffer( _gl.FRAMEBUFFER, framebuffer );
+
+					const texture = renderTarget.texture;
+					const textureFormat = texture.format;
+					const textureType = texture.type;
+
+					if ( ! capabilities.textureFormatReadable( textureFormat ) ) {
+
+						throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in RGBA or implementation defined format.' );
+
+					}
+
+					if ( ! capabilities.textureTypeReadable( textureType ) ) {
+
+						throw new Error( 'THREE.WebGLRenderer.readRenderTargetPixelsAsync: renderTarget is not in UnsignedByteType or implementation defined type.' );
+
+					}
 
 					const glBuffer = _gl.createBuffer();
 					_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
@@ -50789,18 +54775,14 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Copies pixels from the current bound framebuffer into the given texture.
+		 *
+		 * @param {FramebufferTexture} texture - The texture.
+		 * @param {?Vector2} [position=null] - The start position of the copy operation.
+		 * @param {number} [level=0] - The mip level. The default represents the base mip.
+		 */
 		this.copyFramebufferToTexture = function ( texture, position = null, level = 0 ) {
-
-			// support previous signature with position first
-			if ( texture.isTexture !== true ) {
-
-				// @deprecated, r165
-				warnOnce( 'WebGLRenderer: copyFramebufferToTexture function signature has changed.' );
-
-				position = arguments[ 0 ] || null;
-				texture = arguments[ 1 ];
-
-			}
 
 			const levelScale = Math.pow( 2, - level );
 			const width = Math.floor( texture.image.width * levelScale );
@@ -50819,21 +54801,21 @@ class WebGLRenderer {
 
 		const _srcFramebuffer = _gl.createFramebuffer();
 		const _dstFramebuffer = _gl.createFramebuffer();
+
+		/**
+		 * Copies data of the given source texture into a destination texture.
+		 *
+		 * When using render target textures as `srcTexture` and `dstTexture`, you must make sure both render targets are initialized
+		 * {@link WebGLRenderer#initRenderTarget}.
+		 *
+		 * @param {Texture} srcTexture - The source texture.
+		 * @param {Texture} dstTexture - The destination texture.
+		 * @param {?(Box2|Box3)} [srcRegion=null] - A bounding box which describes the source region. Can be two or three-dimensional.
+		 * @param {?(Vector2|Vector3)} [dstPosition=null] - A vector that represents the origin of the destination region. Can be two or three-dimensional.
+		 * @param {number} [srcLevel=0] - The source mipmap level to copy.
+		 * @param {?number} [dstLevel=null] - The destination mipmap level.
+		 */
 		this.copyTextureToTexture = function ( srcTexture, dstTexture, srcRegion = null, dstPosition = null, srcLevel = 0, dstLevel = null ) {
-
-			// support previous signature with dstPosition first
-			if ( srcTexture.isTexture !== true ) {
-
-				// @deprecated, r165
-				warnOnce( 'WebGLRenderer: copyTextureToTexture function signature has changed.' );
-
-				dstPosition = arguments[ 0 ] || null;
-				srcTexture = arguments[ 1 ];
-				dstTexture = arguments[ 2 ];
-				dstLevel = arguments[ 3 ] || 0;
-				srcRegion = null;
-
-			}
 
 			// support the previous signature with just a single dst mipmap level
 			if ( dstLevel === null ) {
@@ -51087,20 +55069,6 @@ class WebGLRenderer {
 
 		this.copyTextureToTexture3D = function ( srcTexture, dstTexture, srcRegion = null, dstPosition = null, level = 0 ) {
 
-			// support previous signature with source box first
-			if ( srcTexture.isTexture !== true ) {
-
-				// @deprecated, r165
-				warnOnce( 'WebGLRenderer: copyTextureToTexture3D function signature has changed.' );
-
-				srcRegion = arguments[ 0 ] || null;
-				dstPosition = arguments[ 1 ] || null;
-				srcTexture = arguments[ 2 ];
-				dstTexture = arguments[ 3 ];
-				level = arguments[ 4 ] || 0;
-
-			}
-
 			// @deprecated, r170
 			warnOnce( 'WebGLRenderer: copyTextureToTexture3D function has been deprecated. Use "copyTextureToTexture" instead.' );
 
@@ -51108,6 +55076,13 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Initializes the given WebGLRenderTarget memory. Useful for initializing a render target so data
+		 * can be copied into it using {@link WebGLRenderer#copyTextureToTexture} before it has been
+		 * rendered to.
+		 *
+		 * @param {WebGLRenderTarget} target - The render target.
+		 */
 		this.initRenderTarget = function ( target ) {
 
 			if ( properties.get( target ).__webglFramebuffer === undefined ) {
@@ -51118,6 +55093,12 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Initializes the given texture. Useful for preloading a texture rather than waiting until first
+		 * render (which can cause noticeable lags due to decode and GPU upload overhead).
+		 *
+		 * @param {Texture} texture - The texture.
+		 */
 		this.initTexture = function ( texture ) {
 
 			if ( texture.isCubeTexture ) {
@@ -51142,6 +55123,11 @@ class WebGLRenderer {
 
 		};
 
+		/**
+		 * Can be used to reset the internal WebGL state. This method is mostly
+		 * relevant for applications which share a single WebGL context across
+		 * multiple WebGL libraries.
+		 */
 		this.resetState = function () {
 
 			_currentActiveCubeFace = 0;
@@ -51161,12 +55147,27 @@ class WebGLRenderer {
 
 	}
 
+	/**
+	 * Defines the coordinate system of the renderer.
+	 *
+	 * In `WebGLRenderer`, the value is always `WebGLCoordinateSystem`.
+	 *
+	 * @type {WebGLCoordinateSystem|WebGPUCoordinateSystem}
+	 * @default WebGLCoordinateSystem
+	 * @readonly
+	 */
 	get coordinateSystem() {
 
 		return WebGLCoordinateSystem;
 
 	}
 
+	/**
+	 * Defines the output color space of the renderer.
+	 *
+	 * @type {SRGBColorSpace|LinearSRGBColorSpace}
+	 * @default SRGBColorSpace
+	 */
 	get outputColorSpace() {
 
 		return this._outputColorSpace;
@@ -51178,7 +55179,7 @@ class WebGLRenderer {
 		this._outputColorSpace = colorSpace;
 
 		const gl = this.getContext();
-		gl.drawingBufferColorspace = ColorManagement._getDrawingBufferColorSpace( colorSpace );
+		gl.drawingBufferColorSpace = ColorManagement._getDrawingBufferColorSpace( colorSpace );
 		gl.unpackColorSpace = ColorManagement._getUnpackColorSpace();
 
 	}
@@ -51383,7 +55384,8 @@ class Scene extends Object3D {
 		this.environmentRotation = new Euler();
 
 		/**
-		 * Forces everything in the scene to be rendered with the defined material.
+		 * Forces everything in the scene to be rendered with the defined material. It is possible
+		 * to exclude materials from override by setting {@link Material#allowOverride} to `false`.
 		 *
 		 * @type {?Material}
 		 * @default null
@@ -51440,14 +55442,43 @@ class Scene extends Object3D {
 
 }
 
+/**
+ * An instanced version of a buffer attribute.
+ *
+ * @augments BufferAttribute
+ */
 class InstancedBufferAttribute extends BufferAttribute {
 
+	/**
+	 * Constructs a new instanced buffer attribute.
+	 *
+	 * @param {TypedArray} array - The array holding the attribute data.
+	 * @param {number} itemSize - The item size.
+	 * @param {boolean} [normalized=false] - Whether the data are normalized or not.
+	 * @param {number} [meshPerAttribute=1] - How often a value of this buffer attribute should be repeated.
+	 */
 	constructor( array, itemSize, normalized, meshPerAttribute = 1 ) {
 
 		super( array, itemSize, normalized );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isInstancedBufferAttribute = true;
 
+		/**
+		 * Defines how often a value of this buffer attribute should be repeated. A
+		 * value of one means that each value of the instanced attribute is used for
+		 * a single instance. A value of two means that each value is used for two
+		 * consecutive instances (and so on).
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.meshPerAttribute = meshPerAttribute;
 
 	}
@@ -51476,18 +55507,83 @@ class InstancedBufferAttribute extends BufferAttribute {
 
 }
 
+/**
+ * Creates a texture directly from raw buffer data.
+ *
+ * The interpretation of the data depends on type and format: If the type is
+ * `UnsignedByteType`, a `Uint8Array` will be useful for addressing the
+ * texel data. If the format is `RGBAFormat`, data needs four values for
+ * one texel; Red, Green, Blue and Alpha (typically the opacity).
+ *
+ * @augments Texture
+ */
 class DataTexture extends Texture {
 
+	/**
+	 * Constructs a new data texture.
+	 *
+	 * @param {?TypedArray} [data=null] - The buffer data.
+	 * @param {number} [width=1] - The width of the texture.
+	 * @param {number} [height=1] - The height of the texture.
+	 * @param {number} [format=RGBAFormat] - The texture format.
+	 * @param {number} [type=UnsignedByteType] - The texture type.
+	 * @param {number} [mapping=Texture.DEFAULT_MAPPING] - The texture mapping.
+	 * @param {number} [wrapS=ClampToEdgeWrapping] - The wrapS value.
+	 * @param {number} [wrapT=ClampToEdgeWrapping] - The wrapT value.
+	 * @param {number} [magFilter=NearestFilter] - The mag filter value.
+	 * @param {number} [minFilter=NearestFilter] - The min filter value.
+	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The anisotropy value.
+	 * @param {string} [colorSpace=NoColorSpace] - The color space.
+	 */
 	constructor( data = null, width = 1, height = 1, format, type, mapping, wrapS, wrapT, magFilter = NearestFilter, minFilter = NearestFilter, anisotropy, colorSpace ) {
 
 		super( null, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, colorSpace );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isDataTexture = true;
 
+		/**
+		 * The image definition of a data texture.
+		 *
+		 * @type {{data:TypedArray,width:number,height:number}}
+		 */
 		this.image = { data: data, width: width, height: height };
 
+		/**
+		 * Whether to generate mipmaps (if possible) for a texture.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.generateMipmaps = false;
+
+		/**
+		 * If set to `true`, the texture is flipped along the vertical axis when
+		 * uploaded to the GPU.
+		 *
+		 * Overwritten and set to `false` by default.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flipY = false;
+
+		/**
+		 * Specifies the alignment requirements for the start of each pixel row in memory.
+		 *
+		 * Overwritten and set to `1` by default.
+		 *
+		 * @type {boolean}
+		 * @default 1
+		 */
 		this.unpackAlignment = 1;
 
 	}
@@ -51559,7 +55655,7 @@ class InstancedMesh extends Mesh {
 		 * {@link Texture#needsUpdate} flag to true if you modify instanced data
 		 * via {@link InstancedMesh#setMorphAt}.
 		 *
-		 * @type {?InstancedBufferAttribute}
+		 * @type {?DataTexture}
 		 * @default null
 		 */
 		this.morphTexture = null;
@@ -51809,7 +55905,7 @@ class InstancedMesh extends Mesh {
 	 * {@link InstancedMesh#instanceMatrix} to `true` after updating all the colors.
 	 *
 	 * @param {number} index - The instance index.
-	 * @param {Matrix4} matrix - The the local transformation.
+	 * @param {Matrix4} matrix - The local transformation.
 	 */
 	setMatrixAt( index, matrix ) {
 
@@ -51880,30 +55976,103 @@ class InstancedMesh extends Mesh {
 
 }
 
+/**
+ * A material for rendering line primitives.
+ *
+ * Materials define the appearance of renderable 3D objects.
+ *
+ * ```js
+ * const material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+ * ```
+ *
+ * @augments Material
+ */
 class LineBasicMaterial extends Material {
 
+	/**
+	 * Constructs a new line basic material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLineBasicMaterial = true;
 
 		this.type = 'LineBasicMaterial';
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff );
 
+		/**
+		 * Sets the color of the lines using data from a texture. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * Controls line thickness or lines.
+		 *
+		 * Can only be used with {@link SVGRenderer}. WebGL and WebGPU
+		 * ignore this setting and always render line primitives with a
+		 * width of one pixel.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.linewidth = 1;
+
+		/**
+		 * Defines appearance of line ends.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('butt'|'round'|'square')}
+		 * @default 'round'
+		 */
 		this.linecap = 'round';
+
+		/**
+		 * Defines appearance of line joints.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.linejoin = 'round';
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
 
 	}
-
 
 	copy( source ) {
 
@@ -52311,25 +56480,114 @@ class LineSegments extends Line$1 {
 
 }
 
+/**
+ * A material for rendering point primitives.
+ *
+ * Materials define the appearance of renderable 3D objects.
+ *
+ * ```js
+ * const vertices = [];
+ *
+ * for ( let i = 0; i < 10000; i ++ ) {
+ * 	const x = THREE.MathUtils.randFloatSpread( 2000 );
+ * 	const y = THREE.MathUtils.randFloatSpread( 2000 );
+ * 	const z = THREE.MathUtils.randFloatSpread( 2000 );
+ *
+ * 	vertices.push( x, y, z );
+ * }
+ *
+ * const geometry = new THREE.BufferGeometry();
+ * geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+ * const material = new THREE.PointsMaterial( { color: 0x888888 } );
+ * const points = new THREE.Points( geometry, material );
+ * scene.add( points );
+ * ```
+ *
+ * @augments Material
+ */
 class PointsMaterial extends Material {
 
+	/**
+	 * Constructs a new points material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isPointsMaterial = true;
 
 		this.type = 'PointsMaterial';
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff );
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * Defines the size of the points in pixels.
+		 *
+		 * Might be capped if the value exceeds hardware dependent parameters like [gl.ALIASED_POINT_SIZE_RANGE]{@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParamete}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.size = 1;
+
+		/**
+		 * Specifies whether size of individual points is attenuated by the camera depth (perspective camera only).
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.sizeAttenuation = true;
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
@@ -52576,15 +56834,177 @@ function testPoint( point, index, localThresholdSq, matrixWorld, raycaster, inte
 
 }
 
+/**
+ * Creates a texture from a canvas element.
+ *
+ * This is almost the same as the base texture class, except that it sets {@link Texture#needsUpdate}
+ * to `true` immediately since a canvas can directly be used for rendering.
+ *
+ * @augments Texture
+ */
 class CanvasTexture extends Texture {
 
+	/**
+	 * Constructs a new texture.
+	 *
+	 * @param {HTMLCanvasElement} [canvas] - The HTML canvas element.
+	 * @param {number} [mapping=Texture.DEFAULT_MAPPING] - The texture mapping.
+	 * @param {number} [wrapS=ClampToEdgeWrapping] - The wrapS value.
+	 * @param {number} [wrapT=ClampToEdgeWrapping] - The wrapT value.
+	 * @param {number} [magFilter=LinearFilter] - The mag filter value.
+	 * @param {number} [minFilter=LinearMipmapLinearFilter] - The min filter value.
+	 * @param {number} [format=RGBAFormat] - The texture format.
+	 * @param {number} [type=UnsignedByteType] - The texture type.
+	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The anisotropy value.
+	 */
 	constructor( canvas, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy ) {
 
 		super( canvas, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isCanvasTexture = true;
 
 		this.needsUpdate = true;
+
+	}
+
+}
+
+/**
+ * A simple shape of Euclidean geometry. It is constructed from a
+ * number of triangular segments that are oriented around a central point and
+ * extend as far out as a given radius. It is built counter-clockwise from a
+ * start angle and a given central angle. It can also be used to create
+ * regular polygons, where the number of segments determines the number of
+ * sides.
+ *
+ * ```js
+ * const geometry = new THREE.CircleGeometry( 5, 32 );
+ * const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+ * const circle = new THREE.Mesh( geometry, material );
+ * scene.add( circle )
+ * ```
+ *
+ * @augments BufferGeometry
+ */
+class CircleGeometry extends BufferGeometry {
+
+	/**
+	 * Constructs a new circle geometry.
+	 *
+	 * @param {number} [radius=1] - Radius of the circle.
+	 * @param {number} [segments=32] - Number of segments (triangles), minimum = `3`.
+	 * @param {number} [thetaStart=0] - Start angle for first segment in radians.
+	 * @param {number} [thetaLength=Math.PI*2] - The central angle, often called theta,
+	 * of the circular sector in radians. The default value results in a complete circle.
+	 */
+	constructor( radius = 1, segments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
+
+		super();
+
+		this.type = 'CircleGeometry';
+
+		/**
+		 * Holds the constructor parameters that have been
+		 * used to generate the geometry. Any modification
+		 * after instantiation does not change the geometry.
+		 *
+		 * @type {Object}
+		 */
+		this.parameters = {
+			radius: radius,
+			segments: segments,
+			thetaStart: thetaStart,
+			thetaLength: thetaLength
+		};
+
+		segments = Math.max( 3, segments );
+
+		// buffers
+
+		const indices = [];
+		const vertices = [];
+		const normals = [];
+		const uvs = [];
+
+		// helper variables
+
+		const vertex = new Vector3();
+		const uv = new Vector2();
+
+		// center point
+
+		vertices.push( 0, 0, 0 );
+		normals.push( 0, 0, 1 );
+		uvs.push( 0.5, 0.5 );
+
+		for ( let s = 0, i = 3; s <= segments; s ++, i += 3 ) {
+
+			const segment = thetaStart + s / segments * thetaLength;
+
+			// vertex
+
+			vertex.x = radius * Math.cos( segment );
+			vertex.y = radius * Math.sin( segment );
+
+			vertices.push( vertex.x, vertex.y, vertex.z );
+
+			// normal
+
+			normals.push( 0, 0, 1 );
+
+			// uvs
+
+			uv.x = ( vertices[ i ] / radius + 1 ) / 2;
+			uv.y = ( vertices[ i + 1 ] / radius + 1 ) / 2;
+
+			uvs.push( uv.x, uv.y );
+
+		}
+
+		// indices
+
+		for ( let i = 1; i <= segments; i ++ ) {
+
+			indices.push( i, i + 1, 0 );
+
+		}
+
+		// build geometry
+
+		this.setIndex( indices );
+		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+
+	}
+
+	copy( source ) {
+
+		super.copy( source );
+
+		this.parameters = Object.assign( {}, source.parameters );
+
+		return this;
+
+	}
+
+	/**
+	 * Factory method for creating an instance of this class from the given
+	 * JSON object.
+	 *
+	 * @param {Object} data - A JSON object representing the serialized geometry.
+	 * @return {CircleGeometry} A new instance.
+	 */
+	static fromJSON( data ) {
+
+		return new CircleGeometry( data.radius, data.segments, data.thetaStart, data.thetaLength );
 
 	}
 
@@ -52649,7 +57069,7 @@ class Curve {
 	 * @abstract
 	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
 	 * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
-	 * @return {?(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
+	 * @return {(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
 	 */
 	getPoint( /* t, optionalTarget */ ) {
 
@@ -55247,7 +59667,7 @@ let Path$1 = class Path extends CurvePath {
 	 * @param {number} aStartAngle - The start angle in radians.
 	 * @param {number} aEndAngle - The end angle in radians.
 	 * @param {boolean} [aClockwise=false] - Whether to sweep the ellipse clockwise or not.
-	 * @param {boolean} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+	 * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
 	 * @return {Path} A reference to this path.
 	 */
 	ellipse( aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation ) {
@@ -55331,140 +59751,6 @@ let Path$1 = class Path extends CurvePath {
 	}
 
 };
-
-/**
- * A simple shape of Euclidean geometry. It is constructed from a
- * number of triangular segments that are oriented around a central point and
- * extend as far out as a given radius. It is built counter-clockwise from a
- * start angle and a given central angle. It can also be used to create
- * regular polygons, where the number of segments determines the number of
- * sides.
- *
- * ```js
- * const geometry = new THREE.CircleGeometry( 5, 32 );
- * const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
- * const circle = new THREE.Mesh( geometry, material );
- * scene.add( circle )
- * ```
- *
- * @augments BufferGeometry
- */
-class CircleGeometry extends BufferGeometry {
-
-	/**
-	 * Constructs a new circle geometry.
-	 *
-	 * @param {number} [radius=1] - Radius of the circle.
-	 * @param {number} [segments=32] - Number of segments (triangles), minimum = `3`.
-	 * @param {number} [thetaStart=0] - Start angle for first segment in radians.
-	 * @param {number} [thetaLength=Math.PI*2] - The central angle, often called theta,
-	 * of the circular sector in radians. The default value results in a complete circle.
-	 */
-	constructor( radius = 1, segments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
-
-		super();
-
-		this.type = 'CircleGeometry';
-
-		/**
-		 * Holds the constructor parameters that have been
-		 * used to generate the geometry. Any modification
-		 * after instantiation does not change the geometry.
-		 *
-		 * @type {Object}
-		 */
-		this.parameters = {
-			radius: radius,
-			segments: segments,
-			thetaStart: thetaStart,
-			thetaLength: thetaLength
-		};
-
-		segments = Math.max( 3, segments );
-
-		// buffers
-
-		const indices = [];
-		const vertices = [];
-		const normals = [];
-		const uvs = [];
-
-		// helper variables
-
-		const vertex = new Vector3();
-		const uv = new Vector2();
-
-		// center point
-
-		vertices.push( 0, 0, 0 );
-		normals.push( 0, 0, 1 );
-		uvs.push( 0.5, 0.5 );
-
-		for ( let s = 0, i = 3; s <= segments; s ++, i += 3 ) {
-
-			const segment = thetaStart + s / segments * thetaLength;
-
-			// vertex
-
-			vertex.x = radius * Math.cos( segment );
-			vertex.y = radius * Math.sin( segment );
-
-			vertices.push( vertex.x, vertex.y, vertex.z );
-
-			// normal
-
-			normals.push( 0, 0, 1 );
-
-			// uvs
-
-			uv.x = ( vertices[ i ] / radius + 1 ) / 2;
-			uv.y = ( vertices[ i + 1 ] / radius + 1 ) / 2;
-
-			uvs.push( uv.x, uv.y );
-
-		}
-
-		// indices
-
-		for ( let i = 1; i <= segments; i ++ ) {
-
-			indices.push( i, i + 1, 0 );
-
-		}
-
-		// build geometry
-
-		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
-
-	}
-
-	copy( source ) {
-
-		super.copy( source );
-
-		this.parameters = Object.assign( {}, source.parameters );
-
-		return this;
-
-	}
-
-	/**
-	 * Factory method for creating an instance of this class from the given
-	 * JSON object.
-	 *
-	 * @param {Object} data - A JSON object representing the serialized geometry.
-	 * @return {CircleGeometry} A new instance.
-	 */
-	static fromJSON( data ) {
-
-		return new CircleGeometry( data.radius, data.segments, data.thetaStart, data.thetaLength );
-
-	}
-
-}
 
 /**
  * Defines an arbitrary 2d shape plane using paths with optional holes. It
@@ -55626,12 +59912,642 @@ class Shape extends Path$1 {
 
 }
 
-/**
- * An implementation of the earcut polygon triangulation algorithm. The code
- * is a port of [mapbox/earcut]{@link https://github.com/mapbox/earcut mapbox/earcut} (v2.2.4).
- *
- * @hideconstructor
- */
+/* eslint-disable */
+// copy of mapbox/earcut version 3.0.1
+// https://github.com/mapbox/earcut/tree/v3.0.1
+
+function earcut(data, holeIndices, dim = 2) {
+
+    const hasHoles = holeIndices && holeIndices.length;
+    const outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+    let outerNode = linkedList(data, 0, outerLen, dim, true);
+    const triangles = [];
+
+    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+
+    let minX, minY, invSize;
+
+    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+
+    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+    if (data.length > 80 * dim) {
+        minX = Infinity;
+        minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        for (let i = dim; i < outerLen; i += dim) {
+            const x = data[i];
+            const y = data[i + 1];
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+
+        // minX, minY and invSize are later used to transform coords into integers for z-order calculation
+        invSize = Math.max(maxX - minX, maxY - minY);
+        invSize = invSize !== 0 ? 32767 / invSize : 0;
+    }
+
+    earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0);
+
+    return triangles;
+}
+
+// create a circular doubly linked list from polygon points in the specified winding order
+function linkedList(data, start, end, dim, clockwise) {
+    let last;
+
+    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+        for (let i = start; i < end; i += dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
+    } else {
+        for (let i = end - dim; i >= start; i -= dim) last = insertNode(i / dim | 0, data[i], data[i + 1], last);
+    }
+
+    if (last && equals(last, last.next)) {
+        removeNode(last);
+        last = last.next;
+    }
+
+    return last;
+}
+
+// eliminate colinear or duplicate points
+function filterPoints(start, end) {
+    if (!start) return start;
+    if (!end) end = start;
+
+    let p = start,
+        again;
+    do {
+        again = false;
+
+        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+            removeNode(p);
+            p = end = p.prev;
+            if (p === p.next) break;
+            again = true;
+
+        } else {
+            p = p.next;
+        }
+    } while (again || p !== end);
+
+    return end;
+}
+
+// main ear slicing loop which triangulates a polygon (given as a linked list)
+function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+    if (!ear) return;
+
+    // interlink polygon nodes in z-order
+    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+
+    let stop = ear;
+
+    // iterate through ears, slicing them one by one
+    while (ear.prev !== ear.next) {
+        const prev = ear.prev;
+        const next = ear.next;
+
+        if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+            triangles.push(prev.i, ear.i, next.i); // cut off the triangle
+
+            removeNode(ear);
+
+            // skipping the next vertex leads to less sliver triangles
+            ear = next.next;
+            stop = next.next;
+
+            continue;
+        }
+
+        ear = next;
+
+        // if we looped through the whole remaining polygon and can't find any more ears
+        if (ear === stop) {
+            // try filtering points and slicing again
+            if (!pass) {
+                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+
+            // if this didn't work, try curing all small self-intersections locally
+            } else if (pass === 1) {
+                ear = cureLocalIntersections(filterPoints(ear), triangles);
+                earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+
+            // as a last resort, try splitting the remaining polygon into two
+            } else if (pass === 2) {
+                splitEarcut(ear, triangles, dim, minX, minY, invSize);
+            }
+
+            break;
+        }
+    }
+}
+
+// check whether a polygon node forms a valid ear with adjacent nodes
+function isEar(ear) {
+    const a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // now make sure we don't have other points inside the potential ear
+    const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+
+    // triangle bbox
+    const x0 = Math.min(ax, bx, cx),
+        y0 = Math.min(ay, by, cy),
+        x1 = Math.max(ax, bx, cx),
+        y1 = Math.max(ay, by, cy);
+
+    let p = c.next;
+    while (p !== a) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 &&
+            pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.next;
+    }
+
+    return true;
+}
+
+function isEarHashed(ear, minX, minY, invSize) {
+    const a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+
+    // triangle bbox
+    const x0 = Math.min(ax, bx, cx),
+        y0 = Math.min(ay, by, cy),
+        x1 = Math.max(ax, bx, cx),
+        y1 = Math.max(ay, by, cy);
+
+    // z-order range for the current triangle bbox;
+    const minZ = zOrder(x0, y0, minX, minY, invSize),
+        maxZ = zOrder(x1, y1, minX, minY, invSize);
+
+    let p = ear.prevZ,
+        n = ear.nextZ;
+
+    // look for points inside the triangle in both directions
+    while (p && p.z >= minZ && n && n.z <= maxZ) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
+            pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+
+        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
+            pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    // look for remaining points in decreasing z-order
+    while (p && p.z >= minZ) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
+            pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+    }
+
+    // look for remaining points in increasing z-order
+    while (n && n.z <= maxZ) {
+        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
+            pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    return true;
+}
+
+// go through all polygon nodes and cure small local self-intersections
+function cureLocalIntersections(start, triangles) {
+    let p = start;
+    do {
+        const a = p.prev,
+            b = p.next.next;
+
+        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+
+            triangles.push(a.i, p.i, b.i);
+
+            // remove two nodes involved
+            removeNode(p);
+            removeNode(p.next);
+
+            p = start = b;
+        }
+        p = p.next;
+    } while (p !== start);
+
+    return filterPoints(p);
+}
+
+// try splitting polygon into two and triangulate them independently
+function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+    // look for a valid diagonal that divides the polygon into two
+    let a = start;
+    do {
+        let b = a.next.next;
+        while (b !== a.prev) {
+            if (a.i !== b.i && isValidDiagonal(a, b)) {
+                // split the polygon in two by the diagonal
+                let c = splitPolygon(a, b);
+
+                // filter colinear points around the cuts
+                a = filterPoints(a, a.next);
+                c = filterPoints(c, c.next);
+
+                // run earcut on each half
+                earcutLinked(a, triangles, dim, minX, minY, invSize, 0);
+                earcutLinked(c, triangles, dim, minX, minY, invSize, 0);
+                return;
+            }
+            b = b.next;
+        }
+        a = a.next;
+    } while (a !== start);
+}
+
+// link every hole into the outer loop, producing a single-ring polygon without holes
+function eliminateHoles(data, holeIndices, outerNode, dim) {
+    const queue = [];
+
+    for (let i = 0, len = holeIndices.length; i < len; i++) {
+        const start = holeIndices[i] * dim;
+        const end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+        const list = linkedList(data, start, end, dim, false);
+        if (list === list.next) list.steiner = true;
+        queue.push(getLeftmost(list));
+    }
+
+    queue.sort(compareXYSlope);
+
+    // process holes from left to right
+    for (let i = 0; i < queue.length; i++) {
+        outerNode = eliminateHole(queue[i], outerNode);
+    }
+
+    return outerNode;
+}
+
+function compareXYSlope(a, b) {
+    let result = a.x - b.x;
+    // when the left-most point of 2 holes meet at a vertex, sort the holes counterclockwise so that when we find
+    // the bridge to the outer shell is always the point that they meet at.
+    if (result === 0) {
+        result = a.y - b.y;
+        if (result === 0) {
+            const aSlope = (a.next.y - a.y) / (a.next.x - a.x);
+            const bSlope = (b.next.y - b.y) / (b.next.x - b.x);
+            result = aSlope - bSlope;
+        }
+    }
+    return result;
+}
+
+// find a bridge between vertices that connects hole with an outer ring and and link it
+function eliminateHole(hole, outerNode) {
+    const bridge = findHoleBridge(hole, outerNode);
+    if (!bridge) {
+        return outerNode;
+    }
+
+    const bridgeReverse = splitPolygon(bridge, hole);
+
+    // filter collinear points around the cuts
+    filterPoints(bridgeReverse, bridgeReverse.next);
+    return filterPoints(bridge, bridge.next);
+}
+
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+function findHoleBridge(hole, outerNode) {
+    let p = outerNode;
+    const hx = hole.x;
+    const hy = hole.y;
+    let qx = -Infinity;
+    let m;
+
+    // find a segment intersected by a ray from the hole's leftmost point to the left;
+    // segment's endpoint with lesser x will be potential connection point
+    // unless they intersect at a vertex, then choose the vertex
+    if (equals(hole, p)) return p;
+    do {
+        if (equals(hole, p.next)) return p.next;
+        else if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+            const x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                m = p.x < p.next.x ? p : p.next;
+                if (x === hx) return m; // hole touches outer segment; pick leftmost endpoint
+            }
+        }
+        p = p.next;
+    } while (p !== outerNode);
+
+    if (!m) return null;
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
+    // if there are no points found, we have a valid connection;
+    // otherwise choose the point of the minimum angle with the ray as connection point
+
+    const stop = m;
+    const mx = m.x;
+    const my = m.y;
+    let tanMin = Infinity;
+
+    p = m;
+
+    do {
+        if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+
+            const tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+
+            if (locallyInside(p, hole) &&
+                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
+                m = p;
+                tanMin = tan;
+            }
+        }
+
+        p = p.next;
+    } while (p !== stop);
+
+    return m;
+}
+
+// whether sector in vertex m contains sector in vertex p in the same coordinates
+function sectorContainsSector(m, p) {
+    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
+}
+
+// interlink polygon nodes in z-order
+function indexCurve(start, minX, minY, invSize) {
+    let p = start;
+    do {
+        if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+        p.prevZ = p.prev;
+        p.nextZ = p.next;
+        p = p.next;
+    } while (p !== start);
+
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
+
+    sortLinked(p);
+}
+
+// Simon Tatham's linked list merge sort algorithm
+// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+function sortLinked(list) {
+    let numMerges;
+    let inSize = 1;
+
+    do {
+        let p = list;
+        let e;
+        list = null;
+        let tail = null;
+        numMerges = 0;
+
+        while (p) {
+            numMerges++;
+            let q = p;
+            let pSize = 0;
+            for (let i = 0; i < inSize; i++) {
+                pSize++;
+                q = q.nextZ;
+                if (!q) break;
+            }
+            let qSize = inSize;
+
+            while (pSize > 0 || (qSize > 0 && q)) {
+
+                if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                }
+
+                if (tail) tail.nextZ = e;
+                else list = e;
+
+                e.prevZ = tail;
+                tail = e;
+            }
+
+            p = q;
+        }
+
+        tail.nextZ = null;
+        inSize *= 2;
+
+    } while (numMerges > 1);
+
+    return list;
+}
+
+// z-order of a point given coords and inverse of the longer side of data bbox
+function zOrder(x, y, minX, minY, invSize) {
+    // coords are transformed into non-negative 15-bit integer range
+    x = (x - minX) * invSize | 0;
+    y = (y - minY) * invSize | 0;
+
+    x = (x | (x << 8)) & 0x00FF00FF;
+    x = (x | (x << 4)) & 0x0F0F0F0F;
+    x = (x | (x << 2)) & 0x33333333;
+    x = (x | (x << 1)) & 0x55555555;
+
+    y = (y | (y << 8)) & 0x00FF00FF;
+    y = (y | (y << 4)) & 0x0F0F0F0F;
+    y = (y | (y << 2)) & 0x33333333;
+    y = (y | (y << 1)) & 0x55555555;
+
+    return x | (y << 1);
+}
+
+// find the leftmost node of a polygon ring
+function getLeftmost(start) {
+    let p = start,
+        leftmost = start;
+    do {
+        if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
+        p = p.next;
+    } while (p !== start);
+
+    return leftmost;
+}
+
+// check if a point lies within a convex triangle
+function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+    return (cx - px) * (ay - py) >= (ax - px) * (cy - py) &&
+           (ax - px) * (by - py) >= (bx - px) * (ay - py) &&
+           (bx - px) * (cy - py) >= (cx - px) * (by - py);
+}
+
+// check if a point lies within a convex triangle but false if its equal to the first point of the triangle
+function pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, px, py) {
+    return !(ax === px && ay === py) && pointInTriangle(ax, ay, bx, by, cx, cy, px, py);
+}
+
+// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
+}
+
+// signed area of a triangle
+function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+}
+
+// check if two points are equal
+function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+}
+
+// check if two segments intersect
+function intersects(p1, q1, p2, q2) {
+    const o1 = sign(area(p1, q1, p2));
+    const o2 = sign(area(p1, q1, q2));
+    const o3 = sign(area(p2, q2, p1));
+    const o4 = sign(area(p2, q2, q1));
+
+    if (o1 !== o2 && o3 !== o4) return true; // general case
+
+    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
+    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
+    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
+    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+
+    return false;
+}
+
+// for collinear points p, q, r, check if point q lies on segment pr
+function onSegment(p, q, r) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+}
+
+function sign(num) {
+    return num > 0 ? 1 : num < 0 ? -1 : 0;
+}
+
+// check if a polygon diagonal intersects any polygon segments
+function intersectsPolygon(a, b) {
+    let p = a;
+    do {
+        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                intersects(p, p.next, a, b)) return true;
+        p = p.next;
+    } while (p !== a);
+
+    return false;
+}
+
+// check if a polygon diagonal is locally inside the polygon
+function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ?
+        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+}
+
+// check if the middle point of a polygon diagonal is inside the polygon
+function middleInside(a, b) {
+    let p = a;
+    let inside = false;
+    const px = (a.x + b.x) / 2;
+    const py = (a.y + b.y) / 2;
+    do {
+        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+            inside = !inside;
+        p = p.next;
+    } while (p !== a);
+
+    return inside;
+}
+
+// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+// if one belongs to the outer ring and another to a hole, it merges it into a single ring
+function splitPolygon(a, b) {
+    const a2 = createNode(a.i, a.x, a.y),
+        b2 = createNode(b.i, b.x, b.y),
+        an = a.next,
+        bp = b.prev;
+
+    a.next = b;
+    b.prev = a;
+
+    a2.next = an;
+    an.prev = a2;
+
+    b2.next = a2;
+    a2.prev = b2;
+
+    bp.next = b2;
+    b2.prev = bp;
+
+    return b2;
+}
+
+// create a node and optionally link it with previous one (in a circular doubly linked list)
+function insertNode(i, x, y, last) {
+    const p = createNode(i, x, y);
+
+    if (!last) {
+        p.prev = p;
+        p.next = p;
+
+    } else {
+        p.next = last.next;
+        p.prev = last;
+        last.next.prev = p;
+        last.next = p;
+    }
+    return p;
+}
+
+function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+}
+
+function createNode(i, x, y) {
+    return {
+        i, // vertex index in coordinates array
+        x, y, // vertex coordinates
+        prev: null, // previous and next vertex nodes in a polygon ring
+        next: null,
+        z: 0, // z-order curve value
+        prevZ: null, // previous and next nodes in z-order
+        nextZ: null,
+        steiner: false // indicates whether this is a steiner point
+    };
+}
+
+function signedArea(data, start, end, dim) {
+    let sum = 0;
+    for (let i = start, j = end - dim; i < end; i += dim) {
+        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+        j = i;
+    }
+    return sum;
+}
+
 class Earcut {
 
 	/**
@@ -55645,783 +60561,9 @@ class Earcut {
 	 */
 	static triangulate( data, holeIndices, dim = 2 ) {
 
-		const hasHoles = holeIndices && holeIndices.length;
-		const outerLen = hasHoles ? holeIndices[ 0 ] * dim : data.length;
-		let outerNode = linkedList( data, 0, outerLen, dim, true );
-		const triangles = [];
-
-		if ( ! outerNode || outerNode.next === outerNode.prev ) return triangles;
-
-		let minX, minY, maxX, maxY, x, y, invSize;
-
-		if ( hasHoles ) outerNode = eliminateHoles( data, holeIndices, outerNode, dim );
-
-		// if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-		if ( data.length > 80 * dim ) {
-
-			minX = maxX = data[ 0 ];
-			minY = maxY = data[ 1 ];
-
-			for ( let i = dim; i < outerLen; i += dim ) {
-
-				x = data[ i ];
-				y = data[ i + 1 ];
-				if ( x < minX ) minX = x;
-				if ( y < minY ) minY = y;
-				if ( x > maxX ) maxX = x;
-				if ( y > maxY ) maxY = y;
-
-			}
-
-			// minX, minY and invSize are later used to transform coords into integers for z-order calculation
-			invSize = Math.max( maxX - minX, maxY - minY );
-			invSize = invSize !== 0 ? 32767 / invSize : 0;
-
-		}
-
-		earcutLinked( outerNode, triangles, dim, minX, minY, invSize, 0 );
-
-		return triangles;
+		return earcut( data, holeIndices, dim );
 
 	}
-
-}
-
-// create a circular doubly linked list from polygon points in the specified winding order
-function linkedList( data, start, end, dim, clockwise ) {
-
-	let i, last;
-
-	if ( clockwise === ( signedArea( data, start, end, dim ) > 0 ) ) {
-
-		for ( i = start; i < end; i += dim ) last = insertNode( i, data[ i ], data[ i + 1 ], last );
-
-	} else {
-
-		for ( i = end - dim; i >= start; i -= dim ) last = insertNode( i, data[ i ], data[ i + 1 ], last );
-
-	}
-
-	if ( last && equals( last, last.next ) ) {
-
-		removeNode( last );
-		last = last.next;
-
-	}
-
-	return last;
-
-}
-
-// eliminate colinear or duplicate points
-function filterPoints( start, end ) {
-
-	if ( ! start ) return start;
-	if ( ! end ) end = start;
-
-	let p = start,
-		again;
-	do {
-
-		again = false;
-
-		if ( ! p.steiner && ( equals( p, p.next ) || area( p.prev, p, p.next ) === 0 ) ) {
-
-			removeNode( p );
-			p = end = p.prev;
-			if ( p === p.next ) break;
-			again = true;
-
-		} else {
-
-			p = p.next;
-
-		}
-
-	} while ( again || p !== end );
-
-	return end;
-
-}
-
-// main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked( ear, triangles, dim, minX, minY, invSize, pass ) {
-
-	if ( ! ear ) return;
-
-	// interlink polygon nodes in z-order
-	if ( ! pass && invSize ) indexCurve( ear, minX, minY, invSize );
-
-	let stop = ear,
-		prev, next;
-
-	// iterate through ears, slicing them one by one
-	while ( ear.prev !== ear.next ) {
-
-		prev = ear.prev;
-		next = ear.next;
-
-		if ( invSize ? isEarHashed( ear, minX, minY, invSize ) : isEar( ear ) ) {
-
-			// cut off the triangle
-			triangles.push( prev.i / dim | 0 );
-			triangles.push( ear.i / dim | 0 );
-			triangles.push( next.i / dim | 0 );
-
-			removeNode( ear );
-
-			// skipping the next vertex leads to less sliver triangles
-			ear = next.next;
-			stop = next.next;
-
-			continue;
-
-		}
-
-		ear = next;
-
-		// if we looped through the whole remaining polygon and can't find any more ears
-		if ( ear === stop ) {
-
-			// try filtering points and slicing again
-			if ( ! pass ) {
-
-				earcutLinked( filterPoints( ear ), triangles, dim, minX, minY, invSize, 1 );
-
-				// if this didn't work, try curing all small self-intersections locally
-
-			} else if ( pass === 1 ) {
-
-				ear = cureLocalIntersections( filterPoints( ear ), triangles, dim );
-				earcutLinked( ear, triangles, dim, minX, minY, invSize, 2 );
-
-				// as a last resort, try splitting the remaining polygon into two
-
-			} else if ( pass === 2 ) {
-
-				splitEarcut( ear, triangles, dim, minX, minY, invSize );
-
-			}
-
-			break;
-
-		}
-
-	}
-
-}
-
-// check whether a polygon node forms a valid ear with adjacent nodes
-function isEar( ear ) {
-
-	const a = ear.prev,
-		b = ear,
-		c = ear.next;
-
-	if ( area( a, b, c ) >= 0 ) return false; // reflex, can't be an ear
-
-	// now make sure we don't have other points inside the potential ear
-	const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-
-	// triangle bbox; min & max are calculated like this for speed
-	const x0 = ax < bx ? ( ax < cx ? ax : cx ) : ( bx < cx ? bx : cx ),
-		y0 = ay < by ? ( ay < cy ? ay : cy ) : ( by < cy ? by : cy ),
-		x1 = ax > bx ? ( ax > cx ? ax : cx ) : ( bx > cx ? bx : cx ),
-		y1 = ay > by ? ( ay > cy ? ay : cy ) : ( by > cy ? by : cy );
-
-	let p = c.next;
-	while ( p !== a ) {
-
-		if ( p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 &&
-			pointInTriangle( ax, ay, bx, by, cx, cy, p.x, p.y ) &&
-			area( p.prev, p, p.next ) >= 0 ) return false;
-		p = p.next;
-
-	}
-
-	return true;
-
-}
-
-function isEarHashed( ear, minX, minY, invSize ) {
-
-	const a = ear.prev,
-		b = ear,
-		c = ear.next;
-
-	if ( area( a, b, c ) >= 0 ) return false; // reflex, can't be an ear
-
-	const ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-
-	// triangle bbox; min & max are calculated like this for speed
-	const x0 = ax < bx ? ( ax < cx ? ax : cx ) : ( bx < cx ? bx : cx ),
-		y0 = ay < by ? ( ay < cy ? ay : cy ) : ( by < cy ? by : cy ),
-		x1 = ax > bx ? ( ax > cx ? ax : cx ) : ( bx > cx ? bx : cx ),
-		y1 = ay > by ? ( ay > cy ? ay : cy ) : ( by > cy ? by : cy );
-
-	// z-order range for the current triangle bbox;
-	const minZ = zOrder( x0, y0, minX, minY, invSize ),
-		maxZ = zOrder( x1, y1, minX, minY, invSize );
-
-	let p = ear.prevZ,
-		n = ear.nextZ;
-
-	// look for points inside the triangle in both directions
-	while ( p && p.z >= minZ && n && n.z <= maxZ ) {
-
-		if ( p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
-			pointInTriangle( ax, ay, bx, by, cx, cy, p.x, p.y ) && area( p.prev, p, p.next ) >= 0 ) return false;
-		p = p.prevZ;
-
-		if ( n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
-			pointInTriangle( ax, ay, bx, by, cx, cy, n.x, n.y ) && area( n.prev, n, n.next ) >= 0 ) return false;
-		n = n.nextZ;
-
-	}
-
-	// look for remaining points in decreasing z-order
-	while ( p && p.z >= minZ ) {
-
-		if ( p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
-			pointInTriangle( ax, ay, bx, by, cx, cy, p.x, p.y ) && area( p.prev, p, p.next ) >= 0 ) return false;
-		p = p.prevZ;
-
-	}
-
-	// look for remaining points in increasing z-order
-	while ( n && n.z <= maxZ ) {
-
-		if ( n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
-			pointInTriangle( ax, ay, bx, by, cx, cy, n.x, n.y ) && area( n.prev, n, n.next ) >= 0 ) return false;
-		n = n.nextZ;
-
-	}
-
-	return true;
-
-}
-
-// go through all polygon nodes and cure small local self-intersections
-function cureLocalIntersections( start, triangles, dim ) {
-
-	let p = start;
-	do {
-
-		const a = p.prev,
-			b = p.next.next;
-
-		if ( ! equals( a, b ) && intersects( a, p, p.next, b ) && locallyInside( a, b ) && locallyInside( b, a ) ) {
-
-			triangles.push( a.i / dim | 0 );
-			triangles.push( p.i / dim | 0 );
-			triangles.push( b.i / dim | 0 );
-
-			// remove two nodes involved
-			removeNode( p );
-			removeNode( p.next );
-
-			p = start = b;
-
-		}
-
-		p = p.next;
-
-	} while ( p !== start );
-
-	return filterPoints( p );
-
-}
-
-// try splitting polygon into two and triangulate them independently
-function splitEarcut( start, triangles, dim, minX, minY, invSize ) {
-
-	// look for a valid diagonal that divides the polygon into two
-	let a = start;
-	do {
-
-		let b = a.next.next;
-		while ( b !== a.prev ) {
-
-			if ( a.i !== b.i && isValidDiagonal( a, b ) ) {
-
-				// split the polygon in two by the diagonal
-				let c = splitPolygon( a, b );
-
-				// filter colinear points around the cuts
-				a = filterPoints( a, a.next );
-				c = filterPoints( c, c.next );
-
-				// run earcut on each half
-				earcutLinked( a, triangles, dim, minX, minY, invSize, 0 );
-				earcutLinked( c, triangles, dim, minX, minY, invSize, 0 );
-				return;
-
-			}
-
-			b = b.next;
-
-		}
-
-		a = a.next;
-
-	} while ( a !== start );
-
-}
-
-// link every hole into the outer loop, producing a single-ring polygon without holes
-function eliminateHoles( data, holeIndices, outerNode, dim ) {
-
-	const queue = [];
-	let i, len, start, end, list;
-
-	for ( i = 0, len = holeIndices.length; i < len; i ++ ) {
-
-		start = holeIndices[ i ] * dim;
-		end = i < len - 1 ? holeIndices[ i + 1 ] * dim : data.length;
-		list = linkedList( data, start, end, dim, false );
-		if ( list === list.next ) list.steiner = true;
-		queue.push( getLeftmost( list ) );
-
-	}
-
-	queue.sort( compareX );
-
-	// process holes from left to right
-	for ( i = 0; i < queue.length; i ++ ) {
-
-		outerNode = eliminateHole( queue[ i ], outerNode );
-
-	}
-
-	return outerNode;
-
-}
-
-function compareX( a, b ) {
-
-	return a.x - b.x;
-
-}
-
-// find a bridge between vertices that connects hole with an outer ring and link it
-function eliminateHole( hole, outerNode ) {
-
-	const bridge = findHoleBridge( hole, outerNode );
-	if ( ! bridge ) {
-
-		return outerNode;
-
-	}
-
-	const bridgeReverse = splitPolygon( bridge, hole );
-
-	// filter collinear points around the cuts
-	filterPoints( bridgeReverse, bridgeReverse.next );
-	return filterPoints( bridge, bridge.next );
-
-}
-
-// David Eberly's algorithm for finding a bridge between hole and outer polygon
-function findHoleBridge( hole, outerNode ) {
-
-	let p = outerNode,
-		qx = - Infinity,
-		m;
-
-	const hx = hole.x, hy = hole.y;
-
-	// find a segment intersected by a ray from the hole's leftmost point to the left;
-	// segment's endpoint with lesser x will be potential connection point
-	do {
-
-		if ( hy <= p.y && hy >= p.next.y && p.next.y !== p.y ) {
-
-			const x = p.x + ( hy - p.y ) * ( p.next.x - p.x ) / ( p.next.y - p.y );
-			if ( x <= hx && x > qx ) {
-
-				qx = x;
-				m = p.x < p.next.x ? p : p.next;
-				if ( x === hx ) return m; // hole touches outer segment; pick leftmost endpoint
-
-			}
-
-		}
-
-		p = p.next;
-
-	} while ( p !== outerNode );
-
-	if ( ! m ) return null;
-
-	// look for points inside the triangle of hole point, segment intersection and endpoint;
-	// if there are no points found, we have a valid connection;
-	// otherwise choose the point of the minimum angle with the ray as connection point
-
-	const stop = m,
-		mx = m.x,
-		my = m.y;
-	let tanMin = Infinity, tan;
-
-	p = m;
-
-	do {
-
-		if ( hx >= p.x && p.x >= mx && hx !== p.x &&
-				pointInTriangle( hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y ) ) {
-
-			tan = Math.abs( hy - p.y ) / ( hx - p.x ); // tangential
-
-			if ( locallyInside( p, hole ) && ( tan < tanMin || ( tan === tanMin && ( p.x > m.x || ( p.x === m.x && sectorContainsSector( m, p ) ) ) ) ) ) {
-
-				m = p;
-				tanMin = tan;
-
-			}
-
-		}
-
-		p = p.next;
-
-	} while ( p !== stop );
-
-	return m;
-
-}
-
-// whether sector in vertex m contains sector in vertex p in the same coordinates
-function sectorContainsSector( m, p ) {
-
-	return area( m.prev, m, p.prev ) < 0 && area( p.next, m, m.next ) < 0;
-
-}
-
-// interlink polygon nodes in z-order
-function indexCurve( start, minX, minY, invSize ) {
-
-	let p = start;
-	do {
-
-		if ( p.z === 0 ) p.z = zOrder( p.x, p.y, minX, minY, invSize );
-		p.prevZ = p.prev;
-		p.nextZ = p.next;
-		p = p.next;
-
-	} while ( p !== start );
-
-	p.prevZ.nextZ = null;
-	p.prevZ = null;
-
-	sortLinked( p );
-
-}
-
-// Simon Tatham's linked list merge sort algorithm
-// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-function sortLinked( list ) {
-
-	let i, p, q, e, tail, numMerges, pSize, qSize,
-		inSize = 1;
-
-	do {
-
-		p = list;
-		list = null;
-		tail = null;
-		numMerges = 0;
-
-		while ( p ) {
-
-			numMerges ++;
-			q = p;
-			pSize = 0;
-			for ( i = 0; i < inSize; i ++ ) {
-
-				pSize ++;
-				q = q.nextZ;
-				if ( ! q ) break;
-
-			}
-
-			qSize = inSize;
-
-			while ( pSize > 0 || ( qSize > 0 && q ) ) {
-
-				if ( pSize !== 0 && ( qSize === 0 || ! q || p.z <= q.z ) ) {
-
-					e = p;
-					p = p.nextZ;
-					pSize --;
-
-				} else {
-
-					e = q;
-					q = q.nextZ;
-					qSize --;
-
-				}
-
-				if ( tail ) tail.nextZ = e;
-				else list = e;
-
-				e.prevZ = tail;
-				tail = e;
-
-			}
-
-			p = q;
-
-		}
-
-		tail.nextZ = null;
-		inSize *= 2;
-
-	} while ( numMerges > 1 );
-
-	return list;
-
-}
-
-// z-order of a point given coords and inverse of the longer side of data bbox
-function zOrder( x, y, minX, minY, invSize ) {
-
-	// coords are transformed into non-negative 15-bit integer range
-	x = ( x - minX ) * invSize | 0;
-	y = ( y - minY ) * invSize | 0;
-
-	x = ( x | ( x << 8 ) ) & 0x00FF00FF;
-	x = ( x | ( x << 4 ) ) & 0x0F0F0F0F;
-	x = ( x | ( x << 2 ) ) & 0x33333333;
-	x = ( x | ( x << 1 ) ) & 0x55555555;
-
-	y = ( y | ( y << 8 ) ) & 0x00FF00FF;
-	y = ( y | ( y << 4 ) ) & 0x0F0F0F0F;
-	y = ( y | ( y << 2 ) ) & 0x33333333;
-	y = ( y | ( y << 1 ) ) & 0x55555555;
-
-	return x | ( y << 1 );
-
-}
-
-// find the leftmost node of a polygon ring
-function getLeftmost( start ) {
-
-	let p = start,
-		leftmost = start;
-	do {
-
-		if ( p.x < leftmost.x || ( p.x === leftmost.x && p.y < leftmost.y ) ) leftmost = p;
-		p = p.next;
-
-	} while ( p !== start );
-
-	return leftmost;
-
-}
-
-// check if a point lies within a convex triangle
-function pointInTriangle( ax, ay, bx, by, cx, cy, px, py ) {
-
-	return ( cx - px ) * ( ay - py ) >= ( ax - px ) * ( cy - py ) &&
-           ( ax - px ) * ( by - py ) >= ( bx - px ) * ( ay - py ) &&
-           ( bx - px ) * ( cy - py ) >= ( cx - px ) * ( by - py );
-
-}
-
-// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-function isValidDiagonal( a, b ) {
-
-	return a.next.i !== b.i && a.prev.i !== b.i && ! intersectsPolygon( a, b ) && // doesn't intersect other edges
-           ( locallyInside( a, b ) && locallyInside( b, a ) && middleInside( a, b ) && // locally visible
-            ( area( a.prev, a, b.prev ) || area( a, b.prev, b ) ) || // does not create opposite-facing sectors
-            equals( a, b ) && area( a.prev, a, a.next ) > 0 && area( b.prev, b, b.next ) > 0 ); // special zero-length case
-
-}
-
-// signed area of a triangle
-function area( p, q, r ) {
-
-	return ( q.y - p.y ) * ( r.x - q.x ) - ( q.x - p.x ) * ( r.y - q.y );
-
-}
-
-// check if two points are equal
-function equals( p1, p2 ) {
-
-	return p1.x === p2.x && p1.y === p2.y;
-
-}
-
-// check if two segments intersect
-function intersects( p1, q1, p2, q2 ) {
-
-	const o1 = sign( area( p1, q1, p2 ) );
-	const o2 = sign( area( p1, q1, q2 ) );
-	const o3 = sign( area( p2, q2, p1 ) );
-	const o4 = sign( area( p2, q2, q1 ) );
-
-	if ( o1 !== o2 && o3 !== o4 ) return true; // general case
-
-	if ( o1 === 0 && onSegment( p1, p2, q1 ) ) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
-	if ( o2 === 0 && onSegment( p1, q2, q1 ) ) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
-	if ( o3 === 0 && onSegment( p2, p1, q2 ) ) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
-	if ( o4 === 0 && onSegment( p2, q1, q2 ) ) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
-
-	return false;
-
-}
-
-// for collinear points p, q, r, check if point q lies on segment pr
-function onSegment( p, q, r ) {
-
-	return q.x <= Math.max( p.x, r.x ) && q.x >= Math.min( p.x, r.x ) && q.y <= Math.max( p.y, r.y ) && q.y >= Math.min( p.y, r.y );
-
-}
-
-function sign( num ) {
-
-	return num > 0 ? 1 : num < 0 ? -1 : 0;
-
-}
-
-// check if a polygon diagonal intersects any polygon segments
-function intersectsPolygon( a, b ) {
-
-	let p = a;
-	do {
-
-		if ( p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-			intersects( p, p.next, a, b ) ) return true;
-		p = p.next;
-
-	} while ( p !== a );
-
-	return false;
-
-}
-
-// check if a polygon diagonal is locally inside the polygon
-function locallyInside( a, b ) {
-
-	return area( a.prev, a, a.next ) < 0 ?
-		area( a, b, a.next ) >= 0 && area( a, a.prev, b ) >= 0 :
-		area( a, b, a.prev ) < 0 || area( a, a.next, b ) < 0;
-
-}
-
-// check if the middle point of a polygon diagonal is inside the polygon
-function middleInside( a, b ) {
-
-	let p = a,
-		inside = false;
-	const px = ( a.x + b.x ) / 2,
-		py = ( a.y + b.y ) / 2;
-	do {
-
-		if ( ( ( p.y > py ) !== ( p.next.y > py ) ) && p.next.y !== p.y &&
-			( px < ( p.next.x - p.x ) * ( py - p.y ) / ( p.next.y - p.y ) + p.x ) )
-			inside = ! inside;
-		p = p.next;
-
-	} while ( p !== a );
-
-	return inside;
-
-}
-
-// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-// if one belongs to the outer ring and another to a hole, it merges it into a single ring
-function splitPolygon( a, b ) {
-
-	const a2 = new Node$1( a.i, a.x, a.y ),
-		b2 = new Node$1( b.i, b.x, b.y ),
-		an = a.next,
-		bp = b.prev;
-
-	a.next = b;
-	b.prev = a;
-
-	a2.next = an;
-	an.prev = a2;
-
-	b2.next = a2;
-	a2.prev = b2;
-
-	bp.next = b2;
-	b2.prev = bp;
-
-	return b2;
-
-}
-
-// create a node and optionally link it with previous one (in a circular doubly linked list)
-function insertNode( i, x, y, last ) {
-
-	const p = new Node$1( i, x, y );
-
-	if ( ! last ) {
-
-		p.prev = p;
-		p.next = p;
-
-	} else {
-
-		p.next = last.next;
-		p.prev = last;
-		last.next.prev = p;
-		last.next = p;
-
-	}
-
-	return p;
-
-}
-
-function removeNode( p ) {
-
-	p.next.prev = p.prev;
-	p.prev.next = p.next;
-
-	if ( p.prevZ ) p.prevZ.nextZ = p.nextZ;
-	if ( p.nextZ ) p.nextZ.prevZ = p.prevZ;
-
-}
-
-function Node$1( i, x, y ) {
-
-	// vertex index in coordinates array
-	this.i = i;
-
-	// vertex coordinates
-	this.x = x;
-	this.y = y;
-
-	// previous and next vertex nodes in a polygon ring
-	this.prev = null;
-	this.next = null;
-
-	// z-order curve value
-	this.z = 0;
-
-	// previous and next nodes in z-order
-	this.prevZ = null;
-	this.nextZ = null;
-
-	// indicates whether this is a steiner point
-	this.steiner = false;
-
-}
-
-function signedArea( data, start, end, dim ) {
-
-	let sum = 0;
-	for ( let i = start, j = end - dim; i < end; i += dim ) {
-
-		sum += ( data[ j ] - data[ i ] ) * ( data[ i + 1 ] + data[ j + 1 ] );
-		j = i;
-
-	}
-
-	return sum;
 
 }
 
@@ -56539,29 +60681,6 @@ function addContour( vertices, contour ) {
 /**
  * Creates extruded geometry from a path shape.
  *
- * parameters = {
- *
- *  curveSegments: <int>, // number of points on the curves
- *  steps: <int>, // number of points for z-side extrusions / used for subdividing segments of extrude spline too
- *  depth: <float>, // Depth to extrude the shape
- *
- *  bevelEnabled: <bool>, // turn on bevel
- *  bevelThickness: <float>, // how deep into the original shape bevel goes
- *  bevelSize: <float>, // how far from shape outline (including bevelOffset) is bevel
- *  bevelOffset: <float>, // how far from shape outline does bevel start
- *  bevelSegments: <int>, // number of bevel layers
- *
- *  extrudePath: <THREE.Curve> // curve to extrude shape along
- *
- *  UVGenerator: <Object> // object that provides UV generator functions
- *
- * }
- */
-
-
-/**
- * Creates extruded geometry from a path shape.
- *
  * ```js
  * const length = 12, width = 8;
  *
@@ -56586,17 +60705,7 @@ class ExtrudeGeometry extends BufferGeometry {
 	 * Constructs a new extrude geometry.
 	 *
 	 * @param {Shape|Array<Shape>} [shapes] - A shape or an array of shapes.
-	 * @param {Object} [options={}] - The extrude settings.
-	 * @param {number} [options.curveSegments=12] - Number of points on the curves.
-	 * @param {number} [options.steps=1] - Number of points used for subdividing segments along the depth of the extruded spline.
-	 * @param {number} [options.depth=1] - Depth to extrude the shape.
-	 * @param {boolean} [options.bevelEnabled=true] - Whether to beveling to the shape or not.
-	 * @param {number} [options.bevelThickness=0.2] - How deep into the original shape the bevel goes.
-	 * @param {number} [options.bevelSize=bevelThickness-0.1] - Distance from the shape outline that the bevel extends.
-	 * @param {number} [options.bevelOffset=0] - Distance from the shape outline that the bevel starts.
-	 * @param {number} [options.bevelSegments=3] - Number of bevel layers.
-	 * @param {Curve} [options.extrudePath=3] - A 3D spline path along which the shape should be extruded. Bevels not supported for path extrusion.
-	 * @param {Object} [options.UVGenerator] - An object that provides UV generator functions for custom UV generation.
+	 * @param {ExtrudeGeometry~Options} [options] - The extrude settings.
 	 */
 	constructor( shapes = new Shape( [ new Vector2( 0.5, 0.5 ), new Vector2( -0.5, 0.5 ), new Vector2( -0.5, -0.5 ), new Vector2( 0.5, -0.5 ) ] ), options = {} ) {
 
@@ -56725,14 +60834,53 @@ class ExtrudeGeometry extends BufferGeometry {
 
 			}
 
+			/**Merges index-adjacent points that are within a threshold distance of each other. Array is modified in-place. Threshold distance is empirical, and scaled based on the magnitude of point coordinates.
+			 * @param {Array<Vector2>} points
+			*/
+			function mergeOverlappingPoints( points ) {
 
-			const faces = ShapeUtils.triangulateShape( vertices, holes );
+				const THRESHOLD = 1e-10;
+				const THRESHOLD_SQ = THRESHOLD * THRESHOLD;
+				let prevPos = points[ 0 ];
+				for ( let i = 1; i <= points.length; i ++ ) {
+
+					const currentIndex = i % points.length;
+					const currentPos = points[ currentIndex ];
+					const dx = currentPos.x - prevPos.x;
+					const dy = currentPos.y - prevPos.y;
+					const distSq = dx * dx + dy * dy;
+
+					const scalingFactorSqrt = Math.max(
+						Math.abs( currentPos.x ),
+						Math.abs( currentPos.y ),
+						Math.abs( prevPos.x ),
+						Math.abs( prevPos.y )
+					);
+					const thresholdSqScaled = THRESHOLD_SQ * scalingFactorSqrt * scalingFactorSqrt;
+					if ( distSq <= thresholdSqScaled ) {
+
+						points.splice( currentIndex, 1 );
+						i --;
+						continue;
+
+					}
+
+					prevPos = currentPos;
+
+				}
+
+			}
+
+			mergeOverlappingPoints( vertices );
+			holes.forEach( mergeOverlappingPoints );
+
+			const numHoles = holes.length;
 
 			/* Vertices */
 
 			const contour = vertices; // vertices has all points but contour has only points of circumference
 
-			for ( let h = 0, hl = holes.length; h < hl; h ++ ) {
+			for ( let h = 0; h < numHoles; h ++ ) {
 
 				const ahole = holes[ h ];
 
@@ -56749,7 +60897,7 @@ class ExtrudeGeometry extends BufferGeometry {
 
 			}
 
-			const vlen = vertices.length, flen = faces.length;
+			const vlen = vertices.length;
 
 
 			// Find directions for point movement
@@ -56896,7 +61044,7 @@ class ExtrudeGeometry extends BufferGeometry {
 			const holesMovements = [];
 			let oneHoleMovements, verticesMovements = contourMovements.concat();
 
-			for ( let h = 0, hl = holes.length; h < hl; h ++ ) {
+			for ( let h = 0, hl = numHoles; h < hl; h ++ ) {
 
 				const ahole = holes[ h ];
 
@@ -56917,45 +61065,65 @@ class ExtrudeGeometry extends BufferGeometry {
 
 			}
 
+			let faces;
 
-			// Loop bevelSegments, 1 for the front, 1 for the back
+			if ( bevelSegments === 0 ) {
 
-			for ( let b = 0; b < bevelSegments; b ++ ) {
+				faces = ShapeUtils.triangulateShape( contour, holes );
 
-				//for ( b = bevelSegments; b > 0; b -- ) {
+			} else {
 
-				const t = b / bevelSegments;
-				const z = bevelThickness * Math.cos( t * Math.PI / 2 );
-				const bs = bevelSize * Math.sin( t * Math.PI / 2 ) + bevelOffset;
+				const contractedContourVertices = [];
+				const expandedHoleVertices = [];
 
-				// contract shape
+				// Loop bevelSegments, 1 for the front, 1 for the back
 
-				for ( let i = 0, il = contour.length; i < il; i ++ ) {
+				for ( let b = 0; b < bevelSegments; b ++ ) {
 
-					const vert = scalePt2( contour[ i ], contourMovements[ i ], bs );
+					//for ( b = bevelSegments; b > 0; b -- ) {
 
-					v( vert.x, vert.y, - z );
+					const t = b / bevelSegments;
+					const z = bevelThickness * Math.cos( t * Math.PI / 2 );
+					const bs = bevelSize * Math.sin( t * Math.PI / 2 ) + bevelOffset;
 
-				}
+					// contract shape
 
-				// expand holes
+					for ( let i = 0, il = contour.length; i < il; i ++ ) {
 
-				for ( let h = 0, hl = holes.length; h < hl; h ++ ) {
-
-					const ahole = holes[ h ];
-					oneHoleMovements = holesMovements[ h ];
-
-					for ( let i = 0, il = ahole.length; i < il; i ++ ) {
-
-						const vert = scalePt2( ahole[ i ], oneHoleMovements[ i ], bs );
+						const vert = scalePt2( contour[ i ], contourMovements[ i ], bs );
 
 						v( vert.x, vert.y, - z );
+						if ( t === 0 ) contractedContourVertices.push( vert );
+
+					}
+
+					// expand holes
+
+					for ( let h = 0, hl = numHoles; h < hl; h ++ ) {
+
+						const ahole = holes[ h ];
+						oneHoleMovements = holesMovements[ h ];
+						const oneHoleVertices = [];
+						for ( let i = 0, il = ahole.length; i < il; i ++ ) {
+
+							const vert = scalePt2( ahole[ i ], oneHoleMovements[ i ], bs );
+
+							v( vert.x, vert.y, - z );
+							if ( t === 0 ) oneHoleVertices.push( vert );
+
+						}
+
+						if ( t === 0 ) expandedHoleVertices.push( oneHoleVertices );
 
 					}
 
 				}
 
+				faces = ShapeUtils.triangulateShape( contractedContourVertices, expandedHoleVertices );
+
 			}
+
+			const flen = faces.length;
 
 			const bs = bevelSize + bevelOffset;
 
@@ -57562,62 +61730,359 @@ class SphereGeometry extends BufferGeometry {
 
 }
 
+/**
+ * A standard physically based material, using Metallic-Roughness workflow.
+ *
+ * Physically based rendering (PBR) has recently become the standard in many
+ * 3D applications, such as [Unity]{@link https://blogs.unity3d.com/2014/10/29/physically-based-shading-in-unity-5-a-primer/},
+ * [Unreal]{@link https://docs.unrealengine.com/latest/INT/Engine/Rendering/Materials/PhysicallyBased/} and
+ * [3D Studio Max]{@link http://area.autodesk.com/blogs/the-3ds-max-blog/what039s-new-for-rendering-in-3ds-max-2017}.
+ *
+ * This approach differs from older approaches in that instead of using
+ * approximations for the way in which light interacts with a surface, a
+ * physically correct model is used. The idea is that, instead of tweaking
+ * materials to look good under specific lighting, a material can be created
+ * that will react 'correctly' under all lighting scenarios.
+ *
+ * In practice this gives a more accurate and realistic looking result than
+ * the {@link MeshLambertMaterial} or {@link MeshPhongMaterial}, at the cost of
+ * being somewhat more computationally expensive. `MeshStandardMaterial` uses per-fragment
+ * shading.
+ *
+ * Note that for best results you should always specify an environment map when using this material.
+ *
+ * For a non-technical introduction to the concept of PBR and how to set up a
+ * PBR material, check out these articles by the people at [marmoset]{@link https://www.marmoset.co}:
+ *
+ * - [Basic Theory of Physically Based Rendering]{@link https://www.marmoset.co/posts/basic-theory-of-physically-based-rendering/}
+ * - [Physically Based Rendering and You Can Too]{@link https://www.marmoset.co/posts/physically-based-rendering-and-you-can-too/}
+ *
+ * Technical details of the approach used in three.js (and most other PBR systems) can be found is this
+ * [paper from Disney]{@link https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf}
+ * (pdf), by Brent Burley.
+ *
+ * @augments Material
+ */
 class MeshStandardMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh standard material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshStandardMaterial = true;
 
 		this.type = 'MeshStandardMaterial';
 
 		this.defines = { 'STANDARD': '' };
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff ); // diffuse
+
+		/**
+		 * How rough the material appears. `0.0` means a smooth mirror reflection, `1.0`
+		 * means fully diffuse. If `roughnessMap` is also provided,
+		 * both values are multiplied.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.roughness = 1.0;
+
+		/**
+		 * How much the material is like a metal. Non-metallic materials such as wood
+		 * or stone use `0.0`, metallic use `1.0`, with nothing (usually) in between.
+		 * A value between `0.0` and `1.0` could be used for a rusty metal look.
+		 * If `metalnessMap` is also provided, both values are multiplied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.metalness = 0.0;
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The light map. Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.lightMap = null;
+
+		/**
+		 * Intensity of the baked light.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.lightMapIntensity = 1.0;
 
+		/**
+		 * The red channel of this texture is used as the ambient occlusion map.
+		 * Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.aoMap = null;
+
+		/**
+		 * Intensity of the ambient occlusion effect. Range is `[0,1]`, where `0`
+		 * disables ambient occlusion. Where intensity is `1` and the AO map's
+		 * red channel is also `1`, ambient light is fully occluded on a surface.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.aoMapIntensity = 1.0;
 
+		/**
+		 * Emissive (light) color of the material, essentially a solid color
+		 * unaffected by other lighting.
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.emissive = new Color( 0x000000 );
+
+		/**
+		 * Intensity of the emissive light. Modulates the emissive color.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.emissiveIntensity = 1.0;
+
+		/**
+		 * Set emissive (glow) map. The emissive map color is modulated by the
+		 * emissive color and the emissive intensity. If you have an emissive map,
+		 * be sure to set the emissive color to something other than black.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.emissiveMap = null;
 
+		/**
+		 * The texture to create a bump map. The black and white values map to the
+		 * perceived depth in relation to the lights. Bump doesn't actually affect
+		 * the geometry of the object, only the lighting. If a normal map is defined
+		 * this will be ignored.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.bumpMap = null;
+
+		/**
+		 * How much the bump map affects the material. Typical range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.bumpScale = 1;
 
+		/**
+		 * The texture to create a normal map. The RGB values affect the surface
+		 * normal for each pixel fragment and change the way the color is lit. Normal
+		 * maps do not change the actual shape of the surface, only the lighting. In
+		 * case the material has a normal map authored using the left handed
+		 * convention, the `y` component of `normalScale` should be negated to compensate
+		 * for the different handedness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.normalMap = null;
+
+		/**
+		 * The type of normal map.
+		 *
+		 * @type {(TangentSpaceNormalMap|ObjectSpaceNormalMap)}
+		 * @default TangentSpaceNormalMap
+		 */
 		this.normalMapType = TangentSpaceNormalMap;
+
+		/**
+		 * How much the normal map affects the material. Typical value range is `[0,1]`.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.normalScale = new Vector2( 1, 1 );
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
+		/**
+		 * The green channel of this texture is used to alter the roughness of the
+		 * material.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.roughnessMap = null;
 
+		/**
+		 * The blue channel of this texture is used to alter the metalness of the
+		 * material.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.metalnessMap = null;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * The environment map. To ensure a physically correct rendering, environment maps
+		 * are internally pre-processed with {@link PMREMGenerator}.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.envMap = null;
+
+		/**
+		 * The rotation of the environment map in radians.
+		 *
+		 * @type {Euler}
+		 * @default (0,0,0)
+		 */
 		this.envMapRotation = new Euler();
+
+		/**
+		 * Scales the effect of the environment map by multiplying its color.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.envMapIntensity = 1.0;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
+
+		/**
+		 * Defines appearance of wireframe ends.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinecap = 'round';
+
+		/**
+		 * Defines appearance of wireframe joints.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinejoin = 'round';
 
+		/**
+		 * Whether the material is rendered with flat shading or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flatShading = false;
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
@@ -57682,12 +62147,53 @@ class MeshStandardMaterial extends Material {
 
 }
 
+/**
+ * An extension of the {@link MeshStandardMaterial}, providing more advanced
+ * physically-based rendering properties:
+ *
+ * - Anisotropy: Ability to represent the anisotropic property of materials
+ * as observable with brushed metals.
+ * - Clearcoat: Some materials — like car paints, carbon fiber, and wet surfaces — require
+ * a clear, reflective layer on top of another layer that may be irregular or rough.
+ * Clearcoat approximates this effect, without the need for a separate transparent surface.
+ * - Iridescence: Allows to render the effect where hue varies  depending on the viewing
+ * angle and illumination angle. This can be seen on soap bubbles, oil films, or on the
+ * wings of many insects.
+ * - Physically-based transparency: One limitation of {@link Material#opacity} is that highly
+ * transparent materials are less reflective. Physically-based transmission provides a more
+ * realistic option for thin, transparent surfaces like glass.
+ * - Advanced reflectivity: More flexible reflectivity for non-metallic materials.
+ * - Sheen: Can be used for representing cloth and fabric materials.
+ *
+ * As a result of these complex shading features, `MeshPhysicalMaterial` has a
+ * higher performance cost, per pixel, than other three.js materials. Most
+ * effects are disabled by default, and add cost as they are enabled. For
+ * best results, always specify an environment map when using this material.
+ *
+ * @augments MeshStandardMaterial
+ */
 class MeshPhysicalMaterial extends MeshStandardMaterial {
 
+	/**
+	 * Constructs a new mesh physical material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshPhysicalMaterial = true;
 
 		this.defines = {
@@ -57699,17 +62205,88 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 		this.type = 'MeshPhysicalMaterial';
 
+		/**
+		 * The rotation of the anisotropy in tangent, bitangent space, measured in radians
+		 * counter-clockwise from the tangent. When `anisotropyMap` is present, this
+		 * property provides additional rotation to the vectors in the texture.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.anisotropyRotation = 0;
+
+		/**
+		 * Red and green channels represent the anisotropy direction in `[-1, 1]` tangent,
+		 * bitangent space, to be rotated by `anisotropyRotation`. The blue channel
+		 * contains strength as `[0, 1]` to be multiplied by `anisotropy`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.anisotropyMap = null;
 
+		/**
+		 * The red channel of this texture is multiplied against `clearcoat`,
+		 * for per-pixel control over a coating's intensity.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.clearcoatMap = null;
+
+		/**
+		 * Roughness of the clear coat layer, from `0.0` to `1.0`.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.clearcoatRoughness = 0.0;
+
+		/**
+		 * The green channel of this texture is multiplied against
+		 * `clearcoatRoughness`, for per-pixel control over a coating's roughness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.clearcoatRoughnessMap = null;
+
+		/**
+		 * How much `clearcoatNormalMap` affects the clear coat layer, from
+		 * `(0,0)` to `(1,1)`.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.clearcoatNormalScale = new Vector2( 1, 1 );
+
+		/**
+		 * Can be used to enable independent normals for the clear coat layer.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.clearcoatNormalMap = null;
 
+		/**
+		 * Index-of-refraction for non-metallic materials, from `1.0` to `2.333`.
+		 *
+		 * @type {number}
+		 * @default 1.5
+		 */
 		this.ior = 1.5;
 
+		/**
+		 * Degree of reflectivity, from `0.0` to `1.0`. Default is `0.5`, which
+		 * corresponds to an index-of-refraction of `1.5`.
+		 *
+		 * This models the reflectivity of non-metallic materials. It has no effect
+		 * when `metalness` is `1.0`
+		 *
+		 * @name MeshPhysicalMaterial#reflectivity
+		 * @type {number}
+		 * @default 0.5
+		 */
 		Object.defineProperty( this, 'reflectivity', {
 			get: function () {
 
@@ -57723,26 +62300,159 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 			}
 		} );
 
+		/**
+		 * The red channel of this texture is multiplied against `iridescence`, for per-pixel
+		 * control over iridescence.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.iridescenceMap = null;
+
+		/**
+		 * Strength of the iridescence RGB color shift effect, represented by an index-of-refraction.
+		 * Between `1.0` to `2.333`.
+		 *
+		 * @type {number}
+		 * @default 1.3
+		 */
 		this.iridescenceIOR = 1.3;
+
+		/**
+		 *Array of exactly 2 elements, specifying minimum and maximum thickness of the iridescence layer.
+		 Thickness of iridescence layer has an equivalent effect of the one `thickness` has on `ior`.
+		 *
+		 * @type {Array<number,number>}
+		 * @default [100,400]
+		 */
 		this.iridescenceThicknessRange = [ 100, 400 ];
+
+		/**
+		 * A texture that defines the thickness of the iridescence layer, stored in the green channel.
+		 * Minimum and maximum values of thickness are defined by `iridescenceThicknessRange` array:
+		 * - `0.0` in the green channel will result in thickness equal to first element of the array.
+		 * - `1.0` in the green channel will result in thickness equal to second element of the array.
+		 * - Values in-between will linearly interpolate between the elements of the array.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.iridescenceThicknessMap = null;
 
+		/**
+		 * The sheen tint.
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.sheenColor = new Color( 0x000000 );
+
+		/**
+		 * The RGB channels of this texture are multiplied against  `sheenColor`, for per-pixel control
+		 * over sheen tint.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.sheenColorMap = null;
+
+		/**
+		 * Roughness of the sheen layer, from `0.0` to `1.0`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.sheenRoughness = 1.0;
+
+		/**
+		 * The alpha channel of this texture is multiplied against `sheenRoughness`, for per-pixel control
+		 * over sheen roughness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.sheenRoughnessMap = null;
 
+		/**
+		 * The red channel of this texture is multiplied against `transmission`, for per-pixel control over
+		 * optical transparency.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.transmissionMap = null;
 
+		/**
+		 * The thickness of the volume beneath the surface. The value is given in the
+		 * coordinate space of the mesh. If the value is `0` the material is
+		 * thin-walled. Otherwise the material is a volume boundary.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.thickness = 0;
+
+		/**
+		 * A texture that defines the thickness, stored in the green channel. This will
+		 * be multiplied by `thickness`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.thicknessMap = null;
+
+		/**
+		 * Density of the medium given as the average distance that light travels in
+		 * the medium before interacting with a particle. The value is given in world
+		 * space units, and must be greater than zero.
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.attenuationDistance = Infinity;
+
+		/**
+		 * The color that white light turns into due to absorption when reaching the
+		 * attenuation distance.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.attenuationColor = new Color( 1, 1, 1 );
 
+		/**
+		 * A float that scales the amount of specular reflection for non-metals only.
+		 * When set to zero, the model is effectively Lambertian. From `0.0` to `1.0`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.specularIntensity = 1.0;
+
+		/**
+		 * The alpha channel of this texture is multiplied against `specularIntensity`,
+		 * for per-pixel control over specular intensity.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.specularIntensityMap = null;
+
+		/**
+		 * Tints the specular reflection at normal incidence for non-metals only.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.specularColor = new Color( 1, 1, 1 );
+
+		/**
+		 * The RGB channels of this texture are multiplied against `specularColor`,
+		 * for per-pixel control over specular color.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.specularColorMap = null;
 
 		this._anisotropy = 0;
@@ -57756,6 +62466,12 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 	}
 
+	/**
+	 * The anisotropy strength.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get anisotropy() {
 
 		return this._anisotropy;
@@ -57774,6 +62490,14 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 	}
 
+	/**
+	 * Represents the intensity of the clear coat layer, from `0.0` to `1.0`. Use
+	 * clear coat related properties to enable multilayer materials that have a
+	 * thin translucent layer over the base layer.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get clearcoat() {
 
 		return this._clearcoat;
@@ -57791,7 +62515,13 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 		this._clearcoat = value;
 
 	}
-
+	/**
+	 * The intensity of the iridescence layer, simulating RGB color shift based on the angle between
+	 * the surface and the viewer, from `0.0` to `1.0`.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get iridescence() {
 
 		return this._iridescence;
@@ -57810,6 +62540,14 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 	}
 
+	/**
+	 * Defines the strength of the angular separation of colors (chromatic aberration) transmitting
+	 * through a relatively clear volume. Any value zero or larger is valid, the typical range of
+	 * realistic values is `[0, 1]`. This property can be only be used with transmissive objects.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get dispersion() {
 
 		return this._dispersion;
@@ -57828,6 +62566,12 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 	}
 
+	/**
+	 * The intensity of the sheen layer, from `0.0` to `1.0`.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get sheen() {
 
 		return this._sheen;
@@ -57846,6 +62590,18 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 	}
 
+	/**
+	 * Degree of transmission (or optical transparency), from `0.0` to `1.0`.
+	 *
+	 * Thin, transparent or semitransparent, plastic or glass materials remain
+	 * largely reflective even if they are fully transmissive. The transmission
+	 * property can be used to model these materials.
+	 *
+	 * When transmission is non-zero, `opacity` should be  set to `1`.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get transmission() {
 
 		return this._transmission;
@@ -57920,61 +62676,348 @@ class MeshPhysicalMaterial extends MeshStandardMaterial {
 
 }
 
+/**
+ * A material for shiny surfaces with specular highlights.
+ *
+ * The material uses a non-physically based [Blinn-Phong]{@link https://en.wikipedia.org/wiki/Blinn-Phong_shading_model}
+ * model for calculating reflectance. Unlike the Lambertian model used in the
+ * {@link MeshLambertMaterial} this can simulate shiny surfaces with specular
+ * highlights (such as varnished wood). `MeshPhongMaterial` uses per-fragment shading.
+ *
+ * Performance will generally be greater when using this material over the
+ * {@link MeshStandardMaterial} or {@link MeshPhysicalMaterial}, at the cost of
+ * some graphical accuracy.
+ *
+ * @augments Material
+ */
 class MeshPhongMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh phong material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshPhongMaterial = true;
 
 		this.type = 'MeshPhongMaterial';
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff ); // diffuse
+
+		/**
+		 * Specular color of the material. The default color is set to `0x111111` (very dark grey)
+		 *
+		 * This defines how shiny the material is and the color of its shine.
+		 *
+		 * @type {Color}
+		 */
 		this.specular = new Color( 0x111111 );
+
+		/**
+		 * How shiny the specular highlight is; a higher value gives a sharper highlight.
+		 *
+		 * @type {number}
+		 * @default 30
+		 */
 		this.shininess = 30;
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The light map. Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.lightMap = null;
+
+		/**
+		 * Intensity of the baked light.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.lightMapIntensity = 1.0;
 
+		/**
+		 * The red channel of this texture is used as the ambient occlusion map.
+		 * Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.aoMap = null;
+
+		/**
+		 * Intensity of the ambient occlusion effect. Range is `[0,1]`, where `0`
+		 * disables ambient occlusion. Where intensity is `1` and the AO map's
+		 * red channel is also `1`, ambient light is fully occluded on a surface.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.aoMapIntensity = 1.0;
 
+		/**
+		 * Emissive (light) color of the material, essentially a solid color
+		 * unaffected by other lighting.
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.emissive = new Color( 0x000000 );
+
+		/**
+		 * Intensity of the emissive light. Modulates the emissive color.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.emissiveIntensity = 1.0;
+
+		/**
+		 * Set emissive (glow) map. The emissive map color is modulated by the
+		 * emissive color and the emissive intensity. If you have an emissive map,
+		 * be sure to set the emissive color to something other than black.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.emissiveMap = null;
 
+		/**
+		 * The texture to create a bump map. The black and white values map to the
+		 * perceived depth in relation to the lights. Bump doesn't actually affect
+		 * the geometry of the object, only the lighting. If a normal map is defined
+		 * this will be ignored.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.bumpMap = null;
+
+		/**
+		 * How much the bump map affects the material. Typical range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.bumpScale = 1;
 
+		/**
+		 * The texture to create a normal map. The RGB values affect the surface
+		 * normal for each pixel fragment and change the way the color is lit. Normal
+		 * maps do not change the actual shape of the surface, only the lighting. In
+		 * case the material has a normal map authored using the left handed
+		 * convention, the `y` component of `normalScale` should be negated to compensate
+		 * for the different handedness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.normalMap = null;
+
+		/**
+		 * The type of normal map.
+		 *
+		 * @type {(TangentSpaceNormalMap|ObjectSpaceNormalMap)}
+		 * @default TangentSpaceNormalMap
+		 */
 		this.normalMapType = TangentSpaceNormalMap;
+
+		/**
+		 * How much the normal map affects the material. Typical value range is `[0,1]`.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.normalScale = new Vector2( 1, 1 );
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
+		/**
+		 * The specular map value affects both how much the specular surface
+		 * highlight contributes and how much of the environment map affects the
+		 * surface.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.specularMap = null;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * The environment map.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.envMap = null;
+
+		/**
+		 * The rotation of the environment map in radians.
+		 *
+		 * @type {Euler}
+		 * @default (0,0,0)
+		 */
 		this.envMapRotation = new Euler();
 
+		/**
+		 * How to combine the result of the surface's color with the environment map, if any.
+		 *
+		 * When set to `MixOperation`, the {@link MeshBasicMaterial#reflectivity} is used to
+		 * blend between the two colors.
+		 *
+		 * @type {(MultiplyOperation|MixOperation|AddOperation)}
+		 * @default MultiplyOperation
+		 */
 		this.combine = MultiplyOperation;
+
+		/**
+		 * How much the environment map affects the surface.
+		 * The valid range is between `0` (no reflections) and `1` (full reflections).
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.reflectivity = 1;
+
+		/**
+		 * The index of refraction (IOR) of air (approximately 1) divided by the
+		 * index of refraction of the material. It is used with environment mapping
+		 * modes {@link CubeRefractionMapping} and {@link EquirectangularRefractionMapping}.
+		 * The refraction ratio should not exceed `1`.
+		 *
+		 * @type {number}
+		 * @default 0.98
+		 */
 		this.refractionRatio = 0.98;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
+
+		/**
+		 * Defines appearance of wireframe ends.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinecap = 'round';
+
+		/**
+		 * Defines appearance of wireframe joints.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinejoin = 'round';
 
+		/**
+		 * Whether the material is rendered with flat shading or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flatShading = false;
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
@@ -58037,51 +63080,269 @@ class MeshPhongMaterial extends Material {
 
 }
 
+/**
+ * A material implementing toon shading.
+ *
+ * @augments Material
+ */
 class MeshToonMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh toon material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshToonMaterial = true;
 
 		this.defines = { 'TOON': '' };
 
 		this.type = 'MeshToonMaterial';
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff );
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
+
+		/**
+		 * Gradient map for toon shading. It's required to set
+		 * {@link Texture#minFilter} and {@link Texture#magFilter} to {@linkNearestFilter}
+		 * when using this type of texture.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.gradientMap = null;
 
+		/**
+		 * The light map. Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.lightMap = null;
+
+		/**
+		 * Intensity of the baked light.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.lightMapIntensity = 1.0;
 
+		/**
+		 * The red channel of this texture is used as the ambient occlusion map.
+		 * Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.aoMap = null;
+
+		/**
+		 * Intensity of the ambient occlusion effect. Range is `[0,1]`, where `0`
+		 * disables ambient occlusion. Where intensity is `1` and the AO map's
+		 * red channel is also `1`, ambient light is fully occluded on a surface.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.aoMapIntensity = 1.0;
 
+		/**
+		 * Emissive (light) color of the material, essentially a solid color
+		 * unaffected by other lighting.
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.emissive = new Color( 0x000000 );
+
+		/**
+		 * Intensity of the emissive light. Modulates the emissive color.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.emissiveIntensity = 1.0;
+
+		/**
+		 * Set emissive (glow) map. The emissive map color is modulated by the
+		 * emissive color and the emissive intensity. If you have an emissive map,
+		 * be sure to set the emissive color to something other than black.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.emissiveMap = null;
 
+		/**
+		 * The texture to create a bump map. The black and white values map to the
+		 * perceived depth in relation to the lights. Bump doesn't actually affect
+		 * the geometry of the object, only the lighting. If a normal map is defined
+		 * this will be ignored.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.bumpMap = null;
+
+		/**
+		 * How much the bump map affects the material. Typical range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.bumpScale = 1;
 
+		/**
+		 * The texture to create a normal map. The RGB values affect the surface
+		 * normal for each pixel fragment and change the way the color is lit. Normal
+		 * maps do not change the actual shape of the surface, only the lighting. In
+		 * case the material has a normal map authored using the left handed
+		 * convention, the `y` component of `normalScale` should be negated to compensate
+		 * for the different handedness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.normalMap = null;
+
+		/**
+		 * The type of normal map.
+		 *
+		 * @type {(TangentSpaceNormalMap|ObjectSpaceNormalMap)}
+		 * @default TangentSpaceNormalMap
+		 */
 		this.normalMapType = TangentSpaceNormalMap;
+
+		/**
+		 * How much the normal map affects the material. Typical value range is `[0,1]`.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.normalScale = new Vector2( 1, 1 );
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
+
+		/**
+		 * Defines appearance of wireframe ends.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinecap = 'round';
+
+		/**
+		 * Defines appearance of wireframe joints.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinejoin = 'round';
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
@@ -58133,30 +63394,143 @@ class MeshToonMaterial extends Material {
 
 }
 
+/**
+ * A material that maps the normal vectors to RGB colors.
+ *
+ * @augments Material
+ */
 class MeshNormalMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh normal material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshNormalMaterial = true;
 
 		this.type = 'MeshNormalMaterial';
 
+		/**
+		 * The texture to create a bump map. The black and white values map to the
+		 * perceived depth in relation to the lights. Bump doesn't actually affect
+		 * the geometry of the object, only the lighting. If a normal map is defined
+		 * this will be ignored.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.bumpMap = null;
+
+		/**
+		 * How much the bump map affects the material. Typical range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.bumpScale = 1;
 
+		/**
+		 * The texture to create a normal map. The RGB values affect the surface
+		 * normal for each pixel fragment and change the way the color is lit. Normal
+		 * maps do not change the actual shape of the surface, only the lighting. In
+		 * case the material has a normal map authored using the left handed
+		 * convention, the `y` component of `normalScale` should be negated to compensate
+		 * for the different handedness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.normalMap = null;
+
+		/**
+		 * The type of normal map.
+		 *
+		 * @type {(TangentSpaceNormalMap|ObjectSpaceNormalMap)}
+		 * @default TangentSpaceNormalMap
+		 */
 		this.normalMapType = TangentSpaceNormalMap;
+
+		/**
+		 * How much the normal map affects the material. Typical value range is `[0,1]`.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.normalScale = new Vector2( 1, 1 );
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * WebGL and WebGPU ignore this property and always render
+		 * 1 pixel wide lines.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
 
+		/**
+		 * Whether the material is rendered with flat shading or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flatShading = false;
 
 		this.setValues( parameters );
@@ -58189,58 +63563,331 @@ class MeshNormalMaterial extends Material {
 
 }
 
+/**
+ * A material for non-shiny surfaces, without specular highlights.
+ *
+ * The material uses a non-physically based [Lambertian]{@link https://en.wikipedia.org/wiki/Lambertian_reflectance}
+ * model for calculating reflectance. This can simulate some surfaces (such
+ * as untreated wood or stone) well, but cannot simulate shiny surfaces with
+ * specular highlights (such as varnished wood). `MeshLambertMaterial` uses per-fragment
+ * shading.
+ *
+ * Due to the simplicity of the reflectance and illumination models,
+ * performance will be greater when using this material over the
+ * {@link MeshPhongMaterial}, {@link MeshStandardMaterial} or
+ * {@link MeshPhysicalMaterial}, at the cost of some graphical accuracy.
+ *
+ * @augments Material
+ */
 class MeshLambertMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh lambert material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshLambertMaterial = true;
 
 		this.type = 'MeshLambertMaterial';
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff ); // diffuse
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The light map. Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.lightMap = null;
+
+		/**
+		 * Intensity of the baked light.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.lightMapIntensity = 1.0;
 
+		/**
+		 * The red channel of this texture is used as the ambient occlusion map.
+		 * Requires a second set of UVs.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.aoMap = null;
+
+		/**
+		 * Intensity of the ambient occlusion effect. Range is `[0,1]`, where `0`
+		 * disables ambient occlusion. Where intensity is `1` and the AO map's
+		 * red channel is also `1`, ambient light is fully occluded on a surface.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.aoMapIntensity = 1.0;
 
+		/**
+		 * Emissive (light) color of the material, essentially a solid color
+		 * unaffected by other lighting.
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.emissive = new Color( 0x000000 );
+
+		/**
+		 * Intensity of the emissive light. Modulates the emissive color.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.emissiveIntensity = 1.0;
+
+		/**
+		 * Set emissive (glow) map. The emissive map color is modulated by the
+		 * emissive color and the emissive intensity. If you have an emissive map,
+		 * be sure to set the emissive color to something other than black.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.emissiveMap = null;
 
+		/**
+		 * The texture to create a bump map. The black and white values map to the
+		 * perceived depth in relation to the lights. Bump doesn't actually affect
+		 * the geometry of the object, only the lighting. If a normal map is defined
+		 * this will be ignored.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.bumpMap = null;
+
+		/**
+		 * How much the bump map affects the material. Typical range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.bumpScale = 1;
 
+		/**
+		 * The texture to create a normal map. The RGB values affect the surface
+		 * normal for each pixel fragment and change the way the color is lit. Normal
+		 * maps do not change the actual shape of the surface, only the lighting. In
+		 * case the material has a normal map authored using the left handed
+		 * convention, the `y` component of `normalScale` should be negated to compensate
+		 * for the different handedness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.normalMap = null;
+
+		/**
+		 * The type of normal map.
+		 *
+		 * @type {(TangentSpaceNormalMap|ObjectSpaceNormalMap)}
+		 * @default TangentSpaceNormalMap
+		 */
 		this.normalMapType = TangentSpaceNormalMap;
+
+		/**
+		 * How much the normal map affects the material. Typical value range is `[0,1]`.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.normalScale = new Vector2( 1, 1 );
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
+		/**
+		 * Specular map used by the material.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.specularMap = null;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * The environment map.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.envMap = null;
+
+		/**
+		 * The rotation of the environment map in radians.
+		 *
+		 * @type {Euler}
+		 * @default (0,0,0)
+		 */
 		this.envMapRotation = new Euler();
+
+		/**
+		 * How to combine the result of the surface's color with the environment map, if any.
+		 *
+		 * When set to `MixOperation`, the {@link MeshBasicMaterial#reflectivity} is used to
+		 * blend between the two colors.
+		 *
+		 * @type {(MultiplyOperation|MixOperation|AddOperation)}
+		 * @default MultiplyOperation
+		 */
 		this.combine = MultiplyOperation;
+
+		/**
+		 * How much the environment map affects the surface.
+		 * The valid range is between `0` (no reflections) and `1` (full reflections).
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.reflectivity = 1;
+
+		/**
+		 * The index of refraction (IOR) of air (approximately 1) divided by the
+		 * index of refraction of the material. It is used with environment mapping
+		 * modes {@link CubeRefractionMapping} and {@link EquirectangularRefractionMapping}.
+		 * The refraction ratio should not exceed `1`.
+		 *
+		 * @type {number}
+		 * @default 0.98
+		 */
 		this.refractionRatio = 0.98;
 
+		/**
+		 * Renders the geometry as a wireframe.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.wireframe = false;
+
+		/**
+		 * Controls the thickness of the wireframe.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.wireframeLinewidth = 1;
+
+		/**
+		 * Defines appearance of wireframe ends.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinecap = 'round';
+
+		/**
+		 * Defines appearance of wireframe joints.
+		 *
+		 * Can only be used with {@link SVGRenderer}.
+		 *
+		 * @type {('round'|'bevel'|'miter')}
+		 * @default 'round'
+		 */
 		this.wireframeLinejoin = 'round';
 
+		/**
+		 * Whether the material is rendered with flat shading or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flatShading = false;
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
@@ -58301,39 +63948,181 @@ class MeshLambertMaterial extends Material {
 
 }
 
+/**
+ * This material is defined by a MatCap (or Lit Sphere) texture, which encodes the
+ * material color and shading.
+ *
+ * `MeshMatcapMaterial` does not respond to lights since the matcap image file encodes
+ * baked lighting. It will cast a shadow onto an object that receives shadows
+ * (and shadow clipping works), but it will not self-shadow or receive
+ * shadows.
+ *
+ * @augments Material
+ */
 class MeshMatcapMaterial extends Material {
 
+	/**
+	 * Constructs a new mesh matcap material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMeshMatcapMaterial = true;
 
 		this.defines = { 'MATCAP': '' };
 
 		this.type = 'MeshMatcapMaterial';
 
+		/**
+		 * Color of the material.
+		 *
+		 * @type {Color}
+		 * @default (1,1,1)
+		 */
 		this.color = new Color( 0xffffff ); // diffuse
 
+		/**
+		 * The matcap map.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.matcap = null;
 
+		/**
+		 * The color map. May optionally include an alpha channel, typically combined
+		 * with {@link Material#transparent} or {@link Material#alphaTest}. The texture map
+		 * color is modulated by the diffuse `color`.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.map = null;
 
+		/**
+		 * The texture to create a bump map. The black and white values map to the
+		 * perceived depth in relation to the lights. Bump doesn't actually affect
+		 * the geometry of the object, only the lighting. If a normal map is defined
+		 * this will be ignored.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.bumpMap = null;
+
+		/**
+		 * How much the bump map affects the material. Typical range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.bumpScale = 1;
 
+		/**
+		 * The texture to create a normal map. The RGB values affect the surface
+		 * normal for each pixel fragment and change the way the color is lit. Normal
+		 * maps do not change the actual shape of the surface, only the lighting. In
+		 * case the material has a normal map authored using the left handed
+		 * convention, the `y` component of `normalScale` should be negated to compensate
+		 * for the different handedness.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.normalMap = null;
+
+		/**
+		 * The type of normal map.
+		 *
+		 * @type {(TangentSpaceNormalMap|ObjectSpaceNormalMap)}
+		 * @default TangentSpaceNormalMap
+		 */
 		this.normalMapType = TangentSpaceNormalMap;
+
+		/**
+		 * How much the normal map affects the material. Typical value range is `[0,1]`.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.normalScale = new Vector2( 1, 1 );
 
+		/**
+		 * The displacement map affects the position of the mesh's vertices. Unlike
+		 * other maps which only affect the light and shade of the material the
+		 * displaced vertices can cast shadows, block other objects, and otherwise
+		 * act as real geometry. The displacement texture is an image where the value
+		 * of each pixel (white being the highest) is mapped against, and
+		 * repositions, the vertices of the mesh.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.displacementMap = null;
+
+		/**
+		 * How much the displacement map affects the mesh (where black is no
+		 * displacement, and white is maximum displacement). Without a displacement
+		 * map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementScale = 1;
+
+		/**
+		 * The offset of the displacement map's values on the mesh's vertices.
+		 * The bias is added to the scaled sample of the displacement map.
+		 * Without a displacement map set, this value is not applied.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.displacementBias = 0;
 
+		/**
+		 * The alpha map is a grayscale texture that controls the opacity across the
+		 * surface (black: fully transparent; white: fully opaque).
+		 *
+		 * Only the color of the texture is used, ignoring the alpha channel if one
+		 * exists. For RGB and RGBA textures, the renderer will use the green channel
+		 * when sampling this texture due to the extra bit of precision provided for
+		 * green in DXT-compressed and uncompressed RGB 565 formats. Luminance-only and
+		 * luminance/alpha textures will also still work as expected.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.alphaMap = null;
 
+		/**
+		 * Whether the material is rendered with flat shading or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.flatShading = false;
 
+		/**
+		 * Whether the material is affected by fog or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.fog = true;
 
 		this.setValues( parameters );
@@ -58376,17 +64165,69 @@ class MeshMatcapMaterial extends Material {
 
 }
 
+/**
+ * A material for rendering line primitives.
+ *
+ * Materials define the appearance of renderable 3D objects.
+ *
+ * ```js
+ * const material = new THREE.LineDashedMaterial( {
+ * 	color: 0xffffff,
+ * 	scale: 1,
+ * 	dashSize: 3,
+ * 	gapSize: 1,
+ * } );
+ * ```
+ *
+ * @augments LineBasicMaterial
+ */
 class LineDashedMaterial extends LineBasicMaterial {
 
+	/**
+	 * Constructs a new line dashed material.
+	 *
+	 * @param {Object} [parameters] - An object with one or more properties
+	 * defining the material's appearance. Any property of the material
+	 * (including any property from inherited materials) can be passed
+	 * in here. Color values can be passed any type of value accepted
+	 * by {@link Color#set}.
+	 */
 	constructor( parameters ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLineDashedMaterial = true;
 		this.type = 'LineDashedMaterial';
 
+		/**
+		 * The scale of the dashed part of a line.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.scale = 1;
+
+		/**
+		 * The size of the dash. This is both the gap with the stroke.
+		 *
+		 * @type {number}
+		 * @default 3
+		 */
 		this.dashSize = 3;
+
+		/**
+		 * The size of the gap.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.gapSize = 1;
 
 		this.setValues( parameters );
@@ -58407,12 +64248,39 @@ class LineDashedMaterial extends LineBasicMaterial {
 
 }
 
+/**
+ * @class
+ * @classdesc A simple caching system, used internally by {@link FileLoader}.
+ * To enable caching across all loaders that use {@link FileLoader}, add `THREE.Cache.enabled = true.` once in your app.
+ * @hideconstructor
+ */
 const Cache = {
 
+	/**
+	 * Whether caching is enabled or not.
+	 *
+	 * @static
+	 * @type {boolean}
+	 * @default false
+	 */
 	enabled: false,
 
+	/**
+	 * A dictionary that holds cached files.
+	 *
+	 * @static
+	 * @type {Object<string,Object>}
+	 */
 	files: {},
 
+	/**
+	 * Adds a cache entry with a key to reference the file. If this key already
+	 * holds a file, it is overwritten.
+	 *
+	 * @static
+	 * @param {string} key - The key to reference the cached file.
+	 * @param {Object} file -  The file to be cached.
+	 */
 	add: function ( key, file ) {
 
 		if ( this.enabled === false ) return;
@@ -58423,6 +64291,13 @@ const Cache = {
 
 	},
 
+	/**
+	 * Gets the cached value for the given key.
+	 *
+	 * @static
+	 * @param {string} key - The key to reference the cached file.
+	 * @return {Object|undefined} The cached file. If the key does not exist `undefined` is returned.
+	 */
 	get: function ( key ) {
 
 		if ( this.enabled === false ) return;
@@ -58433,12 +64308,23 @@ const Cache = {
 
 	},
 
+	/**
+	 * Removes the cached file associated with the given key.
+	 *
+	 * @static
+	 * @param {string} key - The key to reference the cached file.
+	 */
 	remove: function ( key ) {
 
 		delete this.files[ key ];
 
 	},
 
+	/**
+	 * Remove all values from the cache.
+	 *
+	 * @static
+	 */
 	clear: function () {
 
 		this.files = {};
@@ -58447,8 +64333,32 @@ const Cache = {
 
 };
 
+/**
+ * Handles and keeps track of loaded and pending data. A default global
+ * instance of this class is created and used by loaders if not supplied
+ * manually.
+ *
+ * In general that should be sufficient, however there are times when it can
+ * be useful to have separate loaders - for example if you want to show
+ * separate loading bars for objects and textures.
+ *
+ * ```js
+ * const manager = new THREE.LoadingManager();
+ * manager.onLoad = () => console.log( 'Loading complete!' );
+ *
+ * const loader1 = new OBJLoader( manager );
+ * const loader2 = new ColladaLoader( manager );
+ * ```
+ */
 class LoadingManager {
 
+	/**
+	 * Constructs a new loading manager.
+	 *
+	 * @param {Function} [onLoad] - Executes when all items have been loaded.
+	 * @param {Function} [onProgress] - Executes when single items have been loaded.
+	 * @param {Function} [onError] - Executes when an error occurs.
+	 */
 	constructor( onLoad, onProgress, onError ) {
 
 		const scope = this;
@@ -58462,11 +64372,44 @@ class LoadingManager {
 		// Refer to #5689 for the reason why we don't set .onStart
 		// in the constructor
 
+		/**
+		 * Executes when an item starts loading.
+		 *
+		 * @type {Function|undefined}
+		 * @default undefined
+		 */
 		this.onStart = undefined;
+
+		/**
+		 * Executes when all items have been loaded.
+		 *
+		 * @type {Function|undefined}
+		 * @default undefined
+		 */
 		this.onLoad = onLoad;
+
+		/**
+		 * Executes when single items have been loaded.
+		 *
+		 * @type {Function|undefined}
+		 * @default undefined
+		 */
 		this.onProgress = onProgress;
+
+		/**
+		 * Executes when an error occurs.
+		 *
+		 * @type {Function|undefined}
+		 * @default undefined
+		 */
 		this.onError = onError;
 
+		/**
+		 * This should be called by any loader using the manager when the loader
+		 * starts loading an item.
+		 *
+		 * @param {string} url - The URL to load.
+		 */
 		this.itemStart = function ( url ) {
 
 			itemsTotal ++;
@@ -58485,6 +64428,12 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * This should be called by any loader using the manager when the loader
+		 * ended loading an item.
+		 *
+		 * @param {string} url - The URL of the loaded item.
+		 */
 		this.itemEnd = function ( url ) {
 
 			itemsLoaded ++;
@@ -58509,6 +64458,12 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * This should be called by any loader using the manager when the loader
+		 * encounters an error when loading an item.
+		 *
+		 * @param {string} url - The URL of the item that produces an error.
+		 */
 		this.itemError = function ( url ) {
 
 			if ( scope.onError !== undefined ) {
@@ -58519,6 +64474,13 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * Given a URL, uses the URL modifier callback (if any) and returns a
+		 * resolved URL. If no URL modifier is set, returns the original URL.
+		 *
+		 * @param {string} url - The URL to load.
+		 * @return {string} The resolved URL.
+		 */
 		this.resolveURL = function ( url ) {
 
 			if ( urlModifier ) {
@@ -58531,6 +64493,40 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * If provided, the callback will be passed each resource URL before a
+		 * request is sent. The callback may return the original URL, or a new URL to
+		 * override loading behavior. This behavior can be used to load assets from
+		 * .ZIP files, drag-and-drop APIs, and Data URIs.
+		 *
+		 * ```js
+		 * const blobs = {'fish.gltf': blob1, 'diffuse.png': blob2, 'normal.png': blob3};
+		 *
+		 * const manager = new THREE.LoadingManager();
+		 *
+		 * // Initialize loading manager with URL callback.
+		 * const objectURLs = [];
+		 * manager.setURLModifier( ( url ) => {
+		 *
+		 * 	url = URL.createObjectURL( blobs[ url ] );
+		 * 	objectURLs.push( url );
+		 * 	return url;
+		 *
+		 * } );
+		 *
+		 * // Load as usual, then revoke the blob URLs.
+		 * const loader = new GLTFLoader( manager );
+		 * loader.load( 'fish.gltf', (gltf) => {
+		 *
+		 * 	scene.add( gltf.scene );
+		 * 	objectURLs.forEach( ( url ) => URL.revokeObjectURL( url ) );
+		 *
+		 * } );
+		 * ```
+		 *
+		 * @param {function(string):string} transform - URL modifier callback. Called with an URL and must return a resolved URL.
+		 * @return {LoadingManager} A reference to this loading manager.
+		 */
 		this.setURLModifier = function ( transform ) {
 
 			urlModifier = transform;
@@ -58539,6 +64535,20 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * Registers a loader with the given regular expression. Can be used to
+		 * define what loader should be used in order to load specific files. A
+		 * typical use case is to overwrite the default loader for textures.
+		 *
+		 * ```js
+		 * // add handler for TGA textures
+		 * manager.addHandler( /\.tga$/i, new TGALoader() );
+		 * ```
+		 *
+		 * @param {string} regex - A regular expression.
+		 * @param {Loader} loader - A loader that should handle matched cases.
+		 * @return {LoadingManager} A reference to this loading manager.
+		 */
 		this.addHandler = function ( regex, loader ) {
 
 			handlers.push( regex, loader );
@@ -58547,6 +64557,12 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * Removes the loader for the given regular expression.
+		 *
+		 * @param {string} regex - A regular expression.
+		 * @return {LoadingManager} A reference to this loading manager.
+		 */
 		this.removeHandler = function ( regex ) {
 
 			const index = handlers.indexOf( regex );
@@ -58561,6 +64577,12 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * Can be used to retrieve the registered loader for the given file path.
+		 *
+		 * @param {string} file - The file path.
+		 * @return {?Loader} The registered loader. Returns `null` if no loader was found.
+		 */
 		this.getHandler = function ( file ) {
 
 			for ( let i = 0, l = handlers.length; i < l; i += 2 ) {
@@ -58586,6 +64608,12 @@ class LoadingManager {
 
 }
 
+/**
+ * The global default loading manager.
+ *
+ * @constant
+ * @type {LoadingManager}
+ */
 const DefaultLoadingManager = /*@__PURE__*/ new LoadingManager();
 
 /**
@@ -58645,7 +64673,7 @@ class Loader {
 		 * The [request header]{@link https://developer.mozilla.org/en-US/docs/Glossary/Request_header}
 		 * used in HTTP request.
 		 *
-		 * @type {Object}
+		 * @type {Object<string, any>}
 		 */
 		this.requestHeader = {};
 
@@ -58657,8 +64685,8 @@ class Loader {
 	 *
 	 * @param {string} url - The path/URL of the file to be loaded.
 	 * @param {Function} onLoad - Executed when the loading process has been finished.
-	 * @param {onProgressCallback} onProgress - Executed while the loading is in progress.
-	 * @param {onErrorCallback} onError - Executed when errors occur.
+	 * @param {onProgressCallback} [onProgress] - Executed while the loading is in progress.
+	 * @param {onErrorCallback} [onError] - Executed when errors occur.
 	 */
 	load( /* url, onLoad, onProgress, onError */ ) {}
 
@@ -58666,7 +64694,7 @@ class Loader {
 	 * A async version of {@link Loader#load}.
 	 *
 	 * @param {string} url - The path/URL of the file to be loaded.
-	 * @param {onProgressCallback} onProgress - Executed while the loading is in progress.
+	 * @param {onProgressCallback} [onProgress] - Executed while the loading is in progress.
 	 * @return {Promise} A Promise that resolves when the asset has been loaded.
 	 */
 	loadAsync( url, onProgress ) {
@@ -58764,14 +64792,12 @@ class Loader {
 /**
  * Callback for onProgress in loaders.
  *
- *
  * @callback onProgressCallback
  * @param {ProgressEvent} event - An instance of `ProgressEvent` that represents the current loading status.
  */
 
 /**
  * Callback for onError in loaders.
- *
  *
  * @callback onErrorCallback
  * @param {Error} error - The error which occurred during the loading process.
@@ -58789,14 +64815,44 @@ class Loader {
  */
 Loader.DEFAULT_MATERIAL_NAME = '__DEFAULT';
 
+/**
+ * A loader for loading images. The class loads images with the HTML `Image` API.
+ *
+ * ```js
+ * const loader = new THREE.ImageLoader();
+ * const image = await loader.loadAsync( 'image.png' );
+ * ```
+ * Please note that `ImageLoader` has dropped support for progress
+ * events in `r84`. For an `ImageLoader` that supports progress events, see
+ * [this thread]{@link https://github.com/mrdoob/three.js/issues/10439#issuecomment-275785639}.
+ *
+ * @augments Loader
+ */
 class ImageLoader extends Loader {
 
+	/**
+	 * Constructs a new image loader.
+	 *
+	 * @param {LoadingManager} [manager] - The loading manager.
+	 */
 	constructor( manager ) {
 
 		super( manager );
 
 	}
 
+	/**
+	 * Starts loading from the given URL and passes the loaded image
+	 * to the `onLoad()` callback. The method also returns a new `Image` object which can
+	 * directly be used for texture creation. If you do it this way, the texture
+	 * may pop up in your scene once the respective loading process is finished.
+	 *
+	 * @param {string} url - The path/URL of the file to be loaded. This can also be a data URI.
+	 * @param {function(Image)} onLoad - Executed when the loading process has been finished.
+	 * @param {onProgressCallback} onProgress - Unsupported in this loader.
+	 * @param {onErrorCallback} onError - Executed when errors occur.
+	 * @return {Image} The image.
+	 */
 	load( url, onLoad, onProgress, onError ) {
 
 		if ( this.path !== undefined ) url = this.path + url;
@@ -58874,14 +64930,47 @@ class ImageLoader extends Loader {
 
 }
 
+/**
+ * Class for loading textures. Images are internally
+ * loaded via {@link ImageLoader}.
+ *
+ * ```js
+ * const loader = new THREE.TextureLoader();
+ * const texture = await loader.loadAsync( 'textures/land_ocean_ice_cloud_2048.jpg' );
+ *
+ * const material = new THREE.MeshBasicMaterial( { map:texture } );
+ * ```
+ * Please note that `TextureLoader` has dropped support for progress
+ * events in `r84`. For a `TextureLoader` that supports progress events, see
+ * [this thread]{@link https://github.com/mrdoob/three.js/issues/10439#issuecomment-293260145}.
+ *
+ * @augments Loader
+ */
 class TextureLoader extends Loader {
 
+	/**
+	 * Constructs a new texture loader.
+	 *
+	 * @param {LoadingManager} [manager] - The loading manager.
+	 */
 	constructor( manager ) {
 
 		super( manager );
 
 	}
 
+	/**
+	 * Starts loading from the given URL and pass the fully loaded texture
+	 * to the `onLoad()` callback. The method also returns a new texture object which can
+	 * directly be used for material creation. If you do it this way, the texture
+	 * may pop up in your scene once the respective loading process is finished.
+	 *
+	 * @param {string} url - The path/URL of the file to be loaded. This can also be a data URI.
+	 * @param {function(Texture)} onLoad - Executed when the loading process has been finished.
+	 * @param {onProgressCallback} onProgress - Unsupported in this loader.
+	 * @param {onErrorCallback} onError - Executed when errors occur.
+	 * @return {Texture} The texture.
+	 */
 	load( url, onLoad, onProgress, onError ) {
 
 		const texture = new Texture();
@@ -59067,7 +65156,7 @@ const _lookTarget$1 = /*@__PURE__*/ new Vector3();
 
 /**
  * Abstract base class for light shadow classes. These classes
- * represent the shadow configuration for different ligth types.
+ * represent the shadow configuration for different light types.
  *
  * @abstract
  */
@@ -59151,6 +65240,14 @@ class LightShadow {
 		 * @default (512,512)
 		 */
 		this.mapSize = new Vector2( 512, 512 );
+
+		/**
+		 * The type of shadow texture. The default is `UnsignedByteType`.
+		 *
+		 * @type {number}
+		 * @default UnsignedByteType
+		 */
+		this.mapType = UnsignedByteType;
 
 		/**
 		 * The depth map generated using the internal camera; a location beyond a
@@ -59322,6 +65419,11 @@ class LightShadow {
 
 		this.bias = source.bias;
 		this.radius = source.radius;
+
+		this.autoUpdate = source.autoUpdate;
+		this.needsUpdate = source.needsUpdate;
+		this.normalBias = source.normalBias;
+		this.blurSamples = source.blurSamples;
 
 		this.mapSize.copy( source.mapSize );
 
@@ -59528,18 +65630,86 @@ class AmbientLight extends Light {
 
 const _matrix = /*@__PURE__*/ new Matrix4();
 
+/**
+ * This class is designed to assist with raycasting. Raycasting is used for
+ * mouse picking (working out what objects in the 3d space the mouse is over)
+ * amongst other things.
+ */
 class Raycaster {
 
+	/**
+	 * Constructs a new raycaster.
+	 *
+	 * @param {Vector3} origin - The origin vector where the ray casts from.
+	 * @param {Vector3} direction - The (normalized) direction vector that gives direction to the ray.
+	 * @param {number} [near=0] - All results returned are further away than near. Near can't be negative.
+	 * @param {number} [far=Infinity] - All results returned are closer than far. Far can't be lower than near.
+	 */
 	constructor( origin, direction, near = 0, far = Infinity ) {
 
+		/**
+		 * The ray used for raycasting.
+		 *
+		 * @type {Ray}
+		 */
 		this.ray = new Ray( origin, direction );
-		// direction is assumed to be normalized (for accurate distance calculations)
 
+		/**
+		 * All results returned are further away than near. Near can't be negative.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.near = near;
+
+		/**
+		 * All results returned are further away than near. Near can't be negative.
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.far = far;
+
+		/**
+		 * The camera to use when raycasting against view-dependent objects such as
+		 * billboarded objects like sprites. This field can be set manually or
+		 * is set when calling `setFromCamera()`.
+		 *
+		 * @type {?Camera}
+		 * @default null
+		 */
 		this.camera = null;
+
+		/**
+		 * Allows to selectively ignore 3D objects when performing intersection tests.
+		 * The following code example ensures that only 3D objects on layer `1` will be
+		 * honored by raycaster.
+		 * ```js
+		 * raycaster.layers.set( 1 );
+		 * object.layers.enable( 1 );
+		 * ```
+		 *
+		 * @type {Layers}
+		 */
 		this.layers = new Layers();
 
+
+		/**
+		 * A parameter object that configures the raycasting. It has the structure:
+		 *
+		 * ```
+		 * {
+		 * 	Mesh: {},
+		 * 	Line: { threshold: 1 },
+		 * 	LOD: {},
+		 * 	Points: { threshold: 1 },
+		 * 	Sprite: {}
+		 * }
+		 * ```
+		 * Where `threshold` is the precision of the raycaster when intersecting objects, in world units.
+		 *
+		 * @type {Object}
+		 */
 		this.params = {
 			Mesh: {},
 			Line: { threshold: 1 },
@@ -59550,6 +65720,12 @@ class Raycaster {
 
 	}
 
+	/**
+	 * Updates the ray with a new origin and direction by copying the values from the arguments.
+	 *
+	 * @param {Vector3} origin - The origin vector where the ray casts from.
+	 * @param {Vector3} direction - The (normalized) direction vector that gives direction to the ray.
+	 */
 	set( origin, direction ) {
 
 		// direction is assumed to be normalized (for accurate distance calculations)
@@ -59558,6 +65734,13 @@ class Raycaster {
 
 	}
 
+	/**
+	 * Uses the given coordinates and camera to compute a new origin and direction for the internal ray.
+	 *
+	 * @param {Vector2} coords - 2D coordinates of the mouse, in normalized device coordinates (NDC).
+	 * X and Y components should be between `-1` and `1`.
+	 * @param {Camera} camera - The camera from which the ray should originate.
+	 */
 	setFromCamera( coords, camera ) {
 
 		if ( camera.isPerspectiveCamera ) {
@@ -59580,6 +65763,12 @@ class Raycaster {
 
 	}
 
+	/**
+	 * Uses the given WebXR controller to compute a new origin and direction for the internal ray.
+	 *
+	 * @param {WebXRController} controller - The controller to copy the position and direction from.
+	 * @return {Raycaster} A reference to this raycaster.
+	 */
 	setFromXRController( controller ) {
 
 		_matrix.identity().extractRotation( controller.matrixWorld );
@@ -59591,6 +65780,42 @@ class Raycaster {
 
 	}
 
+	/**
+	 * The intersection point of a raycaster intersection test.
+	 * @typedef {Object} Raycaster~Intersection
+	 * @property {number} distance - The distance from the ray's origin to the intersection point.
+	 * @property {number} distanceToRay -  Some 3D objects e.g. {@link Points} provide the distance of the
+	 * intersection to the nearest point on the ray. For other objects it will be `undefined`.
+	 * @property {Vector3} point - The intersection point, in world coordinates.
+	 * @property {Object} face - The face that has been intersected.
+	 * @property {number} faceIndex - The face index.
+	 * @property {Object3D} object - The 3D object that has been intersected.
+	 * @property {Vector2} uv - U,V coordinates at point of intersection.
+	 * @property {Vector2} uv1 - Second set of U,V coordinates at point of intersection.
+	 * @property {Vector3} uv1 - Interpolated normal vector at point of intersection.
+	 * @property {number} instanceId - The index number of the instance where the ray
+	 * intersects the {@link InstancedMesh}.
+	 */
+
+	/**
+	 * Checks all intersection between the ray and the object with or without the
+	 * descendants. Intersections are returned sorted by distance, closest first.
+	 *
+	 * `Raycaster` delegates to the `raycast()` method of the passed 3D object, when
+	 * evaluating whether the ray intersects the object or not. This allows meshes to respond
+	 * differently to ray casting than lines or points.
+	 *
+	 * Note that for meshes, faces must be pointed towards the origin of the ray in order
+	 * to be detected; intersections of the ray passing through the back of a face will not
+	 * be detected. To raycast against both faces of an object, you'll want to set  {@link Material#side}
+	 * to `THREE.DoubleSide`.
+	 *
+	 * @param {Object3D} object - The 3D object to check for intersection with the ray.
+	 * @param {boolean} [recursive=true] - If set to `true`, it also checks all descendants.
+	 * Otherwise it only checks intersection with the object.
+	 * @param {Array<Raycaster~Intersection>} [intersects=[]] The target array that holds the result of the method.
+	 * @return {Array<Raycaster~Intersection>} An array holding the intersection points.
+	 */
 	intersectObject( object, recursive = true, intersects = [] ) {
 
 		intersect( object, this, intersects, recursive );
@@ -59601,6 +65826,16 @@ class Raycaster {
 
 	}
 
+	/**
+	 * Checks all intersection between the ray and the objects with or without
+	 * the descendants. Intersections are returned sorted by distance, closest first.
+	 *
+	 * @param {Array<Object3D>} objects - The 3D objects to check for intersection with the ray.
+	 * @param {boolean} [recursive=true] - If set to `true`, it also checks all descendants.
+	 * Otherwise it only checks intersection with the object.
+	 * @param {Array<Raycaster~Intersection>} [intersects=[]] The target array that holds the result of the method.
+	 * @return {Array<Raycaster~Intersection>} An array holding the intersection points.
+	 */
 	intersectObjects( objects, recursive = true, intersects = [] ) {
 
 		for ( let i = 0, l = objects.length; i < l; i ++ ) {
@@ -59649,20 +65884,67 @@ function intersect( object, raycaster, intersects, recursive ) {
 
 }
 
+/**
+ * Class for keeping track of time.
+ */
 class Clock {
 
+	/**
+	 * Constructs a new clock.
+	 *
+	 * @param {boolean} [autoStart=true] - Whether to automatically start the clock when
+	 * `getDelta()` is called for the first time.
+	 */
 	constructor( autoStart = true ) {
 
+		/**
+		 * If set to `true`, the clock starts automatically when `getDelta()` is called
+		 * for the first time.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoStart = autoStart;
 
+		/**
+		 * Holds the time at which the clock's `start()` method was last called.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.startTime = 0;
+
+		/**
+		 * Holds the time at which the clock's `start()`, `getElapsedTime()` or
+		 * `getDelta()` methods were last called.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.oldTime = 0;
+
+		/**
+		 * Keeps track of the total time that the clock has been running.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.elapsedTime = 0;
 
+		/**
+		 * Whether the clock is running or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.running = false;
 
 	}
 
+	/**
+	 * Starts the clock. When `autoStart` is set to `true`, the method is automatically
+	 * called by the class.
+	 */
 	start() {
 
 		this.startTime = now();
@@ -59673,6 +65955,9 @@ class Clock {
 
 	}
 
+	/**
+	 * Stops the clock.
+	 */
 	stop() {
 
 		this.getElapsedTime();
@@ -59681,6 +65966,11 @@ class Clock {
 
 	}
 
+	/**
+	 * Returns the elapsed time in seconds.
+	 *
+	 * @return {number} The elapsed time.
+	 */
 	getElapsedTime() {
 
 		this.getDelta();
@@ -59688,6 +65978,11 @@ class Clock {
 
 	}
 
+	/**
+	 * Returns the delta time in seconds.
+	 *
+	 * @return {number} The delta time.
+	 */
 	getDelta() {
 
 		let diff = 0;
@@ -60974,8 +67269,23 @@ class Controls extends EventDispatcher {
 	/**
 	 * Connects the controls to the DOM. This method has so called "side effects" since
 	 * it adds the module's event listeners to the DOM.
+	 *
+	 * @param {HTMLDOMElement} element - The DOM element to connect to.
 	 */
-	connect() {}
+	connect( element ) {
+
+		if ( element === undefined ) {
+
+			console.warn( 'THREE.Controls: connect() now requires an element.' ); // @deprecated, the warning can be removed with r185
+			return;
+
+		}
+
+		if ( this.domElement !== null ) this.disconnect();
+
+		this.domElement = element;
+
+	}
 
 	/**
 	 * Disconnects the controls from the DOM.
@@ -61031,25 +67341,36 @@ if ( typeof window !== 'undefined' ) {
  */
 
 /**
- * Text = 3D Text
+ * A class for generating text as a single geometry. It is constructed by providing a string of text, and a set of
+ * parameters consisting of a loaded font and extrude settings.
  *
- * parameters = {
- *  font: <THREE.Font>, // font
+ * See the {@link FontLoader} page for additional details.
  *
- *  size: <float>, // size of the text
- *  depth: <float>, // thickness to extrude text
- *  curveSegments: <int>, // number of points on the curves
+ * `TextGeometry` uses [typeface.json]{@link http://gero3.github.io/facetype.js/} generated fonts.
+ * Some existing fonts can be found located in `/examples/fonts`.
  *
- *  bevelEnabled: <bool>, // turn on bevel
- *  bevelThickness: <float>, // how deep into text bevel goes
- *  bevelSize: <float>, // how far from text outline (including bevelOffset) is bevel
- *  bevelOffset: <float> // how far from text outline does bevel start
- * }
+ * ```js
+ * const loader = new FontLoader();
+ * const font = await loader.loadAsync( 'fonts/helvetiker_regular.typeface.json' );
+ * const geometry = new TextGeometry( 'Hello three.js!', {
+ * 	font: font,
+ * 	size: 80,
+ * 	depth: 5,
+ * 	curveSegments: 12
+ * } );
+ * ```
+ *
+ * @augments ExtrudeGeometry
+ * @three_import import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
  */
-
-
 class TextGeometry extends ExtrudeGeometry {
 
+	/**
+	 * Constructs a new text geometry.
+	 *
+	 * @param {string} text - The text that should be transformed into a geometry.
+	 * @param {TextGeometry~Options} [parameters] - The text settings.
+	 */
 	constructor( text, parameters = {} ) {
 
 		const font = parameters.font;
@@ -61079,20 +67400,46 @@ class TextGeometry extends ExtrudeGeometry {
 
 }
 
-//
-
+/**
+ * Class representing a font.
+ */
 class Font {
 
+	/**
+	 * Constructs a new font.
+	 *
+	 * @param {Object} data - The font data as JSON.
+	 */
 	constructor( data ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isFont = true;
 
 		this.type = 'Font';
 
+		/**
+		 * The font data as JSON.
+		 *
+		 * @type {Object}
+		 */
 		this.data = data;
 
 	}
 
+	/**
+	 * Generates geometry shapes from the given text and size. The result of this method
+	 * should be used with {@link ShapeGeometry} to generate the actual geometry data.
+	 *
+	 * @param {string} text - The text.
+	 * @param {number} [size=100] - The text size.
+	 * @return {Array<Shape>} An array of shapes representing the text.
+	 */
 	generateShapes( text, size = 100 ) {
 
 		const shapes = [];
@@ -61221,16 +67568,30 @@ function createPath( char, scale, offsetX, offsetY, data ) {
 
 }
 
-// OrbitControls performs orbiting, dollying (zooming), and panning.
-// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
-//
-//    Orbit - left mouse / touch: one-finger move
-//    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
-//    Pan - right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move
-
+/**
+ * Fires when the camera has been transformed by the controls.
+ *
+ * @event OrbitControls#change
+ * @type {Object}
+ */
 const _changeEvent = { type: 'change' };
+
+/**
+ * Fires when an interaction was initiated.
+ *
+ * @event OrbitControls#start
+ * @type {Object}
+ */
 const _startEvent = { type: 'start' };
+
+/**
+ * Fires when an interaction has finished.
+ *
+ * @event OrbitControls#end
+ * @type {Object}
+ */
 const _endEvent = { type: 'end' };
+
 const _ray = new Ray();
 const _plane = new Plane();
 const _TILT_LIMIT = Math.cos( 70 * MathUtils$1.DEG2RAD );
@@ -61250,84 +67611,341 @@ const _STATE = {
 };
 const _EPS = 0.000001;
 
+
+/**
+ * Orbit controls allow the camera to orbit around a target.
+ *
+ * OrbitControls performs orbiting, dollying (zooming), and panning. Unlike {@link TrackballControls},
+ * it maintains the "up" direction `object.up` (+Y by default).
+ *
+ * - Orbit: Left mouse / touch: one-finger move.
+ * - Zoom: Middle mouse, or mousewheel / touch: two-finger spread or squish.
+ * - Pan: Right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move.
+ *
+ * ```js
+ * const controls = new OrbitControls( camera, renderer.domElement );
+ *
+ * // controls.update() must be called after any manual changes to the camera's transform
+ * camera.position.set( 0, 20, 100 );
+ * controls.update();
+ *
+ * function animate() {
+ *
+ * 	// required if controls.enableDamping or controls.autoRotate are set to true
+ * 	controls.update();
+ *
+ * 	renderer.render( scene, camera );
+ *
+ * }
+ * ```
+ *
+ * @augments Controls
+ * @three_import import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+ */
 class OrbitControls extends Controls {
 
+	/**
+	 * Constructs a new controls instance.
+	 *
+	 * @param {Object3D} object - The object that is managed by the controls.
+	 * @param {?HTMLDOMElement} domElement - The HTML element used for event listeners.
+	 */
 	constructor( object, domElement = null ) {
 
 		super( object, domElement );
 
 		this.state = _STATE.NONE;
 
-		// Set to false to disable this control
-		this.enabled = true;
-
-		// "target" sets the location of focus, where the object orbits around
+		/**
+		 * The focus point of the controls, the `object` orbits around this.
+		 * It can be updated manually at any point to change the focus of the controls.
+		 *
+		 * @type {Vector3}
+		 */
 		this.target = new Vector3();
 
-		// Sets the 3D cursor (similar to Blender), from which the maxTargetRadius takes effect
+		/**
+		 * The focus point of the `minTargetRadius` and `maxTargetRadius` limits.
+		 * It can be updated manually at any point to change the center of interest
+		 * for the `target`.
+		 *
+		 * @type {Vector3}
+		 */
 		this.cursor = new Vector3();
 
-		// How far you can dolly in and out ( PerspectiveCamera only )
+		/**
+		 * How far you can dolly in (perspective camera only).
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.minDistance = 0;
+
+		/**
+		 * How far you can dolly out (perspective camera only).
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.maxDistance = Infinity;
 
-		// How far you can zoom in and out ( OrthographicCamera only )
+		/**
+		 * How far you can zoom in (orthographic camera only).
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.minZoom = 0;
+
+		/**
+		 * How far you can zoom out (orthographic camera only).
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.maxZoom = Infinity;
 
-		// Limit camera target within a spherical area around the cursor
+		/**
+		 * How close you can get the target to the 3D `cursor`.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.minTargetRadius = 0;
+
+		/**
+		 * How far you can move the target from the 3D `cursor`.
+		 *
+		 * @type {number}
+		 * @default Infinity
+		 */
 		this.maxTargetRadius = Infinity;
 
-		// How far you can orbit vertically, upper and lower limits.
-		// Range is 0 to Math.PI radians.
-		this.minPolarAngle = 0; // radians
-		this.maxPolarAngle = Math.PI; // radians
+		/**
+		 * How far you can orbit vertically, lower limit. Range is `[0, Math.PI]` radians.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
+		this.minPolarAngle = 0;
 
-		// How far you can orbit horizontally, upper and lower limits.
-		// If set, the interval [ min, max ] must be a sub-interval of [ - 2 PI, 2 PI ], with ( max - min < 2 PI )
-		this.minAzimuthAngle = - Infinity; // radians
-		this.maxAzimuthAngle = Infinity; // radians
+		/**
+		 * How far you can orbit vertically, upper limit. Range is `[0, Math.PI]` radians.
+		 *
+		 * @type {number}
+		 * @default Math.PI
+		 */
+		this.maxPolarAngle = Math.PI;
 
-		// Set to true to enable damping (inertia)
-		// If damping is enabled, you must call controls.update() in your animation loop
+		/**
+		 * How far you can orbit horizontally, lower limit. If set, the interval `[ min, max ]`
+		 * must be a sub-interval of `[ - 2 PI, 2 PI ]`, with `( max - min < 2 PI )`.
+		 *
+		 * @type {number}
+		 * @default -Infinity
+		 */
+		this.minAzimuthAngle = - Infinity;
+
+		/**
+		 * How far you can orbit horizontally, upper limit. If set, the interval `[ min, max ]`
+		 * must be a sub-interval of `[ - 2 PI, 2 PI ]`, with `( max - min < 2 PI )`.
+		 *
+		 * @type {number}
+		 * @default -Infinity
+		 */
+		this.maxAzimuthAngle = Infinity;
+
+		/**
+		 * Set to `true` to enable damping (inertia), which can be used to give a sense of weight
+		 * to the controls. Note that if this is enabled, you must call `update()` in your animation
+		 * loop.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.enableDamping = false;
+
+		/**
+		 * The damping inertia used if `enableDamping` is set to `true`.
+		 *
+		 * Note that for this to work, you must call `update()` in your animation loop.
+		 *
+		 * @type {number}
+		 * @default 0.05
+		 */
 		this.dampingFactor = 0.05;
 
-		// This option actually enables dollying in and out; left as "zoom" for backwards compatibility.
-		// Set to false to disable zooming
+		/**
+		 * Enable or disable zooming (dollying) of the camera.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enableZoom = true;
+
+		/**
+		 * Speed of zooming / dollying.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.zoomSpeed = 1.0;
 
-		// Set to false to disable rotating
+		/**
+		 * Enable or disable horizontal and vertical rotation of the camera.
+		 *
+		 * Note that it is possible to disable a single axis by setting the min and max of the
+		 * `minPolarAngle` or `minAzimuthAngle` to the same value, which will cause the vertical
+		 * or horizontal rotation to be fixed at that value.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enableRotate = true;
+
+		/**
+		 * Speed of rotation.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.rotateSpeed = 1.0;
+
+		/**
+		 * How fast to rotate the camera when the keyboard is used.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.keyRotateSpeed = 1.0;
 
-		// Set to false to disable panning
+		/**
+		 * Enable or disable camera panning.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enablePan = true;
+
+		/**
+		 * Speed of panning.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.panSpeed = 1.0;
-		this.screenSpacePanning = true; // if false, pan orthogonal to world-space direction camera.up
-		this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
+
+		/**
+		 * Defines how the camera's position is translated when panning. If `true`, the camera pans
+		 * in screen space. Otherwise, the camera pans in the plane orthogonal to the camera's up
+		 * direction.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
+		this.screenSpacePanning = true;
+
+		/**
+		 * How fast to pan the camera when the keyboard is used in
+		 * pixels per keypress.
+		 *
+		 * @type {number}
+		 * @default 7
+		 */
+		this.keyPanSpeed = 7.0;
+
+		/**
+		 * Setting this property to `true` allows to zoom to the cursor's position.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.zoomToCursor = false;
 
-		// Set to true to automatically rotate around the target
-		// If auto-rotate is enabled, you must call controls.update() in your animation loop
+		/**
+		 * Set to true to automatically rotate around the target
+		 *
+		 * Note that if this is enabled, you must call `update()` in your animation loop.
+		 * If you want the auto-rotate speed to be independent of the frame rate (the refresh
+		 * rate of the display), you must pass the time `deltaTime`, in seconds, to `update()`.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.autoRotate = false;
-		this.autoRotateSpeed = 2.0; // 30 seconds per orbit when fps is 60
 
-		// The four arrow keys
+		/**
+		 * How fast to rotate around the target if `autoRotate` is `true`. The default  equates to 30 seconds
+		 * per orbit at 60fps.
+		 *
+		 * Note that if `autoRotate` is enabled, you must call `update()` in your animation loop.
+		 *
+		 * @type {number}
+		 * @default 2
+		 */
+		this.autoRotateSpeed = 2.0;
+
+		/**
+		 * This object contains references to the keycodes for controlling camera panning.
+		 *
+		 * ```js
+		 * controls.keys = {
+		 * 	LEFT: 'ArrowLeft', //left arrow
+		 * 	UP: 'ArrowUp', // up arrow
+		 * 	RIGHT: 'ArrowRight', // right arrow
+		 * 	BOTTOM: 'ArrowDown' // down arrow
+		 * }
+		 * ```
+		 * @type {Object}
+		 */
 		this.keys = { LEFT: 'ArrowLeft', UP: 'ArrowUp', RIGHT: 'ArrowRight', BOTTOM: 'ArrowDown' };
 
-		// Mouse buttons
+		/**
+		 * This object contains references to the mouse actions used by the controls.
+		 *
+		 * ```js
+		 * controls.mouseButtons = {
+		 * 	LEFT: THREE.MOUSE.ROTATE,
+		 * 	MIDDLE: THREE.MOUSE.DOLLY,
+		 * 	RIGHT: THREE.MOUSE.PAN
+		 * }
+		 * ```
+		 * @type {Object}
+		 */
 		this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
 
-		// Touch fingers
+		/**
+		 * This object contains references to the touch actions used by the controls.
+		 *
+		 * ```js
+		 * controls.mouseButtons = {
+		 * 	ONE: THREE.TOUCH.ROTATE,
+		 * 	TWO: THREE.TOUCH.DOLLY_PAN
+		 * }
+		 * ```
+		 * @type {Object}
+		 */
 		this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
 
-		// for reset
+		/**
+		 * Used internally by `saveState()` and `reset()`.
+		 *
+		 * @type {Vector3}
+		 */
 		this.target0 = this.target.clone();
+
+		/**
+		 * Used internally by `saveState()` and `reset()`.
+		 *
+		 * @type {Vector3}
+		 */
 		this.position0 = this.object.position.clone();
+
+		/**
+		 * Used internally by `saveState()` and `reset()`.
+		 *
+		 * @type {number}
+		 */
 		this.zoom0 = this.object.zoom;
 
 		// the target DOM element for key events
@@ -61393,7 +68011,7 @@ class OrbitControls extends Controls {
 
 		if ( this.domElement !== null ) {
 
-			this.connect();
+			this.connect( this.domElement );
 
 		}
 
@@ -61401,7 +68019,9 @@ class OrbitControls extends Controls {
 
 	}
 
-	connect() {
+	connect( element ) {
+
+		super.connect( element );
 
 		this.domElement.addEventListener( 'pointerdown', this._onPointerDown );
 		this.domElement.addEventListener( 'pointercancel', this._onPointerUp );
@@ -61441,24 +68061,45 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Get the current vertical rotation, in radians.
+	 *
+	 * @return {number} The current vertical rotation, in radians.
+	 */
 	getPolarAngle() {
 
 		return this._spherical.phi;
 
 	}
 
+	/**
+	 * Get the current horizontal rotation, in radians.
+	 *
+	 * @return {number} The current horizontal rotation, in radians.
+	 */
 	getAzimuthalAngle() {
 
 		return this._spherical.theta;
 
 	}
 
+	/**
+	 * Returns the distance from the camera to the target.
+	 *
+	 * @return {number} The distance from the camera to the target.
+	 */
 	getDistance() {
 
 		return this.object.position.distanceTo( this.target );
 
 	}
 
+	/**
+	 * Adds key event listeners to the given DOM element.
+	 * `window` is a recommended argument for using this method.
+	 *
+	 * @param {HTMLDOMElement} domElement - The DOM element
+	 */
 	listenToKeyEvents( domElement ) {
 
 		domElement.addEventListener( 'keydown', this._onKeyDown );
@@ -61466,6 +68107,9 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Removes the key event listener previously defined with `listenToKeyEvents()`.
+	 */
 	stopListenToKeyEvents() {
 
 		if ( this._domElementKeyEvents !== null ) {
@@ -61477,6 +68121,9 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Save the current state of the controls. This can later be recovered with `reset()`.
+	 */
 	saveState() {
 
 		this.target0.copy( this.target );
@@ -61485,6 +68132,10 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Reset the controls to their state from either the last time the `saveState()`
+	 * was called, or the initial state.
+	 */
 	reset() {
 
 		this.target.copy( this.target0 );
@@ -62764,9 +69415,16 @@ function interceptControlUp( event ) {
 }
 
 /**
- * Full-screen textured quad shader
+ * @module CopyShader
+ * @three_import import { CopyShader } from 'three/addons/shaders/CopyShader.js';
  */
 
+/**
+ * Full-screen copy shader pass.
+ *
+ * @constant
+ * @type {ShaderMaterial~Shader}
+ */
 const CopyShader = {
 
 	name: 'CopyShader',
@@ -62807,34 +69465,98 @@ const CopyShader = {
 
 };
 
+/**
+ * Abstract base class for all post processing passes.
+ *
+ * This module is only relevant for post processing with {@link WebGLRenderer}.
+ *
+ * @abstract
+ * @three_import import { Pass } from 'three/addons/postprocessing/Pass.js';
+ */
 class Pass {
 
+	/**
+	 * Constructs a new pass.
+	 */
 	constructor() {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isPass = true;
 
-		// if set to true, the pass is processed by the composer
+		/**
+		 * If set to `true`, the pass is processed by the composer.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enabled = true;
 
-		// if set to true, the pass indicates to swap read and write buffer after rendering
+		/**
+		 * If set to `true`, the pass indicates to swap read and write buffer after rendering.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.needsSwap = true;
 
-		// if set to true, the pass clears its buffer before rendering
+		/**
+		 * If set to `true`, the pass clears its buffer before rendering
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.clear = false;
 
-		// if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
+		/**
+		 * If set to `true`, the result of the pass is rendered to screen. The last pass in the composers
+		 * pass chain gets automatically rendered to screen, no matter how this property is configured.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.renderToScreen = false;
 
 	}
 
+	/**
+	 * Sets the size of the pass.
+	 *
+	 * @abstract
+	 * @param {number} width - The width to set.
+	 * @param {number} height - The width to set.
+	 */
 	setSize( /* width, height */ ) {}
 
+	/**
+	 * This method holds the render logic of a pass. It must be implemented in all derived classes.
+	 *
+	 * @abstract
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( /* renderer, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
 
 		console.error( 'THREE.Pass: .render() must be implemented in derived pass.' );
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the pass is no longer used in your app.
+	 *
+	 * @abstract
+	 */
 	dispose() {}
 
 }
@@ -62860,26 +69582,58 @@ class FullscreenTriangleGeometry extends BufferGeometry {
 
 const _geometry = new FullscreenTriangleGeometry();
 
+
+/**
+ * This module is a helper for passes which need to render a full
+ * screen effect which is quite common in context of post processing.
+ *
+ * The intended usage is to reuse a single full screen quad for rendering
+ * subsequent passes by just reassigning the `material` reference.
+ *
+ * This module can only be used with {@link WebGLRenderer}.
+ *
+ * @augments Mesh
+ * @three_import import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
+ */
 class FullScreenQuad {
 
+	/**
+	 * Constructs a new full screen quad.
+	 *
+	 * @param {?Material} material - The material to render te full screen quad with.
+	 */
 	constructor( material ) {
 
 		this._mesh = new Mesh( _geometry, material );
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the instance is no longer used in your app.
+	 */
 	dispose() {
 
 		this._mesh.geometry.dispose();
 
 	}
 
+	/**
+	 * Renders the full screen quad.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 */
 	render( renderer ) {
 
 		renderer.render( this._mesh, _camera );
 
 	}
 
+	/**
+	 * The quad's material.
+	 *
+	 * @type {?Material}
+	 */
 	get material() {
 
 		return this._mesh.material;
@@ -62894,13 +69648,54 @@ class FullScreenQuad {
 
 }
 
+/**
+ * This pass can be used to create a post processing effect
+ * with a raw GLSL shader object. Useful for implementing custom
+ * effects.
+ *
+ * ```js
+ * const fxaaPass = new ShaderPass( FXAAShader );
+ * composer.addPass( fxaaPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+ */
 class ShaderPass extends Pass {
 
-	constructor( shader, textureID ) {
+	/**
+	 * Constructs a new shader pass.
+	 *
+	 * @param {Object|ShaderMaterial} [shader] - A shader object holding vertex and fragment shader as well as
+	 * defines and uniforms. It's also valid to pass a custom shader material.
+	 * @param {string} [textureID='tDiffuse'] - The name of the texture uniform that should sample
+	 * the read buffer.
+	 */
+	constructor( shader, textureID = 'tDiffuse' ) {
 
 		super();
 
-		this.textureID = ( textureID !== undefined ) ? textureID : 'tDiffuse';
+		/**
+		 * The name of the texture uniform that should sample the read buffer.
+		 *
+		 * @type {string}
+		 * @default 'tDiffuse'
+		 */
+		this.textureID = textureID;
+
+		/**
+		 * The pass uniforms.
+		 *
+		 * @type {?Object}
+		 */
+		this.uniforms = null;
+
+		/**
+		 * The pass material.
+		 *
+		 * @type {?ShaderMaterial}
+		 */
+		this.material = null;
 
 		if ( shader instanceof ShaderMaterial ) {
 
@@ -62924,10 +69719,23 @@ class ShaderPass extends Pass {
 
 		}
 
-		this.fsQuad = new FullScreenQuad( this.material );
+		// internals
+
+		this._fsQuad = new FullScreenQuad( this.material );
 
 	}
 
+	/**
+	 * Performs the shader pass.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		if ( this.uniforms[ this.textureID ] ) {
@@ -62936,50 +69744,115 @@ class ShaderPass extends Pass {
 
 		}
 
-		this.fsQuad.material = this.material;
+		this._fsQuad.material = this.material;
 
 		if ( this.renderToScreen ) {
 
 			renderer.setRenderTarget( null );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		} else {
 
 			renderer.setRenderTarget( writeBuffer );
 			// TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
 			if ( this.clear ) renderer.clear( renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		}
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the pass is no longer used in your app.
+	 */
 	dispose() {
 
 		this.material.dispose();
 
-		this.fsQuad.dispose();
+		this._fsQuad.dispose();
 
 	}
 
 }
 
+/**
+ * This pass can be used to define a mask during post processing.
+ * Meaning only areas of subsequent post processing are affected
+ * which lie in the masking area of this pass. Internally, the masking
+ * is implemented with the stencil buffer.
+ *
+ * ```js
+ * const maskPass = new MaskPass( scene, camera );
+ * composer.addPass( maskPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { MaskPass } from 'three/addons/postprocessing/MaskPass.js';
+ */
 class MaskPass extends Pass {
 
+	/**
+	 * Constructs a new mask pass.
+	 *
+	 * @param {Scene} scene - The 3D objects in this scene will define the mask.
+	 * @param {Camera} camera - The camera.
+	 */
 	constructor( scene, camera ) {
 
 		super();
 
+		/**
+		 * The scene that defines the mask.
+		 *
+		 * @type {Scene}
+		 */
 		this.scene = scene;
+
+		/**
+		 * The camera.
+		 *
+		 * @type {Camera}
+		 */
 		this.camera = camera;
 
+		/**
+		 * Overwritten to perform a clear operation by default.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.clear = true;
+
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.needsSwap = false;
 
+		/**
+		 * Whether to inverse the mask or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.inverse = false;
 
 	}
 
+	/**
+	 * Performs a mask pass with the configured scene and camera.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		const context = renderer.getContext();
@@ -63046,16 +69919,46 @@ class MaskPass extends Pass {
 
 }
 
+/**
+ * This pass can be used to clear a mask previously defined with {@link MaskPass}.
+ *
+ * ```js
+ * const clearPass = new ClearMaskPass();
+ * composer.addPass( clearPass );
+ * ```
+ *
+ * @augments Pass
+ */
 class ClearMaskPass extends Pass {
 
+	/**
+	 * Constructs a new clear mask pass.
+	 */
 	constructor() {
 
 		super();
 
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.needsSwap = false;
 
 	}
 
+	/**
+	 * Performs the clear of the currently defined mask.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer /*, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
 
 		renderer.state.buffers.stencil.setLocked( false );
@@ -63065,10 +69968,53 @@ class ClearMaskPass extends Pass {
 
 }
 
+/**
+ * Used to implement post-processing effects in three.js.
+ * The class manages a chain of post-processing passes to produce the final visual result.
+ * Post-processing passes are executed in order of their addition/insertion.
+ * The last pass is automatically rendered to screen.
+ *
+ * This module can only be used with {@link WebGLRenderer}.
+ *
+ * ```js
+ * const composer = new EffectComposer( renderer );
+ *
+ * // adding some passes
+ * const renderPass = new RenderPass( scene, camera );
+ * composer.addPass( renderPass );
+ *
+ * const glitchPass = new GlitchPass();
+ * composer.addPass( glitchPass );
+ *
+ * const outputPass = new OutputPass()
+ * composer.addPass( outputPass );
+ *
+ * function animate() {
+ *
+ * 	composer.render(); // instead of renderer.render()
+ *
+ * }
+ * ```
+ *
+ * @three_import import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+ */
 class EffectComposer {
 
+	/**
+	 * Constructs a new effect composer.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} [renderTarget] - This render target and a clone will
+	 * be used as the internal read and write buffers. If not given, the composer creates
+	 * the buffers automatically.
+	 */
 	constructor( renderer, renderTarget ) {
 
+		/**
+		 * The renderer.
+		 *
+		 * @type {WebGLRenderer}
+		 */
 		this.renderer = renderer;
 
 		this._pixelRatio = renderer.getPixelRatio();
@@ -63093,20 +70039,59 @@ class EffectComposer {
 		this.renderTarget2 = renderTarget.clone();
 		this.renderTarget2.texture.name = 'EffectComposer.rt2';
 
+		/**
+		 * A reference to the internal write buffer. Passes usually write
+		 * their result into this buffer.
+		 *
+		 * @type {WebGLRenderTarget}
+		 */
 		this.writeBuffer = this.renderTarget1;
+
+		/**
+		 * A reference to the internal read buffer. Passes usually read
+		 * the previous render result from this buffer.
+		 *
+		 * @type {WebGLRenderTarget}
+		 */
 		this.readBuffer = this.renderTarget2;
 
+		/**
+		 * Whether the final pass is rendered to the screen (default framebuffer) or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.renderToScreen = true;
 
+		/**
+		 * An array representing the (ordered) chain of post-processing passes.
+		 *
+		 * @type {Array<Pass>}
+		 */
 		this.passes = [];
 
+		/**
+		 * A copy pass used for internal swap operations.
+		 *
+		 * @private
+		 * @type {ShaderPass}
+		 */
 		this.copyPass = new ShaderPass( CopyShader );
 		this.copyPass.material.blending = NoBlending;
 
+		/**
+		 * The internal clock for managing time data.
+		 *
+		 * @private
+		 * @type {Clock}
+		 */
 		this.clock = new Clock();
 
 	}
 
+	/**
+	 * Swaps the internal read/write buffers.
+	 */
 	swapBuffers() {
 
 		const tmp = this.readBuffer;
@@ -63115,6 +70100,11 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Adds the given pass to the pass chain.
+	 *
+	 * @param {Pass} pass - The pass to add.
+	 */
 	addPass( pass ) {
 
 		this.passes.push( pass );
@@ -63122,6 +70112,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Inserts the given pass at a given index.
+	 *
+	 * @param {Pass} pass - The pass to insert.
+	 * @param {number} index - The index into the pass chain.
+	 */
 	insertPass( pass, index ) {
 
 		this.passes.splice( index, 0, pass );
@@ -63129,6 +70125,11 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Removes the given pass from the pass chain.
+	 *
+	 * @param {Pass} pass - The pass to remove.
+	 */
 	removePass( pass ) {
 
 		const index = this.passes.indexOf( pass );
@@ -63141,6 +70142,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Returns `true` if the pass for the given index is the last enabled pass in the pass chain.
+	 *
+	 * @param {number} passIndex - The pass index.
+	 * @return {boolean} Whether the pass for the given index is the last pass in the pass chain.
+	 */
 	isLastEnabledPass( passIndex ) {
 
 		for ( let i = passIndex + 1; i < this.passes.length; i ++ ) {
@@ -63157,6 +70164,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Executes all enabled post-processing passes in order to produce the final frame.
+	 *
+	 * @param {number} deltaTime - The delta time in seconds. If not given, the composer computes
+	 * its own time delta value.
+	 */
 	render( deltaTime ) {
 
 		// deltaTime value is in seconds
@@ -63221,6 +70234,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Resets the internal state of the EffectComposer.
+	 *
+	 * @param {WebGLRenderTarget} [renderTarget] - This render target has the same purpose like
+	 * the one from the constructor. If set, it is used to setup the read and write buffers.
+	 */
 	reset( renderTarget ) {
 
 		if ( renderTarget === undefined ) {
@@ -63245,6 +70264,13 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Resizes the internal read and write buffers as well as all passes. Similar to {@link WebGLRenderer#setSize},
+	 * this method honors the current pixel ration.
+	 *
+	 * @param {number} width - The width in logical pixels.
+	 * @param {number} height - The height in logical pixels.
+	 */
 	setSize( width, height ) {
 
 		this._width = width;
@@ -63264,6 +70290,12 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Sets device pixel ratio. This is usually used for HiDPI device to prevent blurring output.
+	 * Setting the pixel ratio will automatically resize the composer.
+	 *
+	 * @param {number} pixelRatio - The pixel ratio to set.
+	 */
 	setPixelRatio( pixelRatio ) {
 
 		this._pixelRatio = pixelRatio;
@@ -63272,6 +70304,10 @@ class EffectComposer {
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the composer is no longer used in your app.
+	 */
 	dispose() {
 
 		this.renderTarget1.dispose();
@@ -63283,27 +70319,111 @@ class EffectComposer {
 
 }
 
+/**
+ * This class represents a render pass. It takes a camera and a scene and produces
+ * a beauty pass for subsequent post processing effects.
+ *
+ * ```js
+ * const renderPass = new RenderPass( scene, camera );
+ * composer.addPass( renderPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+ */
 class RenderPass extends Pass {
 
+	/**
+	 * Constructs a new render pass.
+	 *
+	 * @param {Scene} scene - The scene to render.
+	 * @param {Camera} camera - The camera.
+	 * @param {?Material} [overrideMaterial=null] - The override material. If set, this material is used
+	 * for all objects in the scene.
+	 * @param {?(number|Color|string)} [clearColor=null] - The clear color of the render pass.
+	 * @param {?number} [clearAlpha=null] - The clear alpha of the render pass.
+	 */
 	constructor( scene, camera, overrideMaterial = null, clearColor = null, clearAlpha = null ) {
 
 		super();
 
+		/**
+		 * The scene to render.
+		 *
+		 * @type {Scene}
+		 */
 		this.scene = scene;
+
+		/**
+		 * The camera.
+		 *
+		 * @type {Camera}
+		 */
 		this.camera = camera;
 
+		/**
+		 * The override material. If set, this material is used
+		 * for all objects in the scene.
+		 *
+		 * @type {?Material}
+		 * @default null
+		 */
 		this.overrideMaterial = overrideMaterial;
 
+		/**
+		 * The clear color of the render pass.
+		 *
+		 * @type {?(number|Color|string)}
+		 * @default null
+		 */
 		this.clearColor = clearColor;
+
+		/**
+		 * The clear alpha of the render pass.
+		 *
+		 * @type {?number}
+		 * @default null
+		 */
 		this.clearAlpha = clearAlpha;
 
+		/**
+		 * Overwritten to perform a clear operation by default.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.clear = true;
+
+		/**
+		 * If set to `true`, only the depth can be cleared when `clear` is to `false`.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.clearDepth = false;
+
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.needsSwap = false;
 		this._oldClearColor = new Color();
 
 	}
 
+	/**
+	 * Performs a beauty pass with the configured scene and camera.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		const oldAutoClear = renderer.autoClear;
@@ -63377,10 +70497,16 @@ class RenderPass extends Pass {
 }
 
 /**
- * Luminosity
- * http://en.wikipedia.org/wiki/Luminosity
+ * @module LuminosityHighPassShader
+ * @three_import import { LuminosityHighPassShader } from 'three/addons/shaders/LuminosityHighPassShader.js';
  */
 
+/**
+ * Luminosity high pass shader.
+ *
+ * @constant
+ * @type {ShaderMaterial~Shader}
+ */
 const LuminosityHighPassShader = {
 
 	uniforms: {
@@ -63432,27 +70558,86 @@ const LuminosityHighPassShader = {
 };
 
 /**
- * UnrealBloomPass is inspired by the bloom pass of Unreal Engine. It creates a
+ * This pass is inspired by the bloom pass of Unreal Engine. It creates a
  * mip map chain of bloom textures and blurs them with different radii. Because
  * of the weighted combination of mips, and because larger blurs are done on
  * higher mips, this effect provides good quality and performance.
  *
+ * When using this pass, tone mapping must be enabled in the renderer settings.
+ *
  * Reference:
- * - https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/
+ * - [Bloom in Unreal Engine]{@link https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/}
+ *
+ * ```js
+ * const resolution = new THREE.Vector2( window.innerWidth, window.innerHeight );
+ * const bloomPass = new UnrealBloomPass( resolution, 1.5, 0.4, 0.85 );
+ * composer.addPass( bloomPass );
+ * ```
+ *
+ * @augments Pass
+ * @three_import import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
  */
 class UnrealBloomPass extends Pass {
 
-	constructor( resolution, strength, radius, threshold ) {
+	/**
+	 * Constructs a new Unreal Bloom pass.
+	 *
+	 * @param {Vector2} [resolution] - The effect's resolution.
+	 * @param {number} [strength=1] - The Bloom strength.
+	 * @param {number} radius - The Bloom radius.
+	 * @param {number} threshold - The luminance threshold limits which bright areas contribute to the Bloom effect.
+	 */
+	constructor( resolution, strength = 1, radius, threshold ) {
 
 		super();
 
-		this.strength = ( strength !== undefined ) ? strength : 1;
+		/**
+		 * The Bloom strength.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
+		this.strength = strength;
+
+		/**
+		 * The Bloom radius.
+		 *
+		 * @type {number}
+		 */
 		this.radius = radius;
+
+		/**
+		 * The luminance threshold limits which bright areas contribute to the Bloom effect.
+		 *
+		 * @type {number}
+		 */
 		this.threshold = threshold;
+
+		/**
+		 * The effect's resolution.
+		 *
+		 * @type {Vector2}
+		 * @default (256,256)
+		 */
 		this.resolution = ( resolution !== undefined ) ? new Vector2( resolution.x, resolution.y ) : new Vector2( 256, 256 );
 
-		// create color only once here, reuse it later inside the render function
+		/**
+		 * The effect's clear color
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.clearColor = new Color( 0, 0, 0 );
+
+		/**
+		 * Overwritten to disable the swap.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.needsSwap = false;
+
+		// internals
 
 		// render targets
 		this.renderTargetsHorizontal = [];
@@ -63510,7 +70695,7 @@ class UnrealBloomPass extends Pass {
 
 		for ( let i = 0; i < this.nMips; i ++ ) {
 
-			this.separableBlurMaterials.push( this.getSeparableBlurMaterial( kernelSizeArray[ i ] ) );
+			this.separableBlurMaterials.push( this._getSeparableBlurMaterial( kernelSizeArray[ i ] ) );
 
 			this.separableBlurMaterials[ i ].uniforms[ 'invSize' ].value = new Vector2( 1 / resx, 1 / resy );
 
@@ -63522,7 +70707,7 @@ class UnrealBloomPass extends Pass {
 
 		// composite material
 
-		this.compositeMaterial = this.getCompositeMaterial( this.nMips );
+		this.compositeMaterial = this._getCompositeMaterial( this.nMips );
 		this.compositeMaterial.uniforms[ 'blurTexture1' ].value = this.renderTargetsVertical[ 0 ].texture;
 		this.compositeMaterial.uniforms[ 'blurTexture2' ].value = this.renderTargetsVertical[ 1 ].texture;
 		this.compositeMaterial.uniforms[ 'blurTexture3' ].value = this.renderTargetsVertical[ 2 ].texture;
@@ -63538,32 +70723,31 @@ class UnrealBloomPass extends Pass {
 
 		// blend material
 
-		const copyShader = CopyShader;
-
-		this.copyUniforms = UniformsUtils.clone( copyShader.uniforms );
+		this.copyUniforms = UniformsUtils.clone( CopyShader.uniforms );
 
 		this.blendMaterial = new ShaderMaterial( {
 			uniforms: this.copyUniforms,
-			vertexShader: copyShader.vertexShader,
-			fragmentShader: copyShader.fragmentShader,
+			vertexShader: CopyShader.vertexShader,
+			fragmentShader: CopyShader.fragmentShader,
 			blending: AdditiveBlending,
 			depthTest: false,
 			depthWrite: false,
 			transparent: true
 		} );
 
-		this.enabled = true;
-		this.needsSwap = false;
-
 		this._oldClearColor = new Color();
-		this.oldClearAlpha = 1;
+		this._oldClearAlpha = 1;
 
-		this.basic = new MeshBasicMaterial();
+		this._basic = new MeshBasicMaterial();
 
-		this.fsQuad = new FullScreenQuad( null );
+		this._fsQuad = new FullScreenQuad( null );
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever the pass is no longer used in your app.
+	 */
 	dispose() {
 
 		for ( let i = 0; i < this.renderTargetsHorizontal.length; i ++ ) {
@@ -63590,14 +70774,20 @@ class UnrealBloomPass extends Pass {
 
 		this.compositeMaterial.dispose();
 		this.blendMaterial.dispose();
-		this.basic.dispose();
+		this._basic.dispose();
 
 		//
 
-		this.fsQuad.dispose();
+		this._fsQuad.dispose();
 
 	}
 
+	/**
+	 * Sets the size of the pass.
+	 *
+	 * @param {number} width - The width to set.
+	 * @param {number} height - The width to set.
+	 */
 	setSize( width, height ) {
 
 		let resx = Math.round( width / 2 );
@@ -63619,10 +70809,21 @@ class UnrealBloomPass extends Pass {
 
 	}
 
+	/**
+	 * Performs the Bloom pass.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} writeBuffer - The write buffer. This buffer is intended as the rendering
+	 * destination for the pass.
+	 * @param {WebGLRenderTarget} readBuffer - The read buffer. The pass can access the result from the
+	 * previous pass from this buffer.
+	 * @param {number} deltaTime - The delta time in seconds.
+	 * @param {boolean} maskActive - Whether masking is active or not.
+	 */
 	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
 
 		renderer.getClearColor( this._oldClearColor );
-		this.oldClearAlpha = renderer.getClearAlpha();
+		this._oldClearAlpha = renderer.getClearAlpha();
 		const oldAutoClear = renderer.autoClear;
 		renderer.autoClear = false;
 
@@ -63634,12 +70835,12 @@ class UnrealBloomPass extends Pass {
 
 		if ( this.renderToScreen ) {
 
-			this.fsQuad.material = this.basic;
-			this.basic.map = readBuffer.texture;
+			this._fsQuad.material = this._basic;
+			this._basic.map = readBuffer.texture;
 
 			renderer.setRenderTarget( null );
 			renderer.clear();
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		}
 
@@ -63647,11 +70848,11 @@ class UnrealBloomPass extends Pass {
 
 		this.highPassUniforms[ 'tDiffuse' ].value = readBuffer.texture;
 		this.highPassUniforms[ 'luminosityThreshold' ].value = this.threshold;
-		this.fsQuad.material = this.materialHighPassFilter;
+		this._fsQuad.material = this.materialHighPassFilter;
 
 		renderer.setRenderTarget( this.renderTargetBright );
 		renderer.clear();
-		this.fsQuad.render( renderer );
+		this._fsQuad.render( renderer );
 
 		// 2. Blur All the mips progressively
 
@@ -63659,19 +70860,19 @@ class UnrealBloomPass extends Pass {
 
 		for ( let i = 0; i < this.nMips; i ++ ) {
 
-			this.fsQuad.material = this.separableBlurMaterials[ i ];
+			this._fsQuad.material = this.separableBlurMaterials[ i ];
 
 			this.separableBlurMaterials[ i ].uniforms[ 'colorTexture' ].value = inputRenderTarget.texture;
 			this.separableBlurMaterials[ i ].uniforms[ 'direction' ].value = UnrealBloomPass.BlurDirectionX;
 			renderer.setRenderTarget( this.renderTargetsHorizontal[ i ] );
 			renderer.clear();
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 			this.separableBlurMaterials[ i ].uniforms[ 'colorTexture' ].value = this.renderTargetsHorizontal[ i ].texture;
 			this.separableBlurMaterials[ i ].uniforms[ 'direction' ].value = UnrealBloomPass.BlurDirectionY;
 			renderer.setRenderTarget( this.renderTargetsVertical[ i ] );
 			renderer.clear();
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 			inputRenderTarget = this.renderTargetsVertical[ i ];
 
@@ -63679,18 +70880,18 @@ class UnrealBloomPass extends Pass {
 
 		// Composite All the mips
 
-		this.fsQuad.material = this.compositeMaterial;
+		this._fsQuad.material = this.compositeMaterial;
 		this.compositeMaterial.uniforms[ 'bloomStrength' ].value = this.strength;
 		this.compositeMaterial.uniforms[ 'bloomRadius' ].value = this.radius;
 		this.compositeMaterial.uniforms[ 'bloomTintColors' ].value = this.bloomTintColors;
 
 		renderer.setRenderTarget( this.renderTargetsHorizontal[ 0 ] );
 		renderer.clear();
-		this.fsQuad.render( renderer );
+		this._fsQuad.render( renderer );
 
 		// Blend it additively over the input texture
 
-		this.fsQuad.material = this.blendMaterial;
+		this._fsQuad.material = this.blendMaterial;
 		this.copyUniforms[ 'tDiffuse' ].value = this.renderTargetsHorizontal[ 0 ].texture;
 
 		if ( maskActive ) renderer.state.buffers.stencil.setTest( true );
@@ -63698,23 +70899,25 @@ class UnrealBloomPass extends Pass {
 		if ( this.renderToScreen ) {
 
 			renderer.setRenderTarget( null );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		} else {
 
 			renderer.setRenderTarget( readBuffer );
-			this.fsQuad.render( renderer );
+			this._fsQuad.render( renderer );
 
 		}
 
 		// Restore renderer settings
 
-		renderer.setClearColor( this._oldClearColor, this.oldClearAlpha );
+		renderer.setClearColor( this._oldClearColor, this._oldClearAlpha );
 		renderer.autoClear = oldAutoClear;
 
 	}
 
-	getSeparableBlurMaterial( kernelRadius ) {
+	// internals
+
+	_getSeparableBlurMaterial( kernelRadius ) {
 
 		const coefficients = [];
 
@@ -63770,7 +70973,7 @@ class UnrealBloomPass extends Pass {
 
 	}
 
-	getCompositeMaterial( nMips ) {
+	_getCompositeMaterial( nMips ) {
 
 		return new ShaderMaterial( {
 
@@ -63940,10 +71143,18 @@ class RenderableSprite {
 
 }
 
-//
-
+/**
+ * This class can project a given scene in 3D space into a 2D representation
+ * used for rendering with a 2D API. `Projector` is currently used by {@link SVGRenderer}
+ * and was previously used by the legacy `CanvasRenderer`.
+ *
+ * @three_import import { Projector } from 'three/addons/renderers/Projector.js';
+ */
 class Projector {
 
+	/**
+	 * Constructs a new projector.
+	 */
 	constructor() {
 
 		let _object, _objectCount, _objectPoolLength = 0,
@@ -64223,6 +71434,16 @@ class Projector {
 
 		}
 
+		/**
+		 * Projects the given scene in 3D space into a 2D representation. The result
+		 * is an object with renderable items.
+		 *
+		 * @param {Object3D} scene - A scene or any other type of 3D object.
+		 * @param {Camera} camera - The camera.
+		 * @param {boolean} sortObjects - Whether to sort objects or not.
+		 * @param {boolean} sortElements - Whether to sort elements (faces, lines and sprites) or not.
+		 * @return {{objects:Array<Objects>,lights:Array<Objects>,elements:Array<Objects>}} The projected scene as renderable objects.
+		 */
 		this.projectScene = function ( scene, camera, sortObjects, sortElements ) {
 
 			_faceCount = 0;
@@ -64735,8 +71956,32 @@ class Projector {
 
 }
 
+/**
+ * This renderer an be used to render geometric data using SVG. The produced vector
+ * graphics are particular useful in the following use cases:
+ *
+ * - Animated logos or icons.
+ * - Interactive 2D/3D diagrams or graphs.
+ * - Interactive maps.
+ * - Complex or animated user interfaces.
+ *
+ * `SVGRenderer` has various advantages. It produces crystal-clear and sharp output which
+ * is independent of the actual viewport resolution.SVG elements can be styled via CSS.
+ * And they have good accessibility since it's possible to add metadata like title or description
+ * (useful for search engines or screen readers).
+ *
+ * There are, however, some important limitations:
+ * - No advanced shading.
+ * - No texture support.
+ * - No shadow support.
+ *
+ * @three_import import { SVGRenderer } from 'three/addons/renderers/SVGRenderer.js';
+ */
 class SVGRenderer {
 
+	/**
+	 * Constructs a new SVG renderer.
+	 */
 	constructor() {
 
 		let _renderData, _elements, _lights,
@@ -64776,16 +72021,60 @@ class SVGRenderer {
 			_projector = new Projector(),
 			_svg = document.createElementNS( 'http://www.w3.org/2000/svg', 'svg' );
 
+		/**
+		 * The DOM where the renderer appends its child-elements.
+		 *
+		 * @type {DOMElement}
+		 */
 		this.domElement = _svg;
 
+		/**
+		 * Whether to automatically perform a clear before a render call or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoClear = true;
+
+		/**
+		 * Whether to sort 3D objects or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.sortObjects = true;
+
+		/**
+		 * Whether to sort elements or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.sortElements = true;
 
+		/**
+		 * Number of fractional pixels to enlarge polygons in order to
+		 * prevent anti-aliasing gaps. Range is `[0,1]`.
+		 *
+		 * @type {number}
+		 * @default 0.5
+		 */
 		this.overdraw = 0.5;
 
+		/**
+		 * The output color space.
+		 *
+		 * @type {(SRGBColorSpace|LinearSRGBColorSpace)}
+		 * @default SRGBColorSpace
+		 */
 		this.outputColorSpace = SRGBColorSpace;
 
+		/**
+		 * Provides information about the number of
+		 * rendered vertices and faces.
+		 *
+		 * @type {Object}
+		 */
 		this.info = {
 
 			render: {
@@ -64797,6 +72086,12 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Sets the render quality. Setting to `high` means This value indicates that the browser
+		 * tries to improve the SVG quality over rendering speed and geometric precision.
+		 *
+		 * @param {('low'|'high')} quality - The quality.
+		 */
 		this.setQuality = function ( quality ) {
 
 			switch ( quality ) {
@@ -64808,6 +72103,11 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Sets the clear color.
+		 *
+		 * @param {(number|Color|string)} color - The clear color to set.
+		 */
 		this.setClearColor = function ( color ) {
 
 			_clearColor.set( color );
@@ -64816,6 +72116,12 @@ class SVGRenderer {
 
 		this.setPixelRatio = function () {};
 
+		/**
+		 * Resizes the renderer to the given width and height.
+		 *
+		 * @param {number} width - The width of the renderer.
+		 * @param {number} height - The height of the renderer.
+		 */
 		this.setSize = function ( width, height ) {
 
 			_svgWidth = width; _svgHeight = height;
@@ -64830,6 +72136,11 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Returns an object containing the width and height of the renderer.
+		 *
+		 * @return {{width:number,height:number}} The size of the renderer.
+		 */
 		this.getSize = function () {
 
 			return {
@@ -64839,6 +72150,11 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Sets the precision of the data used to create a paths.
+		 *
+		 * @param {number} precision - The precision to set.
+		 */
 		this.setPrecision = function ( precision ) {
 
 			_precision = precision;
@@ -64863,6 +72179,9 @@ class SVGRenderer {
 
 		}
 
+		/**
+		 * Performs a manual clear with the defined clear color.
+		 */
 		this.clear = function () {
 
 			removeChildNodes();
@@ -64870,6 +72189,12 @@ class SVGRenderer {
 
 		};
 
+		/**
+		 * Renders the given scene using the given camera.
+		 *
+		 * @param {Object3D} scene - A scene or any other type of 3D object.
+		 * @param {Camera} camera - The camera.
+		 */
 		this.render = function ( scene, camera ) {
 
 			if ( camera instanceof Camera === false ) {
@@ -69099,6 +76424,9 @@ function tryOpenOpenUI(sources, args) {
 
    if ((src.indexOf('roothandler') === 0) && (src.indexOf('://') < 0))
       src = src.replace(/:\//g, '://');
+
+   if (settings.Debug)
+      console.log('Try openui5 from ' + src);
 
    const element = document.createElement('script');
    element.setAttribute('type', 'text/javascript');
@@ -80087,20 +87415,17 @@ class TPadPainter extends ObjectPainter {
          }
 
          const fp = pp.getFramePainter();
-         if (!isFunc(fp?.access3dKind)) return;
+         if (!isFunc(fp?.access3dKind))
+            return;
 
          const can3d = fp.access3dKind();
-         if ((can3d !== constants$1.Embed3D.Overlay) && (can3d !== constants$1.Embed3D.Embed)) return;
+         if ((can3d !== constants$1.Embed3D.Overlay) && (can3d !== constants$1.Embed3D.Embed))
+            return;
 
-         let main, canvas;
-         if (isFunc(fp.render3D)) {
-            main = fp;
-            canvas = fp.renderer?.domElement;
-         } else {
-            main = fp.getMainPainter();
-            canvas = main?._renderer?.domElement;
-         }
-         if (!isFunc(main?.render3D) || !isObject(canvas)) return;
+         const main = isFunc(fp.getRenderer) ? fp : fp.getMainPainter(),
+               canvas = isFunc(main.getRenderer) ? main.getRenderer()?.domElement : null;
+         if (!isFunc(main?.render3D) || !isObject(canvas))
+            return;
 
          const sz2 = fp.getSizeFor3d(constants$1.Embed3D.Embed); // get size and position of DOM element as it will be embed
          main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
@@ -85146,31 +92471,15 @@ class THistPainter extends ObjectPainter {
       return cntr;
    }
 
-   /** @summary Return contour object */
-   getContour(force_recreate) {
-      if (this.fContour && !force_recreate)
-         return this.fContour;
+   /** @summary Return Z-scale ranges to create contour */
+   #getContourRanges(main, fp) {
+      const src = (this !== main) && ((main?.minbin !== undefined) || main?.options.ohmin) && !this.options.IgnoreMainScale && !main?.tt_handle?.ScatterPlot ? main : this;
+      let apply_min, zmin = src.minbin, zmax = src.maxbin, zminpos = src.minposbin;
 
-      const main = this.getMainPainter(),
-            fp = this.getFramePainter();
-
-      if (main?.fContour && (main !== this) && !this.options.IgnoreMainScale) {
-         this.fContour = main.fContour;
-         return this.fContour;
-      }
-
-      // if not initialized, first create contour array
-      // difference from ROOT - fContour includes also last element with maxbin, which makes easier to build logz
-      // when no same0 draw option specified, use main painter for creating contour, also ignore scatter drawing for main painter
-      const histo = this.getObject(),
-            src = (this !== main) && (main?.minbin !== undefined) && !this.options.IgnoreMainScale && !main?.tt_handle?.ScatterPlot ? main : this;
-      let nlevels = 0, apply_min,
-          zmin = src.minbin, zmax = src.maxbin, zminpos = src.minposbin,
-          custom_levels;
       if (zmin === zmax) {
-         if (this.options.ohmin && this.options.ohmax && this.options.Zscale) {
-            zmin = this.options.hmin;
-            zmax = this.options.hmax;
+         if (src.options.ohmin && src.options.ohmax) {
+            zmin = src.options.hmin;
+            zmax = src.options.hmax;
             zminpos = Math.max(zmin, zmax * 1e-10);
          } else {
             zmin = src.gminbin;
@@ -85196,6 +92505,29 @@ class THistPainter extends ObjectPainter {
          zmax = mod ? fp.zoom_zmax : gzmax;
       }
 
+      return { zmin, zmax, zminpos, gzmin, gzmax };
+   }
+
+   /** @summary Return contour object */
+   getContour(force_recreate) {
+      if (this.fContour && !force_recreate)
+         return this.fContour;
+
+      const main = this.getMainPainter(),
+            fp = this.getFramePainter();
+
+      if (main?.fContour && (main !== this) && !this.options.IgnoreMainScale) {
+         this.fContour = main.fContour;
+         return this.fContour;
+      }
+
+      // if not initialized, first create contour array
+      // difference from ROOT - fContour includes also last element with maxbin, which makes easier to build logz
+      // when no same0 draw option specified, use main painter for creating contour, also ignore scatter drawing for main painter
+      const histo = this.getObject(),
+            r = this.#getContourRanges(main, fp);
+      let nlevels = 0, custom_levels;
+
       if (histo.fContour?.length > 1) {
          if (histo.TestBit(kUserContour))
             custom_levels = histo.fContour;
@@ -85203,13 +92535,13 @@ class THistPainter extends ObjectPainter {
             nlevels = histo.fContour.length;
       }
 
-      const cntr = this.createContour(nlevels, zmin, zmax, zminpos, custom_levels);
+      const cntr = this.createContour(nlevels, r.zmin, r.zmax, r.zminpos, custom_levels);
 
       if ((this.getDimension() < 3) && fp) {
-         fp.zmin = gzmin;
-         fp.zmax = gzmax;
+         fp.zmin = r.gzmin;
+         fp.zmax = r.gzmax;
 
-         if ((gzmin !== cntr.colzmin) || (gzmax !== cntr.colzmax)) {
+         if ((r.gzmin !== cntr.colzmin) || (r.gzmax !== cntr.colzmax)) {
             fp.zoom_zmin = cntr.colzmin;
             fp.zoom_zmax = cntr.colzmax;
          } else
@@ -85682,6 +93014,9 @@ class THistPainter extends ObjectPainter {
       // force recalculation of z levels
       this.fContour = null;
 
+      if (args.zrange)
+         Object.assign(res, this.#getContourRanges(this.getMainPainter(), this.getFramePainter()));
+
       return res;
    }
 
@@ -85710,23 +93045,15 @@ class THistPainter extends ObjectPainter {
             res = { low: err, up: err },
             kind = this.options.Poisson || histo.fBinStatErrOpt;
 
-      if (!kind || (histo.fSumw2.fN && histo.fTsumw !== histo.fTsumw2))
+      if (!kind || (histo.fSumw2.fN && histo.fTsumw !== histo.fTsumw2) || (content < 0))
          return res;
 
       const alpha = (kind === kPoisson2) ? 0.05 : 1 - 0.682689492,
             n = Math.round(content);
 
-      if (content < 0)
-         return res;
-
       res.poisson = true; // indicate poisson error
-
-      if (n === 0)
-         res.low = 0;
-      else
-         res.low = content - gamma_quantile(alpha/2, n, 1);
-
-      res.up = gamma_quantile_c(alpha/2, n + 1, 1) - content;
+      res.low = (n === 0) ? 0 : content - gamma_quantile(alpha / 2, n, 1);
+      res.up = gamma_quantile_c(alpha / 2, n + 1, 1) - content;
       return res;
    }
 
@@ -87721,7 +95048,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
                if (loop === 0)
                   dn = Math.max(dn, Math.abs(dx), Math.abs(dy));
-                else {
+               else {
                   xc = (handle.grx[i] + handle.grx[i+1])/2;
                   yc = (handle.gry[j] + handle.gry[j+1])/2;
                   dxn = scale_x*dx/dn;
@@ -87787,23 +95114,12 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    /** @summary Draw TH2 bins as boxes */
    drawBinsBox() {
       const histo = this.getObject(),
-          handle = this.prepareDraw({ rounding: false }),
-          main = this.getMainPainter();
-
-      if (main === this) {
-         if (main.maxbin === main.minbin) {
-            main.maxbin = main.gmaxbin;
-            main.minbin = main.gminbin;
-            main.minposbin = main.gminposbin;
-         }
-         if (main.maxbin === main.minbin)
-            main.minbin = Math.min(0, main.maxbin-1);
-      }
-
-      const absmax = Math.max(Math.abs(main.maxbin), Math.abs(main.minbin)),
-            absmin = Math.max(0, main.minbin),
+            handle = this.prepareDraw({ rounding: false, zrange: true }),
+            absmax = Math.max(Math.abs(handle.zmin), Math.abs(handle.zmax)),
+            absmin = Math.max(0, handle.zmin),
             pad = this.getPadPainter().getRootPad(true),
             test_cutg = this.options.cutg;
+
       let i, j, binz, absz, res = '', cross = '', btn1 = '', btn2 = '',
           zdiff, dgrx, dgry, xx, yy, ww, hh, xyfactor,
           uselogz = false, logmin = 0;
@@ -87813,11 +95129,12 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          const logmax = Math.log(absmax);
          if (absmin > 0)
             logmin = Math.log(absmin);
-         else if ((main.minposbin >= 1) && (main.minposbin < 100))
+         else if ((handle.zminpos >= 1) && (handle.zminpos < 100))
             logmin = Math.log(0.7);
          else
-            logmin = (main.minposbin > 0) ? Math.log(0.7*main.minposbin) : logmax - 10;
-         if (logmin >= logmax) logmin = logmax - 10;
+            logmin = (handle.zminpos > 0) ? Math.log(0.7 * handle.zminpos) : logmax - 10;
+         if (logmin >= logmax)
+            logmin = logmax - 10;
          xyfactor = 1.0 / (logmax - logmin);
       } else
          xyfactor = 1.0 / (absmax - absmin);
@@ -88366,7 +95683,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       handle.ScatterPlot = true;
 
-      if (scale*handle.sumz < 1e5) {
+      if (scale * handle.sumz < 1e5) {
          // one can use direct drawing of scatter plot without any patterns
 
          this.createAttMarker({ attr: histo });
@@ -88403,7 +95720,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       // limit filling factor, do not try to produce as many points as filled area;
-      if (this.maxbin > 0.7) factor = 0.7/this.maxbin;
+      if (this.maxbin > 0.7)
+         factor = 0.7 / this.maxbin;
 
       const nlevels = Math.round(handle.max - handle.min),
             cntr = this.createContour((nlevels > 50) ? 50 : nlevels, this.minposbin, this.maxbin, this.minposbin);
@@ -88452,48 +95770,47 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       for (colindx = 0; colindx < colPaths.length; ++colindx) {
          if ((colPaths[colindx] !== undefined) && (colindx < cntr.arr.length)) {
-           const pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`;
-           let pattern = defs.selectChild(`#${pattern_id}`);
-           if (pattern.empty()) {
-              pattern = defs.append('svg:pattern')
-                            .attr('id', pattern_id)
-                            .attr('patternUnits', 'userSpaceOnUse');
-           } else
-              pattern.selectAll('*').remove();
+            const pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`;
+            let pattern = defs.selectChild(`#${pattern_id}`);
+            if (pattern.empty()) {
+               pattern = defs.append('svg:pattern')
+                             .attr('id', pattern_id)
+                             .attr('patternUnits', 'userSpaceOnUse');
+            } else
+               pattern.selectAll('*').remove();
 
-           let npix = Math.round(factor*cntr.arr[colindx]*cell_w[colindx]*cell_h[colindx]);
-           if (npix < 1) npix = 1;
+            let npix = Math.round(factor*cntr.arr[colindx]*cell_w[colindx]*cell_h[colindx]);
+            if (npix < 1) npix = 1;
 
-           const arrx = new Float32Array(npix), arry = new Float32Array(npix);
+            const arrx = new Float32Array(npix), arry = new Float32Array(npix);
 
-           if (npix === 1)
+            if (npix === 1)
               arrx[0] = arry[0] = 0.5;
             else {
               for (let n = 0; n < npix; ++n) {
                  arrx[n] = rnd.random();
                  arry[n] = rnd.random();
               }
-           }
+            }
 
-           this.markeratt.resetPos();
+            this.markeratt.resetPos();
 
-           let path = '';
+            let path = '';
+            for (let n = 0; n < npix; ++n)
+               path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
 
-           for (let n = 0; n < npix; ++n)
-              path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
+            pattern.attr('width', cell_w[colindx])
+                   .attr('height', cell_h[colindx])
+                   .append('svg:path')
+                   .attr('d', path)
+                   .call(this.markeratt.func);
 
-           pattern.attr('width', cell_w[colindx])
-                  .attr('height', cell_h[colindx])
-                  .append('svg:path')
-                  .attr('d', path)
-                  .call(this.markeratt.func);
-
-           this.draw_g
-               .append('svg:path')
-               .attr('scatter-index', colindx)
-               .style('fill', `url(#${pattern_id})`)
-               .attr('d', colPaths[colindx]);
-        }
+            this.draw_g
+                .append('svg:path')
+                .attr('scatter-index', colindx)
+                .style('fill', `url(#${pattern_id})`)
+                .attr('d', colPaths[colindx]);
+         }
       }
 
       return handle;
@@ -90033,6 +97350,10 @@ function render3D(tmout) {
    }
 }
 
+/** @summary Returns assigned render object
+  * @private */
+function getRenderer() { return this.renderer; }
+
 /** @summary Check is 3D drawing need to be resized
   * @private */
 function resize3D() {
@@ -90917,7 +98238,7 @@ function convert3DtoPadNDC(x, y, z) {
 /** @summary Assign 3D methods for frame painter
   * @private */
 function assignFrame3DMethods(fpainter) {
-   Object.assign(fpainter, { create3DScene, add3DMesh, remove3DMeshes, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
+   Object.assign(fpainter, { create3DScene, add3DMesh, remove3DMeshes, getRenderer, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
 function _meshLegoToolTip(intersect) {
@@ -99753,7 +107074,8 @@ class ClonedNodes {
 
    /** @summary Returns ids array which correspond to the stack */
    buildIdsByStack(stack) {
-      if (!stack) return null;
+      if (!stack)
+         return null;
       let node = this.nodes[0];
       const ids = [0];
       for (let k = 0; k < stack.length; ++k) {
@@ -99798,7 +107120,8 @@ class ClonedNodes {
       const names = fullname.split('/'), stack = [];
       let currid = 0;
 
-      if (this.getNodeName(currid) !== names[0]) return null;
+      if (this.getNodeName(currid) !== names[0])
+         return null;
 
       for (let n = 1; n < names.length; ++n) {
          const node = this.nodes[currid];
@@ -99814,7 +107137,8 @@ class ClonedNodes {
          }
 
          // no new entry - not found stack
-         if (stack.length === n - 1) return null;
+         if (stack.length === n - 1)
+            return null;
       }
 
       return stack;
@@ -99824,11 +107148,10 @@ class ClonedNodes {
    setDefaultColors(on) {
       this.use_dflt_colors = on;
       if (this.use_dflt_colors && !this.dflt_table) {
-         const dflt = { kGray: 920,
-                        kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kOrange: 800},
-
-          nmax = 110, col = [];
-         for (let i=0; i<nmax; i++) col.push(dflt.kGray);
+         const nmax = 110, col = [], dflt = { kGray: 920,
+               kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kOrange: 800};
+         for (let i = 0; i < nmax; i++)
+            col.push(dflt.kGray);
 
          //  here we should create a new TColor with the same rgb as in the default
          //  ROOT colors used below
@@ -100009,7 +107332,8 @@ class ClonedNodes {
             }
          }
 
-         if ((options === 'mesh') || !mesh) return mesh;
+         if ((options === 'mesh') || !mesh)
+            return mesh;
 
          const res = three_prnt;
          while (mesh && (mesh !== toplevel)) {
@@ -103233,13 +110557,13 @@ function buildOverlapVolume(overlap) {
    node1.fName = overlap.fVolume1.fName || 'Overlap1';
    node1.fMatrix = overlap.fMatrix1;
    node1.fVolume = overlap.fVolume1;
-   // node1.fVolume.fLineColor = 2; // color assigned with _splitColors
+   // node1.fVolume.fLineColor = 2; // color assigned with ctrl.split_colors
 
    const node2 = create$1(clTGeoNodeMatrix);
    node2.fName = overlap.fVolume2.fName || 'Overlap2';
    node2.fMatrix = overlap.fMatrix2;
    node2.fVolume = overlap.fVolume2;
-   // node2.fVolume.fLineColor = 3;  // color assigned with _splitColors
+   // node2.fVolume.fLineColor = 3;  // color assigned with ctrl.split_colors
 
    vol.fNodes = create$1(clTList);
    vol.fNodes.Add(node1);
@@ -103337,13 +110661,13 @@ function getHistPainter3DCfg(painter) {
 }
 
 
-/** @summary find item with 3d painter
+/** @summary find item with geometry painter
   * @private */
-function findItemWithPainter(hitem, funcname) {
+function findItemWithGeoPainter(hitem, test_changes) {
    while (hitem) {
-      if (hitem._painter?._camera) {
-         if (funcname && isFunc(hitem._painter[funcname]))
-            hitem._painter[funcname]();
+      if (isFunc(hitem._painter?.testGeomChanges)) {
+         if (test_changes)
+            hitem._painter.testGeomChanges();
          return hitem;
       }
       hitem = hitem._parent;
@@ -103360,11 +110684,15 @@ function provideVisStyle(obj) {
    const vis = !testGeoBit(obj, geoBITS.kVisNone) && testGeoBit(obj, geoBITS.kVisThis);
    let chld = testGeoBit(obj, geoBITS.kVisDaughters);
 
-   if (chld && !obj.fNodes?.arr?.length) chld = false;
+   if (chld && !obj.fNodes?.arr?.length)
+      chld = false;
 
-   if (vis && chld) return ' geovis_all';
-   if (vis) return ' geovis_this';
-   if (chld) return ' geovis_daughters';
+   if (vis && chld)
+      return ' geovis_all';
+   if (vis)
+      return ' geovis_this';
+   if (chld)
+      return ' geovis_daughters';
    return '';
 }
 
@@ -103557,6 +110885,83 @@ const stageInit = 0, stageCollect = 1, stageWorkerCollect = 2, stageAnalyze = 3,
 
 class TGeoPainter extends ObjectPainter {
 
+   #geo_manager;  // TGeoManager instance - if assigned in drawing
+   #superimpose;  // set when superimposed with other 3D drawings
+   #complete_handler; // callback, assigned by ROOT GeomViewer
+   #geom_viewer;  // true when processing drawing from ROOT GeomViewer
+   #extra_objects; // TList with extra objects configured for drawing
+   #webgl;         // true when normal WebGL drawing is enabled
+   #worker;       // extra Worker to run different calculations
+   #worker_ready; // is worker started and initialized
+   #worker_jobs;  // number of submitted to worker jobs
+   #clones;       // instance of ClonedNodes
+   #clones_owner; // is instance managed by the painter
+   #draw_nodes;   // drawn nodes from geometry
+   #build_shapes; // build shapes required for drawings
+   #current_face_limit; // current face limit
+   #draw_all_nodes; // flag using in drawing
+   #draw_nodes_again; // flag set if drawing should be started again when completed
+   #drawing_ready; // if drawing completed
+   #drawing_log;   // current drawing log information
+   #draw_resolveFuncs; // resolve call-backs for start drawing calls
+   #start_drawing_time; // time when drawing started
+   #start_render_tm; // time when rendering started
+   #first_render_tm; // first time when rendering was performed
+   #last_render_tm;  // last time when rendering was performed
+   #last_render_meshes; // last value of rendered meshes
+   #render_resolveFuncs; // resolve call-backs from render calls
+   #render_tmout;    // timeout used in Render3D()
+   #first_drawing;   // true when very first drawing is performed
+   #full_redrawing;  // if full redraw must be performed
+   #last_clip_cfg;   // last config of clip panels
+   #redraw_timer;    // timer used in redraw
+   #did_update;     // flag used in update
+   #custom_bounding_box; // custom bounding box for extra objects
+   #clip_planes;     // clip planes
+   #central_painter; // pointer on central painter
+   #subordinate_painters; // list of subordinate painters
+   #effectComposer;  // extra composer for special effects, used in EVE
+   #bloomComposer;   // extra composer for bloom highlight
+   #new_draw_nodes; // temporary list of new draw nodes
+   #new_append_nodes; // temporary list of new append nodes
+   #more_nodes;      // more nodes from ROOT geometry viewer
+   #provided_more_nodes; // staged more nodes from ROOT geometry viewer
+   #on_pad;         // true when drawing done on TPad
+   #last_manifest;  // last node which was "manifest" via menu
+   #last_hidden;    // last node which was "hidden" via menu
+   #gui;            // dat.GUI instance
+   #toolbar;        // tool buttons
+   #controls;       // orbit control
+   #highlight_handlers; // highlight handlers
+   #animating;      // set when animation started
+   #last_camera_position; // last camera position
+   #fullgeom_proj;  // full geometry to produce projection
+   #selected_mesh;  // used in highlight
+   #fog;            // fog for the scene
+   #lookat;         // position to which camera looks at
+   #scene_size;     // stored scene size to control changes
+   #scene_width;    // actual scene width
+   #scene_height;   // actual scene width
+   #fit_main_area;  // true if drawing must fit to DOM
+   #overall_size;   // overall size
+   #scene;          // three.js Scene object
+   #camera;         // three.js camera object
+   #renderer;       // three.js renderer object
+   #toplevel;       // three.js top level Object3D
+   #camera0pos;     // camera on opposite side
+   #vrControllers;  // used in VR display
+   #controllersMeshes; // used in VR display
+   #dolly;          // used in VR display
+   #vrDisplay;      // used in VR display
+   #vr_camera_position; // used in VR display
+   #vr_camera_rotation; // used in VR display
+   #vr_camera_near;  // used in VR display
+   #standingMatrix;  // used in VR display
+   #raycasterEnd;    // used in VR display
+   #raycasterOrigin;  // used in VR display
+   #adjust_camera_with_render; // flag to readjust camera when rendering
+   #did_cleanup;    // flag set after cleanup
+
    /** @summary Constructor
      * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} obj - supported TGeo object */
@@ -103573,14 +110978,15 @@ class TGeoPainter extends ObjectPainter {
       super(dom, obj);
 
       if (getHistPainter3DCfg(this.getMainPainter()))
-         this.superimpose = true;
+         this.#superimpose = true;
 
-      if (gm) this.geo_manager = gm;
+      if (gm)
+         this.#geo_manager = gm;
 
       this.no_default_title = true; // do not set title to main DIV
       this.mode3d = true; // indication of 3D mode
       this.drawing_stage = stageInit; //
-      this.drawing_log = 'Init';
+      this.#drawing_log = 'Init';
       this.ctrl = {
          clipIntersect: true,
          clipVisualize: false,
@@ -103686,8 +111092,51 @@ class TGeoPainter extends ObjectPainter {
          }
       };
 
+      this.#draw_resolveFuncs = [];
+      this.#render_resolveFuncs = [];
+
       this.cleanup(true);
    }
+
+   /** @summary Returns scene */
+   getScene() { return this.#scene; }
+
+   /** @summary Returns camera */
+   getCamera() { return this.#camera; }
+
+   /** @summary Returns renderer */
+   getRenderer() { return this.#renderer; }
+
+   /** @summary Returns top Object3D instance */
+   getTopObject3D() { return this.#toplevel; }
+
+   /** @summary Assign or remove subordinate painter */
+   assignSubordinate(painter, do_assign = true) {
+      if (this.#subordinate_painters === undefined)
+         this.#subordinate_painters = [];
+      const pos = this.#subordinate_painters.indexOf(painter);
+      if (do_assign && pos < 0)
+         this.#subordinate_painters.push(painter);
+      else if (!do_assign && pos >= 0)
+         this.#subordinate_painters.splice(pos, 1);
+   }
+
+   /** @summary Return list of subordinate painters */
+   getSubordinates() { return this.#subordinate_painters ?? []; }
+
+   /** @summary Assign or cleanup central painter */
+   assignCentral(painter, do_assign = true) {
+      if (do_assign)
+         this.#central_painter = painter;
+      else if (this.#central_painter === painter)
+         this.#central_painter = undefined;
+   }
+
+   /** @summary Returns central painter */
+   getCentral() { return this.#central_painter; }
+
+   /** @summary Returns extra objects configured for drawing */
+   getExtraObjects() { return this.#extra_objects; }
 
    /** @summary Function called by framework when dark mode is changed
      * @private */
@@ -103716,7 +111165,7 @@ class TGeoPainter extends ObjectPainter {
             default: msg = `stage ${value}`;
          }
       }
-      this.drawing_log = msg;
+      this.#drawing_log = msg;
    }
 
    /** @summary Check drawing stage */
@@ -103724,9 +111173,12 @@ class TGeoPainter extends ObjectPainter {
 
    isBatchMode() { return isBatchMode() || this.batch_mode; }
 
+   getControls() { return this.#controls; }
+
    /** @summary Create toolbar */
    createToolbar() {
-      if (this._toolbar || !this._webgl || this.ctrl.notoolbar || this.isBatchMode()) return;
+      if (this.#toolbar || !this.#webgl || this.ctrl.notoolbar || this.isBatchMode())
+         return;
       const buttonList = [{
          name: 'toImage',
          title: 'Save as PNG',
@@ -103776,30 +111228,30 @@ class TGeoPainter extends ObjectPainter {
 
       const bkgr = new THREE.Color(this.ctrl.background);
 
-      this._toolbar = new Toolbar(this.selectDom(), (bkgr.r + bkgr.g + bkgr.b) < 1, buttonList);
+      this.#toolbar = new Toolbar(this.selectDom(), (bkgr.r + bkgr.g + bkgr.b) < 1, buttonList);
 
-      this._toolbar.createButtons();
+      this.#toolbar.createButtons();
    }
 
    /** @summary Initialize VR mode */
    initVRMode() {
       // Dolly contains camera and controllers in VR Mode
       // Allows moving the user in the scene
-      this._dolly = new THREE.Group();
-      this._scene.add(this._dolly);
-      this._standingMatrix = new THREE.Matrix4();
+      this.#dolly = new THREE.Group();
+      this.#scene.add(this.#dolly);
+      this.#standingMatrix = new THREE.Matrix4();
 
       // Raycaster temp variables to avoid one per frame allocation.
-      this._raycasterEnd = new THREE.Vector3();
-      this._raycasterOrigin = new THREE.Vector3();
+      this.#raycasterEnd = new THREE.Vector3();
+      this.#raycasterOrigin = new THREE.Vector3();
 
       navigator.getVRDisplays().then(displays => {
          const vrDisplay = displays[0];
          if (!vrDisplay) return;
-         this._renderer.vr.setDevice(vrDisplay);
-         this._vrDisplay = vrDisplay;
+         this.#renderer.vr.setDevice(vrDisplay);
+         this.#vrDisplay = vrDisplay;
          if (vrDisplay.stageParameters)
-            this._standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
+            this.#standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
 
          this.initVRControllersGeometry();
       });
@@ -103817,15 +111269,15 @@ class TGeoPainter extends ObjectPainter {
             sphere1 = new THREE.Mesh(geometry, material),
             sphere2 = new THREE.Mesh(geometry, material);
 
-      this._controllersMeshes = [];
-      this._controllersMeshes.push(sphere1);
-      this._controllersMeshes.push(sphere2);
+      this.#controllersMeshes = [];
+      this.#controllersMeshes.push(sphere1);
+      this.#controllersMeshes.push(sphere2);
       ray1Mesh.position.z -= 1;
       ray2Mesh.position.z -= 1;
       sphere1.add(ray1Mesh);
       sphere2.add(ray2Mesh);
-      this._dolly.add(sphere1);
-      this._dolly.add(sphere2);
+      this.#dolly.add(sphere1);
+      this.#dolly.add(sphere2);
       // Controller mesh hidden by default
       sphere1.visible = false;
       sphere2.visible = false;
@@ -103836,17 +111288,17 @@ class TGeoPainter extends ObjectPainter {
    updateVRControllersList() {
       const gamepads = navigator.getGamepads && navigator.getGamepads();
       // Has controller list changed?
-      if (this.vrControllers && (gamepads.length === this.vrControllers.length)) return;
+      if (this.#vrControllers && (gamepads.length === this.#vrControllers.length)) return;
       // Hide meshes.
-      this._controllersMeshes.forEach(mesh => { mesh.visible = false; });
-      this._vrControllers = [];
+      this.#controllersMeshes.forEach(mesh => { mesh.visible = false; });
+      this.#vrControllers = [];
       for (let i = 0; i < gamepads.length; ++i) {
          if (!gamepads[i] || !gamepads[i].pose) continue;
-         this._vrControllers.push({
+         this.#vrControllers.push({
             gamepad: gamepads[i],
-            mesh: this._controllersMeshes[i]
+            mesh: this.#controllersMeshes[i]
          });
-         this._controllersMeshes[i].visible = true;
+         this.#controllersMeshes[i].visible = true;
       }
    }
 
@@ -103854,16 +111306,16 @@ class TGeoPainter extends ObjectPainter {
      * @private */
    processVRControllerIntersections() {
       let intersects = [];
-      for (let i = 0; i < this._vrControllers.length; ++i) {
-         const controller = this._vrControllers[i].mesh,
-               end = controller.localToWorld(this._raycasterEnd.set(0, 0, -1)),
-               origin = controller.localToWorld(this._raycasterOrigin.set(0, 0, 0));
+      for (let i = 0; i < this.#vrControllers.length; ++i) {
+         const controller = this.#vrControllers[i].mesh,
+               end = controller.localToWorld(this.#raycasterEnd.set(0, 0, -1)),
+               origin = controller.localToWorld(this.#raycasterOrigin.set(0, 0, 0));
          end.sub(origin).normalize();
-         intersects = intersects.concat(this._controls.getOriginDirectionIntersects(origin, end));
+         intersects = intersects.concat(this.#controls.getOriginDirectionIntersects(origin, end));
       }
       // Remove duplicates.
       intersects = intersects.filter((item, pos) => { return intersects.indexOf(item) === pos; });
-      this._controls.processMouseMove(intersects);
+      this.#controls.processMouseMove(intersects);
    }
 
    /** @summary Update VR controllers
@@ -103871,15 +111323,15 @@ class TGeoPainter extends ObjectPainter {
    updateVRControllers() {
       this.updateVRControllersList();
       // Update pose.
-      for (let i = 0; i < this._vrControllers.length; ++i) {
-         const controller = this._vrControllers[i],
+      for (let i = 0; i < this.#vrControllers.length; ++i) {
+         const controller = this.#vrControllers[i],
                orientation = controller.gamepad.pose.orientation,
                position = controller.gamepad.pose.position,
                controllerMesh = controller.mesh;
          if (orientation) controllerMesh.quaternion.fromArray(orientation);
          if (position) controllerMesh.position.fromArray(position);
          controllerMesh.updateMatrix();
-         controllerMesh.applyMatrix4(this._standingMatrix);
+         controllerMesh.applyMatrix4(this.#standingMatrix);
          controllerMesh.matrixWorldNeedsUpdate = true;
       }
       this.processVRControllerIntersections();
@@ -103888,28 +111340,29 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Toggle VR mode
      * @private */
    toggleVRMode() {
-      if (!this._vrDisplay) return;
+      if (!this.#vrDisplay)
+         return;
       // Toggle VR mode off
-      if (this._vrDisplay.isPresenting) {
+      if (this.#vrDisplay.isPresenting) {
          this.exitVRMode();
          return;
       }
-      this._previousCameraPosition = this._camera.position.clone();
-      this._previousCameraRotation = this._camera.rotation.clone();
-      this._vrDisplay.requestPresent([{ source: this._renderer.domElement }]).then(() => {
-         this._previousCameraNear = this._camera.near;
-         this._dolly.position.set(this._camera.position.x/4, -this._camera.position.y/8, -this._camera.position.z/4);
-         this._camera.position.set(0, 0, 0);
-         this._dolly.add(this._camera);
-         this._camera.near = 0.1;
-         this._camera.updateProjectionMatrix();
-         this._renderer.vr.enabled = true;
-         this._renderer.setAnimationLoop(() => {
+      this.#vr_camera_position = this.#camera.position.clone();
+      this.#vr_camera_rotation = this.#camera.rotation.clone();
+      this.#vrDisplay.requestPresent([{ source: this.#renderer.domElement }]).then(() => {
+         this.#vr_camera_near = this.#camera.near;
+         this.#dolly.position.set(this.#camera.position.x/4, -this.#camera.position.y/8, -this.#camera.position.z/4);
+         this.#camera.position.set(0, 0, 0);
+         this.#dolly.add(this.#camera);
+         this.#camera.near = 0.1;
+         this.#camera.updateProjectionMatrix();
+         this.#renderer.vr.enabled = true;
+         this.#renderer.setAnimationLoop(() => {
             this.updateVRControllers();
             this.render3D(0);
          });
       });
-      this._renderer.vr.enabled = true;
+      this.#renderer.vr.enabled = true;
 
       window.addEventListener('keydown', evnt => {
          // Esc Key turns VR mode off
@@ -103920,28 +111373,28 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Exit VR mode
      * @private */
    exitVRMode() {
-      if (!this._vrDisplay.isPresenting) return;
-      this._renderer.vr.enabled = false;
-      this._dolly.remove(this._camera);
-      this._scene.add(this._camera);
+      if (!this.#vrDisplay.isPresenting)
+         return;
+      this.#renderer.vr.enabled = false;
+      this.#dolly.remove(this.#camera);
+      this.#scene.add(this.#camera);
       // Restore Camera pose
-      this._camera.position.copy(this._previousCameraPosition);
-      this._previousCameraPosition = undefined;
-      this._camera.rotation.copy(this._previousCameraRotation);
-      this._previousCameraRotation = undefined;
-      this._camera.near = this._previousCameraNear;
-      this._camera.updateProjectionMatrix();
-      this._vrDisplay.exitPresent();
+      this.#camera.position.copy(this.#vr_camera_position);
+      this.#vr_camera_position = undefined;
+      this.#camera.rotation.copy(this.#vr_camera_rotation);
+      this.#vr_camera_rotation = undefined;
+      this.#camera.near = this.#vr_camera_near;
+      this.#camera.updateProjectionMatrix();
+      this.#vrDisplay.exitPresent();
    }
 
    /** @summary Returns main geometry object */
-   getGeometry() {
-      return this.getObject();
-   }
+   getGeometry() { return this.getObject(); }
 
    /** @summary Modify visibility of provided node by name */
    modifyVisisbility(name, sign) {
-      if (getNodeKind(this.getGeometry()) !== 0) return;
+      if (getNodeKind(this.getGeometry()) !== 0)
+         return;
 
       if (!name)
          return setGeoBit(this.getGeometry().fVolume, geoBITS.kVisThis, (sign === '+'));
@@ -103965,9 +111418,10 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Decode drawing options */
    decodeOptions(opt) {
-      if (!isStr(opt)) opt = '';
+      if (!isStr(opt))
+         opt = '';
 
-      if (this.superimpose && (opt.indexOf('same') === 0))
+      if (this.#superimpose && (opt.indexOf('same') === 0))
          opt = opt.slice(4);
 
       const res = this.ctrl,
@@ -104000,6 +111454,8 @@ class TGeoPainter extends ObjectPainter {
       const d = new DrawOptions(opt);
 
       if (d.check('MAIN')) res.is_main = true;
+
+      if (d.check('DUMMY')) res.dummy = true;
 
       if (d.check('TRACKS')) res.tracks = true; // only for TGeoManager
       if (d.check('SHOWTOP')) res.showtop = true; // only for TGeoManager
@@ -104141,7 +111597,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Activate specified items in the browser */
    activateInBrowser(names, force) {
-      if (isStr(names)) names = [names];
+      if (isStr(names))
+         names = [names];
 
       if (this._hpainter) {
          // show browser if it not visible
@@ -104154,47 +111611,61 @@ class TGeoPainter extends ObjectPainter {
       }
    }
 
+   /** @summary  Return ClonedNodes instance from the painter */
+   getClones() { return this.#clones; }
+
+   /** @summary Assign clones, created outside.
+    * @desc Used by ROOT geometry painter, where clones are handled by the server */
+   assignClones(clones, owner = true) {
+      if (this.#clones_owner)
+         this.#clones?.cleanup(this.#draw_nodes, this.#build_shapes);
+      this.#draw_nodes = undefined;
+      this.#build_shapes = undefined;
+      this.#drawing_ready = false;
+
+      this.#clones = clones;
+      this.#clones_owner = owner;
+   }
+
    /** @summary  method used to check matrix calculations performance with current three.js model */
    testMatrixes() {
       let errcnt = 0, totalcnt = 0, totalmax = 0;
 
       const arg = {
-            domatrix: true,
-            func: (/* node */) => {
-               let m2 = this.getmatrix();
-               const entry = this.copyStack(),
-                     mesh = this._clones.createObject3D(entry.stack, this._toplevel, 'mesh');
-               if (!mesh) return true;
+         domatrix: true,
+         func: (/* node */) => {
+            let m2 = this.getmatrix();
+            const entry = this.copyStack(),
+                  mesh = this.#clones.createObject3D(entry.stack, this.#toplevel, 'mesh');
+            if (!mesh) return true;
 
-               totalcnt++;
+            totalcnt++;
 
-               const m1 = mesh.matrixWorld;
+            const m1 = mesh.matrixWorld;
+            if (m1.equals(m2)) return true;
+            if ((m1.determinant() > 0) && (m2.determinant() < -0.9)) {
+               const flip = new THREE.Vector3(1, 1, -1);
+               m2 = m2.clone().scale(flip);
                if (m1.equals(m2)) return true;
-               if ((m1.determinant() > 0) && (m2.determinant() < -0.9)) {
-                  const flip = new THREE.Vector3(1, 1, -1);
-                  m2 = m2.clone().scale(flip);
-                  if (m1.equals(m2)) return true;
-               }
-
-               let max = 0;
-               for (let k = 0; k < 16; ++k)
-                  max = Math.max(max, Math.abs(m1.elements[k] - m2.elements[k]));
-
-               totalmax = Math.max(max, totalmax);
-
-               if (max < 1e-4) return true;
-
-               console.log(`${this._clones.resolveStack(entry.stack).name} maxdiff ${max} determ ${m1.determinant()} ${m2.determinant()}`);
-
-               errcnt++;
-
-               return false;
             }
-         },
 
-       tm1 = new Date().getTime();
+            let max = 0;
+            for (let k = 0; k < 16; ++k)
+               max = Math.max(max, Math.abs(m1.elements[k] - m2.elements[k]));
 
-      /* let cnt = */ this._clones.scanVisible(arg);
+            totalmax = Math.max(max, totalmax);
+
+            if (max < 1e-4) return true;
+
+            console.log(`${this.#clones.resolveStack(entry.stack).name} maxdiff ${max} determ ${m1.determinant()} ${m2.determinant()}`);
+
+            errcnt++;
+
+            return false;
+         }
+      }, tm1 = new Date().getTime();
+
+      this.#clones.scanVisible(arg);
 
       const tm2 = new Date().getTime();
 
@@ -104217,7 +111688,7 @@ class TGeoPainter extends ObjectPainter {
       menu.addchk(this.ctrl._axis === 2, 'center', 2, arg => this.setAxesDraw(parseInt(arg)));
       menu.endsub();
 
-      if (this.geo_manager)
+      if (this.#geo_manager)
          menu.addchk(this.ctrl.showtop, 'Show top volume', () => this.setShowTop(!this.ctrl.showtop));
 
       menu.addchk(this.ctrl.wireframe, 'Wire frame', () => this.toggleWireFrame());
@@ -104256,7 +111727,7 @@ class TGeoPainter extends ObjectPainter {
       if (!this.ctrl.project)
           menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
 
-      if (!this._geom_viewer) {
+      if (!this.#geom_viewer) {
          menu.addchk(this.canRotateCamera(), 'Can rotate', () => this.changeCanRotate(!this.ctrl.can_rotate));
 
          menu.add('Get position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
@@ -104301,7 +111772,7 @@ class TGeoPainter extends ObjectPainter {
       if (func || (transparency === undefined))
          transparency = this.ctrl.transparency;
 
-      this._toplevel?.traverse(node => {
+      this.#toplevel?.traverse(node => {
          // ignore all kind of extra elements
          if (node?.material?.inherentOpacity === undefined)
             return;
@@ -104321,7 +111792,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Method used to interactively change material kinds */
    changedMaterial() {
-      this._toplevel?.traverse(node => {
+      this.#toplevel?.traverse(node => {
          // ignore all kind of extra elements
          if (node.material?.inherentArgs !== undefined)
             node.material = createMaterial(this.ctrl, node.material.inherentArgs);
@@ -104336,7 +111807,7 @@ class TGeoPainter extends ObjectPainter {
       if (value === undefined)
          return console.error('No property ', name);
 
-      this._toplevel?.traverse(node => {
+      this.#toplevel?.traverse(node => {
          // ignore all kind of extra elements
          if (node.material?.inherentArgs === undefined) return;
 
@@ -104356,7 +111827,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Method should be called when transformation parameters were changed */
    changedTransformation(arg) {
-      if (!this._toplevel) return;
+      if (!this.#toplevel) return;
 
       const ctrl = this.ctrl,
             translation = new THREE.Matrix4(),
@@ -104365,7 +111836,7 @@ class TGeoPainter extends ObjectPainter {
       if (arg === 'reset')
          ctrl.trans_z = ctrl.trans_radial = 0;
 
-      this._toplevel.traverse(mesh => {
+      this.#toplevel.traverse(mesh => {
          if (mesh.stack !== undefined) {
             const node = mesh.parent;
 
@@ -104445,7 +111916,7 @@ class TGeoPainter extends ObjectPainter {
          }
       });
 
-      this._toplevel.updateMatrixWorld();
+      this.#toplevel.updateMatrixWorld();
 
       // axes drawing always triggers rendering
       if (arg !== 'norender')
@@ -104469,13 +111940,13 @@ class TGeoPainter extends ObjectPainter {
    changedBackground(val) {
       if (val !== undefined)
          this.ctrl.background = val;
-      this._scene.background = new THREE.Color(this.ctrl.background);
-      this._renderer.setClearColor(this._scene.background, 1);
+      this.#scene.background = new THREE.Color(this.ctrl.background);
+      this.#renderer.setClearColor(this.#scene.background, 1);
       this.render3D(0);
 
-      if (this._toolbar) {
+      if (this.#toolbar) {
          const bkgr = new THREE.Color(this.ctrl.background);
-         this._toolbar.changeBrightness((bkgr.r + bkgr.g + bkgr.b) < 1);
+         this.#toolbar.changeBrightness((bkgr.r + bkgr.g + bkgr.b) < 1);
       }
    }
 
@@ -104485,38 +111956,36 @@ class TGeoPainter extends ObjectPainter {
       if (!this.ctrl) return;
 
       if (on === 'toggle')
-         on = !this._gui;
+         on = !this.#gui;
        else if (on === undefined)
          on = this.ctrl.show_controls;
 
-
       this.ctrl.show_controls = on;
 
-      if (this._gui) {
+      if (this.#gui) {
          if (!on) {
-            this._gui.destroy();
-            delete this._gui;
+            this.#gui.destroy();
+            this.#gui = undefined;
          }
          return;
       }
 
-      if (!on || !this._renderer)
+      if (!on || !this.#renderer)
          return;
-
 
       const main = this.selectDom();
       if (main.style('position') === 'static')
          main.style('position', 'relative');
 
-      this._gui = new GUI({ container: main.node(), closeFolders: true, width: Math.min(300, this._scene_width / 2),
+      this.#gui = new GUI({ container: main.node(), closeFolders: true, width: Math.min(300, this.#scene_width / 2),
                             title: 'Settings' });
 
-      const dom = this._gui.domElement;
+      const dom = this.#gui.domElement;
       dom.style.position = 'absolute';
       dom.style.top = 0;
       dom.style.right = 0;
 
-      this._gui.painter = this;
+      this.#gui.painter = this;
 
       const makeLil = items => {
          const lil = {};
@@ -104525,12 +111994,12 @@ class TGeoPainter extends ObjectPainter {
       };
 
       if (!this.ctrl.project) {
-         const selection = this._gui.addFolder('Selection');
+         const selection = this.#gui.addFolder('Selection');
 
          if (!this.ctrl.maxnodes)
-            this.ctrl.maxnodes = this._clones?.getMaxVisNodes() ?? 10000;
+            this.ctrl.maxnodes = this.#clones?.getMaxVisNodes() ?? 10000;
          if (!this.ctrl.vislevel)
-            this.ctrl.vislevel = this._clones?.getVisLevel() ?? 3;
+            this.ctrl.vislevel = this.#clones?.getVisLevel() ?? 3;
          if (!this.ctrl.maxfaces)
             this.ctrl.maxfaces = 200000 * this.ctrl.more;
          this.ctrl.more = 1;
@@ -104553,13 +112022,13 @@ class TGeoPainter extends ObjectPainter {
          if (this.ctrl.projectPos === undefined)
             this.ctrl.projectPos = (bound.min[axis] + bound.max[axis])/2;
 
-         this._gui.add(this.ctrl, 'projectPos', bound.min[axis], bound.max[axis])
+         this.#gui.add(this.ctrl, 'projectPos', bound.min[axis], bound.max[axis])
              .name(axis.toUpperCase() + ' projection')
              .onChange(() => this.startDrawGeometry());
       } else {
          // Clipping Options
 
-         const clipFolder = this._gui.addFolder('Clipping');
+         const clipFolder = this.#gui.addFolder('Clipping');
 
          for (let naxis = 0; naxis < 3; ++naxis) {
             const cc = this.ctrl.clip[naxis],
@@ -104583,7 +112052,7 @@ class TGeoPainter extends ObjectPainter {
 
       // Scene Options
 
-      const scene = this._gui.addFolder('Scene');
+      const scene = this.#gui.addFolder('Scene');
       // following items used in handlers and cannot be constants
       let light_pnts = null, strength = null, hcolor = null, overlay = null;
 
@@ -104610,10 +112079,9 @@ class TGeoPainter extends ObjectPainter {
       scene.add(this.ctrl, 'use_fog').name('Fog')
            .listen().onChange(() => this.changedUseFog());
 
-
       // Appearance Options
 
-      const appearance = this._gui.addFolder('Appearance');
+      const appearance = this.#gui.addFolder('Appearance');
 
       this.ctrl._highlight = !this.ctrl.highlight ? 0 : this.ctrl.highlight_bloom ? 2 : 1;
       appearance.add(this.ctrl, '_highlight', { none: 0, normal: 1, bloom: 2 }).name('Highlight Selection')
@@ -104642,7 +112110,7 @@ class TGeoPainter extends ObjectPainter {
 
       // Material options
 
-      const material = this._gui.addFolder('Material');
+      const material = this.#gui.addFolder('Material');
       let material_props = [];
 
       const addMaterialProp = () => {
@@ -104680,7 +112148,7 @@ class TGeoPainter extends ObjectPainter {
 
 
       // Camera options
-      const camera = this._gui.addFolder('Camera');
+      const camera = this.#gui.addFolder('Camera');
 
       camera.add(this.ctrl, 'camera_kind', makeLil(this.ctrl.cameraKindItems))
             .name('Kind').listen().onChange(() => {
@@ -104698,8 +112166,8 @@ class TGeoPainter extends ObjectPainter {
                       .show(this.ctrl.camera_kind.indexOf('ortho') === 0);
 
       // Advanced Options
-      if (this._webgl) {
-         const advanced = this._gui.addFolder('Advanced');
+      if (this.#webgl) {
+         const advanced = this.#gui.addFolder('Advanced');
 
          advanced.add(this.ctrl, 'depthTest').name('Depth test')
             .listen().onChange(() => this.changedDepthTest());
@@ -104713,7 +112181,7 @@ class TGeoPainter extends ObjectPainter {
 
       // Transformation Options
       if (!this.ctrl.project) {
-         const transform = this._gui.addFolder('Transform');
+         const transform = this.#gui.addFolder('Transform');
          transform.add(this.ctrl, 'trans_z', 0.0, 3.0, 0.01)
                      .name('Z axis')
                      .listen().onChange(() => this.changedTransformation());
@@ -104747,7 +112215,7 @@ class TGeoPainter extends ObjectPainter {
       if (!this.ctrl.highlight)
          this.highlightMesh(null);
 
-      this._slave_painters?.forEach(p => {
+      this.getSubordinates()?.forEach(p => {
          p.ctrl.highlight = this.ctrl.highlight;
          p.ctrl.highlight_bloom = this.ctrl.highlight_bloom;
          p.ctrl.bloom_strength = this.ctrl.bloom_strength;
@@ -104759,13 +112227,13 @@ class TGeoPainter extends ObjectPainter {
    changeCanRotate(on) {
       if (on !== undefined)
          this.ctrl.can_rotate = on;
-      if (this._controls)
-         this._controls.enableRotate = this.ctrl.can_rotate;
+      if (this.#controls)
+         this.#controls.enableRotate = this.ctrl.can_rotate;
    }
 
    /** @summary Change use fog property */
    changedUseFog() {
-      this._scene.fog = this.ctrl.use_fog ? this._fog : null;
+      this.#scene.fog = this.ctrl.use_fog ? this.#fog : null;
 
       this.render3D();
    }
@@ -104773,9 +112241,9 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Handle change of camera kind */
    changeCamera() {
       // force control recreation
-      if (this._controls) {
-          this._controls.cleanup();
-          delete this._controls;
+      if (this.#controls) {
+          this.#controls.cleanup();
+          this.#controls = undefined;
       }
 
       this.ensureBloom(false);
@@ -104794,9 +112262,9 @@ class TGeoPainter extends ObjectPainter {
 
       this.render3D();
 
-      // delete this._scene_size; // ensure reassign of camera position
+      // this.#scene_size = undefined; // ensure reassign of camera position
 
-      // this._first_drawing = true;
+      // this.#first_drawing = true;
       // this.startDrawGeometry(true);
    }
 
@@ -104804,32 +112272,32 @@ class TGeoPainter extends ObjectPainter {
    ensureBloom(on) {
       if (on === undefined) {
          if (this.ctrl.highlight_bloom === 0)
-             this.ctrl.highlight_bloom = this._webgl && !browser.android;
+             this.ctrl.highlight_bloom = this.#webgl && !browser.android;
 
          on = this.ctrl.highlight_bloom && this.ctrl.getMaterialCfg()?.emissive;
       }
 
-      if (on && !this._bloomComposer) {
-         this._camera.layers.enable(_BLOOM_SCENE);
-         this._bloomComposer = new THREE.EffectComposer(this._renderer);
-         this._bloomComposer.addPass(new THREE.RenderPass(this._scene, this._camera));
-         const pass = new THREE.UnrealBloomPass(new THREE.Vector2(this._scene_width, this._scene_height), 1.5, 0.4, 0.85);
+      if (on && !this.#bloomComposer) {
+         this.#camera.layers.enable(_BLOOM_SCENE);
+         this.#bloomComposer = new THREE.EffectComposer(this.#renderer);
+         this.#bloomComposer.addPass(new THREE.RenderPass(this.#scene, this.#camera));
+         const pass = new THREE.UnrealBloomPass(new THREE.Vector2(this.#scene_width, this.#scene_height), 1.5, 0.4, 0.85);
          pass.threshold = 0;
          pass.radius = 0;
          pass.renderToScreen = true;
-         this._bloomComposer.addPass(pass);
-         this._renderer.autoClear = false;
-      } else if (!on && this._bloomComposer) {
-         this._bloomComposer.dispose();
-         delete this._bloomComposer;
-         if (this._renderer)
-            this._renderer.autoClear = true;
-         this._camera?.layers.disable(_BLOOM_SCENE);
-         this._camera?.layers.set(_ENTIRE_SCENE);
+         this.#bloomComposer.addPass(pass);
+         this.#renderer.autoClear = false;
+      } else if (!on && this.#bloomComposer) {
+         this.#bloomComposer.dispose();
+         this.#bloomComposer = undefined;
+         if (this.#renderer)
+            this.#renderer.autoClear = true;
+         this.#camera?.layers.disable(_BLOOM_SCENE);
+         this.#camera?.layers.set(_ENTIRE_SCENE);
       }
 
-      if (this._bloomComposer?.passes)
-         this._bloomComposer.passes[1].strength = this.ctrl.bloom_strength;
+      if (this.#bloomComposer?.passes)
+         this.#bloomComposer.passes[1].strength = this.ctrl.bloom_strength;
    }
 
 
@@ -104865,7 +112333,7 @@ class TGeoPainter extends ObjectPainter {
                   if (!name) name = itemname;
                   hdr = name;
                } else if (stack) {
-                  name = this._clones.getStackName(stack);
+                  name = this.#clones.getStackName(stack);
                   itemname = this.getStackFullName(stack);
                   hdr = this.getItemName();
                   if (name.indexOf('Nodes/') === 0)
@@ -104923,21 +112391,21 @@ class TGeoPainter extends ObjectPainter {
 
                if (cnt > 1) {
                   menu.add('Manifest', n, indx => {
-                     if (this._last_manifest)
-                        this._last_manifest.wireframe = !this._last_manifest.wireframe;
+                     if (this.#last_manifest)
+                        this.#last_manifest.wireframe = !this.#last_manifest.wireframe;
 
-                     this._last_hidden?.forEach(obj2 => { obj2.visible = true; });
+                     this.#last_hidden?.forEach(obj2 => { obj2.visible = true; });
 
-                     this._last_hidden = [];
+                     this.#last_hidden = [];
 
                      for (let i = 0; i < indx; ++i)
-                        this._last_hidden.push(intersects[i].object);
+                        this.#last_hidden.push(intersects[i].object);
 
-                     this._last_hidden.forEach(obj2 => { obj2.visible = false; });
+                     this.#last_hidden.forEach(obj2 => { obj2.visible = false; });
 
-                     this._last_manifest = intersects[indx].object.material;
+                     this.#last_manifest = intersects[indx].object.material;
 
-                     this._last_manifest.wireframe = !this._last_manifest.wireframe;
+                     this.#last_manifest.wireframe = !this.#last_manifest.wireframe;
 
                      this.render3D();
                   }, 'Manifest selected node');
@@ -104947,9 +112415,9 @@ class TGeoPainter extends ObjectPainter {
                   this.focusCamera(intersects[indx].object);
                });
 
-               if (!this._geom_viewer) {
+               if (!this.#geom_viewer) {
                   menu.add('Hide', n, indx => {
-                     const resolve = this._clones.resolveStack(intersects[indx].object.stack);
+                     const resolve = this.#clones.resolveStack(intersects[indx].object.stack);
                      if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
                         setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
                         updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
@@ -104961,13 +112429,13 @@ class TGeoPainter extends ObjectPainter {
                      this.testGeomChanges();// while many volumes may disappear, recheck all of them
                   }, 'Hide all logical nodes of that kind');
                   menu.add('Hide only this', n, indx => {
-                     this._clones.setPhysNodeVisibility(getIntersectStack(intersects[indx]), false);
+                     this.#clones.setPhysNodeVisibility(getIntersectStack(intersects[indx]), false);
                      this.testGeomChanges();
                   }, 'Hide only this physical node');
                   if (n > 1) {
                     menu.add('Hide all before', n, indx => {
                         for (let k = 0; k < indx; ++k)
-                           this._clones.setPhysNodeVisibility(getIntersectStack(intersects[k]), false);
+                           this.#clones.setPhysNodeVisibility(getIntersectStack(intersects[k]), false);
                         this.testGeomChanges();
                      }, 'Hide all physical nodes before that');
                   }
@@ -105019,9 +112487,9 @@ class TGeoPainter extends ObjectPainter {
             const point = intersects[i].point, special = (intersects[i].object.type === 'Points');
             let clipped = true;
 
-            if (clip[0].enabled && ((this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant) ^ special)) clipped = false;
-            if (clip[1].enabled && ((this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant) ^ special)) clipped = false;
-            if (clip[2].enabled && (this._clipPlanes[2].normal.dot(point) > this._clipPlanes[2].constant)) clipped = false;
+            if (clip[0].enabled && ((this.#clip_planes[0].normal.dot(point) > this.#clip_planes[0].constant) ^ special)) clipped = false;
+            if (clip[1].enabled && ((this.#clip_planes[1].normal.dot(point) > this.#clip_planes[1].constant) ^ special)) clipped = false;
+            if (clip[2].enabled && (this.#clip_planes[2].normal.dot(point) > this.#clip_planes[2].constant)) clipped = false;
 
             if (!clipped) clippedIntersects.push(intersects[i]);
          }
@@ -105036,10 +112504,11 @@ class TGeoPainter extends ObjectPainter {
      * @desc function analyzes camera position and start redraw of geometry
      *  if objects in view may be changed */
    testCameraPositionChange() {
-      if (!this.ctrl.select_in_view || this._draw_all_nodes) return;
+      if (!this.ctrl.select_in_view || this.#draw_all_nodes)
+         return;
 
-      const matrix = createProjectionMatrix(this._camera),
-          frustum = createFrustum(matrix);
+      const matrix = createProjectionMatrix(this.#camera),
+            frustum = createFrustum(matrix);
 
       // check if overall bounding box seen
       if (!frustum.CheckBox(this.getGeomBoundingBox()))
@@ -105048,7 +112517,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Resolve stack */
    resolveStack(stack) {
-      return this._clones && stack ? this._clones.resolveStack(stack) : null;
+      return this.#clones && stack ? this.#clones.resolveStack(stack) : null;
    }
 
    /** @summary Returns stack full name
@@ -105064,10 +112533,11 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Add handler which will be called when element is highlighted in geometry drawing
      * @desc Handler should have highlightMesh function with same arguments as TGeoPainter  */
    addHighlightHandler(handler) {
-      if (!isFunc(handler?.highlightMesh)) return;
-      if (!this._highlight_handlers)
-         this._highlight_handlers = [];
-      this._highlight_handlers.push(handler);
+      if (!isFunc(handler?.highlightMesh))
+         return;
+      if (!this.#highlight_handlers)
+         this.#highlight_handlers = [];
+      this.#highlight_handlers.push(handler);
    }
 
    /** @summary perform mesh highlight */
@@ -105081,9 +112551,9 @@ class TGeoPainter extends ObjectPainter {
                   active_mesh.push(obj3d);
             });
          }
-      } else if (geo_stack && this._toplevel) {
+      } else if (geo_stack && this.#toplevel) {
          active_mesh = [];
-         this._toplevel.traverse(mesh => {
+         this.#toplevel.traverse(mesh => {
             if ((mesh instanceof THREE.Mesh) && isSameStack(mesh.stack, geo_stack))
                active_mesh.push(mesh);
          });
@@ -105096,9 +112566,11 @@ class TGeoPainter extends ObjectPainter {
       if (active_mesh) {
          // check if highlight is disabled for correspondent objects kinds
          if (active_mesh[0].geo_object) {
-            if (!this.ctrl.highlight_scene) active_mesh = null;
+            if (!this.ctrl.highlight_scene)
+               active_mesh = null;
          } else
-            if (!this.ctrl.highlight) active_mesh = null;
+            if (!this.ctrl.highlight)
+               active_mesh = null;
       }
 
       if (!no_recursive) {
@@ -105109,7 +112581,7 @@ class TGeoPainter extends ObjectPainter {
             if (!geo_stack) geo_stack = active_mesh[0].stack;
          }
 
-         const lst = this._highlight_handlers || (!this._master_painter ? this._slave_painters : this._master_painter._slave_painters.concat([this._master_painter]));
+         const lst = this.#highlight_handlers || this.getCentral()?.getSubordinates().concat([this.getCentral()]) || this.getSubordinates();
 
          for (let k = 0; k < lst?.length; ++k) {
             if (lst[k] !== this)
@@ -105117,34 +112589,30 @@ class TGeoPainter extends ObjectPainter {
          }
       }
 
-      const curr_mesh = this._selected_mesh;
+      const curr_mesh = this.#selected_mesh;
+      if (!curr_mesh && !active_mesh)
+         return false;
 
-      if (!curr_mesh && !active_mesh) return false;
-
-      const get_ctrl = mesh => mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.highlight_bloom && this._bloomComposer);
+      const get_ctrl = mesh => mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.highlight_bloom && this.#bloomComposer);
 
       let same = false;
 
       // check if selections are the same
       if (curr_mesh && active_mesh && (curr_mesh.length === active_mesh.length)) {
          same = true;
-         for (let k = 0; (k < curr_mesh.length) && same; ++k)
-            if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index)) same = false;
+         for (let k = 0; (k < curr_mesh.length) && same; ++k) {
+            if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index))
+               same = false;
+         }
       }
       if (same)
          return Boolean(curr_mesh);
 
-      if (curr_mesh) {
-         for (let k = 0; k < curr_mesh.length; ++k)
-            get_ctrl(curr_mesh[k]).setHighlight();
-      }
+      curr_mesh?.forEach(mesh => get_ctrl(mesh).setHighlight());
 
-      this._selected_mesh = active_mesh;
+      this.#selected_mesh = active_mesh;
 
-      if (active_mesh) {
-         for (let k = 0; k < active_mesh.length; ++k)
-            get_ctrl(active_mesh[k]).setHighlight(color || new THREE.Color(this.ctrl.highlight_color), geo_index);
-      }
+      active_mesh?.forEach(mesh => get_ctrl(mesh).setHighlight(color || new THREE.Color(this.ctrl.highlight_color), geo_index));
 
       this.render3D(0);
 
@@ -105153,13 +112621,15 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary handle mouse click event */
    processMouseClick(pnt, intersects, evnt) {
-      if (!intersects.length) return;
+      if (!intersects.length)
+         return;
 
       const mesh = intersects[0].object;
-      if (!mesh.get_ctrl) return;
+      if (!mesh.get_ctrl)
+         return;
 
       const ctrl = mesh.get_ctrl(),
-          click_indx = ctrl.extractIndex(intersects[0]);
+            click_indx = ctrl.extractIndex(intersects[0]);
 
       ctrl.evnt = evnt;
 
@@ -105174,8 +112644,8 @@ class TGeoPainter extends ObjectPainter {
       if (this.ctrl)
          this.ctrl.mouse_tmout = val;
 
-      if (this._controls)
-         this._controls.mouse_tmout = val;
+      if (this.#controls)
+         this.#controls.mouse_tmout = val;
    }
 
    /** @summary Configure depth method, used for render order production.
@@ -105196,23 +112666,23 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Add orbit control */
    addOrbitControls() {
-      if (this._controls || !this._webgl || this.isBatchMode() || this.superimpose || isNodeJs()) return;
+      if (this.#controls || !this.#webgl || this.isBatchMode() || this.#superimpose || isNodeJs()) return;
 
       if (!this.getCanvPainter())
          this.setTooltipAllowed(settings.Tooltip);
 
-      this._controls = createOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
+      this.#controls = createOrbitControl(this, this.#camera, this.#scene, this.#renderer, this.#lookat);
 
-      this._controls.mouse_tmout = this.ctrl.mouse_tmout; // set larger timeout for geometry processing
+      this.#controls.mouse_tmout = this.ctrl.mouse_tmout; // set larger timeout for geometry processing
 
       if (!this.canRotateCamera())
-         this._controls.enableRotate = false;
+         this.#controls.enableRotate = false;
 
-      this._controls.contextMenu = this.orbitContext.bind(this);
+      this.#controls.contextMenu = this.orbitContext.bind(this);
 
-      this._controls.processMouseMove = intersects => {
+      this.#controls.processMouseMove = intersects => {
          // painter already cleaned up, ignore any incoming events
-         if (!this.ctrl || !this._controls) return;
+         if (!this.ctrl || !this.#controls) return;
 
          let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index, geo_stack;
 
@@ -105266,20 +112736,20 @@ class TGeoPainter extends ObjectPainter {
          return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines };
       };
 
-      this._controls.processMouseLeave = function() {
+      this.#controls.processMouseLeave = function() {
          this.processMouseMove([]); // to disable highlight and reset browser
       };
 
-      this._controls.processDblClick = () => {
+      this.#controls.processDblClick = () => {
          // painter already cleaned up, ignore any incoming events
-         if (!this.ctrl || !this._controls) return;
+         if (!this.ctrl || !this.#controls) return;
 
-         if (this._last_manifest) {
-            this._last_manifest.wireframe = !this._last_manifest.wireframe;
-            if (this._last_hidden)
-               this._last_hidden.forEach(obj => { obj.visible = true; });
-            delete this._last_hidden;
-            delete this._last_manifest;
+         if (this.#last_manifest) {
+            this.#last_manifest.wireframe = !this.#last_manifest.wireframe;
+            if (this.#last_hidden)
+               this.#last_hidden.forEach(obj => { obj.visible = true; });
+            this.#last_hidden = undefined;
+            this.#last_manifest = undefined;
          } else
             this.adjustCameraPosition(true);
 
@@ -105294,32 +112764,37 @@ class TGeoPainter extends ObjectPainter {
      * - 1 when call after short timeout required
      * - 2 when call must be done from processWorkerReply */
    nextDrawAction() {
-      if (!this._clones || this.isStage(stageInit)) return false;
+      if (!this.#clones || this.isStage(stageInit))
+         return false;
 
       if (this.isStage(stageCollect)) {
-         if (this._geom_viewer) {
-            this._draw_all_nodes = false;
+         if (this.#geom_viewer) {
+            this.#draw_all_nodes = false;
             this.changeStage(stageAnalyze);
             return true;
          }
 
          // wait until worker is really started
          if (this.ctrl.use_worker > 0) {
-            if (!this._worker) { this.startWorker(); return 1; }
-            if (!this._worker_ready) return 1;
+            if (!this.#worker) {
+               this.startWorker();
+               return 1;
+            }
+            if (!this.#worker_ready)
+               return 1;
          }
 
          // first copy visibility flags and check how many unique visible nodes exists
-         let numvis = this._first_drawing ? this._clones.countVisibles() : 0,
+         let numvis = this.#first_drawing ? this.#clones.countVisibles() : 0,
              matrix = null, frustum = null;
 
          if (!numvis)
-            numvis = this._clones.markVisibles(false, false, Boolean(this.geo_manager) && !this.ctrl.showtop);
+            numvis = this.#clones.markVisibles(false, false, Boolean(this.#geo_manager) && !this.ctrl.showtop);
 
-         if (this.ctrl.select_in_view && !this._first_drawing) {
+         if (this.ctrl.select_in_view && !this.#first_drawing) {
             // extract camera projection matrix for selection
 
-            matrix = createProjectionMatrix(this._camera);
+            matrix = createProjectionMatrix(this.#camera);
 
             frustum = createFrustum(matrix);
 
@@ -105330,12 +112805,12 @@ class TGeoPainter extends ObjectPainter {
             }
          }
 
-         this._current_face_limit = this.ctrl.maxfaces;
-         if (matrix) this._current_face_limit *= 1.25;
+         this.#current_face_limit = this.ctrl.maxfaces;
+         if (matrix) this.#current_face_limit *= 1.25;
 
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
-         let need_worker = !this.isBatchMode() && browser.isChrome && ((numvis > 10000) || (matrix && (this._clones.scanVisible() > 1e5)));
+         let need_worker = !this.isBatchMode() && browser.isChrome && ((numvis > 10000) || (matrix && (this.#clones.scanVisible() > 1e5)));
 
          // worker does not work when starting from file system
          if (need_worker && exports.source_dir.indexOf('file://') === 0) {
@@ -105343,23 +112818,23 @@ class TGeoPainter extends ObjectPainter {
             need_worker = false;
          }
 
-         if (need_worker && !this._worker && (this.ctrl.use_worker >= 0))
+         if (need_worker && !this.#worker && (this.ctrl.use_worker >= 0))
             this.startWorker(); // we starting worker, but it may not be ready so fast
 
-         if (!need_worker || !this._worker_ready) {
-            const res = this._clones.collectVisibles(this._current_face_limit, frustum);
-            this._new_draw_nodes = res.lst;
-            this._draw_all_nodes = res.complete;
+         if (!need_worker || !this.#worker_ready) {
+            const res = this.#clones.collectVisibles(this.#current_face_limit, frustum);
+            this.#new_draw_nodes = res.lst;
+            this.#draw_all_nodes = res.complete;
             this.changeStage(stageAnalyze);
             return true;
          }
 
          const job = {
-            collect: this._current_face_limit,   // indicator for the command
-            flags: this._clones.getVisibleFlags(),
+            collect: this.#current_face_limit,   // indicator for the command
+            flags: this.#clones.getVisibleFlags(),
             matrix: matrix ? matrix.elements : null,
-            vislevel: this._clones.getVisLevel(),
-            maxvisnodes: this._clones.getMaxVisNodes()
+            vislevel: this.#clones.getVisLevel(),
+            maxvisnodes: this.#clones.getMaxVisNodes()
          };
 
          this.submitToWorker(job);
@@ -105378,37 +112853,37 @@ class TGeoPainter extends ObjectPainter {
          // here we merge new and old list of nodes for drawing,
          // normally operation is fast and can be implemented with one c
 
-         if (this._new_append_nodes) {
-            this._new_draw_nodes = this._draw_nodes.concat(this._new_append_nodes);
+         if (this.#new_append_nodes) {
+            this.#new_draw_nodes = this.#draw_nodes.concat(this.#new_append_nodes);
 
-            delete this._new_append_nodes;
-         } else if (this._draw_nodes) {
+            this.#new_append_nodes = undefined;
+         } else if (this.#draw_nodes) {
             let del;
-            if (this._geom_viewer)
-               del = this._draw_nodes;
+            if (this.#geom_viewer)
+               del = this.#draw_nodes;
             else
-               del = this._clones.mergeVisibles(this._new_draw_nodes, this._draw_nodes);
+               del = this.#clones.mergeVisibles(this.#new_draw_nodes, this.#draw_nodes);
 
             // remove should be fast, do it here
             for (let n = 0; n < del.length; ++n)
-               this._clones.createObject3D(del[n].stack, this._toplevel, 'delete_mesh');
+               this.#clones.createObject3D(del[n].stack, this.#toplevel, 'delete_mesh');
 
             if (del.length > 0)
-               this.drawing_log = `Delete ${del.length} nodes`;
+               this.#drawing_log = `Delete ${del.length} nodes`;
          }
 
-         this._draw_nodes = this._new_draw_nodes;
-         delete this._new_draw_nodes;
+         this.#draw_nodes = this.#new_draw_nodes;
+         this.#new_draw_nodes = undefined;
          this.changeStage(stageCollShapes);
          return true;
       }
 
       if (this.isStage(stageCollShapes)) {
          // collect shapes
-         const shapes = this._clones.collectShapes(this._draw_nodes);
+         const shapes = this.#clones.collectShapes(this.#draw_nodes);
 
          // merge old and new list with produced shapes
-         this._build_shapes = this._clones.mergeShapesLists(this._build_shapes, shapes);
+         this.#build_shapes = this.#clones.mergeShapesLists(this.#build_shapes, shapes);
 
          this.changeStage(stageStartBuild);
          return true;
@@ -105419,10 +112894,10 @@ class TGeoPainter extends ObjectPainter {
          // one can ask worker to build them or do it ourself
 
          if (this.canSubmitToWorker()) {
-            const job = { limit: this._current_face_limit, shapes: [] };
+            const job = { limit: this.#current_face_limit, shapes: [] };
             let cnt = 0;
-            for (let n = 0; n < this._build_shapes.length; ++n) {
-               const item = this._build_shapes[n];
+            for (let n = 0; n < this.#build_shapes.length; ++n) {
+               const item = this.#build_shapes[n];
                // only submit not-done items
                if (item.ready || item.geom) {
                   // this is place holder for existing geometry
@@ -105453,13 +112928,13 @@ class TGeoPainter extends ObjectPainter {
          if (this.isStage(stageBuild)) {
             // building shapes
 
-            const res = this._clones.buildShapes(this._build_shapes, this._current_face_limit, 500);
+            const res = this.#clones.buildShapes(this.#build_shapes, this.#current_face_limit, 500);
             if (res.done) {
-               this.ctrl.info.num_shapes = this._build_shapes.length;
+               this.ctrl.info.num_shapes = this.#build_shapes.length;
                this.changeStage(stageBuildReady);
             } else {
                this.ctrl.info.num_shapes = res.shapes;
-               this.drawing_log = `Creating: ${res.shapes} / ${this._build_shapes.length} shapes,  ${res.faces} faces`;
+               this.#drawing_log = `Creating: ${res.shapes} / ${this.#build_shapes.length} shapes,  ${res.faces} faces`;
                return true;
                // if (res.notusedshapes < 30) return true;
             }
@@ -105468,19 +112943,19 @@ class TGeoPainter extends ObjectPainter {
          // final stage, create all meshes
 
          const tm0 = new Date().getTime(),
-               toplevel = this.ctrl.project ? this._full_geom : this._toplevel;
+               toplevel = this.ctrl.project ? this.#fullgeom_proj : this.#toplevel;
          let build_instanced = false, ready = true;
 
          if (!this.ctrl.project)
-            build_instanced = this._clones.createInstancedMeshes(this.ctrl, toplevel, this._draw_nodes, this._build_shapes, getRootColors());
+            build_instanced = this.#clones.createInstancedMeshes(this.ctrl, toplevel, this.#draw_nodes, this.#build_shapes, getRootColors());
 
          if (!build_instanced) {
-            for (let n = 0; n < this._draw_nodes.length; ++n) {
-               const entry = this._draw_nodes[n];
+            for (let n = 0; n < this.#draw_nodes.length; ++n) {
+               const entry = this.#draw_nodes[n];
                if (entry.done) continue;
 
                // shape can be provided with entry itself
-               const shape = entry.server_shape || this._build_shapes[entry.shapeid];
+               const shape = entry.server_shape || this.#build_shapes[entry.shapeid];
 
                this.createEntryMesh(entry, shape, toplevel);
 
@@ -105499,18 +112974,18 @@ class TGeoPainter extends ObjectPainter {
          }
 
          if (!this.isStage(stageBuild))
-            this.drawing_log = `Building meshes ${this.ctrl.info.num_meshes} / ${this.ctrl.info.num_faces}`;
+            this.#drawing_log = `Building meshes ${this.ctrl.info.num_meshes} / ${this.ctrl.info.num_faces}`;
          return true;
       }
 
       if (this.isStage(stageWaitMain)) {
          // wait for main painter to be ready
-
-         if (!this._master_painter) {
+         if (!this.getCentral()) {
             this.changeStage(stageInit, 'Lost main painter');
             return false;
          }
-         if (!this._master_painter._drawing_ready) return 1;
+         if (!this.getCentral().isDrawingReady())
+            return 1;
 
          this.changeStage(stageBuildProj); // just do projection
       }
@@ -105529,14 +113004,14 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Insert appropriate mesh for given entry */
    createEntryMesh(entry, shape, toplevel) {
       // workaround for the TGeoOverlap, where two branches should get predefined color
-      if (this._splitColors && entry.stack) {
+      if (this.ctrl.split_colors && entry.stack) {
          if (entry.stack[0] === 0)
             entry.custom_color = 'green';
          else if (entry.stack[0] === 1)
             entry.custom_color = 'blue';
       }
 
-      this._clones.createEntryMesh(this.ctrl, toplevel, entry, shape, getRootColors());
+      this.#clones.createEntryMesh(this.ctrl, toplevel, entry, shape, getRootColors());
 
       return true;
    }
@@ -105546,82 +113021,77 @@ class TGeoPainter extends ObjectPainter {
      * Shape already should be created and assigned to the node */
    appendMoreNodes(nodes, from_drawing) {
       if (!this.isStage(stageInit) && !from_drawing) {
-         this._provided_more_nodes = nodes;
+         this.#provided_more_nodes = nodes;
          return;
       }
 
       // delete old nodes
-      if (this._more_nodes) {
-         for (let n = 0; n < this._more_nodes.length; ++n) {
-            const entry = this._more_nodes[n],
-                obj3d = this._clones.createObject3D(entry.stack, this._toplevel, 'delete_mesh');
+      if (this.#more_nodes) {
+         for (let n = 0; n < this.#more_nodes.length; ++n) {
+            const entry = this.#more_nodes[n],
+                obj3d = this.#clones.createObject3D(entry.stack, this.#toplevel, 'delete_mesh');
             disposeThreejsObject(obj3d);
             cleanupShape(entry.server_shape);
             delete entry.server_shape;
          }
+         this.#more_nodes = undefined;
       }
-
-      delete this._more_nodes;
 
       if (!nodes) return;
 
       const real_nodes = [];
-
       for (let k = 0; k < nodes.length; ++k) {
          const entry = nodes[k],
              shape = entry.server_shape;
          if (!shape?.ready) continue;
 
-         if (this.createEntryMesh(entry, shape, this._toplevel))
+         if (this.createEntryMesh(entry, shape, this.#toplevel))
             real_nodes.push(entry);
       }
 
       // remember additional nodes only if they include shape - otherwise one can ignore them
       if (real_nodes.length > 0)
-         this._more_nodes = real_nodes;
+         this.#more_nodes = real_nodes;
 
-      if (!from_drawing) this.render3D();
+      if (!from_drawing)
+         this.render3D();
    }
 
    /** @summary Returns hierarchy of 3D objects used to produce projection.
      * @desc Typically external master painter is used, but also internal data can be used */
    getProjectionSource() {
-      if (this._clones_owner)
-         return this._full_geom;
-      if (!this._master_painter) {
-         console.warn('MAIN PAINTER DISAPPER');
-         return null;
-      }
-      if (!this._master_painter._drawing_ready) {
+      if (this.#clones_owner)
+         return this.#fullgeom_proj;
+      if (!this.getCentral()?.isDrawingReady()) {
          console.warn('MAIN PAINTER NOT READY WHEN DO PROJECTION');
          return null;
       }
-      return this._master_painter._toplevel;
+      return this.getCentral().#toplevel;
    }
 
    /** @summary Extend custom geometry bounding box */
    extendCustomBoundingBox(box) {
       if (!box) return;
-      if (!this._customBoundingBox)
-         this._customBoundingBox = new THREE.Box3().makeEmpty();
+      if (!this.#custom_bounding_box)
+         this.#custom_bounding_box = new THREE.Box3().makeEmpty();
 
-      const origin = this._customBoundingBox.clone();
-      this._customBoundingBox.union(box);
+      const origin = this.#custom_bounding_box.clone();
+      this.#custom_bounding_box.union(box);
 
-      if (!this._customBoundingBox.equals(origin))
-         this._adjust_camera_with_render = true;
+      if (!this.#custom_bounding_box.equals(origin))
+         this.#adjust_camera_with_render = true;
    }
 
    /** @summary Calculate geometry bounding box */
    getGeomBoundingBox(topitem, scalar) {
-      const box3 = new THREE.Box3(), check_any = !this._clones;
+      const box3 = new THREE.Box3(), check_any = !this.#clones;
       if (topitem === undefined)
-         topitem = this._toplevel;
+         topitem = this.#toplevel;
 
       box3.makeEmpty();
 
-      if (this._customBoundingBox && (topitem === this._toplevel)) {
-         box3.union(this._customBoundingBox);
+      if (this.#custom_bounding_box && (topitem === this.#toplevel)) {
+         box3.union(this.#custom_bounding_box);
          return box3;
       }
 
@@ -105653,7 +113123,7 @@ class TGeoPainter extends ObjectPainter {
 
       if (!toplevel) return false;
 
-      disposeThreejsObject(this._toplevel, true);
+      disposeThreejsObject(this.#toplevel, true);
 
       // let axis = this.ctrl.project;
 
@@ -105676,7 +113146,7 @@ class TGeoPainter extends ObjectPainter {
 
          const mesh2 = new THREE.Mesh(geom2, mesh.material.clone());
 
-         this._toplevel.add(mesh2);
+         this.#toplevel.add(mesh2);
 
          mesh2.stack = mesh.stack;
       });
@@ -105686,7 +113156,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Should be invoked when light configuration changed */
    changedLight(box) {
-      if (!this._camera) return;
+      if (!this.#camera)
+         return;
 
       const need_render = !box;
 
@@ -105697,28 +113168,28 @@ class TGeoPainter extends ObjectPainter {
           sizez = box.max.z - box.min.z,
           plights = [], p = (this.ctrl.light.power ?? 1) * 0.5;
 
-      if (this._camera._lights !== this.ctrl.light.kind) {
+      if (this.#camera._lights !== this.ctrl.light.kind) {
          // remove all childs and recreate only necessary lights
-         disposeThreejsObject(this._camera, true);
+         disposeThreejsObject(this.#camera, true);
 
-         this._camera._lights = this.ctrl.light.kind;
+         this.#camera._lights = this.ctrl.light.kind;
 
-         switch (this._camera._lights) {
-            case 'ambient' : this._camera.add(new THREE.AmbientLight(0xefefef, p)); break;
-            case 'hemisphere' : this._camera.add(new THREE.HemisphereLight(0xffffbb, 0x080820, p)); break;
-            case 'mix': this._camera.add(new THREE.AmbientLight(0xefefef, p));
+         switch (this.#camera._lights) {
+            case 'ambient' : this.#camera.add(new THREE.AmbientLight(0xefefef, p)); break;
+            case 'hemisphere' : this.#camera.add(new THREE.HemisphereLight(0xffffbb, 0x080820, p)); break;
+            case 'mix': this.#camera.add(new THREE.AmbientLight(0xefefef, p));
             // eslint-disable-next-line  no-fallthrough
             default: // 6 point lights
                for (let n = 0; n < 6; ++n) {
                   const l = new THREE.DirectionalLight(0xefefef, p);
-                  this._camera.add(l);
+                  this.#camera.add(l);
                   l._id = n;
                }
          }
       }
 
-      for (let k = 0; k < this._camera.children.length; ++k) {
-         const light = this._camera.children[k];
+      for (let k = 0; k < this.#camera.children.length; ++k) {
+         const light = this.#camera.children[k];
          let enabled = false;
          if (light.isAmbientLight || light.isHemisphereLight) {
             light.intensity = p;
@@ -105750,107 +113221,110 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Create configured camera */
    createCamera() {
-      if (this._camera) {
-          this._scene.remove(this._camera);
-          disposeThreejsObject(this._camera);
-          delete this._camera;
-       }
+      if (this.#camera) {
+         this.#scene.remove(this.#camera);
+         disposeThreejsObject(this.#camera);
+         this.#camera = undefined;
+      }
 
       if (this.isOrthoCamera())
-         this._camera = new THREE.OrthographicCamera(-this._scene_width/2, this._scene_width/2, this._scene_height/2, -this._scene_height/2, 1, 10000);
+         this.#camera = new THREE.OrthographicCamera(-this.#scene_width/2, this.#scene_width/2, this.#scene_height/2, -this.#scene_height/2, 1, 10000);
        else {
-         this._camera = new THREE.PerspectiveCamera(25, this._scene_width / this._scene_height, 1, 10000);
-         this._camera.up = this.ctrl._yup ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
+         this.#camera = new THREE.PerspectiveCamera(25, this.#scene_width / this.#scene_height, 1, 10000);
+         this.#camera.up = this.ctrl._yup ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
       }
 
       // Light - add default directional light, adjust later
       const light = new THREE.DirectionalLight(0xefefef, 0.1);
       light.position.set(10, 10, 10);
-      this._camera.add(light);
+      this.#camera.add(light);
 
-      this._scene.add(this._camera);
+      this.#scene.add(this.#camera);
    }
 
    /** @summary Create special effects */
    createSpecialEffects() {
-      if (this._webgl && this.ctrl.outline && isFunc(this.createOutline)) {
+      if (this.#webgl && this.ctrl.outline && isFunc(this.createOutline)) {
          // code used with jsroot-based geometry drawing in EVE7, not important any longer
-         this._effectComposer = new THREE.EffectComposer(this._renderer);
-         this._effectComposer.addPass(new THREE.RenderPass(this._scene, this._camera));
-         this.createOutline(this._scene_width, this._scene_height);
+         this.#effectComposer = new THREE.EffectComposer(this.#renderer);
+         this.#effectComposer.addPass(new THREE.RenderPass(this.#scene, this.#camera));
+         this.createOutline(this.#scene, this.#camera, this.#scene_width, this.#scene_height);
       }
 
       this.ensureBloom();
    }
 
+   /** @summary Return current effect composer */
+   getEffectComposer() { return this.#effectComposer; }
+
    /** @summary Initial scene creation */
    async createScene(w, h, render3d) {
-      if (this.superimpose) {
+      if (this.#superimpose) {
          const cfg = getHistPainter3DCfg(this.getMainPainter());
 
          if (cfg?.renderer) {
-            this._scene = cfg.scene;
-            this._scene_width = cfg.scene_width;
-            this._scene_height = cfg.scene_height;
-            this._renderer = cfg.renderer;
-            this._webgl = (this._renderer.jsroot_render3d === constants$1.Render3D.WebGL);
+            this.#scene = cfg.scene;
+            this.#scene_width = cfg.scene_width;
+            this.#scene_height = cfg.scene_height;
+            this.#renderer = cfg.renderer;
+            this.#webgl = (this.#renderer.jsroot_render3d === constants$1.Render3D.WebGL);
 
-            this._toplevel = new THREE.Object3D();
-            this._scene.add(this._toplevel);
+            this.#toplevel = new THREE.Object3D();
+            this.#scene.add(this.#toplevel);
 
             if (cfg.scale_x || cfg.scale_y || cfg.scale_z)
-               this._toplevel.scale.set(cfg.scale_x, cfg.scale_y, cfg.scale_z);
+               this.#toplevel.scale.set(cfg.scale_x, cfg.scale_y, cfg.scale_z);
             if (cfg.offset_x || cfg.offset_y || cfg.offset_z)
-               this._toplevel.position.set(cfg.offset_x, cfg.offset_y, cfg.offset_z);
-            this._toplevel.updateMatrix();
-            this._toplevel.updateMatrixWorld();
+               this.#toplevel.position.set(cfg.offset_x, cfg.offset_y, cfg.offset_z);
+            this.#toplevel.updateMatrix();
+            this.#toplevel.updateMatrixWorld();
 
-            this._camera = cfg.camera;
+            this.#camera = cfg.camera;
          }
 
-         return this._renderer?.jsroot_dom;
+         return this.#renderer?.jsroot_dom;
       }
 
       return importThreeJs().then(() => {
          // three.js 3D drawing
-         this._scene = new THREE.Scene();
-         this._fog = new THREE.Fog(0xffffff, 1, 10000);
-         this._scene.fog = this.ctrl.use_fog ? this._fog : null;
+         this.#scene = new THREE.Scene();
+         this.#fog = new THREE.Fog(0xffffff, 1, 10000);
+         this.#scene.fog = this.ctrl.use_fog ? this.#fog : null;
 
-         this._scene.overrideMaterial = new THREE.MeshLambertMaterial({ color: 0x7000ff, vertexColors: false, transparent: true, opacity: 0.2, depthTest: false });
+         this.#scene.overrideMaterial = new THREE.MeshLambertMaterial({ color: 0x7000ff, vertexColors: false, transparent: true, opacity: 0.2, depthTest: false });
 
-         this._scene_width = w;
-         this._scene_height = h;
+         this.#scene_width = w;
+         this.#scene_height = h;
 
          this.createCamera();
 
-         this._selected_mesh = null;
+         this.#selected_mesh = null;
 
-         this._overall_size = 10;
+         this.#overall_size = 10;
 
-         this._toplevel = new THREE.Object3D();
+         this.#toplevel = new THREE.Object3D();
 
-         this._scene.add(this._toplevel);
+         this.#scene.add(this.#toplevel);
 
-         this._scene.background = new THREE.Color(this.ctrl.background);
+         this.#scene.background = new THREE.Color(this.ctrl.background);
 
          return createRender3D(w, h, render3d, { antialias: true, logarithmicDepthBuffer: false, preserveDrawingBuffer: true });
       }).then(r => {
-         this._renderer = r;
+         this.#renderer = r;
 
          if (this.batch_format)
             r.jsroot_image_format = this.batch_format;
 
-         this._webgl = (r.jsroot_render3d === constants$1.Render3D.WebGL);
+         this.#webgl = (r.jsroot_render3d === constants$1.Render3D.WebGL);
 
          if (isFunc(r.setPixelRatio) && !isNodeJs() && !browser.android)
             r.setPixelRatio(window.devicePixelRatio);
-         r.setSize(w, h, !this._fit_main_area);
+         r.setSize(w, h, !this.#fit_main_area);
          r.localClippingEnabled = true;
 
-         r.setClearColor(this._scene.background, 1);
+         r.setClearColor(this.#scene.background, 1);
 
-         if (this._fit_main_area && this._webgl) {
+         if (this.#fit_main_area && this.#webgl) {
             r.domElement.style.width = '100%';
             r.domElement.style.height = '100%';
             const main = this.selectDom();
@@ -105858,59 +113332,58 @@ class TGeoPainter extends ObjectPainter {
                main.style('position', 'relative');
          }
 
-         this._animating = false;
+         this.#animating = false;
 
          this.ctrl.doubleside = false; // both sides need for clipping
          this.createSpecialEffects();
 
-         if (this._fit_main_area && !this._webgl) {
+         if (this.#fit_main_area && !this.#webgl) {
             // create top-most SVG for geometry drawings
             const doc = getDocument(),
                   svg = doc.createElementNS(nsSVG, 'svg');
             svg.setAttribute('width', w);
             svg.setAttribute('height', h);
-            svg.appendChild(this._renderer.jsroot_dom);
+            svg.appendChild(this.#renderer.jsroot_dom);
             return svg;
          }
 
-         return this._renderer.jsroot_dom;
+         return this.#renderer.jsroot_dom;
       });
    }
 
    /** @summary Start geometry drawing */
    startDrawGeometry(force) {
       if (!force && !this.isStage(stageInit)) {
-         this._draw_nodes_again = true;
+         this.#draw_nodes_again = true;
          return;
       }
 
-      if (this._clones_owner && this._clones)
-         this._clones.setDefaultColors(this.ctrl.dflt_colors);
+      if (this.#clones_owner)
+         this.#clones?.setDefaultColors(this.ctrl.dflt_colors);
 
-      this._startm = new Date().getTime();
-      this._last_render_tm = this._startm;
-      this._last_render_meshes = 0;
+      this.#last_render_tm = this.#start_render_tm = new Date().getTime();
+      this.#last_render_meshes = 0;
       this.changeStage(stageCollect);
-      this._drawing_ready = false;
+      this.#drawing_ready = false;
       this.ctrl.info.num_meshes = 0;
       this.ctrl.info.num_faces = 0;
       this.ctrl.info.num_shapes = 0;
-      this._selected_mesh = null;
+      this.#selected_mesh = null;
 
       if (this.ctrl.project) {
-         if (this._clones_owner) {
-            if (this._full_geom)
+         if (this.#clones_owner) {
+            if (this.#fullgeom_proj)
                this.changeStage(stageBuildProj);
-             else
-               this._full_geom = new THREE.Object3D();
+            else
+               this.#fullgeom_proj = new THREE.Object3D();
          } else
             this.changeStage(stageWaitMain);
       }
 
-      delete this._last_manifest;
-      delete this._last_hidden; // clear list of hidden objects
+      this.#last_manifest = undefined;
+      this.#last_hidden = undefined; // clear list of hidden objects
 
-      delete this._draw_nodes_again; // forget about such flag
+      this.#draw_nodes_again = undefined; // forget about such flag
 
       this.continueDraw();
    }
@@ -105927,23 +113400,23 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary returns maximal dimension */
    getOverallSize(force) {
-      if (!this._overall_size || force || this._customBoundingBox) {
+      if (!this.#overall_size || force || this.#custom_bounding_box) {
          const box = this.getGeomBoundingBox();
 
          // if detect of coordinates fails - ignore
          if (!Number.isFinite(box.min.x)) return 1000;
 
-         this._overall_size = 2 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
+         this.#overall_size = 2 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
       }
 
-      return this._overall_size;
+      return this.#overall_size;
    }
 
    /** @summary Create png image with drawing snapshot. */
    createSnapshot(filename) {
-      if (!this._renderer) return;
+      if (!this.#renderer) return;
       this.render3D(0);
-      const dataUrl = this._renderer.domElement.toDataURL('image/png');
+      const dataUrl = this.#renderer.domElement.toDataURL('image/png');
       if (filename === 'asis') return dataUrl;
       dataUrl.replace('image/png', 'image/octet-stream');
       const doc = getDocument(),
@@ -105960,11 +113433,11 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Returns url parameters defining camera position.
      * @desc Either absolute position are provided (arg === true) or zoom, roty, rotz parameters */
    produceCameraUrl(arg) {
-      if (!this._camera)
+      if (!this.#camera)
          return '';
 
-      if (this._camera.isOrthographicCamera) {
-         const zoom = Math.round(this._camera.zoom * 100);
+      if (this.#camera.isOrthographicCamera) {
+         const zoom = Math.round(this.#camera.zoom * 100);
          return this.ctrl.camera_kind + (zoom === 100 ? '' : `,zoom=${zoom}`);
       }
 
@@ -105973,7 +113446,7 @@ class TGeoPainter extends ObjectPainter {
         kind = this.ctrl.camera_kind + ',';
 
       if (arg === true) {
-         const p = this._camera?.position, t = this._controls?.target;
+         const p = this.#camera.position, t = this.#controls?.target;
          if (!p || !t) return '';
 
          const conv = v => {
@@ -105987,11 +113460,11 @@ class TGeoPainter extends ObjectPainter {
          return res;
       }
 
-      if (!this._lookat || !this._camera0pos)
+      if (!this.#lookat || !this.#camera0pos)
          return '';
 
-      const pos1 = new THREE.Vector3().add(this._camera0pos).sub(this._lookat),
-            pos2 = new THREE.Vector3().add(this._camera.position).sub(this._lookat),
+      const pos1 = new THREE.Vector3().add(this.#camera0pos).sub(this.#lookat),
+            pos2 = new THREE.Vector3().add(this.#camera.position).sub(this.#lookat),
             zoom = Math.min(10000, Math.max(1, this.ctrl.zoom * pos2.length() / pos1.length() * 100));
 
       pos1.normalize();
@@ -106012,9 +113485,9 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Calculates current zoom factor */
    calculateZoom() {
-      if (this._camera0pos && this._camera && this._lookat) {
-         const pos1 = new THREE.Vector3().add(this._camera0pos).sub(this._lookat),
-               pos2 = new THREE.Vector3().add(this._camera.position).sub(this._lookat);
+      if (this.#camera0pos && this.#camera && this.#lookat) {
+         const pos1 = new THREE.Vector3().add(this.#camera0pos).sub(this.#lookat),
+               pos2 = new THREE.Vector3().add(this.#camera.position).sub(this.#lookat);
          return pos2.length() / pos1.length();
       }
 
@@ -106025,15 +113498,16 @@ class TGeoPainter extends ObjectPainter {
      * @param arg - true forces camera readjustment, 'first' is called when suppose to be first after complete drawing
      * @param keep_zoom - tries to keep zooming factor of the camera */
    adjustCameraPosition(arg, keep_zoom) {
-      if (!this._toplevel || this.superimpose) return;
+      if (!this.#toplevel || this.#superimpose)
+         return;
 
       const force = (arg === true),
-          first_time = (arg === 'first') || force,
-          only_set = (arg === 'only_set'),
-          box = this.getGeomBoundingBox();
+            first_time = (arg === 'first') || force,
+            only_set = (arg === 'only_set'),
+            box = this.getGeomBoundingBox();
 
       // let box2 = new THREE.Box3().makeEmpty();
-      // box2.expandByObject(this._toplevel, true);
+      // box2.expandByObject(this.#toplevel, true);
       // console.log('min,max', box.min.x, box.max.x, box.min.y, box.max.y, box.min.z, box.max.z );
 
       // if detect of coordinates fails - ignore
@@ -106050,28 +113524,27 @@ class TGeoPainter extends ObjectPainter {
             midz = (box.max.z + box.min.z)/2,
             more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar') ? 0.2 : 0.1;
 
-      if (this._scene_size && !force) {
-         const d = this._scene_size, test = (v1, v2, scale) => {
+      if (this.#scene_size && !force) {
+         function test(v1, v2, scale) {
             if (!scale) scale = Math.abs((v1+v2)/2);
             return scale <= 1e-20 ? true : Math.abs(v2-v1)/scale > 0.01;
-         },
-          large_change = test(sizex, d.sizex) || test(sizey, d.sizey) || test(sizez, d.sizez) ||
-                            test(midx, d.midx, d.sizex) || test(midy, d.midy, d.sizey) || test(midz, d.midz, d.sizez);
-         if (!large_change) {
-            if (this.ctrl.select_in_view)
-               this.startDrawGeometry();
-            return;
+         }         const d = this.#scene_size;
+         if (!test(sizex, d.sizex) && !test(sizey, d.sizey) && !test(sizez, d.sizez) &&
+             !test(midx, d.midx, d.sizex) && !test(midy, d.midy, d.sizey) && !test(midz, d.midz, d.sizez)) {
+               if (this.ctrl.select_in_view)
+                  this.startDrawGeometry();
+               return;
          }
       }
 
-      this._scene_size = { sizex, sizey, sizez, midx, midy, midz };
+      this.#scene_size = { sizex, sizey, sizez, midx, midy, midz };
 
-      this._overall_size = 2 * Math.max(sizex, sizey, sizez);
+      this.#overall_size = 2 * Math.max(sizex, sizey, sizez);
 
-      this._camera.near = this._overall_size / 350;
-      this._camera.far = this._overall_size * 100;
-      this._fog.near = this._overall_size * 0.5;
-      this._fog.far = this._overall_size * 5;
+      this.#camera.near = this.#overall_size / 350;
+      this.#camera.far = this.#overall_size * 100;
+      this.#fog.near = this.#overall_size * 0.5;
+      this.#fog.far = this.#overall_size * 5;
 
       if (first_time) {
          for (let naxis = 0; naxis < 3; ++naxis) {
@@ -106101,11 +113574,11 @@ class TGeoPainter extends ObjectPainter {
       const max_all = Math.max(sizex, sizey, sizez),
             sign = this.ctrl.camera_kind.indexOf('N') > 0 ? -1 : 1;
 
-      this._lookat = new THREE.Vector3(midx, midy, midz);
-      this._camera0pos = new THREE.Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
+      this.#lookat = new THREE.Vector3(midx, midy, midz);
+      this.#camera0pos = new THREE.Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
 
-      this._camera.updateMatrixWorld();
-      this._camera.updateProjectionMatrix();
+      this.#camera.updateMatrixWorld();
+      this.#camera.updateProjectionMatrix();
 
       if ((this.ctrl.rotatey || this.ctrl.rotatez) && this.ctrl.can_rotate) {
          const prev_zoom = this.calculateZoom();
@@ -106113,120 +113586,120 @@ class TGeoPainter extends ObjectPainter {
 
          const euler = new THREE.Euler(0, this.ctrl.rotatey/180*Math.PI, this.ctrl.rotatez/180*Math.PI, 'YZX');
 
-         this._camera.position.set(-k*max_all, 0, 0);
-         this._camera.position.applyEuler(euler);
-         this._camera.position.add(new THREE.Vector3(midx, midy, midz));
+         this.#camera.position.set(-k*max_all, 0, 0);
+         this.#camera.position.applyEuler(euler);
+         this.#camera.position.add(new THREE.Vector3(midx, midy, midz));
 
          if (keep_zoom && prev_zoom) {
             const actual_zoom = this.calculateZoom();
             k *= prev_zoom/actual_zoom;
 
-            this._camera.position.set(-k*max_all, 0, 0);
-            this._camera.position.applyEuler(euler);
-            this._camera.position.add(new THREE.Vector3(midx, midy, midz));
+            this.#camera.position.set(-k*max_all, 0, 0);
+            this.#camera.position.applyEuler(euler);
+            this.#camera.position.add(new THREE.Vector3(midx, midy, midz));
          }
       } else if (this.ctrl.camx !== undefined && this.ctrl.camy !== undefined && this.ctrl.camz !== undefined) {
-         this._camera.position.set(this.ctrl.camx, this.ctrl.camy, this.ctrl.camz);
-         this._lookat.set(this.ctrl.camlx || 0, this.ctrl.camly || 0, this.ctrl.camlz || 0);
+         this.#camera.position.set(this.ctrl.camx, this.ctrl.camy, this.ctrl.camz);
+         this.#lookat.set(this.ctrl.camlx || 0, this.ctrl.camly || 0, this.ctrl.camlz || 0);
          this.ctrl.camx = this.ctrl.camy = this.ctrl.camz = this.ctrl.camlx = this.ctrl.camly = this.ctrl.camlz = undefined;
       } else if ((this.ctrl.camera_kind === 'orthoXOY') || (this.ctrl.camera_kind === 'orthoXNOY')) {
-         this._camera.up.set(0, 1, 0);
-         this._camera.position.set(sign < 0 ? midx*2 : 0, 0, midz + sign*sizez*2);
-         this._lookat.set(sign < 0 ? midx*2 : 0, 0, midz);
-         this._camera.left = box.min.x - more*sizex;
-         this._camera.right = box.max.x + more*sizex;
-         this._camera.top = box.max.y + more*sizey;
-         this._camera.bottom = box.min.y - more*sizey;
-         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
-         this._camera.orthoSign = sign;
-         this._camera.orthoZ = [midz, sizez/2];
+         this.#camera.up.set(0, 1, 0);
+         this.#camera.position.set(sign < 0 ? midx*2 : 0, 0, midz + sign*sizez*2);
+         this.#lookat.set(sign < 0 ? midx*2 : 0, 0, midz);
+         this.#camera.left = box.min.x - more*sizex;
+         this.#camera.right = box.max.x + more*sizex;
+         this.#camera.top = box.max.y + more*sizey;
+         this.#camera.bottom = box.min.y - more*sizey;
+         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.orthoSign = sign;
+         this.#camera.orthoZ = [midz, sizez/2];
       } else if ((this.ctrl.camera_kind === 'orthoXOZ') || (this.ctrl.camera_kind === 'orthoXNOZ')) {
-         this._camera.up.set(0, 0, 1);
-         this._camera.position.set(sign < 0 ? midx*2 : 0, midy - sign*sizey*2, 0);
-         this._lookat.set(sign < 0 ? midx*2 : 0, midy, 0);
-         this._camera.left = box.min.x - more*sizex;
-         this._camera.right = box.max.x + more*sizex;
-         this._camera.top = box.max.z + more*sizez;
-         this._camera.bottom = box.min.z - more*sizez;
-         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
-         this._camera.orthoIndicies = [0, 2, 1];
-         this._camera.orthoRotation = geom => geom.rotateX(Math.PI/2);
-         this._camera.orthoSign = sign;
-         this._camera.orthoZ = [midy, -sizey/2];
+         this.#camera.up.set(0, 0, 1);
+         this.#camera.position.set(sign < 0 ? midx*2 : 0, midy - sign*sizey*2, 0);
+         this.#lookat.set(sign < 0 ? midx*2 : 0, midy, 0);
+         this.#camera.left = box.min.x - more*sizex;
+         this.#camera.right = box.max.x + more*sizex;
+         this.#camera.top = box.max.z + more*sizez;
+         this.#camera.bottom = box.min.z - more*sizez;
+         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.orthoIndicies = [0, 2, 1];
+         this.#camera.orthoRotation = geom => geom.rotateX(Math.PI/2);
+         this.#camera.orthoSign = sign;
+         this.#camera.orthoZ = [midy, -sizey/2];
       } else if ((this.ctrl.camera_kind === 'orthoZOY') || (this.ctrl.camera_kind === 'orthoZNOY')) {
-         this._camera.up.set(0, 1, 0);
-         this._camera.position.set(midx - sign*sizex*2, 0, sign < 0 ? midz*2 : 0);
-         this._lookat.set(midx, 0, sign < 0 ? midz*2 : 0);
-         this._camera.left = box.min.z - more*sizez;
-         this._camera.right = box.max.z + more*sizez;
-         this._camera.top = box.max.y + more*sizey;
-         this._camera.bottom = box.min.y - more*sizey;
-         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
-         this._camera.orthoIndicies = [2, 1, 0];
-         this._camera.orthoRotation = geom => geom.rotateY(-Math.PI/2);
-         this._camera.orthoSign = sign;
-         this._camera.orthoZ = [midx, -sizex/2];
+         this.#camera.up.set(0, 1, 0);
+         this.#camera.position.set(midx - sign*sizex*2, 0, sign < 0 ? midz*2 : 0);
+         this.#lookat.set(midx, 0, sign < 0 ? midz*2 : 0);
+         this.#camera.left = box.min.z - more*sizez;
+         this.#camera.right = box.max.z + more*sizez;
+         this.#camera.top = box.max.y + more*sizey;
+         this.#camera.bottom = box.min.y - more*sizey;
+         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.orthoIndicies = [2, 1, 0];
+         this.#camera.orthoRotation = geom => geom.rotateY(-Math.PI/2);
+         this.#camera.orthoSign = sign;
+         this.#camera.orthoZ = [midx, -sizex/2];
       } else if ((this.ctrl.camera_kind === 'orthoZOX') || (this.ctrl.camera_kind === 'orthoZNOX')) {
-         this._camera.up.set(1, 0, 0);
-         this._camera.position.set(0, midy - sign*sizey*2, sign > 0 ? midz*2 : 0);
-         this._lookat.set(0, midy, sign > 0 ? midz*2 : 0);
-         this._camera.left = box.min.z - more*sizez;
-         this._camera.right = box.max.z + more*sizez;
-         this._camera.top = box.max.x + more*sizex;
-         this._camera.bottom = box.min.x - more*sizex;
-         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
-         this._camera.orthoIndicies = [2, 0, 1];
-         this._camera.orthoRotation = geom => geom.rotateX(Math.PI/2).rotateY(Math.PI/2);
-         this._camera.orthoSign = sign;
-         this._camera.orthoZ = [midy, -sizey/2];
+         this.#camera.up.set(1, 0, 0);
+         this.#camera.position.set(0, midy - sign*sizey*2, sign > 0 ? midz*2 : 0);
+         this.#lookat.set(0, midy, sign > 0 ? midz*2 : 0);
+         this.#camera.left = box.min.z - more*sizez;
+         this.#camera.right = box.max.z + more*sizez;
+         this.#camera.top = box.max.x + more*sizex;
+         this.#camera.bottom = box.min.x - more*sizex;
+         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.orthoIndicies = [2, 0, 1];
+         this.#camera.orthoRotation = geom => geom.rotateX(Math.PI/2).rotateY(Math.PI/2);
+         this.#camera.orthoSign = sign;
+         this.#camera.orthoZ = [midy, -sizey/2];
       } else if (this.ctrl.project) {
          switch (this.ctrl.project) {
-            case 'x': this._camera.position.set(k*1.5*Math.max(sizey, sizez), 0, 0); break;
-            case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex, sizez), 0); break;
-            case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex, sizey)); break;
+            case 'x': this.#camera.position.set(k*1.5*Math.max(sizey, sizez), 0, 0); break;
+            case 'y': this.#camera.position.set(0, k*1.5*Math.max(sizex, sizez), 0); break;
+            case 'z': this.#camera.position.set(0, 0, k*1.5*Math.max(sizex, sizey)); break;
          }
       } else if (this.ctrl.camera_kind === 'perspXOZ') {
-         this._camera.up.set(0, 1, 0);
-         this._camera.position.set(midx - 3*max_all, midy, midz);
+         this.#camera.up.set(0, 1, 0);
+         this.#camera.position.set(midx - 3*max_all, midy, midz);
       } else if (this.ctrl.camera_kind === 'perspYOZ') {
-         this._camera.up.set(1, 0, 0);
-         this._camera.position.set(midx, midy - 3*max_all, midz);
+         this.#camera.up.set(1, 0, 0);
+         this.#camera.position.set(midx, midy - 3*max_all, midz);
       } else if (this.ctrl.camera_kind === 'perspXOY') {
-         this._camera.up.set(0, 0, 1);
-         this._camera.position.set(midx - 3*max_all, midy, midz);
+         this.#camera.up.set(0, 0, 1);
+         this.#camera.position.set(midx - 3*max_all, midy, midz);
       } else if (this.ctrl._yup) {
-         this._camera.up.set(0, 1, 0);
-         this._camera.position.set(midx-k*Math.max(sizex, sizez), midy+k*sizey, midz-k*Math.max(sizex, sizez));
+         this.#camera.up.set(0, 1, 0);
+         this.#camera.position.set(midx-k*Math.max(sizex, sizez), midy+k*sizey, midz-k*Math.max(sizex, sizez));
       } else {
-         this._camera.up.set(0, 0, 1);
-         this._camera.position.set(midx-k*Math.max(sizex, sizey), midy-k*Math.max(sizex, sizey), midz+k*sizez);
+         this.#camera.up.set(0, 0, 1);
+         this.#camera.position.set(midx-k*Math.max(sizex, sizey), midy-k*Math.max(sizex, sizey), midz+k*sizez);
       }
 
-      if (this._camera.isOrthographicCamera && this.isOrthoCamera() && this._scene_width && this._scene_height) {
-         const screen_ratio = this._scene_width / this._scene_height,
-             szx = this._camera.right - this._camera.left, szy = this._camera.top - this._camera.bottom;
+      if (this.#camera.isOrthographicCamera && this.isOrthoCamera() && this.#scene_width && this.#scene_height) {
+         const screen_ratio = this.#scene_width / this.#scene_height,
+               szx = this.#camera.right - this.#camera.left, szy = this.#camera.top - this.#camera.bottom;
 
          if (screen_ratio > szx / szy) {
             // screen wider than actual geometry
-            const m = (this._camera.right + this._camera.left) / 2;
-            this._camera.left = m - szy * screen_ratio / 2;
-            this._camera.right = m + szy * screen_ratio / 2;
+            const m = (this.#camera.right + this.#camera.left) / 2;
+            this.#camera.left = m - szy * screen_ratio / 2;
+            this.#camera.right = m + szy * screen_ratio / 2;
          } else {
             // screen higher than actual geometry
-            const m = (this._camera.top + this._camera.bottom) / 2;
-            this._camera.top = m + szx / screen_ratio / 2;
-            this._camera.bottom = m - szx / screen_ratio / 2;
+            const m = (this.#camera.top + this.#camera.bottom) / 2;
+            this.#camera.top = m + szx / screen_ratio / 2;
+            this.#camera.bottom = m - szx / screen_ratio / 2;
          }
       }
 
-      this._camera.lookAt(this._lookat);
-      this._camera.updateProjectionMatrix();
+      this.#camera.lookAt(this.#lookat);
+      this.#camera.updateProjectionMatrix();
 
       this.changedLight(box);
 
-      if (this._controls) {
-         this._controls.target.copy(this._lookat);
-         if (!only_set) this._controls.update();
+      if (this.#controls) {
+         this.#controls.target.copy(this.#lookat);
+         if (!only_set) this.#controls.update();
       }
 
       // recheck which elements to draw
@@ -106264,12 +113737,13 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary focus on item */
    focusOnItem(itemname) {
-      if (!itemname || !this._clones) return;
+      if (!itemname || !this.#clones)
+         return;
 
-      const stack = this._clones.findStackByName(itemname);
+      const stack = this.#clones.findStackByName(itemname);
 
       if (stack)
-         this.focusCamera(this._clones.resolveStack(stack, true), false);
+         this.focusCamera(this.#clones.resolveStack(stack, true), false);
    }
 
    /** @summary focus camera on specified position */
@@ -106306,13 +113780,13 @@ class TGeoPainter extends ObjectPainter {
          position = new THREE.Vector3(midx-2*Math.max(sizex, sizey), midy-2*Math.max(sizex, sizey), midz+2*sizez);
 
       const target = new THREE.Vector3(midx, midy, midz),
-            oldTarget = this._controls.target,
+            oldTarget = this.#controls.target,
             // Amount to change camera position at each step
-            posIncrement = position.sub(this._camera.position).divideScalar(frames),
+            posIncrement = position.sub(this.#camera.position).divideScalar(frames),
             // Amount to change 'lookAt' so it will end pointed at target
             targetIncrement = target.sub(oldTarget).divideScalar(frames);
 
-      autoClip = autoClip && this._webgl;
+      autoClip = autoClip && this.#webgl;
 
       // Automatic Clipping
       if (autoClip) {
@@ -106324,23 +113798,22 @@ class TGeoPainter extends ObjectPainter {
          this.updateClipping();
       }
 
-      this._animating = true;
-
-      // Interpolate //
+      this.#animating = true;
 
       const animate = () => {
-         if (this._animating === undefined) return;
+         if (this.#animating === undefined)
+            return;
 
-         if (this._animating)
+         if (this.#animating)
             requestAnimationFrame(animate);
-          else if (!this._geom_viewer)
+          else if (!this.#geom_viewer)
             this.startDrawGeometry();
          const smoothFactor = -Math.cos((2.0*Math.PI*step)/frames) + 1.0;
-         this._camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
+         this.#camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
          oldTarget.add(targetIncrement.clone().multiplyScalar(smoothFactor));
-         this._lookat = oldTarget;
-         this._camera.lookAt(this._lookat);
-         this._camera.updateProjectionMatrix();
+         this.#lookat = oldTarget;
+         this.#camera.lookAt(this.#lookat);
+         this.#camera.updateProjectionMatrix();
 
          const tm1 = new Date().getTime();
          if (autoClip) {
@@ -106353,12 +113826,12 @@ class TGeoPainter extends ObjectPainter {
          const tm2 = new Date().getTime();
          if ((step === 0) && (tm2-tm1 > 200)) frames = 20;
          step++;
-         this._animating = step < frames;
+         this.#animating = step < frames;
       };
 
       animate();
 
-   //   this._controls.update();
+   //   this.#controls.update();
    }
 
    /** @summary activate auto rotate */
@@ -106367,23 +113840,23 @@ class TGeoPainter extends ObjectPainter {
       let last = new Date();
 
       const animate = () => {
-         if (!this._renderer || !this.ctrl) return;
+         if (!this.#renderer || !this.ctrl) return;
 
          const current = new Date();
 
          if (this.ctrl.rotate)
             requestAnimationFrame(animate);
 
-         if (this._controls) {
-            this._controls.autoRotate = this.ctrl.rotate;
-            this._controls.autoRotateSpeed = rotSpeed * (current.getTime() - last.getTime()) / 16.6666;
-            this._controls.update();
+         if (this.#controls) {
+            this.#controls.autoRotate = this.ctrl.rotate;
+            this.#controls.autoRotateSpeed = rotSpeed * (current.getTime() - last.getTime()) / 16.6666;
+            this.#controls.update();
          }
          last = new Date();
          this.render3D(0);
       };
 
-      if (this._webgl) animate();
+      if (this.#webgl) animate();
    }
 
    /** @summary called at the end of scene drawing */
@@ -106396,16 +113869,16 @@ class TGeoPainter extends ObjectPainter {
    async drawCount(unqievis, clonetm) {
       const makeTime = tm => (this.isBatchMode() ? 'anytime' : tm.toString()) + ' ms',
 
-       res = ['Unique nodes: ' + this._clones.nodes.length,
+       res = ['Unique nodes: ' + this.#clones.nodes.length,
                   'Unique visible: ' + unqievis,
                   'Time to clone: ' + makeTime(clonetm)];
 
       // need to fill cached value line numvischld
-      this._clones.scanVisible();
+      this.#clones.scanVisible();
 
       let nshapes = 0;
       const arg = {
-         clones: this._clones,
+         clones: this.#clones,
          cnt: [],
          func(node) {
             if (this.cnt[this.last] === undefined)
@@ -106419,7 +113892,7 @@ class TGeoPainter extends ObjectPainter {
       };
 
       let tm1 = new Date().getTime(),
-          numvis = this._clones.scanVisible(arg),
+          numvis = this.#clones.scanVisible(arg),
           tm2 = new Date().getTime();
 
       res.push(`Total visible nodes: ${numvis}`, `Total shapes: ${nshapes}`);
@@ -106441,7 +113914,7 @@ class TGeoPainter extends ObjectPainter {
       return postponePromise(() => {
          arg.domatrix = true;
          tm1 = new Date().getTime();
-         numvis = this._clones.scanVisible(arg);
+         numvis = this.#clones.scanVisible(arg);
          tm2 = new Date().getTime();
 
          const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
@@ -106496,7 +113969,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary function called when mouse is going over the item in the browser */
    mouseOverHierarchy(on, itemname, hitem) {
-      if (!this.ctrl) return; // protection for cleaned-up painter
+      if (!this.ctrl)
+         return; // protection for cleaned-up painter
 
       const obj = hitem._obj;
 
@@ -106509,7 +113983,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary clear extra drawn objects like tracks or hits */
    clearExtras() {
       this.getExtrasContainer('delete');
-      delete this._extraObjects; // workaround, later will be normal function
+      this.#extra_objects = undefined; // workaround, later will be normal function
       this.render3D();
    }
 
@@ -106517,13 +113991,13 @@ class TGeoPainter extends ObjectPainter {
     * @desc Rendered after main geometry volumes are created
     * Check if object already exists to prevent duplication */
    addExtra(obj, itemname) {
-      if (this._extraObjects === undefined)
-         this._extraObjects = create$1(clTList);
+      if (!this.#extra_objects)
+         this.#extra_objects = create$1(clTList);
 
-      if (this._extraObjects.arr.indexOf(obj) >= 0)
+      if (this.#extra_objects.arr.indexOf(obj) >= 0)
          return false;
 
-      this._extraObjects.Add(obj, itemname);
+      this.#extra_objects.Add(obj, itemname);
 
       delete obj.$hidden_via_menu; // remove previous hidden property
 
@@ -106533,21 +114007,22 @@ class TGeoPainter extends ObjectPainter {
    /** @summary manipulate visibility of extra objects, used for HierarchyPainter
      * @private */
    extraObjectVisible(hpainter, hitem, toggle) {
-      if (!this._extraObjects) return;
+      if (!this.#extra_objects)
+         return;
 
       const itemname = hpainter.itemFullName(hitem);
-      let indx = this._extraObjects.opt.indexOf(itemname);
+      let indx = this.#extra_objects.opt.indexOf(itemname);
 
       if ((indx < 0) && hitem._obj) {
-         indx = this._extraObjects.arr.indexOf(hitem._obj);
+         indx = this.#extra_objects.arr.indexOf(hitem._obj);
          // workaround - if object found, replace its name
-         if (indx >= 0) this._extraObjects.opt[indx] = itemname;
+         if (indx >= 0) this.#extra_objects.opt[indx] = itemname;
       }
 
       if (indx < 0)
          return;
 
-      const obj = this._extraObjects.arr[indx];
+      const obj = this.#extra_objects.arr[indx];
       let res = Boolean(obj.$hidden_via_menu);
 
       if (toggle) {
@@ -106556,7 +114031,7 @@ class TGeoPainter extends ObjectPainter {
 
          let mesh = null;
          // either found painted object or just draw once again
-         this._toplevel.traverse(node => { if (node.geo_object === obj) mesh = node; });
+         this.#toplevel.traverse(node => { if (node.geo_object === obj) mesh = node; });
 
          if (mesh) {
             mesh.visible = res;
@@ -106634,14 +114109,14 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary returns container for extra objects */
    getExtrasContainer(action, name) {
-      if (!this._toplevel) return null;
+      if (!this.#toplevel) return null;
 
       if (!name) name = 'tracks';
 
       let extras = null;
       const lst = [];
-      for (let n = 0; n < this._toplevel.children.length; ++n) {
-         const chld = this._toplevel.children[n];
+      for (let n = 0; n < this.#toplevel.children.length; ++n) {
+         const chld = this.#toplevel.children[n];
          if (!chld._extras) continue;
          if (action === 'collect') { lst.push(chld); continue; }
          if (chld._extras === name) { extras = chld; break; }
@@ -106649,12 +114124,12 @@ class TGeoPainter extends ObjectPainter {
 
       if (action === 'collect') {
          for (let k = 0; k < lst.length; ++k)
-            this._toplevel.remove(lst[k]);
+            this.#toplevel.remove(lst[k]);
          return lst;
       }
 
       if (action === 'delete') {
-         if (extras) this._toplevel.remove(extras);
+         if (extras) this.#toplevel.remove(extras);
          disposeThreejsObject(extras);
          return null;
       }
@@ -106662,7 +114137,7 @@ class TGeoPainter extends ObjectPainter {
       if ((action !== 'get') && !extras) {
          extras = new THREE.Object3D();
          extras._extras = name;
-         this._toplevel.add(extras);
+         this.#toplevel.add(extras);
       }
 
       return extras;
@@ -106800,8 +114275,8 @@ class TGeoPainter extends ObjectPainter {
             projx = (this.ctrl.project === 'x'),
             projy = (this.ctrl.project === 'y'),
             projz = (this.ctrl.project === 'z'),
-            hit_scale = Math.max(hit.fMarkerSize * this.getOverallSize() * (this._dummy ? 0.015 : 0.005), 0.2),
-            pnts = new PointsCreator(nhits, this._webgl, hit_scale);
+            hit_scale = Math.max(hit.fMarkerSize * this.getOverallSize() * (this.options.dummy ? 0.015 : 0.005), 0.2),
+            pnts = new PointsCreator(nhits, this.#webgl, hit_scale);
 
       for (let i = 0; i < nhits; i++) {
          pnts.addPoint(projx ? projv : hit.fP[i*3],
@@ -106840,7 +114315,7 @@ class TGeoPainter extends ObjectPainter {
       if (!prnt) {
          prnt = this.getGeometry();
          if (!prnt && (getNodeKind(prnt) !== 0)) return null;
-         itemname = this.geo_manager ? prnt.fName : '';
+         itemname = this.#geo_manager ? prnt.fName : '';
          first_level = true;
          volumes = [];
       } else {
@@ -106873,11 +114348,23 @@ class TGeoPainter extends ObjectPainter {
       return res;
    }
 
+   /** @summary Search for created shape for nodeid
+    * @desc Used in ROOT geometry painter */
+   findNodeShape(nodeid) {
+      if ((nodeid !== undefined) && !this.#draw_nodes) {
+         for (let k = 0; k < this.#draw_nodes.length; ++k) {
+            const item = this.geo_painter._draw_nodes[k];
+            if ((item.nodeid === nodeid) && item.server_shape)
+               return item.server_shape;
+         }
+      }
+   }
+
    /** @summary Process script option - load and execute some gGeoManager-related calls */
    async loadMacro(script_name) {
       const result = { obj: this.getGeometry(), prefix: '' };
 
-      if (this.geo_manager)
+      if (this.#geo_manager)
          result.prefix = result.obj.fName;
 
       if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== 0))
@@ -106967,15 +114454,8 @@ class TGeoPainter extends ObjectPainter {
       });
    }
 
-   /** @summary Assign clones, created outside.
-     * @desc Used by geometry painter, where clones are handled by the server */
-   assignClones(clones) {
-      this._clones_owner = true;
-      this._clones = clones;
-   }
-
-    /** @summary Extract shapes from draw message of geometry painter
-      * @desc For the moment used in batch production */
+   /** @summary Extract shapes from draw message of geometry painter
+     * @desc For the moment used in batch production */
    extractRawShapes(draw_msg, recreate) {
       let nodes = null, old_gradpersegm = 0;
 
@@ -106991,20 +114471,19 @@ class TGeoPainter extends ObjectPainter {
          if (nodes)
             nodes[node.id] = node;
          else
-            this._clones.updateNode(node);
+            this.#clones.updateNode(node);
       });
 
       if (recreate) {
-         this._clones_owner = true;
-         this._clones = new ClonedNodes(null, nodes);
-         this._clones.name_prefix = this._clones.getNodeName(0);
-         this._clones.setConfig(this.ctrl);
+         this.assignClones(new ClonedNodes(null, nodes), true);
+         this.#clones.name_prefix = this.#clones.getNodeName(0);
+         this.#clones.setConfig(this.ctrl);
 
          // normally only need when making selection, not used in geo viewer
-         // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
-         // this.geo_clones.setVisLevel(draw_msg.vislevel);
+         // this.geo#clones.setMaxVisNodes(draw_msg.maxvisnodes);
+         // this.geo#clones.setVisLevel(draw_msg.vislevel);
          // TODO: provide from server
-         this._clones.maxdepth = 20;
+         this.#clones.maxdepth = 20;
       }
 
       let nsegm = 0;
@@ -107034,57 +114513,53 @@ class TGeoPainter extends ObjectPainter {
      * @desc Return value used as promise for painter */
    async prepareObjectDraw(draw_obj, name_prefix) {
       // if did cleanup - ignore all kind of activity
-      if (this.did_cleanup)
+      if (this.#did_cleanup)
          return null;
 
       if (name_prefix === '__geom_viewer_append__') {
-         this._new_append_nodes = draw_obj;
+         this.#new_append_nodes = draw_obj;
          this.ctrl.use_worker = 0;
-         this._geom_viewer = true; // indicate that working with geom viewer
-      } else if ((name_prefix === '__geom_viewer_selection__') && this._clones) {
+         this.#geom_viewer = true; // indicate that working with geom viewer
+      } else if ((name_prefix === '__geom_viewer_selection__') && this.#clones) {
          // these are selection done from geom viewer
-         this._new_draw_nodes = draw_obj;
+         this.#new_draw_nodes = draw_obj;
          this.ctrl.use_worker = 0;
-         this._geom_viewer = true; // indicate that working with geom viewer
-      } else if (this._master_painter) {
-         this._clones_owner = false;
-         this._clones = this._master_painter._clones;
-         console.log(`Reuse clones ${this._clones.nodes.length} from main painter`);
-      } else if (!draw_obj) {
-         this._clones_owner = false;
-         this._clones = null;
-      } else {
-         this._start_drawing_time = new Date().getTime();
-         this._clones_owner = true;
-         this._clones = new ClonedNodes(draw_obj);
+         this.#geom_viewer = true; // indicate that working with geom viewer
+      } else if (this.getCentral())
+         this.assignClones(this.getCentral().getClones(), false);
+      else if (!draw_obj)
+         this.assignClones(undefined, undefined);
+      else {
+         this.#start_drawing_time = new Date().getTime();
+         this.assignClones(new ClonedNodes(draw_obj), true);
          let lvl = this.ctrl.vislevel, maxnodes = this.ctrl.maxnodes;
-         if (this.geo_manager) {
-            if (!lvl && this.geo_manager.fVisLevel)
-               lvl = this.geo_manager.fVisLevel;
+         if (this.#geo_manager) {
+            if (!lvl && this.#geo_manager.fVisLevel)
+               lvl = this.#geo_manager.fVisLevel;
             if (!maxnodes)
-               maxnodes = this.geo_manager.fMaxVisNodes;
+               maxnodes = this.#geo_manager.fMaxVisNodes;
          }
 
-         this._clones.setVisLevel(lvl);
-         this._clones.setMaxVisNodes(maxnodes, this.ctrl.more);
-         this._clones.setConfig(this.ctrl);
+         this.#clones.setVisLevel(lvl);
+         this.#clones.setMaxVisNodes(maxnodes, this.ctrl.more);
+         this.#clones.setConfig(this.ctrl);
 
-         this._clones.name_prefix = name_prefix;
+         this.#clones.name_prefix = name_prefix;
 
-         const hide_top_volume = Boolean(this.geo_manager) && !this.ctrl.showtop;
-         let uniquevis = this.ctrl.no_screen ? 0 : this._clones.markVisibles(true, false, hide_top_volume);
+         const hide_top_volume = Boolean(this.#geo_manager) && !this.ctrl.showtop;
+         let uniquevis = this.ctrl.no_screen ? 0 : this.#clones.markVisibles(true, false, hide_top_volume);
 
          if (uniquevis <= 0)
-            uniquevis = this._clones.markVisibles(false, false, hide_top_volume);
+            uniquevis = this.#clones.markVisibles(false, false, hide_top_volume);
          else
-            uniquevis = this._clones.markVisibles(true, true, hide_top_volume); // copy bits once and use normal visibility bits
+            uniquevis = this.#clones.markVisibles(true, true, hide_top_volume); // copy bits once and use normal visibility bits
 
-         this._clones.produceIdShifts();
+         this.#clones.produceIdShifts();
 
-         const spent = new Date().getTime() - this._start_drawing_time;
+         const spent = new Date().getTime() - this.#start_drawing_time;
 
-         if (!this._scene)
-            console.log(`Creating clones ${this._clones.nodes.length} takes ${spent} ms uniquevis ${uniquevis}`);
+         if (!this.#scene && (settings.Debug || spent > 1000))
+            console.log(`Creating clones ${this.#clones.nodes.length} takes ${spent} ms uniquevis ${uniquevis}`);
 
          if (this.ctrl._count)
             return this.drawCount(uniquevis, spent);
@@ -107092,14 +114567,14 @@ class TGeoPainter extends ObjectPainter {
 
       let promise = Promise.resolve(true);
 
-      if (!this._scene) {
-         this._first_drawing = true;
+      if (!this.#scene) {
+         this.#first_drawing = true;
 
          const pp = this.getPadPainter();
 
-         this._on_pad = Boolean(pp);
+         this.#on_pad = Boolean(pp);
 
-         if (this._on_pad) {
+         if (this.#on_pad) {
             let size, render3d, fp;
             promise = ensureTCanvas(this, '3d').then(() => {
                if (pp.fillatt?.color)
@@ -107114,7 +114589,7 @@ class TGeoPainter extends ObjectPainter {
 
                size = fp.getSizeFor3d(undefined, render3d);
 
-               this._fit_main_area = (size.can3d === -1);
+               this.#fit_main_area = (size.can3d === -1);
 
                return this.createScene(size.width, size.height, render3d)
                           .then(dom => fp.add3dCanvas(size, dom, render3d === constants$1.Render3D.WebGL));
@@ -107135,16 +114610,16 @@ class TGeoPainter extends ObjectPainter {
 
             const size = this.getSizeFor3d(undefined, render3d);
 
-            this._fit_main_area = (size.can3d === -1);
+            this.#fit_main_area = (size.can3d === -1);
 
             promise = this.createScene(size.width, size.height, render3d)
-                          .then(dom2 => this.add3dCanvas(size, dom2, this._webgl));
+                          .then(dom2 => this.add3dCanvas(size, dom2, this.#webgl));
          }
       }
 
       return promise.then(() => {
          // this is limit for the visible faces, number of volumes does not matter
-         if (this._first_drawing && !this.ctrl.maxfaces)
+         if (this.#first_drawing && !this.ctrl.maxfaces)
             this.ctrl.maxfaces = 200000 * this.ctrl.more;
 
          // set top painter only when first child exists
@@ -107153,11 +114628,11 @@ class TGeoPainter extends ObjectPainter {
          this.createToolbar();
 
          // just draw extras and complete drawing if there are no main model
-         if (!this._clones)
+         if (!this.#clones)
             return this.completeDraw();
 
          return new Promise(resolveFunc => {
-            this._resolveFunc = resolveFunc;
+            this.#draw_resolveFuncs.push(resolveFunc);
             this.showDrawInfo('Drawing geometry');
             this.startDrawGeometry(true);
          });
@@ -107166,9 +114641,10 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary methods show info when first geometry drawing is performed */
    showDrawInfo(msg) {
-      if (this.isBatchMode() || !this._first_drawing || !this._start_drawing_time) return;
+      if (this.isBatchMode() || !this.#first_drawing || !this.#start_drawing_time)
+         return;
 
-      const main = this._renderer.domElement.parentNode;
+      const main = this.#renderer.domElement.parentNode;
       if (!main) return;
 
       let info = main.querySelector('.geo_info');
@@ -107176,7 +114652,7 @@ class TGeoPainter extends ObjectPainter {
       if (!msg)
          info?.remove();
        else {
-         const spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
+         const spent = (new Date().getTime() - this.#start_drawing_time)*1e-3;
          if (!info) {
             info = getDocument().createElement('p');
             info.setAttribute('class', 'geo_info');
@@ -107193,7 +114669,7 @@ class TGeoPainter extends ObjectPainter {
       if (this.isStage(stageInit)) return;
 
       const tm0 = new Date().getTime(),
-            interval = this._first_drawing ? 1000 : 200;
+            interval = this.#first_drawing ? 1000 : 200;
       let now = tm0;
 
       while (true) {
@@ -107203,33 +114679,35 @@ class TGeoPainter extends ObjectPainter {
          now = new Date().getTime();
 
          // stop creation after 100 sec, render as is
-         if (now - this._startm > 1e5) {
+         if (now - this.#start_render_tm > 1e5) {
             this.changeStage(stageInit, 'Abort build after 100s');
             break;
          }
 
          // if we are that fast, do next action
-         if ((res === true) && (now - tm0 < interval)) continue;
+         if ((res === true) && (now - tm0 < interval))
+            continue;
 
          if ((now - tm0 > interval) || (res === 1) || (res === 2)) {
-            showProgress(this.drawing_log);
+            showProgress(this.#drawing_log);
 
-            this.showDrawInfo(this.drawing_log);
+            this.showDrawInfo(this.#drawing_log);
 
-            if (this._first_drawing && this._webgl && (this._num_meshes - this._last_render_meshes > 100) && (now - this._last_render_tm > 2.5*interval)) {
+            if (this.#first_drawing && this.#webgl && (this.ctrl.info.num_meshes - this.#last_render_meshes > 100) && (now - this.#last_render_tm > 2.5*interval)) {
                this.adjustCameraPosition();
                this.render3D(-1);
-               this._last_render_meshes = this.ctrl.info.num_meshes;
+               this.#last_render_meshes = this.ctrl.info.num_meshes;
             }
-            if (res !== 2) setTimeout(() => this.continueDraw(), (res === 1) ? 100 : 1);
+            if (res !== 2)
+               setTimeout(() => this.continueDraw(), (res === 1) ? 100 : 1);
 
             return;
          }
       }
 
-      const take_time = now - this._startm;
+      const take_time = now - this.#start_render_tm;
 
-      if (this._first_drawing || this._full_redrawing)
+      if ((this.#first_drawing || this.#full_redrawing) && (settings.Debug || take_time > 1000))
          console.log(`Create tm = ${take_time} meshes ${this.ctrl.info.num_meshes} faces ${this.ctrl.info.num_faces}`);
 
       if (take_time > 300) {
@@ -107244,21 +114722,21 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Checks camera position and recalculate rendering order if needed
      * @param force - if specified, forces calculations of render order */
    testCameraPosition(force) {
-      this._camera.updateMatrixWorld();
+      this.#camera.updateMatrixWorld();
 
       this.drawOverlay();
 
-      const origin = this._camera.position.clone();
-      if (!force && this._last_camera_position) {
+      const origin = this.#camera.position.clone();
+      if (!force && this.#last_camera_position) {
          // if camera position does not changed a lot, ignore such change
-         const dist = this._last_camera_position.distanceTo(origin);
-         if (dist < (this._overall_size || 1000)*1e-4) return;
+         const dist = this.#last_camera_position.distanceTo(origin);
+         if (dist < (this.#overall_size || 1000)*1e-4) return;
       }
 
-      this._last_camera_position = origin; // remember current camera position
+      this.#last_camera_position = origin; // remember current camera position
 
       if (this.ctrl._axis) {
-         const vect = (this._controls?.target || this._lookat).clone().sub(this._camera.position).normalize();
+         const vect = (this.#controls?.target || this.#lookat).clone().sub(this.#camera.position).normalize();
          this.getExtrasContainer('get', 'axis')?.traverse(obj3d => {
             if (isFunc(obj3d._axis_flip))
                obj3d._axis_flip(vect);
@@ -107266,7 +114744,7 @@ class TGeoPainter extends ObjectPainter {
       }
 
       if (!this.ctrl.project)
-         produceRenderOrder(this._toplevel, origin, this.ctrl.depthMethod, this._clones);
+         produceRenderOrder(this.#toplevel, origin, this.ctrl.depthMethod, this.#clones);
    }
 
    /** @summary Call 3D rendering of the geometry
@@ -107278,150 +114756,159 @@ class TGeoPainter extends ObjectPainter {
      * Several special values are used:
      *   -1    - force recheck of rendering order based on camera position */
    render3D(tmout, measure) {
-      if (!this._renderer) {
-         if (!this.did_cleanup)
-            console.warn('renderer object not exists - check code');
-         else
+      if (!this.#renderer) {
+         if (this.#did_cleanup)
             console.warn('try to render after cleanup');
+         else
+            console.warn('renderer object not exists - check code');
          return this;
       }
 
       const ret_promise = (tmout !== undefined) && (tmout > 0) && (measure !== 'nopromise');
 
-      if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
+      if (tmout === undefined)
+         tmout = 5; // by default, rendering happens with timeout
 
-      if ((tmout > 0) && this._webgl) {
-         if (this.isBatchMode()) tmout = 1; // use minimal timeout in batch mode
+      if ((tmout > 0) && this.#webgl) {
+         if (this.isBatchMode())
+            tmout = 1; // use minimal timeout in batch mode
          if (ret_promise) {
             return new Promise(resolveFunc => {
-               if (!this._render_resolveFuncs)
-                  this._render_resolveFuncs = [];
-               this._render_resolveFuncs.push(resolveFunc);
-               if (!this.render_tmout)
-                  this.render_tmout = setTimeout(() => this.render3D(0), tmout);
+               this.#render_resolveFuncs.push(resolveFunc);
+               if (!this.#render_tmout)
+                  this.#render_tmout = setTimeout(() => this.render3D(0), tmout);
             });
          }
 
-         if (!this.render_tmout)
-            this.render_tmout = setTimeout(() => this.render3D(0), tmout);
+         if (!this.#render_tmout)
+            this.#render_tmout = setTimeout(() => this.render3D(0), tmout);
          return this;
       }
 
-      if (this.render_tmout) {
-         clearTimeout(this.render_tmout);
-         delete this.render_tmout;
+      if (this.#render_tmout) {
+         clearTimeout(this.#render_tmout);
+         this.#render_tmout = undefined;
       }
 
-      beforeRender3D(this._renderer);
+      beforeRender3D(this.#renderer);
 
       const tm1 = new Date();
 
-      if (this._adjust_camera_with_render) {
+      if (this.#adjust_camera_with_render) {
          this.adjustCameraPosition('only_set');
-         delete this._adjust_camera_with_render;
+         this.#adjust_camera_with_render = undefined;
       }
 
       this.testCameraPosition(tmout === -1);
 
       // its needed for outlinePass - do rendering, most consuming time
-      if (this._webgl && this._effectComposer && (this._effectComposer.passes.length > 0))
-         this._effectComposer.render();
-       else if (this._webgl && this._bloomComposer && (this._bloomComposer.passes.length > 0)) {
-         this._renderer.clear();
-         this._camera.layers.set(_BLOOM_SCENE);
-         this._bloomComposer.render();
-         this._renderer.clearDepth();
-         this._camera.layers.set(_ENTIRE_SCENE);
-         this._renderer.render(this._scene, this._camera);
+      if (this.#webgl && this.#effectComposer?.passes)
+         this.#effectComposer.render();
+       else if (this.#webgl && this.#bloomComposer?.passes) {
+         this.#renderer.clear();
+         this.#camera.layers.set(_BLOOM_SCENE);
+         this.#bloomComposer.render();
+         this.#renderer.clearDepth();
+         this.#camera.layers.set(_ENTIRE_SCENE);
+         this.#renderer.render(this.#scene, this.#camera);
       } else
-         this._renderer.render(this._scene, this._camera);
-
+         this.#renderer.render(this.#scene, this.#camera);
 
       const tm2 = new Date();
 
-      this.last_render_tm = tm2.getTime();
+      this.#last_render_tm = tm2.getTime();
 
-      if ((this.first_render_tm === 0) && (measure === true)) {
-         this.first_render_tm = tm2.getTime() - tm1.getTime();
-         if (this.first_render_tm > 500)
-            console.log(`three.js r${THREE.REVISION}, first render tm = ${this.first_render_tm}`);
+      if ((this.#first_render_tm === 0) && (measure === true)) {
+         this.#first_render_tm = tm2.getTime() - tm1.getTime();
+         if (this.#first_render_tm > 500)
+            console.log(`three.js r${THREE.REVISION}, first render tm = ${this.#first_render_tm}`);
       }
 
-      afterRender3D(this._renderer);
+      afterRender3D(this.#renderer);
 
-      if (this._render_resolveFuncs) {
-         const arr = this._render_resolveFuncs;
-         delete this._render_resolveFuncs;
-         arr.forEach(func => func(this));
-      }
+      const arr = this.#render_resolveFuncs;
+      this.#render_resolveFuncs = [];
+      arr?.forEach(func => func(this));
    }
 
    /** @summary Start geo worker */
-   startWorker() {
-      if (this._worker) return;
+   async startWorker() {
+      if (this.#worker)
+         return;
 
-      this._worker_ready = false;
-      this._worker_jobs = 0; // counter how many requests send to worker
+      this.#worker_ready = false;
+      this.#worker_jobs = 0; // counter how many requests send to worker
 
-      // TODO: modules not yet working, see https://www.codedread.com/blog/archives/2017/10/19/web-workers-can-be-es6-modules-too/
-      this._worker = new Worker(exports.source_dir + 'scripts/geoworker.js' /* , { type: 'module' } */);
+      let pr;
 
-      this._worker.onmessage = e => {
-         if (!isObject(e.data)) return;
+      if (isNodeJs()) {
+         pr = import('node:worker_threads').then(h => {
+            const wrk = new h.Worker(exports.source_dir.slice(7) + 'modules/geom/nodeworker.mjs', { type: 'module' });
+            wrk.on('message', msg => this.processWorkerReply(msg));
+            return wrk;
+         });
+      } else {
+         // Finally use ES6 module, see https://www.codedread.com/blog/archives/2017/10/19/web-workers-can-be-es6-modules-too/
+         const wrk = new Worker(exports.source_dir + 'modules/geom/geoworker.mjs', { type: 'module' });
+         wrk.onmessage = e => this.processWorkerReply(e?.data);
+         pr = Promise.resolve(wrk);
+      }
 
-         if ('log' in e.data)
-            return console.log(`geo: ${e.data.log}`);
-
-         if ('progress' in e.data)
-            return showProgress(e.data.progress);
-
-         e.data.tm3 = new Date().getTime();
-
-         if ('init' in e.data) {
-            this._worker_ready = true;
-            console.log(`Worker ready: ${e.data.tm3 - e.data.tm0}`);
-         } else
-            this.processWorkerReply(e.data);
-      };
-
-      // send initialization message with clones
-      this._worker.postMessage({
-         init: true,   // indicate init command for worker
-         browser,
-         tm0: new Date().getTime(),
-         vislevel: this._clones.getVisLevel(),
-         maxvisnodes: this._clones.getMaxVisNodes(),
-         clones: this._clones.nodes,
-         sortmap: this._clones.sortmap
+      return pr.then(wrk => {
+         this.#worker = wrk;
+         // send initialization message with clones
+         wrk.postMessage({
+            init: true,   // indicate init command for worker
+            tm0: new Date().getTime(),
+            vislevel: this.#clones.getVisLevel(),
+            maxvisnodes: this.#clones.getMaxVisNodes(),
+            clones: this.#clones.nodes,
+            sortmap: this.#clones.sortmap
+         });
       });
    }
 
    /** @summary check if one can submit request to worker
      * @private */
    canSubmitToWorker(force) {
-      if (!this._worker) return false;
-
-      return this._worker_ready && ((this._worker_jobs === 0) || force);
+      return this.#worker ? this.#worker_ready && ((this.#worker_jobs === 0) || force) : false;
    }
 
    /** @summary submit request to worker
      * @private */
    submitToWorker(job) {
-      if (!this._worker) return false;
+      if (!this.#worker)
+         return false;
 
-      this._worker_jobs++;
+      this.#worker_jobs++;
       job.tm0 = new Date().getTime();
-      this._worker.postMessage(job);
+      this.#worker.postMessage(job);
    }
 
    /** @summary process reply from worker
      * @private */
    processWorkerReply(job) {
-      this._worker_jobs--;
+      if (!job || !isObject(job))
+         return;
+
+      if (job.log)
+         return console.log(`geo: ${job.log}`);
+
+      if (job.progress)
+         return showProgress(job.progress);
+
+      job.tm3 = new Date().getTime();
+
+      if (job.init) {
+         this.#worker_ready = true;
+         return;
+      }
+
+      this.#worker_jobs--;
 
       if ('collect' in job) {
-         this._new_draw_nodes = job.new_nodes;
-         this._draw_all_nodes = job.complete;
+         this.#new_draw_nodes = job.new_nodes;
+         this.#draw_all_nodes = job.complete;
          this.changeStage(stageAnalyze);
          // invoke methods immediately
          return this.continueDraw();
@@ -107430,9 +114917,7 @@ class TGeoPainter extends ObjectPainter {
       if ('shapes' in job) {
          for (let n=0; n<job.shapes.length; ++n) {
             const item = job.shapes[n],
-                origin = this._build_shapes[n];
-
-            // let shape = this._clones.getNodeShape(item.nodeid);
+                  origin = this.#build_shapes[n];
 
             if (item.buf_pos && item.buf_norm) {
                if (item.buf_pos.length === 0)
@@ -107461,16 +114946,15 @@ class TGeoPainter extends ObjectPainter {
       }
    }
 
-   /** @summary start draw geometries on master and all slaves
+   /** @summary start draw geometries on central and all subordinate painters
      * @private */
    testGeomChanges() {
-      if (this._master_painter) {
-         console.warn('Get testGeomChanges call for slave painter');
-         return this._master_painter.testGeomChanges();
+      if (this.getCentral()) {
+         console.warn('Get testGeomChanges call for subordinate painter');
+         return this.getCentral().testGeomChanges();
       }
       this.startDrawGeometry();
-      for (let k = 0; k < this._slave_painters.length; ++k)
-         this._slave_painters[k].startDrawGeometry();
+      this.getSubordinates()?.forEach(p => p.startDrawGeometry());
    }
 
    /** @summary Draw axes and camera overlay */
@@ -107490,13 +114974,13 @@ class TGeoPainter extends ObjectPainter {
       if (!this.isOrthoCamera() || (this.ctrl.camera_overlay === 'none'))
          return false;
 
-      const zoom = 0.5 / this._camera.zoom,
-            midx = (this._camera.left + this._camera.right) / 2,
-            midy = (this._camera.bottom + this._camera.top) / 2,
-            xmin = midx - (this._camera.right - this._camera.left) * zoom,
-            xmax = midx + (this._camera.right - this._camera.left) * zoom,
-            ymin = midy - (this._camera.top - this._camera.bottom) * zoom,
-            ymax = midy + (this._camera.top - this._camera.bottom) * zoom,
+      const zoom = 0.5 / this.#camera.zoom,
+            midx = (this.#camera.left + this.#camera.right) / 2,
+            midy = (this.#camera.bottom + this.#camera.top) / 2,
+            xmin = midx - (this.#camera.right - this.#camera.left) * zoom,
+            xmax = midx + (this.#camera.right - this.#camera.left) * zoom,
+            ymin = midy - (this.#camera.top - this.#camera.bottom) * zoom,
+            ymax = midy + (this.#camera.top - this.#camera.bottom) * zoom,
             tick_size = (ymax - ymin) * 0.02,
             text_size = (ymax - ymin) * 0.015,
             grid_gap = (ymax - ymin) * 0.001,
@@ -107510,11 +114994,11 @@ class TGeoPainter extends ObjectPainter {
       y_handle.configureAxis('yaxis', y1, y2, y1, y2, false, [y1, y2],
                               { log: 0, reverse: false });
 
-      const ii = this._camera.orthoIndicies ?? [0, 1, 2];
+      const ii = this.#camera.orthoIndicies ?? [0, 1, 2];
       let buf, pos, midZ = 0, gridZ = 0;
 
-      if (this._camera.orthoZ)
-         gridZ = midZ = this._camera.orthoZ[0];
+      if (this.#camera.orthoZ)
+         gridZ = midZ = this.#camera.orthoZ[0];
 
       const addPoint = (x, y, z) => {
          buf[pos+ii[0]] = x;
@@ -107528,11 +115012,11 @@ class TGeoPainter extends ObjectPainter {
          text3d._height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
 
          text3d.translate(-text3d._width/2, -text3d._height/2, 0);
-         if (this._camera.orthoSign < 0)
+         if (this.#camera.orthoSign < 0)
             text3d.rotateY(Math.PI);
 
-         if (isFunc(this._camera.orthoRotation))
-            this._camera.orthoRotation(text3d);
+         if (isFunc(this.#camera.orthoRotation))
+            this.#camera.orthoRotation(text3d);
 
          return text3d;
       }, createTextMesh = (geom, material, x, y, z) => {
@@ -107584,11 +115068,11 @@ class TGeoPainter extends ObjectPainter {
 
       const show_grid = this.ctrl.camera_overlay.indexOf('grid') === 0;
 
-      if (show_grid && this._camera.orthoZ) {
+      if (show_grid && this.#camera.orthoZ) {
          if (this.ctrl.camera_overlay === 'gridf')
-            gridZ += this._camera.orthoSign * this._camera.orthoZ[1];
+            gridZ += this.#camera.orthoSign * this.#camera.orthoZ[1];
          else if (this.ctrl.camera_overlay === 'gridb')
-            gridZ -= this._camera.orthoSign * this._camera.orthoZ[1];
+            gridZ -= this.#camera.orthoSign * this.#camera.orthoZ[1];
       }
 
       if ((this.ctrl.camera_overlay === 'axis') || show_grid) {
@@ -107668,7 +115152,7 @@ class TGeoPainter extends ObjectPainter {
       if (!this.ctrl._axis)
          return false;
 
-      const box = this.getGeomBoundingBox(this._toplevel, this.superimpose ? 'original' : undefined),
+      const box = this.getGeomBoundingBox(this.#toplevel, this.#superimpose ? 'original' : undefined),
           container = this.getExtrasContainer('create', 'axis'),
           text_size = 0.02 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z),
           center = [0, 0, 0],
@@ -107691,8 +115175,8 @@ class TGeoPainter extends ObjectPainter {
          if (ortho && ckind.indexOf(labels[naxis]) < 0) continue;
 
          const buf = new Float32Array(6),
-             color = colors[naxis],
-             name = names[naxis],
+               color = colors[naxis],
+               name = names[naxis],
 
           valueToString = val => {
             if (!val) return '0';
@@ -107930,9 +115414,9 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Should be called when depth test flag is changed */
    changedDepthTest() {
-      if (!this._toplevel) return;
+      if (!this.#toplevel) return;
       const flag = this.ctrl.depthTest;
-      this._toplevel.traverse(node => {
+      this.#toplevel.traverse(node => {
          if (node instanceof THREE.Mesh)
             node.material.depthTest = flag;
       });
@@ -107943,7 +115427,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Should be called when depth method is changed */
    changedDepthMethod(arg) {
       // force recalculation of render order
-      delete this._last_camera_position;
+      this.#last_camera_position = undefined;
       if (arg !== 'norender')
          return this.render3D();
    }
@@ -107951,10 +115435,10 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Assign clipping attributes to the meshes - supported only for webgl */
    updateClipping(without_render, force_traverse) {
       // do not try clipping with SVG renderer
-      if (this._renderer?.jsroot_render3d === constants$1.Render3D.SVG) return;
+      if (this.#renderer?.jsroot_render3d === constants$1.Render3D.SVG) return;
 
-      if (!this._clipPlanes) {
-         this._clipPlanes = [new THREE.Plane(new THREE.Vector3(1, 0, 0), 0),
+      if (!this.#clip_planes) {
+         this.#clip_planes = [new THREE.Plane(new THREE.Vector3(1, 0, 0), 0),
                              new THREE.Plane(new THREE.Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
                              new THREE.Plane(new THREE.Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0)];
       }
@@ -107968,15 +115452,15 @@ class TGeoPainter extends ObjectPainter {
       for (let k = 0; k < 3; ++k) {
          if (clip[k].enabled)
             clip_cfg += 2 << k;
-         if (this._clipPlanes[k].constant !== clip_constants[k]) {
+         if (this.#clip_planes[k].constant !== clip_constants[k]) {
             if (clip[k].enabled) changed = true;
-            this._clipPlanes[k].constant = clip_constants[k];
+            this.#clip_planes[k].constant = clip_constants[k];
          }
          if (clip[k].enabled)
-            panels.push(this._clipPlanes[k]);
+            panels.push(this.#clip_planes[k]);
 
          if (container && clip[k].enabled) {
-            const helper = new THREE.PlaneHelper(this._clipPlanes[k], (clip[k].max - clip[k].min));
+            const helper = new THREE.PlaneHelper(this.#clip_planes[k], (clip[k].max - clip[k].min));
             helper._no_clip = true;
             container.add(helper);
          }
@@ -107984,16 +115468,16 @@ class TGeoPainter extends ObjectPainter {
       if (panels.length === 0)
          panels = null;
 
-      if (this._clipCfg !== clip_cfg)
+      if (this.#last_clip_cfg !== clip_cfg)
          changed = true;
 
-      this._clipCfg = clip_cfg;
+      this.#last_clip_cfg = clip_cfg;
 
       const any_clipping = Boolean(panels), ci = this.ctrl.clipIntersect,
             material_side = any_clipping ? THREE.DoubleSide : THREE.FrontSide;
 
       if (force_traverse || changed) {
-         this._scene.traverse(node => {
+         this.#scene.traverse(node => {
             if (!node._no_clip && (node.material?.clippingPlanes !== undefined)) {
                if (node.material.clippingPlanes !== panels) {
                   node.material.clipIntersection = ci;
@@ -108022,7 +115506,7 @@ class TGeoPainter extends ObjectPainter {
      * @desc Used together with web-based geometry viewer
      * @private */
    setCompleteHandler(callback) {
-      this._complete_handler = callback;
+      this.#complete_handler = callback;
    }
 
    /** @summary Completes drawing procedure
@@ -108035,31 +115519,30 @@ class TGeoPainter extends ObjectPainter {
          return this;
       }
 
-      let promise = Promise.resolve(true);
+      let promise;
 
-      if (!this._clones) {
+      if (!this.#clones) {
          check_extras = false;
          // if extra object where append, redraw them at the end
          this.getExtrasContainer('delete'); // delete old container
-         const extras = (this._master_painter ? this._master_painter._extraObjects : null) || this._extraObjects;
-         promise = this.drawExtras(extras, '', false);
-      } else if (this._first_drawing || this._full_redrawing) {
-         if (this.ctrl.tracks && this.geo_manager)
-            promise = this.drawExtras(this.geo_manager.fTracks, '<prnt>/Tracks');
-      }
+         promise = this.drawExtras(this.getCentral()?.getExtraObjects() || this.getExtraObjects(), '', false);
+      } else if ((this.#first_drawing || this.#full_redrawing) && this.ctrl.tracks && this.#geo_manager)
+         promise = this.drawExtras(this.#geo_manager.fTracks, '<prnt>/Tracks');
+      else
+         promise = Promise.resolve(true);
 
       return promise.then(() => {
-         if (this._full_redrawing) {
+         if (this.#full_redrawing) {
             this.adjustCameraPosition('first');
-            this._full_redrawing = false;
+            this.#full_redrawing = false;
             full_redraw = true;
             this.changedDepthMethod('norender');
          }
 
-         if (this._first_drawing) {
+         if (this.#first_drawing) {
             this.adjustCameraPosition('first');
             this.showDrawInfo();
-            this._first_drawing = false;
+            this.#first_drawing = false;
             first_time = true;
             full_redraw = true;
          }
@@ -108073,82 +115556,81 @@ class TGeoPainter extends ObjectPainter {
          if (full_redraw)
             return this.drawAxesAndOverlay(true);
       }).then(() => {
-         this._scene.overrideMaterial = null;
+         this.#scene.overrideMaterial = null;
 
-         if (this._provided_more_nodes !== undefined) {
-            this.appendMoreNodes(this._provided_more_nodes, true);
-            delete this._provided_more_nodes;
+         if (this.#provided_more_nodes !== undefined) {
+            this.appendMoreNodes(this.#provided_more_nodes, true);
+            this.#provided_more_nodes = undefined;
          }
 
          if (check_extras) {
             // if extra object where append, redraw them at the end
             this.getExtrasContainer('delete'); // delete old container
-            const extras = this._master_painter?._extraObjects || this._extraObjects;
-            return this.drawExtras(extras, '', false);
+            return this.drawExtras(this.getCentral()?.getExtraObjects() || this.getExtraObjects(), '', false);
          }
       }).then(() => {
          this.updateClipping(true); // do not render
 
          this.render3D(0, true);
 
-         if (close_progress) showProgress();
+         if (close_progress)
+            showProgress();
 
          this.addOrbitControls();
 
          if (first_time && !this.isBatchMode()) {
             // after first draw check if highlight can be enabled
             if (this.ctrl.highlight === 0)
-               this.ctrl.highlight = (this.first_render_tm < 1000);
+               this.ctrl.highlight = (this.#first_render_tm < 1000);
 
             // also highlight of scene object can be assigned at the first draw
             if (this.ctrl.highlight_scene === 0)
                this.ctrl.highlight_scene = this.ctrl.highlight;
 
             // if rotation was enabled, do it
-            if (this._webgl && this.ctrl.rotate && !this.ctrl.project) this.autorotate(2.5);
-            if (this._webgl && this.ctrl.show_controls) this.showControlGui(true);
+            if (this.#webgl && this.ctrl.rotate && !this.ctrl.project)
+               this.autorotate(2.5);
+            if (this.#webgl && this.ctrl.show_controls)
+               this.showControlGui(true);
          }
 
          this.setAsMainPainter();
 
-         if (isFunc(this._resolveFunc)) {
-            this._resolveFunc(this);
-            delete this._resolveFunc;
-         }
+         const arr = this.#draw_resolveFuncs;
+         this.#draw_resolveFuncs = [];
+         arr?.forEach(func => func(this));
 
-         if (isFunc(this._complete_handler))
-            this._complete_handler(this);
+         if (isFunc(this.#complete_handler))
+            this.#complete_handler(this);
 
-         if (this._draw_nodes_again)
+         if (this.#draw_nodes_again)
             this.startDrawGeometry(); // relaunch drawing
          else
-            this._drawing_ready = true; // indicate that drawing is completed
+            this.#drawing_ready = true; // indicate that drawing is completed
 
          return this;
       });
    }
 
    /** @summary Returns true if geometry drawing is completed */
-   isDrawingReady() {
-      return this._drawing_ready || false;
-   }
+   isDrawingReady() { return this.#drawing_ready ?? false; }
 
    /** @summary Remove already drawn node. Used by geom viewer */
    removeDrawnNode(nodeid) {
-      if (!this._draw_nodes) return;
+      if (!this.#draw_nodes) return;
 
       const new_nodes = [];
 
-      for (let n = 0; n < this._draw_nodes.length; ++n) {
-         const entry = this._draw_nodes[n];
-         if ((entry.nodeid === nodeid) || this._clones.isIdInStack(nodeid, entry.stack))
-            this._clones.createObject3D(entry.stack, this._toplevel, 'delete_mesh');
+      for (let n = 0; n < this.#draw_nodes.length; ++n) {
+         const entry = this.#draw_nodes[n];
+         if ((entry.nodeid === nodeid) || this.#clones.isIdInStack(nodeid, entry.stack))
+            this.#clones.createObject3D(entry.stack, this.#toplevel, 'delete_mesh');
           else
             new_nodes.push(entry);
       }
 
-      if (new_nodes.length < this._draw_nodes.length) {
-         this._draw_nodes = new_nodes;
+      if (new_nodes.length < this.#draw_nodes.length) {
+         this.#draw_nodes = new_nodes;
          this.render3D();
       }
    }
@@ -108158,10 +115640,10 @@ class TGeoPainter extends ObjectPainter {
       if (!first_time) {
          let can3d = 0;
 
-         if (!this.superimpose) {
+         if (!this.#superimpose) {
             this.clearTopPainter(); // remove as pointer
 
-            if (this._on_pad) {
+            if (this.#on_pad) {
                const fp = this.getFramePainter();
                if (fp?.mode3d) {
                   fp.clear3dCanvas();
@@ -108170,24 +115652,20 @@ class TGeoPainter extends ObjectPainter {
             } else
                can3d = this.clear3dCanvas(); // remove 3d canvas from main HTML element
 
-
-            disposeThreejsObject(this._scene);
+            disposeThreejsObject(this.#scene);
          }
 
-         this._toolbar?.cleanup(); // remove toolbar
+         this.#toolbar?.cleanup(); // remove toolbar
 
-         disposeThreejsObject(this._full_geom);
+         disposeThreejsObject(this.#fullgeom_proj);
 
-         this._controls?.cleanup();
+         this.#controls?.cleanup();
 
-         if (this._context_menu)
-            this._renderer.domElement.removeEventListener('contextmenu', this._context_menu, false);
+         this.#gui?.destroy();
 
-         this._gui?.destroy();
+         this.#worker?.terminate();
 
-         this._worker?.terminate();
-
-         delete this._animating;
+         this.#animating = undefined;
 
          const obj = this.getGeometry();
          if (obj && this.ctrl.is_main) {
@@ -108197,106 +115675,93 @@ class TGeoPainter extends ObjectPainter {
                delete obj.fVolume.$geo_painter;
          }
 
-         if (this._master_painter?._slave_painters) {
-            const pos = this._master_painter._slave_painters.indexOf(this);
-            if (pos >= 0) this._master_painter._slave_painters.splice(pos, 1);
-         }
+         this.#central_painter?.assignSubordinate(this, false);
+         this.#subordinate_painters?.forEach(p => {
+            p.assignCentral(this, false);
+            if (p.getClones() === this.getClones())
+               p.assignClones(undefined, undefined);
+         });
 
-         for (let k = 0; k < this._slave_painters?.length; ++k) {
-            const slave = this._slave_painters[k];
-            if (slave?._master_painter === this) slave._master_painter = null;
-         }
-
-         delete this.geo_manager;
-         delete this._highlight_handlers;
+         this.#geo_manager = undefined;
+         this.#highlight_handlers = undefined;
 
          super.cleanup();
 
          delete this.ctrl;
          delete this.options;
 
-         this.did_cleanup = true;
+         this.#did_cleanup = true;
 
-         if (can3d < 0) this.selectDom().html('');
+         if (can3d < 0)
+            this.selectDom().html('');
       }
 
-      if (this._slave_painters) {
-         for (const k in this._slave_painters) {
-            const slave = this._slave_painters[k];
-            slave._master_painter = null;
-            if (slave._clones === this._clones) slave._clones = null;
-         }
-      }
+      this.#central_painter = undefined;
+      this.#subordinate_painters = [];
 
-      this._master_painter = null;
-      this._slave_painters = [];
+      const arr = this.#render_resolveFuncs;
+      this.#render_resolveFuncs = [];
+      arr?.forEach(func => func(this));
 
-      if (this._render_resolveFuncs) {
-         this._render_resolveFuncs.forEach(func => func(this));
-         delete this._render_resolveFuncs;
-      }
-
-      if (!this.superimpose)
-         cleanupRender3D(this._renderer);
+      if (!this.#superimpose)
+         cleanupRender3D(this.#renderer);
 
       this.ensureBloom(false);
-      delete this._effectComposer;
+      this.#effectComposer = undefined;
 
-      delete this._scene;
-      delete this._scene_size;
-      this._scene_width = 0;
-      this._scene_height = 0;
-      this._renderer = null;
-      this._toplevel = null;
-      delete this._full_geom;
-      delete this._fog;
-      delete this._camera;
-      delete this._camera0pos;
-      delete this._lookat;
-      delete this._selected_mesh;
+      this.#scene = undefined;
+      this.#scene_size = undefined;
+      this.#scene_width = 0;
+      this.#scene_height = 0;
+      this.#renderer = null;
+      this.#toplevel = null;
+      this.#fullgeom_proj = undefined;
+      this.#fog = undefined;
+      this.#camera= undefined;
+      this.#camera0pos = undefined;
+      this.#lookat = undefined;
+      this.#selected_mesh = undefined;
+      this.#custom_bounding_box = undefined;
 
-      if (this._clones && this._clones_owner)
-         this._clones.cleanup(this._draw_nodes, this._build_shapes);
-      delete this._clones;
-      delete this._clones_owner;
-      delete this._draw_nodes;
-      delete this._drawing_ready;
-      delete this._build_shapes;
-      delete this._new_draw_nodes;
-      delete this._new_append_nodes;
-      delete this._last_camera_position;
+      this.assignClones(undefined, undefined);
+      this.#new_draw_nodes = undefined;
+      this.#new_append_nodes = undefined;
+      this.#last_camera_position = undefined;
 
-      this.first_render_tm = 0; // time needed for first rendering
-      this.last_render_tm = 0;
+      this.#on_pad = undefined;
+
+      this.#start_render_tm = 0;
+      this.#first_render_tm = 0; // time needed for first rendering
+      this.#last_render_tm = 0;
 
       this.changeStage(stageInit, 'cleanup');
-      delete this.drawing_log;
+      this.#drawing_log = undefined;
 
-      delete this._gui;
-      delete this._controls;
-      delete this._context_menu;
-      delete this._toolbar;
+      this.#gui = undefined;
+      this.#controls = undefined;
+      this.#toolbar = undefined;
 
-      delete this._worker;
+      this.#worker = undefined;
    }
 
    /** @summary perform resize */
    performResize(width, height) {
-      if ((this._scene_width === width) && (this._scene_height === height)) return false;
+      if ((this.#scene_width === width) && (this.#scene_height === height))
+         return false;
       if ((width < 10) || (height < 10)) return false;
 
-      this._scene_width = width;
-      this._scene_height = height;
+      this.#scene_width = width;
+      this.#scene_height = height;
 
-      if (this._camera && this._renderer) {
-         if (this._camera.isPerspectiveCamera)
-            this._camera.aspect = this._scene_width / this._scene_height;
-         else if (this._camera.isOrthographicCamera)
+      if (this.#camera && this.#renderer) {
+         if (this.#camera.isPerspectiveCamera)
+            this.#camera.aspect = this.#scene_width / this.#scene_height;
+         else if (this.#camera.isOrthographicCamera)
             this.adjustCameraPosition(true, true);
-         this._camera.updateProjectionMatrix();
-         this._renderer.setSize(this._scene_width, this._scene_height, !this._fit_main_area);
-         this._effectComposer?.setSize(this._scene_width, this._scene_height);
-         this._bloomComposer?.setSize(this._scene_width, this._scene_height);
+         this.#camera.updateProjectionMatrix();
+         this.#renderer.setSize(this.#scene_width, this.#scene_height, !this.#fit_main_area);
+         this.#effectComposer?.setSize(this.#scene_width, this.#scene_height);
+         this.#bloomComposer?.setSize(this.#scene_width, this.#scene_height);
 
          if (this.isStage(stageInit))
             this.render3D();
@@ -108311,10 +115776,10 @@ class TGeoPainter extends ObjectPainter {
 
       // firefox is the only browser which correctly supports resize of embedded canvas,
       // for others we should force canvas redrawing at every step
-      if (cp && !cp.checkCanvasResize(arg)) return false;
+      if (cp && !cp.checkCanvasResize(arg))
+         return false;
 
       const sz = this.getSizeFor3d();
-
       return this.performResize(sz.width, sz.height);
    }
 
@@ -108328,7 +115793,8 @@ class TGeoPainter extends ObjectPainter {
      * @return undefined when wireframe cannot be accessed
      * @private */
    accessObjectWireFrame(obj, on) {
-      if (!obj?.material) return;
+      if (!obj?.material)
+         return;
 
       if ((on !== undefined) && obj.stack)
          obj.material.wireframe = on;
@@ -108339,7 +115805,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary handle wireframe flag change in GUI
      * @private */
    changedWireFrame() {
-      this._scene?.traverse(obj => this.accessObjectWireFrame(obj, this.ctrl.wireframe));
+      this.#scene?.traverse(obj => this.accessObjectWireFrame(obj, this.ctrl.wireframe));
 
       this.render3D();
    }
@@ -108360,10 +115826,10 @@ class TGeoPainter extends ObjectPainter {
       if (obj._typename.indexOf(clTGeoVolume) === 0)
          obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
-      if (this.geo_manager && gm) {
-         this.geo_manager = gm;
+      if (this.#geo_manager && gm) {
+         this.#geo_manager = gm;
          this.assignObject(obj);
-         this._did_update = true;
+         this.#did_update = true;
          return true;
       }
 
@@ -108371,46 +115837,40 @@ class TGeoPainter extends ObjectPainter {
          return false;
 
       this.assignObject(obj);
-      this._did_update = true;
+      this.#did_update = true;
       return true;
    }
 
    /** @summary Cleanup TGeo drawings */
    clearDrawings() {
-      if (this._clones && this._clones_owner)
-         this._clones.cleanup(this._draw_nodes, this._build_shapes);
-      delete this._clones;
-      delete this._clones_owner;
-      delete this._draw_nodes;
-      delete this._drawing_ready;
-      delete this._build_shapes;
+      this.assignClones(undefined, undefined);
 
-      delete this._extraObjects;
-      delete this._clipCfg;
+      this.#extra_objects = undefined;
+      this.#last_clip_cfg = undefined;
 
       // only remove all childs from top level object
-      disposeThreejsObject(this._toplevel, true);
+      disposeThreejsObject(this.#toplevel, true);
 
-      this._full_redrawing = true;
+      this.#full_redrawing = true;
    }
 
     /** @summary Redraw TGeo object inside TPad */
    redraw() {
-      if (this.superimpose) {
+      if (this.#superimpose) {
          const cfg = getHistPainter3DCfg(this.getMainPainter());
 
          if (cfg) {
-            this._toplevel.scale.set(cfg.scale_x ?? 1, cfg.scale_y ?? 1, cfg.scale_z ?? 1);
-            this._toplevel.position.set(cfg.offset_x ?? 0, cfg.offset_y ?? 0, cfg.offset_z ?? 0);
-            this._toplevel.updateMatrix();
-            this._toplevel.updateMatrixWorld();
+            this.#toplevel.scale.set(cfg.scale_x ?? 1, cfg.scale_y ?? 1, cfg.scale_z ?? 1);
+            this.#toplevel.position.set(cfg.offset_x ?? 0, cfg.offset_y ?? 0, cfg.offset_z ?? 0);
+            this.#toplevel.updateMatrix();
+            this.#toplevel.updateMatrixWorld();
          }
       }
 
-      if (this._did_update)
+      if (this.#did_update)
          return this.startRedraw();
 
-      const main = this._on_pad ? this.getFramePainter() : null;
+      const main = this.#on_pad ? this.getFramePainter() : null;
       if (!main)
          return Promise.resolve(false);
       const sz = main.getSizeFor3d(main.access3dKind());
@@ -108429,18 +115889,18 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Start geometry redraw */
    startRedraw(tmout) {
       if (tmout) {
-         if (this._redraw_timer)
-            clearTimeout(this._redraw_timer);
-         this._redraw_timer = setTimeout(() => this.startRedraw(), tmout);
+         if (this.#redraw_timer)
+            clearTimeout(this.#redraw_timer);
+         this.#redraw_timer = setTimeout(() => this.startRedraw(), tmout);
          return;
       }
 
-      delete this._redraw_timer;
-      delete this._did_update;
+      this.#redraw_timer = undefined;
+      this.#did_update = undefined;
 
       this.clearDrawings();
       const draw_obj = this.getGeometry(),
-            name_prefix = this.geo_manager ? draw_obj.fName : '';
+            name_prefix = this.#geo_manager ? draw_obj.fName : '';
       return this.prepareObjectDraw(draw_obj, name_prefix);
    }
 
@@ -108459,7 +115919,8 @@ class TGeoPainter extends ObjectPainter {
       } else if (obj._typename === clTGeoManager)
          shape = obj.fMasterVolume.fShape;
       else if (obj._typename === clTGeoOverlap) {
-         extras = obj.fMarker; extras_path = '<prnt>/Marker';
+         extras = obj.fMarker;
+         extras_path = '<prnt>/Marker';
          obj = buildOverlapVolume(obj);
          if (!opt) opt = 'wire';
       } else if ('fVolume' in obj) {
@@ -108487,15 +115948,15 @@ class TGeoPainter extends ObjectPainter {
          obj.$geo_painter = painter;
 
       if (!painter.ctrl.is_main && painter.ctrl.project && obj.$geo_painter) {
-         painter._master_painter = obj.$geo_painter;
-         painter._master_painter._slave_painters.push(painter);
+         painter.assignCentral(obj.$geo_painter);
+         obj.$geo_painter.assignSubordinate(painter);
       }
 
       if (is_eve && (!painter.ctrl.vislevel || (painter.ctrl.vislevel < 9)))
          painter.ctrl.vislevel = 9;
 
       if (extras) {
-         painter._splitColors = true;
+         painter.ctrl.split_colors = true;
          painter.addExtra(extras, extras_path);
       }
 
@@ -108517,7 +115978,7 @@ function getBrowserIcon(hitem, hpainter) {
       case prROOT + clTPolyMarker3D: icon = 'img_evepoints'; break;
    }
    if (icon) {
-      const drawitem = findItemWithPainter(hitem);
+      const drawitem = findItemWithGeoPainter(hitem);
       if (drawitem?._painter?.extraObjectVisible(hpainter, hitem))
          icon += ' geovis_this';
    }
@@ -108535,7 +115996,7 @@ function browserIconClick(hitem, hpainter) {
 
       updateBrowserIcons(hitem._volume, hpainter);
 
-      findItemWithPainter(hitem, 'testGeomChanges');
+      findItemWithGeoPainter(hitem, true);
       return false; // no need to update icon - we did it ourself
    }
 
@@ -108543,12 +116004,12 @@ function browserIconClick(hitem, hpainter) {
       hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
 
       updateBrowserIcons(hitem._geoobj, hpainter);
-      findItemWithPainter(hitem, 'testGeomChanges');
+      findItemWithGeoPainter(hitem, true);
       return false; // no need to update icon - we did it ourself
    }
 
    // first check that geo painter assigned with the item
-   const drawitem = findItemWithPainter(hitem),
+   const drawitem = findItemWithGeoPainter(hitem),
          newstate = drawitem?._painter?.extraObjectVisible(hpainter, hitem, true);
 
    // return true means browser should update icon for the item
@@ -108671,7 +116132,7 @@ function provideMenu(menu, item, hpainter) {
          }, item);
       }
 
-      findItemWithPainter(item, 'testGeomChanges');
+      findItemWithGeoPainter(item, true);
    }, toggleMenuBit = arg => {
       toggleGeoBit(vol, arg);
       const newname = item._icon.split(' ')[0] + provideVisStyle(vol);
@@ -108684,8 +116145,8 @@ function provideMenu(menu, item, hpainter) {
       });
 
       hpainter.updateTreeNode(item);
-      findItemWithPainter(item, 'testGeomChanges');
-   }, drawitem = findItemWithPainter(item),
+      findItemWithGeoPainter(item, true);
+   }, drawitem = findItemWithGeoPainter(item),
       fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
 
    if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && drawitem) {
@@ -108701,15 +116162,15 @@ function provideMenu(menu, item, hpainter) {
       if (res.hidden + res.visible > 0)
          menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', toggleEveVisibility);
    } else {
-      const stack = drawitem?._painter?._clones?.findStackByName(fullname),
-          phys_vis = stack ? drawitem._painter._clones.getPhysNodeVisibility(stack) : null,
-          is_visible = testGeoBit(vol, geoBITS.kVisThis);
+      const stack = drawitem?._painter?.getClones()?.findStackByName(fullname),
+            phys_vis = stack ? drawitem._painter.getClones().getPhysNodeVisibility(stack) : null,
+            is_visible = testGeoBit(vol, geoBITS.kVisThis);
 
       menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible', geoBITS.kVisNone, toggleMenuBit);
       if (stack) {
          const changePhysVis = arg => {
-            drawitem._painter._clones.setPhysNodeVisibility(stack, (arg === 'off') ? false : arg);
-            findItemWithPainter(item, 'testGeomChanges');
+            drawitem._painter.getClones().setPhysNodeVisibility(stack, (arg === 'off') ? false : arg);
+            findItemWithGeoPainter(item, true);
          };
 
          menu.sub('Physical vis', 'Physical node visibility - only for this instance');
@@ -108950,10 +116411,9 @@ async function drawDummy3DGeom(painter) {
                   fTrans: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false }),
          pp = painter.getPadPainter(),
-         opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' + pp.pad.fFillColor : '';
+         opt = 'dummy;' + (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' + pp.pad.fFillColor : '';
 
-   return TGeoPainter.draw(pp, obj, opt)
-                     .then(geop => { geop._dummy = true; return geop; });
+   return TGeoPainter.draw(pp, obj, opt);
 }
 
 /** @summary Direct draw function for TAxis3D
@@ -155639,7 +163099,7 @@ function parseAsArray(val) {
 /** @summary central function for expand of all online items
   * @private */
 function onlineHierarchy(node, obj) {
-   if (obj && node && ('_childs' in obj)) {
+   if (node && obj?._childs) {
       for (let n = 0; n < obj._childs.length; ++n) {
          if (obj._childs[n]._more || obj._childs[n]._childs)
             obj._childs[n]._expand = onlineHierarchy;
@@ -156086,19 +163546,24 @@ class HierarchyPainter extends BasePainter {
    /** @summary returns true if item is last in parent childs list
      * @private */
    isLastSibling(hitem) {
-      if (!hitem || !hitem._parent || !hitem._parent._childs) return false;
+      if (!hitem || !hitem._parent || !hitem._parent._childs)
+         return false;
       const chlds = hitem._parent._childs;
       let indx = chlds.indexOf(hitem);
-      if (indx < 0) return false;
-      while (++indx < chlds.length)
-         if (!('_hidden' in chlds[indx])) return false;
+      if (indx < 0)
+         return false;
+      while (++indx < chlds.length) {
+         if (!('_hidden' in chlds[indx]))
+            return false;
+      }
       return true;
    }
 
    /** @summary Create item html code
      * @private */
    addItemHtml(hitem, d3prnt, arg) {
-      if (!hitem || ('_hidden' in hitem)) return true;
+      if (!hitem || ('_hidden' in hitem))
+         return true;
 
       const isroot = (hitem === this.h),
             has_childs = ('_childs' in hitem),
@@ -156115,8 +163580,10 @@ class HierarchyPainter extends BasePainter {
              (canExpandHandle(handle) && (hitem._more !== false))) can_click = true;
       }
 
-      if ('_icon' in hitem) img1 = hitem._icon;
-      if ('_icon2' in hitem) img2 = hitem._icon2;
+      if ('_icon' in hitem)
+         img1 = hitem._icon;
+      if ('_icon2' in hitem)
+         img2 = hitem._icon2;
       if (!img1 && ('_online' in hitem))
          hitem._icon = img1 = 'img_globe';
       if (!img1 && isroot)
@@ -156188,7 +163655,7 @@ class HierarchyPainter extends BasePainter {
                           .style('width', '18px')
                           .style('height', '18px');
 
-         if (('_icon_click' in hitem) || (handle && ('icon_click' in handle)))
+         if (hitem._icon_click || handle?.icon_click)
             d3img.on('click', function(evnt) { h.tree_click(evnt, this, 'icon'); });
       }
 
@@ -156270,7 +163737,8 @@ class HierarchyPainter extends BasePainter {
          const pr = this.expandItem(this.itemFullName(hitem));
          if (isPromise(pr) && isObject(promises))
             promises.push(pr);
-         if (hitem._childs !== undefined) hitem._isopen = true;
+         if (hitem._childs !== undefined)
+            hitem._isopen = true;
          return hitem._isopen;
       }
 
@@ -156299,7 +163767,8 @@ class HierarchyPainter extends BasePainter {
    /** @summary Expand to specified level
      * @protected */
    async exapndToLevel(level) {
-      if (!level || !Number.isFinite(level) || (level < 0)) return this;
+      if (!level || !Number.isFinite(level) || (level < 0))
+         return this;
 
       const promises = [];
       this.toggleOpenState(true, this.h, promises);
@@ -156324,8 +163793,10 @@ class HierarchyPainter extends BasePainter {
       let status_item = null;
       this.forEachItem(item => {
          delete item._d3cont; // remove html container
-         if (('_fastcmd' in item) && (item._kind === 'Command')) factcmds.push(item);
-         if (('_status' in item) && !status_item) status_item = item;
+         if (('_fastcmd' in item) && (item._kind === 'Command'))
+            factcmds.push(item);
+         if (('_status' in item) && !status_item)
+            status_item = item;
       });
 
       if (!this.h || d3elem.empty())
@@ -156544,7 +164015,8 @@ class HierarchyPainter extends BasePainter {
       }
 
       // special feature - all items with '_expand' function are not drawn by click
-      if ((place === 'item') && ('_expand' in hitem) && !evnt.ctrlKey && !evnt.shiftKey) place = kPM;
+      if ((place === 'item') && ('_expand' in hitem) && !evnt.ctrlKey && !evnt.shiftKey)
+         place = kPM;
 
       // special case - one should expand item
       if (((place === kPM) && !('_childs' in hitem) && hitem._more) ||
@@ -156997,18 +164469,20 @@ class HierarchyPainter extends BasePainter {
 
          item = this.findItem(display_itemname);
 
-         if (item && ('_player' in item))
+         if (item?._player)
             return this.player(display_itemname, drawopt).then(res => complete(res));
 
          updating = isStr(drawopt) && (drawopt.indexOf('update:') === 0);
 
          if (updating) {
             drawopt = drawopt.slice(7);
-            if (!item || item._doing_update) return complete();
+            if (!item || item._doing_update)
+               return complete();
             item._doing_update = true;
          }
 
-         if (item && !this.canDisplay(item, drawopt)) return complete();
+         if (item && !this.canDisplay(item, drawopt))
+            return complete();
 
          let use_dflt_opt = false;
          // deprecated - drawing divid was possible to code in draw options
@@ -157217,16 +164691,19 @@ class HierarchyPainter extends BasePainter {
       this.disp.forEachPainter(p => {
          const itemname = p.getItemName();
 
-         if (!isStr(itemname) || (allitems.indexOf(itemname) >= 0)) return;
+         if (!isStr(itemname) || (allitems.indexOf(itemname) >= 0))
+            return;
 
          if (want_update_all) {
             const item = this.findItem(itemname);
-            if (!item || ('_not_monitor' in item) || ('_player' in item)) return;
+            if (!item || item._not_monitor || item._player)
+               return;
             if (!('_always_monitor' in item)) {
                const handle = getDrawHandle(item._kind);
                let forced = false;
                if (handle?.monitor !== undefined) {
-                  if ((handle.monitor === false) || (handle.monitor === 'never')) return;
+                  if ((handle.monitor === false) || (handle.monitor === 'never'))
+                     return;
                   if (handle.monitor === 'always') forced = true;
                }
                if (!forced && only_auto_items) return;
@@ -157639,15 +165116,16 @@ class HierarchyPainter extends BasePainter {
      * @private */
    getTopOnlineItem(item) {
       if (item) {
-         while (item && (!('_online' in item))) item = item._parent;
+         while (item && (!('_online' in item)))
+            item = item._parent;
          return item;
       }
 
       if (!this.h)
          return null;
-      if ('_online' in this.h)
+      if (this.h._online)
          return this.h;
-      if (this.h._childs && ('_online' in this.h._childs[0]))
+      if (this.h._childs && this.h._childs[0]?._online)
          return this.h._childs[0];
       return null;
    }
@@ -157655,16 +165133,16 @@ class HierarchyPainter extends BasePainter {
    /** @summary Call function for each item which corresponds to JSON file
      * @private */
    forEachJsonFile(func) {
-      if (!this.h) return;
-      if ('_jsonfile' in this.h)
+      if (!this.h)
+         return;
+
+      if (this.h._jsonfile)
          return func(this.h);
 
-      if (this.h._childs) {
-         for (let n = 0; n < this.h._childs.length; ++n) {
-            const item = this.h._childs[n];
-            if ('_jsonfile' in item) func(item);
-         }
-      }
+      this.h._childs?.forEach(item => {
+         if (item._jsonfile)
+            func(item);
+      });
    }
 
    /** @summary Open JSON file
@@ -157693,7 +165171,7 @@ class HierarchyPainter extends BasePainter {
          else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
          else {
-            const h0 = this.h, topname = ('_jsonfile' in h0) ? 'Files' : 'Items';
+            const h0 = this.h, topname = h0?._jsonfile ? 'Files' : 'Items';
             this.h = { _name: topname, _kind: kTopFolder, _childs: [h0, h1] };
          }
 
@@ -157704,17 +165182,15 @@ class HierarchyPainter extends BasePainter {
    /** @summary Call function for each item which corresponds to ROOT file
      * @private */
    forEachRootFile(func) {
-      if (!this.h) return;
+      if (!this.h)
+         return;
       if ((this.h._kind === kindTFile) && this.h._file)
          return func(this.h);
 
-      if (this.h._childs) {
-         for (let n = 0; n < this.h._childs.length; ++n) {
-            const item = this.h._childs[n];
-            if ((item._kind === kindTFile) && ('_fullurl' in item))
-               func(item);
-         }
-      }
+      this.h._childs?.forEach(item => {
+         if ((item._kind === kindTFile) && item._fullurl)
+            func(item);
+      });
    }
 
    /** @summary Find ROOT file which corresponds to provided item name
@@ -157851,18 +165327,19 @@ class HierarchyPainter extends BasePainter {
      * @private */
    getFileProp(itemname) {
       let item = this.findItem(itemname);
-      if (!item) return null;
+      if (!item)
+         return null;
 
-      let subname = item._name;
+      itemname = item._name;
       while (item._parent) {
          item = item._parent;
-         if ('_file' in item)
-            return { kind: 'file', fileurl: item._file.fURL, itemname: subname, localfile: Boolean(item._file.fLocalFile) };
+         if (item._file)
+            return { kind: 'file', fileurl: item._file.fURL, itemname, localfile: Boolean(item._file.fLocalFile) };
 
-         if ('_jsonfile' in item)
-            return { kind: 'json', fileurl: item._jsonfile, itemname: subname };
+         if (item._jsonfile)
+            return { kind: 'json', fileurl: item._jsonfile, itemname };
 
-         subname = item._name + '/' + subname;
+         itemname = item._name + '/' + itemname;
       }
 
       return null;
@@ -157913,7 +165390,8 @@ class HierarchyPainter extends BasePainter {
       if (item) {
          url = this.getOnlineItemUrl(item);
          let func = null;
-         if ('_kind' in item) draw_handle = getDrawHandle(item._kind);
+         if (item._kind)
+            draw_handle = getDrawHandle(item._kind);
 
          if (h_get) {
             req = 'h.json?compact=3';
@@ -157936,8 +165414,8 @@ class HierarchyPainter extends BasePainter {
                if (isStr(dreq))
                   req = dreq;
                 else {
-                  if ('req' in dreq) req = dreq.req;
-                  if ('kind' in dreq) req_kind = dreq.kind;
+                  if (dreq.req) req = dreq.req;
+                  if (dreq.kind) req_kind = dreq.kind;
                }
             }
          }
@@ -157946,7 +165424,7 @@ class HierarchyPainter extends BasePainter {
            req = 'item.json.gz?compact=3';
       }
 
-      if (!itemname && item && ('_cached_draw_object' in this) && !req) {
+      if (!itemname && item && this._cached_draw_object && !req) {
          // special handling for online draw when cashed
          const obj = this._cached_draw_object;
          delete this._cached_draw_object;
@@ -158056,19 +165534,16 @@ class HierarchyPainter extends BasePainter {
      * @private */
    getOnlineProp(itemname) {
       let item = this.findItem(itemname);
-      if (!item) return null;
+      if (!item)
+         return null;
 
-      let subname = item._name;
+      itemname = item._name;
       while (item._parent) {
          item = item._parent;
 
-         if ('_online' in item) {
-            return {
-               server: item._online,
-               itemname: subname
-            };
-         }
-         subname = item._name + '/' + subname;
+         if (item._online)
+            return { server: item._online, itemname };
+         itemname = item._name + '/' + itemname;
       }
 
       return null;
@@ -158106,7 +165581,7 @@ class HierarchyPainter extends BasePainter {
                            'Request PNG image from the server');
       }
 
-      if ('_player' in node)
+      if (node._player)
          menu.add('Player', () => this.player(itemname));
    }
 
@@ -158272,7 +165747,7 @@ class HierarchyPainter extends BasePainter {
      * @return {Promise} when ready
      * @private */
    async createDisplay() {
-      if ('disp' in this) {
+      if (this.disp) {
          if ((this.disp.numDraw() > 0) || (this.disp_kind === 'custom'))
             return this.disp;
          this.disp.cleanup();
@@ -158596,16 +166071,21 @@ class HierarchyPainter extends BasePainter {
       if (h0 !== null) {
          return this.openOnline(h0).then(() => {
             // check if server enables monitoring
-            if (!this.exclude_browser && !browser_configured && ('_browser' in this.h)) {
+            if (!this.exclude_browser && !browser_configured && this.h._browser) {
                browser_kind = this.h._browser;
-               if (browser_kind === 'no') browser_kind = ''; else
-               if (browser_kind === 'off') { browser_kind = ''; status = null; this.exclude_browser = true; }
+               if (browser_kind === 'no')
+                  browser_kind = '';
+               else if (browser_kind === 'off') {
+                  browser_kind = '';
+                  status = null;
+                  this.exclude_browser = true;
+               }
             }
 
             if (('_monitoring' in this.h) && !monitor)
                monitor = this.h._monitoring;
 
-            if (('_loadfile' in this.h) && (filesarr.length === 0))
+            if (this.h._loadfile && (filesarr.length === 0))
                filesarr = parseAsArray(this.h._loadfile);
 
             if (('_drawitem' in this.h) && (itemsarr.length === 0)) {
@@ -158613,7 +166093,7 @@ class HierarchyPainter extends BasePainter {
                optionsarr = parseAsArray(this.h._drawopt);
             }
 
-            if (('_layout' in this.h) && !layout && ((this.is_online !== 'draw') || (itemsarr.length > 1)))
+            if (this.h._layout && !layout && ((this.is_online !== 'draw') || (itemsarr.length > 1)))
                this.disp_kind = this.h._layout;
 
             if (('_toptitle' in this.h) && this.exclude_browser && (typeof document !== 'undefined'))
@@ -160832,7 +168312,7 @@ function before3DDraw(painter) {
       const pp = painter.getPadPainter();
       if (pp) pp._disable_dragging = true;
 
-      if (geop._dummy && isFunc(painter.get3DBox))
+      if (geop.options.dummy && isFunc(painter.get3DBox))
          geop.extendCustomBoundingBox(painter.get3DBox());
       return geop.drawExtras(painter.getObject(), '', true, true);
    });
@@ -169915,7 +177395,8 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Divide pad on sub-pads */
    async divide(/* nx, ny, use_existing */) {
-      console.warn('RPadPainter.divide not implemented');
+      if (settings.Debug)
+         console.warn('RPadPainter.divide not implemented');
       return this;
    }
 
@@ -169966,7 +177447,8 @@ class RPadPainter extends RObjectPainter {
      * @desc used to find title drawing
      * @private */
    findInPrimitives(/* objname, objtype */) {
-      console.warn('findInPrimitives not implemented for RPad');
+      if (settings.Debug)
+         console.warn('findInPrimitives not implemented for RPad');
       return null;
    }
 
@@ -170230,7 +177712,7 @@ class RPadPainter extends RObjectPainter {
 
       this.setFastDrawing(rect.width, rect.height);
 
-      if (this.alignButtons && btns)
+      if (isFunc(this.alignButtons) && btns)
          this.alignButtons(btns, rect.width, rect.height);
 
       return true;
@@ -171132,20 +178614,17 @@ class RPadPainter extends RObjectPainter {
             }
 
             const fp = pp.getFramePainter();
-            if (!isFunc(fp?.access3dKind)) return;
+            if (!isFunc(fp?.access3dKind))
+               return;
 
             const can3d = fp.access3dKind();
-            if ((can3d !== constants$1.Embed3D.Overlay) && (can3d !== constants$1.Embed3D.Embed)) return;
+            if ((can3d !== constants$1.Embed3D.Overlay) && (can3d !== constants$1.Embed3D.Embed))
+               return;
 
-            let main, canvas;
-            if (isFunc(fp.render3D)) {
-               main = fp;
-               canvas = fp.renderer?.domElement;
-            } else {
-               main = fp.getMainPainter();
-               canvas = main?._renderer?.domElement;
-            }
-            if (!isFunc(main?.render3D) || !isObject(canvas)) return;
+            const main = isFunc(fp.getRenderer) ? fp : fp.getMainPainter(),
+                  canvas = isFunc(main.getRenderer) ? main.getRenderer()?.domElement : null;
+            if (!isFunc(main?.render3D) || !isObject(canvas))
+               return;
 
             const sz2 = fp.getSizeFor3d(constants$1.Embed3D.Embed); // get size and position of DOM element as it will be embed
             main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
