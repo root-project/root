@@ -89,6 +89,10 @@ namespace ROOT {
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetThreadPoolSize();
+   /// \brief Enable or disable ROOT-7-style memory management.
+   void ROOT7MemoryManagement(bool enable);
+   /// \brief Test if ROOT-7-style memory management is enabled.
+   bool ROOT7MemoryManagement();
 }
 
 class TROOT : public TDirectory {
