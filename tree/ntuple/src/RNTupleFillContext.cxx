@@ -23,6 +23,7 @@
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 
 #include <algorithm>
 #include <utility>
@@ -102,4 +103,37 @@ void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
 
    fSink->CommitStagedClusters(fStagedClusters);
    fStagedClusters.clear();
+}
+
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSet *>
+ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name,
+                                                           std::unique_ptr<ROOT::RNTupleModel> model)
+{
+   TDirectory *dir = fSink->GetUnderlyingDirectory();
+   if (!dir)
+      return R__FAIL("AttributeSet can only be created from a TFile-based RNTupleWriter!");
+
+   std::string nameStr{name};
+   auto attrSet = Experimental::RNTupleAttributeSet::Create(name, std::move(model), this, *dir);
+   if (!attrSet)
+      return R__FORWARD_ERROR(attrSet);
+
+   auto [attrSetIter, wasInserted] = fAttributeSets.try_emplace(nameStr, attrSet.Unwrap());
+   if (!wasInserted)
+      return R__FAIL(std::string("Attempted to create an Attribute Set named '") + nameStr +
+                     "', but one already exists with that name");
+
+   // NOTE(gparolini): pointers into unordered_map are guaranteed to be stable. cppreference states:
+   // "References and pointers to either key or data stored in the container are only invalidated by
+   // erasing that element"
+   return &attrSetIter->second;
+}
+
+void ROOT::Experimental::RNTupleFillContext::CommitAttributes()
+{
+   for (auto &[_, attrSet] : fAttributeSets) {
+      attrSet.fFillContext.FlushCluster();
+      attrSet.fFillContext.fSink->CommitClusterGroup();
+      attrSet.fFillContext.fSink->CommitDataset();
+   }
 }

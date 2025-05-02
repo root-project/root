@@ -29,20 +29,6 @@
 
 #include <utility>
 
-static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &model)
-{
-   const auto &projFields = ROOT::Internal::GetProjectedFieldsOfModel(model);
-   if (!projFields.IsEmpty())
-      return R__FAIL("The Model passed to CreateAttributeSet cannot contain projected fields.");
-   
-   for (const auto &field : model.GetConstFieldZero()) {
-      if (field.GetStructure() == ROOT::ENTupleStructure::kStreamer)
-         return R__FAIL(std::string("The Model passed to CreateAttributeSet cannot contain Streamer field '") +
-                        field.GetQualifiedFieldName());
-   }
-   return ROOT::RResult<void>::Success();
-}
-
 ROOT::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
                                    std::unique_ptr<ROOT::Internal::RPageSink> sink)
    : fFillContext(std::move(model), std::move(sink)), fMetrics("RNTupleWriter")
@@ -150,6 +136,7 @@ void ROOT::RNTupleWriter::CommitDataset()
 
    CommitCluster(true /* commitClusterGroup */);
    fFillContext.fSink->CommitDataset();
+   fFillContext.CommitAttributes();
    fFillContext.fModel->Expire();
 }
 
@@ -163,19 +150,5 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
 ROOT::RResult<ROOT::Experimental::RNTupleAttributeSet *>
 ROOT::RNTupleWriter::CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model)
 {
-   TDirectory *dir = fFillContext.fSink->GetUnderlyingDirectory();
-   if (!dir)
-      return R__FAIL("AttributeSet can only be created from a TFile-based RNTupleWriter!");
-
-   if (auto modelValid = ValidateAttributeModel(*model); !modelValid)
-      return R__FORWARD_ERROR(modelValid);
-
-   std::string nameStr { name };
-   auto attrSet = std::make_unique<Experimental::RNTupleAttributeSet>(name, std::move(model), &fFillContext, *dir);
-   auto [attrSetIter, wasInserted] = fAttributeSets.try_emplace(nameStr, std::move(attrSet));
-   if (!wasInserted)
-      return R__FAIL(std::string("Attempted to create an Attribute Set named '") + nameStr +
-                                     "', but one already exists with that name");
-
-   return attrSetIter->second.get();
+   return fFillContext.CreateAttributeSet(name, std::move(model));
 }
