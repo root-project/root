@@ -1,0 +1,6 @@
+builtin_pcre=ON
+builtin_vdt=ON
+builtin_zlib=ON
+builtin_zstd=ON
+gfal=OFF
+tmva-cpu=OFF
