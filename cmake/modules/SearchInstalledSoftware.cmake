@@ -643,7 +643,7 @@ if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
     # FIXME: one need to find better way to extract path with GSL include files
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
     set(GSL_FOUND ON)
-    set(mathmore ON CACHE BOOL "Enabled because builtin_gls requested (${mathmore_description})" FORCE)
+    set(mathmore ON CACHE BOOL "Enabled because builtin_gsl requested (${mathmore_description})" FORCE)
   endif()
 endif()
 
