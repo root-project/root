@@ -231,7 +231,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
    // set the input
    if (fAttrLayout == 0) {
       if (fType == "float") {
-         out << SP << "float *" << OpName << "_input = tensor_" << fNX << ";\n";
+         out << SP << "float const*" << OpName << "_input = tensor_" << fNX << ";\n";
       }
    } else {
       if (fUseSession)

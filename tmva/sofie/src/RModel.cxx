@@ -687,7 +687,7 @@ std::string RModel::GenerateInferSignature(bool isdecl) {
          if (type == "other")
             throw std::runtime_error("TMVA-SOFIE: input tensor " + name +
                                      " is of a data type which is not yet supported.");
-         rGC += type + "* ";
+         rGC += type + " const* ";
       }
       rGC += "tensor_" + name + ",";
       i_input++;
