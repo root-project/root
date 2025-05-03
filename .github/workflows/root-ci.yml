@@ -99,6 +99,8 @@ jobs:
         include:
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+          - image: alma9
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu22
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
 
