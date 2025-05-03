@@ -987,8 +987,7 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
             fGC += "   f.seekg(" + std::to_string(pos) + ");\n";
         }
 
-        fGC += "   std::string tensor_name;\n";
-        fGC += "   size_t length;\n";
+        fGC += "   using TMVA::Experimental::SOFIE::ReadTensorFromStream;\n";
 
         // loop on tensors and parse the file
         for (auto& i: fInitializedTensors) {
@@ -996,25 +995,8 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
             if (!i.second.IsWeightTensor()) continue;
             std::string tensor_name = "tensor_" + i.first;
             if (i.second.type() == ETensorType::FLOAT) {
-                size_t length = 1;
-                length = ConvertShapeToLength(i.second.shape());
-                std::string slength = std::to_string(length);
-                fGC += "   f >> tensor_name >> length;\n";
-                fGC += "   if (tensor_name != \"" + tensor_name + "\" ) {\n";
-                fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor name; expected name is " +
-                       tensor_name + " , read \" + tensor_name;\n";
-                fGC += "      throw std::runtime_error(err_msg);\n";
-                fGC += "    }\n";
-                fGC += "   if (length != " + slength + ") {\n";
-                fGC += "      std::string err_msg = \"TMVA-SOFIE failed to read the correct tensor size; expected size is " +
-                       slength + " , read \" + std::to_string(length) ;\n";
-                fGC += "      throw std::runtime_error(err_msg);\n";
-                fGC += "    }\n";
-                fGC += "   for (size_t i = 0; i < length; ++i)\n";
-                fGC += "      f >> " + tensor_name + "[i];\n";
-                fGC += "   if (f.fail()) {\n";
-                fGC += "      throw std::runtime_error(\"TMVA-SOFIE failed to read the values for tensor " + tensor_name + "\");\n";
-                fGC += "   }\n";
+               std::string length = std::to_string(ConvertShapeToLength(i.second.shape()));
+               fGC += "   ReadTensorFromStream(f, " + tensor_name + ", \"" + tensor_name + "\", " + length + ");\n";
             } else {
                std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a file");
             }
