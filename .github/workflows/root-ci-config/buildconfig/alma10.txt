@@ -1,0 +1,5 @@
+builtin_zlib=ON
+builtin_zstd=ON
+builtin_vdt=ON
+ccache=ON
+tmva-sofie=ON
