@@ -284,7 +284,7 @@ Bool_t TStreamerElement::CannotSplit() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a pointer to the TClass of this element.
+/// Returns a pointer to the TClass of this element and updates fClassObject
 
 TClass *TStreamerElement::GetClassPointer() const
 {
