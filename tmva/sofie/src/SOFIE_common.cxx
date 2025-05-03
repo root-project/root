@@ -1,11 +1,12 @@
 #include "TMVA/SOFIE_common.hxx"
-#include<cctype>
+
+#include <cctype>
 #include <sstream>
 #include <stdexcept>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
 
 /// @brief  Convert shape from integer format to dynamic one (based on Dim)
 /// @param shape
@@ -430,7 +431,6 @@ std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape)
    return strides;
 }
 
-
-}//SOFIE
-}//Experimental
-}//TMVA
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA

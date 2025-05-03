@@ -21,9 +21,9 @@
 #include <cassert>
 #include <limits>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
 
 enum class ETensorType{
    UNDEFINED = 0, FLOAT = 1, UINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
@@ -735,8 +735,32 @@ inline void Gemm_Call(float *output, bool transa, bool transb, int m, int n, int
                                            &beta, output, ldc);
 }
 
-}//SOFIE
-}//Experimental
-}//TMVA
+template <class T>
+void ReadTensorFromStream(std::istream &is, T &target, std::string const &expectedName, std::size_t expectedLength)
+{
+   std::string name;
+   std::size_t length;
+   is >> name >> length;
+   if (name != expectedName) {
+      std::string err_msg =
+         "TMVA-SOFIE failed to read the correct tensor name; expected name is " + expectedName + " , read " + name;
+      throw std::runtime_error(err_msg);
+   }
+   if (length != expectedLength) {
+      std::string err_msg = "TMVA-SOFIE failed to read the correct tensor size; expected size is " +
+                            std::to_string(expectedLength) + " , read " + std::to_string(length);
+      throw std::runtime_error(err_msg);
+   }
+   for (size_t i = 0; i < length; ++i) {
+      is >> target[i];
+   }
+   if (is.fail()) {
+      throw std::runtime_error("TMVA-SOFIE failed to read the values for tensor " + expectedName);
+   }
+}
+
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 
 #endif //TMVA_SOFIE_RMODEL
