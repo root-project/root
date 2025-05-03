@@ -1,0 +1,9 @@
+builtin_pcre=ON
+builtin_vdt=ON
+builtin_zlib=ON
+builtin_zstd=ON
+gfal=OFF
+roofit=OFF
+root7=OFF
+runtime_cxxmodules=OFF
+tmva-cpu=OFF
