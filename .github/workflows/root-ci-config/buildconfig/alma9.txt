@@ -1,4 +1,3 @@
 builtin_nlohmannjson=ON
-builtin_vdt=ON
 ccache=ON
 tmva-sofie=ON
