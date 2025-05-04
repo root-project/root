@@ -201,19 +201,22 @@ void testHalfSampleMode()
       0.92055153154640645, 0.9373728168229567};
    double testw[testdata_n] {}; // all equal zero weights
    
-   //const long testdata2_n = 16;
-   //unsigned short testdata2[testdata2_n] = {0,0,0,0,0,
-   //                                 1,1,1,1,1,
-   //                                 2,2,2,2,2,2};
+   const long testdata2_n = 16;
+   unsigned short testdata2[testdata2_n] = {0,0,2,2,0,0,0,
+                                    1,1,1,1,1,
+                                    2,2,2,2};
    
    const long testdata3_n = 4;
    double testdata3[testdata3_n] = {1,2,3,3.25};
    
-   //const long testdata4_n = 10;
-   //unsigned short testdata4[testdata4_n] = {0,0,0,1,1,1,1,2,2,2};
+   const long testdata4_n = 10;
+   unsigned short testdata4[testdata4_n] = {1,1,1,1,0,0,0,2,2,2};
 
     R__ASSERT(TMath::ModeHalfSample(testdata_n, testdata, nullptr) == TMath::ModeHalfSample(testdata_n, testdata, testw)); // Check equal weights is as no weights
 
+    R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 2.);
+    R__ASSERT(TMath::ModeHalfSample(testdata4_n, testdata4) == 1.);
+   
     // Check that the low-n cases work as expected.
     R__ASSERT(TMath::ModeHalfSample(1, testdata3) == 1.);
     R__ASSERT(TMath::ModeHalfSample(2, testdata3) == 1.5);
