@@ -1425,7 +1425,7 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// contains ~n/2 values. Then it re-applies the same algorithm to
 /// that range until the range has <= 3 elements in it.
 ///
-/// \note See David R. Bickel: "On a Fast, Robust Estimator fo the Mode"
+/// \note See David R. Bickel: "On a Fast, Robust Estimator of the Mode"
 /// http://arxiv.org/ftp/math/papers/0505/0505419.pdf (page 19)
 /// Initial implementation suggestion by Jean-Fran\c{c}ois Caron, 2014 on JIRA-6849
 ///
