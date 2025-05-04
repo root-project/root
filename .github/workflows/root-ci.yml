@@ -394,6 +394,7 @@ jobs:
             property: clang
             overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
           - image: alma10
+            is_special: true
           # Disable GPU builds until the DNS problem is solved  
           # - image: ubuntu2404-cuda
           #   is_special: true
