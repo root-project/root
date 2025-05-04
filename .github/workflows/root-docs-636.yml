@@ -3,7 +3,6 @@ name: 'ROOT Docs 6.36'
 on:
   schedule:
     - cron: '0 1 * * *'
-    - cron: '0 12 * * *'
 
   workflow_dispatch:
     inputs:
