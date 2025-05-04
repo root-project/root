@@ -1655,10 +1655,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                                  if (fNpar>=gMAXPAR) err=7; // too many parameters
                                  if (!err) fNoper++;
                                  if (fNpar == 2) SetNumber(200);
-                              } else err=20;
-                           } else err = 20; // non integer value for parameter number
+                              } else
+                                 err = 20;
+                           } else
+                              err = 20; // non integer value for parameter number
                         } else {
-                           err=26; // unknown name
+                           err = 26; // unknown name
                            chaine_error=chaine;
                         }
 
@@ -1741,11 +1743,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                                  if (fNpar>=gMAXPAR) err=7; // too many parameters
                                  if (!err) fNoper++;
                                  if(fNpar == 3) SetNumber(100);
-                              } else err = 20; // non integer value for parameter number
+                              } else
+                                 err = 20; // non integer value for parameter number
                            }
-                        } else if (err==0) {
-                           err=26; // unknown name
-                           chaine_error=chaine1ST;
+                        } else if (err == 0) {
+                           err = 26; // unknown name
+                           chaine_error = chaine1ST;
                         }
 
    // Look for landau, xlandau,ylandau,xylandau
@@ -1826,11 +1829,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                                  if (fNpar>=gMAXPAR) err=7; // too many parameters
                                  if (!err) fNoper++;
                                  if (fNpar == 3) SetNumber(400);
-                              } else err = 20; // non integer value for parameter number
+                              } else
+                                 err = 20; // non integer value for parameter number
                            }
-                        } else if (err==0) {
-                           err=26; // unknown name
-                           chaine_error=chaine1ST;
+                        } else if (err == 0) {
+                           err = 26; // unknown name
+                           chaine_error = chaine1ST;
                         }
 
    // Look for a polynomial
@@ -1873,7 +1877,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            }
                            if (!err) {
                               auto res = sscanf(ctemp.Data(), "%d", &inter);
-                              if (res != 1 || inter < 0) err = 20;
+                              if (res != 1 || inter < 0)
+                                 err = 20;
                            }
                         }
                         else {
