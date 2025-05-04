@@ -471,42 +471,19 @@ if (builtin_cling)
     endif()
   endif()
 else()
-  set(Cling_DIR ${LLVM_BINARY_DIR}/lib/cmake/cling/)
-  find_package(Cling REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/cling" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
-  find_package(Clang REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/clang" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
+  # We're using the GLOBAL argument to find_package(Cling) to make the
+  # imported targets available everywhere. This feature was only introduced
+  # with CMake 3.24, so we error out if the version is lower.
+  # TODO: remove once minimum CMake version required for ROOT is >= 3.24.
+  if(CMAKE_VERSION VERSION_LESS 3.24.0)
+    message(FATAL_ERROR "Building ROOT with builtin_cling=OFF requires at least CMake 3.24.0 (current CMake version is ${CMAKE_VERSION})")
+  endif()
 
-  # We need to consider not just the direct link dependencies, but also the
-  # transitive link dependencies. Do this by starting with the set of direct
-  # dependencies, then the dependencies of those dependencies, and so on.
-  set(new_libs "clingMetaProcessor")
-  set(link_libs ${new_libs})
-  while(NOT "${new_libs}" STREQUAL "")
-    foreach(lib ${new_libs})
-      if(TARGET ${lib})
-        get_target_property(lib_type ${lib} TYPE)
-        if("${lib_type}" STREQUAL "STATIC_LIBRARY")
-          list(APPEND static_libs ${lib})
-        else()
-          list(APPEND other_libs ${lib})
-        endif()
-        get_target_property(transitive_libs ${lib} INTERFACE_LINK_LIBRARIES)
-        if (NOT transitive_libs)
-          continue()
-        endif()
-        foreach(transitive_lib ${transitive_libs})
-          list(FIND link_libs ${transitive_lib} idx)
-          #if(TARGET ${transitive_lib} AND idx EQUAL -1)
-          if(idx EQUAL -1)
-            list(APPEND newer_libs ${transitive_lib})
-            list(APPEND link_libs ${transitive_lib})
-          endif()
-        endforeach(transitive_lib)
-      endif()
-    endforeach(lib)
-    set(new_libs ${newer_libs})
-    set(newer_libs "")
-  endwhile()
-  set(CLING_DEPEND_LIBS ${link_libs} CACHE STRING "")
+  find_package(Cling REQUIRED CONFIG GLOBAL)
+  find_package(Clang REQUIRED CONFIG)
+
+  # Forward CLING_INCLUDE_DIRS so it can be used outside the interpreter subdirectory
+  set(CLING_INCLUDE_DIRS ${CLING_INCLUDE_DIRS} PARENT_SCOPE)
 endif(builtin_cling)
 
 
