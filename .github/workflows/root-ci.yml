@@ -366,6 +366,7 @@ jobs:
           - image: ubuntu2404
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
+            is_special: true
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
     runs-on:
       - self-hosted
