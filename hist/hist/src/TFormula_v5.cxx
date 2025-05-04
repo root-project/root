@@ -1644,8 +1644,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (err==0) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter>=0) {
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res == 1 && inter >= 0) {
                                  inter += offset;
                                  actionCode = kexpo + inter2;
                                  actionParam = inter;
@@ -1730,8 +1730,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (err==0) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter >= 0) {
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res == 1 && inter >= 0) {
                                  inter += offset;
                                  actionCode = kgaus + inter2;
                                  actionParam = inter;
@@ -1815,8 +1815,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (err==0) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter >= 0) {
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res == 1 && inter >= 0) {
                                  inter += offset;
                                  actionCode = klandau + inter2;
                                  actionParam = inter;
@@ -1872,8 +1872,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               }
                            }
                            if (!err) {
-                              sscanf(ctemp.Data(),"%d",&inter);
-                              if (inter < 0) err = 20;
+                              auto res = sscanf(ctemp.Data(), "%d", &inter);
+                              if (res != 1 || inter < 0) err = 20;
                            }
                         }
                         else {
@@ -2088,12 +2088,14 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            }
                         }
                         if (!err) {
-                           sscanf(ctemp.Data(),"%d",&valeur);
-                           actionCode = kParameter;
-                           actionParam = offset + valeur;
-                           SetAction(fNoper-1, actionCode, actionParam);
-                           fExpr[fNoper-1] = "[";
-                           fExpr[fNoper-1] = (fExpr[fNoper-1] + (long int)(valeur+offset)) + "]";
+                           auto res = sscanf(ctemp.Data(), "%d", &valeur);
+                           if (res == 1) {
+                              actionCode = kParameter;
+                              actionParam = offset + valeur;
+                              SetAction(fNoper - 1, actionCode, actionParam);
+                              fExpr[fNoper - 1] = "[";
+                              fExpr[fNoper - 1] = (fExpr[fNoper - 1] + (long int)(valeur + offset)) + "]";
+                           }
                         }
                      } else if (chaine == "pi") {
                         fExpr[fNoper] = "pi";
@@ -3598,8 +3600,8 @@ void TFormula::Convert(UInt_t /* fromVersion */)
          newActionCode = kSignInv;
 
          Float_t aresult = 99.99;
-         sscanf((const char*)fExpr[i],"%g",&aresult);
-         R__ASSERT((aresult+1)<0.001);
+         auto res = sscanf((const char *)fExpr[i], "%g", &aresult);
+         R__ASSERT(res == 1 && (aresult + 1) < 0.001);
 
          ++i; // skip the implied multiplication.
 
