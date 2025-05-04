@@ -255,7 +255,8 @@ void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, st
 void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape) {
     tensor_name = UTILITY::Clean_name(tensor_name);
     if (CheckIfTensorAlreadyExist(tensor_name)) {
-        throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+      //   throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+      return;
     }
     TensorInfo new_tensor {type, shape};
     fIntermediateTensorInfos[tensor_name] = new_tensor;
@@ -419,6 +420,38 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
    }
 }
 
+void RModel::CheckAndFuseOperators(){
+   size_t idx = 0;
+   std::vector<size_t> fusable_indices;
+   std::string fusable_propagate_tensor_name;
+
+   while (idx < fOperators.size()) {
+       if (fOperators[idx]->GetOpKind() == OperatorKind::GEMM) {
+           fusable_indices.clear();
+           size_t j = idx + 1;
+
+           for (; j < fOperators.size(); ++j) {
+               if (FusableKinds.count(fOperators[j]->GetOpKind())) {
+                   fusable_indices.push_back(j);
+                   if (fIntermediateTensorFrequencyLookup[fOperators[j]->GetFusableOutputTensorName()] > 1) {
+                       fusable_propagate_tensor_name = fOperators[j]->GetFusableOutputTensorName();
+                       break;
+                   }
+               } else {
+                   break;
+               }
+           }
+
+           for (auto &it : fusable_indices) {
+               fOperators[it]->UpdateFusableTensorName(fusable_propagate_tensor_name);
+           }
+
+           idx = j; // move idx past fused ops
+       } else {
+           ++idx;
+       }
+   }
+}
 
 
 void RModel::Initialize(int batchSize, bool verbose) {
@@ -532,6 +565,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       }
       i++;
    }
+   CheckAndFuseOperators();
 
    fIsInitialized = true;
 }

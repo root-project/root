@@ -2,6 +2,7 @@
 #define TMVA_SOFIE_ROPERATOR
 
 #include <vector>
+#include <set>
 #include <memory>
 
 #include "TMVA/SOFIE_common.hxx"
@@ -14,6 +15,15 @@ namespace Experimental{
 namespace SOFIE{
 
 class RModel;
+
+enum class OperatorKind {
+      GEMM = 0,
+      LAYERNORM = 1,
+      RELU = 2,
+      UNDEFINED = 3
+};
+   
+inline std::set<OperatorKind> FusableKinds = { OperatorKind::RELU, OperatorKind::LAYERNORM };
 
 class ROperator{
 
@@ -32,13 +42,16 @@ public:
    // generate session data members specific to operator
    virtual std::string GenerateSessionMembersCode(std::string /*opName*/) { return ""; }
    virtual std::string Header() { return "";}
+   virtual std::string GetFusableOutputTensorName() { return "";}
+   virtual void UpdateFusableTensorName(std::string){ return;};
+
 
    //virtual void Forward_reference() = 0;
    //virtual void Forward_blas() = 0;
    virtual ~ROperator(){}
 
 protected:
-
+   OperatorKind fKind = OperatorKind::UNDEFINED;
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
    bool fUseSession = false;        ///< flag to identify if using the session class
    bool fIsOutputConstant = false;  ///< flag to identify if operator has a constant output (no need to generate code)
@@ -56,6 +69,10 @@ public:
       return fOutputTensorNames;
    }
 
+   OperatorKind GetOpKind(){
+            return fKind;
+   }
+   
 };
 
 
