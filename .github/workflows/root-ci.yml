@@ -259,6 +259,7 @@ jobs:
             property: clang
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
           - image: alma10
+            is_special: true
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
             # Disable until the DNS issues are understood
           # - image: ubuntu2404-cuda
