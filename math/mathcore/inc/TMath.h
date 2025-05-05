@@ -1497,13 +1497,14 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
       // Initialize search
       Double_t min_v_range = values[sn-1] - values[0];
       size_t start = 0;
-      size_t N = std::ceil(sn*0.5);
-      size_t stop = start + sn - N + 1; // +1 since we use < and not <=
+      size_t n = sn;
       size_t jMin = 0;
 
       // Do recursive calls dividing each time the interval by two
-      for (; ; N = std::ceil(N*0.5)) {
-
+      while (n > 3) {
+         const size_t N = std::ceil(n*0.5);
+         const size_t stop = start + n - N + 1; // +1 since we use < and not <=
+         start = jMin;
          // Find sequentally what v_range is smallest by sliding the half-window
          for(size_t i = start; i < stop; i++)
          {
@@ -1514,14 +1515,11 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
                jMin = i;
             }
          }
-         start = jMin;
-         stop = jMin + N - std::ceil(N*0.5) + 1; // +1 since we use < and not <=
          //assert(min_v_range == values[N-1+start] - values[start]);
-         if (N < 4)
-            break;
+         n = N;
       }
 
-      if (N == 3) {
+      if (n == 3) {
          const double d1_0 = values[start+1] - values[start+0];
          const double d2_1 = values[start+2] - values[start+1];
          if (d2_1 < d1_0)
@@ -1531,7 +1529,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
          else
             return values[start+1];
       }
-      else if (N == 2) {
+      else if (n == 2) {
          return (values[start] + values[start+1])*0.5;
       }
       else {
