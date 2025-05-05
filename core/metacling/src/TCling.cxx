@@ -304,7 +304,21 @@ private: \
 public: \
    static TClass *Class() { static TClass* sIsA = 0; if (!sIsA) sIsA = TClass::GetClass(#name); return sIsA; } \
    static const char *Class_Name() { return #name; } \
-   virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd { return true; } \
+   virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd {                         \
+      static std::atomic<UChar_t> recurseBlocker(0);                                           \
+      if (R__likely(recurseBlocker >= 2)) {                                                    \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;  \
+      } else if (recurseBlocker == 1) {                                                        \
+         return false;                                                                         \
+      } else if (recurseBlocker++ == 0) {                                                      \
+         ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency =        \
+            ::ROOT::Internal::HasConsistentHashMember(_QUOTE_(name)) ||                        \
+            ::ROOT::Internal::HasConsistentHashMember(*IsA());                                 \
+         ++recurseBlocker;                                                                     \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;  \
+      }                                                                                        \
+      return false; /* unreachable */                                                          \
+   }                                                                                           \
    static Version_t Class_Version() { return id; } \
    static TClass *Dictionary() { return 0; } \
    virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
