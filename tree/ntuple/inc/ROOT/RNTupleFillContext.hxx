@@ -34,7 +34,7 @@
 namespace ROOT {
 namespace Experimental {
 
-class RNTupleAttributeSet;
+class RNTupleAttributeSetWriter;
 struct RNTupleAttributeSetDescriptor;
 
 // clang-format off
@@ -55,7 +55,7 @@ sequential writing, please refer to RNTupleWriter.
 class RNTupleFillContext {
    friend class ROOT::RNTupleWriter;
    friend class RNTupleParallelWriter;
-   friend class RNTupleAttributeSet;
+   friend class RNTupleAttributeSetWriter;
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
@@ -88,7 +88,7 @@ private:
    std::vector<ROOT::Internal::RPageSink::RStagedCluster> fStagedClusters;
 
    /// All the Attribute Sets created from this FillContext
-   std::unordered_map<std::string, Experimental::RNTupleAttributeSet> fAttributeSets;
+   std::unordered_map<std::string, Experimental::RNTupleAttributeSetWriter> fAttributeSets;
 
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
@@ -185,7 +185,7 @@ public:
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   ROOT::RResult<ROOT::Experimental::RNTupleAttributeSet *>
+   ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriter *>
    CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model);
 }; // class RNTupleFillContext
 
