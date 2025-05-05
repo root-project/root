@@ -195,7 +195,7 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
    EXPECT_STREQ("ntuple", proc->GetProcessorName().c_str());
 
    {
-      auto namedProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, "my_ntuple");
+      auto namedProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, nullptr, "my_ntuple");
       EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
    }
 
@@ -351,7 +351,7 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
       RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {});
 
    std::vector<std::unique_ptr<RNTupleProcessor>> auxProcs;
-   auxProcs.emplace_back(RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2"));
+   auxProcs.emplace_back(RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2"));
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProcs), {"i"});
 
@@ -377,7 +377,8 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
    auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
    std::vector<std::unique_ptr<RNTupleProcessor>> auxProcsIntermediate;
-   auxProcsIntermediate.emplace_back(RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2"));
+   auxProcsIntermediate.emplace_back(
+      RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2"));
 
    std::vector<std::unique_ptr<RNTupleProcessor>> auxProcs;
    auxProcs.emplace_back(RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
