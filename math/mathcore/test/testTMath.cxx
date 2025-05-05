@@ -210,7 +210,7 @@ void testHalfSampleMode()
 
    const long testdata1_n = 5;
    unsigned short testdata1[testdata1_n] = {0, 2, 2, 1, 1};
-   R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 1.);
+   R__ASSERT(TMath::ModeHalfSample(testdata1_n, testdata1) == 1.);
 
    const long testdata2_n = 16;
    unsigned short testdata2[testdata2_n] = {0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2};
@@ -229,8 +229,8 @@ void testHalfSampleMode()
    unsigned short testdata4[testdata4_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2};
    R__ASSERT(TMath::ModeHalfSample(testdata4_n, testdata4) == 0.);
 
-   const long testdata5_n = 10;
-   unsigned short testdata5[testdata5_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+   const long testdata5_n = 18;
+   unsigned short testdata5[testdata5_n] = {1, 1, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2};
    R__ASSERT(TMath::ModeHalfSample(testdata5_n, testdata5) == 2.);
 
    // Test now with real weights
