@@ -224,7 +224,7 @@ void testHalfSampleMode()
    R__ASSERT(TMath::ModeHalfSample(1, testdata3) == 1.);
    R__ASSERT(TMath::ModeHalfSample(2, testdata3) == 1.5);
    R__ASSERT(TMath::ModeHalfSample(3, testdata3) == 2.);
-   R__ASSERT(TMath::ModeHalfSample(3, testdata3+1) == (3 + 3.25) / 2.0);
+   R__ASSERT(TMath::ModeHalfSample(3, testdata3 + 1) == (3 + 3.25) / 2.0);
 
    const long testdata4_n = 10;
    unsigned short testdata4[testdata4_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2};
@@ -233,6 +233,20 @@ void testHalfSampleMode()
    const long testdata5_n = 10;
    unsigned short testdata5[testdata5_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
    R__ASSERT(TMath::ModeHalfSample(testdata5_n, testdata5) == 2.);
+
+   // Test now with real weights
+   const long testdata6_n = 4;
+   short testdata6[testdata6_n] = {-1, 2, 3, 5};
+   double weightdata6[testdata6_n] = {2, 3, 1, 6};
+   R__ASSERT(TMath::ModeHalfSample(testdata6_n, testdata6, weightdata6) == 5);
+   R__ASSERT(TMath::ModeHalfSample(2, testdata6, weightdata6) == TMath::Mean(2, testdata6, weightdata6));
+
+   // Test now with real weights and duplicates
+   const long testdata7_n = 5;
+   short testdata7[testdata7_n] = {-1, 2, 3, 5, -1};
+   double weightdata7[testdata7_n] = {2, 3, 1, 6, 5};
+   R__ASSERT(TMath::ModeHalfSample(testdata7_n, testdata7, weightdata7) == -1);
+
 }
 
 void testTMath()
