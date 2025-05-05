@@ -392,11 +392,11 @@ private:
    /// \brief Construct a new RNTupleProcessor for processing a single RNTuple.
    ///
    /// \param[in] ntuple The source specification (name and storage location) for the RNTuple to process.
+   /// \param[in] model The model that specifies which fields should be read by the processor.
    /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::Create, this is
    /// the name of the underlying RNTuple.
-   /// \param[in] model The model that specifies which fields should be read by the processor.
-   RNTupleSingleProcessor(RNTupleOpenSpec ntuple, std::string_view processorName,
-                          std::unique_ptr<ROOT::RNTupleModel> model);
+   RNTupleSingleProcessor(RNTupleOpenSpec ntuple, std::unique_ptr<ROOT::RNTupleModel> model,
+                          std::string_view processorName);
 
 public:
    RNTupleSingleProcessor(const RNTupleSingleProcessor &) = delete;
@@ -447,15 +447,15 @@ private:
    /// \brief Construct a new RNTupleChainProcessor.
    ///
    /// \param[in] ntuples The source specification (name and storage location) for each RNTuple to process.
-   /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateChain, this
-   /// is the name of the first inner processor.
    /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
    /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
    /// specified, it is created from the descriptor of the first RNTuple specified in `ntuples`.
+   /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateChain, this
+   /// is the name of the first inner processor.
    ///
    /// RNTuples are processed in the order in which they are specified.
-   RNTupleChainProcessor(std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName,
-                         std::unique_ptr<ROOT::RNTupleModel> model);
+   RNTupleChainProcessor(std::vector<std::unique_ptr<RNTupleProcessor>> processors,
+                         std::unique_ptr<ROOT::RNTupleModel> model, std::string_view processorName);
 
 public:
    RNTupleChainProcessor(const RNTupleChainProcessor &) = delete;
@@ -526,19 +526,18 @@ private:
    /// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified processor. If an empty list is provided, it is assumed that the processors are fully aligned.
-   /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateJoin, this
-   /// is the name of the primary processor.
    /// \param[in] primaryModel An RNTupleModel specifying which fields from the primary processor can be read by the
    /// processor. If no model is provided, one will be created based on the descriptor of the primary processor.
    /// \param[in] auxModels A list of RNTupleModels specifying which fields from the corresponding auxiliary processor
    /// (according to the order of `auxProcessors`) can be read by the processor. If this vector is empty, the models
    /// will be inferred from their corresponding processors. This also applies to individual auxiliary processors for
    /// which the provided model is a `nullptr`.
+   /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateJoin, this
+   /// is the name of the primary processor.
    RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
                         std::vector<std::unique_ptr<RNTupleProcessor>> auxProcessors,
-                        const std::vector<std::string> &joinFields, std::string_view processorName,
-                        std::unique_ptr<ROOT::RNTupleModel> primaryModel = nullptr,
-                        std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels = {});
+                        const std::vector<std::string> &joinFields, std::unique_ptr<ROOT::RNTupleModel> primaryModel,
+                        std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels, std::string_view processorName);
 
 public:
    RNTupleJoinProcessor(const RNTupleJoinProcessor &) = delete;
