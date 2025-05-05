@@ -8,8 +8,8 @@
 #include <map>
 #include <set>
 #include <bitset>
-
-#include <string.h>
+#include <iostream>
+#include <cstring>
 
 #include "TNamed.h"
 #include "TBox.h"
@@ -19,7 +19,6 @@
 #include "TMap.h"
 #include "TClonesArray.h"
 #include "TArrayI.h"
-#include "Riostream.h"
 #include "TBufferJSON.h"
 #include "TClass.h"
 
@@ -61,13 +60,13 @@ class TJsonEx1 {
 
      virtual void Print()
      {
-         cout << "   fBool = " << fBool << endl;
-         cout << "   fChar = " << fChar << endl;
-         cout << "   fShort = " << fShort << endl;
-         cout << "   fInt = " << fInt << endl;
-         cout << "   fLong = " << fLong << endl;
-         cout << "   fFloat = " << fFloat << endl;
-         cout << "   fDouble = " << fDouble << endl;
+         std::cout << "   fBool = " << fBool << std::endl;
+         std::cout << "   fChar = " << fChar << std::endl;
+         std::cout << "   fShort = " << fShort << std::endl;
+         std::cout << "   fInt = " << fInt << std::endl;
+         std::cout << "   fLong = " << fLong << std::endl;
+         std::cout << "   fFloat = " << fFloat << std::endl;
+         std::cout << "   fDouble = " << fDouble << std::endl;
      }
 
 };
@@ -157,19 +156,19 @@ class TJsonEx2 {
      void Print()
      {
          for (int i=0;i<4;i++)
-           cout << "   fTest1[" << i << "] = " << fTest1[i] << endl;
+            std::cout << "   fTest1[" << i << "] = " << fTest1[i] << std::endl;
 
          for (int i=0;i<2;i++)
          for (int j=0;j<3;j++)
          for (int k=0;k<4;k++) {
-            cout << "  for indexes ["<<i<<"]["<<j<<"]["<<k<<"]" << endl;
-            cout << "     fBool = " << fBool[i][j][k] << endl;
-            cout << "     fChar = " << fChar[i][j][k] << endl;
-            cout << "     fShort = " << fShort[i][j][k] << endl;
-            cout << "     fInt = " << fInt[i][j][k] << endl;
-            cout << "     fLong = " << fLong[i][j][k] << endl;
-            cout << "     fFloat = " << fFloat[i][j][k] << endl;
-            cout << "     fDouble = " << fDouble[i][j][k] << endl;
+            std::cout << "  for indexes ["<<i<<"]["<<j<<"]["<<k<<"]" << std::endl;
+            std::cout << "     fBool = " << fBool[i][j][k] << std::endl;
+            std::cout << "     fChar = " << fChar[i][j][k] << std::endl;
+            std::cout << "     fShort = " << fShort[i][j][k] << std::endl;
+            std::cout << "     fInt = " << fInt[i][j][k] << std::endl;
+            std::cout << "     fLong = " << fLong[i][j][k] << std::endl;
+            std::cout << "     fFloat = " << fFloat[i][j][k] << std::endl;
+            std::cout << "     fDouble = " << fDouble[i][j][k] << std::endl;
          }
      }
 };
@@ -260,14 +259,14 @@ class TJsonEx3 {
      void Print()
      {
          for (int i=0;i<fSize;i++) {
-            cout << "  index = " << i << endl;
-            cout << "     fBool = " << fBool[i] << endl;
-            cout << "     fChar = " << fChar[i] << endl;
-            cout << "     fShort = " << fShort[i] << endl;
-            cout << "     fInt = " << fInt[i] << endl;
-            cout << "     fLong = " << fLong[i] << endl;
-            cout << "     fFloat = " << fFloat[i] << endl;
-            cout << "     fDouble = " << fDouble[i] << endl;
+            std::cout << "  index = " << i << std::endl;
+            std::cout << "     fBool = " << fBool[i] << std::endl;
+            std::cout << "     fChar = " << fChar[i] << std::endl;
+            std::cout << "     fShort = " << fShort[i] << std::endl;
+            std::cout << "     fInt = " << fInt[i] << std::endl;
+            std::cout << "     fLong = " << fLong[i] << std::endl;
+            std::cout << "     fFloat = " << fFloat[i] << std::endl;
+            std::cout << "     fDouble = " << fDouble[i] << std::endl;
          }
      }
 
@@ -309,10 +308,10 @@ class TJsonEx4 : public TJsonEx1 {
       void Print()
       {
           TJsonEx1::Print();
-          cout << "   fStr1 = " << fStr1 << endl;
-          cout << "   fStr2 = " << (fStr2 ? fStr2 : "null") << endl;
-          cout << "   fDummy2 = " << fDummy2 << endl;
-          cout << "   fStr3 = " << fStr3 << endl;
+          std::cout << "   fStr1 = " << fStr1 << std::endl;
+          std::cout << "   fStr2 = " << (fStr2 ? fStr2 : "null") << std::endl;
+          std::cout << "   fDummy2 = " << fDummy2 << std::endl;
+          std::cout << "   fStr3 = " << fStr3 << std::endl;
       }
 };
 
@@ -375,31 +374,31 @@ class TJsonEx5 {
 
      void Print()
      {
-        cout << endl << "!!!!!!!!!! fObj1 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fObj1 !!!!!!!!!!!" << std::endl;
         fObj1.Print();
 
-        cout << endl << "!!!!!!!!!! fObj2 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fObj2 !!!!!!!!!!!" << std::endl;
         fObj2.Print();
 
-        cout << endl << "!!!!!!!!!! fObj3 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fObj3 !!!!!!!!!!!" << std::endl;
         fObj3.Print();
 
-        cout << endl << "!!!!!!!!!! fPtr1 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fPtr1 !!!!!!!!!!!" << std::endl;
         if (fPtr1) fPtr1->Print();
 
-        cout << endl << "!!!!!!!!!! fPtr2 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fPtr2 !!!!!!!!!!!" << std::endl;
         if (fPtr2) fPtr2->Print();
 
-        cout << endl << "!!!!!!!!!! fPtr3 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fPtr3 !!!!!!!!!!!" << std::endl;
         if (fPtr3) fPtr3->Print();
 
-        cout << endl << "!!!!!!!!!! fSafePtr1 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fSafePtr1 !!!!!!!!!!!" << std::endl;
         if (fSafePtr1) fSafePtr1->Print();
 
-        cout << endl << "!!!!!!!!!! fSafePtr2 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fSafePtr2 !!!!!!!!!!!" << std::endl;
         if (fSafePtr2) fSafePtr2->Print();
 
-        cout << endl << "!!!!!!!!!! fSafePtr3 !!!!!!!!!!!" << endl;
+        std::cout << std::endl << "!!!!!!!!!! fSafePtr3 !!!!!!!!!!!" << std::endl;
         if (fSafePtr3) fSafePtr3->Print();
      }
 };
@@ -480,31 +479,31 @@ class TJsonEx6 {
      void Print()
      {
         for (int n=0;n<3;n++) {
-           cout << endl << "!!!!!!!!!! fObj1["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fObj1["<<n<<"] !!!!!!!!!!!" << std::endl;
            fObj1[n].Print();
 
-           cout << endl << "!!!!!!!!!! fObj2["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fObj2["<<n<<"] !!!!!!!!!!!" << std::endl;
            fObj2[n].Print();
 
-           cout << endl << "!!!!!!!!!! fObj3["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fObj3["<<n<<"] !!!!!!!!!!!" << std::endl;
            fObj3[n].Print();
 
-           cout << endl << "!!!!!!!!!! fPtr1["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fPtr1["<<n<<"] !!!!!!!!!!!" << std::endl;
            if (fPtr1[n]) fPtr1[n]->Print();
 
-           cout << endl << "!!!!!!!!!! fPtr2["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fPtr2["<<n<<"] !!!!!!!!!!!" << std::endl;
            if (fPtr2[n]) fPtr2[n]->Print();
 
-           cout << endl << "!!!!!!!!!! fPtr3["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fPtr3["<<n<<"] !!!!!!!!!!!" << std::endl;
            if (fPtr3[n]) fPtr3[n]->Print();
 
-           cout << endl << "!!!!!!!!!! fSafePtr1["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fSafePtr1["<<n<<"] !!!!!!!!!!!" << std::endl;
            if (fSafePtr1[n]) fSafePtr1[n]->Print();
 
-           cout << endl << "!!!!!!!!!! fSafePtr2["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fSafePtr2["<<n<<"] !!!!!!!!!!!" << std::endl;
            if (fSafePtr2[n]) fSafePtr2[n]->Print();
 
-           cout << endl << "!!!!!!!!!! fSafePtr3["<<n<<"] !!!!!!!!!!!" << endl;
+           std::cout << std::endl << "!!!!!!!!!! fSafePtr3["<<n<<"] !!!!!!!!!!!" << std::endl;
            if (fSafePtr3[n]) fSafePtr3[n]->Print();
         }
      }
@@ -604,12 +603,12 @@ class TJsonEx7 {
       fStrArr[1] = "Value of fStrArr[1]";
       fStrArr[2] = "Value of fStrArr[2]";
 
-      fStrPtr1 = new string("Value of < >  &lt; &gt; string fStrPtr1");
-      fStrPtr2 = nullptr; // new string("Value of string fStrPtr2");
+      fStrPtr1 = new std::string("Value of < >  &lt; &gt; string fStrPtr1");
+      fStrPtr2 = nullptr; // new std::string("Value of string fStrPtr2");
 
-      fStrPtrArr[0] = new string("value of fStrPtrArr[0]");
-      fStrPtrArr[1] = new string("value of fStrPtrArr[1]");
-      fStrPtrArr[2] = new string("value of fStrPtrArr[2]");
+      fStrPtrArr[0] = new std::string("value of fStrPtrArr[0]");
+      fStrPtrArr[1] = new std::string("value of fStrPtrArr[1]");
+      fStrPtrArr[2] = new std::string("value of fStrPtrArr[2]");
 
       for (int n=0;n<10;n++)
          fBoolArr[n] = (n%3 == 1);
@@ -668,7 +667,7 @@ class TJsonEx7 {
 
       for (int n=0;n<sz5;n++) {
         fVectString.push_back(Form("string %d content",n));
-        fVectStringPtr.push_back(new string(Form("string pointer %d content",n)));
+        fVectStringPtr.push_back(new std::string(Form("string pointer %d content",n)));
       }
 
 
@@ -701,8 +700,8 @@ class TJsonEx7 {
          fMapIntEx1[n] = TJsonEx1(); fMapIntEx1[n].Init(n+8);
          fMapIntEx1Ptr[n] = new TJsonEx1; fMapIntEx1Ptr[n]->Init(n+3);
 
-         fMultimapIntDouble.insert(pair<int,double>(n,n*6));
-         fMultimapIntDouble.insert(pair<int,double>(n,1000+n*6));
+         fMultimapIntDouble.insert(std::pair<int,double>(n,n*6));
+         fMultimapIntDouble.insert(std::pair<int,double>(n,1000+n*6));
          fSetDouble.insert(n+2);
          fMultisetDouble.insert((n+1)*17);
       }
@@ -718,17 +717,17 @@ class TJsonEx7 {
 
    void Print()
    {
-      cout << "Do not print everything, just something..." << endl;
+      std::cout << "Do not print everything, just something..." << std::endl;
 
-      cout << " fStr1 = " << fStr1 << endl;
+      std::cout << " fStr1 = " << fStr1 << std::endl;
 
-      cout << " fStrArr[1] = " << fStrArr[1] << endl;
+      std::cout << " fStrArr[1] = " << fStrArr[1] << std::endl;
 
-      //cout << " fVectEx1.back().Print()" << endl;
+      //std::cout << " fVectEx1.back().Print()" << std::endl;
       //fVectEx1.back().Print();
-      //cout << " fVectEx1Ptr.size() = " << fVectEx1Ptr.size() << endl;
-      //cout << " fVectStringPtr.size() = " << fVectStringPtr.size() << endl;
-      //cout << " fMapIntEx1Ptr.size() = " << fMapIntEx1Ptr.size() << endl;
+      //std::cout << " fVectEx1Ptr.size() = " << fVectEx1Ptr.size() << std::endl;
+      //std::cout << " fVectStringPtr.size() = " << fVectStringPtr.size() << std::endl;
+      //std::cout << " fMapIntEx1Ptr.size() = " << fMapIntEx1Ptr.size() << std::endl;
    }
 };
 
@@ -754,11 +753,11 @@ class TJsonEx8 : public std::vector<int> {
 
    void Print()
    {
-      cout << "vector size = " << size() << endl;
+      std::cout << "vector size = " << size() << std::endl;
       for (unsigned n=0;n<size(); n++)
-        cout << "vector.at(" << n << ") = " << at(n) << endl;
-      cout << " fInt = " << fInt << endl;
-      cout << " fStdString = " << fStdString << endl;
+        std::cout << "vector.at(" << n << ") = " << at(n) << std::endl;
+      std::cout << " fInt = " << fInt << std::endl;
+      std::cout << " fStdString = " << fStdString << std::endl;
    }
 };
 

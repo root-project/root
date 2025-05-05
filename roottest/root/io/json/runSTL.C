@@ -1,13 +1,8 @@
-{
-// Fill out the code of the actual test
-#ifndef SECOND_RUN
-   gROOT->ProcessLine(".L test_classes.h+");
-#endif
+#include "test_classes.h"
 
-#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
-#define SECOND_RUN
-   gROOT->ProcessLine(".x runSTL.C");
-#else
+void runSTL()
+{
+   gSystem->Load("libJsonTestClasses");
 
    TJsonEx7 ex7; ex7.Init();
    TJsonEx8 ex8; ex8.Init();
@@ -15,27 +10,20 @@
    TJsonEx13 ex13; ex13.Init();
    TString json;
 
-   cout << " ====== different STL containers TJsonEx7 ===== " << endl;
+   std::cout << " ====== different STL containers TJsonEx7 ===== " << std::endl;
    json = TBufferJSON::ToJSON(&ex7);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== STL as base class TJsonEx8 ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== STL as base class TJsonEx8 ===== " << std::endl;
    json = TBufferJSON::ToJSON(&ex8);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== STL vector of complex classes TJsonEx12 ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== STL vector of complex classes TJsonEx12 ===== " << std::endl;
    json = TBufferJSON::ToJSON(&ex12);
    testJsonReading(json);
-   cout << json << endl << endl;
-   cout << " ====== More exotic STL containers as set or map with TRef inside TJsonEx13 ===== " << endl;
+   std::cout << json << std::endl << std::endl;
+   std::cout << " ====== More exotic STL containers as set or map with TRef inside TJsonEx13 ===== " << std::endl;
    json = TBufferJSON::ToJSON(&ex13);
    testJsonReading(json);
-   cout << json << endl << endl;
-
-#endif
-#ifdef ClingWorkAroundBrokenUnnamedReturn
-   gApplication->Terminate(0);
-#else
-   return 0;
-#endif
+   std::cout << json << std::endl << std::endl;
 }
