@@ -3994,6 +3994,67 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// \param instance iteration instance
 /// \param stringStackArg formula as string
 /// \return the result of the evaluation, or a signaling NaN if out of bounds
+///
+/// \warning Care has to be taken before calling this function with std::vector
+/// or dynamically sized objects, rather than plain fixed-size arrays.
+/// For example, this works without problems:
+/// ~~~{.cpp}
+/// TTree t("t", "t");
+/// Float_t x[2]{};
+/// t.Branch("xa", &x, "x[2]/F");
+/// x[1] = 1;
+/// t.Fill();
+/// x[1] = 2;
+/// t.Fill();
+/// t.Scan();
+/// TTreeFormula tfx("tfx", "xa[1]", &t);
+/// t.GetEntry(0);
+/// tfx.EvalInstance()
+/// t.GetEntry(1);
+/// tfx.EvalInstance()
+/// ~~~
+/// But the following fails (independently on whether the size changed or not between entries):
+/// ~~~{.cpp}
+/// TTree t("t", "t");
+/// vector<Short_t> v;
+/// t.Branch("vec", &v);
+/// v.push_back(2);
+/// v.push_back(3);
+/// t.Fill();
+/// v.clear();
+/// v.push_back(4);
+/// v.push_back(5);
+/// t.Fill();
+/// t.Scan();
+/// TTreeFormula tfv1("tfv1", "vec[1]", &t);
+/// TTreeFormula tfv("tfv", "vec", &t);
+/// t.GetEntry(0);
+/// tfv1.EvalInstance()
+/// tfv.EvalInstance(1)
+/// t.GetEntry(1);
+/// tfv1.EvalInstance()
+/// tfv.EvalInstance(1)
+/// ~~~
+/// To prevent this, when working with objects with dynamic size for each entry, one needs
+/// to mimick what TTree::Scan does, i.e. to check the value of
+/// `GetNdata()` before calling `EvalInstance()`:
+/// ~~~{.cpp}
+/// t.GetEntry(0);
+/// if (tfv1.GetNdata() > 0)
+///    tfv1.EvalInstance()
+/// if (tfv.GetNdata() > 1)
+///    tfv.EvalInstance(1)
+/// t.GetEntry(1);
+/// if (tfv1.GetNdata() > 0)
+///    tfv1.EvalInstance()
+/// if (tfv.GetNdata() > 1)
+///    tfv.EvalInstance(1)
+/// ~~~
+/// Note that for `tfv1`, even if the index is fixed in the formula and even if each entry
+/// had the same std::vector size, since the formula contains a branch with theoretically variable size,
+/// one must check GetNData() as there might 0 or 1 answers. Since even with fixed index,
+/// the collection might be too small to fulfill it.
+/// TTreeFormula::GetMultiplicity tells you (indirectly) whether you need to call GetNData or not for a given formula.
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
