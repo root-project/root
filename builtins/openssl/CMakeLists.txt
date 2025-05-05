@@ -13,9 +13,9 @@ foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS CRYPTO_LIBRARY SSL_LIBRARY LIBRARY
   unset(OPENSSL_${suffix} PARENT_SCOPE)
 endforeach()
 
-set(OPENSSL_VERSION "3.0.13")
+set(OPENSSL_VERSION "3.5.0")
 set(OPENSSL_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/openssl-${OPENSSL_VERSION}.tar.gz")
-set(OPENSSL_URLHASH "SHA256=88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313")
+set(OPENSSL_URLHASH "SHA256=344d0a79f1a9b08029b0744e2cc401a43f9c90acd1044d09a530b4885a8e9fc0")
 set(OPENSSL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/OPENSSL-prefix)
 
 foreach(lib ssl crypto)

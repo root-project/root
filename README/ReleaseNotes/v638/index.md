@@ -12,3 +12,6 @@ This silent mutation of data can be dangerous.
 With ROOT 6.38, an exception will be thrown instead.
 If you know what you are doing and want to restore the old clipping behavior, you can do so with `RooRealVar::enableSilentClipping()`, but this is not recommended.
 
+## Versions of built-in packages
+
+* The version of openssl has been updated to 3.5.0
