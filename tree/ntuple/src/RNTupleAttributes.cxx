@@ -22,11 +22,11 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
 {
    const auto &projFields = ROOT::Internal::GetProjectedFieldsOfModel(model);
    if (!projFields.IsEmpty())
-      return R__FAIL("The Model passed to CreateAttributeSet cannot contain projected fields.");
+      return R__FAIL("The Model passed to CreateAttributeSetWriter cannot contain projected fields.");
 
    for (const auto &field : model.GetConstFieldZero()) {
       if (field.GetStructure() == ROOT::ENTupleStructure::kStreamer)
-         return R__FAIL(std::string("The Model passed to CreateAttributeSet cannot contain Streamer field '") +
+         return R__FAIL(std::string("The Model passed to CreateAttributeSetWriter cannot contain Streamer field '") +
                         field.GetQualifiedFieldName());
    }
    return ROOT::RResult<void>::Success();
@@ -42,11 +42,11 @@ ROOT::Experimental::Internal::RNTupleAttributeRange::RNTupleAttributeRange(std::
 }
 
 //
-//  RNTupleAttributeSet
+//  RNTupleAttributeSetWriter
 //
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSet>
-ROOT::Experimental::RNTupleAttributeSet::Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
-                                                const RNTupleFillContext *mainFillContext, TDirectory &dir)
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriter>
+ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
+                                                      const RNTupleFillContext *mainFillContext, TDirectory &dir)
 
 {
    // Validate model
@@ -63,28 +63,28 @@ ROOT::Experimental::RNTupleAttributeSet::Create(std::string_view name, std::uniq
    auto opts = ROOT::RNTupleWriteOptions{};
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
    RNTupleFillContext fillContext{std::move(model), std::move(sink)};
-   return RNTupleAttributeSet(mainFillContext, std::move(fillContext));
+   return RNTupleAttributeSetWriter(mainFillContext, std::move(fillContext));
 }
 
-ROOT::Experimental::RNTupleAttributeSet::RNTupleAttributeSet(const RNTupleFillContext *mainFillContext,
-                                                             RNTupleFillContext fillContext)
+ROOT::Experimental::RNTupleAttributeSetWriter::RNTupleAttributeSetWriter(const RNTupleFillContext *mainFillContext,
+                                                                         RNTupleFillContext fillContext)
    : fFillContext(std::move(fillContext)), fMainFillContext(mainFillContext)
 {
 }
 
-ROOT::Experimental::RNTupleAttributeSet::~RNTupleAttributeSet()
+ROOT::Experimental::RNTupleAttributeSetWriter::~RNTupleAttributeSetWriter()
 {
    if (fOpenRange)
       EndRangeInternal();
 }
 
-const std::string &ROOT::Experimental::RNTupleAttributeSet::GetName() const
+const std::string &ROOT::Experimental::RNTupleAttributeSetWriter::GetName() const
 {
    const auto &name = fFillContext.fSink->GetNTupleName();
    return name;
 }
 
-ROOT::Experimental::RNTupleAttributeRangeHandle ROOT::Experimental::RNTupleAttributeSet::BeginRange()
+ROOT::Experimental::RNTupleAttributeRangeHandle ROOT::Experimental::RNTupleAttributeSetWriter::BeginRange()
 {
    if (fOpenRange)
       throw ROOT::RException(R__FAIL("Called BeginRange() without having closed the currently open range!"));
@@ -96,7 +96,8 @@ ROOT::Experimental::RNTupleAttributeRangeHandle ROOT::Experimental::RNTupleAttri
    return handle;
 }
 
-void ROOT::Experimental::RNTupleAttributeSet::EndRange(ROOT::Experimental::RNTupleAttributeRangeHandle rangeHandle)
+void ROOT::Experimental::RNTupleAttributeSetWriter::EndRange(
+   ROOT::Experimental::RNTupleAttributeRangeHandle rangeHandle)
 {
    if (R__unlikely(!fOpenRange || &rangeHandle.fRange != &*fOpenRange))
       throw ROOT::RException(
@@ -106,7 +107,7 @@ void ROOT::Experimental::RNTupleAttributeSet::EndRange(ROOT::Experimental::RNTup
    EndRangeInternal();
 }
 
-void ROOT::Experimental::RNTupleAttributeSet::EndRangeInternal()
+void ROOT::Experimental::RNTupleAttributeSetWriter::EndRangeInternal()
 {
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();

@@ -29,12 +29,12 @@ class RNTupleModel;
 
 namespace Experimental {
 
-class RNTupleAttributeSet;
+class RNTupleAttributeSetWriter;
 class RNTupleFillContext;
 
 namespace Internal {
 class RNTupleAttributeRange final {
-   friend class ROOT::Experimental::RNTupleAttributeSet;
+   friend class ROOT::Experimental::RNTupleAttributeSetWriter;
 
    std::unique_ptr<REntry> fEntry;
    ROOT::NTupleSize_t fStart;
@@ -51,7 +51,7 @@ public:
 } // namespace Internal
 
 class RNTupleAttributeRangeHandle final {
-   friend class RNTupleAttributeSet;
+   friend class RNTupleAttributeSetWriter;
 
    Internal::RNTupleAttributeRange &fRange;
 
@@ -67,9 +67,9 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttributeSet
+\class ROOT::Experimental::RNTupleAttributeSetWriter
 \ingroup NTuple
-\brief A Grouping of RNTuple Attributes, characterized by a common schema
+\brief Class used to write a RNTupleAttributeSet in the context of a RNTupleWriter.
 
 TODO: description here
 
@@ -78,7 +78,7 @@ TODO: code sample here
 ~~~
 */
 // clang-format on
-class RNTupleAttributeSet final {
+class RNTupleAttributeSetWriter final {
    friend class ::ROOT::Experimental::RNTupleFillContext;
 
    static constexpr const char *const kEntryRangeFieldName = "__ROOT_entryRange";
@@ -92,19 +92,21 @@ class RNTupleAttributeSet final {
    /// The currently open range, existing from BeginRange() to EndRange()
    std::optional<Internal::RNTupleAttributeRange> fOpenRange;
 
-   static ROOT::RResult<RNTupleAttributeSet> Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
-                                                    const RNTupleFillContext *mainFillContext, TDirectory &dir);
+   /// Creates a RNTupleAttributeSetWriter associated to the RNTupleWriter owning `mainFillContext` and writing
+   /// in `dir`. `model` is the schema of the AttributeSet.
+   static ROOT::RResult<RNTupleAttributeSetWriter> Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
+                                                          const RNTupleFillContext *mainFillContext, TDirectory &dir);
 
-   RNTupleAttributeSet(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext);
+   RNTupleAttributeSetWriter(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext);
 
    void EndRangeInternal();
 
 public:
-   RNTupleAttributeSet(const RNTupleAttributeSet &) = delete;
-   RNTupleAttributeSet &operator=(const RNTupleAttributeSet &) = delete;
-   RNTupleAttributeSet(RNTupleAttributeSet &&) = default;
-   RNTupleAttributeSet &operator=(RNTupleAttributeSet &&) = default;
-   ~RNTupleAttributeSet();
+   RNTupleAttributeSetWriter(const RNTupleAttributeSetWriter &) = delete;
+   RNTupleAttributeSetWriter &operator=(const RNTupleAttributeSetWriter &) = delete;
+   RNTupleAttributeSetWriter(RNTupleAttributeSetWriter &&) = default;
+   RNTupleAttributeSetWriter &operator=(RNTupleAttributeSetWriter &&) = default;
+   ~RNTupleAttributeSetWriter();
 
    const std::string &GetName() const;
 

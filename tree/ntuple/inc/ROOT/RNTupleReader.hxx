@@ -42,6 +42,10 @@ enum class ENTupleInfo {
    kMetrics,        // internals performance counters, requires that EnableMetrics() was called
 };
 
+namespace Experimental {
+class RNTupleAttributeSet;
+}
+
 // clang-format off
 /**
 \class ROOT::RNTupleReader
@@ -464,6 +468,7 @@ public:
    /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
    const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+
 }; // class RNTupleReader
 
 } // namespace ROOT

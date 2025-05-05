@@ -39,7 +39,7 @@ namespace ROOT {
 class RNTupleWriteOptions;
 
 namespace Experimental {
-class RNTupleAttributeSet;
+class RNTupleAttributeSetWriter;
 }
 
 namespace Internal {
@@ -245,7 +245,7 @@ public:
 
    /// Creates a new Attribute Set called `name` associated to this Writer and returns a non-owning pointer to it.
    /// The lifetime of the Attribute Set ends at the same time as the Writer's.
-   ROOT::RResult<Experimental::RNTupleAttributeSet *>
+   ROOT::RResult<Experimental::RNTupleAttributeSetWriter *>
    CreateAttributeSet(std::string_view name, std::unique_ptr<RNTupleModel> model);
 }; // class RNTupleWriter
 

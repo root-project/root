@@ -108,16 +108,16 @@ void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
    fStagedClusters.clear();
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSet *>
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriter *>
 ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name,
                                                            std::unique_ptr<ROOT::RNTupleModel> model)
 {
    TDirectory *dir = fSink->GetUnderlyingDirectory();
    if (!dir)
-      return R__FAIL("AttributeSet can only be created from a TFile-based RNTupleWriter!");
+      return R__FAIL("AttributeSetWriter can only be created from a TFile-based RNTupleWriter!");
 
    std::string nameStr{name};
-   auto attrSet = Experimental::RNTupleAttributeSet::Create(name, std::move(model), this, *dir);
+   auto attrSet = Experimental::RNTupleAttributeSetWriter::Create(name, std::move(model), this, *dir);
    if (!attrSet)
       return R__FORWARD_ERROR(attrSet);
 
