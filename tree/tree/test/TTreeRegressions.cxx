@@ -236,19 +236,20 @@ TEST(TTreeRegressions, EmptyLeafObject)
 // https://its.cern.ch/jira/browse/ROOT-6741
 class MySubClass {
 public:
-  MySubClass(int Id = 0, double X = 0) : id(Id), x(X) {}
-  virtual ~MySubClass() {}
-  int id;
-  double x;
+   MySubClass(int Id = 0, double X = 0) : id(Id), x(X) {}
+   virtual ~MySubClass() {}
+   int id;
+   double x;
 };
 class MyClass {
 public:
    virtual ~MyClass(){}
    std::vector<MySubClass> sub;
-   void Push(MySubClass msc){ sub.push_back(msc); }
-   MySubClass* Get(int id) { 
-      for(size_t i = 0; i < sub.size(); ++i)
-         if(sub[i].id == id)
+   void Push(MySubClass msc) { sub.push_back(msc); }
+   MySubClass* Get(int id)
+   { 
+      for (size_t i = 0; i < sub.size(); ++i)
+         if (sub[i].id == id)
             return &sub[i];
       return 0;
    }
@@ -269,21 +270,21 @@ TEST(TTreeRegressions, TTreeFormulaMemberIndex)
    mc.Push(s);
    tree.Fill();
 
-   Long64_t n1 = tree.Draw("mc.Get(1)->x >> h1");
+   Long64_t n1 = tree.Draw("mc.Get(1)->x >> h1", "");
    ASSERT_EQ(n1, 1);
    auto h1 = gROOT->Get<TH1F *>("h1"));
    ASSERT_FLOAT_EQ(mc.Get(1)->x, h1->GetMean());
    delete h1;
 
-   Long64_t n2 = tree.Draw("mc.Get(23)->x >> h2");
+   Long64_t n2 = tree.Draw("mc.Get(23)->x >> h2", "");
    ASSERT_EQ(n2, 1);
    auto h2 = gROOT->Get<TH1F *>("h2");
    ASSERT_FLOAT_EQ(mc.Get(23)->x, h2->GetMean());
    delete h2;
 
-   Long64_t n3 = tree.Draw("mc.Get(-2)->x >> h3");
+   Long64_t n3 = tree.Draw("mc.Get(-2)->x >> h3", "");
    ASSERT_EQ(n3, 1);
-   auto h3 =gROOT->Get<TH1F *>("h3");
+   auto h3 = gROOT->Get<TH1F *>("h3");
    ASSERT_FLOAT_EQ(mc.Get(-2)->x, h3->GetMean());
    delete h3;
 }
