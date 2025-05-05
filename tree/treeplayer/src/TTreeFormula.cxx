@@ -3759,7 +3759,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
    if (instance==0) fNeedLoading = true;                                                        \
-   if (real_instance>=fNdata[0]) return 0;                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                  \
                                                                                                 \
    /* Since the only operation in this formula is reading this branch,                          \
       we are guaranteed that this function is first called with instance==0 and                 \
@@ -3793,7 +3793,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
 #define TREE_EVAL_INIT                                                                          \
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
-   if (real_instance>=fNdata[0]) return 0;                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                  \
                                                                                                 \
    if (fAxis) {                                                                                 \
       char * label;                                                                             \
@@ -3845,13 +3845,13 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          }                                                                                      \
       }                                                                                         \
    }                                                                                            \
-   if (real_instance>=fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return TMath::SignalingNaN();
 
 #define TREE_EVAL_INIT_LOOP                                                                     \
    /* Now let calculate what physical instance we really need.  */                              \
    const Int_t real_instance = GetRealInstance(instance,code);                                  \
                                                                                                 \
-   if (real_instance>=fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return TMath::SignalingNaN();
 
 
 template<typename T> T Summing(TTreeFormula *sum) {
@@ -3993,14 +3993,14 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// \tparam T The type used to interpret the numbers then used for the operations
 /// \param instance iteration instance
 /// \param stringStackArg formula as string
-/// \return the result of the evaluation
+/// \return the result of the evaluation, or a signaling NaN if out of bounds
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
 // Note that the redundancy and structure in this code is tailored to improve
 // efficiencies.
-   if (TestBit(kMissingLeaf)) return 0;
+   if (TestBit(kMissingLeaf)) return TMath::SignalingNaN();
    if (fNoper == 1 && fNcodes > 0) {
 
       switch (fLookupType[0]) {
@@ -4059,7 +4059,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             }
             return fx->EvalInstance<T>(instance);
          }
-         default: return 0;
+         default: return TMath::SignalingNaN();
       }
    }
 
@@ -4443,7 +4443,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
                      R__LoadBranch(br,treeEntry,true);
                   }
-                  if (real_instance>=fNdata[string_code]) return 0;
+                  if (real_instance>=fNdata[string_code]) return TMath::SignalingNaN();
                }
                pos2++;
                if (fLookupType[string_code]==kDirect) {
