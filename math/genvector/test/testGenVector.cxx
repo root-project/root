@@ -468,19 +468,19 @@ int testRotations3D() {
 
   // test TVector3-like Rotate function around some axis by an angle. Test case taken from cwessel:
   // https://root-forum.cern.ch/t/tvector3-rotate-to-arbitrary-rotation-using-xyzvector/63244/7
-  XYZVector vg(17, -4, -23);
+  XYZVector ag(17, -4, -23);
   double angle = 100;
   XYZVector axisg(-23.4, 1.7, -0.3);
-  XYZVector rotated = Rotate(vg, angle, axisg);
+  XYZVector rotated = Rotate(ag, angle, axisg);
   // should be equivalent to:
   // TVector3 at(17, -4, -23);
   // TVector3 axist(-23.4, 1.7, -0.3);
   // at.Rotate(angle, axist);
   // at.Print();
   // (17.856456,8.106555,-21.199782)
-  iret |= compare(vg.X(), 17.856456, "x diff", 1e10);
-  iret |= compare(vg.Y(), 8.106555, "y diff", 1e10);
-  iret |= compare(vg.Z(), -21.199782, "z diff", 1e10);
+  iret |= compare(ag.X(), 17.856456, "x diff", 1e10);
+  iret |= compare(ag.Y(), 8.106555, "y diff", 1e10);
+  iret |= compare(ag.Z(), -21.199782, "z diff", 1e10);
 
   if (iret == 0) std::cout << "\tOK\n";
   else std::cout << "\t FAILED\n";
