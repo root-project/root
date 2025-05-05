@@ -184,6 +184,9 @@ void testBreitWignerRelativistic()
 
 void testHalfSampleMode()
 {
+   // Let's compare the results with a completely independent implementation in MATLAB, see:
+   // https://es.mathworks.com/matlabcentral/fileexchange/65579-ivim-model-fitting#functions_tab
+
    const long testdata_n = 50;
    double testdata[testdata_n] =
      {-1.8626292050574662, -1.2588261580948075, -1.2148747383283962, -0.88052174765194313,
@@ -199,30 +202,37 @@ void testHalfSampleMode()
       0.42184335741753576, 0.45308183033935723, 0.47769262360841214, 0.48905822724024939,
       0.48979853918045224, 0.53563861071255214, 0.61398403826022885, 0.62855905995409977,
       0.92055153154640645, 0.9373728168229567};
+   R__ASSERT(TMath::Abs(TMath::ModeHalfSample(testdata_n, testdata, nullptr) - 0.9198) < 1e-4);
+   // Check equal weights is the same as no weights
    double testw[testdata_n] {}; // all equal zero weights
-   
+   R__ASSERT(TMath::ModeHalfSample(testdata_n, testdata, nullptr) == TMath::ModeHalfSample(testdata_n, testdata, testw)); 
+
+   const long testdata1_n = 5;
+   unsigned short testdata1[testdata1_n] = {0, 2, 2, 1, 1};
+   R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 1.);
+
    const long testdata2_n = 16;
-   unsigned short testdata2[testdata2_n] = {0,0,2,2,0,0,0,
-                                    1,1,1,1,1,
-                                    2,2,2,2};
-   
+   unsigned short testdata2[testdata2_n] = {0, 0, 2, 2, 0, 0, 0,
+                                    1, 1, 1, 1, 1,
+                                    2, 2, 2, 2};
+   R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 0.);
+
    const long testdata3_n = 4;
-   double testdata3[testdata3_n] = {1,2,3,3.25};
-   
+   double testdata3[testdata3_n] = {1, 2, 3, 3.25};
+   R__ASSERT(TMath::ModeHalfSample(testdata3_n, testdata3) == (3 + 3.25) / 2.0);
+   // Check that the low-n cases work as expected.
+   R__ASSERT(TMath::ModeHalfSample(1, testdata3) == 1.);
+   R__ASSERT(TMath::ModeHalfSample(2, testdata3) == 1.5);
+   R__ASSERT(TMath::ModeHalfSample(3, testdata3) == 2.);
+   R__ASSERT(TMath::ModeHalfSample(3, testdata3+1) == (3 + 3.25) / 2.0);
+
    const long testdata4_n = 10;
-   unsigned short testdata4[testdata4_n] = {1,1,1,1,0,0,0,2,2,2};
+   unsigned short testdata4[testdata4_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2};
+   R__ASSERT(TMath::ModeHalfSample(testdata4_n, testdata4) == 0.);
 
-    R__ASSERT(TMath::ModeHalfSample(testdata_n, testdata, nullptr) == TMath::ModeHalfSample(testdata_n, testdata, testw)); // Check equal weights is as no weights
-
-    R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 2.);
-    R__ASSERT(TMath::ModeHalfSample(testdata4_n, testdata4) == 1.);
-   
-    // Check that the low-n cases work as expected.
-    R__ASSERT(TMath::ModeHalfSample(1, testdata3) == 1.);
-    R__ASSERT(TMath::ModeHalfSample(2, testdata3) == 1.5);
-    R__ASSERT(TMath::ModeHalfSample(3, testdata3) == 2.);
-    R__ASSERT(TMath::ModeHalfSample(3, testdata3+1) == (3+3.25)/2.0);
-    R__ASSERT(TMath::ModeHalfSample(4, testdata3) == (3+3.25)/2.0);
+   const long testdata5_n = 10;
+   unsigned short testdata5[testdata5_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+   R__ASSERT(TMath::ModeHalfSample(testdata5_n, testdata5) == 2.);
 }
 
 void testTMath()
