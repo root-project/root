@@ -742,7 +742,7 @@ TEST(RNTupleMerger, MergeThroughTFileMergerKey)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.requiredDiag(kWarning, "TFileMerger", "Merging RNTuples is experimental");
-   diags.requiredDiag(kError, "RNTuple::Merge", "Output file already has key, but not of type RNTuple!");
+   diags.requiredDiag(kError, "ROOT.NTuple", "Output file already has key, but not of type RNTuple!");
    diags.requiredDiag(kError, "TFileMerger", "Could NOT merge RNTuples!");
    diags.requiredDiag(kError, "TFileMerger", "error during merge of your ROOT files");
 
@@ -1933,7 +1933,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Filter"));
          CheckDiagsRAII diags;
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
-         diags.requiredDiag(kError, "RNTuple::Merge", "missing the following field", false);
+         diags.requiredDiag(kError, "ROOT.NTuple", "missing the following field", false);
          diags.requiredDiag(kError, "TFileMerger::MergeRecursive", "Could NOT merge RNTuples!", false);
          diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
          auto res = fileMerger.Merge();
@@ -1949,7 +1949,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Strict"));
          CheckDiagsRAII diags;
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
-         diags.requiredDiag(kError, "RNTuple::Merge", "missing the following field", false);
+         diags.requiredDiag(kError, "ROOT.NTuple", "missing the following field", false);
          diags.requiredDiag(kError, "TFileMerger::MergeRecursive", "Could NOT merge RNTuples!", false);
          diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
          auto res = fileMerger.Merge();
@@ -2872,7 +2872,7 @@ TEST(RNTupleMerger, MergeEmptySchema)
       }
 
       ROOT::TestSupport::CheckDiagsRAII diags;
-      diags.requiredDiag(kWarning, "RNTuple::Merge", "Output RNTuple 'ntuple' has no entries.");
+      diags.requiredDiag(kWarning, "ROOT.NTuple", "Output RNTuple 'ntuple' has no entries.");
 
       RNTupleMergeOptions opts;
       {
