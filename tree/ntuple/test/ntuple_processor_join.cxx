@@ -90,7 +90,7 @@ TEST_F(RNTupleJoinProcessorTest, PrimaryOnly)
    EXPECT_STREQ("ntuple1", proc->GetProcessorName().c_str());
 
    {
-      auto namedProc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {}, {}, "my_ntuple");
+      auto namedProc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {}, {}, nullptr, {}, "my_ntuple");
       EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
    }
 

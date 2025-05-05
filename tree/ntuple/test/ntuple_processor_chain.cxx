@@ -104,8 +104,8 @@ TEST_F(RNTupleChainProcessorTest, Basic)
    EXPECT_STREQ("ntuple", proc->GetProcessorName().c_str());
 
    {
-      auto namedProc =
-         RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}}, "my_ntuple");
+      auto namedProc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}},
+                                                     nullptr, "my_ntuple");
       EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
    }
 
