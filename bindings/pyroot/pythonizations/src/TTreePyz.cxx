@@ -86,13 +86,12 @@ static std::pair<void *, std::string> ResolveBranch(TTree *tree, const char *nam
 
    // for return of a full object
    if (branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class()) {
-      TClass *klass = TClass::GetClass(branch->GetClassName());
-      if (klass && branch->GetAddress())
+      if (branch->GetAddress())
          return {*(void **)branch->GetAddress(), branch->GetClassName()};
 
       // try leaf, otherwise indicate failure by returning a typed null-object
       TObjArray *leaves = branch->GetListOfLeaves();
-      if (klass && !tree->GetLeaf(name) && !(leaves->GetSize() && (leaves->First() == leaves->Last())))
+      if (!tree->GetLeaf(name) && !(leaves->GetSize() && (leaves->First() == leaves->Last())))
          return {nullptr, branch->GetClassName()};
    }
 
