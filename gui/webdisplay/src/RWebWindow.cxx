@@ -1657,7 +1657,7 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
          else
             conn->fQueue.emplace(chid, txt, std::move(data));  // move content
       } else {
-         R__LOG_ERROR(WebGUILog()) << "Maximum queue length achieved";
+         R__LOG_ERROR(WebGUILog()) << "Maximum queue length " << maxqlen << " achieved, can be changed with SetMaxQueueLength(v) method";
       }
    }
 
