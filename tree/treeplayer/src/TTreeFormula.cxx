@@ -2618,8 +2618,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 
    if (i<nchname) {
       if (strlen(right) && right[strlen(right)-1]!='.' && cname[i]!='.') {
-         // In some cases we remove a little to fast the period, we add
-         // it back if we need.  It is assumed that 'right' and the rest of
+         // In some cases we remove a little too fast the period, we add
+         // it back if we need. It is assumed that 'right' and the rest of
          // the name was cut by a delimiter, so this should be safe.
          strncat(right,".",2*kMaxLen-1-strlen(right));
       }
