@@ -36,7 +36,7 @@ ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::unique
                                              std::string_view processorName)
 {
    return std::unique_ptr<RNTupleSingleProcessor>(
-      new RNTupleSingleProcessor(std::move(ntuple), processorName, std::move(model)));
+      new RNTupleSingleProcessor(std::move(ntuple), std::move(model), processorName));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
@@ -78,7 +78,7 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
    }
 
    return std::unique_ptr<RNTupleChainProcessor>(
-      new RNTupleChainProcessor(std::move(innerProcessors), processorName, std::move(model)));
+      new RNTupleChainProcessor(std::move(innerProcessors), std::move(model), processorName));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
@@ -145,15 +145,15 @@ std::unique_ptr<ROOT::Experimental::RNTupleProcessor> ROOT::Experimental::RNTupl
    }
 
    return std::unique_ptr<RNTupleJoinProcessor>(
-      new RNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessors), joinFields, processorName,
-                               std::move(primaryModel), std::move(auxModels)));
+      new RNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessors), joinFields,
+                               std::move(primaryModel), std::move(auxModels), processorName));
 }
 
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSpec ntuple,
-                                                                   std::string_view processorName,
-                                                                   std::unique_ptr<ROOT::RNTupleModel> model)
+                                                                   std::unique_ptr<ROOT::RNTupleModel> model,
+                                                                   std::string_view processorName)
    : RNTupleProcessor(processorName, std::move(model)), fNTupleSpec(std::move(ntuple))
 {
    if (!fModel) {
@@ -251,8 +251,8 @@ void ROOT::Experimental::RNTupleSingleProcessor::AddEntriesToJoinTable(Internal:
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
-   std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName,
-   std::unique_ptr<ROOT::RNTupleModel> model)
+   std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::unique_ptr<ROOT::RNTupleModel> model,
+   std::string_view processorName)
    : RNTupleProcessor(processorName, std::move(model)), fInnerProcessors(std::move(processors))
 {
    if (fProcessorName.empty()) {
@@ -357,8 +357,8 @@ void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::
 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(
    std::unique_ptr<RNTupleProcessor> primaryProcessor, std::vector<std::unique_ptr<RNTupleProcessor>> auxProcessors,
-   const std::vector<std::string> &joinFields, std::string_view processorName,
-   std::unique_ptr<ROOT::RNTupleModel> primaryModel, std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels)
+   const std::vector<std::string> &joinFields, std::unique_ptr<ROOT::RNTupleModel> primaryModel,
+   std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels, std::string_view processorName)
    : RNTupleProcessor(processorName, nullptr),
      fPrimaryProcessor(std::move(primaryProcessor)),
      fAuxiliaryProcessors(std::move(auxProcessors))
