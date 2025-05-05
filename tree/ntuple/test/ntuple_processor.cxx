@@ -243,9 +243,9 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {}));
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {}));
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
@@ -269,9 +269,9 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[2], fFileNames[2]}}, {"i"}));
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}, {"i"}));
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[2], fFileNames[2]}}, {"i"}));
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}, {"i"}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
@@ -296,9 +296,8 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
    auto primaryChain =
       RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
 
-   std::vector<std::unique_ptr<RNTupleProcessor>> auxiliaryChain;
-   auxiliaryChain.emplace_back(
-      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}}));
+   auto auxiliaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}});
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
 
@@ -323,9 +322,8 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
    auto primaryChain =
       RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
 
-   std::vector<std::unique_ptr<RNTupleProcessor>> auxiliaryChain;
-   auxiliaryChain.emplace_back(
-      RNTupleProcessor::CreateChain({{fNTupleNames[2], fFileNames[2]}, {fNTupleNames[2], fFileNames[2]}}));
+   auto auxiliaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[2], fFileNames[2]}, {fNTupleNames[2], fFileNames[2]}});
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
 
@@ -348,12 +346,11 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 {
    auto primaryProc =
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {});
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
-   std::vector<std::unique_ptr<RNTupleProcessor>> auxProcs;
-   auxProcs.emplace_back(RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2"));
+   auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2");
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProcs), {"i"});
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
 
    int nEntries = 0;
 
@@ -376,16 +373,13 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
 {
    auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
-   std::vector<std::unique_ptr<RNTupleProcessor>> auxProcsIntermediate;
-   auxProcsIntermediate.emplace_back(
-      RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2"));
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2");
 
-   std::vector<std::unique_ptr<RNTupleProcessor>> auxProcs;
-   auxProcs.emplace_back(RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
-                                                      std::move(auxProcsIntermediate), {"i"}));
+   auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
+                                               std::move(auxProcIntermediate), {"i"});
 
    try {
-      auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProcs), {});
+      auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("auxiliary RNTupleJoinProcessors are currently not supported"));
    }

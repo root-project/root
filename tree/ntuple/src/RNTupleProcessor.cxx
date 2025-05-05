@@ -82,15 +82,12 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, std::vector<RNTupleOpenSpec> auxNTuples,
+ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
                                                  const std::vector<std::string> &joinFields,
                                                  std::unique_ptr<ROOT::RNTupleModel> primaryModel,
-                                                 std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels,
+                                                 std::unique_ptr<ROOT::RNTupleModel> auxModel,
                                                  std::string_view processorName)
 {
-   if (!auxModels.empty() && auxModels.size() != auxNTuples.size())
-      throw RException(R__FAIL("number of auxiliary models and auxiliary RNTuples does not match"));
-
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
    }
@@ -99,15 +96,10 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   // Ensure that all ntuples are uniquely named to prevent name clashes.
-   // TODO(fdegeus) allow for the provision of aliases for ntuples with the same name, removing the constraint of
-   // uniquely-named ntuples.
-   std::unordered_set<std::string> uniqueNTupleNames{primaryNTuple.fNTupleName};
-   for (const auto &ntuple : auxNTuples) {
-      auto res = uniqueNTupleNames.emplace(ntuple.fNTupleName);
-      if (!res.second) {
-         throw ROOT::RException(R__FAIL("joining RNTuples with the same name is not allowed"));
-      }
+   // Ensure no name clash exists between the primary and auxiliary ntuple.
+   if ((!processorName.empty() && processorName == auxNTuple.fNTupleName) ||
+       (primaryNTuple.fNTupleName == auxNTuple.fNTupleName)) {
+      throw ROOT::RException(R__FAIL("joining RNTuples with the same name is not allowed"));
    }
 
    std::unique_ptr<RNTupleProcessor> primaryProcessor;
@@ -116,26 +108,21 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
    else
       primaryProcessor = Create(primaryNTuple, nullptr, processorName);
 
-   std::vector<std::unique_ptr<RNTupleProcessor>> auxProcessors;
-   for (unsigned i = 0; i < auxNTuples.size(); ++i) {
-      if (!auxModels.empty() && auxModels[i])
-         auxProcessors.emplace_back(Create(auxNTuples[i], auxModels[i]->Clone()));
-      else
-         auxProcessors.emplace_back(Create(auxNTuples[i]));
-   }
+   std::unique_ptr<RNTupleProcessor> auxProcessor;
+   if (auxModel)
+      auxProcessor = Create(auxNTuple, auxModel->Clone());
+   else
+      auxProcessor = Create(auxNTuple);
 
-   return CreateJoin(std::move(primaryProcessor), std::move(auxProcessors), joinFields, std::move(primaryModel),
-                     std::move(auxModels), processorName);
+   return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, std::move(primaryModel),
+                     std::move(auxModel), processorName);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor> ROOT::Experimental::RNTupleProcessor::CreateJoin(
-   std::unique_ptr<RNTupleProcessor> primaryProcessor, std::vector<std::unique_ptr<RNTupleProcessor>> auxProcessors,
+   std::unique_ptr<RNTupleProcessor> primaryProcessor, std::unique_ptr<RNTupleProcessor> auxProcessor,
    const std::vector<std::string> &joinFields, std::unique_ptr<ROOT::RNTupleModel> primaryModel,
-   std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels, std::string_view processorName)
+   std::unique_ptr<ROOT::RNTupleModel> auxModel, std::string_view processorName)
 {
-   if (!auxModels.empty() && auxModels.size() != auxProcessors.size())
-      throw RException(R__FAIL("number of auxiliary models and auxiliary processors does not match"));
-
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
    }
@@ -145,8 +132,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleProcessor> ROOT::Experimental::RNTupl
    }
 
    return std::unique_ptr<RNTupleJoinProcessor>(
-      new RNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessors), joinFields,
-                               std::move(primaryModel), std::move(auxModels), processorName));
+      new RNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessor), joinFields,
+                               std::move(primaryModel), std::move(auxModel), processorName));
 }
 
 //------------------------------------------------------------------------------
@@ -355,21 +342,21 @@ void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(
-   std::unique_ptr<RNTupleProcessor> primaryProcessor, std::vector<std::unique_ptr<RNTupleProcessor>> auxProcessors,
-   const std::vector<std::string> &joinFields, std::unique_ptr<ROOT::RNTupleModel> primaryModel,
-   std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels, std::string_view processorName)
+ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                                                               std::unique_ptr<RNTupleProcessor> auxProcessor,
+                                                               const std::vector<std::string> &joinFields,
+                                                               std::unique_ptr<ROOT::RNTupleModel> primaryModel,
+                                                               std::unique_ptr<ROOT::RNTupleModel> auxModel,
+                                                               std::string_view processorName)
    : RNTupleProcessor(processorName, nullptr),
      fPrimaryProcessor(std::move(primaryProcessor)),
-     fAuxiliaryProcessors(std::move(auxProcessors))
+     fAuxiliaryProcessor(std::move(auxProcessor))
 {
    // FIXME(fdegeus): this check is not complete, e.g. the situation where the auxiliary processor is a chain of joins
    // would pass. It would be better to fix the underlying issue (how to access their fields), so this check would
    // become unecessary altogether.
-   for (const auto &auxProc : fAuxiliaryProcessors) {
-      if (dynamic_cast<RNTupleJoinProcessor *>(auxProc.get())) {
-         throw RException(R__FAIL("auxiliary RNTupleJoinProcessors are currently not supported"));
-      }
+   if (dynamic_cast<RNTupleJoinProcessor *>(fAuxiliaryProcessor.get())) {
+      throw RException(R__FAIL("auxiliary RNTupleJoinProcessors are currently not supported"));
    }
 
    if (fProcessorName.empty()) {
@@ -378,15 +365,11 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(
 
    if (!primaryModel)
       primaryModel = fPrimaryProcessor->GetModel().Clone();
-   if (auxModels.empty()) {
-      auxModels.resize(fAuxiliaryProcessors.size());
-   }
-   for (unsigned i = 0; i < fAuxiliaryProcessors.size(); ++i) {
-      if (!auxModels[i])
-         auxModels[i] = fAuxiliaryProcessors[i]->GetModel().Clone();
+   if (!auxModel) {
+      auxModel = fAuxiliaryProcessor->GetModel().Clone();
    }
 
-   SetModel(std::move(primaryModel), std::move(auxModels));
+   SetModel(std::move(primaryModel), std::move(auxModel));
 
    fModel->Freeze();
    fEntry = fModel->CreateEntry();
@@ -405,13 +388,11 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(
    }
 
    fPrimaryProcessor->SetEntryPointers(*fEntry);
-   for (auto &auxProcessor : fAuxiliaryProcessors) {
-      // FIXME(fdegeus): for nested auxiliary processors, simply passing the processor name is not sufficient because we
-      // also need the name(s) of the *inner* processor(s) (e.g., "ntuple0.ntuple1"). This means either (1) recursively
-      // infer this full name or (2) rethink the way fields in auxiliary processors together with how entries are
-      // currently set altogether.
-      auxProcessor->SetEntryPointers(*fEntry, auxProcessor->GetProcessorName());
-   }
+   // FIXME(fdegeus): for nested auxiliary processors, simply passing the processor name is not sufficient because we
+   // also need the name(s) of the *inner* processor(s) (e.g., "ntuple0.ntuple1"). This means either (1) recursively
+   // infer this full name or (2) rethink the way fields in auxiliary processors together with how entries are
+   // currently set altogether.
+   fAuxiliaryProcessor->SetEntryPointers(*fEntry, fAuxiliaryProcessor->GetProcessorName());
 
    if (!joinFields.empty()) {
       for (const auto &joinField : joinFields) {
@@ -419,47 +400,43 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(
          fJoinFieldTokens.emplace_back(token);
       }
 
-      for (unsigned i = 0; i < fAuxiliaryProcessors.size(); ++i) {
-         fJoinTables.emplace_back(Internal::RNTupleJoinTable::Create(joinFields));
-      }
+      fJoinTable = Internal::RNTupleJoinTable::Create(joinFields);
    }
 }
 
 void ROOT::Experimental::RNTupleJoinProcessor::SetModel(std::unique_ptr<ROOT::RNTupleModel> primaryModel,
-                                                        std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels)
+                                                        std::unique_ptr<RNTupleModel> auxModel)
 {
    fModel = std::move(primaryModel);
    fModel->Unfreeze();
 
-   // Create an anonymous record field for each auxiliary ntuple, containing their top-level fields. These original
+   // Create an anonymous record field for the auxiliary processor, containing its top-level fields. These original
    // top-level fields are registered as subfields in the join model, such that they can be accessed as
    // `auxNTupleName.fieldName`.
-   for (unsigned i = 0; i < auxModels.size(); ++i) {
-      std::vector<std::unique_ptr<ROOT::RFieldBase>> auxFields;
-      auxFields.reserve(auxModels[i]->GetFieldNames().size());
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> auxFields;
+   auxFields.reserve(auxModel->GetFieldNames().size());
 
-      for (const auto &fieldName : auxModels[i]->GetFieldNames()) {
-         auxFields.emplace_back(auxModels[i]->GetConstField(fieldName).Clone(fieldName));
-      }
+   for (const auto &fieldName : auxModel->GetFieldNames()) {
+      auxFields.emplace_back(auxModel->GetConstField(fieldName).Clone(fieldName));
+   }
 
-      auto auxParentField =
-         std::make_unique<ROOT::RRecordField>(fAuxiliaryProcessors[i]->GetProcessorName(), std::move(auxFields));
-      const auto &subFields = auxParentField->GetConstSubfields();
-      fModel->AddField(std::move(auxParentField));
+   auto auxParentField =
+      std::make_unique<ROOT::RRecordField>(fAuxiliaryProcessor->GetProcessorName(), std::move(auxFields));
+   const auto &subFields = auxParentField->GetConstSubfields();
+   fModel->AddField(std::move(auxParentField));
 
-      for (const auto &field : subFields) {
-         fModel->RegisterSubfield(field->GetQualifiedFieldName());
-      }
+   for (const auto &field : subFields) {
+      fModel->RegisterSubfield(field->GetQualifiedFieldName());
+   }
 
-      // If the model has a default entry, adopt its value pointers. This way, the pointers returned by
-      // RNTupleModel::MakeField can be used in the processor loop to access the corresponding field values.
-      if (!auxModels[i]->IsBare()) {
-         const auto &auxDefaultEntry = auxModels[i]->GetDefaultEntry();
-         auto &joinDefaultEntry = fModel->GetDefaultEntry();
-         for (const auto &fieldName : auxModels[i]->GetFieldNames()) {
-            auto valuePtr = auxDefaultEntry.GetPtr<void>(fieldName);
-            joinDefaultEntry.BindValue(fAuxiliaryProcessors[i]->GetProcessorName() + "." + fieldName, valuePtr);
-         }
+   // If the model has a default entry, adopt its value pointers. This way, the pointers returned by
+   // RNTupleModel::MakeField can be used in the processor loop to access the corresponding field values.
+   if (!fModel->IsBare() && !auxModel->IsBare()) {
+      const auto &auxDefaultEntry = auxModel->GetDefaultEntry();
+      auto &joinDefaultEntry = fModel->GetDefaultEntry();
+      for (const auto &fieldName : auxModel->GetFieldNames()) {
+         auto valuePtr = auxDefaultEntry.GetPtr<void>(fieldName);
+         joinDefaultEntry.BindValue(fAuxiliaryProcessor->GetProcessorName() + "." + fieldName, valuePtr);
       }
    }
 
@@ -478,9 +455,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetEntryPointers(const ROOT::REnt
    }
 
    fPrimaryProcessor->SetEntryPointers(*fEntry);
-   for (auto &auxProc : fAuxiliaryProcessors) {
-      auxProc->SetEntryPointers(*fEntry, auxProc->GetProcessorName());
-   }
+   fAuxiliaryProcessor->SetEntryPointers(*fEntry, fAuxiliaryProcessor->GetProcessorName());
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
@@ -491,21 +466,19 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    fCurrentEntryNumber = entryNumber;
    fNEntriesProcessed++;
 
-   if (!HasJoinTable()) {
-      for (auto &auxProcessor : fAuxiliaryProcessors) {
-         if (auxProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
-            throw RException(R__FAIL("entry " + std::to_string(entryNumber) +
-                                     " in the primary processor has no corresponding entry in auxiliary processor \"" +
-                                     auxProcessor->GetProcessorName() + "\""));
-         }
+   if (!fJoinTable) {
+      if (fAuxiliaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
+         throw RException(R__FAIL("entry " + std::to_string(entryNumber) +
+                                  " in the primary processor has no corresponding entry in auxiliary processor \"" +
+                                  fAuxiliaryProcessor->GetProcessorName() + "\""));
       }
+
+      return entryNumber;
    }
 
-   if (!fJoinTablesAreBuilt) {
-      for (unsigned i = 0; i < fJoinTables.size(); ++i) {
-         fAuxiliaryProcessors[i]->AddEntriesToJoinTable(*fJoinTables[i]);
-      }
-      fJoinTablesAreBuilt = true;
+   if (!fJoinTableIsBuilt) {
+      fAuxiliaryProcessor->AddEntriesToJoinTable(*fJoinTable);
+      fJoinTableIsBuilt = true;
    }
 
    // Collect the values of the join fields for this entry.
@@ -518,16 +491,14 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
 
    // Find the entry index corresponding to the join field values for each auxiliary processor and load the
    // corresponding entry.
-   for (unsigned i = 0; i < fJoinTables.size(); ++i) {
-      const auto entryIdx = fJoinTables[i]->GetEntryIndex(valPtrs);
+   const auto entryIdx = fJoinTable->GetEntryIndex(valPtrs);
 
-      if (entryIdx == kInvalidNTupleIndex)
-         throw RException(R__FAIL("entry " + std::to_string(entryNumber) +
-                                  " in the primary processor has no corresponding entry in auxiliary processor \"" +
-                                  fAuxiliaryProcessors[i]->GetProcessorName() + "\""));
+   if (entryIdx == kInvalidNTupleIndex)
+      throw RException(R__FAIL("entry " + std::to_string(entryNumber) +
+                               " in the primary processor has no corresponding entry in auxiliary processor \"" +
+                               fAuxiliaryProcessor->GetProcessorName() + "\""));
 
-      fAuxiliaryProcessors[i]->LoadEntry(entryIdx);
-   }
+   fAuxiliaryProcessor->LoadEntry(entryIdx);
 
    return entryNumber;
 }

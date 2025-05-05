@@ -84,7 +84,7 @@ void Read()
    // field values is used. It is possible to specify up to 4 join fields. Providing an empty list of join fields
    // signals to the processor that all entries are aligned.
    auto processor =
-      RNTupleProcessor::CreateJoin({kMainNTupleName, kMainNTuplePath}, {{kAuxNTupleName, kAuxNTuplePath}}, {"i"});
+      RNTupleProcessor::CreateJoin({kMainNTupleName, kMainNTuplePath}, {kAuxNTupleName, kAuxNTuplePath}, {"i"});
 
    float px, py;
    for (const auto &entry : *processor) {
