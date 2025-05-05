@@ -1447,7 +1447,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
    else if (n == 2)
        return TMath::Mean(n, a, w);
 
-   if (w && std::adjacent_find(w, w+n, std::not_equal_to<>()) == w+n) // If all weights are equal, ignore those
+   if (w && std::adjacent_find(w, w + n, std::not_equal_to<>()) == w + n) // If all weights are equal, ignore those
       w = nullptr;
 
    // Sort the array and remove duplicates (if w != nullptr)
