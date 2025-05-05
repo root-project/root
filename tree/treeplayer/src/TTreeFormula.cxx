@@ -3991,6 +3991,63 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// \param instance iteration instance
 /// \param stringStackArg formula as string
 /// \return the result of the evaluation, or a signaling NaN if out of bounds
+///
+/// \warning Care has to be taken before calling this function with std::vector
+/// or dynamically sized objects, rather than plain fixed-size arrays.
+/// For example, this works without problems:
+/// ~~~{.cpp}
+/// TTree t("t", "t");
+/// Float_t x[2]{};
+/// t.Branch("xa", &x, "x[2]/F");
+/// x[1] = 1;
+/// t.Fill();
+/// x[1] = 2;
+/// t.Fill();
+/// t.Scan();
+/// TTreeFormula tfx("tfx", "xa[1]", &t);
+/// t.GetEntry(0);
+/// tfx.EvalInstance()
+/// t.GetEntry(1);
+/// tfx.EvalInstance()
+/// ~~~
+/// But the following fails (independently on whether the size changed or not between entries):
+/// ~~~{.cpp}
+/// TTree t("t", "t");
+/// vector<Short_t> v;
+/// t.Branch("vec", &v);
+/// v.push_back(2);
+/// v.push_back(3);
+/// t.Fill();
+/// v.clear();
+/// v.push_back(4);
+/// v.push_back(5);
+/// t.Fill();
+/// t.Scan();
+/// TTreeFormula tfv1("tfv1", "vec[1]", &t);
+/// TTreeFormula tfv("tfv", "vec", &t);
+/// t.GetEntry(0);
+/// tfv1.EvalInstance()
+/// tfv.EvalInstance(1)
+/// t.GetEntry(1);
+/// tfv1.EvalInstance()
+/// tfv.EvalInstance(1)
+/// ~~~
+/// To prevent this, when working with objects with dynamic size for each entry, one needs
+/// to mimick that TTree::Scan does, i.e. call GetNData() inbetween GetEntry() and EvalInstance():
+/// ~~~
+/// But the following fails:
+/// ~~~{.cpp}
+/// t.GetEntry(0);
+/// tfv1.GetNdata()
+/// tfv1.EvalInstance()
+/// tfv.GetNdata()
+/// tfv.EvalInstance(1)
+/// t.GetEntry(1);
+/// tfv1.GetNdata()
+/// tfv1.EvalInstance()
+/// tfv.GetNdata()
+/// tfv.EvalInstance(1)
+/// ~~~
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
