@@ -4,6 +4,7 @@
 #include "TInterpreter.h"
 #include "TSystem.h"
 #include "TLeafObject.h"
+#include "TH1F.h"
 
 #include "gtest/gtest.h"
 
@@ -229,4 +230,66 @@ TEST(TTreeRegressions, EmptyLeafObject)
 {
    TLeafObject tlo;
    EXPECT_EQ(tlo.GetObject(), nullptr);
+}
+
+
+// https://its.cern.ch/jira/browse/ROOT-6741
+class MySubClass {
+public:
+  MySubClass(int Id = 0, double X = 0) : id(Id), x(X) {}
+  virtual ~MySubClass() {}
+  int id;
+  double x;
+};
+class MyClass {
+public:
+   virtual ~MyClass(){}
+   std::vector<MySubClass> sub;
+   void Push(MySubClass msc){ sub.push_back(msc); }
+   MySubClass* Get(int id) { 
+      for(size_t i = 0; i < sub.size(); ++i)
+         if(sub[i].id == id)
+            return &sub[i];
+      return 0;
+   }
+};
+TEST(TTreeRegressions, TTreeFormulaMemberIndex)
+{
+   TTree tree("tree","tree");
+   MyClass mc;
+   tree.Branch("mc",&mc);
+
+   MySubClass s(1,1.11);
+   mc.Push(s);
+   s.id = 23;
+   s.x = 2.22;
+   mc.Push(s);
+   s.id = -2;
+   s.x = 3.33;
+   mc.Push(s);
+   tree.Fill();
+
+   auto n1 = tree.Draw("mc.Get(1)->x >> h1");
+   ASSERT_EQ(n1, 1);
+#ifdef ClingWorkAroundMissingDynamicScope
+   TH1F *h1 = static_cast<TH1F *>gROOT->FindObject("h1");
+#endif
+   ASSERT_FLOAT_EQ(mc.Get(1)->x, h1->GetMean());
+   delete h1;
+
+   auto n2 = tree.Draw("mc.Get(23)->x >> h2");
+   ASSERT_EQ(n2, 1);
+#ifdef ClingWorkAroundMissingDynamicScope
+   TH1F *h2 = static_cast<TH1F *>gROOT->FindObject("h2");
+#endif
+   ASSERT_FLOAT_EQ(mc.Get(23)->x, h2->GetMean());
+   delete h2;
+
+   auto n3 = tree.Draw("mc.Get(-2)->x >> h3");
+   ASSERT_EQ(n3, 1);
+#ifdef ClingWorkAroundMissingDynamicScope
+   TH1F *h3 = static_cast<TH1F *>gROOT->FindObject("h3");
+#endif
+   ASSERT_FLOAT_EQ(mc.Get(-2)->x, h3->GetMean());
+   delete h3;
 }

@@ -2352,7 +2352,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             final = true;
 
             // Record in 'i' what we consumed
-            i += strlen(params);
+            i += 2; // open and close parentheses
 
             // we reset work
             current = &(work[0]);
