@@ -128,14 +128,14 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
       if (fIsOutputConstant) {
          // no code to generate here for constant output. Tensor output is defined in Session constructor
          return "//---------------------------------------\n";
       }
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
       std::stringstream out;
-      out << "//--------- Gather operator \n";
+      out << "//--------- Gather " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
       // The shape of the output is q + r - 1
       size_t r = fShapeX.size();
       // Indices of shape q
@@ -157,19 +157,17 @@ public:
          out << SP << "}\n";
       }
 
-
       // Fill the output Y[j_0, j_1, ..., j_{axis - 1}, i_0, i_1, ..., i_{q - 1}, j_{axis + 1}, ..., j_{r - 1}]
       // [0 ... axis) [axis ... axis + q) [axis + q ... q + r - 1)
       // iterate in [0 ... axis) [0 ... q) [axis ... r - 1)
       // for j_0, j_1, ..., j_{axis-1}
+
       for (size_t j = 0; j < size_t(fAttrAxis); j++) {
          std::string index = "j_" + std::to_string(j);
          for (size_t k = 0; k <= j; k++) out << SP;
          out << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[j] << "; " << index << "++) {\n";
       }
       // for i_0, i_1, ..., i_{q - 1}
-      if (q == 0 && fAttrAxis == 0)
-         out << SP << "{\n";  // add a scope for local variables in case is not in a for loop
       for (size_t i = 0; i < q; i++) {
          std::string index = "i_" + std::to_string(i);
          for (size_t k = 0; k <= i + fAttrAxis; k++) out << SP;
@@ -181,6 +179,10 @@ public:
          for (size_t k = 0; k <= q + j; k++) out << SP;
          out << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[q + j] << "; " << index << "++) {\n";
       }
+
+      // add a scope for local variables in case above loop are not done
+      if (fAttrAxis == 0 && q == 0 && r <= 1)
+         out << SP << "{   // scalar case \n";
 
       // output index
       for (size_t k = 0; k < q + r; k++) out << SP;
@@ -200,6 +202,9 @@ public:
          out << "j_" << q+j;
          if (stridesY[q+j].dim != 1) out << " * " << stridesY[q+j];
       }
+      // empty case
+      if (fAttrAxis == 0 && q == 0 && r <= 1)
+         out << "0";
       out << ";\n";
 
       // input Indices
@@ -210,7 +215,11 @@ public:
          out << "i_" << i;
          if (stridesIndices[i].dim != 1) out << " * " << stridesIndices[i];
       }
+      // empty case
+      if (q == 0)
+         out << "0";
       out << ";\n";
+
       // K
       for (size_t k = 0; k < q + r; k++) out << SP;
       out << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
@@ -239,6 +248,9 @@ public:
          for (size_t k = 0; k <j; k++) out << SP;
          out << "}\n";
       }
+      // close empty scope if it was opened
+      if (q == 0 && fAttrAxis == 0 && r <= 1)
+         out << SP << "}   // close Gather scope for scalar case \n";
 
 
       return out.str();

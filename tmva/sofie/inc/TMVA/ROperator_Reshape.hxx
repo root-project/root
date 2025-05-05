@@ -264,7 +264,7 @@ public:
       else if (fOpMode == Unsqueeze)
          opType = "Unsquueze";
 
-      out << SP << "///--------" << opType << " operator " << opName << "\n" << std::endl;
+      out << SP << "///--------" << opType << " operator " << opName << " --> " << ConvertShapeToString(fShapeOutput) << "\n";
 
       // in case of dynamic output shape we need to set the shape value from input shape tensor
       // and take case of the zero values
