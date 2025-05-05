@@ -232,7 +232,6 @@ TEST(TTreeRegressions, EmptyLeafObject)
    EXPECT_EQ(tlo.GetObject(), nullptr);
 }
 
-
 // https://its.cern.ch/jira/browse/ROOT-6741
 class MySubClass {
 public:
@@ -243,10 +242,10 @@ public:
 };
 class MyClass {
 public:
-   virtual ~MyClass(){}
+   virtual ~MyClass() {}
    std::vector<MySubClass> sub;
    void Push(MySubClass msc) { sub.push_back(msc); }
-   MySubClass* Get(int id)
+   MySubClass *Get(int id)
    { 
       for (size_t i = 0; i < sub.size(); ++i)
          if (sub[i].id == id)
