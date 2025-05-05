@@ -5,6 +5,7 @@
 #include "TSystem.h"
 #include "TLeafObject.h"
 #include "TH1F.h"
+#include "TROOT.h"
 
 #include "gtest/gtest.h"
 
@@ -246,7 +247,7 @@ public:
    std::vector<MySubClass> sub;
    void Push(MySubClass msc) { sub.push_back(msc); }
    MySubClass *Get(int id)
-   { 
+   {
       for (size_t i = 0; i < sub.size(); ++i)
          if (sub[i].id == id)
             return &sub[i];
@@ -271,7 +272,7 @@ TEST(TTreeRegressions, TTreeFormulaMemberIndex)
 
    Long64_t n1 = tree.Draw("mc.Get(1)->x >> h1", "");
    ASSERT_EQ(n1, 1);
-   auto h1 = gROOT->Get<TH1F *>("h1"));
+   auto h1 = gROOT->Get<TH1F *>("h1");
    ASSERT_FLOAT_EQ(mc.Get(1)->x, h1->GetMean());
    delete h1;
 
