@@ -64,8 +64,10 @@ public:
          // assume shape of input shape is known (size is 1)
          auto shapeOfInputShape = model.GetTensorShape(fNShape);
          fShapeDim.resize(shapeOfInputShape[0]);
-         for (size_t i = 0; i < fShapeDim.size(); i++)
+         for (size_t i = 0; i < fShapeDim.size(); i++) {
             fShapeDim[i] = Dim{std::string("v_") + fNShape + "_" + std::to_string(i)};
+            model.AddShapeParam(fShapeDim[i].param);
+         }
       }
       // Y is the common shape of fShapeX and shape
       std::cout << "expand - input tensor " << ConvertShapeToString(fShapeX) << std::endl;
@@ -131,14 +133,14 @@ public:
       return out.str();
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
       if (fIsOutputConstant) return "";
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
       if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Expand Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ Expand Op" << "\n";
+      out << SP << "\n//------ Expand " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
       // need to declare shape parameters for non initialized shapes
       if (!fInitializedShape) {
          for (size_t i = 0; i < fShapeDim.size(); i++) {

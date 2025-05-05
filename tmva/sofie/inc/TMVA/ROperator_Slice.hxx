@@ -171,8 +171,7 @@ public:
             fStart[fAxes[i]] = Dim{size_t(istart)};
             fEnd[fAxes[i]] = Dim{size_t(iend)};
             fSteps[fAxes[i]] = Dim{size_t(istep)};
-         }
-         else {
+         } else {
             std::cout << i << " Param dim for " << fAxes[i] << "  " <<  fShapeInput[fAxes[i]] << std::endl;
             // we need to correct at run time
             if (!itensors[0].empty()) {
@@ -196,22 +195,20 @@ public:
             if (!itensors[3].empty()) {
                fSteps[fAxes[i]] = Dim{size_t(itensors[3][i])};
             }
-            // case of intermediate tensors for start/end/steps
-            if (!fStartDims.empty()) {
-               fStartDims[i] = Dim{std::string("start_") + fNOutput + "_" + std::to_string(i)};
-               fStart[fAxes[i]] = fStartDims[i];
-            }
-            if (!fEndDims.empty()) {
-               fEndDims[i] = Dim{std::string("end_") + fNOutput + "_" + std::to_string(i)};
-               fEnd[fAxes[i]] = fEndDims[i];
-            }
-            if (!fStepDims.empty()) {
-               fStepDims[i] = Dim{std::string("step_") + fNOutput + "_" + std::to_string(i)};
-               fSteps[fAxes[i]] = fStepDims[i];
-            }
          }
-
-
+         // case of intermediate tensors for start/end/steps
+         if (!fStartDims.empty()) {
+            fStartDims[i] = Dim{std::string("start_") + fNOutput + "_" + std::to_string(i)};
+            fStart[fAxes[i]] = fStartDims[i];
+         }
+         if (!fEndDims.empty()) {
+            fEndDims[i] = Dim{std::string("end_") + fNOutput + "_" + std::to_string(i)};
+            fEnd[fAxes[i]] = fEndDims[i];
+         }
+         if (!fStepDims.empty()) {
+            fStepDims[i] = Dim{std::string("step_") + fNOutput + "_" + std::to_string(i)};
+            fSteps[fAxes[i]] = fStepDims[i];
+         }
 
       }
       std::cout << "found output shape " << std::endl;
@@ -232,6 +229,15 @@ public:
                s += ")/" + fSteps[i].GetVal() + ")";
             }
             fShapeOutput[i] = Dim{s,size_t(-1)};
+            // add also the shape parameters to RModel to declare them when
+            // allocating output tensor
+            if (fEnd[i].isParam && fEnd[i].dim != size_t(-1))
+               model.AddShapeParam(fEnd[i].param,fEnd[i].dim );
+            if (fStart[i].isParam && fStart[i].dim != size_t(-1))
+               model.AddShapeParam(fStart[i].param,fStart[i].dim );
+            if (fSteps[i].isParam && fSteps[i].dim != size_t(-1))
+               model.AddShapeParam(fSteps[i].param,fSteps[i].dim );
+
          }
       }
       // case input is a constant tensor and of int64 type

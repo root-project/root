@@ -171,7 +171,7 @@ public:
          if (model.Verbose())
             std::cout << "Where op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
                << ConvertValuesToString(dataY) << std::endl;
-         
+
          // output is a constant tensor
          fOutputTensorNames.pop_back();
       }
@@ -185,17 +185,17 @@ public:
       return out.str();
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
 
       if (fIsOutputConstant) return "";
 
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
 
       if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Where Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//-------- Where   \n";
+      out << SP << "\n//-------- Where " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
       std::string typeName = TensorType<T>::Name();
       // Broadcast A if it's uninitialized

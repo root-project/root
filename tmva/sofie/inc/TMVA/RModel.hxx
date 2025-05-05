@@ -121,7 +121,8 @@ public:
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
    // Add an intermediate dynamic tensor
    void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
-
+   // void Add a shape parameter
+   void AddShapeParam(const std::string & name, size_t def_value = 0);
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> output_tensor_names);
    void
