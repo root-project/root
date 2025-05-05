@@ -1452,7 +1452,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
 
    // Sort the array and remove duplicates (if w != nullptr)
    std::vector<T> values;
-   std::vector<T> weights;
+   std::vector<Double_t> weights;
    values.reserve(n);
    weights.reserve(n);
    for (Long64_t i = 0; i < n; ++i) {
