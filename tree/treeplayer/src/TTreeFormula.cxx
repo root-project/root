@@ -3756,7 +3756,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
    if (instance==0) fNeedLoading = true;                                                        \
-   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                  \
                                                                                                 \
    /* Since the only operation in this formula is reading this branch,                          \
       we are guaranteed that this function is first called with instance==0 and                 \
@@ -3790,7 +3790,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
 #define TREE_EVAL_INIT                                                                          \
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
-   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                  \
                                                                                                 \
    if (fAxis) {                                                                                 \
       char * label;                                                                             \
@@ -3990,7 +3990,7 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// \tparam T The type used to interpret the numbers then used for the operations
 /// \param instance iteration instance
 /// \param stringStackArg formula as string
-/// \return the result of the evaluation
+/// \return the result of the evaluation, or a signaling NaN if out of bounds
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
