@@ -705,6 +705,7 @@ private:
    /// Potentially a subset of all the available clusters
    std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
+   /// Mapping `{ attrSet name => attrSet locator }`
    std::unordered_map<std::string, RNTupleLocator> fAttributeSets;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
