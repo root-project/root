@@ -269,27 +269,21 @@ TEST(TTreeRegressions, TTreeFormulaMemberIndex)
    mc.Push(s);
    tree.Fill();
 
-   auto n1 = tree.Draw("mc.Get(1)->x >> h1");
+   Long64_t n1 = tree.Draw("mc.Get(1)->x >> h1");
    ASSERT_EQ(n1, 1);
-#ifdef ClingWorkAroundMissingDynamicScope
    TH1F *h1 = static_cast<TH1F *>gROOT->FindObject("h1");
-#endif
    ASSERT_FLOAT_EQ(mc.Get(1)->x, h1->GetMean());
    delete h1;
 
-   auto n2 = tree.Draw("mc.Get(23)->x >> h2");
+   Long64_t n2 = tree.Draw("mc.Get(23)->x >> h2");
    ASSERT_EQ(n2, 1);
-#ifdef ClingWorkAroundMissingDynamicScope
    TH1F *h2 = static_cast<TH1F *>gROOT->FindObject("h2");
-#endif
    ASSERT_FLOAT_EQ(mc.Get(23)->x, h2->GetMean());
    delete h2;
 
-   auto n3 = tree.Draw("mc.Get(-2)->x >> h3");
+   Long64_t n3 = tree.Draw("mc.Get(-2)->x >> h3");
    ASSERT_EQ(n3, 1);
-#ifdef ClingWorkAroundMissingDynamicScope
    TH1F *h3 = static_cast<TH1F *>gROOT->FindObject("h3");
-#endif
    ASSERT_FLOAT_EQ(mc.Get(-2)->x, h3->GetMean());
    delete h3;
 }
