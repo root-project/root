@@ -555,13 +555,13 @@ including `std::variant<Ts...>` and collections such as `std::vector<T>`.
 The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
 In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
-If flag 0x02 (column with range) is set, the column metadata contains the inclusive range of valid values
-for this column (used e.g. for quantized real values).
-The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
-
 If the index of the first element is negative (sign bit set), the column is deferred _and_ suppressed.
 In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
 See Section "Page List Envelope" for further information about suppressed columns.
+
+If flag 0x02 (column with range) is set, the column metadata contains the inclusive range of valid values
+for this column (used e.g. for quantized real values).
+The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
 
 #### Alias columns
 
