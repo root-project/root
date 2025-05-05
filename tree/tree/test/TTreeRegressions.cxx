@@ -256,6 +256,9 @@ public:
 };
 TEST(TTreeRegressions, TTreeFormulaMemberIndex)
 {
+   gInterpreter->Declare("class MySubClass { public: MySubClass(int Id = 0, double X = 0) : id(Id), x(X) {} virtual ~MySubClass() {} int id; double x; };")
+   gInterpreter->Declare("class MyClass { public: virtual ~MyClass() {} std::vector<MySubClass> sub; void Push(MySubClass msc) { sub.push_back(msc); } MySubClass *Get(int id) { for (size_t i = 0; i < sub.size(); ++i) if (sub[i].id == id) return &sub[i]; return 0; } };");
+
    TTree tree("tree", "tree");
    MyClass mc;
    tree.Branch("mc", &mc);
