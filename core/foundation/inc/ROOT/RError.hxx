@@ -189,15 +189,15 @@ RResult<T>::Unwrap() can be used as a short hand for
 int value = FuncThatReturnsRResultOfInt().Unwrap();  // may throw
 ~~~
 
-There is no implict operator that converts RResult<T> to T. This is intentional to make it clear in the calling code
+There is no implicit operator that converts RResult<T> to T. This is intentional to make it clear in the calling code
 where an exception may be thrown.
 */
 // clang-format on
 template <typename T>
 class RResult : public RResultBase {
 private:
-   /// The result value in case of successful execution
-   T fValue;
+   /// The result value, only present in case of successful execution.
+   std::optional<T> fValue;
 
    // Ensure accessor methods throw in case of errors
    inline void ThrowOnError()
@@ -239,7 +239,7 @@ public:
    const T &Inspect()
    {
       ThrowOnError();
-      return fValue;
+      return *fValue;
    }
 
    /// If the operation was successful, returns the inner type by value.
@@ -252,7 +252,7 @@ public:
    T Unwrap()
    {
       ThrowOnError();
-      return std::move(fValue);
+      return std::move(*fValue);
    }
 
    explicit operator bool() { return Check(); }
