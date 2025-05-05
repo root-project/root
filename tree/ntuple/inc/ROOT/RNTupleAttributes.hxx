@@ -32,8 +32,9 @@ namespace Experimental {
 class RNTupleAttributeSet;
 class RNTupleFillContext;
 
+namespace Internal {
 class RNTupleAttributeRange final {
-   friend class RNTupleAttributeSet;
+   friend class ROOT::Experimental::RNTupleAttributeSet;
 
    std::unique_ptr<REntry> fEntry;
    ROOT::NTupleSize_t fStart;
@@ -45,6 +46,22 @@ public:
    std::shared_ptr<T> GetPtr(std::string_view name)
    {
       return fEntry->GetPtr<T>(name);
+   }
+};
+} // namespace Internal
+
+class RNTupleAttributeRangeHandle final {
+   friend class RNTupleAttributeSet;
+
+   Internal::RNTupleAttributeRange &fRange;
+
+   RNTupleAttributeRangeHandle(Internal::RNTupleAttributeRange &range) : fRange(range) {}
+
+public:
+   template <typename T>
+   std::shared_ptr<T> GetPtr(std::string_view name)
+   {
+      return fRange.GetPtr<T>(name);
    }
 };
 
@@ -72,15 +89,27 @@ class RNTupleAttributeSet final {
    RNTupleFillContext fFillContext;
    /// Fill context of the main RNTuple being written (i.e. the RNTuple whose attributes we are).
    const RNTupleFillContext *fMainFillContext = nullptr;
+   /// The currently open range, existing from BeginRange() to EndRange()
+   std::optional<Internal::RNTupleAttributeRange> fOpenRange;
 
    static ROOT::RResult<RNTupleAttributeSet> Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
                                                     const RNTupleFillContext *mainFillContext, TDirectory &dir);
 
    RNTupleAttributeSet(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext);
 
+   void EndRangeInternal();
+
 public:
-   RNTupleAttributeRange BeginRange();
-   void EndRange(RNTupleAttributeRange range);
+   RNTupleAttributeSet(const RNTupleAttributeSet &) = delete;
+   RNTupleAttributeSet &operator=(const RNTupleAttributeSet &) = delete;
+   RNTupleAttributeSet(RNTupleAttributeSet &&) = default;
+   RNTupleAttributeSet &operator=(RNTupleAttributeSet &&) = default;
+   ~RNTupleAttributeSet();
+
+   const std::string &GetName() const;
+
+   RNTupleAttributeRangeHandle BeginRange();
+   void EndRange(RNTupleAttributeRangeHandle rangeHandle);
 };
 
 } // namespace Experimental
