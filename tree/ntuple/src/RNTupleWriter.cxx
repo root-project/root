@@ -147,7 +147,7 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
    return std::unique_ptr<ROOT::RNTupleWriter>(new ROOT::RNTupleWriter(std::move(model), std::move(sink)));
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSet *>
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriter *>
 ROOT::RNTupleWriter::CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model)
 {
    return fFillContext.CreateAttributeSet(name, std::move(model));

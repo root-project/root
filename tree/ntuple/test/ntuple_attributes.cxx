@@ -188,6 +188,35 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
    // TODO: read back RNTuple and check if Attributes are correct.
 }
 
+TEST(RNTupleAttributes, ImplicitEndRange)
+{
+   // EndRange gets called automatically when a AttributeRangeHandle goes out of scope.
+
+   FileRaii fileGuard("test_ntuple_attrs_auto_end_range.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+      auto attrModel = RNTupleModel::Create();
+      attrModel->MakeField<std::string>("string");
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone()).Unwrap();
+
+      auto attrRange = attrSet->BeginRange();
+      auto pMyAttr = attrRange.GetPtr<std::string>("string");
+      *pMyAttr = "Run 1";
+      for (int i = 0; i < 10; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      // Calling EndRange implicitly on scope exit
+   }
+
+   // TODO: read back RNTuple and check if Attributes are correct.
+}
+
 TEST(RNTupleAttributes, AttributeMultipleSets)
 {
    // Create multiple sets and interleave attribute ranges
