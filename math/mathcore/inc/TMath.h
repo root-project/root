@@ -1496,15 +1496,14 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
 
       // Initialize search
       Double_t min_v_range = values[sn-1] - values[0];
-      size_t start = 0;
       size_t n = sn;
       size_t jMin = 0;
 
       // Do recursive calls dividing each time the interval by two
       while (n > 3) {
          const size_t N = std::ceil(n*0.5);
+         const size_t start = jMin;
          const size_t stop = start + n - N + 1; // +1 since we use < and not <=
-         start = jMin;
          // Find sequentally what v_range is smallest by sliding the half-window
          for(size_t i = start; i < stop; i++)
          {
@@ -1518,19 +1517,18 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
          //assert(min_v_range == values[N-1+start] - values[start]);
          n = N;
       }
-
       if (n == 3) {
-         const double d1_0 = values[start+1] - values[start+0];
-         const double d2_1 = values[start+2] - values[start+1];
+         const double d1_0 = values[jMin+1] - values[jMin+0];
+         const double d2_1 = values[jMin+2] - values[jMin+1];
          if (d2_1 < d1_0)
-            return (values[start+1] + values[start+2])*0.5;
+            return (values[jMin+1] + values[jMin+2])*0.5;
          else if (d2_1 > d1_0)
-            return (values[start] + values[start+1])*0.5;
+            return (values[jMin] + values[jMin+1])*0.5;
          else
-            return values[start+1];
+            return values[jMin+1];
       }
       else if (n == 2) {
-         return (values[start] + values[start+1])*0.5;
+         return (values[jMin] + values[jMin+1])*0.5;
       }
       else {
          Error("ModeHalfSample", "Error in recursive algorithm, returning NaN"); // this should not happen
