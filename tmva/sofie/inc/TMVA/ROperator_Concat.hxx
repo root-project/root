@@ -229,14 +229,14 @@
             }
          }
 
-         std::string Generate(std::string OpName) override {
+         std::string Generate(std::string opName) override {
             if (fIsOutputConstant) return "";
-            OpName = "op_"+OpName;
+            opName = "op_" + opName;
             if(fOutputShape.empty()){
                   throw std::runtime_error("TMVA SOFIE Concat called to Generate without being initialized first");
             }
             std::stringstream out;
-            out<<"\n//--------- Concat\n";
+            out<<"\n//--------- Concat " << opName << " --> " << ConvertShapeToString(fOutputShape) << "\n";
             // special case when memory is contiguous
             bool hasShapeOnes = true;
             for(int i = 0; i<fAxis; ++i){

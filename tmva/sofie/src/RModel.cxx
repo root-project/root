@@ -239,16 +239,18 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
    // store shape parameter if not existing
    for (auto &d : shape) {
       if (d.isParam) {
-         if (fShapeParams.count(d.param) == 0) {
-            // case parameter is an expression of some other existing parameter, no need to
-            // register it
-            if (d.dim != size_t(-1)) {
-              fShapeParams[d.param] = std::to_string(d.dim);
-              // add also in teh vector list (used to keep the order)
-              fDimShapeNames.push_back(d.param);
-            }
+         if (d.dim != size_t(-1)) {
+            AddShapeParam(d.param, d.dim);
          }
       }
+   }
+}
+
+void RModel::AddShapeParam(const std::string & param, size_t default_value) {
+   if (fShapeParams.count(param) == 0) {
+      fShapeParams[param] = std::to_string(default_value);
+      // add also in the vector list (used to keep the order)
+      fDimShapeNames.push_back(param);
    }
 }
 

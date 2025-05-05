@@ -180,15 +180,16 @@ public:
          fIsModelOutput = true;
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
       if (fIsOutputConstant) return "";
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
 
      if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Comparision Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ " << ComparisionTrait<T,Op>::Name() << "\n";
+      out << SP << "\n//------ " << ComparisionTrait<T,Op>::Name() << "  " << opName
+                                 << " --> " << ConvertShapeToString(fShapeY) << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
       // Broadcast A if it's uninitialized
       if (!fNBroadcastedX1.empty()) {

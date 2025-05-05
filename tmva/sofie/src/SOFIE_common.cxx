@@ -156,9 +156,14 @@ std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
       }
    }
    // multiply the integer components to the parametric one
+   // if larger than 1
    if (int_length > 0) {
-      if (!length.empty()) length += " * ";
-      length += std::to_string(int_length);
+      if (!length.empty() && int_length > 1) {
+         length += " * ";
+         length += std::to_string(int_length);
+      } else if (length.empty()) { // case is full known shape
+         length = std::to_string(int_length);
+      }
    }
    return length;
 }
@@ -546,8 +551,14 @@ std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape)
       for (std::size_t i = 1; i < size; i++) {
          if (!shape[size-i].isParam && !strides[size-i].isParam)
             strides[size - 1 - i] = Dim{strides[size-i].dim * shape[size-i].dim};
-         else
-            strides[size - 1 - i] = Dim{std::string(strides[size-i].GetVal() + "*" + shape[size-i].GetVal())};
+         else {
+            if (strides[size-i].GetVal() == "1")
+               strides[size - 1 - i] = shape[size-i];
+            else if (shape[size-i].GetVal() == "1")
+               strides[size - 1 - i] = strides[size-i];
+            else
+              strides[size - 1 - i] = Dim{std::string(strides[size-i].GetVal() + "*" + shape[size-i].GetVal())};
+         }
       }
    }
    return strides;
