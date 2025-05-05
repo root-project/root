@@ -35,8 +35,8 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
 //
 //  RNTupleAttributeRange
 //
-ROOT::Experimental::RNTupleAttributeRange::RNTupleAttributeRange(std::unique_ptr<REntry> entry,
-                                                                 ROOT::NTupleSize_t start)
+ROOT::Experimental::Internal::RNTupleAttributeRange::RNTupleAttributeRange(std::unique_ptr<REntry> entry,
+                                                                           ROOT::NTupleSize_t start)
    : fEntry(std::move(entry)), fStart(start)
 {
 }
@@ -72,20 +72,49 @@ ROOT::Experimental::RNTupleAttributeSet::RNTupleAttributeSet(const RNTupleFillCo
 {
 }
 
-ROOT::Experimental::RNTupleAttributeRange ROOT::Experimental::RNTupleAttributeSet::BeginRange()
+ROOT::Experimental::RNTupleAttributeSet::~RNTupleAttributeSet()
 {
-   auto entry = fFillContext.GetModel().CreateEntry();
-   const auto start = fMainFillContext->GetNEntries();
-   auto range = RNTupleAttributeRange(std::move(entry), start);
-   return range;
+   if (fOpenRange)
+      EndRangeInternal();
 }
 
-void ROOT::Experimental::RNTupleAttributeSet::EndRange(ROOT::Experimental::RNTupleAttributeRange range)
+const std::string &ROOT::Experimental::RNTupleAttributeSet::GetName() const
+{
+   const auto &name = fFillContext.fSink->GetNTupleName();
+   return name;
+}
+
+ROOT::Experimental::RNTupleAttributeRangeHandle ROOT::Experimental::RNTupleAttributeSet::BeginRange()
+{
+   if (fOpenRange)
+      throw ROOT::RException(R__FAIL("Called BeginRange() without having closed the currently open range!"));
+
+   auto entry = fFillContext.GetModel().CreateEntry();
+   const auto start = fMainFillContext->GetNEntries();
+   fOpenRange = Internal::RNTupleAttributeRange(std::move(entry), start);
+   auto handle = RNTupleAttributeRangeHandle{*fOpenRange};
+   return handle;
+}
+
+void ROOT::Experimental::RNTupleAttributeSet::EndRange(ROOT::Experimental::RNTupleAttributeRangeHandle rangeHandle)
+{
+   if (R__unlikely(!fOpenRange || &rangeHandle.fRange != &*fOpenRange))
+      throw ROOT::RException(
+         R__FAIL(std::string("Handle passed to EndRange() of Attribute Set \"") + GetName() +
+                 "\" is invalid (it is not the Handle returned by the latest call to BeginRange())"));
+
+   EndRangeInternal();
+}
+
+void ROOT::Experimental::RNTupleAttributeSet::EndRangeInternal()
 {
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();
+   auto &range = *fOpenRange;
    auto pRange = range.fEntry->GetPtr<REntryRange>(kEntryRangeFieldName);
    R__ASSERT(pRange);
    *pRange = {range.fStart, end};
    fFillContext.Fill(*range.fEntry);
+
+   fOpenRange = std::nullopt;
 }
