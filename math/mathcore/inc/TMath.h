@@ -1496,7 +1496,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
 
       // Initialize search
       Double_t min_v_range = values[sn-1] - values[0];
-      size_t n = sn;
+      n = sn;
       size_t jMin = 0;
 
       // Do recursive calls dividing each time the interval by two
