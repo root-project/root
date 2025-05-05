@@ -98,22 +98,31 @@ public:
       if (!model.CheckIfTensorAlreadyExist(fNB)) {
          throw std::runtime_error(std::string("TMVA SOFIE Binary Op Input Tensor ") + fNB + "is not found in model");
       }
-      if (model.IsDynamicTensor(fNA))
+      int dynamicInputs = 0;
+      if (model.IsDynamicTensor(fNA)) {
          fDimShapeA = model.GetDynamicTensorShape(fNA);
-      else {
+         dynamicInputs |= 1;
+      } else {
          fShapeA = model.GetTensorShape(fNA);
          fDimShapeA = ConvertShapeToDim(fShapeA);
       }
-      if (model.IsDynamicTensor(fNB))
+      if (model.IsDynamicTensor(fNB)) {
+         dynamicInputs |= 2;
          fDimShapeB = model.GetDynamicTensorShape(fNB);
-      else {
+      } else {
          fShapeB = model.GetTensorShape(fNB);
          fDimShapeB = ConvertShapeToDim(fShapeB);
       }
+      std::cout <<  BinaryOperatorTrait<T, Op>::Name() << "  ";
+      if (dynamicInputs & 1)
+         std::cout <<  fNA << " is dynamic " << ConvertShapeToString(fDimShapeA) << "  ";
+      if (dynamicInputs & 2)
+         std::cout <<  fNB << " is dynamic " << ConvertShapeToString(fDimShapeB) << "  ";
+      std::cout << std::endl;
       // check if need to broadcast at initialization time if shapes are known and different
       // (we could broadcast the tensor tensor to maximum values of dynamic shapes - to be done)
       // case of known shapes
-      if (!fShapeA.empty() && !fShapeB.empty()) {
+      if (dynamicInputs == 0) {
          auto ret = UTILITY::MultidirectionalBroadcastShape(fShapeA, fShapeB);
          fBroadcastFlag = ret.first;
          fShapeY = ret.second;
@@ -126,7 +135,7 @@ public:
             // Broadcast A to Y
             if (broadcastA) {
                fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
-               if (model.IsInitializedTensor(fNA)) {
+               if (model.IsConstantTensor(fNA)) {
                   auto data = model.GetInitializedTensorData(fNA);
                   std::shared_ptr<void> broadcastedData(
                      UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeA, fShapeY),
@@ -142,7 +151,7 @@ public:
             // Broadcast B to Y
             if (broadcastB) {
                fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
-               if (model.IsInitializedTensor(fNB)) {
+               if (model.IsConstantTensor(fNB)) {
                   auto data = model.GetInitializedTensorData(fNB);
                   if (model.Verbose())
                      std::cout << "data B " << ConvertShapeToString(fShapeB) << " : "
@@ -168,7 +177,7 @@ public:
             fShapeY = fShapeA;
          }
          // check case of constant  output (if all inputs are defined)
-         if (model.IsInitializedTensor(fNA) && model.IsInitializedTensor(fNB)) {
+         if (model.IsConstantTensor(fNA) && model.IsConstantTensor(fNB)) {
             const std::string &nameA = fNBroadcastedA.empty() ? fNA : fNBroadcastedA;
             const std::string &nameB = fNBroadcastedB.empty() ? fNB : fNBroadcastedB;
             auto dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());

@@ -168,6 +168,7 @@ public:
          reducedLength = "reducedLength_" + opName;
          out << SP << "size_t " << reducedLength << " = " <<  inputLength << " / " << outputLength << ";\n";
       } else {
+         std::cout << "input " << inputLength << " output " << outputLength << " !" << std::endl;
          int rLength = std::stoi(inputLength) / std::stoi(outputLength);
          reducedLength = std::to_string(rLength);
       }

@@ -60,7 +60,7 @@ public:
          }
          // get output shape from input values:
          // can work only if input is a constant or initialized tensor (or dynamic one)
-         if (model.IsInitializedTensor(fNX) || model.IsConstantTensor(fNX)) {
+         if (model.IsConstantTensor(fNX)) {
             fIsOutputConstant = true;
             auto dptr = model.GetInitializedTensorData(fNX);
             auto input_tensor = static_cast<int64_t *>(dptr.get());
@@ -126,16 +126,18 @@ public:
 
    std::string Generate(std::string opName) override {
       // no code to generate here. Tensor are defined in Session constructor
+      std::stringstream out;
       if (fIsOutputConstant) {
          if (fNX.empty())
-            return "// ---- Constant (no-op) \n";
+            out <<  "// ---- Constant (no-op) " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
          else
-            return "// ---- ConstantOfShape (no-op) \n";
+            out << "// ---- ConstantOfShape (no-op) " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
+         return out.str();
       }
       // Only ConstantOfShape might require generation code
       // generate constant tensor according to input
-      std::stringstream out;
-      out << "\n//--------- ConstantOfShape " << opName << "\n";
+
+      out << "\n//--------- ConstantOfShape " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
        // set shape values
       for (size_t i = 0; i < fDimOutputShape.size(); i++) {
          out << SP << "size_t " << fDimOutputShape[i].param << " = " << "tensor_" << fNX << "[" << i << "];\n";
