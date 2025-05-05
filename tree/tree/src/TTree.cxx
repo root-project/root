@@ -438,6 +438,8 @@ End_Macro
 #include <thread>
 #endif
 
+#include "ROOT/StringUtils.hxx"
+
 constexpr Int_t   kNEntriesResort    = 100;
 constexpr Float_t kNEntriesResortInv = 1.f/kNEntriesResort;
 
@@ -5283,6 +5285,9 @@ TBranch *R__GetBranch(const TObjArray &branches, const char *name)
       if (!strcmp(b->GetName(), name)) {
          return b;
       }
+      const std::string prefix{b->GetName()};
+      if (prefix.compare(0, prefix.size(), name, prefix.size()) != 0)
+         continue;
       if (!strcmp(b->GetFullName(), name)) {
          return b;
       }
@@ -5314,6 +5319,33 @@ TBranch* TTree::GetBranch(const char* name)
    if (result)
       return result;
 
+   if (auto it = fNamesToBranches.find(name); it != fNamesToBranches.end())
+      return it->second;
+
+   // if (name[0] != '.') {
+   //    const auto tokens = ROOT::Split(name, ".");
+   //    if (tokens.size() > 1) // there was at least one dot in the name
+   //    {
+   //       auto *topLevelBranch = static_cast<TBranch *>(fBranches.FindObject(tokens[0].c_str()));
+   //       if (topLevelBranch)
+   //          if (auto *innerBranches = topLevelBranch->GetListOfBranches())
+   //             if (auto *leaf = R__GetBranch(*(innerBranches), name))
+   //                return leaf;
+   //    }
+   // }
+
+   //   TObjArray* leaves = GetListOfLeaves();
+   //   std::string target{name};
+   //   target.erase(0, target.find('.') + 1);
+   //   if (!target.empty()){
+   //   auto *maybeLeaf = leaves->FindObject(target.c_str());
+   //   if (maybeLeaf){
+   //      auto *branch = static_cast<TLeaf *>(maybeLeaf)->GetBranch();
+   //      if (!strcmp(branch->GetFullName(), name)) {
+   //         return branch;
+   //      }
+   //   }
+   //   }
    // Search using branches, breadth first.
    result = R__GetBranch(fBranches, name);
    if (result)
@@ -9629,6 +9661,8 @@ static void TBranch__SetTree(TTree *tree, TObjArray &branches)
             tree->IncrementTotalBuffers(bk->GetBufferSize());
          }
       }
+
+      tree->InsertNameAndBranch({std::string{br->GetFullName()}, br});
 
       TBranch__SetTree(tree,*br->GetListOfBranches());
    }

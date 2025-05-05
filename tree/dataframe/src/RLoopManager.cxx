@@ -74,6 +74,8 @@
 #include <set>
 #include <limits> // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
+#include <ROOT/StringUtils.hxx>
+
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
 
@@ -136,7 +138,16 @@ void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bN
       TBranch *subBranch = static_cast<TBranch *>(sb);
       auto subBranchName = std::string(subBranch->GetName());
       auto fullName = prefix + subBranchName;
-
+      auto prefixTokens = ROOT::Split(prefix, ".", true /*skipEmpty*/);
+      auto subBranchNameTokens = ROOT::Split(subBranchName, ".", true /*skipEmpty*/);
+      if (!prefixTokens.empty() && !subBranchNameTokens.empty() && prefixTokens.back() == subBranchNameTokens.front()) {
+         fullName = std::string{};
+         for (const auto &s : prefixTokens)
+            fullName += s + ".";
+         for (decltype(subBranchNameTokens.size()) i = 1; i < subBranchNameTokens.size(); i++)
+            fullName += subBranchNameTokens[i] + ".";
+         fullName.erase(fullName.size() - 1);
+      }
       std::string newPrefix;
       if (!prefix.empty())
          newPrefix = fullName + ".";
