@@ -3756,7 +3756,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
    if (instance==0) fNeedLoading = true;                                                        \
-   if (real_instance>=fNdata[0]) return 0;                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                                      \
                                                                                                 \
    /* Since the only operation in this formula is reading this branch,                          \
       we are guaranteed that this function is first called with instance==0 and                 \
@@ -3790,7 +3790,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
 #define TREE_EVAL_INIT                                                                          \
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
-   if (real_instance>=fNdata[0]) return 0;                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                                      \
                                                                                                 \
    if (fAxis) {                                                                                 \
       char * label;                                                                             \
@@ -3842,13 +3842,13 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          }                                                                                      \
       }                                                                                         \
    }                                                                                            \
-   if (real_instance>=fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return TMath::SignalingNaN();
 
 #define TREE_EVAL_INIT_LOOP                                                                     \
    /* Now let calculate what physical instance we really need.  */                              \
    const Int_t real_instance = GetRealInstance(instance,code);                                  \
                                                                                                 \
-   if (real_instance>=fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return TMath::SignalingNaN();
 
 
 template<typename T> T Summing(TTreeFormula *sum) {
@@ -4440,7 +4440,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
                      R__LoadBranch(br,treeEntry,true);
                   }
-                  if (real_instance>=fNdata[string_code]) return 0;
+                  if (real_instance>=fNdata[string_code]) return TMath::SignalingNaN();
                }
                pos2++;
                if (fLookupType[string_code]==kDirect) {
