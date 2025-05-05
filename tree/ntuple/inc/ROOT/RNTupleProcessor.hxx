@@ -299,50 +299,44 @@ public:
    ///
    /// \param[in] primaryNTuple The name and location of the primary RNTuple. Its entries are processed in sequential
    /// order.
-   /// \param[in] auxNTuples The names and locations of the RNTuples to join the primary RNTuple with. The order in
-   /// which their entries are processed are determined by the primary RNTuple and doesn't necessarily have to be
-   /// sequential.
+   /// \param[in] auxNTuple The name and location of the RNTuple to join the primary RNTuple with. The order in which
+   /// its entries are processed is determined by the primary RNTuple and doesn't necessarily have to be sequential.
    /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
    /// \param[in] primaryModel An RNTupleModel specifying which fields from the primary RNTuple can be read by the
    /// processor. If no model is provided, one will be created based on the descriptor of the primary RNTuple.
-   /// \param[in] auxModels A list of RNTupleModels specifying which fields from the corresponding auxiliary RNTuple
-   /// (according to the order of `auxNTuples`) can be read by the processor. If this vector is empty, the models will
-   /// be created based on the descriptors of their corresponding RNTuples. This also applies to individual auxiliary
-   /// RNTuples for which the provided model is a `nullptr`.
+   /// \param[in] auxModel An RNTupleModel specifying which fields from the auxiliary RNTuple can be read by the
+   /// processor. If no model is provided, one will be created based on the descriptor of the auxiliary RNTuple.
    /// \param[in] processorName The name to give to the processor. If empty, the name of the primary RNTuple is used.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateJoin(RNTupleOpenSpec primaryNTuple, std::vector<RNTupleOpenSpec> auxNTuples,
-              const std::vector<std::string> &joinFields, std::unique_ptr<ROOT::RNTupleModel> primaryModel = nullptr,
-              std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels = {}, std::string_view processorName = "");
+   CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple, const std::vector<std::string> &joinFields,
+              std::unique_ptr<ROOT::RNTupleModel> primaryModel = nullptr,
+              std::unique_ptr<ROOT::RNTupleModel> auxModel = nullptr, std::string_view processorName = "");
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
    ///
    /// \param[in] primaryProcessor The primary processor. Its entries are processed in sequential order.
-   /// \param[in] auxProcessors The processors to join the primary processor with. The order in which their entries are
-   /// processed are determined by the primary processor and doesn't necessarily have to be sequential.
+   /// \param[in] auxProcessor The processor to join the primary processor with. The order in which its entries are
+   /// processed is determined by the primary processor and doesn't necessarily have to be sequential.
    /// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified processors. If an empty list is provided, it is assumed that the specified processors are fully
    /// aligned.
    /// \param[in] primaryModel An RNTupleModel specifying which fields from the primary processor can be read by the
    /// processor. If no model is provided, one will be created based on the descriptor of the primary processor.
-   /// \param[in] auxModels A list of RNTupleModels specifying which fields from the corresponding auxiliary processor
-   /// (according to the order of `auxProcessors`) can be read by the processor. If this vector is empty, the models
-   /// will be inferred from their corresponding processors. This also applies to individual auxiliary processors for
-   /// which the provided model is a `nullptr`.
+   /// \param[in] auxModel An RNTupleModel specifying which fields from the auxiliary processor can be read by the
+   /// processor. If no model is provided, one will be created based on the descriptor of the auxiliary processor.
    /// \param[in] processorName The name to give to the processor. If empty, the name of the primary processor is used.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor,
-              std::vector<std::unique_ptr<RNTupleProcessor>> auxProcessors, const std::vector<std::string> &joinFields,
-              std::unique_ptr<ROOT::RNTupleModel> primaryModel = nullptr,
-              std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels = {}, std::string_view processorName = "");
+   CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor, std::unique_ptr<RNTupleProcessor> auxProcessor,
+              const std::vector<std::string> &joinFields, std::unique_ptr<ROOT::RNTupleModel> primaryModel = nullptr,
+              std::unique_ptr<ROOT::RNTupleModel> auxModel = nullptr, std::string_view processorName = "");
 };
 
 // clang-format off
@@ -477,14 +471,12 @@ class RNTupleJoinProcessor : public RNTupleProcessor {
 
 private:
    std::unique_ptr<RNTupleProcessor> fPrimaryProcessor;
-   std::vector<std::unique_ptr<RNTupleProcessor>> fAuxiliaryProcessors;
+   std::unique_ptr<RNTupleProcessor> fAuxiliaryProcessor;
 
    /// Tokens representing the join fields present in the primary processor.
    std::vector<ROOT::RFieldToken> fJoinFieldTokens;
-   std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinTables;
-   bool fJoinTablesAreBuilt = false;
-
-   bool HasJoinTable() const { return fJoinTables.size() > 0; }
+   std::unique_ptr<Internal::RNTupleJoinTable> fJoinTable;
+   bool fJoinTableIsBuilt = false;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number of the primary processor.
@@ -510,34 +502,31 @@ private:
    /// \brief Set fModel by combining the primary and auxiliary models.
    ///
    /// \param[in] primaryModel The model of the primary processor.
-   /// \param[in] auxModels Models of the auxiliary processors.
+   /// \param[in] auxModel Model of the auxiliary processors.
    ///
    /// To prevent field name clashes when one or more models have fields with duplicate names, fields from each
    /// auxiliary model are stored as a anonymous record, and subsequently registered as subfields in the join model.
    /// This way, they can be accessed from the processor's entry as `auxNTupleName.fieldName`.
-   void SetModel(std::unique_ptr<ROOT::RNTupleModel> primaryModel,
-                 std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels);
+   void SetModel(std::unique_ptr<ROOT::RNTupleModel> primaryModel, std::unique_ptr<ROOT::RNTupleModel> auxModel);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Construct a new RNTupleJoinProcessor.
    /// \param[in] primaryProcessor The primary processor. Its entries are processed in sequential order.
-   /// \param[in] auxProcessors The processors to join the primary processor with. The order in which their entries are
-   /// processed are determined by the primary processor and doesn't necessarily have to be sequential.
+   /// \param[in] auxProcessor The processor to join the primary processor with. The order in which its entries are
+   /// processed is determined by the primary processor and doesn't necessarily have to be sequential.
    /// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified processor. If an empty list is provided, it is assumed that the processors are fully aligned.
    /// \param[in] primaryModel An RNTupleModel specifying which fields from the primary processor can be read by the
    /// processor. If no model is provided, one will be created based on the descriptor of the primary processor.
-   /// \param[in] auxModels A list of RNTupleModels specifying which fields from the corresponding auxiliary processor
-   /// (according to the order of `auxProcessors`) can be read by the processor. If this vector is empty, the models
-   /// will be inferred from their corresponding processors. This also applies to individual auxiliary processors for
-   /// which the provided model is a `nullptr`.
+   /// \param[in] auxModel An RNTupleModel specifying which fields from the auxiliary processor can be read by the
+   /// processor. If no model is provided, one will be created based on the descriptor of the auxiliary processor.
    /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateJoin, this
    /// is the name of the primary processor.
    RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
-                        std::vector<std::unique_ptr<RNTupleProcessor>> auxProcessors,
-                        const std::vector<std::string> &joinFields, std::unique_ptr<ROOT::RNTupleModel> primaryModel,
-                        std::vector<std::unique_ptr<ROOT::RNTupleModel>> auxModels, std::string_view processorName);
+                        std::unique_ptr<RNTupleProcessor> auxProcessor, const std::vector<std::string> &joinFields,
+                        std::unique_ptr<ROOT::RNTupleModel> primaryModel, std::unique_ptr<ROOT::RNTupleModel> auxModel,
+                        std::string_view processorName);
 
 public:
    RNTupleJoinProcessor(const RNTupleJoinProcessor &) = delete;
