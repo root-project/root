@@ -255,11 +255,11 @@ public:
 };
 TEST(TTreeRegressions, TTreeFormulaMemberIndex)
 {
-   TTree tree("tree","tree");
+   TTree tree("tree", "tree");
    MyClass mc;
-   tree.Branch("mc",&mc);
+   tree.Branch("mc", &mc);
 
-   MySubClass s(1,1.11);
+   MySubClass s(1, 1.11);
    mc.Push(s);
    s.id = 23;
    s.x = 2.22;
@@ -271,19 +271,19 @@ TEST(TTreeRegressions, TTreeFormulaMemberIndex)
 
    Long64_t n1 = tree.Draw("mc.Get(1)->x >> h1");
    ASSERT_EQ(n1, 1);
-   TH1F *h1 = static_cast<TH1F *>gROOT->FindObject("h1");
+   auto h1 = gROOT->Get<TH1F *>("h1"));
    ASSERT_FLOAT_EQ(mc.Get(1)->x, h1->GetMean());
    delete h1;
 
    Long64_t n2 = tree.Draw("mc.Get(23)->x >> h2");
    ASSERT_EQ(n2, 1);
-   TH1F *h2 = static_cast<TH1F *>gROOT->FindObject("h2");
+   auto h2 = gROOT->Get<TH1F *>("h2");
    ASSERT_FLOAT_EQ(mc.Get(23)->x, h2->GetMean());
    delete h2;
 
    Long64_t n3 = tree.Draw("mc.Get(-2)->x >> h3");
    ASSERT_EQ(n3, 1);
-   TH1F *h3 = static_cast<TH1F *>gROOT->FindObject("h3");
+   auto h3 =gROOT->Get<TH1F *>("h3");
    ASSERT_FLOAT_EQ(mc.Get(-2)->x, h3->GetMean());
    delete h3;
 }
