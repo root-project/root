@@ -516,7 +516,7 @@ struct Limits {
    /////////////////////////////////////////////////////////////////////////////
    // Statistics over arrays
 
-   //Mean, Geometric Mean, Median, RMS(sigma), ModeHalfSample
+   // Mean, Geometric Mean, Median, RMS(sigma), ModeHalfSample
 
    template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=nullptr);
    template <typename Iterator> Double_t Mean(Iterator first, Iterator last);
@@ -1445,7 +1445,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
    else if (n == 1)
       return a[0];
    else if (n == 2)
-       return TMath::Mean(n, a, w);
+      return TMath::Mean(n, a, w);
 
    if (w && std::adjacent_find(w, w + n, std::not_equal_to<>()) == w + n) // If all weights are equal, ignore those
       w = nullptr;
@@ -1474,7 +1474,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
    if (sn <= 0)
       return TMath::QuietNaN();
    else if (sn == 1)
-       return values[0];
+      return values[0];
    else if (sn == 2)
       return TMath::Mean(sn, values.data(), weights.data());
 
@@ -1491,11 +1491,11 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
 
    const auto wstart = weights.begin();
    const auto wstop = weights.end();
-   if (std::adjacent_find(wstart, wstop, std::not_equal_to<>() ) == wstop ) {
+   if (std::adjacent_find(wstart, wstop, std::not_equal_to<>()) == wstop ) {
       // All elements are unique and have equal weights
 
       // Initialize search
-      Double_t min_v_range = values[sn-1] - values[0];
+      Double_t min_v_range = values[sn - 1] - values[0];
       n = sn;
       size_t jMin = 0;
 
@@ -1505,9 +1505,9 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
          const size_t start = jMin;
          const size_t stop = start + n - N + 1; // +1 since we use < and not <=
          // Find sequentally what v_range is smallest by sliding the half-window
-         for(size_t i = start; i < stop; i++) {
+         for (size_t i = start; i < stop; i++) {
             Double_t range = values[i + N - 1] - values[i];
-            if(range < min_v_range) {
+            if (range < min_v_range) {
                min_v_range = range;
                jMin = i;
             }

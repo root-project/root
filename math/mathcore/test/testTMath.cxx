@@ -204,17 +204,16 @@ void testHalfSampleMode()
       0.92055153154640645, 0.9373728168229567};
    R__ASSERT(TMath::Abs(TMath::ModeHalfSample(testdata_n, testdata, nullptr) - 0.9198) < 1e-4);
    // Check equal weights is the same as no weights
-   double testw[testdata_n] {}; // all equal zero weights
-   R__ASSERT(TMath::ModeHalfSample(testdata_n, testdata, nullptr) == TMath::ModeHalfSample(testdata_n, testdata, testw)); 
+   double testw[testdata_n]{}; // all equal zero weights
+   R__ASSERT(TMath::ModeHalfSample(testdata_n, testdata, nullptr) ==
+             TMath::ModeHalfSample(testdata_n, testdata, testw)); 
 
    const long testdata1_n = 5;
    unsigned short testdata1[testdata1_n] = {0, 2, 2, 1, 1};
    R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 1.);
 
    const long testdata2_n = 16;
-   unsigned short testdata2[testdata2_n] = {0, 0, 2, 2, 0, 0, 0,
-                                    1, 1, 1, 1, 1,
-                                    2, 2, 2, 2};
+   unsigned short testdata2[testdata2_n] = {0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2};
    R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 0.);
 
    const long testdata3_n = 4;
@@ -246,7 +245,6 @@ void testHalfSampleMode()
    short testdata7[testdata7_n] = {-1, 2, 3, 5, -1};
    double weightdata7[testdata7_n] = {2, 3, 1, 6, 5};
    R__ASSERT(TMath::ModeHalfSample(testdata7_n, testdata7, weightdata7) == -1);
-
 }
 
 void testTMath()
