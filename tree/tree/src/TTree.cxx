@@ -3850,10 +3850,10 @@ void TTree::DirectoryAutoAdd(TDirectory* dir)
 ///
 /// \return -1 in case of error or number of selected events in case of success.
 /// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
-/// `x > 0`, then we return the sum of all selected instances rather than number of events,
-/// the instances being the lines shown in the prompt when calling tree.Scan(), where
-/// each event (tree row entry) is split across the various instances (lines) of the array.
-/// In constrast, the function `GetEntries(selection)` returns the number of events.
+/// `x > 0`, then we return the number of selected instances rather than number of events.
+/// In the output of `tree.Scan()`, instances are shown in individual printed rows, thus
+/// each event (tree entry) is split across the various instances (lines) of the array.
+/// In contrast, the function `GetEntries(selection)` returns the number of events.
 ///
 /// This function accepts TCut objects as arguments.
 /// Useful to use the string operator +
@@ -3875,10 +3875,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///
 /// \return -1 in case of error or number of selected events in case of success.
 /// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
-/// `x > 0`, then we return the sum of all selected instances rather than number of events,
-/// the instances being the lines shown in the prompt when calling tree.Scan(), where
-/// each event (tree row entry) is split across the various instances (lines) of the array.
-/// In constrast, the function `GetEntries(selection)` returns the number of events.
+/// `x > 0`, then we return the number of selected instances rather than number of events.
+/// In the output of `tree.Scan()`, instances are shown in individual printed rows, thus
+/// each event (tree entry) is split across the various instances (lines) of the array.
+/// In contrast, the function `GetEntries(selection)` returns the number of events.
 ///
 /// \param [in] varexp
 /// \parblock
