@@ -7,6 +7,28 @@
 #include "StreamerField.hxx"
 #include "StreamerFieldXML.h"
 
+TEST(RField, StreamerTraits)
+{
+   auto trivial = std::make_unique<ROOT::RStreamerField>("trivial", "TrivialStreamedClass");
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitTypeChecksum, trivial->GetTraits());
+   auto containsTrivial = std::make_unique<ROOT::RStreamerField>("containsTrivial", "ContainsTrivialStreamedClass");
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitTypeChecksum, containsTrivial->GetTraits());
+
+   auto constructor = std::make_unique<ROOT::RStreamerField>("constructor", "ConstructorStreamedClass");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible | RFieldBase::kTraitTypeChecksum, constructor->GetTraits());
+   auto containsConstructor =
+      std::make_unique<ROOT::RStreamerField>("containsConstructor", "ContainsConstructorStreamedClass");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible | RFieldBase::kTraitTypeChecksum,
+             containsConstructor->GetTraits());
+
+   auto destructor = std::make_unique<ROOT::RStreamerField>("destructor", "DestructorStreamedClass");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyConstructible | RFieldBase::kTraitTypeChecksum, destructor->GetTraits());
+   auto containsDestructor =
+      std::make_unique<ROOT::RStreamerField>("containsDestructor", "ContainsDestructorStreamedClass");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyConstructible | RFieldBase::kTraitTypeChecksum,
+             containsDestructor->GetTraits());
+}
+
 TEST(RField, StreamerDirect)
 {
    FileRaii fileGuard("test_ntuple_rfield_streamer_direct.root");

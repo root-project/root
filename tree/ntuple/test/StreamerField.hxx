@@ -6,6 +6,30 @@
 #include <memory>
 #include <vector>
 
+struct TrivialStreamedClass {
+   int fA;
+};
+
+struct ContainsTrivialStreamedClass {
+   TrivialStreamedClass fStreamed;
+};
+
+struct ConstructorStreamedClass {
+   ConstructorStreamedClass() {}
+};
+
+struct ContainsConstructorStreamedClass {
+   ConstructorStreamedClass fStreamed;
+};
+
+struct DestructorStreamedClass {
+   ~DestructorStreamedClass() {}
+};
+
+struct ContainsDestructorStreamedClass {
+   DestructorStreamedClass fStreamed;
+};
+
 struct CyclicMember {
    float fB = 0.0;
    std::vector<CyclicMember> fV;
