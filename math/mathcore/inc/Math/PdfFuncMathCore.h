@@ -409,7 +409,7 @@ namespace Math {
 
   Probability density function of the bi-dimensional (Gaussian) distribution.
 
-  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-((x-x0)^2/\sigma_x^2 + (y-y0)^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
+  \f[ p(x,y) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-((x-x0)^2/\sigma_x^2 + (y-y0)^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/BivariateNormalDistribution.html">
