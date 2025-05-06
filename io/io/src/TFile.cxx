@@ -5185,20 +5185,6 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
 {
    TUrl sURL(src, kTRUE);
 
-   // Files will be open in RAW mode
-   TString raw = "filetype=raw";
-
-   // Set optimization options for the source file
-   TString opt = sURL.GetOptions();
-   if (opt != "") opt += "&";
-   opt += raw;
-   // Netx-related options:
-   //    cachesz = 4*buffersize     -> 4 buffers as peak mem usage
-   //    readaheadsz = 2*buffersize -> Keep at max 4*buffersize bytes outstanding when reading
-   //    rmpolicy = 1               -> Remove from the cache the blk with the least offset
-   opt += TString::Format("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 4*buffersize, 2*buffersize);
-   sURL.SetOptions(opt);
-
    TFile *sfile = nullptr;
 
    Bool_t success = kFALSE;
