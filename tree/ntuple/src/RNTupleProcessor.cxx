@@ -96,12 +96,6 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   // Ensure no name clash exists between the primary and auxiliary ntuple.
-   if ((!processorName.empty() && processorName == auxNTuple.fNTupleName) ||
-       (primaryNTuple.fNTupleName == auxNTuple.fNTupleName)) {
-      throw ROOT::RException(R__FAIL("joining RNTuples with the same name is not allowed"));
-   }
-
    std::unique_ptr<RNTupleProcessor> primaryProcessor;
    if (primaryModel)
       primaryProcessor = Create(primaryNTuple, primaryModel->Clone(), processorName);
@@ -367,6 +361,17 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<R
       primaryModel = fPrimaryProcessor->GetModel().Clone();
    if (!auxModel) {
       auxModel = fAuxiliaryProcessor->GetModel().Clone();
+   }
+
+   // If the primaryProcessor has a field with the name of the auxProcessor (either as a "proper" field or because the
+   // primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor), there
+   // will be name conflicts, so error out.
+   if (primaryModel->GetFieldNames().find(fAuxiliaryProcessor->GetProcessorName()) !=
+       primaryModel->GetFieldNames().end()) {
+      throw RException(R__FAIL("a field or nested auxiliary processor named \"" +
+                               fAuxiliaryProcessor->GetProcessorName() +
+                               "\" is already present in the model of the primary processor; rename the auxiliary "
+                               "processor to avoid conflicts"));
    }
 
    SetModel(std::move(primaryModel), std::move(auxModel));
