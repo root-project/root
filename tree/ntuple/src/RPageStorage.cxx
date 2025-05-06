@@ -966,6 +966,11 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
+   // Clone attribute sets
+   for (const auto &[name, locator] : srcDescriptor.GetAttributeSets()) {
+      fDescriptorBuilder.AddAttributeSet(Experimental::Internal::RNTupleAttributeSetDescriptor{name, locator});
+   }
+
    // Create column/page ranges
    const auto nColumns = descriptor.GetNPhysicalColumns();
    R__ASSERT(fOpenColumnRanges.empty() && fOpenPageRanges.empty());
@@ -1197,8 +1202,8 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
          if (!columnInfo.fIsSuppressed)
             continue;
          const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
-         // For suppressed columns, we need to reset the first element index to the first element of the next (upcoming)
-         // cluster. This information has been determined for the committed cluster descriptor through
+         // For suppressed columns, we need to reset the first element index to the first element of the next
+         // (upcoming) cluster. This information has been determined for the committed cluster descriptor through
          // CommitSuppressedColumnRanges(), so we can use the information from the descriptor.
          const auto &columnRangeFromDesc = clusterBuilder.GetColumnRange(colId);
          fOpenColumnRanges[colId].SetFirstElementIndex(columnRangeFromDesc.GetFirstElementIndex() +
@@ -1297,4 +1302,10 @@ void ROOT::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter> *>("timeCpuWrite", "ns", "CPU time spent writing"),
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter> *>("timeCpuZip", "ns",
                                                                         "CPU time spent compressing")});
+}
+
+ROOT::Internal::RMiniFileReader *
+ROOT::Experimental::Internal::GetUnderlyingReader(ROOT::Internal::RPageSource &pageSource)
+{
+   return pageSource.GetUnderlyingReader();
 }

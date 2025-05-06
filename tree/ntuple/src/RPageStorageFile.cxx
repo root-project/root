@@ -305,6 +305,15 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
    return pageSource;
 }
 
+std::unique_ptr<ROOT::Internal::RPageSourceFile>
+ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options)
+{
+   auto pageSource = std::make_unique<RPageSourceFile>("", fFile->Clone(), options);
+   pageSource->fAnchor = anchor;
+   pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
+   return pageSource;
+}
+
 ROOT::Internal::RPageSourceFile::~RPageSourceFile() = default;
 
 void ROOT::Internal::RPageSourceFile::LoadStructureImpl()

@@ -47,9 +47,19 @@ namespace ROOT {
 class RNTupleModel;
 
 namespace Internal {
+class RMiniFileReader;
+class RPageSource;
+}
+
+namespace Experimental::Internal {
+ROOT::Internal::RMiniFileReader *GetUnderlyingReader(ROOT::Internal::RPageSource &pageSource);
+}
+
+namespace Internal {
 
 class RPageAllocator;
 class RColumn;
+class RRawFile;
 struct RNTupleModelChangeset;
 
 enum class EPageStorageType {
@@ -557,6 +567,8 @@ The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+   friend RMiniFileReader *ROOT::Experimental::Internal::GetUnderlyingReader(ROOT::Internal::RPageSource &pageSource);
+
 public:
    /// Used in SetEntryRange / GetEntryRange
    struct REntryRange {
@@ -629,6 +641,8 @@ private:
    /// and evict unused paged from the page pool of all previous clusters.
    /// Must not be called when the descriptor guard is taken.
    void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
+
+   virtual RMiniFileReader *GetUnderlyingReader() { return nullptr; }
 
 protected:
    /// Default I/O performance counters that get registered in `fMetrics`
