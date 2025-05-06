@@ -21,6 +21,10 @@ class ROperator_Slice final : public ROperator
 
 private:
 
+   // flags to indicate if start/end and steps are not defined at compiled time
+   bool fIsStartUndef = false;
+   bool fIsEndUndef = false;
+   bool fIsStepUndef = false;
    std::string fNData;        // input data tensor name
    std::string fNOutput;      // output data name
    std::vector<std::string> fNames;       // tensor names for meta(axis) information
@@ -85,22 +89,36 @@ public:
          for (size_t i = 0; i < 4; ++i) {
             if (!fNames[i].empty()) {
                if (model.IsInitializedTensor(fNames[i])) {
-                  // std::cout << " i " << i << " getting data for tensor " << fNames[i] << std::endl;
                   auto dptr = model.GetInitializedTensorData(fNames[i]);
                   auto tensor = static_cast<IType *>(dptr.get());
                   auto vec = model.GetTensorShape(fNames[i]);
                   assert(vec.size() == 1);
                   itensors[i] = std::vector<IType>(tensor, tensor + vec[0]);
+
+               } else if (model.IsShapeTensor(fNames[i])) {
+                  // case is a shape tensor
+                  if (i == 0) {
+                     fStartDims = model.GetShapeTensorValues(fNames[i]);
+                  } else if (i == 1) {
+                     fEndDims = model.GetShapeTensorValues(fNames[i]);
+                  } else if (i == 3) {
+                     fStepDims = model.GetShapeTensorValues(fNames[i]);
+                  }
                } else {
                   // case is an intermediate tensor
                   auto shape = model.GetTensorShape(fNames[i]);
                   size_t s = shape[0];
-                  if (i == 0) {
-                     fStartDims = std::vector<Dim>(s);
-                  } else if (i == 1) {
-                     fEndDims = std::vector<Dim>(s);
-                  } else if (i == 3) {
-                     fStepDims = std::vector<Dim>(s);
+                  for (size_t k = 0; k < s; k++) {
+                     if (i == 0) {
+                        fStartDims.push_back( Dim{std::string("start_") + fNOutput + "_" + std::to_string(k)});
+                        fIsStartUndef = true;
+                     } else if (i == 1) {
+                        fEndDims.push_back(Dim{std::string("end_") + fNOutput + "_" + std::to_string(k)});
+                        fIsEndUndef = true;
+                     } else if (i == 3) {
+                        fStepDims.push_back(Dim{std::string("step_") + fNOutput + "_" + std::to_string(k)});
+                        fIsStepUndef = true;
+                     }
                   }
                }
             }
@@ -133,29 +151,48 @@ public:
                   " for  " + std::to_string(i));
          }
       }
-      // if we know the input shape in given axis
-      std::cout << "axis loop....\n";
+      // Loop on axis to get start/end/step values
       for (size_t i = 0; i < fAxes.size(); i++) {
+         if (!itensors[0].empty() )
+            fStartDims.push_back(Dim{ static_cast<size_t>(itensors[0][i])});
+         if (fStartDims.empty())
+            throw std::runtime_error("TMVA Slice Op : Missing start input tensor");
+
+         if (!itensors[1].empty())
+            fEndDims.push_back(Dim{ static_cast<size_t>(itensors[1][i])});
+         else if (fEndDims.empty())
+            throw std::runtime_error("TMVA Slice Op : Missing end input tensor");
+
+         if (!itensors[3].empty()) {
+            fStepDims.push_back(Dim{ static_cast<size_t>(itensors[3][i])});
+         }
+         else if (fStepDims.size() < fAxes.size())  // this can happen since it is optional
+            fStepDims.push_back(Dim{size_t(1)});
+
          if (!fShapeInput[fAxes[i]].isParam) {
-            std::cout << i << " Non param dim for " << fAxes[i] << "  " << fShapeInput[fAxes[i]] << std::endl;
             size_t iAxisDim = fShapeInput[fAxes[i]].dim;
             //correct values if too large or too small
             IType istart = 0;
-            if (!itensors[0].empty()) {
-               istart = itensors[0][i];
+            if (!fStartDims[i].isParam) {
+               istart = static_cast<IType>(fStartDims[i].dim);
                if (istart < 0) istart = iAxisDim + istart;
-               if (istart < 0) istart = 0;
             }
             IType iend = static_cast<IType>(iAxisDim);
-            if (!itensors[1].empty()) {
-               iend = itensors[1][i];
+            if (!fEndDims[i].isParam) {
+               iend = static_cast<IType>(fEndDims[i].dim);
                if (iend < 0) iend = iAxisDim + iend;
             }
             //steps
             IType istep = 1;
-            if (!itensors[3].empty()) {
-               istep = itensors[3][i];
+            if (!fStepDims[i].isParam) {
+               istep = static_cast<IType>(fStepDims[i].dim);
+            } else {
+               throw std::runtime_error("TMVA Slice Op : parametric step inputs are not supported");
             }
+            // clamp start end values depending on steps
+            // start must be [0,N] for positive steps or [0,N-1] for negative
+            // end   must be [0,N] for positive steps or [-1, N-1] for negative
+            if (istart < 0) istart = 0;
             if (istep > 0) {
                if (istart > static_cast<IType>(iAxisDim)) istart = static_cast<IType>(iAxisDim);
                if (iend < 0) iend = 0;
@@ -168,50 +205,47 @@ public:
                throw std::runtime_error("TMVA Slice Op : invalid step value " + std::to_string(istep) +
                   " for  " + std::to_string(i));
             }
-            fStart[fAxes[i]] = Dim{size_t(istart)};
-            fEnd[fAxes[i]] = Dim{size_t(iend)};
+            // for parametric values clamping we will done at run time
+            if (fStartDims[i].isParam)
+               fStart[fAxes[i]] = fStartDims[i];
+            else
+               fStart[fAxes[i]] = Dim{size_t(istart)};
+            if (fStartDims[i].isParam)
+               fEnd[fAxes[i]] = fEndDims[i];
+            else
+               fEnd[fAxes[i]] = Dim{size_t(iend)};
+
             fSteps[fAxes[i]] = Dim{size_t(istep)};
          } else {
-            std::cout << i << " Param dim for " << fAxes[i] << "  " <<  fShapeInput[fAxes[i]] << std::endl;
-            // we need to correct at run time
-            if (!itensors[0].empty()) {
-               IType istart = itensors[0][i];
+            //std::cout << i << " Param dim for " << fAxes[i] << "  " <<  fShapeInput[fAxes[i]] << std::endl;
+            // correct only negative values
+            if (!fStartDims[i].isParam) {
+               IType istart = static_cast<IType>(fStartDims[i].dim);
                if (istart < 0) {
                   std::string sstart = std::string("(") + fShapeInput[fAxes[i]].param + "-" + std::to_string(-istart) +")";
                   fStart[fAxes[i]] = Dim{sstart,size_t(-1)};
                } else {
                  fStart[fAxes[i]] = Dim{size_t(istart)};
                }
+            } else {
+               fStart[fAxes[i]] = fStartDims[i];
             }
-            if (!itensors[1].empty()) {
-               IType iend = itensors[1][i];
+            if (!fEndDims[i].isParam) {
+               IType iend = static_cast<IType>(fEndDims[i].dim);
                if (iend < 0) {
                   std::string send = std::string("(") + fShapeInput[fAxes[i]].param + "-" + std::to_string(-iend) +")";
                   fEnd[fAxes[i]] = Dim{send,size_t(-1)};
                } else {
                  fEnd[fAxes[i]] = Dim{size_t(iend)};
                }
+            } else {
+               fEnd[fAxes[i]] = fEndDims[i];
             }
-            if (!itensors[3].empty()) {
-               fSteps[fAxes[i]] = Dim{size_t(itensors[3][i])};
-            }
-         }
-         // case of intermediate tensors for start/end/steps
-         if (!fStartDims.empty()) {
-            fStartDims[i] = Dim{std::string("start_") + fNOutput + "_" + std::to_string(i)};
-            fStart[fAxes[i]] = fStartDims[i];
-         }
-         if (!fEndDims.empty()) {
-            fEndDims[i] = Dim{std::string("end_") + fNOutput + "_" + std::to_string(i)};
-            fEnd[fAxes[i]] = fEndDims[i];
-         }
-         if (!fStepDims.empty()) {
-            fStepDims[i] = Dim{std::string("step_") + fNOutput + "_" + std::to_string(i)};
+
             fSteps[fAxes[i]] = fStepDims[i];
          }
 
       }
-      std::cout << "found output shape " << std::endl;
       //  find output shape
       fShapeOutput.resize(dim);
       for (size_t i = 0; i < dim; i++) {
@@ -307,18 +341,65 @@ public:
 
 
       out << SP << "{\n"; // define operator scope
-      for (size_t i = 0; i < fStartDims.size(); i++) {
-         out << SP << "size_t " << fStartDims[i] << " = tensor_" << fNames[0] << "[" << i << "];\n";
-         out << SP << "if (" << fStartDims[i] << " < 0) " << fStartDims[i] << " += " << fShapeInput[fAxes[i]] <<";\n";
-      }
-      for (size_t i = 0; i < fEndDims.size(); i++) {
-         out << SP << "size_t " << fEndDims[i] << " = tensor_" << fNames[1] << "[" << i << "];\n";
-         out << SP << "if (" << fEndDims[i] << " < 0) " << fEndDims[i] << " += " << fShapeInput[fAxes[i]] <<";\n";
-      }
       for (size_t i = 0; i < fStepDims.size(); i++) {
-         // to do : apply correction here for steps too
-         out << SP << "size_t " << fStepDims[i] << " = tensor_" << fNames[3] << "[" << i << "];\n";
+         if (fStepDims[i].isParam) {
+            if (fIsStepUndef)
+               out << SP << "size_t " << fStepDims[i] << " = tensor_" << fNames[3] << "[" << i << "];\n";
+         }
       }
+      // special case for parametric  values for start/end. Need to do clipping
+      for (size_t i = 0; i < fStartDims.size(); i++) {
+         if (fStartDims[i].isParam && fStartDims[i].param != fShapeInput[fAxes[i]].param) {
+            std::string s_start = "start_" + std::to_string(i);
+            if (fIsStartUndef) {
+               s_start = fStartDims[i].param;
+               out << SP << "size_t " << s_start << " = tensor_" << fNames[0] << "[" << i << "];\n";
+            } else {
+               out << SP << "size_t " << s_start << " = " <<  fStartDims[i] << ";\n";
+               fStart[fAxes[i]] = s_start; // need to use this value later when slicing
+            }
+            out << SP << "if (" << s_start << " < 0) " << s_start << " += " << fShapeInput[fAxes[i]] <<";\n";
+            out << SP << "if (" << s_start << " < 0) " << s_start << " = 0;\n";
+            if (!fStepDims[i].isParam) {
+               if (static_cast<IType>(fStepDims[i].dim) > 0 )
+                  out << SP << "if (" << s_start << " > " << fShapeInput[fAxes[i]] << " ) " << s_start << " = " << fShapeInput[fAxes[i]] <<";\n";
+               else
+                  out << SP << "if (" << s_start << " > " << fShapeInput[fAxes[i]] << " - 1" << " ) " << s_start << " = " << fShapeInput[fAxes[i]] << " - 1;\n";
+            }
+         }
+         // special case if step is negative and shape are equal and step is negative
+         else if (fStartDims[i].isParam && fStartDims[i].param == fShapeInput[fAxes[i]].param && !fStepDims[i].isParam && static_cast<IType>(fStepDims[i].dim) < 0 ) {
+            fStart[fAxes[i]] = Dim{ fStartDims[i].param + "-1" };
+         }
+      }
+      // now to for end
+      for (size_t i = 0; i < fEndDims.size(); i++) {
+         if (fEndDims[i].isParam && fEndDims[i].param != fShapeInput[fAxes[i]].param) {
+            std::string s_end = "end_" + std::to_string(i);
+            if (fIsEndUndef) {
+               s_end = fEndDims[i].param;
+               out << SP << "size_t " << s_end << " = tensor_" << fNames[1] << "[" << i << "];\n";
+            } else {
+               out << SP << "size_t " << s_end << " = " <<  fEndDims[i] << ";\n";
+               fEnd[fAxes[i]] = s_end; // need to use this value later when slicing
+            }
+            out << SP << "if (" << s_end << " < 0) " << s_end << " += " << fShapeInput[fAxes[i]] <<";\n";
+            if (!fStepDims[i].isParam) {
+               if (static_cast<IType>(fStepDims[i].dim) > 0 ) {
+                  out << SP << "if (" << s_end << " < 0) " << s_end << " = 0;\n";
+                  out << SP << "if (" << s_end << " > " << fShapeInput[fAxes[i]] << " ) " << s_end << " = " << fShapeInput[fAxes[i]] <<";\n";
+               } else {
+                  out << SP << "if (" << s_end << " < -1) " << s_end << " = -1;\n";
+                  out << SP << "if (" << s_end << " > " << fShapeInput[fAxes[i]] << " - 1" << " ) " << s_end << " = " << fShapeInput[fAxes[i]] << " - 1;\n";
+               }
+            }
+         }
+         // special case if step is negative and shape are equal and step is negative
+         else if (fEndDims[i].isParam && fEndDims[i].param == fShapeInput[fAxes[i]].param && !fStepDims[i].isParam && static_cast<IType>(fStepDims[i].dim) < 0 ) {
+            fEnd[fAxes[i]] = Dim{ fEndDims[i].param + "-1" };
+         }
+      }
+
       out << SP << "size_t iOut = 0;\n";
       std::string MSP = SP;
       for (size_t idim = 0; idim < ndim; idim++) {

@@ -26,7 +26,7 @@ std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, O
     return opA | static_cast<std::underlying_type_t<Options>>(opB);
 }
 
-const std::vector<size_t>& RModel::GetTensorShape(const std::string & name) const {
+std::vector<size_t> RModel::GetTensorShape(const std::string & name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.shape;
@@ -43,6 +43,16 @@ const std::vector<size_t>& RModel::GetTensorShape(const std::string & name) cons
     if (f4 != fIntermediateTensorInfos.end()) {
         return f4->second.shape;
     }
+    // case of shape tensors
+    auto f5 = fShapeTensors.find(name);
+    if (f5 != fShapeTensors.end()) {
+      // shape is vector of size 1 with size of shape values or just a scalar
+      if (f5->second.second)  // check scalar flag
+         return std::vector<size_t>{};
+      else
+         return std::vector<size_t>{f5->second.first.size()};
+    }
+
     if (fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
       throw std::runtime_error("TMVA SOFIE tensor [" + name + "] is a dynamic tensor. Use GetDynamicTensorShape instead of GetTensorShape");
 
@@ -77,7 +87,7 @@ std::vector<Dim> RModel::GetDynamicTensorShape(const std::string & name) const {
    throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
-const ETensorType& RModel::GetTensorType(std::string name) const {
+ETensorType RModel::GetTensorType(std::string name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.type;
@@ -98,6 +108,10 @@ const ETensorType& RModel::GetTensorType(std::string name) const {
     if (f5 != fDynamicTensorInfos.end()){
       return f5->second.type;
     }
+    // case of shape tensor type is INT64
+    if (fShapeTensors.find(name) != fShapeTensors.end()){
+      return ETensorType::INT64;
+    }
 
     if (fIsSubGraph && fParentGraph)
       return fParentGraph->GetTensorType(name);
@@ -111,6 +125,7 @@ bool RModel::CheckIfTensorAlreadyExist(std::string tensor_name) {
     if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()) return true;
     if (fIntermediateTensorInfos.find(tensor_name) != fIntermediateTensorInfos.end()) return true;
     if (fDynamicTensorInfos.find(tensor_name) != fDynamicTensorInfos.end()) return true;
+    if (fShapeTensors.find(tensor_name) != fShapeTensors.end()) return true;
     if (fIsSubGraph && fParentGraph) return fParentGraph->CheckIfTensorAlreadyExist(tensor_name);
     return false;
 }
@@ -179,10 +194,27 @@ void RModel::AddConstantTensor(std::string tensor_name, ETensorType type, std::v
     tensor_name = UTILITY::Clean_name(tensor_name);
     //NB: own data
     if (CheckIfTensorAlreadyExist(tensor_name)) {
-        throw std::runtime_error("TMVA-SOFIE: initialized tensor with name " + tensor_name + " already exists \n");
+        throw std::runtime_error("TMVA-SOFIE: constant tensor with name " + tensor_name + " already exists \n");
     }
     InitializedTensor new_tensor {type, shape, data, true};   // add here flag to specify is a constant tensor
     fInitializedTensors[tensor_name] = new_tensor;
+}
+
+void RModel::AddShapeTensor(const std::string & name, const std::vector<Dim> & shape_values, bool scalar){
+   auto tensor_name = UTILITY::Clean_name(name);
+   if (fShapeTensors.count(tensor_name) != 0) {
+      throw std::runtime_error("TMVA-SOFIE: shape tensor with name " + tensor_name + " already exists \n");
+   }
+   fShapeTensors[tensor_name] = std::make_pair(shape_values, scalar);
+}
+
+bool RModel::IsShapeTensor(const std::string & tensor_name) const {
+   return fShapeTensors.count(tensor_name) != 0;
+}
+
+const std::vector<Dim> & RModel::GetShapeTensorValues(const std::string & tensor_name) const {
+   //if (!IsShapeTensor(tensor_name) ) return std::vector<Dim>{};
+   return fShapeTensors.at(tensor_name).first;
 }
 
 bool RModel::IsInitializedTensor(const std::string& tensorName) const {

@@ -59,7 +59,7 @@ public:
    }
 
    // shape of output tensors given input tensors
-   std::vector<Dim> ShapeInference(const std::vector<Dim> &  input)  {
+   std::vector<Dim> DoShapeInference(const std::vector<Dim> &  input)  {
       auto ret = input; //suggest copy to compiler
       auto & outputShape = ret;
       for (size_t j = 0; j < fAttrAxes.size(); j++) {
@@ -110,7 +110,7 @@ public:
             fAttrAxes[i] = i;
       }
       // find shape of Y and add it in the list of intermediate tensors
-      fShapeY = ShapeInference(fShapeX);
+      fShapeY = DoShapeInference(fShapeX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       if (model.Verbose()){
          std::cout << Name() << " : " << fNX << " -> " << fNY << " shape " << ConvertShapeToString(fShapeY) << std::endl;
@@ -168,7 +168,6 @@ public:
          reducedLength = "reducedLength_" + opName;
          out << SP << "size_t " << reducedLength << " = " <<  inputLength << " / " << outputLength << ";\n";
       } else {
-         std::cout << "input " << inputLength << " output " << outputLength << " !" << std::endl;
          int rLength = std::stoi(inputLength) / std::stoi(outputLength);
          reducedLength = std::to_string(rLength);
       }

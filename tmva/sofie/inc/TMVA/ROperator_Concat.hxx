@@ -193,12 +193,18 @@
                std::cout << "Output of concat operator has shape " << ConvertDimShapeToString(fOutputShape) << std::endl;
 
             // check if concat has constant inputs , axis 0(concat contigous memory and type is integer)
+            bool isOutputShape = false;
             if (model.GetTensorType(fInputs[0]) == ETensorType::INT64 && fAxis == 0) {
                fIsOutputConstant = true;
+               isOutputShape = true;
+
                for ( auto & input : fInputs) {
                   if (!model.IsInitializedTensor(input)) {
                      fIsOutputConstant = false;
-                     break;
+                     if (!model.IsShapeTensor(input)) {
+                        isOutputShape = false;
+                        break;
+                     }
                   }
                }
                if (fIsOutputConstant) {
@@ -217,8 +223,35 @@
                   model.AddConstantTensor<int64_t>(fOutput, outputShape, outputData.data());
                   if (model.Verbose()) {
                      std::cout << "output of Concat is a constant tensor " << ConvertShapeToString(outputShape) << " : "
-                     << ConvertValuesToString(outputData) << std::endl;
+                     << ConvertValuesToString(outputData) << " (constant)" << std::endl;
                   }
+               } else if (isOutputShape) {
+                  auto outputShape = ConvertShapeToInt(fOutputShape);  // conversion must be possible
+                  std::vector<Dim> outputData(ConvertShapeToLength(outputShape));
+                  size_t offset = 0;
+                  for ( auto & input : fInputs) {
+                     std::vector<Dim> inputData;
+                     auto inputShape = model.GetTensorShape(input); // shape is not dynamic
+                     size_t inputLength = ConvertShapeToLength(inputShape); // shape can be a scalar
+                     if (model.IsShapeTensor(input))
+                        inputData = model.GetShapeTensorValues(input);
+                     else if (model.IsConstantTensor(input)) {
+                        inputData.resize(inputLength);
+                        auto intData = static_cast<int64_t*>(model.GetInitializedTensorData(input).get());
+                        for (size_t i = 0; i < inputData.size(); i++)
+                           inputData[i] = Dim{ static_cast<size_t>(intData[i])};
+                     }
+                     std::cout << "concatanating input data " << inputLength << "  " << inputData[0] << std::endl;
+                     std::copy(inputData.begin(), inputData.end(), outputData.begin() + offset );
+                     offset += inputLength;
+                  }
+                  // add output tensor
+                  model.AddShapeTensor(fOutput,outputData, false); // cannot be a  scalar
+                  if (model.Verbose()) {
+                     std::cout << "output of Concat is a shape tensor " << ConvertShapeToString(outputShape) << " : "
+                     << ConvertShapeToString(outputData) << " (shape)" <<  std::endl;
+                  }
+                  fIsOutputConstant = true;
                }
             }
             if (!fIsOutputConstant) {

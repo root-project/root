@@ -66,12 +66,15 @@ public:
          }
          fIsOutputConstant = true;
       }
-      else
-         model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
-
-
+      else {
+         // add tensor as a shape tensor (and also as initialized one??)
+         //model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
+         fIsOutputConstant = true;
+         model.AddShapeTensor(fNY, std::vector<Dim>(fShape.begin() + fStart, fShape.begin() + fEnd));
+      }
    }
 
+   // generate is not needed
    std::string Generate(std::string OpName) override {
       // no need to generate code if the output is constant
       if (fIsOutputConstant) return "";

@@ -90,9 +90,9 @@ public:
          model.AddDynamicTensor(fNOutput, type, fShape);
       }
       if (model.Verbose()) {
-         std::cout << "Range -> output is " << fNOutput << " ";
-         if (fIsOutputConstant) std::cout << ConvertShapeToString(fShape) << std::endl;
-         else std::cout << ConvertShapeToString(model.GetDynamicTensorShape(fNOutput)) << std::endl;
+         std::cout << "Range -> output is " << fNOutput << " : " << ConvertShapeToString(fShape);
+         if (fIsOutputConstant) std::cout << " : " << ConvertValuesToString(model.GetTensorData<T>(fNOutput));
+         std::cout << std::endl;
       }
    }
 
