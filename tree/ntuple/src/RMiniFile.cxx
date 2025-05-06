@@ -754,6 +754,14 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProper(st
       return R__FAIL("no RNTuple named '" + std::string(ntupleName) + "' in file '" + fRawFile->GetUrl() + "'");
    }
 
+   auto res = GetNTupleProperAtOffset(offset);
+   return res;
+}
+
+ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProperAtOffset(std::uint64_t keyOffset)
+{
+   auto offset = keyOffset;
+   RTFKey key;
    ReadBuffer(&key, sizeof(key), offset);
    offset = key.GetSeekKey() + key.fKeyLen;
 
