@@ -17,7 +17,8 @@ The following people have contributed to this new version:
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/EP-SFT,\
  Mattias Ellert, Uppsala University,\
- Florine de Geus, CERN/University of Twente,\
+ Florine de Geus, CERN/EP-SFT and University of Twente,\
+ Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, CSIC/University of Valencia,\
  Stephan Hageboeck, CERN,\
  Sergey Linev, GSI Darmstadt,\
