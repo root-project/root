@@ -69,3 +69,14 @@ TEST(TClass, BuildRealData)
 {
    TClass::GetClass("TClass")->BuildRealData();
 }
+
+// https://github.com/root-project/root/issues/18654
+TEST(TClass, ConsistentSTLLookup)
+{
+   // The lookup via normalised shortened name yielded a different class
+   // than lookup via typeid. This lead to crashes in cppyy.
+   auto first = TClass::GetClass("unordered_map<string,char>", true, true);
+   std::unordered_map<std::string, char> map;
+   auto second = first->GetActualClass(&map);
+   EXPECT_EQ(first, second);
+}
