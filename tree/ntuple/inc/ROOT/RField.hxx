@@ -190,7 +190,7 @@ public:
    RClassField(std::string_view fieldName, std::string_view className);
    RClassField(RClassField &&other) = default;
    RClassField &operator=(RClassField &&other) = default;
-   ~RClassField() override = default;
+   ~RClassField() override;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final;
