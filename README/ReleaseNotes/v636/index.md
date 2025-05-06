@@ -15,6 +15,7 @@ The following people have contributed to this new version:
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
  Philippe Canal, FNAL,\
+ Marta Czurylo, CERN/EP-SFT,\
  Mattias Ellert, Uppsala University,\
  Florine de Geus, CERN/University of Twente,\
  Fernando Hueso Gonzalez, CSIC/University of Valencia,\
@@ -157,6 +158,8 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 ## RDataFrame
 
 ## Tutorials and Code Examples
+
+* The ROOT Tutorials have been modernized - we organized the tutorials into new categories and added more informative descriptions to each section. Some of the tutorials were fixed, renamed or moved to the legacy folder but also new tutorials were added to showcase features not represented before. We believe that interacting with the tutorials is now much easier and more pleasant both for the new and old users. Have a look [here](https://root.cern.ch/doc/v636/group__Tutorials.html) for all the details.
 
 * add `tutorials/visualisation/webgui/bootstrap` example showing usage of `RWebWindow` with [bootstrap](https://getbootstrap.com/) framework, including embedding of `TWebCanvas` in the widget
 
