@@ -113,11 +113,10 @@ public:
          fShapeB = model.GetTensorShape(fNB);
          fDimShapeB = ConvertShapeToDim(fShapeB);
       }
-      std::cout <<  BinaryOperatorTrait<T, Op>::Name() << "  ";
-      if (dynamicInputs & 1)
-         std::cout <<  fNA << " is dynamic " << ConvertShapeToString(fDimShapeA) << "  ";
-      if (dynamicInputs & 2)
-         std::cout <<  fNB << " is dynamic " << ConvertShapeToString(fDimShapeB) << "  ";
+      if (dynamicInputs & 1 && model.Verbose() )
+         std::cout <<  BinaryOperatorTrait<T, Op>::Name() << " : input " << fNA << " is dynamic " << ConvertShapeToString(fDimShapeA) << "  ";
+      if (dynamicInputs & 2 && model.Verbose())
+         std::cout <<  BinaryOperatorTrait<T, Op>::Name() << " : input " << fNB << " is dynamic " << ConvertShapeToString(fDimShapeB) << "  ";
       std::cout << std::endl;
       // check if need to broadcast at initialization time if shapes are known and different
       // (we could broadcast the tensor tensor to maximum values of dynamic shapes - to be done)
@@ -126,7 +125,6 @@ public:
          auto ret = UTILITY::MultidirectionalBroadcastShape(fShapeA, fShapeB);
          fBroadcastFlag = ret.first;
          fShapeY = ret.second;
-         std::cout << BinaryOperatorTrait<T, Op>::Name() << " : checking for defined shapes " << fBroadcastFlag << "  " << ConvertShapeToString(fShapeY) << std::endl;
          bool broadcast =  ret.first > 0;
          if (broadcast) {
             // Y is the common shape of A and B
@@ -212,7 +210,6 @@ public:
          auto ret = UTILITY::MultidirectionalBroadcastShape(fDimShapeA, fDimShapeB);
          fBroadcastFlag = ret.first;
          fDimShapeY = ret.second;
-         std::cout << BinaryOperatorTrait<T, Op>::Name() << " : checking for Dim shapes " << fBroadcastFlag << "  " << ConvertShapeToString(fDimShapeY) << std::endl;
          // case of all parametric shapes and MultiDirectionalBroadcastShape  return the max of the 2
          // need to do before we declare the output tensor shape and the broadcasted ones
          if (ret.first & 4) {
