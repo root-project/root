@@ -336,6 +336,28 @@ void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::
 
 //------------------------------------------------------------------------------
 
+namespace ROOT::Experimental::Internal {
+class RAuxiliaryProcessorField final : public ROOT::RRecordField {
+private:
+   using RFieldBase::GenerateColumns;
+   void GenerateColumns() final
+   {
+      throw RException(R__FAIL("RAuxiliaryProcessorField fields must only be used for reading"));
+   }
+
+public:
+   RAuxiliaryProcessorField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
+      : ROOT::RRecordField(fieldName, "RAuxiliaryProcessorField")
+   {
+      fOffsets.reserve(itemFields.size());
+      for (auto &item : itemFields) {
+         fOffsets.push_back(GetItemPadding(fSize, item->GetAlignment()));
+      }
+      AttachItemFields(std::move(itemFields));
+   }
+};
+} // namespace ROOT::Experimental::Internal
+
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
                                                                std::unique_ptr<RNTupleProcessor> auxProcessor,
                                                                const std::vector<std::string> &joinFields,
@@ -346,13 +368,6 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<R
      fPrimaryProcessor(std::move(primaryProcessor)),
      fAuxiliaryProcessor(std::move(auxProcessor))
 {
-   // FIXME(fdegeus): this check is not complete, e.g. the situation where the auxiliary processor is a chain of joins
-   // would pass. It would be better to fix the underlying issue (how to access their fields), so this check would
-   // become unecessary altogether.
-   if (dynamic_cast<RNTupleJoinProcessor *>(fAuxiliaryProcessor.get())) {
-      throw RException(R__FAIL("auxiliary RNTupleJoinProcessors are currently not supported"));
-   }
-
    if (fProcessorName.empty()) {
       fProcessorName = fPrimaryProcessor->GetProcessorName();
    }
@@ -425,13 +440,19 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetModel(std::unique_ptr<ROOT::RN
       auxFields.emplace_back(auxModel->GetConstField(fieldName).Clone(fieldName));
    }
 
-   auto auxParentField =
-      std::make_unique<ROOT::RRecordField>(fAuxiliaryProcessor->GetProcessorName(), std::move(auxFields));
+   auto auxParentField = std::make_unique<Internal::RAuxiliaryProcessorField>(fAuxiliaryProcessor->GetProcessorName(),
+                                                                              std::move(auxFields));
    const auto &subFields = auxParentField->GetConstSubfields();
    fModel->AddField(std::move(auxParentField));
 
    for (const auto &field : subFields) {
       fModel->RegisterSubfield(field->GetQualifiedFieldName());
+
+      if (field->GetTypeName() == "RAuxiliaryProcessorField") {
+         for (const auto &auxSubField : field->GetConstSubfields()) {
+            fModel->RegisterSubfield(auxSubField->GetQualifiedFieldName());
+         }
+      }
    }
 
    // If the model has a default entry, adopt its value pointers. This way, the pointers returned by
