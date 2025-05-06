@@ -4054,7 +4054,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
 // Note that the redundancy and structure in this code is tailored to improve
 // efficiencies.
-   if (TestBit(kMissingLeaf)) return 0;
+   if (TestBit(kMissingLeaf)) return TMath::SignalingNaN();
    if (fNoper == 1 && fNcodes > 0) {
 
       switch (fLookupType[0]) {
@@ -4113,7 +4113,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             }
             return fx->EvalInstance<T>(instance);
          }
-         default: return 0;
+         default: return TMath::SignalingNaN();
       }
    }
 
