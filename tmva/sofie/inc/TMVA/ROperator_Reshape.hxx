@@ -81,7 +81,6 @@ public:
 
    // output shape
    std::vector<std::vector<Dim>> ShapeInference(const std::vector<std::vector<Dim>> & input)  {
-       std::cout << "infering shape for ..." << fOpMode << std::endl;
       std::vector<std::vector<Dim>> ret;
       auto & input_shape = input[0];
       if (fOpMode == Reshape) {
@@ -103,8 +102,27 @@ public:
                auto input_length = ConvertDimShapeToLength(input_shape);
                if (IsInteger(tmp_length) && IsInteger(input_length))
                   output_shape[i] = Dim{static_cast<size_t>(std::stoi(input_length) / std::stoi(tmp_length))};
-               else
-                  output_shape[i] = Dim{std::string("(") + input_length + " / (" + tmp_length + ")"};
+               else {
+                  //we can try simplifying expression if tmp_length is integer and part of input_length
+                  // contains tmp_length
+                  bool canSimplify = false;
+                  if (IsInteger(tmp_length)) {
+                     std::vector<Dim> reduced_input = input_shape;
+                     for (auto & s : input_shape) {
+                        if (s.GetVal() == tmp_length) {
+                           //erase value in the reduced_input vector
+                           auto itr = std::find(reduced_input.begin(), reduced_input.end(), s);
+                           reduced_input.erase(itr);
+                           canSimplify = true;
+                           break;
+                        }
+                     }
+                     if (canSimplify)
+                        output_shape[i] = Dim{std::string("(") + ConvertDimShapeToLength(reduced_input) + ")", static_cast<size_t>(-1)};
+                  }
+                  if (!canSimplify)
+                     output_shape[i] = Dim{std::string("(") + input_length + " / (" + tmp_length + ")", static_cast<size_t>(-1)};
+               }
 
                break; // cannot have more than -1
             }
@@ -244,7 +262,18 @@ public:
             std::cout << Name() << " : " << fNData << " " << ConvertShapeToString(fShapeInput) << " -->  " << fNOutput << " (constant) " << ConvertShapeToString(fShapeOutput)  << " : " <<
             ConvertValuesToString(ConvertShapeToLength(o_shape), inputData) << std::endl;
          }
-      } else {
+      }
+      // for shape tensors we can have it if output shape is size==1 or a scalar
+      else if (model.IsShapeTensor(fNData) && fShapeOutput.size() <=1) {
+         fIsOutputConstant = true;
+         auto inputData = model.GetShapeTensorValues(fNData);
+         model.AddShapeTensor(fNOutput, inputData);
+         if (model.Verbose()) {
+            std::cout << Name() << " : " << fNData << " " << ConvertShapeToString(fShapeInput) << " -->  " << fNOutput << " (shape) " << ConvertShapeToString(fShapeOutput)  << " : " <<
+            ConvertShapeToString(inputData) << std::endl;
+         }
+      }
+      else {
          // non-constant case
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
          if (model.Verbose())
