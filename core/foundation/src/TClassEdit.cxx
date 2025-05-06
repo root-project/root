@@ -48,13 +48,20 @@ namespace {
             gInterpreterHelper->ShuttingDownSignal();
       }
    };
-}
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Remove the next spaces.
+   void RemoveSpace(std::string_view &s)
+   {
+      while (!s.empty() && s[0] == ' ')
+         s.remove_prefix(1);
+   }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the length, if any, taken by std:: and any
 /// potential inline namespace (well compiler detail namespace).
 
-static size_t StdLen(const std::string_view name)
+size_t StdLen(const std::string_view name)
 {
    size_t len = 0;
    if (name.compare(0,5,"std::")==0) {
@@ -113,7 +120,7 @@ static size_t StdLen(const std::string_view name)
 /// Remove std:: and any potential inline namespace (well compiler detail
 /// namespace.
 
-static void RemoveStd(std::string &name, size_t pos = 0)
+void RemoveStd(std::string &name, size_t pos = 0)
 {
    size_t len = StdLen({name.data()+pos,name.length()-pos});
    if (len) {
@@ -125,13 +132,25 @@ static void RemoveStd(std::string &name, size_t pos = 0)
 /// Remove std:: and any potential inline namespace (well compiler detail
 /// namespace.
 
-static void RemoveStd(std::string_view &name)
+void RemoveStd(std::string_view &name)
 {
    size_t len = StdLen(name);
    if (len) {
       name.remove_prefix(len);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove instances of "::".
+
+void RemoveScopeResolutionOp(std::string &name)
+{
+   if (name.length() > 2 && name[0] == ':' && name[1] == ':') {
+      name.erase(0, 2);
+   }
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -641,9 +660,11 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    }
    a.remove_prefix(alloclen);
 
+   RemoveSpace(a);
    RemoveStd(a);
 
    string_view k = classname;
+   RemoveSpace(a);
    RemoveStd(k);
 
    if (a.compare(0,k.length(),k) != 0) {
@@ -664,7 +685,9 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
       a.remove_prefix(k.length());
    }
 
-   if (a.compare(0,1,">")!=0 && a.compare(0,2," >")!=0) {
+   RemoveSpace(a);
+
+   if (a.compare(0, 1, ">") != 0) {
       return false;
    }
 
@@ -682,6 +705,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    if (IsDefAlloc(allocname,keyclassname)) return true;
 
    string_view a( allocname );
+   RemoveSpace(a);
    RemoveStd(a);
 
    constexpr auto length = std::char_traits<char>::length;
@@ -691,6 +715,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    }
    a.remove_prefix(alloclen);
 
+   RemoveSpace(a);
    RemoveStd(a);
 
    constexpr static int pairlen = length("pair<");
@@ -704,6 +729,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       a.remove_prefix(constlen+1);
    }
 
+   RemoveSpace(a);
    RemoveStd(a);
 
    string_view k = keyclassname;
@@ -735,14 +761,12 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       }
       a.remove_prefix(end);
    } else {
-      size_t end = k.length();
-      if ( (a[end-1] == '*') || a[end]==' ' ) {
-         size_t skipSpace = (a[end] == ' ');
-         if (a.compare(end+skipSpace,constlen,"const") == 0) {
-            end += constlen+skipSpace;
-         }
+      // Deal with a trailing const of the allocated type
+      a.remove_prefix(k.length());
+      RemoveSpace(a);
+      if (a.compare(0, constlen, "const") == 0) {
+         a.remove_prefix(constlen);
       }
-      a.remove_prefix(end);
    }
 
    if (a[0] != ',') {
@@ -772,7 +796,9 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       a.remove_prefix(v.length());
    }
 
-   if (a.compare(0,1,">")!=0 && a.compare(0,2," >")!=0) {
+   RemoveSpace(a);
+
+   if (a.compare(0, 1, ">") != 0) {
       return false;
    }
 
@@ -896,9 +922,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
    // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
    // part of the result string.  For consistency, we must remove it.
-   if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
-      norm_name.erase(0,2);
-   }
+   RemoveScopeResolutionOp(norm_name);
 
    if (gInterpreterHelper) {
       // See if the expanded name itself is a typedef.
@@ -906,7 +930,16 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
       if (gInterpreterHelper->ExistingTypeCheck(norm_name, typeresult)
           || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(norm_name, typeresult)) {
 
-         if (!typeresult.empty()) norm_name = typeresult;
+         if (!typeresult.empty()) {
+            // For STL containers, typeresult comes back with default template arguments, so a last
+            // stripping step is required
+            TClassEdit::TSplitType stripDefaultTemplateArgs(
+               typeresult.c_str(),
+               static_cast<TClassEdit::EModType>(TClassEdit::kLong64 | TClassEdit::kDropStd |
+                                                 TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
+            stripDefaultTemplateArgs.ShortType(norm_name, TClassEdit::kDropStd | TClassEdit::kDropStlDefault);
+            RemoveScopeResolutionOp(norm_name);
+         }
       }
    }
 }
@@ -1050,33 +1083,28 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 
    // We need to replace basic_string with string.
    {
-      unsigned int const_offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
       bool isString = false;
       bool isStdString = false;
-      size_t std_offset = const_offset;
-      static const char* basic_string_std = "std::basic_string<char";
-      static const unsigned int basic_string_std_len = strlen(basic_string_std);
+      bool isConst = false;
+      size_t prefix_offset = 0;
 
-      if (full.compare(const_offset,basic_string_std_len,basic_string_std) == 0
-          && full.size() > basic_string_std_len) {
-         isString = true;
-         isStdString = true;
-         std_offset += 5;
-      } else if (full.compare(const_offset,basic_string_std_len-5,basic_string_std+5) == 0
-                 && full.size() > (basic_string_std_len-5)) {
-         // no std.
-         isString = true;
-      } else if (full.find("basic_string") != std::string::npos) {
-         size_t len = StdLen(full.c_str() + const_offset);
-         if (len && len != 5 && full.compare(const_offset + len, basic_string_std_len-5, basic_string_std+5) == 0) {
-            isString = true;
-            isStdString = true;
-            std_offset += len;
-         }
+      if (full.compare(prefix_offset, 6, "const ") == 0) {
+         prefix_offset += isConst = true;
       }
+      if (full.compare(prefix_offset, 5, "std::") == 0) {
+         prefix_offset += 5;
+         isStdString = true;
+      }
+      if (full.compare(prefix_offset, 9, "__cxx11::") == 0) {
+         prefix_offset += 9;
+      }
+      if (full.compare(prefix_offset, 17, "basic_string<char") == 0) {
+         isString = true;
+         prefix_offset += 17;
+      }
+
       if (isString) {
-         size_t offset = basic_string_std_len - 5;
-         offset += std_offset; // std_offset includs both the size of std prefix and const prefix.
+         size_t offset = prefix_offset;
          if ( full[offset] == '>' ) {
             // done.
          } else if (full[offset] == ',') {
@@ -1128,7 +1156,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
          }
          if (isString) {
             output.push_back(string());
-            if (const_offset && (mode & kKeepOuterConst)) {
+            if (isConst && (mode & kKeepOuterConst)) {
                if (isStdString && !(mode & kDropStd)) {
                   output.push_back("const std::string");
                } else {
