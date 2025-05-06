@@ -16,7 +16,8 @@ The following people have contributed to this new version:
  Jakob Blomer, CERN/EP-SFT,\
  Philippe Canal, FNAL,\
  Mattias Ellert, Uppsala University,\
- Florine de Geus, CERN/University of Twente,\
+ Florine de Geus, CERN/EP-SFT and University of Twente,\
+ Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, CSIC/University of Valencia,\
  Enrico Lusiani, INFN Padova,\
  Alberto Mecca, University of Turin,\
