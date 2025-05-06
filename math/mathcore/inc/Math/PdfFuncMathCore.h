@@ -409,7 +409,7 @@ namespace Math {
 
   Probability density function of the bi-dimensional (Gaussian) distribution.
 
-  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-((x-x0)^2/\sigma_x^2 + (y-y0)^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
+  \f[ p(x,y) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-((x-x0)^2/\sigma_x^2 + (y-y0)^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/BivariateNormalDistribution.html">
@@ -439,7 +439,7 @@ namespace Math {
    /**
 
    Probability density function of the Landau distribution:
-  \f[ p(x,y) = \frac{1}{\xi} \phi (\lambda) \f]
+  \f[ p(x) = \frac{1}{\xi} \phi (\lambda) \f]
    with
    \f[  \phi(\lambda) = \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} e^{\lambda s + s \log{s}} ds\f]
    where \f$\lambda = (x-x_0)/\xi\f$. For a detailed description see
