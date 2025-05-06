@@ -159,6 +159,7 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
     [RNTupleMergeOptions](https://root.cern/doc/v634/structROOT_1_1Experimental_1_1Internal_1_1RNTupleMergeOptions.html));
   * "rntuple.ErrBehavior=(Abort|Skip)": RNTuple-specific option that specifies the behavior of the RNTupleMerger on error (see link above);
   * "rntuple.ExtraVerbose": RNTuple-specific option that tells the RNTupleMerger to emit more information during the merge process.
+* The option to explicitly pass a type name or `std::type_info` to `RNTupleReader::GetView<void>` has been added, in case the on-disk type of the field differs from the underlying type of the pointer to read into.
 
 ## Tutorials and Code Examples
 
