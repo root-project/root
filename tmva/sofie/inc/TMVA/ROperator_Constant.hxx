@@ -25,6 +25,7 @@ private:
    std::vector<T> fValues;
    std::string fAttrType;
    bool fIsConstantOfShape = false;
+   bool fIsUndefinedInputShape = false;
 
 public:
    ROperator_Constant(){}
@@ -52,6 +53,7 @@ public:
    void Initialize(RModel& model) override {
        //input must be a graph input, or already initialized intermediate tensor
       size_t length = 1;
+      /// ConstantOfShape-------------
       if (!fNX.empty()) {
          // case of ConstantOfShape (since no inputs in case of Constant operator)
          fIsConstantOfShape  = true;
@@ -81,8 +83,13 @@ public:
             T value = fValues[0];
             fValues = std::vector<T>(length, value);
          }
-         else {
-            // case of non constant tensors- we need to do at run time
+         else if (model.IsShapeTensor(fNX)) {
+            // case tensor values representing output shapes are  known
+            fDimOutputShape = model.GetShapeTensorValues(fNX);
+         } else {
+            // case of not known shape tensors- we need to do at run time
+            // not sure if we ever encounter this case
+            fIsUndefinedInputShape = true;
             fDimShape = model.GetDimTensorShape(fNX);
             if (fDimShape.size() > 1 )
                throw std::runtime_error("TMVA SOFIE ConstantOfShape Op Input Tensor has invalid shape");
@@ -138,9 +145,11 @@ public:
       // generate constant tensor according to input
 
       out << "\n//--------- ConstantOfShape " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
-       // set shape values
-      for (size_t i = 0; i < fDimOutputShape.size(); i++) {
-         out << SP << "size_t " << fDimOutputShape[i].param << " = " << "tensor_" << fNX << "[" << i << "];\n";
+       // set shape values if needed
+      if (fIsUndefinedInputShape) {
+         for (size_t i = 0; i < fDimOutputShape.size(); i++) {
+            out << SP << "size_t " << fDimOutputShape[i].param << " = " << "tensor_" << fNX << "[" << i << "];\n";
+         }
       }
       auto length = ConvertDimShapeToLength(fDimOutputShape);
       // vector is already allocated- fill with values

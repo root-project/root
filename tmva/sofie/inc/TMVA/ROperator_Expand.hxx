@@ -60,6 +60,10 @@ public:
          }
          std::vector<size_t> shape(shapeData, shapeData + N);
          fShapeDim = ConvertShapeToDim(shape);
+      } else if (model.IsShapeTensor(fNShape)) {
+         // case input shape is a shape tensor
+         fShapeDim = model.GetShapeTensorValues(fNShape);
+         fInitializedShape = true;
       } else {
          // assume shape of input shape is known (size is 1)
          auto shapeOfInputShape = model.GetTensorShape(fNShape);
@@ -70,8 +74,6 @@ public:
          }
       }
       // Y is the common shape of fShapeX and shape
-      std::cout << "expand - input tensor " << ConvertShapeToString(fShapeX) << std::endl;
-      std::cout << "expand - input shape " << ConvertShapeToString(fShapeDim) << std::endl;
       auto ret  = TMVA::Experimental::SOFIE::UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeDim);
       fShapeY = ret.second;
       fInitialized = model.IsInitializedTensor(fNX) && fInitializedShape;
@@ -117,9 +119,10 @@ public:
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       }
       fType = ConvertTypeToString(model.GetTensorType(fNX));
-      if (model.Verbose())
-         std::cout << "Expand - input shape " << ConvertShapeToString(fShapeX) << " --> output shape "
-                  << ConvertShapeToString(fShapeY) << std::endl;
+      if (model.Verbose()) {
+         std::cout << "Expand - input " << fNX << " shape " << ConvertShapeToString(fShapeX) << " --> " << fNY << " shape "
+                  << ConvertShapeToString(fShapeY) << (fIsOutputConstant ? ConvertValuesToString(model.GetTensorData<T>(fNY)) + " (constant)" : "") << std::endl;
+      }
    }
 
    std::string GenerateInitCode() override {

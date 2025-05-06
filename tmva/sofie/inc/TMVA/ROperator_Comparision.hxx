@@ -157,22 +157,95 @@ public:
          fShapeY = fShapeX1;
       }
       // case of constant tensors
-      if (model.IsInitializedTensor(fNX1) && model.IsInitializedTensor(fNX2) ) {
+      T * data1 = nullptr;
+      T * data2 = nullptr;
+      std::vector<Dim> shapeData1;
+      std::vector<Dim> shapeData2;
+      size_t length = ConvertShapeToLength(fShapeY);
+      bool *  outData = new bool[length];
+      if (model.IsInitializedTensor(fNX1)) {
+         data1 = static_cast<T *>(model.GetInitializedTensorData(fNX1).get());
+      } else if (model.IsShapeTensor(fNX1)) {
+         shapeData1 = model.GetShapeTensorValues(fNX1);
+      }
+      if (model.IsInitializedTensor(fNX2)) {
+         data2 = static_cast<T *>(model.GetInitializedTensorData(fNX2).get());
+      } else if (model.IsShapeTensor(fNX2)) {
+         shapeData2 = model.GetShapeTensorValues(fNX2);
+      }
+      if (data1 && data2) {
          fIsOutputConstant = true;
-         auto data1 = static_cast<T *>(model.GetInitializedTensorData(fNX1).get());
-         auto data2 = static_cast<T *>(model.GetInitializedTensorData(fNX2).get());
-         size_t length = ConvertShapeToLength(fShapeY);
-         bool * outData = new bool[length];
          for (size_t i = 0; i < length; i++)
             outData[i] = ComparisionTrait<T,Op>::Result(data1[i], data2[i]);
          model.AddConstantTensor(fNY, fShapeY, outData);
          if (model.Verbose())
             std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
                << ConvertValuesToString(length,outData) << std::endl;
-         delete [] outData;
-      } else {
-         model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
+      } else if ((data1 || !shapeData1.empty()) && (data2 || !shapeData2.empty())) {
+         fIsOutputConstant = true;
+         if (data1 && !data2) {
+            // data 1 is constant and data2 is shape
+            for (size_t i = 0; i < length; i++) {
+               if (shapeData2[i].isParam) {
+                  if (shapeData2[i].dim == size_t(-1) || data1[i] > 0) {
+                     fIsOutputConstant = false;
+                     break;
+                  } else {
+                     // assume a comparison is done with .dim = 0
+                     shapeData2[i].dim = 0;
+                  }
+               }
+               outData[i] = ComparisionTrait<T,Op>::Result(data1[i], static_cast<T>(shapeData2[i].dim));
+            }
+         } else if (!data1 && data2) {
+            // data 1 is shape and dat2 is constant
+            for (size_t i = 0; i < length; i++) {
+               if (shapeData1[i].isParam) {
+                  if (shapeData1[i].dim == size_t(-1) || data2[i] > 0) {
+                     fIsOutputConstant = false;
+                     break;
+                  } else {
+                     // assume a comparison is done with .dim = 0
+                     shapeData1[i].dim = 0;
+                  }
+               }
+               outData[i] = ComparisionTrait<T,Op>::Result(static_cast<T>(shapeData1[i].dim), data2[i]);
+            }
+         } else if (!shapeData1.empty() && !shapeData2.empty() ) {
+            // both data1 and data2 are shape tensors
+            for (size_t i = 0; i < length; i++) {
+               if (!shapeData1[i].isParam && !shapeData2[i].isParam) {
+                  outData[i] = ComparisionTrait<T,Op>::Result(shapeData1[i].dim, shapeData2[i].dim);
+               }
+               else if (shapeData1[i].isParam && shapeData2[i].isParam) {
+                  if (shapeData1[i].param == shapeData2[i].param)
+                     outData[i] = ComparisionTrait<int,Op>::Result(1,1); // comparison of two equal value
+                  else {
+                     fIsOutputConstant = false;
+                     break;
+                  }
+               }
+               else {
+                  fIsOutputConstant = false;
+                  break;
+               }
+            }
+         }
+         if (fIsOutputConstant) {
+            model.AddConstantTensor(fNY, fShapeY, outData);
+            if (model.Verbose())
+               std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
+                  << ConvertValuesToString(length,outData) << " (constant) " << std::endl;
+
+         }
       }
+      delete [] outData;
+      if (!fIsOutputConstant) {
+         model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
+         if (model.Verbose())
+               std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << std::endl;
+      }
+
       // check if this is not output operators to add a specific line for definining the tensor_xxx variable
       const auto & outputTensorNames = model.GetOutputTensorNames();
       fIsModelOutput = false;

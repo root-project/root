@@ -53,8 +53,9 @@ public:
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");
       }
       fShapeX = model.GetDimTensorShape(fNX);
-      std::cout << "Gather - initial shape " << ConvertShapeToString(fShapeX) << " indices "
-            << ConvertShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
+      if (model.Verbose())
+         std::cout << "Gather - initial shape " << ConvertShapeToString(fShapeX) << " shape of indices "
+               << ConvertShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
       //  fShapeIndices can be  dynamic
       fShapeIndices = model.GetDimTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
@@ -109,13 +110,36 @@ public:
          if (model.GetTensorType(fNX) == ETensorType::INT64) {
             auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNX).get());
             // if q <=1 and r = 1 output length = 1 (it is a scalar)
-            std::vector<int64_t> outputData(ConvertShapeToLength(shapeY));
+            std::vector<int64_t> outputData(1); //ConvertShapeToLength(shapeY));
             outputData[0] = inputData[fIndices[0]];
             model.AddConstantTensor(fNY, shapeY, outputData.data());
             if (model.Verbose())
                std::cout << "Gather: " << fNX << " " << ConvertShapeToString(shapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(shapeY)
                    << " and values " << ConvertValuesToString(outputData) << " (constant) " << std::endl;
             fIsOutputConstant = true;
+         }
+      }
+      // case input is a shape tensor  (r is == 1 by definition) and indices are known
+      else if (model.IsShapeTensor(fNX) && q <=1  && fIndices.size() > 0) {
+         auto inputData = model.GetShapeTensorValues(fNX);
+         // if r == 1 and q<=1 then output length is 1 (is a scalar or tensor of size1)
+         std::vector<Dim> outputData(1);
+         outputData[0] = inputData[fIndices[0]];
+         if (outputData[0].isParam) {
+            fIsOutputConstant = true;
+            // shapeY can be scalar or vector of size1
+            model.AddShapeTensor(fNY, outputData, fShapeY.size() == 0);
+            if (model.Verbose())
+               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+                   << " and values " << ConvertShapeToString(outputData) << " (shape) " << std::endl;
+         } else {
+            int64_t value = static_cast<int64_t>(outputData[0].dim);
+            auto shapeY = ConvertShapeToInt(fShapeY);
+            model.AddConstantTensor(fNY, shapeY, &value);
+            fIsOutputConstant = true;
+            if (model.Verbose())
+               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+                   << " and values {" << value <<  "} (constant) " << std::endl;
          }
       }
       if (!fIsOutputConstant) {
@@ -141,8 +165,6 @@ public:
       // Indices of shape q
       size_t q = fShapeIndices.size();
       // Strides
-      std::cout << "shapes of Gather " << ConvertShapeToString(fShapeX) << "  " <<
-            ConvertShapeToString(fShapeY) << "  " << ConvertShapeToString(fShapeIndices) << std::endl;
       auto stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
       auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
       auto stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
