@@ -253,14 +253,19 @@ TEST(RNTuple, TClassReadRules)
       auto ptrOldCoord = model->MakeField<OldCoordinates>("oldCoord");
       auto ptrLowPrecisionFloat = model->MakeField<LowPrecisionFloatWithIORules>("lowPrecisionFloat");
       auto ptrOldName = model->MakeField<OldName<OldName<int>>>("rename");
+      auto ptrWithSource = model->MakeField<StructWithSourceStruct>("withSource");
       ptrCoord->fX = ptrOldCoord->fOldX = 1.0;
       ptrCoord->fY = ptrOldCoord->fOldY = 1.0;
       ptrLowPrecisionFloat->fFoo = 1.0;
       ptrLowPrecisionFloat->fLast8BitsZero = last8BitsZero;
       ptrOldName->fValue.fValue = 42;
+      // The following two members are transient and should not be stored.
+      ptrWithSource->fSource.fTransient = 1;
+      ptrWithSource->fTransient = 2;
       auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       for (int i = 0; i < 5; i++) {
          *ptrClass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
+         ptrWithSource->fSource.fValue = i;
          writer->Fill();
       }
    }
@@ -270,6 +275,7 @@ TEST(RNTuple, TClassReadRules)
    EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
              reader->GetModel().GetConstField("class").GetOnDiskTypeChecksum());
    auto viewKlass = reader->GetView<StructWithIORules>("class");
+   auto viewWithSource = reader->GetView<StructWithSourceStruct>("withSource");
    for (auto i : reader->GetEntryRange()) {
       float fi = static_cast<float>(i);
       EXPECT_EQ(fi, viewKlass(i).a);
@@ -285,6 +291,10 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_FLOAT_EQ(42.0, viewKlass(i).checksumA);
       // The following member is not touched by a rule due to a checksum mismatch
       EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
+
+      // The staging area should have called the constructor and set fSource.fTransient = 23; fSource.fValue = i is
+      // loaded from disk, and then fTransient should be 23 + i
+      EXPECT_EQ(23 + i, viewWithSource(i).fTransient);
    }
 
    auto viewCoord = reader->GetView<CoordinatesWithIORules>("coord");

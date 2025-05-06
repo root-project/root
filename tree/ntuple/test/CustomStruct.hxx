@@ -286,6 +286,21 @@ struct NewName {
    T fValue;
 };
 
+struct SourceStruct {
+   int fValue;
+   int fTransient; //!
+   SourceStruct()
+   {
+      fValue = 17;
+      fTransient = 23;
+   }
+};
+
+struct StructWithSourceStruct {
+   SourceStruct fSource;
+   int fTransient = 0; //!
+};
+
 struct Cyclic {
    std::vector<Cyclic> fMember;
 };

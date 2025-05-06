@@ -128,6 +128,12 @@
 #pragma link C++ options = version(3) class NewName < NewName < int>> + ;
 #pragma read sourceClass = "OldName<OldName<int>>" targetClass = "NewName<OldName<int>>" version = "[3]"
 
+#pragma link C++ struct SourceStruct + ;
+#pragma link C++ struct StructWithSourceStruct + ;
+#pragma read sourceClass = "StructWithSourceStruct" source = "SourceStruct fSource" targetClass = \
+   "StructWithSourceStruct" target = "fTransient" code =                                          \
+      "{ fTransient = onfile.fSource.fValue + onfile.fSource.fTransient; }"
+
 #pragma link C++ class Cyclic + ;
 #pragma link C++ class CyclicCollectionProxy + ;
 #pragma link C++ class Unsupported + ;

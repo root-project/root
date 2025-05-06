@@ -185,6 +185,18 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
    fTraits |= kTraitTypeChecksum;
 }
 
+ROOT::RClassField::~RClassField()
+{
+   if (fStagingArea) {
+      for (const auto &[_, si] : fStagingItems) {
+         if (!(si.fField->GetTraits() & kTraitTriviallyDestructible)) {
+            auto deleter = si.fField->GetDeleter();
+            deleter->operator()(fStagingArea.get() + si.fOffset, true /* dtorOnly */);
+         }
+      }
+   }
+}
+
 void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info)
 {
    fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
@@ -368,6 +380,12 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
       R__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
       // We use std::make_unique instead of MakeUninitArray to zero-initialize the staging area.
       fStagingArea = std::make_unique<unsigned char[]>(stagingAreaSize);
+
+      for (const auto &[_, si] : fStagingItems) {
+         if (!(si.fField->GetTraits() & kTraitTriviallyConstructible)) {
+            CallConstructValueOn(*si.fField, fStagingArea.get() + si.fOffset);
+         }
+      }
    }
 }
 
