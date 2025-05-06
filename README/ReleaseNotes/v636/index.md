@@ -64,6 +64,7 @@ The following people have contributed to this new version:
   the pool of slot numbers that a thread can pick from is now shared across all graphs. This enables use cases where a single resource, which may be expensive to create or copy,
   is shared across tasks belonging to different computation graphs.
 - RDataFrame's RResultPtr now allow direct access to the underlying shared_ptr using [GetSharedPtr()](https://root.cern.ch/doc/v636/classROOT_1_1RDF_1_1RResultPtr.html#a633d680942845d91c10a48f62918f908). See also the new tutorial [df040](https://root.cern.ch/doc/v636/df040__RResultPtr__lifetimeManagement_8C.html) for details of lifetime management of RDataFrame results.
+- Support for single-threaded snapshotting to RNTuple has been added. This can be enabled through `RSnapshotOptions`. Note that snapshotting from a TTree-based RDataFrame to RNTuple is not yet supported in this release, but will be added in a future version. The current recommended way to convert from TTree to RNTuple is through the [RNTupleImporter](https://root.cern/doc/v636/classROOT_1_1Experimental_1_1RNTupleImporter.html).
 
 ## RooFit
 
