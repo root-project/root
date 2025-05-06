@@ -384,3 +384,18 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
       EXPECT_THAT(err.what(), testing::HasSubstr("auxiliary RNTupleJoinProcessors are currently not supported"));
    }
 }
+
+TEST_F(RNTupleProcessorTest, JoinedJoinComposedSameName)
+{
+   auto primaryProc =
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
+
+   try {
+      auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]});
+      auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("a field or nested auxiliary processor named \"ntuple_aux\" "
+                                                 "is already present in the model of the primary processor; rename "
+                                                 "the auxiliary processor to avoid conflicts"));
+   }
+}
