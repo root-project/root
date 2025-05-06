@@ -1923,6 +1923,9 @@ int TUnixSystem::Utime(const char *file, Long_t modtime, Long_t actime)
 /// The search path is specified as a : separated list of directories.
 /// Return value is pointing to wfile for compatibility with
 /// Which(const char*,const char*,EAccessMode) version.
+/// \note This function does not support finding files in directories containing
+/// colons in their name. For that specific use case and if you know the filename,
+/// deploy instead TSystem::AccessPathName(dirName+fileName, kReadPermission)
 
 const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode mode)
 {
