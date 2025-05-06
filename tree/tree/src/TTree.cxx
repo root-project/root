@@ -3849,6 +3849,10 @@ void TTree::DirectoryAutoAdd(TDirectory* dir)
 /// Draw expression varexp for specified entries.
 ///
 /// \return -1 in case of error or number of selected events in case of success.
+/// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
+/// `x > 0`, then we return the number of selected rows rather number of events,
+/// the row being what is shown in the prompt when calling tree.Scan(), where
+/// each event is split across the various instances (rows) of the array.
 ///
 /// This function accepts TCut objects as arguments.
 /// Useful to use the string operator +
@@ -3869,6 +3873,10 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// \brief Draw expression varexp for entries and objects that pass a (optional) selection.
 ///
 /// \return -1 in case of error or number of selected events in case of success.
+/// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
+/// `x > 0`, then we return the number of selected rows rather number of events,
+/// the row being what is shown in the prompt when calling tree.Scan(), where
+/// each event is split across the various instances (rows) of the array.
 ///
 /// \param [in] varexp
 /// \parblock
