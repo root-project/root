@@ -16,6 +16,7 @@ The following people have contributed to this new version:
  Jakob Blomer, CERN/EP-SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/EP-SFT,\
+ Marta Czurylo, CERN/EP-SFT,\
  Mattias Ellert, Uppsala University,\
  Florine de Geus, CERN/EP-SFT and University of Twente,\
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
@@ -163,6 +164,8 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 * The [RNTupleProcessor](https://root.cern/doc/v636/classROOT_1_1Experimental_1_1RNTupleProcessor.html) has been extended to support *joins* (comparable to TTree friends) and *chains of joins*. As an effect, `RNTupleReader::OpenFriends()` has been removed. Note that the RNTupleProcessor is still under active development and will remain in the Experimental namespace.
 
 ## Tutorials and Code Examples
+
+* The ROOT Tutorials have been modernized - we organized the tutorials into new categories and added more informative descriptions to each section. Some of the tutorials were fixed, renamed or moved to the legacy folder but also new tutorials were added to showcase features not represented before. We believe that interacting with the tutorials is now much easier and more pleasant both for the new and old users. Have a look [here](https://root.cern.ch/doc/v636/group__Tutorials.html) for all the details.
 
 * add `tutorials/visualisation/webgui/bootstrap` example showing usage of `RWebWindow` with [bootstrap](https://getbootstrap.com/) framework, including embedding of `TWebCanvas` in the widget
 
