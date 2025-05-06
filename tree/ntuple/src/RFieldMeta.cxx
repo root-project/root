@@ -828,9 +828,12 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
      fIndex(0)
 {
    fTraits |= kTraitTypeChecksum;
-   if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
+   // For RClassField, we only check for explicit constructors and destructors and then recursively combine traits from
+   // all member subfields. For RStreamerField, we treat the class as a black box and additionally need to check for
+   // implicit constructors and destructors.
+   if (!(fClass->ClassProperty() & (kClassHasExplicitCtor | kClassHasImplicitCtor)))
       fTraits |= kTraitTriviallyConstructible;
-   if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
+   if (!(fClass->ClassProperty() & (kClassHasExplicitDtor | kClassHasImplicitDtor)))
       fTraits |= kTraitTriviallyDestructible;
 }
 

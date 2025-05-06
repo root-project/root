@@ -1,5 +1,12 @@
 #ifdef __CLING__
 
+#pragma link C++ struct TrivialStreamedClass + ;
+#pragma link C++ struct ContainsTrivialStreamedClass + ;
+#pragma link C++ struct ConstructorStreamedClass + ;
+#pragma link C++ struct ContainsConstructorStreamedClass + ;
+#pragma link C++ struct DestructorStreamedClass + ;
+#pragma link C++ struct ContainsDestructorStreamedClass + ;
+
 #pragma link C++ struct CyclicMember;
 #pragma link C++ class ClassWithStreamedMember + ;
 #pragma link C++ class CustomStreamer - ;
