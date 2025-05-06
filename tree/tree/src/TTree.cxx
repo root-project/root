@@ -3852,7 +3852,8 @@ void TTree::DirectoryAutoAdd(TDirectory* dir)
 /// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
 /// `x > 0`, then we return the sum of all selected instances rather than number of events,
 /// the instances being the lines shown in the prompt when calling tree.Scan(), where
-/// each event is split across the various instances (lines) of the array.
+/// each event (tree row entry) is split across the various instances (lines) of the array.
+/// In constrast, the function `GetEntries(selection)` returns the number of events.
 ///
 /// This function accepts TCut objects as arguments.
 /// Useful to use the string operator +
@@ -3876,7 +3877,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
 /// `x > 0`, then we return the sum of all selected instances rather than number of events,
 /// the instances being the lines shown in the prompt when calling tree.Scan(), where
-/// each event is split across the various instances (lines) of the array.
+/// each event (tree row entry) is split across the various instances (lines) of the array.
+/// In constrast, the function `GetEntries(selection)` returns the number of events.
 ///
 /// \param [in] varexp
 /// \parblock
