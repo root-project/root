@@ -366,7 +366,8 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
 
    if (stagingAreaSize) {
       R__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
-      fStagingArea = ROOT::Internal::MakeUninitArray<unsigned char>(stagingAreaSize);
+      // We use std::make_unique instead of MakeUninitArray to zero-initialize the staging area.
+      fStagingArea = std::make_unique<unsigned char[]>(stagingAreaSize);
    }
 }
 
