@@ -1514,3 +1514,11 @@ ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable ROOT::RNTupleDescripto
 {
    return RExtraTypeInfoDescriptorIterable(*this);
 }
+
+const ROOT::RNTupleLocator *ROOT::Experimental::Internal::GetAttributeSetLocator(const RNTupleDescriptor &desc, std::string_view name)
+{
+   auto it = desc.fAttributeSets.find(std::string(name));
+   if (it == desc.fAttributeSets.end())
+      return nullptr;
+   return &it->second;
+}

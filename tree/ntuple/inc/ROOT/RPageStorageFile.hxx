@@ -38,9 +38,6 @@ class RNTupleWriter;
 
 namespace Internal {
 class RPageSinkFile;
-}
-
-namespace Internal {
 class RClusterPool;
 class RRawFile;
 class RPageAllocatorHeap;
@@ -159,6 +156,8 @@ private:
    std::unique_ptr<ROOT::Internal::RCluster>
    PrepareSingleCluster(const ROOT::Internal::RCluster::RKey &clusterKey, std::vector<RRawFile::RIOVec> &readRequests);
 
+   RMiniFileReader *GetUnderlyingReader() final { return &fReader; }
+
 protected:
    void LoadStructureImpl() final;
    ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
@@ -182,6 +181,11 @@ public:
    RPageSourceFile(RPageSourceFile &&) = delete;
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
+
+   /// Creates a new PageSourceFile using the same underlying file as this but referring to a different RNTuple,
+   /// represented by `anchor`.
+   std::unique_ptr<RPageSourceFile>
+   OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;

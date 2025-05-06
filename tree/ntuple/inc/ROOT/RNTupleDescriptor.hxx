@@ -68,10 +68,16 @@ std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const
 } // namespace Internal
 
 namespace Experimental::Internal {
+
 struct RNTupleAttributeSetDescriptor {
    std::string fName;
+   // The locator of the AttributeSet anchor.
+   // In case of kTypeFile, it points to the beginning of the Anchor's TKey (not the payload).
+   // NOTE: Only kTypeFile is supported at the moment.
    RNTupleLocator fLocator;
 };
+
+const RNTupleLocator *GetAttributeSetLocator(const RNTupleDescriptor &desc, std::string_view name);
 } // namespace Experimental::Internal
 
 // clang-format off
@@ -652,6 +658,7 @@ and backward compatibility when the metadata evolves.
 class RNTupleDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend RNTupleDescriptor Internal::CloneDescriptorSchema(const RNTupleDescriptor &desc);
+   friend const RNTupleLocator *ROOT::Experimental::Internal::GetAttributeSetLocator(const RNTupleDescriptor &desc, std::string_view name);
 
 public:
    class RHeaderExtension;
@@ -851,7 +858,11 @@ public:
    bool HasFeature(unsigned int flag) const { return fFeatureFlags.count(flag) > 0; }
    std::vector<std::uint64_t> GetFeatureFlags() const;
 
+   // XXX: superfluous?
    std::vector<std::string> GetAttributeSetNames() const;
+   // TODO: replace with an iterable?
+   // XXX: should be internal?
+   const std::unordered_map<std::string, RNTupleLocator> &GetAttributeSets() const { return fAttributeSets; }
 
    /// Return header extension information; if the descriptor does not have a header extension, return `nullptr`
    const RHeaderExtension *GetHeaderExtension() const { return fHeaderExtension.get(); }
