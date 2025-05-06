@@ -23,7 +23,6 @@
 #include <Byteswap.h>
 #include <TBufferFile.h>
 #include <TDirectory.h>
-#include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
 #include <TObjString.h>
@@ -169,7 +168,7 @@ struct RTFString {
    {
       // The length of strings with 255 characters and longer are encoded with a 32-bit integer following the first
       // byte. This is currently not handled.
-      R__ASSERT(str.length() < 255);
+      R7__ASSERT(str.length() < 255);
       fLName = str.length();
       memcpy(fData, str.data(), fLName);
    }
@@ -177,7 +176,7 @@ struct RTFString {
    {
       // A length of 255 is special and means that the first byte is followed by a 32-bit integer with the actual
       // length.
-      R__ASSERT(fLName != 255);
+      R7__ASSERT(fLName != 255);
       return 1 + fLName;
    }
 };
@@ -221,8 +220,8 @@ struct RTFKey {
    RTFKey(std::uint64_t seekKey, std::uint64_t seekPdir, const RTFString &clName, const RTFString &objName,
           const RTFString &titleName, std::size_t szObjInMem, std::size_t szObjOnDisk = 0)
    {
-      R__ASSERT(szObjInMem <= std::numeric_limits<std::uint32_t>::max());
-      R__ASSERT(szObjOnDisk <= std::numeric_limits<std::uint32_t>::max());
+      R7__ASSERT(szObjInMem <= std::numeric_limits<std::uint32_t>::max());
+      R7__ASSERT(szObjOnDisk <= std::numeric_limits<std::uint32_t>::max());
       // For writing, we alywas produce "big" keys with 64-bit SeekKey and SeekPdir.
       fVersion = fVersion + kBigKeyVersion;
       fObjLen = szObjInMem;
@@ -656,7 +655,7 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
    // For a reasonable-sized maxKeySize it looks very unlikely that we can have more chunks
    // than we can fit in the first `maxKeySize` bytes. E.g. for maxKeySize = 1GiB we can fit
    // 134217728 chunk offsets, making our multi-key blob's capacity exactly 128 PiB.
-   R__ASSERT(nbytesChunkOffsets <= maxChunkSize);
+   R7__ASSERT(nbytesChunkOffsets <= maxChunkSize);
 
    return nChunks;
 }
@@ -838,7 +837,7 @@ void ROOT::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, st
 
       // Read first chunk
       nread = fRawFile->ReadAt(bufCur, fMaxKeySize, offset);
-      R__ASSERT(nread == fMaxKeySize);
+      R7__ASSERT(nread == fMaxKeySize);
       // NOTE: we read the entire chunk in `bufCur`, but we only advance the pointer by `nbytesFirstChunk`,
       // since the last part of `bufCur` will later be overwritten by the next chunk's payload.
       // We do this to avoid a second ReadAt to read in the chunk offsets.
@@ -858,17 +857,17 @@ void ROOT::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, st
 
          const size_t bytesToRead = std::min<size_t>(fMaxKeySize, remainingBytes);
          // Ensure we don't read outside of the buffer
-         R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<uint8_t *>(buffer)) <= nbytes - bytesToRead);
+         R7__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<uint8_t *>(buffer)) <= nbytes - bytesToRead);
 
          auto nbytesRead = fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
-         R__ASSERT(nbytesRead == bytesToRead);
+         R7__ASSERT(nbytesRead == bytesToRead);
 
          nread += bytesToRead;
          bufCur += bytesToRead;
          remainingBytes -= bytesToRead;
       } while (remainingBytes > 0);
    }
-   R__ASSERT(nread == nbytes);
+   R7__ASSERT(nread == nbytes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -882,7 +881,7 @@ void ROOT::Internal::RNTupleFileWriter::PrepareBlobKey(std::int64_t offset, size
    RTFString strObject;
    RTFString strTitle;
    RTFKey keyHeader(offset, RTFHeader::kBEGIN, strClass, strObject, strTitle, len, nbytes);
-   R__ASSERT(keyHeader.fKeyLen == kBlobKeyLen);
+   R7__ASSERT(keyHeader.fKeyLen == kBlobKeyLen);
 
    // Copy structures into the buffer.
    unsigned char *writeBuffer = buffer;
@@ -894,7 +893,7 @@ void ROOT::Internal::RNTupleFileWriter::PrepareBlobKey(std::int64_t offset, size
    writeBuffer += strObject.GetSize();
    memcpy(writeBuffer, &strTitle, strTitle.GetSize());
    writeBuffer += strTitle.GetSize();
-   R__ASSERT(writeBuffer == buffer + kBlobKeyLen);
+   R7__ASSERT(writeBuffer == buffer + kBlobKeyLen);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -955,12 +954,12 @@ void ROOT::Internal::RNTupleFileWriter::RFileSimple::Flush()
       throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
 
    std::size_t lastBlockSize = fFilePos - fBlockOffset;
-   R__ASSERT(lastBlockSize <= fBlockSize);
+   R7__ASSERT(lastBlockSize <= fBlockSize);
    if (fDirectIO) {
       // Round up to a multiple of kBlockAlign.
       lastBlockSize += kBlockAlign - 1;
       lastBlockSize = (lastBlockSize / kBlockAlign) * kBlockAlign;
-      R__ASSERT(lastBlockSize <= fBlockSize);
+      R7__ASSERT(lastBlockSize <= fBlockSize);
    }
    retval = fwrite(fBlock, 1, lastBlockSize, fFile);
    if (retval != lastBlockSize)
@@ -984,7 +983,7 @@ void ROOT::Internal::RNTupleFileWriter::RFileSimple::Flush()
 
 void ROOT::Internal::RNTupleFileWriter::RFileSimple::Write(const void *buffer, size_t nbytes, std::int64_t offset)
 {
-   R__ASSERT(fFile);
+   R7__ASSERT(fFile);
    size_t retval;
    if ((offset >= 0) && (static_cast<std::uint64_t>(offset) != fFilePos)) {
       fFilePos = offset;
@@ -999,7 +998,7 @@ void ROOT::Internal::RNTupleFileWriter::RFileSimple::Write(const void *buffer, s
       memcpy(fHeaderBlock + fFilePos, buffer, headerBytes);
    }
 
-   R__ASSERT(fFilePos >= fBlockOffset);
+   R7__ASSERT(fFilePos >= fBlockOffset);
 
    while (nbytes > 0) {
       std::uint64_t posInBlock = fFilePos % fBlockSize;
@@ -1177,7 +1176,7 @@ ROOT::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::st
       writer->fIsBare = true;
       writer->WriteBareFileSkeleton(defaultCompression);
       break;
-   default: R__ASSERT(false && "Internal error: unhandled container format");
+   default: R7__ASSERT(false && "Internal error: unhandled container format");
    }
 
    return writer;
@@ -1251,7 +1250,7 @@ void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
 
    // Update header and TFile record
    memcpy(fileSimple.fHeaderBlock, &fileSimple.fControlBlock->fHeader, fileSimple.fControlBlock->fHeader.GetSize());
-   R__ASSERT(fileSimple.fControlBlock->fSeekFileRecord + fileSimple.fControlBlock->fFileRecord.GetSize() <
+   R7__ASSERT(fileSimple.fControlBlock->fSeekFileRecord + fileSimple.fControlBlock->fFileRecord.GetSize() <
              RFileSimple::kHeaderBlockSize);
    memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekFileRecord, &fileSimple.fControlBlock->fFileRecord,
           fileSimple.fControlBlock->fFileRecord.GetSize());
@@ -1268,7 +1267,7 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::WriteBlob(const void *data, siz
    };
 
    const std::uint64_t maxKeySize = fNTupleAnchor.fMaxKeySize;
-   R__ASSERT(maxKeySize > 0);
+   R7__ASSERT(maxKeySize > 0);
    // We don't need the object length except for seeing compression ratios in TFile::Map()
    // Make sure that the on-disk object length fits into the TKey header.
    if (static_cast<std::uint64_t>(len) > static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()))
@@ -1328,7 +1327,7 @@ std::uint64_t
 ROOT::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen])
 {
    // ReserveBlob cannot be used to reserve a multi-key blob
-   R__ASSERT(nbytes <= fNTupleAnchor.GetMaxKeySize());
+   R7__ASSERT(nbytes <= fNTupleAnchor.GetMaxKeySize());
 
    std::uint64_t offset;
    if (auto *fileSimple = std::get_if<RFileSimple>(&fFile)) {

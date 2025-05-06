@@ -23,7 +23,7 @@ struct RFieldBaseTest : public ROOT::RFieldBase {
          return fnColumnElementIndexToEntry(fPrincipalColumn->GetFirstElementIndex());
       if (!fSubfields.empty())
          return static_cast<const RFieldBaseTest &>(*fSubfields[0]).GetFirstEntry();
-      R__ASSERT(false);
+      R7__ASSERT(false);
       return 0;
    }
 };

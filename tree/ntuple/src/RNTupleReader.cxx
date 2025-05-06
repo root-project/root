@@ -212,7 +212,7 @@ void ROOT::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output
    case ENTupleInfo::kMetrics: fMetrics.Print(output); break;
    default:
       // Unhandled case, internal error
-      R__ASSERT(false);
+      R7__ASSERT(false);
    }
 }
 

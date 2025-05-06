@@ -29,7 +29,6 @@
 #include <ROOT/RPageStorageDaos.hxx>
 
 #include <RVersion.h>
-#include <TError.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -636,7 +635,7 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
-      R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
+      R7__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       auto cachedPageRef = fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType},
                                              RNTupleLocalIndex(clusterId, idxInCluster));
@@ -645,7 +644,7 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
 
       ROOT::Internal::ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
-      R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
+      R7__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
       sealedPage.SetBuffer(onDiskPage->GetAddress());
    }
 

@@ -606,12 +606,6 @@ TEST(MiniFile, MultiKeyBlob_TooManyChunks)
 {
    // Try writing more than the max possible number of chunks for a split key and verify it fails
 
-#ifdef GTEST_FLAG_SET
-   // Death tests must run single-threaded:
-   // https://github.com/google/googletest/blob/main/docs/advanced.md#death-tests-and-threads
-   GTEST_FLAG_SET(death_test_style, "threadsafe");
-#endif
-
    FileRaii fileGuard("test_ntuple_minifile_multi_key_blob_small_key.root");
 
    const auto kMaxKeySize = 128;
@@ -632,7 +626,11 @@ TEST(MiniFile, MultiKeyBlob_TooManyChunks)
       const auto data = std::make_unique<unsigned char[]>(kTooBigDataSize);
       auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
       memset(data.get(), 0x99, kTooBigDataSize);
-      EXPECT_DEATH(writer->WriteBlob(data.get(), kTooBigDataSize, kTooBigDataSize), "");
+      try {
+         writer->WriteBlob(data.get(), kTooBigDataSize, kTooBigDataSize);
+      } catch (const ROOT::RException &ex) {
+         EXPECT_THAT(ex.what(), testing::HasSubstr("nbytesChunkOffsets <= maxChunkSize"));
+      }
       writer->Commit();
    }
 }

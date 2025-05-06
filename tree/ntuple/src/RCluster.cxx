@@ -15,8 +15,6 @@
 
 #include <ROOT/RCluster.hxx>
 
-#include <TError.h>
-
 #include <iterator>
 #include <utility>
 
@@ -46,7 +44,7 @@ void ROOT::Internal::RCluster::Adopt(std::unique_ptr<ROnDiskPageMap> pageMap)
 
 void ROOT::Internal::RCluster::Adopt(RCluster &&other)
 {
-   R__ASSERT(fClusterId == other.fClusterId);
+   R7__ASSERT(fClusterId == other.fClusterId);
 
    auto &pages = other.fOnDiskPages;
    fOnDiskPages.insert(std::make_move_iterator(pages.begin()), std::make_move_iterator(pages.end()));

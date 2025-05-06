@@ -324,7 +324,7 @@ protected:
          fAuxiliaryColumn = column.get();
       } else {
          // We currently have no fields with more than 2 columns in its column representation
-         R__ASSERT(representationIndex > 0);
+         R7__ASSERT(representationIndex > 0);
       }
 
       if constexpr (sizeof...(TailTs))
@@ -864,13 +864,13 @@ namespace Internal {
 struct RFieldRepresentationModifier {
    static void SetPrimaryColumnRepresentation(RFieldBase &field, std::uint16_t newRepresentationIdx)
    {
-      R__ASSERT(newRepresentationIdx < field.fColumnRepresentatives.size());
+      R7__ASSERT(newRepresentationIdx < field.fColumnRepresentatives.size());
       const auto N = field.fColumnRepresentatives[0].get().size();
-      R__ASSERT(N >= 1 && N <= 2);
-      R__ASSERT(field.fPrincipalColumn);
+      R7__ASSERT(N >= 1 && N <= 2);
+      R7__ASSERT(field.fPrincipalColumn);
       field.fPrincipalColumn = field.fAvailableColumns[newRepresentationIdx * N].get();
       if (field.fAuxiliaryColumn) {
-         R__ASSERT(N == 2);
+         R7__ASSERT(N == 2);
          field.fAuxiliaryColumn = field.fAvailableColumns[newRepresentationIdx * N + 1].get();
       }
    }

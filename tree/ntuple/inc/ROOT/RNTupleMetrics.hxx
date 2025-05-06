@@ -17,10 +17,9 @@
 #define ROOT_RNTupleMetrics
 
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RError.hxx>
+
 #include <string_view>
-
-#include <TError.h>
-
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -215,7 +214,7 @@ public:
    RNTupleTickCounter(const std::string &name, const std::string &unit, const std::string &desc)
       : BaseCounterT(name, unit, desc)
    {
-      R__ASSERT(unit == "ns");
+      R7__ASSERT(unit == "ns");
    }
 
    std::int64_t GetValueAsInt() const final {
@@ -309,7 +308,7 @@ public:
    template <typename CounterPtrT, class... Args>
    CounterPtrT MakeCounter(const std::string &name, Args&&... args)
    {
-      R__ASSERT(!Contains(name));
+      R7__ASSERT(!Contains(name));
       auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, std::forward<Args>(args)...);
       auto ptrCounter = counter.get();
       fCounters.emplace_back(std::move(counter));
