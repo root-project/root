@@ -74,7 +74,7 @@ newlib="-lNew"
 rootglibs="-lGui"
 rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
 rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
-          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lROOTNTuple"
 
 # MultiProc is not supported on Windows
 if test "$platform" != "win32"; then
@@ -83,6 +83,10 @@ fi
 
 if echo "${features}" | grep -q "dataframe"; then
    rootlibs="$rootlibs -lROOTDataFrame"
+fi
+
+if echo "${features}" | grep -q "root7"; then
+   rootlibs="$rootlibs -lROOTNTupleUtil"
 fi
 
 if test "$platform" = "win32"; then
