@@ -139,9 +139,7 @@ ROOT::Experimental::RNTupleFillContext::CommitAttributes()
    offsets.reserve(fAttributeSets.size());
 
    for (auto &[_, attrSet] : fAttributeSets) {
-      attrSet.fFillContext.FlushCluster();
-      attrSet.fFillContext.fSink->CommitClusterGroup();
-      attrSet.fFillContext.fSink->CommitDataset();
+      attrSet.Commit();
       TDirectory *dir = attrSet.fFillContext.fSink->GetUnderlyingDirectory();
       R__ASSERT(dir); // TODO: we're only dealing with TFile-based attributes for now.
       const auto &attrSetName = attrSet.fFillContext.fSink->GetNTupleName();
@@ -151,7 +149,7 @@ ROOT::Experimental::RNTupleFillContext::CommitAttributes()
       locator.SetType(RNTupleLocator::kTypeFile);
       // TODO(gparolini): set proper size of Anchor (although it's unused right now)
       locator.SetNBytesOnStorage(0);
-      locator.SetPosition(key->GetSeekKey() + static_cast<std::size_t>(key->GetKeylen()));
+      locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey()));
       offsets.push_back(Internal::RNTupleAttributeSetDescriptor{attrSetName, locator});
    }
 

@@ -4,7 +4,6 @@
 TEST(RNTupleAttributes, AttributeBasics)
 {
    FileRaii fileGuard("test_ntuple_attrs_basics.root");
-   fileGuard.PreserveFile();
 
    // WRITING
    // ----------------------------------------------
@@ -54,7 +53,16 @@ TEST(RNTupleAttributes, AttributeBasics)
       }
 
       // Fetch a specific attribute set
-      // const auto *attrSet = reader->GetAttributeSet("MyAttrSet");
+      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
+      for (int i = 0; i < 100; ++i) {
+         int nAttrs = 0;
+         for (const auto &attrEntry : attrSet.GetAttributes(i)) {
+            auto pAttr = attrEntry.GetPtr<std::string>("myAttr");
+            EXPECT_EQ(*pAttr, "This is a custom attribute");
+            ++nAttrs;
+         }
+         EXPECT_EQ(nAttrs, 1);
+      }
    }
 }
 
@@ -185,7 +193,21 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       }
    }
 
-   // TODO: read back RNTuple and check if Attributes are correct.
+   // Read back the attributes
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      // Fetch a specific attribute set
+      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
+      auto nAttrs = 0;
+      for (const auto &attrEntry : attrSet.GetAttributes()) {
+         auto pAttr = attrEntry.GetPtr<std::string>("string");
+         EXPECT_EQ(attrEntry.GetRange().first, nAttrs * 10);
+         EXPECT_EQ(attrEntry.GetRange().second, (1 + nAttrs) * 10);
+         EXPECT_EQ(*pAttr, nAttrs == 0 ? "Run 1" : "Run 2");
+         ++nAttrs;
+      }
+      EXPECT_EQ(nAttrs, 2);
+   }
 }
 
 TEST(RNTupleAttributes, ImplicitEndRange)
@@ -214,7 +236,21 @@ TEST(RNTupleAttributes, ImplicitEndRange)
       // Calling EndRange implicitly on scope exit
    }
 
-   // TODO: read back RNTuple and check if Attributes are correct.
+   // Read back the attributes
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      // Fetch a specific attribute set
+      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
+      auto nAttrs = 0;
+      for (const auto &attrEntry : attrSet.GetAttributes()) {
+         auto pAttr = attrEntry.GetPtr<std::string>("string");
+         EXPECT_EQ(attrEntry.GetRange().first, 0);
+         EXPECT_EQ(attrEntry.GetRange().second, 10);
+         EXPECT_EQ(*pAttr, "Run 1");
+         ++nAttrs;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
 }
 
 TEST(RNTupleAttributes, AttributeMultipleSets)
@@ -289,4 +325,99 @@ TEST(RNTupleAttributes, AttributeInvalidEndRange)
 
    // Oops! Calling EndRange on the wrong set!
    EXPECT_THROW(attrSet1->EndRange(std::move(attrRange2)), ROOT::RException);
+}
+
+TEST(RNTupleAttributes, ReadRanges)
+{
+   // Testing reading attribute ranges with a [startIdx, endIdx].
+
+   FileRaii fileGuard("test_ntuple_attrs_readranges.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+      auto attrModelRuns = RNTupleModel::Create();
+      attrModelRuns->MakeField<std::string>("run");
+      auto attrSetRuns = writer->CreateAttributeSet("Attr_Runs", std::move(attrModelRuns)).Unwrap();
+      auto attrModelEpochs = RNTupleModel::Create();
+      attrModelEpochs->MakeField<std::string>("epoch");
+      auto attrSetEpochs = writer->CreateAttributeSet("Attr_Epochs", std::move(attrModelEpochs)).Unwrap();
+
+      {
+         auto attrRangeEpoch = attrSetEpochs->BeginRange();
+         auto pEpoch = attrRangeEpoch.GetPtr<std::string>("epoch");
+         *pEpoch = "Epoch 1";
+
+         {
+            auto attrRange = attrSetRuns->BeginRange();
+            auto pMyAttr = attrRange.GetPtr<std::string>("run");
+            *pMyAttr = "Run 1";
+            for (int i = 0; i < 10; ++i) {
+               *pInt = i;
+               writer->Fill();
+            }
+            attrSetRuns->EndRange(std::move(attrRange));
+         }
+
+         // Second attribute entry
+         {
+            auto attrRange = attrSetRuns->BeginRange();
+            auto pMyAttr = attrRange.GetPtr<std::string>("run");
+            for (int i = 0; i < 10; ++i) {
+               *pInt = i;
+               writer->Fill();
+            }
+            *pMyAttr = "Run 2";
+            attrSetRuns->EndRange(std::move(attrRange));
+         }
+         attrSetEpochs->EndRange(std::move(attrRangeEpoch));
+      }
+      {
+         auto attrRangeEpoch = attrSetEpochs->BeginRange();
+         auto pMyAttrEpoch = attrRangeEpoch.GetPtr<std::string>("epoch");
+         *pMyAttrEpoch = "Epoch 2";
+
+         {
+            auto attrRange = attrSetRuns->BeginRange();
+            auto pMyAttr = attrRange.GetPtr<std::string>("run");
+            *pMyAttr = "Run 3";
+            for (int i = 0; i < 10; ++i) {
+               *pInt = i;
+               writer->Fill();
+            }
+            attrSetRuns->EndRange(std::move(attrRange));
+         }
+         attrSetEpochs->EndRange(std::move(attrRangeEpoch));
+      }
+   }
+
+   // Read back the attributes
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      // Fetch a specific attribute set
+      auto attrSetRuns = reader->GetAttributeSet("Attr_Runs").Unwrap();
+      EXPECT_EQ(attrSetRuns.GetAttributes().size(), 3);
+      EXPECT_EQ(attrSetRuns.GetAttributes(4).size(), 1);
+      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 5).size(), 1);
+      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 4).size(), 1);
+      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(0, 100).size(), 0);
+      EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 5).size(), 0);
+      EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 4).size(), 0);
+      EXPECT_EQ(attrSetRuns.GetAttributesInRange(0, 100).size(), 3);
+      EXPECT_EQ(attrSetRuns.GetAttributes(12).size(), 1);
+      EXPECT_EQ(attrSetRuns.GetAttributes(120).size(), 0);
+
+      {
+         ROOT::TestSupport::CheckDiagsRAII diags;
+         diags.requiredDiag(kWarning, "ROOT.NTuple", "end < start", false);
+         EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 3).size(), 0);
+         EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 3).size(), 0);
+      }
+
+      auto attrSetEpochs = reader->GetAttributeSet("Attr_Epochs").Unwrap();
+      EXPECT_EQ(attrSetEpochs.GetAttributes().size(), 2);
+   }
 }

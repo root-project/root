@@ -33,6 +33,7 @@ class TVirtualStreamerInfo;
 namespace ROOT {
 
 class RNTupleWriteOptions;
+class RNTupleReader;
 
 namespace Internal {
 class RNTupleFileWriter;
@@ -59,6 +60,8 @@ RNTuple data keys.
 */
 // clang-format on
 class RMiniFileReader {
+   friend ROOT::RNTupleReader;
+
 private:
    /// The raw file used to read byte ranges
    ROOT::Internal::RRawFile *fRawFile = nullptr;
