@@ -234,24 +234,17 @@ TEST(TTreeRegressions, EmptyLeafObject)
 }
 
 // https://its.cern.ch/jira/browse/ROOT-6741
-struct MySubClass {
-   int id;
-   double x;
-};
-struct MyClass {
-   std::vector<MySubClass> sub;
-   MySubClass *Get(int id)
-   {
-      for (size_t i = 0; i < sub.size(); ++i)
-         if (sub[i].id == id)
-            return &sub[i];
-      return nullptr;
-   }
-};
+#define MYSUBCLASS struct MySubClass { int id; double x; };
+#define MYCLASS struct MyClass { std::vector<MySubClass> sub; MySubClass *Get(int id) { for (size_t i = 0; i < sub.size(); ++i) if (sub[i].id == id) return &sub[i]; return nullptr; } };
+MYSUBCLASS
+MYCLASS
+#define STRINGIFY(string) #string
+#define TO_LITERAL(string) STRINGIFY(string)
+
 TEST(TTreeRegressions, TTreeFormulaMemberIndex)
 {
-   gInterpreter->Declare("struct MySubClass { int id; double x; };");
-   gInterpreter->Declare("struct MyClass { std::vector<MySubClass> sub; MySubClass *Get(int id) { for (size_t i = 0; i < sub.size(); ++i) if (sub[i].id == id) return &sub[i]; return nullptr; } };");
+   gInterpreter->Declare(TO_LITERAL(MYSUBCLASS));
+   gInterpreter->Declare(TO_LITERAL(MYCLASS));
 
    TTree tree("tree", "tree");
    MyClass mc;
