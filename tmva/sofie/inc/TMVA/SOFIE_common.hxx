@@ -628,11 +628,21 @@ void FillOutput(T const *arr, std::vector<T> &out, std::size_t n)
 
 }  // end namespace UTILITY
 
-namespace BLAS{
-extern "C" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,
-                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,
-                       const float * beta, float * C, const int * ldc);
-}//BLAS
+namespace BLAS {
+
+extern "C" void saxpy_(const int *n, const float *alpha, const float *x, const int *incx, float *y, const int *incy);
+
+extern "C" void scopy_(const int *n, const float *x, const int *incx, float *y, const int *incy);
+
+extern "C" void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+                       const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
+                       const float *beta, float *C, const int *ldc);
+
+extern "C" void sgemv_(const char *trans, const int *m, const int *n, const float *alpha, const float *A,
+                       const int *lda, const float *X, const int *incx, const float *beta, const float *Y,
+                       const int *incy);
+
+} // namespace BLAS
 
 
 struct GNN_Data {
