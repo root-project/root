@@ -4033,20 +4033,20 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// tfv.EvalInstance(1)
 /// ~~~
 /// To prevent this, when working with objects with dynamic size for each entry, one needs
-/// to mimick that TTree::Scan does, i.e. call GetNData() inbetween GetEntry() and EvalInstance():
+/// to mimick that TTree::Scan does, i.e. call GetNdata() inbetween GetEntry() and EvalInstance():
 /// ~~~
 /// But the following fails:
 /// ~~~{.cpp}
 /// t.GetEntry(0);
-/// tfv1.GetNdata()
-/// tfv1.EvalInstance()
-/// tfv.GetNdata()
-/// tfv.EvalInstance(1)
+/// if (tfv1.GetNdata() > 0)
+///    tfv1.EvalInstance()
+/// if (tfv.GetNdata() > 1)
+///    tfv.EvalInstance(1)
 /// t.GetEntry(1);
-/// tfv1.GetNdata()
-/// tfv1.EvalInstance()
-/// tfv.GetNdata()
-/// tfv.EvalInstance(1)
+/// if (tfv1.GetNdata() > 0)
+///    tfv1.EvalInstance()
+/// if (tfv.GetNdata() > 1)
+///    tfv.EvalInstance(1)
 /// ~~~
 
 template<typename T>
