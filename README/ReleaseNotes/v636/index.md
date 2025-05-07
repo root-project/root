@@ -156,6 +156,7 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
   * "rntuple.ErrBehavior=(Abort|Skip)": RNTuple-specific option that specifies the behavior of the RNTupleMerger on error (see link above);
   * "rntuple.ExtraVerbose": RNTuple-specific option that tells the RNTupleMerger to emit more information during the merge process.
 * The option to explicitly pass a type name or `std::type_info` to `RNTupleReader::GetView<void>` has been added, in case the on-disk type of the field differs from the underlying type of the pointer to read into.
+* The [RNTupleProcessor](https://root.cern/doc/v636/classROOT_1_1Experimental_1_1RNTupleProcessor.html) has been extended to support *joins* (comparable to TTree friends) and *chains of joins*. As an effect, `RNTupleReader::OpenFriends()` has been removed. Note that the RNTupleProcessor is still under active development and will remain in the Experimental namespace.
 
 ## RDataFrame
 
