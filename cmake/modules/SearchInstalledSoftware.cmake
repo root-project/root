@@ -2079,8 +2079,8 @@ if(webgui)
     else()
       ExternalProject_Add(
         OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.98.0/openui5-runtime-1.98.0.zip
-        URL_HASH SHA256=3d3db9ba001141019aae2cdf6eb6d34d655a3652308e03a335794f1231d21d2f
+        URL https://github.com/SAP/openui5/releases/download/1.128.0/openui5-runtime-1.128.0.zip
+        URL_HASH SHA256=c58453c0f1021d56be70161b467f8c24c0ec888f3bd9c96919f4a04532c88266
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
