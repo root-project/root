@@ -1,12 +1,10 @@
-import py
+import py, pytest, os
 from pytest import raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS
+from support import setup_make, ispypy, IS_WINDOWS
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("overloadsDict"))
 
-def setup_module(mod):
-    setup_make("overloads")
+currpath = os.getcwd()
+test_dct = currpath + "/overloadsDict"
 
 
 class TestOVERLOADS:
@@ -346,3 +344,7 @@ class TestOVERLOADS:
 
         assert ns.myfunc2(ns.E()) == "E"
         assert ns.myfunc2(ns.D()) == "D"
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))
