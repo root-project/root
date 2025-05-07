@@ -954,6 +954,125 @@ TEST(Packing, Real32QuantFloat)
    }
 }
 
+TEST(Packing, Real32QuantFloatCornerCases)
+{
+   namespace BitPacking = ROOT::Internal::BitPacking;
+
+   static constexpr double pi = 3.141592653589793;
+   {
+      // Passing a double-precision value as min, max to a RField<float>.
+      // The min and max values should be converted to float internally and,
+      // when deserializing, we should get back (float)min and (float)max.
+      constexpr auto kBitsOnStorage = 32;
+
+      unsigned char out[BitPacking::MinBufSize(2, kBitsOnStorage)];
+      {
+         RColumnElement<float, ENTupleColumnType::kReal32Quant> element;
+         element.SetBitsOnStorage(kBitsOnStorage);
+         element.SetValueRange((float)-pi, (float)pi);
+
+         float extremesFloatIn[2] = {-pi, pi};
+         element.Pack(out, extremesFloatIn, 2);
+         float extremesFloatOut[2];
+         element.Unpack(extremesFloatOut, out, 2);
+         // Must be exactly the same
+         EXPECT_EQ(extremesFloatOut[0], (float)-pi);
+         EXPECT_EQ(extremesFloatOut[1], (float)pi);
+      }
+
+      {
+         RColumnElement<double, ENTupleColumnType::kReal32Quant> elementDouble;
+         elementDouble.SetBitsOnStorage(kBitsOnStorage);
+         elementDouble.SetValueRange(-pi, pi);
+
+         double extremesDoubleOut[2] = {-pi, pi};
+         elementDouble.Unpack(extremesDoubleOut, out, 2);
+         EXPECT_EQ(extremesDoubleOut[0], -pi);
+         const double eps = std::numeric_limits<double>::epsilon();
+         const double maxErr = std::max(1.0, std::abs(pi)) * eps;
+         // in double precision the value unquantized from the max is not guaranteed to be exactly the same as the given
+         // max value in the range, due to floating point error propagating when scaling it back.
+         EXPECT_NEAR(extremesDoubleOut[1], pi, maxErr);
+         EXPECT_LE(extremesDoubleOut[1], pi);
+      }
+   }
+
+   {
+      FileRaii fileGuard("test_ntuple_packing_quant_float_cornercase.root");
+
+      // Same as above but through a RField.
+      {
+         auto model = RNTupleModel::Create();
+         auto field = std::make_unique<RField<float>>("f");
+         field->SetQuantized(-pi, pi, 32);
+         model->AddField(std::move(field));
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+         auto pf = writer->GetModel().GetDefaultEntry().GetPtr<float>("f");
+         *pf = -pi; // gets truncated to float!
+         writer->Fill();
+         *pf = pi; // gets truncated to float!
+         writer->Fill();
+      }
+      {
+         auto model = RNTupleModel::Create();
+         // impose a model with a double field instead of float
+         auto field = model->MakeField<double>("f");
+         auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+         auto viewF = reader->GetView<double>("f");
+         EXPECT_EQ(static_cast<float>(viewF(0)), static_cast<float>(-pi));
+         EXPECT_EQ(static_cast<float>(viewF(1)), static_cast<float>(pi));
+      }
+   }
+
+   {
+      FileRaii fileGuard("test_ntuple_packing_quant_float_cornercase.root");
+
+      // Same as above but swapping float and double (write as double, read as float).
+      {
+         auto model = RNTupleModel::Create();
+         auto field = std::make_unique<RField<double>>("f");
+         field->SetQuantized(-pi, pi, 32);
+         model->AddField(std::move(field));
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+         auto pf = writer->GetModel().GetDefaultEntry().GetPtr<double>("f");
+         *pf = -pi;
+         writer->Fill();
+         *pf = pi;
+         writer->Fill();
+      }
+      {
+         auto model = RNTupleModel::Create();
+         auto field = model->MakeField<float>("f");
+         auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+         auto viewF = reader->GetModel().GetDefaultEntry().GetPtr<float>("f");
+         reader->LoadEntry(0);
+         EXPECT_EQ(*viewF, static_cast<float>(-pi));
+         reader->LoadEntry(1);
+         EXPECT_EQ(*viewF, static_cast<float>(pi));
+      }
+   }
+
+   {
+      // Verify that we can handle ranges where the internal quantized precision
+      // is higher than the floating point precision at that interval (meaning there
+      // are multiple different quantized values that map to the same float).
+      constexpr auto kBitsOnStorage = 32;
+
+      unsigned char out[BitPacking::MinBufSize(2, kBitsOnStorage)];
+      RColumnElement<float, ENTupleColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(100, 110);
+
+      float extremesFloatIn[2] = {100, 110};
+      element.Pack(out, extremesFloatIn, 2);
+      float extremesFloatOut[2];
+      element.Unpack(extremesFloatOut, out, 2);
+      // Must be exactly the same
+      EXPECT_EQ(extremesFloatOut[0], 100);
+      EXPECT_EQ(extremesFloatOut[1], 110);
+   }
+}
+
 TEST(Packing, Real32QuantDouble)
 {
    namespace BitPacking = ROOT::Internal::BitPacking;
