@@ -909,6 +909,63 @@ TEST(Packing, Real32QuantFloat)
       EXPECT_FLOAT_EQ(f2, -5.f);
    }
 
+   {
+      // Passing a double-precision value as min, max; then serializing
+      // the minimum and maximum values cast to float. This should work and,
+      // when deserializing, we should get back (T)min and (T)max depending on
+      // the type of the field we're deserializing into (the representation is
+      // exactly the same on disk for float and double, as internally it's all
+      // done in double precision).
+      static constexpr double pi = 3.141592653589793;
+      constexpr auto kBitsOnStorage = 32;
+
+      unsigned char out[BitPacking::MinBufSize(2, kBitsOnStorage)];
+      {
+         RColumnElement<float, ENTupleColumnType::kReal32Quant> element;
+         element.SetBitsOnStorage(kBitsOnStorage);
+         element.SetValueRange(-pi, pi);
+
+         float extremesFloatIn[2] = {-pi, pi};
+         element.Pack(out, extremesFloatIn, 2);
+         float extremesFloatOut[2];
+         element.Unpack(extremesFloatOut, out, 2);
+         // Must be exactly the same
+         EXPECT_EQ(extremesFloatOut[0], (float)-pi);
+         EXPECT_EQ(extremesFloatOut[1], (float)pi);
+      }
+
+      {
+         RColumnElement<double, ENTupleColumnType::kReal32Quant> elementDouble;
+         elementDouble.SetBitsOnStorage(kBitsOnStorage);
+         elementDouble.SetValueRange(-pi, pi);
+
+         double extremesDoubleOut[2] = {-pi, pi};
+         elementDouble.Unpack(extremesDoubleOut, out, 2);
+         EXPECT_EQ(extremesDoubleOut[0], -pi);
+         EXPECT_EQ(extremesDoubleOut[1], pi);
+      }
+   }
+
+   {
+      // Verify that we can handle ranges where the internal quantized precision
+      // is higher than the floating point precision at that interval (meaning there
+      // are multiple different quantized values that map to the same float).
+      constexpr auto kBitsOnStorage = 32;
+
+      unsigned char out[BitPacking::MinBufSize(2, kBitsOnStorage)];
+      RColumnElement<float, ENTupleColumnType::kReal32Quant> element;
+      element.SetBitsOnStorage(kBitsOnStorage);
+      element.SetValueRange(100, 110);
+
+      float extremesFloatIn[2] = {100, 110};
+      element.Pack(out, extremesFloatIn, 2);
+      float extremesFloatOut[2];
+      element.Unpack(extremesFloatOut, out, 2);
+      // Must be exactly the same
+      EXPECT_EQ(extremesFloatOut[0], 100);
+      EXPECT_EQ(extremesFloatOut[1], 110);
+   }
+
    // Exhaustively test, for all valid bit widths, packing and unpacking of 0 to N random floats.
    constexpr double kMin = -1000, kMax = 1000;
    std::uniform_real_distribution<float> dist(kMin, kMax);
