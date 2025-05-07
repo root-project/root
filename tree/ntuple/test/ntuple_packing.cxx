@@ -449,7 +449,7 @@ TEST(Packing, Real32TruncFloat)
       element.Unpack(nullptr, nullptr, 0);
 
       float f1 = 3.5f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       float f2;
@@ -490,7 +490,7 @@ TEST(Packing, Real32TruncFloat)
       element.Unpack(nullptr, nullptr, 0);
 
       float f1 = 992.f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       float f2;
@@ -521,7 +521,7 @@ TEST(Packing, Real32TruncFloat)
       element.Unpack(nullptr, nullptr, 0);
 
       float f1 = 2.126f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       float f2;
@@ -608,7 +608,7 @@ TEST(Packing, Real32TruncDouble)
       element.Unpack(nullptr, nullptr, 0);
 
       double f1 = 3.5f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       double f2;
@@ -649,7 +649,7 @@ TEST(Packing, Real32TruncDouble)
       element.Unpack(nullptr, nullptr, 0);
 
       double f1 = 992.f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       double f2;
@@ -680,7 +680,7 @@ TEST(Packing, Real32TruncDouble)
       element.Unpack(nullptr, nullptr, 0);
 
       double f1 = 2.126f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       double f2;
@@ -841,7 +841,7 @@ TEST(Packing, Real32QuantFloat)
       element.Unpack(nullptr, nullptr, 0);
 
       float f1 = 3.5f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       float f2;
@@ -883,7 +883,7 @@ TEST(Packing, Real32QuantFloat)
       element.SetValueRange(-10.f, 10.f);
 
       float f1 = -10.f;
-      unsigned char out[1];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
       float f2;
       element.Unpack(&f2, out, 1);
@@ -902,7 +902,7 @@ TEST(Packing, Real32QuantFloat)
       element.SetValueRange(-10.f, 10.f);
 
       float f1 = -5.f;
-      unsigned char out[4];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
       float f2;
       element.Unpack(&f2, out, 1);
@@ -966,7 +966,7 @@ TEST(Packing, Real32QuantDouble)
       element.Unpack(nullptr, nullptr, 0);
 
       double f1 = 3.5f;
-      unsigned char out[8];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
 
       double f2;
@@ -1008,7 +1008,7 @@ TEST(Packing, Real32QuantDouble)
       element.SetValueRange(-10.f, 10.f);
 
       double f1 = -10.f;
-      unsigned char out[1];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
       double f2;
       element.Unpack(&f2, out, 1);
@@ -1027,7 +1027,7 @@ TEST(Packing, Real32QuantDouble)
       element.SetValueRange(-10.f, 10.f);
 
       double f1 = -5.f;
-      unsigned char out[4];
+      unsigned char out[BitPacking::MinBufSize(1, kBitsOnStorage)];
       element.Pack(out, &f1, 1);
       double f2;
       element.Unpack(&f2, out, 1);
