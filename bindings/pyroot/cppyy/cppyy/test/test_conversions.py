@@ -1,6 +1,6 @@
-import py
+import py, pytest
 from pytest import raises
-from .support import setup_make
+from support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("conversionsDict"))
@@ -125,3 +125,7 @@ class TestCONVERSIONS:
         assert     ns.Test1()
         assert     ns.Test2(True)
         assert not ns.Test2(False)
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

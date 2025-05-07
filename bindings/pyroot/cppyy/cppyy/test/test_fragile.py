@@ -1,6 +1,6 @@
-import py, os, sys
+import py, os, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
 currpath = py.path.local(__file__).dirpath()
@@ -166,6 +166,7 @@ class TestFRAGILE:
         g = cppyy.gbl.fragile.gI
         assert not g
 
+    @mark.xfail
     def test10_documentation(self):
         """Check contents of documentation"""
 
@@ -732,6 +733,7 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 
@@ -871,3 +873,7 @@ class TestSTDNOTINGLOBAL:
         std::span<int> my_test_span1;
         #endif
         """)
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

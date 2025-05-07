@@ -1,6 +1,6 @@
-import py
+import py, pytest
 from pytest import mark, raises
-from .support import setup_make
+from support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("std_streamsDict"))
@@ -74,3 +74,7 @@ class TestSTDStreams:
         assert cl0 == cl1
         assert cl1 == cl2
         assert cl2 == cl0
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

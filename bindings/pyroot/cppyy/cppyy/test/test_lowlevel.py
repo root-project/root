@@ -1,6 +1,6 @@
-import py, sys
+import py, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, pyunicode, IS_WINDOWS, ispypy
+from support import setup_make, pylong, pyunicode, IS_WINDOWS, ispypy
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("datatypesDict"))
@@ -754,3 +754,7 @@ class TestMULTIDIMARRAYS:
         for i, v in enumerate(("s1", "s23", "s456")):
             assert len(ns.str_array[i]) == 7
             assert ns.str_array[i].as_string() == v
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))
