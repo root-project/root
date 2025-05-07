@@ -592,7 +592,7 @@ Here argument "multi" identifies, that server response should be parsed with `pa
 
 ## Using unix sockets
 
-Starting from ROOT version 6.28, one can start server with unix socket. Just do:
+Starting from ROOT version 6.28, one can start server bind to the unix socket. Just do:
 
 Just call:
 ```cpp
@@ -679,3 +679,26 @@ serv->Register(handler);
 After that web socket connection can be established with the address `ws://host_name:8080/name1/root.websocket`
 Example client code can be found in `$ROOTSYS/tutorials/http/ws.htm` file. Custom HTML page for
 websocket handler is specified with `TUserHandler::GetDefaultPageContent()` method returning `"file:ws.htm"`.
+
+
+## Processing of custom http requests
+
+To process custom http requests, one can derive from THttpServer class and
+reimplement `THttpServer::MissedRequest()` method. Like:
+
+```cpp
+class TCustomHttpServer : public THttpServer {
+
+   TCustomHttpServer(const char *engine) : THttpServer(engine) {}
+
+   void MissedRequest(THttpCallArg *arg) override
+   {
+      if (!strcmp(arg->GetPathName(), "custom_path") &&
+          !strcmp(arg->GetFileName(), "empty_object.json")) {
+         arg->SetJsonContent("{}");
+      } else {
+         THttpServer::MissedRequest(arg);
+      }
+   }
+};
+```
