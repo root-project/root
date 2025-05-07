@@ -32,6 +32,7 @@
 #include "TROOT.h" // IsImplicitMTEnabled, gCoreMutex, R__*_LOCKGUARD
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
+#include "ROOT/InternalTreeUtils.hxx" // GetTopLevelBranchNames
 
 #include "ROOT/RTTreeDS.hxx"
 
@@ -534,6 +535,7 @@ void RLoopManager::RunEmptySource()
    }
 }
 
+#ifdef R__USE_IMT
 namespace {
 /// Return true on succesful entry read.
 ///
@@ -558,6 +560,7 @@ bool validTTreeReaderRead(TTreeReader &treeReader)
    }
 }
 } // namespace
+#endif
 
 namespace {
 struct DSRunRAII {

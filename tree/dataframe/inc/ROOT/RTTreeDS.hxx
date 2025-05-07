@@ -46,6 +46,10 @@ namespace ROOT::TreeUtils {
 struct RFriendInfo;
 }
 
+namespace ROOT::Internal::TreeUtils {
+class RNoCleanupNotifier;
+}
+
 class TChain;
 class TDirectory;
 class TTree;
@@ -65,6 +69,10 @@ class RTTreeDS final : public ROOT::RDF::RDataSource {
    std::unique_ptr<TTreeReader> fTreeReader;
 
    std::vector<std::unique_ptr<TChain>> fFriends;
+
+   // Should be needed mostly for MT runs, but we keep it here to document and align the existing functionality
+   // from RLoopManager. See https://github.com/root-project/root/pull/10729
+   std::unique_ptr<ROOT::Internal::TreeUtils::RNoCleanupNotifier> fNoCleanupNotifier;
 
    ROOT::RDF::RSampleInfo
    CreateSampleInfo(const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const final;

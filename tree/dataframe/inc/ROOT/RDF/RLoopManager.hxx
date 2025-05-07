@@ -11,7 +11,6 @@
 #ifndef ROOT_RLOOPMANAGER
 #define ROOT_RLOOPMANAGER
 
-#include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
@@ -129,6 +128,13 @@ class RLoopManager : public RNodeBase {
    friend struct RCallCleanUpTask;
    friend struct ROOT::Internal::RDF::RDSRangeRAII;
 
+   /*
+   A wrapped reference to a TTree dataset that can be shared by many computation graphs. Ensures lifetime management.
+   It needs to be destroyed *after* the fDataSource data member, in case it is holding the only Python reference to the
+   input dataset and the data source needs to access it before it is destroyed.
+   */
+   std::any fTTreeLifeline{};
+
    std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
    std::vector<RDFInternal::RActionBase *> fRunActions;    ///< Non-owning pointers to actions already run
    std::vector<RFilterBase *> fBookedFilters;
@@ -172,7 +178,6 @@ class RLoopManager : public RNodeBase {
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
 
-   ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
    /// Pointer to a shared slot stack in case this instance runs concurrently with others:
    std::weak_ptr<ROOT::Internal::RSlotStack> fSlotStack;
 
@@ -200,10 +205,6 @@ class RLoopManager : public RNodeBase {
       fUniqueDefinesWithReaders;
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
       fUniqueVariationsWithReaders;
-
-   /// A wrapped reference to a TTree dataset that can be shared by many computation graphs. Ensures lifetime
-   /// management.
-   std::any fTTreeLifeline{};
 
 public:
    RLoopManager(const ColumnNames_t &defaultColumns = {});

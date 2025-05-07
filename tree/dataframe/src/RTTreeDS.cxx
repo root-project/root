@@ -1,9 +1,7 @@
 #include <sstream>
 
-#include <ROOT/InternalTreeUtils.hxx> // GetTopLevelBranchNames
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RFriendInfo.hxx>
 #include <ROOT/RTTreeDS.hxx>
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RLoopManager.hxx> // GetBranchNames
 #include <ROOT/RDF/RTreeColumnReader.hxx>
 #include <ROOT/RDF/Utils.hxx> // GetBranchOrLeafTypeName
@@ -11,7 +9,10 @@
 #include <TClassEdit.h>
 #include <TFile.h>
 #include <TTree.h>
+#include <TChain.h>
 #include <TTreeReader.h>
+#include <ROOT/RFriendInfo.hxx>
+#include <ROOT/InternalTreeUtils.hxx> // GetTopLevelBranchNames
 
 #ifdef R__USE_IMT
 #include <TROOT.h>
@@ -62,11 +63,23 @@ GetCollectionInfo(const std::string &typeName)
 } // namespace
 
 // Destructor is defined here, where the data member types are actually available
-ROOT::Internal::RDF::RTTreeDS::~RTTreeDS() = default;
+ROOT::Internal::RDF::RTTreeDS::~RTTreeDS()
+{
+   if (fNoCleanupNotifier && fTree)
+      // fNoCleanupNotifier was created only if the input TTree is a TChain
+      fNoCleanupNotifier->RemoveLink(*static_cast<TChain *>(fTree.get()));
+};
 
 void ROOT::Internal::RDF::RTTreeDS::Setup(std::shared_ptr<TTree> &&tree, const ROOT::TreeUtils::RFriendInfo *friendInfo)
 {
    fTree = tree;
+
+   // We keep the existing functionality from RLoopManager, until proven not necessary.
+   // See https://github.com/root-project/root/pull/10729
+   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
+      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
+      fNoCleanupNotifier->RegisterChain(*ch);
+   }
 
    if (friendInfo) {
       fFriends = ROOT::Internal::TreeUtils::MakeFriends(*friendInfo);

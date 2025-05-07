@@ -1411,18 +1411,15 @@ public:
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
       const auto definedColumns = fColRegister.GenerateColumnNames();
-      auto *tree = fLoopManager->GetTree();
 
-      const auto treeBranchNames = tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = GetDataSource() ? ROOT::Internal::RDF::GetTopLevelFieldNames(*GetDataSource()) : ColumnNames_t{};
       // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
       std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
                    [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
       ColumnNames_t columnNames;
-      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumnsWithoutSizeColumns.size());
+      columnNames.reserve(definedColumns.size() + dsColumnsWithoutSizeColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
-      columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
       columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
 
       // The only way we can get duplicate entries is if a column coming from a tree or data-source is Redefine'd.
@@ -1560,18 +1557,14 @@ public:
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
       const auto definedColumns = fColRegister.GenerateColumnNames();
-      auto *tree = fLoopManager->GetTree();
-      const auto treeBranchNames =
-         tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{};
       // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
       std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
                    [](const std::string &name) { return name.size() < 13 || name.substr(0, 13) != "R_rdf_sizeof_"; });
       ColumnNames_t columnNames;
-      columnNames.reserve(definedColumns.size() + treeBranchNames.size() + dsColumns.size());
+      columnNames.reserve(definedColumns.size() + dsColumns.size());
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
-      columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
       columnNames.insert(columnNames.end(), dsColumns.begin(), dsColumns.end());
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Cache");
       return Cache(selectedColumns);
