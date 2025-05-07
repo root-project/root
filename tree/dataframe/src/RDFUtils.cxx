@@ -572,10 +572,10 @@ std::string ROOT::Internal::RDF::DescribeDataset(ROOT::RDF::RDataSource &ds)
 }
 
 ROOT::RDF::RSampleInfo ROOT::Internal::RDF::CreateSampleInfo(
-   const ROOT::RDF::RDataSource &ds,
+   const ROOT::RDF::RDataSource &ds, unsigned int slot,
    const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap)
 {
-   return ds.CreateSampleInfo(sampleMap);
+   return ds.CreateSampleInfo(slot, sampleMap);
 }
 
 void ROOT::Internal::RDF::RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun)
