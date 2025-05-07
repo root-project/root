@@ -101,7 +101,7 @@ function tryOpenOpenUI(sources, args) {
 
    element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
    // element.setAttribute('data-sap-ui-language', args.openui5language ?? 'en');
-   element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
+   element.setAttribute('data-sap-ui-theme', args.openui5theme || (settings.DarkMode ? 'sap_fiori_3_dark' : 'sap_fiori_3'));
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
    element.setAttribute('data-sap-ui-async', 'true');
    // element.setAttribute('data-sap-ui-bindingSyntax', 'complex');
@@ -133,7 +133,8 @@ async function loadOpenui5(args) {
    if (typeof globalThis.sap === 'object')
       return globalThis.sap;
 
-   if (!args) args = {};
+   if (!args)
+      args = {};
 
    let rootui5sys = source_dir.replace(/jsrootsys/g, 'rootui5sys');
 
@@ -146,7 +147,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.128.0/',
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.135.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {

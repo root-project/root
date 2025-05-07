@@ -57,12 +57,17 @@ function scanTF1Options(opt) {
 class TF1Painter extends TH1Painter {
 
    #use_saved_points; // use saved points for drawing
+   #func; // func object
+   #tmp_tooltip; // temporary tooltip
+
+   /** @summary Assign function  */
+   setFunc(f) { this.#func = f; }
 
    /** @summary Returns drawn object name */
-   getObjectName() { return this.$func?.fName ?? 'func'; }
+   getObjectName() { return this.#func?.fName ?? 'func'; }
 
    /** @summary Returns drawn object class name */
-   getClassName() { return this.$func?._typename ?? clTF1; }
+   getClassName() { return this.#func?._typename ?? clTF1; }
 
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
@@ -70,7 +75,7 @@ class TF1Painter extends TH1Painter {
    isTF12() { return this.getClassName() === clTF12; }
 
    /** @summary Returns primary function which was then drawn as histogram */
-   getPrimaryObject() { return this.$func; }
+   getPrimaryObject() { return this.#func; }
 
    /** @summary Update function */
    updateObject(obj /* , opt */) {
@@ -84,7 +89,7 @@ class TF1Painter extends TH1Painter {
          if (h0) this.updateAxes(histo, h0, this.getFramePainter());
       }
 
-      this.$func = obj;
+      this.setFunc(obj);
       this.createTF1Histogram(obj, histo);
       this.scanContent();
       return true;
@@ -94,7 +99,7 @@ class TF1Painter extends TH1Painter {
      * @private */
    redraw(reason) {
       if (!this.#use_saved_points && (reason === 'logx' || reason === 'zoom')) {
-         this.createTF1Histogram(this.$func, this.getHisto());
+         this.createTF1Histogram(this.#func, this.getHisto());
          this.scanContent();
       }
 
@@ -236,7 +241,7 @@ class TF1Painter extends TH1Painter {
    extractAxesProperties(ndim) {
       super.extractAxesProperties(ndim);
 
-      const func = this.$func, nsave = func?.fSave.length ?? 0;
+      const func = this.#func, nsave = func?.fSave.length ?? 0;
 
       if (nsave > 3 && this.#use_saved_points) {
          this.xmin = Math.min(this.xmin, func.fSave[nsave - 2]);
@@ -250,13 +255,13 @@ class TF1Painter extends TH1Painter {
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis, min, max) {
-      const nsave = this.$func?.fSave.length ?? 0;
+      const nsave = this.#func?.fSave.length ?? 0;
       if ((nsave > 3) && this.#use_saved_points && (axis === 'x')) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          const nb_points = nsave - 2,
-             xmin = this.$func.fSave[nsave - 2],
-             xmax = this.$func.fSave[nsave - 1];
+             xmin = this.#func.fSave[nsave - 2],
+             xmax = this.#func.fSave[nsave - 1];
 
          return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
       }
@@ -267,11 +272,11 @@ class TF1Painter extends TH1Painter {
 
    /** @summary return tooltips for TF2 */
    getTF1Tooltips(pnt) {
-      delete this.$tmp_tooltip;
+      this.#tmp_tooltip = undefined;
       const lines = [this.getObjectHint()],
             funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
 
-      if (!funcs || !isFunc(this.$func?.evalPar)) {
+      if (!funcs || !isFunc(this.#func?.evalPar)) {
          lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
          return lines;
       }
@@ -280,7 +285,7 @@ class TF1Painter extends TH1Painter {
       let y = 0, gry = 0, iserror = false;
 
       try {
-         y = this.$func.evalPar(x);
+         y = this.#func.evalPar(x);
          gry = Math.round(funcs.gry(y));
       } catch {
          iserror = true;
@@ -290,7 +295,7 @@ class TF1Painter extends TH1Painter {
                  'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
 
       if (!iserror)
-         this.$tmp_tooltip = { y, gry };
+         this.#tmp_tooltip = { y, gry };
       return lines;
    }
 
@@ -306,7 +311,7 @@ class TF1Painter extends TH1Painter {
          return null;
       }
 
-      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
+      const res = { name: this.#func?.fName, title: this.#func?.fTitle,
                     x: pnt.x, y: pnt.y,
                     color1: this.lineatt?.color ?? 'green',
                     color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
@@ -324,7 +329,7 @@ class TF1Painter extends TH1Painter {
          }
 
          ttrect.attr('cx', pnt.x)
-               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y);
+               .attr('cy', this.#tmp_tooltip?.gry ?? pnt.y);
          if (this.lineatt)
             ttrect.call(this.lineatt.func);
       }
@@ -361,7 +366,7 @@ class TF1Painter extends TH1Painter {
 
       const painter = new TF1Painter(dom, hist);
 
-      painter.$func = tf1;
+      painter.setFunc(tf1);
       Object.assign(painter, web);
 
       painter.createTF1Histogram(tf1, hist);

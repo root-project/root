@@ -1084,14 +1084,16 @@ class TGeoPainter extends ObjectPainter {
       if (isStr(names))
          names = [names];
 
-      if (this._hpainter) {
+      const h = this.getHPainter();
+
+      if (h) {
          // show browser if it not visible
 
-         this._hpainter.activateItems(names, force);
+         h.activateItems(names, force);
 
          // if highlight in the browser disabled, suppress in few seconds
          if (!this.ctrl.update_browser)
-            setTimeout(() => this._hpainter.activateItems([]), 2000);
+            setTimeout(() => h.activateItems([]), 2000);
       }
    }
 
@@ -1836,8 +1838,8 @@ class TGeoPainter extends ObjectPainter {
 
                menu.add('Browse', itemname, arg => this.activateInBrowser([arg], true));
 
-               if (this._hpainter)
-                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, kInspect));
+               if (this.getHPainter())
+                  menu.add('Inspect', itemname, arg => this.getHPainter().display(arg, kInspect));
 
                if (isFunc(this.hidePhysicalNode)) {
                   menu.add('Hide', itemname, arg => this.hidePhysicalNode([arg]));
@@ -1904,10 +1906,10 @@ class TGeoPainter extends ObjectPainter {
                      const resolve = this.#clones.resolveStack(intersects[indx].object.stack);
                      if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
                         setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
-                        updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
+                        updateBrowserIcons(resolve.obj.fVolume, this.getHPainter());
                      } else if (resolve.obj && (resolve.node.kind === kindEve)) {
                         resolve.obj.fRnrSelf = false;
-                        updateBrowserIcons(resolve.obj, this._hpainter);
+                        updateBrowserIcons(resolve.obj, this.getHPainter());
                      }
 
                      this.testGeomChanges();// while many volumes may disappear, recheck all of them

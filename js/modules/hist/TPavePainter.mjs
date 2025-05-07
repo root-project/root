@@ -31,8 +31,9 @@ function isDefaultStatPosition(pt) {
  * @private
  */
 
-
 class TPavePainter extends ObjectPainter {
+
+   #palette_vertical; // when palette drawing vertical
 
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
@@ -938,6 +939,9 @@ class TPavePainter extends ObjectPainter {
       });
    }
 
+   /** @summary Returns true if palette drawn in vertical direction */
+   isPaletteVertical() { return this.#palette_vertical; }
+
    /** @summary draw color palette with axis */
    drawPaletteAxis(s_width, s_height, arg) {
       const palette = this.getObject(),
@@ -963,7 +967,7 @@ class TPavePainter extends ObjectPainter {
 
       let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform, axis_second = 0;
 
-      this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
+      this.#palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
 
       axis.fTickSize = 0.03; // adjust axis ticks size
 
@@ -1009,7 +1013,7 @@ class TPavePainter extends ObjectPainter {
          gzmin = zmin; gzmax = zmax;
       }
 
-      if (this._palette_vertical) {
+      if (this.#palette_vertical) {
          this._swap_side = palette.fX2NDC < 0.5;
          axis.fChopt = 'S+' + (this._swap_side ? 'R' : 'L'); // clearly configure text align
          this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, true, [0, s_height], { log, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*sizek), swap_side: this._swap_side, minposbin: main.gminposbin });
@@ -1034,7 +1038,7 @@ class TPavePainter extends ObjectPainter {
                 z1 = Math.round(this.z_handle.gr(levels[i+1])),
                 lvl = (levels[i] + levels[i+1])*0.5, d;
 
-            if (this._palette_vertical) {
+            if (this.#palette_vertical) {
                if ((z1 >= s_height) || (z0 < 0)) continue;
                z0 += 1; // ensure correct gap filling between colors
 
@@ -1097,7 +1101,7 @@ class TPavePainter extends ObjectPainter {
                // for batch testing provide approx estimation
                rect = { x: this._pave_x, y: this._pave_y, width: s_width, height: s_height };
                const fsz = this.z_handle.labelsFont?.size || 14;
-               if (this._palette_vertical) {
+               if (this.#palette_vertical) {
                   const dx = (this.z_handle._maxlbllen || 3) * 0.6 * fsz;
                   rect.width += dx;
                   if (this._swap_side) rect.x -= dx;
@@ -1111,7 +1115,7 @@ class TPavePainter extends ObjectPainter {
          if (!rect)
             return this;
 
-         if (this._palette_vertical) {
+         if (this.#palette_vertical) {
             const shift = (this._pave_x + parseInt(rect.width)) - Math.round(0.995*width) + 3;
 
             if (shift > 0) {
@@ -1143,7 +1147,7 @@ class TPavePainter extends ObjectPainter {
          evnt.preventDefault();
 
          const m = d3_pointer(evnt, this.draw_g.node());
-         if (this._palette_vertical) {
+         if (this.#palette_vertical) {
             sel2 = Math.min(Math.max(m[1], 0), s_height);
             zoom_rect.attr('y', Math.min(sel1, sel2))
                      .attr('height', Math.abs(sel2-sel1));
@@ -1178,7 +1182,7 @@ class TPavePainter extends ObjectPainter {
 
          zoom_rect = this.draw_g.append('svg:rect').attr('id', 'colzoomRect').call(addHighlightStyle, true);
 
-         if (this._palette_vertical) {
+         if (this.#palette_vertical) {
             sel1 = sel2 = origin[1];
             zoom_rect.attr('x', '0')
                      .attr('width', s_width)
@@ -1205,7 +1209,7 @@ class TPavePainter extends ObjectPainter {
       if (settings.ZoomWheel) {
          this.draw_g.on('wheel', evnt => {
             const pos = d3_pointer(evnt, this.draw_g.node()),
-                  coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
+                  coord = this.#palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
                   item = this.z_handle.analyzeWheelEvent(evnt, coord);
             if (item?.changed)
                this.getFramePainter().zoomSingle('z', item.min, item.max, true);

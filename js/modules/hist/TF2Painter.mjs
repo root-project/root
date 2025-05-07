@@ -16,18 +16,22 @@ import { THistPainter } from '../hist2d/THistPainter.mjs';
 class TF2Painter extends TH2Painter {
 
    #use_saved_points; // use saved points for drawing
+   #func; // func object
+
+   /** @summary Assign function  */
+   setFunc(f) { this.#func = f; }
 
    /** @summary Returns drawn object name */
-   getObjectName() { return this.$func?.fName ?? 'func'; }
+   getObjectName() { return this.#func?.fName ?? 'func'; }
 
    /** @summary Returns drawn object class name */
-   getClassName() { return this.$func?._typename ?? clTF2; }
+   getClassName() { return this.#func?._typename ?? clTF2; }
 
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
 
    /** @summary Returns primary function which was then drawn as histogram */
-   getPrimaryObject() { return this.$func; }
+   getPrimaryObject() { return this.#func; }
 
    /** @summary Update histogram */
    updateObject(obj /* , opt */) {
@@ -40,7 +44,7 @@ class TF2Painter extends TH2Painter {
          if (h0) this.updateAxes(histo, h0, this.getFramePainter());
       }
 
-      this.$func = obj;
+      this.setFunc(obj);
       this.createTF2Histogram(obj, histo);
       this.scanContent();
       return true;
@@ -50,7 +54,7 @@ class TF2Painter extends TH2Painter {
      * @private */
    redraw(reason) {
       if (!this.#use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'zoom')) {
-         this.createTF2Histogram(this.$func, this.getHisto());
+         this.createTF2Histogram(this.#func, this.getHisto());
          this.scanContent();
       }
 
@@ -207,7 +211,7 @@ class TF2Painter extends TH2Painter {
    extractAxesProperties(ndim) {
       super.extractAxesProperties(ndim);
 
-      const func = this.$func, nsave = func?.fSave.length ?? 0;
+      const func = this.#func, nsave = func?.fSave.length ?? 0;
 
       if (nsave > 6 && this.#use_saved_points) {
          this.xmin = Math.min(this.xmin, func.fSave[nsave-6]);
@@ -228,7 +232,7 @@ class TF2Painter extends TH2Painter {
       const lines = [this.getObjectHint()],
             funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
 
-      if (!funcs || !isFunc(this.$func?.evalPar)) {
+      if (!funcs || !isFunc(this.#func?.evalPar)) {
          lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
          return lines;
       }
@@ -238,7 +242,7 @@ class TF2Painter extends TH2Painter {
       let z = 0, iserror = false;
 
        try {
-          z = this.$func.evalPar(x, y);
+          z = this.#func.evalPar(x, y);
        } catch {
           iserror = true;
        }
@@ -261,7 +265,7 @@ class TF2Painter extends TH2Painter {
          return null;
       }
 
-      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
+      const res = { name: this.#func?.fName, title: this.#func?.fTitle,
                   x: pnt.x, y: pnt.y,
                   color1: this.lineatt?.color ?? 'green',
                   color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
@@ -320,7 +324,7 @@ class TF2Painter extends TH2Painter {
 
       const painter = new TF2Painter(dom, hist);
 
-      painter.$func = tf2;
+      painter.setFunc(tf2);
       Object.assign(painter, web);
       painter.createTF2Histogram(tf2, hist);
 

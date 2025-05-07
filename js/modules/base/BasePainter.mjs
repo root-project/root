@@ -1,6 +1,6 @@
 import { select as d3_select } from '../d3.mjs';
 import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument } from '../core.mjs';
-import { getColor } from './colors.mjs';
+import { getColor, addColor } from './colors.mjs';
 
 /** @summary Standard prefix for SVG file context as data url
  * @private */
@@ -196,10 +196,12 @@ class DrawOptions {
    /** @summary Checks if given option exists */
    check(name, postpart) {
       const pos = this.opt.indexOf(name);
-      if (pos < 0) return false;
+      if (pos < 0)
+         return false;
       this.opt = this.opt.slice(0, pos) + this.opt.slice(pos + name.length);
       this.part = '';
-      if (!postpart) return true;
+      if (!postpart)
+         return true;
 
       let pos2 = pos;
       while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';')) pos2++;
@@ -211,8 +213,14 @@ class DrawOptions {
       if (postpart !== 'color')
          return true;
 
+      if (((this.part.length === 6) || (this.part.length === 8)) && this.part.match(/^[a-fA-F0-9]+/)) {
+         this.color = addColor('#' + this.part);
+         return true;
+      }
+
       this.color = this.partAsInt(1) - 1;
-      if (this.color >= 0) return true;
+      if (this.color >= 0)
+         return true;
       for (let col = 0; col < 8; ++col) {
          if (getColor(col).toUpperCase() === this.part) {
             this.color = col;
@@ -464,6 +472,9 @@ class BasePainter {
 
    #divid;  // either id of DOM element or element itself
    #selected_main; // d3.select for dom elements
+   #hitemname; // item name in the hpainter
+   #hdrawopt; // draw option in the hpainter
+   #hpainter; // assigned hpainter
 
    /** @summary constructor
      * @param {object|string} [dom] - dom element or id of dom element */
@@ -558,12 +569,12 @@ class BasePainter {
       this.#divid = null;
       this.#selected_main = undefined;
 
-      if (isFunc(this._hpainter?.removePainter))
-         this._hpainter.removePainter(this);
+      if (isFunc(this.#hpainter?.removePainter))
+         this.#hpainter.removePainter(this);
 
-      delete this._hitemname;
-      delete this._hdrawopt;
-      delete this._hpainter;
+      this.#hitemname = undefined;
+      this.#hdrawopt = undefined;
+      this.#hpainter = undefined;
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated
@@ -703,24 +714,24 @@ class BasePainter {
      * @desc Used by {@link HierarchyPainter}
      * @private */
    setItemName(name, opt, hpainter) {
-      if (isStr(name))
-         this._hitemname = name;
-      else
-         delete this._hitemname;
+      this.#hitemname = isStr(name) ? name : undefined;
       // only update draw option, never delete.
       if (isStr(opt))
-         this._hdrawopt = opt;
+         this.#hdrawopt = opt;
 
-      this._hpainter = hpainter;
+      this.#hpainter = hpainter;
    }
+
+   /** @summary Returns assigned histogram painter */
+   getHPainter() { return this.#hpainter; }
 
    /** @summary Returns assigned item name
      * @desc Used with {@link HierarchyPainter} to identify drawn item name */
-   getItemName() { return this._hitemname ?? null; }
+   getItemName() { return this.#hitemname ?? null; }
 
    /** @summary Returns assigned item draw option
      * @desc Used with {@link HierarchyPainter} to identify drawn item option */
-   getItemDrawOpt() { return this._hdrawopt ?? ''; }
+   getItemDrawOpt() { return this.#hdrawopt ?? ''; }
 
 } // class BasePainter
 
