@@ -155,7 +155,7 @@ ROOT::Internal::RDF::FromTTree(std::string_view treeName, const std::vector<std:
 }
 
 ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(
-   const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const
+   unsigned int, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const
 {
    // one GetTree to retrieve the TChain, another to retrieve the underlying TTree
    auto *tree = fTreeReader->GetTree()->GetTree();
