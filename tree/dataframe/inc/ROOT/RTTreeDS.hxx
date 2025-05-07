@@ -75,7 +75,8 @@ class RTTreeDS final : public ROOT::RDF::RDataSource {
    std::unique_ptr<ROOT::Internal::TreeUtils::RNoCleanupNotifier> fNoCleanupNotifier;
 
    ROOT::RDF::RSampleInfo
-   CreateSampleInfo(const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const final;
+   CreateSampleInfo(unsigned int,
+                    const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const final;
 
    void RunFinalChecks(bool nodesLeftNotRun) const final;
 
