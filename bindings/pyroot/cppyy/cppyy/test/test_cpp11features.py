@@ -1,13 +1,11 @@
-import py, sys
+import py, sys, pytest, os
 from pytest import mark, raises
-from .support import setup_make, ispypy
+from support import setup_make, ispypy
 
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp11featuresDict"))
+currpath = os.getcwd()
+test_dct = currpath + "/cpp11featuresDict"
 
-def setup_module(mod):
-    setup_make("cpp11features")
 
 class TestCPP11FEATURES:
     def setup_class(cls):
@@ -565,3 +563,6 @@ class TestCPP11FEATURES:
 
         assert ns.call_creator(pyfunc)
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

@@ -1,13 +1,10 @@
-import py, os
+import py, os, pytest
 from pytest import raises, skip, mark
-from .support import setup_make, pylong, IS_MAC_ARM
+from support import setup_make, pylong, IS_MAC_ARM
 
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("crossinheritanceDict"))
-
-def setup_module(mod):
-    setup_make("crossinheritance")
+currpath = os.getcwd()
+test_dct = currpath + "/crossinheritanceDict"
 
 
 class TestCROSSINHERITANCE:
@@ -1818,3 +1815,6 @@ class TestCROSSINHERITANCE:
         assert derived.s == "Hello"
         assert derived.t == "World"
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))
