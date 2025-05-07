@@ -448,8 +448,6 @@ void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, co
    }
    BroadcastTensor<T, std::span<T>>(inData, shape, targetShape, broadcastedData);
 }
-// specialization for vector of boolean
-void UnidirectionalBroadcast(const std::vector<bool> & data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::vector<bool> & broadcastedData);
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
@@ -625,15 +623,6 @@ void FillOutput(T const *arr, std::vector<T> &out, std::size_t n)
    out.resize(n);
    for (std::size_t i = 0; i < n; ++i) {
       out[i] = arr[i];
-   }
-}
-
-// Special case for std::vector<bool>.
-inline void FillOutput(std::vector<bool> const &vec, std::vector<std::uint8_t> &out, std::size_t n)
-{
-   out.resize(n);
-   for (std::size_t i = 0; i < n; ++i) {
-      out[i] = vec[i];
    }
 }
 

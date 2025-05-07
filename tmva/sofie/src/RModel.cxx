@@ -586,9 +586,8 @@ void RModel::GenerateIntermediateTensorInfo() {
       std::string tensor_declaration_block = "";
       for (auto &i : fIntermediateTensorInfos) {
          if (i.second.type == ETensorType::BOOL) {
-               tensor_declaration_block += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
-               // No pointer allocation possible for BOOL, but we create a reference to the vector to make the data member layout more consistent
-               tensor_declaration_block += "std::vector<bool> & tensor_" + i.first + " = fTensor_" + i.first + ";\n";
+               tensor_declaration_block += "std::vector<std::uint8_t> fTensor_" + i.first + " = std::vector<std::uint8_t>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
+               tensor_declaration_block += "std::uint8_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
                continue;
          }
          bool is_extended = (fOptimizationLevel == OptimizationLevel::kExtended);
