@@ -241,7 +241,7 @@ TEST(TClingDataMemberInfo, Offset)
    // Make sure ROOT's Core constexpr constants work
    EXPECT_EQ(3000, *(int*)gROOT->GetGlobal("kError")->GetAddress());
 
-#ifdef R__USE_CXXMODULES
+#if defined(R__USE_CXXMODULES) && defined(R__HAS_GEOM)
    // gGeoManager is defined in the Geom libraries and we want to make sure we
    // do not load it when autoloading is off. We can only test this in modules
    // mode because gGeoManager is not part of the PCH and non-modular ROOT has
@@ -250,5 +250,5 @@ TEST(TClingDataMemberInfo, Offset)
    TGlobal *GeoManagerInfo = gROOT->GetGlobal("gGeoManager");
    TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
    EXPECT_EQ(-1L, (ptrdiff_t)GeoManagerInfo->GetAddress());
-#endif // R__USE_CXXMODULES
+#endif // R__USE_CXXMODULES and R__HAS_GEOM
 }
