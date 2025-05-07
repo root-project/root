@@ -234,43 +234,39 @@ TEST(TTreeRegressions, EmptyLeafObject)
 }
 
 // https://its.cern.ch/jira/browse/ROOT-6741
-class MySubClass {
-public:
-   MySubClass(int Id = 0, double X = 0) : id(Id), x(X) {}
-   virtual ~MySubClass() {}
+struct MySubClass {
    int id;
    double x;
 };
-class MyClass {
-public:
-   virtual ~MyClass() {}
+struct MyClass {
    std::vector<MySubClass> sub;
-   void Push(MySubClass msc) { sub.push_back(msc); }
    MySubClass *Get(int id)
    {
       for (size_t i = 0; i < sub.size(); ++i)
          if (sub[i].id == id)
             return &sub[i];
-      return 0;
+      return nullptr;
    }
 };
 TEST(TTreeRegressions, TTreeFormulaMemberIndex)
 {
-   gInterpreter->Declare("class MySubClass { public: MySubClass(int Id = 0, double X = 0) : id(Id), x(X) {} virtual ~MySubClass() {} int id; double x; };");
-   gInterpreter->Declare("class MyClass { public: virtual ~MyClass() {} std::vector<MySubClass> sub; void Push(MySubClass msc) { sub.push_back(msc); } MySubClass *Get(int id) { for (size_t i = 0; i < sub.size(); ++i) if (sub[i].id == id) return &sub[i]; return 0; } };");
+   gInterpreter->Declare("struct MySubClass { int id; double x; };");
+   gInterpreter->Declare("struct MyClass { std::vector<MySubClass> sub; MySubClass *Get(int id) { for (size_t i = 0; i < sub.size(); ++i) if (sub[i].id == id) return &sub[i]; return nullptr; } };");
 
    TTree tree("tree", "tree");
    MyClass mc;
    tree.Branch("mc", &mc);
 
-   MySubClass s(1, 1.11);
-   mc.Push(s);
+   MySubClass s;
+   s.id = 1;
+   s.x = 1.11;
+   mc.sub.push_back(s);
    s.id = 23;
    s.x = 2.22;
-   mc.Push(s);
+   mc.sub.push_back(s);
    s.id = -2;
    s.x = 3.33;
-   mc.Push(s);
+   mc.sub.push_back(s);
    tree.Fill();
 
    Long64_t n1 = tree.Draw("mc.Get(1)->x >> h1", "");
