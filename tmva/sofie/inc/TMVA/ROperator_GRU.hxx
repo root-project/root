@@ -144,12 +144,6 @@ template <typename T> class ROperator_GRU final : public ROperator {
     */
    std::string Generate(std::string /*OpName*/);
 
-   /*! \brief Generate the code for the Session internal data vectors
-    *
-    * \param opName name of the operator
-    */
-   std::string GenerateSessionMembersCode(std::string opName);
-
    /*! \brief Returns the blas routines needed to compile the generated code
     */
    std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
