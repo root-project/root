@@ -101,6 +101,8 @@ protected:
       const char *ui5theme = gEnv->GetValue("WebGui.openui5theme","");
       if (ui5theme && *ui5theme)
          more_args.append("openui5theme: \""s + ui5theme + "\","s);
+      if (GetBoolEnv("WebGui.DarkMode") == 1)
+         more_args.append("dark: true,"s);
       int credits = gEnv->GetValue("WebGui.ConnCredits", 10);
       if ((credits > 0) && (credits != 10))
          more_args.append("credits: "s + std::to_string(credits) + ","s);
