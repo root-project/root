@@ -32,6 +32,8 @@
 
 namespace ROOT {
 namespace Experimental {
+template <typename T>
+class RNTupleProcessorValuePtr;
 
 namespace Internal {
 struct RNTupleProcessorEntryLoader;
@@ -63,6 +65,129 @@ public:
    RNTupleOpenSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
 
    std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource() const;
+};
+
+class RNTupleProcessorEntry {
+   friend class RNTupleSingleProcessor;
+   friend class RNTupleChainProcessor;
+   friend class RNTupleJoinProcessor;
+   template <typename T>
+   friend class RNTupleProcessorValuePtr;
+
+private:
+   std::unique_ptr<ROOT::REntry> fEntry;
+   bool fIsValid = true;
+
+   RNTupleProcessorEntry(std::unique_ptr<ROOT::REntry> entry) : fEntry(std::move(entry)) {}
+
+   void SetValid(bool valid) { fIsValid = valid; }
+
+   void BindValue(std::string_view fieldName, std::shared_ptr<void> objPtr) { fEntry->BindValue(fieldName, objPtr); }
+   void BindValue(ROOT::RFieldToken token, std::shared_ptr<void> objPtr) { fEntry->BindValue(token, objPtr); }
+
+   template <typename T>
+   std::shared_ptr<T> GetPtr(std::string_view fieldName) const
+   {
+      if (fIsValid)
+         return fEntry->GetPtr<T>(fieldName);
+
+      return nullptr;
+   }
+
+   template <typename T>
+   std::shared_ptr<T> GetPtr(ROOT::RFieldToken token) const
+   {
+      if (fIsValid)
+         return fEntry->GetPtr<T>(token);
+
+      return nullptr;
+   }
+
+   void Read(ROOT::NTupleSize_t index)
+   {
+      assert(fIsValid && "cannot read invalidated entries");
+      fEntry->Read(index);
+   }
+
+   const std::string &FindFieldName(ROOT::RFieldToken token) const { return fEntry->FindFieldName(token); }
+
+   static std::unique_ptr<RNTupleProcessorEntry> Create(std::unique_ptr<ROOT::REntry> entry)
+   {
+      return std::unique_ptr<RNTupleProcessorEntry>(new RNTupleProcessorEntry(std::move(entry)));
+   }
+
+public:
+   RNTupleProcessorEntry() = delete;
+   RNTupleProcessorEntry(const RNTupleProcessorEntry &other) = delete;
+   RNTupleProcessorEntry &operator=(const RNTupleProcessorEntry &other) = delete;
+   RNTupleProcessorEntry(RNTupleProcessorEntry &&other) = default;
+   RNTupleProcessorEntry &operator=(RNTupleProcessorEntry &&other) = default;
+   ~RNTupleProcessorEntry() = default;
+
+   bool IsValid() const { return fIsValid; }
+
+   ROOT::RFieldToken GetToken(std::string_view fieldName) const { return fEntry->GetToken(fieldName); }
+
+   ROOT::REntry::ConstIterator_t begin() const { return fEntry->begin(); }
+   ROOT::REntry::ConstIterator_t end() const { return fEntry->end(); }
+};
+
+template <typename T>
+class RNTupleProcessorValuePtr {
+   friend class RNTupleProcessor;
+   friend class RNTupleProcessorEntry;
+
+private:
+   const RNTupleProcessorEntry *fProcessorEntry;
+   ROOT::RFieldToken fToken;
+
+   RNTupleProcessorValuePtr(std::string_view fieldName, const RNTupleProcessorEntry &processorEntry)
+      : fProcessorEntry(&processorEntry), fToken(processorEntry.GetToken(fieldName))
+   {
+   }
+
+public:
+   bool HasValue() const { return fProcessorEntry->IsValid(); }
+
+   std::shared_ptr<T> GetPtr() const
+   {
+      if (fProcessorEntry->IsValid())
+         return fProcessorEntry->GetPtr<T>(fToken);
+
+      return nullptr;
+   }
+
+   const T &operator*() const
+   {
+      if (auto ptr = GetPtr(); ptr)
+         return *std::static_pointer_cast<T>(ptr);
+      else
+         throw RException(R__FAIL("cannot read \"" + fProcessorEntry->FindFieldName(fToken) +
+                                  "\" because the entry it belongs to is invalid"));
+   }
+};
+
+template <>
+class RNTupleProcessorValuePtr<void> {
+   friend class RNTupleProcessor;
+
+private:
+   const RNTupleProcessorEntry *fProcessorEntry;
+   ROOT::RFieldToken fToken;
+
+   RNTupleProcessorValuePtr(std::string_view fieldName, const RNTupleProcessorEntry &processorEntry)
+      : fProcessorEntry(&processorEntry), fToken(processorEntry.GetToken(fieldName))
+   {
+   }
+
+public:
+   std::shared_ptr<void> GetPtr() const
+   {
+      if (fProcessorEntry->IsValid())
+         return fProcessorEntry->GetPtr<void>(fToken);
+
+      return nullptr;
+   }
 };
 
 // clang-format off
@@ -105,7 +230,7 @@ class RNTupleProcessor {
 
 protected:
    std::string fProcessorName;
-   std::unique_ptr<ROOT::REntry> fEntry;
+   std::unique_ptr<RNTupleProcessorEntry> fEntry;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
@@ -128,7 +253,7 @@ protected:
    /// \brief Point the entry's field values of the processor to the pointers from the provided entry.
    ///
    /// \param[in] entry The entry whose field values to use.
-   virtual void SetEntryPointers(const ROOT::REntry &entry, std::string_view fieldNamePrefix = "") = 0;
+   virtual void SetEntryPointers(const RNTupleProcessorEntry &entry, std::string_view fieldNamePrefix = "") = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
@@ -190,11 +315,11 @@ public:
    /// \brief Get the model used by the processor.
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }
 
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get a reference to the entry used by the processor.
-   ///
-   /// \return A reference to the entry used by the processor.
-   const ROOT::REntry &GetEntry() const { return *fEntry; }
+   template <typename T>
+   RNTupleProcessorValuePtr<T> GetValuePtr(std::string_view fieldName) const
+   {
+      return RNTupleProcessorValuePtr<T>(fieldName, *fEntry);
+   }
 
    // clang-format off
    /**
@@ -211,10 +336,10 @@ public:
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
-      using value_type = ROOT::REntry;
+      using value_type = RNTupleProcessorEntry;
       using difference_type = std::ptrdiff_t;
-      using pointer = ROOT::REntry *;
-      using reference = const ROOT::REntry &;
+      using pointer = RNTupleProcessorEntry *;
+      using reference = const RNTupleProcessorEntry &;
 
       RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
          : fProcessor(processor), fCurrentEntryNumber(entryNumber)
@@ -239,7 +364,7 @@ public:
          return obj;
       }
 
-      reference operator*() { return fProcessor.GetEntry(); }
+      reference operator*() { return *fProcessor.fEntry; }
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
@@ -366,7 +491,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
-   void SetEntryPointers(const ROOT::REntry &entry, std::string_view fieldNamePrefix) final;
+   void SetEntryPointers(const RNTupleProcessorEntry &entry, std::string_view fieldNamePrefix) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
@@ -423,7 +548,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
-   void SetEntryPointers(const ROOT::REntry &, std::string_view fieldNamePrefix) final;
+   void SetEntryPointers(const RNTupleProcessorEntry &, std::string_view fieldNamePrefix) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
@@ -486,7 +611,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
-   void SetEntryPointers(const ROOT::REntry &, std::string_view fieldNamePrefix) final;
+   void SetEntryPointers(const RNTupleProcessorEntry &, std::string_view fieldNamePrefix) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
