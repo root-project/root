@@ -455,13 +455,12 @@ public:
 
    /// Sets this field to use a quantized integer representation using `nBits` per value.
    /// It must be $1 <= nBits <= 32$.
-   /// `minValue` and `maxValue` must not be infinity, `NaN` or denormal floats, and they must be representable by the
-   /// type `T`.
+   /// `minValue` and `maxValue` must not be infinity, `NaN` or denormal floats.
    /// Calling this function establishes a promise by the caller to RNTuple that this field will only contain values
    /// contained in `[minValue, maxValue]` inclusive. If a value outside this range is assigned to this field, the
    /// behavior is undefined.
    /// This is mutually exclusive with SetTruncated() and SetHalfPrecision() and supersedes them if called after them.
-   void SetQuantized(double minValue, double maxValue, std::size_t nBits)
+   void SetQuantized(T minValue, T maxValue, std::size_t nBits)
    {
       const auto &[minBits, maxBits] =
          ROOT::Internal::RColumnElementBase::GetValidBitRange(ROOT::ENTupleColumnType::kReal32Quant);
