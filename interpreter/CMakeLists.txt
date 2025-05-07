@@ -181,6 +181,11 @@ if(builtin_llvm)
     endif()
   endif()
 
+  # Regardless of LLVM_BUILD_TYPE and LLVM_ENABLE_ASSERTIONS, we never want to
+  # "optimize llvm_unreachable() as undefined behavior" but trap if we hit this
+  # in production builds.
+  set(LLVM_UNREACHABLE_OPTIMIZE FALSE)
+
   # Multi-configuration generators ignore CMAKE_BUILD_TYPE, so
   # in that case we set the flags for all configurations to the
   # flags of the build type assigned to LLVM_BUILD_TYPE.
