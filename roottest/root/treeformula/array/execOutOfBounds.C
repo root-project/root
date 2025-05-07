@@ -7,6 +7,7 @@ int execOutOfBounds() {
   auto t = _file0->Get<TTree>("t");
   // ThetaDeg is a dynamic array with indices going from 0 to (ringtouche_DE1 - 1)
   TTreeFormula tf("tf", "ThetaDeg[ringtouche_DE1]", t); 
+  t->GetEntry(0);
   auto res = tf.EvalInstance();
   if (!TMath::IsNaN(res)) {
      printf("Error: evaluated instance is %f rather than NaN\n", res);
