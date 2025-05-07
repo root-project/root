@@ -217,19 +217,18 @@ public:
          // special case if C is an input tensor
          if (fIsInputBoolTensor) {
             size_t inputLength = ConvertShapeToLength(fShapeC);
-            out << SP << "std::vector<bool> fTensor_" << fNC << "(tensor_" << fNC <<  ", tensor_" << fNC << " + " << inputLength << ");\n";
+            out << SP << "std::vector<std::uint8_t> fTensor_" << fNC << "(tensor_" << fNC <<  ", tensor_" << fNC << " + " << inputLength << ");\n";
          }
          out << SP << "// Broadcasting uninitialized tensor " << fNC << "\n";
          //out << SP << "{\n";
-         // for boolean we need to pass vector<bool> and use the non-template version of the function
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(fTensor_" << fNC << ", " << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY)
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<std::uint8_t>(fTensor_" << fNC << ".data(), " << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY)
                    << ", fTensor_" << fNBroadcastedC << ");\n";
       }
       std::string nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
       std::string nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
       std::string nameC = fNBroadcastedC.empty()? fNC : fNBroadcastedC;
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      // get output tensor applying condition (note we need to use directly the vector<bool> since v.data(),  i.e the data pointer, does not exist)
+      // get output tensor applying condition
       out << SP << SP << "tensor_" << fNY << "[id] = "  << "(fTensor_" << nameC << "[id]) ? tensor_"
                                << nameA << "[id] : tensor_" + nameB + "[id];\n";
       out << SP << "}\n";

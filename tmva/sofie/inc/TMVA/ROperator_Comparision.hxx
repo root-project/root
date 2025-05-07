@@ -206,7 +206,7 @@ public:
       out << SP << "}\n";
       // since output is a boolean need to add the tensor_xxx variable since it is not defined as a pointer to a boolean std::vector
       if (!fIsModelOutput)
-         out << SP << "const std::vector<bool> & tensor_" << fNY << " = fTensor_" << fNY << ";\n";
+         out << SP << "const std::vector<std::uint8_t> & tensor_" << fNY << " = fTensor_" << fNY << ";\n";
 
       return out.str();
    }
