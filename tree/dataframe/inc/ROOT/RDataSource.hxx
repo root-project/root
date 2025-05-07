@@ -94,7 +94,7 @@ const std::vector<std::string> &GetColumnNamesNoDuplicates(const ROOT::RDF::RDat
 void CallInitializeWithOpts(ROOT::RDF::RDataSource &ds, const std::set<std::string> &suppressErrorsForMissingColumns);
 std::string DescribeDataset(ROOT::RDF::RDataSource &ds);
 ROOT::RDF::RSampleInfo
-CreateSampleInfo(const ROOT::RDF::RDataSource &ds,
+CreateSampleInfo(const ROOT::RDF::RDataSource &ds, unsigned int slot,
                  const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap);
 void RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun);
 void ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm);
@@ -168,10 +168,10 @@ protected:
    virtual std::string DescribeDataset() { return "Dataframe from datasource " + GetLabel(); }
 
    friend ROOT::RDF::RSampleInfo
-   ROOT::Internal::RDF::CreateSampleInfo(const ROOT::RDF::RDataSource &,
+   ROOT::Internal::RDF::CreateSampleInfo(const ROOT::RDF::RDataSource &, unsigned int,
                                          const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &);
    virtual ROOT::RDF::RSampleInfo
-   CreateSampleInfo(const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &) const;
+   CreateSampleInfo(unsigned int, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &) const;
 
    friend void ROOT::Internal::RDF::RunFinalChecks(const ROOT::RDF::RDataSource &, bool);
    virtual void RunFinalChecks(bool) const {}
