@@ -357,13 +357,17 @@ function addDragHandler(_painter, arg) {
       makeResizeElements(arg.getDrawG(), drag_resize);
 }
 
-const TooltipHandler = {
+/** @summary Tooltip handler class
+  * @private */
+class TooltipHandler extends ObjectPainter {
+
+   // cannot use private members because of RFramePainter
 
    /** @desc only canvas info_layer can be used while other pads can overlay
      * @return layer where frame tooltips are shown */
    hints_layer() {
       return this.getCanvPainter()?.getLayerSvg('info_layer') ?? d3_select(null);
-   },
+   }
 
    /** @return true if tooltip is shown, use to prevent some other action */
    isTooltipShown() {
@@ -371,13 +375,13 @@ const TooltipHandler = {
          return false;
       const hintsg = this.hints_layer().selectChild('.objects_hints');
       return hintsg.empty() ? false : hintsg.property('hints_pad') === this.getPadName();
-   },
+   }
 
    /** @summary set tooltips enabled on/off */
    setTooltipEnabled(enabled) {
       if (enabled !== undefined)
          this.tooltip_enabled = enabled;
-   },
+   }
 
    /** @summary central function which let show selected hints for the object */
    processFrameTooltipEvent(pnt, evnt) {
@@ -709,27 +713,23 @@ const TooltipHandler = {
 
       if (cp._highlight_connect && isFunc(cp.processHighlightConnect))
          cp.processHighlightConnect(hints);
-   },
-
-   /** @summary Assigns tooltip methods */
-   assign(painter) {
-      Object.assign(painter, this, { tooltip_enabled: true });
    }
 
-}, // TooltipHandler
+} // class TooltipHandler
 
 
-/** @summary Set of frame interactivity methods
+/** @summary Frame interactivity class
   * @private */
+class FrameInteractive extends TooltipHandler {
 
- FrameInteractive = {
+   // cannot use private members because of RFramePainter
 
    /** @summary Adding basic interactivity */
    addBasicInteractivity() {
-      TooltipHandler.assign(this);
+      this.setTooltipEnabled(true);
 
-      if (!this._frame_rotate && !this._frame_fixpos) {
-         addDragHandler(this, { obj: this, x: this._frame_x, y: this._frame_y, width: this.getFrameWidth(), height: this.getFrameHeight(),
+      if (this.$can_drag) {
+         addDragHandler(this, { obj: this, x: this.getFrameX(), y: this.getFrameY(), width: this.getFrameWidth(), height: this.getFrameHeight(),
                                 is_disabled: kind => { return (kind === 'move') && this.mode3d; },
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
       }
@@ -745,11 +745,11 @@ const TooltipHandler = {
               .property('handlers_set', 0);
 
       const pp = this.getPadPainter(),
-          handlers_set = pp?._fast_drawing ? 0 : 1;
+            handlers_set = pp?._fast_drawing ? 0 : 1;
 
       if (main_svg.property('handlers_set') !== handlers_set) {
-         const close_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, null) : null,
-               mouse_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: false }) : null;
+         const close_handler = handlers_set ? evnt => this.processFrameTooltipEvent(null, evnt) : null,
+               mouse_handler = handlers_set ? evnt => this.processFrameTooltipEvent({ handler: true, touch: false }, evnt) : null;
 
          main_svg.property('handlers_set', handlers_set)
                  .on('mouseenter', mouse_handler)
@@ -757,7 +757,7 @@ const TooltipHandler = {
                  .on('mouseleave', close_handler);
 
          if (browser.touches) {
-            const touch_handler = handlers_set ? this.processFrameTooltipEvent.bind(this, { handler: true, touch: true }) : null;
+            const touch_handler = handlers_set ? evnt => this.processFrameTooltipEvent({ handler: true, touch: true }, evnt) : null;
 
             main_svg.on('touchstart', touch_handler)
                     .on('touchmove', touch_handler)
@@ -774,8 +774,8 @@ const TooltipHandler = {
       const hintsg = this.hints_layer().selectChild('.objects_hints');
       // if tooltips were visible before, try to reconstruct them after short timeout
       if (!hintsg.empty() && this.isTooltipAllowed() && (hintsg.property('hints_pad') === this.getPadName()))
-         setTimeout(this.processFrameTooltipEvent.bind(this, hintsg.property('last_point'), null), 10);
-   },
+         setTimeout(() => this.processFrameTooltipEvent(hintsg.property('last_point'), null), 10);
+   }
 
    /** @summary Add interactive handlers */
    async addFrameInteractivity(for_second_axes) {
@@ -808,7 +808,7 @@ const TooltipHandler = {
       }
 
       if (!svg.property('interactive_set')) {
-         this.addFrameKeysHandler();
+         this.addKeysHandler();
 
          this.zoom_kind = 0; // 0 - none, 1 - XY, 2 - only X, 3 - only Y, (+100 for touches)
          this.zoom_rect = null;
@@ -844,16 +844,7 @@ const TooltipHandler = {
       svg.property('interactive_set', true);
 
       return this;
-   },
-
-   /** @summary Add keys handler */
-   addFrameKeysHandler() {
-      if (this.keys_handler || (typeof window === 'undefined')) return;
-
-      this.keys_handler = evnt => this.processKeyPress(evnt);
-
-      window.addEventListener('keydown', this.keys_handler, false);
-   },
+   }
 
    /** @summary Handle key press */
    processKeyPress(evnt) {
@@ -866,7 +857,7 @@ const TooltipHandler = {
             pp = this.getPadPainter();
       let key = evnt.key;
 
-      if (!settings.HandleKeys || main.empty() || (this.enabledKeys === false) ||
+      if (!settings.HandleKeys || main.empty() || (this.isEnabledKeys() === false) ||
           (getActivePad() !== pp) || (allowed.indexOf(key) < 0)) return false;
 
       if (evnt.shiftKey) key = `Shift ${key}`;
@@ -908,7 +899,7 @@ const TooltipHandler = {
       }
 
       return true; // just process any key press
-   },
+   }
 
    /** @summary Function called when frame is clicked and object selection can be performed
      * @desc such event can be used to select */
@@ -928,18 +919,18 @@ const TooltipHandler = {
       }
 
       if (exact) {
-         const handler = dblckick ? this._dblclick_handler : this._click_handler;
+         const handler = dblckick ? this.getDblclickHandler() : this.getClickHandler();
          if (isFunc(handler))
             res = handler(exact.user_info, pnt);
       }
 
       if (!dblckick) {
          pp.selectObjectPainter(exact ? exact.painter : this,
-               { x: pnt.x + (this._frame_x || 0), y: pnt.y + (this._frame_y || 0) });
+               { x: pnt.x + this.getFrameX(), y: pnt.y + this.getFrameY() });
       }
 
       return res;
-   },
+   }
 
    /** @summary Check mouse moving  */
    shiftMoveHanlder(evnt, pos0) {
@@ -959,7 +950,7 @@ const TooltipHandler = {
          evnt.preventDefault();
          evnt.stopPropagation();
       }
-   },
+   }
 
    /** @summary mouse up handler for shifting */
    shiftUpHanlder(evnt) {
@@ -970,7 +961,7 @@ const TooltipHandler = {
 
       if ((this._shifting_dx !== undefined) && (this._shifting_dy !== undefined))
          this.performScalesShift();
-    },
+   }
 
     /** @summary Shift scales on defined positions */
    performScalesShift() {
@@ -993,7 +984,7 @@ const TooltipHandler = {
          this.zoomSingle('x', xmin, xmax);
       else
          this.zoom(xmin, xmax, ymin, ymax);
-   },
+   }
 
    /** @summary Start mouse rect zooming */
    startRectSel(evnt) {
@@ -1066,7 +1057,7 @@ const TooltipHandler = {
 
       if (this.zoom_kind !== 1)
          return postponePromise(() => this.startLabelsMove(), 500);
-   },
+   }
 
    /** @summary Starts labels move */
    startLabelsMove() {
@@ -1078,7 +1069,7 @@ const TooltipHandler = {
 
       if (handle.processLabelsMove('start', this.zoom_lastpos))
          this.zoom_labels = handle;
-   },
+   }
 
    /** @summary Process mouse rect zooming */
    moveRectSel(evnt) {
@@ -1118,7 +1109,7 @@ const TooltipHandler = {
       }
 
       this.zoom_rect.attr('x', x).attr('y', y).attr('width', w).attr('height', h);
-   },
+   }
 
    /** @summary Finish mouse rect zooming */
    endRectSel(evnt) {
@@ -1205,7 +1196,7 @@ const TooltipHandler = {
 
       // return promise - if any
       return pr;
-   },
+   }
 
    /** @summary Handle mouse double click on frame */
    mouseDoubleClick(evnt) {
@@ -1217,7 +1208,7 @@ const TooltipHandler = {
       const valid_x = (m[0] >= 0) && (m[0] <= fw),
             valid_y = (m[1] >= 0) && (m[1] <= fh);
 
-      if (valid_x && valid_y && this._dblclick_handler)
+      if (valid_x && valid_y && this.getDblclickHandler())
          if (this.processFrameClick({ x: m[0], y: m[1] }, true)) return;
 
       let kind = (this.can_zoom_x ? 'x' : '') + (this.can_zoom_y ? 'y' : '') + 'z';
@@ -1235,7 +1226,7 @@ const TooltipHandler = {
          const pp = this.getPadPainter(), rect = this.getFrameRect();
          return pp?.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
       });
-   },
+   }
 
    /** @summary Start touch zoom */
    startTouchZoom(evnt) {
@@ -1319,7 +1310,7 @@ const TooltipHandler = {
                           .on('touchcancel.zoomRect', evnt2 => this.endTouchZoom(evnt2))
                           .on('touchend.zoomRect', evnt2 => this.endTouchZoom(evnt2));
       }
-   },
+   }
 
    /** @summary Move touch zooming */
    moveTouchZoom(evnt) {
@@ -1352,7 +1343,7 @@ const TooltipHandler = {
          setPainterTooltipEnabled(this, false);
 
       evnt.stopPropagation();
-   },
+   }
 
    /** @summary End touch zooming handler */
    endTouchZoom(evnt) {
@@ -1398,7 +1389,7 @@ const TooltipHandler = {
          this.zoom(xmin, xmax, ymin, ymax, undefined, undefined, true);
 
       evnt.stopPropagation();
-   },
+   }
 
    /** @summary Analyze zooming with mouse wheel */
    analyzeMouseWheelEvent(event, item, dmin, test_ignore, second_side) {
@@ -1410,7 +1401,7 @@ const TooltipHandler = {
       }
       const handle = this[item.name + '_handle'];
       return handle?.analyzeWheelEvent(event, dmin, item, test_ignore);
-   },
+   }
 
     /** @summary return true if default Y zooming should be enabled
       * @desc it is typically for 2-Dim histograms or
@@ -1428,7 +1419,7 @@ const TooltipHandler = {
       }
 
       return false;
-   },
+   }
 
    /** @summary Handles mouse wheel event */
    mouseWheel(evnt) {
@@ -1456,7 +1447,7 @@ const TooltipHandler = {
          pr = pr.then(() => this.zoomSingle('y2', itemy.second.min, itemy.second.max, itemy.second.changed));
 
       return pr;
-   },
+   }
 
    /** @summary Show frame context menu */
    showContextMenu(kind, evnt, obj) {
@@ -1543,9 +1534,9 @@ const TooltipHandler = {
             });
          }
       });
-   },
+   }
 
-  /** @summary Activate touch handling on frame
+   /** @summary Activate touch handling on frame
     * @private */
    startSingleTouchHandling(kind, evnt) {
       const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
@@ -1565,7 +1556,7 @@ const TooltipHandler = {
       d3_select(window).on('touchmove.singleTouch', kind ? null : evnt2 => this.moveTouchHandling(evnt2, kind, arr[0]))
                        .on('touchcancel.singleTouch', evnt2 => this.endSingleTouchHandling(evnt2, kind, arr[0], tm))
                        .on('touchend.singleTouch', evnt2 => this.endSingleTouchHandling(evnt2, kind, arr[0], tm));
-   },
+   }
 
    /** @summary Moving of touch pointer
     * @private */
@@ -1590,7 +1581,7 @@ const TooltipHandler = {
       this._shifting_dy = dy;
 
       main_svg.attr('viewBox', `${dx} ${dy} ${w} ${h}`);
-   },
+   }
 
    /** @summary Process end-touch event, which can cause content menu to appear
     * @private */
@@ -1610,7 +1601,7 @@ const TooltipHandler = {
          this.performScalesShift();
        else if (new Date().getTime() - tm > 700)
          this.showContextMenu(kind, { x: pos[0], y: pos[1] });
-   },
+   }
 
    /** @summary Clear frame interactive elements */
    clearInteractiveElements() {
@@ -1625,22 +1616,47 @@ const TooltipHandler = {
 
       // enable tooltip in frame painter
       setPainterTooltipEnabled(this, true);
-   },
-
-   /** @summary Assign frame interactive methods */
-   assign(painter) {
-      Object.assign(painter, this);
    }
 
-}; // FrameInteractive
+   /** @summary Assign interactive methods to RFrame painter */
+   static assign(fpainter) {
+      const src = FrameInteractive.prototype,
+            src2 = TooltipHandler.prototype;
+      Object.getOwnPropertyNames(src).forEach(name => {
+         if (name !== 'constructor')
+            fpainter[name] = src[name];
+      });
+      Object.getOwnPropertyNames(src2).forEach(name => {
+         if (name !== 'constructor')
+            fpainter[name] = src2[name];
+      });
+   }
 
+}; // class FrameInteractive
 
 /**
  * @summary Painter class for TFrame, main handler for interactivity
  * @private
  */
 
-class TFramePainter extends ObjectPainter {
+class TFramePainter extends FrameInteractive {
+
+   #frame_x; // frame X coordinate
+   #frame_y; // frame Y coordinate
+   #frame_width; // frame width
+   #frame_height; // frame height
+   #frame_trans; // transform of frame element
+   #border_mode; // frame border mode
+   #border_size; // frame border size
+   #axes_drawn; // when axes are drawn
+   #axes2_drawn; // when axes are drawn
+   #shrink_frame_left; // shrink frame on left side
+   #projection; // id of projection function
+   #click_handler; // handle for click events
+   #dblclick_handler; // handle for double click events
+   #keys_handler; // assigned handler for keyboard events
+   #enabled_keys;  // when keyboard press handling enabled
+   #last_event_pos; // position of last event
 
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
@@ -1649,16 +1665,15 @@ class TFramePainter extends ObjectPainter {
       super(dom, frame?.$dummy ? null : frame);
       this.zoom_kind = 0;
       this.mode3d = false;
-      this.shrink_frame_left = 0.0;
+      this.#shrink_frame_left = 0.0;
       this.xmin = this.xmax = 0; // no scale specified, wait for objects drawing
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
       this.ranges_set = false;
-      this.axes_drawn = false;
-      this.axes2_drawn = false;
-      this.keys_handler = null;
-      this._borderMode = gStyle.fFrameBorderMode;
-      this._borderSize = gStyle.fFrameBorderSize;
-      this.projection = 0; // different projections
+      this.#axes_drawn = false;
+      this.#axes2_drawn = false;
+      this.#border_mode = gStyle.fFrameBorderMode;
+      this.#border_size = gStyle.fFrameBorderSize;
+      this.#projection = 0; // different projections
    }
 
    /** @summary Returns frame painter - object itself */
@@ -1678,11 +1693,15 @@ class TFramePainter extends ObjectPainter {
    /** @summary Set active flag for frame - can block some events
      * @private */
    setFrameActive(on) {
-      this.enabledKeys = on && settings.HandleKeys;
+      this.#enabled_keys = on && settings.HandleKeys;
       // used only in 3D mode where control is used
       if (this.control)
-         this.control.enableKeys = this.enabledKeys;
+         this.control.enableKeys = this.#enabled_keys;
    }
+
+   /** @summary Returns true if keys handling enabled
+     * @private */
+   isEnabledKeys() { return this.#enabled_keys; }
 
    /** @summary Shrink frame size
      * @private */
@@ -1691,25 +1710,24 @@ class TFramePainter extends ObjectPainter {
       this.fX2NDC -= shrink_right;
    }
 
-   /** @summary Set position of last context menu event */
-   setLastEventPos(pnt) {
-      this.fLastEventPnt = pnt;
-   }
+   /** @summary Set position of last context menu event
+    * @private */
+   setLastEventPos(pnt) { this.#last_event_pos = pnt; }
 
    /** @summary Return position of last event
      * @private */
-   getLastEventPos() { return this.fLastEventPnt; }
+   getLastEventPos() { return this.#last_event_pos; }
 
    /** @summary Returns coordinates transformation func */
-   getProjectionFunc() { return getEarthProjectionFunc(this.projection); }
+   getProjectionFunc() { return getEarthProjectionFunc(this.#projection); }
 
    /** @summary Recalculate frame ranges using specified projection functions */
    recalculateRange(Proj, change_x, change_y) {
-      this.projection = Proj || 0;
+      this.#projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >= 90))) {
+      if ((this.#projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >= 90))) {
          console.warn(`Mercator Projection: Latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
-         this.projection = 0;
+         this.#projection = 0;
       }
 
       const func = this.getProjectionFunc();
@@ -2196,9 +2214,7 @@ class TFramePainter extends ObjectPainter {
 
    /** @summary Identify if requested axes are drawn
      * @desc Checks if x/y axes are drawn. Also if second side is already there */
-   hasDrawnAxes(second_x, second_y) {
-      return !second_x && !second_y ? this.axes_drawn : this.axes2_drawn;
-   }
+   hasDrawnAxes(second_x, second_y) { return !second_x && !second_y ? this.#axes_drawn : this.#axes2_drawn; }
 
    /** @summary draw axes,
      * @return {Promise} which ready when drawing is completed  */
@@ -2247,7 +2263,7 @@ class TFramePainter extends ObjectPainter {
          pr2 = draw_vertical.drawAxis(layer, w, h,
                                       draw_vertical.invert_side ? `translate(${w})` : null,
                                       pad?.fTicky ? w : 0, disable_y_draw,
-                                      draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
+                                      draw_vertical.invert_side ? 0 : this.#frame_x, can_adjust_frame);
 
          pr = Promise.all([pr1, pr2]).then(() => {
             this.drawGrids(draw_grids);
@@ -2259,10 +2275,10 @@ class TFramePainter extends ObjectPainter {
 
             if ((-0.2 * w < ypos) && (ypos < 0)) {
                shrink = -ypos / w + 0.001;
-               this.shrink_frame_left += shrink;
-            } else if ((ypos > 0) && (ypos < 0.3 * w) && (this.shrink_frame_left > 0) && (ypos / w > this.shrink_frame_left)) {
-               shrink = -this.shrink_frame_left;
-               this.shrink_frame_left = 0.0;
+               this.#shrink_frame_left += shrink;
+            } else if ((ypos > 0) && (ypos < 0.3 * w) && (this.#shrink_frame_left > 0) && (ypos / w > this.#shrink_frame_left)) {
+               shrink = -this.#shrink_frame_left;
+               this.#shrink_frame_left = 0.0;
             }
 
             if (!shrink) return;
@@ -2272,15 +2288,15 @@ class TFramePainter extends ObjectPainter {
          });
       }
 
-     return pr.then(() => {
-        if (!shrink_forbidden)
-           this.axes_drawn = true;
-        return true;
-     });
+      return pr.then(() => {
+         if (!shrink_forbidden)
+            this.#axes_drawn = true;
+         return true;
+      });
    }
 
    /** @summary draw second axes (if any)  */
-   drawAxes2(second_x, second_y) {
+   async drawAxes2(second_x, second_y) {
       const layer = this.getFrameSvg().selectChild('.axis_layer'),
           w = this.getFrameWidth(),
           h = this.getFrameHeight(),
@@ -2318,13 +2334,13 @@ class TFramePainter extends ObjectPainter {
          pr2 = draw_vertical.drawAxis(layer, w, h,
                                       draw_vertical.invert_side ? `translate(${w})` : null,
                                       pad?.fTicky ? w : 0, false,
-                                      draw_vertical.invert_side ? 0 : this._frame_x, false);
+                                      draw_vertical.invert_side ? 0 : this.#frame_x, false);
       }
 
-       return Promise.all([pr1, pr2]).then(() => {
-         this.axes2_drawn = true;
+      return Promise.all([pr1, pr2]).then(() => {
+         this.#axes2_drawn = true;
          return true;
-       });
+      });
    }
 
 
@@ -2351,8 +2367,8 @@ class TFramePainter extends ObjectPainter {
 
       if (tframe) {
          this.createAttFill({ attr: tframe });
-         this._borderMode = tframe.fBorderMode;
-         this._borderSize = tframe.fBorderSize;
+         this.#border_mode = tframe.fBorderMode;
+         this.#border_size = tframe.fBorderSize;
       } else if (this.fillatt === undefined) {
          if (pad?.fFrameFillColor)
             this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
@@ -2423,7 +2439,7 @@ class TFramePainter extends ObjectPainter {
       this.y2_handle?.removeG();
 
       this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
-      this.axes_drawn = this.axes2_drawn = false;
+      this.#axes_drawn = this.#axes2_drawn = false;
    }
 
    /** @summary Returns frame rectangle plus extra info for hint display */
@@ -2468,18 +2484,18 @@ class TFramePainter extends ObjectPainter {
 
       delete this.draw_g; // frame <g> element managed by the pad
 
-      if (this.keys_handler) {
-         window.removeEventListener('keydown', this.keys_handler, false);
-         this.keys_handler = null;
+      if (this.#keys_handler) {
+         window.removeEventListener('keydown', this.#keys_handler, false);
+         this.#keys_handler = undefined;
       }
    }
 
    /** @summary Cleanup frame */
    cleanup() {
       this.cleanFrameDrawings();
-      delete this._click_handler;
-      delete this._dblclick_handler;
-      delete this.enabledKeys;
+      this.#click_handler = undefined;
+      this.#dblclick_handler = undefined;
+      this.#enabled_keys = undefined;
 
       this.getPadPainter()?.setFramePainter(this, false);
 
@@ -2496,29 +2512,17 @@ class TFramePainter extends ObjectPainter {
 
       const rect = pp?.getPadRect() ?? { width: 10, height: 10 },
             lm = Math.round(rect.width * this.fX1NDC),
-            tm = Math.round(rect.height * (1 - this.fY2NDC));
-      let w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
-          h = Math.round(rect.height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false, trans;
+            tm = Math.round(rect.height * (1 - this.fY2NDC)),
+            rotate = pp?.options?.RotateFrame,
+            w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
+            h = Math.round(rect.height * (this.fY2NDC - this.fY1NDC));
 
-      if (pp?.options) {
-         if (pp.options.RotateFrame) rotate = true;
-         if (pp.options.FixFrame) fixpos = true;
-      }
-
-      if (rotate) {
-         trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
-         [w, h] = [h, w];
-      } else
-         trans = makeTranslate(lm, tm);
-
-      this._frame_x = lm;
-      this._frame_y = tm;
-      this._frame_width = w;
-      this._frame_height = h;
-      this._frame_rotate = rotate;
-      this._frame_fixpos = fixpos;
-      this._frame_trans = trans;
+      this.#frame_x = lm;
+      this.#frame_y = tm;
+      this.#frame_width = rotate ? h : w;
+      this.#frame_height = rotate ? w : h;
+      this.#frame_trans = rotate ? `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})` : makeTranslate(lm, tm);
+      this.$can_drag = !rotate && !pp?.options?.FixFrame;
 
       return this.mode3d ? this : this.createFrameG();
    }
@@ -2553,21 +2557,21 @@ class TFramePainter extends ObjectPainter {
          main_svg = this.draw_g.selectChild('.main_layer');
       }
 
-      this.axes_drawn = this.axes2_drawn = false;
+      this.#axes_drawn = this.#axes2_drawn = false;
 
-      this.draw_g.attr('transform', this._frame_trans);
+      this.draw_g.attr('transform', this.#frame_trans);
 
-      top_rect.attr('d', `M0,0H${this._frame_width}V${this._frame_height}H0Z`)
+      top_rect.attr('d', `M0,0H${this.#frame_width}V${this.#frame_height}H0Z`)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr('width', this._frame_width)
-              .attr('height', this._frame_height)
-              .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
+      main_svg.attr('width', this.#frame_width)
+              .attr('height', this.#frame_height)
+              .attr('viewBox', `0 0 ${this.#frame_width} ${this.#frame_height}`);
 
       this.draw_g.selectAll('.frame_deco').remove();
-      if (this._borderMode && this.fillatt.hasColor()) {
-         const paths = getBoxDecorations(0, 0, this._frame_width, this._frame_height, this._borderMode, this._borderSize || 2, this._borderSize || 2);
+      if (this.#border_mode && this.fillatt.hasColor()) {
+         const paths = getBoxDecorations(0, 0, this.#frame_width, this.#frame_height, this.#border_mode, this.#border_size || 2, this.#border_size || 2);
          this.draw_g.insert('svg:path', '.main_layer')
                     .attr('class', 'frame_deco')
                     .attr('d', paths[0])
@@ -2766,12 +2770,12 @@ class TFramePainter extends ObjectPainter {
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
 
       menu.sub('Border');
-      menu.addSelectMenu('Mode', ['Down', 'Off', 'Up'], this._borderMode + 1, v => {
-         this._borderMode = v - 1;
+      menu.addSelectMenu('Mode', ['Down', 'Off', 'Up'], this.#border_mode + 1, v => {
+         this.#border_mode = v - 1;
          this.interactiveRedraw(true, `exec:SetBorderMode(${v-1})`);
       }, 'Frame border mode');
-      menu.addSizeMenu('Size', 0, 20, 2, this._borderSize, v => {
-         this._borderSize = v;
+      menu.addSizeMenu('Size', 0, 20, 2, this.#border_size, v => {
+         this.#border_size = v;
          this.interactiveRedraw(true, `exec:SetBorderSize(${v})`);
       }, 'Frame border size');
       menu.endsub();
@@ -2783,8 +2787,8 @@ class TFramePainter extends ObjectPainter {
          gStyle.fPadRightMargin = 1 - this.fX2NDC;
          this.fillatt?.saveToStyle('fFrameFillColor', 'fFrameFillStyle');
          this.lineatt?.saveToStyle('fFrameLineColor', 'fFrameLineWidth', 'fFrameLineStyle');
-         gStyle.fFrameBorderMode = this._borderMode;
-         gStyle.fFrameBorderSize = this._borderSize;
+         gStyle.fFrameBorderMode = this.#border_mode;
+         gStyle.fFrameBorderSize = this.#border_size;
       }, 'Store frame position and graphical attributes to gStyle');
 
       menu.separator();
@@ -2806,22 +2810,22 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Returns frame X position */
-   getFrameX() { return this._frame_x || 0; }
+   getFrameX() { return this.#frame_x || 0; }
 
    /** @summary Returns frame Y position */
-   getFrameY() { return this._frame_y || 0; }
+   getFrameY() { return this.#frame_y || 0; }
 
    /** @summary Returns frame width */
-   getFrameWidth() { return this._frame_width || 0; }
+   getFrameWidth() { return this.#frame_width || 0; }
 
    /** @summary Returns frame height */
-   getFrameHeight() { return this._frame_height || 0; }
+   getFrameHeight() { return this.#frame_height || 0; }
 
    /** @summary Returns frame rectangle plus extra info for hint display */
    getFrameRect() {
       return {
-         x: this._frame_x || 0,
-         y: this._frame_y || 0,
+         x: this.#frame_x || 0,
+         y: this.#frame_y || 0,
          width: this.getFrameWidth(),
          height: this.getFrameHeight(),
          transform: this.draw_g?.attr('transform') || '',
@@ -2835,16 +2839,22 @@ class TFramePainter extends ObjectPainter {
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of click will be disabled */
    configureUserClickHandler(handler) {
-      this._click_handler = isFunc(handler) ? handler : null;
+      this.#click_handler = isFunc(handler) ? handler : null;
    }
+
+   /** @summary Returns actual click handler */
+   getClickHandler() { return this.#click_handler; }
 
    /** @summary Configure user-defined dblclick handler
      * @desc Function will be called every time when double click was called
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
    configureUserDblclickHandler(handler) {
-      this._dblclick_handler = isFunc(handler) ? handler : null;
+      this.#dblclick_handler = isFunc(handler) ? handler : null;
    }
+
+   /** @summary Returns actual double-click handler */
+   getDblclickHandler() { return this.#dblclick_handler; }
 
    /** @summary Function can be used for zooming into specified range
      * @desc if both limits for each axis 0 (like xmin === xmax === 0), axis will be un-zoomed
@@ -3126,9 +3136,12 @@ class TFramePainter extends ObjectPainter {
    /** @summary Add interactive keys handlers
     * @private */
    addKeysHandler() {
-      if (this.isBatchMode()) return;
-      FrameInteractive.assign(this);
-      this.addFrameKeysHandler();
+      if (this.isBatchMode() || this.#keys_handler || (typeof window === 'undefined'))
+         return;
+
+      this.#keys_handler = evnt => this.processKeyPress(evnt);
+
+      window.addEventListener('keydown', this.#keys_handler, false);
    }
 
    /** @summary Add interactive functionality to the frame
@@ -3137,7 +3150,6 @@ class TFramePainter extends ObjectPainter {
       if (this.isBatchMode() || (!settings.Zooming && !settings.ContextMenu))
          return false;
 
-      FrameInteractive.assign(this);
       if (!for_second_axes)
          this.addBasicInteractivity();
 

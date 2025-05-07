@@ -9,15 +9,15 @@ import { detectRightButton, injectStyle } from './utils.mjs';
 /** @summary Current hierarchy painter
   * @desc Instance of {@link HierarchyPainter} object
   * @private */
-let first_hpainter = null;
+let _first_hpainter = null;
 
 /** @summary Returns current hierarchy painter object
   * @private */
-function getHPainter() { return first_hpainter; }
+function getHPainter() { return _first_hpainter; }
 
 /** @summary Set hierarchy painter object
   * @private */
-function setHPainter(hp) { first_hpainter = hp; }
+function setHPainter(hp) { _first_hpainter = hp; }
 
 /**
  * @summary Base class to manage multiple document interface for drawings

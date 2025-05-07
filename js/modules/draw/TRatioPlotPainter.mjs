@@ -14,6 +14,8 @@ const k_upper_pad = 'upper_pad', k_lower_pad = 'lower_pad', k_top_pad = 'top_pad
 
 class TRatioPlotPainter extends ObjectPainter {
 
+   #oldratio; // old ratio plot
+
    /** @summary Set grids range */
    setGridsRange(xmin, xmax, ymin, ymax, low_p) {
       const ratio = this.getObject();
@@ -200,13 +202,13 @@ class TRatioPlotPainter extends ObjectPainter {
       const ratio = this.getObject(),
             pp = this.getPadPainter();
 
-      if (this.$oldratio === undefined)
-         this.$oldratio = Boolean(pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad));
+      if (this.#oldratio === undefined)
+         this.#oldratio = Boolean(pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad));
 
       // configure ratio interactive at the end
       pp.$userInteractive = () => this.configureInteractive();
 
-      if (this.$oldratio)
+      if (this.#oldratio)
          return this.redrawOld();
 
       const pad = pp.getRootPad(),

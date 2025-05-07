@@ -16,6 +16,19 @@ import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 class RFramePainter extends RObjectPainter {
 
+   #frame_x; // frame X coordinate
+   #frame_y; // frame Y coordinate
+   #frame_width; // frame width
+   #frame_height; // frame height
+   #frame_trans; // transform of frame element
+   #axes_drawn; // when axes are drawn
+   #projection; // id of projection function
+   #click_handler; // handle for click events
+   #dblclick_handler; // handle for double click events
+   #keys_handler; // assigned handler for keyboard events
+   #enabled_keys;  // when keyboard press handling enabled
+   #last_event_pos; // position of last event
+
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} frame - RFrame object */
@@ -24,9 +37,8 @@ class RFramePainter extends RObjectPainter {
       this.mode3d = false;
       this.xmin = this.xmax = 0; // no scale specified, wait for objects drawing
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
-      this.axes_drawn = false;
-      this.keys_handler = null;
-      this.projection = 0; // different projections
+      this.#axes_drawn = false;
+      this.#projection = 0; // different projections
       this.v7_frame = true; // indicator of v7, used in interactive part
    }
 
@@ -40,21 +52,23 @@ class RFramePainter extends RObjectPainter {
    /** @summary Set active flag for frame - can block some events
     * @private */
    setFrameActive(on) {
-      this.enabledKeys = on && settings.HandleKeys;
+      this.#enabled_keys = on && settings.HandleKeys;
       // used only in 3D mode
       if (this.control)
-         this.control.enableKeys = this.enabledKeys;
+         this.control.enableKeys = this.#enabled_keys;
    }
 
-   setLastEventPos(pnt) {
-      // set position of last context menu event, can be
-      this.fLastEventPnt = pnt;
-   }
+   /** @summary Returns true if keys handling enabled
+   * @private */
+   isEnabledKeys() { return this.#enabled_keys; }
 
-   getLastEventPos() {
-      // return position of last event
-      return this.fLastEventPnt;
-   }
+   /** @summary Set position of last context menu event
+    * @private */
+   setLastEventPos(pnt) { this.#last_event_pos = pnt; }
+
+   /** @summary Return position of last event
+     * @private */
+   getLastEventPos() { return this.#last_event_pos; }
 
    /** @summary Update graphical attributes */
    updateAttributes(force) {
@@ -73,16 +87,16 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Returns coordinates transformation func */
-   getProjectionFunc() { return getEarthProjectionFunc(this.projection); }
+   getProjectionFunc() { return getEarthProjectionFunc(this.#projection); }
 
    /** @summary Recalculate frame ranges using specified projection functions
      * @desc Not yet used in v7 */
    recalculateRange(Proj) {
-      this.projection = Proj || 0;
+      this.#projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >=90))) {
+      if ((this.#projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >=90))) {
          console.warn(`Mercator Projection: latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
-         this.projection = 0;
+         this.#projection = 0;
       }
 
       const func = this.getProjectionFunc();
@@ -214,7 +228,7 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Set axes ranges for drawing, check configured attributes if range already specified */
    setAxesRanges(xaxis, xmin, xmax, yaxis, ymin, ymax, zaxis, zmin, zmax) {
-      if (this.axes_drawn) return;
+      if (this.#axes_drawn) return;
       this.xaxis = xaxis;
       this._setAxisRange('x', xmin, xmax);
       this.yaxis = yaxis;
@@ -323,15 +337,13 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Identify if requested axes are drawn
      * @desc Checks if x/y axes are drawn. Also if second side is already there */
-   hasDrawnAxes(second_x, second_y) {
-      return !second_x && !second_y ? this.axes_drawn : false;
-   }
+   hasDrawnAxes(second_x, second_y) { return !second_x && !second_y ? this.#axes_drawn : false; }
 
    /** @summary Draw configured axes on the frame
      * @desc axes can be drawn only for main histogram  */
    async drawAxes() {
-      if (this.axes_drawn || (this.xmin === this.xmax) || (this.ymin === this.ymax))
-         return this.axes_drawn;
+      if (this.#axes_drawn || (this.xmin === this.xmax) || (this.ymin === this.ymax))
+         return this.#axes_drawn;
 
       const ticksx = this.v7EvalAttr('ticksX', 1),
             ticksy = this.v7EvalAttr('ticksY', 1);
@@ -417,7 +429,7 @@ class RFramePainter extends RObjectPainter {
           pr2 = draw_vertical.drawAxis(layer, w, h,
                                    draw_vertical.invert_side ? `translate(${w})` : null,
                                    (ticksy > 1) ? w : 0, disable_y_draw,
-                                   draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
+                                   draw_vertical.invert_side ? 0 : this.#frame_x, can_adjust_frame);
 
          pr = Promise.all([pr1, pr2]).then(() => this.drawGrids());
       } else {
@@ -441,7 +453,7 @@ class RFramePainter extends RObjectPainter {
       }
 
       return pr.then(() => {
-         this.axes_drawn = true;
+         this.#axes_drawn = true;
          return true;
       });
    }
@@ -566,7 +578,7 @@ class RFramePainter extends RObjectPainter {
       this.cleanXY();
 
       this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
-      this.axes_drawn = false;
+      this.#axes_drawn = false;
    }
 
    /** @summary Removes all drawn elements of the frame
@@ -608,11 +620,11 @@ class RFramePainter extends RObjectPainter {
                     .property('interactive_set', null);
       }
 
-      if (this.keys_handler) {
-         window.removeEventListener('keydown', this.keys_handler, false);
-         this.keys_handler = null;
+      if (this.#keys_handler) {
+         window.removeEventListener('keydown', this.#keys_handler, false);
+         this.#keys_handler = undefined;
       }
-      delete this.enabledKeys;
+      this.#enabled_keys = undefined;
       delete this.self_drawaxes;
 
       delete this.xaxis;
@@ -623,8 +635,8 @@ class RFramePainter extends RObjectPainter {
 
       delete this.draw_g; // frame <g> element managed by the pad
 
-      delete this._click_handler;
-      delete this._dblclick_handler;
+      this.#click_handler = undefined;
+      this.#dblclick_handler = undefined;
 
       this.getPadPainter()?.setFramePainter(this, false);
 
@@ -642,31 +654,18 @@ class RFramePainter extends RObjectPainter {
 
       const rect = pp?.getPadRect() ?? { width: 10, height: 10 },
             lm = Math.round(rect.width * this.fX1NDC),
-            tm = Math.round(rect.height * (1 - this.fY2NDC));
-      let w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
-          h = Math.round(rect.height * (this.fY2NDC - this.fY1NDC)),
-          rotate = false, fixpos = false, trans;
-
-      if (pp?.options) {
-         if (pp.options.RotateFrame) rotate = true;
-         if (pp.options.FixFrame) fixpos = true;
-      }
-
-      if (rotate) {
-         trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
-         [w, h] = [h, w];
-      } else
-         trans = makeTranslate(lm, tm);
-
+            tm = Math.round(rect.height * (1 - this.fY2NDC)),
+            rotate = pp?.options?.RotateFrame,
+            w = Math.round(rect.width * (this.fX2NDC - this.fX1NDC)),
+            h = Math.round(rect.height * (this.fY2NDC - this.fY1NDC));
 
       // update values here to let access even when frame is not really updated
-      this._frame_x = lm;
-      this._frame_y = tm;
-      this._frame_width = w;
-      this._frame_height = h;
-      this._frame_rotate = rotate;
-      this._frame_fixpos = fixpos;
-      this._frame_trans = trans;
+      this.#frame_x = lm;
+      this.#frame_y = tm;
+      this.#frame_width = rotate ? h : w;
+      this.#frame_height = rotate ? w : h;
+      this.#frame_trans = rotate ? `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})` : makeTranslate(lm, tm);
+      this.$can_drag = !rotate && !pp?.options?.FixFrame;
 
       return this.mode3d ? this : this.createFrameG();
    }
@@ -700,22 +699,22 @@ class RFramePainter extends RObjectPainter {
          main_svg = this.draw_g.selectChild('.main_layer');
       }
 
-      this.axes_drawn = false;
+      this.#axes_drawn = false;
 
-      this.draw_g.attr('transform', this._frame_trans);
+      this.draw_g.attr('transform', this.#frame_trans);
 
       top_rect.attr('x', 0)
               .attr('y', 0)
-              .attr('width', this._frame_width)
-              .attr('height', this._frame_height)
+              .attr('width', this.#frame_width)
+              .attr('height', this.#frame_height)
               .attr('rx', this.lineatt.rx || null)
               .attr('ry', this.lineatt.ry || null)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      main_svg.attr('width', this._frame_width)
-              .attr('height', this._frame_height)
-              .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
+      main_svg.attr('width', this.#frame_width)
+              .attr('height', this.#frame_height)
+              .attr('viewBox', `0 0 ${this.#frame_width} ${this.#frame_height}`);
 
       let pr = Promise.resolve(true);
 
@@ -729,22 +728,22 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Returns frame X position */
-   getFrameX() { return this._frame_x || 0; }
+   getFrameX() { return this.#frame_x || 0; }
 
    /** @summary Returns frame Y position */
-   getFrameY() { return this._frame_y || 0; }
+   getFrameY() { return this.#frame_y || 0; }
 
    /** @summary Returns frame width */
-   getFrameWidth() { return this._frame_width || 0; }
+   getFrameWidth() { return this.#frame_width || 0; }
 
    /** @summary Returns frame height */
-   getFrameHeight() { return this._frame_height || 0; }
+   getFrameHeight() { return this.#frame_height || 0; }
 
    /** @summary Returns frame rectangle plus extra info for hint display */
    getFrameRect() {
       return {
-         x: this._frame_x || 0,
-         y: this._frame_y || 0,
+         x: this.#frame_x || 0,
+         y: this.#frame_y || 0,
          width: this.getFrameWidth(),
          height: this.getFrameHeight(),
          transform: this.draw_g?.attr('transform') || '',
@@ -763,23 +762,29 @@ class RFramePainter extends RObjectPainter {
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of click will be disabled */
    configureUserClickHandler(handler) {
-      this._click_handler = isFunc(handler) ? handler : null;
+      this.#click_handler = isFunc(handler) ? handler : null;
    }
+
+   /** @summary Returns actual click handler */
+   getClickHandler() { return this.#click_handler; }
 
    /** @summary Configure user-defined dblclick handler
      * @desc Function will be called every time when double click was called
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
    configureUserDblclickHandler(handler) {
-      this._dblclick_handler = isFunc(handler) ? handler : null;
+      this.#dblclick_handler = isFunc(handler) ? handler : null;
    }
+
+   /** @summary Returns actual double-click handler */
+   getDblclickHandler() { return this.#dblclick_handler; }
 
    /** @summary function can be used for zooming into specified range
      * @desc if both limits for each axis 0 (like xmin === xmax === 0), axis will be unzoomed
      * @return {Promise} with boolean flag if zoom operation was performed */
    async zoom(xmin, xmax, ymin, ymax, zmin, zmax, interactive) {
       // disable zooming when axis conversion is enabled
-      if (this.projection)
+      if (this.#projection)
          return false;
 
       if (xmin === 'x') {
@@ -911,7 +916,7 @@ class RFramePainter extends RObjectPainter {
       const names = ['x', 'y', 'z', 'x2', 'y2'], indx = names.indexOf(name);
 
       // disable zooming when axis conversion is enabled
-      if (this.projection || (!this[`${name}_handle`] && (name !== 'z')) || (indx < 0))
+      if (this.#projection || (!this[`${name}_handle`] && (name !== 'z')) || (indx < 0))
          return false;
 
       let zoom_v = (vmin !== vmax), unzoom_v = false;
@@ -1114,7 +1119,7 @@ class RFramePainter extends RObjectPainter {
          menu.addchk(this.x_handle.draw_ticks === 2, 'ticks on both sides', () => this.changeFrameAttr('ticksX', 2));
          menu.addchk(this.x_handle.draw_ticks === 3, 'labels on both sides', () => this.changeFrameAttr('ticksX', 3));
          menu.endsub();
-       }
+      }
       if (this.y_handle && !this.y2_handle) {
          menu.sub('Ticks y');
          menu.addchk(this.y_handle.draw_ticks === 0, 'off', () => this.changeFrameAttr('ticksY', 0));
@@ -1122,7 +1127,7 @@ class RFramePainter extends RObjectPainter {
          menu.addchk(this.y_handle.draw_ticks === 2, 'ticks on both sides', () => this.changeFrameAttr('ticksY', 2));
          menu.addchk(this.y_handle.draw_ticks === 3, 'labels on both sides', () => this.changeFrameAttr('ticksY', 3));
          menu.endsub();
-       }
+      }
 
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
       menu.separator();
@@ -1157,9 +1162,14 @@ class RFramePainter extends RObjectPainter {
    /** @summary Add interactive keys handlers
     * @private */
    addKeysHandler() {
-      if (this.isBatchMode()) return;
+      if (this.isBatchMode() || this.#keys_handler || (typeof window === 'undefined'))
+         return;
+
       FrameInteractive.assign(this);
-      this.addFrameKeysHandler();
+
+      this.#keys_handler = evnt => this.processKeyPress(evnt);
+
+      window.addEventListener('keydown', this.#keys_handler, false);
    }
 
    /** @summary Add interactive functionality to the frame

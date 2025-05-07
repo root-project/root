@@ -109,7 +109,7 @@ function v6_require(need) {
 
    if (typeof need == 'string') need = need.split(';');
 
-   need.forEach((name,indx) => {
+   need.forEach((name, indx) => {
       if ((name.indexOf('load:') == 0) || (name.indexOf('user:') == 0))
          need[indx] = name.slice(5);
       else if (name == '2d')
@@ -290,11 +290,9 @@ exports.connectWebWindow = function(arg) {
    }
 
    return _sync().then(() => {
-
       let prereq = '';
       if (arg.prereq) prereq = arg.prereq;
       if (arg.prereq2) prereq += ';' + arg.prereq2;
-
       if (!prereq) return;
 
       return v6_require(prereq).then(() => {
@@ -313,29 +311,22 @@ exports.connectWebWindow = function(arg) {
    });
 }
 
-
 // try to define global JSROOT
 if ((typeof globalThis !== 'undefined') && !globalThis.JSROOT) {
-
-   console.warn('Usage of JSRoot.core.js script is obsolete. Please swicth to modules.  See https://github.com/root-project/jsroot/blob/master/docs/JSROOT.md#migration-v6---v7');
+   console.warn('Usage of JSRoot.core.js script is obsolete. Please swicth to ES6 modules. See https://github.com/root-project/jsroot/blob/master/docs/JSROOT.md#migration-v6---v7');
 
    globalThis.JSROOT = exports;
-
    globalThis.JSROOT.extend = Object.assign;
-
    globalThis.JSROOT._complete_loading = _sync;
 
-   let pr = Promise.all([import('../modules/core.mjs'), import('../modules/draw.mjs'),
-            import('../modules/gui/HierarchyPainter.mjs'), import('../modules/gui/display.mjs')]).then(arr => {
-
+   let pr = Promise.all([import('../modules/core.mjs'),
+                         import('../modules/draw.mjs'),
+                         import('../modules/gui/HierarchyPainter.mjs'),
+                         import('../modules/gui/display.mjs')]).then(arr => {
       Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
-
       Object.assign(globalThis.JSROOT.settings, workaround_settings);
-
       globalThis.JSROOT._ = arr[0].internals;
-
       getHPainter = arr[3].getHPainter;
-
       globalThis.JSROOT.hpainter = getHPainter();
    });
 

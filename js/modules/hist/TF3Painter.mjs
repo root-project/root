@@ -30,18 +30,22 @@ function findZValue(arrz, arrv, cross = 0) {
 class TF3Painter extends TH2Painter {
 
    #use_saved_points; // use saved points for drawing
+   #func; // func object
+
+   /** @summary Assign function  */
+   setFunc(f) { this.#func = f; }
 
    /** @summary Returns drawn object name */
-   getObjectName() { return this.$func?.fName ?? 'func'; }
+   getObjectName() { return this.#func?.fName ?? 'func'; }
 
    /** @summary Returns drawn object class name */
-   getClassName() { return this.$func?._typename ?? clTF3; }
+   getClassName() { return this.#func?._typename ?? clTF3; }
 
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
 
    /** @summary Returns primary function which was then drawn as histogram */
-   getPrimaryObject() { return this.$func; }
+   getPrimaryObject() { return this.#func; }
 
    /** @summary Update histogram */
    updateObject(obj /* , opt */) {
@@ -54,7 +58,7 @@ class TF3Painter extends TH2Painter {
          if (h0) this.updateAxes(histo, h0, this.getFramePainter());
       }
 
-      this.$func = obj;
+      this.setFunc(obj);
       this.createTF3Histogram(obj, histo);
       this.scanContent();
       return true;
@@ -64,7 +68,7 @@ class TF3Painter extends TH2Painter {
      * @private */
    redraw(reason) {
       if (!this.#use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'logy' || reason === 'zoom')) {
-         this.createTF3Histogram(this.$func, this.getHisto());
+         this.createTF3Histogram(this.#func, this.getHisto());
          this.scanContent();
       }
 
@@ -227,7 +231,7 @@ class TF3Painter extends TH2Painter {
    extractAxesProperties(ndim) {
       super.extractAxesProperties(ndim);
 
-      const func = this.$func, nsave = func?.fSave.length ?? 0;
+      const func = this.#func, nsave = func?.fSave.length ?? 0;
 
       if (nsave > 9 && this.#use_saved_points) {
          this.xmin = Math.min(this.xmin, func.fSave[nsave-9]);
@@ -280,7 +284,7 @@ class TF3Painter extends TH2Painter {
 
       const painter = new TF3Painter(dom, hist);
 
-      painter.$func = tf3;
+      painter.setFunc(tf3, clTF3);
       Object.assign(painter, web);
       painter.createTF3Histogram(tf3, hist);
       return THistPainter._drawHist(painter, opt);

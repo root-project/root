@@ -1644,7 +1644,7 @@ function _meshLegoToolTip(intersect) {
 
    tip.color = this.tip_color;
    tip.$painter = p;
-   tip.$projection = p.is_projection && (p.getDimension() === 2);
+   tip.$projection = (p.getDimension() === 2) && isFunc(p.isProjection) && p.isProjection();
 
    return tip;
 }

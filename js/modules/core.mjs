@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '2/05/2025',
+version_date = '7/05/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -373,8 +373,8 @@ settings = {
 },
 
 /** @namespace
-  * @summary Insiance of TStyle object like in ROOT
-  * @desc Includes default draw styles, can be changed after loading of JSRoot.core.js
+  * @summary Instance of TStyle object like in ROOT
+  * @desc Includes default draw styles, can be changed after loading of core.mjs
   * or can be load from the file providing style=itemname in the URL
   * See [TStyle docu]{@link https://root.cern/doc/master/classTStyle.html} 'Private attributes' section for more detailed info about each value */
 gStyle = {

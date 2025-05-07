@@ -1076,11 +1076,12 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       // then check if double-click handler assigned
-      const fp = this.painter?.getFramePainter();
-      if (isFunc(fp?._dblclick_handler)) {
+      const handler = this.painter?.getFramePainter()?.getDblclickHandler();
+
+      if (isFunc(handler)) {
          const info = this.getInfoAtMousePosition(this.getMousePos(evnt, {}));
          if (info) {
-            fp._dblclick_handler(info);
+            handler(info);
             return;
          }
       }
@@ -1266,11 +1267,11 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       delete this.single_click_tm;
 
       if (kind === 1) {
-         const fp = this.painter?.getFramePainter();
-         if (isFunc(fp?._click_handler)) {
+         const handler = this.painter?.getFramePainter()?.getClickHandler();
+         if (isFunc(handler)) {
             const info = this.getInfoAtMousePosition(mouse_pos);
             if (info) {
-               fp._click_handler(info);
+               handler(info);
                return;
             }
          }
@@ -1309,7 +1310,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       let kind = 0;
-      if (isFunc(this.painter?.getFramePainter()?._click_handler))
+      if (this.painter?.getFramePainter()?.getClickHandler())
          kind = 1;  // user click handler
       else if (this.processSingleClick && this.painter?.options?.mouse_click)
          kind = 2;  // eve7 click handler

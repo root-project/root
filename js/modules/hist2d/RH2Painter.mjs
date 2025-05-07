@@ -13,6 +13,10 @@ import { buildHist2dContour } from '../hist2d/TH2Painter.mjs';
 
 class RH2Painter extends RHistPainter {
 
+   #projection_kind;  // kind of enabled histogram projection
+   #projection_widthX; // X width of projection
+   #projection_widthY; // Y width of projection
+
    /** @summary constructor
      * @param {object|string} dom - DOM element or id
      * @param {object} histo - histogram object */
@@ -29,6 +33,9 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Returns histogram dimension */
    getDimension() { return 2; }
+
+   /** @summary Returns if projection is used */
+   isProjection() { return this.#projection_kind; }
 
    /** @summary Toggle projection */
    toggleProjection(kind, width) {
@@ -60,30 +67,30 @@ class RH2Painter extends RHistPainter {
       if (!widthX && !widthY)
          widthX = widthY = 1;
 
-      if (kind && (this.is_projection === kind)) {
-         if ((this.projection_widthX === widthX) && (this.projection_widthY === widthY))
+      if (kind && (this.#projection_kind === kind)) {
+         if ((this.#projection_widthX === widthX) && (this.#projection_widthY === widthY))
             kind = '';
           else {
-            this.projection_widthX = widthX;
-            this.projection_widthY = widthY;
+            this.#projection_widthX = widthX;
+            this.#projection_widthY = widthY;
             return;
          }
       }
 
       delete this.proj_hist;
 
-      const new_proj = (this.is_projection === kind) ? '' : kind;
-      this.projection_widthX = widthX;
-      this.projection_widthY = widthY;
-      this.is_projection = ''; // avoid projection handling until area is created
+      const new_proj = (this.#projection_kind === kind) ? '' : kind;
+      this.#projection_widthX = widthX;
+      this.#projection_widthY = widthY;
+      this.#projection_kind = ''; // avoid projection handling until area is created
 
-      this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
+      this.provideSpecialDrawArea(new_proj).then(() => { this.#projection_kind = new_proj; return this.redrawProjection(); });
    }
 
    /** @summary Redraw projections */
    redrawProjection(/* ii1, ii2, jj1, jj2 */) {
       // do nothing for the moment
-      // if (!this.is_projection) return;
+      // if (!this.#projection_kind) return;
    }
 
    /** @summary Execute menu command */
@@ -101,10 +108,10 @@ class RH2Painter extends RHistPainter {
    /** @summary Fill histogram context menu */
    fillHistContextMenu(menu) {
       if (this.getPadPainter()?.iscan) {
-         let kind = this.is_projection || '';
-         if (kind) kind += this.projection_widthX;
-         if ((this.projection_widthX !== this.projection_widthY) && (this.is_projection === 'XY'))
-            kind = `X${this.projection_widthX}_Y${this.projection_widthY}`;
+         let kind = this.#projection_kind || '';
+         if (kind) kind += this.#projection_widthX;
+         if ((this.#projection_widthX !== this.#projection_widthY) && (this.#projection_kind === 'XY'))
+            kind = `X${this.#projection_widthX}_Y${this.#projection_widthY}`;
          const kinds = ['X1', 'X2', 'X3', 'X5', 'X10', 'Y1', 'Y2', 'Y3', 'Y5', 'Y10', 'XY1', 'XY2', 'XY3', 'XY5', 'XY10'];
          if (kind) kinds.unshift('Off');
 
@@ -990,7 +997,7 @@ class RH2Painter extends RHistPainter {
 
       if ((i < h.i2) && (j < h.j2)) {
          binz = histo.getBinContent(i+1, j+1);
-         if (this.is_projection)
+         if (this.#projection_kind)
             colindx = 0; // just to avoid hide
           else if (h.hide_only_zeros)
             colindx = (binz === 0) && !this._show_empty_bins ? null : 0;
@@ -1014,7 +1021,7 @@ class RH2Painter extends RHistPainter {
       if (this.options.Color)
          res.color2 = h.palette.getColor(colindx);
 
-      if (pnt.disabled && !this.is_projection) {
+      if (pnt.disabled && !this.#projection_kind) {
          ttrect.remove();
          res.changed = true;
       } else {
@@ -1032,9 +1039,9 @@ class RH2Painter extends RHistPainter {
              y1 = h.gry[j2], y2 = h.gry[j1],
              binid = i*10000 + j, path;
 
-         if (this.is_projection) {
-            const pwx = this.projection_widthX || 1, ddx = (pwx - 1) / 2;
-            if ((this.is_projection.indexOf('X')) >= 0 && (pwx > 1)) {
+         if (this.#projection_kind) {
+            const pwx = this.#projection_widthX || 1, ddx = (pwx - 1) / 2;
+            if ((this.#projection_kind.indexOf('X')) >= 0 && (pwx > 1)) {
                if (j2+ddx >= h.j2) {
                   j2 = Math.min(Math.round(j2+ddx), h.j2);
                   j1 = Math.max(j2-pwx, h.j1);
@@ -1043,8 +1050,8 @@ class RH2Painter extends RHistPainter {
                   j2 = Math.min(j1+pwx, h.j2);
                }
             }
-            const pwy = this.projection_widthY || 1, ddy = (pwy - 1) / 2;
-            if ((this.is_projection.indexOf('Y')) >= 0 && (pwy > 1)) {
+            const pwy = this.#projection_widthY || 1, ddy = (pwy - 1) / 2;
+            if ((this.#projection_kind.indexOf('Y')) >= 0 && (pwy > 1)) {
                if (i2+ddy >= h.i2) {
                   i2 = Math.min(Math.round(i2+ddy), h.i2);
                   i1 = Math.max(i2-pwy, h.i1);
@@ -1055,15 +1062,15 @@ class RH2Painter extends RHistPainter {
             }
          }
 
-         if (this.is_projection === 'X') {
+         if (this.#projection_kind === 'X') {
             x1 = 0; x2 = pmain.getFrameWidth();
             y1 = h.gry[j2]; y2 = h.gry[j1];
             binid = j1*777 + j2*333;
-         } else if (this.is_projection === 'Y') {
+         } else if (this.#projection_kind === 'Y') {
             y1 = 0; y2 = pmain.getFrameHeight();
             x1 = h.grx[i1]; x2 = h.grx[i2];
             binid = i1*777 + i2*333;
-         } else if (this.is_projection === 'XY') {
+         } else if (this.#projection_kind === 'XY') {
             y1 = h.gry[j2]; y2 = h.gry[j1];
             x1 = h.grx[i1]; x2 = h.grx[i2];
             binid = i1*789 + i2*653 + j1*12345 + j2*654321;
@@ -1078,7 +1085,7 @@ class RH2Painter extends RHistPainter {
                   .property('current_bin', binid);
          }
 
-         if (this.is_projection && res.changed)
+         if (this.#projection_kind && res.changed)
             this.redrawProjection(i1, i2, j1, j2);
       }
 

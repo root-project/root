@@ -1551,7 +1551,8 @@ class ObjectPainter extends BasePainter {
      * @param {object} data - tooltip data
      * @private */
    provideUserTooltip(data) {
-      if (!this.hasUserTooltip()) return;
+      if (!this.hasUserTooltip())
+         return;
 
       if (this.#user_tooltip_timeout <= 0)
          return this.#user_tooltip_handler(data);

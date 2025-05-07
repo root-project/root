@@ -42,6 +42,9 @@ class RCanvasPainter extends RPadPainter {
       super.cleanup();
    }
 
+   /** @summary Returns readonly flag */
+   isReadonly() { return false; }
+
    /** @summary Returns canvas name */
    getCanvasName() {
       const title = this.pad?.fTitle;
