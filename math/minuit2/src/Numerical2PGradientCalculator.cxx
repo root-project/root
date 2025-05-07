@@ -35,8 +35,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 {
    // calculate gradient using Initial gradient calculator and from MinimumParameters object
 
-   InitialGradientCalculator gc(fFcn, fTransformation);
-   FunctionGradient gra = gc(par);
+   FunctionGradient gra = calculateInitialGradient(par, fTransformation, fFcn.ErrorDef());
 
    return (*this)(par, gra);
 }
