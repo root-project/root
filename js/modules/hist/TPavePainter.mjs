@@ -1414,7 +1414,7 @@ class TPavePainter extends ObjectPainter {
          if (isFunc(fp?.showContextMenu))
              fp.showContextMenu('pal', evnt);
       } else
-         showPainterMenu(evnt, this, this.isTitle() ? kTitle : undefined);
+         showPainterMenu(evnt, this);
    }
 
    /** @summary Returns true when stat box is drawn */

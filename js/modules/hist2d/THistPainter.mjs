@@ -2206,8 +2206,8 @@ class THistPainter extends ObjectPainter {
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.addFunction(pal, true);
-      } else if (pp?._palette_vertical !== undefined)
-         this.options.Zvert = pp._palette_vertical;
+      } else if (pal_painter?._palette_vertical !== undefined)
+         this.options.Zvert = pal_painter._palette_vertical;
 
       const fp = this.getFramePainter();
 
