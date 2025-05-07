@@ -47,7 +47,6 @@ file. Although now deprecated this method still works for backward
 compatibility, e.g.:
 ~~~ {.cpp}
   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"
-  +Plugin.TSQLServer: ^pgsql:  TPgSQLServer PgSQL  "<constructor>"
   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"
 ~~~
 Where the + in front of Plugin.TSQLServer says that it extends the
@@ -384,9 +383,8 @@ TPluginManager::~TPluginManager()
 /// Load plugin handlers specified in config file, like:
 /// ~~~ {.cpp}
 ///    Plugin.TSQLServer:  ^mysql:   TMySQLServer   MySQL "TMySQLServer(...)"
-///    +Plugin.TSQLServer: ^pgsql:   TPgSQLServer   PgSQL "TPgSQLServer(...)"
 /// ~~~
-/// The + allows the extension of an already defined resource (see TEnv).
+/// Add a `+` before `Plugin.` to allow for the extension of an already defined resource (see TEnv).
 
 void TPluginManager::LoadHandlersFromEnv(TEnv *env)
 {
