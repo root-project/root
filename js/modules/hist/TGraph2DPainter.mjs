@@ -1,4 +1,4 @@
-import { settings, createHistogram, setHistogramTitle, kNoZoom,
+import { settings, createHistogram, setHistogramTitle, getPromise, kNoZoom,
          clTH2D, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
 import { buildSvgCurve, DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -1056,6 +1056,8 @@ function graph2DTooltip(intersect) {
 
 class TGraph2DPainter extends ObjectPainter {
 
+   #redraw_hist; // painter to redraw histogram
+
    /** @summary Decode options string  */
    decodeOptions(opt) {
       const d = new DrawOptions(opt);
@@ -1253,8 +1255,7 @@ class TGraph2DPainter extends ObjectPainter {
          const geometry = createLegoGeom(this.getMainPainter(), pos, null, 100, 100),
                color = plain_mode ? this.getColor(graph.fFillColor) : palette.calcColor(lvl, levels.length),
                material = new THREE.MeshBasicMaterial(getMaterialArgs(color, { side: THREE.DoubleSide, vertexColors: false })),
-
-          mesh = new THREE.Mesh(geometry, material);
+               mesh = new THREE.Mesh(geometry, material);
 
          fp.add3DMesh(mesh, this);
 
@@ -1269,7 +1270,8 @@ class TGraph2DPainter extends ObjectPainter {
 
    /** @summary Update TGraph2D object */
    updateObject(obj, opt) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
 
       if (opt && (opt !== this.options.original))
          this.decodeOptions(opt, obj);
@@ -1278,13 +1280,13 @@ class TGraph2DPainter extends ObjectPainter {
 
       delete this._delaunay; // rebuild triangles
 
-      delete this.$redraw_hist;
+      this.#redraw_hist = undefined;
 
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
          const hist_painter = this.getMainPainter();
          hist_painter?.updateObject(this.createHistogram(), this.options.Axis);
-         this.$redraw_hist = hist_painter;
+         this.#redraw_hist = hist_painter;
       }
 
       return true;
@@ -1294,12 +1296,9 @@ class TGraph2DPainter extends ObjectPainter {
      * @desc Update histogram drawing if necessary
      * @return {Promise} for drawing ready */
    async redraw() {
-      let promise = Promise.resolve(true);
+      const promise = getPromise(this.#redraw_hist?.redraw());
 
-      if (this.$redraw_hist) {
-         promise = this.$redraw_hist.redraw();
-         delete this.$redraw_hist;
-      }
+      this.#redraw_hist = undefined;
 
       return promise.then(() => this.drawGraph2D());
    }

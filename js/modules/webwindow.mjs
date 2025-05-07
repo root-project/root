@@ -936,6 +936,9 @@ async function connectWebWindow(arg) {
       if (arg.batch)
          setBatchMode(true);
 
+      if (arg.dark)
+         settings.DarkMode = true;
+
       if (!arg.socket_kind)
          arg.socket_kind = d.get('ws');
 

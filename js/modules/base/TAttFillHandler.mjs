@@ -10,6 +10,8 @@ import { getColor, findColor, clTLinearGradient, clTRadialGradient, toColor } fr
 
 class TAttFillHandler {
 
+   #disabled; // if fill disabled
+
    /** @summary constructor
      * @param {object} args - arguments see {@link TAttFillHandler#setArgs} for more info
      * @param {number} [args.kind = 2] - 1 means object drawing where combination fillcolor == 0 and fillstyle == 1001 means no filling,  2 means all other objects where such combination is white-color filling */
@@ -48,7 +50,7 @@ class TAttFillHandler {
 
    /** @summary Apply fill style to selection */
    apply(selection) {
-      if (this._disable) {
+      if (this.#disabled) {
          selection.style('fill', 'none');
          return;
       }
@@ -81,10 +83,7 @@ class TAttFillHandler {
 
    /** @summary Enable or disable fill usage - if disabled only 'fill: none' will be applied */
    enable(on) {
-      if ((on === undefined) || on)
-         delete this._disable;
-      else
-         this._disable = true;
+      this.#disabled = ((on === undefined) || on) ? undefined : true;
    }
 
    /** @summary Set usage flag of attribute */

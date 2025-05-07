@@ -3164,9 +3164,9 @@ class HierarchyPainter extends BasePainter {
      * @private */
    fillOnlineMenu(menu, onlineprop, itemname) {
       const node = this.findItem(itemname),
-          sett = getDrawSettings(node._kind, 'nosame;noinspect'),
-          handle = getDrawHandle(node._kind),
-          root_type = isStr(node._kind) ? node._kind.indexOf(prROOT) === 0 : false;
+            sett = getDrawSettings(node._kind, 'nosame;noinspect'),
+            handle = getDrawHandle(node._kind),
+            root_type = isStr(node._kind) ? node._kind.indexOf(prROOT) === 0 : false;
 
       if (sett.opts && (node._can_draw !== false)) {
          sett.opts.push(kInspect);
@@ -3207,7 +3207,7 @@ class HierarchyPainter extends BasePainter {
      * @param {number} interval - repetition interval in ms
      * @param {boolean} flag - initial monitoring state */
    setMonitoring(interval, monitor_on) {
-      this._runMonitoring('cleanup');
+      this.#runMonitoring('cleanup');
 
       if (interval) {
          interval = parseInt(interval);
@@ -3221,12 +3221,12 @@ class HierarchyPainter extends BasePainter {
       this._monitoring_on = monitor_on;
 
       if (this.isMonitoring())
-         this._runMonitoring();
+         this.#runMonitoring();
    }
 
    /** @summary Runs monitoring event loop
      * @private */
-   _runMonitoring(arg) {
+   #runMonitoring(arg) {
       if ((arg === 'cleanup') || !this.isMonitoring()) {
          if (this._monitoring_handle) {
             clearTimeout(this._monitoring_handle);
@@ -3243,7 +3243,7 @@ class HierarchyPainter extends BasePainter {
       if (arg === 'frame') {
          // process of timeout, request animation frame
          delete this._monitoring_handle;
-         this._monitoring_frame = requestAnimationFrame(this._runMonitoring.bind(this, 'draw'));
+         this._monitoring_frame = requestAnimationFrame(() => this.#runMonitoring('draw'));
          return;
       }
 
@@ -3252,7 +3252,7 @@ class HierarchyPainter extends BasePainter {
          this.updateItems();
       }
 
-      this._monitoring_handle = setTimeout(this._runMonitoring.bind(this, 'frame'), this.getMonitoringInterval());
+      this._monitoring_handle = setTimeout(() => this.#runMonitoring('frame'), this.getMonitoringInterval());
    }
 
    /** @summary Returns configured monitoring interval in ms */
@@ -3388,7 +3388,7 @@ class HierarchyPainter extends BasePainter {
 
       this.disp.cleanupFrame = this.cleanupFrame.bind(this);
       if (settings.DragAndDrop)
-          this.disp.setInitFrame(this.enableDrop.bind(this));
+         this.disp.setInitFrame(this.enableDrop.bind(this));
 
       return this.disp;
    }

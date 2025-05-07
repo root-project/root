@@ -14,7 +14,7 @@ const kNoTitle = BIT(17);
  *
  * @private */
 
-class TGraphPolargramPainter extends ObjectPainter {
+class TGraphPolargramPainter extends TooltipHandler {
 
    /** @summary Create painter
      * @param {object|string} dom - DOM element for drawing or element id
@@ -26,6 +26,7 @@ class TGraphPolargramPainter extends ObjectPainter {
       this.t0 = 0;
       this.mult = 1;
       this.decodeOptions(opt);
+      this.setTooltipEnabled(true);
    }
 
    /** @summary Returns true if fixed coordinates are configured */
@@ -368,8 +369,6 @@ class TGraphPolargramPainter extends ObjectPainter {
 
          if (this.isBatchMode())
             return;
-
-         TooltipHandler.assign(this);
 
          assignContextMenu(this, kNoReorder);
 

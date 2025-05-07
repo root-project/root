@@ -3824,10 +3824,12 @@ class TNodejsFile extends TFile {
 
          const readfunc = (_err, _bytesRead, buf) => {
             const res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
-            if (place.length === 2) return resolve(res);
+            if (place.length === 2)
+               return resolve(res);
             blobs.push(res);
             cnt += 2;
-            if (cnt >= place.length) return resolve(blobs);
+            if (cnt >= place.length)
+               return resolve(blobs);
             this.fs.read(this.fd, Buffer.alloc(place[cnt + 1]), 0, place[cnt + 1], place[cnt], readfunc);
          };
 
@@ -3900,12 +3902,18 @@ class TProxyFile extends TFile {
       if (!this.proxy)
          return Promise.reject(Error(`File is not opened ${this.fFileName}`));
 
+      if (isFunc(this.proxy.readBuffers)) {
+         return this.proxy.readBuffers(place).then(arr => {
+            return arr?.length === 1 ? arr[0] : arr;
+         });
+      }
+
       if (place.length === 2)
          return this.proxy.readBuffer(place[0], place[1]);
 
       const arr = [];
-      for (let k = 0; k < place.length; k+=2)
-         arr.push(this.proxy.readBuffer(place[k], place[k+1]));
+      for (let k = 0; k < place.length; k += 2)
+         arr.push(this.proxy.readBuffer(place[k], place[k + 1]));
       return Promise.all(arr);
    }
 
