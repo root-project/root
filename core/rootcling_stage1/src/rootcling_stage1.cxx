@@ -24,12 +24,18 @@ static void (*dlsymaddr)() = &usedToIdentifyRootClingByDlSym;
 ROOT::Internal::RootCling::TROOTSYSSetter gROOTSYSSetter;
 
 static const char *GetIncludeDir() {
-   static std::string incdir = std::string(getenv("ROOTSYS")) + "/include";
+   auto renv = getenv("ROOTSYS");
+   if (!renv)
+      return nullptr;
+   static std::string incdir = std::string(renv) + "/include";
    return incdir.c_str();
 }
 
 static const char *GetEtcDir() {
-   static std::string etcdir = std::string(getenv("ROOTSYS")) + "/etc";
+   auto renv = getenv("ROOTSYS");
+   if (!renv)
+      return nullptr;
+   static std::string etcdir = std::string(renv) + "/etc";
    return etcdir.c_str();
 }
 
