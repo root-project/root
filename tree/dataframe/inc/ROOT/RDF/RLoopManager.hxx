@@ -120,8 +120,6 @@ class RLoopManager : public RNodeBase {
    using ColumnNames_t = std::vector<std::string>;
    enum class ELoopType {
       kInvalid,
-      kROOTFiles,
-      kROOTFilesMT,
       kNoFiles,
       kNoFilesMT,
       kDataSource,
@@ -139,9 +137,6 @@ class RLoopManager : public RNodeBase {
    std::vector<RDefineBase *> fBookedDefines;
    std::vector<RDFInternal::RVariationBase *> fBookedVariations;
 
-   /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
-   /// argument to RDataFrame's ctor (in which case we let users retain ownership).
-   std::shared_ptr<TTree> fTree{nullptr};
    Long64_t fBeginEntry{0};
    Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
 
@@ -150,8 +145,6 @@ class RLoopManager : public RNodeBase {
    /// Samples need to survive throughout the whole event loop, hence stored as an attribute
    std::vector<ROOT::RDF::Experimental::RSample> fSamples;
 
-   /// Friends of the fTree. Only used if we constructed fTree ourselves.
-   std::vector<std::unique_ptr<TChain>> fFriends;
    ColumnNames_t fDefaultColumns;
    /// Range of entries created when no data source is specified.
    std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
@@ -185,8 +178,6 @@ class RLoopManager : public RNodeBase {
 
    void RunEmptySourceMT();
    void RunEmptySource();
-   void RunTreeProcessorMT();
-   void RunTreeReader();
    void RunDataSourceMT();
    void RunDataSource();
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
@@ -251,7 +242,6 @@ public:
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
-   void SetTree(std::shared_ptr<TTree> tree);
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;
