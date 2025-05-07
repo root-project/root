@@ -1,7 +1,7 @@
-import os
+import os, pytest
 import math, time
 from pytest import mark, raises
-from .support import setup_make
+from support import setup_make
 
 try:
     import numba
@@ -818,3 +818,7 @@ class TestNUMBA_DOC:
             return total
 
         assert tsdcmm(a, d) == 155
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

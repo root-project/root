@@ -1,12 +1,10 @@
-import py
+import py, pytest, os
 from pytest import mark, raises
-from .support import setup_make, pylong
+from support import setup_make, pylong
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("templatesDict"))
 
-def setup_module(mod):
-    setup_make("templates")
+currpath = os.getcwd()
+test_dct = currpath + "/templatesDict"
 
 
 class TestTEMPLATES:
@@ -1338,3 +1336,7 @@ class TestTEMPLATE_TYPE_REDUCTION:
         cppyy.py.add_type_reducer('TypeReduction::BinaryExpr<int>', 'TypeReduction::Expr<int>')
 
         assert type(e1+e2) == cppyy.gbl.TypeReduction.Expr[int]
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))
