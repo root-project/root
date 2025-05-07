@@ -20,35 +20,35 @@ struct ComparisionTrait{};
 template <typename T>
 struct ComparisionTrait<T, Eq> {
    static const std::string Name() { return "Equal"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " == " +  t2 + " ? true : false "; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " == " +  t2; }
    static bool Result(T v1, T v2) { return v1 == v2;}
 };
 
 template <typename T>
 struct ComparisionTrait<T, Less> {
    static const std::string Name() { return "Less"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " < " + t2 + " ? true : false "; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " < " + t2; }
    static bool Result(T v1, T v2) { return v1 < v2;}
 };
 
 template <typename T>
 struct ComparisionTrait<T, LessEq> {
    static const std::string Name() { return "LessOrEqual"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " <= " +  t2 + " ? true : false ";  }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " <= " +  t2;  }
    static bool Result(T v1, T v2) { return v1 <= v2;}
 };
 
 template <typename T>
 struct ComparisionTrait<T, Greater> {
    static const std::string Name() { return "Greater"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return  t1 + " > " +  t2 + " ? true : false "; }
+   static std::string Op(const std::string & t1, const std::string t2) { return  t1 + " > " +  t2; }
    static bool Result(T v1, T v2) { return v1 > v2;}
 };
 
 template <typename T>
 struct ComparisionTrait<T, GreaterEq> {
    static const std::string Name() { return "GreaterOrEqual"; }
-   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " >= " +  t2 + " ? true : false " ; }
+   static std::string Op(const std::string & t1, const std::string t2) { return t1 + " >= " +  t2 ; }
    static bool Result(T v1, T v2) { return v1 >= v2;}
 };
 
