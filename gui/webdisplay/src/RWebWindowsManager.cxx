@@ -791,9 +791,9 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.Debug: "no" (default), "yes" - enable more debug output on JSROOT side
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
 ///      WebGui.QueueLength: 10 - maximal number of entires in window send queue
-///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.128.0/
+///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.135.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
-///      WebGui.openui5theme: openui5 theme like sap_belize (default) or sap_fiori_3
+///      WebGui.openui5theme: openui5 theme like sap_horizon (default) or sap_fiori_3
 ///
 /// THttpServer-related parameters documented in \ref CreateServer method
 
