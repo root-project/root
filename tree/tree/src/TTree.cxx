@@ -3849,6 +3849,11 @@ void TTree::DirectoryAutoAdd(TDirectory* dir)
 /// Draw expression varexp for specified entries.
 ///
 /// \return -1 in case of error or number of selected events in case of success.
+/// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
+/// `x > 0`, then we return the number of selected instances rather than number of events.
+/// In the output of `tree.Scan()`, instances are shown in individual printed rows, thus
+/// each event (tree entry) is split across the various instances (lines) of the array.
+/// In contrast, the function `GetEntries(selection)` always returns the number of entries selected.
 ///
 /// This function accepts TCut objects as arguments.
 /// Useful to use the string operator +
@@ -3869,6 +3874,11 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// \brief Draw expression varexp for entries and objects that pass a (optional) selection.
 ///
 /// \return -1 in case of error or number of selected events in case of success.
+/// If `selection` involves an array variable `x[n]`, for example `x[] > 0` or
+/// `x > 0`, then we return the number of selected instances rather than number of events.
+/// In the output of `tree.Scan()`, instances are shown in individual printed rows, thus
+/// each event (tree entry) is split across the various instances (lines) of the array.
+/// In contrast, the function `GetEntries(selection)` always returns the number of entries selected.
 ///
 /// \param [in] varexp
 /// \parblock
@@ -4257,8 +4267,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///     will draw the sum arr3 for the index 0 to 2 only if the
 ///     actual_size_of_arr3 is greater or equal to 3.
 ///     Note that the array in 'primary' is flattened/linearized thus using
-///     `Alt$` with multi-dimensional arrays of different dimensions in unlikely
-///     to yield the expected results.  To visualize a bit more what elements
+///     `Alt$` with multi-dimensional arrays of different dimensions is unlikely
+///     to yield the expected results. To visualize a bit more what elements
 ///     would be matched by TTree::Draw, TTree::Scan can be used:
 /// ~~~ {.cpp}
 ///        tree->Scan("arr1:Alt$(arr2,0)");
