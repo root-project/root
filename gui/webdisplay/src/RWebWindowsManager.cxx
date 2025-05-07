@@ -437,8 +437,6 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///
 ///      WebGui.ServerLocations: location1:/file/path/to/location1;location2:/file/path/to/location2
 
-
-
 bool RWebWindowsManager::CreateServer(bool with_http)
 {
    if (gROOT->GetWebDisplay() == "off")
@@ -793,7 +791,8 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.QueueLength: 10 - maximal number of entires in window send queue
 ///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.135.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
-///      WebGui.openui5theme: openui5 theme like sap_horizon (default) or sap_fiori_3
+///      WebGui.openui5theme: openui5 theme like sap_fiori_3 (default) or sap_horizon
+///      WebGui.DarkMode: "no" (default), "yes" - switch to JSROOT dark mode and will use sap_fiori_3_dark theme
 ///
 /// THttpServer-related parameters documented in \ref CreateServer method
 
