@@ -52,6 +52,12 @@ using ROOT::Internal::RPageStorage;
 
 using namespace ROOT::Experimental::Internal;
 
+static ROOT::RLogChannel &NTupleMergeLog()
+{
+   static ROOT::RLogChannel sLog("ROOT.NTuple.Merge");
+   return sLog;
+}
+
 // TFile options parsing
 // -------------------------------------------------------------------------------------
 static bool BeginsWithDelimitedWord(const TString &str, const char *word)
@@ -108,7 +114,7 @@ Long64_t ROOT::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 try {
    // Check the inputs
    if (!inputs || inputs->GetEntries() < 3 || !mergeInfo) {
-      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "Invalid inputs.";
+      R__LOG_ERROR(NTupleMergeLog()) << "Invalid inputs.";
       return -1;
    }
 
@@ -122,8 +128,8 @@ try {
    TObject *secondArg = itr();
    TFile *outFile = dynamic_cast<TFile *>(secondArg);
    if (!outFile) {
-      R__LOG_ERROR(ROOT::Internal::NTupleLog())
-         << "Second input parameter should be a TFile, but it's a " << secondArg->ClassName() << ".";
+      R__LOG_ERROR(NTupleMergeLog()) << "Second input parameter should be a TFile, but it's a "
+                                     << secondArg->ClassName() << ".";
       return -1;
    }
 
@@ -133,7 +139,7 @@ try {
    if (outKey) {
       outNTuple = outKey->ReadObject<ROOT::RNTuple>();
       if (!outNTuple) {
-         R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "Output file already has key, but not of type RNTuple!";
+         R__LOG_ERROR(NTupleMergeLog()) << "Output file already has key, but not of type RNTuple!";
          return -1;
       }
       // In principle, we should already be working on the RNTuple object from the output file, but just continue with
@@ -145,9 +151,8 @@ try {
    const bool extraVerbose = mergeInfo->fOptions.Contains("rntuple.ExtraVerbose");
    if (defaultComp && firstSrcComp) {
       // this should never happen through hadd, but a user may call RNTuple::Merge() from custom code.
-      R__LOG_WARNING(ROOT::Internal::NTupleLog())
-         << "Passed both options \"DefaultCompression\" and \"FirstSrcCompression\": "
-            "only the latter will apply.";
+      R__LOG_WARNING(NTupleMergeLog()) << "Passed both options \"DefaultCompression\" and \"FirstSrcCompression\": "
+                                          "only the latter will apply.";
    }
    std::optional<std::uint32_t> compression;
    if (firstSrcComp) {
@@ -159,7 +164,7 @@ try {
    } else {
       // user passed no compression-related options: use default
       compression = RCompressionSetting::EDefaults::kUseGeneralPurpose;
-      R__LOG_INFO(ROOT::Internal::NTupleLog()) << "Using the default compression: " << *compression;
+      R__LOG_INFO(NTupleMergeLog()) << "Using the default compression: " << *compression;
    }
 
    // The remaining entries are the input files
@@ -170,8 +175,8 @@ try {
       TFile *inFile = dynamic_cast<TFile *>(pitr);
       ROOT::RNTuple *anchor = inFile ? inFile->Get<ROOT::RNTuple>(ntupleName.c_str()) : nullptr;
       if (!anchor) {
-         R__LOG_INFO(ROOT::Internal::NTupleLog())
-            << "No RNTuple anchor named '" << ntupleName << "' from file '" << inFile->GetName() << "'";
+         R__LOG_INFO(NTupleMergeLog()) << "No RNTuple anchor named '" << ntupleName << "' from file '"
+                                       << inFile->GetName() << "'";
          continue;
       }
 
@@ -184,7 +189,7 @@ try {
          auto clusterIter = descriptor->GetClusterIterable();
          auto firstCluster = clusterIter.begin();
          if (firstCluster == clusterIter.end()) {
-            R__LOG_ERROR(ROOT::Internal::NTupleLog())
+            R__LOG_ERROR(NTupleMergeLog())
                << "Asked to use the first source's compression as the output compression, but the "
                   "first source (file '"
                << inFile->GetName()
@@ -195,7 +200,7 @@ try {
          auto colRangeIter = (*firstCluster).GetColumnRangeIterable();
          auto firstColRange = colRangeIter.begin();
          if (firstColRange == colRangeIter.end()) {
-            R__LOG_ERROR(ROOT::Internal::NTupleLog())
+            R__LOG_ERROR(NTupleMergeLog())
                << "Asked to use the first source's compression as the output compression, but the "
                   "first source (file '"
                << inFile->GetName()
@@ -204,7 +209,7 @@ try {
             return -1;
          }
          compression = (*firstColRange).GetCompressionSettings().value();
-         R__LOG_INFO(ROOT::Internal::NTupleLog()) << "Using the first RNTuple's compression: " << *compression;
+         R__LOG_INFO(NTupleMergeLog()) << "Using the first RNTuple's compression: " << *compression;
       }
       sources.push_back(std::move(source));
    }
@@ -247,7 +252,7 @@ try {
 
    return 0;
 } catch (const std::exception &ex) {
-   R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "Exception thrown while merging: " << ex.what();
+   R__LOG_ERROR(NTupleMergeLog()) << "Exception thrown while merging: " << ex.what();
    return -1;
 }
 
@@ -568,9 +573,8 @@ static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> new
       msg += std::accumulate(newFields.begin(), newFields.end(), std::string{}, [](const auto &acc, const auto *field) {
          return acc + (acc.length() ? ", " : "") + '`' + field->GetFieldName() + '`';
       });
-      R__LOG_INFO(ROOT::Internal::NTupleLog())
-         << msg << ": adding " << (newFields.size() > 1 ? "them" : "it") << " to the destination model (entry #"
-         << mergeData.fNumDstEntries << ").";
+      R__LOG_INFO(NTupleMergeLog()) << msg << ": adding " << (newFields.size() > 1 ? "them" : "it")
+                                    << " to the destination model (entry #" << mergeData.fNumDstEntries << ").";
    }
 
    changeset.fAddedFields.reserve(newFields.size());
@@ -744,7 +748,7 @@ void RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool
          srcColElement->GetIdentifier().fOnDiskType != dstColElement->GetIdentifier().fOnDiskType;
 
       if (needsResealing && mergeData.fMergeOpts.fExtraVerbose) {
-         R__LOG_INFO(ROOT::Internal::NTupleLog())
+         R__LOG_INFO(NTupleMergeLog())
             << "Resealing column " << column.fColumnName << ": { compression: " << colRangeCompressionSettings << " => "
             << mergeData.fMergeOpts.fCompressionSettings.value()
             << ", onDiskType: " << RColumnElementBase::GetColumnTypeName(srcColElement->GetIdentifier().fOnDiskType)
@@ -968,10 +972,11 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RO
       }
 
       if (mergeData.fMergeOpts.fExtraVerbose) {
-         R__LOG_INFO(ROOT::Internal::NTupleLog())
-            << "Adding column " << info.fColumnName << " with log.id " << srcColumnId << ", phys.id "
-            << srcColumn.GetPhysicalId() << ", type " << RColumnElementBase::GetColumnTypeName(srcColumn.GetType())
-            << " -> log.id " << info.fOutputId << ", type " << RColumnElementBase::GetColumnTypeName(info.fColumnType);
+         R__LOG_INFO(NTupleMergeLog()) << "Adding column " << info.fColumnName << " with log.id " << srcColumnId
+                                       << ", phys.id " << srcColumn.GetPhysicalId() << ", type "
+                                       << RColumnElementBase::GetColumnTypeName(srcColumn.GetType()) << " -> log.id "
+                                       << info.fOutputId << ", type "
+                                       << RColumnElementBase::GetColumnTypeName(info.fColumnType);
       }
 
       // Since we disallow merging fields of different types, src and dstFieldDesc must have the same type name.
@@ -1089,14 +1094,14 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
    }
 
-#define SKIP_OR_ABORT(errMsg)                                                                    \
-   do {                                                                                          \
-      if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                            \
-         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "Skipping RNTuple due to: " << (errMsg); \
-         continue;                                                                               \
-      } else {                                                                                   \
-         return R__FAIL(errMsg);                                                                 \
-      }                                                                                          \
+#define SKIP_OR_ABORT(errMsg)                                                         \
+   do {                                                                               \
+      if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                 \
+         R__LOG_WARNING(NTupleMergeLog()) << "Skipping RNTuple due to: " << (errMsg); \
+         continue;                                                                    \
+      } else {                                                                        \
+         return R__FAIL(errMsg);                                                      \
+      }                                                                               \
    } while (0)
 
    // Merge main loop
@@ -1151,8 +1156,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    } // end loop over sources
 
    if (fDestination->GetNEntries() == 0)
-      R__LOG_WARNING(ROOT::Internal::NTupleLog())
-         << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
+      R__LOG_WARNING(NTupleMergeLog()) << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
 
    // Commit the output
    fDestination->CommitClusterGroup();
