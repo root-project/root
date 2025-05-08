@@ -94,10 +94,6 @@ namespace ROOT {
      - CG
      - and more methods, see the Details in the documentation of the function `optimix` of the [optmix R package](https://cran.r-project.org/web/packages/optimx/optimx.pdf)
 
-
-   The Minimizer class provides the interface to perform the minimization including
-
-
    In addition to provide the API for function minimization (via ROOT::Math::Minimizer::Minimize) the Minimizer class  provides:
    - the interface for setting the function to be minimized. The objective function passed to the Minimizer must  implement the multi-dimensional generic interface
    ROOT::Math::IBaseFunctionMultiDim. If the function provides gradient calculation (e.g. implementing the ROOT::Math::IGradientFunctionMultiDim interface)
@@ -114,6 +110,9 @@ namespace ROOT {
    - The interface to perform a Scan, Hesse or a Contour plot (for the minimizers that support this, i.e. Minuit and Minuit2)
 
    An example on how to use this interface is the tutorial NumericalMinimization.C in the tutorials/math directory.
+
+   To get an overview of the default minimizer, tolerance, precision, maximum number of function calls, etc., use:
+   `ROOT::Math::MinimizerOptions::PrintDefault()`
 
    @ingroup MultiMin
 */
