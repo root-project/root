@@ -57,7 +57,7 @@ public:
    static Int_t CheckForDuplicateLabels(const TH1 * hist);
 
     // function to check if histogram bin is empty
-   static Bool_t IsBinEmpty(const TH1 *hist, Int_t bin);
+   static Bool_t IsBinEmpty(const TH1 *hist, Int_t bin, Int_t profileDim = 0);
 
 
 
