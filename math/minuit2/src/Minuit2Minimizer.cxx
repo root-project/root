@@ -464,7 +464,7 @@ ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::M
 /// Perform the minimization and store a copy of FunctionMinimum.
 /// The maximum number of function calls used can be checked via `this->MaxFunctionCalls()`,
 /// if this value is 0 (the default), then it is replaced with
-/// `2 * (nvar + 1) * (200 + 100 * nvar + 5 * nvar * nvar` where `var` is number of variable parameters.
+/// `2 * (nvar + 1) * (200 + 100 * nvar + 5 * nvar * nvar` where `nvar` is number of variable parameters.
 /// \see MnMinos::FindCrossValue
 /// Other minimization settings can be retrieved via `Tolerance()`, `Strategy()`, `ErrorDef()`, `Precision()`
 /// \see ROOT::Math::MinimizerOptions::PrintDefault()
