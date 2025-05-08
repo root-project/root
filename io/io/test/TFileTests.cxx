@@ -223,7 +223,7 @@ TEST(TFile, ROOT_5306)
    // with MySubClass.cxx containing: class MySubClass { public: int id; ClassDef(MySubClass, 3) };
    gInterpreter->ProcessLine(".L MySubClassUnv.cxx+"); 
    TFile f("mysub.root", "READ");
-   auto msc = f.Get<MySubClass>("msc")
+   auto msc = f.Get<MySubClass>("msc");
    ASSERT_EQ(msc->id, 33);
 
 
