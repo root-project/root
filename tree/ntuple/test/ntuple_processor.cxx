@@ -16,7 +16,7 @@ TEST(RNTupleProcessor, EmptyNTuple)
    auto proc = RNTupleProcessor::Create({"ntuple", fileGuard.GetPath()});
 
    int nEntries = 0;
-   for ([[maybe_unused]] const auto &entry : *proc) {
+   for (auto it = proc->begin(); it != proc->end(); it++) {
       nEntries++;
    }
    EXPECT_EQ(0, nEntries);
@@ -38,17 +38,17 @@ TEST(RNTupleProcessor, TMemFile)
    }
 
    auto proc = RNTupleProcessor::Create({"ntuple", &memFile});
+
    auto x = proc->GetValuePtr<float>("x");
 
-   int nEntries = 0;
-   for ([[maybe_unused]] const auto &entry : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
    }
-   EXPECT_EQ(nEntries, 5);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 TEST(RNTupleProcessor, TDirectory)
@@ -71,15 +71,14 @@ TEST(RNTupleProcessor, TDirectory)
    auto proc = RNTupleProcessor::Create({"a/b/ntuple", file.get()});
    auto x = proc->GetValuePtr<float>("x");
 
-   int nEntries = 0;
-   for ([[maybe_unused]] const auto &entry : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
    }
-   EXPECT_EQ(nEntries, 5);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 class RNTupleProcessorTest : public testing::Test {
@@ -147,19 +146,16 @@ TEST_F(RNTupleProcessorTest, Base)
    // Check that `GetValuePtr` also works with `void`.
    auto y = proc->GetValuePtr<void>("y");
 
-   int nEntries = 0;
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
 
-   for (auto it = proc->begin(); it != proc->end(); ++it) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
 
-      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *x);
-
-      std::vector<float> yExp{static_cast<float>(nEntries - 1), static_cast<float>((nEntries - 1) * 2)};
+      std::vector<float> yExp{static_cast<float>(idx), static_cast<float>((idx) * 2)};
       EXPECT_EQ(yExp, *std::static_pointer_cast<std::vector<float>>(y.GetPtr()));
    }
-   EXPECT_EQ(nEntries, 5);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, BaseWithModel)
@@ -178,8 +174,8 @@ TEST_F(RNTupleProcessorTest, BaseWithModel)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
    }
 
-   for (auto it = proc->begin(); it != proc->end(); ++it) {
-      EXPECT_EQ(fldX, x.GetPtr());
+   for (const auto &idx : *proc) {
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
    }
 }
 
@@ -206,8 +202,8 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
    }
 
-   for (auto it = proc->begin(); it != proc->end(); ++it) {
-      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber(), *x);
+   for (const auto &idx : *proc) {
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
    }
 }
 
@@ -223,16 +219,13 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
    auto i = proc->GetValuePtr<int>("i");
    auto x = proc->GetValuePtr<float>("x");
 
-   int nEntries = 0;
-
-   for (const auto &entry [[maybe_unused]] : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
       EXPECT_EQ(static_cast<float>(*i), *x);
    }
-   EXPECT_EQ(nEntries, 15);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+   EXPECT_EQ(15, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, ChainedJoin)
@@ -245,22 +238,19 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
-   int nEntries = 0;
-
    auto i = proc->GetValuePtr<int>("i");
    auto x = proc->GetValuePtr<float>("x");
    auto z = proc->GetValuePtr<float>("ntuple_aux.z");
 
-   for (const auto &entry [[maybe_unused]] : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
    }
-   EXPECT_EQ(nEntries, 10);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
@@ -273,22 +263,19 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
-   int nEntries = 0;
-
    auto i = proc->GetValuePtr<int>("i");
    auto x = proc->GetValuePtr<float>("x");
    auto z = proc->GetValuePtr<float>("ntuple_aux.z");
 
-   for (const auto &entry [[maybe_unused]] : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
    }
-   EXPECT_EQ(nEntries, 10);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, JoinedChain)
@@ -301,22 +288,19 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
 
-   int nEntries = 0;
-
    auto i = proc->GetValuePtr<int>("i");
    auto x = proc->GetValuePtr<float>("x");
    auto z = proc->GetValuePtr<float>("ntuple_aux.z");
 
-   for (const auto &entry [[maybe_unused]] : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
    }
-   EXPECT_EQ(nEntries, 10);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
@@ -329,22 +313,19 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
 
-   int nEntries = 0;
-
    auto i = proc->GetValuePtr<int>("i");
    auto x = proc->GetValuePtr<float>("x");
    auto z = proc->GetValuePtr<float>("ntuple_aux.z");
 
-   for (const auto &entry [[maybe_unused]] : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
    }
-   EXPECT_EQ(nEntries, 10);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
@@ -356,24 +337,21 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
 
-   int nEntries = 0;
-
    auto i = proc->GetValuePtr<int>("i");
    auto x = proc->GetValuePtr<float>("x");
    auto z1 = proc->GetValuePtr<float>("ntuple_aux.z");
    auto z2 = proc->GetValuePtr<float>("ntuple_aux2.z");
 
-   for (const auto &entry [[maybe_unused]] : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
       EXPECT_EQ(*z1, *z2);
    }
-   EXPECT_EQ(nEntries, 5);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
@@ -387,24 +365,22 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
 
-   int nEntries = 0;
-
    auto i = proc->GetValuePtr<int>("i");
    auto x = proc->GetValuePtr<float>("x");
    auto z1 = proc->GetValuePtr<float>("ntuple_aux.z");
    auto z2 = proc->GetValuePtr<float>("ntuple_aux.ntuple_aux2.z");
 
-   for (const auto &entry [[maybe_unused]] : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   for (const auto &idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
       EXPECT_EQ(*z1, *z2);
    }
-   EXPECT_EQ(nEntries, 5);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedSameName)
