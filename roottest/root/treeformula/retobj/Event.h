@@ -47,16 +47,17 @@ private:
 
 public:
    Track() { fPointValue = 0; }
-   Track(const Track& orig) {
+   Track(const Track& orig) : TObject(orig) {
      //orig.fTrigBits.Dump();
      *this = orig;
      //fTrigBits.Dump();
      fPointValue = 0;
      fNsp = 0;
    }
+   Track &operator=(const Track& orig) = default;
    Track(Float_t random);
    ~Track() override {Clear();}
-   void          Clear(Option_t *option="") override { delete [] fPointValue; fPointValue=0; }
+   void          Clear(Option_t * /*option*/="") override { delete [] fPointValue; fPointValue=0; }
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
    Float_t       GetPz() const { return fPz; }
