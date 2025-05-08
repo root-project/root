@@ -87,18 +87,20 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
 {
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
-   int nEntries = 0;
-   std::vector<float> yExpected;
-   for (auto &entry : *proc) {
-      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+   auto i = proc->GetEntry().GetPtr<int>("i");
+   auto y = proc->GetEntry().GetPtr<std::vector<float>>("y");
+   auto z = proc->GetEntry().GetPtr<float>("ntuple3.z");
 
-      auto i = entry.GetPtr<int>("i");
+   std::vector<float> yExpected;
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
-      EXPECT_EQ(yExpected, *entry.GetPtr<std::vector<float>>("y"));
+      EXPECT_EQ(yExpected, *y);
 
-      EXPECT_FLOAT_EQ(*i * 2.f, *entry.GetPtr<float>("ntuple3.z"));
+      EXPECT_FLOAT_EQ(*i * 2.f, *z);
    }
 
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
@@ -108,10 +110,12 @@ TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
 {
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   for (auto &entry : *proc) {
-      EXPECT_NE(i, entry.GetPtr<int>("ntuple3.i"));
-      EXPECT_EQ(*i, *entry.GetPtr<int>("ntuple3.i"));
+   auto iPrimary = proc->GetEntry().GetPtr<int>("i");
+   auto iAux = proc->GetEntry().GetPtr<int>("ntuple3.i");
+
+   for (auto it = proc->begin(); it != proc->end(); it++) {
+      EXPECT_NE(iPrimary, iAux);
+      EXPECT_EQ(*iPrimary, *iAux);
    }
 
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
@@ -121,18 +125,19 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 {
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"});
 
-   int nEntries = 0;
-   auto i = proc->GetEntry().GetPtr<int>("i");
+   auto iPrimary = proc->GetEntry().GetPtr<int>("i");
+   auto iAux = proc->GetEntry().GetPtr<int>("ntuple2.i");
    auto x = proc->GetEntry().GetPtr<float>("x");
    auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple2.y");
+
    std::vector<float> yExpected;
-   for ([[maybe_unused]] auto &entry : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
 
-      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
-      EXPECT_FLOAT_EQ(*i * 0.5f, *x);
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx * 2, *iPrimary);
+      EXPECT_EQ(*iPrimary, *iAux);
+      EXPECT_FLOAT_EQ(*iPrimary * 0.5f, *x);
 
-      yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+      yExpected = {static_cast<float>(*iPrimary * 0.2), 3.14, static_cast<float>(*iPrimary * 1.3)};
       EXPECT_EQ(yExpected, *y);
    }
 
@@ -168,12 +173,12 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    auto proc =
       RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "j", "k"});
 
-   int nEntries = 0;
    auto i = proc->GetEntry().GetPtr<int>("i");
    auto x = proc->GetEntry().GetPtr<float>("x");
    auto a = proc->GetEntry().GetPtr<float>("ntuple4.a");
-   for ([[maybe_unused]] auto &entry : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), idx);
 
       EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
@@ -196,7 +201,7 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
    ++procIter;
    EXPECT_EQ(*i * 0.1f, *a);
    ++procIter;
-   EXPECT_EQ(2ULL, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(2ULL, *i);
    try {
       ++procIter;
    } catch (const ROOT::RException &err) {
@@ -209,36 +214,40 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
 TEST_F(RNTupleJoinProcessorTest, WithModel)
 {
    auto primaryModel = RNTupleModel::Create();
-   auto i = primaryModel->MakeField<int>("i");
-   auto x = primaryModel->MakeField<float>("x");
+   auto fldI = primaryModel->MakeField<int>("i");
+   auto fldX = primaryModel->MakeField<float>("x");
 
    auto auxModel = RNTupleModel::Create();
-   auto y = auxModel->MakeField<std::vector<float>>("y");
+   auto fldY = auxModel->MakeField<std::vector<float>>("y");
 
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"},
                                             std::move(primaryModel), std::move(auxModel));
 
-   int nEntries = 0;
+   auto i = proc->GetEntry().GetPtr<int>("i");
+   auto x = proc->GetEntry().GetPtr<float>("x");
+   auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple2.y");
+
+   try {
+      proc->GetEntry().GetPtr<float>("ntuple2.z");
+      FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
+   }
+
    std::vector<float> yExpected;
-   for (auto &entry : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), idx);
 
       EXPECT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
-      EXPECT_EQ(*entry.GetPtr<int>("i"), *i);
+      EXPECT_EQ(*fldI, *i);
 
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
-      EXPECT_FLOAT_EQ(*entry.GetPtr<float>("x"), *x);
+      EXPECT_FLOAT_EQ(*fldX, *x);
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
       EXPECT_EQ(yExpected, *y);
-      EXPECT_EQ(*entry.GetPtr<std::vector<float>>("ntuple2.y"), *y);
-
-      try {
-         entry.GetPtr<float>("ntuple2.z");
-         FAIL() << "should not be able to access values from fields not present in the provided models";
-      } catch (const ROOT::RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
-      }
+      EXPECT_EQ(*fldY, *y);
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -260,24 +269,23 @@ TEST_F(RNTupleJoinProcessorTest, WithBareModel)
    auto x = proc->GetEntry().GetPtr<float>("x");
    auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple2.y");
 
-   int nEntries = 0;
-   std::vector<float> yExpected;
-   for (auto &entry : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
+   try {
+      proc->GetEntry().GetPtr<float>("ntuple2.z");
+      FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
+   }
 
-      EXPECT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
+   std::vector<float> yExpected;
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), idx);
+      EXPECT_EQ(idx * 2, *i);
 
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
       EXPECT_EQ(yExpected, *y);
-
-      try {
-         entry.GetPtr<float>("ntuple2.z");
-         FAIL() << "should not be able to access values from fields not present in the provided models";
-      } catch (const ROOT::RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
-      }
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -301,15 +309,15 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
 
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {"ntuple_aux", &memFile}, {"i"});
 
-   int nEntries = 0;
    auto i = proc->GetEntry().GetPtr<int>("i");
    auto x = proc->GetEntry().GetPtr<float>("x");
    auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple_aux.y");
-   std::vector<float> yExpected;
-   for ([[maybe_unused]] auto &entry : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
 
-      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
+   std::vector<float> yExpected;
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx * 2, *i);
+
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};

@@ -215,10 +215,10 @@ public:
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
-      using value_type = ROOT::REntry;
+      using value_type = ROOT::NTupleSize_t;
       using difference_type = std::ptrdiff_t;
-      using pointer = ROOT::REntry *;
-      using reference = const ROOT::REntry &;
+      using pointer = ROOT::NTupleSize_t *;
+      using reference = ROOT::NTupleSize_t &;
 
       RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
          : fProcessor(processor), fCurrentEntryNumber(entryNumber)
@@ -243,7 +243,7 @@ public:
          return obj;
       }
 
-      reference operator*() { return fProcessor.GetEntry(); }
+      reference operator*() { return fCurrentEntryNumber; }
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
