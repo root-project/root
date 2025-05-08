@@ -2961,8 +2961,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             if (current[0] == ']') {
                fIndexes[code][dim] = -1; // Loop over all elements;
             } else {
-               scanindex = sscanf(current,"%d",&index);
-               if (scanindex) {
+               TString tempIndex(current);
+               auto closePos = tempIndex.First(']');
+               if (closePos != -1)
+                  tempIndex = tempIndex(0, closePos);
+               if (tempIndex.IsDigit() && (scanindex = sscanf(current, "%d", &index)) && scanindex == 1) {
                   fIndexes[code][dim] = index;
                } else {
                   fIndexes[code][dim] = -2; // Index is calculated via a variable.
