@@ -49,7 +49,7 @@ compatibility, e.g.:
   Plugin.TSQLServer:  ^mysql:  TMySQLServer MySQL  "<constructor>"
   Plugin.TVirtualFitter: *     TFitter      Minuit "TFitter(Int_t)"
 ~~~
-Where the + in front of Plugin.TSQLServer says that it extends the
+Add a `+` in front of Plugin.TSQLServer to extend a previously
 existing definition of TSQLServer, useful when there is more than
 one plugin that can extend the same base class. The "<constructor>"
 should be the constructor or a static method that generates an
