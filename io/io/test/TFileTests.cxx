@@ -206,6 +206,11 @@ TEST(TFile, MakeSubDirectory)
 }
 
 // https://its.cern.ch/jira/browse/ROOT-5306
+class MySubClass
+{
+public:
+   int id;
+};
 TEST(TFile, ROOT_5306)
 {
    // Original file was generated as:
