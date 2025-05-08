@@ -13,6 +13,7 @@
 #include "TROOT.h" // gROOT
 #include "TSystem.h"
 #include "TEnv.h" // gEnv
+#include "TInterpreter.h"
 
 TEST(TFile, WriteObjectTObject)
 {
@@ -202,4 +203,23 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(c, gDirectory);
    EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/a/b/c");
    EXPECT_EQ(std::string(gDirectory->GetName()), "c");
+}
+
+// https://its.cern.ch/jira/browse/ROOT-5306
+TEST(TFile, ROOT_5306)
+{
+   // Original file was generated as:
+   // .L MySubClass.cxx+
+   // TFile f("/tmp/mysub.root", "RECREATE");
+   // MySubClass msc;
+   // msc.id = 33;
+   // f.WriteObjectAny(&msc, "MySubClass", "msc");
+   // f.Close();
+   // with MySubClass.cxx containing: class MySubClass { public: int id; ClassDef(MySubClass, 3) };
+   gInterpreter->ProcessLine(".L MySubClassUnv.cxx+"); 
+   TFile f("mysub.root", "READ");
+   auto msc = f.Get<MySubClass>("msc")
+   ASSERT_EQ(msc->id, 33);
+
+
 }
