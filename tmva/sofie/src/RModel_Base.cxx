@@ -39,23 +39,7 @@ void RModel_Base::GenerateHeaderInfo(std::string& hgname) {
 
     fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
     if (!fNeededBlasRoutines.empty()) {
-        fGC += ("namespace BLAS{\n");
-        for (auto &routine : fNeededBlasRoutines) {
-            if (routine == "Gemm") {
-                fGC += ("\textern \"C\" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,\n"
-                        "\t                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,\n"
-                        "\t                       const float * beta, float * C, const int * ldc);\n");
-            } else if (routine == "Gemv") {
-                fGC += ("\textern \"C\" void sgemv_(const char * trans, const int * m, const int * n, const float * alpha, const float * A,\n"
-                        "\t                       const int * lda, const float * X, const int * incx, const float * beta, const float * Y, const int * incy);\n");
-            } else if (routine == "Axpy") {
-                fGC += ("\textern \"C\" void saxpy_(const int * n, const float * alpha, const float * x,\n"
-                        "\t                         const int * incx, float * y, const int * incy);\n");
-            } else if (routine == "Copy") {
-                fGC += ("\textern \"C\" void scopy_(const int *n, const float* x, const int *incx, float* y, const int* incy);\n");
-            }
-        }
-        fGC += ("}//BLAS\n");
+        fGC += "\nnamespace BLAS = TMVA::Experimental::SOFIE::BLAS;\n";
     }
 }
 
