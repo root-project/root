@@ -6,9 +6,9 @@ int execOutOfBounds() {
   TFile *_file0 = TFile::Open("run133.root");
   auto t = _file0->Get<TTree>("t");
   // ThetaDeg is a dynamic array with indices going from 0 to (ringtouche_DE1 - 1)
-  TTreeFormula tf("tf", "ThetaDeg[ringtouche_DE1]", t); 
-  t->GetEntry(0);
-  auto res = tf.EvalInstance();
+  TTreeFormula tf("tf", "ThetaDeg", t); 
+  t->GetEntry(0); // ringtouche for entry 0 is 0
+  auto res = tf.EvalInstance(1); // ThetaDeg[1] goes out of bonds
   if (!TMath::IsNaN(res)) {
      printf("Error: evaluated instance is %f rather than NaN\n", res);
      return 1;
