@@ -5,7 +5,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ROOT_ADD_GTEST(RRawFile RRawFile.cxx LIBRARIES RIO)
-ROOT_ADD_GTEST(TFile TFileTests.cxx LIBRARIES RIO)
+ROOT_ADD_GTEST(TFile TFileTests.cxx
+  LIBRARIES RIO
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/MySubClassUnv.cxx
+                   ${CMAKE_CURRENT_SOURCE_DIR}/mysub.root)
 ROOT_ADD_GTEST(TBufferFile TBufferFileTests.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TBufferMerger TBufferMerger.cxx LIBRARIES RIO Imt Tree)
 ROOT_ADD_GTEST(TBufferJSON TBufferJSONTests.cxx LIBRARIES RIO)
