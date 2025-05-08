@@ -2,35 +2,37 @@
 
 if [[ $# -eq 0 ]] ; then
 
-  echo "rootssh - invokes ssh and automatically configures tunel for remote ROOT session"
-  echo ""
-  echo "To start, just call:"
-  echo ""
-  echo "     [localhost] rootssh  user@remotehost"
-  echo ""
-  echo "And then in the ssh shell do:"
-  echo ""
-  echo "    [user@remotehost] source path/to/bin/thisroot.sh"
-  echo "    [user@remotehost] root --web=server -e 'new TBrowser'"
-  echo ""
-  echo "Or just call in single line:"
-  echo ""
-  echo "    [localhost] rootssh  user@remotehost \"source path/to/bin/thisroot.sh; root --web=server -e 'new TBrowser'\""
-  echo ""
-  echo "ROOT automatically recognizes that it runs in special session (because of ROOT_LISTENER_SOCKET variable)"
-  echo "and provides to this socket information to configure port forwarding and to start web windows automatically"
-  echo ""
-  echo "One can provide all supported by ssh arguments also to rootssh like '-E config.file' or '-Y'"
-  echo "In addition, special rootssh arguments can be specified:"
-  echo ""
-  echo "    --port number - port number on local node used for ssh tunnel to remote"
-  echo "    --browser <name> - name of web browser executable like firefox or chromium"
-  echo ""
-  echo " Thus one can call:"
-  echo ""
-  echo "     [localhost] rootssh --port 9753 --browser chromium -E config.file user@remotehost \"root --web 'new TBrowser'\""
-  echo ""
-  echo "Author: Sergey Linev, 2.12.2022"
+   # print help information
+
+   echo "rootssh - invokes ssh and automatically configures tunel for remote ROOT session"
+   echo ""
+   echo "To start, just call:"
+   echo ""
+   echo "     [localhost] rootssh  user@remotehost"
+   echo ""
+   echo "And then in the ssh shell do:"
+   echo ""
+   echo "    [user@remotehost] source path/to/bin/thisroot.sh"
+   echo "    [user@remotehost] root --web -e 'new TBrowser'"
+   echo ""
+   echo "Or just call in single line:"
+   echo ""
+   echo "    [localhost] rootssh  user@remotehost \"source path/to/bin/thisroot.sh; root --web -e 'new TBrowser'\""
+   echo ""
+   echo "ROOT automatically recognizes that it runs in special session (because of ROOT_LISTENER_SOCKET variable)"
+   echo "and provides to this socket information to configure port forwarding and to start web windows automatically"
+   echo ""
+   echo "One can provide all supported by ssh arguments also to rootssh like '-E config.file' or '-Y'"
+   echo "In addition, special rootssh arguments can be specified:"
+   echo ""
+   echo "    --port number      - port number on local node used for ssh tunnel to remote"
+   echo "    --browser <name>   - name of web browser executable like firefox or chromium"
+   echo ""
+   echo " Thus one can call:"
+   echo ""
+   echo "     [localhost] rootssh --port 9753 --browser chromium -E config.file user@remotehost \"root --web 'new TBrowser'\""
+   echo ""
+   echo "Author: Sergey Linev, 2.12.2022"
 
 elif [[ "$1" == "--as-listener--" ]] ; then
 
@@ -44,7 +46,7 @@ elif [[ "$1" == "--as-listener--" ]] ; then
    flag=1
    NUM=1
 
-   touch $listener_socket.log
+   touch $listener_socket $listener_socket.log
 
    # on MacOS it is not possible to start netcat multiple times with same socket
    # therefore run it permanently and redirect output to log file
@@ -54,7 +56,7 @@ elif [[ "$1" == "--as-listener--" ]] ; then
    nc_procid=$!
 
    # protect socket and log file from reading
-   chmod 0700 $listener_socket $listener_socket.log
+   chmod -f 0700 $listener_socket $listener_socket.log
 
    # remove netcat listening on socket
    trap "kill -SIGINT $nc_procid >/dev/null 2>&1; rm -f $listener_socket.log" 0 1 2 3 6
@@ -83,8 +85,8 @@ else
 
    # main body
 
-   listener_local="$(mktemp /tmp/root.XXXXXXXXX)"
-   listener_remote="$(mktemp /tmp/root.XXXXXXXXX)"
+   listener_local="$(mktemp /tmp/root.local.XXXXXXXXX)"
+   listener_remote="$(mktemp /tmp/root.remote.XXXXXXXXX)"
    root_socket="$(mktemp /tmp/root.XXXXXXXXX)"
 
    rm -f $listener_local $listener_remote
@@ -123,9 +125,8 @@ else
       fi
    done
 
-
    # List of potential local client browsers
-   browsers=( xdg-open open chromium firefox )
+   browsers=( xdg-open open chromium firefox opera )
    if [ -z "${browser}" ]; then
       for b in "${browsers[@]}"
       do
@@ -133,15 +134,15 @@ else
          which ${b} 2>&1 >/dev/null
          if [ $? -eq 0 ]; then
             # The search was successful.
-           browser=${b}
+            browser=${b}
             break
          fi
       done
    fi
 
    if [ -z "${browser}" ]; then
-       echo "No appropriate browser found; please use --browser option"
-       exit 1
+      echo "No appropriate browser found; please use --browser option"
+      exit 1
    fi
 
    if [[ "x$localport" == "x" ]] ; then
@@ -171,6 +172,6 @@ else
    fi
 
    ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination $ssh_args \
-   "chmod 0700 $listener_remote; export ROOT_WEBDISPLAY=server; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
+   "touch $listener_remote; chmod -f 0700 $listener_remote; export ROOT_WEBDISPLAY=server; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
 
 fi
