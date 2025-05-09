@@ -614,7 +614,7 @@ void RLoopManager::RunDataSource()
 
       ranges = fDataSource->GetEntryRanges();
 
-      fSampleInfos[0] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, fSampleMap);
+      fSampleInfos[0] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, /*slot*/ 0, fSampleMap);
 
       try {
          for (const auto &range : ranges) {
@@ -1325,6 +1325,8 @@ void ROOT::Detail::RDF::RLoopManager::DataSourceThreadTask(const std::pair<ULong
 
    RCallCleanUpTask cleanup(*this, slot);
    RDSRangeRAII _{*this, slot, start};
+
+   fSampleInfos[slot] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, slot, fSampleMap);
 
    R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
 
