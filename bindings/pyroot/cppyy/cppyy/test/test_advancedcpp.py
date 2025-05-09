@@ -1,6 +1,6 @@
-import py
+import py, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, IS_WINDOWS, ispypy
+from support import setup_make, pylong, IS_WINDOWS, ispypy
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("advancedcppDict"))
@@ -963,3 +963,7 @@ class TestADVANCEDCPP:
 
         for norm in [ns.norm_cr, ns.norm_m, ns.norm_v]:
             assert round(norm(p3) - pynorm, 8) == 0
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

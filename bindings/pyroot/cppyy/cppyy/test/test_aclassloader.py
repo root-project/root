@@ -1,6 +1,6 @@
-import py
-from pytest import raises
-from .support import setup_make
+import py, pytest
+from pytest import raises, mark
+from support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("example01Dict"))
@@ -22,3 +22,7 @@ class TestACLASSLOADER:
         cl2 = cppyy.gbl.example01
         assert cl2
         assert example01_class is cl2
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

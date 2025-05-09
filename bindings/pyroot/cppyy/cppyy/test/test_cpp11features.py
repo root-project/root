@@ -1,6 +1,6 @@
-import py, sys
+import py, sys, pytest
 from pytest import mark, raises
-from .support import setup_make, ispypy
+from support import setup_make, ispypy
 
 
 currpath = py.path.local(__file__).dirpath()
@@ -565,3 +565,6 @@ class TestCPP11FEATURES:
 
         assert ns.call_creator(pyfunc)
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

@@ -1,6 +1,6 @@
-import py, sys
+import py, sys, pytest
 from pytest import mark, raises
-from .support import setup_make, pylong
+from support import setup_make, pylong
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("pythonizablesDict"))
@@ -260,6 +260,5 @@ class TestClassPYTHONIZATION:
 
 
 ## actual test run
-if __name__ == '__main__':
-    result = run_pytest(__file__)
-    sys.exit(result)
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))
