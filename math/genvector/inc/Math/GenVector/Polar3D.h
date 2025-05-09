@@ -23,6 +23,7 @@
 
 #include "Math/GenVector/eta.h"
 
+#include "TMath.h"
 #include <cmath>
 
 namespace ROOT {
@@ -158,7 +159,7 @@ public :
 
 
 private:
-   inline static Scalar pi()  { return M_PI; }
+   inline static Scalar pi() { return TMath::Pi(); }
    inline void Restrict() {
       using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
