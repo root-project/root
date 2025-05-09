@@ -45,8 +45,12 @@
   \param -experimental-io-features <FEATURES> Enables the corresponding experimental feature for output trees.
                                               \see ROOT::Experimental::EIOFeatures
   \param -f            Force overwriting of output file.
-  \param -f[0-9]       Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101
-                       (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f505.
+  \param -f[0-9]       Set target compression algorithm `i` and level `j` passing the number `i*100 + j`, e.g. `-f505.`
+                       The last digit (`j`) can be set from 0 = uncompressed to 9 = highly compressed.
+                       The first digit (`i`) is 1 for ZLIB, 2 for LZMA, 4 for LZ4 and 5 for ZSTD.
+                       Recommended flags are 101 (ZLIB), 207 (LZMA), 404 (LZ4), 505 (ZSTD),
+                       The default value for this flag is 101 (kDefaultZLIB).
+                       See ROOT::RCompressionSetting for more details.
   \param -fk           Sets the target file to contain the baskets with the same compression as the input files
                        (unless -O is specified). Compresses the meta data using the compression level specified
                        in the first input or the compression setting after fk (for example 505 when using -fk505)
