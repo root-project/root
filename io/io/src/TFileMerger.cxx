@@ -1047,7 +1047,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open up to fMaxOpenedFiles of the excess files.
+/// Open up to (fMaxOpenedFiles-1) of the excess files.
 
 Bool_t TFileMerger::OpenExcessFiles()
 {
@@ -1107,8 +1107,9 @@ void TFileMerger::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a limit to the number of files that TFileMerger will open simultaneously.
 ///
-/// If the request is higher than the system limit, we reset it to the system limit.
-/// If the request is less than two, we reset it to 2 (one for the output file and one for the input file).
+/// This number includes both the read input files and the output file.
+/// \param newmax if higher than the system limit, we reset it to the system limit.
+/// If less than two, we reset it to 2 (one for the output file and one for the input file).
 
 void TFileMerger::SetMaxOpenedFiles(Int_t newmax)
 {
