@@ -37,9 +37,6 @@ struct CSCSegment
    // ClassDef(CSCSegment, 4);
 };
 
-static const char *dups_label = "dups ";
-static const char *copy_label = "copy ";
-
 #ifdef __ROOTCLING__
 #pragma link C++ class MatchedCSCSegment+;
 #pragma link C++ class CSCSegment+;
