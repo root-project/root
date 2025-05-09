@@ -19,6 +19,7 @@
 #include <limits>
 #include <cmath>
 #include <vector>
+#include <map>
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -536,7 +537,7 @@ struct Limits {
    template <typename T>
    Double_t Median(Long64_t n, const T *a, const Double_t *w = nullptr, Long64_t *work = nullptr);
    template <typename T>
-   Double_t ModeHalfSample(Long64_t n, const T *a, const Double_t *w = nullptr);
+   Double_t ModeHalfSample(Long64_t n, const T *a, const Double_t *w = nullptr, const bool searchMostRepeated = false);
 
    //k-th order statistic
    template <class Element, typename Size> Element KOrdStat(Size n, const Element *a, Size k, Size *work = 0);
@@ -1426,9 +1427,6 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// The algorithm searches for the smallest range of sorted a values that
 /// contains ~n/2 values. Then it re-applies the same algorithm to
 /// that range until the range has <= 3 elements in it.
-/// In case that there are several candidates for the minimum smallest range,
-/// we select the one with the largest number of repeated values, and if there
-/// are several maximum ones, we take the last one.
 ///
 /// \note See David R. Bickel: "On a Fast, Robust Estimator of the Mode"
 /// http://arxiv.org/ftp/math/papers/0505/0505419.pdf (page 19)
@@ -1439,12 +1437,17 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// \param a Pointer to array of values (owned by user, preallocated), must have length of n, and none of them should be
 /// NaN. The array must not be necessarily sorted nor contain unique values. \param w Pointer to array of weights (owned
 /// by user, preallocated), must have length of n. If the weights are supplied (w not nullptr) all weights must be >= 0
-/// to properly work. \return NaN if n <= 0, a[0] if n == 1, TMath::Mean(n,a,w) if n == 2, the (weighted) mean of the
-/// closest two if n == 3; for the rest of the cases, if all values of `a` are unique or have equal weights (or `w` is
-/// nullptr), then the Bickel half-sample-mode algorithm is applied; otherwise the value associated with the highest sum
-/// of weights (if `w` is not nullptr) is returned.
+/// to properly work. \param searchMostRepeated If false, in case that there are several equal candidates for the
+/// minimum smallest range, we take the first occurrence. If true, we select the one with the largest number of repeated
+/// values, and if there are several maximum ones, we take the central index in the array of starting points. It's
+/// useful to set this parameter to true for better results when T is an integer, at the expense of speed.
+/// \return NaN if n <= 0, a[0] if n == 1, TMath::Mean(n,a,w) if n == 2,
+/// the (weighted) mean of the closest two if n == 3; for the rest of the cases,
+/// if all values of `a` are unique or have equal weights (or `w` is nullptr), then the Bickel half-sample-mode
+/// algorithm is applied; otherwise the value associated with the highest sum of weights (if `w` is not nullptr) is
+/// returned.
 template <typename T>
-Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w)
+Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w, const bool searchMostRepeated)
 {
    if (n <= 0)
       return TMath::QuietNaN();
@@ -1507,21 +1510,65 @@ Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w)
    // All elements are unique and have equal weights, apply Bickel's recursive algorithm
 
    // Initialize search
-   Double_t min_v_range = values[sn - 1] - values[0];
    n = sn;
    size_t jMin = 0;
 
    // Do recursive calls dividing each time the interval by two
    while (n > 3) {
+      Double_t min_v_range = values[jMin + n - 1] - values[jMin];
       const size_t N = std::ceil(n * 0.5);
       const size_t start = jMin;
       const size_t stop = start + n - N + 1; // +1 since we use < and not <=
       // Find sequentally what v_range is smallest by sliding the half-window
-      for (size_t i = start; i < stop; i++) {
-         Double_t range = values[i + N - 1] - values[i];
-         if (range < min_v_range) {
-            min_v_range = range;
-            jMin = i;
+      if (!searchMostRepeated) {
+         for (size_t i = start; i < stop; i++) {
+            Double_t range = values[i + N - 1] - values[i];
+            if (range < min_v_range) {
+               min_v_range = range;
+               jMin = i;
+            }
+         }
+      } else {
+         std::vector<size_t> jCandidates;
+         for (size_t i = start; i < stop; i++) {
+            Double_t range = values[i + N - 1] - values[i];
+            if (range < min_v_range) {
+               min_v_range = range;
+               jCandidates = {i};
+            } else if (range == min_v_range) {
+               jCandidates.push_back(i);
+            }
+         }
+         const auto jSize = jCandidates.size();
+         // assert(jSize > 0);
+         if (jSize == 1) {
+            jMin = jCandidates[0];
+         } else {
+            // Count interval with more repeated values
+            std::vector<size_t> kCandidates;
+            size_t max_repeated = 0;
+            for (size_t j = 0; j < jSize; j++) {
+               const size_t k = jCandidates[j];
+               std::map<T, size_t> hist;
+               for (size_t i = k; i <= k + N - 1; i++) {
+                  hist[values[i]]++;
+               }
+               auto nRepeated =
+                  std::max_element(hist.begin(), hist.end(),
+                                   [](const std::pair<T, size_t> &lhs, const std::pair<T, size_t> &rhs) -> bool {
+                                      return lhs.second < rhs.second;
+                                   })
+                     ->second;
+               if (nRepeated > max_repeated) {
+                  max_repeated = nRepeated;
+                  kCandidates = {k};
+               } else if (nRepeated == max_repeated) {
+                  kCandidates.push_back(k);
+               }
+            }
+            const auto kSize = kCandidates.size();
+            // assert(kSize > 0);
+            jMin = kCandidates[std::ceil(kSize * 0.5) - 1];
          }
       }
       // assert(min_v_range == values[N - 1 + start] - values[start]);

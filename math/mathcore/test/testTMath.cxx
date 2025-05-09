@@ -184,8 +184,8 @@ void testBreitWignerRelativistic()
 
 void testHalfSampleMode()
 {
-   // Let's compare the results with a completely independent implementation in MATLAB, see:
-   // https://es.mathworks.com/matlabcentral/fileexchange/65579-ivim-model-fitting#functions_tab
+   // Let's compare the results with a completely independent implementation in MATLAB (searchRepeated=false there),
+   // see: https://es.mathworks.com/matlabcentral/fileexchange/65579-ivim-model-fitting#functions_tab
 
    const long testdata_n = 50;
    double testdata[testdata_n] = {
@@ -212,6 +212,7 @@ void testHalfSampleMode()
    const long testdata2_n = 16;
    unsigned short testdata2[testdata2_n] = {0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2};
    R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2) == 0.);
+   R__ASSERT(TMath::ModeHalfSample(testdata2_n, testdata2, nullptr, true) == 2.);
 
    const long testdata3_n = 4;
    double testdata3[testdata3_n] = {1, 2, 3, 3.25};
@@ -225,6 +226,7 @@ void testHalfSampleMode()
    const long testdata4_n = 10;
    unsigned short testdata4[testdata4_n] = {1, 1, 1, 1, 0, 0, 0, 2, 2, 2};
    R__ASSERT(TMath::ModeHalfSample(testdata4_n, testdata4) == 0.);
+   R__ASSERT(TMath::ModeHalfSample(testdata4_n, testdata4, nullptr, true) == 1.);
 
    const long testdata5_n = 18;
    unsigned short testdata5[testdata5_n] = {1, 1, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2};
