@@ -1028,8 +1028,10 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
    static_assert(sizeof(T) <= sizeof(double));
    assert(1 <= nQuantBits && nQuantBits <= 8 * sizeof(Quantized_t));
 
+   const T minT = min;
+   const T maxT = max;
    const std::size_t quantMax = (1ull << nQuantBits) - 1;
-   const double scale = quantMax / (max - min);
+   const double scale = static_cast<double>(quantMax) / (maxT - minT);
    const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
 
    int nOutOfRange = 0;
@@ -1037,9 +1039,17 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
    for (std::size_t i = 0; i < count; ++i) {
       const T elem = src[i];
 
-      nOutOfRange += !(min <= elem && elem <= max);
+      // NOTE: the boundary check is done against the values cast to T and not with the
+      // double-precision ones, because we want to make sure that the user is able to use
+      // (T)min and (T)max as valid input even if they passed us (double)min and (double)max
+      // as the value range.
+      // In general it's not guaranteed that (double)min <= (T)min or (T)max <= (double)max,
+      // so this check would report the T-typed extremes to be out of range in some cases.
+      // Note that when unpacking the minimum and maximum quantized values into a field of
+      // type T the user will get exactly (T)min and (T)max as one would expect.
+      nOutOfRange += !(minT <= elem && elem <= maxT);
 
-      const double e = 0.5 + (elem - min) * scale;
+      const double e = 0.5 + (elem - minT) * scale;
       Quantized_t q = static_cast<Quantized_t>(e);
       ByteSwapIfNecessary(q);
 
@@ -1063,12 +1073,14 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
    static_assert(sizeof(T) <= sizeof(double));
    assert(1 <= nQuantBits && nQuantBits <= 8 * sizeof(Quantized_t));
 
+   const T minT = min;
+   const T maxT = max;
    const std::size_t quantMax = (1ull << nQuantBits) - 1;
-   const double scale = (max - min) / quantMax;
+   const double scale = (maxT - minT) / static_cast<double>(quantMax);
    const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
    const double eps = std::numeric_limits<double>::epsilon();
-   const double emin = min - std::abs(min) * eps;
-   const double emax = max + std::abs(max) * eps;
+   const double emin = -eps * scale + min;
+   const double emax = (static_cast<double>(quantMax) + eps) * scale + min;
 
    int nOutOfRange = 0;
 
@@ -1081,9 +1093,10 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
 
       const double fq = static_cast<double>(elem);
       const double e = fq * scale + min;
-      dst[i] = static_cast<T>(e);
 
-      nOutOfRange += !(emin <= dst[i] && dst[i] <= emax);
+      nOutOfRange += !(emin <= e && e <= emax);
+
+      dst[i] = static_cast<T>(e);
    }
 
    return nOutOfRange;
