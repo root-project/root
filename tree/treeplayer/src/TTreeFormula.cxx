@@ -4035,8 +4035,6 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// To prevent this, when working with objects with dynamic size for each entry, one needs
 /// to mimick what TTree::Scan does, i.e. to check the value of
 /// `GetNdata()` before calling `EvalInstance()`:
-/// ~~~
-/// But the following fails:
 /// ~~~{.cpp}
 /// t.GetEntry(0);
 /// if (tfv1.GetNdata() > 0)
