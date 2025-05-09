@@ -11,45 +11,49 @@
 #ifndef ROOSTATS_HISTOTOWORKSPACEFACTORYFAST
 #define ROOSTATS_HISTOTOWORKSPACEFACTORYFAST
 
+#include <RooStats/HistFactory/Systematics.h>
+
+#include <RooArgSet.h>
+#include <RooDataSet.h>
+#include <RooFitResult.h>
+#include <RooPlot.h>
+#include <RooWorkspace.h>
+
+#include <TH1.h>
+#include <TObject.h>
+
 #include <vector>
 #include <string>
 #include <map>
-#include <iostream>
-#include <sstream>
 #include <memory>
 
-#include <RooPlot.h>
-#include <RooArgSet.h>
-#include <RooFitResult.h>
-#include <RooAbsReal.h>
-#include <RooRealVar.h>
-#include <RooWorkspace.h>
-#include <TObject.h>
-#include <TH1.h>
-#include <TDirectory.h>
 
-#include "RooStats/HistFactory/Systematics.h"
 class ParamHistFunc;
 class RooProduct;
 class RooHistFunc;
 
-namespace RooStats{
-  namespace HistFactory{
+namespace RooStats {
+namespace HistFactory {
 
-    // Forward Declarations FTW
-    class Measurement;
-    class Channel;
-    class Sample;
+// Forward Declarations FTW
+class Measurement;
+class Channel;
+class Sample;
 
-    class HistoToWorkspaceFactoryFast: public TObject {
+class HistoToWorkspaceFactoryFast : public TObject {
 
-    public:
-
-      struct Configuration {
-        bool binnedFitOptimization = true;
-        bool createPerRegionWorkspaces = true;
-        bool storeDataError = false;
-      };
+public:
+   /// \brief Configuration settings for HistFactory behavior.
+   struct Configuration {
+      /// \brief Enable or disable optimization for binned likelihood fits (default `true`).
+      bool binnedFitOptimization = true;
+      /// \brief Control whether whether combined workspace is written to a ROOT file (default `true`).
+      bool createWorkspaceFile = true;
+      /// \brief Control whether individual workspace files are created for each channel (default `true`).
+      bool createPerRegionWorkspaces = true;
+      /// \brief Control whether errors on the data histograms are stored in the workspace (default `false`).
+      bool storeDataError = false;
+   };
 
       HistoToWorkspaceFactoryFast() {}
       HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& Meas);
