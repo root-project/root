@@ -496,6 +496,12 @@ if (uring)
 else()
   set(hasuring undef)
 endif()
+if (geom)
+  set(hasgeom define)
+else()
+  set(hasgeom undef)
+endif()
+
 
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };

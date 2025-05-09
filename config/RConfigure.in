@@ -74,4 +74,6 @@
 
 #@hasuring@ R__HAS_URING /**/
 
+#@hasgeom@ R__HAS_GEOM /**/
+
 #endif
