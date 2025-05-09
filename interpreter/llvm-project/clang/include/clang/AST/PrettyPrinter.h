@@ -76,6 +76,7 @@ struct PrintingPolicy {
         SuppressImplicitBase(false), FullyQualifiedName(false),
         PrintCanonicalTypes(false), PrintInjectedClassNameWithArguments(true),
         UsePreferredNames(true), AlwaysIncludeTypeForTemplateArgument(false),
+        NeverIncludeTypeForTemplateArgument(false),
         CleanUglifiedParameters(false), EntireContentsOfLargeArray(true),
         UseEnumerators(true) {}
 
@@ -325,6 +326,13 @@ struct PrintingPolicy {
   /// parameters.
   LLVM_PREFERRED_TYPE(bool)
   unsigned AlwaysIncludeTypeForTemplateArgument : 1;
+
+  /// Whether to never use type suffixes (eg: 1U) on integral non-type template
+  /// parameters.  This is useful to cancel the behavior of
+  /// TemplateParameterList::shouldIncludeTypeForArgument sometimes request the
+  /// type suffix even if AlwaysIncludeTypeForTemplateArgument is not true.
+  LLVM_PREFERRED_TYPE(bool)
+  unsigned NeverIncludeTypeForTemplateArgument : 1;
 
   /// Whether to strip underscores when printing reserved parameter names.
   /// e.g. std::vector<class _Tp> becomes std::vector<class Tp>.

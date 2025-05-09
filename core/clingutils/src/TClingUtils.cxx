@@ -645,6 +645,8 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          // TMetaUtils::GetNormalizedName, we just do the 'strip leading std' and fix
          // white space.
          clang::PrintingPolicy policy(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
+         // For now we do not want the integral type suffixes in the normalized name.
+         policy.NeverIncludeTypeForTemplateArgument = true;
          policy.SuppressTagKeyword = true; // Never get the class or struct keyword
          policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
          // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
@@ -1421,6 +1423,8 @@ void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::Nam
 {
    llvm::raw_string_ostream stream(qual_name);
    clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
+   // For now we do not want the integral type suffixes in the normalized name.
+   policy.NeverIncludeTypeForTemplateArgument = true;
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
    policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
 
@@ -4171,6 +4175,8 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
 
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
+   // For now we do not want the integral type suffixes in the normalized name.
+   policy.NeverIncludeTypeForTemplateArgument = true;
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
    policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
    policy.AnonymousTagLocations = false; // Do not extract file name + line number for anonymous types.
