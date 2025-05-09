@@ -63,7 +63,9 @@
                        "-L" flag. "SkipListed" will skip all the listed objects; "OnlyListed" will only merge those
                        objects. If this flag is passed, "-L" must be passed as well.
   \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum - which is also
-                       the default)
+                       the default). This number includes both the input reading files as well as the output file.
+                       Thus, if set to 1, it will be automatically replaced to a minimum of 2. If set to a too large value,
+                       it will be clipped to the system maximum.
   \param -O            Re-optimize basket size when merging TTree
   \param -T            Do not merge Trees
   \param -v [LEVEL]    Explicitly set the verbosity level: 0 request no output, 99 is the default
