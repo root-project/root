@@ -3621,7 +3621,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             // We could also get here if the old class version was '1' and the new class version is higher than 1
             // We could also get here if the stored-in-file class version was '3' and the current-in-memory class version is not defined
             // AND the checksum is the same.
-            if (v2file || version == cl->GetClassVersion() || version == 1 || (version >= 0 && cl->GetClassVersion() == -1) ) {
+            if (v2file || version == cl->GetClassVersion() || version == 1 || (version > 0 && cl->GetClassVersion() == -1) ) {
                R__LOCKGUARD(gInterpreterMutex);
 
                // We need to check if another thread did not get here first
