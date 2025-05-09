@@ -145,10 +145,7 @@ ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before proce
 ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
 ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
-ROOT_BUILD_OPTION(mysql OFF "Enable support for MySQL databases (deprecated)")
-ROOT_BUILD_OPTION(odbc OFF "Enable support for ODBC databases (requires libiodbc or libodbc; deprecated)")
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
-ROOT_BUILD_OPTION(pgsql OFF "Enable support for PostgreSQL (deprecated)")
 ROOT_BUILD_OPTION(proof OFF "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
@@ -396,14 +393,14 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx
         cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
-        tcmalloc vmc xproofd)
+        tcmalloc vmc xproofd mysql odbc pgsql)
   if(${opt})
     message(FATAL_ERROR ">>> '${opt}' is no longer part of ROOT ${ROOT_VERSION} build options.")
   endif()
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt mysql odbc pgsql)
+foreach(opt )
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()

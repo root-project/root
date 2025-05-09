@@ -140,30 +140,10 @@ GL2PSLIBDIR    := @gl2pslibdir@
 GL2PSLIB       := @gl2pslib@
 GL2PSINCDIR    := $(filter-out /usr/include, @gl2psincdir@)
 
-BUILDMYSQL     := @buildmysql@
-MYSQLLIBDIR    := @mysqllibdir@
-MYSQLCLILIB    := @mysqllib@
-MYSQLINCDIR    := $(filter-out /usr/include, @mysqlincdir@)
-
-BUILDORACLE    := @buildoracle@
-ORACLELIBDIR   := @oraclelibdir@
-ORACLECLILIB   := @oraclelib@
-ORACLEINCDIR   := $(filter-out /usr/include, @oracleincdir@)
-
-BUILDPGSQL     := @buildpgsql@
-PGSQLLIBDIR    := @pgsqllibdir@
-PGSQLCLILIB    := @pgsqllib@
-PGSQLINCDIR    := $(filter-out /usr/include, @pgsqlincdir@)
-
 BUILDSQLITE     := @buildsqlite@
 SQLITELIBDIR    := @sqlitelibdir@
 SQLITECLILIB    := @sqlitelib@
 SQLITEINCDIR    := $(filter-out /usr/include, @sqliteincdir@)
-
-BUILDODBC      := @buildodbc@
-ODBCLIBDIR     := @odbclibdir@
-ODBCCLILIB     := @odbclib@
-ODBCINCDIR     := $(filter-out /usr/include, @odbcincdir@)
 
 BUILDDAVIX      := @builddavix@
 DAVIXLIBDIR     := @davixlibdir@
