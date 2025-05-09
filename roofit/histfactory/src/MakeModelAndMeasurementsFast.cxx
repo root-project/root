@@ -10,7 +10,7 @@
 
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 
-// from roofit
+// from RooFit
 #include "RooFit/ModelConfig.h"
 
 // from this package
@@ -24,8 +24,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
-#include <fstream>
 #include <sstream>
 
 /** ********************************************************************************************
@@ -79,6 +77,25 @@
   </ul>
   </ul>
 */
+
+
+/// \brief Creates a statistical model and associated RooFit workspace(s) from a
+///        HistFactory measurement configuration.
+///
+/// This function processes a RooStats::HistFactory::Measurement using the fast
+/// RooStats::HistFactory::HistoToWorkspaceFactoryFast machinery. It creates
+/// individual channel workspaces, optionally writes them to disk, and then
+/// combines them into a single RooWorkspace representing the full statistical
+/// model.
+///
+/// \param measurement Object containing the configuration of the statistical
+///                    analysis, including luminosity, binning, systematic
+///                    uncertainties, and channels.
+/// \param cfg Configuration object that controls behavior such as workspace
+///            file creation.
+///
+/// \return The combined `RooWorkspace`, or `nullptr` if workspace creation fails.
+
 RooFit::OwningPtr<RooWorkspace>
 RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measurement &measurement,
                                                    HistoToWorkspaceFactoryFast::Configuration const &cfg)
@@ -197,7 +214,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     // Configure that workspace
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
 
-    {
+    if (cfg.createWorkspaceFile) {
       std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
         + rowTitle + "_model.root";
       cxcoutPHF << "Writing combined workspace to file: " << CombinedFileName << std::endl;
