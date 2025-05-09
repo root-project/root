@@ -59,7 +59,7 @@ void test(TTree *t, const char *bname)
    t->Scan(formula.c_str());
 }
 
-int exec14491()
+int execROOT14491()
 {
    auto file = TFile::Open("oldfile14491.root", "READ");
    auto t = file->Get<TTree>("t");
