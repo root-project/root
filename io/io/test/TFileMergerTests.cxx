@@ -279,3 +279,39 @@ TEST(TFileMerger, SelectiveMergeWithDirectories)
    for (auto name : {input1, input2, output})
       gSystem->Unlink(name);
 }
+
+// https://github.com/root-project/root/issues/9022
+TEST(TFileMerger, SingleHistFile)
+{
+   auto filename1 = "f1_9022.root";
+   auto filename2 = "f2_9022.root";
+   auto outname = "file9022mergeroutput.root";
+   {
+      TFile f1(filename1, "RECREATE");
+      TH1F h("h1", "h1", 1, 0, 1);
+      h.Write();
+      f1.Close();
+      TFile f2(filename2, "RECREATE");
+      TH1F h2("h2", "h2", 1, 0, 1);
+      h2.Write();
+      f2.Close();
+   }
+   {
+      TFileMerger filemerger{false, false};
+      filemerger.SetMaxOpenedFiles(2);
+      filemerger.OutputFile(std::unique_ptr<TFile>{TFile::Open(outname, "RECREATE")});
+
+      filemerger.AddFile(filename1);
+      filemerger.AddFile(filename2);
+
+      filemerger.Merge();
+   }
+   {
+      TFile file(outname, "READ");
+      EXPECT_NE(file.Get<TH1>("h1"), nullptr);
+      EXPECT_NE(file.Get<TH1>("h2"), nullptr);
+   }
+   gSystem->Unlink(filename1);
+   gSystem->Unlink(filename2);
+   gSystem->Unlink(outname);
+}
