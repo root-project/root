@@ -50,7 +50,7 @@
                        The first digit (`i`) is 1 for ZLIB, 2 for LZMA, 4 for LZ4 and 5 for ZSTD.
                        Recommended flags are 101 (ZLIB), 207 (LZMA), 404 (LZ4), 505 (ZSTD),
                        The default value for this flag is 101 (kDefaultZLIB).
-                       See ROOT::RCompressionSetting for more details.
+                       See ROOT::RCompressionSetting and TFile::TFile documentation for more details.
   \param -fk           Sets the target file to contain the baskets with the same compression as the input files
                        (unless -O is specified). Compresses the meta data using the compression level specified
                        in the first input or the compression setting after fk (for example 505 when using -fk505)
