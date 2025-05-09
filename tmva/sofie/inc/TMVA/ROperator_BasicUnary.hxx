@@ -69,8 +69,8 @@ private:
    std::string fNX;
    std::string fNY;
 
-   std::vector<size_t> fShapeX;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeY;
 
 public:
    ROperator_BasicUnary() {}
@@ -90,8 +90,8 @@ public:
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }
-      fShapeX = model.GetTensorShape(fNX);
-      fShapeY = ShapeInference({fShapeX})[0];
+      fShapeX = model.GetDimTensorShape(fNX);
+      fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
    }
 
@@ -101,7 +101,7 @@ public:
       std::stringstream out;
 
       out << SP << "\n//---- Operator" << UnaryOpTraits<T, Op>::Name() << " " << OpName << "\n";
-      size_t length = ConvertShapeToLength(fShapeX);
+      auto length = ConvertDimShapeToLength(fShapeX);
       out << SP << "for (size_t i = 0; i < " << length << "; i++) {\n";
       out << SP << SP << "tensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("tensor_" + fNX + "[i]") << ";\n";
       out << SP << "}\n";
