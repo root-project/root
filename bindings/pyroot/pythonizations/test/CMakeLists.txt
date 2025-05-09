@@ -197,3 +197,10 @@ if (NOT MSVC AND tmva)
 endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
+
+if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR win_broken_tests)
+    # Test the conversion and low level views of interpreter-defined C++ arrays to NumPy
+    # We do not run this test on Windows x86 due to an interpreter issue with arrays:
+    # https://github.com/root-project/root/issues/9809
+    ROOT_ADD_PYUNITTEST(pyroot_array_numpy_views array_conversions.py PYTHON_DEPS numpy)
+endif()
