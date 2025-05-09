@@ -94,10 +94,6 @@ private:
       return value.template GetPtr<T>();
    }
 
-   /// Return the RValue currently bound to the provided field.
-   ROOT::RFieldBase::RValue &GetValue(ROOT::RFieldToken token) { return fValues.at(token.fIndex); }
-   ROOT::RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
-
    void Read(ROOT::NTupleSize_t index)
    {
       for (auto &v : fValues) {
