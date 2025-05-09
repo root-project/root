@@ -378,11 +378,26 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
    auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
                                                std::move(auxProcIntermediate), {"i"});
 
-   try {
-      auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("auxiliary RNTupleJoinProcessors are currently not supported"));
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+
+   int nEntries = 0;
+
+   auto x = proc->GetEntry().GetPtr<float>("x");
+   auto i = proc->GetEntry().GetPtr<int>("i");
+   auto zAux1 = proc->GetEntry().GetPtr<float>("ntuple_aux.z");
+   auto zAux2 = proc->GetEntry().GetPtr<float>("ntuple_aux.ntuple_aux2.z");
+
+   for (const auto &entry [[maybe_unused]] : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*i), *x);
+      EXPECT_EQ(*x * 2, *zAux1);
+      EXPECT_EQ(*zAux1, *zAux2);
    }
+   EXPECT_EQ(nEntries, 5);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedSameName)
