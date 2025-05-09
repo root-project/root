@@ -83,10 +83,13 @@ RooFit::OwningPtr<RooWorkspace>
 RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measurement &measurement,
                                                    HistoToWorkspaceFactoryFast::Configuration const &cfg)
 {
-  std::unique_ptr<TFile> outFile;
+   std::unique_ptr<TFile> outFile;
 
-  auto& msgSvc = RooMsgService::instance();
-  msgSvc.getStream(1).removeTopic(RooFit::ObjectHandling);
+   // Make sure that topic is added back on function return.
+   struct RemoveTopicRAII {
+      RemoveTopicRAII() { RooMsgService::instance().getStream(1).removeTopic(RooFit::ObjectHandling); }
+      ~RemoveTopicRAII() { RooMsgService::instance().getStream(1).addTopic(RooFit::ObjectHandling); }
+   } removeTopicRaii;
 
     cxcoutIHF << "Making Model and Measurements (Fast) for measurement: " << measurement.GetName() << std::endl;
 
@@ -210,8 +213,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
       cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
       measurement.writeToFile( combFile.get() );
     }
-
-  msgSvc.getStream(1).addTopic(RooFit::ObjectHandling);
 
   return RooFit::makeOwningPtr(std::move(ws));
 }
