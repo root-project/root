@@ -1426,6 +1426,9 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// The algorithm searches for the smallest range of sorted a values that
 /// contains ~n/2 values. Then it re-applies the same algorithm to
 /// that range until the range has <= 3 elements in it.
+/// In case that there are several candidates for the minimum smallest range,
+/// we select the one with the largest number of repeated values, and if there
+/// are several maximum ones, we take the last one.
 ///
 /// \note See David R. Bickel: "On a Fast, Robust Estimator of the Mode"
 /// http://arxiv.org/ftp/math/papers/0505/0505419.pdf (page 19)
@@ -1494,50 +1497,50 @@ Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w)
 
    const auto wstart = weights.begin();
    const auto wstop = weights.end();
-   if (std::adjacent_find(wstart, wstop, std::not_equal_to<>()) == wstop) {
-      // All elements are unique and have equal weights
-
-      // Initialize search
-      Double_t min_v_range = values[sn - 1] - values[0];
-      n = sn;
-      size_t jMin = 0;
-
-      // Do recursive calls dividing each time the interval by two
-      while (n > 3) {
-         const size_t N = std::ceil(n * 0.5);
-         const size_t start = jMin;
-         const size_t stop = start + n - N + 1; // +1 since we use < and not <=
-         // Find sequentally what v_range is smallest by sliding the half-window
-         for (size_t i = start; i < stop; i++) {
-            Double_t range = values[i + N - 1] - values[i];
-            if (range < min_v_range) {
-               min_v_range = range;
-               jMin = i;
-            }
-         }
-         // assert(min_v_range == values[N - 1 + start] - values[start]);
-         n = N;
-      }
-      if (n == 3) {
-         const double d1_0 = values[jMin + 1] - values[jMin + 0];
-         const double d2_1 = values[jMin + 2] - values[jMin + 1];
-         if (d2_1 < d1_0)
-            return (values[jMin + 1] + values[jMin + 2]) * 0.5;
-         else if (d2_1 > d1_0)
-            return (values[jMin] + values[jMin + 1]) * 0.5;
-         else
-            return values[jMin + 1];
-      } else if (n == 2) {
-         return (values[jMin] + values[jMin + 1]) * 0.5;
-      } else {
-         Error("ModeHalfSample", "Error in recursive algorithm, returning NaN"); // this should not happen
-         return TMath::QuietNaN();
-      }
-   } else {
+   if (std::adjacent_find(wstart, wstop, std::not_equal_to<>()) != wstop) {
       // Get highest (sum of) weight element
       const auto wmaxiter = std::max_element(wstart, wstop);
       const auto wmaxidx = std::distance(wstart, wmaxiter);
       return values[wmaxidx];
+   }
+
+   // All elements are unique and have equal weights, apply Bickel's recursive algorithm
+
+   // Initialize search
+   Double_t min_v_range = values[sn - 1] - values[0];
+   n = sn;
+   size_t jMin = 0;
+
+   // Do recursive calls dividing each time the interval by two
+   while (n > 3) {
+      const size_t N = std::ceil(n * 0.5);
+      const size_t start = jMin;
+      const size_t stop = start + n - N + 1; // +1 since we use < and not <=
+      // Find sequentally what v_range is smallest by sliding the half-window
+      for (size_t i = start; i < stop; i++) {
+         Double_t range = values[i + N - 1] - values[i];
+         if (range < min_v_range) {
+            min_v_range = range;
+            jMin = i;
+         }
+      }
+      // assert(min_v_range == values[N - 1 + start] - values[start]);
+      n = N;
+   }
+   if (n == 3) {
+      const double d1_0 = values[jMin + 1] - values[jMin + 0];
+      const double d2_1 = values[jMin + 2] - values[jMin + 1];
+      if (d2_1 < d1_0)
+         return (values[jMin + 1] + values[jMin + 2]) * 0.5;
+      else if (d2_1 > d1_0)
+         return (values[jMin] + values[jMin + 1]) * 0.5;
+      else
+         return values[jMin + 1];
+   } else if (n == 2) {
+      return (values[jMin] + values[jMin + 1]) * 0.5;
+   } else {
+      Error("ModeHalfSample", "Error in recursive algorithm, returning NaN"); // this should not happen
+      return TMath::QuietNaN();
    }
 }
 
