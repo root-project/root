@@ -79,7 +79,7 @@ public:
       return representations;
    }
    // Field is only used for reading
-   void GenerateColumns() final { assert(false && "Cardinality fields must only be used for reading"); }
+   void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final
    {
       GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
@@ -121,7 +121,7 @@ private:
    {
       return std::make_unique<RArraySizeField>(fArrayLength);
    }
-   void GenerateColumns() final { assert(false && "RArraySizeField fields must only be used for reading"); }
+   void GenerateColumns() final { throw RException(R__FAIL("RArraySizeField fields must only be used for reading")); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final {}
    void ReadGlobalImpl(ROOT::NTupleSize_t /*globalIndex*/, void *to) final
    {

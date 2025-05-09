@@ -329,7 +329,7 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void GenerateColumns() final { R__ASSERT(false && "RArrayAsRVec fields must only be used for reading"); }
+   void GenerateColumns() final { throw RException(R__FAIL("RArrayAsRVec fields must only be used for reading")); }
    using RFieldBase::GenerateColumns;
 
    void ConstructValue(void *where) const final;
