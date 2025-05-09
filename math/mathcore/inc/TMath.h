@@ -1435,9 +1435,11 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// \tparam T data type of the values array `a`
 /// \param n Number of elements in array `a`
 /// \param a Pointer to array of values (owned by user, preallocated), must have length of n, and none of them should be
-/// NaN. The array must not be necessarily sorted nor contain unique values. \param w Pointer to array of weights (owned
+/// NaN. The array must not be necessarily sorted nor contain unique values.
+/// \param w Pointer to array of weights (owned
 /// by user, preallocated), must have length of n. If the weights are supplied (w not nullptr) all weights must be >= 0
-/// to properly work. \param searchMostRepeated If false, in case that there are several equal candidates for the
+/// to properly work.
+/// \param searchMostRepeated If false, in case that there are several equal candidates for the
 /// minimum smallest range, we take the first occurrence. If true, we select the one with the largest number of repeated
 /// values, and if there are several maximum ones, we take the central index in the array of starting points. It's
 /// useful to set this parameter to true for better results when T is an integer, at the expense of speed.
