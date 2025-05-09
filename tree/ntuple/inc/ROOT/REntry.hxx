@@ -94,17 +94,6 @@ private:
       return value.template GetPtr<T>();
    }
 
-   /// Update the RValue for a field in the entry. To be used when its underlying ROOT::RFieldBase changes, which
-   /// typically happens when the page source from which the field values are read changes.
-   void UpdateValue(ROOT::RFieldToken token, ROOT::RFieldBase::RValue &&value)
-   {
-      std::swap(fValues.at(token.fIndex), value);
-   }
-   void UpdateValue(ROOT::RFieldToken token, ROOT::RFieldBase::RValue &value)
-   {
-      std::swap(fValues.at(token.fIndex), value);
-   }
-
    /// Return the RValue currently bound to the provided field.
    ROOT::RFieldBase::RValue &GetValue(ROOT::RFieldToken token) { return fValues.at(token.fIndex); }
    ROOT::RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
