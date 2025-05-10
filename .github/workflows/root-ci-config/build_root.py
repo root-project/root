@@ -30,6 +30,7 @@ from build_utils import (
     die,
     github_log_group,
     is_macos,
+    is_windows,
     load_config,
     subprocess_with_capture,
     subprocess_with_log,
@@ -46,9 +47,8 @@ except Exception as exc:
     print("Failed to open the S3 connection:", exc, file=sys.stderr)
     CONNECTION = None
 
-WINDOWS = (os.name == 'nt')
-WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
-COMPRESSIONLEVEL = 6 if not WINDOWS else 1
+WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not is_windows() else 'C:/ROOT-CI'
+COMPRESSIONLEVEL = 6 if not is_windows() else 1
 
 
 def main():
@@ -79,7 +79,7 @@ def main():
 
     options = build_utils.cmake_options_from_dict(options_dict)
 
-    if WINDOWS:
+    if is_windows():
         options = "-Thost=x64 " + options
 
         if args.architecture == 'x86':
@@ -124,7 +124,7 @@ def main():
 
     testing: bool = options_dict['testing'].lower() == "on"
 
-    if not WINDOWS:
+    if not is_windows():
         show_node_state()
 
     build(options, args.buildtype)
@@ -141,7 +141,7 @@ def main():
 
     if testing:
         extra_ctest_flags = ""
-        if WINDOWS:
+        if is_windows():
             extra_ctest_flags += "--repeat until-pass:5 "
             extra_ctest_flags += "--build-config " + args.buildtype
 
@@ -211,7 +211,7 @@ def cleanup_previous_build():
     if WORKDIR in ("", "/"):
         die(1, "WORKDIR not set")
 
-    if WINDOWS:
+    if is_windows():
         # windows
         os.environ['COMSPEC'] = 'powershell.exe'
         result = subprocess_with_log(f"""
@@ -375,8 +375,8 @@ def dump_requested_config(options):
 
 @github_log_group("Build")
 def cmake_build(buildtype):
-    generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
-    parallel_jobs = "4" if WINDOWS else str(get_cpu_count())
+    generator_flags = "-- '-verbosity:minimal'" if is_windows() else ""
+    parallel_jobs = "4" if is_windows() else str(get_cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""

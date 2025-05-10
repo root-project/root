@@ -22,6 +22,9 @@ from requests import get
 def is_macos():
     return 'Darwin' == platform.system()
 
+def is_windows():
+    return os.name == 'nt'
+
 class SimpleTimer:
     def __init__(self):
         self._start_time = time.perf_counter()
@@ -307,10 +310,8 @@ def download_latest(url: str, prefix: str, destination: str) -> str:
 def get_cpu_count():
     base_cpu_count = os.cpu_count()
     cpu_count = base_cpu_count
-    node_name = platform.node()
-    node_name_overcommit_prefix = "githubci-lcgapp-2"
-    if node_name.startswith(node_name_overcommit_prefix):
+    if not is_windows() and not is_macos():
         cpu_count = math.ceil(base_cpu_count * 1.15)
-        print_info(f"Hardware CPU count is {base_cpu_count}: overcommitting to {cpu_count}")
+        print_info(f"Hardware CPU count is {base_cpu_count}: since this is Linux, we overcommit the node running on {cpu_count} CPUs.")
 
     return cpu_count
