@@ -63,3 +63,14 @@ TEST(TClass, TypeNameDouble)
    TClass *clTypeID32 = TClass::GetClass(typeid(ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> >));
    EXPECT_EQ(clLVd, clTypeID32) << "LV<double> should have priority; typeid lookup should find it.";
 }
+
+// https://github.com/root-project/root/issues/18654
+TEST(TClass, ConsistentSTLLookup)
+{
+   // The lookup via normalised shortened name yielded a different class
+   // than lookup via typeid. This lead to crashes in cppyy.
+   auto first = TClass::GetClass("unordered_map<string,char>", true, true);
+   std::unordered_map<std::string, char> map;
+   auto second = first->GetActualClass(&map);
+   EXPECT_EQ(first, second);
+}
