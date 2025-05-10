@@ -1,0 +1,42 @@
+#include "RooRealVar.h"
+#include "RooGaussian.h"
+#include "RooCategory.h"
+#include "gtest/gtest.h"
+
+#include "RooMultiPdf.h"
+
+TEST(RooMultiPdf, SelectsCorrectPdf)
+{
+
+   RooRealVar x("x", "x", -10, 10);
+   x.setVal(2.0);
+
+   RooRealVar m1("mean1", "mean1", 0.);
+   RooRealVar s1("sigma1", "sigma1", 1., 0.001, 10.);
+   RooRealVar m2("mean2", "mean2", 2.);
+   RooRealVar s2("sigma2", "sigma2", 1., 0.001, 10.);
+   RooGaussian gaus1("gaus1", "gaus1", x, m1, s1);
+   RooGaussian gaus2("gaus2", "gaus2", x, m2, s2);
+
+   RooCategory indx("my_special_index", "my_index");
+
+   indx.defineType("gauss1", 0);
+   indx.defineType("gauss2", 1);
+   std::cout << "Defined types and indices in the category:" << std::endl;
+   std::cout << "gauss1 --> 0" << std::endl;
+   std::cout << "gauss2 --> 1" << std::endl;
+
+   RooArgList list;
+   list.add(gaus1);
+   list.add(gaus2);
+
+   RooMultiPdf pdf("mult", "multi_pdf", indx, list);
+
+   indx.setIndex(0);
+
+   std::cout << "value is " << pdf.getVal() << std::endl;
+
+   indx.setIndex(1);
+
+   std::cout << "value is " << pdf.getVal() << std::endl;
+}
