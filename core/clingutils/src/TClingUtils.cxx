@@ -4184,6 +4184,10 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
 
+   norm_name = normalizedNameStep1;
+   TClassEdit::AtomicTypeNameHandlerRAII atomicTypeNameHandler_step1(normalizedNameStep1);
+   TClassEdit::AtomicTypeNameHandlerRAII atomicTypeNameHandler_norm_name(norm_name);
+
    // Still remove the std:: and default template argument for STL container and
    // normalize the location and amount of white spaces.
    TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));

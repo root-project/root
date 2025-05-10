@@ -16,6 +16,7 @@
 #include <ROOT/RConfig.hxx>
 #include "RConfigure.h"
 #include <stdlib.h>
+#include <stdexcept>
 #ifdef R__WIN32
 #ifndef UNDNAME_COMPLETE
 #define UNDNAME_COMPLETE 0x0000
@@ -151,6 +152,33 @@ namespace TClassEdit {
    private:
       TSplitType(const TSplitType&) = delete;
       TSplitType &operator=(const TSplitType &) = delete;
+   };
+
+   /// A simple RAII helper to remove and readd enclosing _Atomic()
+   /// It expects no spaces at the beginning or end of the string
+   class AtomicTypeNameHandlerRAII {
+      std::string &fTypeName;
+      bool fIsAtomic = false;
+      const char *fgPrefix = "_Atomic(";
+
+   public:
+      AtomicTypeNameHandlerRAII(std::string &typeName) : fTypeName(typeName)
+      {
+         if (0 == fTypeName.find(fgPrefix)) {
+            fIsAtomic = true;
+            fTypeName.erase(0, 8);
+            if (0 == fTypeName.size() || ')' != fTypeName[fTypeName.size() - 1]) {
+               throw std::runtime_error("Cannot remove substring \")\" at the end of typename \""+typeName+"\"");
+            }
+            fTypeName.pop_back();
+         }
+      }
+      ~AtomicTypeNameHandlerRAII()
+      {
+         if (fIsAtomic) {
+            fTypeName = fgPrefix + fTypeName + ")";
+         }
+      }
    };
 
    void        Init(TClassEdit::TInterpreterLookupHelper *helper);
