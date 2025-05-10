@@ -34,6 +34,7 @@ from build_utils import (
     subprocess_with_capture,
     subprocess_with_log,
     upload_file,
+    get_cpu_count,
 )
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
@@ -375,7 +376,7 @@ def dump_requested_config(options):
 @github_log_group("Build")
 def cmake_build(buildtype):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
-    parallel_jobs = "4" if WINDOWS else str(os.cpu_count())
+    parallel_jobs = "4" if WINDOWS else str(get_cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
     result = subprocess_with_log(f"""

@@ -8,6 +8,7 @@ import textwrap
 import datetime
 import time
 import platform
+import math
 from functools import wraps
 from hashlib import sha1
 from http import HTTPStatus
@@ -302,3 +303,14 @@ def download_latest(url: str, prefix: str, destination: str) -> str:
         log.add(f"\ncurl --output {destination}/artifacts.tar.gz {url}/{latest}\n")
 
     return f"{destination}/artifacts.tar.gz"
+
+def get_cpu_count():
+    base_cpu_count = os.cpu_count()
+    cpu_count = base_cpu_count
+    node_name = platform.node()
+    node_name_overcommit_prefix = "githubci-lcgapp-2"
+    if node_name.startswith(node_name_overcommit_prefix):
+        cpu_count = math.ceil(base_cpu_count * 1.15)
+        print_info(f"Hardware CPU count is {base_cpu_count}: overcommitting to {cpu_count}")
+
+    return cpu_count
