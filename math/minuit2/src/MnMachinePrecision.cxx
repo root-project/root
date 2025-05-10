@@ -8,7 +8,6 @@
  **********************************************************************/
 
 #include "Minuit2/MnMachinePrecision.h"
-#include "Minuit2/MnTiny.h"
 #include <limits>
 
 namespace ROOT {
@@ -39,8 +38,6 @@ void MnMachinePrecision::ComputePrecision()
        fEpsMa2 = 2.*std::sqrt(fEpsMac);
    */
 
-   MnTiny mytiny;
-
    // calculate machine precision
    double epstry = 0.5;
    double epsbak = 0.;
@@ -49,13 +46,25 @@ void MnMachinePrecision::ComputePrecision()
    for (int i = 0; i < 100; i++) {
       epstry *= 0.5;
       epsp1 = one + epstry;
-      epsbak = mytiny(epsp1);
+      epsbak = Tiny(epsp1);
       if (epsbak < epstry) {
          fEpsMac = 8. * epstry;
          fEpsMa2 = 2. * std::sqrt(fEpsMac);
          break;
       }
    }
+}
+
+double MnMachinePrecision::One() const
+{
+   return fOne;
+}
+
+double MnMachinePrecision::Tiny(double epsp1) const
+{
+   // evaluate minimal difference between two floating points
+   double result = epsp1 - One();
+   return result;
 }
 
 } // namespace Minuit2
