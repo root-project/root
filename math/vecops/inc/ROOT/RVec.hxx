@@ -3273,7 +3273,7 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may cause rounding issues. Consequently, the resulting sequence may not end exactly at \p end. To ensure that the sequence ends exactly at \p end, consider casting the result as follows: `RVec<integral_type>(Linspace(...))`. This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may cause rounding issues. Consequently, the resulting sequence may not end exactly at \p end. To ensure that the sequence ends exactly at \p end, consider casting the result as follows: `RVec<integral_type>(Linspace(...))` (which is equivalent in numpy to `np.linspace(...).astype(integral_type)`). This behavior is different than NumPy in Python.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3302,7 +3302,7 @@ inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bo
 {
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return RVec<Ret_t>{};
+        return {};
     }
     
     long double step = std::is_floating_point_v<Ret_t> ?
@@ -3357,7 +3357,7 @@ inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bo
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the sequence may not end exactly at \f$base^{end}\f>. To ensure that the final element is exactly \f$base^{end}\f>, consider casting the result as follows: `RVec<integral_type>(Logspace(...))`. This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the sequence may not end exactly at \f$base^{end}\f>. To ensure that the final element is exactly \f$base^{end}\f>, consider casting the result as follows: `RVec<integral_type>(Logspace(...))` (which is equivalent in numpy to `np.logspace(...).astype(integral_type)`). This behavior is different than NumPy in Python.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3388,17 +3388,15 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
 {
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return RVec<Ret_t>{};
+        return {};
     }
     RVec<Ret_t> temp(n);
     
-    Ret_t start_c = static_cast<Ret_t>(start);
-    Ret_t end_c   = static_cast<Ret_t>(end);
-    Ret_t base_c  = static_cast<Ret_t>(base);
+    long double start_c = start;
+    long double end_c   = end;
+    long double base_c  = base;
     
-    long double step = std::is_floating_point_v<Ret_t> ?
-    (end_c - start_c) / static_cast<long double>(n - endpoint) :
-    (end >= start ? static_cast<long double>(end - start) / (n - endpoint) : (static_cast<long double>(end) - start) / (n - endpoint));
+    long double step = (end_c - start_c) / (n - endpoint);
     
     temp[0] = std::is_floating_point_v<Ret_t> ?
     static_cast<Ret_t>(std::pow(base_c, start_c)) :
@@ -3408,15 +3406,15 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
     {
         for (unsigned long long i = 1; i < n; i++)
         {
-            Ret_t exponent = start_c + i * step;
-            temp[i] = std::pow(base_c, exponent);
+            auto exponent = start_c + i * step;
+            temp[i] = static_cast<Ret_t>(std::pow(base_c, exponent));
         }
     }
     else
     {
         for (unsigned long long i = 1; i < n; i++)
         {
-            Ret_t exponent = start_c + i * step;
+            auto exponent = start_c + i * step;
             temp[i] = std::floor(std::pow(base_c, exponent));
         }
     }
@@ -3455,7 +3453,7 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the produced sequence may not strictly adhere to the intended progression. If an exact sequence is desired, consider casting the result as follows: `RVec<integral_type>(Arange(...))`. This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the produced sequence may not strictly adhere to the intended progression. If an exact sequence is desired, consider casting the result as follows: `RVec<integral_type>(Arange(...))` (which is equivalent in numpy to `np.arange(...).astype(integral_type)`). This behavior is different than NumPy in Python.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3486,21 +3484,20 @@ inline RVec<Ret_t> Arange(T start, T end, T step)
 
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
-        return RVec<Ret_t>{};
+        return {};
     }
     
     RVec<Ret_t> temp(n);
     
-    Ret_t start_c = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
-        
+    long double start_c = start;
     long double step_c = step;
 
-    temp[0] = start_c;
+    temp[0] = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
     if (std::is_floating_point_v<Ret_t>)
     {
         for (unsigned long long i = 1; i < n; i++)
         {
-            temp[i] = start_c + i * step_c;
+            temp[i] = static_cast<Ret_t>(start_c + i * step_c);
         }
     }
     else
