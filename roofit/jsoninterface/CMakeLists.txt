@@ -17,7 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitJSONInterface
     src/JSONParser.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
-  LIBRARIES
+  DEPENDENCIES
     Core
 )
 
