@@ -11,10 +11,11 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-template <typename T>
+// implement Softmax and LogSoftmax
 class ROperator_Softmax final : public ROperator {
 
 private:
+   bool fLogSoftmax;  // for the logsoftmax case
    int64_t fAttrAxis;
 
    std::string fNX;
@@ -25,8 +26,10 @@ private:
 
 public:
    ROperator_Softmax() {}
-   ROperator_Softmax(int64_t attr_axis, std::string nameX, std::string nameY)
-      : fAttrAxis(attr_axis), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
+   ROperator_Softmax(int64_t attr_axis, std::string nameX, std::string nameY, bool logSoftmax)
+      : fLogSoftmax(logSoftmax),
+      fAttrAxis(attr_axis), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
+
    {
          fInputTensorNames = { fNX };
          fOutputTensorNames = { fNY };
@@ -71,13 +74,13 @@ public:
          } else {
             num_rows = "(" + length_str + ") / (" + axis_size + ")";
          }
-         
+
          out << "\n" << SP << "//------ SOFTMAX - " << size << "  " << length_str << "  " << axis << "\n";
          out << SP << "for (int i = 0; i < " << num_rows << "; ++i) {\n";
          out << SP << SP << "size_t offset = i * " << axis_size << ";\n";
          out << SP << SP << fType << " const * x_ptr = &tensor_" << fNX << "[offset];\n";
          out << SP << SP << fType << " * y_ptr = &tensor_" << fNY << "[offset];\n";
-         
+
          out << SP << SP << fType << " vmax = x_ptr[0];\n";
          out << SP << SP << "for (int j = 1; j < " << axis_size << "; ++j) {\n";
          out << SP << SP << SP << "if (x_ptr[j] > vmax) vmax = x_ptr[j];\n";
@@ -92,6 +95,8 @@ public:
          out << SP << SP << fType << " inv_sum = 1.0f / sum;\n";
          out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
          out << SP << SP << SP << "y_ptr[j] *= inv_sum;\n";
+         if (fLogSoftmax)
+            out << SP << SP << SP << "y_ptr[j] = std::log(y_ptr[j]);\n";
          out << SP << SP << "}\n";
          out << SP << "}\n";
 
@@ -150,10 +155,15 @@ public:
          // normalize
          for (size_t j = 0; j < size-1; j++) out << SP;
          out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
-          for (size_t j = 0; j < size; j++) out << SP;
-         out << "tensor_" << fNY << "[index + i";
-         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
-         out << "] /= sum;\n";
+         for (size_t j = 0; j < size; j++) out << SP;
+         out << "size_t id = index + i";
+         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ");\n";
+         for (size_t j = 0; j < size; j++) out << SP;
+         out << "tensor_" << fNY << "[id] /= sum;\n";
+         if (fLogSoftmax) {
+            for (size_t j = 0; j < size; j++) out << SP;
+            out << "tensor_" << fNY << "[id] = std::log(tensor_" << fNY << "[id]);\n";
+         }
          for (size_t j = 0; j < size-1; j++) out << SP;
          out << "}\n";
          //end loops

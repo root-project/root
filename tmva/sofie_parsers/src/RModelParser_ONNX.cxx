@@ -216,6 +216,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Sigmoid", ParseSigmoid);
    RegisterOperator("Slice", ParseSlice);
    RegisterOperator("Softmax", ParseSoftmax);
+   RegisterOperator("LogSoftmax", ParseSoftmax);
    RegisterOperator("Tanh", ParseTanh);
    RegisterOperator("Transpose", ParseTranspose);
    RegisterOperator("MatMul", ParseMatMul);
