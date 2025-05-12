@@ -244,8 +244,6 @@ TEST(TFileMerger, SingleHistFile)
       filemerger.AddFile(filename1);
       filemerger.AddFile(filename2);
 
-      // Before the fix, TTree::ChangeFile was called during Merge
-      // in the end deleting the TFileMerger's output file and leading to a crash.
       filemerger.Merge();
    }
    {
