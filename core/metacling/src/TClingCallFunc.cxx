@@ -1633,12 +1633,17 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
    const clang::Decl* D = info->GetDecl();
    if (Cpp::IsClass(D))
       D = (clang::Decl *)Cpp::GetDefaultConstructorConst(D);
-   if (!Cpp::IsConstructor(D))
+   if (!Cpp::IsConstructor(D)) {
+      ::Error("TClingCallFunc::ExecDefaultConstructor", "Could not find a default constructor for this scope");
       return nullptr;
+   }
 
    Cpp::JitCall JC = Cpp::MakeFunctionCallable(D);
    
-   if(JC.getKind() == Cpp::JitCall::kUnknown) return nullptr;
+   if(JC.getKind() == Cpp::JitCall::kUnknown) {
+      ::Error("TClingCallFunc::ExecDefaultConstructor", "Wrapper codegen unsuccesful");
+      return nullptr;
+   }
 
    if(address) {
       JC.Invoke(&address, {}, (void*)~0, nary);

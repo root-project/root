@@ -1907,35 +1907,38 @@ namespace Cpp {
         callbuf << class_name << "[n_objs]";
       else
         callbuf << class_name;
-      // for (unsigned i = 0U; i < N; ++i) {
-      //   const ParmVarDecl* PVD = FD->getParamDecl(i);
-      //   QualType Ty = PVD->getType();
-      //   QualType QT = Ty.getCanonicalType();
-      //   std::string type_name;
-      //   EReferenceType refType = kNotReference;
-      //   bool isPointer = false;
-      //   collect_type_info(FD, QT, typedefbuf, callbuf, type_name, refType,
-      //                     isPointer, indent_level, true);
-      //   if (i) {
-      //     callbuf << ',';
-      //     if (i % 2) {
-      //       callbuf << ' ';
-      //     } else {
-      //       callbuf << "\n";
-      //       indent(callbuf, indent_level);
-      //     }
-      //   }
-      //   if (refType != kNotReference) {
-      //     callbuf << "(" << type_name.c_str()
-      //             << (refType == kLValueReference ? "&" : "&&") << ")*("
-      //             << type_name.c_str() << "*)args[" << i << "]";
-      //   } else if (isPointer) {
-      //     callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
-      //   } else {
-      //     callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
-      //   }
-      // }
-      // callbuf << ")";
+      if (N) {
+        callbuf << "(";
+        for (unsigned i = 0U; i < N; ++i) {
+          const ParmVarDecl* PVD = FD->getParamDecl(i);
+          QualType Ty = PVD->getType();
+          QualType QT = Ty.getCanonicalType();
+          std::string type_name;
+          EReferenceType refType = kNotReference;
+          bool isPointer = false;
+          collect_type_info(FD, QT, typedefbuf, callbuf, type_name, refType,
+                            isPointer, indent_level, true);
+          if (i) {
+            callbuf << ',';
+            if (i % 2) {
+              callbuf << ' ';
+            } else {
+              callbuf << "\n";
+              indent(callbuf, indent_level);
+            }
+          }
+          if (refType != kNotReference) {
+            callbuf << "(" << type_name.c_str()
+                    << (refType == kLValueReference ? "&" : "&&") << ")*("
+                    << type_name.c_str() << "*)args[" << i << "]";
+          } else if (isPointer) {
+            callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
+          } else {
+            callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+          }
+        }
+        callbuf << ")";
+      }
     }
 
     const DeclContext* get_non_transparent_decl_context(const FunctionDecl* FD) {
