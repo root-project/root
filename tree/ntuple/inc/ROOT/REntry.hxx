@@ -201,6 +201,9 @@ public:
    ///
    /// Ownership is shared with the caller and the object will be kept alive until it is replaced (by a call to
    /// EmplaceNewValue, BindValue, or BindRawPtr) or the entry is destructed.
+   ///
+   /// **Note**: if `T = void`, type checks are disabled. It is the caller's responsibility to match the field and
+   /// object types.
    template <typename T>
    void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {
@@ -222,6 +225,9 @@ public:
    ///
    /// The caller retains ownership of the object and must ensure it is kept alive when reading or writing using the
    /// entry.
+   ///
+   /// **Note**: if `T = void`, type checks are disabled. It is the caller's responsibility to match the field and
+   /// object types.
    template <typename T>
    void BindRawPtr(std::string_view fieldName, T *rawPtr)
    {
@@ -242,6 +248,9 @@ public:
    /// Get the (typed) pointer to the value for the field referenced by `token`.
    ///
    /// Ownership is shared and the caller can continue to use the object after the entry is destructed.
+   ///
+   /// **Note**: if `T = void`, type checks are disabled. It is the caller's responsibility to use the returned pointer
+   /// according to the field type.
    template <typename T>
    std::shared_ptr<T> GetPtr(std::string_view fieldName) const
    {
