@@ -1108,8 +1108,8 @@ void TFileMerger::RecursiveRemove(TObject *obj)
 /// Set a limit to the number of files that TFileMerger will open simultaneously.
 ///
 /// This number includes both the read input files and the output file.
-/// \param newmax if higher than the system limit, we reset it to the system limit.
-/// If less than two, we reset it to 2 (one for the output file and one for the input file).
+/// \param newmax if higher than the system limit, we reset it to the system limit;
+/// if less than two, we reset it to 2 (one for the output file and one for the input file).
 
 void TFileMerger::SetMaxOpenedFiles(Int_t newmax)
 {
