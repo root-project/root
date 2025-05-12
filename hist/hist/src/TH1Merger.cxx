@@ -804,6 +804,7 @@ Bool_t TH1Merger::DifferentAxesMerge() {
    for (Int_t i=0;i<TH1::kNstat;i++) {totstats[i] = stats[i] = 0;}
    fH0->GetStats(totstats);
    Double_t nentries = fH0->GetEntries();
+   const Int_t tProfileMergeCode = !fIsProfileMerge ? 0 : fIsProfile1D ? 1 : fIsProfile2D ? 2 : fIsProfile3D ? 3 : -1;
 
    TIter next(&fInputList);
    while (TH1* hist=(TH1*)next()) {
@@ -824,7 +825,7 @@ Bool_t TH1Merger::DifferentAxesMerge() {
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
 
          // if bin is empty we can skip it
-         if (IsBinEmpty(hist, ibin, !fIsProfileMerge ? 0 : fIsProfile1D ? 1 : fIsProfile2D ? 2 : fIsProfile3D ? 3 : -1))
+         if (IsBinEmpty(hist, ibin, tProfileMergeCode))
             continue;
 
          Int_t binx,biny,binz;
