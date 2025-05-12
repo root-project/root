@@ -432,7 +432,7 @@ inline double approxErf(double arg)
    if (arg < -5.0)
       return -1.0;
 
-   return TMath::Erf(arg);
+   return std::erf(arg);
 }
 
 /// @brief Function to calculate the integral of an un-normalized RooGaussian over x. To calculate the integral over
@@ -460,8 +460,8 @@ inline double gaussianIntegral(double xMin, double xMax, double mean, double sig
    // tail of the Gaussian, because erfc has the highest precision there.
    // Therefore, the different cases for range limits in the negative hemisphere are mapped onto
    // the equivalent points in the upper hemisphere using erfc(-x) = 2. - erfc(x)
-   double ecmin = TMath::Erfc(std::abs(scaledMin));
-   double ecmax = TMath::Erfc(std::abs(scaledMax));
+   double ecmin = std::erfc(std::abs(scaledMin));
+   double ecmax = std::erfc(std::abs(scaledMax));
 
    double cond = 0.0;
    // Don't put this "prd" inside the "if" because clad will not be able to differentiate the code correctly (as of
@@ -485,12 +485,11 @@ inline double bifurGaussIntegral(double xMin, double xMax, double mean, double s
    const double resultScale = 0.5 * std::sqrt(TMath::TwoPi());
 
    if (xMax < mean) {
-      return resultScale * (sigmaL * (TMath::Erf((xMax - mean) / xscaleL) - TMath::Erf((xMin - mean) / xscaleL)));
+      return resultScale * (sigmaL * (std::erf((xMax - mean) / xscaleL) - std::erf((xMin - mean) / xscaleL)));
    } else if (xMin > mean) {
-      return resultScale * (sigmaR * (TMath::Erf((xMax - mean) / xscaleR) - TMath::Erf((xMin - mean) / xscaleR)));
+      return resultScale * (sigmaR * (std::erf((xMax - mean) / xscaleR) - std::erf((xMin - mean) / xscaleR)));
    } else {
-      return resultScale *
-             (sigmaR * TMath::Erf((xMax - mean) / xscaleR) - sigmaL * TMath::Erf((xMin - mean) / xscaleL));
+      return resultScale * (sigmaR * std::erf((xMax - mean) / xscaleR) - sigmaL * std::erf((xMin - mean) / xscaleL));
    }
 }
 
@@ -656,8 +655,7 @@ inline double logNormalIntegral(double xMin, double xMax, double m0, double k)
    const double root2 = std::sqrt(2.);
 
    double ln_k = std::abs(std::log(k));
-   double ret =
-      0.5 * (TMath::Erf(std::log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(std::log(xMin / m0) / (root2 * ln_k)));
+   double ret = 0.5 * (std::erf(std::log(xMax / m0) / (root2 * ln_k)) - std::erf(std::log(xMin / m0) / (root2 * ln_k)));
 
    return ret;
 }
@@ -668,7 +666,7 @@ inline double logNormalIntegralStandard(double xMin, double xMax, double mu, dou
 
    double ln_k = std::abs(sigma);
    double ret =
-      0.5 * (TMath::Erf((std::log(xMax) - mu) / (root2 * ln_k)) - TMath::Erf((std::log(xMin) - mu) / (root2 * ln_k)));
+      0.5 * (std::erf((std::log(xMax) - mu) / (root2 * ln_k)) - std::erf((std::log(xMin) - mu) / (root2 * ln_k)));
 
    return ret;
 }
@@ -705,7 +703,7 @@ inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma,
       double b = r - absAlpha;
 
       if (useLog) {
-         result += a * std::pow(r, n-1) * sig * (std::log(b - tmin) - std::log(b - tmax));
+         result += a * std::pow(r, n - 1) * sig * (std::log(b - tmin) - std::log(b - tmax));
       } else {
          result += a * sig / (1.0 - n) * (std::pow(r / (b - tmin), n - 1.0) - std::pow(r / (b - tmax), n - 1.0));
       }
@@ -716,7 +714,7 @@ inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma,
 
       double term1 = 0.0;
       if (useLog) {
-         term1 = a * std::pow(r, n-1) * sig * (std::log(b - tmin) - std::log(r));
+         term1 = a * std::pow(r, n - 1) * sig * (std::log(b - tmin) - std::log(r));
       } else {
          term1 = a * sig / (1.0 - n) * (std::pow(r / (b - tmin), n - 1.0) - 1.0);
       }
@@ -773,7 +771,8 @@ inline double multiVarGaussian(int n, const double *x, const double *mu, const d
 // Integral of a step function defined by `nBins` intervals, where the
 // intervals have values `coefs` and the boundary on the interval `iBin` is
 // given by `[boundaries[i], boundaries[i+1])`.
-inline double stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, double const *boundaries, double const *coefs)
+inline double
+stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, double const *boundaries, double const *coefs)
 {
    double out = 0.0;
    for (std::size_t i = 0; i < nBins; ++i) {
