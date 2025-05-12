@@ -21,7 +21,7 @@ full advantage of multi-core and distributed systems.
 ROOT is performance critical software written in C++ and enables rapid prototyping 
 powered by a unique C++ compliant interpreter called Cling. 
 Cling also enables performant C++ type introspection which is a building block of automatic 
-interoperability with Python. Thanks to PyROOT, leveraging the cppyy technology, 
+interoperability with Python. Thanks to its dynamic Python bindings, leveraging the cppyy technology, 
 ROOT offers efficient, on-demand C++/Python interoperability in a uniform cross-language 
 execution environment.
 
