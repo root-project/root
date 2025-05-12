@@ -63,6 +63,33 @@ The following people have contributed to this new version:
   is shared across tasks belonging to different computation graphs.
 - Support for single-threaded snapshotting to RNTuple has been added. This can be enabled through `RSnapshotOptions`. Note that snapshotting from a TTree-based RDataFrame to RNTuple is not yet supported in this release, but will be added in a future version. The current recommended way to convert from TTree to RNTuple is through the [RNTupleImporter](https://root.cern/doc/v636/classROOT_1_1Experimental_1_1RNTupleImporter.html).
 
+### Distributed RDataFrame
+
+The distributed RDataFrame (`ROOT.RDF.Distributed`) is now out of the experimental namespace. We recommend that users switch to using the new version as soon as possible. Note the following changes between the old and the new code:
+
+```python
+# Old version - not recommended:
+# This will still work in 6.36 but will raise a warning
+connection = ... # your distributed Dask client or SparkContext
+RDataFrame = ROOT.RDF.Experimental.Distributed.[Backend].RDataFrame
+df = RDataFrame(..., [daskclient,sparkcontext] = connection)
+# New version - recommended
+connection = ... # your distributed Dask client or SparkContext
+df = ROOT.RDataFrame(..., executor = connection)
+```
+
+In case of using the old version, with `Experimental` keyword, a warning will be raised. In ROOT 6.38, the `Experimental` name will be removed completely and using it will result in an exception.
+
+A set of new features is now available to the distributed RDataFrame users:
+
+* It is now much easier to inject the C++ code into the distributed RDF application. The following functions are available: 
+  * DistributeHeaders - include and distribute headers
+  * DistributeSharedLibs - load and distribute shared libraries 
+  * DistributeCppCode - declare and distribute the C++ code, the C++ code is available to all dataframes in the application
+  * DistributeFiles - distribute other files (not headers or shared libraries) that may be needed
+
+* The factory function `FromSpec` is available to build the distributed RDF. Note, however, the addition and use of the metadata is not yet supported. 
+
 ## RooFit
 
 ### Breaking function signature changes
@@ -158,8 +185,6 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
   * "rntuple.ExtraVerbose": RNTuple-specific option that tells the RNTupleMerger to emit more information during the merge process.
 * The option to explicitly pass a type name or `std::type_info` to `RNTupleReader::GetView<void>` has been added, in case the on-disk type of the field differs from the underlying type of the pointer to read into.
 * The [RNTupleProcessor](https://root.cern/doc/v636/classROOT_1_1Experimental_1_1RNTupleProcessor.html) has been extended to support *joins* (comparable to TTree friends) and *chains of joins*. As an effect, `RNTupleReader::OpenFriends()` has been removed. Note that the RNTupleProcessor is still under active development and will remain in the Experimental namespace.
-
-## RDataFrame
 
 ## Tutorials and Code Examples
 
