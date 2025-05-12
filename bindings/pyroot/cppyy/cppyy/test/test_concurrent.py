@@ -304,5 +304,6 @@ class TestCONCURRENT:
         assert State.c1 == 1000
         assert State.c2 == State.c3
 
+
 if __name__ == "__main__":
     exit(pytest.main(args=[__file__]))
