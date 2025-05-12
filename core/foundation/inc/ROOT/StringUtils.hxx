@@ -40,6 +40,8 @@ std::string Join(const std::string &sep, StringCollection_t &&strings)
                           [&sep](auto const &a, auto const &b) { return a + sep + b; });
 }
 
+std::string Round(const double value, const double error, const uint8_t cutoff = 1, const std::string delim = "#pm");
+
 } // namespace ROOT
 
 #endif
