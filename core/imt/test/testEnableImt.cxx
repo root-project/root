@@ -12,15 +12,17 @@ static const unsigned gMaxConcurrency = ROOT::Internal::LogicalCPUBandwidthContr
 
 TEST(EnableImt, TBBAttach)
 {
-   tbb::task_arena main_arena;
-   main_arena.initialize(2);
+   tbb::task_arena main_arena{2};
 
-   ROOT::EnableImplicitMT(ROOT::EIMTConfig::kExistingTBBArena);
+   main_arena.execute([&]() {
+      ROOT::EnableImplicitMT(ROOT::EIMTConfig::kExistingTBBArena);
+   });
 
    auto psize = ROOT::GetThreadPoolSize();
 
    EXPECT_TRUE( psize > 1);
-   EXPECT_EQ( psize, 2); // gMaxConcurrency);
+   EXPECT_EQ( main_arena.max_concurrency(), 2);
+   EXPECT_EQ( psize, 2);
 }
 
 #endif
