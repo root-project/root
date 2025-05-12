@@ -15,6 +15,7 @@
 #include <sstream>
 #include <cmath>
 #include <ios>
+#include <cassert>
 
 namespace ROOT {
 
