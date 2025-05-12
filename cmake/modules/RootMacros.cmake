@@ -592,6 +592,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
+        if(TARGET ${dep})
+          get_target_property(_dep_pcm_filename ${dep} ROOT_PCM_FILENAME)
+          if(_dep_pcm_filename)
+            list(APPEND pcm_dependencies ${_dep_pcm_filename})
+          endif()
+        endif()
       endif()
       set(newargs ${newargs} -m  ${dependent_pcm})
     endforeach()
@@ -675,6 +681,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(APPEND compIncPaths "-compilerI${implinc}")
   endforeach()
 
+  if(cpp_module_file AND TARGET ${ARG_MODULE})
+    set_target_properties(${ARG_MODULE} PROPERTIES
+      ROOT_PCM_FILENAME "${cpp_module_file}")
+  endif()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
@@ -686,6 +697,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                                         ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
                      DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
+                             ${pcm_dependencies}
                              ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
                              ${runtime_cxxmodule_dependencies}
                      COMMAND_EXPAND_LISTS)
