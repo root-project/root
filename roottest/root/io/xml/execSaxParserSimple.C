@@ -1,6 +1,9 @@
 
 #include "saxParserSimpleHandle.h"
 
+#include <TSAXParser.h>
+#include <TStopwatch.h>
+
 int execSaxParserSimple()
 {
    const Int_t nIterations = 1000;

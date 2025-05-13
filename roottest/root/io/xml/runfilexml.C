@@ -1,19 +1,15 @@
-{
-// Fill out the code of the actual test
-#ifndef SECOND_RUN
-   gROOT->ProcessLine(".L test_classes.h+");
-#endif
+#include "test_classes.h"
 
-#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
-#define SECOND_RUN
-   gROOT->ProcessLine(".x runfilexml.C");
-#else
+void runfilexml()
+{
+   gSystem->Load("libXmlTestClasses");
+
    TFile *f = TFile::Open("file.xml", "recreate");
-   if (f==0) {
-      cout << "Cannot create file.xml" << endl;   
+   if (!f) {
+      cout << "Cannot create file.xml" << endl;
       return;
    }
-   
+
    TXmlEx1* ex1 = new TXmlEx1;
    TXmlEx2* ex2 = new TXmlEx2;
    TXmlEx3* ex3 = new TXmlEx3;
@@ -22,22 +18,22 @@
    TXmlEx6* ex6 = new TXmlEx6(true);
    TXmlEx7* ex7 = new TXmlEx7(true);
    TXmlEx8* ex8 = new TXmlEx8(true);
-   
+
    TH1I* h1 = new TH1I("histo1","histo title", 100, -10., 10.);
    h1->FillRandom("gaus",10000);
-   
+
    TList* arr = new TList;
    for(Int_t n=0;n<10;n++) {
-      TBox* b = new TBox(n*10,n*100,n*20,n*200);  
+      TBox* b = new TBox(n*10,n*100,n*20,n*200);
       arr->Add(b, Form("option_%d_option",n));
    }
-   
+
    TClonesArray* clones = new TClonesArray("TBox",10);
-   for(int n=0;n<10;n++) 
+   for(int n=0;n<10;n++)
        new ((*clones)[n]) TBox(n*10,n*100,n*20,n*200);
-   
+
    cout << "Writing objects to file " << endl;
-   
+
    f->WriteObject(ex1, "ex1");
    f->WriteObject(ex2, "ex2");
    f->WriteObject(ex3, "ex3");
@@ -51,7 +47,7 @@
    arr->Write("arr",TObject::kSingleKey);
    clones->Write("clones",TObject::kSingleKey);
    delete f; f = 0;
-   
+
    delete ex1; ex1 = 0;
    delete ex2; ex2 = 0;
    delete ex3; ex3 = 0;
@@ -63,17 +59,17 @@
    delete h1;  h1 = 0;
    delete arr; arr = 0;
    delete clones; clones = 0;
-   
+
 #ifdef ClingReinstateRedeclarationAllowed
    TFile *f = TFile::Open("file.xml");
 #else
    f = TFile::Open("file.xml");
 #endif
    if (f==0) {
-      cout << "Cannot open file.xml" << endl;   
+      cout << "Cannot open file.xml" << endl;
       return;
    }
-   
+
    f->GetObject("ex1", ex1);
    f->GetObject("ex2", ex2);
    f->GetObject("ex3", ex3);
@@ -100,10 +96,4 @@
    cout << "clones = " << (clones ? "Ok" : "Error") << endl;
 
    delete f;
-#endif
-#ifdef ClingWorkAroundBrokenUnnamedReturn
-   gApplication->Terminate(0);
-#else
-   return 0;
-#endif
 }
