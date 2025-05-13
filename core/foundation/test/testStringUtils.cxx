@@ -79,4 +79,5 @@ TEST(StringUtils, Round)
    EXPECT_EQ(ROOT::Round(-30000., 2000000000., 2), "(-0.0#pm2.0)*1e9");
    EXPECT_EQ(ROOT::Round(-30000., 1000000000., 99), "(-0.0#pm1.0)*1e9");
    EXPECT_EQ(ROOT::Round(-30000., 1000000000., 0), "(-0#pm1)*1e9");
+   EXPECT_EQ(ROOT::Round(110., 0.24, 1, "+-"), "110.0+-0.2");
 }
