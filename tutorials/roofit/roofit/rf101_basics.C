@@ -64,8 +64,7 @@ void rf101_basics()
    // -----------------------------
 
    // Fit pdf to data
-   //gauss.fitTo(*data, PrintLevel(-1));
-   gauss.fitTo(*data);
+   gauss.fitTo(*data, PrintLevel(-1));
 
    // Print values of mean and sigma (that now reflect fitted values and errors)
    mean.Print();
