@@ -804,6 +804,7 @@ Bool_t TH1Merger::DifferentAxesMerge() {
    for (Int_t i=0;i<TH1::kNstat;i++) {totstats[i] = stats[i] = 0;}
    fH0->GetStats(totstats);
    Double_t nentries = fH0->GetEntries();
+   const Int_t tProfileMergeCode = !fIsProfileMerge ? 0 : fIsProfile1D ? 1 : fIsProfile2D ? 2 : fIsProfile3D ? 3 : -1;
 
    TIter next(&fInputList);
    while (TH1* hist=(TH1*)next()) {
@@ -824,7 +825,8 @@ Bool_t TH1Merger::DifferentAxesMerge() {
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
 
          // if bin is empty we can skip it
-         if (IsBinEmpty(hist,ibin)) continue;
+         if (IsBinEmpty(hist, ibin, tProfileMergeCode))
+            continue;
 
          Int_t binx,biny,binz;
          hist->GetBinXYZ(ibin, binx, biny, binz);
@@ -870,8 +872,16 @@ Bool_t TH1Merger::DifferentAxesMerge() {
                   fH0->GetName(), ib,fH0->fNcells);
          }
 
-         MergeBin(hist, ibin, ib);
-
+         if (!fIsProfileMerge) {
+            MergeBin(hist, ibin, ib);
+         } else {
+            if (fIsProfile1D)
+               MergeProfileBin(static_cast<const TProfile *> (hist), ibin, ib);
+            else if (fIsProfile2D)
+               MergeProfileBin(static_cast<const TProfile2D *> (hist), ibin, ib);
+            else if (fIsProfile3D)
+               MergeProfileBin(static_cast<const TProfile3D *> (hist), ibin, ib);
+         }
       }
    }
    //copy merged stats
@@ -1121,11 +1131,24 @@ Bool_t TH1Merger::LabelMerge(bool newLimits) {
 }
 
 /// helper function for merging
+/// \param profileDim 0 if it's a regular TH1 merge (default), 1 for TProfile, 2 for TProfile2D and 3 for TProfile3D
 
-Bool_t TH1Merger::IsBinEmpty(const TH1 * hist, Int_t ibin) {
+Bool_t TH1Merger::IsBinEmpty(const TH1 * hist, Int_t ibin, Int_t profileDim) {
    Double_t cu = hist->RetrieveBinContent(ibin);
    Double_t e1sq = (hist->fSumw2.fN) ?  hist->GetBinErrorSqUnchecked(ibin) : cu;
-   return cu == 0 && e1sq == 0;
+   bool profileCheck = (profileDim == 0);
+   // For TProfiles we need also to check that entries is 0 even if content and errors are 0
+   if (profileDim == 1) {
+      auto prof = static_cast<const TProfile *>(hist);
+      profileCheck = prof->fBinEntries.fArray[ibin] == 0;
+   } else if (profileDim == 2) {
+      auto prof = static_cast<const TProfile2D *>(hist);
+      profileCheck = prof->fBinEntries.fArray[ibin] == 0;
+   } else if (profileDim == 3) {
+      auto prof = static_cast<const TProfile3D *>(hist);
+      profileCheck = prof->fBinEntries.fArray[ibin] == 0;
+   }
+   return cu == 0 && e1sq == 0 && profileCheck;
 }
 
 // merge input bin (ibin) of histograms hist ibin into current bin cbin of this histogram
