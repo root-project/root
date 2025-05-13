@@ -91,5 +91,11 @@ TEST(TClingUtilsTests, GetRealPath)
 TEST(TClingUtilsTests, CollectionSizeof)
 {
    // https://its.cern.ch/jira/browse/ROOT-9889
-   EXPECT_EQ(sizeof(std::deque<long double>), TClass::GetClass("std::deque<long double>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<short>), TClass::GetClass("std::deque<short>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<unsigned short>), TClass::GetClass("std::deque<unsigned short>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<int>), TClass::GetClass("std::deque<int>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<unsigned int>), TClass::GetClass("std::deque<unsigned int>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<long>), TClass::GetClass("std::deque<long>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<unsigned long>), TClass::GetClass("std::deque<unsigned long>")->GetClassSize());
+
 }
