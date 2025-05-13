@@ -1,12 +1,13 @@
 #include "TFile.h"
 #include "TNamed.h"
-#include <stdio.h>
+#include <cstdio>
 
 
-void runXmlDir() {
-   TFile *f = TFile::Open("file.xml", "recreate");
+void runXmlDir()
+{
+   TFile *f = TFile::Open("filesubdirs.xml", "recreate");
    if (!f) {
-      printf("Cannot create file.xml\n");
+      printf("Cannot create filesubdirs.xml\n");
       return;
    }
 
@@ -33,9 +34,9 @@ void runXmlDir() {
    delete n3; n3 = nullptr;
    delete n4; n4 = nullptr;
 
-   f = TFile::Open("file.xml");
-   if (f==0) {
-      printf("Cannot open file.xml for reading\n");
+   f = TFile::Open("filesubdirs.xml");
+   if (!f) {
+      printf("Cannot open filesubdirs.xml for reading\n");
       return;
    }
 
@@ -44,7 +45,7 @@ void runXmlDir() {
    f->GetObject("dir1/obj1", n1);
    f->GetObject("dir1/dir2/obj4", n4);
 
-   if (n1) printf("dir1/obj1: %s %s\n", n1->GetName(), n1->GetTitle()); 
+   if (n1) printf("dir1/obj1: %s %s\n", n1->GetName(), n1->GetTitle());
       else printf("Fail to read dir1/obj1\n");
    if (n2) printf("dir1/dir2/obj2: %s %s\n", n2->GetName(), n2->GetTitle());
       else printf("Fail to read dir1/dir2/obj2\n");

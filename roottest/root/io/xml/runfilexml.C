@@ -6,7 +6,7 @@ void runfilexml()
 
    TFile *f = TFile::Open("file.xml", "recreate");
    if (!f) {
-      cout << "Cannot create file.xml" << endl;
+      std::cout << "Cannot create file.xml" << std::endl;
       return;
    }
 
@@ -32,7 +32,7 @@ void runfilexml()
    for(int n=0;n<10;n++)
        new ((*clones)[n]) TBox(n*10,n*100,n*20,n*200);
 
-   cout << "Writing objects to file " << endl;
+   std::cout << "Writing objects to file " << std::endl;
 
    f->WriteObject(ex1, "ex1");
    f->WriteObject(ex2, "ex2");
@@ -46,27 +46,23 @@ void runfilexml()
    h1->SetDirectory(0);
    arr->Write("arr",TObject::kSingleKey);
    clones->Write("clones",TObject::kSingleKey);
-   delete f; f = 0;
+   delete f; f = nullptr;
 
-   delete ex1; ex1 = 0;
-   delete ex2; ex2 = 0;
-   delete ex3; ex3 = 0;
-   delete ex4; ex4 = 0;
-   delete ex5; ex5 = 0;
-   delete ex6; ex6 = 0;
-   delete ex7; ex7 = 0;
-   delete ex8; ex8 = 0;
-   delete h1;  h1 = 0;
-   delete arr; arr = 0;
-   delete clones; clones = 0;
+   delete ex1; ex1 = nullptr;
+   delete ex2; ex2 = nullptr;
+   delete ex3; ex3 = nullptr;
+   delete ex4; ex4 = nullptr;
+   delete ex5; ex5 = nullptr;
+   delete ex6; ex6 = nullptr;
+   delete ex7; ex7 = nullptr;
+   delete ex8; ex8 = nullptr;
+   delete h1;  h1 = nullptr;
+   delete arr; arr = nullptr;
+   delete clones; clones = nullptr;
 
-#ifdef ClingReinstateRedeclarationAllowed
-   TFile *f = TFile::Open("file.xml");
-#else
    f = TFile::Open("file.xml");
-#endif
-   if (f==0) {
-      cout << "Cannot open file.xml" << endl;
+   if (!f) {
+      std::cout << "Cannot open file.xml" << std::endl;
       return;
    }
 
@@ -83,17 +79,17 @@ void runfilexml()
    f->GetObject("clones", clones);
 
 
-   cout << "ex1 = " << (ex1 ? "Ok" : "Error") << endl;
-   cout << "ex2 = " << (ex2 ? "Ok" : "Error") << endl;
-   cout << "ex3 = " << (ex3 ? "Ok" : "Error") << endl;
-   cout << "ex4 = " << (ex4 ? "Ok" : "Error") << endl;
-   cout << "ex5 = " << (ex5 ? "Ok" : "Error") << endl;
-   cout << "ex6 = " << (ex6 ? "Ok" : "Error") << endl;
-   cout << "ex7 = " << (ex7 ? "Ok" : "Error") << endl;
-   cout << "ex8 = " << (ex8 ? "Ok" : "Error") << endl;
-   cout << "h1 = " << (h1 ? "Ok" : "Error") << endl;
-   cout << "arr = " << (arr ? "Ok" : "Error") << endl;
-   cout << "clones = " << (clones ? "Ok" : "Error") << endl;
+   std::cout << "ex1 = " << (ex1 ? "Ok" : "Error") << std::endl;
+   std::cout << "ex2 = " << (ex2 ? "Ok" : "Error") << std::endl;
+   std::cout << "ex3 = " << (ex3 ? "Ok" : "Error") << std::endl;
+   std::cout << "ex4 = " << (ex4 ? "Ok" : "Error") << std::endl;
+   std::cout << "ex5 = " << (ex5 ? "Ok" : "Error") << std::endl;
+   std::cout << "ex6 = " << (ex6 ? "Ok" : "Error") << std::endl;
+   std::cout << "ex7 = " << (ex7 ? "Ok" : "Error") << std::endl;
+   std::cout << "ex8 = " << (ex8 ? "Ok" : "Error") << std::endl;
+   std::cout << "h1 = " << (h1 ? "Ok" : "Error") << std::endl;
+   std::cout << "arr = " << (arr ? "Ok" : "Error") << std::endl;
+   std::cout << "clones = " << (clones ? "Ok" : "Error") << std::endl;
 
    delete f;
 }
