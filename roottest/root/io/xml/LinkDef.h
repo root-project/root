@@ -1,9 +1,4 @@
-#ifdef __CLING__
-
-#pragma link off all    globals;
-#pragma link off all    classes;
-#pragma link off all    functions;
-
+#ifdef __ROOTCLING__
 
 #pragma link C++ class TXmlEx1+;
 #pragma link C++ class TXmlEx2+;

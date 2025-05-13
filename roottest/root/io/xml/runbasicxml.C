@@ -2,7 +2,7 @@
 
 void runbasicxml()
 {
-   gSystem->Load("libXmlTestClasses");
+   gSystem->Load("libXmlTestDictionaries");
 
    TString sbuf;
 
