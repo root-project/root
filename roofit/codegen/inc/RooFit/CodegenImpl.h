@@ -54,6 +54,7 @@ class RooRealSumPdf;
 class RooRealVar;
 class RooRecursiveFraction;
 class RooUniform;
+class RooWrapperPdf;
 
 namespace RooStats {
 namespace HistFactory {
@@ -113,6 +114,7 @@ void codegenImpl(RooRealVar &arg, CodegenContext &ctx);
 void codegenImpl(RooRecursiveFraction &arg, CodegenContext &ctx);
 void codegenImpl(RooStats::HistFactory::FlexibleInterpVar &arg, CodegenContext &ctx);
 void codegenImpl(RooUniform &arg, CodegenContext &ctx);
+void codegenImpl(RooWrapperPdf &arg, CodegenContext &ctx);
 
 std::string codegenIntegralImpl(RooAbsReal &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooBernstein &arg, int code, const char *rangeName, CodegenContext &ctx);

@@ -107,7 +107,7 @@ public:
     return _func.arg().plotSamplingHint(obs, xlo, xhi);
   }
 
-
+  RooAbsReal const &function() const { return *_func; }
 
 private:
   RooRealProxy _func;
