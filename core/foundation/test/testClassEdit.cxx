@@ -285,10 +285,20 @@ TEST(TClassEdit, DefAlloc)
    EXPECT_TRUE(TClassEdit::IsDefAlloc("class std::allocator<float>", "float"));
 }
 
-// https://github.com/root-project/root/issues/6607
+
 TEST(TClassEdit, GetNormalizedName)
 {
    std::string n;
+   
+   // https://github.com/root-project/root/issues/6607
    TClassEdit::GetNormalizedName(n, "std::vector<float, class std::allocator<float>>");
    EXPECT_STREQ("vector<float>", n.c_str());
+
+   // https://github.com/root-project/root/issues/18643
+   n.clear();
+   TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*)");
+   EXPECT_STREQ("_Atomic(map<string,TObjArray*>*)", n.c_str());
+
+   n.clear();
+   EXPECT_THROW(TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*"), std::runtime_error);
 }
