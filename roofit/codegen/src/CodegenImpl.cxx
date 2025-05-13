@@ -54,6 +54,7 @@
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
 #include <RooUniform.h>
+#include <RooWrapperPdf.h>
 
 #include "RooFitImplHelpers.h"
 
@@ -643,6 +644,11 @@ void codegenImpl(RooStats::HistFactory::FlexibleInterpVar &arg, CodegenContext &
 void codegenImpl(RooUniform &arg, CodegenContext &ctx)
 {
    ctx.addResult(&arg, "1.0");
+}
+
+void codegenImpl(RooWrapperPdf &arg, CodegenContext &ctx)
+{
+   ctx.addResult(&arg, ctx.getResult(arg.function()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
