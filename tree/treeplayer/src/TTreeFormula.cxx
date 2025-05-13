@@ -4047,6 +4047,11 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// if (tfv.GetNdata() > 1)
 ///    tfv.EvalInstance(1)
 /// ~~~
+/// Note that for `tfv1`, even if the index is fixed in the formula and even if each entry
+/// had the same std::vector size, since the formula contains a branch with theoretically variable size,
+/// one must check GetNData() as there might 0 or 1 answers. Since even with fixed index,
+/// the collection might be too small to fulfill it.
+/// TTreeFormula::GetMultiplicity tells you (indirectly) whether you need to call GetNData or not for a given formula.
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
