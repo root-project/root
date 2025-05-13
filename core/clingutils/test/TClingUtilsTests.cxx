@@ -15,12 +15,14 @@
  *************************************************************************/
 
 #include <TClingUtils.h>
+#include <TClass.h>
 
 #include <ROOT/FoundationUtils.hxx>
 
 #include "gtest/gtest.h"
 
 #include <fstream>
+#include <deque>
 
 TEST(TClingUtilsTests, GetCppName)
 {
@@ -84,4 +86,10 @@ TEST(TClingUtilsTests, GetRealPath)
    std::remove("./realfile1");
    std::remove("./realfile2");
 #endif // not R__WIN32
+}
+
+TEST(TClingUtilsTests, CollectionSizeof)
+{
+   // https://its.cern.ch/jira/browse/ROOT-9889
+   EXPECT_EQ(sizeof(std::deque<long double>), TClass::GetClass("std::deque<long double>")->GetClassSize());
 }
