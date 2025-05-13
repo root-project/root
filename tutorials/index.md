@@ -23,10 +23,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing event generation with pythia and Monte Carlo.
 
-\defgroup tutorial_exp Experimental API tutorials
-\ingroup Tutorials
-\brief Various examples showing the experimental API.
-
 \defgroup tutorial_geometry Geometry tutorials
 \ingroup Tutorials
 \brief Examples showing how to make use of geometry classes in ROOT.
