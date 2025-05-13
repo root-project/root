@@ -1438,6 +1438,7 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// if all values of `a` are unique or have equal weights (or `w` is nullptr), then the Bickel half-sample-mode algorithm is applied; otherwise the
 /// value associated with the highest sum of weights (if `w` is not nullptr)
 /// is returned.
+/// \note If in a given iteration step, there are several equally small subranges, then the first occurrence is chosen.
 template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, const Double_t *w)
 {
    if (n <= 0)
