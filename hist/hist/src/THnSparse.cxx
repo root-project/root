@@ -536,9 +536,9 @@ be retrieved by THnSparse::GetBinContent(linidx, (Int_t*)coord).
 After the call, coord will contain the bin coordinate of each axis for the bin
 with linear index linidx. A possible call would be
 
-   std::cout << hs.GetBinContent(0, coord);
-   std::cout <<" is the content of bin [x = " << coord[0] "
-        << " | y = " << coord[1] << "]" << std::endl;
+    std::cout << hs.GetBinContent(0, coord);
+    std::cout <<" is the content of bin [x = " << coord[0] "
+         << " | y = " << coord[1] << "]" << std::endl;
 
 ## Efficiency
 TH1 and TH2 are generally faster than THnSparse for one and two dimensional
