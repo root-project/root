@@ -2882,3 +2882,62 @@ TEST(ONNX, MatMul_Stacked)
       EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
    }
 }
+
+TEST(ONNX, GatherND_1)
+{
+   // test  gatherND elements
+   std::vector<float> input(18, 0.);    // input tensor shape is (2, 3, 3)
+   std::iota(input.begin(), input.end(), 1.);
+   // input : {1,2,3},{4,5,6},{7,8,9}  {10,11,12}{13,14,15}{16,17,18}
+   std::vector<int64_t> indices = { 1, 0, 2,   0, 2, 1};  // get x(1,0,2) and x(0,2,1)
+   std::vector<float> correct_output = {12, 8};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherND_1", input, indices);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, GatherND_2)
+{
+   // test GatherND using slices
+   std::vector<float> input(18, 0.);    // input tensor shape is (2, 3, 3)
+   // input : {1,2,3},{4,5,6},{7,8,9}......
+   std::iota(input.begin(), input.end(), 1.);  // { 1,...,18}
+   std::vector<int64_t> indices = { 1, 1, 0, 2}; // get x(1,1,:) and x(0,2:)
+   std::vector<float> correct_output = {13,14,15, 7,8,9};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherND_2", input, indices);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, GatherND_3)
+{
+   // test GatherND elements using batch size as first dim (bs=2)
+   std::vector<float> input(24, 0.);    // input tensor shape is (2, 3, 2, 2)
+   std::iota(input.begin(), input.end(), 1.);  // { 1,...,24}
+   std::vector<int64_t> indices = { 2, 0, 0, 1}; // shape is (2,2,1)
+   // indices are { [[2],[0]] , [[0],[1]]}  :
+   // data[0,2,:] data[0,0:] ,  data[1,0:] data[1,1,:]
+   std::vector<float> correct_output = {9,10,11,12, 1,2,3,4, 13,14,15,16, 17,18,19,20};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherND_3", input, indices);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
