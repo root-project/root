@@ -63,3 +63,9 @@ TEST(TClass, TypeNameDouble)
    TClass *clTypeID32 = TClass::GetClass(typeid(ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> >));
    EXPECT_EQ(clLVd, clTypeID32) << "LV<double> should have priority; typeid lookup should find it.";
 }
+
+// https://github.com/root-project/root/issues/18643
+TEST(TClass, BuildRealData)
+{
+   TClass::GetClass("TClass")->BuildRealData();
+}
