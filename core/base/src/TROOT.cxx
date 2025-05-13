@@ -570,7 +570,7 @@ namespace Internal {
          sym(config);
       ROOT::Internal::IsImplicitMTEnabledImpl() = true;
 #else
-      ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
+      ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with config %d, please build ROOT with -Dimt=ON", static_cast<int>(config));
 #endif
    }
 
