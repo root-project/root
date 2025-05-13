@@ -3,6 +3,9 @@
 
 #include <Rtypes.h>
 #include <TQObject.h>
+#include <TXMLAttr.h>
+
+#include <iostream>
 
 class TList;
 
