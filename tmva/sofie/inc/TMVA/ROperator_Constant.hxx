@@ -36,7 +36,9 @@ public:
       fShape(shape),
       fValues(values),
       fAttrType(type)
-      {
+      {  
+         fKind = OperatorKind::CONSTANT;
+
          fInputTensorNames = { };
          fOutputTensorNames = { };
       }
@@ -57,6 +59,7 @@ public:
       if (!fNX.empty()) {
          // case of ConstantOfShape (since no inputs in case of Constant operator)
          fIsConstantOfShape  = true;
+         fKind = OperatorKind::CONSTANTOFSHAPE;
          if (model.CheckIfTensorAlreadyExist(fNX) == false){
            throw std::runtime_error("TMVA SOFIE ConstantOfShape Op Input Tensor is not found in model");
          }

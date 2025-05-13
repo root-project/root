@@ -160,6 +160,12 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
     for (auto& stdlib : libs) {
         AddNeededStdLib(stdlib);
     }
+    if (op->GetOpKind()==OperatorKind::CONSTANT){
+      AddConstantOperator(std::move(op));
+      return;
+    }
+
+    op->RegisterOperatorOrder(order_execution);
     if (order_execution >= 0) {
         fOperators.insert(fOperators.begin() + order_execution, std::move(op));
     } else {
@@ -168,8 +174,8 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
 
     // storing the last usage of tensors which are input to
     // operators (but are not inputs to the model, i.e. they are intermediate
-    // tensors). This information is needed to keep a check on when a
-    // particular intermediate tensor can be flushed to free up memory for reuse.
+    // tensors). This information is needed to keep a check on when memory is no
+    // longer required for a particular intermediate tensor and can be reused.
    for(size_t index = 0; index<op_input_tensors.size() &&
          fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() &&
          std::find(fInputTensorNames.begin(), fInputTensorNames.end(),
@@ -178,6 +184,10 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
          ++index){
             fIntermediateTensorFrequencyLookup[op_input_tensors[index]] = order_execution;
    }
+}
+
+void RModel::AddConstantOperator(std::unique_ptr<ROperator> op){
+   fConstantOperators.push_back(std::move(op));
 }
 
 void RModel::AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data) {
@@ -420,38 +430,52 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
    }
 }
 
-void RModel::CheckAndFuseOperators(){
+void RModel::CheckAndFuseOperators() {
    size_t idx = 0;
    std::vector<size_t> fusable_indices;
    std::string fusable_propagate_tensor_name;
-
    while (idx < fOperators.size()) {
-       if (fOperators[idx]->GetOpKind() == OperatorKind::GEMM) {
-           fusable_indices.clear();
-           size_t j = idx + 1;
-
-           for (; j < fOperators.size(); ++j) {
-               if (FusableKinds.count(fOperators[j]->GetOpKind())) {
-                   fusable_indices.push_back(j);
-                   if (fIntermediateTensorFrequencyLookup[fOperators[j]->GetFusableOutputTensorName()] > 1) {
-                       fusable_propagate_tensor_name = fOperators[j]->GetFusableOutputTensorName();
-                       break;
-                   }
-               } else {
-                   break;
-               }
-           }
-
-           for (auto &it : fusable_indices) {
-               fOperators[it]->UpdateFusableTensorName(fusable_propagate_tensor_name);
-           }
-
-           idx = j; // move idx past fused ops
-       } else {
-           ++idx;
-       }
+      if (fOperators[idx]->GetOpKind() != OperatorKind::GEMM) {
+          ++idx;
+          continue;
+      }
+   
+      fusable_indices.clear();
+      fusable_propagate_tensor_name.clear();
+   
+      size_t j = idx + 1;
+      for (; j < fOperators.size(); ++j) {
+          auto opKind = fOperators[j]->GetOpKind();
+   
+          // Only consider operators with fusable kinds
+          if (!FusableKinds.count(opKind)) {
+              break;
+          }
+   
+          fusable_indices.push_back(j);
+   
+          const auto& tensorName = fOperators[j]->GetFusableOutputTensorName();
+          auto freqIt = fIntermediateTensorFrequencyLookup.find(tensorName);
+   
+          // Propagate tensor name only if it's not used multiple times
+          if (freqIt != fIntermediateTensorFrequencyLookup.end() && freqIt->second != fOperators[j]->GetOpOrder()) {
+              std::cout << "\nBreaking here, second: " << freqIt->second << ", idx: " << j;
+              fusable_propagate_tensor_name = tensorName;
+              break;
+          }
+      }
+   
+      if (!fusable_propagate_tensor_name.empty()) {
+          std::cout << "\nOperators to be fused with: " << fusable_propagate_tensor_name;
+          for (auto& index : fusable_indices) {
+              fOperators[index]->UpdateFusableTensorName(fusable_propagate_tensor_name);
+          }
+      }
+   
+      idx = j; // Move index forward to continue search
    }
 }
+
 
 
 void RModel::Initialize(int batchSize, bool verbose) {
@@ -467,7 +491,7 @@ void RModel::Initialize(int batchSize, bool verbose) {
 void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool verbose) {
 
    fVerbose = int(verbose);
-
+   fVerbose = 0;
    if (fIsInitialized) {
       if (verbose)
          std::cout << "Model is already initialized  - skip initialization " << std::endl;
@@ -543,27 +567,39 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       if (!modelHasWeights)
          fUseWeightFile = false;
    }
-   // Go through model and initialize each operator
-   int i = 0;
 
-   std::vector<size_t> temp_available_stack; // vector stores individual chunks of available memory that maybe reused
-
-   for(size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx){
+   for (size_t op_const_idx = 0; op_const_idx < fConstantOperators.size(); ++op_const_idx) {
       if (verbose) {
-         auto& r = *fOperators[op_idx].get();
-         std::cout << "Initializing operator " << i << "  " << typeid(r).name() << std::endl;
+          auto& r = *fConstantOperators[op_const_idx].get();
+          std::cout << "Initializing constant operator " << op_const_idx << "  " << typeid(r).name() << std::endl;
       }
-      fOperators[op_idx]->Initialize(*this);
-      for(auto &it:fOperators[op_idx]->GetOpOutputTensors()){
-         std::string name = std::string{it};
-         if (fIntermediateTensorFrequencyLookup.find(it) == fIntermediateTensorFrequencyLookup.end() &&
-             std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), name) == fOutputTensorNames.end() &&
-             fInitializedTensors.find(name) == fInitializedTensors.end() &&
-             fDynamicTensorInfos.find(name) == fDynamicTensorInfos.end()){
-            fIntermediateTensorFrequencyLookup[it] = op_idx;
-         }
-      }
-      i++;
+  
+      fConstantOperators[op_const_idx]->Initialize(*this);
+  }
+
+  // Go through model and initialize each operator
+   int i = 0;
+   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx ) {
+       if (verbose) {
+           auto& r = *fOperators[op_idx].get();
+           std::cout << "Initializing operator " << i << "  " << typeid(r).name() << std::endl;
+       }
+   
+       fOperators[op_idx]->Initialize(*this);
+      //  if(fOperators[op_idx]->GetOpName().length()==0){
+      //    std::cout<<"\nempty name for op, typeid: "<<typeid(*fOperators[op_idx]).name();
+      //  }
+       for (auto &it : fOperators[op_idx]->GetOpOutputTensors()) {
+           std::string name{it};
+           if (fIntermediateTensorFrequencyLookup.find(it) == fIntermediateTensorFrequencyLookup.end() &&
+               fInputTensorInfos.find(name) == fInputTensorInfos.end() &&
+               fInitializedTensors.find(name) == fInitializedTensors.end() &&
+               fDynamicTensorInfos.find(name) == fDynamicTensorInfos.end()) {
+               fIntermediateTensorFrequencyLookup[it] = i;
+           }
+       }
+   
+       ++i;
    }
    CheckAndFuseOperators();
 
@@ -880,6 +916,7 @@ void RModel::GenerateSessionCode()
       std::string intermediate_memory_alloc_string = "";
       intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
       for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+         // std::cout<<std::endl<<toString(fOperators[op_idx]->GetOpKind());
          intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
          CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
       }
