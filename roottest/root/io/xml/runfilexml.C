@@ -2,7 +2,7 @@
 
 void runfilexml()
 {
-   gSystem->Load("libXmlTestClasses");
+   gSystem->Load("libXmlTestDictionaries");
 
    TFile *f = TFile::Open("file.xml", "recreate");
    if (!f) {

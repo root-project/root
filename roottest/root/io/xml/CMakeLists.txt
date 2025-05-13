@@ -19,19 +19,19 @@ ROOTTEST_ADD_TEST(XmlDir
                   MACRO runXmlDir.C
                   OUTREF XmlDir.ref)
 
-ROOTTEST_GENERATE_DICTIONARY(libXmlTestClasses
+ROOTTEST_GENERATE_DICTIONARY(libXmlTestDictionaries
                   test_classes.h
                   LINKDEF LinkDef.h
                   NO_ROOTMAP NO_CXXMODULE
-                  FIXTURES_SETUP xmlTestClasses_fixture)
+                  FIXTURES_SETUP xmlTestDict_fixture)
 
 ROOTTEST_ADD_TEST(basicxml
                   MACRO runbasicxml.C
                   OUTREF basicxml.ref
-                  FIXTURES_REQUIRED xmlTestClasses_fixture)
+                  FIXTURES_REQUIRED xmlTestDict_fixture)
 
 ROOTTEST_ADD_TEST(filexml
                   MACRO runfilexml.C
                   OUTREF filexml.ref
-                  FIXTURES_REQUIRED xmlTestClasses_fixture)
+                  FIXTURES_REQUIRED xmlTestDict_fixture)
 
