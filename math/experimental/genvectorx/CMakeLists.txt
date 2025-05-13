@@ -10,54 +10,53 @@
 
 message(STATUS "Experimental GenVectorX")
 
-  ROOT_LINKER_LIBRARY(GenVectorSYCL
-      src/3DConversions.cxx
-      src/3DDistances.cxx
-      src/AxisAngle.cxx
-      src/AxisAngleXother.cxx
-      src/BitReproducible.cxx
-      src/Boost.cxx
-      src/BoostX.cxx
-      src/BoostY.cxx
-      src/BoostZ.cxx
-      src/EulerAngles.cxx
-      src/LorentzRotation.cxx
-      src/Quaternion.cxx
-      src/QuaternionXaxial.cxx
-      src/Rotation3D.cxx
-      src/Rotation3DxAxial.cxx
-      src/RotationZYX.cxx
-      src/VectorUtil.cxx
-    DEPENDENCIES
-      Core
-      MathCore
-  )
- 
-  add_sycl_library_to_root_target(
-    TARGET 
-      GenVectorSYCL 
-    SOURCES 
-      src/3DConversions.cxx
-      src/3DDistances.cxx
-      src/AxisAngle.cxx
-      src/AxisAngleXother.cxx
-      src/BitReproducible.cxx
-      src/Boost.cxx
-      src/BoostX.cxx
-      src/BoostY.cxx
-      src/BoostZ.cxx
-      src/EulerAngles.cxx
-      src/LorentzRotation.cxx
-      src/Quaternion.cxx
-      src/QuaternionXaxial.cxx
-      src/Rotation3D.cxx
-      src/Rotation3DxAxial.cxx
-      src/RotationZYX.cxx
-      src/VectorUtil.cxx
-     COMPILE_DEFINITIONS
-       ROOT_MATH_SYCL
-  )
-  
+ROOT_LINKER_LIBRARY(GenVectorSYCL
+    src/3DConversions.cxx
+    src/3DDistances.cxx
+    src/AxisAngle.cxx
+    src/AxisAngleXother.cxx
+    src/BitReproducible.cxx
+    src/Boost.cxx
+    src/BoostX.cxx
+    src/BoostY.cxx
+    src/BoostZ.cxx
+    src/EulerAngles.cxx
+    src/LorentzRotation.cxx
+    src/Quaternion.cxx
+    src/QuaternionXaxial.cxx
+    src/Rotation3D.cxx
+    src/Rotation3DxAxial.cxx
+    src/RotationZYX.cxx
+    src/VectorUtil.cxx
+  DEPENDENCIES
+    Core
+    MathCore
+)
+
+add_sycl_to_target(
+  TARGET 
+    GenVectorSYCL 
+  SOURCES 
+    src/3DConversions.cxx
+    src/3DDistances.cxx
+    src/AxisAngle.cxx
+    src/AxisAngleXother.cxx
+    src/BitReproducible.cxx
+    src/Boost.cxx
+    src/BoostX.cxx
+    src/BoostY.cxx
+    src/BoostZ.cxx
+    src/EulerAngles.cxx
+    src/LorentzRotation.cxx
+    src/Quaternion.cxx
+    src/QuaternionXaxial.cxx
+    src/Rotation3D.cxx
+    src/Rotation3DxAxial.cxx
+    src/RotationZYX.cxx
+    src/VectorUtil.cxx
+)
+target_link_libraries(GenVectorSYCL INTERFACE AdaptiveCpp::acpp-rt)
+target_compile_options(GenVectorSYCL PUBLIC ${SYCL_COMPILER_FLAGS})
 target_compile_definitions(GenVectorSYCL PUBLIC ROOT_MATH_SYCL)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
