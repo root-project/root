@@ -586,8 +586,6 @@ private:
   void WriteTypeAbbrevs();
   void WriteType(ASTContext &Context, QualType T);
 
-  bool isLookupResultExternal(StoredDeclsList &Result, DeclContext *DC);
-
   void GenerateSpecializationInfoLookupTable(
       const NamedDecl *D, llvm::SmallVectorImpl<const Decl *> &Specializations,
       llvm::SmallVectorImpl<char> &LookupTable, bool IsPartial);
