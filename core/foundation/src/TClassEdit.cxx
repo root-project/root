@@ -33,40 +33,40 @@
 using std::string, std::string_view, std::vector, std::set;
 
 namespace {
-   static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = nullptr;
+static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = nullptr;
 
-   template <typename T>
-   struct ShuttingDownSignaler : public T {
-      using T::T;
+template <typename T>
+struct ShuttingDownSignaler : public T {
+   using T::T;
 
-      ShuttingDownSignaler() = default;
-      ShuttingDownSignaler(T &&in) : T(std::move(in)) {}
+   ShuttingDownSignaler() = default;
+   ShuttingDownSignaler(T &&in) : T(std::move(in)) {}
 
-      ~ShuttingDownSignaler()
-      {
-         if (gInterpreterHelper)
-            gInterpreterHelper->ShuttingDownSignal();
-      }
-   };
-}
+   ~ShuttingDownSignaler()
+   {
+      if (gInterpreterHelper)
+         gInterpreterHelper->ShuttingDownSignal();
+   }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the length, if any, taken by std:: and any
 /// potential inline namespace (well compiler detail namespace).
 
-static size_t StdLen(const std::string_view name)
+size_t StdLen(const std::string_view name)
 {
    size_t len = 0;
-   if (name.compare(0,5,"std::")==0) {
+   if (name.compare(0, 5, "std::") == 0) {
       len = 5;
 
       // TODO: This is likely to induce unwanted autoparsing, those are reduced
       // by the caching of the result.
       if (gInterpreterHelper) {
-         for(size_t i = 5; i < name.length(); ++i) {
-            if (name[i] == '<') break;
+         for (size_t i = 5; i < name.length(); ++i) {
+            if (name[i] == '<')
+               break;
             if (name[i] == ':') {
-               std::string scope(name.data(),i);
+               std::string scope(name.data(), i);
 
                // We assume that we are called in already serialized code.
                // Note: should we also cache the negative answers?
@@ -81,21 +81,20 @@ static size_t StdLen(const std::string_view name)
 
                if (isInlined) {
                   len = i;
-                  if (i+1<name.length() && name[i+1]==':') {
+                  if (i + 1 < name.length() && name[i + 1] == ':') {
                      len += 2;
                   }
                } else {
                   std::string scoperesult;
-                  if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
-                     && gInterpreterHelper->IsDeclaredScope(scope, isInlined))
-                  {
+                  if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult) &&
+                      gInterpreterHelper->IsDeclaredScope(scope, isInlined)) {
                      if (isInlined) {
                         {
                            ROOT::Internal::TSpinLockGuard lock(spinFlag);
                            gInlined.insert(scope);
                         }
                         len = i;
-                        if (i+1<name.length() && name[i+1]==':') {
+                        if (i + 1 < name.length() && name[i + 1] == ':') {
                            len += 2;
                         }
                      }
@@ -113,11 +112,11 @@ static size_t StdLen(const std::string_view name)
 /// Remove std:: and any potential inline namespace (well compiler detail
 /// namespace.
 
-static void RemoveStd(std::string &name, size_t pos = 0)
+void RemoveStd(std::string &name, size_t pos = 0)
 {
-   size_t len = StdLen({name.data()+pos,name.length()-pos});
+   size_t len = StdLen({name.data() + pos, name.length() - pos});
    if (len) {
-      name.erase(pos,len);
+      name.erase(pos, len);
    }
 }
 
@@ -132,6 +131,8 @@ static void RemoveStd(std::string_view &name)
       name.remove_prefix(len);
    }
 }
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1087,7 +1088,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
                offset += 5;
             }
             constexpr auto char_traits_s = "char_traits<char>";
-            // or 
+            // or
             // static constexpr char const* const char_traits_s = "char_traits<char>";
             static constexpr unsigned int char_traits_len = std::char_traits<char>::length(char_traits_s);
             if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
