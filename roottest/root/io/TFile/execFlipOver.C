@@ -1,5 +1,5 @@
+int execFlipOver()
 {
-#ifdef R__B64
    std::vector<int> data;
    data.resize(  (100*1024*1024+408620)/4);
    std::vector<float> smalldata;
@@ -25,8 +25,6 @@
 
       // f->GetListOfFree()->ls();
    }
-
-#if 1
 
    fprintf(stderr,"Write input file header\n");
    f->Write();
@@ -90,7 +88,5 @@
       return 5;
    }
 
-#endif
-   // What about spurrious StreamerInfo warning.
-#endif
+   return 0;
 }
