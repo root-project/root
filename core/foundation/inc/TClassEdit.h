@@ -175,7 +175,8 @@ namespace TClassEdit {
       AtomicTypeNameHandlerRAII(std::string &typeName, EBehavior behavior = EBehavior::kDetectStripReadd)
          : fTypeName(typeName), fBehavior(behavior)
       {
-         if (fBehavior == EBehavior::kReadd || fBehavior == EBehavior::kNoOp) return;
+         if (fBehavior == EBehavior::kReadd || fBehavior == EBehavior::kNoOp)
+            return;
          if (0 == fTypeName.find(fgPrefix)) {
             fIsAtomic = true;
             if (fBehavior == EBehavior::kDetectStrip || fBehavior == EBehavior::kDetectStripReadd) {
