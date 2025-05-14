@@ -232,7 +232,6 @@ TEST(RNTuple, VoidViewThrow)
    *model->MakeField<unsigned long>("m") = 42;
    *model->MakeField<float>("f") = 42.f;
    *model->MakeField<double>("d") = 42.;
-   *model->MakeField<long double>("e") = 42.;
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
@@ -250,7 +249,6 @@ TEST(RNTuple, VoidViewThrow)
    auto vm = reader->GetView<void>("m");
    auto vf = reader->GetView<void>("f");
    auto vd = reader->GetView<void>("d");
-   auto ve = reader->GetView<void>("e");
    EXPECT_THROW(vc.GetValue().GetRef<short>(), ROOT::RException);
    EXPECT_THROW(vh.GetValue().GetRef<unsigned short>(), ROOT::RException);
    EXPECT_THROW(vs.GetValue().GetRef<int>(), ROOT::RException);
@@ -263,7 +261,7 @@ TEST(RNTuple, VoidViewThrow)
    EXPECT_THROW(vf.GetValue().GetRef<Double_t>(), ROOT::RException);
    EXPECT_THROW(vd.GetValue().GetRef<float>(), ROOT::RException);
    EXPECT_THROW(vd.GetValue().GetRef<Float_t>(), ROOT::RException);
-   EXPECT_THROW(ve.GetValue().GetRef<float>(), ROOT::RException);
+   EXPECT_THROW(vd.GetValue().GetRef<long double>(), ROOT::RException);
    EXPECT_FLOAT_EQ(vf.GetValue().GetRef<Float_t>(), 42.f);
    EXPECT_FLOAT_EQ(vd.GetValue().GetRef<Double_t>(), 42.);
 }
