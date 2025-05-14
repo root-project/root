@@ -370,10 +370,10 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
           \f[ \Delta R = - \sqrt { \Delta \eta ^2 - \Delta phi ^2 } \f]
           \param useRapidity true to use Rapidity(), false to use Eta()
        */
-       Scalar DeltaR(const LorentzVector &v, const Bool_t useRapidity = false) const
+       Scalar DeltaR(const LorentzVector &v, const bool useRapidity = false) const
        {
-          const Double_t delta = useRapidity ? Rapidity() - v.Rapidity() : Eta() - v.Eta();
-          const Double_t dphi = VectorUtil::Phi_mpi_pi(Phi() - v.Phi());
+          const double delta = useRapidity ? Rapidity() - v.Rapidity() : Eta() - v.Eta();
+          const double dphi = VectorUtil::Phi_mpi_pi(Phi() - v.Phi());
           return std::sqrt(delta * delta + dphi * dphi);
        }
 
