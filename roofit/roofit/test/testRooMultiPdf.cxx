@@ -20,11 +20,6 @@ TEST(RooMultiPdf, SelectsCorrectPdf)
 
    RooCategory indx("my_special_index", "my_index");
 
-   indx.defineType("gauss1", 0);
-   indx.defineType("gauss2", 1);
-   std::cout << "Defined types and indices in the category:" << std::endl;
-   std::cout << "gauss1 --> 0" << std::endl;
-   std::cout << "gauss2 --> 1" << std::endl;
 
    RooArgList list;
    list.add(gaus1);
