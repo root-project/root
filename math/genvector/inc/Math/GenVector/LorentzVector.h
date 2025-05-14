@@ -368,7 +368,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 
        /**
           deltaRapidity between this and vector v
-          \f[ \Delta R = \sqrt { \Delta \eta ^2 + \Delta phi ^2 } \f]
+          \f[ \Delta R = \sqrt { \Delta \eta ^2 + \Delta \phi ^2 } \f]
           \param useRapidity true to use Rapidity(), false to use Eta()
        */
        template <class OtherLorentzVector>
