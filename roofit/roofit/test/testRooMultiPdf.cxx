@@ -25,11 +25,11 @@ TEST(RooMultiPdf, SelectsCorrectPdf)
 
    RooMultiPdf pdf("mult", "multi_pdf", indx, list);
 
-   indx.setIndex(0);
+   RooArgSet normSet{x};
 
-   std::cout << "value is " << pdf.getVal() << std::endl;
+   indx.setIndex(0);
+   EXPECT_EQ(pdf.getVal(normSet), gaus1.getVal(normSet));
 
    indx.setIndex(1);
-
-   std::cout << "value is " << pdf.getVal() << std::endl;
+   EXPECT_EQ(pdf.getVal(normSet), gaus2.getVal(normSet));
 }
