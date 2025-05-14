@@ -31,13 +31,15 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
    gSystem->Unlink("latest");
    gSystem->Symlink(dirname,"latest");
 
-   TString filename = gSystem->ConcatFileName(dirname, testname );
+   auto _filename = gSystem->ConcatFileName(dirname, testname );
+   TString filename = _filename;
+   delete [] _filename;
    filename += ".root";
 
    TFile *file = new TFile(filename,"RECREATE","stl test file",0);
 
    HolderClass *holder = new HolderClass( 0 );
-   
+
    // Write(file,"scalar",holder->fScalar)
    // Write(file,"object",holder->fObject)
    // Write(file,"nested",holder->fNested)
@@ -64,7 +66,7 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
         tree->Branch("scalar2.",&(holder->fScalarPtr),32000,2);
         tree->Branch("scalar99.",&(holder->fScalarPtr),32000,99);
      }
- 
+
      TClass *clo = gROOT->GetClass(typeid(holder->fObject));
      if (!clo) {
         TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
@@ -80,7 +82,7 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
      if (!cln) {
         TestError("TreeBuilding", Form("Writing holder class: Missing class for %s",
                   typeid(holder->fNested).name()));
-     } else {     
+     } else {
         tree->Branch("nested0." ,&(holder->fNestedPtr),32000,0);
         tree->Branch("nested1." ,&(holder->fNestedPtr),32000,1);
         tree->Branch("nested2." ,&(holder->fNestedPtr),32000,2);
@@ -105,14 +107,14 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
       TestError("treeReading",Form("Missing branch: %s",bname));
       return false;
    }
-   
+
    if (branch->InheritsFrom("TBranchObject")) {
       TLeafObject *tbo = dynamic_cast<TLeafObject*>(branch->GetListOfLeaves()->At(0));
       holder = (HolderClass*)(tbo->GetObject());
 
       if (holder==0) {
          TestError("treeReading",Form("BranchObject %s with holder == 0!",bname));
-         return false;         
+         return false;
       }
    } else {
       add = (HolderClass**)branch->GetAddress();
@@ -128,7 +130,7 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
          case 3: p = (void**) &(gHolder->fNestedPtr); *p = ((TBranchElement*)branch)->GetObject(); break;
       }
    }
-   
+
    int splitlevel = branch->GetSplitLevel();
 
    switch (type) {
@@ -136,7 +138,7 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
       case 1: return gHolder->VerifyScalarPtr(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
       case 2: return gHolder->VerifyObjectPtr(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
       case 3: return gHolder->VerifyNestedPtr(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
-      default: 
+      default:
          TestError("treeReading",Form("Unknown type %d in verifyBranch",type));
          return false;
    }
@@ -145,10 +147,13 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
 template <class HolderClass> bool read(const char *dirname, const char *testname, int nEntry, bool current) {
    HolderClass *holder = 0;
    bool result = true;
-   bool testingTopLevelVectors = true; 
+   bool testingTopLevelVectors = true;
 
-   TString filename = gSystem->ConcatFileName(dirname, testname );
+
+   auto _filename = gSystem->ConcatFileName(dirname, testname );
+   TString filename = _filename;
    filename += ".root";
+   delete [] _filename;
 
    if (!current && gSystem->AccessPathName(filename, kFileExists)) {
       // when reading old directory a missing files is not an error.
@@ -200,16 +205,16 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
          result &= verifyBranch<HolderClass>(testname,chain,"scalar1",1);
          result &= verifyBranch<HolderClass>(testname,chain,"scalar2",1);
          result &= verifyBranch<HolderClass>(testname,chain,"scalar99",1);
-         
+
          result &= verifyBranch<HolderClass>(testname,chain,"object0",2);
          result &= verifyBranch<HolderClass>(testname,chain,"object1",2);
          result &= verifyBranch<HolderClass>(testname,chain,"object2",2);
          result &= verifyBranch<HolderClass>(testname,chain,"object99",2);
-         
+
          result &= verifyBranch<HolderClass>(testname,chain,"nested0",3);
          result &= verifyBranch<HolderClass>(testname,chain,"nested1",3);
          result &= verifyBranch<HolderClass>(testname,chain,"nested2",3);
-         result &= verifyBranch<HolderClass>(testname,chain,"nested99",3);  
+         result &= verifyBranch<HolderClass>(testname,chain,"nested99",3);
       }
    }
    return result;
@@ -217,7 +222,7 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
 
 template <class HolderClass> bool read(const char *testname, int nEntry = 0, bool readother = false) {
 
-   // for each dirname 
+   // for each dirname
    TString dirname = gROOT->GetVersion();
    dirname.ReplaceAll(".","-");
    dirname.ReplaceAll("/","-");
@@ -229,12 +234,12 @@ template <class HolderClass> bool read(const char *testname, int nEntry = 0, boo
       TList listOfDirs;
       listOfDirs.SetOwner(kTRUE);
       fillListOfDir(listOfDirs);
-      
+
       TIter next(&listOfDirs);
       while (TObjString *dir = (TObjString*)next()) {
          if (dirname != dir->GetName()) {
             std::cout << "Testing older file format from: " << dir->GetName() << std::endl;
-            result &= read<HolderClass>(dir->GetName(),testname, nEntry, /*current=*/ false);         
+            result &= read<HolderClass>(dir->GetName(),testname, nEntry, /*current=*/ false);
          }
       }
    }
