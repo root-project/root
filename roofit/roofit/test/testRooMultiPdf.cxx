@@ -21,9 +21,7 @@ TEST(RooMultiPdf, SelectsCorrectPdf)
    RooCategory indx("my_special_index", "my_index");
 
 
-   RooArgList list;
-   list.add(gaus1);
-   list.add(gaus2);
+   RooArgList list{gaus1, gaus2};
 
    RooMultiPdf pdf("mult", "multi_pdf", indx, list);
 
