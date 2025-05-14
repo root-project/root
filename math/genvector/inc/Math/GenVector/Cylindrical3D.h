@@ -16,7 +16,7 @@
 #ifndef ROOT_Math_GenVector_Cylindrical3D
 #define ROOT_Math_GenVector_Cylindrical3D  1
 
-#include "Math/Math.h"
+#include "TMath.h"
 
 #include "Math/GenVector/eta.h"
 
@@ -109,7 +109,7 @@ public :
    {rho=fRho; zz=fZ; phi=fPhi;}
 
 private:
-   inline static Scalar pi() { return Scalar(M_PI); }
+   inline static Scalar pi() { return Scalar(TMath::Pi()); }
    inline void          Restrict()
    {
       using std::floor;
