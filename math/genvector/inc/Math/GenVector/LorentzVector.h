@@ -23,6 +23,7 @@
 #include "Math/GenVector/DisplacementVector3D.h"
 
 #include "Math/GenVector/GenVectorIO.h"
+#include "Math/GenVector/VectorUtil.h"
 
 #include <cmath>
 #include <string>
@@ -363,6 +364,17 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
           \f[ \eta = - \ln { \tan { \frac { \theta} {2} } } \f]
        */
        Scalar Eta() const { return fCoordinates.Eta(); }
+
+       /**
+          deltaRapidity between this and vector v
+          \f[ \Delta R = - \sqrt { \Delta \eta ^2 - \Delta phi ^2 } \f]
+          \param useRapidity true to use Rapidity(), false to use Eta()
+       */
+       Scalar DeltaR(const LorentzVector<CoordSystem>& v, const Bool_t useRapidity = false) const {
+          const Double_t delta = useRapidity ? Rapidity() - v.Rapidity() : Eta() - v.Eta();
+          const Double_t dphi = VectorUtil::Phi_mpi_pi(Phi() - v.Phi());
+          return std::sqrt(delta* delta + dphi * dphi);
+       }
 
        /**
           get the spatial components of the Vector in a
