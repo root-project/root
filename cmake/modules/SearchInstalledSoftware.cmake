@@ -144,6 +144,16 @@ if(NOT builtin_nlohmannjson)
       set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
     endif()
   endif()
+
+  # ROOTEve wants to know if it comes with json_fwd.hpp:
+  if(TARGET nlohmann_json::nlohmann_json)
+    get_target_property(inc_dirs nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+    foreach(dir ${inc_dirs})
+      if(EXISTS "${dir}/nlohmann/json_fwd.hpp")
+        target_compile_definitions(nlohmann_json::nlohmann_json INTERFACE NLOHMANN_JSON_PROVIDES_FWD_HPP)
+      endif()
+    endforeach()
+  endif()
 endif()
 
 if(builtin_nlohmannjson)
@@ -342,6 +352,11 @@ if(builtin_lzma)
     )
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
+
+  add_library(LibLZMA STATIC IMPORTED GLOBAL)
+  add_library(LibLZMA::LibLZMA ALIAS LibLZMA)
+  target_include_directories(LibLZMA INTERFACE ${LIBLZMA_INCLUDE_DIR})
+  set_target_properties(LibLZMA PROPERTIES IMPORTED_LOCATION ${LIBLZMA_LIBRARIES})
 endif()
 
 #---Check for xxHash-----------------------------------------------------------------
@@ -985,13 +1000,6 @@ foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(XROOTD_${suffix} CACHE)
 endforeach()
 
-if(xrootd OR builtin_xrootd)
-  # This is the target that ROOT will use, irrespective of whether XRootD is a builtin or in the system.
-  # All targets should only link to ROOT::XRootD. Refrain from using XRootD variables.
-  add_library(XRootD INTERFACE IMPORTED GLOBAL)
-  add_library(ROOT::XRootD ALIAS XRootD)
-endif()
-
 if(xrootd AND NOT builtin_xrootd)
   message(STATUS "Looking for XROOTD")
   find_package(XRootD)
@@ -1019,30 +1027,28 @@ if(builtin_xrootd)
     message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
       " option or the 'fail-on-missing' to automatically disable options requiring internet access")
   endif()
+  if(NOT ssl AND NOT builtin_openssl)
+    message(FATAL_ERROR "Building XRootD ('builtin_xrootd'=On) requires ssl support ('ssl' or 'builtin_openssl').")
+  endif()
   list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
-  # The builtin XRootD requires OpenSSL.
-  # We have to find it here, such that OpenSSL is available in this scope to
-  # finalize the XRootD target configuration.
-  # See also: https://github.com/root-project/root/issues/16374
-  find_package(OpenSSL REQUIRED)
   add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
 
-# Finalise the XRootD target configuration
-if(TARGET XRootD)
-
-  # The XROOTD_INCLUDE_DIRS provided by XRootD is actually a list with two
-  # paths, like:
+# Backward compatibility for XRootD <v5.8 without CMake targets:
+if(xrootd AND NOT TARGET XRootD::XrdCl)
+  # Before v5.7.0, XROOTD_INCLUDE_DIRS includes private headers, like:
   #   <xrootd_include_dir>;<xrootd_include_dir>/private
-  # We don't need the private headers, and we have to exclude this path from
-  # the build configuration if we don't want it to fail on systems were the
-  # private headers are not installed (most linux distributions).
-  list(GET XROOTD_INCLUDE_DIRS 0 XROOTD_INCLUDE_DIR_PRIMARY)
+  # The private headers are not always installed, so the configure step might fail.
+  # ROOT doesn't need these headers, so it's best to remove them.
+  list(FILTER XROOTD_INCLUDE_DIRS EXCLUDE REGEX .*/private)
 
-  target_include_directories(XRootD SYSTEM INTERFACE "$<BUILD_INTERFACE:${XROOTD_INCLUDE_DIR_PRIMARY}>")
-  target_link_libraries(XRootD INTERFACE $<BUILD_INTERFACE:${XROOTD_CLIENT_LIBRARIES}>)
-  target_link_libraries(XRootD INTERFACE $<BUILD_INTERFACE:${XROOTD_UTILS_LIBRARIES}>)
+  add_library(XRootD::XrdCl SHARED IMPORTED)
+  set_target_properties(XRootD::XrdCl PROPERTIES IMPORTED_LOCATION ${XROOTD_CLIENT_LIBRARIES})
+  target_include_directories(XRootD::XrdCl SYSTEM INTERFACE $<BUILD_INTERFACE:${XROOTD_INCLUDE_DIRS}>)
+
+  add_library(XRootD::XrdUtils SHARED IMPORTED)
+  set_target_properties(XRootD::XrdUtils PROPERTIES IMPORTED_LOCATION ${XROOTD_UTILS_LIBRARIES})
 endif()
 
 #---check if netxng can be built-------------------------------
@@ -1575,14 +1581,16 @@ if(vdt OR builtin_vdt)
           set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
         endif()
       endif()
-    endif()
+     else()
+       add_library(VDT ALIAS VDT::VDT)
+     endif()
   endif()
   if(builtin_vdt)
     set(vdt_version 0.4.6)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
-      VDT
+      BUILTIN_VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       URL_HASH SHA256=1820feae446780763ec8bbb60a0dbcf3ae1ee548bdd01415b1fb905fd4f90c54
       INSTALL_DIR ${CMAKE_BINARY_DIR}
@@ -1600,12 +1608,19 @@ if(vdt OR builtin_vdt)
       TIMEOUT 600
     )
     ExternalProject_Add_Step(
-       VDT copy2externals
+       BUILTIN_VDT copy2externals
        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
        DEPENDEES install
     )
     set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
+    if(NOT TARGET VDT)
+      add_library(VDT IMPORTED SHARED)
+      add_dependencies(VDT BUILTIN_VDT)
+      set_target_properties(VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
+      target_include_directories(VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
+    endif()
+
     install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
@@ -2046,6 +2061,15 @@ if (builtin_gtest)
 
 endif()
 
+# Starting from cmake 3.23, the GTest targets will have stable names.
+# ROOT was updated to use those, but for older CMake versions, we have to declare the aliases:
+foreach(LIBNAME gtest_main gmock_main gtest gmock)
+  if(NOT TARGET GTest::${LIBNAME} AND TARGET ${LIBNAME})
+    add_library(GTest::${LIBNAME} ALIAS ${LIBNAME})
+  endif()
+endforeach()
+
+#------------------------------------------------------------------------------------
 if(webgui AND NOT builtin_openui5)
   ROOT_CHECK_CONNECTION("builtin_openui5=ON")
   if(NO_CONNECTION)

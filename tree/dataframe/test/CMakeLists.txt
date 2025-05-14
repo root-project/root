@@ -59,11 +59,6 @@ ROOT_GENERATE_DICTIONARY(DummyDict ${CMAKE_CURRENT_SOURCE_DIR}/DummyHeader.hxx
 endif()
 
 ROOT_ADD_GTEST(dataframe_datasetspec dataframe_datasetspec.cxx LIBRARIES ROOTDataFrame)
-if(builtin_nlohmannjson)
-  target_include_directories(dataframe_datasetspec PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
-else()
-  target_link_libraries(dataframe_datasetspec nlohmann_json::nlohmann_json)
-endif()
 
 ROOT_ADD_GTEST(dataframe_display dataframe_display.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_ranges dataframe_ranges.cxx LIBRARIES ROOTDataFrame)
