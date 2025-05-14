@@ -744,9 +744,9 @@ public:
           (std::strncmp(templName, "s", 1) == 0 && typeName != "short" && typeName != "std::int16_t") ||
           (std::strncmp(templName, "t", 1) == 0 && typeName != "unsigned short" && typeName != "std::uint16_t") ||
           (std::strncmp(templName, "i", 1) == 0 && typeName != "int" && typeName != "std::int32_t") ||
-          (std::strncmp(templName, "j", 1) == 0 && typeName != "unsigned int" && typeName != "std::uint32_t") ||
+          (std::strncmp(templName, "j", 1) == 0 && typeName != "unsigned int" && typeName != "std::uint32_t" && typeName != "ROOT::RNTupleCardinality<std::uint32_t>) ||
           (std::strncmp(templName, "l", 1) == 0 && typeName != "long" && typeName != "std::int64_t") ||
-          (std::strncmp(templName, "m", 1) == 0 && typeName != "unsigned long" && typeName != "std::int64_t" && typeName != "ROOT::RNTupleCardinality<std::uint64_t>") ||
+          (std::strncmp(templName, "m", 1) == 0 && typeName != "long unsigned int" && typeName != "std::int64_t" && typeName != "ROOT::RNTupleCardinality<std::uint64_t>") ||
           (std::strncmp(templName, "f", 1) == 0 && typeName != "float") ||
           (std::strncmp(templName, "d", 1) == 0 && typeName != "double") ||
           (std::strncmp(templName, "e", 1) == 0 && typeName != "long double")) {
