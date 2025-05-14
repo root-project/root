@@ -57,6 +57,9 @@ typedef std::int64_t int_t;
 std::string ConvertTypeToString(ETensorType type);
 ETensorType ConvertStringToType(std::string type);
 
+// find if a string represents a number
+bool IsInteger(const std::string & s);
+
 struct Dim{
    bool isParam = false;
    size_t dim = 0;
@@ -66,16 +69,42 @@ struct Dim{
    Dim() {}
 
    // constructor for a parametric dimension with the option to pass a default dim value
-   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p) {}
+   // We use -1 for dim to indicate that the param dimension is an expression (e.g. "d1+d2")
+   // in case the string represents a number make Dim not parametric
+   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p)
+   {
+      if (IsInteger(p)) {
+            isParam = false;
+            dim = std::stoi(p);
+      }
+   }
 
    // constructor for a non-parametric dimension
    Dim(size_t d) : dim(d) {}
 
    std::string GetVal() const {
-      return (isParam) ? param : std::to_string(dim);
+      // cast to int64_t for negative shape values
+      return (isParam) ? param : std::to_string(static_cast<int64_t>(dim));
+   }
+
+   std::ostream& operator<< (std::ostream& os) const {
+      os << GetVal();
+      return os;
+   }
+
+   bool operator==(const Dim& rhs) const {
+       return (isParam && rhs.isParam) ? param == rhs.param : dim == rhs.dim;
+   }
+   bool operator!=(const Dim& rhs) const {
+       return !(*this == rhs);
    }
 };
 
+//bool operator==(const Dim& lhs, const Dim& rhs);
+inline std::ostream & operator<< (std::ostream &os, const Dim &d) {
+   os << d.GetVal();
+   return os;
+}
 
 struct InputTensorInfo{
    ETensorType type;
@@ -90,6 +119,18 @@ struct TensorInfo{
 struct DynamicTensorInfo{
    ETensorType type;
    std::vector<Dim> shape;
+};
+
+// template traits for Tensor Shape
+template <typename T>
+struct TensorShape {};
+template<>
+struct TensorShape<Dim> {
+   static bool IsDim() { return true; }
+};
+template<>
+struct TensorShape<size_t> {
+   static bool IsDim() { return false; }
 };
 
 // template traits for Tensor type
@@ -119,6 +160,10 @@ template<>
 struct TensorType<uint64_t> {
    static const std::string Name() { return "uint64_t"; }
 };
+template<>
+struct TensorType<bool> {
+   static const std::string Name() { return "bool"; }
+};
 
 struct TensorMemoryInfo {
    std::string_view tensor_name;
@@ -147,19 +192,21 @@ struct MemoryPoolInfo {
    std::map<size_t, size_t> available_stack;
 };
 
-std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
+std::vector<Dim> ConvertShapeToDim(const std::vector<size_t> & shape);
 
-std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
+std::vector<size_t> ConvertShapeToInt(const std::vector<Dim> & shape);
 
-std::size_t ConvertShapeToLength(std::vector<size_t> shape);
+std::size_t ConvertShapeToLength(const std::vector<size_t> & shape);
 
-std::string ConvertShapeToString(std::vector<size_t> shape);
-std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
-// std::string ConvertShapeToString(std::vector<Dim> shape) {
-//    return ConvertDynamicShapeToString(shape);
-// }
+std::string ConvertShapeToString(const std::vector<size_t> & shape);
+std::string ConvertDimShapeToString(const std::vector<Dim> & shape);
+std::string ConvertShapeToString(const std::vector<Dim> & shape);
 
-std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
+
+
+std::string ConvertDimShapeToLength(const std::vector<Dim> & shape);
+std::string ConvertDynamicShapeToLength(const std::vector<Dim> & shape);
+
 
 template<class T>
 std::string ConvertValToString(T value) {
@@ -286,6 +333,12 @@ ETensorType GetTemplatedType(T /*obj*/ ){
 }
 
 namespace UTILITY{
+
+
+
+// clean operator and tensor names
+std::string Clean_name(std::string input_tensor_name);
+
 // Check if two shapes are equal
 bool AreSameShape(const std::vector<size_t>&, const std::vector<size_t>&);
 bool AreSameShape(const std::vector<size_t>&, const std::vector<Dim>&);
@@ -295,10 +348,14 @@ bool AreSameShape(const std::vector<Dim>&, const std::vector<Dim>&);
 // Multidirectional broadcast a list of tensors to the same shape
 std::vector<size_t> MultidirectionalBroadcastShape(std::vector<std::vector<size_t>>);
 
-// Unidirectional broadcast two shapes to the same shape
-std::vector<size_t> UnidirectionalBroadcastShape(std::vector<size_t>, std::vector<size_t>);
+// Multidirectional broadcast two shapes to the same shape
 
-std::string Clean_name(std::string input_tensor_name);
+std::pair<int, std::vector<size_t>> MultidirectionalBroadcastShape(std::vector<size_t> &, std::vector<size_t> &);
+std::vector<size_t> UnidirectionalBroadcastShape(std::vector<size_t> &, std::vector<size_t> &);
+
+std::pair<int, std::vector<Dim>> MultidirectionalBroadcastShape(std::vector<Dim> &, std::vector<Dim> &);
+
+
 
 template<typename T>
 T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size_t>& targetShape) {
@@ -752,4 +809,4 @@ void ReadTensorFromStream(std::istream &is, T &target, std::string const &expect
 } // namespace Experimental
 } // namespace TMVA
 
-#endif //TMVA_SOFIE_RMODEL
+#endif //TMVA_SOFIE_COMMON

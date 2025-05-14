@@ -19,7 +19,7 @@ private:
 
    std::string fNX;
    std::string fNY;
-   std::vector<size_t> fShape;
+   std::vector<Dim> fShape;
    std::string fAttrType = "float";
 
 public:
@@ -45,14 +45,14 @@ public:
       if (model.CheckIfTensorAlreadyExist(fNX) == false){
         throw std::runtime_error("TMVA SOFIE Cast Op Input Tensor is not found in model");
       }
-      fShape = model.GetTensorShape(fNX);
+      fShape = model.GetDimTensorShape(fNX);
       // shoud we add a check if the same type
       auto inputType = model.GetTensorType(fNX);
       if (model.IsInitializedTensor(fNX)) {
          fIsOutputConstant = true;
          auto inputData = model.GetInitializedTensorData(fNX);
          if (ConvertStringToType(fAttrType) == ETensorType::INT64) {
-            model.AddConstantTensor<int64_t>(fNY, fShape, static_cast<int64_t*>(inputData.get()));
+            model.AddConstantTensor<int64_t>(fNY, ConvertShapeToInt(fShape), static_cast<int64_t*>(inputData.get()));
             model.SetNotWritableInitializedTensor(fNX);
          }
          else
@@ -76,7 +76,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Cast called to Generate without being initialized first");
       }
       std::stringstream out;
-      size_t length = ConvertShapeToLength(fShape);
+      auto length = ConvertDimShapeToLength(fShape);
 
       // out << SP << ETensorType << " " << OpName << "_attr = "  << fattr << ";\n";
       out << "\n//------ CAST\n";

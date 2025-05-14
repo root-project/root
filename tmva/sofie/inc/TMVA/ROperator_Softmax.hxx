@@ -19,7 +19,7 @@ private:
 
    std::string fNX;
    std::string fNY;
-   std::vector<size_t> fShape;
+   std::vector<Dim> fShape;
 
    std::string fType;
 
@@ -44,7 +44,7 @@ public:
           false) { // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Softmax Op Input Tensor is not found in model");
       }
-      fShape = model.GetTensorShape(fNX);
+      fShape = model.GetDimTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose()) {
@@ -58,9 +58,10 @@ public:
          throw std::runtime_error("TMVA SOFIE Operator Softmax called to Generate without being initialized first");
       }
       std::stringstream out;
-      size_t size = fShape.size();
-      size_t length = ConvertShapeToLength(fShape);
-      size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
+      int size = fShape.size();
+      auto length = ConvertDimShapeToLength(fShape);
+      auto stride = UTILITY::ComputeStrideFromShape(fShape);
+      int axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
       out << "\n" << SP << "//------ SOFTMAX - " << size << "  " << length << "  " << axis << "\n";
       // use safe numerically implementation by subtracting max of tensor
       if (size == 1) {
@@ -77,6 +78,70 @@ public:
          out << SP << SP << "tensor_" << fNY << "[i] /= sum;\n";
          out << SP << "}\n";
       } else {
+         int k = 0;
+         std::vector<std::string> l(size);
+         for (int i = 0; i < size; i++) {
+            if (i != axis) {
+               for (int j = 0; j < k; j++) out << SP;
+               l[i] = std::string("i") + std::to_string(i);
+               out << "for (int " << l[i] << " = 0; " << l[i] << " < " << fShape[i] << "; " << l[i] << "++) {\n";
+               k++;
+            }
+         }
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << fType << " sum = 0.;\n";
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << "size_t index = ";
+         for (int i = 0; i < size; i++) {
+            if (i == axis) continue;
+            if ((i > 0 && axis != 0) || i > 1 ) out << "+";
+            if (stride[i].GetVal() != "1")
+               out << stride[i] << "*";
+            out << l[i];
+         }
+         out << ";\n";
+         // find maximum looping along reduced axix
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << fType << " vmax = tensor_" << fNX << "[index];\n";
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
+         for (int j = 0; j < size; j++) out << SP;
+         out << fType << " x = tensor_" << fNX << "[index + i";
+         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+         out << "];\n";
+         for (int j = 0; j < size; j++) out << SP;
+         out << "if (x > vmax) vmax = x;\n";
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << "}\n";
+         // compute softmax
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
+         for (int j = 0; j < size; j++) out << SP;
+         out << "size_t id = index + i";
+         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+         out << ";\n";
+         for (int j = 0; j < size; j++) out << SP;
+         out << "tensor_" << fNY << "[id] = std::exp(tensor_" << fNX << "[id] - vmax);\n";
+         for (int j = 0; j < size; j++) out << SP;
+         out << "sum += tensor_" << fNY << "[id];\n";
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << "}\n";
+         // normalize
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
+          for (int j = 0; j < size; j++) out << SP;
+         out << "tensor_" << fNY << "[index + i";
+         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+         out << "] /= sum;\n";
+         for (int j = 0; j < size-1; j++) out << SP;
+         out << "}\n";
+         //end loops
+         for (int i = size-2; i >=0; i--) {
+            for (int j = 0; j < i; j++) out << SP;
+            out << "}\n";
+         }
+
+#if 0
          size_t batch = fShape[0];
          size_t channel = fShape[1];
          size_t width = (size > 2) ? fShape[size - 1] : 1;
@@ -181,6 +246,8 @@ public:
          if (notBatch) {
             out << SP << "}\n"; // end n
          }
+
+#endif
       }
       return out.str();
    }
