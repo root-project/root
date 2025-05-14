@@ -262,7 +262,9 @@ TEST(RNTuple, VoidViewThrow)
    EXPECT_THROW(vd.GetValue().GetRef<float>(), ROOT::RException);
    EXPECT_THROW(vd.GetValue().GetRef<Float_t>(), ROOT::RException);
    EXPECT_THROW(vd.GetValue().GetRef<long double>(), ROOT::RException);
+   vf(0);
    EXPECT_FLOAT_EQ(vf.GetValue().GetRef<Float_t>(), 42.f);
+   vd(0);
    EXPECT_FLOAT_EQ(vd.GetValue().GetRef<Double_t>(), 42.);
 }
 
