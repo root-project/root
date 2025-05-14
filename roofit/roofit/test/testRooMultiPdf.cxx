@@ -1,9 +1,9 @@
-#include "RooRealVar.h"
-#include "RooGaussian.h"
-#include "RooCategory.h"
-#include "gtest/gtest.h"
+#include <RooCategory.h>
+#include <RooGaussian.h>
+#include <RooMultiPdf.h>
+#include <RooRealVar.h>
 
-#include "RooMultiPdf.h"
+#include <gtest/gtest.h>
 
 TEST(RooMultiPdf, SelectsCorrectPdf)
 {
