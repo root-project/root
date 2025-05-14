@@ -794,6 +794,20 @@ int testVectorUtil() {
 
 }
 
+int testLorentzVector()
+{
+   std::cout << "testing LorentzVector  \t:\t";
+   int iret = 0;
+   LorentzVector<PtEtaPhiM4D<float>> v1;
+   LorentzVector<PtEtaPhiM4D<float>> v2;   
+   iret |= (v1.DeltaR(v2) == 4.60575f);
+   if (iret == 0)
+      std::cout << "\t\t\tOK\n";
+   else
+      std::cout << "\t\t\t\t\t\tFAILED\n";
+   return iret
+}
+
 int testGenVector() {
 
   int iret = 0;
@@ -808,7 +822,7 @@ int testGenVector() {
   iret |= testTransform3D();
 
   iret |= testVectorUtil();
-
+  iret |= testLorentzVector();
 
   if (iret !=0) std::cout << "\nTest GenVector FAILED!!!!!!!!!\n";
   return iret;
