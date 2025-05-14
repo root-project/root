@@ -736,15 +736,17 @@ public:
    const T &GetRef() const
    {
       const auto templName = typeid(T).name();
-      const auto typeName = fField ? fField->GetTypeName() : "";
-      if ((std::strncmp(templName, "c", 1) == 0 && typeName != "char") ||
-          (std::strncmp(templName, "h", 1) == 0 && typeName != "unsigned char") ||
-          (std::strncmp(templName, "s", 1) == 0 && typeName != "short") ||
-          (std::strncmp(templName, "t", 1) == 0 && typeName != "unsigned short") ||
-          (std::strncmp(templName, "i", 1) == 0 && typeName != "int") ||
-          (std::strncmp(templName, "j", 1) == 0 && typeName != "unsigned int") ||
-          (std::strncmp(templName, "l", 1) == 0 && typeName != "long") ||
-          (std::strncmp(templName, "m", 1) == 0 && typeName != "unsigned long") ||
+      auto typeName = fField ? fField->GetTypeName() : "";
+      if (typeName.substr(0, 25) == "ROOT::RNTupleCardinality<")
+         typeName = ROOT::Internal::GetCanonicalTypePrefix(ROOT::Internal::TokenizeTypeList(typeName.substr(25, typeName.length() - 26)).at(0));
+      if ((std::strncmp(templName, "c", 1) == 0 && typeName != "char" && typeName != "std::int8_t") ||
+          (std::strncmp(templName, "h", 1) == 0 && typeName != "unsigned char" && typeName != "std::uint8_t" && typeName != "std::byte") ||
+          (std::strncmp(templName, "s", 1) == 0 && typeName != "short" && typeName != "std::int16_t") ||
+          (std::strncmp(templName, "t", 1) == 0 && typeName != "unsigned short" && typeName != "std::uint16_t") ||
+          (std::strncmp(templName, "i", 1) == 0 && typeName != "int" && typeName != "std::int32_t") ||
+          (std::strncmp(templName, "j", 1) == 0 && typeName != "unsigned int" && typeName != "std::uint32_t") ||
+          (std::strncmp(templName, "l", 1) == 0 && typeName != "long" && typeName != "std::int64_t") ||
+          (std::strncmp(templName, "m", 1) == 0 && typeName != "unsigned long" && typeName != "std::int64_t" && typeName != "ROOT::RNTupleCardinality<std::uint64_t>") ||
           (std::strncmp(templName, "f", 1) == 0 && typeName != "float") ||
           (std::strncmp(templName, "d", 1) == 0 && typeName != "double") ||
           (std::strncmp(templName, "e", 1) == 0 && typeName != "long double")) {
