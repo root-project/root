@@ -36,7 +36,7 @@ fMuMax, fMuStep and fNMax are those used in the PRD:
 but there is total flexibility in changing this should you desire.
 
 
-see example of use in $ROOTSYS/tutorials/math/FeldmanCousins.C
+see example of use in FeldmanCousins.C
 
 see note about: "Should I use TRolke, TFeldmanCousins, TLimit?"
  in the TRolke class description.

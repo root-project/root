@@ -2922,7 +2922,7 @@ The supported option is:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "GLCOL"  | H3 is drawn using semi-transparent colored boxes.  See `$ROOTSYS/tutorials/visualisation/gl/glvox1.C`.|
+| "GLCOL"  | H3 is drawn using semi-transparent colored boxes.  See glvox1.C .|
 
 
 
@@ -2963,8 +2963,7 @@ The supported option is:
 \anchor HP29e
 #### Parametric surfaces
 
-`$ROOTSYS/tutorials/visualisation/gl/glparametric.C` shows how to create parametric
-equations and visualize the surface.
+glparametric.C shows how to create parametric equations and visualize the surface.
 
 \anchor HP29f
 #### Interaction with the plots
@@ -3074,7 +3073,7 @@ graphically. Bin will be highlighted as "bin box" (presented by box
 object). Moreover, any highlight (change of bin) emits signal
 `TCanvas::Highlighted()` which allows the user to react and call their own
 function. For a better understanding see also the tutorial `hist043` to `hist046`
-lacated in `$ROOTSYS/tutorials/hist/`.
+located in `$ROOTSYS/tutorials/hist/`.
 
 Highlight mode is switched on/off by `TH1::SetHighlight()` function
 or interactively from `TH1` context menu. `TH1::IsHighlight()` to verify
@@ -3154,7 +3153,7 @@ void hlprint()
 
 \image html hlsimple.gif "Highlight mode and simple user function"
 
-For more complex demo please see for example `$ROOTSYS/tutorials/io/tree/tree200_temperature.C` file.
+For more complex demo please see for example tree200_temperature.C file.
 
 */
 

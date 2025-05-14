@@ -101,7 +101,7 @@ The following types of plots are provided:
    The supported option is:
 
   - `"GLCOL" :` TH3 is drawn using semi-transparent colored boxes.
-  See `$ROOTSYS/tutorials/visualisation/gl/glvox1.C`.
+  See glvox1.C .
 
 
 #### `TF3` (implicit function) - (`TGLTF3Painter`)
@@ -111,7 +111,7 @@ The following types of plots are provided:
 
 
 #### Parametric surfaces - (`TGLParametricPlot`)
-  `$ROOTSYS/tutorials/visualisation/gl/glparametric.C` shows how to create parametric equations and
+  glparametric.C shows how to create parametric equations and
   visualize the surface.
 
 
