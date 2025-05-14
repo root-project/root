@@ -737,8 +737,8 @@ public:
    {
       const auto templName = typeid(T).name();
       auto typeName = fField ? fField->GetTypeName() : "";
-      if (typeName.substr(0, 25) == "ROOT::RNTupleCardinality<")
-         typeName = ROOT::Internal::GetCanonicalTypePrefix(ROOT::Internal::TokenizeTypeList(typeName.substr(25, typeName.length() - 26)).at(0));
+      // if (typeName.substr(0, 25) == "ROOT::RNTupleCardinality<")
+      //    typeName = ROOT::Internal::GetCanonicalTypePrefix(ROOT::Internal::TokenizeTypeList(typeName.substr(25, typeName.length() - 26)).at(0));
       if ((std::strncmp(templName, "c", 1) == 0 && typeName != "char" && typeName != "std::int8_t") ||
           (std::strncmp(templName, "h", 1) == 0 && typeName != "unsigned char" && typeName != "std::uint8_t" && typeName != "std::byte") ||
           (std::strncmp(templName, "s", 1) == 0 && typeName != "short" && typeName != "std::int16_t") ||
