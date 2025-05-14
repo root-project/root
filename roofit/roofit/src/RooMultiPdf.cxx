@@ -24,9 +24,9 @@
    which can switch between previously set probability density functions (PDF)
    by setting their associated indices.*/
 
-#include "../inc/RooMultiPdf.h"
+#include <RooMultiPdf.h>
 
-#include "RooConstVar.h"
+#include <RooConstVar.h>
 
 ClassImp(RooMultiPdf)
    // Constructing a RooMultiPdf
