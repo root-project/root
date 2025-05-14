@@ -656,7 +656,7 @@ NOTE all parameters of user function are taken from
   - `x` is highlighted x-th (i-th) point for graph
   - `y` not in use (only for 2D histogram)
 
-For more complex demo please see for example `$ROOTSYS/tutorials/math/hlquantiles.C` file.
+For more complex demo please see for example hlquantiles.C example.
 
 */
 

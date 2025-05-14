@@ -4341,7 +4341,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ### Making a 5D plot using GL
 ///
 /// If option GL5D is specified together with 5 variables, a 5D plot is drawn
-/// using OpenGL. See $ROOTSYS/tutorials/io/tree/tree502_staff.C as example.
+/// using OpenGL. See tree502_staff.C as example.
 ///
 /// ### Making a parallel coordinates plot
 ///
