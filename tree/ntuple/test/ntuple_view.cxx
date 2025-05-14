@@ -217,7 +217,6 @@ TEST(RNTuple, VoidView)
    EXPECT_STREQ("pt", viewPt.GetField().GetFieldName().c_str());
 }
 
-
 TEST(RNTuple, VoidViewThrow)
 {
    FileRaii fileGuard("test_ntuple_voidview_throw.root");

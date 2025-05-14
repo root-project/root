@@ -748,7 +748,8 @@ public:
           (std::strncmp(templName, "f", 1) == 0 && typeName != "float") ||
           (std::strncmp(templName, "d", 1) == 0 && typeName != "double") ||
           (std::strncmp(templName, "e", 1) == 0 && typeName != "long double")) {
-         throw RException(R__FAIL("Mismatch between type name `" + typeName + "` and template type `" + templName + "`."));
+         throw RException(
+            R__FAIL("Mismatch between type name `" + typeName + "` and template type `" + templName + "`."));
       }
       return *static_cast<T *>(fObjPtr.get());
    }
