@@ -27,6 +27,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <cstring>
 
 namespace ROOT {
 
@@ -727,9 +728,28 @@ public:
       return std::static_pointer_cast<T>(fObjPtr);
    }
 
+   /**
+    * Get object reference, already casted to template type
+    * \note If a the passed template type does not match the field base type name, an exception is thrown
+    */
    template <typename T>
    const T &GetRef() const
    {
+      const auto templName = typeid(T).name();
+      const auto typeName = fField ? fField->GetTypeName() : "";
+      if ((std::strncmp(templName, "c", 1) == 0 && typeName != "char") ||
+          (std::strncmp(templName, "h", 1) == 0 && typeName != "unsigned char") ||
+          (std::strncmp(templName, "s", 1) == 0 && typeName != "short") ||
+          (std::strncmp(templName, "t", 1) == 0 && typeName != "unsigned short") ||
+          (std::strncmp(templName, "i", 1) == 0 && typeName != "int") ||
+          (std::strncmp(templName, "j", 1) == 0 && typeName != "unsigned int") ||
+          (std::strncmp(templName, "l", 1) == 0 && typeName != "long") ||
+          (std::strncmp(templName, "m", 1) == 0 && typeName != "unsigned long") ||
+          (std::strncmp(templName, "f", 1) == 0 && typeName != "float") ||
+          (std::strncmp(templName, "d", 1) == 0 && typeName != "double") ||
+          (std::strncmp(templName, "e", 1) == 0 && typeName != "long double")) {
+         throw RException(R__FAIL("Mismatch between type name `" + typeName + "` and template type `" + templName + "`."));
+      }
       return *static_cast<T *>(fObjPtr.get());
    }
 
