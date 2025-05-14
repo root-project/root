@@ -7,7 +7,7 @@
 #include <utility>
 
 void fillListOfDir(const TString &directory, TList &l) {
-   
+
    void *dir = gSystem->OpenDirectory(directory);
 
    const char *file = 0;
@@ -25,11 +25,17 @@ void fillListOfDir(const TString &directory, TList &l) {
          TString s = file;
          if ( (basename!=file) && s.Index(re) == kNPOS) continue;
 
-	 TString dirname = file;
-	 if (directory != ".")
-	    dirname = gSystem->ConcatFileName(directory, file);
+         TString dirname = file;
+         if (directory != ".") {
+            auto _dirname = gSystem->ConcatFileName(directory, file);
+            dirname = _dirname;
+            delete [] _dirname;
+         }
 
-         TString vfile = gSystem->ConcatFileName(dirname, "vector.root");
+         auto _vfile = gSystem->ConcatFileName(dirname, "vector.root");
+         TString vfile = _vfile;
+         delete [] _vfile;
+
          if (gSystem->GetPathInfo(vfile,(Long_t*)0,(Long_t*)0,(Long_t*)0,0)==0) {
             l.Add(new TObjString(dirname));
          } else {
