@@ -178,13 +178,39 @@ struct Var {
  */
 bool isNumber(const std::string &str)
 {
-   bool first = true;
-   for (char const &c : str) {
-      if (std::isdigit(c) == 0 && c != '.' && !(first && (c == '-' || c == '+')))
-         return false;
-      first = false;
-   }
-   return true;
+    bool seen_digit = false;
+    bool seen_dot = false;
+    bool seen_e = false;
+    bool after_e = false;
+    bool sign_allowed = true;
+
+    for (size_t i = 0; i < str.size(); ++i) {
+        char c = str[i];
+
+        if (std::isdigit(c)) {
+            seen_digit = true;
+            sign_allowed = false;
+        }
+        else if ((c == '+' || c == '-') && sign_allowed) {
+            // Sign allowed at the beginning or right after 'e'/'E'
+            sign_allowed = false;
+        }
+        else if (c == '.' && !seen_dot && !after_e) {
+            seen_dot = true;
+            sign_allowed = false;
+        }
+        else if ((c == 'e' || c == 'E') && seen_digit && !seen_e) {
+            seen_e = true;
+            after_e = true;
+            sign_allowed = true; // allow sign immediately after 'e'
+            seen_digit = false; // reset: we now expect digits after e
+        }
+        else {
+            return false;
+        }
+    }
+
+    return seen_digit;
 }
 
 /**
@@ -896,8 +922,8 @@ RooRealVar *RooJSONFactoryWSTool::requestImpl<RooRealVar>(const std::string &obj
 {
    if (RooRealVar *retval = _workspace.var(objname))
       return retval;
-   if (JSONNode const *vars = getVariablesNode(*_rootnodeInput)) {
-      if (auto node = vars->find(objname)) {
+   if (const auto *vars = getVariablesNode(*_rootnodeInput)) {
+      if (const auto& node = vars->find(objname)) {
          this->importVariable(*node);
          if (RooRealVar *retval = _workspace.var(objname))
             return retval;
@@ -911,8 +937,8 @@ RooAbsPdf *RooJSONFactoryWSTool::requestImpl<RooAbsPdf>(const std::string &objna
 {
    if (RooAbsPdf *retval = _workspace.pdf(objname))
       return retval;
-   if (auto distributionsNode = _rootnodeInput->find("distributions")) {
-      if (auto child = findNamedChild(*distributionsNode, objname)) {
+   if (const auto& distributionsNode = _rootnodeInput->find("distributions")) {
+      if (const auto& child = findNamedChild(*distributionsNode, objname)) {
          this->importFunction(*child, true);
          if (RooAbsPdf *retval = _workspace.pdf(objname))
             return retval;
@@ -932,8 +958,8 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
       return var;
-   if (auto functionNode = _rootnodeInput->find("functions")) {
-      if (auto child = findNamedChild(*functionNode, objname)) {
+   if (const auto& functionNode = _rootnodeInput->find("functions")) {
+      if (const auto& child = findNamedChild(*functionNode, objname)) {
          this->importFunction(*child, true);
          if (RooAbsReal *retval = _workspace.function(objname))
             return retval;
