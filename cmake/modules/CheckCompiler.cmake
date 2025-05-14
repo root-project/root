@@ -184,7 +184,9 @@ endif()
 # https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
 # but note that compilers might denote partial implementations of new standards (e.g. c++1z)
 # with other non-standard values.
-if (${CXX_STANDARD_STRING} STRGREATER "201703L")
+if (${CXX_STANDARD_STRING} STRGREATER "202002L")
+   set(CXX_STANDARD_STRING 23 CACHE STRING "")
+elseif (${CXX_STANDARD_STRING} STRGREATER "201703L")
    set(CXX_STANDARD_STRING 20 CACHE STRING "")
 elseif(${CXX_STANDARD_STRING} STRGREATER "201402L")
    set(CXX_STANDARD_STRING 17 CACHE STRING "")
