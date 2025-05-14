@@ -251,17 +251,21 @@ TEST(RNTuple, VoidViewThrow)
    auto vf = reader->GetView<void>("f");
    auto vd = reader->GetView<void>("d");
    auto ve = reader->GetView<void>("e");
-   EXPECT_THROW(vc.GetValue().GetRef<short>());
-   EXPECT_THROW(vh.GetValue().GetRef<unsigned short>());
-   EXPECT_THROW(vs.GetValue().GetRef<int>());
-   EXPECT_THROW(vt.GetValue().GetRef<unsigned int>());
-   EXPECT_THROW(vi.GetValue().GetRef<long>());
-   EXPECT_THROW(vj.GetValue().GetRef<unsigned long>());
-   EXPECT_THROW(vl.GetValue().GetRef<short>());
-   EXPECT_THROW(vm.GetValue().GetRef<unsigned short>());
-   EXPECT_THROW(vf.GetValue().GetRef<double>());
-   EXPECT_THROW(vd.GetValue().GetRef<float>());
-   EXPECT_THROW(ve.GetValue().GetRef<float>());
+   EXPECT_THROW(vc.GetValue().GetRef<short>(), ROOT::RException);
+   EXPECT_THROW(vh.GetValue().GetRef<unsigned short>(), ROOT::RException);
+   EXPECT_THROW(vs.GetValue().GetRef<int>(), ROOT::RException);
+   EXPECT_THROW(vt.GetValue().GetRef<unsigned int>(), ROOT::RException);
+   EXPECT_THROW(vi.GetValue().GetRef<long>(), ROOT::RException);
+   EXPECT_THROW(vj.GetValue().GetRef<unsigned long>(), ROOT::RException);
+   EXPECT_THROW(vl.GetValue().GetRef<short>(), ROOT::RException);
+   EXPECT_THROW(vm.GetValue().GetRef<unsigned short>(), ROOT::RException);
+   EXPECT_THROW(vf.GetValue().GetRef<double>(), ROOT::RException);
+   EXPECT_THROW(vf.GetValue().GetRef<Double_t>(), ROOT::RException);
+   EXPECT_THROW(vd.GetValue().GetRef<float>(), ROOT::RException);
+   EXPECT_THROW(vd.GetValue().GetRef<Float_t>(), ROOT::RException);
+   EXPECT_THROW(ve.GetValue().GetRef<float>(), ROOT::RException);
+   EXPECT_FLOAT_EQ(vf.GetValue().GetRef<Float_t>(), 42.f);
+   EXPECT_FLOAT_EQ(vd.GetValue().GetRef<Double_t>(), 42.);
 }
 
 TEST(RNTuple, MissingViewNames)
