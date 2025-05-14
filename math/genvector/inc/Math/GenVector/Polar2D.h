@@ -20,6 +20,7 @@
 #define ROOT_Math_GenVector_Polar2D  1
 
 #include "Math/Math.h"
+#include "TMath.h"
 
 #include "Math/GenVector/etaMax.h"
 
@@ -131,7 +132,7 @@ public :
 
 
 private:
-   inline static double pi()  { return M_PI; }
+   inline static double pi() { return TMath::Pi(); }
 
    /**
       restrict abgle hi to be between -PI and PI
