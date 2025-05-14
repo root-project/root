@@ -217,6 +217,54 @@ TEST(RNTuple, VoidView)
    EXPECT_STREQ("pt", viewPt.GetField().GetFieldName().c_str());
 }
 
+
+TEST(RNTuple, VoidViewThrow)
+{
+   FileRaii fileGuard("test_ntuple_voidview_throw.root");
+
+   auto model = RNTupleModel::Create();
+   *model->MakeField<char>("c") = 42;
+   *model->MakeField<unsigned char>("h") = 42;
+   *model->MakeField<short>("s") = 42;
+   *model->MakeField<unsigned short>("t") = 42;
+   *model->MakeField<int>("i") = 42;
+   *model->MakeField<unsigned int>("j") = 42;
+   *model->MakeField<long>("l") = 42;
+   *model->MakeField<unsigned long>("m") = 42;
+   *model->MakeField<float>("f") = 42.f;
+   *model->MakeField<double>("d") = 42.;
+   *model->MakeField<long double>("e") = 42.;
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+   auto vc = reader->GetView<void>("c");
+   auto vh = reader->GetView<void>("h");
+   auto vs = reader->GetView<void>("s");
+   auto vt = reader->GetView<void>("t");
+   auto vi = reader->GetView<void>("i");
+   auto vj = reader->GetView<void>("j");
+   auto vl = reader->GetView<void>("l");
+   auto vm = reader->GetView<void>("m");
+   auto vf = reader->GetView<void>("f");
+   auto vd = reader->GetView<void>("d");
+   auto ve = reader->GetView<void>("e");
+   EXPECT_THROW(vc.GetValue().GetRef<short>());
+   EXPECT_THROW(vh.GetValue().GetRef<unsigned short>());
+   EXPECT_THROW(vs.GetValue().GetRef<int>());
+   EXPECT_THROW(vt.GetValue().GetRef<unsigned int>());
+   EXPECT_THROW(vi.GetValue().GetRef<long>());
+   EXPECT_THROW(vj.GetValue().GetRef<unsigned long>());
+   EXPECT_THROW(vl.GetValue().GetRef<short>());
+   EXPECT_THROW(vm.GetValue().GetRef<unsigned short>());
+   EXPECT_THROW(vf.GetValue().GetRef<double>());
+   EXPECT_THROW(vd.GetValue().GetRef<float>());
+   EXPECT_THROW(ve.GetValue().GetRef<float>());
+}
+
 TEST(RNTuple, MissingViewNames)
 {
    FileRaii fileGuard("test_ntuple_missing_view_names.root");
