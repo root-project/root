@@ -19,6 +19,8 @@
 #include "Math/RotationZYX.h"
 
 #include "Math/LorentzRotation.h"
+#include "Math/PtEtaPhiM4D.h"
+#include "Math/LorentzVector.h"
 
 #include "Math/VectorUtil.h"
 #ifndef NO_SMATRIX
