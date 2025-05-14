@@ -811,7 +811,7 @@ int testLorentzVector()
       std::cout << "\t\t\tOK\n";
    else
       std::cout << "\t\t\t\t\t\tFAILED\n";
-   return iret
+   return iret;
 }
 
 int testGenVector() {
