@@ -57,9 +57,9 @@ ClassImp(RooMultiPdf)
       std::unique_ptr<RooAbsCollection> nonConstVariables(variables->selectByAttrib(
          "Constant", false)); // selectByAttrib("Constant", false) filters out parameters that are not constant
       // Isn't there a better way to hold on to these values?
-      RooConstVar *tmp = new RooConstVar((std::string{"const"} + pdf->GetName()).c_str(), "",
-                                         nonConstVariables->size()); // records how many  parameters the PDF has
-      corr.addOwned(*tmp);
+      // records how many  parameters the PDF has
+      corr.addOwned(
+         std::make_unique<RooConstVar>((std::string{"const"} + pdf->GetName()).c_str(), "", nonConstVariables->size()));
       count++;
    }
    _oldIndex = fIndex;
