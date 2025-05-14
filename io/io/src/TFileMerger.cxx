@@ -830,7 +830,8 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
          delete ndir;
       }
    } else if (!canBeFound) { // Don't write the partial result for TTree and TH1
-
+      if (gDebug > 0)
+         Info("MergeOne", "Writing partial result of %s into target", oldkeyname.Data());
       if (!canBeMerged) {
          TIter peeknextkey(nextkey);
          status = WriteCycleInOrder(oldkeyname, nextkey, peeknextkey, target) && status;
