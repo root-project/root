@@ -648,7 +648,7 @@ Int_t TMinuit::Command(const char *command)
 /// to a TGraph*. Note that the TGraph is created with npoints+1 in order to
 /// close the contour (setting last point equal to first point).
 ///
-/// You can find an example in $ROOTSYS/tutorials/fit/fitcont.C
+/// You can find an example in fitcont.C
 
 TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
 {
