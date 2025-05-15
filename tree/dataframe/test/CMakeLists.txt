@@ -101,6 +101,13 @@ configure_file(pyspec.json . COPYONLY)
 configure_file(spec_ordering_samples_withFriends.json . COPYONLY)
 ROOT_ADD_GTEST(datasource_csv datasource_csv.cxx LIBRARIES ROOTDataFrame)
 
+ROOT_ADD_GTEST(datasource_tree datasource_tree.cxx LIBRARIES RIO Tree ROOTDataFrame)
+ROOT_GENERATE_DICTIONARY(ClassWithNestedSameNameDict
+                         ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithNestedSameName.hxx
+                         MODULE datasource_tree
+                         LINKDEF ClassWithNestedSameNameLinkDef.hxx
+                         OPTIONS -inlineInputHeader)
+
 #### TESTS REQUIRING EXTRA ROOT FEATURES ####
 if (imt)
    ROOT_ADD_GTEST(dataframe_concurrency dataframe_concurrency.cxx LIBRARIES ROOTDataFrame)
