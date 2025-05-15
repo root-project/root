@@ -194,13 +194,14 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
 
       auto attrModel = RNTupleModel::Create();
       attrModel->MakeField<std::string>("string");
+      attrModel->MakeField<int>("int");
       auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone()).Unwrap();
 
       // First attribute entry
       {
          auto attrRange = attrSet->BeginRange();
-         auto pMyAttr = attrRange.GetPtr<std::string>("string");
-         *pMyAttr = "Run 1";
+         *attrRange.GetPtr<std::string>("string") = "Run 1";
+         *attrRange.GetPtr<int>("int") = 1;
          for (int i = 0; i < 10; ++i) {
             *pInt = i;
             writer->Fill();
@@ -211,12 +212,12 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       // Second attribute entry
       {
          auto attrRange = attrSet->BeginRange();
-         auto pMyAttr = attrRange.GetPtr<std::string>("string");
          for (int i = 0; i < 10; ++i) {
             *pInt = i;
             writer->Fill();
          }
-         *pMyAttr = "Run 2";
+         *attrRange.GetPtr<std::string>("string") = "Run 2";
+         *attrRange.GetPtr<int>("int") = 2;
          attrSet->EndRange(std::move(attrRange));
       }
    }
@@ -228,10 +229,12 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
       auto nAttrs = 0;
       for (const auto &attrEntry : attrSet.GetAttributes()) {
-         auto pAttr = attrEntry.GetPtr<std::string>("string");
+         auto pAttrStr = attrEntry.GetPtr<std::string>("string");
+         auto pAttrInt = attrEntry.GetPtr<int>("int");
          EXPECT_EQ(attrEntry.GetRange().Start(), nAttrs * 10);
          EXPECT_EQ(attrEntry.GetRange().End(), (1 + nAttrs) * 10);
-         EXPECT_EQ(*pAttr, nAttrs == 0 ? "Run 1" : "Run 2");
+         EXPECT_EQ(*pAttrStr, nAttrs == 0 ? "Run 1" : "Run 2");
+         EXPECT_EQ(*pAttrInt, nAttrs == 0 ? 1 : 2);
          ++nAttrs;
       }
       EXPECT_EQ(nAttrs, 2);

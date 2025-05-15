@@ -22,6 +22,7 @@
 
 #include <ROOT/REntry.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
+#include <ROOT/RNTupleAttributeEntry.hxx>
 
 namespace ROOT {
 
@@ -29,99 +30,6 @@ class RNTupleModel;
 class RNTuple;
 
 namespace Experimental {
-
-class RNTupleAttributeSetWriter;
-class RNTupleAttributeSetReader;
-class RNTupleFillContext;
-
-namespace Internal::RNTupleAttributes {
-static constexpr const char *const kEntryRangeFieldName = "__ROOT_entryRange";
-} // namespace Internal::RNTupleAttributes
-
-class RNTupleAttributeRange final {
-   ROOT::NTupleSize_t fStart = 0;
-   ROOT::NTupleSize_t fLength = 0;
-
-   RNTupleAttributeRange(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length) : fStart(start), fLength(length) {}
-
-public:
-   static RNTupleAttributeRange FromStartLength(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length)
-   {
-      return RNTupleAttributeRange{start, length};
-   }
-
-   static RNTupleAttributeRange FromStartEnd(ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
-   {
-      R__ASSERT(end >= start);
-      return RNTupleAttributeRange{start, end - start};
-   }
-
-   RNTupleAttributeRange() = default;
-
-   ROOT::NTupleSize_t Start() const { return fStart; }
-   ROOT::NTupleSize_t End() const { return fStart + fLength; }
-   ROOT::NTupleSize_t Length() const { return fLength; }
-
-   std::pair<ROOT::NTupleSize_t, ROOT::NTupleSize_t> GetStartEnd() const { return {Start(), End()}; }
-};
-
-class RNTupleAttributeEntry final {
-   friend class ROOT::Experimental::RNTupleAttributeSetWriter;
-   friend class ROOT::Experimental::RNTupleAttributeSetReader;
-
-   std::unique_ptr<REntry> fEntry;
-   RNTupleAttributeRange fRange;
-
-   /// Creates a pending AttributeEntry whose length is not determined yet
-   RNTupleAttributeEntry(std::unique_ptr<REntry> entry, ROOT::NTupleSize_t start)
-      : fEntry(std::move(entry)), fRange(RNTupleAttributeRange::FromStartLength(start, 0))
-   {
-   }
-
-   /// Creates an AttributeEntry with the given range
-   RNTupleAttributeEntry(std::unique_ptr<REntry> entry, RNTupleAttributeRange range)
-      : fEntry(std::move(entry)), fRange(range)
-   {
-   }
-
-public:
-   RNTupleAttributeEntry(RNTupleAttributeEntry &&) = default;
-   RNTupleAttributeEntry &operator=(RNTupleAttributeEntry &&) = default;
-
-   template <typename T>
-   std::shared_ptr<T> GetPtr(std::string_view name) const
-   {
-      return fEntry->GetPtr<T>(name);
-   }
-
-   RNTupleAttributeRange GetRange() const { return fRange; }
-};
-
-class RNTupleAttributeEntryHandle final {
-   friend class RNTupleAttributeSetWriter;
-
-   RNTupleAttributeEntry *fRange = nullptr;
-
-   explicit RNTupleAttributeEntryHandle(RNTupleAttributeEntry &range) : fRange(&range) {}
-
-public:
-   RNTupleAttributeEntryHandle(const RNTupleAttributeEntryHandle &) = delete;
-   RNTupleAttributeEntryHandle &operator=(const RNTupleAttributeEntryHandle &) = delete;
-   RNTupleAttributeEntryHandle(RNTupleAttributeEntryHandle &&other) { std::swap(fRange, other.fRange); }
-   RNTupleAttributeEntryHandle &operator=(RNTupleAttributeEntryHandle &&other)
-   {
-      std::swap(fRange, other.fRange);
-      return *this;
-   }
-
-   template <typename T>
-   std::shared_ptr<T> GetPtr(std::string_view name)
-   {
-      if (R__unlikely(!fRange))
-         throw ROOT::RException(R__FAIL("Called GetPtr() on invalid RNTupleAttributeEntryHandle"));
-      return fRange->GetPtr<T>(name);
-   }
-};
 
 // clang-format off
 /**
