@@ -20,13 +20,26 @@ std::unique_ptr<ROperator> ParseBasicUnary(RModelParser_ONNX &parser, const onnx
                                   " but its type is not yet registered");
    }
 
+   if constexpr (Op == EBasicUnaryOperator::kNot) {
+      if (input_type != ETensorType::BOOL) {
+          throw std::runtime_error("TMVA::SOFIE - Unary NOT operator expects input type BOOL, got type " +
+                                   std::to_string(static_cast<int>(input_type)));
+      }
+  }
+
    std::unique_ptr<ROperator> op;
    std::string output_name = nodeproto.output(0);
-
+   
    switch (input_type) {
    case ETensorType::FLOAT:
       op.reset(new ROperator_BasicUnary<float, Op>(input_name, output_name));
       break;
+    case ETensorType::BOOL:
+        if constexpr (Op == EBasicUnaryOperator::kNot) {
+            op.reset(new ROperator_BasicUnary<bool, Op>(input_name, output_name));
+            break;
+        }
+        [[fallthrough]];
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Binary Operator does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
@@ -53,6 +66,11 @@ ParserFuncSignature ParseReciprocal = [](RModelParser_ONNX &parser, const onnx::
 // Parse Neg
 ParserFuncSignature ParseNeg = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    return ParseBasicUnary<EBasicUnaryOperator::kNeg>(parser, nodeproto);
+};
+
+// Parse Not
+ParserFuncSignature ParseNot = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kNot>(parser, nodeproto);
 };
 
 // Parse Exp

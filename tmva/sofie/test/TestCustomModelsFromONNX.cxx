@@ -529,22 +529,20 @@ TEST(ONNX, Neg)
 
    TEST(ONNX, Not)
    {
-      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-
       // Preparing the standard input
-      std::vector<float> input({-0.7077, 1.0645, -0.8607, 0.2085, 4.5335, -3.4592});
+      std::vector<bool> input({false, true, false, false, true, true});
 
       TMVA_SOFIE_Not::Session s("Not_FromONNX.dat");
-      std::vector<float> output = s.infer(input.data());
+      std::vector<bool> output = s.infer(input.data());
 
       // Checking output size
-      EXPECT_EQ(output.size(), sizeof(Not_ExpectedOutput::outputs) / sizeof(float));
+      EXPECT_EQ(output.size(), sizeof(Not_ExpectedOutput::outputs) / sizeof(bool));
 
-      float *correct = Not_ExpectedOutput::outputs;
+      bool *correct = Not_ExpectedOutput::outputs;
 
       // Checking every output value, one by one
       for (size_t i = 0; i < output.size(); ++i) {
-         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+         EXPECT_EQ(output[i], correct[i]);
       }
    }
 

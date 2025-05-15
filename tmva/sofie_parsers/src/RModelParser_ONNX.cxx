@@ -20,6 +20,7 @@ namespace SOFIE {
 extern ParserFuncSignature ParseSqrt;
 extern ParserFuncSignature ParseReciprocal;
 extern ParserFuncSignature ParseNeg;
+extern ParserFuncSignature ParseNot;
 extern ParserFuncSignature ParseExp;
 extern ParserFuncSignature ParseLog;
 extern ParserFuncSignature ParseSin;
@@ -161,7 +162,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Sqrt", ParseSqrt);
    RegisterOperator("Reciprocal", ParseReciprocal);
    RegisterOperator("Neg", ParseNeg);
-   RegisterOperator("Not", ParseNeg);
+   RegisterOperator("Not", ParseNot);
    RegisterOperator("Exp", ParseExp);
    RegisterOperator("Log", ParseLog);
    RegisterOperator("Sin", ParseSin);
