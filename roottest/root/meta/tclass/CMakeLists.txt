@@ -106,10 +106,12 @@ ROOTTEST_ADD_TEST(execInitOrder
                   OUTREF execInitOrder.ref
                   DEPENDS libInitOrder-build libInitOrderDups-build)
 
-ROOTTEST_ADD_TEST(tclassStl
-                  MACRO tclassStl.cxx+
-		  OUTREF tclassStl.ref
-		  RUN_SERIAL)
+if(NOT coverage)
+  ROOTTEST_ADD_TEST(tclassStl
+                    MACRO tclassStl.cxx+
+                    OUTREF tclassStl.ref
+                    RUN_SERIAL)
+endif()
 
 ROOTTEST_ADD_TEST(TClassAtTearDown
                   MACRO execTClassAtTearDown.C
