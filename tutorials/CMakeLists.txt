@@ -127,6 +127,9 @@ if(NOT davix)
     list(APPEND dataframe_veto analysis/dataframe/df028_SQliteIPLocation.C)
     list(APPEND dataframe_veto analysis/dataframe/df029_SQlitePlatformDistribution.C)
     list(APPEND dataframe_veto analysis/dataframe/df030_SQliteVersionsOfROOT.C)
+    set(davix_veto
+        legacy/hist040_TH2Poly_europe.C hist/hist039_TH2Poly_usa.*
+        legacy/multicore/mp104_processH1.C analysis/parallel/mp_processSelector.C)
 endif()
 
 if(MACOSX_VERSION VERSION_EQUAL 10.13)
@@ -134,7 +137,7 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
 endif()
 
 if(NOT geom)
-  set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C)
+  set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/shapes.* legacy/g3d/na49view.*)
 endif()
 
 if(NOT ROOT_proof_FOUND)
@@ -503,6 +506,7 @@ set(all_veto hsimple.C
              ${dataframe_veto}
              ${macm1_veto}
              ${clad_veto}
+             ${davix_veto}
              ${proof_veto}
              )
 
