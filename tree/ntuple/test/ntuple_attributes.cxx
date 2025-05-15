@@ -229,8 +229,8 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       auto nAttrs = 0;
       for (const auto &attrEntry : attrSet.GetAttributes()) {
          auto pAttr = attrEntry.GetPtr<std::string>("string");
-         EXPECT_EQ(attrEntry.GetRange().first, nAttrs * 10);
-         EXPECT_EQ(attrEntry.GetRange().second, (1 + nAttrs) * 10);
+         EXPECT_EQ(attrEntry.GetRange().Start(), nAttrs * 10);
+         EXPECT_EQ(attrEntry.GetRange().End(), (1 + nAttrs) * 10);
          EXPECT_EQ(*pAttr, nAttrs == 0 ? "Run 1" : "Run 2");
          ++nAttrs;
       }
@@ -272,8 +272,8 @@ TEST(RNTupleAttributes, ImplicitEndRange)
       auto nAttrs = 0;
       for (const auto &attrEntry : attrSet.GetAttributes()) {
          auto pAttr = attrEntry.GetPtr<std::string>("string");
-         EXPECT_EQ(attrEntry.GetRange().first, 0);
-         EXPECT_EQ(attrEntry.GetRange().second, 10);
+         EXPECT_EQ(attrEntry.GetRange().Start(), 0);
+         EXPECT_EQ(attrEntry.GetRange().End(), 10);
          EXPECT_EQ(*pAttr, "Run 1");
          ++nAttrs;
       }
