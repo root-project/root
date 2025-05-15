@@ -617,7 +617,7 @@ class TDrawVariable {
             return true;
          }
 
-         const replace = 'arg.var' + (this.branches.length - 1);
+         const replace = `arg.var${this.branches.length - 1}`;
          code = code.slice(0, pos) + replace + code.slice(pos2);
          pos += replace.length;
       }
@@ -1967,7 +1967,7 @@ async function treeProcess(tree, selector, args) {
 
          handle.process_arrays = false;
 
-         const newtgt = new Array(target_object ? (target_object.length + 1) : 1);
+         const newtgt = new Array((target_object?.length || 0) + 1);
          for (let l = 0; l < newtgt.length - 1; ++l)
             newtgt[l] = target_object[l];
          newtgt[newtgt.length - 1] = { name: target_name, lst: makeMethodsList(object_class) };

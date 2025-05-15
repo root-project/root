@@ -10,14 +10,13 @@ class TMultiGraphPainter extends TMultiGraphPainter2D {
      * @return {Promise} when ready */
    async drawAxisHist(histo, hopt) {
       const dom = this.getDrawDom();
-      return this._3d
-              ? TH2Painter.draw(dom, histo, 'LEGO' + hopt)
-              : TH1Painter.draw(dom, histo, hopt);
+      return this.is3d() ? TH2Painter.draw(dom, histo, 'LEGO' + hopt)
+                         : TH1Painter.draw(dom, histo, hopt);
    }
 
    /** @summary draw multi graph in 3D */
    async drawGraph(dom, gr, opt, pos3d) {
-      if (this._3d) opt += `pos3d_${pos3d}`;
+      if (this.is3d()) opt += `pos3d_${pos3d}`;
       return TGraphPainter.draw(dom, gr, opt);
    }
 

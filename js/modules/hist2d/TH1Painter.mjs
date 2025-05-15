@@ -196,19 +196,19 @@ class TH1Painter extends THistPainter {
       }
 
       // final adjustment like in THistPainter.cxx line 7309
-      if (!this._exact_y_range && !pad_logy) {
+      if (!this.options.exact_values_range() && !pad_logy) {
          if (!fix_min) {
             if ((this.options.BaseLine !== false) && (this.ymin >= 0))
                this.ymin = 0;
             else {
                const positive = (this.ymin >= 0);
-               this.ymin -= gStyle.fHistTopMargin*(this.ymax - this.ymin);
+               this.ymin -= gStyle.fHistTopMargin * (this.ymax - this.ymin);
                if (positive && (this.ymin < 0))
                   this.ymin = 0;
             }
          }
          if (!fix_max)
-            this.ymax += gStyle.fHistTopMargin*(this.ymax - this.ymin);
+            this.ymax += gStyle.fHistTopMargin * (this.ymax - this.ymin);
       }
 
       // always set zoom when hmin/hmax is configured
@@ -228,6 +228,35 @@ class TH1Painter extends THistPainter {
       this.wheel_zoomy = (this.getDimension() > 1) || !this.draw_content;
    }
 
+   /** @summary Provide histogram min/max used to create canvas ranges
+    * @private */
+   getUserRanges() {
+      const histo = this.getHisto();
+
+      let miny = 0, maxy = 0;
+
+      for (let i = 0; i < histo.fXaxis.fNbins; ++i) {
+         const value = histo.getBinContent(i + 1);
+         if (i === 0)
+            miny = maxy = value;
+         else {
+            miny = Math.min(miny, value);
+            maxy = Math.max(maxy, value);
+         }
+      }
+
+      if (histo.fMinimum !== kNoZoom)
+         miny = histo.fMinimum;
+
+      if (histo.fMaximum !== kNoZoom)
+         maxy = histo.fMaximum;
+
+      if (maxy <= miny)
+         maxy = miny + 1;
+
+      return { minx: histo.fXaxis.fXmin, maxx: histo.fXaxis.fXmax, miny, maxy };
+   }
+
    /** @summary Count histogram statistic */
    countStat(cond, count_skew) {
       const profile = this.isTProfile(),
@@ -238,7 +267,7 @@ class TH1Painter extends THistPainter {
             res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0,
                     entries: (histo.fEntries > 0) ? histo.fEntries : this.stat_entries,
                     eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
-            has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
+            has_counted_stat = !fp?.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
       let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx, w, xmax = null, wmax = null;
 
@@ -393,7 +422,7 @@ class TH1Painter extends THistPainter {
 
    /** @summary Get baseline for bar drawings */
    getBarBaseline(funcs, height) {
-      let gry = funcs.swap_xy ? 0 : height;
+      let gry = funcs.swap_xy() ? 0 : height;
       if (Number.isFinite(this.options.BaseLine) && (this.options.BaseLine >= funcs.scale_ymin))
          gry = Math.round(funcs.gry(this.options.BaseLine));
       return gry;
@@ -443,7 +472,7 @@ class TH1Painter extends THistPainter {
             grx1 += Math.round(histo.fBarOffset/1000*w);
             w = Math.round(histo.fBarWidth/1000*w);
 
-            if (funcs.swap_xy)
+            if (funcs.swap_xy())
                bars += `M${gry2},${grx1}h${gry1-gry2}v${w}h${gry2-gry1}z`;
             else
                bars += `M${grx1},${gry1}h${w}v${gry2-gry1}h${-w}z`;
@@ -451,7 +480,7 @@ class TH1Painter extends THistPainter {
             if (side > 0) {
                grx2 = grx1 + w;
                w = Math.round(w * side / 10);
-               if (funcs.swap_xy) {
+               if (funcs.swap_xy()) {
                   barsl += `M${gry2},${grx1}h${gry1-gry2}v${w}h${gry2-gry1}z`;
                   barsr += `M${gry2},${grx2}h${gry1-gry2}v${-w}h${gry2-gry1}z`;
                } else {
@@ -463,7 +492,7 @@ class TH1Painter extends THistPainter {
             if (show_text && y) {
                const text = (y === Math.round(y)) ? y.toString() : floatToString(y, gStyle.fPaintTextFormat);
 
-               if (funcs.swap_xy)
+               if (funcs.swap_xy())
                   this.drawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text, color: text_col, latex: 0 });
                else if (text_angle)
                   this.drawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text, color: text_col, latex: 0 });
@@ -653,7 +682,7 @@ class TH1Painter extends THistPainter {
                hints_err += `M${midx-edx},${my-he1}h${2*edx}v${he1+he2}h${-2*edx}z`;
             }
          }, draw_marker = () => {
-            if (funcs.swap_xy) {
+            if (funcs.swap_xy()) {
                path_marker += this.markeratt.create(my, midx);
                if (hints_marker !== null)
                   hints_marker += `M${my-hsz},${midx-hsz}v${2*hsz}h${2*hsz}v${-2*hsz}z`;
@@ -674,7 +703,7 @@ class TH1Painter extends THistPainter {
                      arg.text = (cont === Math.round(cont)) ? cont.toString() : floatToString(cont, gStyle.fPaintTextFormat);
                      arg.color = text_col;
                      arg.latex = 0;
-                     if (funcs.swap_xy) {
+                     if (funcs.swap_xy()) {
                         arg.x = my;
                         arg.y = Math.round(midx - text_size/2);
                      }
@@ -683,7 +712,7 @@ class TH1Painter extends THistPainter {
                }
 
                if (show_line) {
-                  if (funcs.swap_xy)
+                  if (funcs.swap_xy())
                      path_line += (path_line ? 'L' : 'M') + `${my},${midx}`; // no optimization
                   else if (path_line.length === 0)
                      path_line = `M${midx},${my}`;
@@ -810,7 +839,7 @@ class TH1Painter extends THistPainter {
             }
          }
 
-         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && !this._ignore_frame;
+         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && this.isUseFrame();
          let h0 = height + 3;
          if (!fill_for_interactive) {
             const gry0 = Math.round(funcs.gry(0));
@@ -834,7 +863,7 @@ class TH1Painter extends THistPainter {
 
          if (draw_markers || show_line || show_curve) {
             if (!path_line && grpnts.length) {
-               if (funcs.swap_xy)
+               if (funcs.swap_xy())
                   grpnts.forEach(pnt => { const d = pnt.grx; pnt.grx = pnt.gry; pnt.gry = d; });
                path_line = buildSvgCurve(grpnts);
             }
@@ -894,20 +923,19 @@ class TH1Painter extends THistPainter {
    /** @summary Draw TH1 bins in SVG element
      * @return Promise or scalar value */
    draw1DBins() {
-      if (this.options.Same && this._ignore_frame)
+      if (this.options.Same && !this.isUseFrame())
          this.getFrameSvg().style('display', 'none');
 
       this.createHistDrawAttributes();
 
-      const pmain = this.getFramePainter(),
-            funcs = this.getHistGrFuncs(pmain),
-            width = pmain.getFrameWidth(),
-            height = pmain.getFrameHeight();
+      const funcs = this.getHistGrFuncs(),
+            width = funcs.getFrameWidth(),
+            height = funcs.getFrameHeight();
 
       if (!this.draw_content || (width <= 0) || (height <= 0))
          return this.removeG();
 
-      this.createG(!this._ignore_frame);
+      this.createG(this.isUseFrame());
 
       if (this.options.Bar) {
          return this.drawBars(funcs, height).then(() => {
@@ -926,15 +954,15 @@ class TH1Painter extends THistPainter {
    getBinTooltips(bin) {
       const tips = [],
             name = this.getObjectHint(),
-            pmain = this.getFramePainter(),
-            funcs = this.getHistGrFuncs(pmain),
+            funcs = this.getHistGrFuncs(),
             histo = this.getHisto(),
             x1 = histo.fXaxis.GetBinLowEdge(bin+1),
             x2 = histo.fXaxis.GetBinLowEdge(bin+2),
             xlbl = this.getAxisBinTip('x', histo.fXaxis, bin);
       let cont = histo.getBinContent(bin+1);
 
-      if (name) tips.push(name);
+      if (name)
+         tips.push(name);
 
       if (this.options.Error || this.options.Mark || this.isTF1()) {
          tips.push(`x = ${xlbl}`, `y = ${funcs.axisAsText('y', cont)}`);
@@ -965,13 +993,12 @@ class TH1Painter extends THistPainter {
          return null;
       }
 
-      const pmain = this.getFramePainter(),
-            funcs = this.getHistGrFuncs(pmain),
+      const funcs = this.getHistGrFuncs(),
             histo = this.getHisto(),
             left = this.getSelectIndex('x', 'left', -1),
             right = this.getSelectIndex('x', 'right', 2);
-      let width = pmain.getFrameWidth(),
-          height = pmain.getFrameHeight(),
+      let width = funcs.getFrameWidth(),
+          height = funcs.getFrameHeight(),
           show_rect, grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right, pnt_x = pnt.x, pnt_y = pnt.y;
 
@@ -981,14 +1008,14 @@ class TH1Painter extends THistPainter {
       }, GetBinGrY = i => {
          const yy = histo.getBinContent(i + 1);
          if (funcs.logy && (yy < funcs.scale_ymin))
-            return funcs.swap_xy ? -1000 : 10*height;
+            return funcs.swap_xy() ? -1000 : 10*height;
          return Math.round(funcs.gry(yy));
       };
 
-      if (funcs.swap_xy)
+      if (funcs.swap_xy())
          [pnt_x, pnt_y, width, height] = [pnt_y, pnt_x, height, width];
 
-      const descent_order = funcs.swap_xy !== pmain.x_handle.reverse;
+      const descent_order = funcs.x_handle && (funcs.swap_xy() !== funcs.x_handle.reverse);
 
       while (l < r-1) {
          const m = Math.round((l+r)*0.5), xx = GetBinGrX(m);
@@ -1141,10 +1168,10 @@ class TH1Painter extends THistPainter {
          res.changed = ttrect.property('current_bin') !== findbin;
 
          if (res.changed) {
-            ttrect.attr('x', funcs.swap_xy ? gry1 : grx1)
-                  .attr('width', funcs.swap_xy ? gry2-gry1 : grx2-grx1)
-                  .attr('y', funcs.swap_xy ? grx1 : gry1)
-                  .attr('height', funcs.swap_xy ? grx2-grx1 : gry2-gry1)
+            ttrect.attr('x', funcs.swap_xy() ? gry1 : grx1)
+                  .attr('width', funcs.swap_xy() ? gry2 - gry1 : grx2 - grx1)
+                  .attr('y', funcs.swap_xy() ? grx1 : gry1)
+                  .attr('height', funcs.swap_xy() ? grx2 - grx1 : gry2 - gry1)
                   .style('opacity', '0.3')
                   .property('current_bin', findbin);
          }

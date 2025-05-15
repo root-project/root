@@ -314,16 +314,32 @@ class RAxisPainter extends RObjectPainter {
             this.order = order;
             this.ndig = 0;
             let lbls = [], indx = 0, totallen = 0;
-            while (indx<handle.major.length) {
-               const lbl = this.format(handle.major[indx], true);
-               if (lbls.indexOf(lbl) < 0) {
+            while (indx < handle.major.length) {
+               const v0 = handle.major[indx],
+                     lbl = this.format(v0, true);
+
+               let bad_value = lbls.indexOf(lbl) >= 0;
+               if (!bad_value) {
+                  try {
+                     const v1 = parseFloat(lbl) * Math.pow(10, order);
+                     bad_value = (Math.abs(v0) > 1e-30) && (Math.abs(v1 - v0) / Math.abs(v0) > 1e-8);
+                  } catch {
+                     console.warn('Failure by parsing of', lbl);
+                     bad_value = true;
+                  }
+               }
+               if (bad_value) {
+                  if (++this.ndig > 15) {
+                     totallen += 1e10;
+                     break; // not too many digits, anyway it will be exponential
+                  }
+                  lbls = [];
+                  indx = totallen = 0;
+               } else {
                   lbls.push(lbl);
                   totallen += lbl.length;
                   indx++;
-                  continue;
                }
-               if (++this.ndig > 11) break; // not too many digits, anyway it will be exponential
-               lbls = []; indx = 0; totallen = 0;
             }
 
             // for order === 0 we should virtually remove '0.' and extra label on top

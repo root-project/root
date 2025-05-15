@@ -5,17 +5,27 @@ import { TGraphPainter } from './TGraphPainter.mjs';
 import { HistContour } from './THistPainter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 
+/**
+ * @summary Painter for TScatter object.
+ *
+ * @private
+ */
 
 class TScatterPainter extends TGraphPainter {
 
-   constructor(dom, obj) {
-      super(dom, obj);
-      this._is_scatter = true;
-      this._not_adjust_hrange = true;
+   #color_palette; // color palette
+
+   /** @summary Cleanup painter */
+   cleanup() {
+      this.clearHistPalette();
+      super.cleanup();
    }
 
    /** @summary Return drawn graph object */
    getGraph() { return this.getObject()?.fGraph; }
+
+   /** @summary Is TScatter object */
+   isScatter() { return true; }
 
    /** @summary Return margins for histogram ranges */
    getHistRangeMargin() { return this.getObject()?.fMargin ?? 0.1; }
@@ -37,7 +47,7 @@ class TScatterPainter extends TGraphPainter {
       if (!pal && gr) {
          pal = create(clTPaletteAxis);
 
-         const fp = this.get_main();
+         const fp = this.get_fp();
          Object.assign(pal, { fX1NDC: fp.fX2NDC + 0.005, fX2NDC: fp.fX2NDC + 0.05, fY1NDC: fp.fY1NDC, fY2NDC: fp.fY2NDC, fInit: 1, $can_move: true });
          Object.assign(pal.fAxis, { fChopt: '+', fLineColor: 1, fLineSyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11, fNdiv: 510 });
          gr.fFunctions.AddFirst(pal, '');
@@ -82,26 +92,43 @@ class TScatterPainter extends TGraphPainter {
       return false;
    }
 
+   /** @summary Returns color palette associated with histogram
+    * @desc Create if required, checks pad and canvas for custom palette */
+   getHistPalette(force) {
+      let pal = force ? null : this.#color_palette;
+      if (pal)
+         return pal;
+      const pp = this.getPadPainter();
+      if (isFunc(pp?.getCustomPalette))
+         pal = pp.getCustomPalette();
+      if (!pal)
+         pal = getColorPalette(this.options.Palette, pp?.isGrayscale());
+      this.#color_palette = pal;
+      return pal;
+   }
+
+   /** @summary Remove palette */
+   clearHistPalette() {
+      this.#color_palette = undefined;
+   }
+
    /** @summary Actual drawing of TScatter */
    async drawGraph() {
-      const fpainter = this.get_main(),
+      const fp = this.get_fp(),
             hpainter = this.getMainPainter(),
             scatter = this.getObject(),
             hist = this.getHistogram();
 
-      let scale = 1, offset = 0;
-      if (!fpainter || !hpainter || !scatter) return;
+      let scale = 1, offset = 0, palette;
+      if (!fp || !hpainter || !scatter)
+         return;
 
       if (scatter.fColor) {
          const pal = this.getPalette();
          if (pal)
             pal.$main_painter = this;
 
-         const pp = this.getPadPainter();
-         if (!this._color_palette && isFunc(pp?.getCustomPalette))
-            this._color_palette = pp.getCustomPalette();
-         if (!this._color_palette)
-            this._color_palette = getColorPalette(this.options.Palette, pp?.isGrayscale());
+         palette = this.getHistPalette();
 
          let minc = scatter.fColor[0], maxc = scatter.fColor[0];
          for (let i = 1; i < scatter.fColor.length; ++i) {
@@ -116,12 +143,12 @@ class TScatterPainter extends TGraphPainter {
          this.fContour.createNormal(30);
          this.fContour.configIndicies(0, 0);
 
-         fpainter.zmin = minc;
-         fpainter.zmax = maxc;
+         fp.zmin = minc;
+         fp.zmax = maxc;
 
-         if (!fpainter.zoomChangedInteractive('z') && hist && hist.fMinimum !== kNoZoom && hist.fMaximum !== kNoZoom) {
-            fpainter.zoom_zmin = hist.fMinimum;
-            fpainter.zoom_zmax = hist.fMaximum;
+         if (!fp.zoomChangedInteractive('z') && hist && hist.fMinimum !== kNoZoom && hist.fMaximum !== kNoZoom) {
+            fp.zoom_zmin = hist.fMinimum;
+            fp.zoom_zmax = hist.fMaximum;
          }
       }
 
@@ -140,20 +167,21 @@ class TScatterPainter extends TGraphPainter {
          offset = mins;
       }
 
-      this.createG(!fpainter.pad_layer);
+      this.createG(!fp.pad_layer);
 
-      const funcs = fpainter.getGrFuncs(),
-            is_zoom = (fpainter.zoom_zmin !== fpainter.zoom_zmax) && scatter.fColor;
+      const funcs = fp.getGrFuncs(),
+            is_zoom = (fp.zoom_zmin !== fp.zoom_zmax) && scatter.fColor,
+            bins = this._getBins();
 
-      for (let i = 0; i < this.bins.length; ++i) {
-         if (is_zoom && ((scatter.fColor[i] < fpainter.zoom_zmin) || (scatter.fColor[i] > fpainter.zoom_zmax)))
+      for (let i = 0; i < bins.length; ++i) {
+         if (is_zoom && ((scatter.fColor[i] < fp.zoom_zmin) || (scatter.fColor[i] > fp.zoom_zmax)))
             continue;
 
-         const pnt = this.bins[i],
+         const pnt = bins[i],
                grx = funcs.grx(pnt.x),
                gry = funcs.gry(pnt.y),
                size = scatter.fSize ? scatter.fMinMarkerSize + scale * (scatter.fSize[i] - offset) : scatter.fMarkerSize,
-               color = scatter.fColor ? this.fContour.getPaletteColor(this._color_palette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
+               color = scatter.fColor ? this.fContour.getPaletteColor(palette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
                handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
 
           this.draw_g.append('svg:path')

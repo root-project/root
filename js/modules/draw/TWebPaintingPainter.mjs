@@ -5,8 +5,11 @@ import { urlClassPrefix } from '../core.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
 
 
-/** @summary Draw direct TVirtualX commands into SVG
-  * @private */
+/**
+ * @summary Painter for TWebPainting classes.
+ *
+ * @private
+ */
 
 class TWebPaintingPainter extends ObjectPainter {
 

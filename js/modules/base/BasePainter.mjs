@@ -204,10 +204,30 @@ class DrawOptions {
          return true;
 
       let pos2 = pos;
-      while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';')) pos2++;
+      const is_array = postpart === 'array';
+      if (is_array) {
+         if (this.opt[pos2] !== '[')
+            return false;
+         while ((pos2 < this.opt.length) && (this.opt[pos2] !== ']'))
+            pos2++;
+         if (++pos2 > this.opt.length)
+            return false;
+      } else {
+         while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';'))
+            pos2++;
+      }
       if (pos2 > pos) {
          this.part = this.opt.slice(pos, pos2);
          this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+      }
+
+      if (is_array) {
+         try {
+            this.array = JSON.parse(this.part);
+         } catch {
+            this.array = undefined;
+         }
+         return this.array?.length !== undefined;
       }
 
       if (postpart !== 'color')
@@ -233,7 +253,7 @@ class DrawOptions {
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {
       let mult = 1;
-      const last = this.part ? this.part[this.part.length - 1] : '';
+      const last = this.part ? this.part.at(-1) : '';
       if (last === 'K')
          mult = 1e3;
       else if (last === 'M')
