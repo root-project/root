@@ -1481,6 +1481,25 @@ std::list<TObject*> RooWorkspace::allGenericObjects() const
 }
 
 
+namespace {
+
+std::string findFileInPath(std::string const &file, std::list<std::string> const &dirList)
+{
+   // Check list of additional paths
+   for (std::string const &diter : dirList) {
+
+      char *cpath = gSystem->ConcatFileName(diter.c_str(), file.c_str());
+      std::string path = cpath;
+      delete[] cpath;
+      if (!gSystem->AccessPathName(path.c_str())) {
+         // found file
+         return path;
+      }
+   }
+   return "";
+}
+
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1548,21 +1567,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
   // If not, scan through list of 'class declaration' paths in RooWorkspace
   if (gSystem->AccessPathName(declfile.c_str())) {
 
-    // Check list of additional declaration paths
-    list<string>::iterator diter = RooWorkspace::_classDeclDirList.begin() ;
-
-    while(diter!= RooWorkspace::_classDeclDirList.end()) {
-
-      declpath = gSystem->ConcatFileName(diter->c_str(),declfile.c_str()) ;
-      if (!gSystem->AccessPathName(declpath.c_str())) {
-   // found declaration file
-   break ;
-      }
-      // cleanup and continue ;
-      declpath.clear();
-
-      ++diter ;
-    }
+    declpath = findFileInPath(declfile, RooWorkspace::_classDeclDirList);
 
     // Header file cannot be found anywhere, warn user and abort operation
     if (declpath.empty()) {
@@ -1570,7 +1575,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
                   << tc->GetName() << " because header file " << declfile << " is not found in current directory nor in $ROOTSYS" ;
       if (!_classDeclDirList.empty()) {
    ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
-   diter = RooWorkspace::_classDeclDirList.begin() ;
+   auto diter = RooWorkspace::_classDeclDirList.begin() ;
 
    while(diter!= RooWorkspace::_classDeclDirList.end()) {
 
@@ -1593,21 +1598,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
   // If not, scan through list of 'class implementation' paths in RooWorkspace
   if (gSystem->AccessPathName(implfile.c_str())) {
 
-    // Check list of additional declaration paths
-    list<string>::iterator iiter = RooWorkspace::_classImplDirList.begin() ;
-
-    while(iiter!= RooWorkspace::_classImplDirList.end()) {
-
-      implpath = gSystem->ConcatFileName(iiter->c_str(),implfile.c_str()) ;
-      if (!gSystem->AccessPathName(implpath.c_str())) {
-   // found implementation file
-   break ;
-      }
-      // cleanup and continue ;
-      implpath.clear();
-
-      ++iiter ;
-    }
+    implpath = findFileInPath(implfile, RooWorkspace::_classImplDirList);
 
     // Implementation file cannot be found anywhere, warn user and abort operation
     if (implpath.empty()) {
@@ -1615,7 +1606,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
                   << tc->GetName() << " because implementation file " << implfile << " is not found in current directory nor in $ROOTSYS" ;
       if (!_classDeclDirList.empty()) {
    ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
-   iiter = RooWorkspace::_classImplDirList.begin() ;
+   auto iiter = RooWorkspace::_classImplDirList.begin() ;
 
    while(iiter!= RooWorkspace::_classImplDirList.end()) {
 
