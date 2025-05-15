@@ -70,8 +70,8 @@ public:
 
    RTaskArenaWrapper(unsigned maxConcurrency = 0);
    RTaskArenaWrapper(Attach);
-private:
 
+private:
    friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(bool, unsigned, ROOT::EIMTConfig);
    std::unique_ptr<ROOT::ROpaqueTaskArena> fTBBArena;
    static unsigned fNWorkers;

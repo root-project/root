@@ -108,15 +108,14 @@ RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new RO
    ROOT::EnableThreadSafety();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Initializes the tbb::task_arena within RTaskArenaWrapper by attaching to an
 /// existing arena.
 ///
 /// * Can't be reinitialized
 ////////////////////////////////////////////////////////////////////////////////
-RTaskArenaWrapper::RTaskArenaWrapper(RTaskArenaWrapper::Attach) :
-  fTBBArena(new ROpaqueTaskArena{tbb::task_arena::attach{}})
+RTaskArenaWrapper::RTaskArenaWrapper(RTaskArenaWrapper::Attach)
+   : fTBBArena(new ROpaqueTaskArena{tbb::task_arena::attach{}})
 {
    fTBBArena->initialize(tbb::task_arena::attach{});
    fNWorkers = fTBBArena->max_concurrency();
@@ -142,7 +141,8 @@ ROOT::ROpaqueTaskArena &RTaskArenaWrapper::Access()
    return *fTBBArena;
 }
 
-std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(bool semantic, unsigned maxConcurrency, ROOT::EIMTConfig config)
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper>
+GetGlobalTaskArena(bool semantic, unsigned maxConcurrency, ROOT::EIMTConfig config)
 {
    static std::weak_ptr<ROOT::Internal::RTaskArenaWrapper> weak_GTAWrapper;
 

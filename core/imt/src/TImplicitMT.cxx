@@ -62,7 +62,8 @@ extern "C" void ROOT_TImplicitMT_EnableImplicitMT_Config(ROOT::EIMTConfig config
       if (config < ROOT::EIMTConfig::kNumConfigs) {
          R__GetTaskArena4IMT() = ROOT::Internal::GetGlobalTaskArena(config);
       } else {
-         ::Warning("ROOT_TImplicitMT_EnableImplicitMT_Config", "Unknown enum value %d defaulting to EIMTCconfig::kWholeMachine", (int)config);
+         ::Warning("ROOT_TImplicitMT_EnableImplicitMT_Config",
+                   "Unknown enum value %d defaulting to EIMTCconfig::kWholeMachine", (int)config);
          R__GetTaskArena4IMT() = ROOT::Internal::GetGlobalTaskArena(0);
       }
       GetImplicitMTFlag() = true;
