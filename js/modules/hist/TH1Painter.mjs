@@ -14,18 +14,18 @@ class TH1Painter extends TH1Painter2D {
    draw3D(reason) {
       this.mode3d = true;
 
-      const main = this.getFramePainter(), // who makes axis drawing
+      const fp = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
             histo = this.getHisto(),
             zmult = 1 + 2*gStyle.fHistTopMargin;
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         const res = is_main ? main.resize3D() : false;
+         const res = is_main ? fp.resize3D() : false;
          if (res !== 1) {
             full_draw = false;
             if (res)
-               main.render3D();
+               fp.render3D();
          }
       }
 
@@ -35,23 +35,23 @@ class TH1Painter extends TH1Painter2D {
          this.scanContent(reason === 'zoom'); // may be required for axis drawings
 
          if (is_main) {
-            assignFrame3DMethods(main);
-            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
-               main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
-               main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, {
+            assignFrame3DMethods(fp);
+            pr = fp.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
+               fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
+               fp.set3DOptions(this.options);
+               fp.drawXYZ(fp.toplevel, TAxisPainter, {
                   ndim: 1, hist_painter: this, use_y_for_z: true, zmult, zoom: settings.Zooming,
                   draw: (this.options.Axis !== -1), drawany: this.options.isCartesian()
                });
             });
          }
 
-         if (main.mode3d) {
+         if (fp.mode3d) {
             pr = pr.then(() => {
                drawBinsLego(this);
-               main.render3D();
+               fp.render3D();
                this.updateStatWebCanvas();
-               main.addKeysHandler();
+               fp.addKeysHandler();
             });
          }
       }

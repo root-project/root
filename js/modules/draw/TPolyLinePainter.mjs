@@ -8,14 +8,23 @@ import { assignContextMenu } from '../gui/menu.mjs';
 
 const kPolyLineNDC = BIT(14);
 
+/**
+ * @summary Painter for TPolyLine class
+ * @private
+ */
+
 class TPolyLinePainter extends ObjectPainter {
+
+   #dx; // interactive change
+   #dy; // interactive change
+   #isndc; // if NDC coordinates used
 
    /** @summary Dragging object
     *  @private */
    moveDrag(dx, dy) {
-      this.dx += dx;
-      this.dy += dy;
-      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
+      this.#dx += dx;
+      this.#dy += dy;
+      makeTranslate(this.draw_g.select('path'), this.#dx, this.#dy);
    }
 
    /** @summary End dragging object
@@ -23,12 +32,12 @@ class TPolyLinePainter extends ObjectPainter {
    moveEnd(not_changed) {
       if (not_changed) return;
       const polyline = this.getObject(),
-            func = this.getAxisToSvgFunc(this.isndc);
+            func = this.getAxisToSvgFunc(this.#isndc);
       let exec = '';
 
       for (let n = 0; n <= polyline.fLastPoint; ++n) {
-         const x = this.svgToAxis('x', func.x(polyline.fX[n]) + this.dx, this.isndc),
-               y = this.svgToAxis('y', func.y(polyline.fY[n]) + this.dy, this.isndc);
+         const x = this.svgToAxis('x', func.x(polyline.fX[n]) + this.#dx, this.#isndc),
+               y = this.svgToAxis('y', func.y(polyline.fY[n]) + this.#dy, this.#isndc);
          polyline.fX[n] = x;
          polyline.fY[n] = y;
          exec += `SetPoint(${n},${x},${y});;`;
@@ -81,8 +90,8 @@ class TPolyLinePainter extends ObjectPainter {
 
       addMoveHandler(this);
 
-      this.dx = this.dy = 0;
-      this.isndc = isndc;
+      this.#dx = this.#dy = 0;
+      this.#isndc = isndc;
 
       return this;
    }

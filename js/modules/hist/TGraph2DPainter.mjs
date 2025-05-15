@@ -1057,6 +1057,7 @@ function graph2DTooltip(intersect) {
 class TGraph2DPainter extends ObjectPainter {
 
    #redraw_hist; // painter to redraw histogram
+   #delaunay; // used delaunay instance
 
    /** @summary Decode options string  */
    decodeOptions(opt) {
@@ -1170,8 +1171,6 @@ class TGraph2DPainter extends ObjectPainter {
       if (graph.fMinimum !== kNoZoom) uzmin = graph.fMinimum;
       if (graph.fMaximum !== kNoZoom) uzmax = graph.fMaximum;
 
-      this._own_histogram = true; // when histogram created on client side
-
       const histo = createHistogram(clTH2D, graph.fNpx, graph.fNpy);
       histo.fName = graph.fName + '_h';
       setHistogramTitle(histo, graph.fTitle);
@@ -1203,13 +1202,13 @@ class TGraph2DPainter extends ObjectPainter {
    }
 
    buildDelaunay(graph) {
-      if (!this._delaunay) {
-         this._delaunay = new TGraphDelaunay(graph);
-         this._delaunay.FindAllTriangles();
-         if (!this._delaunay.fNdt)
-            delete this._delaunay;
+      if (!this.#delaunay) {
+         this.#delaunay = new TGraphDelaunay(graph);
+         this.#delaunay.FindAllTriangles();
+         if (!this.#delaunay.fNdt)
+            this.#delaunay = undefined;
       }
-      return this._delaunay;
+      return this.#delaunay;
    }
 
    drawTriangles(fp, graph, levels, palette) {
@@ -1278,7 +1277,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       Object.assign(this.getObject(), obj);
 
-      delete this._delaunay; // rebuild triangles
+      this.#delaunay = undefined; // rebuild triangles
 
       this.#redraw_hist = undefined;
 

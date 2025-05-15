@@ -43,7 +43,7 @@ async function drawText() {
 
    this.pos_x = this.axisToSvg('x', pos_x, this.isndc);
    this.pos_y = this.axisToSvg('y', pos_y, this.isndc);
-   this.swap_xy = use_frame && fp?.swap_xy;
+   this.swap_xy = use_frame && fp?.swap_xy();
 
    if (this.swap_xy)
       [this.pos_x, this.pos_y] = [this.pos_y, this.pos_x];
@@ -286,8 +286,9 @@ function drawMarker() {
 
    this.isndc = marker.TestBit(kMarkerNDC);
 
-   const use_frame = this.isndc ? false : new DrawOptions(this.getDrawOpt()).check('FRAME'),
-         swap_xy = use_frame && this.getFramePainter()?.swap_xy;
+   const d = new DrawOptions(this.getDrawOpt()),
+         use_frame = this.isndc ? false : d.check('FRAME'),
+         swap_xy = use_frame && this.getFramePainter()?.swap_xy();
 
    this.createAttMarker({ attr: marker });
 
@@ -306,6 +307,9 @@ function drawMarker() {
           .call(this.markeratt.func);
    }
 
+   if (d.check('NO_INTERACTIVE'))
+      return;
+
    assignContextMenu(this);
 
    addMoveHandler(this);
@@ -315,11 +319,13 @@ function drawMarker() {
    this.moveDrag = function(dx, dy) {
       this.dx += dx;
       this.dy += dy;
-      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
+      if (this.draw_g)
+         makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
    };
 
    this.moveEnd = function(not_changed) {
-      if (not_changed) return;
+      if (not_changed || !this.draw_g)
+         return;
       const mrk = this.getObject();
       let fx = this.svgToAxis('x', this.axisToSvg('x', mrk.fX, this.isndc) + this.dx, this.isndc),
           fy = this.svgToAxis('y', this.axisToSvg('y', mrk.fY, this.isndc) + this.dy, this.isndc);

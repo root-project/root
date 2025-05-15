@@ -336,6 +336,10 @@ class TASImagePainter extends ObjectPainter {
       return false;
    }
 
+   /** @summary Return palette - dummy here
+     * @private */
+   getHistPalette() { return true; }
+
    /** @summary Draw color palette
      * @private */
    async drawColorPalette(enabled, can_move) {
@@ -347,7 +351,6 @@ class TASImagePainter extends ObjectPainter {
          Object.assign(pal, { fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
          pal.fAxis.fChopt = '+';
          this.draw_palette = pal;
-         this._color_palette = true; // to emulate behavior of hist painter
       }
 
       let pal_painter = this.getPadPainter().findPainterFor(this.draw_palette);
@@ -380,7 +383,7 @@ class TASImagePainter extends ObjectPainter {
          pal_painter = p;
 
          // mark painter as secondary - not in list of TCanvas primitives
-         pal_painter.setSecondary(this);
+         pal_painter.setSecondaryId(this);
 
          // make dummy redraw, palette will be updated only from histogram painter
          pal_painter.redraw = function() {};

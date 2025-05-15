@@ -1,4 +1,4 @@
-import { internals } from '../core.mjs';
+import { internals, clTMarker } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
@@ -13,9 +13,20 @@ import { draw } from '../draw.mjs';
 
 class TGraphTimePainter extends ObjectPainter {
 
+   #step; // step number
+   #selfid; // use to identify primitives which should be clean
+   #wait_animation_frame; // animation flag
+   #running_timeout; // timeout handle
+
+   constructor(dom, gr, opt) {
+      super(dom, gr, opt);
+      this.decodeOptions(opt);
+      this.#selfid = 'grtime_' + internals.id_counter++;
+   }
+
    /** @summary Redraw object */
    redraw() {
-      if (this.step === undefined)
+      if (this.#step === undefined)
          this.startDrawing();
    }
 
@@ -23,7 +34,8 @@ class TGraphTimePainter extends ObjectPainter {
    decodeOptions(opt) {
       const d = new DrawOptions(opt || 'REPEAT');
 
-      if (!this.options) this.options = {};
+      if (!this.options)
+         this.options = {};
 
       Object.assign(this.options, {
           once: d.check('ONCE'),
@@ -36,86 +48,83 @@ class TGraphTimePainter extends ObjectPainter {
 
    /** @summary Draw primitives */
    async drawPrimitives(indx) {
-      if (!indx) {
-         indx = 0;
-         this._doing_primitives = true;
-      }
+      const lst = this.getObject()?.fSteps.arr[this.#step];
 
-      const lst = this.getObject()?.fSteps.arr[this.step];
-
-      if (!lst || (indx >= lst.arr.length)) {
-         delete this._doing_primitives;
+      if (!lst || (indx >= lst.arr.length))
          return;
-      }
 
-      return draw(this.getPadPainter(), lst.arr[indx], lst.opt[indx]).then(p => {
+      const obj = lst.arr[indx],
+            opt = lst.opt[indx] + (obj._typename === clTMarker ? ';no_interactive' : '');
+
+      return draw(this.getPadPainter(), obj, opt).then(p => {
          if (p) {
-            p.$grtimeid = this.selfid; // indicator that painter created by ourself
-            p.$grstep = this.step; // remember step
+            p.$grtimeid = this.#selfid; // indicator that painter created by ourself
+            p.$grstep = this.#step; // remember step
          }
-         return this.drawPrimitives(indx+1);
+         return this.drawPrimitives(indx + 1);
       });
    }
 
    /** @summary Continue drawing */
    continueDrawing() {
-      if (!this.options) return;
+      if (!this.options)
+         return;
 
       const gr = this.getObject();
 
       if (this.options.first) {
          // draw only single frame, cancel all others
-         delete this.step;
+         this.#step = undefined;
          return;
       }
 
-      if (this.wait_animation_frame) {
-         delete this.wait_animation_frame;
+      if (this.#wait_animation_frame) {
+         this.#wait_animation_frame = undefined;
 
          // clear pad
          const pp = this.getPadPainter();
          if (!pp) {
             // most probably, pad is cleared
-            delete this.step;
+            this.#step = undefined;
             return;
          }
 
          // draw primitives again
-         this.drawPrimitives().then(() => {
+         this.drawPrimitives(0).then(() => {
             // clear primitives produced by previous drawing to avoid flicking
-            pp.cleanPrimitives(p => { return (p.$grtimeid === this.selfid) && (p.$grstep !== this.step); });
+            pp.cleanPrimitives(p => { return (p.$grtimeid === this.#selfid) && (p.$grstep !== this.#step); });
 
             this.continueDrawing();
          });
-      } else if (this.running_timeout) {
-         clearTimeout(this.running_timeout);
-         delete this.running_timeout;
+      } else if (this.#running_timeout) {
+         clearTimeout(this.#running_timeout);
+         this.#running_timeout = undefined;
 
-         this.wait_animation_frame = true;
+         this.#wait_animation_frame = true;
          // use animation frame to disable update in inactive form
          requestAnimationFrame(() => this.continueDrawing());
       } else {
          let sleeptime = Math.max(gr.fSleepTime, 10);
 
-         if (++this.step > gr.fSteps.arr.length) {
+         if (++this.#step > gr.fSteps.arr.length) {
             if (this.options.repeat) {
-               this.step = 0; // start again
+               this.#step = 0; // start again
                sleeptime = Math.max(5000, 5*sleeptime); // increase sleep time
             } else {
-               delete this.step;    // clear indicator that animation running
+               this.#step = undefined;    // clear indicator that animation running
                return;
             }
          }
 
-         this.running_timeout = setTimeout(() => this.continueDrawing(), sleeptime);
+         this.#running_timeout = setTimeout(() => this.continueDrawing(), sleeptime);
       }
    }
 
-   /** @summary Start drawing of graph time */
+   /** @summary Start drawing of TGraphTime */
    startDrawing() {
-      this.step = 0;
+      this.#step = 0;
 
-      return this.drawPrimitives().then(() => {
+      return this.drawPrimitives(0).then(() => {
          this.continueDrawing();
          return this;
       });
@@ -128,14 +137,12 @@ class TGraphTimePainter extends ObjectPainter {
         return null;
       }
 
-      const painter = new TGraphTimePainter(dom, gr);
+      const painter = new TGraphTimePainter(dom, gr, opt);
 
       if (painter.getMainPainter()) {
          console.error('Cannot draw graph time on top of other histograms');
          return null;
       }
-
-      painter.decodeOptions(opt);
 
       if (!gr.fFrame.fTitle && gr.fTitle) {
          const arr = gr.fTitle.split(';');
@@ -143,8 +150,6 @@ class TGraphTimePainter extends ObjectPainter {
          if (arr[1]) gr.fFrame.fXaxis.fTitle = arr[1];
          if (arr[2]) gr.fFrame.fYaxis.fTitle = arr[2];
       }
-
-      painter.selfid = 'grtime_' + internals.id_counter++; // use to identify primitives which should be clean
 
       return TH1Painter.draw(dom, gr.fFrame, '').then(() => {
          painter.addToPadPrimitives();

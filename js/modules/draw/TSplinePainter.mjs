@@ -5,12 +5,14 @@ import { TH1Painter } from '../hist/TH1Painter.mjs';
 
 
 /**
- * @summary Painter for TSpline objects.
+ * @summary Painter for TSpline classes.
  *
  * @private
  */
 
 class TSplinePainter extends ObjectPainter {
+
+   #knot_size; // graphical size of each knot
 
    /** @summary Update TSpline object
      * @private */
@@ -49,8 +51,10 @@ class TSplinePainter extends ObjectPainter {
       const spline = this.getObject();
       let klow = 0, khig = spline.fNp - 1;
 
-      if (x <= spline.fXmin) return 0;
-      if (x >= spline.fXmax) return khig;
+      if (x <= spline.fXmin)
+         return klow;
+      if (x >= spline.fXmax)
+         return khig;
 
       if (spline.fKstep) {
          // Equidistant knots, use histogram
@@ -58,14 +62,16 @@ class TSplinePainter extends ObjectPainter {
          // Correction for rounding errors
          if (x < spline.fPoly[klow].fX)
             klow = Math.max(klow-1, 0);
-          else if (klow < khig)
-            if (x > spline.fPoly[klow+1].fX) ++klow;
+         else if ((klow < khig) && (x > spline.fPoly[klow+1].fX))
+            ++klow;
       } else {
          // Non equidistant knots, binary search
          while (khig - klow > 1) {
             const khalf = Math.round((klow + khig)/2);
-            if (x > spline.fPoly[khalf].fX) klow = khalf;
-                                      else khig = khalf;
+            if (x > spline.fPoly[khalf].fX)
+               klow = khalf;
+            else
+               khig = khalf;
          }
       }
       return klow;
@@ -125,7 +131,7 @@ class TSplinePainter extends ObjectPainter {
 
          if ((indx < spline.fN-1) && (Math.abs(spline.fPoly[indx+1].fX-xx) < Math.abs(xx-knot.fX))) knot = spline.fPoly[++indx];
 
-         if (Math.abs(funcs.grx(knot.fX) - pnt.x) < 0.5*this.knot_size) {
+         if (Math.abs(funcs.grx(knot.fX) - pnt.x) < 0.5*this.#knot_size) {
             xx = knot.fX; yy = knot.fY;
          } else {
             knot = null;
@@ -190,14 +196,13 @@ class TSplinePainter extends ObjectPainter {
      * @private */
    redraw() {
       const spline = this.getObject(),
-          pmain = this.getFramePainter(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          w = pmain.getFrameWidth(),
-          h = pmain.getFrameHeight();
+            funcs = this.getFramePainter().getGrFuncs(this.options.second_x, this.options.second_y),
+            w = funcs.getFrameWidth(),
+            h = funcs.getFrameHeight();
 
       this.createG(true);
 
-      this.knot_size = 5; // used in tooltip handling
+      this.#knot_size = 5; // used in tooltip handling
 
       this.createAttLine({ attr: spline });
 
@@ -207,14 +212,14 @@ class TSplinePainter extends ObjectPainter {
              xmax = Math.min(funcs.scale_xmax, spline.fXmax),
              indx = this.findX(xmin);
 
-         if (pmain.logx) {
+         if (funcs.logx) {
             xmin = Math.log(xmin);
             xmax = Math.log(xmax);
          }
 
          for (let n = 0; n < npx; ++n) {
             let x = xmin + (xmax-xmin)/npx*(n-1);
-            if (pmain.logx) x = Math.exp(x);
+            if (funcs.logx) x = Math.exp(x);
 
             while ((indx < spline.fNp-1) && (x > spline.fPoly[indx+1].fX)) ++indx;
 
@@ -232,20 +237,21 @@ class TSplinePainter extends ObjectPainter {
 
       if (this.options.Mark) {
          // for tooltips use markers only if nodes where not created
-         let path = '';
 
          this.createAttMarker({ attr: spline });
 
          this.markeratt.resetPos();
 
-         this.knot_size = this.markeratt.getFullSize();
+         this.#knot_size = this.markeratt.getFullSize();
+
+         let path = '';
 
          for (let n = 0; n < spline.fPoly.length; n++) {
             const knot = spline.fPoly[n],
-                grx = funcs.grx(knot.fX);
-            if ((grx > -this.knot_size) && (grx < w + this.knot_size)) {
+                  grx = funcs.grx(knot.fX);
+            if ((grx > -this.#knot_size) && (grx < w + this.#knot_size)) {
                const gry = funcs.gry(knot.fY);
-               if ((gry > -this.knot_size) && (gry < h + this.knot_size))
+               if ((gry > -this.#knot_size) && (gry < h + this.#knot_size))
                   path += this.markeratt.create(grx, gry);
             }
          }

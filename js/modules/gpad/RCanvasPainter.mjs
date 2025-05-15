@@ -21,11 +21,15 @@ import { addDragHandler } from './TFramePainter.mjs';
 class RCanvasPainter extends RPadPainter {
 
    #websocket; // WebWindow handle used for communication with server
+   #changed_layout; // modified layout
+   #submreq;  // submitted requests
+   #nextreqid; // id of next request
 
    /** @summary constructor */
-   constructor(dom, canvas) {
-      super(dom, canvas, true);
+   constructor(dom, canvas, opt) {
+      super(dom, canvas, opt, true);
       this.#websocket = null;
+      this.#submreq = {};
       this.tooltip_allowed = settings.Tooltip;
       this.v7canvas = true;
    }
@@ -33,11 +37,11 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Cleanup canvas painter */
    cleanup() {
       this.#websocket = undefined;
-      delete this._submreq;
+      this.#submreq = {};
 
-     if (this._changed_layout)
+      if (this.#changed_layout)
          this.setLayoutKind('simple');
-      delete this._changed_layout;
+      this.#changed_layout = undefined;
 
       super.cleanup();
    }
@@ -65,7 +69,7 @@ class RCanvasPainter extends RPadPainter {
          if (!kind) kind = 'simple';
          origin.property('layout', kind);
          origin.property('layout_selector', (kind !== 'simple') && main_selector ? main_selector : null);
-         this._changed_layout = (kind !== 'simple'); // use in cleanup
+         this.#changed_layout = (kind !== 'simple'); // use in cleanup
       }
    }
 
@@ -391,8 +395,8 @@ class RCanvasPainter extends RPadPainter {
       req.id = painter.snapid;
 
       if (method) {
-         if (!this._nextreqid) this._nextreqid = 1;
-         req.reqid = this._nextreqid++;
+         if (!this.#nextreqid) this.#nextreqid = 1;
+         req.reqid = this.#nextreqid++;
       } else
          req.reqid = 0; // request will not be replied
 
@@ -405,8 +409,7 @@ class RCanvasPainter extends RPadPainter {
          req._method = method;
          req._tm = new Date().getTime();
 
-         if (!this._submreq) this._submreq = {};
-         this._submreq[req.reqid] = req; // fast access to submitted requests
+         this.#submreq[req.reqid] = req; // fast access to submitted requests
       }
 
       this.sendWebsocket('REQ:' + msg);
@@ -445,13 +448,13 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Process reply from request to RDrawable */
    processDrawableReply(msg) {
       const reply = parse(msg);
-      if (!reply || !reply.reqid || !this._submreq) return false;
+      if (!reply?.reqid) return false;
 
-      const req = this._submreq[reply.reqid];
+      const req = this.#submreq[reply.reqid];
       if (!req) return false;
 
       // remove reference first
-      delete this._submreq[reply.reqid];
+      this.#submreq[reply.reqid] = undefined;
 
       // remove blocking reference for that kind
       if (req._kind && req._painter?._requests) {
@@ -668,12 +671,12 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary draw RCanvas object */
-   static async draw(dom, can /* , opt */) {
+   static async draw(dom, can, opt) {
       const nocanvas = !can;
       if (nocanvas)
          can = create(`${nsREX}RCanvas`);
 
-      const painter = new RCanvasPainter(dom, can);
+      const painter = new RCanvasPainter(dom, can, opt);
       painter.createCanvasSvg(0);
 
       selectActivePad({ pp: painter, active: false });
@@ -691,8 +694,8 @@ class RCanvasPainter extends RPadPainter {
 
 /** @summary draw RPadSnapshot object
   * @private */
-function drawRPadSnapshot(dom, snap /* , opt */) {
-   const painter = new RCanvasPainter(dom, null);
+function drawRPadSnapshot(dom, snap, opt) {
+   const painter = new RCanvasPainter(dom, null, opt);
    painter.batch_mode = isBatchMode();
    return painter.syncDraw(true).then(() => painter.redrawPadSnap(snap)).then(() => {
       painter.confirmDraw();
@@ -785,10 +788,10 @@ registerMethods(`${nsREX}RPalette`, {
       if (zc < cntr[0])
          return -1;
       if (zc >= cntr[r])
-         return r-1;
+         return r - 1;
 
       if (this.fCustomContour) {
-         while (l < r-1) {
+         while (l < r - 1) {
             const mid = Math.round((l+r)/2);
             if (cntr[mid] > zc)
                r = mid;

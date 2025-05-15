@@ -3973,7 +3973,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
       }
 
       if (method === 'ray') {
-         for (let i=arr.length - 1; i >= 0; --i) {
+         for (let i = arr.length - 1; i >= 0; --i) {
             const mesh = arr[i], box3 = mesh.$jsroot_box3;
             let intersects, direction = box3.getCenter(tmp_vect);
 
@@ -4008,7 +4008,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
             // now push first object in intersects to the front
             for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
                const mesh1 = intersects[k1], mesh2 = intersects[k1+1],
-                   i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
+                     i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
                if (i1 < i2) continue;
                for (let ii = i2; ii < i1; ++ii) {
                   resort[ii] = resort[ii+1];

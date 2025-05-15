@@ -271,7 +271,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       const func = internals.getCachedObject || findFunction('GetCachedObject'),
             obj = isFunc(func) ? parse(func()) : undefined;
       if (isObject(obj))
-         hpainter._cached_draw_object = obj;
+         hpainter.setCachedObject(obj);
       let opt = d.get('opt', '');
       if (d.has('websocket'))
          opt += ';websocket';

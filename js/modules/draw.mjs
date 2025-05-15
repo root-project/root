@@ -4,7 +4,7 @@ import { loadScript, loadModules, findFunction, internals, settings, getPromise,
          clTObject, clTNamed, clTString, clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
-         clTText, clTLink, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF12, clTF2, clTF3, clTH3,
+         clTText, clTLink, clTLine, clTMarker, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF12, clTF2, clTF3, clTH3,
          clTProfile, clTProfile2D, clTProfile3D, clTFrame,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
@@ -113,7 +113,7 @@ drawFuncs = { lst: [
    { name: clTBox, icon: 'img_graph', class: () => import('./draw/TBoxPainter.mjs').then(h => h.TBoxPainter), opt: ';L' },
    { name: 'TWbox', sameas: clTBox },
    { name: 'TSliderBox', sameas: clTBox },
-   { name: 'TMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawMarker), direct: true },
+   { name: clTMarker, icon: 'img_graph', draw: () => import_more().then(h => h.drawMarker), direct: true },
    { name: 'TPolyMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawPolyMarker), direct: true },
    { name: 'TASImage', icon: 'img_mgraph', class: () => import('./draw/TASImagePainter.mjs').then(h => h.TASImagePainter), opt: ';z' },
    { name: 'TJSImage', icon: 'img_mgraph', draw: () => import_more().then(h => h.drawJSImage), opt: ';scale;center' },
@@ -149,14 +149,9 @@ drawFuncs = { lst: [
    { name: 'kind:Folder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true },
    { name: nsREX+'RCanvas', icon: 'img_canvas', class: () => import_v7().then(h => h.RCanvasPainter), opt: '', expand_item: fPrimitives },
    { name: nsREX+'RCanvasDisplayItem', icon: 'img_canvas', draw: () => import_v7().then(h => h.drawRPadSnapshot), opt: '', expand_item: fPrimitives },
-   { name: nsREX+'RHist1Drawable', icon: 'img_histo1d', class: () => import_v7('rh1').then(h => h.RH1Painter), opt: '' },
-   { name: nsREX+'RHist2Drawable', icon: 'img_histo2d', class: () => import_v7('rh2').then(h => h.RH2Painter), opt: '' },
-   { name: nsREX+'RHist3Drawable', icon: 'img_histo3d', class: () => import_v7('rh3').then(h => h.RH3Painter), opt: '' },
-   { name: nsREX+'RHistDisplayItem', icon: 'img_histo1d', draw: () => import_v7('rh3').then(h => h.drawHistDisplayItem), opt: '' },
    { name: nsREX+'RText', icon: 'img_text', draw: () => import_v7('more').then(h => h.drawText), opt: '', direct: 'v7', csstype: 'text' },
    { name: nsREX+'RFrameTitle', icon: 'img_text', draw: () => import_v7().then(h => h.drawRFrameTitle), opt: '', direct: 'v7', csstype: 'title' },
    { name: nsREX+'RPaletteDrawable', icon: 'img_text', class: () => import_v7('more').then(h => h.RPalettePainter), opt: '' },
-   { name: nsREX+'RDisplayHistStat', icon: 'img_pavetext', class: () => import_v7('pave').then(h => h.RHistStatsPainter), opt: '' },
    { name: nsREX+'RLine', icon: 'img_graph', draw: () => import_v7('more').then(h => h.drawLine), opt: '', direct: 'v7', csstype: 'line' },
    { name: nsREX+'RBox', icon: 'img_graph', draw: () => import_v7('more').then(h => h.drawBox), opt: '', direct: 'v7', csstype: 'box' },
    { name: nsREX+'RMarker', icon: 'img_graph', draw: () => import_v7('more').then(h => h.drawMarker), opt: '', direct: 'v7', csstype: 'marker' },
@@ -639,13 +634,17 @@ async function makeImage(args) {
             }
          }
 
-         const mainsvg = main.select('svg');
+         const mainsvg = main.select('svg'),
+               style_filter = mainsvg.style('filter');
 
          mainsvg.attr('xmlns', nsSVG)
                 .attr('style', null).attr('class', null).attr('x', null).attr('y', null);
 
          if (!mainsvg.attr('width') && !mainsvg.attr('height'))
             mainsvg.attr('width', args.width).attr('height', args.height);
+
+         if (style_filter)
+            mainsvg.style('filter', style_filter);
 
          function clear_element() {
             const elem = d3_select(this);
@@ -721,9 +720,6 @@ import_v7 = async function(arg) {
       switch (arg) {
          case 'more': return import('./draw/v7more.mjs');
          case 'pave': return import('./hist/RPavePainter.mjs');
-         case 'rh1': return import('./hist/RH1Painter.mjs');
-         case 'rh2': return import('./hist/RH2Painter.mjs');
-         case 'rh3': return import('./hist/RH3Painter.mjs');
       }
       return h;
    });

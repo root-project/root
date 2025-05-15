@@ -4,13 +4,14 @@ import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { TLinePainter } from './TLinePainter.mjs';
 
 
+const k_upper_pad = 'upper_pad', k_lower_pad = 'lower_pad', k_top_pad = 'top_pad';
+
+
 /**
  * @summary Painter class for TRatioPlot
  *
  * @private
  */
-
-const k_upper_pad = 'upper_pad', k_lower_pad = 'lower_pad', k_top_pad = 'top_pad';
 
 class TRatioPlotPainter extends ObjectPainter {
 

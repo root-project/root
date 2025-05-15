@@ -1,7 +1,7 @@
 /**
  * lil-gui
  * https://lil-gui.georgealways.com
- * @version 0.19.2
+ * @version 0.20.0
  * @author George Michael Brower
  * @license MIT
  */
@@ -1180,16 +1180,24 @@ class NumberController extends Controller {
 
 	_snap( value ) {
 
-		// This would be the logical way to do things, but floating point errors.
-		// return Math.round( value / this._step ) * this._step;
+		// Make the steps "start" at min or max.
+		let offset = 0;
+		if ( this._hasMin ) {
+			offset = this._min;
+		} else if ( this._hasMax ) {
+			offset = this._max;
+		}
 
-		// Using inverse step solves a lot of them, but not all
-		// const inverseStep = 1 / this._step;
-		// return Math.round( value * inverseStep ) / inverseStep;
+		value -= offset;
 
-		// Not happy about this, but haven't seen it break.
-		const r = Math.round( value / this._step ) * this._step;
-		return parseFloat( r.toPrecision( 15 ) );
+		value = Math.round( value / this._step ) * this._step;
+
+		value += offset;
+
+		// Used to prevent "flyaway" decimals like 1.00000000000001
+		value = parseFloat( value.toPrecision( 15 ) );
+
+		return value;
 
 	}
 
@@ -1322,7 +1330,7 @@ class StringController extends Controller {
 
 }
 
-const stylesheet = `.lil-gui {
+var stylesheet = `.lil-gui {
   font-family: var(--font-family);
   font-size: var(--font-size);
   line-height: 1;
@@ -1580,12 +1588,11 @@ const stylesheet = `.lil-gui {
 
 .lil-gui .title {
   height: var(--title-height);
-  line-height: calc(var(--title-height) - 4px);
   font-weight: 600;
   padding: 0 var(--padding);
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-  outline: none;
+  width: 100%;
+  text-align: left;
+  background: none;
   text-decoration-skip: objects;
 }
 .lil-gui .title:before {
@@ -1722,21 +1729,23 @@ const stylesheet = `.lil-gui {
   font-size: var(--font-size);
   color: var(--text-color);
   width: 100%;
+  border: none;
+}
+.lil-gui .controller button {
   height: var(--widget-height);
   text-transform: none;
   background: var(--widget-color);
   border-radius: var(--widget-border-radius);
-  border: none;
 }
 @media (hover: hover) {
-  .lil-gui button:hover {
+  .lil-gui .controller button:hover {
     background: var(--hover-color);
   }
-  .lil-gui button:focus {
+  .lil-gui .controller button:focus {
     box-shadow: inset 0 0 0 1px var(--focus-color);
   }
 }
-.lil-gui button:active {
+.lil-gui .controller button:active {
   background: var(--focus-color);
 }
 
@@ -1755,6 +1764,7 @@ function _injectStyles( cssContent ) {
 		document.head.appendChild( injected );
 	}
 }
+
 
 let stylesInjected = false;
 
@@ -1792,7 +1802,6 @@ class GUI {
 	 *
 	 * @param {GUI} [options.parent]
 	 * Adds this GUI as a child in another GUI. Usually this is done for you by `addFolder()`.
-	 *
 	 */
 	constructor( {
 		parent,
@@ -1858,19 +1867,11 @@ class GUI {
 		 * The DOM element that contains the title.
 		 * @type {HTMLElement}
 		 */
-		this.$title = document.createElement( 'div' );
+		this.$title = document.createElement( 'button' );
 		this.$title.classList.add( 'title' );
-		this.$title.setAttribute( 'role', 'button' );
 		this.$title.setAttribute( 'aria-expanded', true );
-		this.$title.setAttribute( 'tabindex', 0 );
 
 		this.$title.addEventListener( 'click', () => this.openAnimated( this._closed ) );
-		this.$title.addEventListener( 'keydown', e => {
-			if ( e.code === 'Enter' || e.code === 'Space' ) {
-				e.preventDefault();
-				this.$title.click();
-			}
-		} );
 
 		// enables :active pseudo class on mobile
 		this.$title.addEventListener( 'touchstart', () => {}, { passive: true } );
@@ -2389,5 +2390,4 @@ class GUI {
 
 }
 
-export default GUI;
-export { BooleanController, ColorController, Controller, FunctionController, GUI, NumberController, OptionController, StringController };
+export { BooleanController, ColorController, Controller, FunctionController, GUI, NumberController, OptionController, StringController, GUI as default };
