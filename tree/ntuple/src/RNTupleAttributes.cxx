@@ -19,8 +19,6 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleReader.hxx>
 
-using namespace ROOT::Experimental::Internal::RNTupleAttributes;
-
 static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &model)
 {
    const auto &projFields = ROOT::Internal::GetProjectedFieldsOfModel(model);
@@ -35,25 +33,6 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
    return ROOT::RResult<void>::Success();
 }
 
-namespace {
-class RAttributeRangeField : public ROOT::RRecordField {
-public:
-   RAttributeRangeField(std::string_view fieldName)
-      // TODO: we could use an untyped record to avoid storing the StreamerInfo of RNTupleAttributeRange in the TFile;
-      // however this requires using some unsafe API (e.g. GetView<void>) and it's probably not worth it.
-      // Investigate if there are better solutions that achieve the same goal without forcing the use of the untyped
-      // unsafe APIs.
-      : RRecordField(fieldName, "ROOT::Experimental::RNTupleAttributeRange")
-   {
-      std::vector<std::unique_ptr<RFieldBase>> fields;
-      fields.emplace_back(new ROOT::RField<ROOT::NTupleSize_t>("_0"));
-      fields.emplace_back(new ROOT::RField<ROOT::NTupleSize_t>("_1"));
-      AttachItemFields(std::move(fields));
-      fOffsets = {0, 8};
-   }
-};
-} // namespace
-
 //
 //  RNTupleAttributeSetWriter
 //
@@ -66,16 +45,32 @@ ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std
    if (auto modelValid = ValidateAttributeModel(*model); !modelValid)
       return R__FORWARD_ERROR(modelValid);
 
-   // Add an internal range field to the model.
-   // TODO: the entry range field name is not guaranteed to not be already taken!
-   // XXX: using a bespoke Field to avoid the overhead of RClassField. Worth it or unneeded extra complexity?
-   model->MakeField<RNTupleAttributeRange>(kEntryRangeFieldName);
-   model->Freeze();
+   model->Unfreeze();
+
+   // Add all fields of `model` as subfields of a single top-level untyped record field which has the same
+   // name as the attribute set. This way we "namespace" all user-defined attribute fields and we are free to use
+   // whichever name we want for our internal fields.
+   // TODO: avoid cloning the fields
+   std::vector<std::unique_ptr<RFieldBase>> fields;
+   fields.reserve(model->GetFieldNames().size());
+   for (const auto &fieldName : model->GetFieldNames()) {
+      auto &field = model->GetMutableField(fieldName);
+      fields.push_back(field.Clone(fieldName));
+   }
+   // TODO: evaluate if this is really needed
+   auto userRootField = std::make_unique<ROOT::RRecordField>(name, std::move(fields));
+
+   // TODO: avoid creating a new model
+   auto newModel = RNTupleModel::CreateBare();
+   newModel->AddField(std::move(userRootField));
+   newModel->MakeField<ROOT::NTupleSize_t>("__rangeStart");
+   newModel->MakeField<ROOT::NTupleSize_t>("__rangeLen");
+   newModel->Freeze();
 
    // Create a sink that points to the same TDirectory as the main RNTuple
    auto opts = ROOT::RNTupleWriteOptions{};
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
-   RNTupleFillContext fillContext{std::move(model), std::move(sink)};
+   RNTupleFillContext fillContext{std::move(newModel), std::move(sink)};
    return RNTupleAttributeSetWriter(mainFillContext, std::move(fillContext));
 }
 
@@ -96,9 +91,10 @@ ROOT::Experimental::RNTupleAttributeEntryHandle ROOT::Experimental::RNTupleAttri
    if (fOpenEntry)
       throw ROOT::RException(R__FAIL("Called BeginRange() without having closed the currently open range!"));
 
-   auto entry = fFillContext.GetModel().CreateEntry();
    const auto start = fMainFillContext->GetNEntries();
-   fOpenEntry = RNTupleAttributeEntry(std::move(entry), start);
+   auto &model = const_cast<RNTupleModel &>(fFillContext.GetModel());
+   auto [entry, scopedEntry] = RNTupleAttributeEntry::CreateInternalEntries(model);
+   fOpenEntry = RNTupleAttributeEntry{std::move(entry), std::move(scopedEntry), start};
    auto handle = RNTupleAttributeEntryHandle{*fOpenEntry};
    return handle;
 }
@@ -119,10 +115,13 @@ void ROOT::Experimental::RNTupleAttributeSetWriter::EndRangeInternal()
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();
    fOpenEntry->fRange = RNTupleAttributeRange::FromStartEnd(fOpenEntry->fRange.Start(), end);
-   auto pRange = fOpenEntry->fEntry->GetPtr<RNTupleAttributeRange>(kEntryRangeFieldName);
-   R__ASSERT(pRange);
-   *pRange = fOpenEntry->GetRange();
-   fFillContext.Fill(*fOpenEntry->fEntry);
+   auto pRangeStart = fOpenEntry->fEntry->GetPtr<ROOT::NTupleSize_t>("__rangeStart");
+   auto pRangeLen = fOpenEntry->fEntry->GetPtr<ROOT::NTupleSize_t>("__rangeLen");
+   R__ASSERT(pRangeStart);
+   R__ASSERT(pRangeLen);
+   *pRangeStart = fOpenEntry->GetRange().Start();
+   *pRangeLen = fOpenEntry->GetRange().Length();
+   fFillContext.FillImpl(*fOpenEntry);
 
    fOpenEntry = std::nullopt;
 }
@@ -143,11 +142,13 @@ ROOT::Experimental::RNTupleAttributeSetReader::RNTupleAttributeSetReader(std::un
    : fReader(std::move(reader))
 {
    // Collect all entry ranges
-   auto entryRangeView = fReader->GetView<RNTupleAttributeRange>(kEntryRangeFieldName);
+   auto entryRangeStartView = fReader->GetView<ROOT::NTupleSize_t>("__rangeStart");
+   auto entryRangeLenView = fReader->GetView<ROOT::NTupleSize_t>("__rangeLen");
    fEntryRanges.reserve(fReader->GetNEntries());
    for (auto i : fReader->GetEntryRange()) {
-      auto range = entryRangeView(i);
-      fEntryRanges.push_back({range, i});
+      auto start = entryRangeStartView(i);
+      auto len = entryRangeLenView(i);
+      fEntryRanges.push_back({RNTupleAttributeRange::FromStartLength(start, len), i});
    }
 
    assert(EntryRangesAreSorted(fEntryRanges));
@@ -198,6 +199,7 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTuple
       return startEntry >= start && endEntry <= end;
    };
 
+   auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
    // TODO: consider using binary search, since fEntryRanges is sorted
    // (maybe it should be done only if the size of the list is bigger than a threshold).
    for (const auto &[range, index] : fEntryRanges) {
@@ -206,9 +208,10 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTuple
          break; // We can break here because fEntryRanges is sorted.
 
       if (FullyContained(startEntry, endEntry, start, end)) {
-         auto entry = fReader->CreateEntry();
-         fReader->LoadEntry(index, *entry);
-         result.push_back(RNTupleAttributeEntry{std::move(entry), range});
+         auto scopedEntry = RNTupleAttributeEntry::CreateScopedEntry(model);
+         auto attrEntry = RNTupleAttributeEntry(nullptr, std::move(scopedEntry), range);
+         fReader->LoadEntry(index, *attrEntry.fScopedEntry);
+         result.push_back(std::move(attrEntry));
       }
    }
 
@@ -239,10 +242,12 @@ std::vector<ROOT::Experimental::RNTupleAttributeEntry> ROOT::Experimental::RNTup
    std::vector<RNTupleAttributeEntry> result;
    result.reserve(fEntryRanges.size());
 
+   auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
    for (const auto &[range, index] : fEntryRanges) {
-      auto entry = fReader->CreateEntry();
-      fReader->LoadEntry(index, *entry);
-      result.push_back(RNTupleAttributeEntry{std::move(entry), range});
+      auto scopedEntry = RNTupleAttributeEntry::CreateScopedEntry(model);
+      auto attrEntry = RNTupleAttributeEntry(nullptr, std::move(scopedEntry), range);
+      fReader->LoadEntry(index, *attrEntry.fScopedEntry);
+      result.push_back(std::move(attrEntry));
    }
 
    return result;
