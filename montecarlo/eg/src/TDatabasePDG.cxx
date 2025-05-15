@@ -168,6 +168,13 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
       return 0;
    }
 
+   // Fix ROOT-6889. If the antiparticle is stable, 
+   if (PDGcode < 0 && stable) {
+      // We verify the antiparticle is stable and this is not an artifact of the PDG Table
+      auto nonAntiParticle = GetParticle(-1*PDGcode);
+      stable = nonAntiParticle->Stable();
+   }
+
    TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,
                                      charge, ParticleClass, PDGcode, Anti,
                                      TrackingCode);
