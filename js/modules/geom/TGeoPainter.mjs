@@ -5136,7 +5136,7 @@ class TGeoPainter extends ObjectPainter {
                   fp.clear3dCanvas();
                   fp.mode3d = false;
                }
-            } else
+            } else if (isFunc(this.clear3dCanvas))
                can3d = this.clear3dCanvas(); // remove 3d canvas from main HTML element
 
             disposeThreejsObject(this.#scene);
@@ -5357,11 +5357,11 @@ class TGeoPainter extends ObjectPainter {
       if (this.#did_update)
          return this.startRedraw();
 
-      const main = this.#on_pad ? this.getFramePainter() : null;
-      if (!main)
+      const fp = this.#on_pad ? this.getFramePainter() : null;
+      if (!fp)
          return Promise.resolve(false);
-      const sz = main.getSizeFor3d(main.access3dKind());
-      main.apply3dSize(sz);
+      const sz = fp.getSizeFor3d(fp.access3dKind());
+      fp.apply3dSize(sz);
       return this.performResize(sz.width, sz.height);
    }
 

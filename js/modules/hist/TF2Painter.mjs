@@ -2,7 +2,7 @@ import { createHistogram, setHistogramTitle, kNoStats, settings, gStyle, clTF2, 
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar } from '../base/func.mjs';
 import { produceTAxisLogScale, scanTF1Options } from '../hist/TF1Painter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { getElementPadPainter } from '../base/ObjectPainter.mjs';
 import { DrawOptions, floatToString } from '../base/BasePainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 
@@ -17,6 +17,7 @@ class TF2Painter extends TH2Painter {
 
    #use_saved_points; // use saved points for drawing
    #func; // func object
+   #fail_eval; // fail evaluation of function
 
    /** @summary Assign function  */
    setFunc(f) { this.#func = f; }
@@ -39,7 +40,7 @@ class TF2Painter extends TH2Painter {
       delete obj.evalPar;
       const histo = this.getHisto();
 
-      if (this.webcanv_hist) {
+      if (this._webcanv_hist) {
          const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH2F);
          if (h0) this.updateAxes(histo, h0, this.getFramePainter());
       }
@@ -68,7 +69,7 @@ class TF2Painter extends TH2Painter {
       if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
          nsave = 0;
 
-      this.#use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || (this.use_saved > 1));
+      this.#use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || (this._use_saved > 1));
 
       const fp = this.getFramePainter(),
             pad = this.getPadPainter()?.getRootPad(true),
@@ -107,7 +108,7 @@ class TF2Painter extends TH2Painter {
          hist.fYaxis.fXbins = [];
       };
 
-      delete this._fail_eval;
+      this.#fail_eval = undefined;
 
       if (!this.#use_saved_points) {
          let iserror = false;
@@ -144,7 +145,7 @@ class TF2Painter extends TH2Painter {
          }
 
          if (iserror)
-            this._fail_eval = true;
+            this.#fail_eval = true;
 
          if (iserror && (nsave > 6))
             this.#use_saved_points = true;
@@ -295,7 +296,7 @@ class TF2Painter extends TH2Painter {
      * @desc Used to inform web canvas when evaluation failed
      * @private */
    fillWebObjectOptions(opt) {
-      opt.fcust = this._fail_eval && !this.use_saved ? 'func_fail' : '';
+      opt.fcust = this.#fail_eval && !this._use_saved ? 'func_fail' : '';
    }
 
    /** @summary draw TF2 object */
@@ -312,10 +313,8 @@ class TF2Painter extends TH2Painter {
 
       let hist;
 
-      if (web.webcanv_hist) {
-         const dummy = new ObjectPainter(dom);
-         hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH2F);
-      }
+      if (web._webcanv_hist)
+         hist = getElementPadPainter(dom)?.findInPrimitives('Func', clTH2F);
 
       if (!hist) {
          hist = createHistogram(clTH2F, 20, 20);

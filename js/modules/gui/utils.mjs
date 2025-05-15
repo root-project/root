@@ -307,7 +307,7 @@ function registerForResize(handle, delay) {
             const mdi = node.property('mdi');
             if (isFunc(mdi?.checkMDIResize))
                mdi.checkMDIResize();
-             else
+            else
                resize(node.node());
          }
       }
@@ -356,27 +356,27 @@ function addMoveHandler(painter, enabled = true, hover_handler = false) {
    drag_move
       .on('start', function(evnt) {
          move_disabled = this.moveEnabled ? !this.moveEnabled() : false;
-         if (move_disabled) return;
-         if (detectRightButton(evnt.sourceEvent)) return;
+         if (move_disabled || detectRightButton(evnt.sourceEvent))
+            return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          const pos = d3_pointer(evnt, this.draw_g.node());
          not_changed = true;
          if (this.moveStart)
-            this.moveStart(pos[0], pos[1]);
+            this.moveStart(pos[0], pos[1], evnt.sourceEvent);
       }.bind(painter)).on('drag', function(evnt) {
          if (move_disabled) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          not_changed = false;
          if (this.moveDrag)
-            this.moveDrag(evnt.dx, evnt.dy);
+            this.moveDrag(evnt.dx, evnt.dy, evnt.sourceEvent);
       }.bind(painter)).on('end', function(evnt) {
          if (move_disabled) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          if (this.moveEnd)
-            this.moveEnd(not_changed);
+            this.moveEnd(not_changed, evnt.sourceEvent);
 
          let arg = null;
          if (not_changed) {

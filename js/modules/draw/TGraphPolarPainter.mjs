@@ -286,7 +286,7 @@ class TGraphPolargramPainter extends TooltipHandler {
       let exclude_last = false;
       const pointer_events = this.isBatchMode() ? null : 'visibleFill';
 
-      if ((ticks[ticks.length - 1] < polar.fRwrmax) && (this.zoom_rmin === this.zoom_rmax)) {
+      if ((ticks.at(-1) < polar.fRwrmax) && (this.zoom_rmin === this.zoom_rmax)) {
          ticks.push(polar.fRwrmax);
          exclude_last = true;
       }

@@ -228,6 +228,8 @@ const AxisPainterMethods = {
      * @desc Fixing following problem, described [here]{@link https://stackoverflow.com/questions/64649793} */
    poduceLogTicks(func, number) {
       const linearArray = arr => {
+         if (arr.length < 2)
+            return false;
          let sum1 = 0, sum2 = 0;
          for (let k = 1; k < arr.length; ++k) {
             const diff = (arr[k] - arr[k-1]);
@@ -235,7 +237,7 @@ const AxisPainterMethods = {
             sum2 += diff**2;
          }
          const mean = sum1/(arr.length - 1),
-             dev = sum2/(arr.length - 1) - mean**2;
+               dev = sum2/(arr.length - 1) - mean**2;
 
          if (dev <= 0) return true;
          if (Math.abs(mean) < 1e-100) return false;
@@ -749,13 +751,33 @@ class TAxisPainter extends ObjectPainter {
          let bestorder = 0, bestndig = this.ndig, bestlen = 1e10;
 
          for (let order = minorder; order <= maxorder; order += 3) {
-            if (exclorder3 && (order === 3)) continue;
+            if (exclorder3 && (order === 3))
+               continue;
             this.order = order;
             this.ndig = 0;
             let lbls = [], indx = 0, totallen = 0;
             while (indx < handle.major.length) {
-               const lbl = this.format(handle.major[indx], true);
-               if (lbls.indexOf(lbl) < 0) {
+               const v0 = handle.major[indx],
+                     lbl = this.format(v0, true);
+
+               let bad_value = lbls.indexOf(lbl) >= 0;
+               if (!bad_value) {
+                  try {
+                     const v1 = parseFloat(lbl) * Math.pow(10, order);
+                     bad_value = (Math.abs(v0) > 1e-30) && (Math.abs(v1 - v0) / Math.abs(v0) > 1e-8);
+                  } catch {
+                     console.warn('Failure by parsing of', lbl);
+                     bad_value = true;
+                  }
+               }
+               if (bad_value) {
+                  if (++this.ndig > 15) {
+                     totallen += 1e10;
+                     break; // not too many digits, anyway it will be exponential
+                  }
+                  lbls = [];
+                  indx = totallen = 0;
+               } else {
                   lbls.push(lbl);
                   const p = lbl.indexOf('.');
                   if (!order && !optionNoexp && ((p > gStyle.fAxisMaxDigits) || ((p < 0) && (lbl.length > gStyle.fAxisMaxDigits)))) {
@@ -764,10 +786,7 @@ class TAxisPainter extends ObjectPainter {
                   }
                   totallen += lbl.length;
                   indx++;
-                  continue;
                }
-               if (++this.ndig > 15) break; // not too many digits, anyway it will be exponential
-               lbls = []; indx = 0; totallen = 0;
             }
 
             // for order === 0 we should virtually remove '0.' and extra label on top
