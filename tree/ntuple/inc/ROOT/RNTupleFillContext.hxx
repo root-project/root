@@ -35,6 +35,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RNTupleAttributeSetWriter;
+class RNTupleAttributeSetWriterHandle;
 struct RNTupleAttributeSetDescriptor;
 
 // clang-format off
@@ -89,6 +90,8 @@ private:
 
    /// All the Attribute Sets created from this FillContext
    std::unordered_map<std::string, Experimental::RNTupleAttributeSetWriter> fAttributeSets;
+   /// Data about all attribute sets committed so far.
+   std::vector<Internal::RNTupleAttributeSetDescriptor> fCommittedAttributeSets;
 
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
@@ -115,6 +118,8 @@ private:
          FlushCluster();
       return status.GetLastEntrySize();
    }
+
+   void CloseAttributeSetInternal(Experimental::RNTupleAttributeSetWriter &handle);
 
    RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;
@@ -158,8 +163,9 @@ public:
    void FlushCluster();
    /// Logically append staged clusters to the RNTuple.
    void CommitStagedClusters();
-   /// Finishes writing all Attribute RNTuples to disk and returns a list of offsets to their Anchors.
-   std::vector<Internal::RNTupleAttributeSetDescriptor> CommitAttributes();
+   /// Finishes writing all Attribute RNTuples to disk and saves a list of offsets to their Anchors into
+   /// `fCommittedAttributeSets`.
+   void CommitAttributes();
 
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }
    std::unique_ptr<ROOT::REntry> CreateEntry() const { return fModel->CreateEntry(); }
@@ -185,8 +191,10 @@ public:
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriter *>
+   ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriterHandle>
    CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model);
+
+   void CloseAttributeSet(Experimental::RNTupleAttributeSetWriterHandle handle);
 }; // class RNTupleFillContext
 
 } // namespace Experimental
