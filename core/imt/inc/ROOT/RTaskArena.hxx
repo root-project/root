@@ -72,7 +72,7 @@ public:
    RTaskArenaWrapper(Attach);
 
 private:
-   friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(bool, unsigned, ROOT::EIMTConfig);
+   friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned, ROOT::EIMTConfig);
    std::unique_ptr<ROOT::ROpaqueTaskArena> fTBBArena;
    static unsigned fNWorkers;
 };

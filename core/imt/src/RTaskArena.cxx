@@ -142,7 +142,7 @@ ROOT::ROpaqueTaskArena &RTaskArenaWrapper::Access()
 }
 
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper>
-GetGlobalTaskArena(bool semantic, unsigned maxConcurrency, ROOT::EIMTConfig config)
+GetGlobalTaskArena(unsigned maxConcurrency, ROOT::EIMTConfig config)
 {
    static std::weak_ptr<ROOT::Internal::RTaskArenaWrapper> weak_GTAWrapper;
 
@@ -156,10 +156,10 @@ GetGlobalTaskArena(bool semantic, unsigned maxConcurrency, ROOT::EIMTConfig conf
       return sp;
    }
    std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> sp;
-   if (semantic && config == ROOT::EIMTConfig::kExistingTBBArena) {
+   if (config == ROOT::EIMTConfig::kExistingTBBArena) {
       sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(ROOT::Internal::RTaskArenaWrapper::Attach{});
    } else {
-      if (semantic && config != ROOT::EIMTConfig::kWholeMachine) {
+      if (config == ROOT::EIMTConfig::kWholeMachine) {
          maxConcurrency = 0;
       }
       sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(maxConcurrency);
@@ -170,12 +170,15 @@ GetGlobalTaskArena(bool semantic, unsigned maxConcurrency, ROOT::EIMTConfig conf
 
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(ROOT::EIMTConfig config)
 {
-   return GetGlobalTaskArena(true, 0, config);
+   if (config >= ROOT::EIMTConfig::kNumConfigs)
+      ::Fatal("ROOT::Internal::GetGlobalTaskArena",
+              "Unsupported enum value %d", (int)config);
+   return GetGlobalTaskArena(0, config);
 }
 
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency)
 {
-   return GetGlobalTaskArena(false, maxConcurrency, ROOT::EIMTConfig::kNumConfigs);
+   return GetGlobalTaskArena(maxConcurrency, ROOT::EIMTConfig::kNumConfigs);
 }
 
 } // namespace Internal
