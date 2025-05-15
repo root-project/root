@@ -108,7 +108,7 @@ void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
    fStagedClusters.clear();
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriter *>
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriterHandle>
 ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name,
                                                            std::unique_ptr<ROOT::RNTupleModel> model)
 {
@@ -129,29 +129,50 @@ ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name
    // NOTE(gparolini): pointers into unordered_map are guaranteed to be stable. cppreference states:
    // "References and pointers to either key or data stored in the container are only invalidated by
    // erasing that element"
-   return &attrSetIter->second;
+   return Experimental::RNTupleAttributeSetWriterHandle{attrSetIter->second};
 }
 
-std::vector<ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor>
-ROOT::Experimental::RNTupleFillContext::CommitAttributes()
+void ROOT::Experimental::RNTupleFillContext::CloseAttributeSetInternal(
+   ROOT::Experimental::RNTupleAttributeSetWriter &attrSet)
 {
-   std::vector<Internal::RNTupleAttributeSetDescriptor> offsets;
-   offsets.reserve(fAttributeSets.size());
+   attrSet.Commit();
+   TDirectory *dir = attrSet.fFillContext.fSink->GetUnderlyingDirectory();
+   R__ASSERT(dir); // TODO: we're only dealing with TFile-based attributes for now.
+   const auto &attrSetName = attrSet.fFillContext.fSink->GetNTupleName();
+   const auto *key = dir->GetKey(attrSetName.c_str());
+   R__ASSERT(key);
+   RNTupleLocator locator;
+   locator.SetType(RNTupleLocator::kTypeFile);
+   // TODO(gparolini): set proper size of Anchor (although it's unused right now)
+   locator.SetNBytesOnStorage(0);
+   locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey()));
+   fCommittedAttributeSets.push_back(Internal::RNTupleAttributeSetDescriptor{attrSetName, locator});
+}
 
-   for (auto &[_, attrSet] : fAttributeSets) {
-      attrSet.Commit();
-      TDirectory *dir = attrSet.fFillContext.fSink->GetUnderlyingDirectory();
-      R__ASSERT(dir); // TODO: we're only dealing with TFile-based attributes for now.
-      const auto &attrSetName = attrSet.fFillContext.fSink->GetNTupleName();
-      const auto *key = dir->GetKey(attrSetName.c_str());
-      R__ASSERT(key);
-      RNTupleLocator locator;
-      locator.SetType(RNTupleLocator::kTypeFile);
-      // TODO(gparolini): set proper size of Anchor (although it's unused right now)
-      locator.SetNBytesOnStorage(0);
-      locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey()));
-      offsets.push_back(Internal::RNTupleAttributeSetDescriptor{attrSetName, locator});
+void ROOT::Experimental::RNTupleFillContext::CloseAttributeSet(RNTupleAttributeSetWriterHandle handle)
+{
+   if (!handle.fWriter) {
+      throw ROOT::RException(R__FAIL("Tried to close an invalid AttributeSetWriter"));
    }
 
-   return offsets;
+   CloseAttributeSetInternal(*handle.fWriter);
+
+   bool erased = false;
+   for (auto it = fAttributeSets.begin(), end = fAttributeSets.end(); it != end; ++it) {
+      if (&it->second == handle.fWriter) {
+         fAttributeSets.erase(it);
+         erased = true;
+         break;
+      }
+   }
+   R__ASSERT(erased);
+}
+
+void ROOT::Experimental::RNTupleFillContext::CommitAttributes()
+{
+   fCommittedAttributeSets.reserve(fCommittedAttributeSets.size() + fAttributeSets.size());
+
+   for (auto &[_, attrSet] : fAttributeSets) {
+      CloseAttributeSetInternal(attrSet);
+   }
 }

@@ -19,7 +19,7 @@ TEST(RNTupleAttributes, AttributeBasics)
       auto pAttr = attrModel->MakeField<std::string>("myAttr");
 
       // Step 2: create the attribute set from the writer
-      auto *attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
 
       // Step 3: open attribute range. attrRange has basically the same interface as REntry
       auto attrRange = attrSet->BeginRange();
@@ -149,6 +149,34 @@ TEST(RNTupleAttributes, MultipleEndRange)
    }
    attrSet->EndRange(std::move(attrRange));
    EXPECT_THROW(attrSet->EndRange(std::move(attrRange)), ROOT::RException);
+}
+
+TEST(RNTupleAttributes, AccessPastEndRange)
+{
+   FileRaii fileGuard("test_ntuple_attrs_pastendrange.root");
+
+   auto model = RNTupleModel::Create();
+   auto pInt = model->MakeField<int>("int");
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+   auto attrModel = RNTupleModel::Create();
+   attrModel->MakeField<std::string>("string");
+   auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone()).Unwrap();
+
+   auto &wModel = writer->GetModel();
+
+   auto attrRange = attrSet->BeginRange();
+   auto pMyAttr = attrRange.GetPtr<std::string>("string");
+   *pMyAttr = "Run 1";
+   for (int i = 0; i < 100; ++i) {
+      auto entry = wModel.CreateEntry();
+      *pInt = i;
+      writer->Fill(*entry);
+   }
+   attrSet->EndRange(std::move(attrRange));
+   // Cannot access attrRange after EndRange()
+   EXPECT_THROW(attrRange.GetPtr<std::string>("string"), ROOT::RException);
 }
 
 TEST(RNTupleAttributes, AssignMetadataAfterData)
