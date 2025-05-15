@@ -25,6 +25,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleAttributeEntry.hxx>
 
 #include <cstddef>
 #include <cstdint>
@@ -152,6 +153,11 @@ public:
    /// from the context's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
+
+   void FillNoFlush(Experimental::RNTupleAttributeEntry &entry, ROOT::RNTupleFillStatus &status)
+   {
+      FillNoFlushImpl(entry, status);
+   }
 
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage.
