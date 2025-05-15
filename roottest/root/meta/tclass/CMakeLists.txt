@@ -108,10 +108,12 @@ ROOTTEST_ADD_TEST(execInitOrder
                   OUTREF execInitOrder.ref
                   FIXTURES_REQUIRED InitOrder)
 
-ROOTTEST_ADD_TEST(tclassStl
-                  MACRO tclassStl.cxx+
-		  OUTREF tclassStl.ref
-		  RUN_SERIAL)
+if(NOT coverage)
+  ROOTTEST_ADD_TEST(tclassStl
+                    MACRO tclassStl.cxx+
+                    OUTREF tclassStl.ref
+                    RUN_SERIAL)
+endif()
 
 ROOTTEST_ADD_TEST(TClassAtTearDown
                   MACRO execTClassAtTearDown.C
