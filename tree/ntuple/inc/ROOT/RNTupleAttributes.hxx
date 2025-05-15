@@ -36,24 +36,57 @@ class RNTupleFillContext;
 
 namespace Internal::RNTupleAttributes {
 static constexpr const char *const kEntryRangeFieldName = "__ROOT_entryRange";
-using REntryRange = std::pair<NTupleSize_t, NTupleSize_t>;
 } // namespace Internal::RNTupleAttributes
 
 class RNTupleAttributeRange final {
+   ROOT::NTupleSize_t fStart = 0;
+   ROOT::NTupleSize_t fLength = 0;
+
+   RNTupleAttributeRange(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length) : fStart(start), fLength(length) {}
+
+public:
+   static RNTupleAttributeRange FromStartLength(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length)
+   {
+      return RNTupleAttributeRange{start, length};
+   }
+
+   static RNTupleAttributeRange FromStartEnd(ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
+   {
+      R__ASSERT(end >= start);
+      return RNTupleAttributeRange{start, end - start};
+   }
+
+   RNTupleAttributeRange() = default;
+
+   ROOT::NTupleSize_t Start() const { return fStart; }
+   ROOT::NTupleSize_t End() const { return fStart + fLength; }
+   ROOT::NTupleSize_t Length() const { return fLength; }
+
+   std::pair<ROOT::NTupleSize_t, ROOT::NTupleSize_t> GetStartEnd() const { return {Start(), End()}; }
+};
+
+class RNTupleAttributeEntry final {
    friend class ROOT::Experimental::RNTupleAttributeSetWriter;
    friend class ROOT::Experimental::RNTupleAttributeSetReader;
 
    std::unique_ptr<REntry> fEntry;
-   ROOT::NTupleSize_t fStart, fEnd;
+   RNTupleAttributeRange fRange;
 
-   RNTupleAttributeRange(std::unique_ptr<REntry> entry, ROOT::NTupleSize_t start, ROOT::NTupleSize_t end = 0)
-      : fEntry(std::move(entry)), fStart(start), fEnd(end)
+   /// Creates a pending AttributeEntry whose length is not determined yet
+   RNTupleAttributeEntry(std::unique_ptr<REntry> entry, ROOT::NTupleSize_t start)
+      : fEntry(std::move(entry)), fRange(RNTupleAttributeRange::FromStartLength(start, 0))
+   {
+   }
+
+   /// Creates an AttributeEntry with the given range
+   RNTupleAttributeEntry(std::unique_ptr<REntry> entry, RNTupleAttributeRange range)
+      : fEntry(std::move(entry)), fRange(range)
    {
    }
 
 public:
-   RNTupleAttributeRange(RNTupleAttributeRange &&) = default;
-   RNTupleAttributeRange &operator=(RNTupleAttributeRange &&) = default;
+   RNTupleAttributeEntry(RNTupleAttributeEntry &&) = default;
+   RNTupleAttributeEntry &operator=(RNTupleAttributeEntry &&) = default;
 
    template <typename T>
    std::shared_ptr<T> GetPtr(std::string_view name) const
@@ -61,21 +94,21 @@ public:
       return fEntry->GetPtr<T>(name);
    }
 
-   std::pair<ROOT::NTupleSize_t, ROOT::NTupleSize_t> GetRange() const { return {fStart, fEnd}; }
+   RNTupleAttributeRange GetRange() const { return fRange; }
 };
 
-class RNTupleAttributeRangeHandle final {
+class RNTupleAttributeEntryHandle final {
    friend class RNTupleAttributeSetWriter;
 
-   RNTupleAttributeRange *fRange = nullptr;
+   RNTupleAttributeEntry *fRange = nullptr;
 
-   explicit RNTupleAttributeRangeHandle(RNTupleAttributeRange &range) : fRange(&range) {}
+   explicit RNTupleAttributeEntryHandle(RNTupleAttributeEntry &range) : fRange(&range) {}
 
 public:
-   RNTupleAttributeRangeHandle(const RNTupleAttributeRangeHandle &) = delete;
-   RNTupleAttributeRangeHandle &operator=(const RNTupleAttributeRangeHandle &) = delete;
-   RNTupleAttributeRangeHandle(RNTupleAttributeRangeHandle &&other) { std::swap(fRange, other.fRange); }
-   RNTupleAttributeRangeHandle &operator=(RNTupleAttributeRangeHandle &&other)
+   RNTupleAttributeEntryHandle(const RNTupleAttributeEntryHandle &) = delete;
+   RNTupleAttributeEntryHandle &operator=(const RNTupleAttributeEntryHandle &) = delete;
+   RNTupleAttributeEntryHandle(RNTupleAttributeEntryHandle &&other) { std::swap(fRange, other.fRange); }
+   RNTupleAttributeEntryHandle &operator=(RNTupleAttributeEntryHandle &&other)
    {
       std::swap(fRange, other.fRange);
       return *this;
@@ -85,7 +118,7 @@ public:
    std::shared_ptr<T> GetPtr(std::string_view name)
    {
       if (R__unlikely(!fRange))
-         throw ROOT::RException(R__FAIL("Called GetPtr() on invalid RNTupleAttributeRangeHandle"));
+         throw ROOT::RException(R__FAIL("Called GetPtr() on invalid RNTupleAttributeEntryHandle"));
       return fRange->GetPtr<T>(name);
    }
 };
@@ -110,8 +143,8 @@ class RNTupleAttributeSetWriter final {
    RNTupleFillContext fFillContext;
    /// Fill context of the main RNTuple being written (i.e. the RNTuple whose attributes we are).
    const RNTupleFillContext *fMainFillContext = nullptr;
-   /// The currently open range, existing from BeginRange() to EndRange()
-   std::optional<RNTupleAttributeRange> fOpenRange;
+   /// The currently open entry, existing from BeginRange() to EndRange()
+   std::optional<RNTupleAttributeEntry> fOpenEntry;
 
    /// Creates a RNTupleAttributeSetWriter associated to the RNTupleWriter owning `mainFillContext` and writing
    /// in `dir`. `model` is the schema of the AttributeSet.
@@ -133,8 +166,8 @@ public:
 
    const std::string &GetName() const;
 
-   RNTupleAttributeRangeHandle BeginRange();
-   void EndRange(RNTupleAttributeRangeHandle rangeHandle);
+   RNTupleAttributeEntryHandle BeginRange();
+   void EndRange(RNTupleAttributeEntryHandle rangeHandle);
 };
 
 class RNTupleAttributeSetWriterHandle final {
@@ -177,11 +210,12 @@ TODO: code sample here
 // clang-format on
 class RNTupleAttributeSetReader final {
    friend class ROOT::RNTupleReader;
-   friend class RAttributeRangeIterable;
+   friend class RAttributeEntryIterable;
 
    // List containing pairs { entryRange, entryIndex }, used to quickly find out which entries in the Attribute
-   // RNTuple contain entries that overlap a given range. The list is sorted by range start, i.e. entryRange.first.
-   std::vector<std::pair<Internal::RNTupleAttributes::REntryRange, NTupleSize_t>> fEntryRanges;
+   // RNTuple contain entries that overlap a given range. The list is sorted by range start, i.e.
+   // entryRange.first.Start().
+   std::vector<std::pair<RNTupleAttributeRange, NTupleSize_t>> fEntryRanges;
    std::unique_ptr<RNTupleReader> fReader;
 
    /// Creates a RNTupleAttributeSetReader associated to the RNTupleReader owning `mainFillContext` and writing
@@ -195,7 +229,7 @@ class RNTupleAttributeSetReader final {
 
    // Used for GetAttributesContainingRange (with `rangeIsContained == false`) and GetAttributesInRange (with
    // `rangeIsContained == true`).
-   std::vector<RNTupleAttributeRange>
+   std::vector<RNTupleAttributeEntry>
    GetAttributesRangeInternal(NTupleSize_t startEntry, NTupleSize_t endEntry, bool rangeIsContained);
 
 public:
@@ -208,13 +242,13 @@ public:
    const std::string &GetName() const;
 
    /// Returns all the attributes whose range fully contains `[startEntry, endEntry]`
-   std::vector<RNTupleAttributeRange> GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
+   std::vector<RNTupleAttributeEntry> GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
    /// Returns all the attributes whose range is fully contained in `[startEntry, endEntry]`
-   std::vector<RNTupleAttributeRange> GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
+   std::vector<RNTupleAttributeEntry> GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
    /// Returns all the attributes whose range contains index `entryIndex`.
-   std::vector<RNTupleAttributeRange> GetAttributes(NTupleSize_t entryIndex);
+   std::vector<RNTupleAttributeEntry> GetAttributes(NTupleSize_t entryIndex);
    /// Returns all the attributes in this Set. The returned attributes are sorted by entry range start.
-   std::vector<RNTupleAttributeRange> GetAttributes();
+   std::vector<RNTupleAttributeEntry> GetAttributes();
 };
 
 } // namespace Experimental
