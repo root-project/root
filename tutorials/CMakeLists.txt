@@ -923,7 +923,9 @@ if(ROOT_pyroot_FOUND)
       visualisation/graphs/gr013_polar2.py
       visualisation/graphs/gr014_polar3.py
   )
-  file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/df038_NumbaDeclare.py)
+  file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      analysis/dataframe/df038_NumbaDeclare.py
+      analysis/dataframe/df101_h1Analysis.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py
       analysis/dataframe/df035_RDFFromPandas.py
@@ -931,7 +933,8 @@ if(ROOT_pyroot_FOUND)
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/pytorch/*.py)
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py)
-  set(fixtureLists requires_numpy requires_numba requires_pandas requires_keras requires_xgboost requires_torch)
+  file(GLOB requires_sklearn RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} roofit/roofit/rf617*.py)
+  set(fixtureLists requires_numpy requires_numba requires_pandas requires_keras requires_xgboost requires_torch requires_sklearn)
 
   # Now set up all the tests
   foreach(t ${pytutorials})
