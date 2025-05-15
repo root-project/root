@@ -67,15 +67,26 @@ public:
 class RNTupleAttributeRangeHandle final {
    friend class RNTupleAttributeSetWriter;
 
-   RNTupleAttributeRange &fRange;
+   RNTupleAttributeRange *fRange = nullptr;
 
-   explicit RNTupleAttributeRangeHandle(RNTupleAttributeRange &range) : fRange(range) {}
+   explicit RNTupleAttributeRangeHandle(RNTupleAttributeRange &range) : fRange(&range) {}
 
 public:
+   RNTupleAttributeRangeHandle(const RNTupleAttributeRangeHandle &) = delete;
+   RNTupleAttributeRangeHandle &operator=(const RNTupleAttributeRangeHandle &) = delete;
+   RNTupleAttributeRangeHandle(RNTupleAttributeRangeHandle &&other) { std::swap(fRange, other.fRange); }
+   RNTupleAttributeRangeHandle &operator=(RNTupleAttributeRangeHandle &&other)
+   {
+      std::swap(fRange, other.fRange);
+      return *this;
+   }
+
    template <typename T>
    std::shared_ptr<T> GetPtr(std::string_view name)
    {
-      return fRange.GetPtr<T>(name);
+      if (R__unlikely(!fRange))
+         throw ROOT::RException(R__FAIL("Called GetPtr() on invalid RNTupleAttributeRangeHandle"));
+      return fRange->GetPtr<T>(name);
    }
 };
 
@@ -124,6 +135,31 @@ public:
 
    RNTupleAttributeRangeHandle BeginRange();
    void EndRange(RNTupleAttributeRangeHandle rangeHandle);
+};
+
+class RNTupleAttributeSetWriterHandle final {
+   friend class ::ROOT::Experimental::RNTupleFillContext;
+
+   RNTupleAttributeSetWriter *fWriter = nullptr;
+
+   explicit RNTupleAttributeSetWriterHandle(RNTupleAttributeSetWriter &range) : fWriter(&range) {}
+
+public:
+   RNTupleAttributeSetWriterHandle(const RNTupleAttributeSetWriterHandle &) = delete;
+   RNTupleAttributeSetWriterHandle &operator=(const RNTupleAttributeSetWriterHandle &) = delete;
+   RNTupleAttributeSetWriterHandle(RNTupleAttributeSetWriterHandle &&other) { std::swap(fWriter, other.fWriter); }
+   RNTupleAttributeSetWriterHandle &operator=(RNTupleAttributeSetWriterHandle &&other)
+   {
+      std::swap(fWriter, other.fWriter);
+      return *this;
+   }
+
+   RNTupleAttributeSetWriter *operator->()
+   {
+      if (R__unlikely(!fWriter))
+         throw ROOT::RException(R__FAIL("Tried to access invalid RNTupleAttributeSetWriterHandle"));
+      return fWriter;
+   }
 };
 
 // clang-format off
