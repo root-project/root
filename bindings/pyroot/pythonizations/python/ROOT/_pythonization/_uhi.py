@@ -309,9 +309,9 @@ def _slice_get(self, index, unprocessed_index):
 
     processed_slices, actions = _get_processed_slices(self, index)
     start_stop = [(r.start, r.stop) for r in processed_slices]
-    slice_args = [item for pair in start_stop for item in pair]
+    args_vec = ROOT.std.vector('Int_t')([item for pair in start_stop for item in pair])
 
-    target_hist = ROOT.Internal.Slice(self, *slice_args)
+    target_hist = ROOT.Internal.Slice(self, args_vec)
 
     return _apply_actions(target_hist, actions, index, unprocessed_index, self)
 
@@ -340,7 +340,7 @@ def _slice_set(self, index, unprocessed_index, value):
     processed_slices, actions = _get_processed_slices(self, index)
     start_stop = [(r.start, r.stop) for r in processed_slices]
     slice_shape = tuple(stop - start for start, stop in start_stop)
-    slice_args = [item for pair in start_stop for item in pair]
+    args_vec = ROOT.std.vector('Int_t')([item for pair in start_stop for item in pair])
         
     if np.isscalar(value):
         value = ROOT.std.variant('std::vector<Double_t>', 'Double_t')(float(value))
@@ -357,7 +357,7 @@ def _slice_set(self, index, unprocessed_index, value):
         except AttributeError:
             raise TypeError(f"Unsupported value type: {type(value).__name__}")
         
-    ROOT.Internal.SetSliceContent(self, value, *slice_args)
+    ROOT.Internal.SetSliceContent(self, value, args_vec)
 
     _apply_actions(self, actions, index, unprocessed_index, self)
 

@@ -47,7 +47,6 @@
 #include <string>
 
 #include <variant>
-#include <set>
 
 class TF1;
 class TH1D;
@@ -117,16 +116,28 @@ namespace{
 }
 
 namespace ROOT::Internal {
-   template <typename T, typename... Args>
-   auto Slice(const T &histo, Args... args)
+   template <typename T>
+   auto Slice(const T &histo, std::vector<Int_t>& args)
    {
-      return histo.Slice(args...);
+      return histo.Slice(args);
    }
 
-   template <typename T, typename... Args>
-   auto SetSliceContent(T &histo, const std::variant<std::vector<Double_t>, Double_t> &input, Args... args)
+   template <typename T>
+   auto SetSliceContent(T &histo, const std::variant<std::vector<Double_t>, Double_t> &input, const std::vector<Int_t>& args)
    {
-      return histo.SetSliceContent(input, args...);
+      switch (args.size() / 2) {
+         case 1:
+            histo.template SetSliceContent<1>(input, args);
+            break;
+         case 2:
+            histo.template SetSliceContent<2>(input, args);
+            break;
+         case 3:
+            histo.template SetSliceContent<3>(input, args);
+            break;
+         default:
+            throw std::invalid_argument("Invalid number of arguments for SetSliceContent");
+      }
    }
 } // namespace ROOT::Internal
 
@@ -212,119 +223,21 @@ private:
    TH1(const TH1&) = delete;
    TH1& operator=(const TH1&) = delete;
 
-   template <typename... Args>
-   TH1* Slice(Args... args){
-      constexpr size_t ndim = sizeof...(args) / 2;
-      if (ndim != fDimension) {
-         Error("TH1::Slice", "Number of dimensions in slice does not match histogram dimension.");
-      }
+   TH1* Slice(std::vector<Int_t>& args) const;
 
-      std::array<Int_t, sizeof...(args)> binsArray{args...};
-      std::vector<Int_t> nBins(ndim);
-      std::vector<Double_t> binLowEdge(ndim), binUpEdge(ndim);
-      std::vector<Int_t> shiftedBins(ndim*2);
+   template <typename T>
+   friend auto ROOT::Internal::Slice(const T &histo, std::vector<Int_t>& args);
 
-      auto configureAxis = [&](size_t i, const auto &axis) {
-         Int_t binLow = std::max(1, binsArray[i * 2]);
-         Int_t binUp = std::min(axis.GetNbins() + 1, binsArray[i * 2 + 1]);
-         binsArray[i * 2] = binLow;
-         binsArray[i * 2 + 1] = binUp;
-         nBins[i] = binUp - binLow;
-         binLowEdge[i] = axis.GetBinLowEdge(binLow);
-         binUpEdge[i] = axis.GetBinLowEdge(binUp);
-         shiftedBins[i * 2] = 1;
-         shiftedBins[i * 2 + 1] = nBins[i] + 1;
-      };
-   
-      // Configure all axes
-      for (size_t i = 0; i < ndim; ++i) {
-            const auto &axis = (i == 0) ? fXaxis : (i == 1) ? fYaxis : fZaxis;
-            configureAxis(i, axis);
-      }
-
-      // Create a new histogram of the same type as this
-      std::unique_ptr<TH1> hSlice(static_cast<TH1*>(IsA()->GetNew()(nullptr)));
-
-      if (!hSlice) {
-         Error("TH1::Slice", "Failed to create a new histogram instance.");
-      }
-
-      // Configure name, title and bins
-      hSlice->SetNameTitle(Form("%s_slice", GetName()), GetTitle());
-
-      auto configureBins = [&](auto &hist) {
-         if constexpr (ndim == 1) {
-             hist.SetBins(nBins[0], binLowEdge[0], binUpEdge[0]);
-         } else if constexpr (ndim == 2) {
-             hist.SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
-                          nBins[1], binLowEdge[1], binUpEdge[1]);
-         } else if constexpr (ndim == 3) {
-             hist.SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
-                          nBins[1], binLowEdge[1], binUpEdge[1],
-                          nBins[2], binLowEdge[2], binUpEdge[2]);
-         }
-      };
-      configureBins(*hSlice);
-
-      std::vector<Double_t> sliceContents;
-      std::unordered_set<Int_t> processedBins;
-      Double_t underflowContent = 0.0, overflowContent = 0.0;
-
-      auto processBinContent = [&](Int_t x, Int_t y, Int_t z) {
-         const Int_t globalBin = GetBin(x, y, z);
-         if (!processedBins.insert(globalBin).second) return;
- 
-         const auto content = RetrieveBinContent(globalBin);
-         const bool isUnderflow = (x < binsArray[0] || (ndim > 1 && y < binsArray[2]) || (ndim > 2 && z < binsArray[4]));
-         const bool isOverflow = (x >= binsArray[1] || (ndim > 1 && y >= binsArray[3]) || (ndim > 2 && z >= binsArray[5]));
- 
-         if (isUnderflow) {
-             underflowContent += content;
-         } else if (isOverflow) {
-             overflowContent += content;
-         } else {
-             sliceContents.push_back(content);
-         }
-      };
-
-      for (Int_t x = 0; x <= fXaxis.GetNbins() + 1; ++x) {
-         for (Int_t y = 0; y <= (ndim > 1 ? fYaxis.GetNbins() + 1 : 1); ++y) {
-             for (Int_t z = 0; z <= (ndim > 2 ? fZaxis.GetNbins() + 1 : 1); ++z) {
-                 processBinContent(x, y, z);
-             }
-         }
-     }
-
-      unpack_caller<ndim*2> caller;
-      auto setSliceContents = [&](auto... binEdges) {
-         ROOT::Internal::SetSliceContent(*hSlice, sliceContents, binEdges...);
-      };
-      caller(setSliceContents, shiftedBins);
-         
-      hSlice->SetBinContent(0, underflowContent);
-      auto overflowBin = (ndim == 1) ? hSlice->GetBin(fXaxis.GetNbins() + 1)
-                     : (ndim == 2) ? hSlice->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1)
-                     : hSlice->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1, fZaxis.GetNbins() + 1);
-      hSlice->SetBinContent(overflowBin, overflowContent);
-
-      return hSlice.release();
-   }
-
-   template <typename T, typename... Args>
-   friend auto ROOT::Internal::Slice(const T &histo, Args... args);
-
-   template <typename... Args>
-   void SetSliceContent(const std::variant<std::vector<Double_t>, Double_t> &input, Args... args) {
-      constexpr auto ndim = sizeof...(args) / 2;
-      if (ndim != fDimension) {
-         Error("TH1::SetSliceContent", "Number of edges in the specified slice does not match histogram dimension.");
+   template <size_t Dim>
+   void SetSliceContent(const std::variant<std::vector<Double_t>, Double_t> &input, const std::vector<Int_t>& args) {
+      if (Dim != fDimension) {
+         throw std::invalid_argument("Number of edges in the specified slice does not match histogram dimension.");
       }
 
       // Extract low/up edges in pairs
-      auto argsArray = std::array<Int_t, sizeof...(args)>{args...};
       std::vector<std::pair<Int_t, Int_t>> sliceEdges;
-      for (size_t i = 0; i < ndim; ++i) {
-         sliceEdges.emplace_back(argsArray[i * 2], argsArray[i * 2 + 1]);
+      for (size_t i = 0; i < Dim; ++i) {
+         sliceEdges.emplace_back(args[i * 2], args[i * 2 + 1]);
       }
 
       // Get the indices to set
@@ -343,11 +256,10 @@ private:
       }, input);
 
       if (values.size() != sliceIndices.size()) {
-         Error("TH1::SetSliceContent", "Number of provided values does not match number of bins to set. ");
-         return;
+         throw std::invalid_argument("Number of provided values does not match number of bins to set.");
       }
 
-      unpack_caller<ndim> caller;
+      unpack_caller<Dim> caller;
       for (size_t i = 0; i < sliceIndices.size(); ++i) {
          auto globalBin = 0;
          // Compute the bin to set
@@ -361,8 +273,8 @@ private:
       }
    }
 
-   template <typename T, typename... Args>
-   friend auto ROOT::Internal::SetSliceContent(T &histo, const std::variant<std::vector<Double_t>, Double_t> &input, Args... args);
+   template <typename T>
+   friend auto ROOT::Internal::SetSliceContent(T &histo, const std::variant<std::vector<Double_t>, Double_t> &input, const std::vector<Int_t>& args);
 
 protected:
    TH1();
