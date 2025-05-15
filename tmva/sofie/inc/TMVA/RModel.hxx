@@ -69,8 +69,8 @@ public:
    bool CheckIfTensorAlreadyExist(std::string tensor_name);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<Dim> shape);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
-   void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
-   void AddOperatorReference(ROperator *op, int order_execution = -1)
+   void AddOperator(std::unique_ptr<ROperator> op, size_t order_execution = -1);
+   void AddOperatorReference(ROperator *op, size_t order_execution = -1)
    {
       std::unique_ptr<ROperator> tmp(op);
       AddOperator(std::move(tmp), order_execution);
