@@ -40,7 +40,7 @@ std::string Join(const std::string &sep, StringCollection_t &&strings)
                           [&sep](auto const &a, auto const &b) { return a + sep + b; });
 }
 
-std::string Round(const double value, const double error, const unsigned short cutoff = 1, const std::string delim = "#pm");
+std::string Round(const double value, const double error, const unsigned short cutoff = 1, const std::string_view delim = "#pm");
 
 } // namespace ROOT
 

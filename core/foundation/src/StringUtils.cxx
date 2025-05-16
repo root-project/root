@@ -52,7 +52,7 @@ std::vector<std::string> Split(std::string_view str, std::string_view delims, bo
  * for very large or very small values of the error, the format is changed from `A+-B` to (A'+-B')*1eX, with X being multiple of 3, respecting the corresponding precision.
  * \see https://www.bipm.org/en/doi/10.59161/jcgm100-2008e, https://physics.nist.gov/cuu/Uncertainty/
  */
-std::string Round(const double value, const double error, const unsigned short cutoff, const std::string delim)
+std::string Round(const double value, const double error, const unsigned short cutoff, const std::string_view delim)
 {
    if(error <= 0.)
    {
