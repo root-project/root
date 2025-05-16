@@ -19,6 +19,8 @@
 #include "Math/RotationZYX.h"
 
 #include "Math/LorentzRotation.h"
+#include "Math/PtEtaPhiM4D.h"
+#include "Math/LorentzVector.h"
 
 #include "Math/VectorUtil.h"
 #ifndef NO_SMATRIX
@@ -794,6 +796,24 @@ int testVectorUtil() {
 
 }
 
+int testLorentzVector()
+{
+   std::cout << "testing LorentzVector  \t:\t";
+   int iret = 0;
+   LorentzVector<PtEtaPhiM4D<float>> v1(1,2,3,4);
+   LorentzVector<PtEtaPhiM4D<float>> v2(5,6,7,8);
+   iret |= compare(v1.DeltaR(v2), 4.60575f);
+   // Result cross-validated using:
+   // TLorentzVector t1, t2;
+   // t1.SetPtEtaPhiE(1,2,3,4); t2.SetPtEtaPhiE(5,6,7,8);
+   // t1.DeltaR(t2)
+   if (iret == 0)
+      std::cout << "\t\t\tOK\n";
+   else
+      std::cout << "\t\t\t\t\t\tFAILED\n";
+   return iret;
+}
+
 int testGenVector() {
 
   int iret = 0;
@@ -808,7 +828,7 @@ int testGenVector() {
   iret |= testTransform3D();
 
   iret |= testVectorUtil();
-
+  iret |= testLorentzVector();
 
   if (iret !=0) std::cout << "\nTest GenVector FAILED!!!!!!!!!\n";
   return iret;
