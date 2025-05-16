@@ -434,12 +434,13 @@ public:
    const char             *pwd() { return WorkingDirectory(); }
    virtual const char     *TempDirectory() const;
    virtual FILE           *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr);
+   virtual char            DirectorySeparator() const { return '/'; }
 
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);
    virtual const char     *DirName(const char *pathname);
    virtual TString         GetDirName(const char *pathname);
-   virtual char           *ConcatFileName(const char *dir, const char *name);
+   char                   *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
    virtual Bool_t          IsFileInIncludePath(const char *name, char **fullpath = nullptr);
    virtual const char     *PrependPathName(const char *dir, TString& name);

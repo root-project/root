@@ -160,6 +160,7 @@ public:
    std::string       GetHomeDirectory(const char *userName = nullptr) const override;
    const char       *TempDirectory() const override;
    FILE             *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr) override;
+   char              DirectorySeparator() const final { return '\\'; }
 
    //---- Users & Groups ---------------------------------------
    Int_t             GetUid(const char *user = nullptr) override;

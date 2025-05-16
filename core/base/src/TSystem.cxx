@@ -1082,9 +1082,13 @@ const char *TSystem::UnixPathName(const char *name)
 
 char *TSystem::ConcatFileName(const char *dir, const char *name)
 {
-   TString nameString(name);
-   PrependPathName(dir, nameString);
-   return StrDup(nameString.Data());
+   const auto dirLen = strlen(dir);
+   const auto nameLen = strlen(name);
+   char *result = new char[nameLen + dirLen + 2];
+   memcpy(result, dir, dirLen);
+   result[dirLen] = DirectorySeparator();
+   memcpy(result + dirLen + 1, name, nameLen + 1); // NOTE: also copies the null terminator
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
