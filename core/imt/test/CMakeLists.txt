@@ -6,3 +6,4 @@
 
 ROOT_ADD_GTEST(testTaskArena testRTaskArena.cxx LIBRARIES Imt ${TBB_LIBRARIES} FAILREGEX "")
 ROOT_ADD_GTEST(testTBBGlobalControl testTBBGlobalControl.cxx LIBRARIES Imt ${TBB_LIBRARIES})
+ROOT_ADD_GTEST(testEnableImt testEnableImt.cxx LIBRARIES Imt ${TBB_LIBRARIES})
