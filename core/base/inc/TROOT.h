@@ -80,12 +80,20 @@ namespace Internal {
 } } // End ROOT::Internal
 
 namespace ROOT {
+   enum class EIMTConfig {
+      kWholeMachine = 0,     ///< Default configuration
+      kExistingTBBArena = 1, ///< Use the existing TBB arena
+      kNumConfigs = 2        ///< Number of support IMT semantic configurations
+   };
    /// \brief Enable support for multi-threading within the ROOT code
    /// in particular, enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety();
    /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
    /// parallelisation mechanism.
    void EnableImplicitMT(UInt_t numthreads = 0);
+   /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
+   /// parallelisation mechanism.
+   void EnableImplicitMT(ROOT::EIMTConfig config);
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetThreadPoolSize();
