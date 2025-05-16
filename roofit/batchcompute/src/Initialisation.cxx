@@ -36,6 +36,12 @@ void loadWithErrorChecking(const std::string &libName)
    }
 }
 
+bool &isInitialisedCpu()
+{
+   static bool isInitialised = false;
+   return isInitialised;
+}
+
 } // end anonymous namespace
 
 namespace RooBatchCompute {
@@ -44,12 +50,10 @@ namespace RooBatchCompute {
 int initCPU()
 {
    // Check if the library was not initialised already
-   static bool isInitialised = false;
-   if (isInitialised)
+   if (isInitialisedCpu())
       return 0;
-   isInitialised = true;
 
-   const std::string userChoice = gEnv->GetValue("RooFit.BatchCompute", "auto");
+   const std::string userChoice = getBatchComputeChoice();
 #ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
 
    __builtin_cpu_init();
@@ -76,12 +80,14 @@ int initCPU()
       loadWithErrorChecking("libRooBatchCompute_SSE4.1");
    } else if (userChoice != "generic") {
       throw std::invalid_argument(
-         "Supported options for `RooFit.BatchCompute` are `auto`, `avx512`, `avx2`, `avx`, `sse`, `generic`.");
+         R"(Supported options for "RooFit.BatchCompute" are "auto", "avx512", "avx2", "avx", "sse", "generic".)");
    }
 #endif // R__RF_ARCHITECTURE_SPECIFIC_LIBS
 
    if (RooBatchCompute::dispatchCPU == nullptr)
       loadWithErrorChecking("libRooBatchCompute_GENERIC");
+
+   isInitialisedCpu() = true;
 
    return 0;
 }
@@ -95,6 +101,20 @@ int initCUDA()
    isInitialised = true;
 
    return gSystem->Load("libRooBatchCompute_CUDA");
+}
+
+std::string getBatchComputeChoice()
+{
+   return gEnv->GetValue("RooFit.BatchCompute", "generic");
+}
+
+void setBatchComputeChoice(std::string const &value)
+{
+   if (isInitialisedCpu() && value != getBatchComputeChoice()) {
+      throw std::runtime_error("It is not possible to choose a different BatchCompute library after RooBatchCompute "
+                               "was already initialised!");
+   }
+   gEnv->SetValue("RooFit.BatchCompute", value.c_str());
 }
 
 } // namespace RooBatchCompute

@@ -78,6 +78,9 @@ RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int num
 
 } // Experimental
 
+std::string getBatchCompute();
+void setBatchCompute(std::string const &value);
+
 /**
  * \defgroup CmdArgs RooFit command arguments
  * These arguments can be passed to functions of RooFit objects.

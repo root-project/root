@@ -62,7 +62,14 @@ private:
    CudaInterface::CudaStream *_cudaStream = nullptr;
 };
 
-enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
+enum class Architecture {
+   AVX512,
+   AVX2,
+   AVX,
+   SSE4,
+   GENERIC,
+   CUDA
+};
 
 enum Computer {
    AddPdf,
@@ -229,6 +236,9 @@ inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceNLL(cfg, probas, weights, offsetProbas);
 }
+
+std::string getBatchComputeChoice();
+void setBatchComputeChoice(std::string const &value);
 
 } // End namespace RooBatchCompute
 
