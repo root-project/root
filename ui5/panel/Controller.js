@@ -19,7 +19,7 @@ sap.ui.define([
             this.websocket.setReceiver(this);
             // confirm panel creation, only then GUI can send commands
             // only done for standalone socket - otherwise connection already established
-            if (!this.websocket.master)
+            if (!this.websocket.isChannel())
                this.websocket.send("PANEL_READY");
          }
 
