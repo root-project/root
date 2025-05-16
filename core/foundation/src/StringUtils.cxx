@@ -61,11 +61,11 @@ std::string Round(double value, double error, unsigned int cutoff, std::string_v
 
    int nexp10 = std::floor(std::log10(error));
    const auto scale = std::pow(10., nexp10);
-   const auto first_digit = static_cast<int>(error / scale);
+   const auto first_digit = static_cast<unsigned int>(error / scale);
    assert (first_digit > 0 && first_digit < 10);
    if (first_digit <= cutoff) {
       const double rerror = error * std::pow(10., -1. * nexp10);
-      if (static_cast<int>(std::round(rerror * 10) / 10) <= cutoff)
+      if (static_cast<unsigned int>(std::round(rerror * 10) / 10) <= cutoff)
          nexp10--;
    } else if (cutoff == 0 && first_digit == 9) {
       const double rerror = std::round(error * std::pow(10., -1. * nexp10));
