@@ -177,7 +177,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.connect();
 
          // if true, most operations are performed locally without involving server
-         this.standalone = (this.websocket.kind == 'file');
+         this.standalone = this.websocket.isStandalone();
 
          // add reload handler
          if (!this.standalone && this.websocket.addReloadKeyHandler)
