@@ -428,7 +428,7 @@ class TooltipHandler extends ObjectPainter {
          if (hint.user_info !== undefined)
             hint.painter?.provideUserTooltip(hint.user_info);
 
-         if (!hint.lines || (hint.lines.length === 0)) {
+         if (!hint.lines?.length) {
             hints[n] = null;
             continue;
          }
@@ -453,7 +453,7 @@ class TooltipHandler extends ObjectPainter {
          hint.height = Math.round(hint.lines.length * textheight * hstep + 2 * hmargin - textheight * (hstep - 1));
 
          if ((hint.color1 !== undefined) && (hint.color1 !== 'none')) {
-            if ((lastcolor1 !== 0) && (lastcolor1 !== hint.color1))
+            if (lastcolor1 && (lastcolor1 !== hint.color1))
                usecolor1 = true;
             lastcolor1 = hint.color1;
          }
@@ -513,7 +513,7 @@ class TooltipHandler extends ObjectPainter {
       this.showObjectStatus(name, title, info, coordinates);
 
       // end of closing tooltips
-      if (!pnt || disable_tootlips || (hints.length === 0) || (maxlen === 0) || (show_only_best && !best_hint)) {
+      if (!pnt || disable_tootlips || !hints.length || (maxlen === 0) || (show_only_best && !best_hint)) {
          hintsg.remove();
          return;
       }
@@ -882,7 +882,7 @@ class FrameInteractive extends TooltipHandler {
          if (!settings.Zooming)
             return false;
          // in 3d mode with orbit control ignore simple arrows
-         if (this.mode3d && (key.indexOf('Ctrl') !== 0))
+         if (this.mode3d && key.indexOf('Ctrl'))
             return false;
          this.analyzeMouseWheelEvent(null, zoom, 0.5);
          if (zoom.changed)
@@ -1009,7 +1009,7 @@ class FrameInteractive extends TooltipHandler {
       }
 
       // ignore all events from non-left button
-      if (evnt.button !== 0)
+      if (evnt.button)
          return;
 
       evnt.preventDefault();
@@ -1234,7 +1234,7 @@ class FrameInteractive extends TooltipHandler {
 
       // in case when zooming was started, block any other kind of events
       // also prevent zooming together with active dragging
-      if ((this.zoom_kind !== 0) || drag_kind)
+      if (this.zoom_kind || drag_kind)
          return;
 
       const arr = get_touch_pointers(evnt, this.getFrameSvg().node());

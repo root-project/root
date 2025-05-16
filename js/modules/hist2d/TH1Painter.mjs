@@ -334,10 +334,10 @@ class TH1Painter extends THistPainter {
          }
 
          const stddev3 = Math.pow(res.rmsx, 3), stddev4 = Math.pow(res.rmsx, 4);
-         if (np * stddev3 !== 0)
+         if (np * stddev3)
             res.skewx = sum3 / (np * stddev3);
          res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
-         if (np * stddev4 !== 0)
+         if (np * stddev4)
             res.kurtx = sum4 / (np * stddev4) - 3;
          res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
       }
@@ -396,10 +396,10 @@ class TH1Painter extends THistPainter {
             stat.addText('Std Dev = ' + stat.format(data.rmsx));
 
          if (print_under > 0)
-            stat.addText('Underflow = ' + stat.format((histo.fArray.length > 0) ? histo.fArray[0] : 0, 'entries'));
+            stat.addText('Underflow = ' + stat.format(histo.fArray.length ? histo.fArray[0] : 0, 'entries'));
 
          if (print_over > 0)
-            stat.addText('Overflow = ' + stat.format((histo.fArray.length > 0) ? histo.fArray.at(-1) : 0, 'entries'));
+            stat.addText('Overflow = ' + stat.format(histo.fArray.length ? histo.fArray.at(-1) : 0, 'entries'));
 
          if (print_integral > 0)
             stat.addText('Integral = ' + stat.format(data.integral, 'entries'));
@@ -696,7 +696,7 @@ class TH1Painter extends THistPainter {
                if (show_text) {
                   const cont = text_profile ? histo.fBinEntries[bin+1] : bincont;
 
-                  if (cont !== 0) {
+                  if (cont) {
                      const arg = text_angle
                         ? { align: 12, x: midx, y: Math.round(my - 2 - text_size / 5), width: 0, height: 0, rotate: text_angle }
                         : { align: 22, x: Math.round(mx1 + (mx2 - mx1) * 0.1), y: Math.round(my - 2 - text_size), width: Math.round((mx2 - mx1) * 0.8), height: text_size };
@@ -714,7 +714,7 @@ class TH1Painter extends THistPainter {
                if (show_line) {
                   if (funcs.swap_xy())
                      path_line += (path_line ? 'L' : 'M') + `${my},${midx}`; // no optimization
-                  else if (path_line.length === 0)
+                  else if (!path_line)
                      path_line = `M${midx},${my}`;
                   else if (lx === midx)
                      path_line += `v${my-ly}`;
@@ -770,7 +770,7 @@ class TH1Painter extends THistPainter {
                gry = Math.round(funcs.gry(y));
             }
 
-            if (res.length === 0) {
+            if (!res) {
                bestimin = bestimax = i;
                prevx = startx = currx = grx;
                prevy = curry_min = curry_max = curry = gry;
@@ -1247,7 +1247,7 @@ class TH1Painter extends THistPainter {
       if (nbins < 2) return;
 
       const arr = new Array(nbins+2),
-            xbins = (xaxis.fXbins.length > 0) ? new Array(nbins) : null;
+            xbins = xaxis.fXbins.length ? new Array(nbins) : null;
 
       arr[0] = histo.fArray[0];
       let indx = 1;

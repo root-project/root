@@ -229,7 +229,7 @@ class TH2Painter extends TH2Painter2D {
          } else if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
             this.zmin = this.options.minimum;
             this.zmax = this.options.maximum;
-         } else if (this.draw_content || (this.gmaxbin !== 0)) {
+         } else if (this.draw_content || this.gmaxbin) {
             this.zmin = logz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
             zmult = 1 + 2*gStyle.fHistTopMargin;

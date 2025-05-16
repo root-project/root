@@ -132,7 +132,7 @@ function folderHierarchy(item, obj) {
    if (!obj?.fFolders)
       return false;
 
-   if (obj.fFolders.arr.length === 0) {
+   if (!obj.fFolders.arr.length) {
       item._more = false;
       return true;
    }
@@ -156,14 +156,15 @@ function listHierarchy(folder, lst) {
    if (!isRootCollection(lst))
       return false;
 
-   if ((lst.arr === undefined) || (lst.arr.length === 0)) {
+   if (!lst.arr?.length) {
       folder._more = false;
       return true;
    }
 
    let do_context = false, prnt = folder;
    while (prnt) {
-      if (prnt._do_context) do_context = true;
+      if (prnt._do_context)
+         do_context = true;
       prnt = prnt._parent;
    }
 
@@ -438,7 +439,7 @@ function objectHierarchy(top, obj, args = undefined) {
          if (isArrayProto(proto) > 0) {
             item._title = 'array len=' + fld.length;
             simple = (proto !== '[object Array]');
-            if (fld.length === 0) {
+            if (!fld.length) {
                item._value = '[ ]';
                item._more = false; // hpainter will not try to expand again
             } else {
@@ -492,7 +493,7 @@ function objectHierarchy(top, obj, args = undefined) {
                      if (isRootCollection(fld) && isObject(fld.arr)) {
                         item._value = fld.arr.length ? '[...]' : '[]';
                         item._title += ', size:' + fld.arr.length;
-                        if (fld.arr.length > 0) item._more = true;
+                        if (fld.arr.length) item._more = true;
                      } else {
                         item._more = true;
                         item._value = '{ }';
@@ -540,7 +541,7 @@ function taskHierarchy(item, obj) {
 
    objectHierarchy(item, obj, { exclude: ['fTasks', 'fName'] });
 
-   if ((obj.fTasks.arr.length === 0) && (item._childs.length === 0)) {
+   if (!obj.fTasks.arr.length && !item._childs.length) {
       item._more = false;
       return true;
    }
@@ -698,7 +699,7 @@ function parseAsArray(val) {
       }
    }
 
-   if (res.length === 0)
+   if (!res.length)
       res.push(val.slice(1, val.length - 1).trim());
 
    return res;
@@ -1046,7 +1047,7 @@ class HierarchyPainter extends BasePainter {
       for (let n = 0; n < (hitem._numargs ?? 0); ++n)
          cmdargs.push(n < userargs.length ? userargs[n] : '');
 
-      const promise = (cmdargs.length === 0) || !elem
+      const promise = !cmdargs.length || !elem
                        ? Promise.resolve(cmdargs)
                        : createMenu().then(menu => menu.showCommandArgsDialog(hitem._name, cmdargs));
 
@@ -1918,11 +1919,11 @@ class HierarchyPainter extends BasePainter {
                if (settings.NewTabUrlExportSettings) {
                   if (gStyle.fOptStat !== 1111)
                      arg0 += `&optstat=${gStyle.fOptStat}`;
-                  if (gStyle.fOptFit !== 0)
+                  if (gStyle.fOptFit)
                      arg0 += `&optfit=${gStyle.fOptFit}`;
-                  if (gStyle.fOptDate !== 0)
+                  if (gStyle.fOptDate)
                      arg0 += `&optdate=${gStyle.fOptDate}`;
-                  if (gStyle.fOptFile !== 0)
+                  if (gStyle.fOptFile)
                      arg0 += `&optfile=${gStyle.fOptFile}`;
                   if (gStyle.fOptTitle !== 1)
                      arg0 += `&opttitle=${gStyle.fOptTitle}`;
@@ -2342,7 +2343,7 @@ class HierarchyPainter extends BasePainter {
      * @return {Promise} when drawing finished
      * @private */
    async displayItems(items, options) {
-      if (!items || (items.length === 0))
+      if (!items?.length)
          return true;
 
       const h = this;
@@ -2392,7 +2393,7 @@ class HierarchyPainter extends BasePainter {
             items[i] = dropitems[i].shift();
          }
 
-         if (dropitems[i] && dropitems[i].length > 0) {
+         if (dropitems[i]?.length) {
             // allow to specify _same_ item in different file
             for (let j = 0; j < dropitems[i].length; ++j) {
                const pos = dropitems[i][j].indexOf('_same_');
@@ -2438,14 +2439,15 @@ class HierarchyPainter extends BasePainter {
          dropitems.splice(n, 1);
       }
 
-      if (items.length === 0)
+      if (!items.length)
          return true;
 
       const frame_names = new Array(items.length), items_wait = new Array(items.length);
       for (let n = 0; n < items.length; ++n) {
          items_wait[n] = 0;
          let fname = items[n], k = 0;
-         if (items.indexOf(fname) < n) items_wait[n] = true; // if same item specified, one should wait first drawing before start next
+         if (items.indexOf(fname) < n)
+            items_wait[n] = true; // if same item specified, one should wait first drawing before start next
          const p = options[n].indexOf('frameid:');
          if (p >= 0) {
             fname = options[n].slice(p+8);
@@ -2479,14 +2481,14 @@ class HierarchyPainter extends BasePainter {
 
          // Than create empty frames for each item
          for (let i = 0; i < items.length; ++i) {
-            if (options[i].indexOf('update:') !== 0) {
+            if (options[i].indexOf('update:')) {
                mdi.createFrame(frame_names[i]);
                doms[i] = 'frame:' + frame_names[i];
             }
          }
 
          function dropNextItem(indx, painter) {
-            if (painter && dropitems[indx] && (dropitems[indx].length > 0))
+            if (painter && dropitems[indx]?.length)
                return h.dropItem(dropitems[indx].shift(), painter.getDom(), dropopts[indx].shift()).then(() => dropNextItem(indx, painter));
 
             dropitems[indx] = null; // mark that all drop items are processed
@@ -2559,7 +2561,7 @@ class HierarchyPainter extends BasePainter {
        find_next = (itemname, prev_found) => {
          if (itemname === undefined) {
             // extract next element
-            if (items.length === 0)
+            if (!items.length)
                return mark_active();
             itemname = items.shift();
          }
@@ -2907,7 +2909,7 @@ class HierarchyPainter extends BasePainter {
                });
             }
          }
-         if (h._childs.length > 0)
+         if (h._childs.length)
             this.h = h;
          return true;
       });
@@ -3039,7 +3041,7 @@ class HierarchyPainter extends BasePainter {
             }
          }
 
-         if (!req && (item._kind.indexOf(prROOT) !== 0))
+         if (!req && item._kind.indexOf(prROOT))
            req = 'item.json.gz?compact=3';
       }
 
@@ -3350,7 +3352,7 @@ class HierarchyPainter extends BasePainter {
       const lst = cleanup(frame);
 
       // we remove all painters references from items
-      if (lst.length > 0) {
+      if (lst.length) {
          this.forEachItem(item => {
             if (item._painter && lst.indexOf(item._painter) >= 0)
                delete item._painter;
@@ -3508,7 +3510,7 @@ class HierarchyPainter extends BasePainter {
 
       getOptionAsArray = opt => {
          let res = getUrlOptionAsArray(opt);
-         if (res.length > 0 || !gui_div || gui_div.empty())
+         if (res.length || !gui_div || gui_div.empty())
             return res;
          while (opt) {
             const separ = opt.indexOf(';');
@@ -3581,7 +3583,7 @@ class HierarchyPainter extends BasePainter {
       if (title && (typeof document !== 'undefined'))
          document.title = title;
 
-      if (expanditems.length === 0 && (getOption('expand') === ''))
+      if (!expanditems.length && (getOption('expand') === ''))
          expanditems.push('');
 
       if (filesdir) {
@@ -3591,7 +3593,7 @@ class HierarchyPainter extends BasePainter {
             jsonarr[i] = filesdir + jsonarr[i];
       }
 
-      if ((itemsarr.length === 0) && ((getOption('item') === '') || ((jsonarr.length === 1) && (expanditems.length === 0))))
+      if (!itemsarr.length && ((getOption('item') === '') || (jsonarr.length === 1 && !expanditems.length)))
          itemsarr.push('');
 
       if (!this.disp_kind) {
@@ -3648,15 +3650,15 @@ class HierarchyPainter extends BasePainter {
             promise = this.createBrowser(browser_kind); browser_kind = '';
          } else if (status !== null) {
             promise = this.createStatusLine(statush, status); status = null;
-         } else if (jsonarr.length > 0)
+         } else if (jsonarr.length)
             promise = this.openJsonFile(jsonarr.shift());
-         else if (filesarr.length > 0)
+         else if (filesarr.length)
             promise = this.openRootFile(filesarr.shift());
          else if (dir) {
             promise = this.listServerDir(dir); dir = '';
-         } else if (expanditems.length > 0)
+         } else if (expanditems.length)
             promise = this.expandItem(expanditems.shift());
-         else if (style.length > 0)
+         else if (style.length)
             promise = this.applyStyle(style.shift());
          else {
             return this.refreshHtml()
@@ -3700,10 +3702,10 @@ class HierarchyPainter extends BasePainter {
             if (('_monitoring' in this.h) && !monitor)
                monitor = this.h._monitoring;
 
-            if (this.h._loadfile && (filesarr.length === 0))
+            if (this.h._loadfile && !filesarr.length)
                filesarr = parseAsArray(this.h._loadfile);
 
-            if (('_drawitem' in this.h) && (itemsarr.length === 0)) {
+            if (('_drawitem' in this.h) && !itemsarr.length) {
                itemsarr = parseAsArray(this.h._drawitem);
                optionsarr = parseAsArray(this.h._drawopt);
             }
@@ -4019,7 +4021,7 @@ async function drawInspector(dom, obj, opt) {
 
    if (isStr(opt) && opt.indexOf(kInspect) === 0) {
       opt = opt.slice(kInspect.length);
-      if (opt.length > 0)
+      if (opt)
          expand_level = Number.parseInt(opt);
    }
 

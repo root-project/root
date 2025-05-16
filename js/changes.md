@@ -9,10 +9,12 @@
 1. With 'Shift' key pressed whole graph is moved by dragging action
 1. Upgrade three.js r174 -> r176
 1. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
+1. Remove experimental RHist classes, deprecated in ROOT
 1. Fix - colz handling on `THStack`, avoid multiple palette drawings
 1. Fix - bug in pad.Divide context menu command
 1. Fix - palette not adjusted when 'same' draw option used for histogram
 1. Fix - drag and drop of histograms on empty sub-pads
+1. Internal - ws members are private, new methods has to be used
 
 
 ## Changes in 7.9.0

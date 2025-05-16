@@ -1069,7 +1069,8 @@ class FlexibleDisplay extends MDIDisplay {
          arr.push(frame);
       });
 
-      if (arr.length === 0) return;
+      if (!arr.length)
+         return;
 
       const top = this.selectDom(),
             w = top.node().clientWidth,

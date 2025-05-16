@@ -669,7 +669,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Handle highlight in canvas - deliver information to server
      * @private */
    processHighlightConnect(hints) {
-      if (!hints || hints.length === 0 || !this._highlight_connect ||
+      if (!hints?.length || !this._highlight_connect ||
           this.doingDraw() || !this.canSendWebsocket(2)) return;
 
       const hint = hints[0] || hints[1];

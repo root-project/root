@@ -69,7 +69,7 @@ const kindGeo = 0,    // TGeoNode / TGeoShape
   * @private */
 function testGeoBit(volume, f) {
    const att = volume.fGeoAtt;
-   return att === undefined ? false : ((att & f) !== 0);
+   return att === undefined ? false : Boolean(att & f);
 }
 
 /** @summary Set fGeoAtt bit
@@ -1666,9 +1666,9 @@ function getNodeMatrix(kind, node) {
       const kPatternReflected = BIT(14),
             finder = node.fFinder,
             typ = finder._typename;
-      if ((finder.fBits & kPatternReflected) !== 0)
+      if (finder.fBits & kPatternReflected)
          geoWarn(`Unsupported reflected pattern ${typ}`);
-      if (typ.indexOf('TGeoPattern') !== 0)
+      if (typ.indexOf('TGeoPattern'))
          geoWarn(`Abnormal pattern type ${typ}`);
       const part = typ.slice(11);
       matrix = new THREE.Matrix4();
@@ -2785,7 +2785,7 @@ class ClonedNodes {
          if (res === 0) {
             if (do_clear) {
                this.fVisibility.splice(indx, 1);
-               if (this.fVisibility.length === 0)
+               if (!this.fVisibility.length)
                   delete this.fVisibility;
             } else
                item.visible = on;
@@ -2991,9 +2991,10 @@ class ClonedNodes {
    /** @summary Create stack array based on nodes ids array.
     * @desc Ids list should correspond to existing nodes hierarchy */
    buildStackByIds(ids) {
-      if (!ids) return null;
+      if (!ids)
+         return null;
 
-      if (ids[0] !== 0) {
+      if (ids[0]) {
          console.error('wrong ids - first should be 0');
          return null;
       }
@@ -3285,7 +3286,7 @@ class ClonedNodes {
          while (mesh && (mesh !== toplevel)) {
             three_prnt = mesh.parent;
             three_prnt.remove(mesh);
-            mesh = (three_prnt.children.length === 0) ? three_prnt : null;
+            mesh = !three_prnt.children.length ? three_prnt : null;
          }
 
          return res;
@@ -3434,7 +3435,7 @@ class ClonedNodes {
                   entry.done = true;
                });
 
-               if (arr1.length > 0) {
+               if (arr1.length) {
                   const mesh1 = new THREE.InstancedMesh(shape.geom, prop.material, arr1.length);
 
                   mesh1.stacks = stacks1;
@@ -3454,10 +3455,10 @@ class ClonedNodes {
 
                   mesh1.$jsroot_order = 1;
                   ctrl.info.num_meshes++;
-                  ctrl.info.num_faces += shape.nfaces*arr1.length;
+                  ctrl.info.num_faces += shape.nfaces * arr1.length;
                }
 
-               if (arr2.length > 0) {
+               if (arr2.length) {
                   if (shape.geomZ === undefined)
                      shape.geomZ = createFlippedGeom(shape.geom);
 

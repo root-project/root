@@ -198,7 +198,7 @@ class ArrayIterator {
             continue;
          }
 
-         if ((typ === 'array') && ((obj.length > 0) || (this.select[cnt + 1] === '$size$'))) {
+         if ((typ === 'array') && (obj.length || (this.select[cnt + 1] === '$size$'))) {
             this.arr[++cnt] = obj;
             switch (this.select[cnt]) {
                case undefined: this.indx[cnt] = 0; break;
@@ -362,7 +362,8 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
       if (pos > 0) search = search.slice(0, pos);
    }
 
-   if (!lst || (lst.arr.length === 0)) return null;
+   if (!lst?.arr.length)
+      return null;
 
    for (let n = 0; n < lst.arr.length; ++n) {
       let brname = lst.arr[n].fName;
@@ -370,7 +371,7 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
          brname = brname.slice(0, brname.indexOf('['));
 
       // special case when branch name includes STL map name
-      if ((search.indexOf(brname) !== 0) && (brname.indexOf('<') > 0)) {
+      if (search.indexOf(brname) && (brname.indexOf('<') > 0)) {
          const p1 = brname.indexOf('<'), p2 = brname.lastIndexOf('>');
          brname = brname.slice(0, p1) + brname.slice(p2 + 1);
       }
@@ -380,7 +381,7 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
          break;
       }
 
-      if (search.indexOf(brname) !== 0)
+      if (search.indexOf(brname))
          continue;
 
       // this is a case when branch name is in the begin of the search string
@@ -390,10 +391,9 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
       if (brname[pnt - 1] === '.') pnt--;
       if (search[pnt] !== '.') continue;
 
-      res = findBranchComplex(tree, search, lst.arr[n].fBranches);
-      if (!res) res = findBranchComplex(tree, search.slice(pnt + 1), lst.arr[n].fBranches);
-
-      if (!res) res = { branch: lst.arr[n], rest: search.slice(pnt) };
+      res = findBranchComplex(tree, search, lst.arr[n].fBranches) ||
+            findBranchComplex(tree, search.slice(pnt + 1), lst.arr[n].fBranches) ||
+            { branch: lst.arr[n], rest: search.slice(pnt) };
 
       break;
    }
@@ -525,7 +525,7 @@ class TDrawVariable {
 
          // now extract all levels of iterators
          while (pos2 < code.length) {
-            if ((code[pos2] === '@') && (code.slice(pos2, pos2 + 5) === '@size') && (arriter.length === 0)) {
+            if ((code[pos2] === '@') && (code.slice(pos2, pos2 + 5) === '@size') && !arriter.length) {
                pos2 += 5;
                branch_mode = true;
                break;
@@ -552,7 +552,7 @@ class TDrawVariable {
                if (code[pos2] === '(') { pos2 = prev - 1; break; }
 
                // this is selection of member, but probably we need to activate iterator for ROOT collection
-               if (arriter.length === 0) {
+               if (!arriter.length) {
                   // TODO: if selected member is simple data type - no need to make other checks - just break here
                   if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
                      arriter.push(undefined);
@@ -597,7 +597,7 @@ class TDrawVariable {
             pos2++;
          }
 
-         if (arriter.length === 0)
+         if (!arriter.length)
             arriter = undefined;
          else if ((arriter.length === 1) && (arriter[0] === undefined))
             arriter = true;
@@ -634,7 +634,7 @@ class TDrawVariable {
    }
 
    /** @summary Check if it is dummy variable */
-   is_dummy() { return (this.branches.length === 0) && !this.func; }
+   is_dummy() { return !this.branches.length && !this.func; }
 
    /** @summary Produce variable
      * @desc after reading tree branches into the object, calculate variable value */
@@ -1040,8 +1040,7 @@ class TDrawSelector extends TSelector {
          this.leaf = args.leaf;
 
          // branch object remains, therefore we need to copy fields to see them all
-         this.copy_fields = ((args.branch.fLeaves && (args.branch.fLeaves.arr.length > 1)) ||
-            (args.branch.fBranches && (args.branch.fBranches.arr.length > 0))) && !args.leaf;
+         this.copy_fields = ((args.branch.fLeaves?.arr.length > 1) || args.branch.fBranches?.arr.length) && !args.leaf;
 
          this.addBranch(branch, 'br0', args.direct_branch); // add branch
 
@@ -1430,7 +1429,7 @@ class TDrawSelector extends TSelector {
                var1 = this.vars[1],
                var2 = this.vars[2],
                len = this.tgtarr.br0.length;
-         if ((var0.buf.length === 0) && (len >= this.arr_limit) && !this.graph) {
+         if (!var0.buf.length && (len >= this.arr_limit) && !this.graph) {
             // special use case - first array large enough to create histogram directly base on it
             var0.buf = this.tgtarr.br0;
             if (var1) var1.buf = this.tgtarr.br1;
@@ -1972,9 +1971,8 @@ async function treeProcess(tree, selector, args) {
             newtgt[l] = target_object[l];
          newtgt[newtgt.length - 1] = { name: target_name, lst: makeMethodsList(object_class) };
 
-         if (!scanBranches(branch.fBranches, newtgt, 0)) return null;
-
-         return item; // this kind of branch does not have baskets and not need to be read
+         // this kind of branch does not have baskets and not need to be read
+         return scanBranches(branch.fBranches, newtgt, 0) ? item : null;
       } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID === -1)) {
          elem = createStreamerElement(target_name, branch.fClassName);
 
@@ -2350,7 +2348,7 @@ async function treeProcess(tree, selector, args) {
 
             const branch = bitems[n].branch;
 
-            if (places.length === 0)
+            if (!places.length)
                filename = branch.fFileName;
             else if (filename !== branch.fFileName)
                continue;
@@ -2360,7 +2358,7 @@ async function treeProcess(tree, selector, args) {
             places.push(branch.fBasketSeek[bitems[n].basket], branch.fBasketBytes[bitems[n].basket]);
          }
 
-         return places.length > 0 ? { places, filename } : null;
+         return places.length ? { places, filename } : null;
       }
 
       function readProgress(value) {
@@ -2575,7 +2573,7 @@ async function treeProcess(tree, selector, args) {
    processBaskets = function(bitems) {
       // this is call-back when next baskets are read
 
-      if ((handle.selector._break !== 0) || (bitems === null)) {
+      if (handle.selector._break || (bitems === null)) {
          handle.selector.Terminate(false);
          return resolveFunc(handle.selector);
       }
@@ -2635,7 +2633,7 @@ async function treeProcess(tree, selector, args) {
                if (handle.process_entries !== undefined) {
                   elem.selected_baskets.shift();
                   // -1 means that basket is not yet found for following entries
-                  elem.curr_basket = (elem.selected_baskets.length > 0) ? elem.selected_baskets[0] : -1;
+                  elem.curr_basket = elem.selected_baskets.length ? elem.selected_baskets[0] : -1;
                }
             }
 
@@ -2774,7 +2772,8 @@ function treeIOTest(tree, args) {
    const branches = [], names = [], nchilds = [];
 
    function collectBranches(obj, prntname = '') {
-      if (!obj?.fBranches) return 0;
+      if (!obj?.fBranches)
+         return 0;
 
       let cnt = 0;
 
@@ -2919,7 +2918,7 @@ function treeHierarchy(tree_node, obj) {
             const object_class = getBranchObjectClass(bobj, bobj.$tree, true),
                   methods = object_class ? getMethods(object_class) : null;
 
-            if (methods && (bobj.fBranches.arr.length > 0)) {
+            if (methods && bobj.fBranches.arr.length) {
                for (const key in methods) {
                   if (!isFunc(methods[key])) continue;
                   const s = methods[key].toString();
@@ -2964,8 +2963,7 @@ function treeHierarchy(tree_node, obj) {
    tree_node._childs = [];
    tree_node._tree = obj;  // set reference, will be used later by TTree::Draw
 
-   for (let i = 0; i < obj.fBranches.arr?.length; ++i)
-      createBranchItem(tree_node, obj.fBranches.arr[i], obj);
+   obj.fBranches?.arr.forEach(branch => createBranchItem(tree_node, branch, obj));
 
    return true;
 }

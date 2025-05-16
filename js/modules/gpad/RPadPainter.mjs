@@ -750,7 +750,7 @@ class RPadPainter extends RObjectPainter {
       if (this.#doing_draw === undefined)
          return console.warn('failure, should not happen');
       this.#doing_draw.shift();
-      if (this.#doing_draw.length === 0)
+      if (!this.#doing_draw.length)
          this.#doing_draw = undefined;
       else {
          const entry = this.#doing_draw[0];
@@ -1625,7 +1625,7 @@ class RPadPainter extends RObjectPainter {
 
       this._buttons.push({ btn, tooltip, funcname, keyname });
 
-      if (!this.isTopPad() && (funcname.indexOf('Pad') !== 0) && (funcname !== 'enlargePad')) {
+      if (!this.isTopPad() && funcname.indexOf('Pad') && (funcname !== 'enlargePad')) {
          const cp = this.getCanvPainter();
          if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
       }

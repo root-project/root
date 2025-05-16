@@ -565,7 +565,7 @@ class TPavePainter extends ObjectPainter {
             nlines = arr.length,
             pp = this.getPadPainter(),
             pad_height = pp.getPadHeight(),
-            draw_header = (pt.fLabel.length > 0),
+            draw_header = pt.fLabel.length,
             promises = [],
             margin_x = pt.fMargin * width,
             stepy = height / (nlines || 1),
@@ -1523,7 +1523,7 @@ class TPavePainter extends ObjectPainter {
                parvalue = this.format(Number(parvalue), 'fit');
                if (print_ferrors && (parerr !== undefined)) {
                   parerr = floatToString(parerr, this.getBestFormat(parvalue, parerr));
-                  if ((Number(parerr) === 0) && (f1.GetParError(n) !== 0))
+                  if (!Number(parerr) && f1.GetParError(n))
                      parerr = floatToString(f1.GetParError(n), '4.2g');
                }
             }

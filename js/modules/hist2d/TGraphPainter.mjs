@@ -815,7 +815,7 @@ class TGraphPainter extends ObjectPainter {
 
          let visible = nodes.filter(d => (d.exlow > 0) || (d.exhigh > 0) || (d.eylow > 0) || (d.eyhigh > 0));
          if (options.skip_errors_x0 || options.skip_errors_y0)
-            visible = visible.filter(d => ((d.x !== 0) || !options.skip_errors_x0) && ((d.y !== 0) || !options.skip_errors_y0));
+            visible = visible.filter(d => (d.x || !options.skip_errors_x0) && (d.y || !options.skip_errors_y0));
 
          if (!this.isBatchMode() && settings.Tooltip && main_block) {
             visible.append('svg:path')
