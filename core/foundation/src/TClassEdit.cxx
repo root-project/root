@@ -1277,7 +1277,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
    constexpr static std::array<const char *, 3> remove{"class", "const", "volatile"};
    constexpr static auto lengths = []() constexpr {
       std::array<std::size_t, 3> ret{};
-      for(std::size_t i = 0; i < remove.size(); i++)
+      for (std::size_t i = 0; i < remove.size(); i++)
          ret[i] = std::char_traits<char>::length(remove[i]);
       return ret;
    }();
