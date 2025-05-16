@@ -1274,7 +1274,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 
 string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 {
-   static const char* remove[] = {"class", "const", "volatile", nullptr};
+   static const char* const remove[] = {"class", "const", "volatile", nullptr};
    auto initLengthsVector = []() {
       std::vector<size_t> create_lengths;
       for (int k=0; remove[k]; ++k) {
@@ -1282,7 +1282,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
       }
       return create_lengths;
    };
-   static std::vector<size_t> lengths{ initLengthsVector() };
+   static const std::vector<size_t> lengths{ initLengthsVector() };
 
    string result;
    result.reserve(strlen(typeDesc)*2);
