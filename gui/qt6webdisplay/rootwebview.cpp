@@ -65,14 +65,11 @@ void RootWebView::dropEvent(QDropEvent* event)
 
 void RootWebView::closeEvent(QCloseEvent *)
 {
-   page()->runJavaScript("if (window && window.onqt5unload) window.onqt5unload();");
+   page()->runJavaScript("if (window && window.onqt6unload) window.onqt6unload();");
 }
 
 void RootWebView::onLoadStarted()
 {
-   // page()->runJavaScript("var jsroot_qt5_identifier = true;");
-   // page()->runJavaScript("window.jsroot_qt5_identifier = true;");
-   // page()->runJavaScript("console.log('window type = ' + typeof window + '  1: ' + typeof jsroot_qt5_identifier + '   2: ' +  typeof window.jsroot_qt5_identifier);");
 }
 
 void RootWebView::onWindowCloseRequested()
