@@ -1,4 +1,7 @@
 builtin_zstd=ON
 builtin_zlib=ON
 builtin_vdt=On
+experimental_adaptivecpp=ON
+experimental_genvectorx=ON
+pythia8=Off
 ccache=On
