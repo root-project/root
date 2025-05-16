@@ -169,7 +169,7 @@ namespace HistFactory{
       throw hf_exc();
     }
     if(!measurement.GetPOIList().empty()){
-      proto_config->GuessObsAndNuisance(*expData, RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO));
+      proto_config->GuessObsAndNuisance(*expData->get(), RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO));
     }
 
     // Now, let's loop over any additional asimov datasets
