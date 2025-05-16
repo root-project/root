@@ -504,11 +504,12 @@ def create_coverage_xml() -> None:
     ignore_directories="runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
     ignore_subpattern="runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter"
     ignore_errors="--gcov-ignore-errors=source_not_found --gcov-ignore-errors=no_working_dir_found"
+    exclude_dictionaries="--exclude='.*/G__.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*'"
     # The output of -v is huge (several 10s of MB at least), we could filter
     # the output of -v to keep just the line with ` Processing file:`
     result = subprocess_with_log(f"""
         cd '{builddir}'
-        gcovr -j {os.cpu_count()} --output=cobertura-cov.xml --cobertura-pretty {ignore_errors} --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/G__.*' --exclude='.*/({ignore_subpattern})/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -r ../src ../build
+        gcovr -j {os.cpu_count()} --output=cobertura-cov.xml --cobertura-pretty {ignore_errors} --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/({ignore_subpattern})/.*' {exclude_dictionaries} -r ../src ../build
     """)
 
     if result != 0:
