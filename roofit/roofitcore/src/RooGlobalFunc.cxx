@@ -20,6 +20,7 @@
 
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
+#include <RooBatchCompute.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
@@ -37,6 +38,23 @@
 #include <algorithm>
 
 namespace RooFit {
+
+/// Get the global choice for the RooBatchCompute library that RooFit will load.
+/// \see RooFit::setBatchCompute().
+std::string getBatchCompute()
+{
+   return RooBatchCompute::getBatchComputeChoice();
+}
+
+/// Globally select the RooBatchCompute CPU implementation that will be loaded
+/// in RooFit.
+/// Supported options are "auto" (default), "avx512", "avx2", "avx", "sse", "generic".
+/// \note It is not possible to change the selection after RooFit has already
+/// loaded a library (which is usually triggered by likelihood creation or fitting).
+void setBatchCompute(std::string const &value)
+{
+   return RooBatchCompute::setBatchComputeChoice(value);
+}
 
 // anonymous namespace for helper functions for the implementation of the global functions
 namespace {
