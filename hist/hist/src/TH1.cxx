@@ -9434,7 +9434,9 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO docstring
 
-TH1* TH1::Slice(std::vector<Int_t>& args) const{
+void TH1::SliceHistoInPlace(std::vector<Int_t>& args){
+   auto originalHisto = (TH1*)this->Clone();
+   this->Reset();
    auto ndim = args.size() / 2;
    if (ndim != static_cast<size_t>(fDimension)) {
       throw std::invalid_argument("Number of dimensions in slice does not match histogram dimension.");
@@ -9446,7 +9448,7 @@ TH1* TH1::Slice(std::vector<Int_t>& args) const{
 
    // Configure all axes
    for (size_t i = 0; i < ndim; ++i) {
-      const auto &axis = (i == 0) ? fXaxis : (i == 1) ? fYaxis : fZaxis;
+      const auto &axis = (i == 0) ? originalHisto->fXaxis : (i == 1) ? originalHisto->fYaxis : originalHisto->fZaxis;
       Int_t binLow = std::max(1, args[i * 2]);
       Int_t binUp = std::min(axis.GetNbins() + 1, args[i * 2 + 1]);
       args[i * 2] = binLow;
@@ -9458,23 +9460,17 @@ TH1* TH1::Slice(std::vector<Int_t>& args) const{
       shiftedBins[i * 2 + 1] = nBins[i] + 1;
    }
 
-   // Create a new histogram of the same type as this
-   std::unique_ptr<TH1> hSlice(static_cast<TH1*>(IsA()->GetNew()(nullptr)));
-
-   if (!hSlice) {
-      throw std::runtime_error("Failed to create a new histogram instance.");
-   }
 
    // Configure name, title and bins
-   hSlice->SetNameTitle(Form("%s_slice", GetName()), GetTitle());
+   this->SetNameTitle(Form("%s_slice", originalHisto->GetName()), originalHisto->GetTitle());
 
    if (ndim == 1) {
-      hSlice->SetBins(nBins[0], binLowEdge[0], binUpEdge[0]);
+      this->SetBins(nBins[0], binLowEdge[0], binUpEdge[0]);
    } else if (ndim == 2) {
-      hSlice->SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
+      this->SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
                   nBins[1], binLowEdge[1], binUpEdge[1]);
    } else if (ndim == 3) {
-      hSlice->SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
+      this->SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
                   nBins[1], binLowEdge[1], binUpEdge[1],
                   nBins[2], binLowEdge[2], binUpEdge[2]);
    }
@@ -9484,10 +9480,10 @@ TH1* TH1::Slice(std::vector<Int_t>& args) const{
    Double_t underflowContent = 0.0, overflowContent = 0.0;
 
    auto processBinContent = [&](Int_t x, Int_t y, Int_t z) {
-      const Int_t globalBin = GetBin(x, y, z);
+      const Int_t globalBin = originalHisto->GetBin(x, y, z);
       if (!processedBins.insert(globalBin).second) return;
 
-      const auto content = RetrieveBinContent(globalBin);
+      const auto content = originalHisto->RetrieveBinContent(globalBin);
       const bool isUnderflow = (x < args[0] || (ndim > 1 && y < args[2]) || (ndim > 2 && z < args[4]));
       const bool isOverflow = (x >= args[1] || (ndim > 1 && y >= args[3]) || (ndim > 2 && z >= args[5]));
 
@@ -9509,16 +9505,14 @@ TH1* TH1::Slice(std::vector<Int_t>& args) const{
   }
 
    // Set the contents of the slice histogram
-   ROOT::Internal::SetSliceContent(*hSlice, sliceContents, shiftedBins);
+   ROOT::Internal::SetSliceContent(*this, sliceContents, shiftedBins);
    
    // Set the flow bins
-   hSlice->SetBinContent(0, underflowContent);
-   auto overflowBin = (ndim == 1) ? hSlice->GetBin(fXaxis.GetNbins() + 1)
-                  : (ndim == 2) ? hSlice->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1)
-                  : hSlice->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1, fZaxis.GetNbins() + 1);
-   hSlice->SetBinContent(overflowBin, overflowContent);
-
-   return hSlice.release();
+   this->SetBinContent(0, underflowContent);
+   auto overflowBin = (ndim == 1) ? this->GetBin(fXaxis.GetNbins() + 1)
+                  : (ndim == 2) ? this->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1)
+                  : this->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1, fZaxis.GetNbins() + 1);
+   this->SetBinContent(overflowBin, overflowContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -79,7 +79,7 @@ class _rebin:
 
 def _sum(hist, axis, args=None):
     """
-    Represents a summation operation for histograms, which either computes the integral
+    Represents a summation operation for histograms, which either computes the integral (1D histograms)
     or projects the histogram along specified axes (projection is only for 2D and 3D histograms).
 
     Example:
@@ -307,11 +307,14 @@ def _slice_get(self, index, unprocessed_index):
     """
     import ROOT
 
+    print("!! slice_get", index, unprocessed_index)
+
     processed_slices, actions = _get_processed_slices(self, index)
     start_stop = [(r.start, r.stop) for r in processed_slices]
     args_vec = ROOT.std.vector('Int_t')([item for pair in start_stop for item in pair])
 
     target_hist = ROOT.Internal.Slice(self, args_vec)
+    print("!! returned sliced histogram", target_hist, type(target_hist))
 
     return _apply_actions(target_hist, actions, index, unprocessed_index, self)
 
@@ -325,6 +328,8 @@ def _slice_set(self, index, unprocessed_index, value):
     import numpy as np
 
     import ROOT
+
+    print("!! slice_set", index, unprocessed_index, value)
 
     if isinstance(value, (list, range)):
         value = np.array(value)

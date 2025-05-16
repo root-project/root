@@ -36,7 +36,6 @@
 #include "TArrayF.h"
 #include "TArrayD.h"
 #include "Foption.h"
-#include "TClass.h"
 
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
@@ -45,7 +44,7 @@
 
 #include <cfloat>
 #include <string>
-
+#include <stdexcept>
 #include <variant>
 
 class TF1;
@@ -118,8 +117,10 @@ namespace{
 namespace ROOT::Internal {
    template <typename T>
    auto Slice(const T &histo, std::vector<Int_t>& args)
-   {
-      return histo.Slice(args);
+   {  
+      T slicedHisto = histo;
+      slicedHisto.SliceHistoInPlace(args);
+      return slicedHisto;
    }
 
    template <typename T>
@@ -223,7 +224,7 @@ private:
    TH1(const TH1&) = delete;
    TH1& operator=(const TH1&) = delete;
 
-   TH1* Slice(std::vector<Int_t>& args) const;
+   void SliceHistoInPlace(std::vector<Int_t>& args);
 
    template <typename T>
    friend auto ROOT::Internal::Slice(const T &histo, std::vector<Int_t>& args);
