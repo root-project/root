@@ -1274,15 +1274,13 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 
 string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 {
-   static const char* remove[] = {"class", "const", "volatile", nullptr};
-   auto initLengthsVector = []() {
-      std::vector<size_t> create_lengths;
-      for (int k=0; remove[k]; ++k) {
-         create_lengths.push_back(strlen(remove[k]));
-      }
-      return create_lengths;
-   };
-   static std::vector<size_t> lengths{ initLengthsVector() };
+   constexpr static std::array<const char *, 3> remove{"class", "const", "volatile"};
+   constexpr static auto lengths = []() constexpr {
+      std::array<std::size_t, 3> ret{};
+      for(std::size_t i = 0; i < remove.size(); i++)
+         ret[i] = std::char_traits<char>::length(remove[i]);
+      return ret;
+   }();
 
    string result;
    result.reserve(strlen(typeDesc)*2);
@@ -1296,11 +1294,11 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
       }
       if (kbl && (mode>=2 || lev==0)) { //remove "const' etc...
          int done = 0;
-         int n = (mode) ? 999 : 1;
+         int n = (mode) ? static_cast<int>(std::size(remove)) : 1;
 
          // loop on all the keywords we want to remove
-         for (int k=0; k<n && remove[k]; k++) {
-            int rlen = lengths[k];
+         for (int k = 0; k < n; k++) {
+            auto rlen = static_cast<int>(lengths[k]);
 
             // Do we have a match
             if (strncmp(remove[k],c,rlen)) continue;
