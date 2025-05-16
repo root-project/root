@@ -151,6 +151,8 @@ void RemoveScopeResolution(std::string &name)
    }
 }
 
+/// Get an array with the respective lengths of an array of strings, e.g. {"ab", "abc"} will return {2,3}
+/// The first parameter is a variadic parameter, pass std::make_index_sequence<std::size(stringArray)>()
 template <std::size_t N, std::size_t... Is>
 constexpr std::array<std::size_t, N>
 getLengthsArray(std::index_sequence<Is...>, std::array<const char *, N> const &stringArray)
