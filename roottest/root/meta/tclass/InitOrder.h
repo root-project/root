@@ -14,4 +14,3 @@ using UserClass_t2 = UserClassViaUsing;
 
 class UserClassNotSelected {};
 using UserClassOnlyTypedef_t = UserClassNotSelected;
-
