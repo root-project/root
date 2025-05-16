@@ -177,6 +177,10 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    if (fArgv)
       gSystem->SetProgname(fArgv[0]);
 
+   // Alternative to '-b' command line switch (i.e. for pyROOT)
+   if (gSystem->Getenv("ROOT_BATCH"))
+      MakeBatch();
+
    // Tell TSystem the TApplication has been created
    gSystem->NotifyApplicationCreated();
 
