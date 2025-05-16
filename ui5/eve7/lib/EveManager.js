@@ -180,7 +180,7 @@ sap.ui.define([], function() {
 
          // Sergey: NextEvent() here just to handle data recording in event_demo.C
 
-         if ((this.handle.kind != "file") || (mir_call == "NextEvent()")) {
+         if (!this.handle.isStandalone() || (mir_call == "NextEvent()")) {
 
             let req = {
                "mir" : mir_call,
@@ -764,7 +764,7 @@ sap.ui.define([], function() {
          }
 
 
-         if (this.handle.kind != "file")
+         if (!this.handle.isStandalone())
             this.handle.send("__REveDoneChanges");
          this.busyProcessingChanges = false;
       }
@@ -915,7 +915,7 @@ sap.ui.define([], function() {
        * Can be used for debugging or as offline app */
       InterceptMIR(mir_call, element_id, element_class) {
 
-         if (this.handle.kind != "file")
+         if (!this.handle.isStandalone())
             return false;
 
          // just do not intercept

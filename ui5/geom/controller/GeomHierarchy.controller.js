@@ -47,7 +47,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket = viewData.conn_handle;
          this.jsroot = viewData.jsroot;
 
-         this.standalone = (this.websocket.kind == 'file');
+         this.standalone = this.websocket.isStandalone();
 
          this.websocket.setReceiver(this);
          this.websocket.connect(viewData.conn_href);
