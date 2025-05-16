@@ -108,6 +108,20 @@ RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new RO
    ROOT::EnableThreadSafety();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes the tbb::task_arena within RTaskArenaWrapper by attaching to an
+/// existing arena.
+///
+/// * Can't be reinitialized
+////////////////////////////////////////////////////////////////////////////////
+RTaskArenaWrapper::RTaskArenaWrapper(RTaskArenaWrapper::Attach)
+   : fTBBArena(new ROpaqueTaskArena{tbb::task_arena::attach{}})
+{
+   fTBBArena->initialize(tbb::task_arena::attach{});
+   fNWorkers = fTBBArena->max_concurrency();
+   ROOT::EnableThreadSafety();
+}
+
 RTaskArenaWrapper::~RTaskArenaWrapper()
 {
    fNWorkers = 0u;
@@ -127,7 +141,8 @@ ROOT::ROpaqueTaskArena &RTaskArenaWrapper::Access()
    return *fTBBArena;
 }
 
-std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency)
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper>
+GetGlobalTaskArena(unsigned maxConcurrency, ROOT::EIMTConfig config)
 {
    static std::weak_ptr<ROOT::Internal::RTaskArenaWrapper> weak_GTAWrapper;
 
@@ -140,9 +155,30 @@ std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned m
       }
       return sp;
    }
-   std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> sp(new ROOT::Internal::RTaskArenaWrapper(maxConcurrency));
+   std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> sp;
+   if (config == ROOT::EIMTConfig::kExistingTBBArena) {
+      sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(ROOT::Internal::RTaskArenaWrapper::Attach{});
+   } else {
+      if (config == ROOT::EIMTConfig::kWholeMachine) {
+         maxConcurrency = 0;
+      }
+      sp = std::make_shared<ROOT::Internal::RTaskArenaWrapper>(maxConcurrency);
+   }
    weak_GTAWrapper = sp;
    return sp;
+}
+
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(ROOT::EIMTConfig config)
+{
+   if (config >= ROOT::EIMTConfig::kNumConfigs)
+      ::Fatal("ROOT::Internal::GetGlobalTaskArena",
+              "Unsupported enum value %d", (int)config);
+   return GetGlobalTaskArena(0, config);
+}
+
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency)
+{
+   return GetGlobalTaskArena(maxConcurrency, ROOT::EIMTConfig::kNumConfigs);
 }
 
 } // namespace Internal
