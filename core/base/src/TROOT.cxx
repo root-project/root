@@ -552,6 +552,31 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
+   /// @param[in] config Configuration to use. The default is kWholeMachine, which
+   ///                   will create a thread pool that spans the whole machine.
+   ///
+   /// EnableImplicitMT calls in turn EnableThreadSafety.
+   /// If ImplicitMT is already enabled, this function does nothing.
+
+   void EnableImplicitMT(ROOT::EIMTConfig config)
+   {
+#ifdef R__USE_IMT
+      if (ROOT::Internal::IsImplicitMTEnabledImpl())
+         return;
+      EnableThreadSafety();
+      static void (*sym)(ROOT::EIMTConfig) =
+         (void (*)(ROOT::EIMTConfig))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT_Config");
+      if (sym)
+         sym(config);
+      ROOT::Internal::IsImplicitMTEnabledImpl() = true;
+#else
+      ::Warning("EnableImplicitMT",
+                "Cannot enable implicit multi-threading with config %d, please build ROOT with -Dimt=ON",
+                static_cast<int>(config));
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
    /// Disables the implicit multi-threading in ROOT (see EnableImplicitMT).
    void DisableImplicitMT()
    {
