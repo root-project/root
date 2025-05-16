@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '15/05/2025',
+version_date = '16/05/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -150,9 +150,10 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
   * @return {Number} 0 - not array, 1 - regular array, 2 - typed array
   * @private */
 function isArrayProto(proto) {
-    if ((proto.length < 14) || (proto.indexOf('[object ') !== 0)) return 0;
+    if ((proto.length < 14) || proto.indexOf('[object ')) return 0;
     const p = proto.indexOf('Array]');
-    if ((p < 0) || (p !== proto.length - 6)) return 0;
+    if ((p < 0) || (p !== proto.length - 6))
+      return 0;
     // plain array has only '[object Array]', typed array type name inside
     return proto.length === 14 ? 1 : 2;
 }
@@ -603,14 +604,17 @@ function parse$1(json) {
       if ((value === null) || (value === undefined)) return;
 
       if (isStr(value)) {
-         if (newfmt || (value.length < 6) || (value.indexOf('$ref:') !== 0)) return;
+         if (newfmt || (value.length < 6) || value.indexOf('$ref:'))
+            return;
          const ref = parseInt(value.slice(5));
-         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
+         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length))
+            return;
          newfmt = false;
          return map[ref];
       }
 
-      if (typeof value !== 'object') return;
+      if (typeof value !== 'object')
+         return;
 
       const proto = Object.prototype.toString.apply(value);
 
@@ -818,7 +822,7 @@ function decodeUrl(url) {
    while (url) {
       // try to correctly handle quotes in the URL
       let pos = 0, nq = 0, eq = -1, firstq = -1;
-      while ((pos < url.length) && ((nq !== 0) || ((url[pos] !== '&') && (url[pos] !== '#')))) {
+      while ((pos < url.length) && (nq || ((url[pos] !== '&') && (url[pos] !== '#')))) {
          switch (url[pos]) {
             case '\'': if (nq >= 0) nq = (nq+1) % 2; if (firstq < 0) firstq = pos; break;
             case '"': if (nq <= 0) nq = (nq-1) % 2; if (firstq < 0) firstq = pos; break;
@@ -1047,7 +1051,7 @@ async function injectCode(code) {
 async function loadModules(arg) {
    if (isStr(arg))
       arg = arg.split(';');
-   if (arg.length === 0)
+   if (!arg.length)
       return true;
    return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
 }
@@ -1610,7 +1614,7 @@ function getMethods(typename, obj) {
    // Therefore when methods requested for given object, check also that basic methods are there
    if ((typename === clTObject) || (typename === clTNamed) || (obj?.fBits !== undefined)) {
       if (typeof m.TestBit === 'undefined') {
-         m.TestBit = function(f) { return (this.fBits & f) !== 0; };
+         m.TestBit = function(f) { return Boolean(this.fBits & f); };
          m.InvertBit = function(f) { this.fBits ^= f & 0xffffff; };
          m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
@@ -1865,10 +1869,10 @@ function getMethods(typename, obj) {
          // compute variance in y (eprim2) and standard deviation in y (eprim)
          const contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum**2));
          if (this.fErrorMode === EErrorType.kERRORSPREADI) {
-            if (eprim !== 0) return eprim/Math.sqrt(neff);
+            if (eprim) return eprim / Math.sqrt(neff);
             // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
             // when the std(y) is zero
-            return 1.0/Math.sqrt(12*neff);
+            return 1.0 / Math.sqrt(12*neff);
          }
          // if approximate compute the sums (of w, wy and wy2) using all the bins
          //  when the variance in y is zero
@@ -8654,7 +8658,7 @@ function floatToString(value, fmt, ret_fmt) {
       let diff = sg.length - l - prec;
       if (sg.indexOf('.') > l) diff--;
 
-      if (diff !== 0) {
+      if (diff) {
          prec -= diff;
          if (prec < 0)
             prec = 0;
@@ -8691,10 +8695,7 @@ class DrawOptions {
    }
 
    /** @summary Returns true if remaining options are empty or contain only separators symbols. */
-   empty() {
-      if (this.opt.length === 0) return true;
-      return this.opt.replace(/[ ;_,]/g, '').length === 0;
-   }
+   empty() { return !this.opt ? true : !this.opt.replace(/[ ;_,]/g, ''); }
 
    /** @summary Returns remaining part of the draw options. */
    remain() { return this.opt; }
@@ -9216,7 +9217,7 @@ class BasePainter {
             }
          }
 
-         while (main.node().childNodes.length > 0)
+         while (main.node().childNodes.length)
             enlarge.node().appendChild(main.node().firstChild);
 
          origin.property('use_enlarge', true);
@@ -9224,7 +9225,7 @@ class BasePainter {
          return true;
       }
       if ((action === false) && (state !== 'off')) {
-         while (enlarge.node() && enlarge.node().childNodes.length > 0)
+         while (enlarge.node()?.childNodes.length)
             main.node().appendChild(enlarge.node().firstChild);
 
          enlarge.remove();
@@ -9477,7 +9478,7 @@ async function loadFontFile(fname) {
    }
 
    async function tryNext() {
-      if (locations.length === 0) {
+      if (!locations.length) {
          completeReading(null);
          throw new Error(`Fail to load ${fname} font`);
       }
@@ -10191,7 +10192,7 @@ function parseLatex(node, arg, label, curr) {
          label = label.slice(lbrace.length);
       }
 
-      while ((n !== 0) && (pos < label.length)) {
+      while (n && (pos < label.length)) {
          if (match(lbrace)) {
             n++;
             pos += lbrace.length;
@@ -10207,7 +10208,7 @@ function parseLatex(node, arg, label, curr) {
             }
          } else pos++;
       }
-      if (n !== 0) {
+      if (n) {
          console.log(`mismatch with open ${lbrace} and closing ${rbrace} in ${label}`);
          return -1;
       }
@@ -11055,7 +11056,7 @@ function translateMath(str, kind, color, painter) {
          let p = str.indexOf('#color[');
          if ((p < 0) && first) { clean = str; break; }
          first = false;
-         if (p !== 0) {
+         if (p) {
             const norm = (p < 0) ? str : str.slice(0, p);
             clean += norm;
             if (p < 0) break;
@@ -11076,7 +11077,8 @@ function translateMath(str, kind, color, painter) {
             else if (str[p] === '}')
                cnt--;
          }
-         if (cnt !== 0) break;
+         if (cnt)
+            break;
 
          const part = str.slice(0, p);
          str = str.slice(p + 1);
@@ -12081,7 +12083,8 @@ class TAttLineHandler {
          this.excl_width = width;
       if (side !== undefined) {
          this.excl_side = side;
-         if ((this.excl_width === 0) && (this.excl_side !== 0)) this.excl_width = 20;
+         if ((this.excl_width === 0) && this.excl_side)
+            this.excl_width = 20;
       }
       this.changed = true;
    }
@@ -13099,7 +13102,7 @@ class ObjectPainter extends BasePainter {
      * @private */
    async interactiveRedraw(arg, info, subelem) {
       let reason, res;
-      if (isStr(info) && (info.indexOf('exec:') !== 0))
+      if (isStr(info) && info.indexOf('exec:'))
          reason = info;
 
       if (arg === 'pad')
@@ -73419,8 +73422,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       // only left-button is considered
-      if ((evnt.button!==undefined) && (evnt.button !== 0)) return;
-      if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
+      if ((evnt.button !== undefined) && (evnt.button !== 0)) return;
+      if ((evnt.buttons !== undefined) && (evnt.buttons !== 1)) return;
 
       if (control.enable_zoom) {
          control.mouse_zoom_mesh = control.detectZoomMesh(evnt);
@@ -76400,9 +76403,11 @@ function showProgress(msg, tmout, click_handle) {
       return box.remove();
    }
 
-   if ((arguments.length === 0) || !msg) {
-      if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
-      if (modal) modal();
+   if (!arguments.length || !msg) {
+      if ((tmout !== -1) || (!box.empty() && box.property('with_timeout')))
+         box.remove();
+      if (modal)
+         modal();
       return;
    }
 
@@ -76450,7 +76455,7 @@ function closeCurrentWindow() {
 /** @summary Tries to open ui5
   * @private */
 function tryOpenOpenUI(sources, args) {
-   if (!sources || (sources.length === 0)) {
+   if (!sources?.length) {
       if (isFunc(args.rejectFunc)) {
          args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
@@ -76915,7 +76920,7 @@ function getBinFileContent(content) {
 /** @summary Returns type of file content
   * @private */
 function getContentType(content) {
-   if (content.indexOf('data:') !== 0)
+   if (content.indexOf('data:'))
       return '';
 
    const p = content.indexOf(';');
@@ -77179,7 +77184,7 @@ class JSRootMenu {
          if (without_sub)
             name = top_name + ' ' + name;
 
-         if (group.length > 0) {
+         if (group.length) {
             this.sub(name, opts[i], call_back);
             group.forEach(sub => {
                this.add(sub, sub, call_back);
@@ -78212,7 +78217,7 @@ class StandaloneMenu extends JSRootMenu {
       if (name === sEndsub) {
          this.stack.pop();
          curr = this.stack.at(-1);
-         if (curr.at(-1).sub.length === 0)
+         if (!curr.at(-1).sub.length)
             curr.at(-1).sub = undefined;
          return;
       }
@@ -78959,7 +78964,8 @@ const AxisPainterMethods = {
             const pow = Math.log10(val) / Math.log10(this.logbase);
             if (Math.abs(Math.round(pow) - pow) < 0.01) arr2.push(val);
          });
-         if (arr2.length > 0) arr = arr2;
+         if (arr2.length)
+            arr = arr2;
       }
 
       return arr;
@@ -79049,7 +79055,7 @@ const AxisPainterMethods = {
             else if (item.max + delta_shift > gmax)
                delta_shift = gmax - item.max;
 
-            if (delta_shift !== 0) {
+            if (delta_shift) {
                item.min += delta_shift;
                item.max += delta_shift;
              } else {
@@ -79282,7 +79288,7 @@ class TAxisPainter extends ObjectPainter {
 
          if (axis?.fNbins && axis?.fLabels) {
             if ((axis.fNbins !== Math.round(axis.fXmax - axis.fXmin)) ||
-                (axis.fXmin !== 0) || (axis.fXmax !== axis.fNbins))
+                axis.fXmin || (axis.fXmax !== axis.fNbins))
                this.regular_labels = false;
          }
 
@@ -79431,7 +79437,7 @@ class TAxisPainter extends ObjectPainter {
       this.ndig = 0;
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
-      if (((this.kind === kAxisNormal) || (this.kind === kAxisFunc)) && !this.log && (handle.major.length > 0)) {
+      if (((this.kind === kAxisNormal) || (this.kind === kAxisFunc)) && !this.log && handle.major.length) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp && !this.cutLabels()) {
@@ -80043,7 +80049,7 @@ class TAxisPainter extends ObjectPainter {
       this.extractDrawAttributes(undefined, w, h);
 
       if (this.is_gaxis)
-         draw_lines = axis.fLineColor !== 0;
+         draw_lines = Boolean(axis.fLineColor);
 
       if (!this.is_gaxis || (this.name === 'zaxis')) {
          axis_g = layer.selectChild(`.${this.name}_container`);
@@ -80594,7 +80600,7 @@ class TooltipHandler extends ObjectPainter {
          if (hint.user_info !== undefined)
             hint.painter?.provideUserTooltip(hint.user_info);
 
-         if (!hint.lines || (hint.lines.length === 0)) {
+         if (!hint.lines?.length) {
             hints[n] = null;
             continue;
          }
@@ -80619,7 +80625,7 @@ class TooltipHandler extends ObjectPainter {
          hint.height = Math.round(hint.lines.length * textheight * hstep + 2 * hmargin - textheight * (hstep - 1));
 
          if ((hint.color1 !== undefined) && (hint.color1 !== 'none')) {
-            if ((lastcolor1 !== 0) && (lastcolor1 !== hint.color1))
+            if (lastcolor1 && (lastcolor1 !== hint.color1))
                usecolor1 = true;
             lastcolor1 = hint.color1;
          }
@@ -80679,7 +80685,7 @@ class TooltipHandler extends ObjectPainter {
       this.showObjectStatus(name, title, info, coordinates);
 
       // end of closing tooltips
-      if (!pnt || disable_tootlips || (hints.length === 0) || (maxlen === 0) || (show_only_best && !best_hint)) {
+      if (!pnt || disable_tootlips || !hints.length || (maxlen === 0) || (show_only_best && !best_hint)) {
          hintsg.remove();
          return;
       }
@@ -81048,7 +81054,7 @@ class FrameInteractive extends TooltipHandler {
          if (!settings.Zooming)
             return false;
          // in 3d mode with orbit control ignore simple arrows
-         if (this.mode3d && (key.indexOf('Ctrl') !== 0))
+         if (this.mode3d && key.indexOf('Ctrl'))
             return false;
          this.analyzeMouseWheelEvent(null, zoom, 0.5);
          if (zoom.changed)
@@ -81175,7 +81181,7 @@ class FrameInteractive extends TooltipHandler {
       }
 
       // ignore all events from non-left button
-      if (evnt.button !== 0)
+      if (evnt.button)
          return;
 
       evnt.preventDefault();
@@ -81400,7 +81406,7 @@ class FrameInteractive extends TooltipHandler {
 
       // in case when zooming was started, block any other kind of events
       // also prevent zooming together with active dragging
-      if ((this.zoom_kind !== 0) || drag_kind)
+      if (this.zoom_kind || drag_kind)
          return;
 
       const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
@@ -84402,7 +84408,8 @@ class FlexibleDisplay extends MDIDisplay {
          arr.push(frame);
       });
 
-      if (arr.length === 0) return;
+      if (!arr.length)
+         return;
 
       const top = this.selectDom(),
             w = top.node().clientWidth,
@@ -86379,7 +86386,7 @@ class TPadPainter extends ObjectPainter {
       if (this.#doing_draw === undefined)
          return console.warn('failure, should not happen');
       this.#doing_draw.shift();
-      if (this.#doing_draw.length === 0)
+      if (!this.#doing_draw.length)
          this.#doing_draw = undefined;
        else {
          const entry = this.#doing_draw[0];
@@ -87080,7 +87087,7 @@ class TPadPainter extends ObjectPainter {
 
          padpainter.createPadSvg();
 
-         if (padpainter.matchObjectType(clTPad) && (snap.fPrimitives.length > 0))
+         if (padpainter.matchObjectType(clTPad) && snap.fPrimitives.length)
             padpainter.addPadButtons(true);
          pindx++; // new painter will be add
          promise = padpainter.drawNextSnap(snap.fPrimitives).then(() => padpainter.addPadInteractive());
@@ -87136,7 +87143,7 @@ class TPadPainter extends ObjectPainter {
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
       // if there are execs in the pad, deliver events to the server
-      this.#deliver_move_events = this.#has_execs || (first.fExecs?.arr?.length > 0);
+      this.#deliver_move_events = this.#has_execs || first.fExecs?.arr?.length;
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
@@ -87733,7 +87740,7 @@ class TPadPainter extends ObjectPainter {
 
       this._buttons.push({ btn, tooltip, funcname, keyname });
 
-      if (!this.isTopPad() && (funcname.indexOf('Pad') !== 0) && (funcname !== 'enlargePad')) {
+      if (!this.isTopPad() && funcname.indexOf('Pad') && (funcname !== 'enlargePad')) {
          const cp = this.getCanvPainter();
          if (cp && (cp !== this))
             cp.addPadButton(btn, tooltip, funcname);
@@ -88525,7 +88532,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Handle highlight in canvas - deliver information to server
      * @private */
    processHighlightConnect(hints) {
-      if (!hints || hints.length === 0 || !this._highlight_connect ||
+      if (!hints?.length || !this._highlight_connect ||
           this.doingDraw() || !this.canSendWebsocket(2)) return;
 
       const hint = hints[0] || hints[1];
@@ -89416,7 +89423,7 @@ class TPavePainter extends ObjectPainter {
             nlines = arr.length,
             pp = this.getPadPainter(),
             pad_height = pp.getPadHeight(),
-            draw_header = (pt.fLabel.length > 0),
+            draw_header = pt.fLabel.length,
             promises = [],
             margin_x = pt.fMargin * width,
             stepy = height / (nlines || 1),
@@ -90374,7 +90381,7 @@ class TPavePainter extends ObjectPainter {
                parvalue = this.format(Number(parvalue), 'fit');
                if (print_ferrors && (parerr !== undefined)) {
                   parerr = floatToString(parerr, this.getBestFormat(parvalue, parerr));
-                  if ((Number(parerr) === 0) && (f1.GetParError(n) !== 0))
+                  if (!Number(parerr) && f1.GetParError(n))
                      parerr = floatToString(f1.GetParError(n), '4.2g');
                }
             }
@@ -91282,7 +91289,7 @@ class HistContour {
          this.arr.push(this.colzmax);
          this.custom = true;
       } else {
-         if ((this.colzmin === this.colzmax) && (this.colzmin !== 0)) {
+         if ((this.colzmin === this.colzmax) && this.colzmin) {
             this.colzmax += 0.01*Math.abs(this.colzmax);
             this.colzmin -= 0.01*Math.abs(this.colzmin);
          }
@@ -91420,10 +91427,10 @@ class FunctionsHandler {
       }
 
       // remove all function which are not found in new list of functions
-      if (painters.length > 0)
+      if (painters.length)
          pp?.cleanPrimitives(p => painters.indexOf(p) >= 0);
 
-      if (update_painters.length > 0)
+      if (update_painters.length)
          this.#extra_painters = update_painters;
    }
 
@@ -91431,7 +91438,7 @@ class FunctionsHandler {
    drawNext(indx) {
       if (this.#extra_painters) {
          const p = this.#extra_painters.shift();
-         if (this.#extra_painters.length === 0)
+         if (!this.#extra_painters.length)
             this.#extra_painters = undefined;
          return getPromise(p.redraw()).then(() => this.drawNext(0));
       }
@@ -92602,7 +92609,7 @@ class THistPainter extends ObjectPainter {
          cntr.createNormal(nlevels, logv ?? 0, zminpositive);
       }
 
-      cntr.configIndicies(this.options.Zero && !is_th2poly ? -1 : 0, (cntr.colzmin !== 0) || !this.options.Zero || is_th2poly ? 0 : -1);
+      cntr.configIndicies(this.options.Zero && !is_th2poly ? -1 : 0, cntr.colzmin || !this.options.Zero || is_th2poly ? 0 : -1);
 
       if (fp && (ndim < 3) && !fp.mode3d) {
          fp.zmin = cntr.colzmin;
@@ -93544,18 +93551,18 @@ class Triangles3DHandler {
          if (!this.dolines) return;
          const side1 = checkSide(z1, this.grz_min, this.grz_max, 0),
              side2 = checkSide(z2, this.grz_min, this.grz_max, 0);
-         if ((side1 === side2) && (side1 !== 0))
+         if ((side1 === side2) && side1)
             return;
          if (!this.loop)
             return ++nsegments;
 
-         if (side1 !== 0) {
+         if (side1) {
             const diff = z2 - z1;
             z1 = (side1 < 0) ? this.grz_min : this.grz_max;
             x1 = x2 - (x2 - x1) / diff * (z2 - z1);
             y1 = y2 - (y2 - y1) / diff * (z2 - z1);
          }
-         if (side2 !== 0) {
+         if (side2) {
             const diff = z1 - z2;
             z2 = (side2 < 0) ? this.grz_min : this.grz_max;
             x2 = x1 - (x1 - x2) / diff * (z1 - z2);
@@ -93572,7 +93579,7 @@ class Triangles3DHandler {
 
          const part = (crossz - zz1) / (zz2 - zz1);
          let shift = 3;
-         if ((lastpart !== 0) && (Math.abs(part) < Math.abs(lastpart))) {
+         if (lastpart && (Math.abs(part) < Math.abs(lastpart))) {
             // while second crossing point closer than first to original, move it in memory
             pntbuf[pntindx] = pntbuf[pntindx-3];
             pntbuf[pntindx+1] = pntbuf[pntindx-2];
@@ -94182,7 +94189,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
-      let is_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
+      let is_content = this.gmaxbin || this.gminbin;
 
       // for TProfile2D show empty bin if there are entries for it
       if (!is_content && (histo._typename === clTProfile2D)) {
@@ -94370,14 +94377,14 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                stddev3y = Math.pow(res.rmsy, 3),
                stddev4x = Math.pow(res.rmsx, 4),
                stddev4y = Math.pow(res.rmsy, 4);
-         if (np * stddev3x !== 0)
+         if (np * stddev3x)
             res.skewx = sumx3 / (np * stddev3x);
-         if (np * stddev3y !== 0)
+         if (np * stddev3y)
             res.skewy = sumy3 / (np * stddev3y);
          res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
-         if (np * stddev4x !== 0)
+         if (np * stddev4x)
             res.kurtx = sumx4 / (np * stddev4x) - 3;
-         if (np * stddev4y !== 0)
+         if (np * stddev4y)
             res.kurty = sumy4 / (np * stddev4y) - 3;
          res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
       }
@@ -95073,7 +95080,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       let pr = Promise.resolve();
 
-      if (textbins.length > 0) {
+      if (textbins.length) {
          const color = this.getColor(histo.fMarkerColor),
                rotate = -1*this.options.TextAngle,
                text_g = this.draw_g.append('svg:g').attr('class', 'th2poly_text'),
@@ -95719,11 +95726,11 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
             if (isOption(kHistoLeft) || isOption(kHistoViolin)) {
                let prev_x = center, prev_y = Math.round(ff(xx[xindx2+1]));
-               if (arr.length === 0)
+               if (!arr.length)
                   arr.push(prev_x, prev_y);
                for (let ii = xindx2; ii >= xindx1; ii--) {
                   const curr_x = Math.round(center - scale*proj[ii]),
-                      curr_y = Math.round(ff(xx[ii]));
+                        curr_y = Math.round(ff(xx[ii]));
                   if (curr_x !== prev_x) {
                      if (ii !== xindx2) arr.push('V', prev_y);
                      arr.push('H', curr_x);
@@ -95738,7 +95745,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
             hists += make_path(arr, 'array');
 
-            if (!this.fillatt.empty()) hists += 'Z';
+            if (!this.fillatt.empty())
+               hists += 'Z';
          }
 
          handle.candle.push(pnt); // keep point for the tooltip
@@ -95796,7 +95804,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
              .style('stroke', this.getColor(histo.fFillColor));
       }
 
-      const hline_color = (isOption(kHistoZeroIndicator) && (histo.fFillStyle !== 0)) ? this.fillatt.color : this.lineatt.color;
+      const hline_color = (isOption(kHistoZeroIndicator) && histo.fFillStyle) ? this.fillatt.color : this.lineatt.color;
       if (hists && (!this.fillatt.empty() || (hline_color !== 'none'))) {
          this.draw_g.append('svg:path')
              .attr('d', hists)
@@ -95934,7 +95942,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       const layer = this.getFrameSvg().selectChild('.main_layer');
       let defs = layer.selectChild('defs');
-      if (defs.empty() && (colPaths.length > 0))
+      if (defs.empty() && colPaths.length)
          defs = layer.insert('svg:defs', ':first-child');
 
       this.createAttMarker({ attr: histo });
@@ -96386,8 +96394,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             lines = [];
       let binname = bin.fPoly.fName, numpoints = 0;
 
-      if (binname === 'Graph') binname = '';
-      if (binname.length === 0) binname = bin.fNumber;
+      if (binname === 'Graph')
+         binname = '';
+      if (!binname)
+         binname = bin.fNumber;
 
       if ((realx === undefined) && (realy === undefined)) {
          realx = realy = 0;
@@ -98250,7 +98260,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       ticks.push(0, 0, grz, this.z_handle.ticksSize*(is_major ? 1 : 0.6), 0, grz);
    }
 
-   if (zgridx && (zgridx.length > 0)) {
+   if (zgridx?.length) {
       const material = new THREE.LineDashedMaterial({ color: this.x_handle.ticksColor, dashSize: 2, gapSize: 2 }),
             lines1 = createLineSegments(zgridx, material);
 
@@ -98266,7 +98276,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       top.add(lines2);
    }
 
-   if (zgridy && (zgridy.length > 0)) {
+   if (zgridy?.length) {
       const material = new THREE.LineDashedMaterial({ color: this.y_handle.ticksColor, dashSize: 2, gapSize: 2 }),
             lines1 = createLineSegments(zgridy, material);
 
@@ -99096,7 +99106,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
              const faces = pnts.length < 3 ? null : THREE.ShapeUtils.triangulateShape(pnts, []);
 
-             if (!faces || (faces.length === 0))
+             if (!faces?.length)
                return;
 
              if ((lastcolindx < 0) || (lastcolindx !== colindx)) {
@@ -99625,10 +99635,10 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
 
          const stddev3 = Math.pow(res.rmsx, 3), stddev4 = Math.pow(res.rmsx, 4);
-         if (np * stddev3 !== 0)
+         if (np * stddev3)
             res.skewx = sum3 / (np * stddev3);
          res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
-         if (np * stddev4 !== 0)
+         if (np * stddev4)
             res.kurtx = sum4 / (np * stddev4) - 3;
          res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
       }
@@ -99687,10 +99697,10 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             stat.addText('Std Dev = ' + stat.format(data.rmsx));
 
          if (print_under > 0)
-            stat.addText('Underflow = ' + stat.format((histo.fArray.length > 0) ? histo.fArray[0] : 0, 'entries'));
+            stat.addText('Underflow = ' + stat.format(histo.fArray.length ? histo.fArray[0] : 0, 'entries'));
 
          if (print_over > 0)
-            stat.addText('Overflow = ' + stat.format((histo.fArray.length > 0) ? histo.fArray.at(-1) : 0, 'entries'));
+            stat.addText('Overflow = ' + stat.format(histo.fArray.length ? histo.fArray.at(-1) : 0, 'entries'));
 
          if (print_integral > 0)
             stat.addText('Integral = ' + stat.format(data.integral, 'entries'));
@@ -99987,7 +99997,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                if (show_text) {
                   const cont = text_profile ? histo.fBinEntries[bin+1] : bincont;
 
-                  if (cont !== 0) {
+                  if (cont) {
                      const arg = text_angle
                         ? { align: 12, x: midx, y: Math.round(my - 2 - text_size / 5), width: 0, height: 0, rotate: text_angle }
                         : { align: 22, x: Math.round(mx1 + (mx2 - mx1) * 0.1), y: Math.round(my - 2 - text_size), width: Math.round((mx2 - mx1) * 0.8), height: text_size };
@@ -100005,7 +100015,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                if (show_line) {
                   if (funcs.swap_xy())
                      path_line += (path_line ? 'L' : 'M') + `${my},${midx}`; // no optimization
-                  else if (path_line.length === 0)
+                  else if (!path_line)
                      path_line = `M${midx},${my}`;
                   else if (lx === midx)
                      path_line += `v${my-ly}`;
@@ -100061,7 +100071,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                gry = Math.round(funcs.gry(y));
             }
 
-            if (res.length === 0) {
+            if (!res) {
                bestimin = bestimax = i;
                prevx = startx = currx = grx;
                prevy = curry_min = curry_max = curry = gry;
@@ -100538,7 +100548,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       if (nbins < 2) return;
 
       const arr = new Array(nbins+2),
-            xbins = (xaxis.fXbins.length > 0) ? new Array(nbins) : null;
+            xbins = xaxis.fXbins.length ? new Array(nbins) : null;
 
       arr[0] = histo.fArray[0];
       let indx = 1;
@@ -100956,7 +100966,7 @@ class TH2Painter extends TH2Painter$2 {
          } else if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
             this.zmin = this.options.minimum;
             this.zmax = this.options.maximum;
-         } else if (this.draw_content || (this.gmaxbin !== 0)) {
+         } else if (this.draw_content || this.gmaxbin) {
             this.zmin = logz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
             zmult = 1 + 2*gStyle.fHistTopMargin;
@@ -101070,7 +101080,7 @@ class TH3Painter extends THistPainter {
       if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
-      this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
+      this.draw_content = this.gmaxbin || this.gminbin;
 
       this.transferFunc = this.findFunction(clTF1, 'TransferFunction');
       this.transferFunc?.SetBit(BIT(9), true); // TF1::kNotDraw
@@ -101183,19 +101193,19 @@ class TH3Painter extends THistPainter {
                stddev4y = Math.pow(res.rmsy, 4),
                stddev4z = Math.pow(res.rmsz, 4);
 
-         if (np * stddev3x !== 0)
+         if (np * stddev3x)
             res.skewx = sumx3 / (np * stddev3x);
-         if (np * stddev3y !== 0)
+         if (np * stddev3y)
             res.skewy = sumy3 / (np * stddev3y);
-         if (np * stddev3z !== 0)
+         if (np * stddev3z)
             res.skewz = sumz3 / (np * stddev3z);
          res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
 
-         if (np * stddev4x !== 0)
+         if (np * stddev4x)
             res.kurtx = sumx4 / (np * stddev4x) - 3;
-         if (np * stddev4y !== 0)
+         if (np * stddev4y)
             res.kurty = sumy4 / (np * stddev4y) - 3;
-         if (np * stddev4z !== 0)
+         if (np * stddev4z)
             res.kurtz = sumz4 / (np * stddev4z) - 3;
          res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
       }
@@ -102610,7 +102620,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
          let visible = nodes.filter(d => (d.exlow > 0) || (d.exhigh > 0) || (d.eylow > 0) || (d.eyhigh > 0));
          if (options.skip_errors_x0 || options.skip_errors_y0)
-            visible = visible.filter(d => ((d.x !== 0) || !options.skip_errors_x0) && ((d.y !== 0) || !options.skip_errors_y0));
+            visible = visible.filter(d => (d.x || !options.skip_errors_x0) && (d.y || !options.skip_errors_y0));
 
          if (!this.isBatchMode() && settings.Tooltip && main_block) {
             visible.append('svg:path')
@@ -103666,7 +103676,7 @@ let Polygon$1 = class Polygon {
       this.nsign = 1;
       if (parent)
          this.copyProperties(parent, more);
-      else if (this.vertices.length > 0)
+      else if (this.vertices.length)
          this.calculateProperties();
    }
 
@@ -103682,11 +103692,12 @@ let Polygon$1 = class Polygon {
    }
 
    calculateProperties(force) {
-      if (this.normal && !force) return;
+      if (this.normal && !force)
+         return;
 
       const a = this.vertices[0],
-          b = this.vertices[1],
-          c = this.vertices[2];
+            b = this.vertices[1],
+            c = this.vertices[2];
 
       this.nsign = 1;
 
@@ -103828,10 +103839,10 @@ class Node {
 
       if (nodeid !== undefined) this.maxnodeid = nodeid;
 
-      if (front.length > 0)
+      if (front.length)
          this.front = new Node(front);
 
-      if (back.length > 0)
+      if (back.length)
          this.back = new Node(back);
    }
 
@@ -103857,13 +103868,15 @@ class Node {
       for (let i = first; i < polygon_count; ++i)
          this.divider.splitPolygon(polygons[i], this.polygons, this.polygons, front, back);
 
-      if (front.length > 0) {
-         if (!this.front) this.front = new Node();
+      if (front.length) {
+         if (!this.front)
+            this.front = new Node();
          this.front.build(front);
       }
 
-      if (back.length > 0) {
-         if (!this.back) this.back = new Node();
+      if (back.length) {
+         if (!this.back)
+            this.back = new Node();
          this.back.build(back);
       }
    }
@@ -104379,7 +104392,7 @@ const kindGeo = 0,    // TGeoNode / TGeoShape
   * @private */
 function testGeoBit(volume, f) {
    const att = volume.fGeoAtt;
-   return att === undefined ? false : ((att & f) !== 0);
+   return att === undefined ? false : Boolean(att & f);
 }
 
 /** @summary Set fGeoAtt bit
@@ -105976,9 +105989,9 @@ function getNodeMatrix(kind, node) {
       const kPatternReflected = BIT(14),
             finder = node.fFinder,
             typ = finder._typename;
-      if ((finder.fBits & kPatternReflected) !== 0)
+      if (finder.fBits & kPatternReflected)
          geoWarn(`Unsupported reflected pattern ${typ}`);
-      if (typ.indexOf('TGeoPattern') !== 0)
+      if (typ.indexOf('TGeoPattern'))
          geoWarn(`Abnormal pattern type ${typ}`);
       const part = typ.slice(11);
       matrix = new THREE.Matrix4();
@@ -107080,7 +107093,7 @@ class ClonedNodes {
          if (res === 0) {
             if (do_clear) {
                this.fVisibility.splice(indx, 1);
-               if (this.fVisibility.length === 0)
+               if (!this.fVisibility.length)
                   delete this.fVisibility;
             } else
                item.visible = on;
@@ -107286,9 +107299,10 @@ class ClonedNodes {
    /** @summary Create stack array based on nodes ids array.
     * @desc Ids list should correspond to existing nodes hierarchy */
    buildStackByIds(ids) {
-      if (!ids) return null;
+      if (!ids)
+         return null;
 
-      if (ids[0] !== 0) {
+      if (ids[0]) {
          console.error('wrong ids - first should be 0');
          return null;
       }
@@ -107579,7 +107593,7 @@ class ClonedNodes {
          while (mesh && (mesh !== toplevel)) {
             three_prnt = mesh.parent;
             three_prnt.remove(mesh);
-            mesh = (three_prnt.children.length === 0) ? three_prnt : null;
+            mesh = !three_prnt.children.length ? three_prnt : null;
          }
 
          return res;
@@ -107728,7 +107742,7 @@ class ClonedNodes {
                   entry.done = true;
                });
 
-               if (arr1.length > 0) {
+               if (arr1.length) {
                   const mesh1 = new THREE.InstancedMesh(shape.geom, prop.material, arr1.length);
 
                   mesh1.stacks = stacks1;
@@ -107748,10 +107762,10 @@ class ClonedNodes {
 
                   mesh1.$jsroot_order = 1;
                   ctrl.info.num_meshes++;
-                  ctrl.info.num_faces += shape.nfaces*arr1.length;
+                  ctrl.info.num_faces += shape.nfaces * arr1.length;
                }
 
-               if (arr2.length > 0) {
+               if (arr2.length) {
                   if (shape.geomZ === undefined)
                      shape.geomZ = createFlippedGeom(shape.geom);
 
@@ -111634,7 +111648,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Modify visibility of provided node by name */
    modifyVisisbility(name, sign) {
-      if (getNodeKind(this.getGeometry()) !== 0)
+      if (getNodeKind(this.getGeometry()) !== kindGeo)
          return;
 
       if (!name)
@@ -112448,7 +112462,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Should be called when configuration of highlight is changed */
    changedHighlight(arg) {
       if (arg !== undefined) {
-         this.ctrl.highlight = arg !== 0;
+         this.ctrl.highlight = Boolean(arg);
          if (this.ctrl.highlight)
             this.ctrl.highlight_bloom = (arg === 2);
       }
@@ -113111,7 +113125,7 @@ class TGeoPainter extends ObjectPainter {
             for (let n = 0; n < del.length; ++n)
                this.#clones.createObject3D(del[n].stack, this.#toplevel, 'delete_mesh');
 
-            if (del.length > 0)
+            if (del.length)
                this.#drawing_log = `Delete ${del.length} nodes`;
          }
 
@@ -113293,7 +113307,7 @@ class TGeoPainter extends ObjectPainter {
       }
 
       // remember additional nodes only if they include shape - otherwise one can ignore them
-      if (real_nodes.length > 0)
+      if (real_nodes.length)
          this.#more_nodes = real_nodes;
 
       if (!from_drawing)
@@ -114557,7 +114571,8 @@ class TGeoPainter extends ObjectPainter {
 
       if (!prnt) {
          prnt = this.getGeometry();
-         if (!prnt && (getNodeKind(prnt) !== 0)) return null;
+         if (!prnt && (getNodeKind(prnt) !== kindGeo))
+            return null;
          itemname = this.#geo_manager ? prnt.fName : '';
          first_level = true;
          volumes = [];
@@ -114610,7 +114625,7 @@ class TGeoPainter extends ObjectPainter {
       if (this.#geo_manager)
          result.prefix = result.obj.fName;
 
-      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== 0))
+      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== kindGeo))
          return result;
 
       const mgr = {
@@ -115163,7 +115178,7 @@ class TGeoPainter extends ObjectPainter {
                   origin = this.#build_shapes[n];
 
             if (item.buf_pos && item.buf_norm) {
-               if (item.buf_pos.length === 0)
+               if (!item.buf_pos.length)
                   origin.geom = null;
                 else if (item.buf_pos.length !== item.buf_norm.length) {
                   console.error(`item.buf_pos.length ${item.buf_pos.length} !== item.buf_norm.length ${item.buf_norm.length}`);
@@ -115708,7 +115723,7 @@ class TGeoPainter extends ObjectPainter {
             container.add(helper);
          }
       }
-      if (panels.length === 0)
+      if (!panels.length)
          panels = null;
 
       if (this.#last_clip_cfg !== clip_cfg)
@@ -116403,7 +116418,7 @@ function provideMenu(menu, item, hpainter) {
       menu.addchk(obj.fRnrSelf, 'Visible', 'self', toggleEveVisibility);
       const res = scanEveVisible(obj, undefined, true);
       if (res.hidden + res.visible > 0)
-         menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', toggleEveVisibility);
+         menu.addchk((res.hidden === 0), 'Daughters', res.hidden ? 'true' : 'false', toggleEveVisibility);
    } else {
       const stack = drawitem?._painter?.getClones()?.findStackByName(fullname),
             phys_vis = stack ? drawitem._painter.getClones().getPhysNodeVisibility(stack) : null,
@@ -116999,7 +117014,7 @@ CustomStreamers = {
       buf.classStreamer(obj, clTPad);
       obj.fDISPLAY = buf.readTString();
       obj.fDoubleBuffer = buf.ntoi4();
-      obj.fRetained = (buf.ntou1() !== 0);
+      obj.fRetained = buf.ntobool();
       obj.fXsizeUser = buf.ntoi4();
       obj.fYsizeUser = buf.ntoi4();
       obj.fXsizeReal = buf.ntoi4();
@@ -117014,7 +117029,7 @@ CustomStreamers = {
       buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
       buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
       obj.fHighLightColor = buf.ntoi2();
-      obj.fBatch = (buf.ntou1() !== 0);
+      obj.fBatch = buf.ntobool();
       buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
       buf.ntou1();   // ignore b << TestBit(kAutoExec);
       buf.ntou1();   // ignore b << TestBit(kMenuBar);
@@ -117097,8 +117112,10 @@ CustomStreamers = {
             if (!Number.isInteger(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
 
             const parse_range = val => {
-               if (!val) return 0;
-               if (val.indexOf('pi') < 0) return parseFloat(val);
+               if (!val)
+                  return 0;
+               if (val.indexOf('pi') < 0)
+                  return parseFloat(val);
                val = val.trim();
                let sign = 1;
                if (val[0] === '-') { sign = -1; val = val.slice(1); }
@@ -117263,7 +117280,7 @@ CustomStreamers = {
    TAttImage: [
       { name: 'fImageQuality', func(buf, obj) { obj.fImageQuality = buf.ntoi4(); } },
       { name: 'fImageCompression', func(buf, obj) { obj.fImageCompression = buf.ntou4(); } },
-      { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = (buf.ntou1() !== 0); } },
+      { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = buf.ntobool(); } },
       { name: 'fPalette', func(buf, obj) { obj.fPalette = buf.classStreamer({}, clTImagePalette); } }
    ],
 
@@ -117273,7 +117290,7 @@ CustomStreamers = {
 
       buf.classStreamer(obj, clTNamed);
 
-      if (buf.ntou1() !== 0) {
+      if (buf.ntobool()) {
          const size = buf.ntoi4();
          obj.fPngBuf = buf.readFastArray(size, kUChar);
       } else {
@@ -117452,8 +117469,10 @@ function getTypeId(typname, norecursion) {
   * @private */
 function getArrayKind(type_name) {
    if ((type_name === clTString) || (type_name === 'string') ||
-      (CustomStreamers[type_name] === clTString)) return 0;
-   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
+      (CustomStreamers[type_name] === clTString))
+      return 0;
+   if ((type_name.length < 7) || type_name.indexOf('TArray'))
+      return -1;
    if (type_name.length === 7) {
       switch (type_name[6]) {
          case 'I': return kInt;
@@ -117759,7 +117778,7 @@ function createMemberStreamer(element, file) {
       case kULong:
          member.func = function(buf, obj) { obj[this.name] = buf.ntou8(); }; break;
       case kBool:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntou1() !== 0; }; break;
+         member.func = function(buf, obj) { obj[this.name] = buf.ntobool(); }; break;
       case kOffsetL + kBool:
       case kOffsetL + kInt:
       case kOffsetL + kCounter:
@@ -117835,7 +117854,7 @@ function createMemberStreamer(element, file) {
       case kFloat16:
       case kOffsetL + kFloat16:
       case kOffsetP + kFloat16:
-         if (element.fFactor !== 0) {
+         if (element.fFactor) {
             member.factor = 1 / element.fFactor;
             member.min = element.fXmin;
             member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
@@ -118130,7 +118149,7 @@ function createMemberStreamer(element, file) {
                member.read_version = function(buf, cnt) {
                   if (cnt === 0) return null;
                   const ver = buf.readVersion();
-                  this.member_wise = ((ver.val & kStreamedMemberWise) !== 0);
+                  this.member_wise = Boolean(ver.val & kStreamedMemberWise);
 
                   this.stl_version = undefined;
                   if (this.member_wise) {
@@ -118339,13 +118358,13 @@ function ZIP_inflate(arr, tgt) {
 
       // Find minimum and maximum length, bound *m by those
       for (j = 1; j <= BMAX; ++j)
-         if (c[j] !== 0) break;
+         if (c[j]) break;
 
       k = j;         // minimum code length
       if (mm < j)
          mm = j;
-      for (i = BMAX; i !== 0; --i)
-         if (c[i] !== 0) break;
+      for (i = BMAX; i; --i)
+         if (c[i]) break;
 
       const g = i;         // maximum code length
       if (mm > i)
@@ -118378,7 +118397,7 @@ function ZIP_inflate(arr, tgt) {
       p = b; pidx = 0;
       i = 0;
       do {
-         if ((j = p[pidx++]) !== 0)
+         if ((j = p[pidx++]))
             v[x[j]++] = i;
       } while (++i < n);
       n = x[g];         // set n to length of v
@@ -118468,7 +118487,7 @@ function ZIP_inflate(arr, tgt) {
             }
 
             // backwards increment the k-bit code i
-            for (j = 1 << (k - 1); (i & j) !== 0; j >>= 1)
+            for (j = 1 << (k - 1); (i & j); j >>= 1)
                i ^= j;
             i ^= j;
 
@@ -118482,7 +118501,7 @@ function ZIP_inflate(arr, tgt) {
       res.m = lx[1];
 
       /* Return true (1) if we were given an incomplete table */
-      res.status = ((y !== 0 && g !== 1) ? 1 : 0);
+      res.status = (y && g !== 1) ? 1 : 0;
 
       return res;
    }
@@ -118615,7 +118634,7 @@ function ZIP_inflate(arr, tgt) {
          zip_fixed_bl = 7;
 
          let h = zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
-         if (h.status !== 0)
+         if (h.status)
             throw new Error('HufBuild error: ' + h.status);
          zip_fixed_tl = h.root;
          zip_fixed_bl = h.m;
@@ -118673,7 +118692,7 @@ function ZIP_inflate(arr, tgt) {
       // build decoding table for trees--single level, 7 bit lookup
       zip_bl = 7;
       h = zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
-      if (h.status !== 0)
+      if (h.status)
          return -1;  // incomplete code set
 
       zip_tl = h.root;
@@ -118724,7 +118743,7 @@ function ZIP_inflate(arr, tgt) {
       h = zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
       if (zip_bl === 0)  // no literals or lengths
          h.status = 1;
-      if (h.status !== 0)
+      if (h.status)
          return -1;     // incomplete code set
       zip_tl = h.root;
       zip_bl = h.m;
@@ -118737,7 +118756,7 @@ function ZIP_inflate(arr, tgt) {
       zip_bd = h.m;
 
       // incomplete distance tree
-      if ((zip_bd === 0 && nl > 257) || (h.status !== 0))   // lengths but no distances
+      if ((zip_bd === 0 && nl > 257) || h.status)   // lengths but no distances
          return -1;
 
       // decompress until an end-of-block code
@@ -118753,7 +118772,7 @@ function ZIP_inflate(arr, tgt) {
             return n;
 
          if (zip_copy_leng > 0) {
-            if (zip_method !== 0 /* zip_STORED_BLOCK */) {
+            if (zip_method /* zip_STORED_BLOCK */) {
                // STATIC_TREES or DYN_TREES
                while (zip_copy_leng > 0 && n < size) {
                   --zip_copy_leng;
@@ -118783,7 +118802,7 @@ function ZIP_inflate(arr, tgt) {
 
             // read in last block bit
             zip_NEEDBITS(1);
-            if (zip_GETBITS(1) !== 0)
+            if (zip_GETBITS(1))
                zip_eof = true;
             zip_DUMPBITS(1);
 
@@ -119097,7 +119116,7 @@ class TBuffer {
       // large strings
       if (len === 255)
          len = this.ntou4();
-      if (len === 0)
+      if (!len)
          return '';
 
       const pos = this.o;
@@ -119110,7 +119129,7 @@ class TBuffer {
       * @desc stops when 0 is found */
     readNullTerminatedString() {
       let res = '', code;
-      while ((code = this.ntou1()) !== 0)
+      while ((code = this.ntou1()))
          res += String.fromCharCode(code);
       return res;
    }
@@ -119131,6 +119150,9 @@ class TBuffer {
 
    /** @summary read uint8_t */
    ntou1() { return this.arr.getUint8(this.o++); }
+
+   /** @summary read boolean */
+   ntobool() { return Boolean(this.arr.getUint8(this.o++)); }
 
    /** @summary read uint16_t */
    ntou2() {
@@ -119903,7 +119925,7 @@ class TFile {
                return send_new_request(true);
             }
 
-            if ((file.fMaxRanges === 1) || (first !== 0))
+            if ((file.fMaxRanges === 1) || !first)
                return rejectFunc(Error('Server returns normal response when multipart was requested, disable multirange support'));
 
             file.fMaxRanges = 1;
@@ -119950,7 +119972,8 @@ class TFile {
                         console.error(`Fail to decode content-range ${line} ${parts}`);
                   }
 
-                  if ((nline > 1) && (line.length === 0)) finish_header = true;
+                  if ((nline > 1) && !line)
+                     finish_header = true;
 
                   nline++; line = '';
                   if (code1 !== 10) {
@@ -120731,9 +120754,9 @@ function openFile(arg, opts) {
    let file, plain_file;
 
    if (isNodeJs() && isStr(arg)) {
-      if (arg.indexOf('file://') === 0)
+      if (!arg.indexOf('file://'))
          file = new TNodejsFile(arg.slice(7));
-      else if (arg.indexOf('http') !== 0)
+      else if (arg.indexOf('http'))
          file = new TNodejsFile(arg);
    }
 
@@ -120956,7 +120979,7 @@ class ArrayIterator {
             continue;
          }
 
-         if ((typ === 'array') && ((obj.length > 0) || (this.select[cnt + 1] === '$size$'))) {
+         if ((typ === 'array') && (obj.length || (this.select[cnt + 1] === '$size$'))) {
             this.arr[++cnt] = obj;
             switch (this.select[cnt]) {
                case undefined: this.indx[cnt] = 0; break;
@@ -121120,7 +121143,8 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
       if (pos > 0) search = search.slice(0, pos);
    }
 
-   if (!lst || (lst.arr.length === 0)) return null;
+   if (!lst?.arr.length)
+      return null;
 
    for (let n = 0; n < lst.arr.length; ++n) {
       let brname = lst.arr[n].fName;
@@ -121128,7 +121152,7 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
          brname = brname.slice(0, brname.indexOf('['));
 
       // special case when branch name includes STL map name
-      if ((search.indexOf(brname) !== 0) && (brname.indexOf('<') > 0)) {
+      if (search.indexOf(brname) && (brname.indexOf('<') > 0)) {
          const p1 = brname.indexOf('<'), p2 = brname.lastIndexOf('>');
          brname = brname.slice(0, p1) + brname.slice(p2 + 1);
       }
@@ -121138,7 +121162,7 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
          break;
       }
 
-      if (search.indexOf(brname) !== 0)
+      if (search.indexOf(brname))
          continue;
 
       // this is a case when branch name is in the begin of the search string
@@ -121148,10 +121172,9 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
       if (brname[pnt - 1] === '.') pnt--;
       if (search[pnt] !== '.') continue;
 
-      res = findBranchComplex(tree, search, lst.arr[n].fBranches);
-      if (!res) res = findBranchComplex(tree, search.slice(pnt + 1), lst.arr[n].fBranches);
-
-      if (!res) res = { branch: lst.arr[n], rest: search.slice(pnt) };
+      res = findBranchComplex(tree, search, lst.arr[n].fBranches) ||
+            findBranchComplex(tree, search.slice(pnt + 1), lst.arr[n].fBranches) ||
+            { branch: lst.arr[n], rest: search.slice(pnt) };
 
       break;
    }
@@ -121283,7 +121306,7 @@ class TDrawVariable {
 
          // now extract all levels of iterators
          while (pos2 < code.length) {
-            if ((code[pos2] === '@') && (code.slice(pos2, pos2 + 5) === '@size') && (arriter.length === 0)) {
+            if ((code[pos2] === '@') && (code.slice(pos2, pos2 + 5) === '@size') && !arriter.length) {
                pos2 += 5;
                branch_mode = true;
                break;
@@ -121310,7 +121333,7 @@ class TDrawVariable {
                if (code[pos2] === '(') { pos2 = prev - 1; break; }
 
                // this is selection of member, but probably we need to activate iterator for ROOT collection
-               if (arriter.length === 0) {
+               if (!arriter.length) {
                   // TODO: if selected member is simple data type - no need to make other checks - just break here
                   if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
                      arriter.push(undefined);
@@ -121355,7 +121378,7 @@ class TDrawVariable {
             pos2++;
          }
 
-         if (arriter.length === 0)
+         if (!arriter.length)
             arriter = undefined;
          else if ((arriter.length === 1) && (arriter[0] === undefined))
             arriter = true;
@@ -121392,7 +121415,7 @@ class TDrawVariable {
    }
 
    /** @summary Check if it is dummy variable */
-   is_dummy() { return (this.branches.length === 0) && !this.func; }
+   is_dummy() { return !this.branches.length && !this.func; }
 
    /** @summary Produce variable
      * @desc after reading tree branches into the object, calculate variable value */
@@ -121798,8 +121821,7 @@ class TDrawSelector extends TSelector {
          this.leaf = args.leaf;
 
          // branch object remains, therefore we need to copy fields to see them all
-         this.copy_fields = ((args.branch.fLeaves && (args.branch.fLeaves.arr.length > 1)) ||
-            (args.branch.fBranches && (args.branch.fBranches.arr.length > 0))) && !args.leaf;
+         this.copy_fields = ((args.branch.fLeaves?.arr.length > 1) || args.branch.fBranches?.arr.length) && !args.leaf;
 
          this.addBranch(branch, 'br0', args.direct_branch); // add branch
 
@@ -122188,7 +122210,7 @@ class TDrawSelector extends TSelector {
                var1 = this.vars[1],
                var2 = this.vars[2],
                len = this.tgtarr.br0.length;
-         if ((var0.buf.length === 0) && (len >= this.arr_limit) && !this.graph) {
+         if (!var0.buf.length && (len >= this.arr_limit) && !this.graph) {
             // special use case - first array large enough to create histogram directly base on it
             var0.buf = this.tgtarr.br0;
             if (var1) var1.buf = this.tgtarr.br1;
@@ -122729,9 +122751,8 @@ async function treeProcess(tree, selector, args) {
             newtgt[l] = target_object[l];
          newtgt[newtgt.length - 1] = { name: target_name, lst: makeMethodsList(object_class) };
 
-         if (!scanBranches(branch.fBranches, newtgt, 0)) return null;
-
-         return item; // this kind of branch does not have baskets and not need to be read
+         // this kind of branch does not have baskets and not need to be read
+         return scanBranches(branch.fBranches, newtgt, 0) ? item : null;
       } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID === -1)) {
          elem = createStreamerElement(target_name, branch.fClassName);
 
@@ -123107,7 +123128,7 @@ async function treeProcess(tree, selector, args) {
 
             const branch = bitems[n].branch;
 
-            if (places.length === 0)
+            if (!places.length)
                filename = branch.fFileName;
             else if (filename !== branch.fFileName)
                continue;
@@ -123117,7 +123138,7 @@ async function treeProcess(tree, selector, args) {
             places.push(branch.fBasketSeek[bitems[n].basket], branch.fBasketBytes[bitems[n].basket]);
          }
 
-         return places.length > 0 ? { places, filename } : null;
+         return places.length ? { places, filename } : null;
       }
 
       function readProgress(value) {
@@ -123332,7 +123353,7 @@ async function treeProcess(tree, selector, args) {
    processBaskets = function(bitems) {
       // this is call-back when next baskets are read
 
-      if ((handle.selector._break !== 0) || (bitems === null)) {
+      if (handle.selector._break || (bitems === null)) {
          handle.selector.Terminate(false);
          return resolveFunc(handle.selector);
       }
@@ -123392,7 +123413,7 @@ async function treeProcess(tree, selector, args) {
                if (handle.process_entries !== undefined) {
                   elem.selected_baskets.shift();
                   // -1 means that basket is not yet found for following entries
-                  elem.curr_basket = (elem.selected_baskets.length > 0) ? elem.selected_baskets[0] : -1;
+                  elem.curr_basket = elem.selected_baskets.length ? elem.selected_baskets[0] : -1;
                }
             }
 
@@ -123531,7 +123552,8 @@ function treeIOTest(tree, args) {
    const branches = [], names = [], nchilds = [];
 
    function collectBranches(obj, prntname = '') {
-      if (!obj?.fBranches) return 0;
+      if (!obj?.fBranches)
+         return 0;
 
       let cnt = 0;
 
@@ -123676,7 +123698,7 @@ function treeHierarchy(tree_node, obj) {
             const object_class = getBranchObjectClass(bobj, bobj.$tree, true),
                   methods = object_class ? getMethods(object_class) : null;
 
-            if (methods && (bobj.fBranches.arr.length > 0)) {
+            if (methods && bobj.fBranches.arr.length) {
                for (const key in methods) {
                   if (!isFunc(methods[key])) continue;
                   const s = methods[key].toString();
@@ -123721,8 +123743,7 @@ function treeHierarchy(tree_node, obj) {
    tree_node._childs = [];
    tree_node._tree = obj;  // set reference, will be used later by TTree::Draw
 
-   for (let i = 0; i < obj.fBranches.arr?.length; ++i)
-      createBranchItem(tree_node, obj.fBranches.arr[i], obj);
+   obj.fBranches?.arr.forEach(branch => createBranchItem(tree_node, branch, obj));
 
    return true;
 }
@@ -162765,7 +162786,7 @@ function folderHierarchy(item, obj) {
    if (!obj?.fFolders)
       return false;
 
-   if (obj.fFolders.arr.length === 0) {
+   if (!obj.fFolders.arr.length) {
       item._more = false;
       return true;
    }
@@ -162789,14 +162810,15 @@ function listHierarchy(folder, lst) {
    if (!isRootCollection(lst))
       return false;
 
-   if ((lst.arr === undefined) || (lst.arr.length === 0)) {
+   if (!lst.arr?.length) {
       folder._more = false;
       return true;
    }
 
    let do_context = false, prnt = folder;
    while (prnt) {
-      if (prnt._do_context) do_context = true;
+      if (prnt._do_context)
+         do_context = true;
       prnt = prnt._parent;
    }
 
@@ -163071,7 +163093,7 @@ function objectHierarchy(top, obj, args = undefined) {
          if (isArrayProto(proto) > 0) {
             item._title = 'array len=' + fld.length;
             simple = (proto !== '[object Array]');
-            if (fld.length === 0) {
+            if (!fld.length) {
                item._value = '[ ]';
                item._more = false; // hpainter will not try to expand again
             } else {
@@ -163125,7 +163147,7 @@ function objectHierarchy(top, obj, args = undefined) {
                      if (isRootCollection(fld) && isObject(fld.arr)) {
                         item._value = fld.arr.length ? '[...]' : '[]';
                         item._title += ', size:' + fld.arr.length;
-                        if (fld.arr.length > 0) item._more = true;
+                        if (fld.arr.length) item._more = true;
                      } else {
                         item._more = true;
                         item._value = '{ }';
@@ -163173,7 +163195,7 @@ function taskHierarchy(item, obj) {
 
    objectHierarchy(item, obj, { exclude: ['fTasks', 'fName'] });
 
-   if ((obj.fTasks.arr.length === 0) && (item._childs.length === 0)) {
+   if (!obj.fTasks.arr.length && !item._childs.length) {
       item._more = false;
       return true;
    }
@@ -163331,7 +163353,7 @@ function parseAsArray(val) {
       }
    }
 
-   if (res.length === 0)
+   if (!res.length)
       res.push(val.slice(1, val.length - 1).trim());
 
    return res;
@@ -163679,7 +163701,7 @@ class HierarchyPainter extends BasePainter {
       for (let n = 0; n < (hitem._numargs ?? 0); ++n)
          cmdargs.push(n < userargs.length ? userargs[n] : '');
 
-      const promise = (cmdargs.length === 0) || !elem
+      const promise = !cmdargs.length || !elem
                        ? Promise.resolve(cmdargs)
                        : createMenu().then(menu => menu.showCommandArgsDialog(hitem._name, cmdargs));
 
@@ -164549,11 +164571,11 @@ class HierarchyPainter extends BasePainter {
                if (settings.NewTabUrlExportSettings) {
                   if (gStyle.fOptStat !== 1111)
                      arg0 += `&optstat=${gStyle.fOptStat}`;
-                  if (gStyle.fOptFit !== 0)
+                  if (gStyle.fOptFit)
                      arg0 += `&optfit=${gStyle.fOptFit}`;
-                  if (gStyle.fOptDate !== 0)
+                  if (gStyle.fOptDate)
                      arg0 += `&optdate=${gStyle.fOptDate}`;
-                  if (gStyle.fOptFile !== 0)
+                  if (gStyle.fOptFile)
                      arg0 += `&optfile=${gStyle.fOptFile}`;
                   if (gStyle.fOptTitle !== 1)
                      arg0 += `&opttitle=${gStyle.fOptTitle}`;
@@ -164973,7 +164995,7 @@ class HierarchyPainter extends BasePainter {
      * @return {Promise} when drawing finished
      * @private */
    async displayItems(items, options) {
-      if (!items || (items.length === 0))
+      if (!items?.length)
          return true;
 
       const h = this;
@@ -165023,7 +165045,7 @@ class HierarchyPainter extends BasePainter {
             items[i] = dropitems[i].shift();
          }
 
-         if (dropitems[i] && dropitems[i].length > 0) {
+         if (dropitems[i]?.length) {
             // allow to specify _same_ item in different file
             for (let j = 0; j < dropitems[i].length; ++j) {
                const pos = dropitems[i][j].indexOf('_same_');
@@ -165069,14 +165091,15 @@ class HierarchyPainter extends BasePainter {
          dropitems.splice(n, 1);
       }
 
-      if (items.length === 0)
+      if (!items.length)
          return true;
 
       const frame_names = new Array(items.length), items_wait = new Array(items.length);
       for (let n = 0; n < items.length; ++n) {
          items_wait[n] = 0;
          let fname = items[n], k = 0;
-         if (items.indexOf(fname) < n) items_wait[n] = true; // if same item specified, one should wait first drawing before start next
+         if (items.indexOf(fname) < n)
+            items_wait[n] = true; // if same item specified, one should wait first drawing before start next
          const p = options[n].indexOf('frameid:');
          if (p >= 0) {
             fname = options[n].slice(p+8);
@@ -165110,14 +165133,14 @@ class HierarchyPainter extends BasePainter {
 
          // Than create empty frames for each item
          for (let i = 0; i < items.length; ++i) {
-            if (options[i].indexOf('update:') !== 0) {
+            if (options[i].indexOf('update:')) {
                mdi.createFrame(frame_names[i]);
                doms[i] = 'frame:' + frame_names[i];
             }
          }
 
          function dropNextItem(indx, painter) {
-            if (painter && dropitems[indx] && (dropitems[indx].length > 0))
+            if (painter && dropitems[indx]?.length)
                return h.dropItem(dropitems[indx].shift(), painter.getDom(), dropopts[indx].shift()).then(() => dropNextItem(indx, painter));
 
             dropitems[indx] = null; // mark that all drop items are processed
@@ -165190,7 +165213,7 @@ class HierarchyPainter extends BasePainter {
        find_next = (itemname, prev_found) => {
          if (itemname === undefined) {
             // extract next element
-            if (items.length === 0)
+            if (!items.length)
                return mark_active();
             itemname = items.shift();
          }
@@ -165538,7 +165561,7 @@ class HierarchyPainter extends BasePainter {
                });
             }
          }
-         if (h._childs.length > 0)
+         if (h._childs.length)
             this.h = h;
          return true;
       });
@@ -165670,7 +165693,7 @@ class HierarchyPainter extends BasePainter {
             }
          }
 
-         if (!req && (item._kind.indexOf(prROOT) !== 0))
+         if (!req && item._kind.indexOf(prROOT))
            req = 'item.json.gz?compact=3';
       }
 
@@ -165981,7 +166004,7 @@ class HierarchyPainter extends BasePainter {
       const lst = cleanup(frame);
 
       // we remove all painters references from items
-      if (lst.length > 0) {
+      if (lst.length) {
          this.forEachItem(item => {
             if (item._painter && lst.indexOf(item._painter) >= 0)
                delete item._painter;
@@ -166139,7 +166162,7 @@ class HierarchyPainter extends BasePainter {
 
       getOptionAsArray = opt => {
          let res = getUrlOptionAsArray(opt);
-         if (res.length > 0 || !gui_div || gui_div.empty())
+         if (res.length || !gui_div || gui_div.empty())
             return res;
          while (opt) {
             const separ = opt.indexOf(';');
@@ -166212,7 +166235,7 @@ class HierarchyPainter extends BasePainter {
       if (title && (typeof document !== 'undefined'))
          document.title = title;
 
-      if (expanditems.length === 0 && (getOption('expand') === ''))
+      if (!expanditems.length && (getOption('expand') === ''))
          expanditems.push('');
 
       if (filesdir) {
@@ -166222,7 +166245,7 @@ class HierarchyPainter extends BasePainter {
             jsonarr[i] = filesdir + jsonarr[i];
       }
 
-      if ((itemsarr.length === 0) && ((getOption('item') === '') || ((jsonarr.length === 1) && (expanditems.length === 0))))
+      if (!itemsarr.length && ((getOption('item') === '') || (jsonarr.length === 1 && !expanditems.length)))
          itemsarr.push('');
 
       if (!this.disp_kind) {
@@ -166279,15 +166302,15 @@ class HierarchyPainter extends BasePainter {
             promise = this.createBrowser(browser_kind); browser_kind = '';
          } else if (status !== null) {
             promise = this.createStatusLine(statush, status); status = null;
-         } else if (jsonarr.length > 0)
+         } else if (jsonarr.length)
             promise = this.openJsonFile(jsonarr.shift());
-         else if (filesarr.length > 0)
+         else if (filesarr.length)
             promise = this.openRootFile(filesarr.shift());
          else if (dir) {
             promise = this.listServerDir(dir); dir = '';
-         } else if (expanditems.length > 0)
+         } else if (expanditems.length)
             promise = this.expandItem(expanditems.shift());
-         else if (style.length > 0)
+         else if (style.length)
             promise = this.applyStyle(style.shift());
          else {
             return this.refreshHtml()
@@ -166331,10 +166354,10 @@ class HierarchyPainter extends BasePainter {
             if (('_monitoring' in this.h) && !monitor)
                monitor = this.h._monitoring;
 
-            if (this.h._loadfile && (filesarr.length === 0))
+            if (this.h._loadfile && !filesarr.length)
                filesarr = parseAsArray(this.h._loadfile);
 
-            if (('_drawitem' in this.h) && (itemsarr.length === 0)) {
+            if (('_drawitem' in this.h) && !itemsarr.length) {
                itemsarr = parseAsArray(this.h._drawitem);
                optionsarr = parseAsArray(this.h._drawopt);
             }
@@ -166650,7 +166673,7 @@ async function drawInspector(dom, obj, opt) {
 
    if (isStr(opt) && opt.indexOf(kInspect) === 0) {
       opt = opt.slice(kInspect.length);
-      if (opt.length > 0)
+      if (opt)
          expand_level = Number.parseInt(opt);
    }
 
@@ -166896,7 +166919,7 @@ function readStyleFromURL(url) {
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
-      return gStyle[field] !== 0;
+      return gStyle[field];
    }
    function get_float_style(name, field) {
       if (!d.has(name)) return;
@@ -167468,8 +167491,8 @@ async function drawPolyMarker3D$1() {
           (fP[i+2] < fp.scale_zmin) || (fP[i+2] > fp.scale_zmax)) continue;
 
       if (step > 1) {
-         select = (select+1) % step;
-         if (select !== 0) continue;
+         select = (select + 1) % step;
+         if (select) continue;
       }
 
       index[icnt++] = i;
@@ -169216,7 +169239,7 @@ class TGraphDelaunay {
             dd1 = (dx2*dy1-dx1*dy2);
             dd2 = (dx1*dy2-dx2*dy1);
 
-            if (dd1*dd2 !== 0) {
+            if (dd1 * dd2) {
                u = (dx2*dy3-dx3*dy2)/dd1;
                v = (dx1*dy3-dx3*dy1)/dd2;
                if ((u < 0) || (v < 0)) {
@@ -169432,7 +169455,7 @@ class TGraphDelaunay {
                      a = 0;
                      b = 0;
                   }
-                  if (a !== 0) {
+                  if (a) {
                      // point z is colinear with 2 of the triangle points, if it lies
                      // between them it's in the circle otherwise it's outside
                      if (this.fXN[a] !== this.fXN[b]) {
@@ -170253,7 +170276,7 @@ class TGraph2DPainter extends ObjectPainter {
 
             if (step > 1) {
                select = (select+1) % step;
-               if (select !== 0) continue;
+               if (select) continue;
             }
 
             index[icnt++] = i; // remember point index for tooltip
@@ -172223,8 +172246,8 @@ class TRatioPlotPainter extends ObjectPainter {
             xmin = up_fp.xmin;
             xmax = up_fp.xmax;
          } else {
-            if (xmin < up_fp.xmin) xmin = up_fp.xmin;
-            if (xmax > up_fp.xmax) xmax = up_fp.xmax;
+            xmin = Math.min(xmin, up_fp.xmin);
+            xmax = Math.max(xmax, up_fp.xmax);
          }
          this._ratio_painter.setGridsRange(xmin, xmax, ymin, ymax);
          return this._ratio_up_fp.o_zoom(xmin, xmax).then(() => this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax));
@@ -172293,7 +172316,7 @@ class TRatioPlotPainter extends ObjectPainter {
          const arr = [];
 
          // add missing lines in old ratio painter
-         if ((ratio.fGridlinePositions.length > 0) && (ratio.fGridlines.length < ratio.fGridlinePositions.length)) {
+         if (ratio.fGridlinePositions.length && (ratio.fGridlines.length < ratio.fGridlinePositions.length)) {
             ratio.fGridlinePositions.forEach(gridy => {
                let found = false;
                ratio.fGridlines.forEach(line => {
@@ -175540,7 +175563,7 @@ class RAxisPainter extends RObjectPainter {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind === kAxisNormal) && !this.log && (handle.major.length > 0)) {
+      if ((this.kind === kAxisNormal) && !this.log && handle.major.length) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
@@ -175888,7 +175911,7 @@ class RAxisPainter extends RObjectPainter {
      * @return {Promise} with gaps in both direction */
    async drawLabels(axis_g, side, gaps) {
       const center_lbls = this.isCenteredLabels(),
-            rotate_lbls = this.labelsFont.angle !== 0,
+            rotate_lbls = Boolean(this.labelsFont.angle),
             label_g = axis_g.append('svg:g').attr('class', 'axis_labels').property('side', side),
             lbl_pos = this.handle.lbl_pos || this.handle.major;
       let textscale = 1, maxtextlen = 0, lbls_tilt = false,
@@ -178323,7 +178346,7 @@ class RPadPainter extends RObjectPainter {
       if (this.#doing_draw === undefined)
          return console.warn('failure, should not happen');
       this.#doing_draw.shift();
-      if (this.#doing_draw.length === 0)
+      if (!this.#doing_draw.length)
          this.#doing_draw = undefined;
       else {
          const entry = this.#doing_draw[0];
@@ -179197,7 +179220,7 @@ class RPadPainter extends RObjectPainter {
 
       this._buttons.push({ btn, tooltip, funcname, keyname });
 
-      if (!this.isTopPad() && (funcname.indexOf('Pad') !== 0) && (funcname !== 'enlargePad')) {
+      if (!this.isTopPad() && funcname.indexOf('Pad') && (funcname !== 'enlargePad')) {
          const cp = this.getCanvPainter();
          if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
       }
@@ -180224,7 +180247,7 @@ registerMethods(`${nsREX}RPalette`, {
          this.fContour.push(this.colzmax);
          this.fCustomContour = true;
       } else {
-         if ((this.colzmin === this.colzmax) && (this.colzmin !== 0)) {
+         if ((this.colzmin === this.colzmax) && this.colzmin) {
             this.colzmax += 0.01*Math.abs(this.colzmax);
             this.colzmin -= 0.01*Math.abs(this.colzmin);
          }

@@ -51,7 +51,7 @@ class TH3Painter extends THistPainter {
       if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
 
-      this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
+      this.draw_content = this.gmaxbin || this.gminbin;
 
       this.transferFunc = this.findFunction(clTF1, 'TransferFunction');
       this.transferFunc?.SetBit(BIT(9), true); // TF1::kNotDraw
@@ -164,19 +164,19 @@ class TH3Painter extends THistPainter {
                stddev4y = Math.pow(res.rmsy, 4),
                stddev4z = Math.pow(res.rmsz, 4);
 
-         if (np * stddev3x !== 0)
+         if (np * stddev3x)
             res.skewx = sumx3 / (np * stddev3x);
-         if (np * stddev3y !== 0)
+         if (np * stddev3y)
             res.skewy = sumy3 / (np * stddev3y);
-         if (np * stddev3z !== 0)
+         if (np * stddev3z)
             res.skewz = sumz3 / (np * stddev3z);
          res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
 
-         if (np * stddev4x !== 0)
+         if (np * stddev4x)
             res.kurtx = sumx4 / (np * stddev4x) - 3;
-         if (np * stddev4y !== 0)
+         if (np * stddev4y)
             res.kurty = sumy4 / (np * stddev4y) - 3;
-         if (np * stddev4z !== 0)
+         if (np * stddev4z)
             res.kurtz = sumz4 / (np * stddev4z) - 3;
          res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
       }

@@ -691,7 +691,7 @@ class HistContour {
          this.arr.push(this.colzmax);
          this.custom = true;
       } else {
-         if ((this.colzmin === this.colzmax) && (this.colzmin !== 0)) {
+         if ((this.colzmin === this.colzmax) && this.colzmin) {
             this.colzmax += 0.01*Math.abs(this.colzmax);
             this.colzmin -= 0.01*Math.abs(this.colzmin);
          }
@@ -829,10 +829,10 @@ class FunctionsHandler {
       }
 
       // remove all function which are not found in new list of functions
-      if (painters.length > 0)
+      if (painters.length)
          pp?.cleanPrimitives(p => painters.indexOf(p) >= 0);
 
-      if (update_painters.length > 0)
+      if (update_painters.length)
          this.#extra_painters = update_painters;
    }
 
@@ -840,7 +840,7 @@ class FunctionsHandler {
    drawNext(indx) {
       if (this.#extra_painters) {
          const p = this.#extra_painters.shift();
-         if (this.#extra_painters.length === 0)
+         if (!this.#extra_painters.length)
             this.#extra_painters = undefined;
          return getPromise(p.redraw()).then(() => this.drawNext(0));
       }
@@ -2011,7 +2011,7 @@ class THistPainter extends ObjectPainter {
          cntr.createNormal(nlevels, logv ?? 0, zminpositive);
       }
 
-      cntr.configIndicies(this.options.Zero && !is_th2poly ? -1 : 0, (cntr.colzmin !== 0) || !this.options.Zero || is_th2poly ? 0 : -1);
+      cntr.configIndicies(this.options.Zero && !is_th2poly ? -1 : 0, cntr.colzmin || !this.options.Zero || is_th2poly ? 0 : -1);
 
       if (fp && (ndim < 3) && !fp.mode3d) {
          fp.zmin = cntr.colzmin;

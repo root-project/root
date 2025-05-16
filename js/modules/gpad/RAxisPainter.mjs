@@ -288,7 +288,7 @@ class RAxisPainter extends RObjectPainter {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind === kAxisNormal) && !this.log && (handle.major.length > 0)) {
+      if ((this.kind === kAxisNormal) && !this.log && handle.major.length) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
@@ -636,7 +636,7 @@ class RAxisPainter extends RObjectPainter {
      * @return {Promise} with gaps in both direction */
    async drawLabels(axis_g, side, gaps) {
       const center_lbls = this.isCenteredLabels(),
-            rotate_lbls = this.labelsFont.angle !== 0,
+            rotate_lbls = Boolean(this.labelsFont.angle),
             label_g = axis_g.append('svg:g').attr('class', 'axis_labels').property('side', side),
             lbl_pos = this.handle.lbl_pos || this.handle.major;
       let textscale = 1, maxtextlen = 0, lbls_tilt = false,

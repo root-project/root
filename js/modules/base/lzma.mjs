@@ -121,7 +121,7 @@ function $CopyBlock(this$static, distance, len) {
    if (pos < 0)
       pos += this$static._windowSize;
 
-   for (; len !== 0; --len) {
+   for (; len; --len) {
       if (pos >= this$static._windowSize)
          pos = 0;
 
@@ -485,7 +485,7 @@ function $BitTreeDecoder(this$static, numBitLevels) {
 
 function $Decode_0(this$static, rangeDecoder) {
    let m = 1;
-   for (let bitIndex = this$static.NumBitLevels; bitIndex !== 0; --bitIndex)
+   for (let bitIndex = this$static.NumBitLevels; bitIndex; --bitIndex)
       m = (m << 1) + $DecodeBit(rangeDecoder, this$static.Models, m);
 
    return m - (1 << this$static.NumBitLevels);
@@ -538,7 +538,7 @@ function $DecodeBit(this$static, probs, index) {
 
 function $DecodeDirectBits(this$static, numTotalBits) {
    let i, t, result = 0;
-   for (i = numTotalBits; i !== 0; --i) {
+   for (i = numTotalBits; i; --i) {
       this$static.Range >>>= 1;
       t = this$static.Code - this$static.Range >>> 31;
       this$static.Code -= this$static.Range & t - 1;

@@ -824,8 +824,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       // only left-button is considered
-      if ((evnt.button!==undefined) && (evnt.button !== 0)) return;
-      if ((evnt.buttons!==undefined) && (evnt.buttons !== 1)) return;
+      if ((evnt.button !== undefined) && (evnt.button !== 0)) return;
+      if ((evnt.buttons !== undefined) && (evnt.buttons !== 1)) return;
 
       if (control.enable_zoom) {
          control.mouse_zoom_mesh = control.detectZoomMesh(evnt);

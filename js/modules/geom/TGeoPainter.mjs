@@ -877,7 +877,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Modify visibility of provided node by name */
    modifyVisisbility(name, sign) {
-      if (getNodeKind(this.getGeometry()) !== 0)
+      if (getNodeKind(this.getGeometry()) !== kindGeo)
          return;
 
       if (!name)
@@ -1691,7 +1691,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Should be called when configuration of highlight is changed */
    changedHighlight(arg) {
       if (arg !== undefined) {
-         this.ctrl.highlight = arg !== 0;
+         this.ctrl.highlight = Boolean(arg);
          if (this.ctrl.highlight)
             this.ctrl.highlight_bloom = (arg === 2);
       }
@@ -2354,7 +2354,7 @@ class TGeoPainter extends ObjectPainter {
             for (let n = 0; n < del.length; ++n)
                this.#clones.createObject3D(del[n].stack, this.#toplevel, 'delete_mesh');
 
-            if (del.length > 0)
+            if (del.length)
                this.#drawing_log = `Delete ${del.length} nodes`;
          }
 
@@ -2536,7 +2536,7 @@ class TGeoPainter extends ObjectPainter {
       }
 
       // remember additional nodes only if they include shape - otherwise one can ignore them
-      if (real_nodes.length > 0)
+      if (real_nodes.length)
          this.#more_nodes = real_nodes;
 
       if (!from_drawing)
@@ -3801,7 +3801,8 @@ class TGeoPainter extends ObjectPainter {
 
       if (!prnt) {
          prnt = this.getGeometry();
-         if (!prnt && (getNodeKind(prnt) !== 0)) return null;
+         if (!prnt && (getNodeKind(prnt) !== kindGeo))
+            return null;
          itemname = this.#geo_manager ? prnt.fName : '';
          first_level = true;
          volumes = [];
@@ -3854,7 +3855,7 @@ class TGeoPainter extends ObjectPainter {
       if (this.#geo_manager)
          result.prefix = result.obj.fName;
 
-      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== 0))
+      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== kindGeo))
          return result;
 
       const mgr = {
@@ -4407,7 +4408,7 @@ class TGeoPainter extends ObjectPainter {
                   origin = this.#build_shapes[n];
 
             if (item.buf_pos && item.buf_norm) {
-               if (item.buf_pos.length === 0)
+               if (!item.buf_pos.length)
                   origin.geom = null;
                 else if (item.buf_pos.length !== item.buf_norm.length) {
                   console.error(`item.buf_pos.length ${item.buf_pos.length} !== item.buf_norm.length ${item.buf_norm.length}`);
@@ -4952,7 +4953,7 @@ class TGeoPainter extends ObjectPainter {
             container.add(helper);
          }
       }
-      if (panels.length === 0)
+      if (!panels.length)
          panels = null;
 
       if (this.#last_clip_cfg !== clip_cfg)
@@ -5647,7 +5648,7 @@ function provideMenu(menu, item, hpainter) {
       menu.addchk(obj.fRnrSelf, 'Visible', 'self', toggleEveVisibility);
       const res = scanEveVisible(obj, undefined, true);
       if (res.hidden + res.visible > 0)
-         menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', toggleEveVisibility);
+         menu.addchk((res.hidden === 0), 'Daughters', res.hidden ? 'true' : 'false', toggleEveVisibility);
    } else {
       const stack = drawitem?._painter?.getClones()?.findStackByName(fullname),
             phys_vis = stack ? drawitem._painter.getClones().getPhysNodeVisibility(stack) : null,

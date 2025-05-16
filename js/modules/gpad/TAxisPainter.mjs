@@ -258,7 +258,8 @@ const AxisPainterMethods = {
             const pow = Math.log10(val) / Math.log10(this.logbase);
             if (Math.abs(Math.round(pow) - pow) < 0.01) arr2.push(val);
          });
-         if (arr2.length > 0) arr = arr2;
+         if (arr2.length)
+            arr = arr2;
       }
 
       return arr;
@@ -348,7 +349,7 @@ const AxisPainterMethods = {
             else if (item.max + delta_shift > gmax)
                delta_shift = gmax - item.max;
 
-            if (delta_shift !== 0) {
+            if (delta_shift) {
                item.min += delta_shift;
                item.max += delta_shift;
              } else {
@@ -581,7 +582,7 @@ class TAxisPainter extends ObjectPainter {
 
          if (axis?.fNbins && axis?.fLabels) {
             if ((axis.fNbins !== Math.round(axis.fXmax - axis.fXmin)) ||
-                (axis.fXmin !== 0) || (axis.fXmax !== axis.fNbins))
+                axis.fXmin || (axis.fXmax !== axis.fNbins))
                this.regular_labels = false;
          }
 
@@ -730,7 +731,7 @@ class TAxisPainter extends ObjectPainter {
       this.ndig = 0;
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
-      if (((this.kind === kAxisNormal) || (this.kind === kAxisFunc)) && !this.log && (handle.major.length > 0)) {
+      if (((this.kind === kAxisNormal) || (this.kind === kAxisFunc)) && !this.log && handle.major.length) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp && !this.cutLabels()) {
@@ -1342,7 +1343,7 @@ class TAxisPainter extends ObjectPainter {
       this.extractDrawAttributes(undefined, w, h);
 
       if (this.is_gaxis)
-         draw_lines = axis.fLineColor !== 0;
+         draw_lines = Boolean(axis.fLineColor);
 
       if (!this.is_gaxis || (this.name === 'zaxis')) {
          axis_g = layer.selectChild(`.${this.name}_container`);

@@ -73,7 +73,8 @@ class TAttLineHandler {
          this.excl_width = width;
       if (side !== undefined) {
          this.excl_side = side;
-         if ((this.excl_width === 0) && (this.excl_side !== 0)) this.excl_width = 20;
+         if ((this.excl_width === 0) && this.excl_side)
+            this.excl_width = 20;
       }
       this.changed = true;
    }
