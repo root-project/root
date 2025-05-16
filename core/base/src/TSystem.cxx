@@ -1079,6 +1079,7 @@ const char *TSystem::UnixPathName(const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Concatenate a directory and a file name. User must delete returned string.
+/// \deprecated Consider replacing with TSystem::PrependPathName
 
 char *TSystem::ConcatFileName(const char *dir, const char *name)
 {
