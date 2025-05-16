@@ -30,7 +30,7 @@ int execInitOrder()
       std::cerr << "Could not find the TClass for Derived\n";
       return 2;
    }
-   if(!cl->GetClassInfo()) {
+   if (!cl->GetClassInfo()) {
       std::cerr << "No ClassInfo found by TClass for Derived\n";
       return 3;
    }
