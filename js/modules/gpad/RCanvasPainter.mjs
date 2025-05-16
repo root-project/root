@@ -918,7 +918,7 @@ registerMethods(`${nsREX}RPalette`, {
          this.fContour.push(this.colzmax);
          this.fCustomContour = true;
       } else {
-         if ((this.colzmin === this.colzmax) && (this.colzmin !== 0)) {
+         if ((this.colzmin === this.colzmax) && this.colzmin) {
             this.colzmax += 0.01*Math.abs(this.colzmax);
             this.colzmin -= 0.01*Math.abs(this.colzmin);
          }

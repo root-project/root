@@ -806,7 +806,7 @@ class ObjectPainter extends BasePainter {
      * @private */
    async interactiveRedraw(arg, info, subelem) {
       let reason, res;
-      if (isStr(info) && (info.indexOf('exec:') !== 0))
+      if (isStr(info) && info.indexOf('exec:'))
          reason = info;
 
       if (arg === 'pad')

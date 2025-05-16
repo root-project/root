@@ -1438,7 +1438,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       ticks.push(0, 0, grz, this.z_handle.ticksSize*(is_major ? 1 : 0.6), 0, grz);
    }
 
-   if (zgridx && (zgridx.length > 0)) {
+   if (zgridx?.length) {
       const material = new THREE.LineDashedMaterial({ color: this.x_handle.ticksColor, dashSize: 2, gapSize: 2 }),
             lines1 = createLineSegments(zgridx, material);
 
@@ -1454,7 +1454,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       top.add(lines2);
    }
 
-   if (zgridy && (zgridy.length > 0)) {
+   if (zgridy?.length) {
       const material = new THREE.LineDashedMaterial({ color: this.y_handle.ticksColor, dashSize: 2, gapSize: 2 }),
             lines1 = createLineSegments(zgridy, material);
 
@@ -2284,7 +2284,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
              const faces = pnts.length < 3 ? null : THREE.ShapeUtils.triangulateShape(pnts, []);
 
-             if (!faces || (faces.length === 0))
+             if (!faces?.length)
                return;
 
              if ((lastcolindx < 0) || (lastcolindx !== colindx)) {

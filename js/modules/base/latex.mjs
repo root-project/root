@@ -487,7 +487,7 @@ function parseLatex(node, arg, label, curr) {
          label = label.slice(lbrace.length);
       }
 
-      while ((n !== 0) && (pos < label.length)) {
+      while (n && (pos < label.length)) {
          if (match(lbrace)) {
             n++;
             pos += lbrace.length;
@@ -503,7 +503,7 @@ function parseLatex(node, arg, label, curr) {
             }
          } else pos++;
       }
-      if (n !== 0) {
+      if (n) {
          console.log(`mismatch with open ${lbrace} and closing ${rbrace} in ${label}`);
          return -1;
       }
@@ -1351,7 +1351,7 @@ function translateMath(str, kind, color, painter) {
          let p = str.indexOf('#color[');
          if ((p < 0) && first) { clean = str; break; }
          first = false;
-         if (p !== 0) {
+         if (p) {
             const norm = (p < 0) ? str : str.slice(0, p);
             clean += norm;
             if (p < 0) break;
@@ -1372,7 +1372,8 @@ function translateMath(str, kind, color, painter) {
             else if (str[p] === '}')
                cnt--;
          }
-         if (cnt !== 0) break;
+         if (cnt)
+            break;
 
          const part = str.slice(0, p);
          str = str.slice(p + 1);

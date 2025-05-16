@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '15/05/2025',
+version_date = '16/05/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -142,9 +142,10 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
   * @return {Number} 0 - not array, 1 - regular array, 2 - typed array
   * @private */
 function isArrayProto(proto) {
-    if ((proto.length < 14) || (proto.indexOf('[object ') !== 0)) return 0;
+    if ((proto.length < 14) || proto.indexOf('[object ')) return 0;
     const p = proto.indexOf('Array]');
-    if ((p < 0) || (p !== proto.length - 6)) return 0;
+    if ((p < 0) || (p !== proto.length - 6))
+      return 0;
     // plain array has only '[object Array]', typed array type name inside
     return proto.length === 14 ? 1 : 2;
 }
@@ -595,14 +596,17 @@ function parse(json) {
       if ((value === null) || (value === undefined)) return;
 
       if (isStr(value)) {
-         if (newfmt || (value.length < 6) || (value.indexOf('$ref:') !== 0)) return;
+         if (newfmt || (value.length < 6) || value.indexOf('$ref:'))
+            return;
          const ref = parseInt(value.slice(5));
-         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
+         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length))
+            return;
          newfmt = false;
          return map[ref];
       }
 
-      if (typeof value !== 'object') return;
+      if (typeof value !== 'object')
+         return;
 
       const proto = Object.prototype.toString.apply(value);
 
@@ -810,7 +814,7 @@ function decodeUrl(url) {
    while (url) {
       // try to correctly handle quotes in the URL
       let pos = 0, nq = 0, eq = -1, firstq = -1;
-      while ((pos < url.length) && ((nq !== 0) || ((url[pos] !== '&') && (url[pos] !== '#')))) {
+      while ((pos < url.length) && (nq || ((url[pos] !== '&') && (url[pos] !== '#')))) {
          switch (url[pos]) {
             case '\'': if (nq >= 0) nq = (nq+1) % 2; if (firstq < 0) firstq = pos; break;
             case '"': if (nq <= 0) nq = (nq-1) % 2; if (firstq < 0) firstq = pos; break;
@@ -1039,7 +1043,7 @@ async function injectCode(code) {
 async function loadModules(arg) {
    if (isStr(arg))
       arg = arg.split(';');
-   if (arg.length === 0)
+   if (!arg.length)
       return true;
    return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
 }
@@ -1602,7 +1606,7 @@ function getMethods(typename, obj) {
    // Therefore when methods requested for given object, check also that basic methods are there
    if ((typename === clTObject) || (typename === clTNamed) || (obj?.fBits !== undefined)) {
       if (typeof m.TestBit === 'undefined') {
-         m.TestBit = function(f) { return (this.fBits & f) !== 0; };
+         m.TestBit = function(f) { return Boolean(this.fBits & f); };
          m.InvertBit = function(f) { this.fBits ^= f & 0xffffff; };
          m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
@@ -1857,10 +1861,10 @@ function getMethods(typename, obj) {
          // compute variance in y (eprim2) and standard deviation in y (eprim)
          const contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum**2));
          if (this.fErrorMode === EErrorType.kERRORSPREADI) {
-            if (eprim !== 0) return eprim/Math.sqrt(neff);
+            if (eprim) return eprim / Math.sqrt(neff);
             // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
             // when the std(y) is zero
-            return 1.0/Math.sqrt(12*neff);
+            return 1.0 / Math.sqrt(12*neff);
          }
          // if approximate compute the sums (of w, wy and wy2) using all the bins
          //  when the variance in y is zero

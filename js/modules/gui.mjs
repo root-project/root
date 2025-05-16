@@ -163,7 +163,7 @@ function readStyleFromURL(url) {
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
-      return gStyle[field] !== 0;
+      return gStyle[field];
    }
    function get_float_style(name, field) {
       if (!d.has(name)) return;

@@ -37,8 +37,8 @@ async function drawPolyMarker3D() {
           (fP[i+2] < fp.scale_zmin) || (fP[i+2] > fp.scale_zmax)) continue;
 
       if (step > 1) {
-         select = (select+1) % step;
-         if (select !== 0) continue;
+         select = (select + 1) % step;
+         if (select) continue;
       }
 
       index[icnt++] = i;

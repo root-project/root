@@ -396,7 +396,7 @@ class TGraphDelaunay {
             dd1 = (dx2*dy1-dx1*dy2);
             dd2 = (dx1*dy2-dx2*dy1);
 
-            if (dd1*dd2 !== 0) {
+            if (dd1 * dd2) {
                u = (dx2*dy3-dx3*dy2)/dd1;
                v = (dx1*dy3-dx3*dy1)/dd2;
                if ((u < 0) || (v < 0)) {
@@ -612,7 +612,7 @@ class TGraphDelaunay {
                      a = 0;
                      b = 0;
                   }
-                  if (a !== 0) {
+                  if (a) {
                      // point z is colinear with 2 of the triangle points, if it lies
                      // between them it's in the circle otherwise it's outside
                      if (this.fXN[a] !== this.fXN[b]) {
@@ -1433,7 +1433,7 @@ class TGraph2DPainter extends ObjectPainter {
 
             if (step > 1) {
                select = (select+1) % step;
-               if (select !== 0) continue;
+               if (select) continue;
             }
 
             index[icnt++] = i; // remember point index for tooltip

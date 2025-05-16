@@ -155,7 +155,7 @@ class JSRootMenu {
          if (without_sub)
             name = top_name + ' ' + name;
 
-         if (group.length > 0) {
+         if (group.length) {
             this.sub(name, opts[i], call_back);
             group.forEach(sub => {
                this.add(sub, sub, call_back);
@@ -1188,7 +1188,7 @@ class StandaloneMenu extends JSRootMenu {
       if (name === sEndsub) {
          this.stack.pop();
          curr = this.stack.at(-1);
-         if (curr.at(-1).sub.length === 0)
+         if (!curr.at(-1).sub.length)
             curr.at(-1).sub = undefined;
          return;
       }

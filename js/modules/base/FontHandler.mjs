@@ -64,7 +64,7 @@ async function loadFontFile(fname) {
    }
 
    async function tryNext() {
-      if (locations.length === 0) {
+      if (!locations.length) {
          completeReading(null);
          throw new Error(`Fail to load ${fname} font`);
       }

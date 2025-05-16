@@ -175,7 +175,8 @@ class LongPollSocket {
 
          this.connid = parseInt(res);
          dummy_tmout = 100; // when establishing connection, wait a bit longer to submit dummy package
-         console.log(`Get new longpoll connection with id ${this.connid}`);
+         if (settings.Debug)
+            console.log(`Get new longpoll connection with id ${this.connid}`);
          if (isFunc(this.onopen))
             this.onopen();
       } else if (this.connid === 'close') {
@@ -209,9 +210,10 @@ class LongPollSocket {
 class FileDumpSocket {
 
    #wait_for_file;
+   #receiver;
 
    constructor(receiver) {
-      this.receiver = receiver;
+      this.#receiver = receiver;
       this.protocol = [];
       this.cnt = 0;
       this.sendcnt = 0;
@@ -263,8 +265,8 @@ class FileDumpSocket {
          if (!res) return;
          const p = fname.indexOf('_ch'),
                chid = (p > 0) ? Number.parseInt(fname.slice(p+3, fname.indexOf('.', p))) : 1;
-         if (isFunc(this.receiver.provideData))
-            this.receiver.provideData(chid, res, 0);
+         if (isFunc(this.#receiver?.provideData))
+            this.#receiver.provideData(chid, res, 0);
          setTimeout(() => this.nextOperation(), 10);
       });
    }
@@ -280,19 +282,48 @@ class FileDumpSocket {
 
 class WebWindowHandle {
 
+   #state; // 0 - init, 1 - connected, -1 - closed
+   #kind; // websocket kind - websocket, file, longpoll, rawlongpoll
+   #key; // connection key
+   #token; // connection token (alternative to key)
+   #new_key; // new key for reconnect
+   #can_modify_url; // if widget URL can be modified to store new key
    #ws; // websocket or emulation
+   #href; // widget url
+   #receiver; // receiver of messages
+   #channels; // sub-channels
+   #master; // master connection
+   #channelid; // channel id if this is sub-channel in master connection
    #ask_reload; // flag set when page reload is triggered
    #credits; // configured number of credits
+   #ackn; // number of acknowledged packets, regularly send to server to keep sending
+   #cansend; // number of packets client can send
+   #send_seq; // sequence counter of send messages
+   #recv_seq; // sequence counter of received messages
    #secondary; // true when created as extra connection, not need to use keys
+   #msgqueue; // messages queue
+   #loop_msgqueue; // flag when looping in message queue
+   #timerid; // keep alive timer
+   #next_binary; // set to channel id when next binary message expected
+   #next_binary_hash; // hash of next binary message
+   #wait_first_recv; // first received message via the channel is confirmation of established connection
+   #user_args; // user arguments for web socket
+   #handling_reload; // true when Ctrl-R handler was installed
 
-   constructor(socket_kind, credits) {
-      this.kind = socket_kind;
-      this.state = 0;
+   constructor(socket_kind, credits, master, chid) {
+      this.#kind = socket_kind;
+      this.#state = 0;
       this.#credits = Math.max(3, credits || 10);
-      this.cansend = this.#credits;
-      this.ackn = this.#credits; // this number will be send to server with first message
-      this.send_seq = 1; // sequence counter of send messages
-      this.recv_seq = 0; // sequence counter of received messages
+      this.#cansend = this.#credits;
+      this.#ackn = this.#credits;
+      this.#send_seq = 1;
+      this.#recv_seq = 0;
+
+      if (socket_kind === 'channel') {
+         this.#wait_first_recv = true;
+         this.#master = master;
+         this.#channelid = chid;
+      }
    }
 
    /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
@@ -301,14 +332,23 @@ class WebWindowHandle {
      * @return user arguments object */
    getUserArgs(field) {
       if (field && isStr(field))
-         return isObject(this.user_args) ? this.user_args[field] : undefined;
+         return isObject(this.#user_args) ? this.#user_args[field] : undefined;
 
-      return this.user_args;
+      return this.#user_args;
    }
 
    /** @summary Set user args
      * @desc Normally set via RWebWindow::SetUserArgs() method */
-   setUserArgs(args) { this.user_args = args; }
+   setUserArgs(args) { this.#user_args = args; }
+
+   /** @summary Set key and token
+     * @private */
+   setKeyToken(key, token, can_modify_url) {
+      this.#key = key;
+      this.#token = token;
+      if (can_modify_url !== undefined)
+         this.#can_modify_url = can_modify_url;
+   }
 
    /** @summary Set callbacks receiver.
      * @param {object} obj - object with receiver functions
@@ -316,61 +356,62 @@ class WebWindowHandle {
      * @param {function} obj.onWebsocketOpened - called when connection established
      * @param {function} obj.onWebsocketClosed - called when connection closed
      * @param {function} obj.onWebsocketError - called when get error via the connection */
-   setReceiver(obj) { this.receiver = obj; }
+   setReceiver(obj) { this.#receiver = obj; }
 
    /** @summary Cleanup and close connection. */
    cleanup() {
-      delete this.receiver;
+      this.#receiver = undefined;
       this.close(true);
    }
 
    /** @summary Invoke method in the receiver.
     * @private */
    invokeReceiver(brdcst, method, arg, arg2) {
-      if (this.receiver && isFunc(this.receiver[method]))
-         this.receiver[method](this, arg, arg2);
+      if (this.#receiver && isFunc(this.#receiver[method]))
+         this.#receiver[method](this, arg, arg2);
 
-      if (brdcst && this.channels) {
-         const ks = Object.keys(this.channels);
+      if (brdcst && this.#channels) {
+         const ks = Object.keys(this.#channels);
          for (let n = 0; n < ks.length; ++n)
-            this.channels[ks[n]].invokeReceiver(false, method, arg, arg2);
+            this.#channels[ks[n]].invokeReceiver(false, method, arg, arg2);
       }
    }
 
    /** @summary Provide data for receiver. When no queue - do it directly.
     * @private */
    provideData(chid, msg, len) {
-      if (this.wait_first_recv) {
+      if (this.#wait_first_recv) {
          // here dummy first recv like EMBED_DONE is handled
-         delete this.wait_first_recv;
-         this.state = 1;
+         this.#wait_first_recv = undefined;
+         this.#state = 1;
          return this.invokeReceiver(false, 'onWebsocketOpened');
       }
 
-      if ((chid > 1) && this.channels) {
-         const channel = this.channels[chid];
+      if ((chid > 1) && this.#channels) {
+         const channel = this.#channels[chid];
          if (channel)
             return channel.provideData(1, msg, len);
       }
 
       const force_queue = len && (len < 0);
-      if (!force_queue && (!this.msgqueue || !this.msgqueue.length))
+      if (!force_queue && !this.#msgqueue?.length)
          return this.invokeReceiver(false, 'onWebsocketMsg', msg, len);
 
-      if (!this.msgqueue)
-         this.msgqueue = [];
+      if (!this.#msgqueue)
+         this.#msgqueue = [];
       if (force_queue)
          len = undefined;
 
-      this.msgqueue.push({ ready: true, msg, len });
+      this.#msgqueue.push({ ready: true, msg, len });
    }
 
    /** @summary Reserve entry in queue for data, which is not yet decoded.
     * @private */
    reserveQueueItem() {
-      if (!this.msgqueue) this.msgqueue = [];
+      if (!this.#msgqueue)
+         this.#msgqueue = [];
       const item = { ready: false, msg: null, len: 0 };
-      this.msgqueue.push(item);
+      this.#msgqueue.push(item);
       return item;
    }
 
@@ -386,33 +427,34 @@ class WebWindowHandle {
    /** @summary Process completed messages in the queue
      * @private */
    processQueue() {
-      if (this._loop_msgqueue || !this.msgqueue) return;
-      this._loop_msgqueue = true;
-      while ((this.msgqueue.length > 0) && this.msgqueue[0].ready) {
-         const front = this.msgqueue.shift();
+      if (this.#loop_msgqueue || !this.#msgqueue)
+         return;
+      this.#loop_msgqueue = true;
+      while (this.#msgqueue.length && this.#msgqueue[0].ready) {
+         const front = this.#msgqueue.shift();
          this.invokeReceiver(false, 'onWebsocketMsg', front.msg, front.len);
       }
-      if (this.msgqueue.length === 0)
-         delete this.msgqueue;
-      delete this._loop_msgqueue;
+      if (!this.#msgqueue.length)
+         this.#msgqueue = undefined;
+      this.#loop_msgqueue = undefined;
    }
 
    /** @summary Close connection */
    close(force) {
-      if (this.master) {
-         this.master.send(`CLOSECH=${this.channelid}`, 0);
-         delete this.master.channels[this.channelid];
-         delete this.master;
+      if (this.#master) {
+         this.#master.send(`CLOSECH=${this.#channelid}`, 0);
+         this.#master.removeChannel(this.#channelid);
+         this.#master = undefined;
          return;
       }
 
-      if (this.timerid) {
-         clearTimeout(this.timerid);
-         delete this.timerid;
+      if (this.#timerid) {
+         clearTimeout(this.#timerid);
+         this.#timerid = undefined;
       }
 
-      if (this.#ws && (this.state > 0)) {
-         this.state = force ? -1 : 0; // -1 prevent socket from reopening
+      if (this.#ws && (this.#state > 0)) {
+         this.#state = force ? -1 : 0; // -1 prevent socket from reopening
          this.#ws.onclose = null; // hide normal handler
          this.#ws.close();
          this.#ws = undefined;
@@ -422,38 +464,39 @@ class WebWindowHandle {
    /** @summary Checks number of credits for send operation
      * @param {number} [numsend = 1] - number of required send operations
      * @return true if one allow to send specified number of text message to server */
-   canSend(numsend) { return this.cansend >= (numsend || 1); }
+   canSend(numsend) { return this.#cansend >= (numsend || 1); }
 
    /** @summary Returns number of possible send operations relative to number of credits */
-   getRelCanSend() { return !this.#credits ? 1 : this.cansend / this.#credits; }
+   getRelCanSend() { return !this.#credits ? 1 : this.#cansend / this.#credits; }
 
    /** @summary Send text message via the connection.
      * @param {string} msg - text message to send
      * @param {number} [chid] - channel id, 1 by default, 0 used only for internal communication */
    send(msg, chid) {
-      if (this.master)
-         return this.master.send(msg, this.channelid);
+      if (this.#master)
+         return this.#master.send(msg, this.#channelid);
 
-      if (!this.#ws || (this.state <= 0))
+      if (!this.#ws || (this.#state <= 0))
          return false;
 
       if (!Number.isInteger(chid))
          chid = 1; // when not configured, channel 1 is used - main widget
 
-      if (this.cansend === 0)
+      if (this.#cansend === 0)
          console.error('No credits for send, increase "WebGui.ConnCredits" value on server');
 
-      const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`,
-            hash = this.key && sessionKey ? HMAC(this.key, `${prefix}${msg}`) : 'none';
+      const prefix = `${this.#send_seq++}:${this.#ackn}:${this.#cansend}:${chid}:`,
+            hash = this.#key && sessionKey ? HMAC(this.#key, `${prefix}${msg}`) : 'none';
 
-      this.ackn = 0;
-      this.cansend--; // decrease number of allowed send packets
+      this.#ackn = 0;
+      this.#cansend--; // decrease number of allowed send packets
 
       this.#ws.send(`${hash}:${prefix}${msg}`);
 
-      if ((this.kind === 'websocket') || (this.kind === 'longpoll')) {
-         if (this.timerid) clearTimeout(this.timerid);
-         this.timerid = setTimeout(() => this.keepAlive(), 10000);
+      if ((this.#kind === 'websocket') || (this.#kind === 'longpoll')) {
+         if (this.#timerid)
+            clearTimeout(this.#timerid);
+         this.#timerid = setTimeout(() => this.keepAlive(), 10000);
       }
 
       return true;
@@ -478,7 +521,8 @@ class WebWindowHandle {
       if (!immediate)
          return setTimeout(this.inject.bind(this, msg, chid, true), 0);
 
-      if (chid === undefined) chid = 1;
+      if (chid === undefined)
+         chid = 1;
 
       if (Array.isArray(msg)) {
          for (let k = 0; k < msg.length; ++k)
@@ -492,7 +536,7 @@ class WebWindowHandle {
      * @desc Only for internal use, only when used with web sockets
      * @private */
    keepAlive() {
-      delete this.timerid;
+      this.#timerid = undefined;
       this.send('KEEPALIVE', 0);
    }
 
@@ -505,6 +549,13 @@ class WebWindowHandle {
          window.resizeTo(w, h);
    }
 
+      /** @summary Remove existing channel.
+    * @private */
+   removeChannel(chid) {
+      if (this.#channels)
+         this.#channels[chid] = undefined;
+   }
+
    /** @summary Method open channel, which will share same connection, but can be used independently from main
      * If @param url is provided - creates fully independent instance and perform connection with it
      * @private */
@@ -512,48 +563,48 @@ class WebWindowHandle {
       if (url)
          return this.createNewInstance(url);
 
-      if (this.master)
-         return this.master.createChannel();
+      if (this.#master)
+         return this.#master.createChannel();
 
-      const channel = new WebWindowHandle('channel', this.#credits);
-      channel.wait_first_recv = true; // first received message via the channel is confirmation of established connection
+      if (!this.#channels)
+         this.#channels = { freeid: 2 };
 
-      if (!this.channels) {
-         this.channels = {};
-         this.freechannelid = 2;
-      }
-
-      channel.master = this;
-      channel.channelid = this.freechannelid++;
+      const channel = new WebWindowHandle('channel', this.#credits, this, this.#channels.freeid++);
 
       // register
-      this.channels[channel.channelid] = channel;
+      this.#channels[channel.getChannelId()] = channel;
 
       // now server-side entity should be initialized and init message send from server side!
       return channel;
    }
 
    /** @summary Returns true if socket connected */
-   isConnected() { return this.state > 0; }
+   isConnected() { return this.#state > 0; }
+
+   /** @summary Return websocket kind - like 'websocket' or 'longpoll' */
+   getKind() { return this.#kind; }
+
+   /** @summary Standalone mode without server connection */
+   isStandalone() { return this.#kind === 'file'; }
 
    /** @summary Returns used channel ID, 1 by default */
-   getChannelId() { return this.channelid && this.master ? this.channelid : 1; }
+   getChannelId() { return this.#channelid && this.#master ? this.#channelid : 1; }
 
+   /** @summary Returns true if sub-channel in master connection */
    isChannel() { return this.getChannelId() > 1; }
 
    /** @summary Assign href parameter
      * @param {string} [path] - absolute path, when not specified window.location.url will be used
      * @private */
-   setHRef(path) {
+   setHRef(path, secondary) {
+      this.#secondary = secondary;
       if (isStr(path) && (path.indexOf('?') > 0)) {
-         this.href = path.slice(0, path.indexOf('?'));
+         this.#href = path.slice(0, path.indexOf('?'));
          const d = decodeUrl(path);
-         this.key = d.get('key');
-         this.token = d.get('token');
+         this.setKeyToken(d.get('key'), d.get('token'));
       } else {
-         this.href = path;
-         delete this.key;
-         delete this.token;
+         this.#href = path;
+         this.setKeyToken();
       }
    }
 
@@ -561,9 +612,9 @@ class WebWindowHandle {
      * @param {string} [relative_path] - relative path to the handle
      * @private */
    getHRef(relative_path) {
-      if (!relative_path || !this.kind || !this.href)
-         return this.href;
-      let addr = this.href;
+      if (!relative_path || !this.#kind || !this.#href)
+         return this.#href;
+      let addr = this.#href;
       if (relative_path.indexOf('../') === 0) {
          const ddd = addr.lastIndexOf('/', addr.length - 2);
          addr = addr.slice(0, ddd) + relative_path.slice(2);
@@ -577,13 +628,13 @@ class WebWindowHandle {
     * @private */
    getConnArgs(ntry) {
       let args = '';
-      if (this.key) {
-         const k = HMAC(this.key, `attempt_${ntry}`);
+      if (this.#key) {
+         const k = HMAC(this.#key, `attempt_${ntry}`);
          args += `key=${k}&ntry=${ntry}`;
       }
-      if (this.token) {
+      if (this.#token) {
          if (args) args += '&';
-         args += `token=${this.token}`;
+         args += `token=${this.#token}`;
       }
       return args;
    }
@@ -593,25 +644,23 @@ class WebWindowHandle {
      * @private */
    connect(href) {
       // ignore connect if channel from master connection configured
-      if (this.master && this.channelid)
+      if (this.isChannel())
          return;
 
       this.close();
 
-      if (href) {
-         this.#secondary = true;
-         this.setHRef(href);
-      }
+      if (href)
+         this.setHRef(href, true);
 
-      href = this.href;
+      href = this.#href;
 
       let ntry = 0;
 
       const retry_open = first_time => {
-         if (this.state !== 0)
+         if (this.#state)
             return;
 
-         if (!first_time)
+         if (!first_time && settings.Debug)
             console.log(`try connect window again ${new Date().toString()}`);
 
          if (this.#ws) {
@@ -626,7 +675,7 @@ class WebWindowHandle {
             if (href && href.lastIndexOf('/') > 0)
                href = href.slice(0, href.lastIndexOf('/') + 1);
          }
-         this.href = href;
+         this.#href = href;
          ntry++;
 
          if (first_time && settings.Debug)
@@ -637,11 +686,11 @@ class WebWindowHandle {
 
          let path = href;
 
-         if (this.kind === 'file') {
+         if (this.isStandalone()) {
             path += 'root.filedump';
             this.#ws = new FileDumpSocket(this);
             console.log(`Configure FileDumpSocket ${path}`);
-         } else if ((this.kind === 'websocket') && first_time) {
+         } else if ((this.#kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
             console.log(`Configure websocket ${path}`);
             path += '?' + this.getConnArgs(ntry);
@@ -649,7 +698,7 @@ class WebWindowHandle {
          } else {
             path += 'root.longpoll';
             console.log(`Configure longpoll ${path}`);
-            this.#ws = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this, ntry);
+            this.#ws = new LongPollSocket(path, (this.#kind === 'rawlongpoll'), this, ntry);
          }
 
          if (!this.#ws)
@@ -657,9 +706,9 @@ class WebWindowHandle {
 
          this.#ws.onopen = () => {
             if (ntry > 2) showProgress();
-            this.state = 1;
+            this.#state = 1;
 
-            const reply = (this.#secondary ? '' : 'generate_key;') + (this.key || '');
+            const reply = (this.#secondary ? '' : 'generate_key;') + (this.#key || '');
             this.send(`READY=${reply}`, 0); // need to confirm connection and request new key
             this.invokeReceiver(false, 'onWebsocketOpened');
          };
@@ -667,11 +716,10 @@ class WebWindowHandle {
          this.#ws.onmessage = e => {
             let msg = e.data;
 
-            if (this.next_binary) {
-               const binchid = this.next_binary,
-                     server_hash = this.next_binary_hash;
-               delete this.next_binary;
-               delete this.next_binary_hash;
+            if (this.#next_binary) {
+               const binchid = this.#next_binary,
+                     server_hash = this.#next_binary_hash;
+               this.#next_binary = this.#next_binary_hash = undefined;
 
                if (msg instanceof Blob) {
                   // convert Blob object to BufferArray
@@ -679,8 +727,8 @@ class WebWindowHandle {
                   // The file's text will be printed here
                   reader.onload = event => {
                      let result = event.target.result;
-                     if (this.key && sessionKey) {
-                        const hash = HMAC(this.key, result, 0);
+                     if (this.#key && sessionKey) {
+                        const hash = HMAC(this.#key, result, 0);
                         if (hash !== server_hash) {
                            console.log('Discard binary buffer because of HMAC mismatch');
                            result = new ArrayBuffer(0);
@@ -693,8 +741,8 @@ class WebWindowHandle {
                } else {
                   // this is from CEF or LongPoll handler
                   let result = msg;
-                  if (this.key && sessionKey) {
-                     const hash = HMAC(this.key, result, e.offset || 0);
+                  if (this.#key && sessionKey) {
+                     const hash = HMAC(this.#key, result, e.offset || 0);
                      if (hash !== server_hash) {
                         console.log('Discard binary buffer because of HMAC mismatch');
                         result = new ArrayBuffer(0);
@@ -723,60 +771,58 @@ class WebWindowHandle {
             // for authentication HMAC checksum and sequence id is important
             // HMAC used to authenticate server
             // sequence id is necessary to exclude submission of same packet again
-            if (this.key && sessionKey) {
-               const client_hash = HMAC(this.key, msg.slice(i0+1));
+            if (this.#key && sessionKey) {
+               const client_hash = HMAC(this.#key, msg.slice(i0+1));
                if (server_hash !== client_hash)
                   return console.log(`Failure checking server HMAC sum ${server_hash}`);
             }
 
-            if (seq_id <= this.recv_seq)
-               return console.log(`Failure with packet sequence ${seq_id} <= ${this.recv_seq}`);
+            if (seq_id <= this.#recv_seq)
+               return console.log(`Failure with packet sequence ${seq_id} <= ${this.#recv_seq}`);
 
-            this.recv_seq = seq_id; // sequence id of received packet
-            this.ackn++;            // count number of received packets,
-            this.cansend += credit; // how many packets client can send
+            this.#recv_seq = seq_id; // sequence id of received packet
+            this.#ackn++;            // count number of received packets,
+            this.#cansend += credit;  // how many packets client can send
 
             msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
-               // console.log(`GET chid=0 message ${msg}`);
                if (msg === 'CLOSE') {
                   this.close(true); // force closing of socket
                   this.invokeReceiver(true, 'onWebsocketClosed');
                } else if (msg.indexOf('NEW_KEY=') === 0) {
-                  this.new_key = msg.slice(8);
-                  if (settings.Debug)
-                     console.log('Got new key', this.new_key);
+                  this.#new_key = msg.slice(8);
                   this.storeKeyInUrl();
                   if (this.#ask_reload)
                      this.askReload(true);
                }
             } else if (msg.slice(0, 10) === '$$binary$$') {
-               this.next_binary = chid;
-               this.next_binary_hash = msg.slice(10);
+               this.#next_binary = chid;
+               this.#next_binary_hash = msg.slice(10);
             } else if (msg === '$$nullbinary$$')
                this.provideData(chid, new ArrayBuffer(0), 0);
             else
                this.provideData(chid, msg);
 
-            if (this.ackn > Math.max(2, this.#credits * 0.7))
+            if (this.#ackn > Math.max(2, this.#credits * 0.7))
                this.send('READY', 0); // send dummy message to server
          };
 
          this.#ws.onclose = arg => {
             this.#ws = undefined;
-            if ((this.state > 0) || (arg === 'force_close')) {
-               console.log('websocket closed');
-               this.state = 0;
+            if ((this.#state > 0) || (arg === 'force_close')) {
+               if (settings.Debug)
+                  console.log('websocket closed');
+               this.#state = 0;
                this.invokeReceiver(true, 'onWebsocketClosed');
             }
          };
 
          this.#ws.onerror = err => {
-            console.log(`websocket error ${err} state ${this.state}`);
-            if (this.state > 0) {
+            console.log(`websocket error ${err} state ${this.#state}`);
+            if (this.#state > 0) {
                this.invokeReceiver(true, 'onWebsocketError', err);
-               this.state = 0;
+               this.#state = 0;
             }
          };
 
@@ -794,7 +840,7 @@ class WebWindowHandle {
      * WARNING - call only when knowing that you are doing
      * @private */
    askReload(force) {
-      if (this.new_key || force) {
+      if (this.#new_key || force) {
          this.close(true);
          if (typeof location !== 'undefined')
             location.reload(true);
@@ -809,12 +855,12 @@ class WebWindowHandle {
      * WARNING - only call when you know that you are doing
      * @private */
    addReloadKeyHandler() {
-      if ((this.kind === 'file') || this._handling_reload)
+      if (this.isStandalone() || this.#handling_reload)
          return;
 
       // this websocket will handle reload
       // embed widgets should not call this method
-      this._handling_reload = true;
+      this.#handling_reload = true;
 
       window.addEventListener('keydown', evnt => {
          if (((evnt.key === 'R') || (evnt.key === 'r')) && evnt.ctrlKey) {
@@ -835,32 +881,31 @@ class WebWindowHandle {
 
       let href = (typeof document !== 'undefined') ? document.URL : null;
 
-      if (this._can_modify_url && isStr(href) && (typeof window !== 'undefined')) {
+      if (this.#can_modify_url && isStr(href) && (typeof window !== 'undefined')) {
          let prefix = '&key=', p = href.indexOf(prefix);
          if (p < 0) {
             prefix = '?key=';
             p = href.indexOf(prefix);
          }
-         if ((p > 0) && this.new_key) {
+         if ((p > 0) && this.#new_key) {
             const p1 = href.indexOf('#', p+1), p2 = href.indexOf('&', p+1),
                   pp = (p1 < 0) ? p2 : (p2 < 0 ? p1 : Math.min(p1, p2));
-            href = href.slice(0, p) + prefix + this.new_key + (pp < 0 ? '' : href.slice(pp));
+            href = href.slice(0, p) + prefix + this.#new_key + (pp < 0 ? '' : href.slice(pp));
             window.history?.replaceState(window.history.state, undefined, href);
          }
       }
 
       if (typeof sessionStorage !== 'undefined') {
          sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
-         sessionStorage.setItem('RWebWindow_Key', this.new_key);
+         sessionStorage.setItem('RWebWindow_Key', this.#new_key);
       }
    }
 
    /** @summary Create new instance of same kind
     * @private */
    createNewInstance(url) {
-      const handle = new WebWindowHandle(this.kind);
-      handle.#secondary = true;
-      handle.setHRef(this.getHRef(url));
+      const handle = new WebWindowHandle(this.#kind);
+      handle.setHRef(this.getHRef(url), true);
       return handle;
    }
 
@@ -961,24 +1006,18 @@ async function connectWebWindow(arg) {
    if (arg.settings)
       Object.assign(settings, arg.settings);
 
-   // only for debug purposes
-   // arg.socket_kind = 'longpoll';
-
    const main = new Promise(resolveFunc => {
       const handle = new WebWindowHandle(arg.socket_kind, arg.credits);
       handle.setUserArgs(arg.user_args);
-      handle._can_modify_url = Boolean(d_key); // if key appears in URL, we can put there new key
       if (arg.href)
          handle.setHRef(arg.href); // apply href now  while connect can be called from other place
-      else {
-         handle.key = new_key || d_key;
-         handle.token = d_token;
-      }
+      else
+         handle.setKeyToken(new_key || d_key, d_token, Boolean(d_key));
 
       if (typeof window !== 'undefined') {
          window.onbeforeunload = () => handle.close(true);
          if (browser.qt6)
-            window.onqt5unload = window.onbeforeunload;
+            window.onqt6unload = window.onbeforeunload;
       }
 
       if (arg.receiver) {
@@ -998,7 +1037,7 @@ async function connectWebWindow(arg) {
          onWebsocketOpened() {}, // dummy function when websocket connected
 
          onWebsocketMsg(h, msg) {
-            if (msg.indexOf(arg.first_recv) !== 0)
+            if (msg.indexOf(arg.first_recv))
                return h.close();
             h.first_msg = msg.slice(arg.first_recv.length);
             resolveFunc(h);
