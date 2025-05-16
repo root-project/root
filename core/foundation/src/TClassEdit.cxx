@@ -1294,11 +1294,11 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
       }
       if (kbl && (mode>=2 || lev==0)) { //remove "const' etc...
          int done = 0;
-         int n = (mode) ? static_cast<int>(std::size(remove)) : 1;
+         size_t n = (mode) ? std::size(remove) : 1;
 
          // loop on all the keywords we want to remove
-         for (int k = 0; k < n; k++) {
-            auto rlen = static_cast<int>(lengths[k]);
+         for (size_t k = 0; k < n; k++) {
+            auto rlen = lengths[k];
 
             // Do we have a match
             if (strncmp(remove[k],c,rlen)) continue;
