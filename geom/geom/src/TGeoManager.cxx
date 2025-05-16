@@ -138,7 +138,7 @@ this process.
 ## An interactive session
 
   Provided that a geometry was successfully built and closed (for instance the
-previous example $ROOTSYS/tutorials/visualisation/geom/rootgeom.C ), the manager class will register
+previous example rootgeom.C ), the manager class will register
 itself to ROOT and the logical/physical structures will become immediately browsable.
 The ROOT browser will display starting from the geometry folder : the list of
 transformations and media, the top volume and the top logical node. These last

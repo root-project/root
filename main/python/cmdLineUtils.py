@@ -653,8 +653,7 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
     to an other file or directory (destFile,destPathSplit)
     - Has the will to be unix-like
     - that's a recursive function
-    - Python adaptation of a root input/output tutorial :
-      $ROOTSYS/tutorials/io/copyFiles.C
+    - Python adaptation of a root input/output tutorial : copyFiles.C
     """
     retcode = 0
     replaceOption = replace
