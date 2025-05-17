@@ -98,6 +98,8 @@ def main():
     platform_machine = platform.machine()
 
     obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
+    if args.coverage:
+        obj_prefix = obj_prefix + "-coverage"
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
@@ -132,8 +134,12 @@ def main():
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental and not args.coverage:
+    if not pull_request and not args.incremental:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
+    #if args.coverage:  # for now, force it.
+        # if we were to actually upload the artefact we probably need to exclude all
+        # coverage run-time files ('*.gcda' and `*.gcov`)
+    #    archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
         create_binaries(args.buildtype)
@@ -394,14 +400,14 @@ def build(options, buildtype):
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
+    if True: # or not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
         cmake_configure(options, buildtype)
     else:
         cmake_dump_config()
 
     dump_requested_config(options)
 
-    cmake_build(buildtype)
+    # cmake_build(buildtype)
 
 
 @github_log_group("Create binary packages")
@@ -499,9 +505,15 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
     builddir = os.path.join(WORKDIR, "build")
+    ignore_directories="runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
+    ignore_subpattern="runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter"
+    ignore_errors="--gcov-ignore-errors=source_not_found --gcov-ignore-errors=no_working_dir_found"
+    exclude_dictionaries="--exclude='.*/G__.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*'"
+    # The output of -v is huge (several 10s of MB at least), we could filter
+    # the output of -v to keep just the line with ` Processing file:`
     result = subprocess_with_log(f"""
         cd '{builddir}'
-        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
+        gcovr -j {os.cpu_count()} --output=cobertura-cov.xml --cobertura-pretty {ignore_errors} --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/({ignore_subpattern})/.*' {exclude_dictionaries} -r ../src ../build
     """)
 
     if result != 0:
