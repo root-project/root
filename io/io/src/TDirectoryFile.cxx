@@ -596,15 +596,16 @@ void TDirectoryFile::Close(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Delete Objects or/and keys in a directory
-///
-/// Properties of the namecycle string:
-///   - namecycle has the format name;cycle
-///   - namecycle = "" is same as namecycle ="T*"
-///   - name  = * means all
-///   - cycle = * means all cycles (memory and keys)
-///   - cycle = "" or cycle = 9999 ==> apply to a memory object
-/// When name=* use T* to delete subdirectories also
+/// Delete Objects or/and keys in the current directory.
+/// 
+/// \param[in] namecycle Encodes the name and cycle of the objects to delete in
+/// the current directory (e.g. the top directory of a TFile)
+///   - <em>namecycle</em> has the format <em>name;cycle</em>.
+///   - <em>namecycle</em>="" is same as <em>namecycle</em>="T*"
+///   - <em>name</em>="*" means all objects, use "T*" to also delete subdirectories
+///   - <em>cycle</em>="*" means all cycles (memory and keys)
+///   - <em>cycle</em>="" or <em>cycle</em>="9999" ==> apply to a memory object
+///   - When <em>name</em>="*"" use "T*" to delete subdirectories also
 ///
 /// To delete one directory, you must specify the directory cycle,
 /// eg.  file.Delete("dir1;1");
@@ -619,6 +620,18 @@ void TDirectoryFile::Close(Option_t *option)
 /// |   *;2   | delete all objects on file having the cycle 2 |
 /// |   *;*   | delete all objects from memory and file |
 /// |   T*;*  | delete all objects from memory and file and all subdirectories |
+///
+/// \note For some objects, this method, which is used e.g. by rootrm,
+/// properly deletes the specified cycles of the object, but does not free any ‘dependent’
+/// data records (unless it is a TDirectoryFile). In other words, in these cases, Delete
+/// does not free all subdata records, but rather orphans them, ie. the file size is not
+/// reduced, and there is later no option to shrink it nor recover the disappeared ‘dependent’
+/// items. For example, deleting a TTree does not free up space from the directory since the
+/// underlying basket records are not recursively deleted. If this is wanted, one can call
+/// TTree::Delete("all") before calling TDirectoryFile::Delete(); file size won't
+/// shrink either, but more space will be left open for overwriting with other objects.
+/// See also Purge() documentation. A workaround to reduce filesize is to clone all
+/// objects (excluding those to be deleted) into a new TFile.
 ///
 /// ## WARNING
 /// If the key to be deleted contains special characters ("+","^","?", etc
