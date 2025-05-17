@@ -83,17 +83,17 @@ namespace RooStats {
 /// We use nullptr to mean not set, so we don't want to fill
 /// with empty RooArgSets.
 
-void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelConfig)
+void ModelConfig::GuessObsAndNuisance(const RooArgSet &obsSet, bool printModelConfig)
 {
 
    // observables
    if (!GetObservables()) {
-      SetObservables(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(data)});
+      SetObservables(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(obsSet)});
    }
    // global observables
    if (!GetGlobalObservables()) {
       RooArgSet co(*GetObservables());
-      co.remove(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(data)});
+      co.remove(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(obsSet)});
       removeConstantParameters(co);
       if (!co.empty())
          SetGlobalObservables(co);
@@ -112,7 +112,7 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelCon
    //   }
    if (!GetNuisanceParameters()) {
       RooArgSet params;
-      GetPdf()->getParameters(data.get(), params);
+      GetPdf()->getParameters(&obsSet, params);
       RooArgSet p(params);
       p.remove(*GetParametersOfInterest());
       removeConstantParameters(p);

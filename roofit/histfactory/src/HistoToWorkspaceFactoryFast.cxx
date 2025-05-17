@@ -161,20 +161,6 @@ namespace HistFactory{
     // Name of an 'edited' model, if necessary
     std::string NewModelName = "newSimPdf"; // <- This name is hard-coded in HistoToWorkspaceFactoryFast::EditSyt.  Probably should be changed to : std::string("new") + ModelName;
 
-    // Set the ModelConfig's Params of Interest
-    RooAbsData* expData = ws_single->data("asimovData");
-    if( !expData ) {
-      std::cout << "Error: Failed to find dataset: " << expData
-      << " in workspace" << std::endl;
-      throw hf_exc();
-    }
-    if(!measurement.GetPOIList().empty()){
-      proto_config->GuessObsAndNuisance(*expData, RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO));
-    }
-
-    // Now, let's loop over any additional asimov datasets
-    // that we need to make
-
     // Get the pdf
     // Notice that we get the "new" pdf, this is the one that is
     // used in the creation of these asimov datasets since they
@@ -182,6 +168,14 @@ namespace HistFactory{
     RooAbsPdf* pdf = ws_single->pdf(NewModelName);
     if( !pdf ) pdf = ws_single->pdf( ModelName );
     const RooArgSet* observables = ws_single->set("observables");
+
+    // Set the ModelConfig's Params of Interest
+    if(!measurement.GetPOIList().empty()){
+      proto_config->GuessObsAndNuisance(*observables, RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO));
+    }
+
+    // Now, let's loop over any additional asimov datasets
+    // that we need to make
 
     // Create a SnapShot of the nominal values
     std::string SnapShotName = "NominalParamValues";
@@ -1352,8 +1346,14 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO)) asymcalcPrintLevel = 1;
     if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG)) asymcalcPrintLevel = 2;
     AsymptoticCalculator::SetPrintLevel(asymcalcPrintLevel);
-    unique_ptr<RooAbsData> asimov_dataset(AsymptoticCalculator::GenerateAsimovData(*model, observables));
-    proto.import(*asimov_dataset, RooFit::Rename("asimovData"));
+    if (fCfg.createPerRegionWorkspaces) {
+      // Creating the per-channel asimov dataset is only meaningful if we
+      // actually create the files with the stored per-channel workspaces.
+      // Otherwise, we just spend time calculating something that gets thrown
+      // away anyway (for the combined workspace, we'll create a new Asimov).
+      unique_ptr<RooAbsData> asimov_dataset(AsymptoticCalculator::GenerateAsimovData(*model, observables));
+      proto.import(*asimov_dataset, RooFit::Rename("asimovData"));
+    }
 
     // GHL: Determine to use data if the hist isn't 'nullptr'
     if(TH1 const* mnominal = channel.GetData().GetHisto()) {

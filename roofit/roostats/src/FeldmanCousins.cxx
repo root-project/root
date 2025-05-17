@@ -217,7 +217,7 @@ PointSetInterval* FeldmanCousins::GetInterval() const {
   //  RooAbsData* data = fData; //fWS->data(fDataName);
 
   // fill in implied variables given data
-  fModel.GuessObsAndNuisance(fData);
+  fModel.GuessObsAndNuisance(*fData.get());
 
   // create the test statistic sampler (private data member fTestStatSampler)
   if(!fTestStatSampler)
