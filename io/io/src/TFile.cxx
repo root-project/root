@@ -1080,26 +1080,7 @@ TFile *&TFile::CurrentFile()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Delete object namecycle.
-///
-/// \param[in] namecycle Encodes the name and cycle of the objects to delete
-///
-/// Namecycle identifies an object in the top directory of the file namecycle
-/// has the format <em>name;cycle</em>.
-///   - <em>name  = *</em> means all objects
-///   - <em>cycle = *</em> means all cycles (memory and keys)
-///   - <em>cycle = ""</em> or cycle = 9999 ==> apply to a memory object
-/// When name=* use T* to delete subdirectories also
-///
-/// Examples:
-/// name/cycle | Action
-/// -----------|-------
-/// foo   | delete object named foo in memory
-/// foo;1 | delete cycle 1 of foo on file
-/// foo;* | delete all cycles of foo on disk and also from memory
-/// *;2   | delete all objects on file having the cycle 2
-/// *;*   | delete all objects from memory and file
-/// T*;*  | delete all objects from memory and file and all subdirectories
+/// \copydoc TDirectoryFile::Delete
 
 void TFile::Delete(const char *namecycle)
 {
