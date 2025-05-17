@@ -305,10 +305,10 @@ void FillIndexedFriend(const char *mainfile, const char *auxfile)
    f2.Close();
 }
 
-void TestIndexedFriendChain()
+void TestIndexedFriendChain(bool useIMT = false)
 {
-   auto mainFile = "IndexedFriendChain_main.root";
-   auto auxFile = "IndexedFriendChain_aux.root";
+   auto mainFile = useIMT ? "IndexedFriendChainIMT_main.root" : "IndexedFriendChain_main.root";
+   auto auxFile = useIMT ? "IndexedFriendChainIMT_aux.root" : "IndexedFriendChain_aux.root";
    FillIndexedFriend(mainFile, auxFile);
 
    TChain mainChain("mainTree", "mainTree");
@@ -332,10 +332,10 @@ void TestIndexedFriendChain()
    gSystem->Unlink(auxFile);
 }
 
-void TestIndexedFriendTree()
+void TestIndexedFriendTree(bool useIMT = false)
 {
-   auto mainFile = "IndexedFriendTree_main.root";
-   auto auxFile = "IndexedFriendTree_aux.root";
+   auto mainFile = useIMT ? "IndexedFriendTreeIMT_main.root" : "IndexedFriendTree_main.root";
+   auto auxFile = useIMT ? "IndexedFriendTreeIMT_aux.root" : "IndexedFriendTree_aux.root";
    FillIndexedFriend(mainFile, auxFile);
 
    TFile mainF(mainFile);
@@ -376,14 +376,14 @@ TEST(RDFAndFriendsNoFixture, IndexedFriendTree)
 TEST(RDFAndFriendsNoFixture, IndexedFriendChainMT)
 {
    ROOT::EnableImplicitMT();
-   TestIndexedFriendChain();
+   TestIndexedFriendChain(true);
    ROOT::DisableImplicitMT();
 }
 
 TEST(RDFAndFriendsNoFixture, IndexedFriendTreeMT)
 {
    ROOT::EnableImplicitMT();
-   TestIndexedFriendTree();
+   TestIndexedFriendTree(true);
    ROOT::DisableImplicitMT();
 }
 #endif // R__USE_IMT
