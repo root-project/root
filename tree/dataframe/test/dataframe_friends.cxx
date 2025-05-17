@@ -369,7 +369,7 @@ TEST(RDFAndFriendsNoFixture, IndexedFriendChain)
 
 TEST(RDFAndFriendsNoFixture, IndexedFriendTree)
 {
-   TestIndexedFriendChain();
+   TestIndexedFriendTree();
 }
 
 #ifdef R__USE_IMT
