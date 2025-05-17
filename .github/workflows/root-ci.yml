@@ -363,23 +363,23 @@ jobs:
         include:
           - image: fedora41
           - image: fedora42
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23","builtin_unuran=ON"]
           - image: alma8
           - image: alma9
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug","builtin_unuran=ON"]
           - image: ubuntu22
-            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug","builtin_unuran=ON"]
           - image: ubuntu2404
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug","builtin_unuran=ON"]
           - image: ubuntu2504
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23","builtin_unuran=ON"]
           - image: debian125
-            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON"]
+            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON","builtin_unuran=ON"]
           # Special builds
           - image: alma9
             is_special: true
             property: modules_off
-            overrides: ["runtime_cxxmodules=Off"]
+            overrides: ["runtime_cxxmodules=Off","builtin_unuran=ON"]
           - image: alma9
             is_special: true
             property: march_native
@@ -387,12 +387,12 @@ jobs:
           - image: alma9
             is_special: true
             property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo","builtin_unuran=ON"]
             architecture: ARM64
           - image: alma9-clang
             is_special: true
             property: clang
-            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++","builtin_unuran=ON"]
           - image: alma10
             is_special: true
           # Disable GPU builds until the DNS problem is solved  
