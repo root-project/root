@@ -49,6 +49,7 @@ namespace SOFIE{
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
          fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY))
       {
+         fKind = OperatorKind::GEMM;
          fActivation = activation;
          fType = "float";
          static_assert(std::is_same_v<T, float>,
@@ -61,9 +62,11 @@ namespace SOFIE{
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
          fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY)), fActivation(activation)
       {
+         fKind = OperatorKind::GEMM;
          fActivation = activation;
          fType = "float";
 
+         fInputTensorNames = { fNA, fNB, fNC };
          fOutputTensorNames = { fNY };
       }
 
@@ -383,7 +386,13 @@ namespace SOFIE{
       }
 
       std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Gemv") }; }
-
+      std::string GetFusableOutputTensorName() override {
+         return fNY;
+      }
+         
+      void UpdateFusableTensorName(std::string fusable_tensor_name){
+         fNY = UTILITY::Clean_name(fusable_tensor_name);
+      }
    };
 
 

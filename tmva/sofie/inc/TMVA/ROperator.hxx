@@ -2,6 +2,7 @@
 #define TMVA_SOFIE_ROPERATOR
 
 #include <vector>
+#include <set>
 #include <memory>
 
 #include "TMVA/SOFIE_common.hxx"
@@ -14,6 +15,28 @@ namespace Experimental{
 namespace SOFIE{
 
 class RModel;
+
+enum class OperatorKind {
+   GEMM = 0,
+   LAYERNORM = 1,
+   RELU = 2,
+   CONSTANT = 3,
+   CONSTANTOFSHAPE = 4,
+   UNDEFINED = 5
+};
+
+inline const char* toString(OperatorKind kind) {
+   switch (kind) {
+       case OperatorKind::GEMM:       return "GEMM";
+       case OperatorKind::LAYERNORM:  return "LAYERNORM";
+       case OperatorKind::RELU:       return "RELU";
+       case OperatorKind::CONSTANT:       return "CONSTANT";
+       case OperatorKind::CONSTANTOFSHAPE:       return "CONSTANTOFSHAPE";
+       case OperatorKind::UNDEFINED:  return "UNDEFINED";
+       default:                       return "UNKNOWN";
+   }
+}
+inline std::set<OperatorKind> FusableKinds = { OperatorKind::RELU, OperatorKind::LAYERNORM };
 
 class ROperator{
 
@@ -32,13 +55,17 @@ public:
    // generate session data members specific to operator
    virtual std::string GenerateSessionMembersCode(std::string /*opName*/) { return ""; }
    virtual std::string Header() { return "";}
+   virtual std::string GetFusableOutputTensorName() { return "";}
+   virtual void UpdateFusableTensorName(std::string){ return;};
+
 
    //virtual void Forward_reference() = 0;
    //virtual void Forward_blas() = 0;
    virtual ~ROperator(){}
 
 protected:
-
+   OperatorKind fKind = OperatorKind::UNDEFINED;
+   size_t fOpOrder = 0;
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
    bool fUseSession = false;        ///< flag to identify if using the session class
    bool fIsOutputConstant = false;  ///< flag to identify if operator has a constant output (no need to generate code)
@@ -54,7 +81,17 @@ public:
    std::span<const std::string_view> GetOpOutputTensors() const {
       return fOutputTensorNames;
    }
-   
+
+   OperatorKind GetOpKind(){
+            return fKind;
+   }
+   void RegisterOperatorOrder(const size_t ord){
+      fOpOrder = ord;
+   }
+   size_t GetOpOrder(){
+      return fOpOrder;
+   }
+    
 };
 
 
