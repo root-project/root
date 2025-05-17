@@ -1,6 +1,6 @@
-import py, sys
+import py, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS
+from support import setup_make, ispypy, IS_WINDOWS
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("doc_helperDict"))
@@ -1280,3 +1280,7 @@ class TestTALKEXAMPLES:
             assert CC.utf8_chinese() == u'\u4e2d\u6587'
         else:
             assert CC.utf8_chinese() == b'\xe4\xb8\xad\xe6\x96\x87'
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

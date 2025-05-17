@@ -1,6 +1,6 @@
-import py
+import py, pytest
 from pytest import raises, skip
-from .support import setup_make, pylong, maxvalue, IS_WINDOWS
+from support import setup_make, pylong, maxvalue, IS_WINDOWS
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("operatorsDict"))
@@ -384,3 +384,7 @@ class TestOPERATORS:
 
         assert     ns.AGe(5) >= ns.AGe(4)
         assert not ns.AGe(4) >= ns.AGe(5)
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

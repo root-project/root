@@ -1,6 +1,6 @@
-import os, sys
+import os, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, IS_WINDOWS, ispypy
+from support import setup_make, IS_WINDOWS, ispypy
 
 
 class TestREGRESSION:
@@ -1381,3 +1381,6 @@ class TestREGRESSION:
         with raises(cppyy.gbl.std.logic_error):
             foo.bar()
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

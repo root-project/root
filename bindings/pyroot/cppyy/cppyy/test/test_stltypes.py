@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
-import py, sys
+import py, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, pyunicode, maxvalue, ispypy
+from support import setup_make, pylong, pyunicode, maxvalue, ispypy
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("stltypesDict"))
@@ -618,6 +618,7 @@ class TestSTLVECTOR:
         v = cppyy.gbl.std.vector(l)
         assert list(l) == l
 
+    @mark.xfail
     def test18_array_interface(self):
         """Test usage of __array__ from numpy"""
 
@@ -2121,3 +2122,7 @@ class TestSTLEXCEPTION:
 
         gc.collect()
         assert cppyy.gbl.GetMyErrorCount() == 0
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))

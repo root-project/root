@@ -1,6 +1,6 @@
-import py, sys
+import py, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, pyunicode
+from support import setup_make, pylong, pyunicode
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("datatypesDict"))
@@ -2370,3 +2370,7 @@ class TestDATATYPES:
 
         assert [ns.test[i]  for i in range(6)] == [-0x12, -0x34, -0x56, -0x78, 0x0, 0x0]
         assert [ns.utest[i] for i in range(6)] == [ 0x12,  0x34,  0x56,  0x78, 0x0, 0x0]
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=[__file__]))
