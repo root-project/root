@@ -22,6 +22,7 @@
 #include <fstream>
 #include <limits>
 #include <iomanip>
+#include <unordered_set>
 
 #include "TROOT.h"
 #include "TBuffer.h"
@@ -9428,6 +9429,90 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    }
 
    return hout;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TODO docstring
+
+void TH1::SliceHistoInPlace(std::vector<Int_t>& args){
+   auto originalHisto = (TH1*)this->Clone();
+   this->Reset();
+   auto ndim = args.size() / 2;
+   if (ndim != static_cast<size_t>(fDimension)) {
+      throw std::invalid_argument("Number of dimensions in slice does not match histogram dimension.");
+   }
+
+   std::vector<Int_t> nBins(ndim);
+   std::vector<Double_t> binLowEdge(ndim), binUpEdge(ndim);
+   std::vector<Int_t> shiftedBins(ndim*2);
+
+   // Configure all axes
+   for (size_t i = 0; i < ndim; ++i) {
+      const auto &axis = (i == 0) ? originalHisto->fXaxis : (i == 1) ? originalHisto->fYaxis : originalHisto->fZaxis;
+      Int_t binLow = std::max(1, args[i * 2]);
+      Int_t binUp = std::min(axis.GetNbins() + 1, args[i * 2 + 1]);
+      args[i * 2] = binLow;
+      args[i * 2 + 1] = binUp;
+      nBins[i] = binUp - binLow;
+      binLowEdge[i] = axis.GetBinLowEdge(binLow);
+      binUpEdge[i] = axis.GetBinLowEdge(binUp);
+      shiftedBins[i * 2] = 1;
+      shiftedBins[i * 2 + 1] = nBins[i] + 1;
+   }
+
+
+   // Configure name, title and bins
+   this->SetNameTitle(Form("%s_slice", originalHisto->GetName()), originalHisto->GetTitle());
+
+   if (ndim == 1) {
+      this->SetBins(nBins[0], binLowEdge[0], binUpEdge[0]);
+   } else if (ndim == 2) {
+      this->SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
+                  nBins[1], binLowEdge[1], binUpEdge[1]);
+   } else if (ndim == 3) {
+      this->SetBins(nBins[0], binLowEdge[0], binUpEdge[0],
+                  nBins[1], binLowEdge[1], binUpEdge[1],
+                  nBins[2], binLowEdge[2], binUpEdge[2]);
+   }
+
+   std::vector<Double_t> sliceContents;
+   std::unordered_set<Int_t> processedBins;
+   Double_t underflowContent = 0.0, overflowContent = 0.0;
+
+   auto processBinContent = [&](Int_t x, Int_t y, Int_t z) {
+      const Int_t globalBin = originalHisto->GetBin(x, y, z);
+      if (!processedBins.insert(globalBin).second) return;
+
+      const auto content = originalHisto->RetrieveBinContent(globalBin);
+      const bool isUnderflow = (x < args[0] || (ndim > 1 && y < args[2]) || (ndim > 2 && z < args[4]));
+      const bool isOverflow = (x >= args[1] || (ndim > 1 && y >= args[3]) || (ndim > 2 && z >= args[5]));
+
+      if (isUnderflow) {
+          underflowContent += content;
+      } else if (isOverflow) {
+          overflowContent += content;
+      } else {
+          sliceContents.push_back(content);
+      }
+   };
+
+   for (Int_t x = 0; x <= fXaxis.GetNbins() + 1; ++x) {
+      for (Int_t y = 0; y <= (ndim > 1 ? fYaxis.GetNbins() + 1 : 1); ++y) {
+          for (Int_t z = 0; z <= (ndim > 2 ? fZaxis.GetNbins() + 1 : 1); ++z) {
+              processBinContent(x, y, z);
+          }
+      }
+  }
+
+   // Set the contents of the slice histogram
+   ROOT::Internal::SetSliceContent(*this, sliceContents, shiftedBins);
+   
+   // Set the flow bins
+   this->SetBinContent(0, underflowContent);
+   auto overflowBin = (ndim == 1) ? this->GetBin(fXaxis.GetNbins() + 1)
+                  : (ndim == 2) ? this->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1)
+                  : this->GetBin(fXaxis.GetNbins() + 1, fYaxis.GetNbins() + 1, fZaxis.GetNbins() + 1);
+   this->SetBinContent(overflowBin, overflowContent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -44,6 +44,8 @@
 
 #include <cfloat>
 #include <string>
+#include <stdexcept>
+#include <variant>
 
 class TF1;
 class TH1D;
@@ -54,6 +56,91 @@ class TCollection;
 class TVirtualFFT;
 class TVirtualHistPainter;
 class TRandom;
+
+
+namespace{
+   /*
+   merci https://stackoverflow.com/a/73551511
+   */
+   template <size_t num_args>
+   struct unpack_caller {
+   private:
+      template <typename FuncType, size_t... I>
+      void call(FuncType &f, const std::vector<int> &args, std::index_sequence<I...>) {
+         f(args[I]...);
+      }
+
+   public:
+      template <typename FuncType>
+      void operator()(FuncType &f, const std::vector<int> &args) {
+         call(f, args, std::make_index_sequence<num_args>{});
+      }
+   };
+
+   std::vector<std::vector<int>> getSliceIndices(const std::vector<std::pair<int, int>>& sliceEdges) {
+      size_t ndim = sliceEdges.size();
+      if (ndim == 0) return {};
+  
+      std::vector<std::vector<int>> slices(ndim);
+      for (size_t i = 0; i < ndim; ++i) {
+          for (int val = sliceEdges[i].first; val < sliceEdges[i].second; ++val) {
+              slices[i].push_back(val);
+          }
+      }
+  
+      std::vector<std::vector<int>> result;
+
+      size_t totalCombinations = 1;
+      for (const auto& slice : slices) {
+         totalCombinations *= slice.size();
+      }
+
+      result.resize(totalCombinations, std::vector<int>(slices.size()));
+
+      for (size_t dim = 0; dim < slices.size(); ++dim) {
+         size_t repeat = 1;
+         for (size_t i = dim + 1; i < slices.size(); ++i) {
+               repeat *= slices[i].size();
+         }
+
+         size_t index = 0;
+         for (size_t i = 0; i < totalCombinations; ++i) {
+               result[i][dim] = slices[dim][(index / repeat) % slices[dim].size()];
+               ++index;
+         }
+      }
+
+      return result;
+  }
+}
+
+namespace ROOT::Internal {
+   template <typename T>
+   auto Slice(const T &histo, std::vector<Int_t>& args)
+   {  
+      T slicedHisto = histo;
+      slicedHisto.SliceHistoInPlace(args);
+      return slicedHisto;
+   }
+
+   template <typename T>
+   auto SetSliceContent(T &histo, const std::variant<std::vector<Double_t>, Double_t> &input, const std::vector<Int_t>& args)
+   {
+      switch (args.size() / 2) {
+         case 1:
+            histo.template SetSliceContent<1>(input, args);
+            break;
+         case 2:
+            histo.template SetSliceContent<2>(input, args);
+            break;
+         case 3:
+            histo.template SetSliceContent<3>(input, args);
+            break;
+         default:
+            throw std::invalid_argument("Invalid number of arguments for SetSliceContent");
+      }
+   }
+} // namespace ROOT::Internal
 
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -136,6 +223,59 @@ private:
 
    TH1(const TH1&) = delete;
    TH1& operator=(const TH1&) = delete;
+
+   void SliceHistoInPlace(std::vector<Int_t>& args);
+
+   template <typename T>
+   friend auto ROOT::Internal::Slice(const T &histo, std::vector<Int_t>& args);
+
+   template <size_t Dim>
+   void SetSliceContent(const std::variant<std::vector<Double_t>, Double_t> &input, const std::vector<Int_t>& args) {
+      if (Dim != fDimension) {
+         throw std::invalid_argument("Number of edges in the specified slice does not match histogram dimension.");
+      }
+
+      // Extract low/up edges in pairs
+      std::vector<std::pair<Int_t, Int_t>> sliceEdges;
+      for (size_t i = 0; i < Dim; ++i) {
+         sliceEdges.emplace_back(args[i * 2], args[i * 2 + 1]);
+      }
+
+      // Get the indices to set
+      auto sliceIndices = getSliceIndices(sliceEdges);
+
+      std::vector<Double_t> values;
+      std::visit([&](auto &&arg) {
+         using T = std::decay_t<decltype(arg)>;
+         if constexpr (std::is_same_v<T, Double_t>) {
+            // Scalar value: replicate for all slice bins
+            values.assign(sliceIndices.size(), arg);
+         } else if constexpr (std::is_same_v<T, std::vector<Double_t>>) {
+            // Vector of values: use as is
+            values = arg;
+         }
+      }, input);
+
+      if (values.size() != sliceIndices.size()) {
+         throw std::invalid_argument("Number of provided values does not match number of bins to set.");
+      }
+
+      unpack_caller<Dim> caller;
+      for (size_t i = 0; i < sliceIndices.size(); ++i) {
+         auto globalBin = 0;
+         // Compute the bin to set
+         auto getGlobalBin = [&](auto... idx) {
+            globalBin = this->GetBin(idx...);
+         };
+         caller(getGlobalBin, sliceIndices[i]);
+         
+         // Set the bin content
+         SetBinContent(globalBin, values[i]);
+      }
+   }
+
+   template <typename T>
+   friend auto ROOT::Internal::SetSliceContent(T &histo, const std::variant<std::vector<Double_t>, Double_t> &input, const std::vector<Int_t>& args);
 
 protected:
    TH1();
