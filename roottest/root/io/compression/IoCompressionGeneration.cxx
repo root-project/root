@@ -14,16 +14,11 @@
 //        Int_t          fNvertex;
 //        UInt_t         fFlag;
 //        Float_t        fTemperature;
-//        Int_t          fMeasures[10];
-//        Float_t        fMatrix[4][4];
-//        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
 //        EventHeader    fEvtHdr;
 //        TClonesArray  *fTracks;
-//        TRefArray     *fHighPt;            //array of High Pt tracks only
-//        TRefArray     *fMuons;             //array of Muon tracks only
-//        TRef           fLastTrack;         //pointer to last track
-//        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a TWebFile
 //        TH1F          *fH;
+//        Float_t        fMatrix[4][4];
+//        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
 //
 //   The EventHeader class has 3 data members (integers):
 //     public:
@@ -69,7 +64,7 @@
 
 #include "TRandom.h"
 #include "TDirectory.h"
-#include "TProcessID.h"
+#include "TAttLine.h"
 
 #include "Event.h"
 
@@ -77,24 +72,27 @@
 ClassImp(EventHeader)
 ClassImp(Event)
 ClassImp(Track)
+ClassImp(UShortVector)
+ClassImp(BigTrack)
 ClassImp(HistogramManager)
 
 TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;
+Double_t EventHeader::fgNever = 55;
 
 //______________________________________________________________________________
-Event::Event() : fEventName(0), fNtrack(0), fNseg(0), fNvertex(0), fFlag(0), 
-                 fTemperature(0), fClosestDistance(0), fTracks(0), fHighPt(0), 
-                 fMuons(0), fH(0)
+Event::Event()
 {
-   // Create an Event object.
+   // default constructor of an Event object.
    // When the constructor is invoked for the first time, the class static
    // variable fgTracks is 0 and the TClonesArray fgTracks is created.
 
-   if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
+   //if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
+   if (!fgTracks) fgTracks = new TClonesArray("BigTrack", 1000);
    fTracks = fgTracks;
-   fHighPt = new TRefArray;
-   fMuons  = new TRefArray;
+   fNtrack = 0;
+   fH      = 0;
+   fNvertex= 0;
    Int_t i0,i1;
    for (i0 = 0; i0 < 4; i0++) {
       for (i1 = 0; i1 < 4; i1++) {
@@ -102,7 +100,133 @@ Event::Event() : fEventName(0), fNtrack(0), fNseg(0), fNvertex(0), fFlag(0),
       }
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
-   fWebHistogram.SetAction(this);
+   fClosestDistance = 0;
+   
+   Int_t i,j;
+   for (i=0;i<12;i++) fVectorint.push_back(i);
+   
+   fString = "this is a C++ string";
+   fStringp = new string("hello string");
+   fTstringp = 0;
+   fVaxis[0] = new TAxis();
+   fVaxis[1] = new TAxis();
+   fVaxis[2] = new TAxis();
+      
+   fPaxis = 0;
+   fQaxis = 0;
+   fMapTAxisp = 0;
+   fSetTAxisp = 0;
+   fMultiSetTAxisp = 0;
+   fListString = new list<string>;
+   fListString->push_back("First string");
+   fListString->push_back("Second string");
+   fListString->push_back("Third string");
+
+   fListStringp.push_back(new string("1st string"));
+   fListStringp.push_back(new string("2nd string"));
+   fListStringp.push_back(new string("3rd string"));
+   fListStringp.push_back(new string("4th string"));
+   
+   fVectAxis.clear();
+   static vector<TAxis*> vecta;
+   for (i=0;i<4;i++) {
+      vecta.clear();
+      for (j=0;j<i+2;j++) {
+         vecta.push_back(new TAxis());
+      }
+      fVectAxis.push_back(vecta);
+   }
+   fMapString.clear();
+   fDequePair.clear();
+   
+   fVectorshort.clear();
+   for (i=0;i<120;i++) fVectorshort.push_back(i);
+
+   fVectorTobject = new vector<TObject>;
+   TObject a1,a2,a3;
+   fVectorTobject->push_back(a1);
+   fVectorTobject->push_back(a2);
+   fVectorTobject->push_back(a3);
+   
+   for (i=0;i<6;i++) fVectorTnamed[i] = new vector<TNamed>;
+      
+   TLine line;
+   fVectorTLine.clear();
+   for (i=0;i<40;i++) {
+      line.SetX1(gRandom->Rndm());
+      line.SetX2(gRandom->Rndm());
+      line.SetY1(gRandom->Rndm());
+      line.SetY2(gRandom->Rndm());
+      line.SetLineColor(i); 
+      fVectorTLine.push_back(line);
+   }  
+      
+   TAttLine attline;
+   fDeque.clear();
+   for (i=0;i<4;i++) {attline.SetLineColor(i); fDeque.push_back(attline);}  
+   
+   fArrayF.Set(24);
+   fArrayI = new TArrayI(24);
+   for (i=0;i<24;i++) {
+      fArrayI->fArray[i] = 24-i; 
+      fArrayF.fArray[i] = 48-2*i;
+   } 
+   
+   fRefH = 0;
+   fEventName = 0;
+   fTracksInVertex = 0;
+}
+
+//______________________________________________________________________________
+Event::Event(Int_t /*enumber*/)
+{
+   // Create an Event object.
+   // When the constructor is invoked for the first time, the class static
+   // variable fgTracks is 0 and the TClonesArray fgTracks is created.
+
+   if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
+   fTracks = fgTracks;
+   fNtrack = 0;
+   fH      = 0;
+   Int_t i0,i1;
+   for (i0 = 0; i0 < 4; i0++) {
+      for (i1 = 0; i1 < 4; i1++) {
+         fMatrix[i0][i1] = 0.0;
+      }
+   }
+   for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
+   fClosestDistance = 0;
+   
+   Int_t i;
+   for (i=0;i<12;i++) fVectorint.push_back(i);
+   
+   fString = "this is a C++ string";
+   fTstringp = 0;
+   fVaxis[0] = new TAxis();
+   fVaxis[1] = new TAxis();
+   fVaxis[2] = new TAxis();
+      
+   fPaxis = 0;
+   fQaxis = 0;
+   fMapTAxisp = 0;
+   fSetTAxisp = 0;
+   fMultiSetTAxisp = 0;
+   
+   fVectorshort.clear();
+   for (i=0;i<120;i++) fVectorshort.push_back(i);
+
+   fVectorTobject = new vector<TObject>;
+   TObject a1,a2,a3;
+   fVectorTobject->push_back(a1);
+   fVectorTobject->push_back(a2);
+   fVectorTobject->push_back(a3);
+   
+   for (i=0;i<6;i++) fVectorTnamed[i] = new vector<TNamed>;
+      
+   TAttLine attline;
+   fDeque.clear();
+   for (i=0;i<40;i++) {attline.SetLineColor(i); fDeque.push_back(attline);}   
+   fEventName = 0;
 }
 
 //______________________________________________________________________________
@@ -110,62 +234,18 @@ Event::~Event()
 {
    Clear();
    if (fH == fgHist) fgHist = 0;
-   delete fH; fH = 0;
-   delete fHighPt; fHighPt = 0;
-   delete fMuons;  fMuons = 0;
+   delete fH;
+   fH = 0;
    delete [] fClosestDistance;
-   if (fEventName) delete [] fEventName;
+   delete fVaxis[0];
+   delete fVaxis[1];
+   delete fVaxis[2];
+   if (fEventName) delete [] fEventName; 
+   if (fTracksInVertex) delete [] fTracksInVertex;  
 }
 
 //______________________________________________________________________________
-void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
-  char etype[20];
-  Float_t sigmat, sigmas;
-  gRandom->Rannor(sigmat,sigmas);
-  Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
-  Float_t random = gRandom->Rndm(1);
-
-  //Save current Object count
-  Int_t ObjectNumber = TProcessID::GetObjectCount();
-  Clear();
-  fHighPt->Delete();
-  fMuons->Delete();
-  
-  Int_t nch = 15;
-  if (ev > 100)   nch += 3;
-  if (ev > 10000) nch += 3;
-  if (fEventName) delete [] fEventName;
-  fEventName = new char[nch];
-  sprintf(fEventName,"Event%d_Run%d",ev,200);
-  sprintf(etype,"type%d",ev%5);
-  SetType(etype);
-  SetHeader(ev, 200, 960312, random);
-  SetNseg(Int_t(10*ntrack+20*sigmas));
-  SetNvertex(Int_t(1+20*gRandom->Rndm()));
-  SetFlag(UInt_t(random+0.5));
-  SetTemperature(random+20.);
-
-  for(UChar_t m = 0; m < 10; m++) {
-     SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
-  }
-  for(UChar_t i0 = 0; i0 < 4; i0++) {
-    for(UChar_t i1 = 0; i1 < 4; i1++) {
-       SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
-    }
-  }
-
-   //  Create and Fill the Track objects
-  for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-  
-  //Restore Object count 
-  //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
-  //object count to what it was at the beginning of the event.
-  TProcessID::SetObjectCount(ObjectNumber);
-}  
-
-//______________________________________________________________________________
-Track *Event::AddTrack(Float_t random, Float_t ptmin)
+void Event::AddTrack(Float_t random)
 {
    // Add a new track to the list of tracks for this event.
    // To avoid calling the very time consuming operator new for each track,
@@ -174,30 +254,23 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
    // otherwise the previous Track[i] will be overwritten.
 
    TClonesArray &tracks = *fTracks;
-   Track *track = new(tracks[fNtrack++]) Track(random);
-   //Save reference to last Track in the collection of Tracks
-   fLastTrack = track;
-   //Save reference in fHighPt if track is a high Pt track
-   if (track->GetPt() > ptmin)   fHighPt->Add(track);
-   //Save reference in fMuons if track is a muon candidate
-   if (track->GetMass2() < 0.11) fMuons->Add(track);
-   return track;
+   //new(tracks[fNtrack++]) Track(random);
+   new(tracks[fNtrack]) BigTrack(random,fNtrack%100);
+   fNtrack++;
 }
 
 //______________________________________________________________________________
 void Event::Clear(Option_t *option)
 {
-   fTracks->Clear("C"); //will also call Track::Clear
-   fHighPt->Delete();
-   fMuons->Delete();
+   fUshort.clear();
+   fTracks->Clear(option);
 }
 
 //______________________________________________________________________________
-void Event::Reset(Option_t *option)
+void Event::Reset(Option_t * /*option*/)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);
-
    delete fgTracks; fgTracks = 0;
    fgHist   = 0;
 }
@@ -205,12 +278,30 @@ void Event::Reset(Option_t *option)
 //______________________________________________________________________________
 void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
 {
+   if (i%10 <3) fBoolA = kTRUE;
+   else         fBoolA = kFALSE;
+   Int_t nch = 15;
+   if (i > 100)   nch += 3;
+   if (i > 10000) nch += 3;
+   if (fEventName) delete [] fEventName;
+   fEventName = new char[nch];
+   sprintf(fEventName,"Event%d_Run%d",i,200);
    fNtrack = 0;
    fEvtHdr.Set(i, run, date);
    if (!fgHist) fgHist = new TH1F("hstat","Event Histogram",100,0,1);
    fH = fgHist;
-   ((TH1F*)fH)->Fill(random);
-   //fH = 0;
+   fH->Fill(random);
+   fRefH = fH;
+   //fill Lachaud strings
+   fLachaud.clear();
+   nch = Int_t(10*random);
+   char lachaud[64];
+   string lac;
+   for (Int_t j=0;j<nch;j++) {
+      sprintf(lachaud,"run%d event%d j%d",run,i,j);
+      lac = lachaud;
+      fLachaud.push_back(lac);
+   }
 }
 
 //______________________________________________________________________________
@@ -221,15 +312,68 @@ void Event::SetMeasure(UChar_t which, Int_t what) {
 //______________________________________________________________________________
 void Event::SetRandomVertex() {
    // This delete is to test the relocation of variable length array
-   if (fClosestDistance) delete [] fClosestDistance;
+   delete [] fClosestDistance;
    if (!fNvertex) {
       fClosestDistance = 0;
       return;
    }
    fClosestDistance = new Float_t[fNvertex];
+   fTracksInVertex  = new char[fNvertex];
+   fTstringp = new TString[fNvertex];
+   fPaxis = new TAxis[fNvertex];
+   fQaxis = new TAxis*[fNvertex];
+   fMapTNamedp.clear();
+   fMultiMapTNamedp.clear();
+   fSetTAxis.clear();
+   //delete fMapTAxisp;
+   fMapTAxisp = new map<TAxis*,int>;
+   fSetTAxisp = new set<TAxis*>;
+   fMultiSetTAxisp = new multiset<TAxis*>;
    for (Int_t k = 0; k < fNvertex; k++ ) {
+      fTracksInVertex[k] = k;
       fClosestDistance[k] = gRandom->Gaus(1,1);
+      fTstringp[k] = "fTstringp";
+      fQaxis[k] = new TAxis();
+      fMapTNamedp.insert(make_pair(new TNamed("ii","jj"),k));
+      fMapTAxisp->insert(make_pair(new TAxis(),k));
+      fSetTAxisp->insert(new TAxis());
+      fMultiMapTNamedp.insert(make_pair(new TNamed("ii","jj"),k));
+      fMultiSetTAxisp->insert(new TAxis());
    }
+  Double_t x=gRandom->Gaus(0,1);
+  Double_t y=gRandom->Gaus(0,1);
+  Double_t z=gRandom->Gaus(0,100);
+  Double_t t=TMath::Sqrt(x*x+y*y+z*z);
+  fLorentz.SetXYZT(x,y,z,t);
+}
+
+//______________________________________________________________________________
+void Event::ShowLachaud()
+{
+   vector<string>::iterator R__k;
+   printf("Lachaud vector has %u entries\n", (unsigned int)fLachaud.size());
+   for (R__k = fLachaud.begin(); R__k != fLachaud.end(); ++R__k) {
+      printf(" %s\n",(*R__k).c_str());
+   }
+}
+
+//______________________________________________________________________________
+UShortVector::UShortVector(Int_t n)
+{
+   // Create a big track object.
+   fNshorts = n;
+}
+
+//______________________________________________________________________________
+BigTrack::BigTrack(Float_t random, Int_t special) : Track(random)
+{
+   // Create a big track object.
+   fSpecial = special;
+  Double_t x=gRandom->Gaus(0,1);
+  Double_t y=gRandom->Gaus(0,1);
+  Double_t z=gRandom->Gaus(0,100);
+  Double_t t=TMath::Sqrt(x*x+y*y+z*z);
+  fKine.SetXYZT(x,y,z,t);
 }
 
 //______________________________________________________________________________
@@ -244,7 +388,7 @@ Track::Track(Float_t random) : TObject()
    fPy = py;
    fPz = TMath::Sqrt(px*px+py*py);
    fRandom = 1000*random;
-   if (fRandom < 10) fMass2 = 0.106;
+   if (fRandom < 10) fMass2 = 0.08;
    else if (fRandom < 100) fMass2 = 0.8;
    else if (fRandom < 500) fMass2 = 4.5;
    else if (fRandom < 900) fMass2 = 8.9;
@@ -263,22 +407,52 @@ Track::Track(Float_t random) : TObject()
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
    fCharge = Float_t(Int_t(3*gRandom->Rndm(1)) - 1);
-   fTrigBits.SetBitNumber(3);
-   fTrigBits.SetBitNumber(9);
    fVertex[0] = gRandom->Gaus(0,0.1);
    fVertex[1] = gRandom->Gaus(0,0.2);
    fVertex[2] = gRandom->Gaus(0,10);
-   fNpoint = Int_t(60+10*gRandom->Rndm(1));
-   fNsp = Int_t(3*gRandom->Rndm(1));
-   if (fNsp) {
-      fPointValue = new Float_t[fNsp];
-      for(int i=0; i<fNsp; i++) {
-         fPointValue[i] = i+1;
+   for (Int_t i0(0),in(0);i0<3;i0++) {
+      for (Int_t i1 = 0;i1<4;i1++) {
+         fCovar[i0][i1] = in;
+         for (Int_t i2 = 0;i2<2;i2++) {
+            fCovara[i0][i1][i2] = in;
+            in++;
+         }
       }
-   } else {
-      fPointValue = 0;
    }
+          
+
+   fNpoint = Int_t(60+10*gRandom->Rndm(1));
    fValid  = Int_t(0.6+gRandom->Rndm(1));
+   if (fNpoint) {
+      fPoints = new Short_t[fNpoint];
+      for (Int_t j=0;j<fNpoint;j++) fPoints[j] = j;
+   } else {
+      fPoints = 0;
+   }
+   Int_t nints = (Int_t)gRandom->Rndm()*4;
+   fInts.Set(nints);
+   for (Int_t i=0;i<nints;i++) fInts.fArray[i] = i;
+   static Int_t trackNumber = 0;
+   trackNumber++;
+   Int_t nch = 15;
+   if (trackNumber > 100)   nch += 3;
+   if (trackNumber > 10000) nch += 3;
+//    if (fTrackName) delete [] fTrackName;
+   fTrackName = new char[nch];
+   sprintf(fTrackName,"Track%d",trackNumber);
+   //Int_t i;
+   //fHits.clear();
+   //for (i=0;i<12;i++) fHits.push_back(i);
+
+}
+
+//______________________________________________________________________________
+Track::~Track()
+{
+   delete [] fPoints;
+   fPoints = 0;
+   if (fTrackName) delete [] fTrackName;
+   fTrackName = 0;
 }
 
 //______________________________________________________________________________
