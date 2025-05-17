@@ -1,3 +1,4 @@
+void execStreamerInfoList()
 {
    gSystem->CopyFile("geodemo.root","geodemo-update.root", kTRUE);
    auto file = TFile::Open("geodemo-update.root","update");

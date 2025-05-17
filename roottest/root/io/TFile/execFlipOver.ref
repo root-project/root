@@ -6,3 +6,4 @@ Copying input file into char buffer
 Reading TMemFile
 Filling input file with 1 more GB.
 Write input file header
+(int) 0
