@@ -118,11 +118,19 @@ private:
 
          inline std::size_t mix(std::size_t init) const
          {
-            init ^= init >> 32;
-            init *= 0xe9846af9b1a615d;
-            init ^= init >> 32;
-            init *= 0xe9846af9b1a615d;
-            init ^= init >> 28;
+            if constexpr (sizeof(std::size_t) == 4) { // 32-bit
+               init ^= init >> 16;
+               init *= 0x21f0aaad;
+               init ^= init >> 15;
+               init *= 0x735a2d97;
+               init ^= init >> 15;
+            } else { // 64-bit
+               init ^= init >> 32;
+               init *= 0xe9846af9b1a615d;
+               init ^= init >> 32;
+               init *= 0xe9846af9b1a615d;
+               init ^= init >> 28;
+            }
             return init;
          }
       };
