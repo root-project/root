@@ -37,6 +37,7 @@
 #include "TError.h" // for R__ASSERT, Warning
 #include "TFile.h"  // for SnapshotTTreeHelper
 #include "TH1.h"
+#include "TH3.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
 #include "TLeaf.h"
@@ -56,6 +57,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -350,33 +352,62 @@ public:
    }
 };
 
+// class which wraps a pointer and implements a no-op increment operator
+template <typename T>
+class ScalarConstIterator {
+   const T *obj_;
+
+public:
+   using iterator_category = std::forward_iterator_tag;
+   using difference_type = std::ptrdiff_t;
+   using value_type = T;
+   using pointer = T *;
+   using reference = T &;
+   ScalarConstIterator(const T *obj) : obj_(obj) {}
+   const T &operator*() const { return *obj_; }
+   ScalarConstIterator<T> &operator++() { return *this; }
+};
+
+// return unchanged value for scalar
+template <typename T>
+auto MakeBegin(const T &val)
+{
+   if constexpr (IsDataContainer<T>::value) {
+      return std::begin(val);
+   } else {
+      return ScalarConstIterator<T>(&val);
+   }
+}
+
+// return container size for containers, and 1 for scalars
+template <typename T>
+std::size_t GetSize(const T &val)
+{
+   if constexpr (IsDataContainer<T>::value) {
+      return std::size(val);
+   } else {
+      return 1;
+   }
+}
+
+// Helpers for dealing with histograms and similar:
+template <typename H, typename = decltype(std::declval<H>().Reset())>
+void ResetIfPossible(H *h)
+{
+   h->Reset();
+}
+
+void ResetIfPossible(TStatistic *h);
+void ResetIfPossible(...);
+
+void UnsetDirectoryIfPossible(TH1 *h);
+void UnsetDirectoryIfPossible(...);
+
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
-
-   template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
-   void ResetIfPossible(H *h)
-   {
-      h->Reset();
-   }
-
-   void ResetIfPossible(TStatistic *h) { *h = TStatistic(); }
-
-   // cannot safely re-initialize variations of the result, hence error out
-   void ResetIfPossible(...)
-   {
-      throw std::runtime_error(
-         "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does "
-         "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
-   }
-
-   void UnsetDirectoryIfPossible(TH1 *h) {
-      h->SetDirectory(nullptr);
-   }
-
-   void UnsetDirectoryIfPossible(...) {}
 
    // Merge overload for types with Merge(TCollection*), like TH1s
    template <typename H, typename = std::enable_if_t<std::is_base_of<TObject, H>::value, int>>
@@ -405,61 +436,10 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
                     "The type passed to Fill does not provide a Merge(TCollection*) or Merge(const std::vector&) method.");
    }
 
-   // class which wraps a pointer and implements a no-op increment operator
-   template <typename T>
-   class ScalarConstIterator {
-      const T *obj_;
-
-   public:
-      ScalarConstIterator(const T *obj) : obj_(obj) {}
-      const T &operator*() const { return *obj_; }
-      ScalarConstIterator<T> &operator++() { return *this; }
-   };
-
-   // helper functions which provide one implementation for scalar types and another for containers
-   // TODO these could probably all be replaced by inlined lambdas and/or constexpr if statements
-   // in c++17 or later
-
-   // return unchanged value for scalar
-   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
-   ScalarConstIterator<T> MakeBegin(const T &val)
-   {
-      return ScalarConstIterator<T>(&val);
-   }
-
-   // return iterator to beginning of container
-   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
-   auto MakeBegin(const T &val)
-   {
-      return std::begin(val);
-   }
-
-   // return 1 for scalars
-   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
-   std::size_t GetSize(const T &)
-   {
-      return 1;
-   }
-
-   // return container size
-   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
-   std::size_t GetSize(const T &val)
-   {
-#if __cplusplus >= 201703L
-      return std::size(val);
-#else
-      return val.size();
-#endif
-   }
-
    template <std::size_t ColIdx, typename End_t, typename... Its>
    void ExecLoop(unsigned int slot, End_t end, Its... its)
    {
-      auto *thisSlotH = fObjects[slot];
-      // loop increments all of the iterators while leaving scalars unmodified
-      // TODO this could be simplified with fold expressions or std::apply in C++17
-      auto nop = [](auto &&...) {};
-      for (; GetNthElement<ColIdx>(its...) != end; nop(++its...)) {
+      for (auto *thisSlotH = fObjects[slot]; GetNthElement<ColIdx>(its...) != end; (std::advance(its, 1), ...)) {
          thisSlotH->Fill(*its...);
       }
    }
@@ -758,6 +738,138 @@ public:
       auto &result = *static_cast<std::shared_ptr<TGraphAsymmErrors> *>(newResult);
       result->Set(0);
       return FillTGraphAsymmErrorsHelper(result, fGraphAsymmErrors.size());
+   }
+};
+
+/// A FillHelper for classes supporting the FillThreadSafe function.
+template <typename HIST>
+class R__CLING_PTRCHECK(off) ThreadSafeFillHelper : public RActionImpl<ThreadSafeFillHelper<HIST>> {
+   std::vector<std::shared_ptr<HIST>> fObjects;
+   std::vector<std::unique_ptr<std::mutex>> fMutexPtrs;
+
+   // This overload matches if the function exists:
+   template <typename T, typename... Args>
+   auto TryCallFillThreadSafe(T &object, std::mutex &, int /*dummy*/, Args... args)
+      -> decltype(ROOT::Internal::FillThreadSafe(object, args...), void())
+   {
+      ROOT::Internal::FillThreadSafe(object, args...);
+   }
+   // This one has lower precedence because of the dummy argument, and uses a lock
+   template <typename T, typename... Args>
+   auto TryCallFillThreadSafe(T &object, std::mutex &mutex, char /*dummy*/, Args... args)
+   {
+      std::scoped_lock lock{mutex};
+      object.Fill(args...);
+   }
+
+   template <std::size_t ColIdx, typename End_t, typename... Its>
+   void ExecLoop(unsigned int slot, End_t end, Its... its)
+   {
+      const auto localSlot = slot % fObjects.size();
+      for (; GetNthElement<ColIdx>(its...) != end; (std::advance(its, 1), ...)) {
+         TryCallFillThreadSafe(*fObjects[localSlot], *fMutexPtrs[localSlot], 0, *its...);
+      }
+   }
+
+public:
+   ThreadSafeFillHelper(ThreadSafeFillHelper &&) = default;
+   ThreadSafeFillHelper(const ThreadSafeFillHelper &) = delete;
+
+   ThreadSafeFillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
+   {
+      fObjects.resize(nSlots);
+      fObjects.front() = h;
+
+      std::generate(fObjects.begin() + 1, fObjects.end(), [h]() {
+         auto hist = std::make_shared<HIST>(*h);
+         UnsetDirectoryIfPossible(hist.get());
+         return hist;
+      });
+      fMutexPtrs.resize(nSlots);
+      std::generate(fMutexPtrs.begin(), fMutexPtrs.end(), []() { return std::make_unique<std::mutex>(); });
+   }
+
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   // no container arguments
+   template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
+   void Exec(unsigned int slot, const ValTypes &...x)
+   {
+      const auto localSlot = slot % fObjects.size();
+      TryCallFillThreadSafe(*fObjects[localSlot], *fMutexPtrs[localSlot], 0, x...);
+   }
+
+   // at least one container argument
+   template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
+   void Exec(unsigned int slot, const Xs &...xs)
+   {
+      // array of bools keeping track of which inputs are containers
+      constexpr std::array<bool, sizeof...(Xs)> isContainer{IsDataContainer<Xs>::value...};
+
+      // index of the first container input
+      constexpr std::size_t colidx = FindIdxTrue(isContainer);
+      // if this happens, there is a bug in the implementation
+      static_assert(colidx < sizeof...(Xs), "Error: index of collection-type argument not found.");
+
+      // get the end iterator to the first container
+      auto const xrefend = std::end(GetNthElement<colidx>(xs...));
+
+      // array of container sizes (1 for scalars)
+      std::array<std::size_t, sizeof...(xs)> sizes = {{GetSize(xs)...}};
+
+      for (std::size_t i = 0; i < sizeof...(xs); ++i) {
+         if (isContainer[i] && sizes[i] != sizes[colidx]) {
+            throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
+         }
+      }
+
+      ExecLoop<colidx>(slot, xrefend, MakeBegin(xs)...);
+   }
+
+   template <typename T = HIST>
+   void Exec(...)
+   {
+      static_assert(sizeof(T) < 0,
+                    "When filling an object with RDataFrame (e.g. via a Fill action) the number or types of the "
+                    "columns passed did not match the signature of the object's `FillThreadSafe` method.");
+   }
+
+   void Initialize() { /* noop */ }
+
+   void Finalize()
+   {
+      if (fObjects.size() > 1) {
+         TList list;
+         for (auto it = fObjects.cbegin() + 1; it != fObjects.end(); ++it) {
+            list.Add(it->get());
+         }
+         fObjects[0]->Merge(&list);
+      }
+
+      fObjects.resize(1);
+      fMutexPtrs.clear();
+   }
+
+   // Helper function for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableFill<HIST>>(*fObjects[0]);
+   }
+
+   // if the fObjects vector type is derived from TObject, return the name of the object
+   template <typename T = HIST, std::enable_if_t<std::is_base_of<TObject, T>::value, int> = 0>
+   std::string GetActionName()
+   {
+      return std::string(fObjects[0]->IsA()->GetName()) + "\\n" + std::string(fObjects[0]->GetName());
+   }
+
+   template <typename H = HIST>
+   ThreadSafeFillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
+      ResetIfPossible(result.get());
+      UnsetDirectoryIfPossible(result.get());
+      return ThreadSafeFillHelper(result, fObjects.size());
    }
 };
 

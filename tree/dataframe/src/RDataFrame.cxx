@@ -1123,8 +1123,25 @@ Also make sure not to count the just-in-time compilation time (which happens onc
 
 ### Memory usage
 
-There are two reasons why RDataFrame may consume more memory than expected. Firstly, each result is duplicated for each worker thread, which e.g. in case of many (possibly multi-dimensional) histograms with fine binning can result in visible memory consumption during the event loop. The thread-local copies of the results are destroyed when the final result is produced. Reducing the number of threads or using coarser binning will reduce the memory usage.
+There are two reasons why RDataFrame may consume more memory than expected.
 
+#### 1. Histograms in multi-threaded mode
+In multithreaded runs, each worker thread will create a local copy of histograms, which e.g. in case of many (possibly multi-dimensional) histograms with fine binning can result in significant memory consumption during the event loop.
+The thread-local copies of the results are destroyed when the final result is produced. Reducing the number of threads or using coarser binning will reduce the memory usage.
+For three-dimensional histograms, the number of clones can be reduced using ROOT::RDF::Experimental::ThreadsPerTH3().
+~~~{.cpp}
+#include "ROOT/RDFHelpers.hxx"
+
+// Make four threads share a TH3 instance:
+ROOT::RDF::Experimental::ThreadsPerTH3(4);
+ROOT::RDataFrame rdf(...);
+~~~
+
+When TH3s are shared among threads, TH3D will either be filled under lock (slowing down the execution) or using atomics if C++20 is available. The latter is significantly faster.
+The best value for `ThreadsPerTH3` depends on the computation graph that runs. Use lower numbers such as 4 for speed and higher memory consumption, and higher numbers such as 16 for
+slower execution and memory savings.
+
+#### 2. Just-in-time compilation
 Secondly, just-in-time compilation of string expressions or non-templated actions (see the previous paragraph) causes Cling, ROOT's C++ interpreter, to allocate some memory for the generated code that is only released at the end of the application. This commonly results in memory usage creep in long-running applications that create many RDataFrames one after the other. Possible mitigations include creating and running each RDataFrame event loop in a sub-process, or booking all operations for all different RDataFrame computation graphs before the first event loop is triggered, so that the interpreter is invoked only once for all computation graphs:
 
 ~~~{.cpp}

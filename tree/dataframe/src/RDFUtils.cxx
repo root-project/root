@@ -59,6 +59,12 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+unsigned int &NThreadPerTH3()
+{
+   static unsigned int nThread = 1;
+   return nThread;
+}
+
 /// Return the type_info associated to a name. If the association fails, an
 /// exception is thrown.
 /// References and pointers are not supported since those cannot be stored in

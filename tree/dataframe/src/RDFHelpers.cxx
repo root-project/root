@@ -144,6 +144,11 @@ namespace RDF {
 
 namespace Experimental {
 
+void ThreadsPerTH3(unsigned int N)
+{
+   ROOT::Internal::RDF::NThreadPerTH3() = N;
+}
+
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,
                                unsigned int printInterval, bool useColors)
    : fPrintInterval(printInterval),
