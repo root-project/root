@@ -20,7 +20,6 @@ endif()
 if(builtin_clang)
   set(CLING_LIBRARIES "clingMetaProcessor")
 else()
-  list(APPEND CLING_LIBRARIES ${CLING_DEPEND_LIBS})
   link_directories("${LLVM_LIBRARY_DIR}")
 endif()
 
