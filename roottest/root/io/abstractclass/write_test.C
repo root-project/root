@@ -1,21 +1,22 @@
+#include "DataBlock1.h"
+#include "DataBlock2.h"
+
+void write_test()
 {
-gROOT->Reset();
+   gSystem->Load("libAbstractClasses");
 
-gSystem->Load("libData.so");
+   // create and initialize file
+   auto hfile = TFile::Open("data.root", "RECREATE");
 
-// create and initialize file
-TFile *hfile = new TFile("data.root","RECREATE","ROOT file");
+   DataBlock1 *db1 = new DataBlock1;
+   DataBlock2 *db2 = new DataBlock2;
 
-DataBlock1 *db1 = new DataBlock1;
-DataBlock2 *db2 = new DataBlock2;
+   db1->Print();
+   db2->Print();
 
-db1->Print();
-db2->Print();
+   db1->Write();
+   db2->Write();
 
-db1->Write();
-db2->Write();
-
-hfile->Write();
-hfile->Close();
-
+   hfile->Write();
+   hfile->Close();
 }
