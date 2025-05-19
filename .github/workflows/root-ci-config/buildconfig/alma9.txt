@@ -1,5 +1,5 @@
+BLA_VENDOR=OpenBLAS
 builtin_vdt=ON
-dataframe=OFF
-tmva=OFF
 tmva-cpu=OFF
+tmva=OFF
 xml=OFF
