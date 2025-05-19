@@ -74,13 +74,6 @@ void ROOT::Internal::RDF::RTTreeDS::Setup(std::shared_ptr<TTree> &&tree, const R
 {
    fTree = tree;
 
-   // We keep the existing functionality from RLoopManager, until proven not necessary.
-   // See https://github.com/root-project/root/pull/10729
-   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
-      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
-      fNoCleanupNotifier->RegisterChain(*ch);
-   }
-
    if (friendInfo) {
       fFriends = ROOT::Internal::TreeUtils::MakeFriends(*friendInfo);
       for (std::size_t i = 0ul; i < fFriends.size(); i++) {
@@ -121,6 +114,16 @@ ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, TDirectory *d
                                dirPtr->GetName() + "'.");
    }
    Setup(ROOT::Internal::RDF::MakeAliasedSharedPtr(tree));
+
+   // We keep the existing functionality from RLoopManager, until proven not necessary.
+   // See https://github.com/root-project/root/pull/10729
+   // The only constructors that were using this functionality are the ones taking a TDirectory * and the ones taking
+   // a file name or list of file names, see
+   // https://github.com/root-project/root/blob/f8b8277627f08cb79d71cec1006b219a82ae273c/tree/dataframe/src/RDataFrame.cxx
+   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
+      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
+      fNoCleanupNotifier->RegisterChain(*ch);
+   }
 }
 
 ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, std::string_view fileNameGlob)
@@ -131,6 +134,15 @@ ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, std::string_v
    chain->Add(fileNameGlobInt.c_str());
 
    Setup(std::move(chain));
+   // We keep the existing functionality from RLoopManager, until proven not necessary.
+   // See https://github.com/root-project/root/pull/10729
+   // The only constructors that were using this functionality are the ones taking a TDirectory * and the ones taking
+   // a file name or list of file names, see
+   // https://github.com/root-project/root/blob/f8b8277627f08cb79d71cec1006b219a82ae273c/tree/dataframe/src/RDataFrame.cxx
+   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
+      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
+      fNoCleanupNotifier->RegisterChain(*ch);
+   }
 }
 
 ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, const std::vector<std::string> &fileNameGlobs)
@@ -141,6 +153,16 @@ ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, const std::ve
       chain->Add(f.c_str());
 
    Setup(std::move(chain));
+
+   // We keep the existing functionality from RLoopManager, until proven not necessary.
+   // See https://github.com/root-project/root/pull/10729
+   // The only constructors that were using this functionality are the ones taking a TDirectory * and the ones taking
+   // a file name or list of file names, see
+   // https://github.com/root-project/root/blob/f8b8277627f08cb79d71cec1006b219a82ae273c/tree/dataframe/src/RDataFrame.cxx
+   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
+      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
+      fNoCleanupNotifier->RegisterChain(*ch);
+   }
 }
 
 ROOT::RDataFrame ROOT::Internal::RDF::FromTTree(std::string_view treeName, std::string_view fileNameGlob)
