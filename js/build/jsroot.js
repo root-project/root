@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '16/05/2025',
+version_date = '19/05/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -96813,10 +96813,21 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       const main = this.getMainPainter(),
             fp = this.getFramePainter();
 
-     if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
-        this.copyOptionsFrom(main);
+      if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
+         this.copyOptionsFrom(main);
 
-      return this.options.Mode3D ? this.draw3D(reason) : this.draw2D(reason);
+      if (!this.options.Mode3D)
+         return this.draw2D(reason);
+
+      return this.draw3D(reason).catch(err => {
+         const cp = this.getCanvPainter();
+         if (isFunc(cp?.showConsoleError))
+            cp.showConsoleError(err);
+         else
+            console.error('Fail to draw histogram in 3D - back to 2D');
+         this.options.Mode3D = false;
+         return this.draw2D(reason);
+      });
    }
 
    /** @summary Redraw histogram */
@@ -100622,17 +100633,6 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       return false;
    }
 
-   /** @summary Call drawing function depending from 3D mode */
-   async callDrawFunc(reason) {
-      const main = this.getMainPainter(),
-            fp = this.getFramePainter();
-
-     if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
-        this.copyOptionsFrom(main);
-
-      return this.options.Mode3D ? this.draw3D(reason) : this.draw2D(reason);
-   }
-
    /** @summary Performs 2D drawing of histogram
      * @return {Promise} when ready */
    async draw2D(reason) {
@@ -100660,6 +100660,28 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       return this.draw2D(reason);
    }
 
+   /** @summary Call drawing function depending from 3D mode */
+   async callDrawFunc(reason) {
+      const main = this.getMainPainter(),
+            fp = this.getFramePainter();
+
+      if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
+         this.copyOptionsFrom(main);
+
+      if (!this.options.Mode3D)
+         return this.draw2D(reason);
+
+      return this.draw3D(reason).catch(err => {
+         const cp = this.getCanvPainter();
+         if (isFunc(cp?.showConsoleError))
+            cp.showConsoleError(err);
+         else
+            console.error('Fail to draw histogram in 3D - back to 2D');
+         this.options.Mode3D = false;
+         return this.draw2D(reason);
+      });
+   }
+
    /** @summary Redraw histogram */
    redraw(reason) {
       return this.callDrawFunc(reason);
@@ -100678,7 +100700,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 class TH1Painter extends TH1Painter$2 {
 
    /** @summary draw TH1 object in 3D mode */
-   draw3D(reason) {
+   async draw3D(reason) {
       this.mode3d = true;
 
       const fp = this.getFramePainter(), // who makes axis drawing

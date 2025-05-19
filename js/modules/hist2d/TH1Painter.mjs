@@ -1321,17 +1321,6 @@ class TH1Painter extends THistPainter {
       return false;
    }
 
-   /** @summary Call drawing function depending from 3D mode */
-   async callDrawFunc(reason) {
-      const main = this.getMainPainter(),
-            fp = this.getFramePainter();
-
-     if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
-        this.copyOptionsFrom(main);
-
-      return this.options.Mode3D ? this.draw3D(reason) : this.draw2D(reason);
-   }
-
    /** @summary Performs 2D drawing of histogram
      * @return {Promise} when ready */
    async draw2D(reason) {
@@ -1357,6 +1346,28 @@ class TH1Painter extends THistPainter {
    async draw3D(reason) {
       console.log('3D drawing is disabled, load ./hist/TH1Painter.mjs');
       return this.draw2D(reason);
+   }
+
+   /** @summary Call drawing function depending from 3D mode */
+   async callDrawFunc(reason) {
+      const main = this.getMainPainter(),
+            fp = this.getFramePainter();
+
+      if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
+         this.copyOptionsFrom(main);
+
+      if (!this.options.Mode3D)
+         return this.draw2D(reason);
+
+      return this.draw3D(reason).catch(err => {
+         const cp = this.getCanvPainter();
+         if (isFunc(cp?.showConsoleError))
+            cp.showConsoleError(err);
+         else
+            console.error('Fail to draw histogram in 3D - back to 2D');
+         this.options.Mode3D = false;
+         return this.draw2D(reason);
+      });
    }
 
    /** @summary Redraw histogram */
