@@ -1438,6 +1438,7 @@ void TClass::ForceReload (TClass* oldcl)
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TClass object. This object contains the full dictionary
 /// of a class. It has list to baseclasses, datamembers and methods.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TClass::Init(const char *name, Version_t cversion,
                   const std::type_info *typeinfo, TVirtualIsAProxy *isa,
@@ -6452,6 +6453,7 @@ void TClass::SetGlobalIsA(IsAGlobalFunc_t func)
 ////////////////////////////////////////////////////////////////////////////////
 /// Call this method to indicate that the shared library containing this
 /// class's code has been removed (unloaded) from the process's memory
+/// The caller of this calss should be holding the ROOT Write lock.
 
 void TClass::SetUnloaded()
 {
