@@ -977,7 +977,6 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by the dtor of a class's init class
 /// (see the ClassImp macro).
