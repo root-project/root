@@ -131,7 +131,7 @@ public:
    ~RNTupleViewBase() = default;
 
    const ROOT::RFieldBase &GetField() const { return *fField; }
-   ROOT::RFieldBase::RBulk CreateBulk() { return fField->CreateBulk(); }
+   ROOT::RFieldBase::RBulkValues CreateBulk() { return fField->CreateBulk(); }
 
    const ROOT::RFieldBase::RValue &GetValue() const { return fValue; }
    /// Returns the global field range of this view.

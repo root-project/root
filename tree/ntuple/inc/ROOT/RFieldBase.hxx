@@ -202,7 +202,7 @@ public:
    }; // class RColumnRepresentations
 
    class RValue;
-   class RBulk;
+   class RBulkValues;
 
 private:
    /// The field name relative to its parent field
@@ -559,9 +559,9 @@ public:
    /// the field.
    RValue CreateValue();
    /// Creates a new, initially empty bulk.
-   /// RBulk::ReadBulk() will construct the array of values. The memory of the value array is managed by the RBulk
-   /// class.
-   RBulk CreateBulk();
+   /// RBulkValues::ReadBulk() will construct the array of values. The memory of the value array is managed by the
+   /// RBulkValues class.
+   RBulkValues CreateBulk();
    /// Creates a value from a memory location with an already constructed object
    RValue BindValue(std::shared_ptr<void> objPtr);
    /// Creates the list of direct child values given an existing value for this field. E.g. a single value for the
@@ -737,7 +737,7 @@ public:
 };
 
 /// Input parameter to RFieldBase::ReadBulk() and RFieldBase::ReadBulkImpl().
-//  See the RBulk class documentation for more information.
+//  See the RBulkValues class documentation for more information.
 struct RFieldBase::RBulkSpec {
    /// Possible return value of ReadBulk() and ReadBulkImpl(), which indicates that the full bulk range was read
    /// independently of the provided masks.
@@ -751,14 +751,14 @@ struct RFieldBase::RBulkSpec {
    /// The destination area, which has to be an array of valid objects of the correct type large enough to hold the bulk
    /// range.
    void *fValues = nullptr;
-   /// Reference to memory owned by the RBulk class. The field implementing BulkReadImpl() may use `fAuxData` as memory
-   /// that stays persistent between calls.
+   /// Reference to memory owned by the RBulkValues class. The field implementing BulkReadImpl() may use `fAuxData` as
+   /// memory that stays persistent between calls.
    std::vector<unsigned char> *fAuxData = nullptr;
 };
 
 // clang-format off
 /**
-\class ROOT::RFieldBase::RBulk
+\class ROOT::RFieldBase::RBulkValues
 \ingroup NTuple
 \brief Points to an array of objects with RNTuple I/O support, used for bulk reading.
 
@@ -766,10 +766,10 @@ Similar to RValue, but manages an array of consecutive values. Bulks have to com
 Bulk I/O works with two bit masks: the mask of all the available entries in the current bulk and the mask
 of the required entries in a bulk read. The idea is that a single bulk may serve multiple read operations
 on the same range, where in each read operation a different subset of values is required.
-The memory of the value array is managed by the RBulk class.
+The memory of the value array is managed by the RBulkValues class.
 */
 // clang-format on
-class RFieldBase::RBulk {
+class RFieldBase::RBulkValues {
 private:
    friend class RFieldBase;
 
@@ -785,7 +785,7 @@ private:
    RNTupleLocalIndex fFirstIndex;      ///< Index of the first value of the array
    /// Reading arrays of complex values may require additional memory, for instance for the elements of
    /// arrays of vectors. A pointer to the `fAuxData` array is passed to the field's BulkRead method.
-   /// The RBulk class does not modify the array in-between calls to the field's BulkRead method.
+   /// The RBulkValues class does not modify the array in-between calls to the field's BulkRead method.
    std::vector<unsigned char> fAuxData;
 
    void ReleaseValues();
@@ -804,16 +804,17 @@ private:
 
    void *GetValuePtrAt(std::size_t idx) const { return reinterpret_cast<unsigned char *>(fValues) + idx * fValueSize; }
 
-   explicit RBulk(RFieldBase *field) : fField(field), fDeleter(field->GetDeleter()), fValueSize(field->GetValueSize())
+   explicit RBulkValues(RFieldBase *field)
+      : fField(field), fDeleter(field->GetDeleter()), fValueSize(field->GetValueSize())
    {
    }
 
 public:
-   ~RBulk();
-   RBulk(const RBulk &) = delete;
-   RBulk &operator=(const RBulk &) = delete;
-   RBulk(RBulk &&other);
-   RBulk &operator=(RBulk &&other);
+   ~RBulkValues();
+   RBulkValues(const RBulkValues &) = delete;
+   RBulkValues &operator=(const RBulkValues &) = delete;
+   RBulkValues(RBulkValues &&other);
+   RBulkValues &operator=(RBulkValues &&other);
 
    // Sets `fValues` and `fSize`/`fCapacity` to the given values. The capacity is specified in number of values.
    // Once a buffer is adopted, an attempt to read more values then available throws an exception.

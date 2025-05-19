@@ -14,7 +14,7 @@ TEST(RNTupleBulk, Simple)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   RFieldBase::RBulk bulk = reader->GetModel().CreateBulk("int");
+   RFieldBase::RBulkValues bulk = reader->GetModel().CreateBulk("int");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, false /* the optimization for simple fields should ignore the mask */);
@@ -47,7 +47,7 @@ TEST(RNTupleBulk, Complex)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   RFieldBase::RBulk bulk = reader->GetModel().CreateBulk("S");
+   RFieldBase::RBulkValues bulk = reader->GetModel().CreateBulk("S");
    auto mask = std::make_unique<bool[]>(10);
    for (unsigned int i = 0; i < 10; ++i)
       mask[i] = (i % 2 == 0);
@@ -98,8 +98,8 @@ TEST(RNTupleBulk, CardinalityField)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    const auto &model = reader->GetModel();
 
-   RFieldBase::RBulk bulk32 = model.CreateBulk("card32");
-   RFieldBase::RBulk bulk64 = model.CreateBulk("card64");
+   RFieldBase::RBulkValues bulk32 = model.CreateBulk("card32");
+   RFieldBase::RBulkValues bulk64 = model.CreateBulk("card64");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, false /* the cardinality field optimization should ignore the mask */);
@@ -140,9 +140,9 @@ TEST(RNTupleBulk, RVec)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    const auto &model = reader->GetModel();
 
-   RFieldBase::RBulk bulkI = model.CreateBulk("vint");
-   RFieldBase::RBulk bulkS = model.CreateBulk("vs");
-   RFieldBase::RBulk bulkVI = model.CreateBulk("vvint");
+   RFieldBase::RBulkValues bulkI = model.CreateBulk("vint");
+   RFieldBase::RBulkValues bulkS = model.CreateBulk("vs");
+   RFieldBase::RBulkValues bulkVI = model.CreateBulk("vvint");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, true);
@@ -191,7 +191,7 @@ TEST(RNTupleBulk, Adopted)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   RFieldBase::RBulk bulkI = reader->GetModel().CreateBulk("vint");
+   RFieldBase::RBulkValues bulkI = reader->GetModel().CreateBulk("vint");
 
    auto mask = std::make_unique<bool[]>(10);
    std::fill(mask.get(), mask.get() + 10, true);

@@ -120,7 +120,7 @@ void ROOT::RFieldBase::RValue::BindRawPtr(void *rawPtr)
 
 //------------------------------------------------------------------------------
 
-ROOT::RFieldBase::RBulk::RBulk(RBulk &&other)
+ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other)
    : fField(other.fField),
      fValueSize(other.fValueSize),
      fCapacity(other.fCapacity),
@@ -134,7 +134,7 @@ ROOT::RFieldBase::RBulk::RBulk(RBulk &&other)
    std::swap(fMaskAvail, other.fMaskAvail);
 }
 
-ROOT::RFieldBase::RBulk &ROOT::RFieldBase::RBulk::operator=(RBulk &&other)
+ROOT::RFieldBase::RBulkValues &ROOT::RFieldBase::RBulkValues::operator=(RBulkValues &&other)
 {
    std::swap(fField, other.fField);
    std::swap(fDeleter, other.fDeleter);
@@ -149,13 +149,13 @@ ROOT::RFieldBase::RBulk &ROOT::RFieldBase::RBulk::operator=(RBulk &&other)
    return *this;
 }
 
-ROOT::RFieldBase::RBulk::~RBulk()
+ROOT::RFieldBase::RBulkValues::~RBulkValues()
 {
    if (fValues)
       ReleaseValues();
 }
 
-void ROOT::RFieldBase::RBulk::ReleaseValues()
+void ROOT::RFieldBase::RBulkValues::ReleaseValues()
 {
    if (fIsAdopted)
       return;
@@ -169,7 +169,7 @@ void ROOT::RFieldBase::RBulk::ReleaseValues()
    operator delete(fValues);
 }
 
-void ROOT::RFieldBase::RBulk::Reset(RNTupleLocalIndex firstIndex, std::size_t size)
+void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::size_t size)
 {
    if (fCapacity < size) {
       if (fIsAdopted) {
@@ -195,14 +195,14 @@ void ROOT::RFieldBase::RBulk::Reset(RNTupleLocalIndex firstIndex, std::size_t si
    fSize = size;
 }
 
-void ROOT::RFieldBase::RBulk::CountValidValues()
+void ROOT::RFieldBase::RBulkValues::CountValidValues()
 {
    fNValidValues = 0;
    for (std::size_t i = 0; i < fSize; ++i)
       fNValidValues += static_cast<std::size_t>(fMaskAvail[i]);
 }
 
-void ROOT::RFieldBase::RBulk::AdoptBuffer(void *buf, std::size_t capacity)
+void ROOT::RFieldBase::RBulkValues::AdoptBuffer(void *buf, std::size_t capacity)
 {
    ReleaseValues();
    fValues = buf;
@@ -784,9 +784,9 @@ std::size_t ROOT::RFieldBase::Append(const void *from)
    return fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-ROOT::RFieldBase::RBulk ROOT::RFieldBase::CreateBulk()
+ROOT::RFieldBase::RBulkValues ROOT::RFieldBase::CreateBulk()
 {
-   return RBulk(this);
+   return RBulkValues(this);
 }
 
 ROOT::RFieldBase::RValue ROOT::RFieldBase::BindValue(std::shared_ptr<void> objPtr)

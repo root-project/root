@@ -254,7 +254,7 @@ The user-provided model can be limited to a subset of fields.
 Data is populated to an explicit `REntry` or the model's default entry through `RNTupleReader::LoadEntry()`.
 
 The reader can create `RNTupleView` objects for the independent reading of individual fields.
-The reader can create `RBulk` objects for bulk reading of individual fields.
+The reader can create `RBulkValues` objects for bulk reading of individual fields.
 
 Additionally, the reader provides access to a cached copy of the descriptor.
 It can display individual entries (`RNTupleReader::Show()`) and summary information (`RNTupleReader::PrintInfo()`).
