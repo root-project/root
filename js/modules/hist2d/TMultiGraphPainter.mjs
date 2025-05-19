@@ -189,15 +189,13 @@ class TMultiGraphPainter extends ObjectPainter {
             xaxis = histo.fYaxis;
             yaxis = histo.fZaxis;
          } else {
-            histo = createHistogram(clTH1F, 10);
+            histo = createHistogram(src_hist?._typename ?? clTH1F, src_hist?.fXaxis.fNbins ?? 10);
             xaxis = histo.fXaxis;
             yaxis = histo.fYaxis;
          }
 
          if (src_hist) {
-            xaxis.fTimeDisplay = src_hist.fXaxis.fTimeDisplay;
-            xaxis.fTimeFormat = src_hist.fXaxis.fTimeFormat;
-            xaxis.fTitle = src_hist.fXaxis.fTitle;
+            Object.assign(xaxis, src_hist.fXaxis);
             yaxis.fTitle = src_hist.fYaxis.fTitle;
          }
 
@@ -208,8 +206,10 @@ class TMultiGraphPainter extends ObjectPainter {
             if (t[1]) xaxis.fTitle = t[1];
             if (t[2]) yaxis.fTitle = t[2];
          }
-         xaxis.fXmin = uxmin;
-         xaxis.fXmax = uxmax;
+         if (!xaxis.fLabels) {
+            xaxis.fXmin = uxmin;
+            xaxis.fXmax = uxmax;
+         }
       }
 
       const axis = this._3d ? histo.fZaxis : histo.fYaxis;
