@@ -11,31 +11,26 @@
 #ifndef ROOEXTENDEDBINDING
 #define ROOEXTENDEDBINDING
 
-#include "RooAbsReal.h"
-#include "RooRealProxy.h"
-#include "RooCategoryProxy.h"
-#include "RooSetProxy.h"
-#include "RooAbsPdf.h"
-#include "RooAbsCategory.h"
+#include <RooAbsPdf.h>
+#include <RooAbsReal.h>
+#include <RooRealProxy.h>
+#include <RooSetProxy.h>
 
 class RooExtendedBinding : public RooAbsReal {
 public:
-  RooExtendedBinding() {} ;
-  RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf);
-  RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& _obs);
-  RooExtendedBinding(const RooExtendedBinding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname=nullptr) const override { return new RooExtendedBinding(*this,newname); }
+   RooExtendedBinding() {}
+   RooExtendedBinding(const char *name, const char *title, RooAbsPdf &_pdf);
+   RooExtendedBinding(const char *name, const char *title, RooAbsPdf &_pdf, const RooArgSet &_obs);
+   RooExtendedBinding(const RooExtendedBinding &other, const char *name = nullptr);
+   TObject *clone(const char *newname = nullptr) const override { return new RooExtendedBinding(*this, newname); }
 
-protected:
-
-  RooRealProxy pdf ;
-  RooSetProxy _obsList;
-
-  double evaluate() const override ;
+   double evaluate() const override;
 
 private:
+   RooRealProxy pdf;
+   std::unique_ptr<RooSetProxy> _obsList;
 
-  ClassDefOverride(RooExtendedBinding,2);
+   ClassDefOverride(RooExtendedBinding, 2);
 };
 
 #endif
