@@ -256,6 +256,8 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          const bool autoParseSuspended = gInterpreter->IsAutoParsingSuspended();
 
          if (scopeIsNamespace && !autoParseSuspended) {
+            // Lock down the autoparsing state.
+            R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
             TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter, true);
 
             auto listOfEnums = tClassScope->GetListOfEnums(true);
