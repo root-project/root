@@ -533,7 +533,7 @@ ROOT::RFieldToken ROOT::RNTupleModel::GetToken(std::string_view fieldName) const
    return ROOT::RFieldToken(std::distance(topLevelFields.begin(), it), fSchemaId);
 }
 
-ROOT::RFieldBase::RBulk ROOT::RNTupleModel::CreateBulk(std::string_view fieldName) const
+ROOT::RFieldBase::RBulkValues ROOT::RNTupleModel::CreateBulk(std::string_view fieldName) const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
