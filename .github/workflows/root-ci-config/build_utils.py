@@ -302,3 +302,24 @@ def download_latest(url: str, prefix: str, destination: str) -> str:
         log.add(f"\ncurl --output {destination}/artifacts.tar.gz {url}/{latest}\n")
 
     return f"{destination}/artifacts.tar.gz"
+
+
+def remove_file_match_ext(directory: str, extension: str) -> str:
+    """
+    Deletes all files in a directory and its subdirectory matching an extension
+
+    Args:
+        directory (str): The path to the directory to search in.
+        extension (str): The regular expression pattern to match filenames against.
+    """
+    print_fancy(f"Removing gcda files from {directory}")
+    log.add(f"\nfind {directory} -name \*.gcda -exec rm {{}} \;")
+    pattern = "." + extension
+    count = 0
+    for currentdir, _, files in os.walk(directory):
+        for filename in files:
+            if filename.endswith(pattern):
+                file_path = os.path.join(currentdir, filename)
+                os.remove(file_path)
+                count += 1
+    print_fancy(f"Deleted {count} gcda files")
