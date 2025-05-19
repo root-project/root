@@ -1,0 +1,31 @@
+{
+    "samples": {
+        "sample1": {
+            "trees": [
+                "Events"
+            ],
+            "files": [
+                "root://eospublic.cern.ch//eos/opendata/cms/mc/RunIISummer20UL16NanoAODv9/BprimeBtoTW_M-1000_NWALO_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/106X_mcRun2_asymptotic_v17-v2/70000/01EAD38D-A98E-6A48-973C-9C4F56997948.root",
+                "root://eospublic.cern.ch//eos/opendata/cms/mc/RunIISummer20UL16NanoAODv9/BprimeBtoTW_M-1000_NWALO_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/106X_mcRun2_asymptotic_v17-v2/70000/0C9AB7D0-1A90-4440-BE6D-963C31D4FEF1.root",
+                "root://eospublic.cern.ch//eos/opendata/cms/mc/RunIISummer20UL16NanoAODv9/BprimeBtoTW_M-1000_NWALO_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/106X_mcRun2_asymptotic_v17-v2/70000/23638D25-6C3C-C24F-9682-79BC4F68003A.root"
+            ],
+            "metadata": {
+                "data_or_mc": "data",
+                "lum": 200.0
+            }
+        },
+        "sample2": {
+            "trees": [
+                "tree"
+            ],
+            "files": [
+                "../data/ttree/distrdf_roottest_check_fromspec.root",
+                "../data/ttree/distrdf_roottest_check_rungraphs.root"
+            ],
+            "metadata": {
+                "data_or_mc": "mc",
+                "lum": 100.0
+            }
+        }
+    }
+}
