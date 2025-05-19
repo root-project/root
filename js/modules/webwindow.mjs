@@ -528,6 +528,9 @@ class WebWindowHandle {
       return channel;
    }
 
+   /** @summary Standalone mode without server connection */
+   isStandalone() { return this.kind === 'file'; }
+
    /** @summary Returns true if socket connected */
    isConnected() { return this.state > 0; }
 

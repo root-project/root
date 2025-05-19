@@ -11,7 +11,7 @@ import { TH1Painter as TH1Painter2D } from '../hist2d/TH1Painter.mjs';
 class TH1Painter extends TH1Painter2D {
 
    /** @summary draw TH1 object in 3D mode */
-   draw3D(reason) {
+   async draw3D(reason) {
       this.mode3d = true;
 
       const main = this.getFramePainter(), // who makes axis drawing

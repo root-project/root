@@ -2928,7 +2928,7 @@ class TFramePainter extends ObjectPainter {
                changed = true;
                zoom_z = false;
                if (interactive)
-                  this.zoomChangedInteractive('y', interactive);
+                  this.zoomChangedInteractive('z', interactive);
             }
          });
       }

@@ -380,7 +380,7 @@ class TASImagePainter extends ObjectPainter {
          pal_painter = p;
 
          // mark painter as secondary - not in list of TCanvas primitives
-         pal_painter.setSecondary(this);
+         pal_painter.setSecondaryId(this);
 
          // make dummy redraw, palette will be updated only from histogram painter
          pal_painter.redraw = function() {};
