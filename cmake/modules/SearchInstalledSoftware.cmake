@@ -1888,7 +1888,6 @@ if (testing OR testsupport)
 endif()
 
 if (builtin_gtest)
-  # FIXME: Remove our version of gtest in roottest. We can reuse this one.
   # Add googletest
   # http://stackoverflow.com/questions/9689183/cmake-googletest
 
