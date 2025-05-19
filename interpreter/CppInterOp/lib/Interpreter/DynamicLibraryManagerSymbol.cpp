@@ -256,7 +256,7 @@ public:
 static inline mode_t cached_lstat(const char *path) {
   static StringMap<mode_t> lstat_cache;
 
-  // If already cached - retun cached result
+  // If already cached - return cached result
   auto it = lstat_cache.find(path);
   if (it != lstat_cache.end())
     return it->second;
@@ -272,7 +272,7 @@ static inline mode_t cached_lstat(const char *path) {
 static inline StringRef cached_readlink(const char* pathname) {
   static StringMap<std::string> readlink_cache;
 
-  // If already cached - retun cached result
+  // If already cached - return cached result
   auto it = readlink_cache.find(pathname);
   if (it != readlink_cache.end())
     return StringRef(it->second);
@@ -304,7 +304,7 @@ std::string cached_realpath(StringRef path, StringRef base_path = "",
     return "";
   }
 
-  // If already cached - retun cached result
+  // If already cached - return cached result
   static StringMap<std::pair<std::string,int>> cache;
   bool relative_path = llvm::sys::path::is_relative(path);
   if (!relative_path) {
@@ -606,10 +606,12 @@ namespace Cpp {
           Deps.push_back(Data + Dyn.d_un.d_val);
           break;
         case ELF::DT_RPATH:
-          SplitPaths(Data + Dyn.d_un.d_val, RPath, utils::kAllowNonExistant, Cpp::utils::platform::kEnvDelim, false);
+          SplitPaths(Data + Dyn.d_un.d_val, RPath, utils::kAllowNonExistent,
+                     Cpp::utils::platform::kEnvDelim, false);
           break;
         case ELF::DT_RUNPATH:
-          SplitPaths(Data + Dyn.d_un.d_val, RunPath, utils::kAllowNonExistant, Cpp::utils::platform::kEnvDelim, false);
+          SplitPaths(Data + Dyn.d_un.d_val, RunPath, utils::kAllowNonExistent,
+                     Cpp::utils::platform::kEnvDelim, false);
           break;
         case ELF::DT_FLAGS_1:
           // Check if this is not a pie executable.
@@ -757,7 +759,9 @@ namespace Cpp {
               }
               else if (Command.C.cmd == MachO::LC_RPATH) {
                 MachO::rpath_command rpathCmd = Obj->getRpathCommand(Command);
-                SplitPaths(Command.Ptr + rpathCmd.path, RPath, utils::kAllowNonExistant, Cpp::utils::platform::kEnvDelim, false);
+                SplitPaths(Command.Ptr + rpathCmd.path, RPath,
+                           utils::kAllowNonExistent,
+                           Cpp::utils::platform::kEnvDelim, false);
               }
             }
           } else if (BinObjF->isCOFF()) {

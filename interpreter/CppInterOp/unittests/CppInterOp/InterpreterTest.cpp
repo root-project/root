@@ -86,7 +86,8 @@ TEST(InterpreterTest, Process) {
 #endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
-  auto* I = Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = { "-include", "new" };
+  auto* I = Cpp::CreateInterpreter(interpreter_args);
   EXPECT_TRUE(Cpp::Process("") == 0);
   EXPECT_TRUE(Cpp::Process("int a = 12;") == 0);
   EXPECT_FALSE(Cpp::Process("error_here;") == 0);
@@ -165,6 +166,25 @@ TEST(InterpreterTest, CreateInterpreter) {
   clang_Interpreter_dispose(CXI);
 #endif
 }
+
+#ifndef CPPINTEROP_USE_CLING
+TEST(InterpreterTest, CreateInterpreterCAPI) {
+  const char* argv[] = {"-std=c++17"};
+  auto *CXI = clang_createInterpreter(argv, 1);
+  auto CLI = clang_Interpreter_getClangInterpreter(CXI);
+  EXPECT_TRUE(CLI);
+  clang_Interpreter_dispose(CXI);
+}
+
+TEST(InterpreterTest, CreateInterpreterCAPIFailure) {
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+  const char* argv[] = {"-fsyntax-only", "-Xclang", "-invalid-plugin"};
+  auto *CXI = clang_createInterpreter(argv, 3);
+  EXPECT_EQ(CXI, nullptr);
+}
+#endif
 
 #ifdef LLVM_BINARY_DIR
 TEST(InterpreterTest, DetectResourceDir) {

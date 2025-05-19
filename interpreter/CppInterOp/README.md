@@ -10,6 +10,8 @@
 
 [![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/Windows.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/Windows.yml)
 
+[![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/Windows-arm.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/Windows-arm.yml)
+
 [![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/emscripten.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/emscripten.yml)
 
 [![codecov](https://codecov.io/gh/compiler-research/CppInterOp/branch/main/graph/badge.svg)](https://codecov.io/gh/compiler-research/CppInterOp)
@@ -113,10 +115,10 @@ git clone --depth=1 https://github.com/compiler-research/cppyy-backend.git
 
 #### Setup Clang-REPL
 
-Clone the 19.x release of the LLVM project repository.
+Clone the 20.x release of the LLVM project repository.
 
 ```bash
-git clone --depth=1 --branch release/19.x https://github.com/llvm/llvm-project.git
+git clone --depth=1 --branch release/20.x https://github.com/llvm/llvm-project.git
 cd llvm-project
 ```
 

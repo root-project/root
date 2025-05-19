@@ -730,7 +730,7 @@ namespace Cpp {
   ///
   ///\param[in] candidates - vector of overloads that come under the
   ///           parent scope and have the same name
-  ///\param[in] explicit_types - set of expicitly instantiated template types
+  ///\param[in] explicit_types - set of explicitly instantiated template types
   ///\param[in] arg_types - set of argument types
   ///\returns Instantiated function pointer
   CPPINTEROP_API TCppFunction_t
@@ -791,7 +791,7 @@ namespace Cpp {
   /// Append all Code completion suggestions to Results.
   ///\param[out] Results - CC suggestions for code fragment. Suggestions are
   /// appended.
-  ///\param[in] code - code fragmet to complete
+  ///\param[in] code - code fragment to complete
   ///\param[in] complete_line - position (line) in code for suggestion
   ///\param[in] complete_column - position (column) in code for suggestion
   CPPINTEROP_API void CodeComplete(std::vector<std::string>& Results,

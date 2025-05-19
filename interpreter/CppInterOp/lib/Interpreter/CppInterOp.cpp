@@ -1421,7 +1421,7 @@ namespace Cpp {
         // not C. That means BaseCXXRD derives from C. Offset needs to be
         // calculated for Derived class
 
-        // Depth first Search is performed to the class that declears FD from
+        // Depth first Search is performed to the class that declares FD from
         // the base class
         std::vector<CXXRecordDecl*> stack;
         std::map<CXXRecordDecl*, CXXRecordDecl*> direction;
@@ -1792,6 +1792,29 @@ namespace Cpp {
       QT.getAsStringInternal(type_name, Policy);
     }
 
+    static void GetDeclName(const clang::Decl* D, ASTContext& Context,
+                            std::string& name) {
+      // Helper to extract a fully qualified name from a Decl
+      PrintingPolicy Policy(Context.getPrintingPolicy());
+      Policy.SuppressTagKeyword = true;
+      Policy.SuppressUnwrittenScope = true;
+      if (const TypeDecl* TD = dyn_cast<TypeDecl>(D)) {
+        // This is a class, struct, or union member.
+        QualType QT;
+        if (const TypedefDecl* Typedef = dyn_cast<const TypedefDecl>(TD)) {
+          // Handle the typedefs to anonymous types.
+          QT = Typedef->getTypeSourceInfo()->getType();
+        } else
+          QT = {TD->getTypeForDecl(), 0};
+        get_type_as_string(QT, name, Context, Policy);
+      } else if (const NamedDecl* ND = dyn_cast<NamedDecl>(D)) {
+        // This is a namespace member.
+        raw_string_ostream stream(name);
+        ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+        stream.flush();
+      }
+    }
+
     void collect_type_info(const FunctionDecl* FD, QualType& QT,
                            std::ostringstream& typedefbuf,
                            std::ostringstream& callbuf, std::string& type_name,
@@ -1895,7 +1918,7 @@ namespace Cpp {
             callbuf << ' ';
           } else {
             callbuf << "\n";
-            indent(callbuf, indent_level);
+            indent(callbuf, indent_level + 1);
           }
         }
         if (refType != kNotReference) {
@@ -1940,8 +1963,14 @@ namespace Cpp {
       // Same applies with member methods which seem to cause parse failures
       // even when we supply the object parameter. Therefore we only use it in
       // cases where we know it works and set this variable to true when we do.
+
+      // true if not a overloaded operators or the overloaded operator is call
+      // operator
+      bool op_flag = !FD->isOverloadedOperator() ||
+                     FD->getOverloadedOperator() == clang::OO_Call;
+
       bool ShouldCastFunction =
-          !isa<CXXMethodDecl>(FD) && N == FD->getNumParams();
+          !isa<CXXMethodDecl>(FD) && N == FD->getNumParams() && op_flag;
       if (ShouldCastFunction) {
         callbuf << "(";
         callbuf << "(";
@@ -1955,7 +1984,7 @@ namespace Cpp {
                 callbuf << ' ';
               } else {
                 callbuf << "\n";
-                indent(callbuf, indent_level);
+                indent(callbuf, indent_level + 1);
               }
             }
             const ParmVarDecl* PVD = FD->getParamDecl(i);
@@ -1980,11 +2009,13 @@ namespace Cpp {
           callbuf << "((const " << class_name << "*)obj)->";
         else
           callbuf << "((" << class_name << "*)obj)->";
-      } else if (const NamedDecl* ND =
-                     dyn_cast<NamedDecl>(get_non_transparent_decl_context(FD))) {
+
+        if (op_flag)
+          callbuf << class_name << "::";
+      } else if (isa<NamedDecl>(get_non_transparent_decl_context(FD))) {
         // This is a namespace member.
-        (void)ND;
-        callbuf << class_name << "::";
+        if (op_flag || N <= 1)
+          callbuf << class_name << "::";
       }
       //   callbuf << fMethod->Name() << "(";
       {
@@ -2007,7 +2038,8 @@ namespace Cpp {
           name = name_without_template_args +
                  (template_args.empty() ? "" : " " + template_args);
         }
-        callbuf << name;
+        if (op_flag || N <= 1)
+          callbuf << name;
       }
       if (ShouldCastFunction)
         callbuf << ")";
@@ -2024,12 +2056,12 @@ namespace Cpp {
                           isPointer, indent_level, true);
 
         if (i) {
-          callbuf << ',';
-          if (i % 2) {
-            callbuf << ' ';
+          if (op_flag) {
+            callbuf << ", ";
           } else {
-            callbuf << "\n";
-            indent(callbuf, indent_level);
+            callbuf << ' '
+                    << Cpp::getOperatorSpelling(FD->getOverloadedOperator())
+                    << ' ';
           }
         }
 
@@ -2205,22 +2237,12 @@ namespace Cpp {
                          std::string& wrapper_name, std::string& wrapper) {
       assert(FD && "generate_wrapper called without a function decl!");
       ASTContext& Context = FD->getASTContext();
-      PrintingPolicy Policy(Context.getPrintingPolicy());
       //
       //  Get the class or namespace name.
       //
       std::string class_name;
       const clang::DeclContext* DC = get_non_transparent_decl_context(FD);
-      if (const TypeDecl* TD = dyn_cast<TypeDecl>(DC)) {
-        // This is a class, struct, or union member.
-        QualType QT(TD->getTypeForDecl(), 0);
-        get_type_as_string(QT, class_name, Context, Policy);
-      } else if (const NamedDecl* ND = dyn_cast<NamedDecl>(DC)) {
-        // This is a namespace member.
-        raw_string_ostream stream(class_name);
-        ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-        stream.flush();
-      }
+      GetDeclName(cast<Decl>(DC), Context, class_name);
       //
       //  Check to make sure that we can
       //  instantiate and codegen this function.
@@ -2670,31 +2692,11 @@ namespace Cpp {
     }
 
     // FIXME: Sink in the code duplication from get_wrapper_code.
-    static std::string PrepareTorWrapper(const Decl* D,
-                                         const char* wrapper_prefix,
-                                         std::string& class_name) {
+    static std::string PrepareStructorWrapper(const Decl* D,
+                                              const char* wrapper_prefix,
+                                              std::string& class_name) {
       ASTContext &Context = D->getASTContext();
-      PrintingPolicy Policy(Context.getPrintingPolicy());
-      Policy.SuppressTagKeyword = true;
-      Policy.SuppressUnwrittenScope = true;
-      //
-      //  Get the class or namespace name.
-      //
-      if (const TypeDecl *TD = dyn_cast<TypeDecl>(D)) {
-        // This is a class, struct, or union member.
-        // Handle the typedefs to anonymous types.
-        QualType QT;
-        if (const TypedefDecl *Typedef = dyn_cast<const TypedefDecl>(TD))
-          QT = Typedef->getTypeSourceInfo()->getType();
-        else
-          QT = {TD->getTypeForDecl(), 0};
-        get_type_as_string(QT, class_name, Context, Policy);
-      } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
-        // This is a namespace member.
-        raw_string_ostream stream(class_name);
-        ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-        stream.flush();
-      }
+      GetDeclName(D, Context, class_name);
 
       //
       //  Make the wrapper name.
@@ -2754,7 +2756,7 @@ namespace Cpp {
       //  Make the wrapper name.
       //
       std::string class_name;
-      string wrapper_name = PrepareTorWrapper(D, "__dtor", class_name);
+      string wrapper_name = PrepareStructorWrapper(D, "__dtor", class_name);
       //
       //  Write the wrapper code.
       //
@@ -2957,7 +2959,15 @@ namespace Cpp {
                    std::back_inserter(ClingArgv),
                    [&](const std::string& str) { return str.c_str(); });
 
+#ifdef CPPINTEROP_USE_CLING
     auto I = new compat::Interpreter(ClingArgv.size(), &ClingArgv[0]);
+#else
+    auto Interp = compat::Interpreter::create(
+        static_cast<int>(ClingArgv.size()), ClingArgv.data());
+    if (!Interp)
+      return nullptr;
+    auto* I = Interp.release();
+#endif
 
     // Honor -mllvm.
     //
@@ -3554,7 +3564,21 @@ namespace Cpp {
   void GetOperator(TCppScope_t scope, Operator op,
                    std::vector<TCppFunction_t>& operators, OperatorArity kind) {
     Decl* D = static_cast<Decl*>(scope);
-    if (auto* DC = llvm::dyn_cast_or_null<DeclContext>(D)) {
+    if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
+      auto fn = [&operators, kind, op](const RecordDecl* RD) {
+        ASTContext& C = RD->getASTContext();
+        DeclContextLookupResult Result =
+            RD->lookup(C.DeclarationNames.getCXXOperatorName(
+                (clang::OverloadedOperatorKind)op));
+        for (auto* i : Result) {
+          if (kind & GetOperatorArity(i))
+            operators.push_back(i);
+        }
+        return true;
+      };
+      fn(CXXRD);
+      CXXRD->forallBases(fn);
+    } else if (auto* DC = llvm::dyn_cast_or_null<DeclContext>(D)) {
       ASTContext& C = getSema().getASTContext();
       DeclContextLookupResult Result =
           DC->lookup(C.DeclarationNames.getCXXOperatorName(
@@ -3646,7 +3670,7 @@ namespace Cpp {
       m_DupFD = dup(FD);
 
       // Flush now or can drop the buffer when dup2 is called with Fd later.
-      // This seems only neccessary when piping stdout or stderr, but do it
+      // This seems only necessary when piping stdout or stderr, but do it
       // for ttys to avoid over complicated code for minimal benefit.
       ::fflush(FD == STDOUT_FILENO ? stdout : stderr);
       if (dup2(fileno(m_TempFile.get()), FD) < 0)
