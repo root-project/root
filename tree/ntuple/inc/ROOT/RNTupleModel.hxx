@@ -347,7 +347,7 @@ public:
    /// Creates a token to be used in REntry methods to address a field present in the entry
    ROOT::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an RException if no field with the given name exists.
-   ROOT::RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
+   ROOT::RFieldBase::RBulkValues CreateBulk(std::string_view fieldName) const;
 
    /// Retrieves the default entry of this model.
    /// Throws an RException if this is a bare model (i.e. if it was created with CreateBare()).
