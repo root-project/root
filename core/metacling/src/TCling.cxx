@@ -1692,6 +1692,7 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM from TFile; returns true on success.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::LoadPCMImpl(TFile &pcmFile)
 {
@@ -1807,6 +1808,7 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a rdict PCM, issues diagnostics if it fails.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::LoadPCM(std::string pcmFileNameFullPath)
 {
@@ -2006,6 +2008,7 @@ void TCling::ProcessClassesToUpdate()
 /// libraries.
 /// The payload code is injected "as is" in the interpreter.
 /// The value of 'triggerFunc' is used to find the shared library location.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::RegisterModule(const char* modulename,
                             const char** headers,
