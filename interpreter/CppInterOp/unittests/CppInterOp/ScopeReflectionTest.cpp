@@ -4,7 +4,7 @@
 #include "clang-c/CXCppInterOp.h"
 
 #include "clang/AST/ASTContext.h"
-#include "clang/Interpreter/CppInterOp.h"
+#include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
@@ -163,12 +163,19 @@ TEST(ScopeReflectionTest, SizeOf) {
 
 
 TEST(ScopeReflectionTest, IsBuiltin) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
+
   // static std::set<std::string> g_builtins =
   // {"bool", "char", "signed char", "unsigned char", "wchar_t", "short", "unsigned short",
   //  "int", "unsigned int", "long", "unsigned long", "long long", "unsigned long long",
   //  "float", "double", "long double", "void"}
 
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = { "-include", "new" };
+
+  Cpp::CreateInterpreter(interpreter_args);
   ASTContext &C = Interp->getCI()->getASTContext();
   EXPECT_TRUE(Cpp::IsBuiltin(C.BoolTy.getAsOpaquePtr()));
   EXPECT_TRUE(Cpp::IsBuiltin(C.CharTy.getAsOpaquePtr()));
@@ -493,6 +500,10 @@ TEST(ScopeReflectionTest, GetScopefromCompleteName) {
 }
 
 TEST(ScopeReflectionTest, GetNamed) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   std::string code = R"(namespace N1 {
                         namespace N2 {
                           class C {
@@ -503,7 +514,10 @@ TEST(ScopeReflectionTest, GetNamed) {
                         }
                         }
                        )";
-  Cpp::CreateInterpreter();
+
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+
+  Cpp::CreateInterpreter(interpreter_args);
 
   Interp->declare(code);
   Cpp::TCppScope_t ns_N1 = Cpp::GetNamed("N1", nullptr);
@@ -878,9 +892,14 @@ template<typename T> T TrivialFnTemplate() { return T(); }
 }
 
 TEST(ScopeReflectionTest, InstantiateTemplateFunctionFromString) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
   std::string code = R"(#include <memory>)";
   Interp->process(code);
   const char* str = "std::make_unique<int,int>";
@@ -1018,12 +1037,18 @@ TEST(ScopeReflectionTest, GetClassTemplateInstantiationArgs) {
 
 
 TEST(ScopeReflectionTest, IncludeVector) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   if (llvm::sys::RunningOnValgrind())
       GTEST_SKIP() << "XFAIL due to Valgrind report";
   std::string code = R"(
     #include <vector>
     #include <iostream>
   )";
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
   Interp->declare(code);
 }
 
@@ -1099,4 +1124,30 @@ TEST(ScopeReflectionTest, GetOperator) {
   Cpp::GetOperator(Cpp::GetScope("extra_ops"), Cpp::Operator::OP_Tilde, ops,
                    Cpp::OperatorArity::kBinary);
   EXPECT_EQ(ops.size(), 0);
+
+  std::string inheritance_code = R"(
+  struct Parent {
+    int x;
+    Parent(int x) : x(x) {}
+    Parent operator+(const Parent& other) {
+      return Parent(x + other.x);
+    }
+  };
+
+  struct Child : Parent {
+    Child(int x) : Parent(x) {}
+    Child operator-(const Child& other) {
+      return Child(x - other.x);
+    }
+  };
+  )";
+  Cpp::Declare(inheritance_code.c_str());
+
+  ops.clear();
+  Cpp::GetOperator(Cpp::GetScope("Child"), Cpp::Operator::OP_Plus, ops);
+  EXPECT_EQ(ops.size(), 1);
+
+  ops.clear();
+  Cpp::GetOperator(Cpp::GetScope("Child"), Cpp::Operator::OP_Minus, ops);
+  EXPECT_EQ(ops.size(), 1);
 }

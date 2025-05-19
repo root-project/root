@@ -14,13 +14,16 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 using namespace clang;
 using namespace llvm;
 
-void TestUtils::GetAllTopLevelDecls(const std::string& code, std::vector<Decl*>& Decls,
-                                    bool filter_implicitGenerated /* = false */) {
-  Cpp::CreateInterpreter();
+void TestUtils::GetAllTopLevelDecls(
+    const std::string& code, std::vector<Decl*>& Decls,
+    bool filter_implicitGenerated /* = false */,
+    const std::vector<const char*>& interpreter_args /* = {} */) {
+  Cpp::CreateInterpreter(interpreter_args);
 #ifdef CPPINTEROP_USE_CLING
   cling::Transaction *T = nullptr;
   Interp->declare(code, &T);

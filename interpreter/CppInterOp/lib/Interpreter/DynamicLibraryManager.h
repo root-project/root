@@ -190,7 +190,7 @@ public:
   /// Find the first not-yet-loaded shared object that contains the symbol
   ///
   ///\param[in] mangledName - the mangled name to look for.
-  ///\param[in] searchSystem - whether to decend into system libraries.
+  ///\param[in] searchSystem - whether to descend into system libraries.
   ///
   ///\returns the library name if found, and empty string otherwise.
   ///
