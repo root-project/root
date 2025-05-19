@@ -1,24 +1,24 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import logging
+import pickle
 import uuid
 import warnings
-
+from abc import ABC, abstractmethod
 from collections import Counter, deque
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial, singledispatch
 from itertools import zip_longest
-from typing import Callable, Deque, Dict, Iterable, List, Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Callable, Deque, Dict, Iterable, List, Optional, Union
 
 import ROOT
 
 from DistRDF import ComputationGraphGenerator, Ranges, _graph_cache
+from DistRDF.Backends import Utils
 from DistRDF.Backends.Base import distrdf_mapper, distrdf_reducer
 from DistRDF.Node import Node
 from DistRDF.Operation import Action, InstantAction, Operation
-from DistRDF.Backends import Utils
 
 if TYPE_CHECKING:
     from DistRDF.Backends.Base import BaseBackend, TaskResult
@@ -497,7 +497,7 @@ class TreeHeadNode(HeadNode):
                         "chunks the dataset can be split in. Some tasks could be doing no work. Consider "
                         "setting the 'npartitions' parameter of the RDataFrame constructor to a lower value.")
 
-        return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo, self.exec_id)
+        return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo, self.exec_id, None)
 
     def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
@@ -636,23 +636,39 @@ class RDatasetSpecHeadNode(HeadNode):
         super().__init__(backend, npartitions, localdf)
 
         # Information about friend trees, if they are present.
+        self.sampleMap: Dict[str, Ranges.SerializableRSample] = None 
+        
         self.friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo] = None
-
+                
+            
         # Retrieve the RDatasetSpec that will be processed
         if isinstance(args[0], ROOT.RDF.Experimental.RDatasetSpec):
             # RDataFrame(rdatasetspec)
             fi = args[0].GetFriendInfo()
             self.friendinfo = fi if not fi.fFriendNames.empty() else None
+
         else:
             raise RuntimeError(
                 f"First argument {args[0]} of type {type(args[0])} is not supported "
                 "in RDatasetSpecHeaNode")
-
+                
+        if (args[0].GetEntryRangeBegin() != 0):
+            warnings.warn("Setting global range is not supported in distributed parsing of RDatasetSpec, the set range will be ignored and all events will be processed.")
+            
         # subtreenames: names of all subtrees in the chain or full path to the tree in the file it belongs to
-        self.subtreenames = [str(treename)
-                             for treename in args[0].GetTreeNames()]
-        self.inputfiles = [str(filename)
-                           for filename in args[0].GetFileNameGlobs()]
+        self.subtreenames = [str(treename) for treename in args[0].GetTreeNames()]
+        self.inputfiles = [str(filename) for filename in args[0].GetFileNameGlobs()]
+            
+        # A map to map file id (filename/tree) to SerializableRSamples
+        self.sampleMap = {}
+        samples = ROOT.Internal.RDF.MoveOutSamples(args[0])
+
+        for sample in samples:
+            trees = sample.GetTreeNames()
+            files = sample.GetFileNameGlobs()
+            for file, tree in zip(files, trees): 
+                sampleId = file + "/" + tree
+                self.sampleMap.update({sampleId : Ranges.SerializableRSample(sample)})
 
     def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
@@ -677,14 +693,13 @@ class RDatasetSpecHeadNode(HeadNode):
                         "The number of requested partitions could be higher than the maximum amount of "
                         "chunks the dataset can be split in. Some tasks could be doing no work. Consider "
                         "setting the 'npartitions' parameter of the RDataFrame constructor to a lower value.")
-
-        return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo, self.exec_id)
+        
+        return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo, self.exec_id, self.sampleMap)
 
     def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
         Generates a function that is responsible for building an instance of
-        RDataFrame on a distributed mapper for a given entry range. Specific for
-        the TTree data source.
+        RDataFrame on a distributed mapper for a given entry range.
         """
 
         def attach_friend_info_if_present(current_range: Ranges.TreeRange,
@@ -715,7 +730,7 @@ class RDatasetSpecHeadNode(HeadNode):
                     )
                     ds.WithGlobalFriends(
                         friend_chainsubnames, friend_filenames, friend_alias)
-
+                    
         def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
             Builds an RDataFrame instance for a distributed mapper.
@@ -729,19 +744,66 @@ class RDatasetSpecHeadNode(HeadNode):
 
             if clustered_range is None:
                 return TaskObjects(None, entries_in_trees)
-
+            
             ds = ROOT.RDF.Experimental.RDatasetSpec()
-            # add a sample with no name to represent the whole dataset
-            ds.AddSample(
-                ("", clustered_range.treenames, clustered_range.filenames))
+        
+            filenames_cluster = clustered_range.filenames
+            treenames_cluster = clustered_range.treenames
+
+            # The goal is to correctly assign the metadata information to the event being
+            # processed.
+            # The distributed tasks are split based on entries in the processed files, we get the task ranges.
+            # Files, however, also belong to various samples. We need to make sure the files are always
+            # correctly matched with the samples they are coming from as this is essential for the correct metadata processing.
+            # In order to do that, we need to find the common files (good_files) from the list of
+            # files processed in a given task range (filenames_cluster) and the list of files belonging to the given sample
+            # (mysample.GetFilenameGlobs). Additionally, we need a dictionary to correctly match files with their trees.
+
+            # Matching files with trees 
+            treesInFileMap = {}
+            fileids_cluster = []
+        
+            for filename, treename in zip(filenames_cluster, treenames_cluster):
+                fileid = filename + "/" + treename
+                fileids_cluster.append(fileid)
+                treesInFileMap.update({fileid : treename})
+
+            # Making sure we don't double count samples  
+            unique_samples = [] 
+            samplenames = []
+            
+            for sample in clustered_range.samples:
+                mysample = sample._sample
+                samplename = mysample.GetSampleName()
+                if samplename not in samplenames:
+                    unique_samples.append(mysample)
+                    samplenames.append(samplename)
+            
+            # Core: matching files with samples and adding samples to the spec that will be processed
+            for mysample in unique_samples:
+                sample_fileids = [
+                    filenameglob + "/" + treename
+                    for filenameglob, treename in zip(mysample.GetFileNameGlobs(), mysample.GetTreeNames())
+                ]
+                    
+                good_files = list((Counter(filenames_cluster) & Counter(mysample.GetFileNameGlobs())).elements())
+                good_fileids = list((Counter(fileids_cluster) & Counter(sample_fileids)).elements()) 
+
+                good_trees =[
+                    treesInFileMap.get(fileid) for fileid in good_fileids
+                ]
+                
+                ds.AddSample((mysample.GetSampleName(), good_trees, good_files, mysample.GetMetaData()))
+                
             ds.WithGlobalRange(
                 (clustered_range.globalstart, clustered_range.globalend))
-
+            
             attach_friend_info_if_present(clustered_range, ds)
 
             if current_range.exec_id not in _graph_cache._RDF_REGISTER:
                 # Fill the cache with the new RDataFrame
-                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(ds)
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(ds) 
+                
             else:
                 # Update it to the range of entries for this task
                 ROOT.Internal.RDF.ChangeSpec(

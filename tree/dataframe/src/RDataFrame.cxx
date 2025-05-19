@@ -840,7 +840,8 @@ the dataset. The number of clusters in a TTree can be retrieved by typing `rootl
 RDataFrame can be also built from a JSON sample specification file using the FromSpec function. In distributed mode, two arguments need to be provided: the path to the specification 
 jsonFile (same as for local RDF case) and an additional executor argument - in the same manner as for the RDataFrame constructors above - an executor can either be a spark connection or a dask client. 
 If no second argument is given, the local version of FromSpec will be run. Here is an example of FromSpec usage in distributed RDF using either spark or dask backends. 
-For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. 
+For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. Note that adding metadata and friend information is supported, 
+but adding the global range will not be respected in the distributed execution. 
 
 Using spark:
 ~~~{.py}

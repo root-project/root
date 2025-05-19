@@ -157,7 +157,7 @@ class TreeRanges(unittest.TestCase):
         filenames = ["backend/Slimmed_ntuple.root"]
         npartitions = 1
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -180,7 +180,7 @@ class TreeRanges(unittest.TestCase):
         filenames = ["backend/Slimmed_ntuple.root"]
         npartitions = 2
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         # We return one task per partition
@@ -204,7 +204,7 @@ class TreeRanges(unittest.TestCase):
         filenames = ["backend/2clusters.root"]
         npartitions = 2
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
         ranges = treeranges_to_tuples(clusteredranges)
 
@@ -227,7 +227,7 @@ class TreeRanges(unittest.TestCase):
         expected_inputfiles = ["backend/2clusters.root"]
         extracted_inputfiles = rdf.inputfiles
 
-        percranges = Ranges.get_percentage_ranges([treename], extracted_inputfiles, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges([treename], extracted_inputfiles, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
         ranges = treeranges_to_tuples(clusteredranges)
 
@@ -258,7 +258,7 @@ class TreeRanges(unittest.TestCase):
         extracted_filenames = rdf.inputfiles
 
         percranges = Ranges.get_percentage_ranges(
-            extracted_subtreenames, extracted_filenames, npartitions, friendinfo=None, exec_id=None)
+            extracted_subtreenames, extracted_filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
         ranges = treeranges_to_tuples(clusteredranges)
 
@@ -281,7 +281,7 @@ class TreeRanges(unittest.TestCase):
         filenames = ["backend/4clusters.root"]
         npartitions = 4
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -304,7 +304,7 @@ class TreeRanges(unittest.TestCase):
         filenames = ["backend/1000clusters.root"]
         npartitions = 4
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -327,7 +327,7 @@ class TreeRanges(unittest.TestCase):
         filenames = ["backend/1000clusters.root"]
         npartitions = 1000
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -349,7 +349,7 @@ class TreeRanges(unittest.TestCase):
         filenames = ["backend/2clusters.root", "backend/4clusters.root"]
         npartitions = 2
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -366,7 +366,7 @@ class TreeRanges(unittest.TestCase):
         filenames = [f"distrdf_unittests_file_{i}.root" for i in range(nfiles)]
         npartitions = 1
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -382,7 +382,7 @@ class TreeRanges(unittest.TestCase):
         filenames = [f"distrdf_unittests_file_{i}.root" for i in range(nfiles)]
         npartitions = nfiles
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -398,7 +398,7 @@ class TreeRanges(unittest.TestCase):
         treenames = [f"tree_{i}" for i in range(nfiles)]
         filenames = [f"distrdf_unittests_file_{i}.root" for i in range(nfiles)]
         npartitions = nfiles * 2
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -425,7 +425,7 @@ class TreeRanges(unittest.TestCase):
         filenames = [f"distrdf_unittests_file_{i}.root" for i in range(nfiles)]
         npartitions = nfiles * 10  # trees have 10 clusters
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         ranges = treeranges_to_tuples(clusteredranges)
@@ -473,7 +473,7 @@ class TreeRanges(unittest.TestCase):
         filenames = [f"distrdf_unittests_file_{i}.root" for i in range(nfiles)]
         npartitions = 42
 
-        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None)
+        percranges = Ranges.get_percentage_ranges(treenames, filenames, npartitions, friendinfo=None, exec_id=None, sampleMap=None)
         clusteredranges = [Ranges.get_clustered_range_from_percs(percrange)[0] for percrange in percranges]
 
         # We return one task per partition
