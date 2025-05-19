@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import logging
-
 from bisect import bisect_left
 from dataclasses import dataclass, field
 from itertools import accumulate
 from math import floor
-
-from typing import Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
 if TYPE_CHECKING:
     from DistRDF._graph_cache import ExecutionIdentifier
@@ -16,7 +14,20 @@ import ROOT
 
 logger = logging.getLogger(__name__)
 
+class SerializableRSample():
+    
+    def __init__(self, sample: ROOT.RDF.Experimental.RSample):
+        self._sample = sample
+    
+    def __getstate__(self):
+        return {"samplenames" : self._sample.GetSampleName(), "treenames" : self._sample.GetTreeNames() , "filenames" : self._sample.GetFileNameGlobs(), "metadata" : ROOT.Internal.RDF.ExportJSON(self._sample.GetMetaData())}
 
+        
+    def __setstate__(self, state):
+        _metadata = ROOT.RDF.Experimental.RMetaData()
+        ROOT.Internal.RDF.ImportJSON(_metadata, state["metadata"])
+        self._sample = ROOT.RDF.Experimental.RSample(state["samplenames"], state["treenames"], state["filenames"], _metadata)
+    
 @dataclass
 class DataRange:
     """
@@ -81,8 +92,7 @@ class TreeRangePerc(DataRange):
     first_tree_start_perc: float
     last_tree_end_perc: float
     friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
-
-
+    samples: Optional[List[SerializableRSample]]
 @dataclass
 class TreeRange(DataRange):
     """
@@ -113,7 +123,7 @@ class TreeRange(DataRange):
     globalstart: int
     globalend: int
     friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
-
+    samples: Optional[List[SerializableRSample]]
 
 @dataclass
 class TaskTreeEntries:
@@ -190,7 +200,7 @@ def get_balanced_ranges(nentries, npartitions, exec_id: ExecutionIdentifier):
 
 def get_percentage_ranges(treenames: List[str], filenames: List[str], npartitions: int,
                           friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo],
-                          exec_id: ExecutionIdentifier) -> List[TreeRangePerc]:
+                          exec_id: ExecutionIdentifier, sampleMap: Optional[Dict[str, SerializableRSample]],) -> List[TreeRangePerc]:
     """
     Create a list of tasks that will process the given trees partitioning them
     by percentages.
@@ -238,12 +248,28 @@ def get_percentage_ranges(treenames: List[str], filenames: List[str], npartition
     if friendinfo is not None:
         # We need to transmit the full list of treenames and filenames to each
         # task, in order to properly align the full dataset considering friends.
-        return [
+        if sampleMap is not None:
+                
+            samples = []
+
+            for filename, treename in zip(filenames, treenames):
+                sample = sampleMap.get(filename + "/" + treename)
+                samples.append(sample)
+
+            return [
             TreeRangePerc(
                 exec_id, rangeid, treenames, filenames, start_sample_idxs[rangeid], end_sample_idxs[rangeid],
-                first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo)
+                first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo, samples)
             for rangeid in range(npartitions)
-        ]
+            ]
+
+        else:   
+            return [
+                TreeRangePerc(
+                    exec_id, rangeid, treenames, filenames, start_sample_idxs[rangeid], end_sample_idxs[rangeid],
+                    first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo, None)
+                for rangeid in range(npartitions)
+            ]
     else:
         # With the indexes created above, we can partition the lists of names of
         # files and trees. Each task will get a number of trees dictated by the
@@ -251,17 +277,40 @@ def get_percentage_ranges(treenames: List[str], filenames: List[str], npartition
         # from the full list of filenames.
         tasktreenames = [treenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
         taskfilenames = [filenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
+        
+        if sampleMap is not None:
+            
+            tasksamples = []
+        
+            for taskfilename, tasktreename in zip(taskfilenames, tasktreenames):
+                tasksample = []
+                for i in range (len(taskfilename)):
+                    sample = sampleMap.get(taskfilename[i] + "/" + tasktreename[i])
+                    tasksample.append(sample)                    
+                tasksamples.append(tasksample)
+            
+            return [
+            
+            TreeRangePerc(
+                exec_id, rangeid, tasktreenames[rangeid], taskfilenames[rangeid], 0, len(taskfilenames[rangeid]),
+                first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo, tasksamples[rangeid]
+            )            
+            for rangeid in range(npartitions)
+            ]        
+            
         # On the other hand, when creating the TreeRangePerc tasks below, the
         # starting and ending indexes have to be task-local. In practice, the
         # task always starts from file index 0 and it always ends at file index
         # equal to the number of files assigned to that task.
-        return [
-            TreeRangePerc(
-                exec_id, rangeid, tasktreenames[rangeid], taskfilenames[rangeid], 0, len(taskfilenames[rangeid]),
-                first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo
-            )
-            for rangeid in range(npartitions)
-        ]
+        else:
+        
+            return [
+                TreeRangePerc(
+                    exec_id, rangeid, tasktreenames[rangeid], taskfilenames[rangeid], 0, len(taskfilenames[rangeid]),
+                    first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo, None
+                )
+                for rangeid in range(npartitions)
+            ]
 
 
 def get_entryrange_at_cluster_boundaries(percstart: float, percend: float,
@@ -404,6 +453,6 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[T
     entries_in_trees = TaskTreeEntries(globalend - globalstart, trees_with_entries)
 
     treerange = TreeRange(percrange.exec_id, percrange.id, percrange.treenames, percrange.filenames,
-                          globalstart, globalend, percrange.friendinfo)
+                          globalstart, globalend, percrange.friendinfo, percrange.samples)
 
     return treerange, entries_in_trees
