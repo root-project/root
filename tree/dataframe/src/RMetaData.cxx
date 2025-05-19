@@ -142,6 +142,16 @@ const std::string RMetaData::GetS(const std::string &key, const std::string &def
    return fJson->payload[key].get<std::string>();
 }
 
+void RMetaData::ImportJSON(const std::string &jsonString)
+{
+   fJson->payload = nlohmann::json::parse(jsonString);
+}
+
+std::string RMetaData::ExportJSON() const
+{
+   return fJson->payload.dump();
+}
+
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
