@@ -191,6 +191,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/)
 /// Returns 'false' if nothing was done.  This can happen in the case where
 /// there is more than one dictionary for the same entity.  Note having
 /// duplicate dictionary is acceptable for namespace or STL collections.
+/// The caller of this function should be holding the ROOT Write lock.
 
 Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (cl->fRealData || cl->fBase.load() || cl->fData.load() || cl->fEnums.load() || cl->fCanSplit >= 0 ||
