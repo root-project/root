@@ -23,6 +23,8 @@ compiled C++ script.
 To call Pythia functions not available in this interface a dictionary must
 be generated.
 
+See evegen_000_pythia8.C for an example of use from CLING.
+
 Author: Andreas Morsch   27/10/2007
 
 \verbatim
