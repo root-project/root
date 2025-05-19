@@ -647,7 +647,7 @@ sap.ui.define([
                      this.oDivideDialog.close();
                      let cp = this.getCanvasPainter();
                      if (arg && cp)
-                        cp.sendWebsocket('DIVIDE:' + JSON.stringify([(cp.findActivePad() || cp).snapid, arg]));
+                        cp.sendWebsocket('DIVIDE:' + JSON.stringify([(cp.findActivePad() || cp).getSnapId(), arg]));
                   }
                }),
                endButton: new Button({
@@ -675,10 +675,10 @@ sap.ui.define([
                this.onDivideDialog();
                break;
             case 'Clear pad':
-               cp.sendWebsocket('CLEAR:' + (cp.findActivePad() || cp).snapid);
+               cp.sendWebsocket('CLEAR:' + (cp.findActivePad() || cp).getSnapId());
                break;
             case 'Clear canvas':
-               cp.sendWebsocket('CLEAR:' + cp.snapid);
+               cp.sendWebsocket('CLEAR:' + cp.getSnapId());
                break;
             default:
                let sz = name.split('x');

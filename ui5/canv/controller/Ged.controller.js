@@ -95,11 +95,8 @@ sap.ui.define([
             data._handle.changed = true;
          }
 
-         let exec = '', item = pars.path.substr(1), obj;
-
-         if (data._painter) {
-            obj = data._painter.snapid ? data._painter.getObject() : null;
-         }
+         let exec = '', item = pars.path.substr(1),
+             obj = data._painter?.getSnapId() ? data._painter.getObject() : null;
 
          if (obj) {
             if ((data._kind === 'TAttLine') && (obj.fLineColor !== undefined) && (obj.fLineStyle !== undefined) && (obj.fLineWidth !== undefined)) {
@@ -288,7 +285,7 @@ sap.ui.define([
          // TAxis belongs to main painter like TH1, therefore submit commands there
          const main = is_gaxis ? handle : handle.hist_painter;
 
-         if (main?.snapid)
+         if (main?.getSnapId())
             main.interactiveRedraw('pad', exec, kind);
          else
             this.currentPadPainter.redraw();
