@@ -106,34 +106,28 @@
 
 #include "Event.h"
 
+#ifdef R__HAS_DEFAULT_LZ4
+constexpr int defaultComp = 4;
+#else
+constexpr int defaultComp = 1;
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char **argv)
+int MainEvent(int nevent, int comp, int split, int arg4, int arg5, int enable_imt = 0, int compAlg = defaultComp,
+              std::vector<std::string> outFiles = {})
 {
-   Int_t nevent = 400;     // by default create 400 events
-   Int_t comp   = 1;       // by default file is compressed
-   Int_t split  = 1;       // by default, split Event in sub branches
+   while (outFiles.size() > 1) {
+      MainEvent(nevent, comp, split, arg4, arg5, enable_imt, compAlg, {outFiles.back()});
+      outFiles.pop_back();
+   }
+
    Int_t write  = 1;       // by default the tree is filled
    Int_t hfill  = 0;       // by default histograms are not filled
    Int_t read   = 0;
-   Int_t arg4   = 1;
-   Int_t arg5   = 600;     //default number of tracks per event
-   Int_t enable_imt = 0;   // Whether to enable IMT mode.
-#ifdef R__HAS_DEFAULT_LZ4
-   Int_t compAlg = 4; // Allow user to specify underlying compression algorithm.
-#else
-   Int_t compAlg = 1;
-#endif
    Int_t netf   = 0;
    Int_t punzip = 0;
 
-   if (argc > 1)  nevent = atoi(argv[1]);
-   if (argc > 2)  comp   = atoi(argv[2]);
-   if (argc > 3)  split  = atoi(argv[3]);
-   if (argc > 4)  arg4   = atoi(argv[4]);
-   if (argc > 5)  arg5   = atoi(argv[5]);
-   if (argc > 6)  enable_imt = atoi(argv[6]);
-   if (argc > 7) compAlg = atoi(argv[7]);
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -184,7 +178,7 @@ int main(int argc, char **argv)
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
       } else
-         hfile = new TFile("Event.root");
+         hfile = new TFile(outFiles.back().c_str());
       tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -228,7 +222,7 @@ int main(int argc, char **argv)
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
       } else
-         hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
+         hfile = new TFile(outFiles.back().c_str(),"RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
       hfile->SetCompressionAlgorithm(compAlg);
 
@@ -305,4 +299,32 @@ int main(int argc, char **argv)
    }
    hfile->Close();
    return 0;
+}
+
+int main(int argc, char **argv)
+{
+   Int_t nevent = 400;     // by default create 400 events
+   Int_t comp   = 1;       // by default file is compressed
+   Int_t split  = 1;       // by default, split Event in sub branches
+   Int_t arg4   = 1;
+   Int_t arg5   = 600;     //default number of tracks per event
+   Int_t enable_imt = 0;   // Whether to enable IMT mode.
+   Int_t compAlg = defaultComp; // Allow user to specify underlying compression algorithm.
+
+   if (argc > 1)  nevent = atoi(argv[1]);
+   if (argc > 2)  comp   = atoi(argv[2]);
+   if (argc > 3)  split  = atoi(argv[3]);
+   if (argc > 4)  arg4   = atoi(argv[4]);
+   if (argc > 5)  arg5   = atoi(argv[5]);
+   if (argc > 6)  enable_imt = atoi(argv[6]);
+   if (argc > 7) compAlg = atoi(argv[7]);
+
+   // all futher arguments are interpreted as additional output file names
+   std::vector<std::string> outFiles;
+   outFiles.push_back("Event.root");
+   for (int i = 8; i < argc; ++i) {
+      outFiles.push_back(argv[i]);
+   }
+
+   return MainEvent(nevent, comp, split, arg4, arg5, enable_imt, compAlg, outFiles);
 }
