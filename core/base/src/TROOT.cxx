@@ -2085,6 +2085,7 @@ void TROOT::InitThreads()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the interpreter. Should be called only after main(),
 /// to make sure LLVM/Clang is fully initialized.
+/// This function must be called in a single thread context (static initialization)
 
 void TROOT::InitInterpreter()
 {
@@ -2556,6 +2557,8 @@ static void CallCloseFiles()
 /// for headers. Calls TCling::RegisterModule() unless gCling
 /// is NULL, i.e. during startup, where the information is buffered in
 /// the static GetModuleHeaderInfoBuffer().
+/// The caller of this function should be holding the ROOT Write lock or be
+/// single threaded (dlopen)
 
 void TROOT::RegisterModule(const char* modulename,
                            const char** headers,
