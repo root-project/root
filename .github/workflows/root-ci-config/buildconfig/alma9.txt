@@ -1,5 +1,3 @@
 BLA_VENDOR=OpenBLAS
 builtin_vdt=ON
 tmva-cpu=OFF
-tmva=OFF
-xml=OFF
