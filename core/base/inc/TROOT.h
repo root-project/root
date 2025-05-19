@@ -147,7 +147,7 @@ protected:
    TVirtualPad     *fSelectPad = nullptr;             ///< Currently selected pad
    TCollection     *fClasses = nullptr;               ///< List of classes definition
    TCollection     *fTypes = nullptr;                 ///< List of data types definition
-   TListOfFunctionTemplates *fFuncTemplate;           ///< List of global function templates
+   TListOfFunctionTemplates *fFuncTemplate = nullptr; ///< List of global function templates
    TListOfDataMembers*fGlobals = nullptr;             ///< List of global variables
    TListOfFunctions*fGlobalFunctions = nullptr;       ///< List of global functions
    TSeqCollection  *fClosedObjects = nullptr;         ///< List of closed objects from the list of files and sockets, so we can delete them if neededCl.
@@ -170,7 +170,7 @@ protected:
    TSeqCollection  *fProofs = nullptr;                ///< List of proof sessions
    TSeqCollection  *fClipboard = nullptr;             ///< List of clipboard objects
    TSeqCollection  *fDataSets = nullptr;              ///< List of data sets (TDSet or TChain)
-   AListOfEnums_t   fEnums;                           ///< List of enum types
+   AListOfEnums_t   fEnums = nullptr;                 ///< List of enum types
    TProcessUUID    *fUUIDs = nullptr;                 ///< Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder = nullptr;            ///< top level folder //root
    TList           *fBrowsables = nullptr;            ///< List of browsables
