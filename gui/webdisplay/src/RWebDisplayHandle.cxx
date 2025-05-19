@@ -837,6 +837,11 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
             // do not put tabs in title
             user_js << "user_pref(\"browser.tabs.inTitlebar\", 0);" << std::endl;
 
+#ifdef R__LINUX
+            // fix WebGL creation problem on some Linux platforms
+            user_js << "user_pref(\"webgl.out-of-process\", false);" << std::endl;
+#endif
+
             std::ofstream times_json(profile_dir + "/times.json", std::ios::trunc);
             times_json << "{" << std::endl;
             times_json << "   \"created\": 1699968480952," << std::endl;
