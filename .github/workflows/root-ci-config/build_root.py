@@ -128,6 +128,10 @@ def main():
     if not WINDOWS:
         show_node_state()
 
+    if args.coverage and args.incremental:
+        # Delete all the .gcda files produces by an artefact.
+        build_utils.remove_file_match_ext(WORKDIR, "gcda")
+
     build(options, args.buildtype)
 
     # Build artifacts should only be uploaded for full builds, and only for
