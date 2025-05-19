@@ -271,8 +271,15 @@ static inline compat::Interpreter* getInterpreter(const CXInterpreterImpl* I) {
 }
 
 CXInterpreter clang_createInterpreter(const char* const* argv, int argc) {
-  auto* I = new CXInterpreterImpl(); // NOLINT(*-owning-memory)
+  auto I = std::make_unique<CXInterpreterImpl>();
+#ifdef CPPINTEROP_USE_CLING
   I->Interp = std::make_unique<compat::Interpreter>(argc, argv);
+#else
+  I->Interp = compat::Interpreter::create(argc, argv);
+  if (!I->Interp) {
+    return nullptr;
+  }
+#endif
   // create a bridge between CXTranslationUnit and clang::Interpreter
   // auto AU = std::make_unique<ASTUnit>(false);
   // AU->FileMgr = I->Interp->getCompilerInstance().getFileManager();
@@ -281,7 +288,7 @@ CXInterpreter clang_createInterpreter(const char* const* argv, int argc) {
   // AU->Ctx = &I->Interp->getSema().getASTContext();
   // I->TU.reset(MakeCXTranslationUnit(static_cast<CIndexer*>(clang_createIndex(0,
   // 0)), AU));
-  return I;
+  return I.release();
 }
 
 CXInterpreter clang_createInterpreterFromRawPtr(TInterp_t I) {

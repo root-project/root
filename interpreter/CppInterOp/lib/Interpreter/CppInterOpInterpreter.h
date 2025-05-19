@@ -17,6 +17,7 @@
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/Basic/LangOptions.h"
+#include "clang/Basic/TargetOptions.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendOptions.h"
 #include "clang/Lex/Preprocessor.h"
@@ -25,6 +26,7 @@
 #if CLANG_VERSION_MAJOR >= 19
 #include "clang/Sema/Redeclaration.h"
 #endif
+#include "clang/Serialization/ModuleFileExtension.h"
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
@@ -34,6 +36,11 @@
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/Triple.h"
+
+#include <utility>
+#include <vector>
 
 namespace clang {
 class CompilerInstance;
@@ -136,11 +143,14 @@ class Interpreter {
 private:
   std::unique_ptr<clang::Interpreter> inner;
 
+  Interpreter(std::unique_ptr<clang::Interpreter> CI) : inner(std::move(CI)) {}
+
 public:
-  Interpreter(int argc, const char* const* argv, const char* llvmdir = 0,
-              const std::vector<std::shared_ptr<clang::ModuleFileExtension>>&
-                  moduleExtensions = {},
-              void* extraLibHandle = 0, bool noRuntime = true) {
+  static std::unique_ptr<Interpreter>
+  create(int argc, const char* const* argv, const char* llvmdir = nullptr,
+         const std::vector<std::shared_ptr<clang::ModuleFileExtension>>&
+             moduleExtensions = {},
+         void* extraLibHandle = nullptr, bool noRuntime = true) {
     // Initialize all targets (required for device offloading)
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
@@ -148,9 +158,13 @@ public:
     llvm::InitializeAllAsmPrinters();
 
     std::vector<const char*> vargs(argv + 1, argv + argc);
-    vargs.push_back("-include");
-    vargs.push_back("new");
-    inner = compat::createClangInterpreter(vargs);
+    auto CI = compat::createClangInterpreter(vargs);
+    if (!CI) {
+      llvm::errs() << "Interpreter creation failed\n";
+      return nullptr;
+    }
+
+    return std::unique_ptr<Interpreter>(new Interpreter(std::move(CI)));
   }
 
   ~Interpreter() {}
@@ -167,7 +181,7 @@ public:
     return inner->getCompilerInstance();
   }
 
-  const llvm::orc::LLJIT* getExecutionEngine() const {
+  llvm::orc::LLJIT* getExecutionEngine() const {
     return compat::getExecutionEngine(*inner);
   }
 
@@ -345,7 +359,7 @@ public:
         const_cast<const Interpreter*>(this)->getDynamicLibraryManager());
   }
 
-  ///\brief Adds multiple include paths separated by a delimter.
+  ///\brief Adds multiple include paths separated by a delimiter.
   ///
   ///\param[in] PathsStr - Path(s)
   ///\param[in] Delim - Delimiter to separate paths or NULL if a single path
@@ -400,6 +414,17 @@ public:
   }
 
   CompilationResult loadLibrary(const std::string& filename, bool lookup) {
+    llvm::Triple triple(getCompilerInstance()->getTargetOpts().Triple);
+    if (triple.isWasm()) {
+      // On WASM, dlopen-style canonical lookup has no effect.
+      if (auto Err = inner->LoadDynamicLibrary(filename.c_str())) {
+        llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
+                                    "loadLibrary: ");
+        return kFailure;
+      }
+      return kSuccess;
+    }
+
     DynamicLibraryManager* DLM = getDynamicLibraryManager();
     std::string canonicalLib;
     if (lookup)

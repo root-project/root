@@ -13,7 +13,8 @@ static bool HasCudaSDK() {
     // FIXME: Enable this for cling.
     return false;
 #endif // CLANG_VERSION_MAJOR < 16
-    Cpp::CreateInterpreter({}, {"--cuda"});
+    if (!Cpp::CreateInterpreter({}, {"--cuda"}))
+      return false;
     return Cpp::Declare("__global__ void test_func() {}"
                         "test_func<<<1,1>>>();") == 0;
   };
@@ -30,7 +31,8 @@ static bool HasCudaRuntime() {
     if (!HasCudaSDK())
       return false;
 
-    Cpp::CreateInterpreter({}, {"--cuda"});
+    if (!Cpp::CreateInterpreter({}, {"--cuda"}))
+      return false;
     if (Cpp::Declare("__global__ void test_func() {}"
                      "test_func<<<1,1>>>();"))
       return false;

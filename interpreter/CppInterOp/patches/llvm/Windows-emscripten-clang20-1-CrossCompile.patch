@@ -1,0 +1,20 @@
+diff --git a/llvm/cmake/modules/CrossCompile.cmake b/llvm/cmake/modules/CrossCompile.cmake
+index 39b4abaa0..474ceddbb 100644
+--- a/llvm/cmake/modules/CrossCompile.cmake
++++ b/llvm/cmake/modules/CrossCompile.cmake
+@@ -74,10 +74,12 @@ function(llvm_create_cross_target project_name target_name toolchain buildtype)
+   endif()
+ 
+   add_custom_command(OUTPUT ${${project_name}_${target_name}_BUILD}/CMakeCache.txt
+-    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
++    COMMAND ${CMAKE_COMMAND} -G Ninja
+         -DCMAKE_MAKE_PROGRAM="${CMAKE_MAKE_PROGRAM}"
+-        -DCMAKE_C_COMPILER_LAUNCHER="${CMAKE_C_COMPILER_LAUNCHER}"
+-        -DCMAKE_CXX_COMPILER_LAUNCHER="${CMAKE_CXX_COMPILER_LAUNCHER}"
++        -DCMAKE_C_COMPILER="clang-cl"
++        -DCMAKE_CXX_COMPILER="clang-cl"
++        -DCMAKE_ASM_MASM_COMPILER=llvm-ml
++        -DCMAKE_ASM_MASM_FLAGS="-m64"
+         ${CROSS_TOOLCHAIN_FLAGS_${target_name}} ${CMAKE_CURRENT_SOURCE_DIR}
+         ${CROSS_TOOLCHAIN_FLAGS_${project_name}_${target_name}}
+         -DLLVM_TARGET_IS_CROSSCOMPILE_HOST=TRUE

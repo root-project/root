@@ -47,5 +47,7 @@
 -Wl,--export=_ZNK5clang11DeclContext6lookupENS_15DeclarationNameE
 -Wl,--export=_ZNK5clang17ClassTemplateDecl18getSpecializationsEv
 -Wl,--export=_ZNK5clang4Sema15getStdNamespaceEv
+-Wl,--export=_ZNK5clang4Type14isFloatingTypeEv
+-Wl,--export=_ZNK5clang12FunctionDecl12getNumParamsEv
 -Wl,--export=__clang_Interpreter_SetValueNoAlloc
 -Wl,--export=__clang_Interpreter_SetValueWithAlloc

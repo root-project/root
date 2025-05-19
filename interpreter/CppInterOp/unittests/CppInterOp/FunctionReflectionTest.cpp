@@ -6,6 +6,8 @@
 #include "clang/Interpreter/CppInterOp.h"
 #include "clang/Sema/Sema.h"
 
+#include <llvm/ADT/ArrayRef.h>
+
 #include "clang-c/CXCppInterOp.h"
 
 #include "gtest/gtest.h"
@@ -635,9 +637,14 @@ TEST(FunctionReflectionTest, ExistsFunctionTemplate) {
 }
 
 TEST(FunctionReflectionTest, InstantiateTemplateFunctionFromString) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = { "-include", "new" };
+  Cpp::CreateInterpreter(interpreter_args);
   std::string code = R"(#include <memory>)";
   Interp->process(code);
   const char* str = "std::make_unique<int,int>";
@@ -844,6 +851,69 @@ TEST(FunctionReflectionTest, GetClassTemplatedMethods_VariadicsAndOthers) {
             "U MyClass::variadicMethod(U first, V ...rest)");
   EXPECT_EQ(Cpp::GetFunctionSignature(templatedMethods[4]),
             "void MyClass::staticVariadic(T t, Args ...args)");
+}
+
+TEST(FunctionReflectionTest, InstantiateVariadicFunction) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class MyClass {};
+
+    template<typename... Args>
+    void VariadicFn(Args... args) {}
+
+    template<typename... Args>
+    void VariadicFnExtended(int fixedParam, Args... args) {}
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+  ASTContext& C = Interp->getCI()->getASTContext();
+
+  std::vector<Cpp::TemplateArgInfo> args1 = {C.DoubleTy.getAsOpaquePtr(),
+                                             C.IntTy.getAsOpaquePtr()};
+  auto Instance1 = Cpp::InstantiateTemplate(Decls[1], args1.data(),
+                                            /*type_size*/ args1.size());
+  EXPECT_TRUE(Cpp::IsTemplatedFunction(Instance1));
+  EXPECT_EQ(Cpp::GetFunctionSignature(Instance1),
+            "template<> void VariadicFn<<double, int>>(double args, int args)");
+
+  FunctionDecl* FD = cast<FunctionDecl>((Decl*)Instance1);
+  FunctionDecl* FnTD1 = FD->getTemplateInstantiationPattern();
+  EXPECT_TRUE(FnTD1->isThisDeclarationADefinition());
+  EXPECT_EQ(FD->getNumParams(), 2);
+
+  const TemplateArgumentList* TA1 = FD->getTemplateSpecializationArgs();
+  llvm::ArrayRef<TemplateArgument> Args = TA1->get(0).getPackAsArray();
+  EXPECT_EQ(Args.size(), 2);
+  EXPECT_TRUE(Args[0].getAsType()->isFloatingType());
+  EXPECT_TRUE(Args[1].getAsType()->isIntegerType());
+
+  // handle to MyClass type
+  auto MyClassType = Cpp::GetTypeFromScope(Decls[0]);
+  std::vector<Cpp::TemplateArgInfo> args2 = {MyClassType,
+                                             C.DoubleTy.getAsOpaquePtr()};
+
+  // instantiate VariadicFnExtended
+  auto Instance2 =
+      Cpp::InstantiateTemplate(Decls[2], args2.data(), args2.size());
+  EXPECT_TRUE(Cpp::IsTemplatedFunction(Instance2));
+
+  FunctionDecl* FD2 = cast<FunctionDecl>((Decl*)Instance2);
+  FunctionDecl* FnTD2 = FD2->getTemplateInstantiationPattern();
+  EXPECT_TRUE(FnTD2->isThisDeclarationADefinition());
+
+  // VariadicFnExtended has one fixed param + 2 elements in TemplateArgument
+  // pack
+  EXPECT_EQ(FD2->getNumParams(), 3);
+
+  const TemplateArgumentList* TA2 = FD2->getTemplateSpecializationArgs();
+  llvm::ArrayRef<TemplateArgument> PackArgs2 = TA2->get(0).getPackAsArray();
+  EXPECT_EQ(PackArgs2.size(), 2);
+
+  EXPECT_TRUE(PackArgs2[0].getAsType()->isRecordType());   // MyClass
+  EXPECT_TRUE(PackArgs2[1].getAsType()->isFloatingType()); // double
+  EXPECT_EQ(Cpp::GetFunctionSignature(Instance2),
+            "template<> void VariadicFnExtended<<MyClass, double>>(int "
+            "fixedParam, MyClass args, double args)");
 }
 
 TEST(FunctionReflectionTest, BestOverloadFunctionMatch1) {
@@ -1313,7 +1383,9 @@ TEST(FunctionReflectionTest, IsStaticMethod) {
 
 TEST(FunctionReflectionTest, GetFunctionAddress) {
 #ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR < 20
   GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
 #endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
@@ -1322,8 +1394,10 @@ TEST(FunctionReflectionTest, GetFunctionAddress) {
 #endif
   std::vector<Decl*> Decls, SubDecls;
   std::string code = "int f1(int i) { return i * i; }";
+  std::vector<const char*> interpreter_args = {"-include", "new"};
 
-  GetAllTopLevelDecls(code, Decls);
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      interpreter_args);
 
   testing::internal::CaptureStdout();
   Interp->declare("#include <iostream>");
@@ -1360,7 +1434,9 @@ TEST(FunctionReflectionTest, IsVirtualMethod) {
 
 TEST(FunctionReflectionTest, JitCallAdvanced) {
 #ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR < 20
   GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
 #endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
@@ -1372,7 +1448,10 @@ TEST(FunctionReflectionTest, JitCallAdvanced) {
       } name;
     )";
 
-  GetAllTopLevelDecls(code, Decls);
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      interpreter_args);
   auto *CtorD
     = (clang::CXXConstructorDecl*)Cpp::GetDefaultConstructor(Decls[0]);
   auto Ctor = Cpp::MakeFunctionCallable(CtorD);
@@ -1410,7 +1489,10 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
     int f1(int i) { return i * i; }
     )";
 
-  GetAllTopLevelDecls(code, Decls);
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      interpreter_args);
 
   Interp->process(R"(
     #include <string>
@@ -1510,7 +1592,8 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
         };
     )";
 
-  GetAllTopLevelDecls(code1, Decls1);
+  GetAllTopLevelDecls(code1, Decls1, /*filter_implicitGenerated=*/false,
+                      interpreter_args);
   ASTContext& C = Interp->getCI()->getASTContext();
 
   std::vector<Cpp::TemplateArgInfo> argument = {C.IntTy.getAsOpaquePtr()};
@@ -1603,8 +1686,48 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   Cpp::TCppScope_t op = Cpp::InstantiateTemplate(op_templated, &TAI, 1);
   auto FCI_op = Cpp::MakeFunctionCallable(op);
   bool boolean = false;
-  FCI_op.Invoke((void*)&boolean, {args, /*args_size=*/1}, object);
+  FCI_op.Invoke((void*)&boolean, {args, /*args_size=*/1}, toperator);
   EXPECT_TRUE(boolean);
+
+  Interp->process(R"(
+    namespace N1 {
+
+    template <typename... _Tn> struct Klass3 {
+      using type = int;
+    };
+    
+    namespace N2 {
+    template <typename T1, typename T2> class Klass1 {};
+
+    template <typename T1, typename T2> class Klass2 {};
+
+    template <typename T1, typename T2, typename T3, typename T4>
+    constexpr Klass2<
+      T1, typename Klass3<T2, Klass1<T3, T4>>::type>
+    operator+(const Klass2<T1, T2> &__lhs,
+              const Klass1<T3, T4> &__rhs) {
+      typedef Klass1<T3, T4> __T1;
+      typedef typename Klass3<T2, __T1>::type __ct;
+      typedef Klass2<T1, __ct> __T2;
+      return {};
+    }
+    } // namespace N2
+    } // namespace N1
+  
+    N1::N2::Klass2<int, double> K1;
+    N1::N2::Klass1<char, float> K2;
+  )");
+
+  Cpp::TCppType_t K1 = Cpp::GetTypeFromScope(Cpp::GetNamed("K1"));
+  Cpp::TCppType_t K2 = Cpp::GetTypeFromScope(Cpp::GetNamed("K2"));
+  operators.clear();
+  Cpp::GetOperator(Cpp::GetScope("N2", Cpp::GetScope("N1")), Cpp::OP_Plus,
+                   operators);
+  EXPECT_EQ(operators.size(), 1);
+  Cpp::TCppFunction_t kop =
+      Cpp::BestOverloadFunctionMatch(operators, {}, {K1, K2});
+  auto chrono_op_fn_callable = Cpp::MakeFunctionCallable(kop);
+  EXPECT_EQ(chrono_op_fn_callable.getKind(), Cpp::JitCall::kGenericCall);
 }
 
 TEST(FunctionReflectionTest, IsConstMethod) {
@@ -1708,15 +1831,17 @@ TEST(FunctionReflectionTest, GetFunctionArgDefault) {
 
 TEST(FunctionReflectionTest, Construct) {
 #ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR < 20
   GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
 #endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
-
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
 
   Interp->declare(R"(
     #include <new>
@@ -1766,6 +1891,69 @@ TEST(FunctionReflectionTest, Construct) {
   clang_Interpreter_dispose(I);
 }
 
+// Test nested constructor calls
+TEST(FunctionReflectionTest, ConstructNested) {
+#ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR < 20
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+#endif
+  if (llvm::sys::RunningOnValgrind())
+    GTEST_SKIP() << "XFAIL due to Valgrind report";
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
+
+  Interp->declare(R"(
+    #include <new>
+    extern "C" int printf(const char*,...);
+    class A {
+    public:
+      int a_val;
+      A() : a_val(7) {
+        printf("A Constructor Called\n");
+      }
+    };
+
+    class B {
+    public:
+      A a;
+      int b_val;
+      B() : b_val(99) {
+        printf("B Constructor Called\n");
+      }
+    };
+    )");
+
+  testing::internal::CaptureStdout();
+  Cpp::TCppScope_t scope_A = Cpp::GetNamed("A");
+  Cpp::TCppScope_t scope_B = Cpp::GetNamed("B");
+  Cpp::TCppObject_t object = Cpp::Construct(scope_B);
+  EXPECT_TRUE(object != nullptr);
+  std::string output = testing::internal::GetCapturedStdout();
+  EXPECT_EQ(output, "A Constructor Called\nB Constructor Called\n");
+  output.clear();
+
+  // In-memory construction
+  testing::internal::CaptureStdout();
+  void* arena = Cpp::Allocate(scope_B);
+  EXPECT_TRUE(arena == Cpp::Construct(scope_B, arena));
+
+  // Check if both integers a_val and b_val were set.
+  EXPECT_EQ(*(int*)arena, 7);
+  size_t a_size = Cpp::SizeOf(scope_A);
+  int* b_val_ptr =
+      reinterpret_cast<int*>(reinterpret_cast<char*>(arena) + a_size);
+  EXPECT_EQ(*b_val_ptr, 99);
+  Cpp::Deallocate(scope_B, arena);
+  output = testing::internal::GetCapturedStdout();
+  EXPECT_EQ(output, "A Constructor Called\nB Constructor Called\n");
+  output.clear();
+}
+
 TEST(FunctionReflectionTest, Destruct) {
 #ifdef EMSCRIPTEN
   GTEST_SKIP() << "Test fails for Emscipten builds";
@@ -1777,7 +1965,8 @@ TEST(FunctionReflectionTest, Destruct) {
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
 
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
 
   Interp->declare(R"(
     #include <new>
@@ -1847,4 +2036,4 @@ TEST(FunctionReflectionTest, UndoTest) {
   EXPECT_EQ(ret, 1);
 #endif
 #endif
-  }
+}

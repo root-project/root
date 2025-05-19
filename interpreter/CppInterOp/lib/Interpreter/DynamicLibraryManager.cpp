@@ -51,11 +51,12 @@ namespace Cpp {
     };
 
     // Behaviour is to not add paths that don't exist...In an interpreted env
-    // does this make sense? Path could pop into existance at any time.
+    // does this make sense? Path could pop into existence at any time.
     for (const char* Var : kSysLibraryEnv) {
       if (const char* Env = GetEnv(Var)) {
         SmallVector<StringRef, 10> CurPaths;
-        SplitPaths(Env, CurPaths, utils::kPruneNonExistant, Cpp::utils::platform::kEnvDelim);
+        SplitPaths(Env, CurPaths, utils::kPruneNonExistent,
+                   Cpp::utils::platform::kEnvDelim);
         for (const auto& Path : CurPaths)
           addSearchPath(Path);
       }
@@ -86,7 +87,7 @@ namespace Cpp {
                               StringRef libLoader) {
 
     // Handle substitutions (MacOS):
-    // @rpath - This function does not substitute @rpath, becouse
+    // @rpath - This function does not substitute @rpath, because
     //          this variable is already handled by lookupLibrary where
     //          @rpath is replaced with all paths from RPATH one by one.
     // @executable_path - Main program path.

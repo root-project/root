@@ -34,11 +34,11 @@ library
  Setup Clang-REPL
 ******************
 
-Clone the 19.x release of the LLVM project repository.
+Clone the 20.x release of the LLVM project repository.
 
 .. code:: bash
 
-   git clone --depth=1 --branch release/19.x https://github.com/llvm/llvm-project.git
+   git clone --depth=1 --branch release/20.x https://github.com/llvm/llvm-project.git
    cd llvm-project
 
 For Clang 16 & 17, the following patches required for development work. To apply
