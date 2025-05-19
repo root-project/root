@@ -918,7 +918,7 @@ TEST(VecOps, Linspace)
    CheckNear(Linspace(3, 12, 5, false), RVecD{ 3, 4.8, 6.6, 8.4, 10.2 });
    CheckNear(Linspace(3, 12, 1, false), RVecD{ 3 });
    CheckNear(Linspace(3, 12, 1, true), RVecD{ 3 });
-   CheckEqual(Linspace<int, int>(1, 10, 3), RVecI{ 1, 5, 9 });
+   CheckEqual(Linspace<int, int>(1, 10, 3), RVecI{ 1, 5, 10 });
 }
 
 TEST(VecOps, Logspace)

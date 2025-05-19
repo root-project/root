@@ -3252,12 +3252,12 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * the sequence consists of n values computed as if there were n+1 evenly spaced samples, with the final
  * value (\p end) omitted; in this case, \f$\text{step} = \frac{\text{end} - \text{start}}{n}\f$.
  *
- * The function is templated to allow for different arithmetic types. The return type \c Ret_t, if
+ * The function is templated to allow for different return types. The return type \c Ret_t, if
  * not explicitly specified, is determined as follows: if \p T is a floating point type, that type is used;
- * otherwise, the arithmetic is performed using \c double.
+ * otherwise, the return type is \c double.
  *
  * \tparam T Type of the start and end value. Default is double.
- * \tparam Ret_t Return type used for arithmetic, which, if not explicitly specified
+ * \tparam Ret_t Return type used, which, if not explicitly specified
  * in the template, is \p T if that is a floating point type, or double otherwise.
  *
  * \param start The first value in the sequence.
@@ -3273,7 +3273,7 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may cause rounding issues. Consequently, the resulting sequence may not end exactly at \p end. To ensure that the sequence ends exactly at \p end, consider casting the result as follows: `RVec<integral_type>(Linspace(...))` (which is equivalent in numpy to `np.linspace(...).astype(integral_type)`). This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the returned results are rounded towards negative (std::floor) and then cast to the integer type. This is equivalent to setting `dtype = int` in numpy.linspace. To cast to integer without rounding, use instead `RVec<integral_type>(Linspace(...))`, which would be equivalent to `np.linspace(...).astype(integral_type)` in numpy.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3293,8 +3293,8 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
  * // { 3, 5.25, 7.5, 9.75, 12 }
  * cout << Linspace(3, 12, 5, false) << "\n";
  * // { 3, 4.8, 6.6, 8.4, 10.2 }
- * Linspace<int, int>(1, 10, 3) << "\n";
- * // { 1, 5, 9 }
+ * cout << Linspace<int, int>(1, 10, 3) << "\n";
+ * // { 1, 5, 10 }
  * ~~~
  */
 template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
@@ -3311,7 +3311,7 @@ inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bo
         
     RVec<Ret_t> temp(n);
     temp[0] = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
-    if (std::is_floating_point_v<Ret_t>)
+    if constexpr (std::is_floating_point_v<Ret_t>)
     {
         for (unsigned long long i = 1; i < n; i++)
         {
@@ -3337,11 +3337,11 @@ inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bo
  * sequence is computed as if there were n+1 evenly spaced samples over the interval in the exponent space,
  * and the final value (\f$base^{end}\f$) is excluded, resulting in a sequence of n values.
  *
- * The function is templated to allow for different arithmetic types. The return type \c Ret_t, if not explicitly specified,
- * iis determined as follows: if \p T is a floating point type, that type is used; otherwise, the arithmetic is performed using \c double.
+ * The function is templated to allow for different return types. The return type \c Ret_t, if not explicitly specified,
+ * is determined as follows: if \p T is a floating point type, that type is used; otherwise, the return type is \c double.
  *
  * \tparam T Type of the start and end exponents and the base. Default is double.
- * \tparam Ret_t Deduced type used for arithmetic, which, if not explicitly specified, is \p T if that is a floating point type, or double otherwise.
+ * \tparam Ret_t Deduced type used for return type, which, if not explicitly specified, is \p T if that is a floating point type, or double otherwise.
  *
  * \param start The exponent corresponding to the first element (i.e., the first element is \f$base^{start}\f$).
  * \param end The exponent corresponding to the final element if \p endpoint is true; otherwise, \p end is excluded.
@@ -3357,7 +3357,7 @@ inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bo
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the sequence may not end exactly at \f$base^{end}\f>. To ensure that the final element is exactly \f$base^{end}\f>, consider casting the result as follows: `RVec<integral_type>(Logspace(...))` (which is equivalent in numpy to `np.logspace(...).astype(integral_type)`). This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the returned results are rounded towards negative (`std::floor`) and then cast to the integer type. This is equivalent to setting `dtype = int` in `numpy.linspace`. To cast to integer without rounding, use instead `RVec<integral_type>(Logspace(...))`, which would be equivalent to `np.logspace(...).astype(integral_type)` in numpy.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3402,7 +3402,7 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
     static_cast<Ret_t>(std::pow(base_c, start_c)) :
     std::floor(std::pow(base_c, start_c));
      
-    if (std::is_floating_point_v<Ret_t>)
+    if constexpr (std::is_floating_point_v<Ret_t>)
     {
         for (unsigned long long i = 1; i < n; i++)
         {
@@ -3433,12 +3433,12 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
  * \f]
  * ensuring that the arithmetic is performed in a floating-point context when needed.
  *
- * The function is templated to allow for different arithmetic types. The deduced type \c Ret_t, if not
+ * The function is templated to allow for different return types. The return type \c Ret_t, if not
  * explicitly specified, is determined as follows: if \p T is a floating point type, that type is used;
- * otherwise, the arithmetic is performed using \c double.
+ * otherwise, the return type is \c double.
  *
  * \tparam T Type of the start, end, and step values. Default is double.
- * \tparam Ret_t Deduced type used for arithmetic, which, if not explicitly
+ * \tparam Ret_t Return type, which, if not explicitly
  * specified, is \p T if that is a floating point type, or double otherwise.
  *
  * \param start The first value in the range.
@@ -3453,7 +3453,7 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
  *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
  *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
  *     amount of memory.
- * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the arithmetic may introduce rounding errors, and as a consequence, the produced sequence may not strictly adhere to the intended progression. If an exact sequence is desired, consider casting the result as follows: `RVec<integral_type>(Arange(...))` (which is equivalent in numpy to `np.arange(...).astype(integral_type)`). This behavior is different than NumPy in Python.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the returned results are rounded towards negative (`std::floor`) and then cast to the integer type. This is equivalent to setting `dtype = int` in numpy. To cast to integer without rounding, use instead `RVec<integral_type>(Arange(...))`, which would be equivalent to `np.arange(...).astype(integral_type)` in numpy.
  *
  * \par C++23 Enumerate Support:
  * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
@@ -3480,8 +3480,8 @@ inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bo
 template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
 inline RVec<Ret_t> Arange(T start, T end, T step)
 {
-    unsigned long long n = std::ceil(static_cast<Ret_t>(end-start)/static_cast<long double>(step)); // Ensure floating-point division.
-
+    unsigned long long n = std::ceil(( end >= start ? (end - start) : static_cast<long double>(end)-start)/static_cast<long double>(step)); // Ensure floating-point division.
+    
     if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
     {
         return {};
@@ -3493,7 +3493,7 @@ inline RVec<Ret_t> Arange(T start, T end, T step)
     long double step_c = step;
 
     temp[0] = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
-    if (std::is_floating_point_v<Ret_t>)
+    if constexpr (std::is_floating_point_v<Ret_t>)
     {
         for (unsigned long long i = 1; i < n; i++)
         {
