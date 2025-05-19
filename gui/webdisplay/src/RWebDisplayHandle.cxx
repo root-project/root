@@ -1085,21 +1085,21 @@ std::string RWebDisplayHandle::GetImageFormat(const std::string &fname)
    };
 
    if (EndsWith(".screenshot.pdf"))
-      return "s.pdf"s;
+      return "s.pdf" s;
    if (EndsWith(".pdf"))
-      return "pdf"s;
+      return "pdf" s;
    if (EndsWith(".json"))
-      return "json"s;
+      return "json" s;
    if (EndsWith(".svg"))
-      return "svg"s;
+      return "svg" s;
    if (EndsWith(".screenshot.png"))
-      return "s.png"s;
+      return "s.png" s;
    if (EndsWith(".png"))
-      return "png"s;
+      return "png" s;
    if (EndsWith(".jpg") || EndsWith(".jpeg"))
-      return "jpeg"s;
+      return "jpeg" s;
    if (EndsWith(".webp"))
-      return "webp"s;
+      return "webp" s;
 
    return ""s;
 }
