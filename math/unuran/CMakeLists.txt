@@ -13,7 +13,7 @@
 if(builtin_unuran)
 
 set(UNR_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(UNR_VERSION "1.8.0-root")
+set(UNR_VERSION "1.11.0")
 set(UNR_TARNAME "unuran-${UNR_VERSION}")
 set(UNR_TARGZFILE ${UNR_SRCDIR}/${UNR_TARNAME}.tar.gz)
 set(UNR_TARFILE ${UNR_SRCDIR}/${UNR_TARNAME}.tar)
