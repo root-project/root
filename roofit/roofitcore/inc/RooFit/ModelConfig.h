@@ -311,7 +311,10 @@ public:
 
    void GuessObsAndNuisance(const RooArgSet &obsSet, bool printModelConfig = true);
 
-   inline void GuessObsAndNuisance(const RooDataSet &data, bool printModelConfig = true) { return GuessObsAndNuisance(data, printModelConfig); }
+   inline void GuessObsAndNuisance(const RooDataSet &data, bool printModelConfig = true)
+   {
+      return GuessObsAndNuisance(*data.get(), printModelConfig);
+   }
 
    /// overload the print method
    void Print(Option_t *option = "") const override;
