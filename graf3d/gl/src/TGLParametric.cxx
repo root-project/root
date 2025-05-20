@@ -103,9 +103,9 @@ where -pi <= u <= pi, -pi <= v <= pi.
                               "1 / (sqrt(2) + cos(v))");
 ~~~
 
- `$ROOTSYS/tutorials/visualisation/gl/glparametric.C` contains more examples.
+glparametric.C contains more examples.
 
- Parametric equations can be specified:
+Parametric equations can be specified:
   - 1. by string expressions, as with TF2, but with 'u' instead of 'x' and
        'v' instead of 'y'.
   - 2. by function - see ParametricEquation_t declaration.
