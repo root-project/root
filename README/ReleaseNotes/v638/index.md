@@ -13,6 +13,34 @@ This silent mutation of data can be dangerous.
 With ROOT 6.38, an exception will be thrown instead.
 If you know what you are doing and want to restore the old clipping behavior, you can do so with `RooRealVar::enableSilentClipping()`, but this is not recommended.
 
+### Changed return type of `RooAbsData::split()`
+
+The return type of `RooAbsData::split()` was changed. So far, it returned a `TList*`, which is changed to `std::vector<std::unique_ptr<RooAbsData>>` in this release. The reason for this breaking change was memory safety. The returned `TList` *as well* as the `RooAbsData` objects it contains had to be deleted by the caller, which is usually forgotten in user frameworks and even RooFit itself. The new return type enforces memory safety.
+
+Furthermore, the `RooAbsData::split()` method is not virtual anymore, as it's not meant the be overridden by inheriting classes.
+
+The names of the datasets in the return object still correspond to the channel names from the category that was used to split the dataset.
+It is quite common to look up the data for a given channel from the data splits, which could previously done with `TList::FindObject()`.
+```C++
+TList *splits{data->split(*category)};
+std::string channelName = "channel_a";
+RooAbsData* channelData = static_cast<RooAbsData*>(splits->FindObject(channelName.c_str()));
+// ... do something with channelData ...
+splits->Delete();
+delete splits;
+```
+
+With the new return type, one has to use algorithms from the standard library to do the lookups:
+```C++
+std::vector<std::unique_ptr<RooAbsData>> splits{data->split(*category)};
+std::string channelName = "channel_a";
+auto found = std::find_if(splits.begin(), splits.end(), [&](auto const &item) {
+  return nameIdx.first == item->GetName();
+});
+RooAbsData *dataForChan = found != splits.end() ? found->get() : nullptr;
+// ... do something with channelData ...
+```
+
 ## RDataFrame
 - Memory savings in RDataFrame: When many Histo3D are filled in RDataFrame, the memory consumption in multi-threaded runs can be prohibitively large, because
   RDF uses one copy of each histogram per thread. Now, RDataFrame can reduce the number of clones using `ROOT::RDF::Experimental::ThreadsPerTH3()`. Setting this
