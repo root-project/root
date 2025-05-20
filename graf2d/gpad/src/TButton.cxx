@@ -67,7 +67,7 @@ void but() {
    but3->Draw();
 
 // Create last button with no name. Instead a graph is draw inside the button
-// Clicking on this button will invoke the macro $ROOTSYS/tutorials/visualisation/graphs/gr001_simple.C
+// Clicking on this button will invoke the macro gr001_simple.C
    button = new TButton("",".x tutorials/visualisation/graphs/gr001_simple.C",0.15,0.15,0.85,0.38);
    button->SetFillColor(42);
    button->Draw();
