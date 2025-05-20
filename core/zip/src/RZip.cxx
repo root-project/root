@@ -364,12 +364,13 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
    obufcnt = *tgtsize;
 
    if (obufcnt < isize) {
-      fprintf(stderr, "R__unzip: too small target\n");
+      fprintf(stderr, "R__unzip: too small target (needed: %ld, given: %ld)\n", isize, obufcnt);
       return;
    }
 
    if (ibufcnt + HDRSIZE != *srcsize) {
-      fprintf(stderr, "R__unzip: discrepancy in source length\n");
+      fprintf(stderr, "R__unzip: discrepancy in source length (expected size: %d, real size: %ld)\n",
+              *srcsize, ibufcnt + HDRSIZE);
       return;
    }
 
