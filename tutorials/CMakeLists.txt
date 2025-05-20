@@ -387,6 +387,14 @@ set(extra_veto
   eve7/*.C
   r/rootlogon.C)
 
+# Some PROOF tutorial doesn't work on newer distros like AlmaLinux 10, so veto
+# it if the CMake version is at least as new as the version available on Alma
+# 10. PROOF is deprecated in later ROOT versions, hence this failure is not
+# worth debugging at this point.
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.5)
+  set(el10_veto multicore/mp105_processEntryList.C)
+endif()
+
 set(all_veto hsimple.C
              geom/geometry.C
              ${extra_veto}
@@ -417,6 +425,7 @@ set(all_veto hsimple.C
              ${spectrum_veto}
              ${dataframe_veto}
              ${macm1_veto}
+             ${el10_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
