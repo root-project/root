@@ -451,6 +451,14 @@ if(MSVC AND ${LLVM_VERSION} VERSION_GREATER_EQUAL 13.0.0 AND NOT llvm13_broken_t
   endif()
 endif()
 
+# Some PROOF tutorial doesn't work on AlmaLinux 10, so veto it for the el10
+# Linux flavor. PROOF is deprecated in later ROOT versions, hence this failure
+# is not worth debugging at this point.
+string(REGEX MATCH "\\.el10" el10_suffix ${CMAKE_SYSTEM})
+if(NOT "${el10_suffix}" STREQUAL "")
+  set(el10_veto multicore/mp105_processEntryList.C)
+endif()
+
 set(all_veto hsimple.C
              geom/geometry.C
              ${extra_veto}
@@ -481,6 +489,7 @@ set(all_veto hsimple.C
              ${dataframe_veto}
              ${macm1_veto}
              ${clad_veto}
+             ${el10_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
