@@ -10,15 +10,15 @@ if(MSVC)
    endif()
 else()
    set(RootExeOptions -e "gSystem->Load(\"../test/libEvent\")")
-
-   # The generate-eventfile uses the eventexe executable.
-   # The eventexe executable is provided by the "eventexe" target, defined in test/CMakeLists.txt
-   ROOTTEST_ADD_TEST(treeCloneTest
-               PRECMD sh ${CMAKE_CURRENT_SOURCE_DIR}/generate-eventfile.sh ${CMAKE_BINARY_DIR}
-               COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/run.C -e "gSystem->Load(\"../test/libEvent\")"
-               POSTCMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/runEvent.C -e "gSystem->Load(\"../test/libEvent\")"
-               OUTREF references/treeCloneTest.ref)
 endif()
+
+# The generate-eventfile uses the eventexe executable.
+# The eventexe executable is provided by the "eventexe" target, defined in test/CMakeLists.txt
+ROOTTEST_ADD_TEST(treeCloneTest
+            PRECMD sh ${CMAKE_CURRENT_SOURCE_DIR}/generate-eventfile.sh ${CMAKE_BINARY_DIR}
+            COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/run.C ${RootExeOptions}
+            POSTCMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/runEvent.C ${RootExeOptions}
+            OUTREF references/treeCloneTest.ref)
 
 if(NOT TARGET hsimple)
       add_custom_target(hsimple-file ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root)
