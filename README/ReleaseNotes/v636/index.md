@@ -181,6 +181,9 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 * The logic to retrieve branch names of a TTree has been improved, leading to O(10) speedup. For example, an RDataFrame
   wrapping a TTree with O(10K) columns could be spending multiple minutes just to retrieve the full dataset schema,
   whereas now it will take seconds.
+* `TFileMerger`'s (and `hadd`'s) default behavior on encountering invalid/corrupt objects while merging has changed: previously the corrupt object would be skipped without aborting the merging process; now the merging process will abort by default. The "skip" behavior can be restored by:
+  * calling the new method `TFileMerger::SetErrorBehavior()` (if using `TFileMerger` directly), or
+  * using the `-k` flag if using `hadd`.
 
 ### RNTuple
 
