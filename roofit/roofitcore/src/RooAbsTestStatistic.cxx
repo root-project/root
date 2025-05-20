@@ -446,7 +446,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
   RooAbsCategoryLValue& simCat = const_cast<RooAbsCategoryLValue&>(simpdf->indexCat());
 
-  std::unique_ptr<TList> dsetList{const_cast<RooAbsData*>(data)->split(*simpdf,processEmptyDataSets())};
+  std::vector<std::unique_ptr<RooAbsData>> dsetList{const_cast<RooAbsData*>(data)->split(*simpdf,processEmptyDataSets())};
 
   // Create array of regular fit contexts, containing subset of data and single fitCat PDF
   for (const auto& catState : simCat) {
@@ -466,7 +466,10 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
     // Retrieve the PDF for this simCat state
     RooAbsPdf* pdf = simpdf->getPdf(catName.c_str());
-    RooAbsData* dset = static_cast<RooAbsData*>(dsetList->FindObject(catName.c_str()));
+    auto found = std::find_if(dsetList.begin(), dsetList.end(), [&](auto const &item) {
+      return catName == item->GetName();
+    });
+    RooAbsData *dset = found != dsetList.end() ? found->get() : nullptr;
 
     if (pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
       ccoutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << _gofArray.size() << " for state " << catName
@@ -517,8 +520,6 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     gof->setSimCount(_gofArray.size());
   }
   coutI(Fitting) << "RooAbsTestStatistic::initSimMode: created " << _gofArray.size() << " slave calculators." << std::endl;
-
-  dsetList->Delete(); // delete the content.
 }
 
 
@@ -552,14 +553,14 @@ bool RooAbsTestStatistic::setData(RooAbsData& indata, bool cloneData)
         gof->setDataSlave(indata, cloneData);
       }
     } else {
-      std::unique_ptr<TList> dlist{indata.split(*static_cast<RooSimultaneous*>(_func), processEmptyDataSets())};
-      if (!dlist) {
-        coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << std::endl;
-        throw std::runtime_error("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting");
-      }
+      std::vector<std::unique_ptr<RooAbsData>> dlist{indata.split(*static_cast<RooSimultaneous*>(_func), processEmptyDataSets())};
 
       for(auto& gof : _gofArray) {
-        if (auto compData = static_cast<RooAbsData*>(dlist->FindObject(gof->GetName()))) {
+        auto found = std::find_if(dlist.begin(), dlist.end(), [&](auto const &item) {
+          return strcmp(gof->GetName(), item->GetName()) == 0;
+        });
+        RooAbsData *compData = found != dlist.end() ? found->get() : nullptr;
+        if (compData) {
           gof->setDataSlave(*compData,false,true);
         } else {
           coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << gof->GetName() << std::endl;
