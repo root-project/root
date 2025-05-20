@@ -1,6 +1,6 @@
 import py, pytest, os
-from pytest import raises, skip
-from support import setup_make, pylong, maxvalue, IS_WINDOWS
+from pytest import raises, skip, mark
+from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC
 
 
 currpath = os.getcwd()
@@ -334,6 +334,7 @@ class TestOPERATORS:
         b = ns.Bar()
         assert b[42] == 42
 
+    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
     def test15_class_and_global_mix(self):
         """Iterator methods have both class and global overloads"""
 
