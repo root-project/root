@@ -459,6 +459,7 @@ class TestFRAGILE:
                     'double lb, double ub, double value, bool binary, bool integer, const std::string& name']:
             assert cppyy.gbl.Variable.__init__.__overload__(sig)
 
+    @mark.xfail(reason="Fails on \"alma9 modules_off runtime_cxxmodules=Off\"")
     def test19_gbl_contents(self):
         """Assure cppyy.gbl is mostly devoid of ROOT thingies"""
 

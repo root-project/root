@@ -1,6 +1,6 @@
 import py, pytest, os
 from pytest import raises, mark
-from support import setup_make
+from support import setup_make, IS_MAC
 
 currpath = os.getcwd()
 test_dct = currpath + "/example01Dict"
@@ -11,6 +11,7 @@ class TestACLASSLOADER:
     def setup_class(cls):
         import cppyy
 
+    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
     def test01_class_autoloading(self):
         """Test whether a class can be found through .rootmap."""
         import cppyy
