@@ -34,11 +34,17 @@ if 'win32' in sys.platform:
         IS_WINDOWS = 32
 
 IS_MAC_ARM = 0
+IS_MAC_X86 = 0
 if 'darwin' in sys.platform:
     import platform
     if 'arm64' in platform.machine():
         IS_MAC_ARM = 64
         os.environ["CPPYY_UNCAUGHT_QUIET"] = "1"
+    else:
+        IS_MAC_X86 = 1
+
+IS_MAC = IS_MAC_ARM or IS_MAC_X86
+IS_LINUX = not (IS_WINDOWS or IS_MAC) 
 
 try:
     import __pypy__

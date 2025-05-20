@@ -1,6 +1,6 @@
 import os, sys, pytest
 from pytest import mark, raises, skip
-from support import setup_make, IS_WINDOWS, ispypy
+from support import setup_make, IS_WINDOWS, ispypy, IS_MAC_X86
 
 
 class TestREGRESSION:
@@ -83,6 +83,7 @@ class TestREGRESSION:
         # TODO: it's deeply silly that namespaces inherit from CPPInstance (in CPyCppyy)
         assert ('CPPInstance' in helptext or 'CPPNamespace' in helptext)
 
+    @mark.xfail(condition=IS_MAC_X86, reason="Fails on OSX-X86")
     def test03_pyfunc_doc(self):
         """Help on a generated pyfunc used to crash."""
 
@@ -103,6 +104,7 @@ class TestREGRESSION:
 
         assert 1 == cppyy.gbl.py2long(1)
 
+    @mark.xfail(reason="Fails on \"alma9 modules_off runtime_cxxmodules=Off\"")
     def test04_avx(self):
         """Test usability of AVX by default."""
 

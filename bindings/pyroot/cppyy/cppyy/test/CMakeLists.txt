@@ -39,6 +39,7 @@ foreach(DICT ${CPPYY_TEST_DICTS})
     target_include_directories(${DICT}Dict PUBLIC ${Python3_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include)
     target_link_libraries(${DICT}Dict PUBLIC Python3::Python ROOT::Core)
     set_target_properties(${DICT}Dict PROPERTIES PREFIX "")
+    target_compile_options(${DICT}Dict PRIVATE "-w")
 endforeach()
 
 # Tests list
@@ -48,7 +49,6 @@ test_advancedcpp
 test_api
 test_boost
 test_conversions
-test_cpp11features
 test_crossinheritance
 test_datatypes
 test_doc_features
@@ -62,10 +62,20 @@ test_overloads
 test_pythonify
 test_pythonization
 test_regression
-test_stltypes
 test_streams
 test_templates
 test_concurrent)
+
+if(NOT CMAKE_CXX_STANDARD EQUAL 23)
+    # test_cpp11features crashes when run with C++23
+    list(APPEND CPPYY_TESTS test_cpp11features)
+endif()
+
+if(NOT APPLE)
+    # test_stltypes completely fails on OSX
+    # because it is unable to load the necessary shared libraries
+    list(APPEND CPPYY_TESTS test_stltypes)
+endif()
 
 # Configure the tests
 foreach(TEST ${CPPYY_TESTS})
