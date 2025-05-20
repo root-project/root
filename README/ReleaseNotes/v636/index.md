@@ -61,15 +61,74 @@ The following people have contributed to this new version:
   * Implemented the `ROOT.uhi.loc`, `ROOT.uhi.underflow`, `ROOT.uhi.overflow`, `ROOT.uhi.rebin`, and `ROOT.uhi.sum` tags.
 
 ## RDataFrame
-- When running multiple computation graphs run concurrently using [`RunGraphs()`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a526d77d018bf69462d736bbdd1a695c4),
+- When running multiple computation graphs concurrently using [`RunGraphs()`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a526d77d018bf69462d736bbdd1a695c4),
   the pool of slot numbers that a thread can pick from is now shared across all graphs. This enables use cases where a single resource, which may be expensive to create or copy,
   is shared across tasks belonging to different computation graphs.
 - RDataFrame's RResultPtr now allow direct access to the underlying shared_ptr using [GetSharedPtr()](https://root.cern.ch/doc/v636/classROOT_1_1RDF_1_1RResultPtr.html#a633d680942845d91c10a48f62918f908). See also the new tutorial [df040](https://root.cern.ch/doc/v636/df040__RResultPtr__lifetimeManagement_8C.html) for details of lifetime management of RDataFrame results.
 - Support for single-threaded snapshotting to RNTuple has been added. This can be enabled through `RSnapshotOptions`. Note that snapshotting from a TTree-based RDataFrame to RNTuple is not yet supported in this release, but will be added in a future version. The current recommended way to convert from TTree to RNTuple is through the [RNTupleImporter](https://root.cern/doc/v636/classROOT_1_1Experimental_1_1RNTupleImporter.html).
+- The support for reading CSV file inputs has been extended with the following capabilities:
+  - Left/right trimming
+  - Skipping of a given number of header/footer lines
+  - Comment character to skip lines / line remainders
+  - Override column names
+- The `Display` operation has been extended to support different printing options. Notably, it now includes the possibility
+  to display the table in Markdown or HTML formats. When using RDataFrame in an IPython-based environment, e.g. a Jupyter
+  notebook, the output format will be HTML by default. This will be parsed and displayed nicely in the notebook cell output.
+- The RNTuple data source has been moved out of the experimental namespace, now in namespace `ROOT::RDF`. In the transition,
+  the support to read a raw RNTuple pointer was removed in order to ensure a simpler and more sustainable API.
+- The `Report` action is now supported in the case of systematic variations, i.e. it is now possible to call
+  `VariationsFor(report)`. This produces the usual map of varied `Report` nodes.
+- New alerts have been put in place when a user requests entry ranges out of the bounds of the data source, addressing the following situations (nEntries is the total number of entries in the dataset):
+  - `begin<nEntries` or `end>nEntries`: raise a warning at the end of the execution
+  - `begin==nEntries`: throw an exception as soon as this is detected
+- Fixed a faulty interaction between sample paths in an RDataFrame execution and the corresponding redirected URL in
+  case the path is pointing to a FUSE-mounted EOS location. The map of available samples now contains both the
+  FUSE-mounted location and the redirected xroot URL. For more info, see https://github.com/root-project/root/pull/17544.
+- The RNTuple data source now follows the automatic conversion to `ROOT::RVec` in-memory when the corresponding on-disk
+  type of the column is one of `ROOT::RVec`, `std::vector`, `std::array`. This follows the same logic used for TTree. In
+  all other cases, the RNTuple data source will use the same in-memory type as the on-disk type.
+- The Python usability of RDataFrame when reading a TTree-based dataset with a TChain has been improved. Specifically,
+  the ownership of the TChain is now shared between the RDataFrame object(s) and the Python interpreter. The following
+  Python function would have previously returned an RDataFrame with a dangling reference to the underlying dataset,
+  whereas now the TChain will stay alive as long as the RDataFrame will:
+  ```python
+  def foo():
+    ch = ROOT.TChain(...)
+    return ROOT.RDataFrame(ch)
+  ```
+- A new option for `Snapshot` has been added to the `RSnapshotOptions`, namely the possibility to specify the output
+  TTree basket size. Users can set the `fBasketSize` data member to the desired basket size.
+- The RNTuple data source now supports reading the same column with different valid column types, for example reading
+  a `std::vector<T>` column as `ROOT::RVec<T>` and vice-versa. An exception is thrown in case a requested type is
+  incompatible with the actual column type.
+- The treatment of TTree datasets in RDataFrame has been completely overhauled and is now aligned with all other data
+  sources, i.e. a new `RDataSource`-derived class was introduced to manage TTree processing. These changes are completely
+  transparent to the user, but improve sustainability of the code base. At the same time, the need to JIT the
+  column readers for TTree dataset was removed thus slightly improving runtime performance.
+- It is now possible to retrieve the `std::shared_ptr<T>` held by an `RResultPtr<T>`. This can be useful in certain
+  scenarios, e.g. when it is desired to keep the result alive longer than the lifetime of the corresponding node, or the
+  RDataFrame itself.
+- The behaviour of `Snapshot` with the TTree output in case no entries pass the selections has been changed. Now, both
+  in single- and multi-thread mode, the operation will produce an output file, with a TTree inside. The TTree will contain
+  the complete dataset schema (i.e. the column names) requested during the `Snapshot` call and it will have no entries.
+- It is now possible to read a string column type with a `pandas.DataFrame` data source.
+- It is now possible to create an RDataFrame wrapping an empty `pandas.DataFrame`, as long as all the columns of the
+  `pandas.DataFrame` are of supported types.
+- The behaviour of `AsNumpy` has been modified, depending on whether the input column type is a scalar or collection.
+  In the case of scalar, the output numpy array will have its `dtype` of the corresponding Python type when the input
+  type is a fundamental type (e.g. integer or float). Columns containing non-fundamental types will result in a numpy
+  array with `dtype=object`. In the case of a collection, the output numpy array will have `dtype=object`, where each
+  element is itself a numpy array representing the collection for its corresponding entry in the column. If the
+  collection at a certain entry contains values of fundamental types, or if it is a regularly shaped multi-dimensional
+  array of a fundamental type, then the numpy array representing the collection for that entry will have the `dtype`
+  associated with the value type of the collection. If the collection at a certain entry contains values of a
+  non-fundamental type, it will be represented as a numpy array with `dtype=object`.
 
 ### Distributed RDataFrame
 
-The distributed RDataFrame (`ROOT.RDF.Distributed`) is now out of the experimental namespace. We recommend that users switch to using the new version as soon as possible. Note the following changes between the old and the new code:
+The local and distributed APIs of RDataFrame have been made completely uniform. Using the keyword argument `executor`,
+an RDataFrame can run on a distributed set of nodes. Furthermore, distributed RDataFrame (`ROOT.RDF.Distributed`) is now
+out of the experimental namespace. We recommend that users switch to using the new version as soon as possible. Note the following changes between the old and the new code:
 
 ```python
 # Old version - not recommended:
@@ -94,6 +153,11 @@ A set of new features is now available to the distributed RDataFrame users:
 
 * The factory function `FromSpec` is available to build the distributed RDF. Note, however, the addition and use of the metadata is not yet supported. 
 
+* Support for the following API operations was added to distributed RDataFrame:
+  * `Alias`
+  * `DefaultValueFor`
+  * `FilterAvailable`
+  * `FilterMissing`
 ## RooFit
 
 ### Breaking function signature changes
@@ -118,6 +182,9 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 * * Note: `enum class` with an underlying size strictly greater than 32 bits are not supported since they would be truncated when stored on file.
 * The version number of `TStreamerInfo` has been increase to 10 to encoded the addition of the support for `enum class` with a non default underlying size. This allows the opportunity to detect files written by old version of ROOT (`v9` and older of `TStreamerInfo`) where  `enum class` with a non default underlying size where stored incorrectly but recoverably.  Those files can be recover by using I/O customization rules that takes in consideration their size at the time of writing (this information is not recorded in the `ROOT` file).  See https://github.com/root-project/root/pull/17009#issuecomment-2522228598 for some examples.
 * New attribute for I/O customization rules: `CanIgnore`.  When using this attribute the rule will be ignored if the input is missing from the schema/class-layout they apply to instead of issue a `Warning`
+* The logic to retrieve branch names of a TTree has been improved, leading to O(10) speedup. For example, an RDataFrame
+  wrapping a TTree with O(10K) columns could be spending multiple minutes just to retrieve the full dataset schema,
+  whereas now it will take seconds.
 
 ### RNTuple
 
