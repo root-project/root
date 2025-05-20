@@ -786,8 +786,8 @@ TEST(RooDataHist, SplitDataHistWithSumW2)
 
    data1.add({x, cat}, 2.0, 0.3);
 
-   std::unique_ptr<TList> dataList{data1.split(cat, true)};
-   auto &data2 = static_cast<RooDataHist &>(*dataList->At(0));
+   std::vector<std::unique_ptr<RooAbsData>> dataList{data1.split(cat, true)};
+   RooAbsData &data2 = *dataList[0];
 
    data1.get(0);
    data2.get(0);
