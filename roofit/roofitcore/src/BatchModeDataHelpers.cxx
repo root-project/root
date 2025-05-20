@@ -205,20 +205,20 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
    std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
    bool splitRange = false;
+
+   // The split datasets need to be kept alive because the datamap points to their content
    std::vector<std::unique_ptr<RooAbsData>> splitDataSets;
 
    if (simPdf) {
-      std::unique_ptr<TList> splits{data.split(*simPdf, true)};
-      for (auto *d : static_range_cast<RooAbsData *>(*splits)) {
+      splitDataSets = data.split(*simPdf, true);
+      for (auto const &d : splitDataSets) {
          RooAbsPdf *simComponent = simPdf->getPdf(d->GetName());
          // If there is no PDF for that component, we also don't need to fill the data
          if (!simComponent) {
             continue;
          }
-         datasets.emplace_back(std::string("_") + d->GetName() + "_", d);
+         datasets.emplace_back(std::string("_") + d->GetName() + "_", d.get());
          isBinnedL.emplace_back(simComponent->getAttribute("BinnedLikelihoodActive"));
-         // The dataset need to be kept alive because the datamap points to their content
-         splitDataSets.emplace_back(d);
       }
       splitRange = simPdf->getAttribute("SplitRange");
    } else {
