@@ -1,0 +1,4 @@
+ libCore.dll  libRIO.dll  libThread.dll  libTree.dll  libHist.dll  libTreePlayer.dll  libNet.dll
+# Now the list of classes
+MyClass
+Wrapper
