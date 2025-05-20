@@ -16,7 +16,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
-    RooMultiPdf.h #new class implementation RooMultiPdf.h
+    RooMultiPdf.h
     Roo2DKeysPdf.h
     RooArgusBG.h
     RooBCPEffDecay.h
@@ -81,7 +81,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooVoigtian.h
     RooJohnson.h
   SOURCES
-    src/RooMultiPdf.cxx #New class implementation RooMultiPDf 
+    src/RooMultiPdf.cxx
     src/Roo2DKeysPdf.cxx
     src/RooArgusBG.cxx
     src/RooBCPEffDecay.cxx

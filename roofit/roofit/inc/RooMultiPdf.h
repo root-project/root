@@ -6,8 +6,6 @@
 #include "RooCategoryProxy.h"
 #include "RooListProxy.h"
 
-#include <iostream>
-
 class RooMultiPdf : public RooAbsPdf {
 public:
    enum PenaltyScheme {

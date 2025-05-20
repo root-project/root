@@ -1,8 +1,3 @@
-//
-// BEGIN_HTML
-// Multiple function p.d.f
-// END_HTML
-//
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
@@ -28,14 +23,13 @@
 
 #include <RooConstVar.h>
 
-ClassImp(RooMultiPdf)
-   // Constructing a RooMultiPdf
-   //  parameter name : The name of the RooMultiPdf object
-   //  parameter title : Display title in plots
-   //  parameter _x :  variable used to select which PDF that selects the active PDF.
-   //  parameter _c : A list of the pdfs.The index of each PDF in the list should match the values in _x
-   //_____________________________________________________________________________
-   RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, const RooArgList &_c)
+// Constructing a RooMultiPdf
+//  parameter name : The name of the RooMultiPdf object
+//  parameter title : Display title in plots
+//  parameter _x :  variable used to select which PDF that selects the active PDF.
+//  parameter _c : A list of the pdfs.The index of each PDF in the list should match the values in _x
+//_____________________________________________________________________________
+RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, const RooArgList &_c)
    : RooAbsPdf(name, title), // call of constructor base class RooAbsPdf passing it name and title
      c("_pdfs", "The list of pdfs", this),
      corr("_corrs", "The list of correction factors", this),
@@ -49,17 +43,12 @@ ClassImp(RooMultiPdf)
    c.add(_c);
    for (RooAbsArg *pdf : c) {
       // This is done by the user BUT is there a way to do it at construction?
-      _x.defineType(
-         ("_pdf" + std::to_string(count)).c_str(),
-         count); // For each PDF, defines a new type in the index category _x, associating "pdf0", "pdf1", etc. to count
-      std::unique_ptr<RooArgSet> variables(
-         pdf->getVariables()); // getVariables() gets all the variables that the PDF depends on
-      std::unique_ptr<RooAbsCollection> nonConstVariables(variables->selectByAttrib(
-         "Constant", false)); // selectByAttrib("Constant", false) filters out parameters that are not constant
+      _x.defineType(("_pdf" + std::to_string(count)).c_str(), count);
+      std::unique_ptr<RooArgSet> variables(pdf->getVariables());
+      std::unique_ptr<RooAbsCollection> nonConstVariables(variables->selectByAttrib("Constant", false));
       // Isn't there a better way to hold on to these values?
-      // records how many  parameters the PDF has
-      corr.addOwned(
-         std::make_unique<RooConstVar>((std::string{"const"} + pdf->GetName()).c_str(), "", nonConstVariables->size()));
+      std::string corrName = std::string{"const"} + pdf->GetName();
+      corr.addOwned(std::make_unique<RooConstVar>(corrName.c_str(), "", nonConstVariables->size()));
       count++;
    }
    _oldIndex = fIndex;
