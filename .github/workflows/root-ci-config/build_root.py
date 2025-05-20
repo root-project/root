@@ -507,7 +507,7 @@ def create_coverage_xml() -> None:
     builddir = os.path.join(WORKDIR, "build")
     ignore_directories="runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
     ignore_subpattern="runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter"
-    ignore_errors="--gcov-ignore-parse-errors=suspicious_hits.warn  --gcov-ignore-errors=source_not_found --gcov-ignore-errors=no_working_dir_found"
+    ignore_errors="--gcov-suspicious-hits-threshold=10000000000  --gcov-ignore-errors=source_not_found --gcov-ignore-errors=no_working_dir_found"
     exclude_dictionaries="--exclude='.*/G__.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*'"
     # The output of -v is huge (several 10s of MB at least), we could filter
     # the output of -v to keep just the line with ` Processing file:`
