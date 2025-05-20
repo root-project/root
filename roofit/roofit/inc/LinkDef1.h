@@ -3,6 +3,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link C++ class Roo2DKeysPdf+ ;
+#pragma link C++ class RooMultiPdf + ;
 #pragma link C++ class RooArgusBG+ ;
 #pragma link C++ class RooBCPEffDecay+ ;
 #pragma link C++ class RooBCPGenDecay+ ;
