@@ -2587,7 +2587,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    const char * stderrfile = "/dev/null";
 #else
    TString stderrfile;
-   AssignAndDelete( stderrfile, gSystem->ConcatFileName(build_loc,"stderr.tmp") );
+   stderrfile = gSystem->PrependPathName(build_loc,TString("stderr.tmp"));
 #endif
    TString bakdepfilename = depfilename + ".bak";
 
@@ -2898,7 +2898,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (build_loc == ".") {
       build_loc = WorkingDirectory();
    } else if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
-      AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
+      build_loc = PrependPathName( WorkingDirectory(), build_loc );
    }
 
    // Get the include directory list in the dir1:dir2:dir3 format
@@ -2991,7 +2991,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       library = library_specified;
       ExpandPathName( library );
       if (! IsAbsoluteFileName(library) ) {
-         AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
+         library = PrependPathName( WorkingDirectory(), library );
       }
       libname_noext = library_specified;
       library = TString(library) + "." + fSoExt;
@@ -3030,15 +3030,15 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (pos==0) lib_location.Remove(pos,3);
 
       if (flatBuildDir) {
-         AssignAndDelete( library, ConcatFileName( build_loc, libname_ext) );
+         library = PrependPathName( build_loc, TString(libname_ext)) ;
       } else {
-         AssignAndDelete( library, ConcatFileName( build_loc, library) );
+         library = PrependPathName( build_loc, library) ;
       }
 
       Bool_t canWriteBuild_loc = !gSystem->AccessPathName(build_loc,kWritePermission);
       TString build_loc_store( build_loc );
       if (!flatBuildDir) {
-         AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
+         build_loc = PrependPathName( build_loc, TString(lib_location));
       }
 
       if (gSystem->AccessPathName(build_loc,kFileExists)) {
@@ -3084,7 +3084,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,3); // Remove ' -I'
-         AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
+         sub = PrependPathName( WorkingDirectory(), sub );
          sub.Prepend(" -I\"");
          if (sub.EndsWith(" "))
             sub.Chop(); // Remove trailing space (i.e between the -Is ...
@@ -3101,7 +3101,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,4); // Remove ' -I"'
-         AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
+         sub = PrependPathName( WorkingDirectory(), sub );
          sub.Prepend(" -I\"");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
@@ -3140,7 +3140,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    {
       UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
       if (ug) {
-         AssignAndDelete( emergency_loc, ConcatFileName( TempDirectory(), ug->fUser ) );
+         TString user = (ug->fUser).Data();
+         emergency_loc = PrependPathName( TempDirectory(), user );
          delete ug;
       } else {
          emergency_loc = TempDirectory();
@@ -3154,7 +3155,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // Generate the dependency filename
    TString depdir = build_loc;
    TString depfilename;
-   AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
+   depfilename = PrependPathName(depdir, TString(BaseName(libname_noext)));
    depfilename += "_" + extension + ".d";
 
    if ( !recompile ) {
@@ -3174,7 +3175,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if ( gSystem->GetPathInfo( depfilename, nullptr,(Long_t*) nullptr, nullptr, &file_time ) != 0 ) {
             if (!canWrite) {
                depdir = emergency_loc;
-               AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
+               depfilename = PrependPathName(depdir, TString(BaseName(libname_noext)));
                depfilename += "_" + extension + ".d";
             }
             R__WriteDependencyFile(build_loc, depfilename, filename_fullpath, library, libname, extension, version_var_prefix, includes, defines, incPath);
@@ -3327,7 +3328,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    TString libmapfilename;
-   AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
+   libmapfilename = PrependPathName( build_loc, TString(libname) );
    libmapfilename += ".rootmap";
 #if (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)) || defined(R__WIN32)
    Bool_t produceRootmap = kTRUE;
@@ -3439,7 +3440,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       dict.ReplaceAll( forbidden_chars[ic],"_" );
    }
    if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
-   AssignAndDelete( dict, ConcatFileName( build_loc, dict ) );
+   dict = PrependPathName( build_loc, dict ) ;
    TString dicth = dict;
    TString dictObj = dict;
    dict += "cxx"; //no need to keep the extension of the original file, any extension will do
@@ -3448,8 +3449,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Generate a linkdef file
 
-   TString linkdef;
-   AssignAndDelete( linkdef, ConcatFileName( build_loc, libname ) );
+   TString linkdef = PrependPathName( build_loc, TString(libname) );
    linkdef += "_ACLiC_linkdef.h";
    std::ofstream linkdefFile( linkdef, std::ios::out );
    linkdefFile << "// File Automatically generated by the ROOT Script Compiler "
@@ -3501,7 +3501,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Generate the list of rootmap files to be looked at
 
    TString mapfile;
-   AssignAndDelete( mapfile, ConcatFileName( build_loc, libname ) );
+   mapfile = PrependPathName( build_loc, TString(libname) );
    mapfile += "_ACLiC_map";
    TString mapfilein = mapfile + ".in";
    TString mapfileout = mapfile + ".out";
@@ -3519,19 +3519,19 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       TString name = ".rootmap";
       TString sname = "system.rootmap";
       TString file;
-      AssignAndDelete(file, ConcatFileName(TROOT::GetEtcDir(), sname) );
+      file = PrependPathName(TROOT::GetEtcDir(), TString(sname));
       if (gSystem->AccessPathName(file)) {
          // for backward compatibility check also $ROOTSYS/system<name> if
          // $ROOTSYS/etc/system<name> does not exist
-         AssignAndDelete(file, ConcatFileName(TROOT::GetRootSys(), sname));
+         file = PrependPathName(TROOT::GetRootSys(), sname);
          if (gSystem->AccessPathName(file)) {
             // for backward compatibility check also $ROOTSYS/<name> if
             // $ROOTSYS/system<name> does not exist
-            AssignAndDelete(file, ConcatFileName(TROOT::GetRootSys(), name));
+            file = PrependPathName(TROOT::GetRootSys(), TString(name));
          }
       }
       mapfileStream << file << std::endl;
-      AssignAndDelete(file, ConcatFileName(gSystem->HomeDirectory(), name) );
+      file = PrependPathName(gSystem->HomeDirectory(), TString(name) );
       mapfileStream << file << std::endl;
       mapfileStream << name << std::endl;
       if (gInterpreter->GetRootMapFiles()) {
@@ -3748,8 +3748,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #endif
 
    TString testcmd = fMakeExe;
-   TString fakeMain;
-   AssignAndDelete( fakeMain, ConcatFileName( build_loc, libname ) );
+   TString fakeMain = PrependPathName( build_loc, TString(libname) );
    fakeMain += "_ACLiC_main";
    fakeMain += extension;
    std::ofstream fakeMainFile( fakeMain, std::ios::out );
@@ -3765,8 +3764,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // however compilation would fail if a main is already there
    // (like stress.cxx)
    // dict.Append(" ").Append(fakeMain);
-   TString exec;
-   AssignAndDelete( exec, ConcatFileName( build_loc, libname ) );
+   TString exec = PrependPathName( build_loc, TString(libname) );
    exec += "_ACLiC_exec";
    testcmd.ReplaceAll("$SourceFiles","-D__ACLIC__ \"$SourceFiles\"");
    testcmd.ReplaceAll("$SourceFiles",dict);
