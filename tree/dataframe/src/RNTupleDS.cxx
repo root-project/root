@@ -415,10 +415,6 @@ ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, std::string_view fi
    fFileNames = std::vector<std::string>{std::string{fileName}};
 }
 
-ROOT::RDF::RNTupleDS::RNTupleDS(RNTuple *ntuple) : RNTupleDS(ROOT::Internal::RPageSourceFile::CreateFromAnchor(*ntuple))
-{
-}
-
 ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames)
    : RNTupleDS(CreatePageSource(ntupleName, fileNames[0]))
 {

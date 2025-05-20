@@ -172,7 +172,6 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
-   RNTupleDS(ROOT::RNTuple *ntuple);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
    // Rule of five
    RNTupleDS(const RNTupleDS &) = delete;
