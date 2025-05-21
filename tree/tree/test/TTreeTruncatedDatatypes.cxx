@@ -1,6 +1,8 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TLeaf.h"
+#include "TBranch.h"
 
 #include "gtest/gtest.h"
 
@@ -56,4 +58,20 @@ TEST(TTreeTruncatedDatatypes, float16double32leaves)
    delete t;
    f.Close();
    gSystem->Unlink(ofileName);
+}
+
+// https://its.cern.ch/jira/browse/ROOT-10149
+TEST(TTreeTruncatedDatatypes, LeafCounter)
+{
+   TTree t("t", "t");
+   int n;
+   Double32_t arr[64];
+   t.Branch("n", &n);
+   t.Branch("arr", arr, "arr[n]/d[0,0,10]");
+   auto b = t.GetBranch("arr");
+   auto l = b->GetLeaf("arr");
+   int len;
+   auto b_c = l->GetLeafCounter(len);
+   EXPECT_NE(b_c, nullptr);
+   EXPECT_EQ(b_c->GetName(), "n");
 }
