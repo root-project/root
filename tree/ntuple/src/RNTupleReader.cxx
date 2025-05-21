@@ -272,27 +272,12 @@ ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view field
 ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetReader>
 ROOT::RNTupleReader::GetAttributeSet(std::string_view attrSetName)
 {
-   ROOT::Internal::RMiniFileReader *reader = ROOT::Experimental::Internal::GetUnderlyingReader(*fSource);
-   // #TODO(gparolini)
-   if (!reader)
-      throw ROOT::RException(R__FAIL("GetAttributeSet is only supported for file-based Readers"));
-   
    const auto &attrSets = GetDescriptor().GetAttributeSets();
    const auto locatorIt = attrSets.find(std::string(attrSetName));
    if (locatorIt == attrSets.end())
       return R__FAIL(std::string("No such AttributeSet: ") + std::string(attrSetName));
 
    const auto locator = locatorIt->second;
-
-   assert(locator.GetType() == RNTupleLocator::kTypeFile);
-   auto attrAnchor = reader->GetNTupleProperAtLocation(locator.GetPosition<std::uint64_t>()).Unwrap();
-
-   // NOTE: this static_cast assumes that GetUnderlyingReader() returns non-null only for RPageSourceFile.
-   // This should be made more robust.
-   auto attrSource = static_cast<Internal::RPageSourceFile &>(*fSource).OpenWithDifferentAnchor(attrAnchor);
-   auto newReader = std::unique_ptr<RNTupleReader>(new RNTupleReader(std::move(attrSource), RNTupleReadOptions{}));
-   R__ASSERT(newReader);
-
-   auto attrReader = Experimental::RNTupleAttributeSetReader(std::move(newReader));
-   return attrReader;
+   auto attrSetReader = fSource->ReadAttributeSet(locator);
+   return attrSetReader;
 }
