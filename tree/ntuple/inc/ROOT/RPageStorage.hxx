@@ -56,6 +56,10 @@ namespace Experimental::Internal {
 ROOT::Internal::RMiniFileReader *GetUnderlyingReader(ROOT::Internal::RPageSource &pageSource);
 } // namespace Experimental::Internal
 
+namespace Experimental {
+class RNTupleAttributeSetReader;
+}
+
 namespace Internal {
 
 class RPageAllocator;
@@ -570,8 +574,6 @@ The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
-   friend RMiniFileReader *ROOT::Experimental::Internal::GetUnderlyingReader(ROOT::Internal::RPageSource &pageSource);
-
 public:
    /// Used in SetEntryRange / GetEntryRange
    struct REntryRange {
@@ -644,8 +646,6 @@ private:
    /// and evict unused paged from the page pool of all previous clusters.
    /// Must not be called when the descriptor guard is taken.
    void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
-
-   virtual RMiniFileReader *GetUnderlyingReader() { return nullptr; }
 
 protected:
    /// Default I/O performance counters that get registered in `fMetrics`
@@ -829,6 +829,8 @@ public:
    virtual std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) = 0;
 
+   virtual RMiniFileReader *GetUnderlyingReader() { return nullptr; }
+
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
    /// unzip thread. It is an optional optimization, the method can safely do nothing. In particular, the
@@ -843,6 +845,8 @@ public:
    /// Builds the streamer info records from the descriptor's extra type info section. This is necessary when
    /// connecting streamer fields so that emulated classes can be read.
    void RegisterStreamerInfos();
+
+   ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetReader> ReadAttributeSet(ROOT::RNTupleLocator locator);
 }; // class RPageSource
 
 } // namespace Internal

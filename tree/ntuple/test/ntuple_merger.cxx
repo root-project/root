@@ -3715,3 +3715,146 @@ TEST(RNTupleMerger, MergeStreamerFieldsSecondMissing)
       }
    }
 }
+
+TEST(RNTupleMerger, MergeAttributes)
+{
+   FileRaii fileGuard1("test_ntuple_merge_attr1.root");
+   FileRaii fileGuard2("test_ntuple_merge_attr2.root");
+   FileRaii fileGuardOut("test_ntuple_merge_attr_out.root");
+
+   // Write
+   int fileNo = 0;
+   for (const auto *fileGuard : {&fileGuard1, &fileGuard2}) {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
+
+      auto attrModel = RNTupleModel::Create();
+      attrModel->MakeField<std::string>("string");
+
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+
+      auto &wModel = writer->GetModel();
+
+      auto attrRange = attrSet->BeginRange();
+      auto pMyAttr = attrRange.GetPtr<std::string>("string");
+      *pMyAttr = "This is file " + std::to_string(fileNo);
+      for (int i = 0; i < 10 + 5 * fileNo; ++i) {
+         auto entry = wModel.CreateEntry();
+         *entry->GetPtr<int>("int") = i;
+         writer->Fill(*entry);
+      }
+      attrSet->EndRange(std::move(attrRange));
+      ++fileNo;
+   }
+
+   // Merge
+   {
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
+      RNTupleMerger merger{std::move(destination)};
+      auto opts = RNTupleMergeOptions{};
+      opts.fCompressionSettings = 0;
+      auto res = merger.Merge(sourcePtrs, opts);
+      EXPECT_TRUE(bool(res));
+   }
+
+   // Read
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      auto res = reader->GetAttributeSet("MyAttrSet");
+      ASSERT_TRUE(bool(res));
+      auto attrSet = res.Unwrap();
+
+      auto attrs = attrSet.GetAttributes();
+      ASSERT_EQ(attrs.size(), 2);
+      EXPECT_EQ(attrs[0].GetRange().Start(), 0);
+      EXPECT_EQ(attrs[0].GetRange().End(), 10);
+      EXPECT_EQ(attrs[1].GetRange().Start(), 10);
+      EXPECT_EQ(attrs[1].GetRange().End(), 25);
+      EXPECT_EQ(*attrs[0].GetPtr<std::string>("string"), "This is file 0");
+      EXPECT_EQ(*attrs[1].GetPtr<std::string>("string"), "This is file 1");
+   }
+}
+
+TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
+{
+   // Try to merge 2 RNTuples with the same attribute fields but in different order.
+   // At the moment it should fail as we don't support it.
+   
+   FileRaii fileGuard1("test_ntuple_merge_attr_sym1.root");
+   FileRaii fileGuard2("test_ntuple_merge_attr_sym2.root");
+   FileRaii fileGuardOut("test_ntuple_merge_attr_sym_out.root");
+
+   // Write
+   int fileNo = 0;
+   for (const auto *fileGuard : {&fileGuard1, &fileGuard2}) {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("foo");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
+
+      auto attrModel = RNTupleModel::Create();
+      if (fileNo == 0) {
+         attrModel->MakeField<std::string>("string");
+         attrModel->MakeField<int>("int");
+      } else {
+         attrModel->MakeField<int>("int");
+         attrModel->MakeField<std::string>("string");
+      }
+
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+
+      auto &wModel = writer->GetModel();
+
+      auto attrRange = attrSet->BeginRange();
+      auto pAttrStr = attrRange.GetPtr<std::string>("string");
+      auto pAttrInt = attrRange.GetPtr<int>("int");
+      *pAttrStr = "This is file " + std::to_string(fileNo);
+      *pAttrInt = fileNo;
+      for (int i = 0; i < 10 + 5 * fileNo; ++i) {
+         auto entry = wModel.CreateEntry();
+         *entry->GetPtr<int>("foo") = i;
+         writer->Fill(*entry);
+      }
+      attrSet->EndRange(std::move(attrRange));
+      ++fileNo;
+   }
+
+   // Merge
+   {
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
+      RNTupleMerger merger{std::move(destination)};
+      auto opts = RNTupleMergeOptions{};
+      opts.fCompressionSettings = 0;
+      auto res = merger.Merge(sourcePtrs, opts);
+      EXPECT_FALSE(bool(res));
+      EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("schema incompatible"));
+   }
+}

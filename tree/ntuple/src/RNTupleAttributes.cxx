@@ -62,13 +62,14 @@ ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std
 
    // TODO: avoid creating a new model
    auto newModel = RNTupleModel::CreateBare();
-   newModel->AddField(std::move(userRootField));
    newModel->MakeField<ROOT::NTupleSize_t>("__rangeStart");
    newModel->MakeField<ROOT::NTupleSize_t>("__rangeLen");
+   newModel->AddField(std::move(userRootField));
    newModel->Freeze();
 
    // Create a sink that points to the same TDirectory as the main RNTuple
    auto opts = ROOT::RNTupleWriteOptions{};
+   opts.SetCompression(mainFillContext->fSink->GetWriteOptions().GetCompression());
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
    RNTupleFillContext fillContext{std::move(newModel), std::move(sink)};
    return RNTupleAttributeSetWriter(mainFillContext, std::move(fillContext));
@@ -166,12 +167,11 @@ const std::string &ROOT::Experimental::RNTupleAttributeSetReader::GetName() cons
 // TODO: make sure merging attributes preserves the sorting.
 bool ROOT::Experimental::RNTupleAttributeSetReader::EntryRangesAreSorted(const decltype(fEntryRanges) &ranges)
 {
-   ROOT::NTupleSize_t prevEnd = 0;
+   ROOT::NTupleSize_t prevStart = 0;
    for (const auto &[range, _] : ranges) {
-      const auto &[start, end] = range.GetStartEnd();
-      if (start < prevEnd)
+      if (range.Start() < prevStart)
          return false;
-      prevEnd = end;
+      prevStart = range.Start();
    }
    return true;
 };
