@@ -592,10 +592,9 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       }
 
       TIconBoxThumb *thumb = 0;
-      char *thumbname = gSystem->ConcatFileName(gSystem->WorkingDirectory(), name);
+      const char *thumbname = gSystem->PrependPathName(gSystem->WorkingDirectory(), TString(name));
       thumb = (TIconBoxThumb *)fThumbnails->FindObject(gSystem->IsAbsoluteFileName(name) ? name :
                                                        thumbname);
-      delete []thumbname;
 
       if (thumb) {
          spic = thumb->fSmall;
@@ -1710,9 +1709,7 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
          if (gSystem->IsAbsoluteFileName(sf->GetName())) {
             path = sf->GetName();
          } else {
-            char *buf = gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
-            path = buf;
-            delete [] buf;
+            path = gSystem->PrependPathName(gSystem->WorkingDirectory(), TString(sf->GetName()));
          }
 
          TIconBoxThumb *thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path.Data());
@@ -3087,14 +3084,13 @@ void TRootBrowserLite::BrowseTextFile(const char *file)
 
 void TRootBrowserLite::ExecMacro()
 {
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
-                                           fTextFileName.Data());
+   const char *tmpfile = gSystem->PrependPathName(gSystem->TempDirectory(),
+                                           TString(fTextFileName.Data()));
 
    gROOT->SetExecutingMacro(kTRUE);
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gROOT->Macro(tmpfile);
    gSystem->Unlink(tmpfile);
-   delete [] tmpfile;
    gROOT->SetExecutingMacro(kFALSE);
 }
 

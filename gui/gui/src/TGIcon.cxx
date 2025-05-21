@@ -177,10 +177,8 @@ void TGIcon::Reset()
 
    TString name = fImage->GetName();
    name.Chop();
-   char *path = gSystem->ConcatFileName(fPath.Data(), name.Data());
+   const char *path = gSystem->PrependPathName(fPath.Data(), TString(name.Data()));
    SetImage(path);
-
-   delete [] path;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

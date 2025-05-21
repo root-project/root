@@ -771,12 +771,11 @@ void TGTextEditor::CompileMacro()
       if (!SaveFileAs())
          return;
    }
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
-                                gSystem->BaseName(fFilename.Data()));
+   const char *tmpfile = gSystem->PrependPathName(gSystem->TempDirectory(),
+                                TString(gSystem->BaseName(fFilename.Data())));
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gSystem->CompileMacro(tmpfile);
    gSystem->Unlink(tmpfile);
-   delete [] tmpfile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
