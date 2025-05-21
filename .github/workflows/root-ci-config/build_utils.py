@@ -1,22 +1,22 @@
 #!/usr/bin/env false
 
+import datetime
 import json
 import os
+import platform
 import subprocess
 import sys
 import textwrap
-import datetime
 import time
-import platform
 from functools import wraps
 from hashlib import sha1
 from http import HTTPStatus
 from shutil import which
 from typing import Callable, Dict
-from collections import namedtuple
 
 from openstack.connection import Connection
 from requests import get
+
 
 def is_macos():
     return 'Darwin' == platform.system()
@@ -218,7 +218,7 @@ def calc_options_hash(options: str) -> str:
     """
     options_and_defines = options
     if ('march=native' in options):
-        print_info(f"A march=native build was detected.")
+        print_info("A march=native build was detected.")
         compiler_name = 'c++' if which('c++') else 'clang++'
         command = f'echo | {compiler_name} -dM -E - -march=native'
         sp_result = subprocess.run([command], shell=True, capture_output=True, text=True)
@@ -258,7 +258,9 @@ def upload_file(connection: Connection, container: str, dest_object: str, src_fi
         except:
             success = False
             sleep_time = sleep_time_unit * attempt
-            print_warning(f"""Attempt {attempt} to upload {src_file} to {dest_object} failed. Retrying in {sleep_time} seconds...""")
+            print_warning(
+                f"""Attempt {attempt} to upload {src_file} to {dest_object} failed. Retrying in {sleep_time} seconds..."""
+            )
             time.sleep(sleep_time)
         if success: break
 

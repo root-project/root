@@ -1,6 +1,9 @@
 from __future__ import print_function
-import ROOT
+
 from sys import stdout
+
+import ROOT
+
 
 def printme(o):
     print("t now %g %d %d" % (o.get["double"](), o.get["int"](), o.get["float"]()))
