@@ -107,6 +107,8 @@ public:
    {
       return Experimental::Internal::GetUnderlyingDirectory(*fWriter);
    }
+
+   ROOT::Internal::RNTupleFileWriter *GetUnderlyingWriter() const { return fWriter.get(); }
 }; // class RPageSinkFile
 
 // clang-format off
