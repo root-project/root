@@ -37,9 +37,11 @@ class RNTupleReader;
 
 namespace Internal {
 class RNTupleFileWriter;
+class RPageSource;
 }
 
 namespace Experimental::Internal {
+class RNTupleMerger;
 TDirectory *GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
 }
 
@@ -60,7 +62,8 @@ RNTuple data keys.
 */
 // clang-format on
 class RMiniFileReader {
-   friend ROOT::RNTupleReader;
+   friend ROOT::Internal::RPageSource;
+   friend ROOT::Experimental::Internal::RNTupleMerger;
 
 private:
    /// The raw file used to read byte ranges
@@ -117,6 +120,7 @@ A stand-alone version of RNTuple can remove the TFile based writer.
 // clang-format on
 class RNTupleFileWriter {
    friend TDirectory *ROOT::Experimental::Internal::GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
+   friend class ROOT::Experimental::Internal::RNTupleMerger;
 
 public:
    /// The key length of a blob. It is always a big key (version > 1000) with class name RBlob.
