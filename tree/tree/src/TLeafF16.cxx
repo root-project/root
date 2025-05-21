@@ -49,11 +49,10 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
    fPointer = nullptr;
    fElement = nullptr;
 
-   if (strchr(type, '[')) {
-      fTitle.Append("/").Append(type);
-      fElement = new TStreamerElement(Form("%s_Element", name), type, 0, 0, "Float16_t");
-   } else {
-      fTitle = type;
+   auto bracket = strchr(type, '[');
+   if (bracket) {
+      fTitle.Append("/").Append(bracket);
+      fElement = new TStreamerElement(Form("%s_Element", name), bracket, 0, 0, "Float16_t");
    }
 }
 
@@ -221,10 +220,10 @@ void TLeafF16::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TLeafF16::Class(), this);
 
-      if (fTitle.Contains("[")) {
+      if (fTitle.Contains("/[")) {
          auto slash = fTitle.First("/");
-         TString type = fTitle(slash + 1, fTitle.Length() - slash - 1);
-         fElement = new TStreamerElement(Form("%s_Element", fName.Data()), type.Data(), 0, 0, "Float16_t");
+         TString bracket = slash == TString::kNPOS ? fTitle : fTitle(slash + 1, fTitle.Length() - slash - 1);
+         fElement = new TStreamerElement(Form("%s_Element", fName.Data()), bracket.Data(), 0, 0, "Float16_t");
       }
    } else {
       R__b.WriteClassBuffer(TLeafF16::Class(), this);

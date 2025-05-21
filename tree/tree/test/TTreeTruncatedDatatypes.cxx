@@ -63,8 +63,8 @@ TEST(TTreeTruncatedDatatypes, float16double32leaves)
 // https://its.cern.ch/jira/browse/ROOT-10149
 TEST(TTreeTruncatedDatatypes, LeafCounter)
 {
+   const auto ofileName = "leafcounter10149.root";
    {
-      const auto ofileName = "leafcounter10149.root";
       TFile f(ofileName, "RECREATE");
       TTree *t = new TTree("t", "t");
       int n;
