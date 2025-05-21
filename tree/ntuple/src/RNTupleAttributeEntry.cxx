@@ -29,7 +29,7 @@ std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleAttributeEntry::CreateS
 
    auto &zeroField = ROOT::Internal::GetFieldZeroOfModel(const_cast<ROOT::RNTupleModel &>(model));
    auto subfields = zeroField.GetMutableSubfields();
-   RFieldBase *userRootField = subfields[0];
+   RFieldBase *userRootField = subfields[2]; // XXX: hardcoded
 
    // Add only the user-defined fields to the scoped entry
    for (auto &f : userRootField->GetMutableSubfields()) {
@@ -51,8 +51,8 @@ ROOT::Experimental::RNTupleAttributeEntry::CreateInternalEntries(ROOT::RNTupleMo
 
    auto &zeroField = ROOT::Internal::GetFieldZeroOfModel(const_cast<ROOT::RNTupleModel &>(model));
    auto subfields = zeroField.GetMutableSubfields();
-   RFieldBase *rangeStartField = subfields[1];
-   RFieldBase *rangeLenField = subfields[2];
+   RFieldBase *rangeStartField = subfields[0]; // XXX: hardcoded
+   RFieldBase *rangeLenField = subfields[1];   // XXX: hardcoded
 
    // Add only the range start/len to `entry`
    entry->AddValue(rangeStartField->CreateValue());

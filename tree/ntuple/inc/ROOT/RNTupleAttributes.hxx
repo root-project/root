@@ -117,7 +117,7 @@ TODO: code sample here
 */
 // clang-format on
 class RNTupleAttributeSetReader final {
-   friend class ROOT::RNTupleReader;
+   friend class ROOT::Internal::RPageSource;
    friend class RAttributeEntryIterable;
 
    // List containing pairs { entryRange, entryIndex }, used to quickly find out which entries in the Attribute

@@ -68,6 +68,8 @@ std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 */
 // clang-format on
 class RNTupleReader {
+   friend class ROOT::Internal::RPageSource;
+   
 private:
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)

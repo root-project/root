@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/TTaskGroup.hxx>
 #include <Compression.h>
 
@@ -88,6 +89,14 @@ struct RNTupleMergeOptions {
    bool fExtraVerbose = false;
 };
 
+struct RColumnOutInfo {
+   ROOT::DescriptorId_t fColumnId;
+   ENTupleColumnType fColumnType;
+};
+
+// { fully.qualified.fieldName.colInputId => colOutputInfo }
+using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
+
 // clang-format off
 /**
  * \class ROOT::Experimental::Internal::RNTupleMerger
@@ -99,7 +108,16 @@ struct RNTupleMergeOptions {
 class RNTupleMerger final {
    friend class ROOT::RNTuple;
 
+   struct RAttributeSetMergeData {
+      std::unique_ptr<ROOT::Internal::RPageSinkFile> fSink;
+      std::unique_ptr<ROOT::RNTupleModel> fModel;
+
+      ColumnIdMap_t fColIdMap;
+   };
+
    std::unique_ptr<ROOT::Internal::RPagePersistentSink> fDestination;
+   // Mapping { attrSetName => data needed to merge it }
+   std::unordered_map<std::string, RAttributeSetMergeData> fAttributesMergeData;
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
@@ -116,6 +134,9 @@ class RNTupleMerger final {
    ROOT::RResult<void>
    MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
                        std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
+
+   ROOT::RResult<void> MergeSourceAttributes(ROOT::Internal::RPageSource &source, RNTupleMergeData &mergeData,
+                                             ROOT::NTupleSize_t nDstEntriesAtPrevSource);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
