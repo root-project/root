@@ -63,15 +63,38 @@ TEST(TTreeTruncatedDatatypes, float16double32leaves)
 // https://its.cern.ch/jira/browse/ROOT-10149
 TEST(TTreeTruncatedDatatypes, LeafCounter)
 {
-   TTree t("t", "t");
-   int n;
-   Double32_t arr[64];
-   t.Branch("n", &n);
-   t.Branch("arr", arr, "arr[n]/d[0,0,10]");
-   auto b = t.GetBranch("arr");
-   auto l = b->GetLeaf("arr");
-   int len;
-   auto b_c = l->GetLeafCounter(len);
-   EXPECT_NE(b_c, nullptr);
-   EXPECT_EQ(b_c->GetName(), "n");
+   {
+      const auto ofileName = "leafcounter10149.root";
+      TFile f(ofileName, "RECREATE");
+      TTree *t = new TTree("t", "t");
+      int n;
+      Double32_t arr[64];
+      t->Branch("n", &n);
+      t->Branch("arr", arr, "arr[n]/d[0,0,10]");
+      auto b = t->GetBranch("arr");
+      EXPECT_NE(b, nullptr);
+      auto l = b->GetLeaf("arr");
+      EXPECT_NE(l, nullptr);
+      int len;
+      auto b_c = l->GetLeafCounter(len);
+      EXPECT_NE(b_c, nullptr);
+      EXPECT_EQ(b_c->GetName(), "n");
+      t->Write();
+      f.Close();
+   }
+   {
+      TFile f(ofileName, "READ");
+      TTree *t = f.Get<TTree>("t");
+      EXPECT_NE(t, nullptr);
+      auto b = t->GetBranch("arr");
+      EXPECT_NE(b, nullptr);
+      auto l = b->GetLeaf("arr");
+      EXPECT_NE(l, nullptr);
+      int len;
+      auto b_c = l->GetLeafCounter(len);
+      EXPECT_NE(b_c, nullptr);
+      EXPECT_EQ(b_c->GetName(), "n");
+      f.Close();
+   }
+   gSystem->Unlink(ofileName);
 }
