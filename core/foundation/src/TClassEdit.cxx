@@ -1652,6 +1652,7 @@ static void ResolveTypedefImpl(const char *tname,
             prevScope = cursor+1;
             break;
          }
+         case '(':
          case '<': {
             // push information on stack
             if (modified) {
@@ -1683,6 +1684,11 @@ static void ResolveTypedefImpl(const char *tname,
                if (modified) result += " >";
                return;
             }
+            if ( (cursor+1)<len && tname[cursor+1] == ')') {
+               ++cursor;
+               if (modified) result += ")";
+               return;
+            }
             if ( (cursor+1) >= len) {
                return;
             }
@@ -1699,7 +1705,7 @@ static void ResolveTypedefImpl(const char *tname,
             while ((cursor+1)<len && tname[cursor+1] == ' ') ++cursor;
 
             auto next = cursor+1;
-            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ']'))
+            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == ']'))
             {
                // A first const after the type needs to be move in the front.
                if (!modified) {
@@ -1719,7 +1725,7 @@ static void ResolveTypedefImpl(const char *tname,
                cursor += 5;
                end_of_type = cursor+1;
                prevScope = end_of_type;
-               if ((next+5)==len || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+               if ((next+5)==len || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == '[') {
                   break;
                }
             } else if (next!=len && tname[next] != '*' && tname[next] != '&') {
@@ -1736,7 +1742,7 @@ static void ResolveTypedefImpl(const char *tname,
             // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
             auto next = cursor+1;
             if (strncmp(tname+next,"const",5) == 0) {
-               if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+               if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == '[') {
                   next += 5;
                }
             }
@@ -1745,7 +1751,7 @@ static void ResolveTypedefImpl(const char *tname,
                ++next;
                // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
                if (strncmp(tname+next,"const",5) == 0) {
-                  if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                  if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>'|| tname[next+5] == ')' || tname[next+5] == '[') {
                      next += 5;
                   }
                }
@@ -1765,13 +1771,15 @@ static void ResolveTypedefImpl(const char *tname,
             if (modified) result += ',';
             return;
          }
+         case ')':
          case '>': {
+            char c = tname[cursor];
             if (modified && prevScope) {
                result += std::string(tname+prevScope,(end_of_type == 0 ? cursor : end_of_type)-prevScope);
             }
             ResolveTypedefProcessType(tname,len,cursor,constprefix,start_of_type,end_of_type,mod_start_of_type,
                                       modified, result);
-            if (modified) result += '>';
+            if (modified) result += c;
             return;
          }
          default:
