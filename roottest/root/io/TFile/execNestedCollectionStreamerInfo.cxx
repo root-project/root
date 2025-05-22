@@ -6,7 +6,7 @@
 #include <memory>
 
 struct Inside {
-  int fValue;
+  int fValue = 0;
 };
 
 struct Middle {
