@@ -71,29 +71,53 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
       Double32_t arr[64];
       t->Branch("n", &n);
       t->Branch("arr", arr, "arr[n]/d[0,0,10]");
-      auto b = t->GetBranch("arr");
-      EXPECT_NE(b, nullptr);
-      auto l = b->GetLeaf("arr");
-      EXPECT_NE(l, nullptr);
-      int len;
-      auto b_c = l->GetLeafCounter(len);
-      EXPECT_NE(b_c, nullptr);
-      EXPECT_EQ(b_c->GetName(), "n");
+      t->Branch("arr_def", arr, "arr_def[n]/d");
+      t->Branch("arr_fix", arr, "arr_fix[64]/d[0,0,10]");
+      t->Branch("arr_fix_def", arr, "arr_fix_def[64]/d");
+      t->Branch("single", arr, "single/d[0,0,10]");
+      t->Branch("single_def", arr, "single_def/d");
+      for (auto name : {"arr", "arr_def", "arr_fix", "arr_fix_def", "single", "single_def"}) {
+         auto b = t->GetBranch(name);
+         EXPECT_NE(b, nullptr);
+         auto l = b->GetLeaf(name);
+         EXPECT_NE(l, nullptr);
+         int len;
+         auto b_c = l->GetLeafCounter(len);
+         if (strcmp(name, "arr") == 0 || strcmp(name, "arr_def") == 0) {
+            EXPECT_NE(b_c, nullptr);
+            EXPECT_STREQ(b_c->GetName(), "n");
+         } else if (strcmp(name, "arr_fix") == 0 || strcmp(name, "arr_fix_def") == 0) {
+            EXPECT_EQ(b_c, nullptr);
+            EXPECT_EQ(len, 64);
+         } else if (strcmp(name, "single") == 0 || strcmp(name, "single_def") == 0) {
+            EXPECT_EQ(b_c, nullptr);
+            EXPECT_EQ(len, 1);
+         }
+      }
       t->Write();
       f.Close();
    }
    {
       TFile f(ofileName, "READ");
       TTree *t = f.Get<TTree>("t");
-      EXPECT_NE(t, nullptr);
-      auto b = t->GetBranch("arr");
-      EXPECT_NE(b, nullptr);
-      auto l = b->GetLeaf("arr");
-      EXPECT_NE(l, nullptr);
-      int len;
-      auto b_c = l->GetLeafCounter(len);
-      EXPECT_NE(b_c, nullptr);
-      EXPECT_EQ(b_c->GetName(), "n");
+      for (auto name : {"arr", "arr_def", "arr_fix", "arr_fix_def", "single", "single_def"}) {
+         auto b = t->GetBranch(name);
+         EXPECT_NE(b, nullptr);
+         auto l = b->GetLeaf(name);
+         EXPECT_NE(l, nullptr);
+         int len;
+         auto b_c = l->GetLeafCounter(len);
+         if (strcmp(name, "arr") == 0 || strcmp(name, "arr_def") == 0) {
+            EXPECT_NE(b_c, nullptr);
+            EXPECT_STREQ(b_c->GetName(), "n");
+         } else if (strcmp(name, "arr_fix") == 0 || strcmp(name, "arr_fix_def") == 0) {
+            EXPECT_EQ(b_c, nullptr);
+            EXPECT_EQ(len, 64);
+         } else if (strcmp(name, "single") == 0 || strcmp(name, "single_def") == 0) {
+            EXPECT_EQ(b_c, nullptr);
+            EXPECT_EQ(len, 1);
+         }
+      }
       f.Close();
    }
    gSystem->Unlink(ofileName);
