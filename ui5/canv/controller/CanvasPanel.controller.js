@@ -118,10 +118,7 @@ sap.ui.define([
                this.isFixedSize = false;
             }
 
-            if (this.canvas_painter) {
-               this.canvas_painter.setDom(dom.lastChild);
-               this.canvas_painter.setPadName('');
-            }
+            this.canvas_painter?.setDom(dom.lastChild);
 
             if (this.canvas_painter?._window_handle) {
                this.canvas_painter.useWebsocket(this.canvas_painter._window_handle);
