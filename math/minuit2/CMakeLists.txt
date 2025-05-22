@@ -120,6 +120,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/FumiliMinimizer.cxx
       src/FumiliStandardChi2FCN.cxx
       src/FumiliStandardMaximumLikelihoodFCN.cxx
+      src/GradientCalculator.cxx
       src/HessianGradientCalculator.cxx
       src/InitialGradientCalculator.cxx
       src/MPIProcess.cxx

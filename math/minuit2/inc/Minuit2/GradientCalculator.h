@@ -35,14 +35,7 @@ public:
 
    virtual bool G2(const MinimumParameters &, MnAlgebraicVector &) const { return false;}
 
-   /**
-    * Enable parallelization of gradient calculation using OpenMP.
-    * This is different from the default parallel mechanism elsewhere (IMT, threads, TBB, ...).
-    * It can only be used to minimise thread-safe functions in Minuit2.
-    * \param doParallel true to enable, false to disable
-    * \note If OPENMP is not available, this function has no effect
-    */
-   static void DoParallelOMP(bool doParallel = true) { fDoParallelOMP = doParallel; }
+   static void DoParallelOMP(bool doParallel = true);
 
 protected:
    static inline bool fDoParallelOMP = false; ///< flag to indicate if parallel OpenMP processing is used
