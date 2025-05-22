@@ -218,9 +218,15 @@ void TLeafF16::SetAddress(void *add)
 void TLeafF16::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(TLeafF16::Class(), this);
-
-      if (fTitle.Contains("/[")) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      R__b.ReadClassBuffer(TLeafF16::Class(), this, R__v, R__s, R__c);
+      if (R__v < 2) {
+         if (fTitle.Contains("[")) {
+            fElement = new TStreamerElement(Form("%s_Element", fName.Data()), fTitle.Data(), 0, 0, "Float16_t");
+            fTitle = "/" + fTitle;
+         }
+      } else if (fTitle.Contains("/[")) {
          auto slash = fTitle.First("/");
          TString bracket = slash == TString::kNPOS ? fTitle : fTitle(slash + 1, fTitle.Length() - slash - 1);
          fElement = new TStreamerElement(Form("%s_Element", fName.Data()), bracket.Data(), 0, 0, "Float16_t");
