@@ -35,7 +35,7 @@ public:
 
    virtual bool G2(const MinimumParameters &, MnAlgebraicVector &) const { return false;}
 
-   static void DoParallelOMP(bool doParallel = true);
+   static bool DoParallelOMP(bool doParallel = true);
 
 protected:
    static inline bool fDoParallelOMP = false; ///< flag to indicate if parallel OpenMP processing is used
