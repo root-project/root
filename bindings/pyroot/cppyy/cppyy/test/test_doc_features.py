@@ -1,6 +1,6 @@
 import py, sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, ispypy, IS_WINDOWS
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
 currpath = os.getcwd()
@@ -446,6 +446,8 @@ namespace Namespace {
         assert cppyy.gbl.call_abstract_method1(pc) == "first message"
         assert cppyy.gbl.call_abstract_method2(pc) == "second message"
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test_exceptions(self):
         """Exception throwing and catching"""
 
@@ -1221,6 +1223,8 @@ class TestTALKEXAMPLES:
         assert type(b) == CC.Derived
         assert d is b
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test_exceptions(self):
         """Exceptions example"""
 
@@ -1281,4 +1285,4 @@ class TestTALKEXAMPLES:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=[__file__]))
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

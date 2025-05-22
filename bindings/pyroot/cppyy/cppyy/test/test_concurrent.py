@@ -306,4 +306,4 @@ class TestCONCURRENT:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=[__file__]))
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

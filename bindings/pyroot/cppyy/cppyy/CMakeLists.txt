@@ -33,4 +33,6 @@ install(DIRECTORY ${localruntimedir}/cppyy
         DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
         COMPONENT libraries)
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+if(NOT MSVC)
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()
