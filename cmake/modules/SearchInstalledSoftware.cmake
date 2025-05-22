@@ -1602,6 +1602,108 @@ if (vecgeom)
   endif()
 endif()
 
+if(experimental_builtin_adaptivecpp)
+  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("experimental_builtin_adaptivecpp")
+endif()
+
+#---Check for AdaptiveCpp-------------------------------------------------------------------
+if (experimental_adaptivecpp OR experimental_builtin_adaptivecpp)
+  if (experimental_oneapi)
+    message(WARNING "Disable OneAPI to load AdaptiveCpp")
+    set(sycl OFF CACHE BOOL "Disabled because AdaptiveCpp is enabled" FORCE)
+  else()
+
+    if(NOT experimental_builtin_adaptivecpp)
+      message(STATUS "Looking for AdaptiveCpp")
+      find_package(AdaptiveCpp)
+      
+      if(NOT AdaptiveCpp_FOUND)
+        message(STATUS "AdaptiveCpp not found. Ensure that the installation of AdaptiveCpp is in the CMAKE_PREFIX_PATH")
+        if(NO_CONNECTION)
+          set(experimental_builtin_adaptivecpp OFF CACHE BOOL "Disabled because not found and no internet connection" FORCE)
+          set(sycl OFF CACHE BOOL FORCE)
+          if(fail-on-missing)
+            message(FATAL_ERROR "AdaptiveCpp cannot be built.")
+          endif()
+        else()
+          message(STATUS "               Switching ON 'experimental_builtin_adaptivecpp' option")
+          set(experimental_builtin_adaptivecpp ON CACHE BOOL "Enabled because external AdaptiveCpp not found" FORCE)
+        endif()
+      endif()
+    endif()
+
+    if(experimental_builtin_adaptivecpp)
+      # Use ADAPTIVE_CPP_SOURCE_DIR variable if it is defined in the CMake
+      # configuration
+      if(NOT DEFINED ADAPTIVE_CPP_SOURCE_DIR)
+        include(FetchContent)
+        set(ADAPTIVE_CPP_SOURCE_DIR "${CMAKE_BINARY_DIR}/AdaptiveCpp")
+        FetchContent_Declare(
+          AdaptiveCpp
+          GIT_REPOSITORY https://github.com/devajithvs/AdaptiveCpp.git
+          GIT_TAG 3fb375fdc84ad0423139e05167739e9e906ca183
+        )
+        FetchContent_GetProperties(AdaptiveCpp)
+        if(NOT AdaptiveCpp_POPULATED)
+          FetchContent_Populate(AdaptiveCpp)
+        endif()
+
+        set(ADAPTIVE_CPP_SOURCE_DIR "${adaptivecpp_SOURCE_DIR}")
+      endif()
+      
+      set(AdaptiveCpp_FOUND True)
+
+      list(INSERT CMAKE_MODULE_PATH 0 "${ADAPTIVE_CPP_SOURCE_DIR}/cmake/")
+
+      set(ADAPTIVE_CPP_HEADER_BUILD_PATH
+          "${CMAKE_CURRENT_BINARY_DIR}/include/AdaptiveCpp")
+      set(ADAPTIVE_CPP_HEADER_INSTALL_PATH
+          "${CMAKE_INSTALL_PREFIX}/include/AdaptiveCpp")
+
+      add_subdirectory(
+        ${ADAPTIVE_CPP_SOURCE_DIR}
+        ${adaptivecpp_BINARY_DIR}
+      )
+
+      set(ACPP_EXPORTS
+          acpp-common
+          acpp-rt
+          acpp-clang-cbs
+          acpp-clang
+          llvm-to-backend
+          llvm-to-host
+          rt-backend-omp)
+
+      if(WITH_CUDA_BACKEND)
+        list(APPEND ACPP_EXPORTS llvm-to-ptx rt-backend-cuda)
+      endif()
+
+      if(WITH_OPENCL_BACKEND)
+        list(APPEND ACPP_EXPORTS llvm-to-spirv rt-backend-ocl ocl-cxx-headers ocl-headers)
+      endif()
+
+      if(WITH_ROCM_BACKEND)
+        list(APPEND ACPP_EXPORTS llvm-to-amdgpu rt-backend-hip)
+      endif()
+    endif()
+
+    if (AdaptiveCpp_FOUND)
+      set(sycl ON)
+      set(SYCL_COMPILER_FLAGS "-ffast-math ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")
+      message(STATUS "SYCL compiler flags: ${SYCL_COMPILER_FLAGS}")
+      separate_arguments(SYCL_COMPILER_FLAGS NATIVE_COMMAND ${SYCL_COMPILER_FLAGS})
+      message(STATUS "AdaptiveCpp sycl enabled")
+    else()
+      if(fail-on-missing)
+        message(FATAL_ERROR "AdaptiveCpp library not found")
+      else()
+        message(STATUS "AdaptiveCpp library not found")
+        set(sycl OFF CACHE BOOL "Disabled because no SYCL implementation is not found" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
+
 #---Check for protobuf-------------------------------------------------------------------
 
 if(tmva-sofie)

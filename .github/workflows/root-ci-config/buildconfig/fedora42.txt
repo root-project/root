@@ -1,4 +1,8 @@
 builtin_zlib=ON
 builtin_zstd=ON
 ccache=ON
+experimental_adaptivecpp=ON
+experimental_genvectorx=ON
+pythia8=OFF
+unuran=OFF
 vdt=OFF
