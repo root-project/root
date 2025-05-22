@@ -76,8 +76,6 @@ struct RNTupleAttributeSetDescriptor {
    // NOTE: Only kTypeFile is supported at the moment.
    RNTupleLocator fLocator;
 };
-
-const RNTupleLocator *GetAttributeSetLocator(const RNTupleDescriptor &desc, std::string_view name);
 } // namespace Experimental::Internal
 
 // clang-format off
@@ -658,7 +656,6 @@ and backward compatibility when the metadata evolves.
 class RNTupleDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend RNTupleDescriptor Internal::CloneDescriptorSchema(const RNTupleDescriptor &desc);
-   friend const RNTupleLocator *ROOT::Experimental::Internal::GetAttributeSetLocator(const RNTupleDescriptor &desc, std::string_view name);
 
 public:
    class RHeaderExtension;
