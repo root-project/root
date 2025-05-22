@@ -37,7 +37,8 @@ public:
 
    /**
     * Enable parallelization of gradient calculation using OpenMP.
-    * This is different from the default parallel mechanism elsewhere (IMT, threads, TBB, ...)
+    * This is different from the default parallel mechanism elsewhere (IMT, threads, TBB, ...).
+    * It can only be used to minimise thread-safe functions in Minuit2.
     * \param doParallel true to enable, false to disable
     * \note If OPENMP is not available, this function has no effect
     */
