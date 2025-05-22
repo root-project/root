@@ -92,6 +92,7 @@ jobs:
       OS_REGION_NAME: 'cern'
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
 
     container:
       image: registry.cern.ch/root-ci/alma9:buildready
@@ -153,7 +154,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
                     --platform       alma9
-                    --incremental    true
+                    --incremental    $INCREMENTAL
                     --coverage       true
                     --base_ref       ${{ github.base_ref }}
                     --sha            ${{ github.sha }}
