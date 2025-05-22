@@ -100,7 +100,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 #pragma omp parallel for if (fDoParallelOMP)
    //#pragma omp for schedule (static, N_PARALLEL_PAR)
 
-   for (int i = 0; i < int(n); i++) {
+   for (unsigned int i = 0; i < n; i++) {
 
 #endif
 
