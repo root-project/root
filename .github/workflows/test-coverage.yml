@@ -41,6 +41,26 @@ on:
         type: string
         required: true
         default: master
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
 
 env:
   PYTHONUNBUFFERED: true
@@ -145,9 +165,10 @@ jobs:
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      Debug
+                    --binaries       ${{ inputs.binaries }}
+                    --buildtype      ${{ inputs.buildtype }}
                     --platform       alma9
-                    --incremental    false
+                    --incremental    {{ inputs.incremental }}
                     --coverage       true
                     --base_ref       ${{ inputs.base_ref }}
                     --sha            ${{ github.sha }}
