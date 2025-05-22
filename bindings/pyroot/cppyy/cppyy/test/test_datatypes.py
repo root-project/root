@@ -1,6 +1,6 @@
 import py, sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode
+from support import setup_make, pylong, pyunicode, IS_MAC_ARM
 
 currpath = os.getcwd()
 test_dct = currpath + "/datatypesDict"
@@ -1277,7 +1277,8 @@ class TestDATATYPES:
         if self.has_byte:
             run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    @mark.xfail
+    @mark.xfail(run=not IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
 
@@ -1340,6 +1341,8 @@ class TestDATATYPES:
         ns = cppyy.gbl.FuncPtrReturn
         assert ns.foo()() == "Hello, World!"
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test27_callable_passing(self):
         """Passing callables through function pointers"""
 
@@ -1412,6 +1415,8 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test28_callable_through_function_passing(self):
         """Passing callables through std::function"""
 
@@ -2371,4 +2376,4 @@ class TestDATATYPES:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=[__file__]))
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

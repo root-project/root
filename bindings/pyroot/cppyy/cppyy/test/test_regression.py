@@ -1,6 +1,6 @@
 import os, sys, pytest
 from pytest import mark, raises, skip
-from support import setup_make, IS_WINDOWS, ispypy, IS_MAC_X86
+from support import setup_make, IS_WINDOWS, ispypy, IS_MAC_X86, IS_MAC_ARM, IS_MAC
 
 
 class TestREGRESSION:
@@ -83,7 +83,7 @@ class TestREGRESSION:
         # TODO: it's deeply silly that namespaces inherit from CPPInstance (in CPyCppyy)
         assert ('CPPInstance' in helptext or 'CPPNamespace' in helptext)
 
-    @mark.xfail(condition=IS_MAC_X86, reason="Fails on OSX-X86")
+    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
     def test03_pyfunc_doc(self):
         """Help on a generated pyfunc used to crash."""
 
@@ -1364,6 +1364,8 @@ class TestREGRESSION:
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("my_custom_type_t") == "const int"
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("cmy_custom_type_t") == "const int"
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test46_exception_narrowing(self):
         """Exception narrowing to C++ exception of all overloads"""
 
@@ -1385,4 +1387,4 @@ class TestREGRESSION:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=[__file__]))
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

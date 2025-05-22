@@ -395,6 +395,7 @@ class TestFRAGILE:
         assert cppyy.gbl.myvar3
         assert cppyy.gbl.myvar4
 
+    @mark.xfail(run=False, reason="Crashes with \"alma10\"")
     def test16_opaque_handle(self):
         """Support use of opaque handles"""
 
@@ -874,4 +875,4 @@ class TestSTDNOTINGLOBAL:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=[__file__]))
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

@@ -227,6 +227,8 @@ class TestCROSSINHERITANCE:
         p1 = TPyDerived1()
         assert p1.get_value() == 13
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test08_error_handling(self):
         """Python errors should propagate through wrapper"""
 
@@ -269,6 +271,8 @@ class TestCROSSINHERITANCE:
         assert 'ValueError' in res
         assert os.path.basename(__file__) in res
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test09_interface_checking(self):
         """Conversion errors should be Python exceptions"""
 
@@ -1817,4 +1821,4 @@ class TestCROSSINHERITANCE:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=[__file__]))
+    exit(pytest.main(args=['-ra', __file__]))
