@@ -97,7 +97,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 
    // parallelize this loop using OpenMP
 //#define N_PARALLEL_PAR 5
-#pragma omp parallel for if (fDoParallel)
+#pragma omp parallel for if (fDoParallelOMP)
    //#pragma omp for schedule (static, N_PARALLEL_PAR)
 
    for (int i = 0; i < int(n); i++) {
