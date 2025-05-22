@@ -28,3 +28,7 @@ ROOTTEST_ADD_TEST(selectUnion
 ROOTTEST_ADD_TEST(ROOT10798
                   COMMAND ${ROOT_rootcling_CMD} -f ROOT10798Dict.cxx ${CMAKE_CURRENT_SOURCE_DIR}/ROOT10798LinkDef.h)
 
+# Issue #18833
+ROOTTEST_ADD_TEST(streamerInfoStdFunction
+                  COMMAND ${ROOT_rootcling_CMD} -f streamerInfoStdFunction.Dict.cc ${CMAKE_CURRENT_SOURCE_DIR}/streamerInfoStdFunction.h -reflex ${CMAKE_CURRENT_SOURCE_DIR}/streamerInfoStdFunction.xml
+                  OUTREF streamerInfoStdFunction.ref)
