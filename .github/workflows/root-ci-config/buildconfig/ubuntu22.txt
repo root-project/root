@@ -1,6 +1,6 @@
 builtin_unuran=ON
 builtin_vdt=ON
-ccache=On
+ccache=ON
 pythia8=OFF
 r=ON
 tmva-sofie=ON
