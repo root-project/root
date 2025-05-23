@@ -11,11 +11,7 @@
 /// \author Rene Brun
 
 // Load the library at macro parsing time: we need this to use its content in the code
-#ifdef R__WIN32
-R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
-#else
-R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
-#endif
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent)
 
 void tree110_copy()
 {

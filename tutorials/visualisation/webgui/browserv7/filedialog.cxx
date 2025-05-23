@@ -20,9 +20,6 @@
 // To start OpenFile dialog in sync mode, call `root "filedialog.cxx(1)" -q`.
 // Once file is selected, root execution will be stopped.
 
-// macro must be here to let macro work on Windows
-R__LOAD_LIBRARY(libROOTBrowserv7)
-
 #include <ROOT/RFileDialog.hxx>
 
 void filedialog(int kind = 0)

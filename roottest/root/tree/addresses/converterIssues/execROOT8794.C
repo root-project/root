@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(ExtHit/ExtHit.so)
+R__LOAD_LIBRARY(ExtHit/ExtHit)
 
 void execROOT8794() {
 
