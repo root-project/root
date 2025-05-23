@@ -19,7 +19,6 @@
 #include "Minuit2/MnFcn.h"
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPosDef.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
@@ -266,7 +265,6 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          }
       }
 
-
       // take a full step
 
       //evaluate function only if doing a line search
@@ -278,7 +276,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
       if (doLineSearch && p.Fval() >= s0.Fval()) {
          print.Debug("Do a line search", fcn.NumOfCalls());
          MnLineSearch lsearch;
-         MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
+         auto pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
 
          if (std::fabs(pp.Y() - s0.Fval()) < prec.Eps()) {
             // std::cout<<"FumiliBuilder: no improvement"<<std::endl;
