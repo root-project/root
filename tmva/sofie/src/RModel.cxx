@@ -125,14 +125,20 @@ void RModel::AddInputTensorName(std::string input_name) {
     fInputTensorNames.emplace_back(UTILITY::Clean_name(input_name));
 }
 
-void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
+void RModel::AddOperator(std::unique_ptr<ROperator> op, size_t order_execution) {
     AddBlasRoutines(op->GetBlasRoutines());
     auto libs = op->GetStdLibs();
     auto op_input_tensors = op->GetOpInputTensors();
     for (auto& stdlib : libs) {
         AddNeededStdLib(stdlib);
     }
-    if (order_execution >= 0) {
+    if (op->GetOpKind()==OperatorKind::CONSTANT){
+      AddConstantOperator(std::move(op));
+      return;
+    }
+
+    op->RegisterOperatorOrder(order_execution);
+    if (order_execution >= 0 && order_execution <= fOperators.size()) {
         fOperators.insert(fOperators.begin() + order_execution, std::move(op));
     } else {
         fOperators.push_back(std::move(op));
@@ -140,16 +146,21 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
 
     // storing the last usage of tensors which are input to
     // operators (but are not inputs to the model, i.e. they are intermediate
-    // tensors). This information is needed to keep a check on when a
-    // particular intermediate tensor can be flushed to free up memory for reuse.
-   for(size_t index = 0; index<op_input_tensors.size() &&
-         fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() &&
-         std::find(fInputTensorNames.begin(), fInputTensorNames.end(),
-                   UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end() &&
-         fDynamicTensorInfos.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fDynamicTensorInfos.end();
-         ++index){
-            fIntermediateTensorFrequencyLookup[op_input_tensors[index]] = order_execution;
-   }
+    // tensors). This information is needed to keep a check on when memory is no
+    // longer required for a particular intermediate tensor and can be reused.
+    for (size_t index = 0; index < op_input_tensors.size(); ++index) {
+      auto cleaned_name = UTILITY::Clean_name(std::string(op_input_tensors[index]));
+      if (fInitializedTensors.find(cleaned_name) == fInitializedTensors.end() &&
+          std::find(fInputTensorNames.begin(), fInputTensorNames.end(), cleaned_name) == fInputTensorNames.end() &&
+          fDynamicTensorInfos.find(cleaned_name) == fDynamicTensorInfos.end()) {
+          
+          fIntermediateTensorFrequencyLookup[op_input_tensors[index]] = order_execution;
+      }
+  }
+}
+
+void RModel::AddConstantOperator(std::unique_ptr<ROperator> op){
+   fConstantOperators.push_back(std::move(op));
 }
 
 void RModel::AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data) {
@@ -208,7 +219,8 @@ void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, st
 void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape) {
     tensor_name = UTILITY::Clean_name(tensor_name);
     if (CheckIfTensorAlreadyExist(tensor_name)) {
-        throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+      //   throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+      return;
     }
     TensorInfo new_tensor {type, shape};
     fIntermediateTensorInfos[tensor_name] = new_tensor;
@@ -334,11 +346,10 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
 void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& op_idx){
    for (auto &it : op_input_tensors){
       // last occurence of the tensor is reached => flush it from memory
-      if (fIntermediateTensorFrequencyLookup[it] == op_idx) {
+      if (fIntermediateTensorFrequencyLookup[it] == fOperators[op_idx]->GetOpOrder()){
          for (auto chunk = fIntermediateMemoryInfo.total_stack.begin();
                chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk ) {
                if (chunk->second.tensor_name == it) {
-
                      // check if nearby chunks in available memory can coalesce
                      auto first_greater = fIntermediateMemoryInfo.available_stack.upper_bound(chunk->first); // smallest element greater than the flushed chunk idx
                      auto last_smaller = (first_greater == fIntermediateMemoryInfo.available_stack.begin()) ? fIntermediateMemoryInfo.available_stack.end() : std::prev(first_greater); // largest element smaller than the flushed chunk idx
@@ -368,6 +379,57 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
    }
 }
 
+void RModel::CheckAndFuseOperators() {
+   size_t idx = 0;
+   std::vector<size_t> fusable_indices;
+   std::string fusable_propagate_tensor_name;
+   while (idx < fOperators.size()) {
+      if (fOperators[idx]->GetOpKind() != OperatorKind::GEMM) {
+          ++idx;
+          continue;
+      }
+   
+      fusable_indices.clear();
+      fusable_propagate_tensor_name.clear();
+      
+      fusable_indices.push_back(idx);
+      size_t j = idx + 1;
+      for (; j < fOperators.size()-1; ++j) {
+          auto opKind = fOperators[j]->GetOpKind();
+   
+          // Only consider operators with fusable kinds
+          if (!FusableKinds.count(opKind)) {
+              break;
+          }
+         //  std::cout<<"\nmight be fusable: "<<toString(opKind);
+   
+          const auto& tensorName = fOperators[j]->GetFusableOutputTensorName();
+          auto freqIt = fIntermediateTensorFrequencyLookup.find(tensorName);
+   
+          // Propagate tensor name only if it's not used multiple times
+          if (freqIt != fIntermediateTensorFrequencyLookup.end() &&
+          (freqIt->second != fOperators[j + 1]->GetOpOrder() ||
+           FusableKinds.count(fOperators[j + 1]->GetOpKind()) == 0)) {
+            //   std::cout << "\nBreaking here, second: " << freqIt->second << ", idx: " << fOperators[j+1]->GetOpOrder();
+              fusable_propagate_tensor_name = tensorName;
+              break;
+          } else {
+            fusable_indices.push_back(j);
+          }
+      }
+      // std::cout<<"\nstart fusing: "<<fusable_propagate_tensor_name;
+      if (!fusable_propagate_tensor_name.empty()) {
+         //  std::cout << "\nOperators to be fused with: " << fusable_propagate_tensor_name;
+          for (auto& index : fusable_indices) {
+            // std::cout<<"\nfusing op "<<toString(fOperators[index]->GetOpKind())<<" , with: "<<fusable_propagate_tensor_name;
+              fOperators[index]->UpdateFusableTensorName(fusable_propagate_tensor_name);
+          }
+      }
+   
+      idx = std::max(idx + 1, j);
+   }
+}
+
 
 
 void RModel::Initialize(int batchSize, bool verbose) {
@@ -383,7 +445,7 @@ void RModel::Initialize(int batchSize, bool verbose) {
 void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool verbose) {
 
    fVerbose = int(verbose);
-
+   fVerbose = 0;
    if (fIsInitialized) {
       if (verbose)
          std::cout << "Model is already initialized  - skip initialization " << std::endl;
@@ -455,28 +517,38 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       if (!modelHasWeights)
          fUseWeightFile = false;
    }
-   // Go through model and initialize each operator
-   int i = 0;
 
-   std::vector<size_t> temp_available_stack; // vector stores individual chunks of available memory that maybe reused
-
-   for(size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx){
+   for (size_t op_const_idx = 0; op_const_idx < fConstantOperators.size(); ++op_const_idx) {
       if (verbose) {
-         auto& r = *fOperators[op_idx].get();
-         std::cout << "Initializing operator " << i << "  " << typeid(r).name() << std::endl;
+          auto& r = *fConstantOperators[op_const_idx].get();
+          std::cout << "Initializing constant operator " << op_const_idx << "  " << typeid(r).name() << std::endl;
       }
-      fOperators[op_idx]->Initialize(*this);
-      for(auto &it:fOperators[op_idx]->GetOpOutputTensors()){
-         std::string name = std::string{it};
-         if (fIntermediateTensorFrequencyLookup.find(it) == fIntermediateTensorFrequencyLookup.end() &&
-             std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), name) == fOutputTensorNames.end() &&
-             fInitializedTensors.find(name) == fInitializedTensors.end() &&
-             fDynamicTensorInfos.find(name) == fDynamicTensorInfos.end()){
-            fIntermediateTensorFrequencyLookup[it] = op_idx;
-         }
-      }
-      i++;
+  
+      fConstantOperators[op_const_idx]->Initialize(*this);
+  }
+
+  // Go through model and initialize each operator
+   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx ) {
+       if (verbose) {
+           auto& r = *fOperators[op_idx].get();
+           std::cout << "Initializing operator " << op_idx << "  " << typeid(r).name() << std::endl;
+       }
+   
+       fOperators[op_idx]->Initialize(*this);
+      //  if(fOperators[op_idx]->GetOpName().length()==0){
+      //    std::cout<<"\nempty name for op, typeid: "<<typeid(*fOperators[op_idx]).name();
+      //  }
+       for (auto &it : fOperators[op_idx]->GetOpOutputTensors()) {
+           std::string name{it};
+           if (fIntermediateTensorFrequencyLookup.find(it) == fIntermediateTensorFrequencyLookup.end() &&
+               fInputTensorInfos.find(name) == fInputTensorInfos.end() &&
+               fInitializedTensors.find(name) == fInitializedTensors.end() &&
+               fDynamicTensorInfos.find(name) == fDynamicTensorInfos.end()) {
+               fIntermediateTensorFrequencyLookup[it] = fOperators[op_idx]->GetOpOrder();
+           }
+       }
    }
+   CheckAndFuseOperators();
 
    fIsInitialized = true;
 }
@@ -791,6 +863,7 @@ void RModel::GenerateSessionCode()
       std::string intermediate_memory_alloc_string = "";
       intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
       for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+         std::cout<<std::endl<<"currently processing: "<<toString(fOperators[op_idx]->GetOpKind());
          intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
          CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
       }
@@ -874,7 +947,7 @@ void RModel::GenerateSessionCode()
 
       fGC += "}\n\n";
    }
-
+ 
    fGC += doInferSignature + "{\n";
    fGC += "\n";
 
