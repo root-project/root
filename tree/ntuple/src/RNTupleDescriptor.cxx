@@ -629,17 +629,6 @@ std::vector<std::uint64_t> ROOT::RNTupleDescriptor::GetFeatureFlags() const
    return result;
 }
 
-std::vector<std::string> ROOT::RNTupleDescriptor::GetAttributeSetNames() const
-{
-   std::vector<std::string> names;
-   names.reserve(fAttributeSets.size());
-
-   for (const auto &[name, _] : fAttributeSets)
-      names.push_back(name);
-
-   return names;
-}
-
 ROOT::RResult<void> ROOT::RNTupleDescriptor::AddClusterGroupDetails(ROOT::DescriptorId_t clusterGroupId,
                                                                     std::vector<RClusterDescriptor> &clusterDescs)
 {

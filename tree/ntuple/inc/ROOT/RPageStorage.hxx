@@ -49,11 +49,12 @@ class RNTupleModel;
 namespace Internal {
 class RMiniFileReader;
 class RPageSource;
-}
+class RPagePersistentSink;
+} // namespace Internal
 
 namespace Experimental::Internal {
 ROOT::Internal::RMiniFileReader *GetUnderlyingReader(ROOT::Internal::RPageSource &pageSource);
-}
+} // namespace Experimental::Internal
 
 namespace Internal {
 
@@ -338,16 +339,15 @@ public:
 
 protected:
    virtual void InitImpl(RNTupleModel &model) = 0;
-   virtual void CommitDatasetImpl(
-      std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttributeSets = {}) = 0;
+   virtual void CommitDatasetImpl() = 0;
 
 public:
    /// Parameters for the SealPage() method
    struct RSealPageConfig {
       const ROOT::Internal::RPage *fPage = nullptr; ///< Input page to be sealed
       const ROOT::Internal::RColumnElementBase *fElement =
-         nullptr;                                   ///< Corresponds to the page's elements, for size calculation etc.
-      std::uint32_t fCompressionSettings = 0;       ///< Compression algorithm and level to apply
+         nullptr;                             ///< Corresponds to the page's elements, for size calculation etc.
+      std::uint32_t fCompressionSettings = 0; ///< Compression algorithm and level to apply
       /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
       /// to store the additional 8 bytes.
       bool fWriteChecksum = true;
@@ -398,11 +398,15 @@ public:
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
+   // TODO: make this pure virtual
+   virtual void CommitAttributeSet(RPageSink &) {}
+   // TODO: make this pure virtual (also probably not public)
+   virtual ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor CommitAttributeSetInternal() { return {}; }
 
    /// The registered callback is executed at the beginning of CommitDataset();
    void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
-   void CommitDataset(std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttrSets = {});
+   void CommitDataset();
 
    /// Get a new, empty page for the given column that can be filled with up to nElements;
    /// nElements must be larger than zero.
@@ -551,8 +555,7 @@ public:
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
-   void
-   CommitDatasetImpl(std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttributeSets) final;
+   void CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 
 // clang-format off
@@ -625,9 +628,9 @@ public:
 private:
    ROOT::RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
-   REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
-   bool fHasStructure = false; ///< Set to true once `LoadStructure()` is called
-   bool fIsAttached = false;   ///< Set to true once `Attach()` is called
+   REntryRange fEntryRange;                  ///< Used by the cluster pool to prevent reading beyond the given range
+   bool fHasStructure = false;               ///< Set to true once `LoadStructure()` is called
+   bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
    /// Remembers the last cluster id from which a page was requested

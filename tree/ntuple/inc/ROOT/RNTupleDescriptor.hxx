@@ -855,8 +855,6 @@ public:
    bool HasFeature(unsigned int flag) const { return fFeatureFlags.count(flag) > 0; }
    std::vector<std::uint64_t> GetFeatureFlags() const;
 
-   // XXX: superfluous?
-   std::vector<std::string> GetAttributeSetNames() const;
    // TODO: replace with an iterable?
    // XXX: should be internal?
    const std::unordered_map<std::string, RNTupleLocator> &GetAttributeSets() const { return fAttributeSets; }
