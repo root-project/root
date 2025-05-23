@@ -28,23 +28,27 @@
 #pragma read sourceClass="RooAbsString" targetClass="RooStringVar" version="[1]" source="Int_t _len; char *_value" target="_string" code="{_string.assign(onfile._value, onfile._len);}"
 #pragma link C++ class RooAbsBinning- ;
 #pragma link C++ class RooAbsCategory+ ;
-#pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[1]" \
-  include="RooFitLegacy/RooCatTypeLegacy.h" \
-  source="TObjArray _types" target="_stateNames,_insertionOrder" \
-  code="{for (const auto* obj : onfile._types) { \
-           auto catType = dynamic_cast<const RooCatType*>(obj); assert(catType); \
-           _stateNames[catType->GetName()] = catType->getVal(); \
-           _insertionOrder.push_back(catType->GetName()); \
-         }}";
+   #pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[1]" \
+      include="RooFitLegacy/RooCatTypeLegacy.h" \
+      source="TObjArray _types" target="_stateNames,_insertionOrder" \
+        code="{for (const auto* obj : onfile._types) { \
+                auto catType = dynamic_cast<const RooCatType*>(obj); assert(catType); \
+                _stateNames[catType->GetName()] = catType->getVal(); \
+                _insertionOrder.push_back(catType->GetName()); \
+              }}";
 #pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[2]" \
-  include="RooFitLegacy/RooCatTypeLegacy.h" \
-  source="std::vector<RooCatType*> _types" target="_stateNames,_insertionOrder" \
-  code="{for (const auto catType : onfile._types) { _stateNames[catType->GetName()] = catType->getVal();\
-                                                    _insertionOrder.push_back(catType->GetName());\
-                                                  } }";
+      include="RooFitLegacy/RooCatTypeLegacy.h" \
+      source="std::vector<RooCatType*> _types" target="_stateNames,_insertionOrder" \
+      code="{for (const auto catType : onfile._types) { _stateNames[catType->GetName()] = catType->getVal();\
+                                                        _insertionOrder.push_back(catType->GetName());\
+                                                      } }";
+
+
+
 #pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[1-2]" include="RooFitLegacy/RooCatTypeLegacy.h" \
-  source="RooCatType _value" target="_currentIndex" code="{ _currentIndex = onfile._value.getVal(); }"
-#pragma link C++ class RooAbsCategoryLValue+ ;
+      source="RooCatType _value" target="_currentIndex" code="{ _currentIndex = onfile._value.getVal(); }"
+
+#pragma link C++ class RooAbsCategoryLValue+     ;
 #pragma link C++ class RooAbsCollection+ ;
 #pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[1]" source="" target="_allRRV" code="{ _allRRV=false ; }"
 #pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[2]"\
