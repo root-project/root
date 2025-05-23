@@ -135,18 +135,8 @@ ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name
 void ROOT::Experimental::RNTupleFillContext::CloseAttributeSetInternal(
    ROOT::Experimental::RNTupleAttributeSetWriter &attrSet)
 {
-   attrSet.Commit();
-   TDirectory *dir = attrSet.fFillContext.fSink->GetUnderlyingDirectory();
-   R__ASSERT(dir); // TODO: we're only dealing with TFile-based attributes for now.
-   const auto &attrSetName = attrSet.fFillContext.fSink->GetNTupleName();
-   const auto *key = dir->GetKey(attrSetName.c_str());
-   R__ASSERT(key);
-   RNTupleLocator locator;
-   locator.SetType(RNTupleLocator::kTypeFile);
-   // TODO(gparolini): set proper size of Anchor (although it's unused right now)
-   locator.SetNBytesOnStorage(0);
-   locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey()));
-   fCommittedAttributeSets.push_back(Internal::RNTupleAttributeSetDescriptor{attrSetName, locator});
+   attrSet.Commit(); // XXX: maybe could be moved to CommitAttributeSet()
+   fSink->CommitAttributeSet(*attrSet.fFillContext.fSink);
 }
 
 void ROOT::Experimental::RNTupleFillContext::CloseAttributeSet(RNTupleAttributeSetWriterHandle handle)

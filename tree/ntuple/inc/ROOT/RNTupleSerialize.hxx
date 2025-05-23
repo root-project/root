@@ -279,9 +279,7 @@ public:
    static RResult<std::uint32_t> SerializePageList(void *buffer, const RNTupleDescriptor &desc,
                                                    std::span<ROOT::DescriptorId_t> physClusterIDs,
                                                    const RContext &context);
-   static RResult<std::uint32_t>
-   SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context,
-                   std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttributeSets);
+   static RResult<std::uint32_t> SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
    static RResult<void>
    DeserializeHeader(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RNTupleDescriptorBuilder &descBuilder);

@@ -49,9 +49,9 @@ TEST(RNTupleCompat, FeatureFlag)
    ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
    writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
 
-   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx, {}).Unwrap();
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
    buffer = std::make_unique<unsigned char[]>(szFooter);
-   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx, {});
+   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
    writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
 
    writer->Commit();

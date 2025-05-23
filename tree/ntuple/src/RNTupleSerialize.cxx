@@ -1743,9 +1743,9 @@ ROOT::Internal::RNTupleSerializer::SerializePageList(void *buffer, const ROOT::R
    return size;
 }
 
-ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
-   void *buffer, const ROOT::RNTupleDescriptor &desc, const RContext &context,
-   std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttributeSets)
+ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
+                                                                                const ROOT::RNTupleDescriptor &desc,
+                                                                                const RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1801,9 +1801,9 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
 
    // Attributes
    frame = pos;
-   const auto nAttributeSets = linkedAttributeSets.size();
+   const auto nAttributeSets = desc.GetAttributeSets().size();
    pos += SerializeListFramePreamble(nAttributeSets, *where);
-   for (const auto &[attrSetName, attrSetLocator] : linkedAttributeSets) {
+   for (const auto &[attrSetName, attrSetLocator] : desc.GetAttributeSets()) {
       if (auto res = SerializeLocator(attrSetLocator, *where)) {
          pos += res.Unwrap();
       } else {
