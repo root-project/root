@@ -14,7 +14,7 @@ int execTEntryListZip()
     // gDirectory->ls();
     auto el = static_cast<TEntryList*>(gDirectory->Get("elist0"));
     if (!el)
-       return 1;
+       return 2;
     // el->Print("V");
 
     chain.SetEntryList(nullptr);
