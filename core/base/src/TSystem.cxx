@@ -3084,7 +3084,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,3); // Remove ' -I'
-         sub = PrependPathName( WorkingDirectory(), sub );
+         PrependPathName( WorkingDirectory(), sub );
          sub.Prepend(" -I\"");
          if (sub.EndsWith(" "))
             sub.Chop(); // Remove trailing space (i.e between the -Is ...
@@ -3101,7 +3101,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,4); // Remove ' -I"'
-         sub = PrependPathName( WorkingDirectory(), sub );
+         PrependPathName( WorkingDirectory(), sub );
          sub.Prepend(" -I\"");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
@@ -3440,7 +3440,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       dict.ReplaceAll( forbidden_chars[ic],"_" );
    }
    if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
-   dict = PrependPathName( build_loc, dict ) ;
+   PrependPathName( build_loc, dict ) ;
    TString dicth = dict;
    TString dictObj = dict;
    dict += "cxx"; //no need to keep the extension of the original file, any extension will do
