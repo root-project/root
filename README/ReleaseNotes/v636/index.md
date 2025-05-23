@@ -105,9 +105,6 @@ The following people have contributed to this new version:
   sources, i.e. a new `RDataSource`-derived class was introduced to manage TTree processing. These changes are completely
   transparent to the user, but improve sustainability of the code base. At the same time, the need to JIT the
   column readers for TTree dataset was removed thus slightly improving runtime performance.
-- It is now possible to retrieve the `std::shared_ptr<T>` held by an `RResultPtr<T>`. This can be useful in certain
-  scenarios, e.g. when it is desired to keep the result alive longer than the lifetime of the corresponding node, or the
-  RDataFrame itself.
 - The behaviour of `Snapshot` with the TTree output in case no entries pass the selections has been changed. Now, both
   in single- and multi-thread mode, the operation will produce an output file, with a TTree inside. The TTree will contain
   the complete dataset schema (i.e. the column names) requested during the `Snapshot` call and it will have no entries.
