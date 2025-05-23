@@ -1434,9 +1434,9 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
    // use the RooAbsData::split() overload that takes the RooSimultaneous.
    // Like this, the observables that are not relevant for a given channel
    // are automatically split from the component datasets.
-   std::unique_ptr<TList> dataList{simPdf ? data.split(*simPdf, true) : data.split(*cat, true)};
+   std::vector<std::unique_ptr<RooAbsData>> dataList{simPdf ? data.split(*simPdf, true) : data.split(*cat, true)};
 
-   for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
+   for (std::unique_ptr<RooAbsData> const &absData : dataList) {
       std::string catName(absData->GetName());
       std::string dataName;
       if (std::isalpha(catName[0])) {
