@@ -27,7 +27,7 @@ Graph 2D class with errors.
 A TGraph2DAsymmErrors is a TGraph2D with asymmetric errors. It behaves like a TGraph2D and has
 the same drawing options.
 
-The **"ERR"** drawing option allows to display the error bars. The
+The "ERR" drawing option allows to display the error bars. The
 following example shows how to use it:
 
 Begin_Macro(source)

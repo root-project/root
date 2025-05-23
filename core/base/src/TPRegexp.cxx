@@ -666,7 +666,7 @@ Supports main Perl operations using regular expressions (Match,
 Substitute and Split). To retrieve the results one can simply use
 operator[] returning a TString.
 
-See $ROOTSYS/tutorials/regexp_pme.C for examples.
+See regexp_pme.C for example.
 */
 
 ClassImp(TPMERegexp);

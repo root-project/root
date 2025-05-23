@@ -24,7 +24,7 @@ ClassImp(TKDTreeBinning);
 
 /**
 \class TKDTreeBinning
-<- TKDTreeBinning - A class providing multidimensional binning ->
+A class providing multidimensional binning
 
 The class implements multidimensional binning by constructing a TKDTree inner structure from the
 data which is used as the bins.
@@ -35,7 +35,7 @@ The bin edges of d-dimensional data is a d-tet of the bin's thresholds. For exam
 edges of bin b is of the form of the following array: {xbmin, ybmin, zbmin}.
 You also have the possibility to sort the bins by their density.
 
-Details of usage can be found in `$ROOTSYS/tutorials/math/kdTreeBinning.C` and more information on
+kdTreeBinning.C and more information on
 the embedded TKDTree documentation.
 
 @ingroup MathCore
@@ -172,7 +172,7 @@ void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
       }
       std::vector<Double_t> binMinEdges(fNBins * fDim);
       std::vector<Double_t> binMaxEdges(fNBins * fDim);
-      std::vector<UInt_t> binContent(fNBins );    // reajust also content (not needed bbut better in general!)
+      std::vector<UInt_t> binContent(fNBins );    // readjust also content (not needed but better in general!)
       fIndices.resize(fNBins);
       for (UInt_t i = 0; i < fNBins; ++i) {
          for (UInt_t j = 0; j < fDim; ++j) {
@@ -524,7 +524,7 @@ const Double_t * TKDTreeBinning::SortOneDimBinEdges(Bool_t sortAsc) {
 
    std::vector<Double_t> binMinEdges(fNBins );
    std::vector<Double_t> binMaxEdges(fNBins );
-   std::vector<UInt_t> binContent(fNBins );    // reajust also content (not needed but better in general!)
+   std::vector<UInt_t> binContent(fNBins );    // readjust also content (not needed but better in general!)
    fIndices.resize( fNBins );
    for (UInt_t i = 0; i < fNBins; ++i) {
       binMinEdges[i ] = fBinMinEdges[indices[i] ];

@@ -82,7 +82,7 @@ such as TPad::GetEvent, TPad::GetEventX, TPad::GetEventY to find
 which type of event and the X,Y position of the mouse.
 By default, the list of TExecs is executed. This can be disabled
 via the canvas menu "Option".
-See $ROOTSYS/tutorials/hist/hist058_TExec_th2.C for an example.
+See hist058_TExec_th2.C for an example.
 ~~~ {.cpp}
    Root > TFile f("hsimple.root");
    Root > hpxpy.Draw();
