@@ -250,7 +250,8 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
 {
    countval = 1;
    auto slash = fTitle.First("/"); // for truncated types D32 F16
-   const char *name = (slash == TString::kNPOS) ? fTitle.Data() : TString(fTitle(0, slash)).Data();
+   TString sname = (slash == TString::kNPOS) ? fTitle : TString(fTitle(0, slash));
+   const char *name = sname.Data();
    char* bleft = (char*) strchr(name, '[');
    if (!bleft) {
       return nullptr;
