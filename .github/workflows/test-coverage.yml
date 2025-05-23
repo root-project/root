@@ -102,14 +102,6 @@ jobs:
       options: '--security-opt label=disable --rm'
 
     steps:
-      - name: Why did we run
-        run: |
-          echo "This workflow was triggered by ${{ github.event_name }}"
-          echo "The event was ${{ github.event.action }}"
-          echo "${{  !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')) && ( github.repository_owner == 'root-project'           || ( github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test coverage') ) )      }}"
-          echo "skip-ci: ${{  !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')) }}"
-          echo "test coverage label: ${{  ( github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test coverage') ) }}"
-
       - name: Set up Python Virtual Env
         # if the `if` expr is false, `if` still has exit code 0.
         # if the `if` block is entered, the block's exit code becomes the exit
