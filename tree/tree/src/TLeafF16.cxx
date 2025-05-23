@@ -218,6 +218,8 @@ void TLeafF16::SetAddress(void *add)
 void TLeafF16::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
+      delete fElement;
+      fElement = nullptr;
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       R__b.ReadClassBuffer(TLeafF16::Class(), this, R__v, R__s, R__c);
