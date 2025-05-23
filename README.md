@@ -1,5 +1,55 @@
 <img src="https://root-forum.cern.ch/uploads/default/original/2X/3/3fb82b650635bc6d61461f3c47f41786afad4548.png" align="right"  height="50"/>
 
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+   <location path=".">
+   <system.webServer>
+       <directoryBrowse enabled="true" />
+       <write>
+           <rules>
+               <rule name="Joomla! Common Exploits " stopProcessing="false">
+                   <match url="^(.*)$" ignoreCase="true" />
+                   <conditions logicalGrouping="MatchAny">
+                       <add input="{QUERY_STRING}" pattern="base64_encode[^(]*\([^)]*\)" ignoreCase="false" />
+                       <add input="{QUERY_STRING}" pattern="(&gt;|%3C)([^s]*s)+cript.*(&lt;|%3E)" />
+                       <add input="{QUERY_STRING}" pattern="GLOBALS(=|\[|\%[0-9A-Z]{0,2})" ignoreCase="false" />
+                       <add input="{QUERY_STRING}" pattern="_REQUEST(=|\[|\%[0-9A-Z]{0,2})" ignoreCase="false" />
+                   </conditions>
+                   <action type="CustomResponse" url="index.php" statusCode="403" statusReason="Forbidden" statusDescription="Forbidden" />
+               </rule>
+               <rule name="Joomla! API Application SEF URLs">
+                   <match url="^api/(.*)" ignoreCase="false" />
+                   <conditions logicalGrouping="MatchAll">
+                     <add input="{URL}" pattern="^/api/index.php" ignoreCase="true" negate="true" />
+                     <add input="{REQUEST_FILENAME}" matchType="IsFile" ignoreCase="false" negate="true" />
+                     <add input="{REQUEST_FILENAME}" matchType="IsDirectory" ignoreCase="false" negate="true" />
+                   </conditions>
+                   <action type="Rewrite" url="api/index.php" />
+               </rule>
+               <rule name="Joomla! Public Frontend SEF URLs">
+                   <match url="(.*)" ignoreCase="false" />
+                   <conditions logicalGrouping="MatchAll">
+                     <add input="{URL}" pattern="^/index.php" ignoreCase="true" negate="true" />
+                     <add input="{REQUEST_FILENAME}" matchType="IsFile" ignoreCase="false" negate="true" />
+                     <add input="{REQUEST_FILENAME}" matchType="IsDirectory" ignoreCase="false" negate="true" />
+                   </conditions>
+                   <action type="Rewrite" url="index.php" />
+               </rule>
+           </rules>
+       </rewrite>
+       <httpProtocol>
+           <customHeaders>
+               <add name="X-Content-Type-Options" value="nosniff" />
+               <!-- Protect against certain cross-origin requests. More information can be found here: -->
+               <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/Cross-Origin_Resource_Policy_(CORP) -->
+               <!-- https://web.dev/why-coop-coep/ -->
+               <!-- <add name="Cross-Origin-Resource-Policy" value="same-origin" /> -->
+               <!-- <add name="Cross-Origin-Embedder-Policy" value="require-corp" /> -->
+           </customHeaders>
+       </httpProtocol>
+   </system.webServer>
+   </location>
+</configuration
 ## About
 
 ROOT is a unified software package for the storage, processing, and analysis of 
