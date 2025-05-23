@@ -716,10 +716,10 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(sizePageList,
              RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap());
 
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    EXPECT_GT(sizeFooter, 0);
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap());
+   EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap());
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
@@ -870,10 +870,10 @@ TEST(RNTuple, SerializeFooterXHeader)
    context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
 
    auto desc = builder.MoveDescriptor();
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    EXPECT_GT(sizeFooter, 0);
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap());
+   EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap());
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
@@ -1038,9 +1038,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap();
 
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap();
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
@@ -1224,9 +1224,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap();
 
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap();
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
@@ -1346,9 +1346,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap();
 
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap();
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
@@ -1469,9 +1469,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap();
 
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap();
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
@@ -1617,9 +1617,9 @@ TEST(RNTuple, DeserializeDescriptorModes)
       bufPageList = MakeUninitArray<unsigned char>(sizePageList);
       RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap();
 
-      sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+      sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
       bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-      RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap();
+      RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
    }
 
    // Reading
@@ -1864,9 +1864,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap();
 
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap();
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
@@ -1990,9 +1990,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap();
 
-   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context, {}).Unwrap();
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
-   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context, {}).Unwrap();
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);

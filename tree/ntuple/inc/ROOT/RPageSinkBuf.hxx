@@ -145,8 +145,9 @@ public:
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
-   void
-   CommitDatasetImpl(std::span<const Experimental::Internal::RNTupleAttributeSetDescriptor> linkedAttributeSets) final;
+   void CommitDatasetImpl() final;
+   void CommitAttributeSet(RPageSink &) final;
+   ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor CommitAttributeSetInternal() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 
