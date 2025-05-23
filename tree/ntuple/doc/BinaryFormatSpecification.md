@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.1
+# RNTuple Binary Format Specification 1.0.1.0
 
 ## Versioning Notes
 
