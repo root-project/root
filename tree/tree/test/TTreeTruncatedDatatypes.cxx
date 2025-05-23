@@ -64,7 +64,7 @@ TEST(TTreeTruncatedDatatypes, float16double32leaves)
 TEST(TTreeTruncatedDatatypes, LeafCounter)
 {
    const auto ofileName = "leafcounter10149.root";
-   Long64_t nEntries = 100;
+   Long64_t nEntries = 10; // must be < 63
    {
       TFile f(ofileName, "RECREATE");
       TTree *t = new TTree("t", "t");
@@ -97,7 +97,7 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
       }
       // Fill tree
       for (Long64_t i = 0; i < nEntries; ++i) {
-         n = i;
+         n = i + 1; // Setting this to n = i; causes issues when i = 0
          for (int j = 0; j < 64; ++j) {
             arr[j] = i + 0.01 * j;
          }
@@ -132,6 +132,7 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
          t->SetBranchAddress(name, arr);
          for (Long64_t i = 0; i < nEntries; ++i) {
             t->GetEntry(i);
+            EXPECT_EQ(n, i + 1);
             if (strcmp(name, "arr") == 0 || strcmp(name, "arr_def") == 0) {
                for (int j = 0; j < n; ++j) {
                   EXPECT_FLOAT_EQ(i + 0.01 * j, arr[j]);
