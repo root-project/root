@@ -62,7 +62,7 @@ The following people have contributed to this new version:
  Sanjiban Sengupta, CERN/EP-SFT and Manchester University,\
  Silia Taider, CERN/EP-SFT,\
  Florian Uhlig, GSI,\
- Devajoth Valaparambil Sreeramaswamy, CERN/EP-SFT,\
+ Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vasilev, Princeton,\
  Dongliang Zhang, University of Science and Technology of China
 
