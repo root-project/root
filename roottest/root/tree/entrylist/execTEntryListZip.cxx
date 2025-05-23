@@ -12,7 +12,7 @@ int execTEntryListZip()
    chain.Draw(">> elist0", "Age > 40", "entrylist");
 
    // gDirectory->ls();
-   auto el = static_cast<TEntryList*>(gDirectory->Get("elist0"));
+   auto el = static_cast<TEntryList *>(gDirectory->Get("elist0"));
    if (!el)
       return 2;
    // el->Print("V");
