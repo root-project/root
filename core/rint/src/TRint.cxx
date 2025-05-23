@@ -195,11 +195,16 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options, 
       PrintLogo(lite);
    }
 
-   // Explicitly load libMathCore it cannot be auto-loaded it when using one
-   // of its freestanding functions. Once functions can trigger autoloading we
-   // can get rid of this.
+#ifndef R__USE_CXXMODULES
+   // When modules are not used, and therefore rootmaps, freestanding functions 
+   // cannot trigger autoloading. Therefore, given the widespread usage of the 
+   // freestanding functions in MathCore, we  load the library explicitly.
+   // When modules are used to condense the reflection information, this manual
+   // loading is not needed, and it can be skipped in order to save time and 
+   // memory when starting the ROOT prompt.
    if (!gClassTable->GetDict("TRandom"))
       gSystem->Load("libMathCore");
+#endif
 
    if (!gInterpreter->HasPCMForLibrary("std")) {
       // Load some frequently used includes
