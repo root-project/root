@@ -13,8 +13,6 @@
 namespace ROOT {
 namespace Math {
 
-
-   
    static const double kSqrt2 = 1.41421356237309515; // sqrt(2.)
 
    double beta_cdf_c(double x, double a, double b)
@@ -59,13 +57,11 @@ namespace Math {
       return ROOT::Math::inc_gamma_c ( 0.5 * r , 0.5* (x-x0) );
    }
 
-   
    double chisquared_cdf(double x, double r, double x0)
    {
       return ROOT::Math::inc_gamma ( 0.5 * r , 0.5* (x-x0) );
    }
 
-   
    double crystalball_cdf(double x, double alpha, double n, double sigma, double mean )
    {
       if (n <= 1.) {
@@ -78,8 +74,8 @@ namespace Math {
       double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
       double totIntegral = sigma*(C+D);
 
-      double integral = crystalball_integral(x,alpha,n,sigma,mean); 
-      return (alpha > 0) ? 1. - integral/totIntegral : integral/totIntegral; 
+      double integral = crystalball_integral(x, alpha, n, sigma, mean);
+      return (alpha > 0) ? 1. - integral / totIntegral : integral / totIntegral;
    }
    double crystalball_cdf_c(double x, double alpha, double n, double sigma, double mean )
    {
@@ -92,65 +88,67 @@ namespace Math {
       double D = std::sqrt(M_PI/2.)*(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
       double totIntegral = sigma*(C+D);
 
-      double integral = crystalball_integral(x,alpha,n,sigma,mean);      
-      return (alpha > 0) ? integral/totIntegral : 1. - (integral/totIntegral); 
+      double integral = crystalball_integral(x, alpha, n, sigma, mean);
+      return (alpha > 0) ? integral / totIntegral : 1. - (integral / totIntegral);
    }
    double crystalball_integral(double x, double alpha, double n, double sigma, double mean)
    {
       // compute the integral of the crystal ball function (ROOT::Math::crystalball_function)
       // If alpha > 0 the integral is the right tail integral.
-      // If alpha < 0 is the left tail integrals which are always finite for finite x.     
+      // If alpha < 0 is the left tail integrals which are always finite for finite x.
       // parameters:
-      // alpha : is non equal to zero, define the # of sigma from which it becomes a power-law function (from mean-alpha*sigma)
-      // n > 1 : is integrer, is the power of the low  tail
-      // add a value xmin for cases when n <=1 the integral diverges 
-      if (sigma == 0)   return 0;
-      if (alpha==0)
-      {
-         MATH_ERROR_MSG("crystalball_integral","CrystalBall function not defined at alpha=0");
+      // alpha : is non equal to zero, define the # of sigma from which it becomes a power-law function
+      // (from mean-alpha*sigma)
+      // n > 1 : is integer, is the power of the low tail
+      // add a value xmin for cases when n <=1 the integral diverges
+      if (sigma == 0)
+         return 0;
+      if (alpha == 0) {
+         MATH_ERROR_MSG("crystalball_integral", "CrystalBall function not defined at alpha=0");
          return 0.;
       }
-      bool useLog = (n == 1.0); 
-      if (n<=0)   MATH_WARN_MSG("crystalball_integral","No physical meaning when n<=0");
+      bool useLog = (n == 1.0);
+      if (n <= 0)
+         MATH_WARN_MSG("crystalball_integral", "No physical meaning when n<=0");
 
-      double z = (x-mean)/sigma;
-      if (alpha < 0 ) z = -z;
-      
+      double z = (x - mean) / sigma;
+      if (alpha < 0)
+         z = -z;
+
       double abs_alpha = std::abs(alpha);
-      
-      //double D = *(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
-      //double N = 1./(sigma*(C+D));
+
+      // double D = *(1.+ROOT::Math::erf(abs_alpha/std::sqrt(2.)));
+      // double N = 1./(sigma*(C+D));
       double intgaus = 0.;
       double intpow  = 0.;
- 
-      const double sqrtpiover2 = std::sqrt(M_PI/2.);
-      const double sqrt2pi = std::sqrt( 2.*M_PI); 
-      const double oneoversqrt2 = 1./sqrt(2.);
+
+      const double sqrtpiover2 = std::sqrt(M_PI / 2.);
+      const double sqrt2pi = std::sqrt(2. * M_PI);
+      const double oneoversqrt2 = 1. / sqrt(2.);
       if (z <= -abs_alpha)
       {
-         double A = std::pow(n/abs_alpha,n) * std::exp(-0.5 * alpha*alpha);
-         double B = n/abs_alpha - abs_alpha;
+         double r = n / abs_alpha;
+         double A = r * std::exp(-0.5 * alpha * alpha);
+         double B = r - abs_alpha;
 
          if (!useLog) {
-            double C = (n/abs_alpha) * (1./(n-1)) * std::exp(-alpha*alpha/2.);
-            intpow  = C - A /(n-1.) * std::pow(B-z,-n+1) ;
+            intpow = A * (1 - std::pow(r / (B - z), n - 1)) / (n - 1);
          }
          else {
             // for n=1 the primitive of 1/x is log(x)
-            intpow = -A * std::log( n / abs_alpha ) + A * std::log( B -z );
+            intpow = A * std::pow(r, n - 1) * (std::log(B - z) - std::log(r));
          }
-         intgaus =  sqrtpiover2*(1.+ROOT::Math::erf(abs_alpha*oneoversqrt2));
+         intgaus = sqrtpiover2 * (1. + ROOT::Math::erf(abs_alpha * oneoversqrt2));
       }
       else
       {
          intgaus = ROOT::Math::gaussian_cdf_c(z, 1);
          intgaus *= sqrt2pi;
-         intpow  =  0;  
+         intpow = 0;
       }
       return sigma * (intgaus + intpow);
    }
 
-   
    double exponential_cdf_c(double x, double lambda, double x0)
    {
       if ((x-x0) < 0)   return 1.0;
@@ -280,7 +278,6 @@ namespace Math {
       return ROOT::Math::gamma_cdf(mu, a, 1.0);
    }
 
-   
    double poisson_cdf(unsigned int n, double mu)
    {
       // mu must be >= 0  . Use poisson - gamma relation
@@ -289,7 +286,6 @@ namespace Math {
       return ROOT::Math::gamma_cdf_c(mu, a, 1.0);
    }
 
-   
    double binomial_cdf_c(unsigned int k, double p, unsigned int n)
    {
       // use relation with in beta distribution
@@ -300,7 +296,6 @@ namespace Math {
       return ROOT::Math::beta_cdf(p, a, b);
    }
 
-   
    double binomial_cdf(unsigned int k, double p, unsigned int n)
    {
       // use relation with in beta distribution
@@ -312,7 +307,6 @@ namespace Math {
       return ROOT::Math::beta_cdf_c(p, a, b);
    }
 
-   
    double negative_binomial_cdf(unsigned int k, double p, double n)
    {
       // use relation with in beta distribution
@@ -322,7 +316,6 @@ namespace Math {
       return ROOT::Math::beta_cdf(p, n, k+1.0);
    }
 
-   
    double negative_binomial_cdf_c(unsigned int k, double p, double n)
    {
       // use relation with in beta distribution
@@ -360,7 +353,7 @@ namespace Math {
 
       static double a1[4] = {0              ,-0.4583333333e+0, 0.6675347222e+0,-0.1641741416e+1};
       static double a2[4] = {0              , 1.0            ,-0.4227843351e+0,-0.2043403138e+1};
- 
+
       double v = (x - x0)/xi;
       double u;
       double lan;
@@ -378,10 +371,10 @@ namespace Math {
       }
       else if (v < 1)
          lan = (p2[0]+(p2[1]+(p2[2]+p2[3]*v)*v)*v)/(q2[0]+(q2[1]+(q2[2]+q2[3]*v)*v)*v);
-      
+
       else if (v < 4)
          lan = (p3[0]+(p3[1]+(p3[2]+p3[3]*v)*v)*v)/(q3[0]+(q3[1]+(q3[2]+q3[3]*v)*v)*v);
-      
+
       else if (v < 12)
       {
          u   = 1./v;
