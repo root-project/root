@@ -21,8 +21,9 @@ jobs:
     steps:
     - name: install clang-format
       run: |
-        sudo apt-get install -y clang-format
-        clang-format --version
+        apt search clang-format
+        sudo apt-get install -y clang-format-19
+        clang-format-19 --version
     - uses: actions/checkout@v4
       with:
         fetch-depth: 1024
@@ -31,8 +32,10 @@ jobs:
       run: git fetch --depth=1024 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
     - name: Compute merge-base
       run: echo "MERGE_BASE=$(git merge-base origin/base_sha HEAD)" >> "$GITHUB_ENV"
+    - name: List ignored files
+      run: clang-format-19 -list-ignored
     - name: run clang-format
-      run: git clang-format -v --diff $MERGE_BASE HEAD
+      run: git-clang-format-19 --binary $(which clang-format-19) -v --diff $MERGE_BASE HEAD
 
   ruff:
     if: |
