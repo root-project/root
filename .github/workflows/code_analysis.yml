@@ -32,7 +32,7 @@ jobs:
     - name: Compute merge-base
       run: echo "MERGE_BASE=$(git merge-base origin/base_sha HEAD)" >> "$GITHUB_ENV"
     - name: run clang-format
-      run: git clang-format --diff $MERGE_BASE HEAD
+      run: git clang-format -v --diff $MERGE_BASE HEAD
 
   ruff:
     if: |
