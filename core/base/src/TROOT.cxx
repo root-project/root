@@ -119,6 +119,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassGenerator.h"
+#include "TDirectory.h"
 #include "TDataType.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
@@ -238,14 +239,10 @@ void TROOT::WriteCloseAllFiles()
          TIter next(gROOT->GetListOfFiles());
          while (TObject *obj = next()) {
             if (obj && obj->InheritsFrom(TClass::GetClass("TFile", kFALSE, kTRUE))) {
-               TMethodCall callIsWritable(obj->IsA(), "IsWritable", "");
-               Longptr_t retLong = 0;
-               callIsWritable.Execute((void *)(obj), retLong);
-               if (retLong == 1) {
-                  TMethodCall callWrite(obj->IsA(), "Write", "");
-                  callWrite.Execute((void *)(obj));
-                  TMethodCall callClose(obj->IsA(), "Close", "");
-                  callClose.Execute((void *)(obj));
+               auto fobj = static_cast<TDirectory *>(obj);
+               if (fobj->IsWritable()) {
+                  fobj->Write();
+                  fobj->Close();
                }
             }
          }
