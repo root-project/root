@@ -1316,6 +1316,7 @@ void TEntryList::SetTree(const TTree *tree)
          if (!gSystem->IsAbsoluteFileName(filename))
             gSystem->PrependPathName(gSystem->pwd(), filename);
          filename = gSystem->UnixPathName(filename);
+         url.SetAnchor(""); // Avoid potentially duplicated # when calling SetFile below
          url.SetFile(filename);
       }
       filename = url.GetUrl();
