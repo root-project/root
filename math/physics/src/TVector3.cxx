@@ -300,7 +300,10 @@ void TVector3::Rotate(Double_t angle, const TVector3 & axis){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// NewUzVector must be normalized !
+/// Rotates reference frame from Uz to newUz (unit vector) (Geant4).
+/// It is composition of two simple rotations:
+/// theta around oy, then phi around oz (non commutative).
+/// \note NewUzVector must be normalized !
 
 void TVector3::RotateUz(const TVector3& NewUzVector) {
    Double_t u1 = NewUzVector.fX;
