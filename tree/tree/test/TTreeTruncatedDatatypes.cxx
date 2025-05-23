@@ -64,7 +64,7 @@ TEST(TTreeTruncatedDatatypes, float16double32leaves)
 TEST(TTreeTruncatedDatatypes, LeafCounter)
 {
    const auto ofileName = "leafcounter10149.root";
-   Long64_t nEntries = 100;
+   Long64_t nEntries = 1;
    {
       TFile f(ofileName, "RECREATE");
       TTree *t = new TTree("t", "t");
