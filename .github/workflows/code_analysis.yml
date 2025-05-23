@@ -20,7 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: install clang-format
-      run: sudo apt-get install -y clang-format
+      run: |
+        sudo apt-get install -y clang-format
+        clang-format --version
     - uses: actions/checkout@v4
       with:
         fetch-depth: 1024
