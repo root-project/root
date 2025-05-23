@@ -11,7 +11,7 @@ int execTEntryListZip()
     chain.Add("cernstaff.zip#cernstaff.root");
     chain.Draw(">> elist0", "Age > 40", "entrylist");
 
-    gDirectory->ls();
+    // gDirectory->ls();
     auto el = static_cast<TEntryList*>(gDirectory->Get("elist0"));
     if (!el)
        return 1;
@@ -20,5 +20,5 @@ int execTEntryListZip()
     chain.SetEntryList(nullptr);
     chain.SetEntryList(el, "");
 
-    return el == chain.GetEntryList();
+    return (el == chain.GetEntryList()) ? 0 : 1;
 }
