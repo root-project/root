@@ -15,6 +15,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+ // macro must be here to let macro work on Windows
+R__LOAD_LIBRARY(libROOTBrowserv7)
+
 #include <ROOT/RBrowser.hxx>
 
 void browser()
