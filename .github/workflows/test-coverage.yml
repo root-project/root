@@ -180,7 +180,7 @@ jobs:
                     --binaries       ${{ inputs.binaries }}
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       alma9
-                    --incremental    {{ inputs.incremental }}
+                    --incremental    ${{ inputs.incremental }}
                     --coverage       true
                     --base_ref       ${{ inputs.base_ref }}
                     --sha            ${{ github.sha }}
