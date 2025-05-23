@@ -376,14 +376,36 @@ A few more options were added to make ROOT builds more reproducible and to avoid
 With default build option values, there is no difference in behavior compared to previous ROOT versions.
 The real benefit of the new options becomes apparent in builds with `fail-on-missing=ON`, because then the build will fail if any of the dependencies is not found.
 
-## Items addressed
+## Bugs and Issues fixed in this release
 
-For this release, the following items have been addressed:
+More than 200 items were addressed for this release. The full list is:
 
+  * [[#18827](https://github.com/root-project/root/issues/18827)] - ROOT uses the wrong value for Planck's constant
+  * [[#18792](https://github.com/root-project/root/issues/18792)] - Thread problem in TEnum::GetEnum
+  * [[#18738](https://github.com/root-project/root/issues/18738)] - Disable the default automatic optimization of RooFit via vectorization
+  * [[#18669](https://github.com/root-project/root/issues/18669)] - Incremental builds with `dev=ON` break when modifying Core header
+  * [[#18667](https://github.com/root-project/root/issues/18667)] - Add setting to disable file writing in MakeModelAndMeasurementsFast
+  * [[#18663](https://github.com/root-project/root/issues/18663)] - Rootssh /tmp/root.XXXXXXXXX chmod issue and consequent THttpEngine (arg?) problem
+  * [[#18654](https://github.com/root-project/root/issues/18654)] - TClassEdit name normalisation fails for unordered_map, leading to a crash in df104_CSVDataSource
+  * [[#18643](https://github.com/root-project/root/issues/18643)] - [C++23][macOS] Failing test `roottest-root-io-tclass-make` with C++23
+  * [[#18631](https://github.com/root-project/root/issues/18631)] - Code display for rf408_RDataFrameToRooFit.C partially broken in the documentation
+  * [[#18623](https://github.com/root-project/root/issues/18623)] - DaviX errors from ROOT.File.Cp
+  * [[#18581](https://github.com/root-project/root/issues/18581)] - Exception when trying to build RDataFrame from pandas
+  * [[#18556](https://github.com/root-project/root/issues/18556)] - Class methods not available to python in cases of transient data members of private nested class type
+  * [[#18536](https://github.com/root-project/root/issues/18536)] - TClass::GetClass hoards memory when called for numerical types
+  * [[#18534](https://github.com/root-project/root/issues/18534)] - Cannot use FromPandas with string columns
+  * [[#18524](https://github.com/root-project/root/issues/18524)] - Memory not released after TTree GetEntry() in PyROOT
+  * [[#18520](https://github.com/root-project/root/issues/18520)] - Missing lock deep inside TClassEdit::ResolveTypedef
+  * [[#18519](https://github.com/root-project/root/issues/18519)] - Concurrency issue with TClassEdit::ResolveTypedef and TClass::GetListOfMethods
+  * [[#18499](https://github.com/root-project/root/issues/18499)] - CI artifacts are currently useless on Linux ...
+  * [[#18477](https://github.com/root-project/root/issues/18477)] - TPad::ClipPolygon illegal access vector.at(-1)
+  * [[#18455](https://github.com/root-project/root/issues/18455)] - Tiny memory leak reported by valgrind in TStreamerInfoActions
   * [[#18441](https://github.com/root-project/root/issues/18441)] - import ROOT fails after a template instantiation is invoked from cppyy
   * [[#18404](https://github.com/root-project/root/issues/18404)] - [ntuple] Unable to read collection of `TObject`
+  * [[#18380](https://github.com/root-project/root/issues/18380)] - [tmva][sofie] `ROperator_Shape::ShapeInference()` code can't be correct
   * [[#18374](https://github.com/root-project/root/issues/18374)] - TH2Poly bin names are drawn with an angle of 1° with option "TEXTN"
   * [[#18365](https://github.com/root-project/root/issues/18365)] - SetBranchAddress does not work with np.int16 and uint16 in PyROOT
+  * [[#18363](https://github.com/root-project/root/issues/18363)] - Incorrect name normalization for template with size_t template argument
   * [[#18354](https://github.com/root-project/root/issues/18354)] - ROOT does not build some pre-requisites on macOS with latest Brew because of make v4.0...
   * [[#18343](https://github.com/root-project/root/issues/18343)] - "Definitely lost" reported by Valgrind in TCling::InspectMembers
   * [[#18329](https://github.com/root-project/root/issues/18329)] - [core] "Definitely lost" from Valgrind in TUnixSystem::UnixOpendir
@@ -391,12 +413,14 @@ For this release, the following items have been addressed:
   * [[#18312](https://github.com/root-project/root/issues/18312)] - Problem with cmake 4.0.0
   * [[#18306](https://github.com/root-project/root/issues/18306)] - macos 15.4 building bug of module map file
   * [[#18304](https://github.com/root-project/root/issues/18304)] - TBrowser not opening in root cling CLI on Fedora if RBrowser lib was deleted after install
+  * [[#18301](https://github.com/root-project/root/issues/18301)] - Performance issue seen by CMS for ROOT's use of tbb::task_arena
   * [[#18298](https://github.com/root-project/root/issues/18298)] - [ntuple] RNTupleMerger: compress the generated zero pages
   * [[#18285](https://github.com/root-project/root/issues/18285)] - [FreeBSD] root build fails in master
   * [[#18251](https://github.com/root-project/root/issues/18251)] - RMiniFile.cxx harsh failure
   * [[#18236](https://github.com/root-project/root/issues/18236)] - Missing lock deep inside TClassEdit::GetNormalizedName
   * [[#18213](https://github.com/root-project/root/issues/18213)] - macos sequoia 15.4 homebrew - Failed to Open ROOT after today's update
   * [[#18195](https://github.com/root-project/root/issues/18195)] - TBufferJSON not serializing std::map
+  * [[#18172](https://github.com/root-project/root/issues/18172)] - [RF] Inefficient un-registering of histograms in HistFactory
   * [[#18167](https://github.com/root-project/root/issues/18167)] - [ci] Apply Ruff Formatting to Changed Lines Only
   * [[#18146](https://github.com/root-project/root/issues/18146)] - [Python] Preserve full Python trace when raising errors in callbacks
   * [[#18128](https://github.com/root-project/root/issues/18128)] - installing with rapidyaml cmake found
@@ -406,28 +430,24 @@ For this release, the following items have been addressed:
   * [[#18002](https://github.com/root-project/root/issues/18002)] - Memory issues reported by Valgrind when cloning `gROOT->GetListOfColors()`
   * [[#17992](https://github.com/root-project/root/issues/17992)] - Spurrious auto parsing when looking up a TClass
   * [[#17969](https://github.com/root-project/root/issues/17969)] - Failure of thisroot.sh on freebsd
-  * [[#17909](https://github.com/root-project/root/pull/17909)] - Prevent LLVM cmake from finding builtin zstd.
   * [[#17900](https://github.com/root-project/root/issues/17900)] - [ntuple] Add write API with const pointers
   * [[#17864](https://github.com/root-project/root/issues/17864)] - [Docs] TTree example is missing the critical lines
   * [[#17859](https://github.com/root-project/root/issues/17859)] - [CMake] JupyROOT sources not correctly tracked by CMake
   * [[#17848](https://github.com/root-project/root/issues/17848)] - [ntuple] Type normalization problems with types in template classes
   * [[#17843](https://github.com/root-project/root/issues/17843)] - [TTreeReader] Crash in TNotifyLink with reused TChain with friend
+  * [[#17841](https://github.com/root-project/root/issues/17841)] - PyROOT multidimenstional int16_t arrays stopped working in 6.34
   * [[#17824](https://github.com/root-project/root/issues/17824)] - TDirectory::mkdir does not return the created directory
   * [[#17820](https://github.com/root-project/root/issues/17820)] - Wrong interaction between indexed TTree friend, GetEntries, GetListOfFriends
-  * [[#17814](https://github.com/root-project/root/pull/17814)] - meta: Disable TClass creation during tear down.
   * [[#17809](https://github.com/root-project/root/issues/17809)] - TGraph2D doc (TGraph2D::GetFunction does not work)
   * [[#17774](https://github.com/root-project/root/issues/17774)] - [ntuple] ATLAS RNTuple Writing Issue (2025-02-19)
   * [[#17757](https://github.com/root-project/root/issues/17757)] - TClass object can be generated during tear down which can lead to the user of already deleted resources.
   * [[#17754](https://github.com/root-project/root/issues/17754)] - [docu] TMinuit2 weird links
   * [[#17753](https://github.com/root-project/root/issues/17753)] - Race condition in TClass::fStreamerImpl value for emulated classes.
-  * [[#17744](https://github.com/root-project/root/pull/17744)] - [skip-ci] move minuit2 user guide to doxygen and remove outdated info
   * [[#17729](https://github.com/root-project/root/issues/17729)] - [Python Interface] Regression: can't properly convert a vector to 2D/3D numpy array
   * [[#17715](https://github.com/root-project/root/issues/17715)] - Disable Docs workflow for forked repositories
-  * [[#17714](https://github.com/root-project/root/pull/17714)] - Prevent a race condition in fStreamerImpl value
   * [[#17691](https://github.com/root-project/root/issues/17691)] - Crash when building dataframe from TChain
   * [[#17686](https://github.com/root-project/root/issues/17686)] - C++23 crash in DiagnosticInfo.h
   * [[#17658](https://github.com/root-project/root/issues/17658)] - Remove infinities in RooFit Crystal Ball PDF
-  * [[#17652](https://github.com/root-project/root/pull/17652)] -  [TTree] when merging, ignore trees without branches
   * [[#17648](https://github.com/root-project/root/issues/17648)] - [ntuple] Record field emulation not working with TFile
   * [[#17634](https://github.com/root-project/root/issues/17634)] - TH1 Documentation: broken links to "Further Python fitting examples"
   * [[#17570](https://github.com/root-project/root/issues/17570)] - [ntuple] Missing type name normalization for meta fields
@@ -444,37 +464,32 @@ For this release, the following items have been addressed:
   * [[#17449](https://github.com/root-project/root/issues/17449)] - [DF] Issues with RDataSpec paths using EOS
   * [[#17444](https://github.com/root-project/root/issues/17444)] - ROOT doesn't compile with gcc-15
   * [[#17418](https://github.com/root-project/root/issues/17418)] - Add option to change default basket size in RDataFrame Snapshot
-  * [[#17408](https://github.com/root-project/root/pull/17408)] - [skip-ci] Fix THistpainter tables
   * [[#17350](https://github.com/root-project/root/issues/17350)] - rootreadspeed should be marked as "CMAKENOEXPORT"
   * [[#17346](https://github.com/root-project/root/issues/17346)] - I/O Customization rules fails in case of changes in the inputs types.
-  * [[#17330](https://github.com/root-project/root/pull/17330)] - Text precision must be 2 in PaintText
-  * [[#17323](https://github.com/root-project/root/pull/17323)] - [RF] Remove unused sel rule for RooStats::ToyMCPayload
-  * [[#17321](https://github.com/root-project/root/issues/17321)] - [RF] Unused Class rule
+  * [[#17321](https://github.com/root-project/root/issues/17321)] - [RF] Unused Class rule 
   * [[#17320](https://github.com/root-project/root/issues/17320)] - [RF] Race when testing RooStats with its tutorials via CTest
   * [[#17305](https://github.com/root-project/root/issues/17305)] - The ONNX.Tile5D test in tmva/sofie/test/TestCustomModelsFromONNX.cxx writes array elements beyond the last element in the array.
   * [[#17295](https://github.com/root-project/root/issues/17295)] - constprefix incorrectly set in TClassEdit
   * [[#17291](https://github.com/root-project/root/issues/17291)] - [RF] Parameter ordering bug in RooFormulaArgStreamer
   * [[#17274](https://github.com/root-project/root/issues/17274)] - Veccore won't compile with clang 19
   * [[#17263](https://github.com/root-project/root/issues/17263)] - [RDF] 'DistRDF.Ranges' has no attribute 'get_clusters_and_entries'
-  * [[#17225](https://github.com/root-project/root/issues/17225)] - TFormula: Possibility of failure during dynamic compilation of predefined functions "gausn" and "landau"
   * [[#17223](https://github.com/root-project/root/issues/17223)] - TFileMerger leaves files open resulting in corrupt metadata
   * [[#17222](https://github.com/root-project/root/issues/17222)] - Regression in Python ownership for histograms within subdirectories with ROOT 6.34.00
   * [[#17214](https://github.com/root-project/root/issues/17214)] - [ntuple] Optimize `RArrayField` reading
   * [[#17190](https://github.com/root-project/root/issues/17190)] - Compiler error (GCC 14.2.0 on Linux)
-  * [[#17163](https://github.com/root-project/root/issues/17163)] - Warnings from  the deserialization of RooCrystalBall
-  * [[#17157](https://github.com/root-project/root/issues/17157)] - operator errors in cppyy
+  * [[#17163](https://github.com/root-project/root/issues/17163)] - Warnings from  the deserialization of RooCrystalBall 
   * [[#17145](https://github.com/root-project/root/issues/17145)] - Distributed RDataFrame cannot deal with same column name in different branches
   * [[#17142](https://github.com/root-project/root/issues/17142)] - Check Python code formatting in CI
   * [[#17135](https://github.com/root-project/root/issues/17135)] - Add Alias transformation to distributed RDataFrame
   * [[#17109](https://github.com/root-project/root/issues/17109)] - [PyROOT] False positive in cppyy proxy cache
-  * [[#17076](https://github.com/root-project/root/issues/17076)] - Double shadow in `TPaveText`
+  * [[#17076](https://github.com/root-project/root/issues/17076)] - Double shadow in `TPaveText` 
   * [[#17040](https://github.com/root-project/root/issues/17040)] - Small difference between kp6Violet implementation and official value from Petroff paper
   * [[#16976](https://github.com/root-project/root/issues/16976)] - Strange overflow bin bar when plotting TH1D with X1 option
   * [[#16946](https://github.com/root-project/root/issues/16946)] - Crash in RDF constructor with empty file list
   * [[#16936](https://github.com/root-project/root/issues/16936)] - [ntuple] RClusterPool can crash on non-existing cluster
   * [[#16915](https://github.com/root-project/root/issues/16915)] - `TThreadExecutor::Map` is private, users can only run `MapReduce`.
   * [[#16841](https://github.com/root-project/root/issues/16841)] - Validate `REntry` belonging to right model when reading
-  * [[#16794](https://github.com/root-project/root/issues/16794)] - TFormula: Pol functions do not accept variable name as arguments
+  * [[#16794](https://github.com/root-project/root/issues/16794)] - TFormula: Pol functions do not accept variable name as arguments 
   * [[#16784](https://github.com/root-project/root/issues/16784)] - Remove default value of p from TH1::GetQuantiles() as is the case with TF1::GetQuantiles
   * [[#16736](https://github.com/root-project/root/issues/16736)] - Please improve documentation and/or argument names for TH1::GetQuantiles()
   * [[#16725](https://github.com/root-project/root/issues/16725)] - Pyroot crashes reading TClonesArray in a TTree
@@ -521,45 +536,49 @@ For this release, the following items have been addressed:
   * [[#9335](https://github.com/root-project/root/issues/9335)] - [hist] TGraphMultiErrors: needs some improvements in interface and  better documentation
   * [[#9319](https://github.com/root-project/root/issues/9319)] - [TTree] Print("clusters") off-by-one error in case of partial clusters
   * [[#8951](https://github.com/root-project/root/issues/8951)] - Add optional flag to include underflow and overflow weights when returning sum of weights from histogram
+  * [[#7685](https://github.com/root-project/root/issues/7685)] - [DF] `AsNumpy` should automatically convert RVecs into numpy arrays
+  * [[#7567](https://github.com/root-project/root/issues/7567)] - TChain fails to read events if: only a single file is processed
   * [[#7254](https://github.com/root-project/root/issues/7254)] - [RF] RooHypatia2 Analytical integral integration
   * [[#6682](https://github.com/root-project/root/issues/6682)] - Add an option to draw "XKCD" plot in ROOT7
   * [[#6640](https://github.com/root-project/root/issues/6640)] - TFileMerger output file is deleted when TTree::ChangeFile is triggered by reaching a file size greater than TTree::GetMaxTreeSize
   * [[#6607](https://github.com/root-project/root/issues/6607)] - TClassEdit::GetNormalizedName does not strip std::allocator on Windows
-  * [[ROOT-11020](https://its.cern.ch/jira/browse/ROOT-11020)] - Add function to evaluate expressions using fit parameters
-  * [[ROOT-10907](https://its.cern.ch/jira/browse/ROOT-10907)] - Allow to pass non-integer numbers of events to TEfficiency::SetTotalEvents and TEfficiency::SetPassedEvents methods
-  * [[ROOT-10823](https://its.cern.ch/jira/browse/ROOT-10823)] - [TTreeReader] Add method to check whether TTreeReaderArray contents are contiguous
-  * [[ROOT-10780](https://its.cern.ch/jira/browse/ROOT-10780)] - [cling] Cannot use trailing return types at prompt
-  * [[ROOT-10621](https://its.cern.ch/jira/browse/ROOT-10621)] - Segfault if TFile is used with TRint in teardown
-  * [[ROOT-10553](https://its.cern.ch/jira/browse/ROOT-10553)] - TSQLStatement::GetBinary is not consistently implemented
-  * [[ROOT-10537](https://its.cern.ch/jira/browse/ROOT-10537)] - CMakeList.txt environment cleanup inaccurate
-  * [[ROOT-10482](https://its.cern.ch/jira/browse/ROOT-10482)] - pullHist and residHist biased (or sampling biased)
-  * [[ROOT-10249](https://its.cern.ch/jira/browse/ROOT-10249)] - TDataMember::GetOptions returns empty list for enum members
-  * [[ROOT-10239](https://its.cern.ch/jira/browse/ROOT-10239)] - rootcling crashes on -Werror + unknown warning flag to clang
-  * [[ROOT-9886](https://its.cern.ch/jira/browse/ROOT-9886)] - TTreeReader loads wrong entry from chain friend
-  * [[ROOT-9833](https://its.cern.ch/jira/browse/ROOT-9833)] - TMVA crashes adding single event w/o prior var def
-  * [[ROOT-9753](https://its.cern.ch/jira/browse/ROOT-9753)] - UB Sanitizer Complaining About clang shared_ptr issue
-  * [[ROOT-9688](https://its.cern.ch/jira/browse/ROOT-9688)] - Be more specific about which tutorials/ to copy
-  * [[ROOT-9204](https://its.cern.ch/jira/browse/ROOT-9204)] - Impossible to use RooFrame or RooCurve chiSquare method if data histogram has option XErrorSize(0)
-  * [[ROOT-9013](https://its.cern.ch/jira/browse/ROOT-9013)] - Get rid of AbstractMethod()
-  * [[ROOT-8775](https://its.cern.ch/jira/browse/ROOT-8775)] - TTree::MakeSelector can produce invalid C++ code
-  * [[ROOT-8725](https://its.cern.ch/jira/browse/ROOT-8725)] - Thread-unsafe statics in GSLInterpolator
-  * [[ROOT-8397](https://its.cern.ch/jira/browse/ROOT-8397)] - TGraphSmooth::Approx graph misbehaves around the maximal "x" value
-  * [[ROOT-8278](https://its.cern.ch/jira/browse/ROOT-8278)] - roofit asymmetry plots create object names which fail when saving plot as macro
-  * [[ROOT-8240](https://its.cern.ch/jira/browse/ROOT-8240)] - Must not unload or reload cling runtime universe
-  * [[ROOT-8112](https://its.cern.ch/jira/browse/ROOT-8112)] - not possible to add filename to TChain which doesn't end in .root, with treename
-  * [[ROOT-7926](https://its.cern.ch/jira/browse/ROOT-7926)] - TTree::Print("toponly") does not account correctly top branches
-  * [[ROOT-7855](https://its.cern.ch/jira/browse/ROOT-7855)] - Inconsistent behaviour when cloning a tree using TChain and TTree
-  * [[ROOT-7626](https://its.cern.ch/jira/browse/ROOT-7626)] - TRegexp::MakeWildcard should support escape sequence
-  * [[ROOT-7372](https://its.cern.ch/jira/browse/ROOT-7372)] - Accessing complex map branches crashes in PyROOT
-  * [[ROOT-7322](https://its.cern.ch/jira/browse/ROOT-7322)] - Missing Overload for TF1 GetParError
-  * [[ROOT-7067](https://its.cern.ch/jira/browse/ROOT-7067)] - tree->GetMaximum() not working with TChain and TEntryList
-  * [[ROOT-6874](https://its.cern.ch/jira/browse/ROOT-6874)] - Suggested function TF1::EvalUncertainty()
-  * [[ROOT-6636](https://its.cern.ch/jira/browse/ROOT-6636)] - Tab completion fails for CV-qualified pointers and objects
-  * [[ROOT-5820](https://its.cern.ch/jira/browse/ROOT-5820)] - Multiple issues with TFileMerger in single file case
-  * [[ROOT-5588](https://its.cern.ch/jira/browse/ROOT-5588)] - GetEntries moves state of fReadEntry in TTree
-  * [[ROOT-5439](https://its.cern.ch/jira/browse/ROOT-5439)] - Dump-output of TH1 not showing pointerness of fArray
-  * [[ROOT-5137](https://its.cern.ch/jira/browse/ROOT-5137)] - Enhance error recover in TTreeCloner
-  * [[ROOT-4663](https://its.cern.ch/jira/browse/ROOT-4663)] - GetFromPipe() loses the return value
-  * [[ROOT-4012](https://its.cern.ch/jira/browse/ROOT-4012)] - TTree::SetAlias() fail to interpret the constant
-  * [[ROOT-119](https://its.cern.ch/jira/browse/ROOT-119)] - Implement Write rules
-  * [[ROOT-118](https://its.cern.ch/jira/browse/ROOT-118)] - Implement support for access to nested objects
+  * [[ROOT-11020](https://its.cern.ch/jira/browse/11020)] - Add function to evaluate expressions using fit parameters
+  * [[ROOT-10907](https://its.cern.ch/jira/browse/10907)] - Allow to pass non-integer numbers of events to TEfficiency::SetTotalEvents and TEfficiency::SetPassedEvents methods
+  * [[ROOT-10823](https://its.cern.ch/jira/browse/10823)] - [TTreeReader] Add method to check whether TTreeReaderArray contents are contiguous
+  * [[ROOT-10780](https://its.cern.ch/jira/browse/10780)] - [cling] Cannot use trailing return types at prompt
+  * [[ROOT-10621](https://its.cern.ch/jira/browse/10621)] - Segfault if TFile is used with TRint in teardown
+  * [[ROOT-10620](https://its.cern.ch/jira/browse/10620)] - Cling gets confused when assigning the result of a malformed template expression
+  * [[ROOT-10553](https://its.cern.ch/jira/browse/10553)] - TSQLStatement::GetBinary is not consistently implemented
+  * [[ROOT-10537](https://its.cern.ch/jira/browse/10537)] - CMakeList.txt environment cleanup inaccurate
+  * [[ROOT-10482](https://its.cern.ch/jira/browse/10482)] - pullHist and residHist biased (or sampling biased)
+  * [[ROOT-10249](https://its.cern.ch/jira/browse/10249)] - TDataMember::GetOptions returns empty list for enum members 
+  * [[ROOT-10239](https://its.cern.ch/jira/browse/10239)] - rootcling crashes on -Werror + unknown warning flag to clang
+  * [[ROOT-9886](https://its.cern.ch/jira/browse/9886)] - TTreeReader loads wrong entry from chain friend
+  * [[ROOT-9833](https://its.cern.ch/jira/browse/9833)] - TMVA crashes adding single event w/o prior var def
+  * [[ROOT-9753](https://its.cern.ch/jira/browse/9753)] - UB Sanitizer Complaining About clang shared_ptr issue
+  * [[ROOT-9688](https://its.cern.ch/jira/browse/9688)] - Be more specific about which tutorials/ to copy
+  * [[ROOT-9508](https://its.cern.ch/jira/browse/9508)] - rootcling web documentation incomplete and out of date
+  * [[ROOT-9204](https://its.cern.ch/jira/browse/9204)] - Impossible to use RooFrame or RooCurve chiSquare method if data histogram has option XErrorSize(0)
+  * [[ROOT-9013](https://its.cern.ch/jira/browse/9013)] - Get rid of AbstractMethod()
+  * [[ROOT-8775](https://its.cern.ch/jira/browse/8775)] - TTree::MakeSelector can produce invalid C++ code
+  * [[ROOT-8725](https://its.cern.ch/jira/browse/8725)] - Thread-unsafe statics in GSLInterpolator
+  * [[ROOT-8397](https://its.cern.ch/jira/browse/8397)] - TGraphSmooth::Approx graph misbehaves around the maximal "x" value
+  * [[ROOT-8278](https://its.cern.ch/jira/browse/8278)] - roofit asymmetry plots create object names which fail when saving plot as macro
+  * [[ROOT-8240](https://its.cern.ch/jira/browse/8240)] - Must not unload or reload cling runtime universe
+  * [[ROOT-8162](https://its.cern.ch/jira/browse/8162)] - Can not compile ROOT scripts when compiling ROOT in a temporary directory.
+  * [[ROOT-8112](https://its.cern.ch/jira/browse/8112)] - not possible to add filename to TChain which doesn't end in .root, with treename
+  * [[ROOT-7926](https://its.cern.ch/jira/browse/7926)] - TTree::Print("toponly") does not account correctly top branches
+  * [[ROOT-7855](https://its.cern.ch/jira/browse/7855)] - Inconsistent behaviour when cloning a tree using TChain and TTree
+  * [[ROOT-7626](https://its.cern.ch/jira/browse/7626)] - TRegexp::MakeWildcard should support escape sequence
+  * [[ROOT-7372](https://its.cern.ch/jira/browse/7372)] - Accessing complex map branches crashes in PyROOT
+  * [[ROOT-7322](https://its.cern.ch/jira/browse/7322)] - Missing Overload for TF1 GetParError 
+  * [[ROOT-7067](https://its.cern.ch/jira/browse/7067)] - tree->GetMaximum() not working with TChain and TEntryList
+  * [[ROOT-6874](https://its.cern.ch/jira/browse/6874)] - Suggested function TF1::EvalUncertainty()
+  * [[ROOT-6636](https://its.cern.ch/jira/browse/6636)] - Tab completion fails for CV-qualified pointers and objects
+  * [[ROOT-5820](https://its.cern.ch/jira/browse/5820)] - Multiple issues with TFileMerger in single file case
+  * [[ROOT-5588](https://its.cern.ch/jira/browse/5588)] - GetEntries moves state of fReadEntry in TTree
+  * [[ROOT-5439](https://its.cern.ch/jira/browse/5439)] - Dump-output of TH1 not showing pointerness of fArray
+  * [[ROOT-5137](https://its.cern.ch/jira/browse/5137)] - Enhance error recover in TTreeCloner
+  * [[ROOT-4663](https://its.cern.ch/jira/browse/4663)] - GetFromPipe() loses the return value
+  * [[ROOT-4012](https://its.cern.ch/jira/browse/4012)] - TTree::SetAlias() fail to interpret the constant
+  * [[ROOT-118](https://its.cern.ch/jira/browse/118)] - Implement support for access to nested objects
