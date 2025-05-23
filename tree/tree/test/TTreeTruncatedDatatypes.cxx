@@ -64,17 +64,18 @@ TEST(TTreeTruncatedDatatypes, float16double32leaves)
 TEST(TTreeTruncatedDatatypes, LeafCounter)
 {
    const auto ofileName = "leafcounter10149.root";
+   Long64_t nEntries = 100;
    {
       TFile f(ofileName, "RECREATE");
       TTree *t = new TTree("t", "t");
       int n;
       Double32_t arr[64];
       t->Branch("n", &n);
-      t->Branch("arr", arr, "arr[n]/d[0,0,10]");
+      t->Branch("arr", arr, "arr[n]/d[0,1000000,20]");
       t->Branch("arr_def", arr, "arr_def[n]/d");
-      t->Branch("arr_fix", arr, "arr_fix[64]/d[0,0,10]");
+      t->Branch("arr_fix", arr, "arr_fix[64]/d[0,1000000,20]");
       t->Branch("arr_fix_def", arr, "arr_fix_def[64]/d");
-      t->Branch("single", arr, "single/d[0,0,10]");
+      t->Branch("single", arr, "single/d[0,1000000,20]");
       t->Branch("single_def", arr, "single_def/d");
       for (auto name : {"arr", "arr_def", "arr_fix", "arr_fix_def", "single", "single_def"}) {
          auto b = t->GetBranch(name);
@@ -93,6 +94,14 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
             EXPECT_EQ(b_c, nullptr);
             EXPECT_EQ(len, 1);
          }
+      }
+      // Fill tree
+      for (Long64_t i = 0; i < nEntries; ++i) {
+         n = i;
+         for (int j = 0; j < 64; ++j) {
+            arr[j] = i + 0.01 * j;
+         }
+         t->Fill();
       }
       t->Write();
       f.Close();
@@ -117,6 +126,25 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
             EXPECT_EQ(b_c, nullptr);
             EXPECT_EQ(len, 1);
          }
+         int n;
+         Double32_t arr[64];
+         t->SetBranchAddress("n", &n);
+         t->SetBranchAddress(name, arr);
+         for (Long64_t i = 0; i < nEntries; ++i) {
+            t->GetEntry(i);
+            if (strcmp(name, "arr") == 0 || strcmp(name, "arr_def") == 0) {
+               for (int j = 0; j < n; ++j) {
+                  EXPECT_FLOAT_EQ(i + 0.01 * j, arr[j]);
+               }
+            } else if (strcmp(name, "arr_fix") == 0 || strcmp(name, "arr_fix_def") == 0) {
+               for (int j = 0; j < 64; ++j) {
+                  EXPECT_FLOAT_EQ(i + 0.01 * j, arr[j]);
+               }
+            } else if (strcmp(name, "single") == 0 || strcmp(name, "single_def") == 0) {
+               EXPECT_FLOAT_EQ(i, arr[0]);
+            }
+         }
+         t->ResetBranchAddresses();
       }
       f.Close();
    }
