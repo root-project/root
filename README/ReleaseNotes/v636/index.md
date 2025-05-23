@@ -4,7 +4,11 @@
 
 ## Introduction
 
-ROOT version 6.36.00 is scheduled for release at the end of May 2025.
+ROOT 6.36.00, released on May 26th 2025, is the first release of the ROOT 6.36 LTS cycle.
+The new ROOT comes with many great features that have the potential of making you even more productive - see release notes below.
+The effort made by the contributors, experiments and core developers is testified by the 202 items in the ROOT trackers that have been addressed for this release.
+
+As previously announced, the 6.36 cycle supersedes the STS 6.34 one, which will be stopped in June. 
 
 For more information, see:
 
@@ -12,16 +16,32 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Samantha Abbott, UC Davis,\
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
+ Lukas Breitwieser, CERN/EP-SFT,\
+ Will Buttinger, RAL,\
  Philippe Canal, FNAL,\
- Olivier Couet, CERN/EP-SFT,\
- Marta Czurylo, CERN/EP-SFT,\
+ Emanuele Chiamulera, University of Padova\
+ Eric Cano, CERN/EP-SFT
+ Olivier Couet, CERN/EP-SFT, \
+ Marta Czurylo, CERN/EP-SFT, \
+ Tomas Dado, CERN/EP-ADP,\
+ Monica Dessole, CERN/EP-SFT,\
  Mattias Ellert, Uppsala University,\
+ Mateusz Fila, CERN EP-SFT,\
+ Martin Føll, CERN/EP-SFT and University of Oslo,\
+ Declan Garvey, CSIC/University of Valencia,\
  Florine de Geus, CERN/EP-SFT and University of Twente,\
+ Massimiliano Galli, Princeton,\
+ Jamie Gooding, TU Dortmund, \
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, CSIC/University of Valencia,\
- Stephan Hageboeck, CERN,\
+ Stephan Hageboeck, CERN/EP-SFT,\
+ Aaron Jomy, CERN/EP-SFT,\
+ Marta Krawczyk, CERN/EP-AID,\
+ Vit Kucera, Inha University,\
+ Stephanie Kwan, Princeton,\
  Sergey Linev, GSI Darmstadt,\
  Enrico Lusiani, INFN Padova,\
  Alberto Mecca, University of Turin,\
@@ -29,12 +49,21 @@ The following people have contributed to this new version:
  Mark Owen, University of Glasgow,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Giacomo Parolini, CERN/EP-SFT,\
+ Daniel Perez Astudillo, QEERI/HBKU,\
  Danilo Piparo, CERN/EP-SFT,\
+ Alexandr Prozorov, CTU Prague,\
  Jonas Rembser, CERN/EP-SFT,\
+ Grigori Rybkin, Paris-Saclay University,\
  Manuel Tobias Schiller, University of Glasgow,\
  Surya Somayyajula, UMass Amherst,\
  Petr Stepanov, @petrstepanov,\
+ Maciej Pawel Szymanski, ANL,\
+ Andres Rios, Princeton,\
+ Sanjiban Sengupta, CERN/EP-SFT and Manchester University,\
  Silia Taider, CERN/EP-SFT,\
+ Florian Uhlig, GSI,\
+ Devajoth Valaparambil Sreeramaswamy, CERN/EP-SFT,\
+ Vassil Vasilev, Princeton,\
  Dongliang Zhang, University of Science and Technology of China
 
 ## Deprecation and Removal
@@ -59,6 +88,10 @@ The following people have contributed to this new version:
   * Introduced UHI-style indexing for access and setting bin values.
   * Introduced UHI-style slicing for selecting histogram ranges.
   * Implemented the `ROOT.uhi.loc`, `ROOT.uhi.underflow`, `ROOT.uhi.overflow`, `ROOT.uhi.rebin`, and `ROOT.uhi.sum` tags.
+
+## Core Libraries
+Existing code can now be interpreted and just-in-time compiled according to the C++23 standard for the platforms that support it. The new standard can be enabled with the CMake option `-DCMAKE_CXX_STANDARD=23`.
+
 
 ## RDataFrame
 - When running multiple computation graphs concurrently using [`RunGraphs()`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#a526d77d018bf69462d736bbdd1a695c4),
@@ -155,6 +188,7 @@ A set of new features is now available to the distributed RDataFrame users:
   * `DefaultValueFor`
   * `FilterAvailable`
   * `FilterMissing`
+
 ## RooFit
 
 ### Breaking function signature changes
@@ -260,10 +294,6 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 
 * add `tutorials/visualisation/webgui/bootstrap` example showing usage of `RWebWindow` with [bootstrap](https://getbootstrap.com/) framework, including embedding of `TWebCanvas` in the widget
 
-## Core
-
-## Histograms
-
 ## Math
 
 ### RooFit / HistFactory
@@ -328,6 +358,8 @@ ROOT 6.36 will use [JSROOT 7.9](https://github.com/root-project/jsroot/releases/
 ## Jupyter lab
 
 Use JSROOT 7.9.0 as fallback version.
+
+The tutorials have been reviewed, improved and modernised. It is now more intuitive to navigate through the individual parts of the ROOT tutorials. Some tutorials were added to showcase the new features, some were modernized to modern C++ standards and some were moved to the legacy folder. 
 
 ## Build, Configuration and Testing Infrastructure
 
