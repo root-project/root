@@ -438,11 +438,10 @@ void TPluginManager::LoadHandlerMacros(const char *path)
       while ((f1 = gSystem->GetDirEntry(dirp))) {
          TString f = f1;
          if (f[0] == 'P' && f.EndsWith(".C")) {
-            const char *p = gSystem->ConcatFileName(path, f);
+            const char *p = gSystem->PrependPathName(path, f);
             if (!gSystem->AccessPathName(p, kReadPermission)) {
                macros.Add(new TObjString(p));
             }
-            delete [] p;
          }
       }
       // load macros in alphabetical order
@@ -535,9 +534,8 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       }
       if (!skip) {
          if (sbase != "") {
-            const char *p = gSystem->ConcatFileName(d, sbase);
+            const char *p = gSystem->PrependPathName(d, sbase);
             LoadHandlerMacros(p);
-            delete [] p;
          } else {
             void *dirp = gSystem->OpenDirectory(d);
             if (dirp) {
@@ -546,10 +544,9 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
                const char *f1;
                while ((f1 = gSystem->GetDirEntry(dirp))) {
                   TString f = f1;
-                  const char *p = gSystem->ConcatFileName(d, f);
-                  LoadHandlerMacros(p);
+                  const char *p1 = gSystem->PrependPathName(d, TString(f));
+                  LoadHandlerMacros(p1);
                   fBasesLoaded->Add(new TObjString(f));
-                  delete [] p;
                }
             }
             gSystem->FreeDirectory(dirp);
@@ -690,10 +687,8 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
          base = h->fBase;
       } else
          idx += 10;
-      const char *dd = gSystem->ConcatFileName(d, h->fBase);
-      TString sdd = dd;
+      TString sdd = gSystem->PrependPathName(d, TString(h->fBase));
       sdd.ReplaceAll("::", "@@");
-      delete [] dd;
       if (gSystem->AccessPathName(sdd, kWritePermission)) {
          if (gSystem->MakeDirectory(sdd) < 0) {
             Error("WritePluginMacros", "cannot create directory %s", sdd.Data());
@@ -702,7 +697,7 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
       }
       TString fn;
       fn.Form("P%03d_%s.C", idx, h->fClass.Data());
-      const char *fd = gSystem->ConcatFileName(sdd, fn);
+      const char *fd = gSystem->PrependPathName(sdd, fn);
       FILE *f = fopen(fd, "w");
       if (f) {
          fprintf(f, "void P%03d_%s()\n{\n", idx, h->fClass.Data());
@@ -728,7 +723,6 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
          fprintf(f, "}\n");
          fclose(f);
       }
-      delete [] fd;
       lnk = lnk->Next();
    }
    return 0;
