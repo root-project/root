@@ -771,8 +771,8 @@ void TGTextEditor::CompileMacro()
       if (!SaveFileAs())
          return;
    }
-   const char *tmpfile = gSystem->PrependPathName(gSystem->TempDirectory(),
-                                TString(gSystem->BaseName(fFilename.Data())));
+   TString temp = gSystem->BaseName(fFilename.Data());
+   const char *tmpfile = gSystem->PrependPathName(gSystem->TempDirectory(), temp);
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gSystem->CompileMacro(tmpfile);
    gSystem->Unlink(tmpfile);

@@ -1492,8 +1492,8 @@ std::string findFileInPath(std::string const &file, std::list<std::string> const
 {
    // Check list of additional paths
    for (std::string const &diter : dirList) {
-
-      const char *cpath = gSystem->PrependPathName(diter.c_str(), TString(file.c_str()));
+      TString temp = file.c_str();
+      const char *cpath = gSystem->PrependPathName(diter.c_str(), temp);
       std::string path = cpath;
       if (!gSystem->AccessPathName(path.c_str())) {
          // found file

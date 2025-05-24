@@ -1280,11 +1280,13 @@ void TApplicationServer::ExecLogon()
    TString name = ".rootlogon.C";
    TString sname = "system";
    sname += name;
-   const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), TString(sname));
+   TString temp_sname = sname;
+   TString temp_name = name;
+   const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), temp_sname);
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
    }
-   s = gSystem->PrependPathName(gSystem->HomeDirectory(), TString(name));
+   s = gSystem->PrependPathName(gSystem->HomeDirectory(), temp_name);
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
    }

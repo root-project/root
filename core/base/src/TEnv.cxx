@@ -419,10 +419,12 @@ TEnv::TEnv(const char *name)
       ReadFile(s, kEnvGlobal);
       if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
          if (const auto rootrcPath = gSystem->Getenv("ROOTENV_USER_PATH")) {
-            const char *s1 = gSystem->PrependPathName(rootrcPath, TString(name));
+            TString temp(name);
+            const char *s1 = gSystem->PrependPathName(rootrcPath, temp);
             ReadFile(s1, kEnvUser);
          } else {
-            const char *s1 = gSystem->PrependPathName(gSystem->HomeDirectory(), TString(name));
+            TString temp(name);
+            const char *s1 = gSystem->PrependPathName(gSystem->HomeDirectory(), temp);
             ReadFile(s1, kEnvUser);
          }
          if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {

@@ -915,12 +915,12 @@ TGuiBldDragManager::TGuiBldDragManager() : TVirtualDragManager() ,
    CreateListOfDialogs();
 
    TString tmpfile = gSystem->TempDirectory();
-   fPasteFileName = gSystem->PrependPathName(tmpfile.Data(),
-               TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid()));
+   fPasteFileName = TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid());
+   gSystem->PrependPathName(tmpfile.Data(), fPasteFileName);
    
 
-   fTmpBuildFile = gSystem->PrependPathName(tmpfile.Data(),
-               TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid()));
+   fTmpBuildFile = TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid());
+   gSystem->PrependPathName(tmpfile.Data(), fTmpBuildFile);
 
    fName = "Gui Builder Drag Manager";
    SetWindowName(fName.Data());
@@ -3265,8 +3265,8 @@ void TGuiBldDragManager::CloneEditable()
    }
 
    TString tmpfile = gSystem->TempDirectory();
-   const char *s = gSystem->PrependPathName(tmpfile.Data(), TString::Format("tmp%d.C",
-                                     gRandom->Integer(100)));
+   TString temp = TString::Format("tmp%d.C", gRandom->Integer(100));
+   const char *s = gSystem->PrependPathName(tmpfile.Data(), temp);
    Save(s);
    gROOT->Macro(s);
    gSystem->Unlink(s);

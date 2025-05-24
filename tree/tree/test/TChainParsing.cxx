@@ -22,7 +22,10 @@ void EXPECT_VEC_EQ(const std::vector<std::string> &v1, const std::vector<std::st
 
 std::string ConcatUnixFileName(const char *dir, const char *name)
 {
-   std::unique_ptr<char[]> fileName{gSystem->PrependPathName(dir, TString(name))};
+   TString tempName(name);
+   const char* fullPath = gSystem->PrependPathName(dir, tempName);
+   std::unique_ptr<char[]> fileName{new char[strlen(fullPath) + 1]};
+   strcpy(fileName.get(), fullPath);
    return gSystem->UnixPathName(fileName.get());
 }
 

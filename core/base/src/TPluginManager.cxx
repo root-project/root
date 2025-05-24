@@ -542,7 +542,8 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
                const char *f1;
                while ((f1 = gSystem->GetDirEntry(dirp))) {
                   TString f = f1;
-                  const char *p1 = gSystem->PrependPathName(d, TString(f));
+                  TString temp = f1;
+                  const char *p1 = gSystem->PrependPathName(d, temp);
                   LoadHandlerMacros(p1);
                   fBasesLoaded->Add(new TObjString(f));
                }
@@ -685,7 +686,8 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
          base = h->fBase;
       } else
          idx += 10;
-      TString sdd = gSystem->PrependPathName(d, TString(h->fBase));
+      TString temp = h->fBase;
+      TString sdd = gSystem->PrependPathName(d, temp);
       sdd.ReplaceAll("::", "@@");
       if (gSystem->AccessPathName(sdd, kWritePermission)) {
          if (gSystem->MakeDirectory(sdd) < 0) {

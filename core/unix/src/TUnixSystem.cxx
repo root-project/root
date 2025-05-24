@@ -1521,7 +1521,7 @@ const char *TUnixSystem::TempDirectory() const
 
 FILE *TUnixSystem::TempFileName(TString &base, const char *dir, const char *suffix)
 {
-   base = PrependPathName(dir ? dir : TempDirectory(), base);
+   PrependPathName(dir ? dir : TempDirectory(), base);
    base += "XXXXXX";
    const bool hasSuffix = suffix && *suffix;
    if (hasSuffix)

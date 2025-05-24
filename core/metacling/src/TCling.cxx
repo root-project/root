@@ -5729,13 +5729,15 @@ void TCling::InitRootmapFile(const char *name)
 
    TString sname = "system";
    sname += name;
-   const char *s1 = gSystem->PrependPathName(TROOT::GetEtcDir(), TString(sname));
+   TString temp_sname = sname;
+   const char *s1 = gSystem->PrependPathName(TROOT::GetEtcDir(), temp_sname);
 
    Int_t ret = ReadRootmapFile(s1);
    if (ret == -3) // old format
       fMapfile->ReadFile(s1, kEnvGlobal);
    if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
-      const char *s2 = gSystem->PrependPathName(gSystem->HomeDirectory(), TString(name));
+      TString temp_name = name;
+      const char *s2 = gSystem->PrependPathName(gSystem->HomeDirectory(), temp_name);
       ret = ReadRootmapFile(s2);
       if (ret == -3) // old format
          fMapfile->ReadFile(s2, kEnvUser);
