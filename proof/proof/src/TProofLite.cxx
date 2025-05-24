@@ -409,7 +409,8 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
    if (fgWrksMax == -2) {
       // Find the max number of workers, if any
       TString sysname = "system.rootrc";
-      const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), TString(sysname));
+      TString temp_sysname = sysname;
+      const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), temp_sysname);
       TEnv sysenv(0);
       sysenv.ReadFile(s, kEnvGlobal);
       fgWrksMax = sysenv.GetValue("ProofLite.MaxWorkers", -1);

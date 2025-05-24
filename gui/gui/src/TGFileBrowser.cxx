@@ -1094,7 +1094,7 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
    TString dirname = itm->GetText();
 
    while ((parent=itm->GetParent())) {
-      dirname = gSystem->PrependPathName(parent->GetText(), dirname);
+      gSystem->PrependPathName(parent->GetText(), dirname);
       itm = parent;
    }
    gSystem->ExpandPathName(dirname);

@@ -432,6 +432,7 @@ Bool_t TGFileDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
    void *p = 0;
    TString txt;
    TString sdir = gSystem->WorkingDirectory();
+   TString temp_string = fTbfname->GetString();
 
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
@@ -465,9 +466,10 @@ Bool_t TGFileDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         // FIXME: once appropriate gSystem method exists, use SetFilename here
                         if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
                            fFileInfo->SetFilename(fTbfname->GetString());
-                        else
-                           fFileInfo->fFilename = strdup(gSystem->PrependPathName(fFc->GetDirectory(),
-                                                                          TString(fTbfname->GetString())));
+                        else {
+                           TString temp = fTbfname->GetString();
+                           fFileInfo->fFilename = strdup(gSystem->PrependPathName(fFc->GetDirectory(), temp));
+                        }
                         pExpandUnixPathName(*fFileInfo);
                      }
                      if (fCheckB && (fCheckB->GetState() == kButtonDown))
@@ -611,8 +613,8 @@ Bool_t TGFileDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                            fFileInfo->fFileNamesList = new TList();
                         }
                         while ((el = (TObjString *) next())) {
-                           const char *s = gSystem->PrependPathName(fFc->GetDirectory(),
-                                                             TString(el->GetString()));
+                           TString temp = el->GetString();
+                           const char *s = gSystem->PrependPathName(fFc->GetDirectory(), temp);
                            tmpString += "\"" + el->GetString() + "\" ";
                            fFileInfo->fFileNamesList->Add(new TObjString(s));
                         }
@@ -660,9 +662,10 @@ Bool_t TGFileDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         // FIXME: once appropriate gSystem method exists, use SetFilename here
                         if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
                            fFileInfo->SetFilename(fTbfname->GetString());
-                        else
-                           fFileInfo->fFilename = strdup(gSystem->PrependPathName(fFc->GetDirectory(),
-                                                                          TString(fTbfname->GetString())));
+                        else {
+                           TString temp = fTbfname->GetString();
+                           fFileInfo->fFilename = strdup(gSystem->PrependPathName(fFc->GetDirectory(), temp));
+                        }
                         pExpandUnixPathName(*fFileInfo);
                         if (fCheckB && (fCheckB->GetState() == kButtonDown))
                            fFileInfo->fOverwrite = kTRUE;
@@ -722,8 +725,8 @@ Bool_t TGFileDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                }
                fFileInfo->SetFilename(nullptr);
                // FIXME: once appropriate gSystem method exists, use SetFilename here
-               fFileInfo->fFilename = strdup(gSystem->PrependPathName(fFc->GetDirectory(),
-                                                              TString(fTbfname->GetString())));
+               temp_string = fTbfname->GetString();
+               fFileInfo->fFilename = strdup(gSystem->PrependPathName(fFc->GetDirectory(), temp_string));
                pExpandUnixPathName(*fFileInfo);
                if (fCheckB && (fCheckB->GetState() == kButtonDown))
                   fFileInfo->fOverwrite = kTRUE;

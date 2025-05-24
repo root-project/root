@@ -105,7 +105,8 @@ void TSystemFile::Copy(const char *to)
 
    if (IsDirectory(to)) {
       if (name.EndsWith("/")) name.Chop();
-      name = gSystem->PrependPathName(name, TString(fName));
+      TString temp = fName;
+      name = gSystem->PrependPathName(name, temp);
    }
 
    Int_t status = gSystem->CopyFile(fName, name, kFALSE);
@@ -131,7 +132,8 @@ void TSystemFile::Move(const char *to)
 
    if (IsDirectory(to)) {
       if (name.EndsWith("/")) name.Chop();
-      name = gSystem->PrependPathName(name, TString(fName));
+      TString temp = fName;
+      name = gSystem->PrependPathName(name, temp);
    }
    Int_t status = gSystem->CopyFile(fName, name, kFALSE);
 
