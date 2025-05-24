@@ -129,7 +129,7 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
          int n;
          Double32_t arr[64];
          t->SetBranchAddress("n", &n);
-         t->SetBranchAddress(name, &arr);
+         t->SetBranchAddress(name, arr);
          for (Long64_t i = 0; i < nEntries; ++i) {
             t->GetEntry(i);
             EXPECT_EQ(n, i + 1);
