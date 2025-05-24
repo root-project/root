@@ -406,10 +406,9 @@ foreach(opt )
   endif()
 endforeach()
 
-
-foreach(opt minuit2_omp minuit2_mpi)
+foreach(opt minuit2_mpi)
   if(${opt})
-      message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with OpenMP or MPI support, it is better to build Minuit2 as a standalone library.")
+      message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with MPI support, it is better to build Minuit2 as a standalone library.")
   endif()
 endforeach()
 

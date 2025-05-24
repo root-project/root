@@ -1,7 +1,7 @@
 builtin_gtest=ON
 builtin_nlohmannjson=ON
 builtin_tbb=ON
-builtin_vdt=On
+builtin_vdt=ON
+ccache=ON
 fortran=OFF
-tmva-sofie=On
-ccache=On
+tmva-sofie=ON

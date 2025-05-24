@@ -4,6 +4,10 @@
 * The `RooStats::HLFactory` class that was deprecated in ROOT 6.36 is now removed. It provided little advantage over using the RooWorkspace directly or any of the other higher-level frameworks that exist in the RooFit ecosystem.
 * The build options `mysql`, `odbc` and `pgsql`, that were deprecated in ROOT 6.36, are now removed.
 
+## Minuit2
+
+* Behavior change: building ROOT using `minuit2_omp=ON` option no longer enables OpenMP parallelization by default. One has to call now additionaly GradientCalculator::DoParallelOMP().
+
 ## RooFit
 
 ### Error out when setting out-of-range variable value instead of silent clipping

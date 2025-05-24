@@ -28,6 +28,7 @@ builtin_zstd=ON
 ccache=ON
 cocoa=ON
 fortran=OFF
+minuit2_omp=OFF
 pythia8=OFF
 test_distrdf_dask=ON
 test_distrdf_pyspark=ON

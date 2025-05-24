@@ -63,6 +63,7 @@ macos_native=OFF
 mathmore=ON
 memory_termination=OFF
 minimal=OFF
+minuit2_omp=ON
 mpi=OFF
 opengl=ON
 pyroot=ON
