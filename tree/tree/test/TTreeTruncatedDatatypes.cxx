@@ -97,7 +97,7 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
       }
       // Fill tree
       for (Long64_t i = 0; i < nEntries; ++i) {
-         n = i + 1; // Setting this to n = i; causes issues when i = 0
+         n = i;
          for (int j = 0; j < 64; ++j) {
             arr[j] = i + 0.01 * j;
          }
@@ -130,19 +130,20 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
          Double32_t arr[64];
          t->SetBranchAddress("n", &n);
          t->SetBranchAddress(name, arr);
+         const auto tol = 0.001;
          for (Long64_t i = 0; i < nEntries; ++i) {
             t->GetEntry(i);
-            EXPECT_EQ(n, i + 1);
+            EXPECT_EQ(n, i);
             if (strcmp(name, "arr") == 0 || strcmp(name, "arr_def") == 0) {
                for (int j = 0; j < n; ++j) {
-                  EXPECT_NEAR(i + 0.01 * j, arr[j], 0.001);
+                  EXPECT_NEAR(i + 0.01 * j, arr[j], tol);
                }
             } else if (strcmp(name, "arr_fix") == 0 || strcmp(name, "arr_fix_def") == 0) {
                for (int j = 0; j < 64; ++j) {
-                  EXPECT_NEAR(i + 0.01 * j, arr[j], 0.001);
+                  EXPECT_NEAR(i + 0.01 * j, arr[j], tol);
                }
             } else if (strcmp(name, "single") == 0 || strcmp(name, "single_def") == 0) {
-               EXPECT_NEAR(i, arr[0], 0.001);
+               EXPECT_NEAR(i, arr[0], tol);
             }
          }
          t->ResetBranchAddresses();
