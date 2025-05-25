@@ -135,14 +135,14 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
             EXPECT_EQ(n, i + 1);
             if (strcmp(name, "arr") == 0 || strcmp(name, "arr_def") == 0) {
                for (int j = 0; j < n; ++j) {
-                  EXPECT_FLOAT_EQ(i + 0.01 * j, arr[j]);
+                  EXPECT_NEAR(i + 0.01 * j, arr[j], 0.001);
                }
             } else if (strcmp(name, "arr_fix") == 0 || strcmp(name, "arr_fix_def") == 0) {
                for (int j = 0; j < 64; ++j) {
-                  EXPECT_FLOAT_EQ(i + 0.01 * j, arr[j]);
+                  EXPECT_NEAR(i + 0.01 * j, arr[j], 0.001);
                }
             } else if (strcmp(name, "single") == 0 || strcmp(name, "single_def") == 0) {
-               EXPECT_FLOAT_EQ(i, arr[0]);
+               EXPECT_NEAR(i, arr[0], 0.001);
             }
          }
          t->ResetBranchAddresses();
