@@ -71,11 +71,11 @@ TEST(TTreeTruncatedDatatypes, LeafCounter)
       int n;
       Double32_t arr[64];
       t->Branch("n", &n);
-      t->Branch("arr", arr, "arr[n]/d[0,1000000,20]");
+      t->Branch("arr", arr, "arr[n]/d[0,100,32]");
       t->Branch("arr_def", arr, "arr_def[n]/d");
-      t->Branch("arr_fix", arr, "arr_fix[64]/d[0,1000000,20]");
+      t->Branch("arr_fix", arr, "arr_fix[64]/d[0,100,32]");
       t->Branch("arr_fix_def", arr, "arr_fix_def[64]/d");
-      t->Branch("single", arr, "single/d[0,1000000,20]");
+      t->Branch("single", arr, "single/d[0,100,32]");
       t->Branch("single_def", arr, "single_def/d");
       for (auto name : {"arr", "arr_def", "arr_fix", "arr_fix_def", "single", "single_def"}) {
          auto b = t->GetBranch(name);
