@@ -50,9 +50,6 @@ where Q denotes the charge of the \f$\rho\f$ meson.
 #include "TMath.h"
 #include "RooRealIntegral.h"
 
-using std::cout, std::endl;
-
-ClassImp(RooNonCPEigenDecay);
 
 #define Debug_RooNonCPEigenDecay 1
 
@@ -147,7 +144,7 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   _tag      ( "tag",      "CP state",           this, tag      ),
   _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
   _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
-  _wQ      ( "wQ", "mischarge", this, *(new RooRealVar( "wQ", "wQ", 0 )), true, false, true ),
+  _wQ      ( "wQ", "mischarge", this, std::make_unique<RooRealVar>( "wQ", "wQ", 0 ), true, false),
   _genB0Frac     ( 0 ),
   _genRhoPlusFrac( 0 ),
   _type     ( type )
@@ -356,8 +353,8 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
     _genB0Frac = b0Int1/sumInt1;
 
     if (Debug_RooNonCPEigenDecay == 1) {
-       cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : " << _genB0Frac
-            << ", tag dilution: " << (1 - 2 * _avgW) << endl;
+       std::cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : " << _genB0Frac
+            << ", tag dilution: " << (1 - 2 * _avgW) << std::endl;
     }
   }
 
@@ -373,7 +370,7 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
     _genRhoPlusFrac = b0Int2/sumInt2;
 
     if (Debug_RooNonCPEigenDecay == 1) {
-       cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: " << _genRhoPlusFrac << endl;
+       std::cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: " << _genRhoPlusFrac << std::endl;
     }
   }
 }

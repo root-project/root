@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.                   *
  ******************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//  Class representing a value coming from cling. Its main use case           //
-//  is to TCallFunc. When TCallFunc returns by-value, i.e. a temporary        //
-//  variable, its lifetime has to be extended. TClingValue provides a         //
-//  way to extend the temporaries lifetime and gives the user to control it.  //
-//                                                                            //
-//  The class is used to hide the implementation details of                   //
-//  cling::Value.                                                             //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+///                                                                            //
+///  Class representing a value coming from cling. Its main use case           //
+///  is to TCallFunc. When TCallFunc returns by-value, i.e. a temporary        //
+///  variable, its lifetime has to be extended. TClingValue provides a         //
+///  way to extend the temporaries lifetime and gives the user to control it.  //
+///                                                                            //
+///  The class is used to hide the implementation details of                   //
+///  cling::Value.                                                             //
+///                                                                            //
+/////////////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TClingValue
 #define ROOT_TClingValue

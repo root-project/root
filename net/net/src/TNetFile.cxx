@@ -740,7 +740,7 @@ zombie:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a NetFile object using an existing connection (socket s).
-/// Provided for use in TXNetFile.
+/// Provided for use in TNetXNGFile.
 /// See:
 ///    TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
 /// for details about the arguments.

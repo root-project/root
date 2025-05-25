@@ -37,6 +37,7 @@ protected:
 public:
    TF2();
    TF2(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Option_t * opt = nullptr);
+   TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2);
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0,Int_t ndim = 2);
    TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2);
 
@@ -123,6 +124,7 @@ public:
    void     SetRange(Double_t xmin, Double_t xmax) override;
    void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override; // *MENU*
    void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax) override;
+   void     SetSavedPoint(Int_t point, Double_t value) override;
 
    //Moments
    virtual Double_t Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon=0.000001);

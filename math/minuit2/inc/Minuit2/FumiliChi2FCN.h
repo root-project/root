@@ -49,10 +49,6 @@ section 5
 class FumiliChi2FCN : public FumiliFCNBase {
 
 public:
-   FumiliChi2FCN() {}
-
-   ~FumiliChi2FCN() override {}
-
    /**
 
    Sets the model function for the data (for example gaussian+linear for a peak)
@@ -87,7 +83,7 @@ public:
 
    */
 
-   virtual std::vector<double> Elements(const std::vector<double> &par) const = 0;
+   virtual std::vector<double> Elements(std::vector<double> const &par) const = 0;
 
    /**
 
@@ -129,7 +125,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::vector<double> const &par) const override
    {
 
       double chiSquare = 0.0;

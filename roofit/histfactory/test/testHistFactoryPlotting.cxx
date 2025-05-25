@@ -93,7 +93,6 @@ TEST(HistFactoryPlotting, ComponentSelection)
    // -- Define the measurement
    RooStats::HistFactory::Measurement meas("B2D0MuNu", "B2D0MuNu fit");
 
-   meas.SetExportOnly(true);    // Tells histfactory to not run the fit
    meas.SetPOI("num_histoSig"); // set to Bogus parma. of interest
    meas.SetLumi(1.0);
    meas.SetLumiRelErr(0.1);
@@ -120,7 +119,6 @@ TEST(HistFactoryPlotting, ComponentSelection)
 
    // add channel to measurements
    meas.AddChannel(B2D0MuNu);
-   meas.SetExportOnly(true);
    meas.CollectHistograms();
 
    // --------------------------------------

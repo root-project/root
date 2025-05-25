@@ -30,7 +30,7 @@ public:
   RooAddModel() ;
   RooAddModel(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, bool ownPdfList=false) ;
   RooAddModel(const RooAddModel& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooAddModel(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooAddModel(*this,newname) ; }
   RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const override ;
 
   double evaluate() const override ;

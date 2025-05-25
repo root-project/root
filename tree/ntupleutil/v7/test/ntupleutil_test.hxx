@@ -16,8 +16,8 @@
  */
 class FileRaii {
 private:
-   static constexpr bool kDebug = false; // if true, don't delete the file on destruction
    std::string fPath;
+   bool fPreserveFile = false;
 
 public:
    explicit FileRaii(const std::string &path) : fPath(path) {}
@@ -25,10 +25,14 @@ public:
    FileRaii &operator=(const FileRaii &) = delete;
    ~FileRaii()
    {
-      if (!kDebug)
+      if (!fPreserveFile)
          std::remove(fPath.c_str());
    }
    std::string GetPath() const { return fPath; }
+
+   // Useful if you want to keep a test file after the test has finished running
+   // for debugging purposes. Should only be used locally and never pushed.
+   void PreserveFile() { fPreserveFile = true; }
 };
 
 #endif // ROOT7_RNTupleUtil_Test

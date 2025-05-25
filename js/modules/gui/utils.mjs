@@ -1,8 +1,9 @@
 import { settings, internals, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
-import { BasePainter } from '../base/BasePainter.mjs';
+import { prSVG, prJSON, BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
 import { getRootColors } from '../base/colors.mjs';
+
 
 /** @summary Display progress message in the left bottom corner.
   * @desc Previous message will be overwritten
@@ -96,7 +97,7 @@ function tryOpenOpenUI(sources, args) {
    element.setAttribute('src', src + (args.ui5dbg ? 'resources/sap-ui-core-dbg.js' : 'resources/sap-ui-core.js')); // latest openui5 version
 
    element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
-
+   // element.setAttribute('data-sap-ui-language', args.openui5language ?? 'en');
    element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
    element.setAttribute('data-sap-ui-async', 'true');
@@ -114,7 +115,7 @@ function tryOpenOpenUI(sources, args) {
    };
 
    element.onload = function() {
-      console.log(`Load openui5 from ${src}`);
+      args.load_src = src;
    };
 
    document.head.appendChild(element);
@@ -142,7 +143,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.128.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -166,6 +167,8 @@ async function loadOpenui5(args) {
       args.rejectFunc = reject;
 
       globalThis.completeUI5Loading = function() {
+         console.log(`Load openui5 version ${globalThis.sap.ui.version} from ${args.load_src}`);
+
          globalThis.sap.ui.loader.config({
             paths: {
                jsroot: source_dir,
@@ -177,15 +180,17 @@ async function loadOpenui5(args) {
             args.resolveFunc(globalThis.sap);
             args.resolveFunc = null;
          }
+
+         delete globalThis.completeUI5Loading;
       };
 
       tryOpenOpenUI(openui5_sources, args);
    });
 }
 
-/* eslint-disable key-spacing */
-/* eslint-disable comma-spacing */
-/* eslint-disable object-curly-spacing */
+/* eslint-disable @stylistic/js/key-spacing */
+/* eslint-disable @stylistic/js/comma-spacing */
+/* eslint-disable @stylistic/js/object-curly-spacing */
 
 // some icons taken from http://uxrepo.com/
 const ToolbarIcons = {
@@ -217,6 +222,10 @@ const ToolbarIcons = {
             'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z '+
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
+
+   /* eslint-enable @stylistic/js/key-spacing */
+   /* eslint-enable @stylistic/js/comma-spacing */
+   /* eslint-enable @stylistic/js/object-curly-spacing */
 
    createSVG(group, btn, size, title, arg) {
       const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
@@ -315,8 +324,9 @@ function detectRightButton(event) {
 
 /** @summary Add move handlers for drawn element
   * @private */
-function addMoveHandler(painter, enabled = true) {
-   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
+function addMoveHandler(painter, enabled = true, hover_handler = false) {
+   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g)
+      return;
 
    if (painter.getPadPainter()?.isEditable() === false)
       enabled = false;
@@ -333,7 +343,8 @@ function addMoveHandler(painter, enabled = true) {
       return;
    }
 
-   if (painter.draw_g.property('assigned_move')) return;
+   if (painter.draw_g.property('assigned_move'))
+      return;
 
    const drag_move = d3_drag().subject(Object);
    let not_changed = true, move_disabled = false;
@@ -373,9 +384,14 @@ function addMoveHandler(painter, enabled = true) {
       }.bind(painter));
 
    painter.draw_g
-          .style('cursor', 'move')
+          .style('cursor', hover_handler ? 'pointer' : 'move')
           .property('assigned_move', true)
           .call(drag_move);
+
+   if (hover_handler) {
+      painter.draw_g.on('mouseenter', () => painter.draw_g.style('text-decoration', 'underline'))
+                    .on('mouseleave', () => painter.draw_g.style('text-decoration', null));
+   }
 }
 
 /** @summary Inject style
@@ -500,22 +516,30 @@ let _saveFileFunc = null;
 /** @summary Returns image file content as it should be stored on the disc
   * @desc Replaces all kind of base64 coding
   * @private */
-
 function getBinFileContent(content) {
-   const svg_prefix = 'data:image/svg+xml;charset=utf-8,';
+   if (content.indexOf(prSVG) === 0)
+      return decodeURIComponent(content.slice(prSVG.length));
 
-   if (content.indexOf(svg_prefix) === 0)
-      return decodeURIComponent(content.slice(svg_prefix.length));
+   if (content.indexOf(prJSON) === 0)
+      return decodeURIComponent(content.slice(prJSON.length));
 
-   if (content.indexOf('data:image/') === 0) {
+   if ((content.indexOf('data:image/') === 0) || (content.indexOf('data:application/pdf') === 0)) {
       const p = content.indexOf('base64,');
-      if (p > 0) {
-         const base64 = content.slice(p + 7);
-         return atob_func(base64);
-      }
+      if (p > 0)
+         return atob_func(content.slice(p + 7));
    }
 
    return content;
+}
+
+/** @summary Returns type of file content
+  * @private */
+function getContentType(content) {
+   if (content.indexOf('data:') !== 0)
+      return '';
+
+   const p = content.indexOf(';');
+   return (p > 0) ? content.slice(5, p) : '';
 }
 
 /** @summary Function store content as file with filename
@@ -528,18 +552,39 @@ async function saveFile(filename, content) {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
       });
-   } else if (typeof document !== 'undefined') {
-      const a = document.createElement('a');
-      a.download = filename;
-      a.href = content;
-      document.body.appendChild(a);
+   } else if (typeof document === 'undefined')
+      return false;
 
-      return new Promise(resolve => {
-         a.addEventListener('click', () => { a.parentNode.removeChild(a); resolve(true); });
-         a.click();
+   const a = document.createElement('a');
+   a.download = filename;
+   a.style.display = 'none';
+   let fileURL = '';
+   const contentType = getContentType(content);
+
+   if ((content.length > 1e6) && (contentType === 'application/pdf')) {
+      // large PDF files do not work in the browser with plain base64 coding
+      const bindata = getBinFileContent(content),
+            blob = new Blob([bindata], { type: contentType });
+      fileURL = URL.createObjectURL(blob);
+      a.href = fileURL;
+   } else
+      a.href = content;
+
+   document.body.appendChild(a);
+
+   return new Promise(resolve => {
+      a.addEventListener('click', () => {
+         if (fileURL) {
+            setTimeout(() => {
+               a.parentNode.removeChild(a);
+               URL.revokeObjectURL(fileURL);
+            }, 3000);
+         } else
+            a.parentNode.removeChild(a);
+         resolve(true);
       });
-   }
-   return false;
+      a.click();
+   });
 }
 
 /** @summary Function store content as file with filename
@@ -570,7 +615,7 @@ function getColorId(col) {
    return { id, col };
 }
 
-/** @summary Produce exec string for WebCanas to set color value
+/** @summary Produce exec string for WebCanvas to set color value
   * @desc Color can be id or string, but should belong to list of known colors
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
   * @private */
@@ -605,6 +650,8 @@ function changeObjectMember(painter, member, val, is_color) {
    if (obj && (obj[member] !== undefined))
       obj[member] = val;
 }
+
+Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,

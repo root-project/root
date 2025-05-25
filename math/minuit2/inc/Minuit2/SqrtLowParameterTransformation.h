@@ -28,12 +28,7 @@ class MnMachinePrecision;
  */
 
 class SqrtLowParameterTransformation /* : public ParameterTransformation */ {
-
 public:
-   SqrtLowParameterTransformation() {}
-
-   ~SqrtLowParameterTransformation() {}
-
    // transformation from internal to external
    long double Int2ext(long double Value, long double Lower) const;
 
@@ -43,7 +38,8 @@ public:
    // derivative of transformation from internal to external
    long double DInt2Ext(long double Value, long double Lower) const;
 
-private:
+   // derivative of transformation from external to internal
+   long double DExt2Int(long double Value, long double Lower) const;
 };
 
 } // namespace Minuit2

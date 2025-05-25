@@ -82,11 +82,11 @@ such as TPad::GetEvent, TPad::GetEventX, TPad::GetEventY to find
 which type of event and the X,Y position of the mouse.
 By default, the list of TExecs is executed. This can be disabled
 via the canvas menu "Option".
-See $ROOTSYS/tutorials/hist/exec2.C for an example.
+See $ROOTSYS/tutorials/hist/hist058_TExec_th2.C for an example.
 ~~~ {.cpp}
    Root > TFile f("hsimple.root");
    Root > hpxpy.Draw();
-   Root > c1.AddExec("ex2",".x exec2.C");
+   Root > c1.AddExec("ex2",".x hist058_TExec_th2.C");
 ~~~
 When moving the mouse in the canvas, a second canvas shows the
 projection along X of the bin corresponding to the Y position
@@ -167,14 +167,9 @@ void TExec::Paint(Option_t *)
 
 void TExec::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   if (gROOT->ClassSaved(TExec::Class()))
-      out<<"   ";
-   else
-      out<<"   TExec *";
+   SavePrimitiveConstructor(
+      out, Class(), "exec",
+      TString::Format("\"%s\", \"%s\"", GetName(), TString(GetTitle()).ReplaceSpecialCppChars().Data()));
 
-   out<<"exec = new TExec("<<quote<<GetName()<<quote<<", "
-      <<quote<<TString(GetTitle()).ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
-
-   out<<"   exec->Draw();"<<std::endl;
+   out << "   exec->Draw();\n";
 }

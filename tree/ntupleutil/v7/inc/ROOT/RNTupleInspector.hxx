@@ -27,17 +27,18 @@
 #include <iostream>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <regex>
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
-
 class RNTuple;
 
 namespace Internal {
 class RPageSource;
 } // namespace Internal
+
+namespace Experimental {
 
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
@@ -63,11 +64,11 @@ using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 
 auto file = TFile::Open("data.rntuple");
-auto rntuple = file->Get<RNTuple>("NTupleName");
-auto inspector = RNTupleInspector::Create(rntuple).Unwrap();
+auto rntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("NTupleName"));
+auto inspector = RNTupleInspector::Create(*rntuple);
 
 std::cout << "The compression factor is " << inspector->GetCompressionFactor()
-          << " using compression settings " << inspector->GetCompressionSettings()
+          << " using compression settings " << inspector->GetCompressionSettingsAsString()
           << std::endl;
 ~~~
 */
@@ -82,31 +83,31 @@ public:
    /// RColumnInspector that belongs to this field.
    class RColumnInspector {
    private:
-      const RColumnDescriptor &fColumnDescriptor;
+      const ROOT::RColumnDescriptor &fColumnDescriptor;
       const std::vector<std::uint64_t> fCompressedPageSizes = {};
       std::uint32_t fElementSize = 0;
       std::uint64_t fNElements = 0;
 
    public:
-      RColumnInspector(const RColumnDescriptor &colDesc, const std::vector<std::uint64_t> &compressedPageSizes,
+      RColumnInspector(const ROOT::RColumnDescriptor &colDesc, const std::vector<std::uint64_t> &compressedPageSizes,
                        std::uint32_t elemSize, std::uint64_t nElems)
          : fColumnDescriptor(colDesc),
            fCompressedPageSizes(compressedPageSizes),
            fElementSize(elemSize),
-           fNElements(nElems){};
+           fNElements(nElems) {};
       ~RColumnInspector() = default;
 
-      const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
+      const ROOT::RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
       const std::vector<std::uint64_t> &GetCompressedPageSizes() const { return fCompressedPageSizes; }
       std::uint64_t GetNPages() const { return fCompressedPageSizes.size(); }
       std::uint64_t GetCompressedSize() const
       {
-         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), 0);
+         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), static_cast<std::uint64_t>(0));
       }
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
-      EColumnType GetType() const { return fColumnDescriptor.GetModel().GetType(); }
+      ROOT::ENTupleColumnType GetType() const { return fColumnDescriptor.GetType(); }
    };
 
    /////////////////////////////////////////////////////////////////////////////
@@ -117,31 +118,31 @@ public:
    /// the RFieldDescriptor that belongs to this field.
    class RFieldTreeInspector {
    private:
-      const RFieldDescriptor &fRootFieldDescriptor;
+      const ROOT::RFieldDescriptor &fRootFieldDescriptor;
       std::uint64_t fCompressedSize = 0;
       std::uint64_t fUncompressedSize = 0;
 
    public:
-      RFieldTreeInspector(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
-         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
+      RFieldTreeInspector(const ROOT::RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
+         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize) {};
       ~RFieldTreeInspector() = default;
 
-      const RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
+      const ROOT::RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
       std::uint64_t GetCompressedSize() const { return fCompressedSize; }
       std::uint64_t GetUncompressedSize() const { return fUncompressedSize; }
    };
 
 private:
-   std::unique_ptr<Internal::RPageSource> fPageSource;
-   std::unique_ptr<RNTupleDescriptor> fDescriptor;
-   int fCompressionSettings = -1;
+   std::unique_ptr<ROOT::Internal::RPageSource> fPageSource;
+   ROOT::RNTupleDescriptor fDescriptor;
+   std::optional<std::uint32_t> fCompressionSettings; ///< The compression settings are unknown for an empty ntuple
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
    std::unordered_map<int, RColumnInspector> fColumnInfo;
    std::unordered_map<int, RFieldTreeInspector> fFieldTreeInfo;
 
-   RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
+   RNTupleInspector(std::unique_ptr<ROOT::Internal::RPageSource> pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Gather column-level and RNTuple-level information.
@@ -160,7 +161,7 @@ private:
    /// \return The RFieldTreeInspector for the provided field ID.
    ///
    /// This method is called when the RNTupleInspector is initially created.
-   RFieldTreeInspector CollectFieldTreeInfo(DescriptorId_t fieldId);
+   RFieldTreeInspector CollectFieldTreeInfo(ROOT::DescriptorId_t fieldId);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the columns that make up the given field, including its subfields.
@@ -168,14 +169,14 @@ private:
    /// \param [in] fieldId The ID of the field for which to collect the columns.
    ///
    /// \return A vector containing the IDs of all columns for the provided field ID.
-   std::vector<DescriptorId_t> GetColumnsByFieldId(DescriptorId_t fieldId) const;
+   std::vector<ROOT::DescriptorId_t> GetColumnsByFieldId(ROOT::DescriptorId_t fieldId) const;
 
 public:
    RNTupleInspector(const RNTupleInspector &other) = delete;
    RNTupleInspector &operator=(const RNTupleInspector &other) = delete;
    RNTupleInspector(RNTupleInspector &&other) = delete;
    RNTupleInspector &operator=(RNTupleInspector &&other) = delete;
-   ~RNTupleInspector() = default;
+   ~RNTupleInspector();
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTupleInspector.
@@ -187,7 +188,7 @@ public:
    /// \note When this factory method is called, all required static information is collected from the RNTuple's fields
    /// and underlying columns are collected at ones. This means that when any inconsistencies are encountered (e.g.
    /// inconsistent compression across clusters), it will throw an error here.
-   static std::unique_ptr<RNTupleInspector> Create(RNTuple *sourceNTuple);
+   static std::unique_ptr<RNTupleInspector> Create(const RNTuple &sourceNTuple);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTupleInspector.
@@ -201,18 +202,19 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the descriptor for the RNTuple being inspected.
    ///
-   /// \return A static copy of the RNTupleDescriptor belonging to the inspected RNTuple.
-   RNTupleDescriptor *GetDescriptor() const { return fDescriptor.get(); }
+   /// \return A static copy of the ROOT::RNTupleDescriptor belonging to the inspected RNTuple.
+   const ROOT::RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the compression settings of the RNTuple being inspected.
    ///
    /// \return The integer representation (\f$algorithm * 10 + level\f$, where \f$algorithm\f$ follows
    /// ROOT::RCompressionSetting::ELevel::EValues) of the compression settings used for the inspected RNTuple.
+   /// Empty for an empty ntuple.
    ///
    /// \note Here, we assume that the compression settings are consistent across all clusters and columns. If this is
    /// not the case, an exception will be thrown when RNTupleInspector::Create is called.
-   int GetCompressionSettings() const { return fCompressionSettings; }
+   std::optional<std::uint32_t> GetCompressionSettings() const { return fCompressionSettings; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a string describing compression settings of the RNTuple being inspected.
@@ -251,29 +253,29 @@ public:
    /// \param[in] physicalColumnId The physical ID of the column for which to get the information.
    ///
    /// \return The storage information for the provided column.
-   const RColumnInspector &GetColumnInspector(DescriptorId_t physicalColumnId) const;
+   const RColumnInspector &GetColumnInspector(ROOT::DescriptorId_t physicalColumnId) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of columns of a given type present in the RNTuple.
    ///
-   /// \param[in] colType The column type to count, as defined by ROOT::Experimental::EColumnType.
+   /// \param[in] colType The column type to count, as defined by ROOT::ENTupleColumnType.
    ///
    /// \return The number of columns present in the inspected RNTuple of the provided type.
-   size_t GetColumnCountByType(EColumnType colType) const;
+   size_t GetColumnCountByType(ROOT::ENTupleColumnType colType) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the IDs of all columns with the given type.
    ///
-   /// \param[in] colType The column type to collect, as defined by ROOT::Experimental::EColumnType.
+   /// \param[in] colType The column type to collect, as defined by ROOT::ENTupleColumnType.
    ///
    /// \return A vector containing the physical IDs of columns of the provided type.
-   const std::vector<DescriptorId_t> GetColumnsByType(EColumnType colType);
+   const std::vector<ROOT::DescriptorId_t> GetColumnsByType(ROOT::ENTupleColumnType colType);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all column types present in the RNTuple being inspected.
    ///
    /// \return A vector containing all column types present in the RNTuple.
-   const std::vector<EColumnType> GetColumnTypes();
+   const std::vector<ROOT::ENTupleColumnType> GetColumnTypes();
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Print storage information per column type.
@@ -346,14 +348,13 @@ public:
    /// \return A pointer to a `TH1D` containing the page size distribution.
    ///
    /// The x-axis will range from the smallest page size, to the largest (inclusive).
-   std::unique_ptr<TH1D> GetPageSizeDistribution(DescriptorId_t physicalColumnId, std::string histName = "",
+   std::unique_ptr<TH1D> GetPageSizeDistribution(ROOT::DescriptorId_t physicalColumnId, std::string histName = "",
                                                  std::string histTitle = "", size_t nBins = 64);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a histogram containing the size distribution of the compressed pages for all columns of a given type.
    ///
-   /// \param[in] colType The column type for which to get the size distribution, as defined by
-   /// ROOT::Experimental::EColumnType.
+   /// \param[in] colType The column type for which to get the size distribution, as defined by ROOT::ENTupleColumnType.
    /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
    /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
    /// \param[in] nBins The desired number of histogram bins.
@@ -361,7 +362,7 @@ public:
    /// \return A pointer to a `TH1D` containing the page size distribution.
    ///
    /// The x-axis will range from the smallest page size, to the largest (inclusive).
-   std::unique_ptr<TH1D> GetPageSizeDistribution(EColumnType colType, std::string histName = "",
+   std::unique_ptr<TH1D> GetPageSizeDistribution(ROOT::ENTupleColumnType colType, std::string histName = "",
                                                  std::string histTitle = "", size_t nBins = 64);
 
    /////////////////////////////////////////////////////////////////////////////
@@ -375,7 +376,7 @@ public:
    /// \return A pointer to a `TH1D` containing the (cumulative) page size distribution.
    ///
    /// The x-axis will range from the smallest page size, to the largest (inclusive).
-   std::unique_ptr<TH1D> GetPageSizeDistribution(std::initializer_list<DescriptorId_t> colIds,
+   std::unique_ptr<TH1D> GetPageSizeDistribution(std::initializer_list<ROOT::DescriptorId_t> colIds,
                                                  std::string histName = "", std::string histTitle = "",
                                                  size_t nBins = 64);
 
@@ -384,8 +385,8 @@ public:
    /// of types.
    ///
    /// \param[in] colTypes The column types for which to get the size distribution, as defined by
-   /// ROOT::Experimental::EColumnType. The default is an empty vector, which indicates that the distribution for *all*
-   /// physical columns will be returned.
+   /// ROOT::ENTupleColumnType. The default is an empty vector, which indicates that the distribution
+   /// for *all* physical columns will be returned.
    /// \param[in] histName The name of the histogram. An empty string means a default name will be used. The name of
    /// each histogram inside the `THStack` will be `histName + colType`.
    /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
@@ -402,15 +403,14 @@ public:
    ///
    /// // We want to show the page size distributions of columns with type `kSplitReal32` and `kSplitReal64`.
    /// auto hist = inspector->GetPageSizeDistribution(
-   ///     {ROOT::Experimental::EColumnType::kSplitReal32,
-   ///      ROOT::Experimental::EColumnType::kSplitReal64});
+   ///     {ROOT::ENTupleColumnType::kSplitReal32, ROOT::ENTupleColumnType::kSplitReal64});
    /// // The "PLC" option automatically sets the line color for each histogram in the `THStack`.
    /// // The "NOSTACK" option will draw the histograms on top of each other instead of stacked.
    /// hist->DrawClone("PLC NOSTACK");
    /// canvas->BuildLegend(0.7, 0.8, 0.89, 0.89);
    /// canvas->DrawClone();
    /// ~~~
-   std::unique_ptr<THStack> GetPageSizeDistribution(std::initializer_list<EColumnType> colTypes = {},
+   std::unique_ptr<THStack> GetPageSizeDistribution(std::initializer_list<ROOT::ENTupleColumnType> colTypes = {},
                                                     std::string histName = "", std::string histTitle = "",
                                                     size_t nBins = 64);
 
@@ -420,7 +420,7 @@ public:
    /// \param[in] fieldId The ID of the (sub)field for which to get the information.
    ///
    /// \return The storage information inspector for the provided (sub)field tree.
-   const RFieldTreeInspector &GetFieldTreeInspector(DescriptorId_t fieldId) const;
+   const RFieldTreeInspector &GetFieldTreeInspector(ROOT::DescriptorId_t fieldId) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a storage information inspector for a given (sub)field by name, including its subfields.
@@ -435,18 +435,18 @@ public:
    ///
    /// \param[in] typeNamePattern The type or class name to count. May contain regular expression patterns for grouping
    /// multiple kinds of types or classes.
-   /// \param[in] searchInSubFields If set to `false`, only top-level fields will be considered.
+   /// \param[in] searchInSubfields If set to `false`, only top-level fields will be considered.
    ///
    /// \return The number of fields that matches the provided type.
-   size_t GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubFields = true) const;
+   size_t GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubfields = true) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of fields of a given type or class present in the RNTuple.
    ///
-   /// \see GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubFields) const
-   size_t GetFieldCountByType(std::string_view typeNamePattern, bool searchInSubFields = true) const
+   /// \see GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubfields) const
+   size_t GetFieldCountByType(std::string_view typeNamePattern, bool searchInSubfields = true) const
    {
-      return GetFieldCountByType(std::regex{std::string(typeNamePattern)}, searchInSubFields);
+      return GetFieldCountByType(std::regex{std::string(typeNamePattern)}, searchInSubfields);
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -455,19 +455,20 @@ public:
    /// \param[in] fieldNamePattern The name of the field name to get. Because field names are unique by design,
    /// providing a single field name will return a vector containing just the ID of that field. However, regular
    /// expression patterns are supported in order to get the IDs of all fields whose name follow a certain structure.
-   /// \param[in] searchInSubFields If set to `false`, only top-level fields will be considered.
+   /// \param[in] searchInSubfields If set to `false`, only top-level fields will be considered.
    ///
    /// \return A vector containing the IDs of fields that match the provided name.
-   const std::vector<DescriptorId_t>
-   GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields = true) const;
+   const std::vector<ROOT::DescriptorId_t>
+   GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubfields = true) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the IDs of (sub-)fields whose name matches the given string.
    ///
-   /// \see GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields) const
-   const std::vector<DescriptorId_t> GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubFields = true)
+   /// \see GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubfields) const
+   const std::vector<ROOT::DescriptorId_t>
+   GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubfields = true)
    {
-      return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubFields);
+      return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubfields);
    }
 };
 } // namespace Experimental

@@ -19,7 +19,7 @@
 // Open("<stager>"), where <stager> contains a keyword allowing to load //
 // the relevant plug-in, e.g.                                           //
 //           TFileStager::Open("root://lxb6064.cern.ch")                //
-// will load TXNetFileStager and initialize it for the redirector at    //
+// will load TNetXNGFileStager and initialize it for the redirector at  //
 // lxb6046.cern.ch .                                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////

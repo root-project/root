@@ -48,37 +48,27 @@ public:
 
    FumiliFCNAdapter(const Function &f, unsigned int ndim, double up = 1.) : FumiliFCNBase(ndim), fFunc(f), fUp(up) {}
 
-   ~FumiliFCNAdapter() override {}
-
-   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
+   double operator()(std::vector<double> const &v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
    double Up() const override { return fUp; }
 
    void SetErrorDef(double up) override { fUp = up; }
 
-   // virtual std::vector<double> Gradient(const std::vector<double>&) const;
-
-   // forward interface
-   // virtual double operator()(int npar, double* params,int iflag = 4) const;
 
    /**
-       evaluate gradient hessian and function value needed by fumili
+       evaluate gradient hessian and function value needed by Fumili
      */
-   void EvaluateAll(const std::vector<double> &v) override;
+   void EvaluateAll(std::vector<double> const &v) override;
 
 private:
-   // data member
-
    const Function &fFunc;
    double fUp;
 };
 
 template <class Function>
-void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
+void FumiliFCNAdapter<Function>::EvaluateAll(std::vector<double> const &v)
 {
    MnPrint print("FumiliFCNAdapter");
-
-   // typedef FumiliFCNAdapter::Function Function;
 
    // evaluate all elements
    unsigned int npar = Dimension();
@@ -136,7 +126,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
    } else if (fFunc.Type() == Function::kPoissonLikelihood) {
       print.Debug("Poisson Likelihood FCN: Evaluate gradient and Hessian");
       // for Poisson need Hessian computed in DataElement since one needs the bin expected value ad bin observed value
-     for (unsigned int i = 0; i < ndata; ++i) {
+      for (unsigned int i = 0; i < ndata; ++i) {
          // calculate data element and gradient
          fFunc.DataElement(&v.front(), i, gf.data(), h.data());
          for (size_t j = 0; j < npar; ++j) {
@@ -146,7 +136,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
                hess[idx] += h[idx];
             }
          }
-     }
+      }
    } else {
       print.Error("Type of fit method is not supported, it must be chi2 or log-likelihood or Poisson Likelihood");
    }

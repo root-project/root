@@ -32,7 +32,7 @@ public:
   RooLinearVar() {} ;
   RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, const RooAbsReal& slope, const RooAbsReal& offset, const char *unit= "") ;
   RooLinearVar(const RooLinearVar& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooLinearVar(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooLinearVar(*this,newname); }
   ~RooLinearVar() override ;
 
   // Parameter value and error accessors

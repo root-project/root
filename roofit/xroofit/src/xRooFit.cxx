@@ -52,7 +52,6 @@
 #include "TGraphErrors.h"
 #include "TLegend.h"
 #include "TKey.h"
-#include "RooAbsTestStatistic.h"
 #include "TPRegexp.h"
 #include "RooStringVar.h"
 
@@ -92,6 +91,11 @@ RooCmdArg xRooFit::Tolerance(double val)
 RooCmdArg xRooFit::StrategySequence(const char *val)
 {
    return RooCmdArg("StrategySequence", 0, 0, 0, 0, val);
+}
+
+RooCmdArg xRooFit::MaxIterations(int val)
+{
+   return RooCmdArg("MaxIterations", val);
 }
 
 xRooNLLVar xRooFit::createNLL(const std::shared_ptr<RooAbsPdf> pdf, const std::shared_ptr<RooAbsData> data,
@@ -628,7 +632,7 @@ public:
             // doing a hesse step, estimate progress based on evaluations
             int nRequired = prevPars.size();
             if (nRequired > 1) {
-               nRequired *= (nRequired - 1) / 2;
+               nRequired *= nRequired;
                if (fState == "Hesse3") {
                   nRequired *= 4;
                }
@@ -938,6 +942,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
    }
 
    bool restore = !fitConfig.UpdateAfterFit();
+   bool minos = fitConfig.MinosErrors();
    std::string logs;
    if (!out) {
       int strategy = fitConfig.MinimizerOptions().Strategy();
@@ -972,7 +977,6 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       bool hesse = _minimizer.fitter()->Config().ParabErrors();
       _minimizer.fitter()->Config().SetParabErrors(
          false); // turn "off" so can run hesse as a separate step, appearing in status
-      bool minos = _minimizer.fitter()->Config().MinosErrors();
       _minimizer.fitter()->Config().SetMinosErrors(false);
       _minimizer.fitter()->Config().SetUpdateAfterFit(true); // note: seems to always take effect
 
@@ -1126,6 +1130,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       // Note that if strategy>=2 or (strategy=1 and Dcovar>0.05) then hesse will be forced to be run (see
       // VariadicMetricBuilder) So only in Strategy=0 can you skip hesse (even if SetParabErrors false).
 
+      int miniStrat = _minimizer.fitter()->Config().MinimizerOptions().Strategy();
       double dCovar = std::numeric_limits<double>::quiet_NaN();
       // if(auto _minuit2 = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer*>(_minimizer.fitter()->GetMinimizer());
       // _minuit2 && _minuit2->fMinimum) {
@@ -1133,9 +1138,8 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       // }
 
       // only do hesse if was a valid min and not full accurate cov matrix already (can happen if e.g. ran strat2)
-      if (hesse &&
-          (m_strategy(sIdx) == 'h' || ((strategy < 2 || _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() != 3) &&
-                                       _minimizer.fitter()->Result().IsValid()))) {
+      if (hesse && m_hessestrategy.Length() != 0 &&
+          (m_strategy(sIdx) == 'h' || (_minimizer.fitter()->Result().IsValid()))) {
 
          // Note: minima where the covariance was made posdef are deemed 'valid' ...
 
@@ -1171,6 +1175,19 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          }
          while (sIdx != -1) {
             hesseStrategy = int(m_hessestrategy(sIdx) - '0');
+
+            if (strategy == 2 && hesseStrategy == 2) {
+               // don't repeat hesse if strategy=2 and hesseStrategy=2, and the matrix was valid
+               if (_minimizer.fitter()->GetMinimizer()->CovMatrixStatus() == 3) {
+                  break;
+               }
+               if (sIdx >= m_hessestrategy.Length() - 1) {
+                  break; // run out of strategies to try, stop
+               }
+               sIdx++;
+               continue;
+            }
+
             _minimizer.fitter()->Config().MinimizerOptions().SetStrategy(hesseStrategy);
             // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianStepTolerance",0.1);
             // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianG2Tolerance",0.02);
@@ -1241,6 +1258,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          if (std::unique_ptr<RooAbsCollection> mpars(floatPars->selectByAttrib("minos", true)); !mpars->empty()) {
             if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
                fff->fState = "Minos";
+               fff->counter2 = 0;
             }
             auto _status = _minimizer.minos(*mpars);
             statusHistory.push_back(std::pair("Minos", _status));
@@ -1263,6 +1281,15 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                   // return from strat3)
             out->setStatus(2); // hesse invalid
          }
+      }
+
+      if(miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse && out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance()*1e-3 && out->status() != 3) {
+         // hesse may have updated edm by using a better strategy than used in the minimization
+         // so print a warning about this
+         std::cerr << "Warning: post-Hesse edm greater than allowed by tolerance. Consider increasing minimization strategy" << std::endl;
+         // Dec24: As this is a new warning, will not update status code for now, so edm will be large
+         // but in the future we should probably update the code to 3 so that users don't miss this warning.
+         // out->setStatus(3); // edm above max
       }
 
       out->setStatusHistory(statusHistory);
@@ -1371,18 +1398,18 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       if (_progress) {
          delete _nll;
       }
+   }
 
+   if(out && out->status() == 0 && minos) {
       // call minos if requested on any parameters
-      if (status == 0 && minos) {
-         for (auto label : {"xminos", "xMinos"}) {
-            std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib(label, true));
-            for (auto p : *pars) {
-               Info("minimize", "Computing xminos error for %s", p->GetName());
-               xRooFit::minos(nll, *out, p->GetName(), myFitConfig);
-            }
-            if (!pars->empty())
-               *floatPars = out->floatParsFinal(); // put values back to best fit
+      for (auto label : {"xminos", "xMinos"}) {
+         std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib(label, true));
+         for (auto p : *pars) {
+            Info("minimize", "Computing xminos error for %s", p->GetName());
+            xRooFit::minos(nll, *out, p->GetName(), myFitConfig);
          }
+         if (!pars->empty())
+            *floatPars = out->floatParsFinal(); // put values back to best fit
       }
    }
 

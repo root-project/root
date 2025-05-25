@@ -37,7 +37,6 @@ namespace RooStats {
 
    public:
 
-     ///     NeymanConstruction();
      NeymanConstruction(RooAbsData& data, ModelConfig& model);
 
      ~NeymanConstruction() override;
@@ -120,7 +119,7 @@ namespace RooStats {
       bool fCreateBelt;                ///< controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
-      ClassDefOverride(NeymanConstruction,1)   ///< Interface for tools setting limits (producing confidence intervals)
+      ClassDefOverride(NeymanConstruction,0)   ///< Interface for tools setting limits (producing confidence intervals)
    };
 }
 

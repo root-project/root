@@ -39,7 +39,7 @@ public:
    TBrowserImp(TBrowser *b = nullptr);
    TBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt = "");
    TBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt = "");
-   virtual ~TBrowserImp() = default;
+   virtual ~TBrowserImp();
 
    virtual void      Add(TObject *, const char *, Int_t) { }
    virtual void      AddCheckBox(TObject *, Bool_t = kFALSE) { }
@@ -55,6 +55,7 @@ public:
    virtual void      Show() { }
    virtual void      SetDrawOption(Option_t * = "") { }
    virtual Option_t *GetDrawOption() const { return nullptr; }
+   virtual Bool_t    IsWeb() const { return kFALSE; }
 
    virtual Longptr_t ExecPlugin(const char *, const char *, const char *, Int_t, Int_t) { return 0; }
    virtual void      SetStatusText(const char *, Int_t) { }

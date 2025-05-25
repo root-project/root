@@ -33,7 +33,7 @@ Begin_Macro
    gGeoManager->SetNsegments(50);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 */
@@ -118,7 +118,7 @@ void TGeoEltu::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoEltu::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoEltu::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t a = fRmin;
    Double_t b = fRmax;

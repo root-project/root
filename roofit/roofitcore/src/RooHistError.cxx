@@ -97,7 +97,7 @@ bool RooHistError::getPoissonIntervalCalc(Int_t n, double &mu1, double &mu2, dou
 {
   // sanity checks
   if(n < 0) {
-    oocoutE(nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << endl;
+    oocoutE(nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << std::endl;
     return false;
   }
 
@@ -129,7 +129,7 @@ bool RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
 {
   // sanity checks
   if(n < 0 || m < 0) {
-    oocoutE(nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
+    oocoutE(nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << std::endl;
     return false;
   }
 
@@ -192,7 +192,7 @@ bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 {
   // sanity checks
   if(n < 0 || m < 0) {
-    oocoutE(nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
+    oocoutE(nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << std::endl;
     return false;
   }
 
@@ -296,7 +296,7 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
     ok= lFinder.findRoot(lo,lo,lo+stepSize,alpha+beta);
     ok|= uFinder.findRoot(hi,hi-stepSize,hi,alpha);
   }
-  if(!ok) oocoutE(nullptr,Plotting) << "RooHistError::getInterval: failed to find root(s)" << endl;
+  if(!ok) oocoutE(nullptr,Plotting) << "RooHistError::getInterval: failed to find root(s)" << std::endl;
 
   return ok;
 }

@@ -1,0 +1,32 @@
+name: Diff CppInterOp against upstream
+on:
+  pull_request:
+    paths:
+      - 'interpreter/CppInterOp/**'
+
+jobs:
+  cppinterop-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ROOT
+        uses: actions/checkout@v4
+        with:
+          path: root
+      - name: Determine tag that CppInterOp in ROOT is based
+        id: determine-tag
+        run: |
+          tag_file=root/interpreter/CppInterOp/cppinterop-version.tag
+          echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
+          rm $tag_file
+      - name: Check out CppInterOp
+        uses: actions/checkout@v4
+        with:
+          repository: compiler-research/CppInterOp
+          ref: ${{ steps.determine-tag.outputs.tag }}
+          path: CppInterOp
+      - name: Drop directories that are not added to ROOT
+        working-directory: CppInterOp
+        run: |
+          rm -rf .git .github discord.svg
+      - name: Compare
+        run: diff -ur CppInterOp/ root/interpreter/CppInterOp/

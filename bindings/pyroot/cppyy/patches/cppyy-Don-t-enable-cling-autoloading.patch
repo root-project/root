@@ -1,6 +1,6 @@
-From 800deb0450dd692e6ef49ec76d6bc8ee83f29630 Mon Sep 17 00:00:00 2001
+From 435b1e67acbc9c7348874030c8ad8721c917cd87 Mon Sep 17 00:00:00 2001
 From: Jonas Rembser <jonas.rembser@cern.ch>
-Date: Tue, 12 Mar 2024 03:26:23 +0100
+Date: Tue, 17 Dec 2024 13:13:32 +0100
 Subject: [PATCH] [cppyy] Don't enable cling autoloading
 
 ---
@@ -8,10 +8,10 @@ Subject: [PATCH] [cppyy] Don't enable cling autoloading
  1 file changed, 5 deletions(-)
 
 diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
-index fdc5be8dc8..957443289d 100644
+index 47b0ff1aab..976afdb7da 100644
 --- a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
 +++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
-@@ -86,11 +86,6 @@ sys.modules['cppyy.gbl'] = gbl
+@@ -93,11 +93,6 @@ sys.modules['cppyy.gbl'] = gbl
  sys.modules['cppyy.gbl.std'] = gbl.std
  
  
@@ -21,8 +21,8 @@ index fdc5be8dc8..957443289d 100644
 -
 -
  #- external typemap ----------------------------------------------------------
- from . import _typemap
  _typemap.initialize(_backend)               # also creates (u)int8_t mapper
+ 
 -- 
-2.44.0
+2.47.0
 

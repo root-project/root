@@ -1696,7 +1696,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    fin.getline(buf,512);
    while (!TString(buf).BeginsWith("#WGT")) fin.getline(buf,512);
    fin.getline(buf,512);
-   ReadWeightsFromStream( fin );;
+   ReadWeightsFromStream( fin );
 
    // update transformation handler
    if (GetTransformationHandler().GetCallerName() == "") GetTransformationHandler().SetCallerName( GetName() );

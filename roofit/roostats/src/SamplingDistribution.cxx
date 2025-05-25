@@ -33,7 +33,6 @@ The class supports merging.
 #include <limits>
 using std::numeric_limits;
 
-ClassImp(RooStats::SamplingDistribution);
 
 using namespace RooStats;
 

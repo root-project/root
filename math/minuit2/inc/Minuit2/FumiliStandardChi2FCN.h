@@ -12,6 +12,9 @@
 
 #include "Minuit2/FumiliChi2FCN.h"
 #include "Minuit2/ParametricFunction.h"
+
+#include <ROOT/RSpan.hxx>
+
 #include <cassert>
 #include <vector>
 #include <cmath>
@@ -57,14 +60,14 @@ public:
 
    */
 
-   FumiliStandardChi2FCN(const ParametricFunction &modelFCN, const std::vector<double> &meas,
-                         const std::vector<double> &pos, const std::vector<double> &mvar)
+   FumiliStandardChi2FCN(const ParametricFunction &modelFCN, std::span<const double> meas,
+                         std::span<const double> pos, std::span<const double> mvar)
    { // this->fModelFCN = &modelFunction;
       this->SetModelFunction(modelFCN);
 
       assert(meas.size() == pos.size());
       assert(meas.size() == mvar.size());
-      fMeasurements = meas;
+      fMeasurements.assign(meas.begin(), meas.end());
       std::vector<double> x(1);
       unsigned int n = mvar.size();
       fPositions.reserve(n);
@@ -98,15 +101,15 @@ public:
 
    */
 
-   FumiliStandardChi2FCN(const ParametricFunction &modelFCN, const std::vector<double> &meas,
-                         const std::vector<std::vector<double>> &pos, const std::vector<double> &mvar)
+   FumiliStandardChi2FCN(const ParametricFunction &modelFCN, std::span<const double> meas,
+                         std::span<const std::vector<double>> pos, std::span<const double> mvar)
    { // this->fModelFCN = &modelFunction;
       this->SetModelFunction(modelFCN);
 
       assert(meas.size() == pos.size());
       assert(meas.size() == mvar.size());
-      fMeasurements = meas;
-      fPositions = pos;
+      fMeasurements.assign(meas.begin(), meas.end());
+      fPositions.assign(pos.begin(), pos.end());
       // correct for variance == 0
       unsigned int n = mvar.size();
       fInvErrors.resize(n);
@@ -118,8 +121,6 @@ public:
             fInvErrors[i] = 1.0 / std::sqrt(mvar[i]);
       }
    }
-
-   ~FumiliStandardChi2FCN() override {}
 
    /**
 
@@ -138,7 +139,7 @@ public:
 
    */
 
-   std::vector<double> Elements(const std::vector<double> &par) const override;
+   std::vector<double> Elements(std::vector<double> const &par) const override;
 
    /**
 
@@ -173,7 +174,7 @@ public:
 
    **/
 
-   void EvaluateAll(const std::vector<double> &par) override;
+   void EvaluateAll(std::vector<double> const &par) override;
 
 private:
    std::vector<double> fMeasurements;

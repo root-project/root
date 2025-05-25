@@ -15,14 +15,14 @@
 #include "RooFit/TestStatistics/LikelihoodGradientWrapper.h"
 #include "RooFit/TestStatistics/SharedOffset.h"
 
-#include "RooRandom.h"
-#include "RooWorkspace.h"
-#include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
-#include "RooHelpers.h"
-#include "RooMinimizer.h"
+#include "RooDataHist.h" // complete type in Binned test
 #include "RooFitResult.h"
 #include "RooGenericPdf.h"
+#include "RooHelpers.h"
+#include "RooMinimizer.h"
+#include "RooRandom.h"
+#include "RooWorkspace.h"
 #include "RooFit/TestStatistics/LikelihoodWrapper.h"
 #include "RooFit/TestStatistics/RooUnbinnedL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
@@ -63,9 +63,35 @@ ValAndError getValAndError(RooArgSet const &parsFinal, const char *name)
    return {var.getVal(), var.getError()};
 };
 
+std::vector<double> getParamVals(RooAbsMinimizerFcn &fcn)
+{
+   std::vector<double> values(fcn.getNDim());
+
+   for (std::size_t i = 0; i < values.size(); ++i) {
+      values[i] = fcn.floatableParam(i).getVal();
+   }
+
+   return values;
+}
+
+std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &nll, bool offsetting)
+{
+   RooMinimizer m0{nll};
+
+   m0.setVerbose(false);
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
+   m0.setOffsetting(offsetting);
+
+   m0.minimize("Minuit2", "migrad");
+
+   return std::unique_ptr<RooFitResult>{m0.save()};
+}
+
 } // namespace
 
-using RooFit::TestStatistics::LikelihoodWrapper;
+namespace RFMP = RooFit::MultiProcess;
+namespace RFTS = RooFit::TestStatistics;
 
 class Environment : public testing::Environment {
 public:
@@ -101,8 +127,6 @@ class LikelihoodGradientJobTest : public ::testing::TestWithParam<std::tuple<std
       RooRandom::randomGenerator()->SetSeed(seed);
    }
 
-   void TearDown() override { RooMinimizer::cleanup(); }
-
 protected:
    std::size_t NWorkers = 0;
    std::size_t seed = 0;
@@ -135,15 +159,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1D)
 
    // --------
 
-   RooMinimizer m0{*nll};
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setOffsetting(offsetting);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, offsetting)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mu0 = mu->getVal();
@@ -151,8 +167,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1D)
 
    values->assign(savedValues);
 
-   RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood",
-                                               std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   RFTS::RooRealL likelihood("likelihood", "likelihood", std::make_unique<RFTS::RooUnbinnedL>(pdf, data.get()));
 
    // Convert to RooRealL to enter into minimizer
    RooMinimizer::Config cfg1;
@@ -201,8 +216,7 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
 
    // --------
 
-   RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood",
-                                               std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   RFTS::RooRealL likelihood("likelihood", "likelihood", std::make_unique<RFTS::RooUnbinnedL>(pdf, data.get()));
    RooMinimizer::Config cfg;
    cfg.parallelize = NWorkers;
    RooMinimizer m1(likelihood, cfg);
@@ -240,19 +254,11 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
 
    // --------
 
-   RooMinimizer m0(*nll);
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setOffsetting(offsetting);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, offsetting)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
-   double mean0[N];
-   double std0[N];
+   std::vector<double> mean0(N);
+   std::vector<double> std0(N);
    for (unsigned ix = 0; ix < N; ++ix) {
       {
          std::ostringstream os;
@@ -272,8 +278,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
 
    // --------
 
-   RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood",
-                                               std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   RFTS::RooRealL likelihood("likelihood", "likelihood", std::make_unique<RFTS::RooUnbinnedL>(pdf, data.get()));
    RooMinimizer::Config cfg1;
    cfg1.parallelize = NWorkers;
    RooMinimizer m1(likelihood, cfg1);
@@ -287,8 +292,8 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
    std::unique_ptr<RooFitResult> m1result{m1.save()};
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
-   double mean1[N];
-   double std1[N];
+   std::vector<double> mean1(N);
+   std::vector<double> std1(N);
    for (unsigned ix = 0; ix < N; ++ix) {
       {
          std::ostringstream os;
@@ -392,12 +397,10 @@ TEST(SimBinnedConstrainedTestBasic, BasicParameters)
 
    // dummy offsets (normally they are shared with other objects):
    SharedOffset shared_offset;
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial,
-                                           RooFit::TestStatistics::NLLFactory{*pdf, *data}
-                                              .GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")})
-                                              .build(),
-                                           std::make_unique<RooFit::TestStatistics::WrapperCalculationCleanFlags>(),
-                                           shared_offset);
+   auto nll_ts = RFTS::LikelihoodWrapper::create(
+      RFTS::LikelihoodMode::serial,
+      RFTS::NLLFactory{*pdf, *data}.GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}).build(),
+      std::make_unique<RFTS::WrapperCalculationCleanFlags>(), shared_offset);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -416,9 +419,8 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
    // This is a simultaneous fit, so its likelihood has multiple components. In that case, splitting over
    // components is always preferable, since it is more precise, due to component offsets matching
    // the (-log) function values better.
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = 1;
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
-      99999; // just a high number, so every component is a task
+   RFMP::Config::LikelihoodJob::defaultNEventTasks = 1;
+   RFMP::Config::LikelihoodJob::defaultNComponentTasks = 99999; // just a high number, so every component is a task
 
    std::unique_ptr<RooWorkspace> wPtr = makeSimBinnedConstrainedWorkspace();
    auto &w = *wPtr;
@@ -428,7 +430,7 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
 
    // do a minimization, but now using GradMinimizer and its MP version
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
-                                                  GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset(true))};
+                                                  GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"))};
 
    // parameters
    std::size_t NWorkers = 2;
@@ -490,10 +492,8 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
    EXPECT_FLOAT_EQ(mu_sig_nominal.error, mu_sig_GradientJob.error);
 
    // reset static variables to automatic
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
-      RooFit::MultiProcess::Config::LikelihoodJob::automaticNEventTasks;
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
-      RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
+   RFMP::Config::LikelihoodJob::defaultNEventTasks = RFMP::Config::LikelihoodJob::automaticNEventTasks;
+   RFMP::Config::LikelihoodJob::defaultNComponentTasks = RFMP::Config::LikelihoodJob::automaticNComponentTasks;
 }
 
 INSTANTIATE_TEST_SUITE_P(LikelihoodGradientJob, SimBinnedConstrainedTest, testing::Values(false, true),
@@ -529,16 +529,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
 
    // --------
 
-   RooMinimizer m0{*nll};
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setVerbose(false);
-   m0.setOffsetting(offsetting);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, offsetting)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mu0 = mu->getVal();
@@ -546,8 +537,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
 
    values->assign(savedValues);
 
-   RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood",
-                                               std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+   RFTS::RooRealL likelihood("likelihood", "likelihood", std::make_unique<RFTS::RooUnbinnedL>(pdf, data.get()));
    RooMinimizer::Config cfg;
    cfg.parallelize = NWorkers;
    cfg.enableParallelDescent = true;
@@ -602,22 +592,16 @@ class LikelihoodGradientJobErrorTest
 
       // we want to split only over components so we can test component-offsets precisely
       // (event-offsets give more variation)
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
-         1; // just one events task (i.e. don't split over events)
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
+      RFMP::Config::LikelihoodJob::defaultNEventTasks = 1; // just one events task (i.e. don't split over events)
+      RFMP::Config::LikelihoodJob::defaultNComponentTasks =
          1000000; // assuming components < 1000000: each component = 1 separate task
    }
 
    void TearDown() override
    {
       // reset static variables to automatic
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
-         RooFit::MultiProcess::Config::LikelihoodJob::automaticNEventTasks;
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
-         RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
-
-      // cleanup to make sure JobManager is shut down after any test
-      RooMinimizer::cleanup();
+      RFMP::Config::LikelihoodJob::defaultNEventTasks = RFMP::Config::LikelihoodJob::automaticNEventTasks;
+      RFMP::Config::LikelihoodJob::defaultNComponentTasks = RFMP::Config::LikelihoodJob::automaticNComponentTasks;
    }
 
 protected:
@@ -654,16 +638,7 @@ TEST_P(LikelihoodGradientJobErrorTest, ErrorHandling)
    RooArgSet savedValues;
    values.snapshot(savedValues);
 
-   RooMinimizer m0{*nll};
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setVerbose(false);
-   //   m0.setPrintEvalErrors(200);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, false)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double m_0 = w.var("m")->getVal();
@@ -718,7 +693,7 @@ TEST_P(LikelihoodGradientJobErrorTest, FitSimpleLinear)
 
    RooArgSet normSet{x};
    ASSERT_FALSE(std::isnan(pdf.getVal(normSet)));
-   a1.setVal(-9.);
+   a1.setVal(-5.);
    ASSERT_TRUE(std::isnan(pdf.getVal(normSet)));
 
    RooMinimizer minim(*nll);
@@ -733,7 +708,7 @@ TEST_P(LikelihoodGradientJobErrorTest, FitSimpleLinear)
    // now with multiprocess
    std::unique_ptr<RooAbsReal> nll_mp(pdf.createNLL(*data, RooFit::ModularL(true)));
 
-   a1.setVal(-9.);
+   a1.setVal(-5.);
    a1.removeError();
    ASSERT_TRUE(std::isnan(pdf.getVal(normSet)));
 
@@ -784,22 +759,16 @@ class LikelihoodGradientJobBinnedErrorTest : public ::testing::TestWithParam<std
 
       // we want to split only over components so we can test component-offsets precisely
       // (event-offsets give more variation)
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
-         1; // just one events task (i.e. don't split over events)
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
+      RFMP::Config::LikelihoodJob::defaultNEventTasks = 1; // just one events task (i.e. don't split over events)
+      RFMP::Config::LikelihoodJob::defaultNComponentTasks =
          1000000; // assuming components < 1000000: each component = 1 separate task
    }
 
    void TearDown() override
    {
       // reset static variables to automatic
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
-         RooFit::MultiProcess::Config::LikelihoodJob::automaticNEventTasks;
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
-         RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
-
-      // cleanup to make sure JobManager is shut down after any test
-      RooMinimizer::cleanup();
+      RFMP::Config::LikelihoodJob::defaultNEventTasks = RFMP::Config::LikelihoodJob::automaticNEventTasks;
+      RFMP::Config::LikelihoodJob::defaultNComponentTasks = RFMP::Config::LikelihoodJob::automaticNComponentTasks;
    }
 
 protected:
@@ -869,18 +838,10 @@ TEST_P(LikelihoodGradientJobBinnedErrorTest, TriggerMuLEZero)
 
    // legacy RooFit fit
    std::unique_ptr<RooAbsReal> nll(w.pdf("model")->createNLL(h_data, RooFit::EvalBackend::Legacy()));
-   RooMinimizer m0{*nll};
 
    double nll0BeforeFit = nll->getVal();
 
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setVerbose(false);
-   //   m0.setPrintEvalErrors(200);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, false)};
    double minNll0 = m0result->minNll();
    double mu_sig0 = w.var("mu_sig")->getVal();
    double mu_bkg_A0 = w.var("mu_bkg_A")->getVal();
@@ -980,9 +941,8 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
    // set up minimizers
    RooMinimizer m_vanilla(*nll_vanilla);
    // we want to split only over components so we can test component-offsets
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
-      1; // just one events task (i.e. don't split over events)
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
+   RFMP::Config::LikelihoodJob::defaultNEventTasks = 1; // just one events task (i.e. don't split over events)
+   RFMP::Config::LikelihoodJob::defaultNComponentTasks =
       1000000; // assuming components < 1000000: each component = 1 separate task
    RooMinimizer::Config cfg;
    cfg.parallelize = 1;
@@ -991,25 +951,19 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
    RooMinimizer m_modularL(*nll_modularL, cfg);
 
    // now use these minimizers to build the corresponding external RooAbsMinimizerFcns
-   auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(nll_modularL.get());
-   RooFit::TestStatistics::MinuitFcnGrad modularL_fcn(
-      nll_real->getRooAbsL(), &m_modularL, m_modularL.fitter()->Config().ParamsSettings(),
-      cfg.enableParallelDescent ? RooFit::TestStatistics::LikelihoodMode::multiprocess
-                                : RooFit::TestStatistics::LikelihoodMode::serial,
-      RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   auto nll_real = dynamic_cast<RFTS::RooRealL *>(nll_modularL.get());
+   RFTS::MinuitFcnGrad modularL_fcn(nll_real->getRooAbsL(), &m_modularL, m_modularL.fitter()->Config().ParamsSettings(),
+                                    cfg.enableParallelDescent ? RFTS::LikelihoodMode::multiprocess
+                                                              : RFTS::LikelihoodMode::serial,
+                                    RFTS::LikelihoodGradientMode::multiprocess);
    RooMinimizerFcn vanilla_fcn(nll_vanilla.get(), &m_vanilla);
 
-   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()),
-             modularL_fcn(modularL_fcn.getParameterValues().data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn).data()), modularL_fcn(getParamVals(modularL_fcn).data()));
    // let's also check with absolutely certain same parameter values, both of them
-   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()),
-             modularL_fcn(vanilla_fcn.getParameterValues().data()));
-   EXPECT_EQ(vanilla_fcn(modularL_fcn.getParameterValues().data()),
-             modularL_fcn(modularL_fcn.getParameterValues().data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn).data()), modularL_fcn(getParamVals(vanilla_fcn).data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(modularL_fcn).data()), modularL_fcn(getParamVals(modularL_fcn).data()));
 
    // reset static variables to automatic
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
-      RooFit::MultiProcess::Config::LikelihoodJob::automaticNEventTasks;
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
-      RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
+   RFMP::Config::LikelihoodJob::defaultNEventTasks = RFMP::Config::LikelihoodJob::automaticNEventTasks;
+   RFMP::Config::LikelihoodJob::defaultNComponentTasks = RFMP::Config::LikelihoodJob::automaticNComponentTasks;
 }

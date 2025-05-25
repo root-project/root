@@ -6,6 +6,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/model/json/JSONModel',
                'sap/ui/table/Column',
                'sap/ui/table/TreeTable',
+               'sap/ui/table/library',
+               'sap/m/table/columnmenu/Menu',
+               'sap/m/table/columnmenu/ActionItem',
                'sap/ui/layout/HorizontalLayout',
                'sap/m/TabContainerItem',
                'sap/m/MessageToast',
@@ -15,12 +18,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/ProgressIndicator',
                'sap/m/Page',
                'sap/ui/core/mvc/XMLView',
+               'sap/ui/core/dnd/DropInfo',
                'sap/ui/core/Icon',
                'sap/m/Button',
-               'sap/m/ButtonType',
-               'sap/ui/core/ValueState',
+               'sap/m/library',
+               'sap/ui/core/library',
                'sap/m/Dialog',
-               'sap/m/DialogType',
                'sap/ui/codeeditor/CodeEditor',
                'sap/m/Image',
                'sap/tnt/ToolHeader',
@@ -36,6 +39,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            JSONModel,
            tableColumn,
            TreeTable,
+           table_lib,
+           ColumnMenu,
+           MenuActionItem,
            HorizontalLayout,
            TabContainerItem,
            MessageToast,
@@ -45,12 +51,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            mProgressIndicator,
            mPage,
            XMLView,
+           DropInfo,
            CoreIcon,
            Button,
-           ButtonType,
-           ValueState,
+           mLibrary,
+           uiCoreLibrary,
            Dialog,
-           DialogType,
            CodeEditor,
            Image,
            ToolHeader,
@@ -81,6 +87,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ReverseOrder: false,
             ShowHiddenFiles: false,
             AppendToCanvas: false,
+            HandleDoubleClick: true,
             DBLCLKRun: false,
             optTH1: '<dflt>',
             TH1: [
@@ -193,13 +200,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          };
 
          let t = this.getView().byId('treeTable');
+
+         t.setSelectionMode(this.model.isHandleDoubleClick() ? table_lib.SelectionMode.None : table_lib.SelectionMode.Single);
          t.setModel(this.model);
 
          this.model.assignTreeTable(t);
+         this.oMenu = new ColumnMenu();
+         this.getView().addDependent(this.oMenu);
+
          t.addColumn(new tableColumn({
             label: 'Name',
             autoResizable: true,
             visible: true,
+            headerMenu: this.oMenu.getId(),
             template: new HorizontalLayout({
                content: [
                          new CoreIcon({src:'{icon}', tooltip: '{className}' }),
@@ -207,60 +220,89 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                          ]
             })
          }));
-         t.addColumn(new tableColumn({
-            label: 'Size',
-            autoResizable: true,
-            visible: true,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{fsize}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'Time',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{mtime}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'Type',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{ftype}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'UID',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{fuid}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'GID',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{fgid}', wrapping: false }) ]
-            })
-         }));
-         t.addColumn(new tableColumn({
-            label: 'ClassName',
-            autoResizable: true,
-            visible: false,
-            template: new HorizontalLayout({
-               content: [ new mText({text:'{className}', wrapping: false }) ]
-            })
-         }));
+
+         this.columnNames   = ['Size',  'Time',  'Type',  'UID',  'GID',  'ClassName'];
+         this.columnFields  = ['fsize', 'mtime', 'ftype', 'fuid', 'fgid', 'className'];
+         this.columnVisible = [ true,    false,   false,   false,  false,  false];
+         for (let i = 0; i < this.columnNames.length; ++i) {
+            t.addColumn(new tableColumn({
+               label: this.columnNames[i],
+               autoResizable: true,
+               visible: this.columnVisible[i],
+               headerMenu: this.oMenu.getId(),
+               template: new HorizontalLayout({
+                  content: [ new mText({text:`{${this.columnFields[i]}}`, wrapping: false }) ]
+               })
+            }));
+         }
+
+         this.buildColumnsMenu();
+         // t.getColumns().forEach(column => column.setHeaderMenu(this.oMenu.getId()));
+
+         // ignore first resize
+         this._columnResized = -1;
 
          // catch re-rendering of the table to assign handlers
          t.addEventDelegate({
-            onAfterRendering() { this.assignRowHandlers(); }
+            onAfterRendering() {
+               this.assignRowHandlers();
+               if (this._columnResized > 0) {
+                  this._columnResized = 0;
+                  this.adjustToColumnsWidths(false);
+               }
+            }
          }, this);
+
+         t.attachEvent("columnResize", {}, evnt => {
+            this._columnResized++;
+         }, this);
+
+         this.byId("tabContainer").addDragDropConfig(new DropInfo({
+            drop: event => this.onDrop(event)
+         }));
       },
+
+      buildColumnsMenu() {
+         this.oMenu.removeAllItems();
+
+         for (let i = 0; i < this.columnNames.length; ++i)
+            this.oMenu.addItem(new MenuActionItem({
+               icon: this.columnVisible[i] ? "sap-icon://accept" : "sap-icon://hide",
+               label: this.columnNames[i],
+               press: () => this.pressColumnMenu(i)
+            }));
+         this.oMenu.addItem(new MenuActionItem({
+            icon: 'sap-icon://resize-horizontal',
+            label: 'Resize columns',
+            press: () => this.adjustToColumnsWidths(true)
+         }));
+      },
+
+      pressColumnMenu(indx) {
+         this.columnVisible[indx] = !this.columnVisible[indx];
+
+         const t = this.getView().byId('treeTable');
+         t.getColumns()[indx+1].setVisible(this.columnVisible[indx]);
+
+         this.oMenu.close();
+         this.buildColumnsMenu();
+      },
+
+      adjustToColumnsWidths(auto_resize) {
+         if (auto_resize)
+            this.oMenu.close();
+         let fullsz = 4;
+         const t = this.getView().byId('treeTable');
+         t.getColumns().forEach(col => {
+            if (col.getVisible()) {
+               if (auto_resize)
+                  col.autoResize();
+               fullsz += 4 + col.$().width();
+            }
+         });
+         this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth(fullsz + 'px');
+      },
+
 
       /* =========================================== */
       /* =============== Image Viewer ============== */
@@ -313,19 +355,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oTabContainer.addItem(item);
 
-         this.jsroot.connectWebWindow({
-            kind: this.websocket.kind,
-            href: this.websocket.getHRef(url),
-            user_args: { nobrowser: true }
-         }).then(handle => {
-            item._jsroot_conn = handle;
-            return XMLView.create({
-               viewName: "rootui5.tree.view.TreeViewer",
-               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-            });
-         }).then(oView => item.addContent(oView));
+         // with non empty url creates independent connection
+         const handle = this.websocket.createChannel(url);
+         handle.setUserArgs({ nobrowser: true });
+         item._jsroot_conn = handle; // keep to be able disconnect
 
-         return item;
+         return XMLView.create({
+            viewName: "rootui5.tree.view.TreeViewer",
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+         }).then(oView => {
+            item.addContent(oView);
+            return item;
+         });
       },
 
       /* =========================================== */
@@ -568,7 +609,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Invoke dialog with server side code */
       onSaveAsFile(tab) {
-
          const oModel = tab.getModel();
          FileDialogController.SaveAs({
             websocket: this.websocket,
@@ -623,16 +663,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Search TabContainerItem by key value */
       findTab(name, set_active) {
-         let oTabContainer = this.byId("tabContainer"),
-             items = oTabContainer.getItems();
-         for(let i = 0; i< items.length; i++)
+         const oTabContainer = this.byId("tabContainer"),
+               items = oTabContainer.getItems();
+         for(let i = 0; i < items.length; i++)
             if (items[i].getKey() === name) {
-               if (set_active) oTabContainer.setSelectedItem(items[i]);
+               if (set_active)
+                  oTabContainer.setSelectedItem(items[i]);
                return items[i];
             }
       },
 
-      /** @summary Retuns current selected tab, instance of TabContainerItem */
+      /** @summary Returns current selected tab, instance of TabContainerItem */
       getSelectedTab() {
          let oTabContainer = this.byId("tabContainer");
          let items = oTabContainer.getItems();
@@ -641,7 +682,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return items[i];
       },
 
-      /** @summary Retuns code editor from the tab */
+      /** @summary Returns code editor from the tab */
       getCodeEditor(tab) {
          let items = tab ? tab.getContent() : [];
          for (let n = 0; n < items.length; ++n)
@@ -733,6 +774,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onSettingsPress() {
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
+         this._oSettingsModel.setProperty("/HandleDoubleClick", this.model.isHandleDoubleClick());
          this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
@@ -759,14 +801,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       handleSeetingsConfirm() {
          let append = this._oSettingsModel.getProperty("/AppendToCanvas"),
+             handledbl = this._oSettingsModel.getProperty("/HandleDoubleClick"),
              lastcycle = this._oSettingsModel.getProperty("/OnlyLastCycle"),
              hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles"),
              sort = this._oSettingsModel.getProperty("/SortMethod"),
              reverse = this._oSettingsModel.getProperty("/ReverseOrder"),
-             changed = false;
+             changed = false, changed_dblclick = false;
 
          if (append != this.model.isAppendToCanvas())
             this.model.setAppendToCanvas(append);
+
+         if (handledbl != this.model.isHandleDoubleClick()) {
+            this.model.setHandleDoubleClick(handledbl);
+            changed_dblclick = true;
+         }
 
          if (lastcycle != (this.model.getOnlyLastCycle() > 0)) {
             changed = true;
@@ -792,6 +840,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (optmsg != this.lastOptMessage) {
             this.lastOptMessage = optmsg;
             this.websocket.send(optmsg);
+         }
+
+         if (changed_dblclick) {
+            this.assignRowHandlers();
+            this.getView().byId('treeTable').setSelectionMode(this.model.isHandleDoubleClick() ? table_lib.SelectionMode.None : table_lib.SelectionMode.Single);
          }
 
          if (changed)
@@ -887,9 +940,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
-      doCloseTabItem(item) {
+      doCloseTabItem(item, skip_send) {
          let oTabContainer = this.byId("tabContainer");
-         if (item.getKey())
+         if (item.getKey() && !skip_send)
             this.websocket.send("CLOSE_TAB:" + item.getKey());
          // force connection to close
          item._jsroot_conn?.close(true);
@@ -994,6 +1047,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onExpandMaster() {
+         // when button pressed - remove exact width value to let rule it via the style
+         this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth('');
          const master = this.getView().byId('masterPage').getParent();
          master.toggleStyleClass('masterExpanded');
          const expanded = master.hasStyleClass('masterExpanded');
@@ -1007,18 +1062,53 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Assign the "double click" event handler to each row */
       assignRowHandlers() {
-         let rows = this.byId("treeTable").getRows();
+         const rows = this.byId("treeTable").getRows(),
+               on = this.model.isHandleDoubleClick();
          for (let k = 0; k < rows.length; ++k) {
-            rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
+            rows[k].$().dblclick(on ? this.onRowDblClick.bind(this, rows[k]) : null)
+                       .css('user-select', 'none');
          }
       },
 
-      /** @summary Double-click event handler */
-      onRowDblClick(row) {
-         let ctxt = row.getBindingContext(),
-             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+      onCellClick(oEvent) {
+         if (!this.model.isHandleDoubleClick())
+            this.onRowDblClick(null, oEvent.getParameter('rowBindingContext'));
+      },
 
-         if (!prop || !prop.path) return;
+      onCellContextMenu(oEvent) {
+         oEvent.preventDefault();
+      },
+
+      onDragStart(oEvent) {
+         const oDraggedRow = oEvent.getParameter("target"),
+               oDragSession = oEvent.getParameter("dragSession"),
+               ctxt = oDraggedRow.getBindingContext(),
+               prop = ctxt?.getProperty(ctxt?.getPath());
+
+         // do not support dragging of folders or elements without path
+         if (!prop?.isLeaf || !prop?.path)
+            return oEvent.preventDefault();
+
+         oDragSession.setComplexData("item_property", prop);
+
+         console.log('start dragging ', prop.path);
+      },
+
+      onDrop(oEvent) {
+         const oDragSession = oEvent.getParameter("dragSession"),
+               prop = oDragSession.getComplexData("item_property");
+
+         this.websocket.send("DROP:" + JSON.stringify(prop.path));
+
+         this.invokeWarning("Processing drop of: " + prop.name, 1000);
+      },
+
+      /** @summary Double-click event handler */
+      onRowDblClick(row, ctxt) {
+         if (row) ctxt = row.getBindingContext();
+         const prop = ctxt?.getProperty(ctxt?.getPath());
+         if (!prop?.path)
+            return;
 
          let opt = "<dflt>", exec = "";
 
@@ -1028,7 +1118,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this._oSettingsModel.getProperty("/DBLCLKRun"))
             exec = "exec";
 
-         let args = prop.path.slice(); // make copy of array
+         const args = prop.path.slice(); // make copy of array
          args.push(opt, exec);
 
          this.websocket.send("DBLCLK:" + JSON.stringify(args));
@@ -1049,12 +1139,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             content.addItem(this.oWarningProgress);
 
             this.oWarningDialog = new Dialog({
-               type: DialogType.Message,
+               type: mLibrary.DialogType.Message,
                title: "Warning",
-               state: ValueState.Warning,
+               state: uiCoreLibrary.ValueState.Warning,
                content,
                beginButton: new Button({
-                  type: ButtonType.Emphasized,
+                  type: mLibrary.ButtonType.Emphasized,
                   text: 'OK',
                   press: () => this.cancelWarning()
                })
@@ -1076,7 +1166,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             delete this.oWarningDialog;
             delete this.oWarningProgress;
          }
+      },
 
+      sendNewChannel(tabname, chid) {
+         this.websocket.send(`NEWCHANNEL:["${tabname}","${chid}"]`);
       },
 
       onWebsocketOpened(/*handle*/) {
@@ -1166,9 +1259,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          }
          case "NEWWIDGET": {  // widget created by server, need to establish connection
-            let arr = JSON.parse(msg);
-            this.createElement(arr[0], arr[1], arr[2], arr[3], arr[4]);
+            const arr = JSON.parse(msg);
+            const pr = this.createElement(arr[0], arr[1], arr[2], arr[3], arr[4]);
+
             this.findTab(arr[2], true); // set active
+            Promise.resolve(pr).then(tab => {
+               if (tab?._jsroot_conn?.isChannel())
+                  this.sendNewChannel(arr[2], tab._jsroot_conn.getChannelId());
+            });
             break;
          }
          case "SET_TITLE": {
@@ -1185,6 +1283,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "SELECT_WIDGET":
            this.findTab(msg, true); // set active
            break;
+         case "CLOSE_WIDGETS":
+            JSON.parse(msg).forEach(name => {
+               let tab = this.findTab(name);
+               if (tab) this.doCloseTabItem(tab, true);
+            });
+            break;
          case "BREPL":   // browser reply
             if (this.model) {
                let bresp = JSON.parse(msg);
@@ -1309,7 +1413,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this._oSettingsModel.setProperty('/optTH2', arr[k][2]|| '<dflt>');
                this._oSettingsModel.setProperty('/optTProfile', arr[k][3]|| '<dflt>');
             } else {
-               this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
+               const pr = this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
+               Promise.resolve(pr).then(tab => {
+                  if (tab?._jsroot_conn?.isChannel())
+                     this.sendNewChannel(arr[k][2], tab._jsroot_conn.getChannelId());
+               });
             }
          }
 
@@ -1351,25 +1459,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          oTabContainer.addItem(item);
-         // oTabContainer.setSelectedItem(item);
 
-         this.jsroot.connectWebWindow({
-            kind: this.websocket.kind,
-            href: this.websocket.getHRef(url),
-            user_args: { nobrowser: true }
-         }).then(handle => {
-            item._jsroot_conn = handle;
-            return XMLView.create({
-               viewName: "rootui5.geom.view.GeomViewer",
-               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-            });
-         }).then(oView => item.addContent(oView));
+         // with non empty url creates independent connection
+         const handle = this.websocket.createChannel(url);
+         handle.setUserArgs({ nobrowser: true });
+         item._jsroot_conn = handle; // keep to be able disconnect
 
-         return item;
+         return XMLView.create({
+            viewName: 'rootui5.geom.view.GeomViewer',
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+         }).then(oView => {
+            item.addContent(oView);
+            return item;
+
+         });
       },
 
       createCanvas(kind, url, name, title, tooltip) {
-         if (!url || !name || (kind != "tcanvas" && kind != "rcanvas")) return;
+         if (!name || (kind != "tcanvas" && kind != "rcanvas"))
+            return null;
 
          let item = new TabContainerItem({
             name: (kind == "rcanvas") ? "RCanvas" : "TCanvas",
@@ -1381,19 +1489,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.byId("tabContainer").addItem(item);
 
-         let conn = new this.jsroot.WebWindowHandle(this.websocket.kind);
-         conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
+         // with non empty url creates independent connection
+         const conn = this.websocket.createChannel(url);
+         item._jsroot_conn = conn; // keep to be able disconnect
 
-         item._jsroot_conn = conn;
-
-         import(this.jsroot.source_dir + 'modules/draw.mjs').then(draw => {
+         return import('jsroot/draw').then(draw => {
             if (kind == "rcanvas")
-               return import(this.jsroot.source_dir + 'modules/gpad/RCanvasPainter.mjs').then(h => {
+               return import('jsrootsys/modules/gpad/RCanvasPainter.mjs').then(h => {
                    draw.assignPadPainterDraw(h.RPadPainter);
                    return new h.RCanvasPainter(null, null);
                 });
 
-            return import(this.jsroot.source_dir + 'modules/gpad/TCanvasPainter.mjs').then(h => {
+            return import('jsrootsys/modules/gpad/TCanvasPainter.mjs').then(h => {
                draw.assignPadPainterDraw(h.TPadPainter);
                return new h.TCanvasPainter(null, null);
             });
@@ -1415,9 +1522,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             item.addContent(oView);
             let ctrl = oView.getController();
             ctrl.onCloseCanvasPress = this.doCloseTabItem.bind(this, item);
+            if (!item._jsroot_painter._window_handle)
+               return item;
+            // wait until painter is ready and fully configured to send message to server with newly created channel
+            return new Promise(resolveFunc => {
+               item._jsroot_painter._window_resolve = resolveFunc;
+            }).then(() => item);
          });
-
-         return item;
       }
 
    });

@@ -17,6 +17,7 @@
 #include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RResultHandle.hxx"    // for RResultHandle, RunGraphs
+#include "ROOT/RSlotStack.hxx"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif // R__USE_IMT
@@ -89,16 +90,14 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    TStopwatch sw;
    sw.Start();
    {
-      const auto effectiveVerbosity =
-         ROOT::Experimental::Internal::GetChannelOrManager(ROOT::Detail::RDF::RDFLogChannel())
-            .GetEffectiveVerbosity(ROOT::Experimental::RLogManager::Get());
-      if (effectiveVerbosity >= ROOT::Experimental::ELogLevel::kDebug + 10) {
+      const auto effectiveVerbosity = ROOT::Internal::GetChannelOrManager(ROOT::Detail::RDF::RDFLogChannel())
+                                         .GetEffectiveVerbosity(ROOT::RLogManager::Get());
+      if (effectiveVerbosity >= ROOT::ELogLevel::kDebug + 10) {
          // a very high verbosity was requested, let's not silence anything
          uniqueLoops[0].fLoopManager->Jit();
       } else {
          // silence logs from RLoopManager::Jit: RunGraphs does its own logging
-         auto silenceRDFLogs = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
-                                                                       ROOT::Experimental::ELogLevel::kError);
+         auto silenceRDFLogs = ROOT::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::ELogLevel::kError);
          uniqueLoops[0].fLoopManager->Jit();
       }
    }
@@ -109,9 +108,12 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
       << (sw.RealTime() > 1e-3 ? " in " + std::to_string(sw.RealTime()) + " seconds." : " in less than 1ms.");
 
    // Trigger the unique event loops
-   auto run = [](RResultHandle &h) {
-      if (h.fLoopManager)
+   auto slotStack = std::make_shared<ROOT::Internal::RSlotStack>(ROOT::GetThreadPoolSize());
+   auto run = [&slotStack](RResultHandle &h) {
+      if (h.fLoopManager) {
+         h.fLoopManager->SetSlotStack(slotStack);
          h.fLoopManager->Run(/*jit=*/false);
+      }
    };
 
    sw.Start();

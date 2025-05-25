@@ -27,7 +27,6 @@
 #include <RooRealVar.h>
 #include <RooFitImplHelpers.h>
 
-ClassImp(RooParamHistFunc);
 
 RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist &dh, const RooAbsArg &x,
                                    const RooParamHistFunc *paramSource, bool paramRelative)
@@ -75,21 +74,6 @@ double RooParamHistFunc::evaluate() const
   Int_t idx = ((RooDataHist&)_dh).getIndex(_x,true) ;
   double ret = (static_cast<RooAbsReal*>(_p.at(idx)))->getVal() ;
   return _relParam ? ret * getNominal(idx) : ret;
-}
-
-void RooParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string const &idx = _dh.calculateTreeIndexForCodeSquash(this, ctx, _x);
-   std::string arrName = ctx.buildArg(_p);
-   std::string result = arrName + "[" + idx + "]";
-   if (_relParam) {
-      // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
-      // be binned uniformly.
-      double binV = _dh.binVolume(0);
-      std::string weightArr = _dh.declWeightArrayForCodeSquash(ctx, false);
-      result += " * *(" + weightArr + " + " + idx + ") * " + std::to_string(binV);
-   }
-   ctx.addResult(this, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

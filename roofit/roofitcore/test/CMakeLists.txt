@@ -8,7 +8,7 @@
 # @author Patrick Bos, NL eScience Center, 2018
 
 ROOT_ADD_GTEST(testSimple testSimple.cxx LIBRARIES RooFitCore)
-ROOT_ADD_GTEST(testRooAddPdf testRooAddPdf.cxx LIBRARIES RooFitCore RooStats)
+ROOT_ADD_GTEST(testRooAddPdf testRooAddPdf.cxx LIBRARIES RooFitCore RooFit RooStats)
 ROOT_ADD_GTEST(testRooCacheManager testRooCacheManager.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooCategory testRooCategory.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testWorkspace testWorkspace.cxx LIBRARIES RooFitCore RooStats)
@@ -39,7 +39,7 @@ ROOT_ADD_GTEST(testRooRealVar testRooRealVar.cxx LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooRealVar_data1.root)
 
   ROOT_ADD_GTEST(testRooAbsReal testRooAbsReal.cxx
-    LIBRARIES RooFitCore
+    LIBRARIES RooFit RooFitCore
     COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooAbsReal_1.root ${CMAKE_CURRENT_SOURCE_DIR}/testRooAbsReal_2.root)
 if(NOT MSVC OR win_broken_tests)
   # Disabled on Windows because it causes the following error:
@@ -63,8 +63,10 @@ ROOT_ADD_GTEST(testLikelihoodSerial TestStatistics/testLikelihoodSerial.cxx LIBR
 ROOT_ADD_GTEST(testNaNPacker testNaNPacker.cxx LIBRARIES RooFitCore RooBatchCompute)
 ROOT_ADD_GTEST(testRooAbsL TestStatistics/testRooAbsL.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooCurve testRooCurve.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooExtendedBinding testRooExtendedBinding.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooHist testRooHist.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooHistPdf testRooHistPdf.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooMinimizer testRooMinimizer.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testRooRealL TestStatistics/testRooRealL.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooRombergIntegrator testRooRombergIntegrator.cxx LIBRARIES MathCore RooFitCore)
@@ -72,7 +74,7 @@ ROOT_ADD_GTEST(testRooSTLRefCountList testRooSTLRefCountList.cxx LIBRARIES RooFi
 ROOT_ADD_GTEST(testRooSimultaneous testRooSimultaneous.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooTruthModel testRooTruthModel.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testSumW2Error testSumW2Error.cxx LIBRARIES Gpad RooFitCore)
-ROOT_ADD_GTEST(testTestStatistics testTestStatistics.cxx LIBRARIES RooFitCore ROOT::TestSupport)
+ROOT_ADD_GTEST(testTestStatistics testTestStatistics.cxx LIBRARIES RooFitCore)
 if (roofit_multiprocess)
   ROOT_ADD_GTEST(testTestStatisticsPlot TestStatistics/testPlot.cxx LIBRARIES RooFitMultiProcess RooFitCore RooFit
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/TestStatistics/TestStatistics_ref.root)
@@ -97,6 +99,13 @@ if(roofit_legacy_eval_backend)
   ROOT_ADD_TEST(test-stressroofit-legacy COMMAND stressRooFit -b legacy FAILREGEX "FAILED|Error in")
 endif()
 ROOT_ADD_TEST(test-stressroofit-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in")
+ROOT_ADD_TEST(test-stressroofit-codegen_no_grad COMMAND stressRooFit -b codegen_no_grad FAILREGEX "FAILED|Error in")
+if(clad)
+  ROOT_ADD_TEST(test-stressroofit-codegen COMMAND stressRooFit -b codegen FAILREGEX "FAILED|Error in")
+endif()
 if(cuda)
-  ROOT_ADD_TEST(test-stressroofit-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
+  ROOT_ADD_TEST(test-stressroofit-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in" RESOURCE_LOCK GPU)
+endif()
+if(dataframe)
+  ROOT_ADD_GTEST(testActionHelpers testActionHelpers.cxx LIBRARIES ROOTDataFrame RooFitCore)
 endif()

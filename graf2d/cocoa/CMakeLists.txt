@@ -39,7 +39,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     "-framework Cocoa"
     "-framework OpenGL"
     ${FREETYPE_LIBRARIES}
-    RGlew
+    GLEW::GLEW
 )
 
 target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
@@ -48,11 +48,4 @@ target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
 target_compile_options(GCocoa PRIVATE -ObjC++ -Wno-deprecated-declarations)
 target_include_directories(GCocoa PRIVATE ${FREETYPE_INCLUDE_DIRS})
 
-if(opengl) # special case when cocoa is enabled but not opengl (i.e. gminimal=ON)
-  target_include_directories(GCocoa PRIVATE ${OPENGL_INCLUDE_DIR})
-else()
-  target_include_directories(GCocoa PRIVATE
-    ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
-  )
-endif(opengl)
-
+target_include_directories(GCocoa PRIVATE ${OPENGL_INCLUDE_DIR})

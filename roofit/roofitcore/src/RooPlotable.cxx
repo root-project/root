@@ -30,17 +30,16 @@ most useful implementation of RooPlotable are RooHist and RooCurve.
 
 using std::endl, std::ostream;
 
-ClassImp(RooPlotable);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print detailed information
 
 void RooPlotable::printMultiline(ostream& os, Int_t /*content*/, bool /*verbose*/, TString indent) const {
-  os << indent << "--- RooPlotable ---" << endl;
-  os << indent << "  y-axis min = " << getYAxisMin() << endl
-     << indent << "  y-axis max = " << getYAxisMax() << endl
-     << indent << "  y-axis label \"" << getYAxisLabel() << "\"" << endl;
+  os << indent << "--- RooPlotable ---" << std::endl;
+  os << indent << "  y-axis min = " << getYAxisMin() << std::endl
+     << indent << "  y-axis max = " << getYAxisMax() << std::endl
+     << indent << "  y-axis label \"" << getYAxisLabel() << "\"" << std::endl;
 }
 
 

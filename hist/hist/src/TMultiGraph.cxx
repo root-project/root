@@ -224,7 +224,7 @@ Automatic coloring according to the current palette is available as shown in the
 following example:
 
 Begin_Macro(source)
-../../../tutorials/graphs/multigraphpalettecolor.C
+../../../tutorials/visualisation/graphs/gr105_multigraphpalettecolor.C
 End_Macro
 
 \anchor MG01f
@@ -324,7 +324,7 @@ overlap. The following example shows how to make them all visible.
 
 
 Begin_Macro(source)
-../../../tutorials/graphs/multigraph.C
+../../../tutorials/visualisation/graphs/gr007_multigraph.C
 End_Macro
 
 \anchor MG03
@@ -362,13 +362,10 @@ Begin_Macro(source)
 End_Macro
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TMultiGraph default constructor.
 
-TMultiGraph::TMultiGraph(): TNamed()
-{
-}
+TMultiGraph::TMultiGraph() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -657,7 +654,7 @@ TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, 
 ///
 ///  ### Associated functions
 ///
-///  One or more object (typically a TF1*) can be added to the list
+///  One or more objects (typically a TF1*) can be added to the list
 ///  of functions (fFunctions) associated to each graph.
 ///  When TGraph::Fit is invoked, the fitted function is added to this list.
 ///  Given a graph gr, one can retrieve an associated function
@@ -1311,16 +1308,20 @@ void TMultiGraph::Paint(Option_t *choptin)
          fHistogram->SetMaximum(rwymax);
          fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
          fHistogram->SetDirectory(nullptr);
+         fHistogram->Sumw2(kFALSE);
          if (!xtitle.empty()) fHistogram->GetXaxis()->SetTitle(xtitle.c_str());
          if (!ytitle.empty()) fHistogram->GetYaxis()->SetTitle(ytitle.c_str());
          if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
          if (timedisplay) {fHistogram->GetXaxis()->SetTimeDisplay(timedisplay);}
          if (!timeformat.empty()) fHistogram->GetXaxis()->SetTimeFormat(timeformat.c_str());
       }
-      TString chopth = "0";
-      if (strstr(chopt.Data(),"X+")) chopth.Append("X+");
-      if (strstr(chopt.Data(),"Y+")) chopth.Append("Y+");
-      if (strstr(chopt.Data(),"I"))  chopth.Append("A");
+      TString chopth("0");
+      if (chopt.Contains("X+"))
+         chopth.Append("X+");
+      if (chopt.Contains("Y+"))
+         chopth.Append("Y+");
+      if (chopt.Contains("I"))
+         chopth.Append("A");
       fHistogram->Paint(chopth.Data());
    }
 
@@ -1592,41 +1593,36 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMultiGraph::Class()))
-      out<<"   ";
-   else
-      out<<"   TMultiGraph *";
-   out<<"multigraph = new TMultiGraph();"<<std::endl;
-   out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   out<<"   multigraph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "multigraph");
+   SavePrimitiveNameTitle(out, "multigraph");
 
    TIter iter(fGraphs);
 
    while (auto g = iter())
       g->SavePrimitive(out, TString::Format("multigraph%s", iter.GetOption()).Data());
 
-   const char *l = strstr(option,"th2poly");
-   if (l) {
-      out<<"   "<<l+7<<"->AddBin(multigraph);"<<std::endl;
-   } else {
-      out<<"   multigraph->Draw(" <<quote<<option<<quote<<");"<<std::endl;
-   }
+   const char *l = strstr(option, "th2poly");
+   if (l)
+      out << "   " << l + 7 << "->AddBin(multigraph);\n";
+   else
+      SavePrimitiveDraw(out, "multigraph", option);
+
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();
 
    if (xaxis) {
-     out<<"   multigraph->GetXaxis()->SetLimits("<<xaxis->GetXmin()<<", "<<xaxis->GetXmax()<<");"<<std::endl;
-     xaxis->SaveAttributes(out, "multigraph","->GetXaxis()");
+      out << "   multigraph->GetXaxis()->SetLimits(" << xaxis->GetXmin() << ", " << xaxis->GetXmax() << ");\n";
+      xaxis->SaveAttributes(out, "multigraph", "->GetXaxis()");
    }
-   if (yaxis) yaxis->SaveAttributes(out, "multigraph","->GetYaxis()");
-   if (fMinimum != -1111) out<<"   multigraph->SetMinimum("<<fMinimum<<");"<<std::endl;
-   if (fMaximum != -1111) out<<"   multigraph->SetMaximum("<<fMaximum<<");"<<std::endl;
+   if (yaxis)
+      yaxis->SaveAttributes(out, "multigraph", "->GetYaxis()");
+   if (fMinimum != -1111)
+      out << "   multigraph->SetMinimum(" << fMinimum << ");\n";
+   if (fMaximum != -1111)
+      out << "   multigraph->SetMaximum(" << fMaximum << ");\n";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set multigraph maximum.

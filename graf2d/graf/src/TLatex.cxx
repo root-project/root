@@ -1593,7 +1593,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          DrawLine(x+l2+ltip+2*l+fs1.Width(),y2-ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
          DrawLine(x+l2+ltip+2*l+fs1.Width(),y2+ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
       }
-      result.Set(fs1.Width()+3*l+2*ltip,fs1.Over(),fs1.Under()) ;;
+      result.Set(fs1.Width()+3*l+2*ltip,fs1.Over(),fs1.Under());
    }
    else if (opFrac>-1) { // \frac found
       if (opCurlyCurly==-1) { // }{ not found
@@ -2235,6 +2235,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
       TMathText tm;
       tm.SetTextAlign(GetTextAlign());
       tm.SetTextFont(GetTextFont());
+      tm.SetTextColor(GetTextColor());
       tm.PaintMathText(x, y, angle, size, text1);
       // If PDF, paint using TLatex
       if (gVirtualPS) {
@@ -2710,26 +2711,19 @@ void TLatex::Savefs(TLatex::TLatexFormSize *fs)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TLatex::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-
-   if (gROOT->ClassSaved(TLatex::Class()))
-      out<<"   ";
-   else
-      out<<"   TLatex *";
-
-   TString s = GetTitle();
-   s.ReplaceSpecialCppChars();
-
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC))
-      out<<"   tex->SetNDC();"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "tex",
+      TString::Format("%g, %g, \"%s\"", fX, fY, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
 
    SaveTextAttributes(out, "tex", 11, 0, 1, 62, 0.05);
    SaveLineAttributes(out, "tex", 1, 1, 1);
 
-   out<<"   tex->Draw();"<<std::endl;
+   if (TestBit(kTextNDC))
+      out << "   tex->SetNDC();\n";
+
+   SavePrimitiveDraw(out, "tex", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

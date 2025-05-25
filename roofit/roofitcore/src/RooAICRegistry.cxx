@@ -30,7 +30,6 @@ associated normalization and integration sets.
 
 #include "Riostream.h"
 
-ClassImp(RooAICRegistry);
 
 namespace {
 
@@ -92,6 +91,14 @@ RooAICRegistry::~RooAICRegistry()
     if (_asArr3[i]) delete   _asArr3[i];
     if (_asArr4[i]) delete   _asArr4[i];
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get size of _clArr vector
+
+size_t RooAICRegistry::size() const
+{
+  return _clArr.size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

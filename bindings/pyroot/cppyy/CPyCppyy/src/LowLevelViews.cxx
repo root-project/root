@@ -817,38 +817,62 @@ static PyObject* ll_reshape(CPyCppyy::LowLevelView* self, PyObject* shape)
 
 
 //---------------------------------------------------------------------------
-static PyObject* ll_array(CPyCppyy::LowLevelView* self, PyObject* args, PyObject* /* kwds */)
+static PyObject* ll_array(CPyCppyy::LowLevelView* self, PyObject* args, PyObject* kwds)
 {
 // Construct a numpy array from the lowlevelview (w/o copy if possible); this
 // uses the Python methods to avoid depending on numpy directly
 
 // Expect as most a dtype from the arguments;
-    static PyObject* ctmod = PyImport_ImportModule("numpy");    // ref-count kept
-    if (!ctmod)
+    static PyObject* npmod = PyImport_ImportModule("numpy");    // ref-count kept
+    if (!npmod)
         return nullptr;
 
-// expect possible dtype from the arguments, otherwie take it from the type code
-    PyObject* dtype;
-    if (!args || PyTuple_GET_SIZE(args) != 1) {
-        PyObject* npdtype = PyObject_GetAttr(ctmod, CPyCppyy::PyStrings::gDType);
-        PyObject* typecode = ll_typecode(self, nullptr);
-        dtype = PyObject_CallFunctionObjArgs(npdtype, typecode, nullptr);
-        Py_DECREF(typecode);
-        Py_DECREF(npdtype);
-    } else {
-        dtype = PyTuple_GET_ITEM(args, 0);
-        Py_INCREF(dtype);
+    bool docopy = false;
+    if (kwds) {
+        PyObject* pycp = PyObject_GetItem(kwds, CPyCppyy::PyStrings::gCopy);
+        if (!pycp) {
+            PyErr_SetString(PyExc_TypeError, "__array__ only supports the \"copy\" keyword");
+            return nullptr;
+        }
+
+        docopy = PyObject_IsTrue(pycp);
+        Py_DECREF(pycp);
     }
 
-    if (!dtype)
-        return nullptr;
+    if (!docopy) {           // view requested
+    // expect possible dtype from the arguments, otherwise take it from the type code
+        PyObject* dtype;
+        if (!args || PyTuple_GET_SIZE(args) != 1) {
+            PyObject* npdtype = PyObject_GetAttr(npmod, CPyCppyy::PyStrings::gDType);
+            PyObject* typecode = ll_typecode(self, nullptr);
+            dtype = PyObject_CallFunctionObjArgs(npdtype, typecode, nullptr);
+            Py_DECREF(typecode);
+            Py_DECREF(npdtype);
+        } else {
+            dtype = PyTuple_GET_ITEM(args, 0);
+            Py_INCREF(dtype);
+        }
 
-    PyObject* npfrombuf = PyObject_GetAttr(ctmod, CPyCppyy::PyStrings::gFromBuffer);
-    PyObject* view = PyObject_CallFunctionObjArgs(npfrombuf, (PyObject*)self, dtype, nullptr);
-    Py_DECREF(dtype);
-    Py_DECREF(npfrombuf);
+        if (!dtype)
+            return nullptr;
 
-    return view;
+        PyObject* npfrombuf = PyObject_GetAttr(npmod, CPyCppyy::PyStrings::gFromBuffer);
+        PyObject* view = PyObject_CallFunctionObjArgs(npfrombuf, (PyObject*)self, dtype, nullptr);
+        Py_DECREF(dtype);
+        Py_DECREF(npfrombuf);
+
+        return view;
+
+    } else {                 // copy requested
+        PyObject* npcopy = PyObject_GetAttr(npmod, CPyCppyy::PyStrings::gCopy);
+        PyObject* newarr = PyObject_CallFunctionObjArgs(npcopy, (PyObject*)self, nullptr);
+        Py_DECREF(npcopy);
+
+        return newarr;
+    }
+
+// never get here
+    return nullptr;
 }
 
 
@@ -959,6 +983,9 @@ PyTypeObject LowLevelView_Type = {
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                            // tp_watched
 #endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                            // tp_versions_used
+#endif
 };
 
 } // namespace CPyCppyy
@@ -971,10 +998,10 @@ template<> struct typecode_traits<bool> {
 template<> struct typecode_traits<char> {
     static constexpr const char* format = "b"; static constexpr const char* name = "char"; };
 template<> struct typecode_traits<signed char> {
-    static constexpr const char* format = "b"; static constexpr const char* name = "signed char"; };
+    static constexpr const char* format = "b"; static constexpr const char* name = "SCharAsInt"; };
 template<> struct typecode_traits<unsigned char> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 template<> struct typecode_traits<std::byte> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
 #endif
@@ -1115,7 +1142,7 @@ PyObject* CPyCppyy::CreateLowLevelView(type** address, cdims_t shape) {     \
 CPPYY_IMPL_VIEW_CREATOR(bool);
 CPPYY_IMPL_VIEW_CREATOR(signed char);
 CPPYY_IMPL_VIEW_CREATOR(unsigned char);
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_VIEW_CREATOR(std::byte);
 #endif
 CPPYY_IMPL_VIEW_CREATOR(short);
@@ -1172,4 +1199,44 @@ PyObject* CPyCppyy::CreateLowLevelView_i8(uint8_t* address,  cdims_t shape) {
 PyObject* CPyCppyy::CreateLowLevelView_i8(uint8_t** address, cdims_t shape) {
     LowLevelView* ll = CreateLowLevelViewT<uint8_t>(address, shape, "B", "uint8_t");
     CPPYY_RET_W_CREATOR(uint8_t**, CreateLowLevelView_i8);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(int16_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
+    CPPYY_RET_W_CREATOR(int16_t*, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(int16_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
+    CPPYY_RET_W_CREATOR(int16_t**, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(uint16_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
+    CPPYY_RET_W_CREATOR(uint16_t*, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(uint16_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
+    CPPYY_RET_W_CREATOR(uint16_t**, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(int32_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
+    CPPYY_RET_W_CREATOR(int32_t*, CreateLowLevelView_i32);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(int32_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
+    CPPYY_RET_W_CREATOR(int32_t**, CreateLowLevelView_i32);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(uint32_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
+    CPPYY_RET_W_CREATOR(uint32_t*, CreateLowLevelView_i32);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(uint32_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
+    CPPYY_RET_W_CREATOR(uint32_t**, CreateLowLevelView_i32);
 }

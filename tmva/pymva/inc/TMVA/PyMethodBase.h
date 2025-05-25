@@ -15,13 +15,6 @@
 #ifndef ROOT_TMVA_PyMethodBase
 #define ROOT_TMVA_PyMethodBase
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// PyMethodBase                                                               //
-//                                                                            //
-// Virtual base class for all TMVA method based on Python                     //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
 
 #include "TMVA/MethodBase.h"
 #include "TMVA/Types.h"
@@ -58,6 +51,7 @@ namespace TMVA {
    /// If "Python3" is installed, return "python3"
    TString Python_Executable();
 
+   /// Virtual base class for all TMVA method based on Python
    class PyMethodBase : public MethodBase {
 
       friend class Factory;

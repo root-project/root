@@ -350,7 +350,7 @@ void TMVA::TransformationHandler::CalcStats (const std::vector<Event*>& events )
    Log() << "  " << std::setw(maxV) << "Mean";
    Log() << " " << std::setw(maxV) << "RMS";
    Log() << "   " << std::setw(maxV) << "[        Min ";
-   Log() << "  " << std::setw(maxV) << "    Max ]"<< Endl;;
+   Log() << "  " << std::setw(maxV) << "    Max ]"<< Endl;
    for (UInt_t i=0; i<clen; i++) Log() << "-";
    Log() << Endl;
 

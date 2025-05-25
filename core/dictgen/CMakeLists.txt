@@ -27,6 +27,12 @@ ROOT_OBJECT_LIBRARY(Dictgen
   XMLReader.cxx
 )
 
+# This directory contains files that include llvm, which can give warnings.
+if(NOT MSVC)
+  target_compile_options(Dictgen PRIVATE -Wno-error)
+endif()
+
+
 add_dependencies(Dictgen CLING)
 
 if(NOT builtin_cling)

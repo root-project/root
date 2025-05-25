@@ -1918,7 +1918,7 @@ void MethodUnitTestWithROCLimits::run()
    TFile *input(nullptr);
    FileStat_t stat;
 
-   TString fname = gROOT->GetTutorialDir() + "/tmva/data/tmva_class_example.root";
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
    if (!gSystem->GetPathInfo(fname, stat)) {
       input = TFile::Open(fname);
    }
@@ -2356,7 +2356,7 @@ void RegressionUnitTestWithDeviation::run()
    TFile *input(nullptr);
    FileStat_t stat;
 
-   TString fname = gROOT->GetTutorialDir() + "/tmva/data/tmva_reg_example.root";
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_reg_example.root";
    if (!gSystem->GetPathInfo(fname, stat)) {
       input = TFile::Open(fname);
    }

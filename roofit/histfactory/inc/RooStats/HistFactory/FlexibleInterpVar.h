@@ -45,7 +45,7 @@ namespace HistFactory{
     void printAllInterpCodes();
     const std::vector<int>&  interpolationCodes() const { return _interpCode; }
 
-    TObject* clone(const char* newname) const override { return new FlexibleInterpVar(*this, newname); }
+    TObject* clone(const char* newname=nullptr) const override { return new FlexibleInterpVar(*this, newname); }
     ~FlexibleInterpVar() override ;
 
     void printMultiline(std::ostream& os, Int_t contents, bool verbose = false, TString indent = "") const override;
@@ -55,10 +55,9 @@ namespace HistFactory{
     double nominal() const { return _nominal; }
     const std::vector<double>& low() const { return _low; }
     const std::vector<double>& high() const { return _high; }
+    double globalBoundary() const { return _interpBoundary;}
 
     void doEval(RooFit::EvalContext &) const override;
-
-    void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   protected:
 
@@ -70,6 +69,10 @@ namespace HistFactory{
     double _interpBoundary = 1.0;
 
     double evaluate() const override;
+
+  private:
+
+    void setInterpCodeForParam(int iParam, int code);
 
     ClassDefOverride(RooStats::HistFactory::FlexibleInterpVar,2); // flexible interpolation
   };

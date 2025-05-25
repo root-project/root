@@ -130,10 +130,9 @@ TEST(SumW2Error, ExtendedFit)
    auto *w = dataNoWeights->addColumn(*wFunc);
    RooDataSet data{dataNoWeights->GetName(),
                    dataNoWeights->GetTitle(),
-                   dataNoWeights.get(),
                    *dataNoWeights->get(),
-                   "",
-                   w->GetName()};
+                   RooFit::Import(*dataNoWeights),
+                   RooFit::WeightVar(w->GetName())};
    RooDataHist datahist{"datahist", "datahist", *data.get(), data};
 
    RooArgSet params;

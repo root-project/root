@@ -36,7 +36,7 @@ Each primitive can be assigned:
   2. External TObject* (stored as TRef).
 
 See also base-class TEveDigitSet for more information.
-Tutorial: tutorials/eve/boxset_test.C
+Tutorial: tutorials/visualisation/eve7/eve/boxset_test.C
 */
 
 ClassImp(TEveBoxSet);

@@ -58,14 +58,15 @@ async function drawPolyMarker3D() {
 
       mesh.tooltip = function(intersect) {
          let indx = Math.floor(intersect.index / this.nvertex);
-         if ((indx < 0) || (indx >= this.index.length)) return null;
+         if ((indx < 0) || (indx >= this.index.length))
+            return null;
 
          indx = this.index[indx];
 
-         const fp = this.fp,
-               grx = fp.grx(this.poly.fP[indx]),
-               gry = fp.gry(this.poly.fP[indx+1]),
-               grz = fp.grz(this.poly.fP[indx+2]);
+         const fp2 = this.fp,
+               grx = fp2.grx(this.poly.fP[indx]),
+               gry = fp2.gry(this.poly.fP[indx+1]),
+               grz = fp2.grz(this.poly.fP[indx+2]);
 
          return {
             x1: grx - this.scale0,
@@ -77,9 +78,9 @@ async function drawPolyMarker3D() {
             color: this.tip_color,
             lines: [this.tip_name,
                      'pnt: ' + indx/3,
-                     'x: ' + fp.axisAsText('x', this.poly.fP[indx]),
-                     'y: ' + fp.axisAsText('y', this.poly.fP[indx+1]),
-                     'z: ' + fp.axisAsText('z', this.poly.fP[indx+2])
+                     'x: ' + fp2.axisAsText('x', this.poly.fP[indx]),
+                     'y: ' + fp2.axisAsText('y', this.poly.fP[indx+1]),
+                     'z: ' + fp2.axisAsText('z', this.poly.fP[indx+2])
                    ]
          };
       };

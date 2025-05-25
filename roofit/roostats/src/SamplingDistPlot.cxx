@@ -34,10 +34,9 @@ objects.
 
 #include "TMath.h"
 
-ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
-using std::cout, std::endl, std::string;
+using std::string;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistPlot default constructor with bin size
@@ -69,7 +68,7 @@ SamplingDistPlot::~SamplingDistPlot()
 double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
    fSamplingDistr = samplingDist->GetSamplingDistribution();
    if( fSamplingDistr.empty() ) {
-      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
+      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << std::endl;
       return 0.0;
    }
    SetSampleWeights(samplingDist);
@@ -89,7 +88,7 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
       }
    }
    if( xmin >= xmax ) {
-      coutW(Plotting) << "Could not determine xmin and xmax of sampling distribution that was given to plot." << endl;
+      coutW(Plotting) << "Could not determine xmin and xmax of sampling distribution that was given to plot." << std::endl;
       xmin = -1.0;
       xmax = 1.0;
    }
@@ -150,7 +149,7 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
 
 double SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, double minShaded, double maxShaded, Option_t *drawOptions) {
    if( samplingDist->GetSamplingDistribution().empty() ) {
-      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
+      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << std::endl;
       return 0.0;
    }
    double scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
@@ -289,11 +288,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    }
    fRooPlot->SetTitle("");
    if( !TMath::IsNaN(theYMax) ) {
-      //coutI(InputArguments) << "Setting maximum to " << theYMax << endl;
+      //coutI(InputArguments) << "Setting maximum to " << theYMax << std::endl;
       fRooPlot->SetMaximum(theYMax);
    }
    if( !TMath::IsNaN(theYMin) ) {
-      //coutI(InputArguments) << "Setting minimum to " << theYMin << endl;
+      //coutI(InputArguments) << "Setting minimum to " << theYMin << std::endl;
       fRooPlot->SetMinimum(theYMin);
    }
 
@@ -302,11 +301,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
       // add cloned objects to avoid mem leaks
       TH1 * cloneObj = static_cast<TH1*>(obj->Clone());
       if( !TMath::IsNaN(theYMax) ) {
-         //coutI(InputArguments) << "Setting maximum of TH1 to " << theYMax << endl;
+         //coutI(InputArguments) << "Setting maximum of TH1 to " << theYMax << std::endl;
          cloneObj->SetMaximum(theYMax);
       }
       if( !TMath::IsNaN(theYMin) ) {
-         //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << endl;
+         //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << std::endl;
          cloneObj->SetMinimum(theYMin);
       }
       cloneObj->SetDirectory(nullptr);  // transfer ownership of the object
@@ -322,11 +321,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    if(fLegend) fRooPlot->addObject(fLegend);
 
    if(bool(gStyle->GetOptLogx()) != fLogXaxis) {
-      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogx(...)" << endl;
+      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogx(...)" << std::endl;
       gStyle->SetOptLogx(fLogXaxis);
    }
    if(bool(gStyle->GetOptLogy()) != fLogYaxis) {
-      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogy(...)" << endl;
+      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogy(...)" << std::endl;
       gStyle->SetOptLogy(fLogYaxis);
    }
    fRooPlot->Draw();
@@ -389,8 +388,8 @@ void SamplingDistPlot::GetAbsoluteInterval(double &theMin, double &theMax, doubl
 /// Sets line color for given sampling distribution and
 /// fill color for the associated shaded TH1F.
 
-void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *samplDist) {
-   if (samplDist == nullptr) {
+void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *sampleDist) {
+   if (sampleDist == nullptr) {
       fHist->SetLineColor(color);
 
       TString shadedName(fHist->GetName());
@@ -405,11 +404,11 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
       }
    } else {
 
-      TString shadedName(samplDist->GetName());
+      TString shadedName(sampleDist->GetName());
       shadedName += "_shaded";
 
       for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-         if (!strcmp(obj->GetName(), samplDist->GetName())) {
+         if (!strcmp(obj->GetName(), sampleDist->GetName())) {
             obj->SetLineColor(color);
             //break;
          }
@@ -426,14 +425,14 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetLineWidth(lwidth);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetLineWidth(lwidth);
    break;
       }
@@ -445,14 +444,14 @@ void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetLineStyle(style);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetLineStyle(style);
    break;
       }
@@ -464,14 +463,14 @@ void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetMarkerStyle(style);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetMarkerStyle(style);
    break;
       }
@@ -483,14 +482,14 @@ void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetMarkerColor(color);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetMarkerColor(color);
    break;
       }
@@ -502,14 +501,14 @@ void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetMarkerSize(size);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetMarkerSize(size);
    break;
       }
@@ -521,13 +520,13 @@ void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
+TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     return fHist;
   }else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
         return obj;
       }
     }
@@ -538,14 +537,14 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist)
+void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->Rebin(rebinFactor);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->Rebin(rebinFactor);
    break;
       }
@@ -562,7 +561,7 @@ void SamplingDistPlot::DumpToFile(const char* RootFileName, Option_t *option, co
    // All the objects are written to rootfile
 
    if(!fRooPlot) {
-      cout << "Plot was not drawn yet. Dump can only be saved after it was drawn with Draw()." << endl;
+      std::cout << "Plot was not drawn yet. Dump can only be saved after it was drawn with Draw()." << std::endl;
       return;
    }
 

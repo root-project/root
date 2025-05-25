@@ -4,7 +4,7 @@
     xmlns:l="sap.ui.layout"
     xmlns="sap.m"
     class="sapUiSizeCompact">
-		<FlexBox height="100%" id="sumSplitter" direction="Column" fitContainer="true" alignItems="Inherit" justifyContent="SpaceBetween">
+		<FlexBox height="100%" id="sumSplitter" direction="Column">
     <Tree id="tree" width="95%"
           toggleOpenState="onToggleOpenState"
           class="sapUiSizeCompact sapUiTinyMargin">

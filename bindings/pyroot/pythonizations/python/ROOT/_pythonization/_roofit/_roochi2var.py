@@ -17,6 +17,8 @@ from ._utils import _kwargs_to_roocmdargs, cpp_signature
 class RooChi2Var(object):
     r"""Constructor of RooChi2Var takes a RooCmdArg as argument also supports keyword arguments."""
 
+    __cpp_name__ = 'RooChi2Var'
+
     @cpp_signature(
         [
             "RooChi2Var(const char* name, const char* title, RooAbsReal& func, RooDataHist& data,"

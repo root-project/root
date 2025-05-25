@@ -78,7 +78,6 @@ private:
    void SqliteError(int errcode);
 
    std::unique_ptr<Internal::RSqliteDSDataSet> fDataSet;
-   unsigned int fNSlots;
    ULong64_t fNRow;
    std::vector<std::string> fColumnNames;
    std::vector<ETypes> fColumnTypes;
@@ -98,7 +97,13 @@ private:
 
 public:
    RSqliteDS(const std::string &fileName, const std::string &query);
-   ~RSqliteDS();
+   // Rule of five
+   RSqliteDS(const RSqliteDS &) = delete;
+   RSqliteDS &operator=(const RSqliteDS &) = delete;
+   RSqliteDS(RSqliteDS &&) = delete;
+   RSqliteDS &operator=(RSqliteDS &&) = delete;
+   ~RSqliteDS() final;
+
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;

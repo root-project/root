@@ -11,7 +11,7 @@
 
 
 /*! \class TMinuit
-\see Minuit2 for a newer version of this package
+\note See ROOT::Minuit2 for a newer version of this package
 \ingroup MinuitOld
 
 Implementation in C++ of the Minuit package written by Fred James.

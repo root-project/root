@@ -11,6 +11,7 @@
 #define ROOT_Minuit2_MnSeedGenerator
 
 #include "Minuit2/MinimumSeedGenerator.h"
+#include "Minuit2/AnalyticalGradientCalculator.h"
 
 namespace ROOT {
 
@@ -21,19 +22,13 @@ namespace Minuit2 {
  */
 
 class MnSeedGenerator : public MinimumSeedGenerator {
-
 public:
-   MnSeedGenerator() {}
-
-   ~MnSeedGenerator() override {}
-
-   MinimumSeed
-   operator()(const MnFcn &, const GradientCalculator &, const MnUserParameterState &, const MnStrategy &) const override;
-
-   MinimumSeed operator()(const MnFcn &, const AnalyticalGradientCalculator &, const MnUserParameterState &,
-                                  const MnStrategy &) const override;
+   MinimumSeed operator()(const MnFcn &, const GradientCalculator &, const MnUserParameterState &,
+                          const MnStrategy &) const override;
 
 private:
+   MinimumSeed CallWithAnalyticalGradientCalculator(const MnFcn &, const AnalyticalGradientCalculator &,
+                                                    const MnUserParameterState &, const MnStrategy &) const;
 };
 
 } // namespace Minuit2

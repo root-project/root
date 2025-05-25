@@ -26,6 +26,8 @@
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
 
+#include "EnterUserCodeRAII.h"
+
 using namespace clang;
 
 namespace cling {
@@ -89,15 +91,6 @@ namespace cling {
     //  Tell the parser to not attempt spelling correction.
     //
     const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
-    //
-    //  Turn on ignoring of the main file eof token.
-    //
-    //  Note: We need this because token readahead in the following
-    //        routine calls ends up parsing it multiple times.
-    //
-    if (!PP.isIncrementalProcessingEnabled()) {
-      PP.enableIncrementalProcessing();
-    }
     assert(!code.empty() &&
            "prepareForParsing should only be called when need");
 
@@ -130,7 +123,7 @@ namespace cling {
       // Compare the contents of the cached buffer and the string we should
       // process. If there are hash collisions this assert should trigger
       // making it easier to debug.
-      CacheIsValid = FIDContents.equals(llvm::StringRef(code.str() + "\n"));
+      CacheIsValid = FIDContents == llvm::StringRef(code.str() + "\n");
       assert(CacheIsValid && "Hash collision!");
       if (CacheIsValid) {
         // We have already included this file once. Reuse the include loc.
@@ -201,7 +194,7 @@ namespace cling {
 
   ///\brief Look for a tag decl based on its name
   ///
-  ///\param declName name of the class, enum, uniorn or namespace being
+  ///\param declName name of the class, enum, union or namespace being
   ///       looked for
   ///\param resultDecl pointer that will be updated with the answer
   ///\param P Parse to use for the search
@@ -328,35 +321,42 @@ namespace cling {
       isunsigned = true;
       typeName = StringRef(typeName.data()+9, typeName.size()-9);
     }
-    if (typeName.equals("char")) {
+    if (typeName == "char") {
       if (isunsigned) return Context.UnsignedCharTy;
       return Context.SignedCharTy;
     }
-    if (typeName.equals("short")) {
+    if (typeName == "short") {
       if (isunsigned) return Context.UnsignedShortTy;
       return Context.ShortTy;
     }
-    if (typeName.equals("int")) {
+    if (typeName == "int") {
       if (isunsigned) return Context.UnsignedIntTy;
       return Context.IntTy;
     }
-    if (typeName.equals("long")) {
+    if (typeName == "long") {
       if (isunsigned) return Context.UnsignedLongTy;
       return Context.LongTy;
     }
-    if (typeName.equals("long long")) {
+    if (typeName == "long long") {
       if (isunsigned) return Context.UnsignedLongLongTy;
       return Context.LongLongTy;
     }
     if (!issigned && !isunsigned) {
-      if (typeName.equals("bool")) return Context.BoolTy;
-      if (typeName.equals("float")) return Context.FloatTy;
-      if (typeName.equals("double")) return Context.DoubleTy;
-      if (typeName.equals("long double")) return Context.LongDoubleTy;
+      if (typeName == "bool")
+        return Context.BoolTy;
+      if (typeName == "float")
+        return Context.FloatTy;
+      if (typeName == "double")
+        return Context.DoubleTy;
+      if (typeName == "long double")
+        return Context.LongDoubleTy;
 
-      if (typeName.equals("wchar_t")) return Context.WCharTy;
-      if (typeName.equals("char16_t")) return Context.Char16Ty;
-      if (typeName.equals("char32_t")) return Context.Char32Ty;
+      if (typeName == "wchar_t")
+        return Context.WCharTy;
+      if (typeName == "char16_t")
+        return Context.Char16Ty;
+      if (typeName == "char32_t")
+        return Context.Char32Ty;
     }
     /* Missing
    CanQualType WideCharTy; // Same as WCharTy in C++, integer type in C99.
@@ -367,7 +367,7 @@ namespace cling {
 
   ///\brief Look for a tag decl based on its name
   ///
-  ///\param typeName name of the class, enum, uniorn or namespace being
+  ///\param typeName name of the class, enum, union or namespace being
   ///       looked for
   ///\param resultType reference to QualType that will be updated with the answer
   ///\param P Parse to use for the search
@@ -474,6 +474,13 @@ namespace cling {
 
     if (typeName.empty()) return TheQT;
 
+    // findType is called from TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling
+    // which is called indirectly from TClassEdit::GetNormalizedName via
+    // the ResolvedTypedef code paths.  Through that code path nothing is
+    // taking the ROOT/Interpreter lock and since this code can modify the
+    // interpreter, we do need to take lock.
+    InterpreterAccessRAII LockAccess(*m_Interpreter);
+
     // Could trigger deserialization of decls.
     Interpreter::PushTransactionRAII RAII(m_Interpreter);
 
@@ -503,7 +510,7 @@ namespace cling {
                                    clang::AS_none, 0, &Attrs));
     if (Res.isUsable()) {
       // Accept it only if the whole name was parsed.
-      if (P.NextToken().getKind() == clang::tok::eof) {
+      if (P.NextToken().getKind() == clang::tok::annot_repl_input_end) {
         TypeSourceInfo* TSI = 0;
         TheQT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
       }
@@ -642,7 +649,7 @@ namespace cling {
         NestedNameSpecifier* NNS = SS.getScopeRep();
         NestedNameSpecifier::SpecifierKind Kind = NNS->getKind();
         // Only accept the parse if we consumed all of the name.
-        if (P.NextToken().getKind() == clang::tok::eof) {
+        if (P.NextToken().getKind() == clang::tok::annot_repl_input_end) {
           //
           //  Be careful, not all nested name specifiers refer to classes
           //  and namespaces, and those are the only things we want.
@@ -677,10 +684,11 @@ namespace cling {
                 // Note: Do we need to check for a dependent type here?
                 NestedNameSpecifier *prefix = NNS->getPrefix();
                 if (prefix) {
-                   QualType temp
-                     = Context.getElaboratedType(ETK_None,prefix,
-                                                 QualType(NNS->getAsType(),0));
-                   *setResultType = temp.getTypePtr();
+                  QualType temp =
+                      Context.getElaboratedType(ElaboratedTypeKeyword::None,
+                                                prefix,
+                                                QualType(NNS->getAsType(), 0));
+                  *setResultType = temp.getTypePtr();
                 } else {
                    *setResultType = NNS->getAsType();
                 }
@@ -749,7 +757,7 @@ namespace cling {
     //
     //  Cleanup after failed parse as a nested-name-specifier.
     //
-    P.SkipUntil(clang::tok::eof);
+    P.SkipUntil(clang::tok::annot_repl_input_end);
     // Doesn't reset the diagnostic mappings
     S.getDiagnostics().Reset(/*soft=*/true);
     //
@@ -777,7 +785,7 @@ namespace cling {
     if (P.getCurToken().getKind() == tok::annot_typename) {
       TypeResult T = P.getTypeAnnotation(const_cast<Token&>(P.getCurToken()));
       // Only accept the parse if we consumed all of the name.
-      if (P.NextToken().getKind() == clang::tok::eof)
+      if (P.NextToken().getKind() == clang::tok::annot_repl_input_end)
         if (!T.get().get().isNull()) {
           TypeSourceInfo *TSI = 0;
           clang::QualType QT =
@@ -1328,12 +1336,12 @@ namespace cling {
        TagDecl *decl = llvm::dyn_cast<TagDecl>(foundDC);
        if (decl) {
           // We have a class or struct or something.
-          if (funcName.substr(1).equals(decl->getName())) {
-             ParsedType PT;
-             QualType QT( decl->getTypeForDecl(), 0 );
-             PT.set(QT);
-             FuncId.setDestructorName(SourceLocation(),PT,SourceLocation());
-             return true;
+          if (funcName.substr(1) == decl->getName()) {
+            ParsedType PT;
+            QualType QT(decl->getTypeForDecl(), 0);
+            PT.set(QT);
+            FuncId.setDestructorName(SourceLocation(), PT, SourceLocation());
+            return true;
           }
        }
        // So it starts with ~ but is not followed by the name of
@@ -1344,14 +1352,14 @@ namespace cling {
        TagDecl *decl = llvm::dyn_cast<TagDecl>(foundDC);
        if (decl) {
           // We have a class or struct or something.
-          if (funcName.equals(decl->getName())) {
-             ParsedType PT;
-             QualType QT( decl->getTypeForDecl(), 0 );
-             PT.set(QT);
-             FuncId.setConstructorName(PT,SourceLocation(),SourceLocation());
+          if (funcName == decl->getName()) {
+            ParsedType PT;
+            QualType QT(decl->getTypeForDecl(), 0);
+            PT.set(QT);
+            FuncId.setConstructorName(PT, SourceLocation(), SourceLocation());
           } else {
-             IdentifierInfo *TypeInfoII = &PP.getIdentifierTable().get(funcName);
-             FuncId.setIdentifier (TypeInfoII, SourceLocation() );
+            IdentifierInfo* TypeInfoII = &PP.getIdentifierTable().get(funcName);
+            FuncId.setIdentifier(TypeInfoII, SourceLocation());
           }
           return true;
        } else {
@@ -1680,7 +1688,7 @@ namespace cling {
       // ParseTypeName might trigger deserialization.
       Interpreter::PushTransactionRAII TforDeser(Interp);
       unsigned int nargs = 0;
-      while (P.getCurToken().isNot(tok::eof)) {
+      while (P.getCurToken().isNot(tok::annot_repl_input_end)) {
         TypeResult Res(P.ParseTypeName());
         if (!Res.isUsable()) {
           // Bad parse, done.
@@ -1714,14 +1722,14 @@ namespace cling {
         Expr* val = (OpaqueValueExpr*)( &ExprMemory[slot] );
         GivenArgs.push_back(val);
       }
-      if (P.getCurToken().isNot(tok::eof)) {
+      if (P.getCurToken().isNot(tok::annot_repl_input_end)) {
         // We did not consume all of the prototype, bad parse.
         return false;
       }
       //
       //  Cleanup after prototype parse.
       //
-      P.SkipUntil(clang::tok::eof);
+      P.SkipUntil(clang::tok::annot_repl_input_end);
       // Doesn't reset the diagnostic mappings
       Sema& S = P.getActions();
       S.getDiagnostics().Reset(/*soft=*/true);
@@ -1958,7 +1966,7 @@ namespace cling {
       std::string proto;
       {
         bool first_time = true;
-        while (P.getCurToken().isNot(tok::eof)) {
+        while (P.getCurToken().isNot(tok::annot_repl_input_end)) {
           ExprResult Res = P.ParseAssignmentExpression();
           if (Res.isUsable()) {
             Expr* expr = Res.get();
@@ -1982,14 +1990,14 @@ namespace cling {
       }
       // For backward compatibility with CINT accept (for now?) a trailing close
       // parenthesis.
-      if (P.getCurToken().isNot(tok::eof) && P.getCurToken().isNot(tok::r_paren) ) {
+      if (P.getCurToken().isNot(tok::annot_repl_input_end) && P.getCurToken().isNot(tok::r_paren) ) {
         // We did not consume all of the arg list, bad parse.
         return false;
       }
       //
       //  Cleanup after the arg list parse.
       //
-      P.SkipUntil(clang::tok::eof);
+      P.SkipUntil(clang::tok::annot_repl_input_end);
       // Doesn't reset the diagnostic mappings
       S.getDiagnostics().Reset(/*soft=*/true);
       return true;
@@ -2033,7 +2041,7 @@ namespace cling {
     //
     {
       bool hasUnusableResult = false;
-      while (P.getCurToken().isNot(tok::eof)) {
+      while (P.getCurToken().isNot(tok::annot_repl_input_end)) {
         ExprResult Res = P.ParseAssignmentExpression();
         if (Res.isUsable()) {
           argExprs.push_back(Res.get());

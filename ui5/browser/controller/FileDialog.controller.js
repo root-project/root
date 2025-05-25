@@ -4,9 +4,9 @@ sap.ui.define(['rootui5/panel/Controller',
                'sap/m/Link',
                'sap/m/Text',
                'sap/m/Button',
-               'sap/m/ButtonType',
+               'sap/m/library',
                'sap/m/Dialog'
-],function(GuiPanelController, JSONModel, Fragment, Link, Text, Button, ButtonType, Dialog) {
+],function(GuiPanelController, JSONModel, Fragment, Link, Text, Button, mLibrary, Dialog) {
 
    'use strict';
 
@@ -175,7 +175,7 @@ sap.ui.define(['rootui5/panel/Controller',
          return false;
       },
 
-      /** @summary When selected file extenstion changed */
+      /** @summary When selected file extension changed */
       onFileExtChanged() {
 
          let extName = this.oModel.getProperty('/fileExt');
@@ -347,7 +347,7 @@ sap.ui.define(['rootui5/panel/Controller',
             }),
             endButton: new Button({
                text: 'Ok',
-               type: ButtonType.Emphasized,
+               type: mLibrary.ButtonType.Emphasized,
                press: () => {
                   oWarnDlg.close();
                   this.websocket.send('DLG_CONFIRM_SELECT');
@@ -443,7 +443,7 @@ sap.ui.define(['rootui5/panel/Controller',
             this.dialog.open();
 
             if (this._init_msg) {
-               // probably never happens here, but keep it for completnece
+               // probably never happens here, but keep it for completeness
                this.processInitMsg(this._init_msg);
                delete this._init_msg;
             }

@@ -30,7 +30,6 @@ Two-dimensional ellipse that can be used to represent an error contour.
 #include "TClass.h"
 #include <cmath>
 
-ClassImp(RooEllipse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 2-dimensional ellipse centered at (x1,x2) that represents the confidence

@@ -30,18 +30,19 @@ public:
                RooAbsReal& _x, const RooArgList& _coefList) ;
 
   RooChebychev(const RooChebychev& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooChebychev(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooChebychev(*this, newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooAbsReal const &x() const { return *_x; }
+  RooArgList const &coefList() const { return _coefList; }
 
-  private:
+  const char *refRangeName() const { return RooNameReg::str(_refRangeName); }
+
+private:
   RooRealProxy _x;
   RooListProxy _coefList ;
   mutable TNamed* _refRangeName = nullptr;

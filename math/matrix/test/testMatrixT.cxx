@@ -160,6 +160,22 @@ TYPED_TEST(testMatrix, Invert)
    CompareTMatrix(c, TestFixture::eye);
 }
 
+TYPED_TEST(testMatrix, SetElement)
+{
+   TypeParam b(n, n);
+   TypeParam c(n, n);
+
+   for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+         b(i, j) = n * i + j + 1 * (i == j);
+
+   for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+         c.SetElement(i, j, n * i + j + 1 * (i == j));
+
+   CompareTMatrix(b, c);
+}
+
 class testMatrixD : public testing::Test {
 protected:
    void SetUp() override

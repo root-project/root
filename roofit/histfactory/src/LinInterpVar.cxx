@@ -27,7 +27,6 @@
 
 using std::vector, std::endl;
 
-ClassImp(RooStats::HistFactory::LinInterpVar);
 
 using namespace RooStats;
 using namespace HistFactory;
@@ -45,7 +44,7 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "LinInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
-             << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << std::endl ;
       assert(0) ;
     }
     _paramList.add(*param) ;

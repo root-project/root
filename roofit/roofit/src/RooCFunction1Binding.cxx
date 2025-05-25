@@ -25,12 +25,6 @@ pointer first using RooCFunction1Binding<T1,T2>::register().
 #include "Riostream.h"
 #include "RooCFunction1Binding.h"
 
-#ifndef ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
-#define ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
-templateClassImp(RooCFunction1Binding);
-templateClassImp(RooCFunction1Ref);
-#endif
-
 
 template<>
 RooCFunction1Map<double,double>& RooCFunction1Ref<double,double>::fmap()

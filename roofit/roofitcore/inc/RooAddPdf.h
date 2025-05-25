@@ -41,7 +41,7 @@ public:
   RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, bool recursiveFraction=false) ;
 
   RooAddPdf(const RooAddPdf& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooAddPdf(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooAddPdf(*this,newname) ; }
   ~RooAddPdf() override { TRACE_DESTROY; }
 
   bool checkObservables(const RooArgSet* nset) const override;
@@ -92,8 +92,6 @@ public:
 
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; };
   void setCacheAndTrackHints(RooArgSet&) override;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 

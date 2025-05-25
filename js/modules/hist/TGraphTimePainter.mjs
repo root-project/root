@@ -15,7 +15,8 @@ class TGraphTimePainter extends ObjectPainter {
 
    /** @summary Redraw object */
    redraw() {
-      if (this.step === undefined) this.startDrawing();
+      if (this.step === undefined)
+         this.startDrawing();
    }
 
    /** @summary Decode drawing options */
@@ -47,7 +48,7 @@ class TGraphTimePainter extends ObjectPainter {
          return;
       }
 
-      return draw(this.getDom(), lst.arr[indx], lst.opt[indx]).then(p => {
+      return draw(this.getPadPainter(), lst.arr[indx], lst.opt[indx]).then(p => {
          if (p) {
             p.$grtimeid = this.selfid; // indicator that painter created by ourself
             p.$grstep = this.step; // remember step
@@ -79,7 +80,7 @@ class TGraphTimePainter extends ObjectPainter {
             return;
          }
 
-         // draw ptrimitives again
+         // draw primitives again
          this.drawPrimitives().then(() => {
             // clear primitives produced by previous drawing to avoid flicking
             pp.cleanPrimitives(p => { return (p.$grtimeid === this.selfid) && (p.$grstep !== this.step); });
@@ -110,7 +111,7 @@ class TGraphTimePainter extends ObjectPainter {
       }
    }
 
-   /** @ummary Start drawing of graph time */
+   /** @summary Start drawing of graph time */
    startDrawing() {
       this.step = 0;
 
@@ -153,4 +154,16 @@ class TGraphTimePainter extends ObjectPainter {
 
 } // class TGraphTimePainter
 
-export { TGraphTimePainter };
+
+/** @summary Draw TRooPlot
+  * @private */
+async function drawRooPlot(dom, plot) {
+   return draw(dom, plot._hist, 'hist').then(async hp => {
+      const arr = [];
+      for (let i = 0; i < plot._items.arr.length; ++i)
+         arr.push(draw(dom, plot._items.arr[i], plot._items.opt[i]));
+      return Promise.all(arr).then(() => hp);
+   });
+}
+
+export { TGraphTimePainter, drawRooPlot };

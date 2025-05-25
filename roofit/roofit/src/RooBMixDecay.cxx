@@ -30,7 +30,6 @@ This function can be analytically convolved with any RooResolutionModel implemen
 #include "RooRandom.h"
 #include "RooBatchCompute.h"
 
-ClassImp(RooBMixDecay);
 
 /// \brief Constructor for RooBMixDecay.
 ///
@@ -127,7 +126,7 @@ void RooBMixDecay::doEval(RooFit::EvalContext &ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
+///   std::cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
 
 Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {

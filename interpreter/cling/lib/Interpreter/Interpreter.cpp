@@ -215,10 +215,26 @@ namespace cling {
     if (handleSimpleOptions(m_Opts))
       return;
 
-    m_LLVMContext.reset(new llvm::LLVMContext);
+    auto LLVMCtx = std::make_unique<llvm::LLVMContext>();
+    TSCtx = std::make_unique<llvm::orc::ThreadSafeContext>(std::move(LLVMCtx));
     m_IncrParser.reset(new IncrementalParser(this, llvmdir, moduleExtensions));
     if (!m_IncrParser->isValid(false))
       return;
+
+    // Load any requested plugins.
+    getCI()->LoadRequestedPlugins();
+
+    // Honor set of `-mllvm` options. This should happen AFTER plugins have been
+    // loaded!
+    if (!m_Opts.CompilerOpts.LLVMArgs.empty()) {
+      unsigned NumArgs = m_Opts.CompilerOpts.LLVMArgs.size();
+      auto Args = std::make_unique<const char*[]>(NumArgs + 2);
+      Args[0] = "cling (LLVM option parsing)";
+      for (unsigned i = 0; i != NumArgs; ++i)
+        Args[i + 1] = m_Opts.CompilerOpts.LLVMArgs[i].c_str();
+      Args[NumArgs + 1] = nullptr;
+      llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
+    }
 
     // Initialize the opt level to what CodeGenOpts says.
     if (m_OptLevel == -1)
@@ -249,16 +265,6 @@ namespace cling {
     }
 
     Sema& SemaRef = getSema();
-    Preprocessor& PP = SemaRef.getPreprocessor();
-    // Enable incremental processing, which prevents the preprocessor destroying
-    // the lexer on EOF token.
-    PP.enableIncrementalProcessing();
-
-    m_LookupHelper.reset(new LookupHelper(new Parser(PP, SemaRef,
-                                                     /*SkipFunctionBodies*/false,
-                                                     /*isTemp*/true), this));
-    if (!m_LookupHelper)
-      return;
 
     if (!isInSyntaxOnlyMode() && !m_Opts.CompilerOpts.CUDADevice) {
       m_Executor.reset(new IncrementalExecutor(SemaRef.Diags, *getCI(),
@@ -304,6 +310,10 @@ namespace cling {
       return;
     }
 
+    m_LookupHelper.reset(new LookupHelper(m_IncrParser->getParser(), this));
+    if (!m_LookupHelper)
+      return;
+
     // When not using C++ modules, we now have a PCH and we can safely setup
     // our callbacks without fearing that they get overwritten by clang code.
     // The modules setup is handled above.
@@ -311,8 +321,7 @@ namespace cling {
       setupCallbacks(*this, parentInterp);
     }
 
-    llvm::SmallVector<llvm::StringRef, 6> Syms;
-    Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode(), Syms);
+    Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode());
 
     // Commit the transactions, now that gCling is set up. It is needed for
     // static initialization in these transactions through
@@ -320,27 +329,9 @@ namespace cling {
     for (auto&& I: IncrParserTransactions)
       m_IncrParser->commitTransaction(I);
 
-    // Now that the transactions have been commited, force symbol emission
-    // and overrides.
-    if (!isInSyntaxOnlyMode() && !m_Opts.CompilerOpts.CUDADevice) {
-      for (const llvm::StringRef& Sym : Syms) {
-        void* Addr = m_Executor->getPointerToGlobalFromJIT(Sym);
-#if defined(__linux__)
-        // We need to look for the mangled name of at_quick_exit on linux.
-        if (!Addr && Sym.equals("at_quick_exit"))
-          Addr = m_Executor->getPointerToGlobalFromJIT("_Z13at_quick_exitPFvvE");
-#endif
-        if (!Addr) {
-          cling::errs() << "Replaced symbol " << Sym << " cannot be found in JIT!\n";
-        } else {
-          m_Executor->replaceSymbol(Sym.str().c_str(), Addr);
-        }
-      }
-    }
-
     m_IncrParser->SetTransformers(parentInterp);
 
-    if (!m_LLVMContext) {
+    if (!TSCtx->getContext()) {
       // Never true, but don't tell the compiler.
       // Force symbols needed by runtime to be included in binaries.
       // Prevents stripping the symbol due to dead-code optimization.
@@ -407,8 +398,7 @@ namespace cling {
     m_IncrParser.reset(nullptr);
   }
 
-  Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly,
-                              llvm::SmallVectorImpl<llvm::StringRef>& Globals) {
+  Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly) {
     // The Initialize() function is called twice in CUDA mode. The first time
     // the host interpreter is initialized and the second time the device
     // interpreter is initialized. Without this if statement, a redefinition
@@ -465,8 +455,17 @@ namespace cling {
     const char* Attr = LangOpts.CPlusPlus ? " throw () " : "";
 #else
     const char* LinkageCxx = Linkage;
+#ifdef __FreeBSD__
+// atexit-like commands need 'throw()' specifier on FreeBSD 15
+#if __FreeBSD_cc_version >= 1500000
+    const char* Attr = " throw () ";
+#else
     const char* Attr = "";
 #endif
+#else
+    const char* Attr = "";
+#endif // __FreeBSD__
+#endif // __GLIBC__
 
 #if defined(__GLIBCXX__)
     const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
@@ -505,7 +504,6 @@ namespace cling {
           << " { return __cxa_atexit((void(*)(void*))f, 0, __dso_handle); }\n";
       else
         Strm << ";\n";
-      Globals.push_back("at_quick_exit");
     }
 
 #if defined(_WIN32)
@@ -523,7 +521,6 @@ namespace cling {
                 " return f; }\n";
       else
         Strm << ";\n";
-    Globals.push_back("__dllonexit");
 #if !defined(_M_CEE_PURE)
     Strm << Linkage << " " << Spec << " int (*_onexit("
          << "int (" << Spec << " *f)()))()";
@@ -532,7 +529,6 @@ namespace cling {
               " return f; }\n";
     else
       Strm << ";\n";
-    Globals.push_back("_onexit");
 #endif
 #endif
 
@@ -682,7 +678,7 @@ namespace cling {
     llvm::raw_ostream &where = cling::log();
     // `.stats decl' and `.stats asttree FILTER' cause deserialization; force transaction
     PushTransactionRAII RAII(this);
-    if (what.equals("asttree")) {
+    if (what == "asttree") {
       std::unique_ptr<clang::ASTConsumer> printer =
         clang::CreateASTDumper(nullptr /*Dump to stdout.*/,
                                filter, true  /*DumpDecls*/,
@@ -691,11 +687,11 @@ namespace cling {
                                false /*DumpDeclTypes*/,
                                ADOF_Default /*DumpFormat*/);
       printer->HandleTranslationUnit(getSema().getASTContext());
-    } else if (what.equals("ast"))
+    } else if (what == "ast")
       getSema().getASTContext().PrintStats();
-    else if (what.equals("decl"))
+    else if (what == "decl")
       ClangInternalState::printLookupTables(where, getSema().getASTContext());
-    else if (what.equals("undo"))
+    else if (what == "undo")
       m_IncrParser->printTransactionStructure();
   }
 
@@ -922,9 +918,17 @@ namespace cling {
     // context triggered this import!
     DeclContext *OldDC = getSema().CurContext;
     getSema().CurContext = getSema().getASTContext().getTranslationUnitDecl();
-    bool success =
-      !getSema().ActOnModuleImport(ValidLoc, /*ExportLoc*/ {}, ValidLoc,
-                                   std::make_pair(II, ValidLoc)).isInvalid();
+
+    // Fix C++20 builds caused by commit:
+    // llvm-project/commit/574ee1c02ef73b66c5957cf93888234b0471695f
+    // We are loading clang modules here and not C++20 modules
+    auto Path = std::make_pair(II, ValidLoc);
+    Module* Mod = getSema().getModuleLoader().loadModule(
+        ValidLoc, Path, Module::AllVisible, /*IsInclusionDirective=*/false);
+    bool success = Mod && !getSema()
+                               .ActOnModuleImport(ValidLoc, /*ExportLoc*/ {},
+                                                  ValidLoc, Mod, Path)
+                               .isInvalid();
     getSema().CurContext = OldDC;
 
     if (success) {
@@ -1670,6 +1674,13 @@ namespace cling {
 
     static_cast<MultiplexInterpreterCallbacks*>(m_Callbacks.get())
       ->addCallback(std::move(C));
+  }
+
+  llvm::orc::LLJIT* Interpreter::getExecutionEngine() {
+    if (!m_Executor)
+      return nullptr;
+
+    return m_Executor->getLLJIT();
   }
 
   const DynamicLibraryManager* Interpreter::getDynamicLibraryManager() const {

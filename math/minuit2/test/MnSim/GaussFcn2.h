@@ -21,17 +21,19 @@ namespace Minuit2 {
 class GaussFcn2 : public FCNBase {
 
 public:
-   GaussFcn2(const std::vector<double> &meas, const std::vector<double> &pos, const std::vector<double> &mvar)
-      : fMeasurements(meas), fPositions(pos), fMVariances(mvar), fMin(0.)
+   GaussFcn2(std::span<const double> meas, std::span<const double> pos, std::span<const double> mvar)
+      : fMeasurements(meas.begin(), meas.end()),
+        fPositions(pos.begin(), pos.end()),
+        fMVariances(mvar.begin(), mvar.end()),
+        fMin(0.)
    {
       Init();
    }
-   ~GaussFcn2() override {}
 
    virtual void Init();
 
    double Up() const override { return 1.; }
-   double operator()(const std::vector<double> &) const override;
+   double operator()(std::vector<double> const &) const override;
    double ErrorDef() const override { return Up(); }
 
    std::vector<double> Measurements() const { return fMeasurements; }

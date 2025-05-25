@@ -50,7 +50,8 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
    RooArgSet obs_set;
 
    // create gaussian parameters
-   double mean[n], sigma[n];
+   std::vector<double> mean(n);
+   std::vector<double> sigma(n);
    for (unsigned ix = 0; ix < n; ++ix) {
       mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
       sigma[ix] = 0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2));

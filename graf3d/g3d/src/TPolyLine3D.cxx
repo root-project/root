@@ -555,25 +555,24 @@ void TPolyLine3D::Print(Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream.
 
-void TPolyLine3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPolyLine3D::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPolyLine3D::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TPolyLine3D *";
+   TString arrarg;
+   if (Size() > 0) {
+      std::vector<Double_t> arr(Size() * 3);
+      for (Int_t i = 0; i < Size() * 3; i++)
+         arr[i] = fP[i];
+      arrarg = SavePrimitiveVector(out, "pline3D", Size() * 3, arr.data(), kTRUE);
+      arrarg.Append(".data(), ");
    }
-   Int_t size=Size();
-   out<<"pline3D = new TPolyLine3D("<<fN<<","<<quote<<fOption<<quote<<");"<<std::endl;
 
-   SaveLineAttributes(out,"pline3D",1,1,1);
+   SavePrimitiveConstructor(
+      out, Class(), "pline3D",
+      TString::Format("%d, %s\"%s\"", Size(), arrarg.Data(), TString(fOption).ReplaceSpecialCppChars().Data()),
+      arrarg.IsNull());
 
-   if (size > 0) {
-      for (Int_t i=0;i<size;i++)
-         out<<"   pline3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<std::endl;
-   }
-   out<<"   pline3D->Draw();"<<std::endl;
+   SaveLineAttributes(out, "pline3D", 1, 1, 1);
+   SavePrimitiveDraw(out, "pline3D", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -39,7 +39,7 @@ double GaussPdf(double x, double x0, double sigma)
    return (1.0 / (std::sqrt(two_pi) * std::fabs(sigma))) * std::exp(-tmp * tmp / 2);
 }
 
-double LogMultiGaussPdf(const std::vector<double> &x, const std::vector<double> &p)
+double LogMultiGaussPdf(std::span<const double> x, std::span<const double> p)
 {
    double f = 0;
    int ndim = x.size();
@@ -59,7 +59,7 @@ struct LogLikeFCN : public FCNBase {
 
    LogLikeFCN(const Data &data) : fData(data) {}
 
-   double operator()(const std::vector<double> &p) const override
+   double operator()(std::vector<double> const &p) const override
    {
       double logl = 0;
       int ndata = fData.size();
@@ -114,7 +114,7 @@ int doFit(int ndim, int ndata)
    VariableMetricMinimizer fMinimizer;
 
    // Minimize
-   FunctionMinimum min = fMinimizer.Minimize(fcn, init_par, init_err);
+   FunctionMinimum min = fMinimizer.Minimize(fcn, {init_par, init_err});
 
    // output
    std::cout << "minimum: " << min << std::endl;

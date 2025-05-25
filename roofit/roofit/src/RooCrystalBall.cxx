@@ -55,7 +55,6 @@ where
 #include <memory>
 #include <utility>
 
-ClassImp(RooCrystalBall);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the fully parametrized crystal ball shape with asymmetric Gaussian core and asymmetric tails.
@@ -163,10 +162,10 @@ namespace {
 
 inline double evaluateCrystalBallTail(double t, double alpha, double n)
 {
-   double a = std::pow(n / alpha, n) * std::exp(-0.5 * alpha * alpha);
-   double b = n / alpha - alpha;
+   double r = n / alpha;
+   double b = r - alpha;
 
-   return a / std::pow(b - t, n);
+   return std::exp(-0.5 * alpha * alpha) * std::pow(r / (b - t), n);
 }
 
 inline double integrateGaussian(double sigmaL, double sigmaR, double tmin, double tmax)
@@ -182,18 +181,19 @@ inline double integrateGaussian(double sigmaL, double sigmaR, double tmin, doubl
 
 inline double integrateTailLogVersion(double sigma, double alpha, double n, double tmin, double tmax)
 {
-   double a = std::pow(n / alpha, n) * exp(-0.5 * alpha * alpha);
-   double b = n / alpha - alpha;
+   double r = n / alpha;
+   double a = std::pow(r, n) * exp(-0.5 * alpha * alpha);
+   double b = r - alpha;
 
    return a * sigma * (log(b - tmin) - log(b - tmax));
 }
 
 inline double integrateTailRegular(double sigma, double alpha, double n, double tmin, double tmax)
 {
-   double a = std::pow(n / alpha, n) * exp(-0.5 * alpha * alpha);
-   double b = n / alpha - alpha;
+   double r = n / alpha;
+   double b = r - alpha;
 
-   return a * sigma / (1.0 - n) * (1.0 / (std::pow(b - tmin, n - 1.0)) - 1.0 / (std::pow(b - tmax, n - 1.0)));
+   return r * exp(-0.5 * alpha * alpha) * sigma / (1.0 - n) * (std::pow(r / (b - tmin), n - 1.0) - std::pow(r / (b - tmax), n - 1.0));
 }
 
 } // namespace

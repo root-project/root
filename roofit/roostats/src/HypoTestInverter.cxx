@@ -62,13 +62,10 @@ call HypoTestInverter::UseCLs().
 #include "TCanvas.h"
 #include "TGraphErrors.h"
 
-#include "RooStats/ProofConfig.h"
-
 #include <cassert>
 #include <cmath>
 #include <memory>
 
-ClassImp(RooStats::HypoTestInverter);
 
 using namespace RooStats;
 using std::endl;
@@ -81,8 +78,6 @@ double HypoTestInverter::fgAbsAccuracy = 0.05;
 double HypoTestInverter::fgRelAccuracy = 0.05;
 std::string HypoTestInverter::fgAlgo = "logSecant";
 
-bool HypoTestInverter::fgCloseProof = false;
-
 // helper class to wrap the functionality of the various HypoTestCalculators
 
 template<class HypoTestType>
@@ -91,13 +86,6 @@ struct HypoTestWrapper {
    static void SetToys(HypoTestType * h, int toyNull, int toyAlt) { h->SetToys(toyNull,toyAlt); }
 
 };
-
-////////////////////////////////////////////////////////////////////////////////
-/// set flag to close proof for every new run
-
-void HypoTestInverter::SetCloseProof(bool flag) {
-   fgCloseProof  = flag;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// get  the variable to scan
@@ -155,7 +143,7 @@ void HypoTestInverter::CheckInputModels(const HypoTestCalculatorGeneric &hc,cons
           (static_cast<RooRealVar *>(poiB->find(scanVariable.GetName())))->getVal() != 0) {
          oocoutW(nullptr, InputArguments)
             << "HypoTestInverter - using a B model  with POI " << scanVariable.GetName() << " not equal to zero "
-            << " user must check input model configurations " << endl;
+            << " user must check input model configurations " << std::endl;
       }
       if (poiB) delete poiB;
    }
@@ -512,8 +500,6 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
          oocoutE(nullptr,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;
    }
 
-   if (fgCloseProof) ProofConfig::CloseProof();
-
    return static_cast<HypoTestInverterResult*> (fResults->Clone());
 }
 
@@ -709,13 +695,13 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
    const_cast<ModelConfig*>(sbModel)->SetSnapshot(poi);
 
    if (fVerbose > 0)
-      oocoutP(nullptr,Eval) << "Running for " << fScannedVariable->GetName() << " = " << fScannedVariable->getVal() << endl;
+      oocoutP(nullptr,Eval) << "Running for " << fScannedVariable->GetName() << " = " << fScannedVariable->getVal() << std::endl;
 
    // compute the results
    std::unique_ptr<HypoTestResult> result( Eval(*fCalculator0,adaptive,clTarget) );
    if (!result) {
       oocoutE(nullptr,Eval) << "HypoTestInverter - Error running point " << fScannedVariable->GetName() << " = " <<
-   fScannedVariable->getVal() << endl;
+   fScannedVariable->getVal() << std::endl;
       return false;
    }
    // in case of a dummy result
@@ -723,7 +709,7 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
    const double altPV = result->AlternatePValue();
    if (!std::isfinite(nullPV) || nullPV < 0. || nullPV > 1. || !std::isfinite(altPV) || altPV < 0. || altPV > 1.) {
       oocoutW(nullptr,Eval) << "HypoTestInverter - Skipping invalid result for  point " << fScannedVariable->GetName() << " = " <<
-         fScannedVariable->getVal() << ". null p-value=" << nullPV << ", alternate p-value=" << altPV << endl;
+         fScannedVariable->getVal() << ". null p-value=" << nullPV << ", alternate p-value=" << altPV << std::endl;
       return false;
    }
 
@@ -1218,7 +1204,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
                                        << nToys << std::endl;
 
 
-      printf("\n\nshnapshot of s+b model \n");
+      std::cout << "\n\nshnapshot of s+b model \n";
       sbModel->GetSnapshot()->Print("v");
 
       // reset parameters to initial values to be sure in case they are not reset

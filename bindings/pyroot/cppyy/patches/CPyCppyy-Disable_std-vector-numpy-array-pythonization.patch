@@ -55,7 +55,7 @@ index 9b87905bab..0510c1c6ac 100644
 +        // the safe option is to disable this function and no longer add it.
 +#if 0
          // numpy array conversion
-             Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray);
+             Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
 +#endif
  
          // checked getitem

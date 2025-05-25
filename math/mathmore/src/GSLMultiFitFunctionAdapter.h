@@ -36,6 +36,7 @@
 
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
+#include "gsl/gsl_matrix.h"
 
 #include <cassert>
 
@@ -109,12 +110,12 @@ public:
       if (npar == 0) return -2;
       FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
       assert ( f->size == n);
-      for (unsigned int i = 0; i < n ; ++i) {
-         assert ( npar == (funcVec[i]).NDim() );
+      for (unsigned int i = 0; i < n; ++i) {
+         assert(npar == (funcVec[i]).NDim());
          double fval = 0;
-         double * g = (h->data)+i*npar;   //pointer to start  of i-th row
+         double *g = (h->data) + i * npar; // pointer to start  of i-th row
          (funcVec[i]).FdF(x->data, fval, g);
-         gsl_vector_set(f, i, fval  );
+         gsl_vector_set(f, i, fval);
       }
       return 0;
    }

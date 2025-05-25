@@ -16,8 +16,10 @@
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
+#include <ROOT/REveText.hxx>
 
 #include <nlohmann/json.hpp>
+#include "TROOT.h"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -106,6 +108,11 @@ List of Viewers providing common operations on REveViewer collections.
 void REveViewer::SetAxesType(int at)
 {
    fAxesType = (EAxesType)at;
+   if (fAxesType != kAxesNone) {
+      std::string fn = "LiberationSerif-Regular";
+      std::string rf_dir = std::string(TROOT::GetDataDir().Data()) + "/fonts/";
+      REX::REveText::AssertSdfFont(fn, rf_dir + fn + ".ttf");
+   }
    StampObjProps();
 }
 
@@ -358,126 +365,6 @@ void REveViewerList::HandleTooltip()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot for global TGLViewer::MouseOver() signal.
-///
-/// The attempt is made to determine the REveElement being
-/// represented by the physical shape and global highlight is updated
-/// accordingly.
-///
-/// If REveElement::IsPickable() returns false, the element is not
-/// highlighted.
-///
-/// Highlight is always in single-selection mode.
-
-void REveViewerList::OnMouseOver(TObject *, UInt_t /*state*/)
-{
-   // REveElement *el = dynamic_cast<REveElement*>(obj);
-   // if (el && !el->IsPickable())
-   //   el = nullptr;
-
-   // void *qsender = gTQSender;
-   // REX::gEve->GetHighlight()->UserPickedElement(el, kFALSE);
-   // gTQSender = qsender;
-
-   HandleTooltip();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Slot for global TGLViewer::ReMouseOver().
-///
-/// The obj is dyn-casted to the REveElement and global selection is
-/// updated accordingly.
-///
-/// If REveElement::IsPickable() returns false, the element is not
-/// selected.
-
-void REveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
-{
-   REveElement* el = dynamic_cast<REveElement*>(obj);
-   if (el && !el->IsPickable())
-      el = nullptr;
-
-   // void *qsender = gTQSender;
-   // REX::gEve->GetHighlight()->UserRePickedElement(el);
-   // gTQSender = qsender;
-
-   HandleTooltip();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Slot for global TGLViewer::UnMouseOver().
-///
-/// The obj is dyn-casted to the REveElement and global selection is
-/// updated accordingly.
-///
-/// If REveElement::IsPickable() returns false, the element is not
-/// selected.
-
-void REveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
-{
-   REveElement* el = dynamic_cast<REveElement*>(obj);
-   if (el && !el->IsPickable())
-      el = nullptr;
-
-   // void *qsender = gTQSender;
-   // REX::gEve->GetHighlight()->UserUnPickedElement(el);
-   // gTQSender = qsender;
-
-   HandleTooltip();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Slot for global TGLViewer::Clicked().
-///
-/// The obj is dyn-casted to the REveElement and global selection is
-/// updated accordingly.
-///
-/// If REveElement::IsPickable() returns false, the element is not
-/// selected.
-
-void REveViewerList::OnClicked(TObject *obj, UInt_t /*button*/, UInt_t state)
-{
-   REveElement* el = dynamic_cast<REveElement*>(obj);
-   if (el && !el->IsPickable())
-      el = nullptr;
-   REX::gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Slot for global TGLViewer::ReClicked().
-///
-/// The obj is dyn-casted to the REveElement and global selection is
-/// updated accordingly.
-///
-/// If REveElement::IsPickable() returns false, the element is not
-/// selected.
-
-void REveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state*/)
-{
-   REveElement* el = dynamic_cast<REveElement*>(obj);
-   if (el && !el->IsPickable())
-      el = nullptr;
-   REX::gEve->GetSelection()->UserRePickedElement(el);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Slot for global TGLViewer::UnClicked().
-///
-/// The obj is dyn-casted to the REveElement and global selection is
-/// updated accordingly.
-///
-/// If REveElement::IsPickable() returns false, the element is not
-/// selected.
-
-void REveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state*/)
-{
-   REveElement* el = dynamic_cast<REveElement*>(obj);
-   if (el && !el->IsPickable())
-      el = nullptr;
-   REX::gEve->GetSelection()->UserUnPickedElement(el);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set color brightness.
 
 void REveViewerList::SetColorBrightness(Float_t b)
@@ -491,13 +378,14 @@ void REveViewerList::SetColorBrightness(Float_t b)
 void REveViewerList::SwitchColorSet()
 {
    fUseLightColorSet = ! fUseLightColorSet;
+   // To implement something along the lines of:
+   // BeginChanges on EveWorld; // Here or in the calling function
    // for (auto &c: fChildren) {
-      // TGLViewer* glv = ((REveViewer *)c)->GetGLViewer();
+      // REveViewer* v = (REveViewer *)c;
       // if ( fUseLightColorSet)
-      //    glv->UseLightColorSet();
+      //    c->UseLightColorSet();
       // else
-      //    glv->UseDarkColorSet();
-
-      // glv->RequestDraw(TGLRnrCtx::kLODHigh);
+      //    c->UseDarkColorSet();
    // }
+   // EndChanges on EveWorld;
 }

@@ -16,7 +16,6 @@
  namespace Experimental{
  namespace SOFIE{
 
-     template <typename T>
      class ROperator_Concat final : public ROperator
      {
      private:
@@ -34,14 +33,19 @@
             fInputs.reserve(inputs.size());
             for (auto & name : inputs)
                fInputs.push_back(UTILITY::Clean_name(name));
+
+         fInputTensorNames.resize(fInputs.size());
+         std::transform(fInputs.begin(), fInputs.end(), fInputTensorNames.begin(),
+                   [](const std::string& s) -> std::string_view { return s; });
+         fOutputTensorNames = { fOutput };
          }
 
-         std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+         std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
              return input;
          }
 
          // get shape of output given inputs. It is going to be called after initialized
-         std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> inputs){
+         std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> inputs) override {
              std::vector<std::vector<size_t>> ret(1);
             // treat negative axis case
             if (fAxis<0) {
@@ -74,8 +78,8 @@
             if(fnewAxis == 1){
                for(size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i-1].size() )
-                  throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " +
-                     ConvertShapeToString(inputs[i]) + " and " + ConvertShapeToString(inputs[i-1]));
+                  throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " + fInputs[i] + " : " +
+                     ConvertShapeToString(inputs[i]) + " and " + fInputs[i-1] + " : " + ConvertShapeToString(inputs[i-1]));
                   for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
                      if ((int) iaxis == fAxis)
                         stack.push_back(inputs[i][iaxis]);
@@ -94,7 +98,7 @@
          }
 
          // get shape of output given inputs. It is going to be called after initialized
-         std::vector<std::vector<Dim>> ShapeInference(const std::vector<std::vector<Dim>> & inputs){
+         std::vector<std::vector<Dim>> ShapeInference(const std::vector<std::vector<Dim>> & inputs) {
             std::vector<std::vector<Dim>> ret(1);
             // treat negative axis case
             if (fAxis<0) {
@@ -107,8 +111,8 @@
             if(fnewAxis == 0){
                for (size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i - 1].size())
-                     throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " +
-                                              ConvertDynamicShapeToString(inputs[i]) + " and " + ConvertDynamicShapeToString(inputs[i - 1]));
+                     throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " + fInputs[i] + " : " +
+                                              ConvertDynamicShapeToString(inputs[i]) + " and " + fInputs[i-1] + " : " + ConvertDynamicShapeToString(inputs[i - 1]));
                   for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
                      if ((int)iaxis == fAxis) {
                         // support only non-params shape for the concatenation axis
@@ -139,8 +143,7 @@
             return ret;
          }
 
-         void Initialize(RModel &model)
-         {
+      void Initialize(RModel& model) override {
             for (auto &it : fInputs) {
                if (model.CheckIfTensorAlreadyExist(it) == false) {
                   throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");
@@ -148,10 +151,48 @@
                fInputShapes.push_back(model.GetDynamicTensorShape(it));
             }
             fOutputShape = ShapeInference(fInputShapes)[0];
-            model.AddIntermediateTensor(fOutput, model.GetTensorType(fInputs[0]), fOutputShape);
+            if (model.Verbose())
+               std::cout << "Output of concat operator has shape " << ConvertDynamicShapeToString(fOutputShape) << std::endl;
+
+            // check if concat has constant inputs , axis 0(concat contigous memory and type is integer)
+            if (model.GetTensorType(fInputs[0]) == ETensorType::INT64 && fAxis == 0) {
+               fIsOutputConstant = true;
+               for ( auto & input : fInputs) {
+                  if (!model.IsInitializedTensor(input)) {
+                     fIsOutputConstant = false;
+                     break;
+                  }
+               }
+               if (fIsOutputConstant) {
+                  auto outputShape = ConvertShapeToInt(fOutputShape);  // conversion must be possible
+                  std::vector<int64_t> outputData(ConvertShapeToLength(outputShape));
+                  size_t offset = 0;
+                  for ( auto & input : fInputs) {
+                     auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(input).get());
+                     auto inputShape = model.GetTensorShape(input); // shape is not dynamic if it is constant
+                     size_t inputLength = ConvertShapeToLength(inputShape);
+                     std::copy(inputData, inputData + inputLength, outputData.begin() + offset );
+                     offset += inputLength;
+                     // data do not need to be written as a weight
+                     model.SetNotWritableInitializedTensor(input);
+                  }
+                  model.AddConstantTensor<int64_t>(fOutput, outputShape, outputData.data());
+                  if (model.Verbose()) {
+                     std::cout << "output of Concat is a constant tensor " << ConvertShapeToString(outputShape) << " : "
+                     << ConvertValuesToString(outputData) << std::endl;
+                  }
+               }
+            }
+            if (!fIsOutputConstant) {
+               model.AddIntermediateTensor(fOutput, model.GetTensorType(fInputs[0]), fOutputShape);
+               if (model.Verbose()) {
+                  std::cout << "Concat ---> " << fOutput << " " <<  ConvertDynamicShapeToString(fOutputShape) << std::endl;
+               }
+            }
          }
 
-         std::string Generate(std::string OpName){
+         std::string Generate(std::string OpName) override {
+            if (fIsOutputConstant) return "";
             OpName = "op_"+OpName;
             if(fOutputShape.empty()){
                   throw std::runtime_error("TMVA SOFIE Concat called to Generate without being initialized first");

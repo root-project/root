@@ -36,14 +36,12 @@ public:
    class BFGSType {
    };
 
-   VariableMetricMinimizer() : fMinSeedGen(MnSeedGenerator()), fMinBuilder(VariableMetricBuilder()) {}
+   VariableMetricMinimizer() = default;
 
    VariableMetricMinimizer(BFGSType)
       : fMinSeedGen(MnSeedGenerator()), fMinBuilder(VariableMetricBuilder(VariableMetricBuilder::kBFGS))
    {
    }
-
-   ~VariableMetricMinimizer() override {}
 
    const MinimumSeedGenerator &SeedGenerator() const override { return fMinSeedGen; }
    const MinimumBuilder &Builder() const override { return fMinBuilder; }

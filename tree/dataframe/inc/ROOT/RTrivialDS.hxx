@@ -25,7 +25,6 @@ namespace RDF {
 /// it returns entries from GetEntryRanges forever or until a Range stops the event loop (for test purposes).
 class RTrivialDS final : public ROOT::RDF::RDataSource {
 private:
-   unsigned int fNSlots = 0U;
    ULong64_t fSize = 0ULL;
    bool fSkipEvenEntries = false;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
@@ -41,7 +40,13 @@ public:
    RTrivialDS(ULong64_t size, bool skipEvenEntries = false);
    /// This ctor produces a data-source that returns infinite entries
    RTrivialDS();
-   ~RTrivialDS();
+   // Rule of five
+   RTrivialDS(const RTrivialDS &) = delete;
+   RTrivialDS &operator=(const RTrivialDS &) = delete;
+   RTrivialDS(RTrivialDS &&) = delete;
+   RTrivialDS &operator=(RTrivialDS &&) = delete;
+   ~RTrivialDS() final = default;
+
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view) const final;

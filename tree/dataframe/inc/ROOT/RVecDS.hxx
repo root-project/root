@@ -55,7 +55,6 @@ class RVecDS final : public ROOT::RDF::RDataSource {
    const PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
-   unsigned int fNSlots{0};
    std::function<void()> fDeleteRVecs;
 
    Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id)
@@ -131,7 +130,12 @@ public:
    {
    }
 
-   ~RVecDS()
+   // Rule of five
+   RVecDS(const RVecDS &) = delete;
+   RVecDS &operator=(const RVecDS &) = delete;
+   RVecDS(RVecDS &&) = delete;
+   RVecDS &operator=(RVecDS &&) = delete;
+   ~RVecDS() final
    {
       for (auto &&ptrHolderv : fPointerHolders) {
          for (auto &&ptrHolder : ptrHolderv) {
@@ -169,7 +173,7 @@ public:
       return true;
    }
 
-   void SetNSlots(unsigned int nSlots)
+   void SetNSlots(unsigned int nSlots) final
    {
       fNSlots = nSlots;
       const auto nCols = fColNames.size();

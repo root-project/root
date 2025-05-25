@@ -13,12 +13,13 @@
 #ifndef ROOT_Math_Util
 #define ROOT_Math_Util
 
-#include <string>
-#include <sstream>
-
+#include <chrono>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <numeric>
+#include <sstream>
+#include <string>
 
 
 // This can be protected against by defining ROOT_Math_VecTypes
@@ -36,12 +37,25 @@
 
 namespace ROOT {
 
-   namespace Math {
+namespace Math {
 
-   /**
-      namespace defining Utility functions needed by mathcore
-   */
-   namespace Util {
+/**
+   namespace defining Utility functions needed by mathcore
+*/
+namespace Util {
+
+class TimingScope {
+
+public:
+   TimingScope(std::function<void(std::string const&)> printer, std::string const &message);
+
+   ~TimingScope();
+
+private:
+   std::chrono::steady_clock::time_point fBegin;
+   std::function<void(std::string const&)> fPrinter;
+   const std::string fMessage;
+};
 
    /**
       Utility function for conversion to strings

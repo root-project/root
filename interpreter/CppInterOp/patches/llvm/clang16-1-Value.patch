@@ -1,0 +1,2084 @@
+diff --git a/clang/include/clang/AST/Decl.h b/clang/include/clang/AST/Decl.h
+index 863f6ac57..feb6db113 100644
+--- a/clang/include/clang/AST/Decl.h
++++ b/clang/include/clang/AST/Decl.h
+@@ -4308,6 +4308,7 @@ class TopLevelStmtDecl : public Decl {
+   friend class ASTDeclWriter;
+ 
+   Stmt *Statement = nullptr;
++  bool IsSemiMissing = false;
+ 
+   TopLevelStmtDecl(DeclContext *DC, SourceLocation L, Stmt *S)
+       : Decl(TopLevelStmt, DC, L), Statement(S) {}
+@@ -4321,6 +4322,12 @@ public:
+   SourceRange getSourceRange() const override LLVM_READONLY;
+   Stmt *getStmt() { return Statement; }
+   const Stmt *getStmt() const { return Statement; }
++  void setStmt(Stmt *S) {
++    assert(IsSemiMissing && "Operation supported for printing values only!");
++    Statement = S;
++  }
++  bool isSemiMissing() const { return IsSemiMissing; }
++  void setSemiMissing(bool Missing = true) { IsSemiMissing = Missing; }
+ 
+   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+   static bool classofKind(Kind K) { return K == TopLevelStmt; }
+diff --git a/clang/include/clang/Basic/TokenKinds.def b/clang/include/clang/Basic/TokenKinds.def
+index 96feae991..752629855 100644
+--- a/clang/include/clang/Basic/TokenKinds.def
++++ b/clang/include/clang/Basic/TokenKinds.def
+@@ -936,6 +936,9 @@ ANNOTATION(module_end)
+ // into the name of a header unit.
+ ANNOTATION(header_unit)
+ 
++// Annotation for end of input in clang-repl.
++ANNOTATION(repl_input_end)
++
+ #undef PRAGMA_ANNOTATION
+ #undef ANNOTATION
+ #undef TESTING_KEYWORD
+diff --git a/clang/include/clang/Interpreter/Interpreter.h b/clang/include/clang/Interpreter/Interpreter.h
+index fd22af976..e68021845 100644
+--- a/clang/include/clang/Interpreter/Interpreter.h
++++ b/clang/include/clang/Interpreter/Interpreter.h
+@@ -14,13 +14,15 @@
+ #ifndef LLVM_CLANG_INTERPRETER_INTERPRETER_H
+ #define LLVM_CLANG_INTERPRETER_INTERPRETER_H
+ 
+-#include "clang/Interpreter/PartialTranslationUnit.h"
+-
++#include "clang/AST/Decl.h"
+ #include "clang/AST/GlobalDecl.h"
++#include "clang/Interpreter/PartialTranslationUnit.h"
++#include "clang/Interpreter/Value.h"
+ 
++#include "llvm/ADT/DenseMap.h"
+ #include "llvm/ExecutionEngine/JITSymbol.h"
++#include "llvm/ExecutionEngine/Orc/Shared/ExecutorAddress.h"
+ #include "llvm/Support/Error.h"
+-
+ #include <memory>
+ #include <vector>
+ 
+@@ -28,7 +30,7 @@ namespace llvm {
+ namespace orc {
+ class LLJIT;
+ class ThreadSafeContext;
+-}
++} // namespace orc
+ } // namespace llvm
+ 
+ namespace clang {
+@@ -52,39 +54,64 @@ class Interpreter {
+ 
+   Interpreter(std::unique_ptr<CompilerInstance> CI, llvm::Error &Err);
+ 
++  llvm::Error CreateExecutor();
++  unsigned InitPTUSize = 0;
++
++  // This member holds the last result of the value printing. It's a class
++  // member because we might want to access it after more inputs. If no value
++  // printing happens, it's in an invalid state.
++  Value LastValue;
++
+ public:
+   ~Interpreter();
+   static llvm::Expected<std::unique_ptr<Interpreter>>
+   create(std::unique_ptr<CompilerInstance> CI);
++  const ASTContext &getASTContext() const;
++  ASTContext &getASTContext();
+   const CompilerInstance *getCompilerInstance() const;
+-  const llvm::orc::LLJIT *getExecutionEngine() const;
++  llvm::Expected<llvm::orc::LLJIT &> getExecutionEngine();
++
+   llvm::Expected<PartialTranslationUnit &> Parse(llvm::StringRef Code);
+   llvm::Error Execute(PartialTranslationUnit &T);
+-  llvm::Error ParseAndExecute(llvm::StringRef Code) {
+-    auto PTU = Parse(Code);
+-    if (!PTU)
+-      return PTU.takeError();
+-    if (PTU->TheModule)
+-      return Execute(*PTU);
+-    return llvm::Error::success();
+-  }
++  llvm::Error ParseAndExecute(llvm::StringRef Code, Value *V = nullptr);
++  llvm::Expected<llvm::orc::ExecutorAddr> CompileDtorCall(CXXRecordDecl *CXXRD);
+ 
+   /// Undo N previous incremental inputs.
+   llvm::Error Undo(unsigned N = 1);
+ 
+-  /// \returns the \c JITTargetAddress of a \c GlobalDecl. This interface uses
++  /// Link a dynamic library
++  llvm::Error LoadDynamicLibrary(const char *name);
++
++  /// \returns the \c ExecutorAddr of a \c GlobalDecl. This interface uses
+   /// the CodeGenModule's internal mangling cache to avoid recomputing the
+   /// mangled name.
+-  llvm::Expected<llvm::JITTargetAddress> getSymbolAddress(GlobalDecl GD) const;
++  llvm::Expected<llvm::orc::ExecutorAddr> getSymbolAddress(GlobalDecl GD) const;
+ 
+-  /// \returns the \c JITTargetAddress of a given name as written in the IR.
+-  llvm::Expected<llvm::JITTargetAddress>
++  /// \returns the \c ExecutorAddr of a given name as written in the IR.
++  llvm::Expected<llvm::orc::ExecutorAddr>
+   getSymbolAddress(llvm::StringRef IRName) const;
+ 
+-  /// \returns the \c JITTargetAddress of a given name as written in the object
++  /// \returns the \c ExecutorAddr of a given name as written in the object
+   /// file.
+-  llvm::Expected<llvm::JITTargetAddress>
++  llvm::Expected<llvm::orc::ExecutorAddr>
+   getSymbolAddressFromLinkerName(llvm::StringRef LinkerName) const;
++
++  enum InterfaceKind { NoAlloc, WithAlloc, CopyArray };
++
++  const llvm::SmallVectorImpl<Expr *> &getValuePrintingInfo() const {
++    return ValuePrintingInfo;
++  }
++
++  Expr *SynthesizeExpr(Expr *E);
++
++private:
++  size_t getEffectivePTUSize() const;
++
++  bool FindRuntimeInterface();
++
++  llvm::DenseMap<CXXRecordDecl *, llvm::orc::ExecutorAddr> Dtors;
++
++  llvm::SmallVector<Expr *, 3> ValuePrintingInfo;
+ };
+ } // namespace clang
+ 
+diff --git a/clang/include/clang/Interpreter/Value.h b/clang/include/clang/Interpreter/Value.h
+new file mode 100644
+index 000000000..4df436703
+--- /dev/null
++++ b/clang/include/clang/Interpreter/Value.h
+@@ -0,0 +1,202 @@
++//===--- Value.h - Definition of interpreter value --------------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++//
++// Value is a lightweight struct that is used for carrying execution results in
++// clang-repl. It's a special runtime that acts like a messager between compiled
++// code and interpreted code. This makes it possible to exchange interesting
++// information between the compiled & interpreted world.
++//
++// A typical usage is like the below:
++//
++// Value V;
++// Interp.ParseAndExecute("int x = 42;");
++// Interp.ParseAndExecute("x", &V);
++// V.getType(); // <-- Yields a clang::QualType.
++// V.getInt(); // <-- Yields 42.
++//
++// The current design is still highly experimental and nobody should rely on the
++// API being stable because we're hopefully going to make significant changes to
++// it in the relatively near future. For example, Value also intends to be used
++// as an exchange token for JIT support enabling remote execution on the embed
++// devices where the JIT infrastructure cannot fit. To support that we will need
++// to split the memory storage in a different place and perhaps add a resource
++// header is similar to intrinsics headers which have stricter performance
++// constraints.
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef LLVM_CLANG_INTERPRETER_VALUE_H
++#define LLVM_CLANG_INTERPRETER_VALUE_H
++
++#include "llvm/Support/Compiler.h"
++#include <cstdint>
++
++// NOTE: Since the REPL itself could also include this runtime, extreme caution
++// should be taken when MAKING CHANGES to this file, especially when INCLUDE NEW
++// HEADERS, like <string>, <memory> and etc. (That pulls a large number of
++// tokens and will impact the runtime performance of the REPL)
++
++namespace llvm {
++class raw_ostream;
++
++} // namespace llvm
++
++namespace clang {
++
++class ASTContext;
++class Interpreter;
++class QualType;
++
++#if __has_attribute(visibility) &&                                             \
++    (!(defined(_WIN32) || defined(__CYGWIN__)) ||                              \
++     (defined(__MINGW32__) && defined(__clang__)))
++#if defined(LLVM_BUILD_LLVM_DYLIB) || defined(LLVM_BUILD_SHARED_LIBS)
++#define REPL_EXTERNAL_VISIBILITY __attribute__((visibility("default")))
++#else
++#define REPL_EXTERNAL_VISIBILITY
++#endif
++#else
++#if defined(_WIN32)
++#define REPL_EXTERNAL_VISIBILITY __declspec(dllexport)
++#endif
++#endif
++
++#define REPL_BUILTIN_TYPES                                                     \
++  X(bool, Bool)                                                                \
++  X(char, Char_S)                                                              \
++  X(signed char, SChar)                                                        \
++  X(unsigned char, UChar)                                                      \
++  X(short, Short)                                                              \
++  X(unsigned short, UShort)                                                    \
++  X(int, Int)                                                                  \
++  X(unsigned int, UInt)                                                        \
++  X(long, Long)                                                                \
++  X(unsigned long, ULong)                                                      \
++  X(long long, LongLong)                                                       \
++  X(unsigned long long, ULongLong)                                             \
++  X(float, Float)                                                              \
++  X(double, Double)                                                            \
++  X(long double, LongDouble)
++
++class REPL_EXTERNAL_VISIBILITY Value {
++  union Storage {
++#define X(type, name) type m_##name;
++    REPL_BUILTIN_TYPES
++#undef X
++    void *m_Ptr;
++  };
++
++public:
++  enum Kind {
++#define X(type, name) K_##name,
++    REPL_BUILTIN_TYPES
++#undef X
++
++    K_Void,
++    K_PtrOrObj,
++    K_Unspecified
++  };
++
++  Value() = default;
++  Value(Interpreter *In, void *Ty);
++  Value(const Value &RHS);
++  Value(Value &&RHS) noexcept;
++  Value &operator=(const Value &RHS);
++  Value &operator=(Value &&RHS) noexcept;
++  ~Value();
++
++  void printType(llvm::raw_ostream &Out) const;
++  void printData(llvm::raw_ostream &Out) const;
++  void print(llvm::raw_ostream &Out) const;
++  void dump() const;
++  void clear();
++
++  ASTContext &getASTContext();
++  const ASTContext &getASTContext() const;
++  Interpreter &getInterpreter();
++  const Interpreter &getInterpreter() const;
++  QualType getType() const;
++
++  bool isValid() const { return ValueKind != K_Unspecified; }
++  bool isVoid() const { return ValueKind == K_Void; }
++  bool hasValue() const { return isValid() && !isVoid(); }
++  bool isManuallyAlloc() const { return IsManuallyAlloc; }
++  Kind getKind() const { return ValueKind; }
++  void setKind(Kind K) { ValueKind = K; }
++  void setOpaqueType(void *Ty) { OpaqueType = Ty; }
++
++  void *getPtr() const;
++  void setPtr(void *Ptr) { Data.m_Ptr = Ptr; }
++
++#define X(type, name)                                                          \
++  void set##name(type Val) { Data.m_##name = Val; }                            \
++  type get##name() const { return Data.m_##name; }
++  REPL_BUILTIN_TYPES
++#undef X
++
++  /// \brief Get the value with cast.
++  //
++  /// Get the value cast to T. This is similar to reinterpret_cast<T>(value),
++  /// casting the value of builtins (except void), enums and pointers.
++  /// Values referencing an object are treated as pointers to the object.
++  template <typename T> T convertTo() const {
++    return convertFwd<T>::cast(*this);
++  }
++
++protected:
++  bool isPointerOrObjectType() const { return ValueKind == K_PtrOrObj; }
++
++  /// \brief Get to the value with type checking casting the underlying
++  /// stored value to T.
++  template <typename T> T as() const {
++    switch (ValueKind) {
++    default:
++      return T();
++#define X(type, name)                                                          \
++  case Value::K_##name:                                                        \
++    return (T)Data.m_##name;
++      REPL_BUILTIN_TYPES
++#undef X
++    }
++  }
++
++  // Allow convertTo to be partially specialized.
++  template <typename T> struct convertFwd {
++    static T cast(const Value &V) {
++      if (V.isPointerOrObjectType())
++        return (T)(uintptr_t)V.as<void *>();
++      if (!V.isValid() || V.isVoid()) {
++        return T();
++      }
++      return V.as<T>();
++    }
++  };
++
++  template <typename T> struct convertFwd<T *> {
++    static T *cast(const Value &V) {
++      if (V.isPointerOrObjectType())
++        return (T *)(uintptr_t)V.as<void *>();
++      return nullptr;
++    }
++  };
++
++  Interpreter *Interp = nullptr;
++  void *OpaqueType = nullptr;
++  Storage Data;
++  Kind ValueKind = K_Unspecified;
++  bool IsManuallyAlloc = false;
++};
++
++template <> inline void *Value::as() const {
++  if (isPointerOrObjectType())
++    return Data.m_Ptr;
++  return (void *)as<uintptr_t>();
++}
++
++} // namespace clang
++#endif
+diff --git a/clang/include/clang/Parse/Parser.h b/clang/include/clang/Parse/Parser.h
+index 6f9581b9e..6b73f43a1 100644
+--- a/clang/include/clang/Parse/Parser.h
++++ b/clang/include/clang/Parse/Parser.h
+@@ -18,6 +18,7 @@
+ #include "clang/Basic/OpenMPKinds.h"
+ #include "clang/Basic/OperatorPrecedence.h"
+ #include "clang/Basic/Specifiers.h"
++#include "clang/Basic/TokenKinds.h"
+ #include "clang/Lex/CodeCompletionHandler.h"
+ #include "clang/Lex/Preprocessor.h"
+ #include "clang/Sema/DeclSpec.h"
+@@ -692,7 +693,8 @@ private:
+   bool isEofOrEom() {
+     tok::TokenKind Kind = Tok.getKind();
+     return Kind == tok::eof || Kind == tok::annot_module_begin ||
+-           Kind == tok::annot_module_end || Kind == tok::annot_module_include;
++           Kind == tok::annot_module_end || Kind == tok::annot_module_include ||
++           Kind == tok::annot_repl_input_end;
+   }
+ 
+   /// Checks if the \p Level is valid for use in a fold expression.
+diff --git a/clang/lib/Frontend/PrintPreprocessedOutput.cpp b/clang/lib/Frontend/PrintPreprocessedOutput.cpp
+index ffa85e523..1b262d9e6 100644
+--- a/clang/lib/Frontend/PrintPreprocessedOutput.cpp
++++ b/clang/lib/Frontend/PrintPreprocessedOutput.cpp
+@@ -663,7 +663,8 @@ void PrintPPOutputPPCallbacks::HandleWhitespaceBeforeTok(const Token &Tok,
+   // them.
+   if (Tok.is(tok::eof) ||
+       (Tok.isAnnotation() && !Tok.is(tok::annot_header_unit) &&
+-       !Tok.is(tok::annot_module_begin) && !Tok.is(tok::annot_module_end)))
++       !Tok.is(tok::annot_module_begin) && !Tok.is(tok::annot_module_end) &&
++       !Tok.is(tok::annot_repl_input_end)))
+     return;
+ 
+   // EmittedDirectiveOnThisLine takes priority over RequireSameLine.
+@@ -819,6 +820,9 @@ static void PrintPreprocessedTokens(Preprocessor &PP, Token &Tok,
+       // -traditional-cpp the lexer keeps /all/ whitespace, including comments.
+       PP.Lex(Tok);
+       continue;
++    } else if (Tok.is(tok::annot_repl_input_end)) {
++      PP.Lex(Tok);
++      continue;
+     } else if (Tok.is(tok::eod)) {
+       // Don't print end of directive tokens, since they are typically newlines
+       // that mess up our line tracking. These come from unknown pre-processor
+diff --git a/clang/lib/Interpreter/CMakeLists.txt b/clang/lib/Interpreter/CMakeLists.txt
+index c49f22fdd..565e824bf 100644
+--- a/clang/lib/Interpreter/CMakeLists.txt
++++ b/clang/lib/Interpreter/CMakeLists.txt
+@@ -12,6 +12,8 @@ add_clang_library(clangInterpreter
+   IncrementalExecutor.cpp
+   IncrementalParser.cpp
+   Interpreter.cpp
++  InterpreterUtils.cpp
++  Value.cpp
+ 
+   DEPENDS
+   intrinsics_gen
+diff --git a/clang/lib/Interpreter/IncrementalExecutor.cpp b/clang/lib/Interpreter/IncrementalExecutor.cpp
+index 37d230b61..489ea48e0 100644
+--- a/clang/lib/Interpreter/IncrementalExecutor.cpp
++++ b/clang/lib/Interpreter/IncrementalExecutor.cpp
+@@ -86,7 +86,7 @@ llvm::Error IncrementalExecutor::runCtors() const {
+   return Jit->initialize(Jit->getMainJITDylib());
+ }
+ 
+-llvm::Expected<llvm::JITTargetAddress>
++llvm::Expected<llvm::orc::ExecutorAddr>
+ IncrementalExecutor::getSymbolAddress(llvm::StringRef Name,
+                                       SymbolNameKind NameKind) const {
+   auto Sym = (NameKind == LinkerName) ? Jit->lookupLinkerMangled(Name)
+@@ -94,7 +94,7 @@ IncrementalExecutor::getSymbolAddress(llvm::StringRef Name,
+ 
+   if (!Sym)
+     return Sym.takeError();
+-  return Sym->getValue();
++  return Sym;
+ }
+ 
+ } // end namespace clang
+diff --git a/clang/lib/Interpreter/IncrementalExecutor.h b/clang/lib/Interpreter/IncrementalExecutor.h
+index 54d37c763..dd0a210a0 100644
+--- a/clang/lib/Interpreter/IncrementalExecutor.h
++++ b/clang/lib/Interpreter/IncrementalExecutor.h
+@@ -16,6 +16,7 @@
+ #include "llvm/ADT/DenseMap.h"
+ #include "llvm/ADT/StringRef.h"
+ #include "llvm/ExecutionEngine/Orc/ExecutionUtils.h"
++#include "llvm/ExecutionEngine/Orc/Shared/ExecutorAddress.h"
+ 
+ #include <memory>
+ 
+@@ -51,9 +52,10 @@ public:
+   llvm::Error removeModule(PartialTranslationUnit &PTU);
+   llvm::Error runCtors() const;
+   llvm::Error cleanUp();
+-  llvm::Expected<llvm::JITTargetAddress>
++  llvm::Expected<llvm::orc::ExecutorAddr>
+   getSymbolAddress(llvm::StringRef Name, SymbolNameKind NameKind) const;
+-  llvm::orc::LLJIT *getExecutionEngine() const { return Jit.get(); }
++
++  llvm::orc::LLJIT &GetExecutionEngine() { return *Jit; }
+ };
+ 
+ } // end namespace clang
+diff --git a/clang/lib/Interpreter/IncrementalParser.cpp b/clang/lib/Interpreter/IncrementalParser.cpp
+index 373e2844b..e43189071 100644
+--- a/clang/lib/Interpreter/IncrementalParser.cpp
++++ b/clang/lib/Interpreter/IncrementalParser.cpp
+@@ -11,7 +11,6 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "IncrementalParser.h"
+-
+ #include "clang/AST/DeclContextInternals.h"
+ #include "clang/CodeGen/BackendUtil.h"
+ #include "clang/CodeGen/CodeGenAction.h"
+@@ -19,9 +18,9 @@
+ #include "clang/Frontend/CompilerInstance.h"
+ #include "clang/Frontend/FrontendAction.h"
+ #include "clang/FrontendTool/Utils.h"
++#include "clang/Interpreter/Interpreter.h"
+ #include "clang/Parse/Parser.h"
+ #include "clang/Sema/Sema.h"
+-
+ #include "llvm/Option/ArgList.h"
+ #include "llvm/Support/CrashRecoveryContext.h"
+ #include "llvm/Support/Error.h"
+@@ -31,6 +30,79 @@
+ 
+ namespace clang {
+ 
++class IncrementalASTConsumer final : public ASTConsumer {
++  Interpreter &Interp;
++  std::unique_ptr<ASTConsumer> Consumer;
++
++public:
++  IncrementalASTConsumer(Interpreter &InterpRef, std::unique_ptr<ASTConsumer> C)
++      : Interp(InterpRef), Consumer(std::move(C)) {}
++
++  bool HandleTopLevelDecl(DeclGroupRef DGR) override final {
++    if (DGR.isNull())
++      return true;
++    if (!Consumer)
++      return true;
++
++    for (Decl *D : DGR)
++      if (auto *TSD = llvm::dyn_cast<TopLevelStmtDecl>(D);
++          TSD && TSD->isSemiMissing())
++        TSD->setStmt(Interp.SynthesizeExpr(cast<Expr>(TSD->getStmt())));
++
++    return Consumer->HandleTopLevelDecl(DGR);
++  }
++  void HandleTranslationUnit(ASTContext &Ctx) override final {
++    Consumer->HandleTranslationUnit(Ctx);
++  }
++  void HandleInlineFunctionDefinition(FunctionDecl *D) override final {
++    Consumer->HandleInlineFunctionDefinition(D);
++  }
++  void HandleInterestingDecl(DeclGroupRef D) override final {
++    Consumer->HandleInterestingDecl(D);
++  }
++  void HandleTagDeclDefinition(TagDecl *D) override final {
++    Consumer->HandleTagDeclDefinition(D);
++  }
++  void HandleTagDeclRequiredDefinition(const TagDecl *D) override final {
++    Consumer->HandleTagDeclRequiredDefinition(D);
++  }
++  void HandleCXXImplicitFunctionInstantiation(FunctionDecl *D) override final {
++    Consumer->HandleCXXImplicitFunctionInstantiation(D);
++  }
++  void HandleTopLevelDeclInObjCContainer(DeclGroupRef D) override final {
++    Consumer->HandleTopLevelDeclInObjCContainer(D);
++  }
++  void HandleImplicitImportDecl(ImportDecl *D) override final {
++    Consumer->HandleImplicitImportDecl(D);
++  }
++  void CompleteTentativeDefinition(VarDecl *D) override final {
++    Consumer->CompleteTentativeDefinition(D);
++  }
++  void CompleteExternalDeclaration(VarDecl *D) override final {
++    Consumer->CompleteExternalDeclaration(D);
++  }
++  void AssignInheritanceModel(CXXRecordDecl *RD) override final {
++    Consumer->AssignInheritanceModel(RD);
++  }
++  void HandleCXXStaticMemberVarInstantiation(VarDecl *D) override final {
++    Consumer->HandleCXXStaticMemberVarInstantiation(D);
++  }
++  void HandleVTable(CXXRecordDecl *RD) override final {
++    Consumer->HandleVTable(RD);
++  }
++  ASTMutationListener *GetASTMutationListener() override final {
++    return Consumer->GetASTMutationListener();
++  }
++  ASTDeserializationListener *GetASTDeserializationListener() override final {
++    return Consumer->GetASTDeserializationListener();
++  }
++  void PrintStats() override final { Consumer->PrintStats(); }
++  bool shouldSkipFunctionBody(Decl *D) override final {
++    return Consumer->shouldSkipFunctionBody(D);
++  }
++  static bool classof(const clang::ASTConsumer *) { return true; }
++};
++
+ /// A custom action enabling the incremental processing functionality.
+ ///
+ /// The usual \p FrontendAction expects one call to ExecuteAction and once it
+@@ -122,7 +194,8 @@ public:
+   }
+ };
+ 
+-IncrementalParser::IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
++IncrementalParser::IncrementalParser(Interpreter &Interp,
++                                     std::unique_ptr<CompilerInstance> Instance,
+                                      llvm::LLVMContext &LLVMCtx,
+                                      llvm::Error &Err)
+     : CI(std::move(Instance)) {
+@@ -131,6 +204,9 @@ IncrementalParser::IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
+   if (Err)
+     return;
+   CI->ExecuteAction(*Act);
++  std::unique_ptr<ASTConsumer> IncrConsumer =
++      std::make_unique<IncrementalASTConsumer>(Interp, CI->takeASTConsumer());
++  CI->setASTConsumer(std::move(IncrConsumer));
+   Consumer = &CI->getASTConsumer();
+   P.reset(
+       new Parser(CI->getPreprocessor(), CI->getSema(), /*SkipBodies=*/false));
+@@ -158,8 +234,8 @@ IncrementalParser::ParseOrWrapTopLevelDecl() {
+   LastPTU.TUPart = C.getTranslationUnitDecl();
+ 
+   // Skip previous eof due to last incremental input.
+-  if (P->getCurToken().is(tok::eof)) {
+-    P->ConsumeToken();
++  if (P->getCurToken().is(tok::annot_repl_input_end)) {
++    P->ConsumeAnyToken();
+     // FIXME: Clang does not call ExitScope on finalizing the regular TU, we
+     // might want to do that around HandleEndOfTranslationUnit.
+     P->ExitScope();
+@@ -259,23 +335,28 @@ IncrementalParser::Parse(llvm::StringRef input) {
+     Token Tok;
+     do {
+       PP.Lex(Tok);
+-    } while (Tok.isNot(tok::eof));
++    } while (Tok.isNot(tok::annot_repl_input_end));
++  } else {
++    Token AssertTok;
++    PP.Lex(AssertTok);
++    assert(AssertTok.is(tok::annot_repl_input_end) &&
++           "Lexer must be EOF when starting incremental parse!");
+   }
+ 
+-  Token AssertTok;
+-  PP.Lex(AssertTok);
+-  assert(AssertTok.is(tok::eof) &&
+-         "Lexer must be EOF when starting incremental parse!");
++  if (std::unique_ptr<llvm::Module> M = GenModule())
++    PTU->TheModule = std::move(M);
++
++  return PTU;
++}
+ 
++std::unique_ptr<llvm::Module> IncrementalParser::GenModule() {
++  static unsigned ID = 0;
+   if (CodeGenerator *CG = getCodeGen(Act.get())) {
+     std::unique_ptr<llvm::Module> M(CG->ReleaseModule());
+-    CG->StartModule("incr_module_" + std::to_string(PTUs.size()),
+-                    M->getContext());
+-
+-    PTU->TheModule = std::move(M);
++    CG->StartModule("incr_module_" + std::to_string(ID++), M->getContext());
++    return M;
+   }
+-
+-  return PTU;
++  return nullptr;
+ }
+ 
+ void IncrementalParser::CleanUpPTU(PartialTranslationUnit &PTU) {
+diff --git a/clang/lib/Interpreter/IncrementalParser.h b/clang/lib/Interpreter/IncrementalParser.h
+index 8e45d6b59..99e37588d 100644
+--- a/clang/lib/Interpreter/IncrementalParser.h
++++ b/clang/lib/Interpreter/IncrementalParser.h
+@@ -16,7 +16,6 @@
+ #include "clang/Interpreter/PartialTranslationUnit.h"
+ 
+ #include "clang/AST/GlobalDecl.h"
+-
+ #include "llvm/ADT/ArrayRef.h"
+ #include "llvm/ADT/StringRef.h"
+ #include "llvm/Support/Error.h"
+@@ -31,8 +30,8 @@ namespace clang {
+ class ASTConsumer;
+ class CompilerInstance;
+ class IncrementalAction;
++class Interpreter;
+ class Parser;
+-
+ /// Provides support for incremental compilation. Keeps track of the state
+ /// changes between the subsequent incremental input.
+ ///
+@@ -57,7 +56,8 @@ class IncrementalParser {
+   std::list<PartialTranslationUnit> PTUs;
+ 
+ public:
+-  IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
++  IncrementalParser(Interpreter &Interp,
++                    std::unique_ptr<CompilerInstance> Instance,
+                     llvm::LLVMContext &LLVMCtx, llvm::Error &Err);
+   ~IncrementalParser();
+ 
+@@ -76,6 +76,8 @@ public:
+ 
+   std::list<PartialTranslationUnit> &getPTUs() { return PTUs; }
+ 
++  std::unique_ptr<llvm::Module> GenModule();
++
+ private:
+   llvm::Expected<PartialTranslationUnit &> ParseOrWrapTopLevelDecl();
+ };
+diff --git a/clang/lib/Interpreter/Interpreter.cpp b/clang/lib/Interpreter/Interpreter.cpp
+index a6f5fdc6e..4391bd008 100644
+--- a/clang/lib/Interpreter/Interpreter.cpp
++++ b/clang/lib/Interpreter/Interpreter.cpp
+@@ -16,7 +16,11 @@
+ #include "IncrementalExecutor.h"
+ #include "IncrementalParser.h"
+ 
++#include "InterpreterUtils.h"
+ #include "clang/AST/ASTContext.h"
++#include "clang/AST/Mangle.h"
++#include "clang/AST/TypeVisitor.h"
++#include "clang/Basic/DiagnosticSema.h"
+ #include "clang/Basic/TargetInfo.h"
+ #include "clang/CodeGen/ModuleBuilder.h"
+ #include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
+@@ -27,12 +31,16 @@
+ #include "clang/Driver/Tool.h"
+ #include "clang/Frontend/CompilerInstance.h"
+ #include "clang/Frontend/TextDiagnosticBuffer.h"
++#include "clang/Interpreter/Value.h"
+ #include "clang/Lex/PreprocessorOptions.h"
+-
++#include "clang/Sema/Lookup.h"
++#include "llvm/ExecutionEngine/JITSymbol.h"
++#include "llvm/ExecutionEngine/Orc/LLJIT.h"
+ #include "llvm/IR/Module.h"
+ #include "llvm/Support/Errc.h"
++#include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/raw_ostream.h"
+ #include "llvm/Support/Host.h"
+-
+ using namespace clang;
+ 
+ // FIXME: Figure out how to unify with namespace init_convenience from
+@@ -176,7 +184,7 @@ Interpreter::Interpreter(std::unique_ptr<CompilerInstance> CI,
+   llvm::ErrorAsOutParameter EAO(&Err);
+   auto LLVMCtx = std::make_unique<llvm::LLVMContext>();
+   TSCtx = std::make_unique<llvm::orc::ThreadSafeContext>(std::move(LLVMCtx));
+-  IncrParser = std::make_unique<IncrementalParser>(std::move(CI),
++  IncrParser = std::make_unique<IncrementalParser>(*this, std::move(CI),
+                                                    *TSCtx->getContext(), Err);
+ }
+ 
+@@ -189,6 +197,29 @@ Interpreter::~Interpreter() {
+   }
+ }
+ 
++// These better to put in a runtime header but we can't. This is because we
++// can't find the precise resource directory in unittests so we have to hard
++// code them.
++const char *const Runtimes = R"(
++    void* operator new(__SIZE_TYPE__, void* __p) noexcept;
++    void *__clang_Interpreter_SetValueWithAlloc(void*, void*, void*);
++    void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*);
++    void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, void*);
++    void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, float);
++    void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, double);
++    void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, long double);
++    void __clang_Interpreter_SetValueNoAlloc(void*,void*,void*,unsigned long long);
++    template <class T, class = T (*)() /*disable for arrays*/>
++    void __clang_Interpreter_SetValueCopyArr(T* Src, void* Placement, unsigned long Size) {
++      for (auto Idx = 0; Idx < Size; ++Idx)
++        new ((void*)(((T*)Placement) + Idx)) T(Src[Idx]);
++    }
++    template <class T, unsigned long N>
++    void __clang_Interpreter_SetValueCopyArr(const T (*Src)[N], void* Placement, unsigned long Size) {
++      __clang_Interpreter_SetValueCopyArr(Src[0], Placement, Size);
++    }
++)";
++
+ llvm::Expected<std::unique_ptr<Interpreter>>
+ Interpreter::create(std::unique_ptr<CompilerInstance> CI) {
+   llvm::Error Err = llvm::Error::success();
+@@ -196,6 +227,15 @@ Interpreter::create(std::unique_ptr<CompilerInstance> CI) {
+       std::unique_ptr<Interpreter>(new Interpreter(std::move(CI), Err));
+   if (Err)
+     return std::move(Err);
++  auto PTU = Interp->Parse(Runtimes);
++  if (!PTU)
++    return PTU.takeError();
++
++  Interp->ValuePrintingInfo.resize(3);
++  // FIXME: This is a ugly hack. Undo command checks its availability by looking
++  // at the size of the PTU list. However we have parsed something in the
++  // beginning of the REPL so we have to mark them as 'Irrevocable'.
++  Interp->InitPTUSize = Interp->IncrParser->getPTUs().size();
+   return std::move(Interp);
+ }
+ 
+@@ -203,25 +243,53 @@ const CompilerInstance *Interpreter::getCompilerInstance() const {
+   return IncrParser->getCI();
+ }
+ 
+-const llvm::orc::LLJIT *Interpreter::getExecutionEngine() const {
+-  if (IncrExecutor)
+-    return IncrExecutor->getExecutionEngine();
+-  return nullptr;
++llvm::Expected<llvm::orc::LLJIT &> Interpreter::getExecutionEngine() {
++  if (!IncrExecutor) {
++    if (auto Err = CreateExecutor())
++      return std::move(Err);
++  }
++
++  return IncrExecutor->GetExecutionEngine();
++}
++
++ASTContext &Interpreter::getASTContext() {
++  return getCompilerInstance()->getASTContext();
++}
++
++const ASTContext &Interpreter::getASTContext() const {
++  return getCompilerInstance()->getASTContext();
++}
++
++size_t Interpreter::getEffectivePTUSize() const {
++  std::list<PartialTranslationUnit> &PTUs = IncrParser->getPTUs();
++  assert(PTUs.size() >= InitPTUSize && "empty PTU list?");
++  return PTUs.size() - InitPTUSize;
+ }
+ 
+ llvm::Expected<PartialTranslationUnit &>
+ Interpreter::Parse(llvm::StringRef Code) {
++  // Tell the interpreter sliently ignore unused expressions since value
++  // printing could cause it.
++  getCompilerInstance()->getDiagnostics().setSeverity(
++      clang::diag::warn_unused_expr, diag::Severity::Ignored, SourceLocation());
+   return IncrParser->Parse(Code);
+ }
+ 
++llvm::Error Interpreter::CreateExecutor() {
++  const clang::TargetInfo &TI =
++      getCompilerInstance()->getASTContext().getTargetInfo();
++  llvm::Error Err = llvm::Error::success();
++  auto Executor = std::make_unique<IncrementalExecutor>(*TSCtx, Err, TI);
++  if (!Err)
++    IncrExecutor = std::move(Executor);
++
++  return Err;
++}
++
+ llvm::Error Interpreter::Execute(PartialTranslationUnit &T) {
+   assert(T.TheModule);
+   if (!IncrExecutor) {
+-    const clang::TargetInfo &TI =
+-        getCompilerInstance()->getASTContext().getTargetInfo();
+-    llvm::Error Err = llvm::Error::success();
+-    IncrExecutor = std::make_unique<IncrementalExecutor>(*TSCtx, Err, TI);
+-
++    auto Err = CreateExecutor();
+     if (Err)
+       return Err;
+   }
+@@ -235,7 +303,26 @@ llvm::Error Interpreter::Execute(PartialTranslationUnit &T) {
+   return llvm::Error::success();
+ }
+ 
+-llvm::Expected<llvm::JITTargetAddress>
++llvm::Error Interpreter::ParseAndExecute(llvm::StringRef Code, Value *V) {
++
++  auto PTU = Parse(Code);
++  if (!PTU)
++    return PTU.takeError();
++  if (PTU->TheModule)
++    if (llvm::Error Err = Execute(*PTU))
++      return Err;
++
++  if (LastValue.isValid()) {
++    if (!V) {
++      LastValue.dump();
++      LastValue.clear();
++    } else
++      *V = std::move(LastValue);
++  }
++  return llvm::Error::success();
++}
++
++llvm::Expected<llvm::orc::ExecutorAddr>
+ Interpreter::getSymbolAddress(GlobalDecl GD) const {
+   if (!IncrExecutor)
+     return llvm::make_error<llvm::StringError>("Operation failed. "
+@@ -245,7 +332,7 @@ Interpreter::getSymbolAddress(GlobalDecl GD) const {
+   return getSymbolAddress(MangledName);
+ }
+ 
+-llvm::Expected<llvm::JITTargetAddress>
++llvm::Expected<llvm::orc::ExecutorAddr>
+ Interpreter::getSymbolAddress(llvm::StringRef IRName) const {
+   if (!IncrExecutor)
+     return llvm::make_error<llvm::StringError>("Operation failed. "
+@@ -255,7 +342,7 @@ Interpreter::getSymbolAddress(llvm::StringRef IRName) const {
+   return IncrExecutor->getSymbolAddress(IRName, IncrementalExecutor::IRName);
+ }
+ 
+-llvm::Expected<llvm::JITTargetAddress>
++llvm::Expected<llvm::orc::ExecutorAddr>
+ Interpreter::getSymbolAddressFromLinkerName(llvm::StringRef Name) const {
+   if (!IncrExecutor)
+     return llvm::make_error<llvm::StringError>("Operation failed. "
+@@ -268,7 +355,7 @@ Interpreter::getSymbolAddressFromLinkerName(llvm::StringRef Name) const {
+ llvm::Error Interpreter::Undo(unsigned N) {
+ 
+   std::list<PartialTranslationUnit> &PTUs = IncrParser->getPTUs();
+-  if (N > PTUs.size())
++  if (N > getEffectivePTUSize())
+     return llvm::make_error<llvm::StringError>("Operation failed. "
+                                                "Too many undos",
+                                                std::error_code());
+@@ -283,3 +370,359 @@ llvm::Error Interpreter::Undo(unsigned N) {
+   }
+   return llvm::Error::success();
+ }
++
++llvm::Error Interpreter::LoadDynamicLibrary(const char *name) {
++  auto EE = getExecutionEngine();
++  if (!EE)
++    return EE.takeError();
++
++  auto &DL = EE->getDataLayout();
++
++  if (auto DLSG = llvm::orc::DynamicLibrarySearchGenerator::Load(
++          name, DL.getGlobalPrefix()))
++    EE->getMainJITDylib().addGenerator(std::move(*DLSG));
++  else
++    return DLSG.takeError();
++
++  return llvm::Error::success();
++}
++
++llvm::Expected<llvm::orc::ExecutorAddr>
++Interpreter::CompileDtorCall(CXXRecordDecl *CXXRD) {
++  assert(CXXRD && "Cannot compile a destructor for a nullptr");
++  if (auto Dtor = Dtors.find(CXXRD); Dtor != Dtors.end())
++    return Dtor->getSecond();
++
++  if (CXXRD->hasIrrelevantDestructor())
++    return llvm::orc::ExecutorAddr{};
++
++  CXXDestructorDecl *DtorRD =
++      getCompilerInstance()->getSema().LookupDestructor(CXXRD);
++
++  llvm::StringRef Name =
++      IncrParser->GetMangledName(GlobalDecl(DtorRD, Dtor_Base));
++  auto AddrOrErr = getSymbolAddress(Name);
++  if (!AddrOrErr)
++    return AddrOrErr.takeError();
++
++  Dtors[CXXRD] = *AddrOrErr;
++  return AddrOrErr;
++}
++
++static constexpr llvm::StringRef MagicRuntimeInterface[] = {
++    "__clang_Interpreter_SetValueNoAlloc",
++    "__clang_Interpreter_SetValueWithAlloc",
++    "__clang_Interpreter_SetValueCopyArr"};
++
++bool Interpreter::FindRuntimeInterface() {
++  if (llvm::all_of(ValuePrintingInfo, [](Expr *E) { return E != nullptr; }))
++    return true;
++
++  Sema &S = getCompilerInstance()->getSema();
++  ASTContext &Ctx = S.getASTContext();
++
++  auto LookupInterface = [&](Expr *&Interface, llvm::StringRef Name) {
++    LookupResult R(S, &Ctx.Idents.get(Name), SourceLocation(),
++                   Sema::LookupOrdinaryName, Sema::ForVisibleRedeclaration);
++    S.LookupQualifiedName(R, Ctx.getTranslationUnitDecl());
++    if (R.empty())
++      return false;
++
++    CXXScopeSpec CSS;
++    Interface = S.BuildDeclarationNameExpr(CSS, R, /*ADL=*/false).get();
++    return true;
++  };
++
++  if (!LookupInterface(ValuePrintingInfo[NoAlloc],
++                       MagicRuntimeInterface[NoAlloc]))
++    return false;
++  if (!LookupInterface(ValuePrintingInfo[WithAlloc],
++                       MagicRuntimeInterface[WithAlloc]))
++    return false;
++  if (!LookupInterface(ValuePrintingInfo[CopyArray],
++                       MagicRuntimeInterface[CopyArray]))
++    return false;
++  return true;
++}
++
++namespace {
++
++class RuntimeInterfaceBuilder
++    : public TypeVisitor<RuntimeInterfaceBuilder, Interpreter::InterfaceKind> {
++  clang::Interpreter &Interp;
++  ASTContext &Ctx;
++  Sema &S;
++  Expr *E;
++  llvm::SmallVector<Expr *, 3> Args;
++
++public:
++  RuntimeInterfaceBuilder(clang::Interpreter &In, ASTContext &C, Sema &SemaRef,
++                          Expr *VE, ArrayRef<Expr *> FixedArgs)
++      : Interp(In), Ctx(C), S(SemaRef), E(VE) {
++    // The Interpreter* parameter and the out parameter `OutVal`.
++    for (Expr *E : FixedArgs)
++      Args.push_back(E);
++
++    // Get rid of ExprWithCleanups.
++    if (auto *EWC = llvm::dyn_cast_if_present<ExprWithCleanups>(E))
++      E = EWC->getSubExpr();
++  }
++
++  ExprResult getCall() {
++    QualType Ty = E->getType();
++    QualType DesugaredTy = Ty.getDesugaredType(Ctx);
++
++    // For lvalue struct, we treat it as a reference.
++    if (DesugaredTy->isRecordType() && E->isLValue()) {
++      DesugaredTy = Ctx.getLValueReferenceType(DesugaredTy);
++      Ty = Ctx.getLValueReferenceType(Ty);
++    }
++
++    Expr *TypeArg =
++        CStyleCastPtrExpr(S, Ctx.VoidPtrTy, (uintptr_t)Ty.getAsOpaquePtr());
++    // The QualType parameter `OpaqueType`, represented as `void*`.
++    Args.push_back(TypeArg);
++
++    // We push the last parameter based on the type of the Expr. Note we need
++    // special care for rvalue struct.
++    Interpreter::InterfaceKind Kind = Visit(&*DesugaredTy);
++    switch (Kind) {
++    case Interpreter::InterfaceKind::WithAlloc:
++    case Interpreter::InterfaceKind::CopyArray: {
++      // __clang_Interpreter_SetValueWithAlloc.
++      ExprResult AllocCall = S.ActOnCallExpr(
++          /*Scope=*/nullptr,
++          Interp.getValuePrintingInfo()[Interpreter::InterfaceKind::WithAlloc],
++          E->getBeginLoc(), Args, E->getEndLoc());
++      assert(!AllocCall.isInvalid() && "Can't create runtime interface call!");
++
++      TypeSourceInfo *TSI = Ctx.getTrivialTypeSourceInfo(Ty, SourceLocation());
++
++      // Force CodeGen to emit destructor.
++      if (auto *RD = Ty->getAsCXXRecordDecl()) {
++        auto *Dtor = S.LookupDestructor(RD);
++        Dtor->addAttr(UsedAttr::CreateImplicit(Ctx));
++        Interp.getCompilerInstance()->getASTConsumer().HandleTopLevelDecl(
++            DeclGroupRef(Dtor));
++      }
++
++      // __clang_Interpreter_SetValueCopyArr.
++      if (Kind == Interpreter::InterfaceKind::CopyArray) {
++        const auto *ConstantArrTy =
++            cast<ConstantArrayType>(DesugaredTy.getTypePtr());
++        size_t ArrSize = Ctx.getConstantArrayElementCount(ConstantArrTy);
++        Expr *ArrSizeExpr = IntegerLiteralExpr(Ctx, ArrSize);
++        Expr *Args[] = {E, AllocCall.get(), ArrSizeExpr};
++        return S.ActOnCallExpr(
++            /*Scope *=*/nullptr,
++            Interp
++                .getValuePrintingInfo()[Interpreter::InterfaceKind::CopyArray],
++            SourceLocation(), Args, SourceLocation());
++      }
++      Expr *Args[] = {AllocCall.get()};
++      ExprResult CXXNewCall = S.BuildCXXNew(
++          E->getSourceRange(),
++          /*UseGlobal=*/true, /*PlacementLParen=*/SourceLocation(), Args,
++          /*PlacementRParen=*/SourceLocation(),
++          /*TypeIdParens=*/SourceRange(), TSI->getType(), TSI, std::nullopt,
++          E->getSourceRange(), E);
++
++      assert(!CXXNewCall.isInvalid() &&
++             "Can't create runtime placement new call!");
++
++      return S.ActOnFinishFullExpr(CXXNewCall.get(),
++                                   /*DiscardedValue=*/false);
++    }
++      // __clang_Interpreter_SetValueNoAlloc.
++    case Interpreter::InterfaceKind::NoAlloc: {
++      return S.ActOnCallExpr(
++          /*Scope=*/nullptr,
++          Interp.getValuePrintingInfo()[Interpreter::InterfaceKind::NoAlloc],
++          E->getBeginLoc(), Args, E->getEndLoc());
++    }
++    }
++    llvm_unreachable("Unhandled Interpreter::InterfaceKind");
++  }
++
++  Interpreter::InterfaceKind VisitRecordType(const RecordType *Ty) {
++    return Interpreter::InterfaceKind::WithAlloc;
++  }
++
++  Interpreter::InterfaceKind
++  VisitMemberPointerType(const MemberPointerType *Ty) {
++    return Interpreter::InterfaceKind::WithAlloc;
++  }
++
++  Interpreter::InterfaceKind
++  VisitConstantArrayType(const ConstantArrayType *Ty) {
++    return Interpreter::InterfaceKind::CopyArray;
++  }
++
++  Interpreter::InterfaceKind
++  VisitFunctionProtoType(const FunctionProtoType *Ty) {
++    HandlePtrType(Ty);
++    return Interpreter::InterfaceKind::NoAlloc;
++  }
++
++  Interpreter::InterfaceKind VisitPointerType(const PointerType *Ty) {
++    HandlePtrType(Ty);
++    return Interpreter::InterfaceKind::NoAlloc;
++  }
++
++  Interpreter::InterfaceKind VisitReferenceType(const ReferenceType *Ty) {
++    ExprResult AddrOfE = S.CreateBuiltinUnaryOp(SourceLocation(), UO_AddrOf, E);
++    assert(!AddrOfE.isInvalid() && "Can not create unary expression");
++    Args.push_back(AddrOfE.get());
++    return Interpreter::InterfaceKind::NoAlloc;
++  }
++
++  Interpreter::InterfaceKind VisitBuiltinType(const BuiltinType *Ty) {
++    if (Ty->isNullPtrType())
++      Args.push_back(E);
++    else if (Ty->isFloatingType())
++      Args.push_back(E);
++    else if (Ty->isIntegralOrEnumerationType())
++      HandleIntegralOrEnumType(Ty);
++    else if (Ty->isVoidType()) {
++      // Do we need to still run `E`?
++    }
++
++    return Interpreter::InterfaceKind::NoAlloc;
++  }
++
++  Interpreter::InterfaceKind VisitEnumType(const EnumType *Ty) {
++    HandleIntegralOrEnumType(Ty);
++    return Interpreter::InterfaceKind::NoAlloc;
++  }
++
++private:
++  // Force cast these types to uint64 to reduce the number of overloads of
++  // `__clang_Interpreter_SetValueNoAlloc`.
++  void HandleIntegralOrEnumType(const Type *Ty) {
++    TypeSourceInfo *TSI = Ctx.getTrivialTypeSourceInfo(Ctx.UnsignedLongLongTy);
++    ExprResult CastedExpr =
++        S.BuildCStyleCastExpr(SourceLocation(), TSI, SourceLocation(), E);
++    assert(!CastedExpr.isInvalid() && "Cannot create cstyle cast expr");
++    Args.push_back(CastedExpr.get());
++  }
++
++  void HandlePtrType(const Type *Ty) {
++    TypeSourceInfo *TSI = Ctx.getTrivialTypeSourceInfo(Ctx.VoidPtrTy);
++    ExprResult CastedExpr =
++        S.BuildCStyleCastExpr(SourceLocation(), TSI, SourceLocation(), E);
++    assert(!CastedExpr.isInvalid() && "Can not create cstyle cast expression");
++    Args.push_back(CastedExpr.get());
++  }
++};
++} // namespace
++
++// This synthesizes a call expression to a speciall
++// function that is responsible for generating the Value.
++// In general, we transform:
++//   clang-repl> x
++// To:
++//   // 1. If x is a built-in type like int, float.
++//   __clang_Interpreter_SetValueNoAlloc(ThisInterp, OpaqueValue, xQualType, x);
++//   // 2. If x is a struct, and a lvalue.
++//   __clang_Interpreter_SetValueNoAlloc(ThisInterp, OpaqueValue, xQualType,
++//   &x);
++//   // 3. If x is a struct, but a rvalue.
++//   new (__clang_Interpreter_SetValueWithAlloc(ThisInterp, OpaqueValue,
++//   xQualType)) (x);
++
++Expr *Interpreter::SynthesizeExpr(Expr *E) {
++  Sema &S = getCompilerInstance()->getSema();
++  ASTContext &Ctx = S.getASTContext();
++
++  if (!FindRuntimeInterface())
++    llvm_unreachable("We can't find the runtime iterface for pretty print!");
++
++  // Create parameter `ThisInterp`.
++  auto *ThisInterp = CStyleCastPtrExpr(S, Ctx.VoidPtrTy, (uintptr_t)this);
++
++  // Create parameter `OutVal`.
++  auto *OutValue = CStyleCastPtrExpr(S, Ctx.VoidPtrTy, (uintptr_t)&LastValue);
++
++  // Build `__clang_Interpreter_SetValue*` call.
++  RuntimeInterfaceBuilder Builder(*this, Ctx, S, E, {ThisInterp, OutValue});
++
++  ExprResult Result = Builder.getCall();
++  // It could fail, like printing an array type in C. (not supported)
++  if (Result.isInvalid())
++    return E;
++  return Result.get();
++}
++
++// Temporary rvalue struct that need special care.
++REPL_EXTERNAL_VISIBILITY void *
++__clang_Interpreter_SetValueWithAlloc(void *This, void *OutVal,
++                                      void *OpaqueType) {
++  Value &VRef = *(Value *)OutVal;
++  VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
++  return VRef.getPtr();
++}
++
++// Pointers, lvalue struct that can take as a reference.
++REPL_EXTERNAL_VISIBILITY void
++__clang_Interpreter_SetValueNoAlloc(void *This, void *OutVal, void *OpaqueType,
++                                    void *Val) {
++  Value &VRef = *(Value *)OutVal;
++  VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
++  VRef.setPtr(Val);
++}
++
++REPL_EXTERNAL_VISIBILITY void
++__clang_Interpreter_SetValueNoAlloc(void *This, void *OutVal,
++                                    void *OpaqueType) {
++  Value &VRef = *(Value *)OutVal;
++  VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
++}
++
++static void SetValueDataBasedOnQualType(Value &V, unsigned long long Data) {
++  QualType QT = V.getType();
++  if (const auto *ET = QT->getAs<EnumType>())
++    QT = ET->getDecl()->getIntegerType();
++
++  switch (QT->getAs<BuiltinType>()->getKind()) {
++  default:
++    llvm_unreachable("unknown type kind!");
++#define X(type, name)                                                          \
++  case BuiltinType::name:                                                      \
++    V.set##name(Data);                                                         \
++    break;
++    REPL_BUILTIN_TYPES
++#undef X
++  }
++}
++
++REPL_EXTERNAL_VISIBILITY void
++__clang_Interpreter_SetValueNoAlloc(void *This, void *OutVal, void *OpaqueType,
++                                    unsigned long long Val) {
++  Value &VRef = *(Value *)OutVal;
++  VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
++  SetValueDataBasedOnQualType(VRef, Val);
++}
++
++REPL_EXTERNAL_VISIBILITY void
++__clang_Interpreter_SetValueNoAlloc(void *This, void *OutVal, void *OpaqueType,
++                                    float Val) {
++  Value &VRef = *(Value *)OutVal;
++  VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
++  VRef.setFloat(Val);
++}
++
++REPL_EXTERNAL_VISIBILITY void
++__clang_Interpreter_SetValueNoAlloc(void *This, void *OutVal, void *OpaqueType,
++                                    double Val) {
++  Value &VRef = *(Value *)OutVal;
++  VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
++  VRef.setDouble(Val);
++}
++
++REPL_EXTERNAL_VISIBILITY void
++__clang_Interpreter_SetValueNoAlloc(void *This, void *OutVal, void *OpaqueType,
++                                    long double Val) {
++  Value &VRef = *(Value *)OutVal;
++  VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
++  VRef.setLongDouble(Val);
++}
+diff --git a/clang/lib/Interpreter/InterpreterUtils.cpp b/clang/lib/Interpreter/InterpreterUtils.cpp
+new file mode 100644
+index 000000000..c19cf6aa3
+--- /dev/null
++++ b/clang/lib/Interpreter/InterpreterUtils.cpp
+@@ -0,0 +1,111 @@
++//===--- InterpreterUtils.cpp - Incremental Utils --------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++//
++// This file implements some common utils used in the incremental library.
++//
++//===----------------------------------------------------------------------===//
++
++#include "InterpreterUtils.h"
++
++namespace clang {
++
++IntegerLiteral *IntegerLiteralExpr(ASTContext &C, uint64_t Val) {
++  return IntegerLiteral::Create(C, llvm::APSInt::getUnsigned(Val),
++                                C.UnsignedLongLongTy, SourceLocation());
++}
++
++Expr *CStyleCastPtrExpr(Sema &S, QualType Ty, Expr *E) {
++  ASTContext &Ctx = S.getASTContext();
++  if (!Ty->isPointerType())
++    Ty = Ctx.getPointerType(Ty);
++
++  TypeSourceInfo *TSI = Ctx.getTrivialTypeSourceInfo(Ty, SourceLocation());
++  Expr *Result =
++      S.BuildCStyleCastExpr(SourceLocation(), TSI, SourceLocation(), E).get();
++  assert(Result && "Cannot create CStyleCastPtrExpr");
++  return Result;
++}
++
++Expr *CStyleCastPtrExpr(Sema &S, QualType Ty, uintptr_t Ptr) {
++  ASTContext &Ctx = S.getASTContext();
++  return CStyleCastPtrExpr(S, Ty, IntegerLiteralExpr(Ctx, (uint64_t)Ptr));
++}
++
++Sema::DeclGroupPtrTy CreateDGPtrFrom(Sema &S, Decl *D) {
++  SmallVector<Decl *, 1> DeclsInGroup;
++  DeclsInGroup.push_back(D);
++  Sema::DeclGroupPtrTy DeclGroupPtr = S.BuildDeclaratorGroup(DeclsInGroup);
++  return DeclGroupPtr;
++}
++
++NamespaceDecl *LookupNamespace(Sema &S, llvm::StringRef Name,
++                               const DeclContext *Within) {
++  DeclarationName DName = &S.Context.Idents.get(Name);
++  LookupResult R(S, DName, SourceLocation(),
++                 Sema::LookupNestedNameSpecifierName);
++  R.suppressDiagnostics();
++  if (!Within)
++    S.LookupName(R, S.TUScope);
++  else {
++    if (const auto *TD = dyn_cast<clang::TagDecl>(Within);
++        TD && !TD->getDefinition())
++      // No definition, no lookup result.
++      return nullptr;
++
++    S.LookupQualifiedName(R, const_cast<DeclContext *>(Within));
++  }
++
++  if (R.empty())
++    return nullptr;
++
++  R.resolveKind();
++
++  return dyn_cast<NamespaceDecl>(R.getFoundDecl());
++}
++
++NamedDecl *LookupNamed(Sema &S, llvm::StringRef Name,
++                       const DeclContext *Within) {
++  DeclarationName DName = &S.Context.Idents.get(Name);
++  LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
++                 Sema::ForVisibleRedeclaration);
++
++  R.suppressDiagnostics();
++
++  if (!Within)
++    S.LookupName(R, S.TUScope);
++  else {
++    const DeclContext *PrimaryWithin = nullptr;
++    if (const auto *TD = dyn_cast<TagDecl>(Within))
++      PrimaryWithin = llvm::dyn_cast_or_null<DeclContext>(TD->getDefinition());
++    else
++      PrimaryWithin = Within->getPrimaryContext();
++
++    // No definition, no lookup result.
++    if (!PrimaryWithin)
++      return nullptr;
++
++    S.LookupQualifiedName(R, const_cast<DeclContext *>(PrimaryWithin));
++  }
++
++  if (R.empty())
++    return nullptr;
++  R.resolveKind();
++
++  if (R.isSingleResult())
++    return llvm::dyn_cast<NamedDecl>(R.getFoundDecl());
++
++  return nullptr;
++}
++
++std::string GetFullTypeName(ASTContext &Ctx, QualType QT) {
++  PrintingPolicy Policy(Ctx.getPrintingPolicy());
++  Policy.SuppressScope = false;
++  Policy.AnonymousTagLocations = false;
++  return QT.getAsString(Policy);
++}
++} // namespace clang
+diff --git a/clang/lib/Interpreter/InterpreterUtils.h b/clang/lib/Interpreter/InterpreterUtils.h
+new file mode 100644
+index 000000000..8df158c17
+--- /dev/null
++++ b/clang/lib/Interpreter/InterpreterUtils.h
+@@ -0,0 +1,54 @@
++//===--- InterpreterUtils.h - Incremental Utils --------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++//
++// This file implements some common utils used in the incremental library.
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef LLVM_CLANG_INTERPRETER_UTILS_H
++#define LLVM_CLANG_INTERPRETER_UTILS_H
++
++#include "clang/AST/ASTContext.h"
++#include "clang/AST/Mangle.h"
++#include "clang/AST/TypeVisitor.h"
++#include "clang/Basic/TargetInfo.h"
++#include "clang/CodeGen/ModuleBuilder.h"
++#include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
++#include "clang/Driver/Compilation.h"
++#include "clang/Driver/Driver.h"
++#include "clang/Driver/Job.h"
++#include "clang/Driver/Options.h"
++#include "clang/Driver/Tool.h"
++#include "clang/Frontend/CompilerInstance.h"
++#include "clang/Frontend/TextDiagnosticBuffer.h"
++#include "clang/Lex/PreprocessorOptions.h"
++
++#include "clang/Sema/Lookup.h"
++#include "llvm/IR/Module.h"
++#include "llvm/Support/Errc.h"
++#include "llvm/TargetParser/Host.h"
++
++namespace clang {
++IntegerLiteral *IntegerLiteralExpr(ASTContext &C, uint64_t Val);
++
++Expr *CStyleCastPtrExpr(Sema &S, QualType Ty, Expr *E);
++
++Expr *CStyleCastPtrExpr(Sema &S, QualType Ty, uintptr_t Ptr);
++
++Sema::DeclGroupPtrTy CreateDGPtrFrom(Sema &S, Decl *D);
++
++NamespaceDecl *LookupNamespace(Sema &S, llvm::StringRef Name,
++                               const DeclContext *Within = nullptr);
++
++NamedDecl *LookupNamed(Sema &S, llvm::StringRef Name,
++                       const DeclContext *Within);
++
++std::string GetFullTypeName(ASTContext &Ctx, QualType QT);
++} // namespace clang
++
++#endif
+diff --git a/clang/lib/Interpreter/Value.cpp b/clang/lib/Interpreter/Value.cpp
+new file mode 100644
+index 000000000..fe37eebac
+--- /dev/null
++++ b/clang/lib/Interpreter/Value.cpp
+@@ -0,0 +1,266 @@
++//===--- Interpreter.h - Incremental Compiation and Execution---*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++//
++// This file defines the class that used to represent a value in incremental
++// C++.
++//
++//===----------------------------------------------------------------------===//
++
++#include "clang/Interpreter/Value.h"
++#include "clang/AST/ASTContext.h"
++#include "clang/AST/Type.h"
++#include "clang/Interpreter/Interpreter.h"
++#include "llvm/ADT/StringExtras.h"
++#include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/raw_os_ostream.h"
++#include <cassert>
++#include <cstdint>
++#include <utility>
++
++using namespace clang;
++
++namespace {
++
++// This is internal buffer maintained by Value, used to hold temporaries.
++class ValueStorage {
++public:
++  using DtorFunc = void (*)(void *);
++
++  static unsigned char *CreatePayload(void *DtorF, size_t AllocSize,
++                                      size_t ElementsSize) {
++    if (AllocSize < sizeof(Canary))
++      AllocSize = sizeof(Canary);
++    unsigned char *Buf =
++        new unsigned char[ValueStorage::getPayloadOffset() + AllocSize];
++    ValueStorage *VS = new (Buf) ValueStorage(DtorF, AllocSize, ElementsSize);
++    std::memcpy(VS->getPayload(), Canary, sizeof(Canary));
++    return VS->getPayload();
++  }
++
++  unsigned char *getPayload() { return Storage; }
++  const unsigned char *getPayload() const { return Storage; }
++
++  static unsigned getPayloadOffset() {
++    static ValueStorage Dummy(nullptr, 0, 0);
++    return Dummy.getPayload() - reinterpret_cast<unsigned char *>(&Dummy);
++  }
++
++  static ValueStorage *getFromPayload(void *Payload) {
++    ValueStorage *R = reinterpret_cast<ValueStorage *>(
++        (unsigned char *)Payload - getPayloadOffset());
++    return R;
++  }
++
++  void Retain() { ++RefCnt; }
++
++  void Release() {
++    assert(RefCnt > 0 && "Can't release if reference count is already zero");
++    if (--RefCnt == 0) {
++      // We hace a non-trivial dtor.
++      if (Dtor && IsAlive()) {
++        assert(Elements && "We at least should have 1 element in Value");
++        size_t Stride = AllocSize / Elements;
++        for (size_t Idx = 0; Idx < Elements; ++Idx)
++          (*Dtor)(getPayload() + Idx * Stride);
++      }
++      delete[] reinterpret_cast<unsigned char *>(this);
++    }
++  }
++
++  // Check whether the storage is valid by validating the canary bits.
++  // If someone accidentally write some invalid bits in the storage, the canary
++  // will be changed first, and `IsAlive` will return false then.
++  bool IsAlive() const {
++    return std::memcmp(getPayload(), Canary, sizeof(Canary)) != 0;
++  }
++
++private:
++  ValueStorage(void *DtorF, size_t AllocSize, size_t ElementsNum)
++      : RefCnt(1), Dtor(reinterpret_cast<DtorFunc>(DtorF)),
++        AllocSize(AllocSize), Elements(ElementsNum) {}
++
++  mutable unsigned RefCnt;
++  DtorFunc Dtor = nullptr;
++  size_t AllocSize = 0;
++  size_t Elements = 0;
++  unsigned char Storage[1];
++
++  // These are some canary bits that are used for protecting the storage been
++  // damaged.
++  static constexpr unsigned char Canary[8] = {0x4c, 0x37, 0xad, 0x8f,
++                                              0x2d, 0x23, 0x95, 0x91};
++};
++} // namespace
++
++static Value::Kind ConvertQualTypeToKind(const ASTContext &Ctx, QualType QT) {
++  if (Ctx.hasSameType(QT, Ctx.VoidTy))
++    return Value::K_Void;
++
++  if (const auto *ET = QT->getAs<EnumType>())
++    QT = ET->getDecl()->getIntegerType();
++
++  const auto *BT = QT->getAs<BuiltinType>();
++  if (!BT || BT->isNullPtrType())
++    return Value::K_PtrOrObj;
++
++  switch (QT->getAs<BuiltinType>()->getKind()) {
++  default:
++    assert(false && "Type not supported");
++    return Value::K_Unspecified;
++#define X(type, name)                                                          \
++  case BuiltinType::name:                                                      \
++    return Value::K_##name;
++    REPL_BUILTIN_TYPES
++#undef X
++  }
++}
++
++Value::Value(Interpreter *In, void *Ty) : Interp(In), OpaqueType(Ty) {
++  setKind(ConvertQualTypeToKind(getASTContext(), getType()));
++  if (ValueKind == K_PtrOrObj) {
++    QualType Canon = getType().getCanonicalType();
++    if ((Canon->isPointerType() || Canon->isObjectType() ||
++         Canon->isReferenceType()) &&
++        (Canon->isRecordType() || Canon->isConstantArrayType() ||
++         Canon->isMemberPointerType())) {
++      IsManuallyAlloc = true;
++      // Compile dtor function.
++      Interpreter &Interp = getInterpreter();
++      void *DtorF = nullptr;
++      size_t ElementsSize = 1;
++      QualType DtorTy = getType();
++
++      if (const auto *ArrTy =
++              llvm::dyn_cast<ConstantArrayType>(DtorTy.getTypePtr())) {
++        DtorTy = ArrTy->getElementType();
++        llvm::APInt ArrSize(sizeof(size_t) * 8, 1);
++        do {
++          ArrSize *= ArrTy->getSize();
++          ArrTy = llvm::dyn_cast<ConstantArrayType>(
++              ArrTy->getElementType().getTypePtr());
++        } while (ArrTy);
++        ElementsSize = static_cast<size_t>(ArrSize.getZExtValue());
++      }
++      if (const auto *RT = DtorTy->getAs<RecordType>()) {
++        if (CXXRecordDecl *CXXRD =
++                llvm::dyn_cast<CXXRecordDecl>(RT->getDecl())) {
++          if (llvm::Expected<llvm::orc::ExecutorAddr> Addr =
++                  Interp.CompileDtorCall(CXXRD))
++            DtorF = reinterpret_cast<void *>(Addr->getValue());
++          else
++            llvm::logAllUnhandledErrors(Addr.takeError(), llvm::errs());
++        }
++      }
++
++      size_t AllocSize =
++          getASTContext().getTypeSizeInChars(getType()).getQuantity();
++      unsigned char *Payload =
++          ValueStorage::CreatePayload(DtorF, AllocSize, ElementsSize);
++      setPtr((void *)Payload);
++    }
++  }
++}
++
++Value::Value(const Value &RHS)
++    : Interp(RHS.Interp), OpaqueType(RHS.OpaqueType), Data(RHS.Data),
++      ValueKind(RHS.ValueKind), IsManuallyAlloc(RHS.IsManuallyAlloc) {
++  if (IsManuallyAlloc)
++    ValueStorage::getFromPayload(getPtr())->Retain();
++}
++
++Value::Value(Value &&RHS) noexcept {
++  Interp = std::exchange(RHS.Interp, nullptr);
++  OpaqueType = std::exchange(RHS.OpaqueType, nullptr);
++  Data = RHS.Data;
++  ValueKind = std::exchange(RHS.ValueKind, K_Unspecified);
++  IsManuallyAlloc = std::exchange(RHS.IsManuallyAlloc, false);
++
++  if (IsManuallyAlloc)
++    ValueStorage::getFromPayload(getPtr())->Release();
++}
++
++Value &Value::operator=(const Value &RHS) {
++  if (IsManuallyAlloc)
++    ValueStorage::getFromPayload(getPtr())->Release();
++
++  Interp = RHS.Interp;
++  OpaqueType = RHS.OpaqueType;
++  Data = RHS.Data;
++  ValueKind = RHS.ValueKind;
++  IsManuallyAlloc = RHS.IsManuallyAlloc;
++
++  if (IsManuallyAlloc)
++    ValueStorage::getFromPayload(getPtr())->Retain();
++
++  return *this;
++}
++
++Value &Value::operator=(Value &&RHS) noexcept {
++  if (IsManuallyAlloc)
++    ValueStorage::getFromPayload(getPtr())->Release();
++
++  Interp = std::exchange(RHS.Interp, nullptr);
++  OpaqueType = std::exchange(RHS.OpaqueType, nullptr);
++  ValueKind = std::exchange(RHS.ValueKind, K_Unspecified);
++  IsManuallyAlloc = std::exchange(RHS.IsManuallyAlloc, false);
++
++  Data = RHS.Data;
++
++  return *this;
++}
++
++void Value::clear() {
++  if (IsManuallyAlloc)
++    ValueStorage::getFromPayload(getPtr())->Release();
++  ValueKind = K_Unspecified;
++  OpaqueType = nullptr;
++  Interp = nullptr;
++  IsManuallyAlloc = false;
++}
++
++Value::~Value() { clear(); }
++
++void *Value::getPtr() const {
++  assert(ValueKind == K_PtrOrObj);
++  return Data.m_Ptr;
++}
++
++QualType Value::getType() const {
++  return QualType::getFromOpaquePtr(OpaqueType);
++}
++
++Interpreter &Value::getInterpreter() {
++  assert(Interp != nullptr &&
++         "Can't get interpreter from a default constructed value");
++  return *Interp;
++}
++
++const Interpreter &Value::getInterpreter() const {
++  assert(Interp != nullptr &&
++         "Can't get interpreter from a default constructed value");
++  return *Interp;
++}
++
++ASTContext &Value::getASTContext() { return getInterpreter().getASTContext(); }
++
++const ASTContext &Value::getASTContext() const {
++  return getInterpreter().getASTContext();
++}
++
++void Value::dump() const { print(llvm::outs()); }
++
++void Value::printType(llvm::raw_ostream &Out) const {
++  Out << "Not implement yet.\n";
++}
++void Value::printData(llvm::raw_ostream &Out) const {
++  Out << "Not implement yet.\n";
++}
++void Value::print(llvm::raw_ostream &Out) const {
++  assert(OpaqueType != nullptr && "Can't print default Value");
++  Out << "Not implement yet.\n";
++}
+diff --git a/clang/lib/Lex/PPLexerChange.cpp b/clang/lib/Lex/PPLexerChange.cpp
+index 66168467e..0822f83b5 100644
+--- a/clang/lib/Lex/PPLexerChange.cpp
++++ b/clang/lib/Lex/PPLexerChange.cpp
+@@ -526,13 +526,19 @@ bool Preprocessor::HandleEndOfFile(Token &Result, bool isEndOfMacro) {
+       return LeavingSubmodule;
+     }
+   }
+-
+   // If this is the end of the main file, form an EOF token.
+   assert(CurLexer && "Got EOF but no current lexer set!");
+   const char *EndPos = getCurLexerEndPos();
+   Result.startToken();
+   CurLexer->BufferPtr = EndPos;
+-  CurLexer->FormTokenWithChars(Result, EndPos, tok::eof);
++
++  if (isIncrementalProcessingEnabled()) {
++    CurLexer->FormTokenWithChars(Result, EndPos, tok::annot_repl_input_end);
++    Result.setAnnotationEndLoc(Result.getLocation());
++    Result.setAnnotationValue(nullptr);
++  } else {
++    CurLexer->FormTokenWithChars(Result, EndPos, tok::eof);
++  }
+ 
+   if (isCodeCompletionEnabled()) {
+     // Inserting the code-completion point increases the source buffer by 1,
+diff --git a/clang/lib/Parse/ParseCXXInlineMethods.cpp b/clang/lib/Parse/ParseCXXInlineMethods.cpp
+index 3a7f5426d..57a3dfba4 100644
+--- a/clang/lib/Parse/ParseCXXInlineMethods.cpp
++++ b/clang/lib/Parse/ParseCXXInlineMethods.cpp
+@@ -836,6 +836,7 @@ bool Parser::ConsumeAndStoreUntil(tok::TokenKind T1, tok::TokenKind T2,
+     case tok::annot_module_begin:
+     case tok::annot_module_end:
+     case tok::annot_module_include:
++    case tok::annot_repl_input_end:
+       // Ran out of tokens.
+       return false;
+ 
+@@ -1242,6 +1243,7 @@ bool Parser::ConsumeAndStoreInitializer(CachedTokens &Toks,
+     case tok::annot_module_begin:
+     case tok::annot_module_end:
+     case tok::annot_module_include:
++    case tok::annot_repl_input_end:
+       // Ran out of tokens.
+       return false;
+ 
+diff --git a/clang/lib/Parse/ParseDecl.cpp b/clang/lib/Parse/ParseDecl.cpp
+index e6812ac72..2f193a3b4 100644
+--- a/clang/lib/Parse/ParseDecl.cpp
++++ b/clang/lib/Parse/ParseDecl.cpp
+@@ -2030,6 +2030,7 @@ void Parser::SkipMalformedDecl() {
+     case tok::annot_module_begin:
+     case tok::annot_module_end:
+     case tok::annot_module_include:
++    case tok::annot_repl_input_end:
+       return;
+ 
+     default:
+@@ -5394,6 +5395,13 @@ Parser::DeclGroupPtrTy Parser::ParseTopLevelStmtDecl() {
+ 
+   SmallVector<Decl *, 2> DeclsInGroup;
+   DeclsInGroup.push_back(Actions.ActOnTopLevelStmtDecl(R.get()));
++
++  if (Tok.is(tok::annot_repl_input_end) &&
++      Tok.getAnnotationValue() != nullptr) {
++    ConsumeAnnotationToken();
++    cast<TopLevelStmtDecl>(DeclsInGroup.back())->setSemiMissing();
++  }
++
+   // Currently happens for things like  -fms-extensions and use `__if_exists`.
+   for (Stmt *S : Stmts)
+     DeclsInGroup.push_back(Actions.ActOnTopLevelStmtDecl(S));
+diff --git a/clang/lib/Parse/ParseStmt.cpp b/clang/lib/Parse/ParseStmt.cpp
+index 1c8441faf..d22e1d440 100644
+--- a/clang/lib/Parse/ParseStmt.cpp
++++ b/clang/lib/Parse/ParseStmt.cpp
+@@ -543,9 +543,22 @@ StmtResult Parser::ParseExprStatement(ParsedStmtContext StmtCtx) {
+     return ParseCaseStatement(StmtCtx, /*MissingCase=*/true, Expr);
+   }
+ 
+-  // Otherwise, eat the semicolon.
+-  ExpectAndConsumeSemi(diag::err_expected_semi_after_expr);
+-  return handleExprStmt(Expr, StmtCtx);
++  Token *CurTok = nullptr;
++  // If the semicolon is missing at the end of REPL input, consider if
++  // we want to do value printing. Note this is only enabled in C++ mode
++  // since part of the implementation requires C++ language features.
++  // Note we shouldn't eat the token since the callback needs it.
++  if (Tok.is(tok::annot_repl_input_end) && Actions.getLangOpts().CPlusPlus)
++    CurTok = &Tok;
++  else
++    // Otherwise, eat the semicolon.
++    ExpectAndConsumeSemi(diag::err_expected_semi_after_expr);
++
++  StmtResult R = handleExprStmt(Expr, StmtCtx);
++  if (CurTok && !R.isInvalid())
++    CurTok->setAnnotationValue(R.get());
++
++  return R;
+ }
+ 
+ /// ParseSEHTryBlockCommon
+diff --git a/clang/lib/Parse/Parser.cpp b/clang/lib/Parse/Parser.cpp
+index 6db3dc315..7fbb27057 100644
+--- a/clang/lib/Parse/Parser.cpp
++++ b/clang/lib/Parse/Parser.cpp
+@@ -319,6 +319,7 @@ bool Parser::SkipUntil(ArrayRef<tok::TokenKind> Toks, SkipUntilFlags Flags) {
+     case tok::annot_module_begin:
+     case tok::annot_module_end:
+     case tok::annot_module_include:
++    case tok::annot_repl_input_end:
+       // Stop before we change submodules. They generally indicate a "good"
+       // place to pick up parsing again (except in the special case where
+       // we're trying to skip to EOF).
+@@ -612,11 +613,6 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result,
+                                Sema::ModuleImportState &ImportState) {
+   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(*this);
+ 
+-  // Skip over the EOF token, flagging end of previous input for incremental
+-  // processing
+-  if (PP.isIncrementalProcessingEnabled() && Tok.is(tok::eof))
+-    ConsumeToken();
+-
+   Result = nullptr;
+   switch (Tok.getKind()) {
+   case tok::annot_pragma_unused:
+@@ -695,6 +691,7 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result,
+     return false;
+ 
+   case tok::eof:
++  case tok::annot_repl_input_end:
+     // Check whether -fmax-tokens= was reached.
+     if (PP.getMaxTokens() != 0 && PP.getTokenCount() > PP.getMaxTokens()) {
+       PP.Diag(Tok.getLocation(), diag::warn_max_tokens_total)
+diff --git a/clang/test/Interpreter/Inputs/dynamic-library-test.cpp b/clang/test/Interpreter/Inputs/dynamic-library-test.cpp
+new file mode 100644
+index 000000000..1f143ba04
+--- /dev/null
++++ b/clang/test/Interpreter/Inputs/dynamic-library-test.cpp
+@@ -0,0 +1,6 @@
++int ultimate_answer = 0;
++
++int calculate_answer() {
++  ultimate_answer = 42;
++  return 5;
++}
+diff --git a/clang/test/Interpreter/dynamic-library.cpp b/clang/test/Interpreter/dynamic-library.cpp
+new file mode 100644
+index 000000000..794ccccf7
+--- /dev/null
++++ b/clang/test/Interpreter/dynamic-library.cpp
+@@ -0,0 +1,19 @@
++// REQUIRES: host-supports-jit, system-linux
++
++// RUN: %clang -xc++ -o %T/libdynamic-library-test.so -fPIC -shared -DLIBRARY %S/Inputs/dynamic-library-test.cpp
++// RUN: cat %s | env LD_LIBRARY_PATH=%T:$LD_LIBRARY_PATH clang-repl | FileCheck %s
++
++#include <cstdio>
++
++extern int ultimate_answer;
++int calculate_answer();
++
++%lib libdynamic-library-test.so
++
++printf("Return value: %d\n", calculate_answer());
++// CHECK: Return value: 5
++
++printf("Variable: %d\n", ultimate_answer);
++// CHECK-NEXT: Variable: 42
++
++%quit
+diff --git a/clang/tools/clang-repl/CMakeLists.txt b/clang/tools/clang-repl/CMakeLists.txt
+index b51a18c10..15d7f9439 100644
+--- a/clang/tools/clang-repl/CMakeLists.txt
++++ b/clang/tools/clang-repl/CMakeLists.txt
+@@ -12,6 +12,7 @@ add_clang_tool(clang-repl
+   )
+ 
+ clang_target_link_libraries(clang-repl PRIVATE
++  clangAST
+   clangBasic
+   clangFrontend
+   clangInterpreter
+diff --git a/clang/tools/clang-repl/ClangRepl.cpp b/clang/tools/clang-repl/ClangRepl.cpp
+index 401a31d34..33faf3fab 100644
+--- a/clang/tools/clang-repl/ClangRepl.cpp
++++ b/clang/tools/clang-repl/ClangRepl.cpp
+@@ -123,6 +123,13 @@ int main(int argc, const char **argv) {
+         }
+         continue;
+       }
++      if (Line->rfind("%lib ", 0) == 0) {
++        if (auto Err = Interp->LoadDynamicLibrary(Line->data() + 5)) {
++          llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(), "error: ");
++          HasError = true;
++        }
++        continue;
++      }
+ 
+       if (auto Err = Interp->ParseAndExecute(*Line)) {
+         llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(), "error: ");
+diff --git a/clang/unittests/Interpreter/CMakeLists.txt b/clang/unittests/Interpreter/CMakeLists.txt
+index 1a099dbbf..698494b98 100644
+--- a/clang/unittests/Interpreter/CMakeLists.txt
++++ b/clang/unittests/Interpreter/CMakeLists.txt
+@@ -22,3 +22,5 @@ target_link_libraries(ClangReplInterpreterTests PUBLIC
+ if(NOT WIN32)
+   add_subdirectory(ExceptionTests)
+ endif()
++
++export_executable_symbols(ClangReplInterpreterTests)
+diff --git a/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp b/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp
+index f54c65568..6d0433a98 100644
+--- a/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp
++++ b/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp
+@@ -25,7 +25,6 @@
+ #include "llvm/ExecutionEngine/Orc/LLJIT.h"
+ #include "llvm/Support/ManagedStatic.h"
+ #include "llvm/Support/TargetSelect.h"
+-#include "llvm-c/Error.h"
+ 
+ #include "gmock/gmock.h"
+ #include "gtest/gtest.h"
+@@ -116,7 +115,8 @@ extern "C" int throw_exception() {
+   llvm::cantFail(Interp->ParseAndExecute(ExceptionCode));
+   testing::internal::CaptureStdout();
+   auto ThrowException =
+-      (int (*)())llvm::cantFail(Interp->getSymbolAddress("throw_exception"));
++      llvm::cantFail(Interp->getSymbolAddress("throw_exception"))
++          .toPtr<int (*)()>();
+   EXPECT_ANY_THROW(ThrowException());
+   std::string CapturedStdOut = testing::internal::GetCapturedStdout();
+   EXPECT_EQ(CapturedStdOut, "Caught: 'To be caught in JIT'\n");
+diff --git a/clang/unittests/Interpreter/InterpreterTest.cpp b/clang/unittests/Interpreter/InterpreterTest.cpp
+index d4900a0e4..330fd18ab 100644
+--- a/clang/unittests/Interpreter/InterpreterTest.cpp
++++ b/clang/unittests/Interpreter/InterpreterTest.cpp
+@@ -17,6 +17,7 @@
+ #include "clang/AST/Mangle.h"
+ #include "clang/Frontend/CompilerInstance.h"
+ #include "clang/Frontend/TextDiagnosticPrinter.h"
++#include "clang/Interpreter/Value.h"
+ #include "clang/Sema/Lookup.h"
+ #include "clang/Sema/Sema.h"
+ 
+@@ -33,6 +34,11 @@ using namespace clang;
+ #define CLANG_INTERPRETER_NO_SUPPORT_EXEC
+ #endif
+ 
++int Global = 42;
++// JIT reports symbol not found on Windows without the visibility attribute.
++REPL_EXTERNAL_VISIBILITY int getGlobal() { return Global; }
++REPL_EXTERNAL_VISIBILITY void setGlobal(int val) { Global = val; }
++
+ namespace {
+ using Args = std::vector<const char *>;
+ static std::unique_ptr<Interpreter>
+@@ -225,7 +231,7 @@ TEST(IncrementalProcessing, FindMangledNameSymbol) {
+ 
+   std::string MangledName = MangleName(FD);
+   auto Addr = cantFail(Interp->getSymbolAddress(MangledName));
+-  EXPECT_NE(0U, Addr);
++  EXPECT_NE(0U, Addr.getValue());
+   GlobalDecl GD(FD);
+   EXPECT_EQ(Addr, cantFail(Interp->getSymbolAddress(GD)));
+ }
+@@ -276,8 +282,7 @@ TEST(IncrementalProcessing, InstantiateTemplate) {
+   std::vector<const char *> Args = {"-fno-delayed-template-parsing"};
+   std::unique_ptr<Interpreter> Interp = createInterpreter(Args);
+ 
+-  llvm::cantFail(Interp->Parse("void* operator new(__SIZE_TYPE__, void* __p);"
+-                               "extern \"C\" int printf(const char*,...);"
++  llvm::cantFail(Interp->Parse("extern \"C\" int printf(const char*,...);"
+                                "class A {};"
+                                "struct B {"
+                                "  template<typename T>"
+@@ -309,9 +314,109 @@ TEST(IncrementalProcessing, InstantiateTemplate) {
+ 
+   std::string MangledName = MangleName(TmpltSpec);
+   typedef int (*TemplateSpecFn)(void *);
+-  auto fn = (TemplateSpecFn)cantFail(Interp->getSymbolAddress(MangledName));
++  auto fn =
++      cantFail(Interp->getSymbolAddress(MangledName)).toPtr<TemplateSpecFn>();
+   EXPECT_EQ(42, fn(NewA));
+   free(NewA);
+ }
+ 
++#ifdef CLANG_INTERPRETER_NO_SUPPORT_EXEC
++TEST(InterpreterTest, DISABLED_Value) {
++#else
++TEST(InterpreterTest, Value) {
++#endif
++  // We cannot execute on the platform.
++  if (!HostSupportsJit())
++    return;
++
++  std::unique_ptr<Interpreter> Interp = createInterpreter();
++
++  Value V1;
++  llvm::cantFail(Interp->ParseAndExecute("int x = 42;"));
++  llvm::cantFail(Interp->ParseAndExecute("x", &V1));
++  EXPECT_TRUE(V1.isValid());
++  EXPECT_TRUE(V1.hasValue());
++  EXPECT_EQ(V1.getInt(), 42);
++  EXPECT_EQ(V1.convertTo<int>(), 42);
++  EXPECT_TRUE(V1.getType()->isIntegerType());
++  EXPECT_EQ(V1.getKind(), Value::K_Int);
++  EXPECT_FALSE(V1.isManuallyAlloc());
++
++  Value V2;
++  llvm::cantFail(Interp->ParseAndExecute("double y = 3.14;"));
++  llvm::cantFail(Interp->ParseAndExecute("y", &V2));
++  EXPECT_TRUE(V2.isValid());
++  EXPECT_TRUE(V2.hasValue());
++  EXPECT_EQ(V2.getDouble(), 3.14);
++  EXPECT_EQ(V2.convertTo<double>(), 3.14);
++  EXPECT_TRUE(V2.getType()->isFloatingType());
++  EXPECT_EQ(V2.getKind(), Value::K_Double);
++  EXPECT_FALSE(V2.isManuallyAlloc());
++
++  Value V3;
++  llvm::cantFail(Interp->ParseAndExecute(
++      "struct S { int* p; S() { p = new int(42); } ~S() { delete p; }};"));
++  llvm::cantFail(Interp->ParseAndExecute("S{}", &V3));
++  EXPECT_TRUE(V3.isValid());
++  EXPECT_TRUE(V3.hasValue());
++  EXPECT_TRUE(V3.getType()->isRecordType());
++  EXPECT_EQ(V3.getKind(), Value::K_PtrOrObj);
++  EXPECT_TRUE(V3.isManuallyAlloc());
++
++  Value V4;
++  llvm::cantFail(Interp->ParseAndExecute("int getGlobal();"));
++  llvm::cantFail(Interp->ParseAndExecute("void setGlobal(int);"));
++  llvm::cantFail(Interp->ParseAndExecute("getGlobal()", &V4));
++  EXPECT_EQ(V4.getInt(), 42);
++  EXPECT_TRUE(V4.getType()->isIntegerType());
++
++  Value V5;
++  // Change the global from the compiled code.
++  setGlobal(43);
++  llvm::cantFail(Interp->ParseAndExecute("getGlobal()", &V5));
++  EXPECT_EQ(V5.getInt(), 43);
++  EXPECT_TRUE(V5.getType()->isIntegerType());
++
++  // Change the global from the interpreted code.
++  llvm::cantFail(Interp->ParseAndExecute("setGlobal(44);"));
++  EXPECT_EQ(getGlobal(), 44);
++
++  Value V6;
++  llvm::cantFail(Interp->ParseAndExecute("void foo() {}"));
++  llvm::cantFail(Interp->ParseAndExecute("foo()", &V6));
++  EXPECT_TRUE(V6.isValid());
++  EXPECT_FALSE(V6.hasValue());
++  EXPECT_TRUE(V6.getType()->isVoidType());
++  EXPECT_EQ(V6.getKind(), Value::K_Void);
++  EXPECT_FALSE(V2.isManuallyAlloc());
++
++  Value V7;
++  llvm::cantFail(Interp->ParseAndExecute("foo", &V7));
++  EXPECT_TRUE(V7.isValid());
++  EXPECT_TRUE(V7.hasValue());
++  EXPECT_TRUE(V7.getType()->isFunctionProtoType());
++  EXPECT_EQ(V7.getKind(), Value::K_PtrOrObj);
++  EXPECT_FALSE(V7.isManuallyAlloc());
++
++  Value V8;
++  llvm::cantFail(Interp->ParseAndExecute("struct SS{ void f() {} };"));
++  llvm::cantFail(Interp->ParseAndExecute("&SS::f", &V8));
++  EXPECT_TRUE(V8.isValid());
++  EXPECT_TRUE(V8.hasValue());
++  EXPECT_TRUE(V8.getType()->isMemberFunctionPointerType());
++  EXPECT_EQ(V8.getKind(), Value::K_PtrOrObj);
++  EXPECT_TRUE(V8.isManuallyAlloc());
++
++  Value V9;
++  llvm::cantFail(Interp->ParseAndExecute("struct A { virtual int f(); };"));
++  llvm::cantFail(
++      Interp->ParseAndExecute("struct B : A { int f() { return 42; }};"));
++  llvm::cantFail(Interp->ParseAndExecute("int (B::*ptr)() = &B::f;"));
++  llvm::cantFail(Interp->ParseAndExecute("ptr", &V9));
++  EXPECT_TRUE(V9.isValid());
++  EXPECT_TRUE(V9.hasValue());
++  EXPECT_TRUE(V9.getType()->isMemberFunctionPointerType());
++  EXPECT_EQ(V9.getKind(), Value::K_PtrOrObj);
++  EXPECT_TRUE(V9.isManuallyAlloc());
++}
+ } // end anonymous namespace

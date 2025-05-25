@@ -54,6 +54,8 @@ namespace ROOT {
           Derived classes must implement the pure private virtual method DoEval(const double *) for the
           function evaluation in addition to NDim() and Clone().
 
+          @note ROOT::Math::Functor is the recommended way to use one's own function with the fitting framework.
+
           @ingroup  GenFunc
       */
 

@@ -14,12 +14,11 @@
 
 #include "REveTypes.hxx"
 
-#include "TError.h"
-
+#include <string_view>
 #include <map>
-#include <set>
-#include <exception>
 
+class TObject;
+class TObjArray;
 class TGeoManager;
 
 namespace ROOT {
@@ -46,6 +45,10 @@ public:
    static void AssertMacro(const char *mac);
    static void Macro(const char *mac);
    static void LoadMacro(const char *mac);
+
+   // Input string verification and sanitization
+
+   static bool VerifyObjectFilterOrTableExpression(std::string_view expr);
 
    // Color management
 

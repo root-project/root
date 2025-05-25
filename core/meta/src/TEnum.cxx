@@ -123,6 +123,9 @@ void TEnum::AddConstant(TEnumConstant *constant)
 
 Bool_t TEnum::IsValid()
 {
+   if (TestBit(kBitIsValid))
+      return true;
+
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetEnum(fClass, fName);
@@ -158,6 +161,7 @@ void TEnum::Update(DeclId_t id)
    if (fInfo)
       gInterpreter->ClassInfo_Delete(fInfo);
    if (!id) {
+      ResetBit(kBitIsValid);
       fInfo = nullptr;
       return;
    }
@@ -167,6 +171,9 @@ void TEnum::Update(DeclId_t id)
    if (fInfo) {
       SetBit(kBitIsScopedEnum, gInterpreter->ClassInfo_IsScopedEnum(fInfo));
       fUnderlyingType = gInterpreter->ClassInfo_GetUnderlyingType(fInfo);
+      SetBit(kBitIsValid);
+   } else {
+      ResetBit(kBitIsValid);
    }
 }
 
@@ -247,19 +254,20 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          const bool scopeIsNamespace (tClassScope->Property() & kIsNamespace);
 
          const bool autoParseSuspended = gInterpreter->IsAutoParsingSuspended();
-         const bool suspendAutoParse = autoParseSuspended || scopeIsNamespace;
 
-         TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter, suspendAutoParse);
+         if (scopeIsNamespace && !autoParseSuspended) {
+            // Lock down the autoparsing state.
+            R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+            TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter, true);
 
-         if (scopeIsNamespace && !autoParseSuspended){
-            canLoadEnums=true;
+            auto listOfEnums = tClassScope->GetListOfEnums(true);
+            // Previous incarnation of the code re-enabled the auto parsing,
+            // before executing findEnumInList
+            theEnum = findEnumInList(listOfEnums, enName, sa_local);
+         } else {
+            auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
+            theEnum = findEnumInList(listOfEnums, enName, sa_local);
          }
-
-         auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
-
-         // Previous incarnation of the code re-enabled the auto parsing,
-         // before executing findEnumInList
-         theEnum = findEnumInList(listOfEnums, enName, sa_local);
       }
       // Check if the scope is still a protoclass
       else if (auto tProtoClassscope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {
@@ -296,35 +304,25 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
 
    if (lastPos != enumName) {
       // We have a scope
-      // All of this C gymnastic is to avoid allocations on the heap (see TClingLookupHelper__ExistingTypeCheck)
       const auto enName = lastPos;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(decltype(*lastPos)) - 2;
-#ifdef R__WIN32
-      char *scopeName = new char[scopeNameSize + 1];
-#else
-      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
-#endif
-      strncpy(scopeName, enumName, scopeNameSize);
-      scopeName[scopeNameSize] = '\0';
+      const auto scopeNameSize = (lastPos - enumName) / sizeof(decltype(*lastPos)) - 2;
+      std::string scopeName{enumName, scopeNameSize};
       // Three levels of search
-      theEnum = searchEnum(scopeName, enName, kNone);
+      theEnum = searchEnum(scopeName.c_str(), enName, kNone);
       if (!theEnum && (sa & kAutoload)) {
-         const auto libsLoaded = gInterpreter->AutoLoad(scopeName);
+         const auto libsLoaded = gInterpreter->AutoLoad(scopeName.c_str());
          // It could be an enum in a scope which is not selected
          if (libsLoaded == 0){
             gInterpreter->AutoLoad(enumName);
          }
-         theEnum = searchEnum(scopeName, enName, kAutoload);
+         theEnum = searchEnum(scopeName.c_str(), enName, kAutoload);
       }
       if (!theEnum && (sa & kALoadAndInterpLookup)) {
          if (gDebug > 0) {
             printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an interpreter lookup will be performed. This can imply parsing of headers. This can be avoided selecting the numerator in the linkdef/selection file.\n", enumName);
          }
-         theEnum = searchEnum(scopeName, enName, kALoadAndInterpLookup);
+         theEnum = searchEnum(scopeName.c_str(), enName, kALoadAndInterpLookup);
       }
-#ifdef R__WIN32
-      delete [] scopeName;
-#endif
    } else {
       // We don't have any scope: this is a global enum
       theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kNone);

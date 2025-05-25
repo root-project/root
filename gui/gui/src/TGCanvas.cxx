@@ -2445,57 +2445,40 @@ void TGCanvas::ClearViewPort()
 
 void TGCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder);
 
-   out << std::endl << "   // canvas widget" << std::endl;
+   out << "\n   // canvas widget\n";
 
-   out << "   TGCanvas *";
-   out << GetName() << " = new TGCanvas("<< fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGCanvas *" << GetName() << " = new TGCanvas(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out << ");" << std::endl;
-      } else {
-         out << "," << GetOptionString() << ");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    TGViewPort *vp = GetViewPort();
-   out << std::endl << "   // canvas viewport" << std::endl;
-   out << "   TGViewPort *" << vp->GetName() << " = " << GetName()
-       << "->GetViewPort();" << std::endl;
+   out << "\n   // canvas viewport\n";
+   out << "   TGViewPort *" << vp->GetName() << " = " << GetName() << "->GetViewPort();\n";
 
-   TGContainer *cont = (TGContainer*)GetContainer();
+   TGContainer *cont = (TGContainer *)GetContainer();
    cont->SavePrimitive(out, option);
 
-   out << "   " << vp->GetName() << "->AddFrame(" << cont->GetName()
-       << ");" << std::endl;
+   out << "   " << vp->GetName() << "->AddFrame(" << cont->GetName() << ");\n";
 
    out << "   " << cont->GetName() << "->SetLayoutManager(";
    cont->GetLayoutManager()->SavePrimitive(out, option);
-   out << ");"<< std::endl;
+   out << ");\n";
 
-   out << "   " << cont->GetName() << "->MapSubwindows();" << std::endl;
+   out << "   " << cont->GetName() << "->MapSubwindows();\n";
 
-   out << "   " << GetName() << "->SetContainer(" << cont->GetName()
-       << ");" << std::endl;
+   out << "   " << GetName() << "->SetContainer(" << cont->GetName() << ");\n";
 
-   out << "   " << GetName() << "->MapSubwindows();" << std::endl;
+   out << "   " << GetName() << "->MapSubwindows();\n";
 
    if (fHScrollbar && fHScrollbar->IsMapped())
-      out << "   " << GetName() << "->SetHsbPosition(" << GetHsbPosition()
-          << ");" << std::endl;
-
+      out << "   " << GetName() << "->SetHsbPosition(" << GetHsbPosition() << ");\n";
 
    if (fVScrollbar && fVScrollbar->IsMapped())
-      out << "   " << GetName() << "->SetVsbPosition(" << GetVsbPosition()
-          << ");" << std::endl;
-
+      out << "   " << GetName() << "->SetVsbPosition(" << GetVsbPosition() << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2503,26 +2486,18 @@ void TGCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   // save options and custom color if not default
+   auto extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder);
 
-   out << std::endl << "   // canvas container" << std::endl;
+   out << "\n   // canvas container\n";
 
-   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
-      out << GetName() << " = new TGContainer(" << GetCanvas()->GetName();
-   } else {
-      out << GetName() << " = new TGContainer(" << fParent->GetName();
-      out << "," << GetWidth() << "," << GetHeight();
-   }
+   out << "   TGContainer *" << GetName() << " = new TGContainer(";
+   if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class()))
+      out << GetCanvas()->GetName();
+   else
+      out << fParent->GetName() << "," << GetWidth() << "," << GetHeight();
+   out << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 }

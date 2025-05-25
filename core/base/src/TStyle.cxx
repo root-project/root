@@ -60,8 +60,8 @@ referenced via the global variable `gStyle` (in TStyle.h).
 ROOT provides two styles called "Default" and "Plain". The "Default"
 style is created simply by:
 
-~~~ .cpp
-auto default = new TStyle("Default","Default Style");
+~~~ {.cpp}
+    auto default = new TStyle("Default","Default Style");
 ~~~
 
 The `Plain` style can be used if you are working on a monochrome display or
@@ -248,6 +248,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetHistLineColor(kBlue+2);
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
+      SetLegendFillStyle(1001);
       SetLegendFont(42);
       SetLegendTextSize(0.);
       SetFuncWidth(2);
@@ -525,7 +526,7 @@ void TStyle::BuildStyles()
 {
    TColor *col = new TColor(); // force the initialisation of fgPalette
    new TStyle("Plain",  "Plain Style (no colors/fill areas)");
-   new TStyle("Bold",   "Bold Style");;
+   new TStyle("Bold",   "Bold Style");
    new TStyle("Video",  "Style for video presentation histograms");
    new TStyle("Pub",    "Style for Publications");
    new TStyle("Classic","Classic Style");
@@ -649,6 +650,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fNumberContours   = fNumberContours;
    ((TStyle&)obj).fLegendBorderSize = fLegendBorderSize;
    ((TStyle&)obj).fLegendFillColor  = fLegendFillColor;
+   ((TStyle&)obj).fLegendFillStyle  = fLegendFillStyle;
    ((TStyle&)obj).fLegendFont       = fLegendFont;
    ((TStyle&)obj).fLegendTextSize   = fLegendTextSize;
 
@@ -747,6 +749,8 @@ void TStyle::Reset(Option_t *opt)
    fFrameBorderMode= 1;
    fBarWidth       = 1;
    fBarOffset      = 0;
+   fCandleCircleLineWidth = 1;
+   fCandleCrossLineWidth = 1;
    fDrawBorder     = 0;
    fOptLogx        = 0;
    fOptLogy        = 0;
@@ -795,6 +799,7 @@ void TStyle::Reset(Option_t *opt)
    fLegendFont      = 62;
    fLegendTextSize  = 0.,
    fLegendFillColor = 0;
+   fLegendFillStyle = 1001;
    fImageScaling    = 1.;
 
    SetDateX();
@@ -874,6 +879,7 @@ void TStyle::Reset(Option_t *opt)
       SetHistLineColor(kBlue+2);
       SetLegendBorderSize(1);
       SetLegendFillColor(0);
+      SetLegendFillStyle(1001);
       SetLegendFont(42);
       SetLegendTextSize(0.);
       SetFuncWidth(2);
@@ -1887,7 +1893,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \see TColor::CreateColorTableFromFile, (which calls TColor::SetPalette)
+/// \see TColor::CreateColorTableFromFile, TColor::SetPalette
 void TStyle::SetPalette(TString fileName, Float_t alpha)
 {
    TColor::CreateColorTableFromFile(fileName, alpha);
@@ -1960,6 +1966,33 @@ void TStyle::SetCandleBoxRange(Double_t bRange)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the line width of the circle marker of a candle plot ([1,5]).
+
+void TStyle::SetCandleCircleLineWidth(Int_t CircleLineWidth)
+{
+   if (CircleLineWidth<1 || CircleLineWidth>5) {
+      Error("SetCandleCircleLineWidth", "illegal line width %d. It must be in the range [1,5]\n", (int)CircleLineWidth);
+      fCandleCircleLineWidth = 1;
+      return;
+   }
+   fCandleCircleLineWidth = CircleLineWidth;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line width of the cross marker of a candle plot ([1,5]).
+
+void TStyle::SetCandleCrossLineWidth(Int_t CrossLineWidth)
+{
+   if (CrossLineWidth<1 || CrossLineWidth>5) {
+      Error("SetCandleCrossLineWidth", "illegal line width %d. It must be in the range [1,5]\n", (int)CrossLineWidth);
+      fCandleCrossLineWidth = 1;
+      return;
+   }
+   fCandleCrossLineWidth = CrossLineWidth;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save the current style in a C++ macro file.
 
 void TStyle::SaveSource(const char *filename, Option_t *option)
@@ -1968,266 +2001,230 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    TString ff = filename && *filename ? filename : "Rootstyl.C";
 
    // Computes the main method name.
-   const char *fname = gSystem->BaseName(ff);
-   Int_t lenfname = strlen(fname);
-   char *sname = new char[lenfname + 1];
-   Int_t i = 0;
-   while ((i < lenfname) && (fname[i] != '.')) {
-      sname[i] = fname[i];
-      i++;
-   }
-   if (i == lenfname) ff += ".C";
-   sname[i] = 0;
+   TString sname, fname = gSystem->BaseName(ff);
+   auto pos = fname.First('.');
+
+   if (pos == kNPOS) {
+      sname = fname;
+      ff.Append(".C");
+   } else
+      sname = fname(0, pos);
 
    // Tries to open the file.
    std::ofstream out;
    out.open(ff.Data(), std::ios::out);
    if (!out.good()) {
-      delete [] sname;
       Error("SaveSource", "cannot open file: %s", ff.Data());
       return;
    }
 
    // Writes macro header, date/time stamp as string, and the used Root version
-   TDatime t;
-   out <<"// Mainframe macro generated from application: " << gApplication->Argv(0) << std::endl;
-   out <<"// By ROOT version " << gROOT->GetVersion() << " on " << t.AsSQLString() << std::endl;
-   out << std::endl;
-
-   char quote = '"';
+   out << "// Macro generated from application: " << gApplication->Argv(0) << "\n";
+   out << "// By ROOT version " << gROOT->GetVersion() << " on " << TDatime().AsSQLString() << "\n\n";
 
    // Writes include.
-   out << std::endl << std::endl;
-   out << "#ifndef ROOT_TStyle" << std::endl;
-   out << "#include " << quote << "TStyle.h" << quote << std::endl;
-   out << "#endif" << std::endl;
-   out << std::endl << std::endl;
+   out << "#include \"TStyle.h\"\n\n";
 
    // Writes the macro entry point equal to the fname
-   out << std::endl;
-   out << "void " << sname << "()" << std::endl;
-   out << "{" << std::endl;
-   delete [] sname;
+   out << "void " << sname << "()\n";
+   out << "{\n";
 
    TStyle::SavePrimitive(out, option);
 
-   out << "}" << std::endl;
+   out << "}\n";
    out.close();
 
    printf(" C++ macro file %s has been generated\n", gSystem->BaseName(ff));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save a main frame widget as a C++ statement(s) on output stream out.
+/// Save primitive as a C++ statement(s) on output stream out
 
 void TStyle::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   auto asBool = [](bool flag)  { return flag ? "kTRUE" : "kFALSE"; };
+   auto asBool = [](bool flag) { return flag ? "kTRUE" : "kFALSE"; };
 
-   const char *pre = "   ";
+   out << "   // Add the saved style to the current ROOT session.\n";
+   out << "   \n";
+   out << "   delete gROOT->GetStyle(\"" << GetName() << "\");\n";
 
-   out << pre << "// Add the saved style to the current ROOT session." << std::endl;
-   out << std::endl;
-   out<<pre<<"delete gROOT->GetStyle(\"" << GetName() << "\");" << std::endl;
-   out << std::endl;
-   out<<pre<<"TStyle *tmpStyle = new TStyle(\"" << GetName() << "\", \"" << GetTitle() << "\");" << std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "tmpStyle",
+      TString::Format("\"%s\", \"%s\"", GetName(), TString(GetTitle()).ReplaceSpecialCppChars().Data()));
+
+   const char *prefix = "   tmpStyle->";
 
    // fXAxis, fYAxis and fZAxis
-   out<<pre<<"tmpStyle->SetNdivisions(" <<GetNdivisions("x") <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetNdivisions(" <<GetNdivisions("y") <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetNdivisions(" <<GetNdivisions("z") <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetAxisColor("  <<GetAxisColor("x")  <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetAxisColor("  <<GetAxisColor("y")  <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetAxisColor("  <<GetAxisColor("z")  <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelColor(" <<GetLabelColor("x") <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelColor(" <<GetLabelColor("y") <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelColor(" <<GetLabelColor("z") <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelFont("  <<GetLabelFont("x")  <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelFont("  <<GetLabelFont("y")  <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelFont("  <<GetLabelFont("z")  <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelOffset("<<GetLabelOffset("x")<<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelOffset("<<GetLabelOffset("y")<<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelOffset("<<GetLabelOffset("z")<<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelSize("  <<GetLabelSize("x")  <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelSize("  <<GetLabelSize("y")  <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLabelSize("  <<GetLabelSize("z")  <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTickLength(" <<GetTickLength("x") <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTickLength(" <<GetTickLength("y") <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTickLength(" <<GetTickLength("z") <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleOffset("<<GetTitleOffset("x")<<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleOffset("<<GetTitleOffset("y")<<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleOffset("<<GetTitleOffset("z")<<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleSize("  <<GetTitleSize("x")  <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleSize("  <<GetTitleSize("y")  <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleSize("  <<GetTitleSize("z")  <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleColor(" <<GetTitleColor("x") <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleColor(" <<GetTitleColor("y") <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleColor(" <<GetTitleColor("z") <<", \"z\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleFont("  <<GetTitleFont("x")  <<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleFont("  <<GetTitleFont("y")  <<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleFont("  <<GetTitleFont("z")  <<", \"z\");"<<std::endl;
+   out << prefix << "SetNdivisions(" << GetNdivisions("x") << ", \"x\");\n";
+   out << prefix << "SetNdivisions(" << GetNdivisions("y") << ", \"y\");\n";
+   out << prefix << "SetNdivisions(" << GetNdivisions("z") << ", \"z\");\n";
+   out << prefix << "SetAxisColor(" << TColor::SavePrimitiveColor(GetAxisColor("x")) << ", \"x\");\n";
+   out << prefix << "SetAxisColor(" << TColor::SavePrimitiveColor(GetAxisColor("y")) << ", \"y\");\n";
+   out << prefix << "SetAxisColor(" << TColor::SavePrimitiveColor(GetAxisColor("z")) << ", \"z\");\n";
+   out << prefix << "SetLabelColor(" << TColor::SavePrimitiveColor(GetLabelColor("x")) << ", \"x\");\n";
+   out << prefix << "SetLabelColor(" << TColor::SavePrimitiveColor(GetLabelColor("y")) << ", \"y\");\n";
+   out << prefix << "SetLabelColor(" << TColor::SavePrimitiveColor(GetLabelColor("z")) << ", \"z\");\n";
+   out << prefix << "SetLabelFont(" << GetLabelFont("x") << ", \"x\");\n";
+   out << prefix << "SetLabelFont(" << GetLabelFont("y") << ", \"y\");\n";
+   out << prefix << "SetLabelFont(" << GetLabelFont("z") << ", \"z\");\n";
+   out << prefix << "SetLabelOffset(" << GetLabelOffset("x") << ", \"x\");\n";
+   out << prefix << "SetLabelOffset(" << GetLabelOffset("y") << ", \"y\");\n";
+   out << prefix << "SetLabelOffset(" << GetLabelOffset("z") << ", \"z\");\n";
+   out << prefix << "SetLabelSize(" << GetLabelSize("x") << ", \"x\");\n";
+   out << prefix << "SetLabelSize(" << GetLabelSize("y") << ", \"y\");\n";
+   out << prefix << "SetLabelSize(" << GetLabelSize("z") << ", \"z\");\n";
+   out << prefix << "SetTickLength(" << GetTickLength("x") << ", \"x\");\n";
+   out << prefix << "SetTickLength(" << GetTickLength("y") << ", \"y\");\n";
+   out << prefix << "SetTickLength(" << GetTickLength("z") << ", \"z\");\n";
+   out << prefix << "SetTitleOffset(" << GetTitleOffset("x") << ", \"x\");\n";
+   out << prefix << "SetTitleOffset(" << GetTitleOffset("y") << ", \"y\");\n";
+   out << prefix << "SetTitleOffset(" << GetTitleOffset("z") << ", \"z\");\n";
+   out << prefix << "SetTitleSize(" << GetTitleSize("x") << ", \"x\");\n";
+   out << prefix << "SetTitleSize(" << GetTitleSize("y") << ", \"y\");\n";
+   out << prefix << "SetTitleSize(" << GetTitleSize("z") << ", \"z\");\n";
+   out << prefix << "SetTitleColor(" << TColor::SavePrimitiveColor(GetTitleColor("x")) << ", \"x\");\n";
+   out << prefix << "SetTitleColor(" << TColor::SavePrimitiveColor(GetTitleColor("y")) << ", \"y\");\n";
+   out << prefix << "SetTitleColor(" << TColor::SavePrimitiveColor(GetTitleColor("z")) << ", \"z\");\n";
+   out << prefix << "SetTitleFont(" << GetTitleFont("x") << ", \"x\");\n";
+   out << prefix << "SetTitleFont(" << GetTitleFont("y") << ", \"y\");\n";
+   out << prefix << "SetTitleFont(" << GetTitleFont("z") << ", \"z\");\n";
 
-   out<<pre<<"tmpStyle->SetExponentOffset(" <<fXAxisExpXOffset<<", "<<fXAxisExpYOffset<<", \"x\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetExponentOffset(" <<fYAxisExpXOffset<<", "<<fYAxisExpYOffset<<", \"y\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetAxisMaxDigits(" << GetAxisMaxDigits() << ");"<<std::endl;
+   out << prefix << "SetExponentOffset(" << fXAxisExpXOffset << ", " << fXAxisExpYOffset << ", \"x\");\n";
+   out << prefix << "SetExponentOffset(" << fYAxisExpXOffset << ", " << fYAxisExpYOffset << ", \"y\");\n";
+   out << prefix << "SetAxisMaxDigits(" << GetAxisMaxDigits() << ");\n";
 
-   out<<pre<<"tmpStyle->SetBarWidth("       <<GetBarWidth()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetBarOffset("      <<GetBarOffset()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetDrawBorder("     <<GetDrawBorder()     <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOptLogx("        <<GetOptLogx()        <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOptLogy("        <<GetOptLogy()        <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOptLogz("        <<GetOptLogz()        <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOptDate("        <<GetOptDate()        <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOptStat("        <<GetOptStat()        <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOptTitle("       <<GetOptTitle()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOptFit("         <<GetOptFit()         <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetNumberContours(" <<GetNumberContours() <<");"<<std::endl;
+   out << prefix << "SetBarWidth(" << GetBarWidth() << ");\n";
+   out << prefix << "SetBarOffset(" << GetBarOffset() << ");\n";
+   out << prefix << "SetDrawBorder(" << GetDrawBorder() << ");\n";
+   out << prefix << "SetOptLogx(" << GetOptLogx() << ");\n";
+   out << prefix << "SetOptLogy(" << GetOptLogy() << ");\n";
+   out << prefix << "SetOptLogz(" << GetOptLogz() << ");\n";
+   out << prefix << "SetOptDate(" << GetOptDate() << ");\n";
+   out << prefix << "SetOptStat(" << GetOptStat() << ");\n";
+   out << prefix << "SetOptTitle(" << GetOptTitle() << ");\n";
+   out << prefix << "SetOptFit(" << GetOptFit() << ");\n";
+   out << prefix << "SetNumberContours(" << GetNumberContours() << ");\n";
 
    // fAttDate
-   out<<pre<<"tmpStyle->GetAttDate()->SetTextFont(" <<GetAttDate()->GetTextFont() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->GetAttDate()->SetTextSize(" <<GetAttDate()->GetTextSize() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->GetAttDate()->SetTextAngle("<<GetAttDate()->GetTextAngle()<<");"<<std::endl;
-   out<<pre<<"tmpStyle->GetAttDate()->SetTextAlign("<<GetAttDate()->GetTextAlign()<<");"<<std::endl;
-   out<<pre<<"tmpStyle->GetAttDate()->SetTextColor("<<GetAttDate()->GetTextColor()<<");"<<std::endl;
+   out << prefix << "GetAttDate()->SetTextFont(" << GetAttDate()->GetTextFont() << ");\n";
+   out << prefix << "GetAttDate()->SetTextSize(" << GetAttDate()->GetTextSize() << ");\n";
+   out << prefix << "GetAttDate()->SetTextAngle(" << GetAttDate()->GetTextAngle() << ");\n";
+   out << prefix << "GetAttDate()->SetTextAlign(" << GetAttDate()->GetTextAlign() << ");\n";
+   out << prefix << "GetAttDate()->SetTextColor(" << TColor::SavePrimitiveColor(GetAttDate()->GetTextColor()) << ");\n";
 
-   out<<pre<<"tmpStyle->SetDateX("           <<GetDateX()           <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetDateY("           <<GetDateY()           <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetEndErrorSize("    <<GetEndErrorSize()    <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetErrorX("          <<GetErrorX()          <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFuncColor("       <<GetFuncColor()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFuncStyle("       <<GetFuncStyle()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFuncWidth("       <<GetFuncWidth()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetGridColor("       <<GetGridColor()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetGridStyle("       <<GetGridStyle()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetGridWidth("       <<GetGridWidth()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLegendBorderSize("<<GetLegendBorderSize()<<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLegendFillColor(" <<GetLegendFillColor() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLegendFont("      <<GetLegendFont()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLegendTextSize("  <<GetLegendTextSize()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHatchesLineWidth("<<GetHatchesLineWidth()<<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHatchesSpacing("  <<GetHatchesSpacing()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFrameFillColor("  <<GetFrameFillColor()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFrameLineColor("  <<GetFrameLineColor()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFrameFillStyle("  <<GetFrameFillStyle()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFrameLineStyle("  <<GetFrameLineStyle()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFrameLineWidth("  <<GetFrameLineWidth()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFrameBorderSize(" <<GetFrameBorderSize() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFrameBorderMode(" <<GetFrameBorderMode() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHistFillColor("   <<GetHistFillColor()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHistLineColor("   <<GetHistLineColor()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHistFillStyle("   <<GetHistFillStyle()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHistLineStyle("   <<GetHistLineStyle()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHistLineWidth("   <<GetHistLineWidth()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetHistMinimumZero(" <<asBool(GetHistMinimumZero())<<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasPreferGL("  <<asBool(GetCanvasPreferGL()) <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasColor("     <<GetCanvasColor()     <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasBorderSize("<<GetCanvasBorderSize()<<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasBorderMode("<<GetCanvasBorderMode()<<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasDefH("      <<GetCanvasDefH()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasDefW("      <<GetCanvasDefW()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasDefX("      <<GetCanvasDefX()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCanvasDefY("      <<GetCanvasDefY()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadColor("        <<GetPadColor()        <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadBorderSize("   <<GetPadBorderSize()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadBorderMode("   <<GetPadBorderMode()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadBottomMargin(" <<GetPadBottomMargin() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadTopMargin("    <<GetPadTopMargin()    <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadLeftMargin("   <<GetPadLeftMargin()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadRightMargin("  <<GetPadRightMargin()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadGridX("        <<asBool(GetPadGridX())<<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetPadGridY("        <<asBool(GetPadGridY())<<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetPadTickX("        <<GetPadTickX()         <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPadTickY("        <<GetPadTickY()         <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetOrthoCamera("     <<asBool(GetOrthoCamera())<<");" <<std::endl;
+   out << prefix << "SetDateX(" << GetDateX() << ");\n";
+   out << prefix << "SetDateY(" << GetDateY() << ");\n";
+   out << prefix << "SetEndErrorSize(" << GetEndErrorSize() << ");\n";
+   out << prefix << "SetErrorX(" << GetErrorX() << ");\n";
+   out << prefix << "SetFuncColor(" << TColor::SavePrimitiveColor(GetFuncColor()) << ");\n";
+   out << prefix << "SetFuncStyle(" << GetFuncStyle() << ");\n";
+   out << prefix << "SetFuncWidth(" << GetFuncWidth() << ");\n";
+   out << prefix << "SetGridColor(" << TColor::SavePrimitiveColor(GetGridColor()) << ");\n";
+   out << prefix << "SetGridStyle(" << GetGridStyle() << ");\n";
+   out << prefix << "SetGridWidth(" << GetGridWidth() << ");\n";
+   out << prefix << "SetLegendBorderSize(" << GetLegendBorderSize() << ");\n";
+   out << prefix << "SetLegendFillColor(" << TColor::SavePrimitiveColor(GetLegendFillColor()) << ");\n";
+   out << prefix << "SetLegendFillStyle(" << GetLegendFillStyle() << ");\n";
+   out << prefix << "SetLegendFont(" << GetLegendFont() << ");\n";
+   out << prefix << "SetLegendTextSize(" << GetLegendTextSize() << ");\n";
+   out << prefix << "SetHatchesLineWidth(" << GetHatchesLineWidth() << ");\n";
+   out << prefix << "SetHatchesSpacing(" << GetHatchesSpacing() << ");\n";
+   out << prefix << "SetFrameFillColor(" << TColor::SavePrimitiveColor(GetFrameFillColor()) << ");\n";
+   out << prefix << "SetFrameLineColor(" << TColor::SavePrimitiveColor(GetFrameLineColor()) << ");\n";
+   out << prefix << "SetFrameFillStyle(" << GetFrameFillStyle() << ");\n";
+   out << prefix << "SetFrameLineStyle(" << GetFrameLineStyle() << ");\n";
+   out << prefix << "SetFrameLineWidth(" << GetFrameLineWidth() << ");\n";
+   out << prefix << "SetFrameBorderSize(" << GetFrameBorderSize() << ");\n";
+   out << prefix << "SetFrameBorderMode(" << GetFrameBorderMode() << ");\n";
+   out << prefix << "SetHistFillColor(" << TColor::SavePrimitiveColor(GetHistFillColor()) << ");\n";
+   out << prefix << "SetHistLineColor(" << TColor::SavePrimitiveColor(GetHistLineColor()) << ");\n";
+   out << prefix << "SetHistFillStyle(" << GetHistFillStyle() << ");\n";
+   out << prefix << "SetHistLineStyle(" << GetHistLineStyle() << ");\n";
+   out << prefix << "SetHistLineWidth(" << GetHistLineWidth() << ");\n";
+   out << prefix << "SetHistMinimumZero(" << asBool(GetHistMinimumZero()) << ");\n";
+   out << prefix << "SetCanvasPreferGL(" << asBool(GetCanvasPreferGL()) << ");\n";
+   out << prefix << "SetCanvasColor(" << TColor::SavePrimitiveColor(GetCanvasColor()) << ");\n";
+   out << prefix << "SetCanvasBorderSize(" << GetCanvasBorderSize() << ");\n";
+   out << prefix << "SetCanvasBorderMode(" << GetCanvasBorderMode() << ");\n";
+   out << prefix << "SetCanvasDefH(" << GetCanvasDefH() << ");\n";
+   out << prefix << "SetCanvasDefW(" << GetCanvasDefW() << ");\n";
+   out << prefix << "SetCanvasDefX(" << GetCanvasDefX() << ");\n";
+   out << prefix << "SetCanvasDefY(" << GetCanvasDefY() << ");\n";
+   out << prefix << "SetPadColor(" << TColor::SavePrimitiveColor(GetPadColor()) << ");\n";
+   out << prefix << "SetPadBorderSize(" << GetPadBorderSize() << ");\n";
+   out << prefix << "SetPadBorderMode(" << GetPadBorderMode() << ");\n";
+   out << prefix << "SetPadBottomMargin(" << GetPadBottomMargin() << ");\n";
+   out << prefix << "SetPadTopMargin(" << GetPadTopMargin() << ");\n";
+   out << prefix << "SetPadLeftMargin(" << GetPadLeftMargin() << ");\n";
+   out << prefix << "SetPadRightMargin(" << GetPadRightMargin() << ");\n";
+   out << prefix << "SetPadGridX(" << asBool(GetPadGridX()) << ");\n";
+   out << prefix << "SetPadGridY(" << asBool(GetPadGridY()) << ");\n";
+   out << prefix << "SetPadTickX(" << GetPadTickX() << ");\n";
+   out << prefix << "SetPadTickY(" << GetPadTickY() << ");\n";
+   out << prefix << "SetOrthoCamera(" << asBool(GetOrthoCamera()) << ");\n";
 
-   out<<pre<<"tmpStyle->SetCandleWhiskerRange("<<GetCandleWhiskerRange()<<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetCandleBoxRange("  <<GetCandleBoxRange()<<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetCandleScaled("    <<asBool(GetCandleScaled())<<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetViolinScaled("    <<asBool(GetViolinScaled())<<");" <<std::endl;
+   out << prefix << "SetCandleWhiskerRange(" << GetCandleWhiskerRange() << ");\n";
+   out << prefix << "SetCandleBoxRange(" << GetCandleBoxRange() << ");\n";
+   out << prefix << "SetCandleScaled(" << asBool(GetCandleScaled()) << ");\n";
+   out << prefix << "SetViolinScaled(" << asBool(GetViolinScaled()) << ");\n";
 
    // fPaperSizeX, fPaperSizeY
-   out<<pre<<"tmpStyle->SetPaperSize("      <<fPaperSizeX<<", "<<fPaperSizeY<<");"<<std::endl;
+   out << prefix << "SetPaperSize(" << fPaperSizeX << ", " << fPaperSizeY << ");\n";
 
-   out<<pre<<"tmpStyle->SetScreenFactor("   <<GetScreenFactor()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatColor("      <<GetStatColor()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatTextColor("  <<GetStatTextColor()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatBorderSize(" <<GetStatBorderSize() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatFont("       <<GetStatFont()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatFontSize("   <<GetStatFontSize()   <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatStyle("      <<GetStatStyle()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatFormat(\""   <<GetStatFormat()   <<"\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatX("          <<GetStatX()          <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatY("          <<GetStatY()          <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatW("          <<GetStatW()          <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStatH("          <<GetStatH()          <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetStripDecimals("  <<asBool(GetStripDecimals())<<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleAlign("     <<GetTitleAlign()     <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleFillColor(" <<GetTitleFillColor() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleTextColor(" <<GetTitleTextColor() <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleBorderSize("<<GetTitleBorderSize()<<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleFont("      <<GetTitleFont()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleFontSize("  <<GetTitleFontSize()  <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleStyle("     <<GetTitleStyle()     <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleX("         <<GetTitleX()         <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleY("         <<GetTitleY()         <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleW("         <<GetTitleW()         <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitleH("         <<GetTitleH()         <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLegoInnerR("     <<GetLegoInnerR()     <<");"<<std::endl;
-   out<<std::endl;
+   out << prefix << "SetScreenFactor(" << GetScreenFactor() << ");\n";
+   out << prefix << "SetStatColor(" << TColor::SavePrimitiveColor(GetStatColor()) << ");\n";
+   out << prefix << "SetStatTextColor(" << TColor::SavePrimitiveColor(GetStatTextColor()) << ");\n";
+   out << prefix << "SetStatBorderSize(" << GetStatBorderSize() << ");\n";
+   out << prefix << "SetStatFont(" << GetStatFont() << ");\n";
+   out << prefix << "SetStatFontSize(" << GetStatFontSize() << ");\n";
+   out << prefix << "SetStatStyle(" << GetStatStyle() << ");\n";
+   out << prefix << "SetStatFormat(\"" << GetStatFormat() << "\");\n";
+   out << prefix << "SetStatX(" << GetStatX() << ");\n";
+   out << prefix << "SetStatY(" << GetStatY() << ");\n";
+   out << prefix << "SetStatW(" << GetStatW() << ");\n";
+   out << prefix << "SetStatH(" << GetStatH() << ");\n";
+   out << prefix << "SetStripDecimals(" << asBool(GetStripDecimals()) << ");\n";
+   out << prefix << "SetTitleAlign(" << GetTitleAlign() << ");\n";
+   out << prefix << "SetTitleFillColor(" << TColor::SavePrimitiveColor(GetTitleFillColor()) << ");\n";
+   out << prefix << "SetTitleTextColor(" << TColor::SavePrimitiveColor(GetTitleTextColor()) << ");\n";
+   out << prefix << "SetTitleBorderSize(" << GetTitleBorderSize() << ");\n";
+   out << prefix << "SetTitleFont(" << GetTitleFont() << ");\n";
+   out << prefix << "SetTitleFontSize(" << GetTitleFontSize() << ");\n";
+   out << prefix << "SetTitleStyle(" << GetTitleStyle() << ");\n";
+   out << prefix << "SetTitleX(" << GetTitleX() << ");\n";
+   out << prefix << "SetTitleY(" << GetTitleY() << ");\n";
+   out << prefix << "SetTitleW(" << GetTitleW() << ");\n";
+   out << prefix << "SetTitleH(" << GetTitleH() << ");\n";
+   out << prefix << "SetLegoInnerR(" << GetLegoInnerR() << ");\n";
 
-   // fPalette
-   out<<pre<<"Int_t tmpPaletteColor["       <<GetNumberOfColors() <<"] = {";
-   for (Int_t ci=0; ci<GetNumberOfColors()-1; ++ci) {
-      if (ci % 10 == 9)
-         out<<std::endl<<pre<<"                              ";
-      out<<" "<<GetColorPalette(ci)<<",";
-   }
-   out<<" "<<GetColorPalette(GetNumberOfColors() - 1)                <<" };"<<std::endl;
-   out<<pre<<"tmpStyle->SetPalette("<<GetNumberOfColors()<< ", tmpPaletteColor);" << std::endl;
-   out<<std::endl;
+   out << "  \n";
+
+   // Palette belongs to the TColor
+   // but stored together with any TStyle instance
+   TColor::SaveColorsPalette(out);
+
+   out << "  \n";
 
    // fLineStyle
-   out<<pre<<"TString tmpLineStyleArray[30] = {";
-   for (Int_t li=0; li<29; ++li) {
-      if (li % 5 == 4)
-         out<<std::endl<<pre<<"                                 ";
-      out<<" \"" << fLineStyle[li] << "\",";
-   }
-   out<<" \""<<fLineStyle[29].Data()<<"\" };"<<std::endl;
-   out<<pre<<"for (Int_t i=0; i<30; i++)"<<std::endl;
-   out<<pre<<"   tmpStyle->SetLineStyleString(i, tmpLineStyleArray[i]);"<<std::endl;
-   out<<std::endl;
+   for (Int_t li = 0; li < 30; ++li)
+      out << prefix << "SetLineStyleString(" << li << ", \"" << TString(fLineStyle[li]).ReplaceSpecialCppChars()
+          << "\");\n";
 
-   out<<pre<<"tmpStyle->SetHeaderPS(\""       <<GetHeaderPS()        <<"\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTitlePS(\""        <<GetTitlePS()         <<"\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetFitFormat(\""      <<GetFitFormat()       <<"\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetPaintTextFormat(\""<<GetPaintTextFormat() <<"\");"<<std::endl;
-   out<<pre<<"tmpStyle->SetLineScalePS("      <<GetLineScalePS()     <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetJoinLinePS("       <<GetJoinLinePS()      <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetCapLinePS("        <<GetCapLinePS()       <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetColorModelPS("     <<GetColorModelPS()    <<");"<<std::endl;
-   out<<pre<<"tmpStyle->SetTimeOffset("       <<TString::Format("%9.0f", GetTimeOffset())<<");"<<std::endl;
-   out<<std::endl;
+   out << "  \n";
+
+   out << prefix << "SetHeaderPS(\"" << TString(GetHeaderPS()).ReplaceSpecialCppChars() << "\");\n";
+   out << prefix << "SetTitlePS(\"" << TString(GetTitlePS()).ReplaceSpecialCppChars() << "\");\n";
+   out << prefix << "SetFitFormat(\"" << TString(GetFitFormat()).ReplaceSpecialCppChars() << "\");\n";
+   out << prefix << "SetPaintTextFormat(\"" << TString(GetPaintTextFormat()).ReplaceSpecialCppChars() << "\");\n";
+   out << prefix << "SetLineScalePS(" << GetLineScalePS() << ");\n";
+   out << prefix << "SetJoinLinePS(" << GetJoinLinePS() << ");\n";
+   out << prefix << "SetCapLinePS(" << GetCapLinePS() << ");\n";
+   out << prefix << "SetColorModelPS(" << GetColorModelPS() << ");\n";
+   out << prefix << "SetTimeOffset(" << TString::Format("%9.0f", GetTimeOffset()) << ");\n";
 
    // Inheritance :
-   // TAttLine :
-   out<<pre<<"tmpStyle->SetLineColor(" <<GetLineColor() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetLineStyle(" <<GetLineStyle() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetLineWidth(" <<GetLineWidth() <<");" <<std::endl;
-
-   // TAttFill
-   out<<pre<<"tmpStyle->SetFillColor(" <<GetFillColor() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetFillStyle(" <<GetFillStyle() <<");" <<std::endl;
-
-   // TAttMarker
-   out<<pre<<"tmpStyle->SetMarkerColor(" <<GetMarkerColor() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetMarkerSize("  <<GetMarkerSize() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetMarkerStyle(" <<GetMarkerStyle() <<");" <<std::endl;
-
-   // TAttText
-   out<<pre<<"tmpStyle->SetTextAlign(" <<GetTextAlign() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetTextAngle(" <<GetTextAngle() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetTextColor(" <<GetTextColor() <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetTextFont("  <<GetTextFont()  <<");" <<std::endl;
-   out<<pre<<"tmpStyle->SetTextSize("  <<GetTextSize()  <<");" <<std::endl;
+   SaveLineAttributes(out, "tmpStyle", -1, -1, -1);
+   SaveFillAttributes(out, "tmpStyle", -1, -1);
+   SaveMarkerAttributes(out, "tmpStyle", -1, -1, -1);
+   SaveTextAttributes(out, "tmpStyle", 0, 0, 0, 0, 0);
 }

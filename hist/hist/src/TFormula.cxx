@@ -13,8 +13,7 @@
 #include "TBuffer.h"
 #include "TMethod.h"
 #include "TF1.h"
-#include "TMethodCall.h"
-#include <TBenchmark.h>
+#include "TMethodCall.h" 
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
@@ -804,9 +803,9 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    TString prototypeArguments = "";
    if (HasVariables || HasParameters) {
       if (IsVectorized)
-         prototypeArguments.Append("ROOT::Double_v*");
+         prototypeArguments.Append("ROOT::Double_v const*");
       else
-         prototypeArguments.Append("Double_t*");
+         prototypeArguments.Append("Double_t const*");
    }
    auto AddDoublePtrParam = [&prototypeArguments]() {
      prototypeArguments.Append(",");
@@ -991,74 +990,152 @@ void TFormula::FillVecFunctionsShurtCuts() {
    // do nothing in case Veccore is not enabled
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-///    Handling polN
-///    If before 'pol' exist any name, this name will be treated as variable used in polynomial
-///    eg.
-///    varpol2(5) will be replaced with: [5] + [6]*var + [7]*var^2
-///    Empty name is treated like variable x.
+/// \brief Handling Polynomial Notation (polN)
+///
+/// This section describes how polynomials are handled in the code.
+///
+/// - If any name appears before 'pol', it is treated as a variable used in the polynomial.
+///   - Example: `varpol2(5)` will be replaced with `[5] + [6]*var + [7]*var^2`.
+///   - Empty name is treated like variable `x`.
+///
+/// - The extended format allows direct variable specification:
+///   - Example: `pol2(x, 0)` or `pol(x, [A])`.
+///
+/// - Traditional syntax: `polN` represents a polynomial of degree `N`:
+///   - `ypol1` → `[p0] + [p1] * y`
+///   - `pol1(x, 0)` → `[p0] + [p1] * x`
+///   - `pol2(y, 1)` → `[p1] + [p2] * y + [p3] * TMath::Sq(y)`
+////////////////////////////////////////////////////////////////////////////////
 
 void TFormula::HandlePolN(TString &formula)
 {
+
    Int_t polPos = formula.Index("pol");
    while (polPos != kNPOS && !IsAParameterName(formula, polPos)) {
-
       Bool_t defaultVariable = false;
       TString variable;
       Int_t openingBracketPos = formula.Index('(', polPos);
       Bool_t defaultCounter = openingBracketPos == kNPOS;
       Bool_t defaultDegree = true;
-      Int_t degree, counter;
+      Int_t degree = 1, counter = 0;
       TString sdegree;
+      std::vector<TString> paramNames;
+
+      // check for extended format
+      Bool_t isNewFormat = false;
       if (!defaultCounter) {
-         // verify first of opening parenthesis belongs to pol expression
-         // character between 'pol' and '(' must all be digits
-         sdegree = formula(polPos + 3, openingBracketPos - polPos - 3);
-         if (!sdegree.IsDigit())
-            defaultCounter = true;
-      }
-      if (!defaultCounter) {
-         degree = sdegree.Atoi();
-         counter = TString(formula(openingBracketPos + 1, formula.Index(')', polPos) - openingBracketPos)).Atoi();
-      } else {
-         Int_t temp = polPos + 3;
-         while (temp < formula.Length() && isdigit(formula[temp])) {
-            defaultDegree = false;
-            temp++;
+         TString args = formula(openingBracketPos + 1, formula.Index(')', polPos) - openingBracketPos - 1);
+         if (args.Contains(",")) {
+            isNewFormat = true;
+            sdegree = formula(polPos + 3, openingBracketPos - polPos - 3);
+            if (!sdegree.IsDigit())
+               sdegree = "1";
+            degree = sdegree.Atoi();
+
+            std::vector<TString> tokens;
+            std::stringstream ss(args.Data());
+            std::string token;
+            while (std::getline(ss, token, ',')) { // spliting string at ,
+               tokens.push_back(TString(token));
+            }
+
+            if (!tokens.empty()) {
+               variable = tokens[0];
+               variable.Strip(TString::kBoth);
+
+               // extract counter if provided as a numeric value, without this it was not working with [A], [B]
+               if (tokens.size() > 1) {
+                  TString counterStr = tokens[1];
+                  counterStr.Strip(TString::kBoth);
+                  if (counterStr.IsDigit()) {
+                     counter = counterStr.Atoi();
+                  }
+               }
+
+               // store parameter names for later use
+               for (size_t i = 1; i < tokens.size(); i++) {
+                  TString paramStr = tokens[i];
+                  paramStr.Strip(TString::kBoth);
+                  if (paramStr.BeginsWith("[") && paramStr.EndsWith("]")) {
+                     paramStr = paramStr(1, paramStr.Length() - 2);
+                     paramNames.push_back(paramStr);
+
+                     if (fParams.find(paramStr) == fParams.end()) {
+                        fParams[paramStr] = fNpar;
+                        fClingParameters.push_back(0.0);
+                        fNpar++;
+                     }
+                  }
+               }
+            }
          }
-         degree = TString(formula(polPos + 3, temp - polPos - 3)).Atoi();
-         counter = 0;
       }
 
-      TString replacement = TString::Format("[%d]", counter);
-      if (polPos - 1 < 0 || !IsFunctionNameChar(formula[polPos - 1]) || formula[polPos - 1] == ':') {
-         variable = "x";
-         defaultVariable = true;
-      } else {
-         Int_t tmp = polPos - 1;
-         while (tmp >= 0 && IsFunctionNameChar(formula[tmp]) && formula[tmp] != ':') {
-            tmp--;
+      // handle original format if not new format
+      if (!isNewFormat) {
+         if (!defaultCounter) {
+            sdegree = formula(polPos + 3, openingBracketPos - polPos - 3);
+            if (!sdegree.IsDigit())
+               defaultCounter = true;
          }
-         variable = formula(tmp + 1, polPos - (tmp + 1));
+         if (!defaultCounter) {
+            degree = sdegree.Atoi();
+            counter = TString(formula(openingBracketPos + 1, formula.Index(')', polPos) - openingBracketPos)).Atoi();
+         } else {
+            Int_t temp = polPos + 3;
+            while (temp < formula.Length() && isdigit(formula[temp])) {
+               defaultDegree = false;
+               temp++;
+            }
+            degree = TString(formula(polPos + 3, temp - polPos - 3)).Atoi();
+         }
+
+         if (polPos - 1 < 0 || !IsFunctionNameChar(formula[polPos - 1]) || formula[polPos - 1] == ':') {
+            variable = "x";
+            defaultVariable = true;
+         } else {
+            Int_t tmp = polPos - 1;
+            while (tmp >= 0 && IsFunctionNameChar(formula[tmp]) && formula[tmp] != ':') {
+               tmp--;
+            }
+            variable = formula(tmp + 1, polPos - (tmp + 1));
+         }
       }
-      Int_t param = counter + 1;
-      Int_t tmp = 1;
-      while (tmp <= degree) {
-         if (tmp > 1)
-            replacement.Append(TString::Format("+[%d]*%s^%d", param, variable.Data(), tmp));
-         else
-            replacement.Append(TString::Format("+[%d]*%s", param, variable.Data()));
-         param++;
-         tmp++;
+
+      // build replacement string (modified)
+      TString replacement;
+      if (isNewFormat && !paramNames.empty()) {
+         for (Int_t i = 0; i <= degree && i < static_cast<Int_t>(paramNames.size()); i++) {
+            if (i == 0) {
+               replacement = TString::Format("[%s]", paramNames[i].Data());
+            } else if (i == 1) {
+               replacement.Append(TString::Format("+[%s]*%s", paramNames[i].Data(), variable.Data()));
+            } else {
+               replacement.Append(TString::Format("+[%s]*%s^%d", paramNames[i].Data(), variable.Data(), i));
+            }
+         }
+      } else {
+         replacement = TString::Format("[%d]", counter);
+         for (Int_t i = 1; i <= degree; i++) {
+            if (i == 1) {
+               replacement.Append(TString::Format("+[%d]*%s", counter + i, variable.Data()));
+            } else {
+               replacement.Append(TString::Format("+[%d]*%s^%d", counter + i, variable.Data(), i));
+            }
+         }
       }
-      // add parenthesis before and after
+
       if (degree > 0) {
          replacement.Insert(0, '(');
          replacement.Append(')');
       }
+
+      // create patern based on format either new or old
       TString pattern;
-      if (defaultCounter && !defaultDegree) {
+      if (isNewFormat) {
+         pattern = formula(polPos, formula.Index(')', polPos) - polPos + 1);
+      } else if (defaultCounter && !defaultDegree) {
          pattern = TString::Format("%spol%d", (defaultVariable ? "" : variable.Data()), degree);
       } else if (defaultCounter && defaultDegree) {
          pattern = TString::Format("%spol", (defaultVariable ? "" : variable.Data()));
@@ -1071,11 +1148,12 @@ void TFormula::HandlePolN(TString &formula)
                formula.Data(), pattern.Data(), replacement.Data());
          break;
       }
+
       if (formula == pattern) {
-         // case of single polynomial
          SetBit(kLinear, true);
          fNumber = 300 + degree;
       }
+
       formula.ReplaceAll(pattern, replacement);
       polPos = formula.Index("pol");
    }
@@ -2308,7 +2386,7 @@ void TFormula::ProcessFormula(TString &formula)
          TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
 
          // valid input formula - try to put into Cling (in case of no variables but only parameter we need to add the standard signature)
-         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " *x").Data() : ""),
+         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " const *x").Data() : ""),
                                                       (hasParameters ? "," : ""), (hasParameters ? "Double_t *p" : ""));
 
          // set the name for Cling using the hash_function
@@ -3125,10 +3203,14 @@ static bool functionExists(const string &Name) {
 }
 
 static void IncludeCladRuntime(Bool_t &IsCladRuntimeIncluded) {
+#ifdef ROOT_SUPPORT_CLAD
    if (!IsCladRuntimeIncluded) {
       IsCladRuntimeIncluded = true;
       gInterpreter->Declare("#include <Math/CladDerivator.h>\n#pragma clad OFF");
    }
+#else
+   IsCladRuntimeIncluded = false;
+#endif
 }
 
 static bool
@@ -3520,8 +3602,12 @@ void TFormula::ReInitializeEvalMethod() {
 ///  - If option = "P" replace the parameter names with their values
 ///  - If option = "CLING" return the actual expression used to build the function  passed to cling
 ///  - If option = "CLINGP" replace in the CLING expression the parameter with their values
+///  @param fl_format specifies the printf floating point precision when option
+///  contains "p". Default is `%g` (6 decimals). If you need more precision,
+///  change e.g. to `%.9f`, or `%a` for a lossless representation.
+///  @see https://cplusplus.com/reference/cstdio/printf/
 
-TString TFormula::GetExpFormula(Option_t *option) const
+TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
 {
    TString opt(option);
    if (opt.IsNull() || TestBit(TFormula::kLambda) ) return fFormula;
@@ -3557,7 +3643,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
             TString parNumbName = clingFormula(i+2,j-i-2);
             int parNumber = parNumbName.Atoi();
             assert(parNumber < fNpar);
-            TString replacement = TString::Format("%f",GetParameter(parNumber));
+            TString replacement = TString::Format(fl_format, GetParameter(parNumber));
             clingFormula.Replace(i,j-i+1, replacement );
             i += replacement.Length();
          }
@@ -3579,7 +3665,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
                return expFormula;
             }
             TString parName = expFormula(i+1,j-i-1);
-            TString replacement = TString::Format("%g",GetParameter(parName));
+            TString replacement = TString::Format(fl_format, GetParameter(parName));
             expFormula.Replace(i,j-i+1, replacement );
             i += replacement.Length();
          }
@@ -3593,7 +3679,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
 TString TFormula::GetGradientFormula() const {
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
-   std::string s("(void (&)(Double_t *, Double_t *, Double_t *)) ");
+   std::string s("(void (&)(Double_t const *, Double_t *, Double_t *)) ");
    s += GetGradientFuncName();
    gInterpreter->Evaluate(s.c_str(), *v);
    return v->ToString();

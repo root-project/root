@@ -17,11 +17,14 @@ class TSplinePainter extends ObjectPainter {
    updateObject(obj, opt) {
       const spline = this.getObject();
 
-      if (spline._typename !== obj._typename) return false;
+      if (spline._typename !== obj._typename)
+         return false;
 
-      if (spline !== obj) Object.assign(spline, obj);
+      if (spline !== obj)
+         Object.assign(spline, obj);
 
-      if (opt !== undefined) this.decodeOptions(opt);
+      if (opt !== undefined)
+         this.decodeOptions(opt);
 
       return true;
    }
@@ -50,7 +53,7 @@ class TSplinePainter extends ObjectPainter {
       if (x >= spline.fXmax) return khig;
 
       if (spline.fKstep) {
-         // Equidistant knots, use histogramming
+         // Equidistant knots, use histogram
          klow = Math.round((x - spline.fXmin)/spline.fDelta);
          // Correction for rounding errors
          if (x < spline.fPoly[klow].fX)
@@ -99,6 +102,8 @@ class TSplinePainter extends ObjectPainter {
       histo.fXaxis.fXmax = xmax;
       histo.fYaxis.fXmin = ymin;
       histo.fYaxis.fXmax = ymax;
+      histo.fMinimum = ymin;
+      histo.fMaximum = ymax;
 
       return histo;
    }
@@ -198,8 +203,8 @@ class TSplinePainter extends ObjectPainter {
 
       if (this.options.Line || this.options.Curve) {
          const npx = Math.max(10, spline.fNpx), bins = []; // index of current knot
-         let xmin = Math.max(pmain.scale_xmin, spline.fXmin),
-             xmax = Math.min(pmain.scale_xmax, spline.fXmax),
+         let xmin = Math.max(funcs.scale_xmin, spline.fXmin),
+             xmax = Math.min(funcs.scale_xmax, spline.fXmax),
              indx = this.findX(xmin);
 
          if (pmain.logx) {
@@ -258,7 +263,7 @@ class TSplinePainter extends ObjectPainter {
       if (axis !== 'x') return false;
 
       // spline can always be calculated and therefore one can zoom inside
-      return !!this.getObject();
+      return Boolean(this.getObject());
    }
 
    /** @summary Decode options for TSpline drawing */
@@ -267,7 +272,7 @@ class TSplinePainter extends ObjectPainter {
 
       if (!this.options) this.options = {};
 
-      const has_main = !!this.getMainPainter();
+      const has_main = Boolean(this.getMainPainter());
 
       Object.assign(this.options, {
          Same: d.check('SAME'),

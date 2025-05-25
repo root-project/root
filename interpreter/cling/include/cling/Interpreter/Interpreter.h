@@ -18,6 +18,7 @@
 #include "cling/Interpreter/RuntimeOptions.h"
 
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 
 #include <cstdlib>
 #include <memory>
@@ -35,6 +36,7 @@ namespace llvm {
   template <typename T> class SmallVectorImpl;
   namespace orc {
     class DefinitionGenerator;
+    class LLJIT;
   }
 }
 
@@ -178,9 +180,9 @@ namespace cling {
     ///
     InvocationOptions m_Opts;
 
-    ///\brief The llvm library state, a per-thread object.
+    ///\brief Thread-safe llvm library state.
     ///
-    std::unique_ptr<llvm::LLVMContext> m_LLVMContext;
+    std::unique_ptr<llvm::orc::ThreadSafeContext> TSCtx;
 
     ///\brief Cling's execution engine - a well wrapped llvm execution engine.
     ///
@@ -308,7 +310,7 @@ namespace cling {
 
     ///\brief Runs given wrapper function.
     ///
-    ///\param [in] fname - The function name.
+    ///\param [in] FD - The function declaration.
     ///\param [in,out] res - The return result of the run function. Must be
     ///       initialized to point to the return value's location if the
     ///       expression result is an aggregate.
@@ -333,12 +335,10 @@ namespace cling {
     ///
     ///\param[in] NoRuntime - Don't include the runtime headers / gCling
     ///\param[in] SyntaxOnly - In SyntaxOnly mode
-    ///\param[out] Globals - Global symbols that need to be emitted
     ///
     ///\returns The resulting Transation of initialization.
     ///
-    Transaction* Initialize(bool NoRuntime, bool SyntaxOnly,
-                            llvm::SmallVectorImpl<llvm::StringRef>& Globals);
+    Transaction* Initialize(bool NoRuntime, bool SyntaxOnly);
 
     ///\ Shut down the interpreter runtime.
     ///
@@ -395,10 +395,10 @@ namespace cling {
     cling::runtime::RuntimeOptions& getRuntimeOptions() { return m_RuntimeOptions; }
 
     const llvm::LLVMContext* getLLVMContext() const {
-      return m_LLVMContext.get();
+      return TSCtx->getContext();
     }
 
-    llvm::LLVMContext* getLLVMContext() { return m_LLVMContext.get(); }
+    llvm::LLVMContext* getLLVMContext() { return TSCtx->getContext(); }
 
     LookupHelper& getLookupHelper() const { return *m_LookupHelper; }
 
@@ -580,7 +580,7 @@ namespace cling {
     ///
     /// @param[in] line - The input containing the string to be completed.
     /// @param[in] cursor - The offset for the completion point.
-    /// @param[out] completions - The results for teh completion
+    /// @param[out] completions - The results for the completion.
     ///
     ///\returns Whether the operation was fully successful.
     ///
@@ -771,6 +771,11 @@ namespace cling {
     void setCallbacks(std::unique_ptr<InterpreterCallbacks> C);
     const InterpreterCallbacks* getCallbacks() const {return m_Callbacks.get();}
     InterpreterCallbacks* getCallbacks() { return m_Callbacks.get(); }
+
+    ///\brief Returns the JIT managed by the Interpreter.
+    /// Accesses and returns the JIT held in the IncrementalJIT instance
+    /// managed by m_Executor
+    llvm::orc::LLJIT* getExecutionEngine();
 
     const DynamicLibraryManager* getDynamicLibraryManager() const;
     DynamicLibraryManager* getDynamicLibraryManager();

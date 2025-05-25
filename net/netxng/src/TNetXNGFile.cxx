@@ -29,8 +29,15 @@
 #include <XrdCl/XrdClFile.hh>
 #include <XrdCl/XrdClXRootDResponses.hh>
 #include <XrdCl/XrdClDefaultEnv.hh>
+#include <XrdCl/XrdClFileSystem.hh>
 #include <XrdVersion.hh>
 #include <iostream>
+
+namespace {
+
+Int_t ParseOpenMode(Option_t *in, TString &modestr, int &mode, Bool_t assumeRead);
+
+} // namepsace
 
 //------------------------------------------------------------------------------
 // Open handler for async open requests
@@ -113,6 +120,17 @@ class TAsyncReadvHandler: public XrdCl::ResponseHandler
 
 ClassImp(TNetXNGFile);
 
+TNetXNGFile::TNetXNGFile()
+   : TFile(),
+     fFile(nullptr),
+     fUrl(nullptr),
+     fMode(XrdCl::OpenFlags::None),
+     fInitCondVar(nullptr),
+     fReadvIorMax(0),
+     fReadvIovMax(0)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 ///
@@ -183,7 +201,7 @@ TNetXNGFile::TNetXNGFile(const char *url, const char *lurl, Option_t *mode, cons
    if (parallelopen) {
       // Open the file asynchronously
       TAsyncOpenHandler *handler = new TAsyncOpenHandler(this);
-      status = fFile->Open(fUrl->GetURL(), fMode, Access::None, handler);
+      status = fFile->Open(fUrl->GetURL(), static_cast<XrdCl::OpenFlags::Flags>(fMode), Access::None, handler);
       if (!status.IsOK()) {
          Error("Open", "%s", status.ToStr().c_str());
          MakeZombie();
@@ -192,7 +210,7 @@ TNetXNGFile::TNetXNGFile(const char *url, const char *lurl, Option_t *mode, cons
    }
 
    // Open the file synchronously
-   status = fFile->Open(fUrl->GetURL(), fMode);
+   status = fFile->Open(fUrl->GetURL(), static_cast<XrdCl::OpenFlags::Flags>(fMode));
    if (!status.IsOK()) {
 #if XrdVNUMBER >= 40000
       if( status.code == errRedirect )
@@ -346,7 +364,7 @@ Int_t TNetXNGFile::ReOpen(Option_t *modestr)
 {
    using namespace XrdCl;
    TString newOpt;
-   OpenFlags::Flags mode;
+   int mode;
 
    Int_t parseres = ParseOpenMode(modestr, newOpt, mode, kFALSE);
 
@@ -370,7 +388,7 @@ Int_t TNetXNGFile::ReOpen(Option_t *modestr)
    fOption = newOpt;
    fMode = mode;
 
-   st = fFile->Open(fUrl->GetURL(), fMode);
+   st = fFile->Open(fUrl->GetURL(), static_cast<XrdCl::OpenFlags::Flags>(fMode));
    if (!st.IsOK()) {
       Error("ReOpen", "%s", st.ToStr().c_str());
       return 1;
@@ -673,6 +691,8 @@ void TNetXNGFile::Seek(Long64_t offset, ERelativeTo position)
    SetOffset(offset, position);
 }
 
+namespace {
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse a file open mode given as a string into a canonically formatted
 /// output mode string and an integer code that the xroot client can use
@@ -684,9 +704,7 @@ void TNetXNGFile::Seek(Long64_t offset, ERelativeTo position)
 /// returns:             0 in case the mode was successfully parsed,
 ///                     -1 in case of failure
 
-Int_t TNetXNGFile::ParseOpenMode(Option_t *in, TString &modestr,
-                                 XrdCl::OpenFlags::Flags &mode,
-                                 Bool_t assumeRead)
+Int_t ParseOpenMode(Option_t *in, TString &modestr, int &mode, Bool_t assumeRead)
 {
    using namespace XrdCl;
    modestr = ToUpper(TString(in));
@@ -705,6 +723,8 @@ Int_t TNetXNGFile::ParseOpenMode(Option_t *in, TString &modestr,
 
    return 0;
 }
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check the file is open and isn't a zombie

@@ -20,6 +20,8 @@ class RooWorkspace(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooWorkspace'
+
     @cpp_signature(
         "Bool_t RooWorkspace::import(const RooAbsArg& arg,"
         "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
@@ -107,6 +109,13 @@ class RooWorkspace(object):
         if name in ["_import", "import", "Import"]:
             raise AttributeError('Resetting the "' + name + '" attribute of a RooWorkspace is not allowed!')
         object.__setattr__(self, name, value)
+
+    def _ipython_key_completions_(self):
+        r"""
+        Support tab completion for `__getitem__`, suggesting all components in
+        the workspace.
+        """
+        return [c.GetName() for c in self.components()]
 
 
 def RooWorkspace_import(self, *args, **kwargs):

@@ -50,7 +50,7 @@ void testMethodDL_DNN(TString architectureStr, TString optimizerStr)
    TMVA::Config::Instance();
 
    TFile *input(nullptr);
-   TString fname = gROOT->GetTutorialDir() + "/tmva/data/tmva_class_example.root";
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
    input = TFile::Open(fname);
    if (!input) {
       std::cout << "ERROR: could not open input data file " << fname << std::endl;

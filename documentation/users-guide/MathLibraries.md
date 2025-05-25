@@ -147,7 +147,7 @@ In the namespace, **`TMath`**, a collection of free functions is provided for th
 -   geometrical functions.
 
 For more details, see the reference documentation of **`TMath`** at
-<http://root.cern.ch/root/htmldoc/TMath.html>.
+[<http://root.cern.ch/root/htmldoc/TMath.html>](https://root.cern/doc/master/namespaceTMath.html).
 
 
 ### Numerical Constants
@@ -2082,6 +2082,9 @@ method, with any vector (`q`) implementing `x()`, `y()` and `z()`.
 
 Note that the multiplication between two vectors using the operator `*`
 is not supported because it is ambiguous.
+
+> [!note]
+> For the vectors using the 4D coordinate systems based on mass instead of energy (such as **`ROOT::Math::PxPyPzM4D`** or **`ROOT::Math::PtEtaPhiM4D`**) the unary operator `-` (negation) doesn't perform a 4-vector negation. Instead, it negates only the spatial components, which might result in unintuive behaviours (for instance, for PxPyPzM4D coordinate system, $\textbf{v}+ \left(-\textbf{v}\right) \neq \textbf{v} -\textbf{v}$).
 
 #### Other Methods
 

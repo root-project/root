@@ -1,0 +1,18 @@
+
+onnx-example:—
+:
+inputA
+inputBoutput"Einsum*
+equation"	ik,kj->ij EinsumGraphZ
+inputA
+
+
+Z
+inputB
+
+
+b
+output
+
+
+B

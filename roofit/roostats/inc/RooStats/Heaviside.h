@@ -25,7 +25,7 @@ namespace RooStats {
             RooAbsReal& _x,
             RooAbsReal& _c);
       Heaviside(const Heaviside& other, const char* name=nullptr) ;
-      TObject* clone(const char* newname) const override { return new Heaviside(*this,newname); }
+      TObject* clone(const char* newname=nullptr) const override { return new Heaviside(*this,newname); }
 
    protected:
 

@@ -1650,41 +1650,28 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
 
 void TGListBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
+   // store options and color if differ from defaults
+   TString extra_args = SaveCtorArgs(out, kSunkenFrame | kDoubleBorder, kTRUE);
 
-   out << std::endl << "   // list box" << std::endl;
+   out << "\n   // list box\n";
+   out << "   TGListBox *" << GetName() << " = new TGListBox(" << fParent->GetName();
+   if (!extra_args.IsNull() || (fWidgetId != -1))
+      out << ", " << fWidgetId << extra_args;
+   out << ");\n";
 
-   out<<"   TGListBox *";
-   out << GetName() << " = new TGListBox(" << fParent->GetName();
-
-   if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         if (fWidgetId == -1) {
-            out <<");" << std::endl;
-         } else {
-            out << "," << fWidgetId << ");" << std::endl;
-         }
-      } else {
-         out << "," << fWidgetId << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << fWidgetId << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   if (!fLbc->GetList()) return;
+   if (!fLbc->GetList())
+      return;
 
-   TGFrameElement *el;
    TIter next(fLbc->GetList());
-
-   while ((el = (TGFrameElement *) next())) {
+   while (auto el = static_cast<TGFrameElement *>(next())) {
       out << "   " << GetName() << "->AddEntry(";
       el->fFrame->SavePrimitive(out, option);
-      out << ");"<< std::endl;
+      out << ");\n";
    }
-   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
-       << ");" << std::endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight() << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1692,9 +1679,5 @@ void TGListBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGTextLBEntry::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TString content = GetText()->GetString();
-   content.ReplaceAll('\\', "\\\\");
-   content.ReplaceAll("\"", "\\\"");
-   char quote = '"';
-   out << quote << content << quote << "," << EntryId();
+   out << "\"" << TString(GetText()->GetString()).ReplaceSpecialCppChars() <<  "\", " << EntryId();
 }

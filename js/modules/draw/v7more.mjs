@@ -19,11 +19,10 @@ function drawText() {
 
    this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
-   this.startTextDrawing(textFont, 'font');
-
-   this.drawText({ x: p.x, y: p.y, text: text.fText, latex: 1 });
-
-   return this.finishTextDrawing();
+   return this.startTextDrawingAsync(textFont, 'font').then(() => {
+      this.drawText({ x: p.x, y: p.y, text: text.fText, latex: 1 });
+      return this.finishTextDrawing();
+   });
 }
 
 /** @summary draw RLine object
@@ -121,8 +120,8 @@ class RPalettePainter extends RObjectPainter {
       if (!framep)
          return console.log('no frame painter - no palette');
 
-      const zmin = contour[0],
-            zmax = contour[contour.length-1],
+      const zmin = contour.at(0),
+            zmax = contour.at(-1),
             rect = framep.getFrameRect(),
             pad_width = this.getPadPainter().getPadWidth(),
             pad_height = this.getPadPainter().getPadHeight(),
@@ -184,17 +183,20 @@ class RPalettePainter extends RObjectPainter {
       else
          framep.z_handle.configureAxis('zaxis', gmin, gmax, zmin, zmax, false, [0, palette_width], palette_width, { reverse: false });
 
-      for (let i = 0; i < contour.length-1; ++i) {
+      for (let i = 0; i < contour.length - 1; ++i) {
          const z0 = Math.round(framep.z_handle.gr(contour[i])),
-             z1 = Math.round(framep.z_handle.gr(contour[i+1])),
-             col = palette.getContourColor((contour[i]+contour[i+1])/2),
+               z1 = Math.round(framep.z_handle.gr(contour[i+1])),
+               col = palette.getContourColor((contour[i] + contour[i+1]) / 2),
 
-          r = g_btns.append('svg:path')
-                     .attr('d', vertical ? `M0,${z1}H${palette_width}V${z0}H0Z` : `M${z0},0V${palette_height}H${z1}V0Z`)
-                     .style('fill', col)
-                     .style('stroke', col)
-                     .property('fill0', col)
-                     .property('fill1', d3_rgb(col).darker(0.5).toString());
+         r = g_btns.append('svg:path')
+                   .attr('d', vertical ? `M0,${z1}H${palette_width}V${z0}H0Z` : `M${z0},0V${palette_height}H${z1}V0Z`)
+                   .style('fill', col)
+                   .style('stroke', col)
+                   .property('fill0', col)
+                   .property('fill1', d3_rgb(col).darker(0.5).formatRgb());
+
+         if (this.isBatchMode())
+            continue;
 
          if (this.isTooltipAllowed()) {
             r.on('mouseover', function() {
@@ -221,7 +223,7 @@ class RPalettePainter extends RObjectPainter {
                evnt.stopPropagation(); // disable main context menu
                evnt.preventDefault();  // disable browser context menu
                createMenu(evnt, this).then(menu => {
-                  menu.add('header:Palette');
+                  menu.header('Palette');
                   menu.addchk(vertical, 'Vertical', flag => { this.v7SetAttr('vertical', flag); this.redrawPad(); });
                   framep.z_handle.fillAxisContextMenu(menu, 'z');
                   menu.show();

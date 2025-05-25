@@ -64,6 +64,19 @@ fIntegral(0), fIntegralStatus(kNoInt)
    fAxes.SetOwner();
 }
 
+THnBase::THnBase(const char* name, const char* title, const std::vector<TAxis>& axes):
+  TNamed(name, title), fNdimensions(axes.size()), fAxes(axes.size()), fBrowsables(axes.size()),
+  fEntries(0), fTsumw(0), fTsumw2(-1.), fTsumwx(axes.size()), fTsumwx2(axes.size()),
+  fIntegral(0), fIntegralStatus(kNoInt)
+{
+  size_t i{};
+  for (auto& a: axes)
+    fAxes.AddAtAndExpand(a.Clone(), i++);
+  // Assuming SetTitle is done by TNamed.
+  fAxes.SetOwner();
+}
+
+
 THnBase::THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins,
                  const std::vector<std::vector<double>> &xbins)
    : TNamed(name, title), fNdimensions(dim), fAxes(dim), fBrowsables(dim), fEntries(0), fTsumw(0), fTsumw2(-1.),
@@ -523,6 +536,29 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
    ROOT::Math::MinimizerOptions minOption;
 
    return ROOT::Fit::FitObject(this, f , fitOption , minOption, goption, range);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief THnBase::GetBinCenter
+/// \param idx an array of bin index in each dimension.
+/// \return vector of bin centers in each dimension; empty in case of error.
+/// \note Throws error if size is different from nDimensions.
+/// \note See also GetAxis(dim)::GetBinCenter(idx) as an alternative
+std::vector<Double_t> THnBase::GetBinCenter(const std::vector<Int_t> &idx) const
+{
+   if (idx.size() != static_cast<decltype(idx.size())>(fNdimensions)) {
+      Error("THnBase::GetBinCenter",
+            "Mismatched number of dimensions %d with bin index vector size %zu, returning an empty vector.",
+            fNdimensions, idx.size());
+      return {};
+   }
+   std::vector<Double_t> centers(fNdimensions);
+   std::generate(centers.begin(), centers.end(), [i = 0, &idx, this]() mutable {
+      auto bincenter = GetAxis(i)->GetBinCenter(idx[i]);
+      i++;
+      return bincenter;
+   });
+   return centers;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1310,6 +1346,24 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
       fIntegral.clear();
       fIntegralStatus = kNoInt;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Compute integral (sum of counts) of histogram in all dimensions
+/// \param respectAxisRange if false, count all bins including under/overflows,
+///                         if true, restrict sum to the user-set axis range
+/// \note See also Projection(0)::Integral() as alternative
+/// \note this function is different from ComputeIntegral, that is a normalized
+/// cumulative sum
+Double_t THnBase::Integral(Bool_t respectAxisRange) const
+{
+   Long64_t myLinBin = 0;
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(respectAxisRange)};
+   Double_t sum = 0.;
+   while ((myLinBin = iter->Next()) >= 0) {
+      sum += GetBinContent(myLinBin);
+   }
+   return sum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

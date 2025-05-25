@@ -17,7 +17,6 @@
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/TestStatistic.h"
 #include "RooStats/ModelConfig.h"
-#include "RooStats/ProofConfig.h"
 
 #include "RooWorkspace.h"
 #include "RooMsgService.h"
@@ -68,7 +67,6 @@ class ToyMCSampler: public TestStatSampler {
 
    public:
 
-      ToyMCSampler();
       ToyMCSampler(TestStatistic &ts, Int_t ntoys);
       ~ToyMCSampler() override;
 
@@ -226,9 +224,6 @@ class ToyMCSampler: public TestStatSampler {
          fAdaptiveLowLimit = low_threshold;
       }
 
-      /// calling with argument or nullptr deactivates proof
-      void SetProofConfig(ProofConfig *pc = nullptr) { fProofConfig = pc; }
-
       void SetProtoData(const RooDataSet* d) { fProtoData = d; }
 
    protected:
@@ -274,8 +269,6 @@ class ToyMCSampler: public TestStatSampler {
 
       const RooDataSet *fProtoData = nullptr; ///< in dev
 
-      ProofConfig *fProofConfig = nullptr; ///<!
-
       mutable NuisanceParametersSampler *fNuisanceParametersSampler = nullptr; ///<!
 
       // objects below cache information and are mutable and non-persistent
@@ -291,8 +284,7 @@ class ToyMCSampler: public TestStatSampler {
       static bool fgAlwaysUseMultiGen ;  ///< Use PrepareMultiGen always
       bool fUseMultiGen = false;         ///< Use PrepareMultiGen?
 
-   protected:
-   ClassDefOverride(ToyMCSampler, 4) // A simple implementation of the TestStatSampler interface
+   ClassDefOverride(ToyMCSampler, 0) // A simple implementation of the TestStatSampler interface
 };
 }
 

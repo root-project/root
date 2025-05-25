@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Example of  I/O of a mathcore Lorentz Vectors in a Tree and comparison with a TLorentzVector.
+/// Example of  I/O of a GenVector Lorentz Vectors in a Tree and comparison with legacy TLorentzVector.
+///
 /// A ROOT tree is written and read in both using either a XYZTVector or a TLorentzVector.
 ///
 ///  To execute the macro type in:

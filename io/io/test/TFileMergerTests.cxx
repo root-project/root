@@ -1,10 +1,16 @@
 #include "ROOT/TestSupport.hxx"
 
 #include "TFileMerger.h"
+#include "TFileMergeInfo.h"
+#include "TBranch.h"
 
 #include "TMemFile.h"
+#include "TFile.h"
 #include "TTree.h"
 #include "TH1.h"
+#include "TSystem.h"
+
+#include <memory>
 
 static void CreateATuple(TMemFile &file, const char *name, double value)
 {
@@ -84,12 +90,12 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    hist3->Fill(1);   hist3->Fill(1);   hist3->Fill(1);
    hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);
    a.Write();
-   
+
    TFileMerger merger;
    auto output = std::unique_ptr<TFile>(new TFile("SingleOnlyListed.root", "RECREATE"));
    bool success = merger.OutputFile(std::move(output));
    ASSERT_TRUE(success);
-   
+
    merger.AddObjectNames("hist1");
    merger.AddObjectNames("hist2");
    merger.AddFile(&a, false);
@@ -100,4 +106,116 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    output = std::unique_ptr<TFile>(TFile::Open("SingleOnlyListed.root"));
    ASSERT_TRUE(output.get() && output->GetListOfKeys());
    EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
+}
+
+// https://github.com/root-project/root/issues/14558 aka https://its.cern.ch/jira/browse/ROOT-4716
+TEST(TFileMerger, MergeBranches)
+{
+   TTree atree("atree", "atitle");
+   int value;
+   atree.Branch("a", &value);
+
+   TTree abtree("abtree", "abtitle");
+   abtree.Branch("a", &value);
+   abtree.Branch("b", &value);
+   value = 11;
+   abtree.Fill();
+   value = 42;
+   abtree.Fill();
+
+   TTree dummy("emptytree", "emptytitle");
+   TList treelist;
+
+   // Case 1 - Static: NoBranch + NoEntries + 2 entries
+   treelist.Add(&dummy);
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file1(TFile::Open("b_4716.root", "RECREATE"));
+   auto rtree = TTree::MergeTrees(&treelist);
+   ASSERT_TRUE(rtree->FindBranch("a") != nullptr);
+   EXPECT_EQ(rtree->FindBranch("a")->GetEntries(), 2);
+   ASSERT_TRUE(rtree->FindBranch("b") == nullptr);
+   file1->Write();
+
+   // Case 2 - This (NoBranch) + NoEntries + 2 entries
+   treelist.Clear();
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file2(TFile::Open("c_4716.root", "RECREATE"));
+   TFileMergeInfo info2(file2.get());
+   dummy.Merge(&treelist, &info2);
+   ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
+   ASSERT_TRUE(dummy.FindBranch("b") == nullptr);
+   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(), 2);
+   EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 2);
+   // atree has now 2 entries instead of zero since it was used as skeleton for dummy
+   file2->Write();
+
+   // Case 3 - This (NoEntries) + 2 entries
+   TTree a0tree("a0tree", "a0title"); // We cannot reuse atree since it was cannibalized by dummy
+   a0tree.Branch("a", &value);
+   treelist.Clear();
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file3(TFile::Open("d_4716.root", "RECREATE"));
+   TFileMergeInfo info3(file3.get());
+   a0tree.Merge(&treelist, &info3);
+   ASSERT_TRUE(a0tree.FindBranch("a") != nullptr);
+   ASSERT_TRUE(a0tree.FindBranch("b") == nullptr);
+   EXPECT_EQ(a0tree.FindBranch("a")->GetEntries(), 2);
+   file3->Write();
+}
+
+// https://github.com/root-project/root/issues/6640
+TEST(TFileMerger, ChangeFile)
+{
+   {
+      TFile f{"file6640mergerinput.root", "RECREATE"};
+
+      TTree t{"T", "SetMaxTreeSize(1000)", 99, &f};
+      int x;
+      auto nentries = 20000;
+
+      t.Branch("x", &x, "x/I");
+
+      // Call function to forcedly trigger TTree::ChangeFile.
+      // This will produce in total 3 files:
+      // * file6640mergerinput.root
+      // * file6640mergerinput_1.root
+      // * file6640mergerinput_2.root
+      TTree::SetMaxTreeSize(1000);
+
+      for (auto i = 0; i < nentries; i++) {
+         x = i;
+         t.Fill();
+      }
+
+      // Write last file to disk
+      auto cf = t.GetCurrentFile();
+      cf->Write();
+      cf->Close();
+   }
+   {
+      TFileMerger filemerger{false, false};
+      filemerger.OutputFile(std::unique_ptr<TFile>{TFile::Open("file6640mergeroutput.root", "RECREATE")});
+
+      TFile fin{"file6640mergerinput.root", "READ"};
+      TFile fin1{"file6640mergerinput_1.root", "READ"};
+      TFile fin2{"file6640mergerinput_2.root", "READ"};
+
+      filemerger.AddAdoptFile(&fin);
+      filemerger.AddAdoptFile(&fin1);
+      filemerger.AddAdoptFile(&fin2);
+
+      // Before the fix, TTree::ChangeFile was called during Merge
+      // in the end deleting the TFileMerger's output file and leading to a crash.
+      filemerger.Merge();
+   }
+   {
+      TFile fout{"file6640mergeroutput.root", "READ"};
+      EXPECT_EQ(fout.Get<TTree>("T")->GetEntries(), 20000);
+   }
+   gSystem->Unlink("file6640mergerinput.root");
+   gSystem->Unlink("file6640mergerinput_1.root");
+   gSystem->Unlink("file6640mergerinput_2.root");
+   gSystem->Unlink("file6640mergeroutput.root");
 }

@@ -146,16 +146,16 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
       if (R__TestUseCache<T>(aElement)) {
          if (aElement->TestBit(TStreamerElement::kWrite)) {
-            if (((TBufferFile&)b).PeekDataCache()==0) {
+            if (b.PeekDataCache() == 0) {
                Warning("WriteBuffer","Skipping %s::%s because the cache is missing.",GetName(),aElement->GetName());
             } else {
                if (gDebug > 1) {
                   printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
                          " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
-                         fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,
-                         aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
+                         fClass->GetName(), aElement->GetName(), i, compinfo[i]->fType, aElement->ClassName(),
+                         b.Length(), arr[0], eoffset, b.PeekDataCache()->GetObjectAt(0));
                }
-               WriteBufferAux(b,*((TBufferFile&)b).PeekDataCache(),compinfo,i,i+1,narr,eoffset, arrayMode);
+               WriteBufferAux(b, *b.PeekDataCache(), compinfo, i, i + 1, narr, eoffset, arrayMode);
             }
             continue;
          } else {
@@ -800,12 +800,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             continue;
          }
 
-         case TStreamerInfo::kCacheNew:
-            ((TBufferFile&)b).PushDataCache( new TVirtualArray( aElement->GetClassPointer(), narr ) );
-            continue;
-         case TStreamerInfo::kCacheDelete:
-            delete ((TBufferFile&)b).PopDataCache();
-            continue;
+         case TStreamerInfo::kCacheNew: b.PushDataCache(new TVirtualArray(aElement->GetClassPointer(), narr)); continue;
+         case TStreamerInfo::kCacheDelete: delete b.PopDataCache(); continue;
          case TStreamerInfo::kArtificial:
 #if 0
             ROOT::TSchemaRule::WriteFuncPtr_t writefunc = ((TStreamerArtificial*)aElement)->GetWriteFunc();

@@ -281,6 +281,28 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
    return nullptr;
 }
 
+/// Return a RDefineReader or a RVariationReader, or nullptr if not available.
+/// No type checking is done on the requested reader.
+RDFDetail::RColumnReaderBase *
+RColumnRegister::GetReaderUnchecked(unsigned int slot, const std::string &colName, const std::string &variationName)
+{
+   // try variations first
+   if (variationName != "nominal") {
+      if (auto *variationAndReaders = FindVariationAndReaders(colName, variationName)) {
+         return &variationAndReaders->GetReader(slot, colName, variationName);
+      }
+   }
+
+   // otherwise try defines
+   if (auto it =
+          std::find_if(fDefines->begin(), fDefines->end(), [&colName](const auto &kv) { return kv.first == colName; });
+       it != fDefines->end()) {
+      return &it->second->GetReader(slot, variationName);
+   }
+
+   return nullptr;
+}
+
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT

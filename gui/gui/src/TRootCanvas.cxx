@@ -28,6 +28,7 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 #include "TGCanvas.h"
 #include "TGMenu.h"
 #include "TGWidget.h"
+#include "TGFileBrowser.h"
 #include "TGFileDialog.h"
 #include "TGStatusBar.h"
 #include "TGTextEditDialogs.h"
@@ -163,17 +164,17 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     0,              0 };
 
 static const char *gSaveAsTypes[] = { "PDF",          "*.pdf",
-                                      "PostScript",   "*.ps",
-                                      "Encapsulated PostScript", "*.eps",
                                       "SVG",          "*.svg",
                                       "TeX",          "*.tex",
+                                      "PostScript",   "*.ps",
+                                      "Encapsulated PostScript", "*.eps",
+                                      "PNG",          "*.png",
+                                      "JPEG",         "*.jpg",
                                       "GIF",          "*.gif",
                                       "ROOT macros",  "*.C",
                                       "ROOT files",   "*.root",
                                       "XML",          "*.xml",
-                                      "PNG",          "*.png",
                                       "XPM",          "*.xpm",
-                                      "JPEG",         "*.jpg",
                                       "TIFF",         "*.tiff",
                                       "XCF",          "*.xcf",
                                       "All files",    "*",
@@ -839,7 +840,18 @@ Bool_t TRootCanvas::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
                         dir = fi.fIniDir;
-                        new TFile(fi.fFilename, "update");
+                        TFile::Open(fi.fFilename, "update");
+                        TIter next(gROOT->GetListOfBrowsers());
+                        TBrowser *b;
+                        while ((b = (TBrowser *)next())) {
+                           TRootBrowser *rb = dynamic_cast<TRootBrowser *>(b->GetBrowserImp());
+                           if (rb) {
+                              TGFileBrowser *fb = dynamic_cast<TGFileBrowser *>(rb->GetActBrowser());
+                              if (fb)
+                                 fb->Selected(0);
+                           }
+                        }
+                        gROOT->RefreshBrowsers();
                      }
                      break;
                   case kFileSaveAs:
@@ -950,7 +962,7 @@ again:
                      }
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
-                     if (TClass::GetClass("TStyleManager"))
+                     if (TClass::GetClass("TStyleManager", kFALSE, kTRUE))
                         gROOT->ProcessLine("TStyleManager::Terminate()");
                      gApplication->Terminate(0);
                      break;
@@ -1188,20 +1200,15 @@ again:
                   // Handle Help menu items...
                   case kHelpAbout:
                      {
-#ifdef R__UNIX
-                        TString rootx = TROOT::GetBinDir() + "/root -a &";
-                        gSystem->Exec(rootx);
-#else
 #ifdef WIN32
                         new TWin32SplashThread(kTRUE);
 #else
 
                         char str[32];
-                        sprintf(str, "About ROOT %s...", gROOT->GetVersion());
+                        snprintf(str, 32, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
 #endif
                      }
                      break;
@@ -2092,11 +2099,10 @@ void TRootCanvas::Activated(Int_t id)
 
 void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   out << std::endl << "   // canvas container" << std::endl;
-   out << "   Int_t canvasID = gVirtualX->InitWindow((ULongptr_t)"
-       << GetParent()->GetParent()->GetName() << "->GetId());" << std::endl;
-   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);" << std::endl;
-   out << "   TGCompositeFrame *";
-   out << GetName() << " = new TGCompositeFrame(gClient,winC"
-       << "," << GetParent()->GetName() << ");" << std::endl;
+   out << "\n   // canvas container\n";
+   out << "   Int_t canvasID = gVirtualX->InitWindow((ULongptr_t)" << GetParent()->GetParent()->GetName()
+       << "->GetId());\n";
+   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);\n";
+   out << "   TGCompositeFrame *" << GetName() << " = new TGCompositeFrame(gClient, winC, " << GetParent()->GetName()
+       << ");\n";
 }

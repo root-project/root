@@ -1,15 +1,30 @@
-import { isStr, isFunc, nsREX } from '../core.mjs';
+import { isStr, isFunc, nsREX, settings, isNodeJs, isBatchMode } from '../core.mjs';
 import { FontHandler } from './FontHandler.mjs';
 import { ObjectPainter } from './ObjectPainter.mjs';
+import { color as d3_color } from '../d3.mjs';
 
 
 const kNormal = 1, /* kLessTraffic = 2, */ kOffline = 3;
 
 class RObjectPainter extends ObjectPainter {
 
+   #pending_request;
+
    constructor(dom, obj, opt, csstype) {
       super(dom, obj, opt);
       this.csstype = csstype;
+   }
+
+   /** @summary Add painter to pad list of painters
+    * @desc For RCanvas also handles common style
+    * @protected */
+   addToPadPrimitives() {
+      const pp = super.addToPadPrimitives();
+
+      if (pp && !this.rstyle && pp.next_rstyle)
+         this.rstyle = pp.next_rstyle;
+
+      return pp;
    }
 
    /** @summary Evaluate v7 attributes using fAttr storage and configured RStyle */
@@ -23,8 +38,9 @@ class RObjectPainter extends ObjectPainter {
          const typ1 = typeof dflt, typ2 = typeof res;
          if (typ1 === typ2) return res;
          if (typ1 === 'boolean') {
-            if (typ2 === 'string') return (res !== '') && (res !== '0') && (res !== 'no') && (res !== 'off');
-            return !!res;
+            if (typ2 === 'string')
+               return (res !== '') && (res !== '0') && (res !== 'no') && (res !== 'off');
+            return Boolean(res);
          }
          if ((typ1 === 'number') && (typ2 === 'string'))
             return parseFloat(res);
@@ -90,7 +106,7 @@ class RObjectPainter extends ObjectPainter {
 
          if ((val[pos] === '-') || (val[pos] === '+')) {
             if (operand) {
-               console.log('Fail to parse RPadLength ' + value);
+               console.log(`Fail to parse RPadLength ${value}`);
                return dflt;
             }
             operand = (val[pos] === '-') ? -1 : 1;
@@ -148,13 +164,22 @@ class RObjectPainter extends ObjectPainter {
             val = '';
          }
       } else if (val[0] === '[') {
-         const ordinal = parseFloat(val.slice(1, val.length-1));
+         const ordinal = parseFloat(val.slice(1, val.length - 1));
          val = 'black';
          if (Number.isFinite(ordinal)) {
              const pal = this.getPadPainter()?.getHistPalette();
              if (pal) val = pal.getColorOrdinal(ordinal);
          }
       }
+
+      // to make colors similar in node and in pupperteer
+      if ((val[0] === '#') && (isNodeJs() || (isBatchMode() && settings.ApproxTextSize))) {
+         const col = d3_color(val);
+         if (col.opacity !== 1)
+            col.opacity = col.opacity.toFixed(2);
+         return col.formatRgb();
+      }
+
       return val;
    }
 
@@ -206,8 +231,10 @@ class RObjectPainter extends ObjectPainter {
 
       const color = this.v7EvalColor(prefix + 'color', 'black'),
             width = this.v7EvalAttr(prefix + 'width', 1),
-            style = this.v7EvalAttr(prefix + 'style', 1),
-            pattern = this.v7EvalAttr(prefix + 'pattern');
+            style = this.v7EvalAttr(prefix + 'style', 1);
+      let pattern = this.v7EvalAttr(prefix + 'pattern');
+      if (pattern && isNodeJs())
+         pattern = pattern.split(',').join(', ');
 
       this.createAttLine({ color, width, style, pattern });
 
@@ -244,7 +271,6 @@ class RObjectPainter extends ObjectPainter {
       if (this.cssprefix) name = this.cssprefix + name;
       req.ids.push(this.snapid);
       req.names.push(name);
-      let obj = null;
 
       if ((value === null) || (value === undefined)) {
         if (!kind) kind = 'none';
@@ -258,10 +284,10 @@ class RObjectPainter extends ObjectPainter {
          }
       }
 
-      obj = { _typename: `${nsREX}RAttrMap::` };
+      const obj = { _typename: `${nsREX}RAttrMap::` };
       switch (kind) {
          case 'none': obj._typename += 'NoValue_t'; break;
-         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = !!value; break;
+         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = Boolean(value); break;
          case 'int': obj._typename += 'IntValue_t'; obj.v = parseInt(value); break;
          case 'double': obj._typename += 'DoubleValue_t'; obj.v = parseFloat(value); break;
          default: obj._typename += 'StringValue_t'; obj.v = isStr(value) ? value : JSON.stringify(value); break;
@@ -276,7 +302,7 @@ class RObjectPainter extends ObjectPainter {
       const canp = this.getCanvPainter();
       if (canp && req?._typename) {
          if (do_update !== undefined)
-            req.update = !!do_update;
+            req.update = Boolean(do_update);
          canp.v7SubmitRequest('', req);
       }
    }
@@ -292,7 +318,7 @@ class RObjectPainter extends ObjectPainter {
       // special situation when snapid not yet assigned - just keep ref until snapid is there
       // maybe keep full list - for now not clear if really needed
       if (!this.snapid) {
-         this._pending_request = { kind, req, method };
+         this.#pending_request = { kind, req, method };
          return req;
       }
 
@@ -303,10 +329,10 @@ class RObjectPainter extends ObjectPainter {
      * @desc Overwrite default method */
    assignSnapId(id) {
       this.snapid = id;
-      if (this.snapid && this._pending_request) {
-         const p = this._pending_request;
+      if (this.snapid && this.#pending_request) {
+         const p = this.#pending_request;
+         this.#pending_request = undefined;
          this.v7SubmitRequest(p.kind, p.req, p.method);
-         delete this._pending_request;
       }
    }
 

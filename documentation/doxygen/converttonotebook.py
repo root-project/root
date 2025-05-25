@@ -640,7 +640,7 @@ def declareNamespace(code):
 def rs401dGetFiles(code):
     if tutName == "rs401d_FeldmanCousins":
         code = code.replace(
-         """#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly\n#else\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly\n""" , """TString tutDir = gROOT->GetTutorialDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.Data());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.Data());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
+         """#include "../tutorials/roofit/roostats/NuMuToNuE_Oscillation.h"\n#include "../tutorials/roofit/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly\n#else\n#include "../tutorials/roofit/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly\n""" , """TString tutDir = gROOT->GetTutorialDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.Data());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.Data());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
     return code
 
 

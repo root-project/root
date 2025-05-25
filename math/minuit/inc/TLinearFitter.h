@@ -210,15 +210,16 @@ private:
    Double_t  CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *index, Int_t *subdat, Int_t start, Int_t end);
    Bool_t    Linf();
 
+   TLinearFitter(const TLinearFitter &) = delete;
+   TLinearFitter& operator=(const TLinearFitter &) = delete;
+
 public:
    TLinearFitter();
    TLinearFitter(Int_t ndim, const char *formula, Option_t *opt="D");
    TLinearFitter(Int_t ndim);
    TLinearFitter(TFormula *function, Option_t *opt="D");
-   TLinearFitter(const TLinearFitter& tlf);
    ~TLinearFitter() override;
 
-   TLinearFitter& operator=(const TLinearFitter& tlf);
    virtual void       Add(TLinearFitter *tlf);
    virtual void       AddPoint(Double_t *x, Double_t y, Double_t e=1);
    virtual void       AddTempMatrices();

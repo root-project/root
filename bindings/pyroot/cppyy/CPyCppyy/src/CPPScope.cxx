@@ -479,12 +479,14 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
     // try all outstanding using namespaces in turn to find the attribute (will cache
     // locally later; TODO: doing so may cause pathological cases)
         for (auto pyref : *klass->fImp.fUsing) {
-            PyObject* pyuscope = PyWeakref_GetObject(pyref);
+            PyObject* pyuscope = CPyCppyy_GetWeakRef(pyref);
             if (pyuscope) {
                 attr = PyObject_GetAttr(pyuscope, pyname);
-                if (attr) break;
-                PyErr_Clear();
+                if (!attr) PyErr_Clear();
+                Py_DECREF(pyuscope);
             }
+            if (attr)
+                break;
         }
     }
 
@@ -502,7 +504,6 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
     }
 
     if (attr) {
-        std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
         PyErr_Clear();
     } else {
     // not found: prepare a full error report
@@ -516,7 +517,7 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
             topmsg = CPyCppyy_PyText_FromFormat("no such attribute \'%s\'. Full details:",
                 CPyCppyy_PyText_AsString(pyname));
         }
-        SetDetailedException(errors, topmsg /* steals */, PyExc_AttributeError /* default error */);
+        SetDetailedException(std::move(errors), topmsg /* steals */, PyExc_AttributeError /* default error */);
     }
 
     return attr;
@@ -706,6 +707,9 @@ PyTypeObject CPPScope_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                           // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                           // tp_versions_used
 #endif
 };
 

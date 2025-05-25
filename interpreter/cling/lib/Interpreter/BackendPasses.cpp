@@ -20,12 +20,12 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
 #include "llvm/Passes/StandardInstrumentations.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/AlwaysInliner.h"
 #include "llvm/Transforms/IPO/Inliner.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils.h"
 
@@ -39,6 +39,48 @@
 using namespace cling;
 using namespace clang;
 using namespace llvm;
+
+namespace {
+  class UniqueInitFunctionNamePass
+      : public PassInfoMixin<UniqueInitFunctionNamePass> {
+    // append a suffix to a symbol to make it unique
+    // the suffix is "_cling_module_<module number>"
+    llvm::SmallString<128> add_module_suffix(const StringRef OriginalName,
+                                             const StringRef ModuleName) {
+      llvm::SmallString<128> NewFunctionName;
+      NewFunctionName.append(ModuleName);
+      NewFunctionName.append("_");
+
+      for (size_t i = 0; i < NewFunctionName.size(); ++i) {
+        // Replace everything that is not [a-zA-Z0-9._] with a _. This set
+        // happens to be the set of C preprocessing numbers.
+        if (!isPreprocessingNumberBody(NewFunctionName[i]))
+          NewFunctionName[i] = '_';
+      }
+
+      return NewFunctionName;
+    }
+
+    // make static initialization function names (__cxx_global_var_init) unique
+    bool runOnFunction(Function& F, const StringRef ModuleName) {
+      if (F.hasName() && F.getName().starts_with("__cxx_global_var_init")) {
+        F.setName(add_module_suffix(F.getName(), ModuleName));
+        return true;
+      }
+
+      return false;
+    }
+
+  public:
+    PreservedAnalyses run(llvm::Module& M, ModuleAnalysisManager& AM) {
+      bool changed = false;
+      const StringRef ModuleName = M.getName();
+      for (auto&& F : M)
+        changed |= runOnFunction(F, ModuleName);
+      return changed ? PreservedAnalyses::none() : PreservedAnalyses::all();
+    }
+  };
+} // namespace
 
 namespace {
   class WorkAroundConstructorPriorityBugPass
@@ -85,7 +127,7 @@ namespace {
 
         llvm::SmallVector<Constant*> NewCtorArgs;
         NewCtorArgs.push_back(
-            llvm::ConstantInt::get(PriorityC->getType(), Priority));
+            llvm::ConstantInt::get(PriorityC->getIntegerType(), Priority));
         // Copy the function and data Constant, if present.
         NewCtorArgs.push_back(Ctor->getOperand(1));
         if (Ctor->getNumOperands() >= 3) {
@@ -151,19 +193,24 @@ namespace {
 namespace {
   class PreventLocalOptPass : public PassInfoMixin<PreventLocalOptPass> {
     bool runOnGlobal(GlobalValue& GV) {
-      if (!GV.isDeclaration())
-        return false; // no change.
-
-      // GV is a declaration with no definition. Make sure to prevent any
-      // optimization that tries to take advantage of the actual definition
-      // being "local" because we have no influence on the memory layout of
-      // data sections and how "close" they are to the code.
-
       bool changed = false;
 
+      // Prevent any optimization that tries to take advantage of the actual
+      // definition being "local" because we have no influence on the memory
+      // layout of sections and how "close" they are.
+
       if (GV.hasLocalLinkage()) {
-        GV.setLinkage(llvm::GlobalValue::ExternalLinkage);
-        changed = true;
+        if (GV.isDeclaration()) {
+          // For declarations with no definition, we can simply adjust the
+          // linkage.
+          GV.setLinkage(llvm::GlobalValue::ExternalLinkage);
+          changed = true;
+        } else {
+          // FIXME: Not clear what would be the right linkage. We also cannot
+          // continue because "GlobalValue with local linkage [...] must be
+          // dso_local!"
+          return false;
+        }
       }
 
       if (!GV.hasDefaultVisibility()) {
@@ -172,7 +219,7 @@ namespace {
       }
 
       // Set DSO locality last because setLinkage() and setVisibility() check
-      // isImplicitDSOLocal().
+      // isImplicitDSOLocal() and then might call setDSOLocal(true).
       if (GV.isDSOLocal()) {
         GV.setDSOLocal(false);
         changed = true;
@@ -260,8 +307,8 @@ namespace {
       if (!GV.hasName())
         return false;
 
-      if (GV.getName().equals("__cuda_fatbin_wrapper") ||
-          GV.getName().equals("__cuda_gpubin_handle")) {
+      if (GV.getName() == "__cuda_fatbin_wrapper" ||
+          GV.getName() == "__cuda_gpubin_handle") {
         GV.setName(add_module_suffix(GV.getName(), ModuleName));
         return true;
       }
@@ -271,9 +318,9 @@ namespace {
 
     // make CUDA specific functions unique
     bool runOnFunction(Function& F, const StringRef ModuleName) {
-      if (F.hasName() && (F.getName().equals("__cuda_module_ctor") ||
-                          F.getName().equals("__cuda_module_dtor") ||
-                          F.getName().equals("__cuda_register_globals"))) {
+      if (F.hasName() && (F.getName() == "__cuda_module_ctor" ||
+                          F.getName() == "__cuda_module_dtor" ||
+                          F.getName() == "__cuda_register_globals")) {
         F.setName(add_module_suffix(F.getName(), ModuleName));
         return true;
       }
@@ -416,10 +463,11 @@ void BackendPasses::CreatePasses(int OptLevel, llvm::ModulePassManager& MPM,
 
   // TODO: Remove this pass once we upgrade past LLVM 19 that includes the fix.
   MPM.addPass(WorkAroundConstructorPriorityBugPass());
+  MPM.addPass(UniqueInitFunctionNamePass());
   MPM.addPass(KeepLocalGVPass());
-  MPM.addPass(PreventLocalOptPass());
   MPM.addPass(WeakTypeinfoVTablePass());
   MPM.addPass(ReuseExistingWeakSymbols(m_JIT));
+  MPM.addPass(PreventLocalOptPass());
 
   // Run verifier after local passes to make sure that IR remains untouched.
   if (m_CGOpts.VerifyModule)
@@ -438,32 +486,38 @@ void BackendPasses::CreatePasses(int OptLevel, llvm::ModulePassManager& MPM,
 
     // Register a callback for disabling all other inliner passes.
     PIC.registerShouldRunOptionalPassCallback([](StringRef P, Any) {
-      if (P.equals("ModuleInlinerWrapperPass") ||
-          P.equals("InlineAdvisorAnalysisPrinterPass") ||
-          P.equals("PartialInlinerPass") || P.equals("buildInlinerPipeline") ||
-          P.equals("ModuleInlinerPass") || P.equals("InlinerPass") ||
-          P.equals("InlineAdvisorAnalysis") ||
-          P.equals("PartiallyInlineLibCallsPass") ||
-          P.equals("RelLookupTableConverterPass") ||
-          P.equals("InlineCostAnnotationPrinterPass") ||
-          P.equals("InlineSizeEstimatorAnalysisPrinterPass") ||
-          P.equals("InlineSizeEstimatorAnalysis"))
+      if (P == "ModuleInlinerWrapperPass" ||
+          P == "InlineAdvisorAnalysisPrinterPass" ||
+          P == "PartialInlinerPass" || P == "buildInlinerPipeline" ||
+          P == "ModuleInlinerPass" || P == "InlinerPass" ||
+          P == "InlineAdvisorAnalysis" || P == "PartiallyInlineLibCallsPass" ||
+          P == "RelLookupTableConverterPass" ||
+          P == "InlineCostAnnotationPrinterPass" ||
+          P == "InlineSizeEstimatorAnalysisPrinterPass" ||
+          P == "InlineSizeEstimatorAnalysis")
         return false;
 
       return true;
     });
   } else {
     // Register a callback for disabling RelLookupTableConverterPass.
-    PIC.registerShouldRunOptionalPassCallback([](StringRef P, Any) {
-      return !P.equals("RelLookupTableConverterPass");
-    });
+    PIC.registerShouldRunOptionalPassCallback(
+        [](StringRef P, Any) { return P != "RelLookupTableConverterPass"; });
   }
 
-  SI.registerCallbacks(PIC, &FAM);
+  SI.registerCallbacks(PIC, &MAM);
 
   PipelineTuningOptions PTO;
   std::optional<PGOOptions> PGOOpt;
   PassBuilder PB(&m_TM, PTO, PGOOpt, &PIC);
+
+  // Attempt to load pass plugins and register their callbacks with PB.
+  for (auto& PluginFN : m_CGOpts.PassPlugins) {
+    auto PassPlugin = PassPlugin::Load(PluginFN);
+    if (PassPlugin) {
+      PassPlugin->registerPassBuilderCallbacks(PB);
+    }
+  }
 
   if (!m_CGOpts.DisableLLVMPasses) {
     // Use the default pass pipeline. We also have to map our optimization
@@ -509,12 +563,9 @@ void BackendPasses::runOnModule(Module& M, int OptLevel) {
 
   CreatePasses(OptLevel, MPM, LAM, FAM, CGAM, MAM, PIC, SI);
 
-  static constexpr std::array<llvm::CodeGenOpt::Level, 4> CGOptLevel {{
-    llvm::CodeGenOpt::None,
-    llvm::CodeGenOpt::Less,
-    llvm::CodeGenOpt::Default,
-    llvm::CodeGenOpt::Aggressive
-  }};
+  static constexpr std::array<llvm::CodeGenOptLevel, 4> CGOptLevel{
+      {llvm::CodeGenOptLevel::None, llvm::CodeGenOptLevel::Less,
+       llvm::CodeGenOptLevel::Default, llvm::CodeGenOptLevel::Aggressive}};
   // TM's OptLevel is used to build orc::SimpleCompiler passes for every Module.
   m_TM.setOptLevel(CGOptLevel[OptLevel]);
 

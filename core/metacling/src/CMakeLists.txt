@@ -37,6 +37,12 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingValue.cxx
 )
 
+# This directory contains files that include llvm, which can give warnings.
+if(NOT MSVC)
+  target_compile_options(MetaCling PRIVATE -Wno-error)
+endif()
+
+
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
@@ -44,6 +50,7 @@ target_include_directories(MetaCling SYSTEM PRIVATE
   ${CLANG_INCLUDE_DIRS}
   ${LLVM_INCLUDE_DIRS}
   ${CLAD_INCLUDE_DIRS}
+  ${CPPINTEROP_INCLUDE_DIRS}
 )
 
 target_include_directories(MetaCling PRIVATE
@@ -71,12 +78,10 @@ if(MSVC)
    target_include_directories(MetaCling PRIVATE
       ${CMAKE_SOURCE_DIR}/core/winnt/inc
    )
-   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-     set_source_files_properties(TCling.cxx COMPILE_FLAGS $<$<CONFIG:Debug>:/bigobj>)
-   endif()
+   set_source_files_properties(TCling.cxx COMPILE_FLAGS /bigobj)
 endif()
 
-add_dependencies(MetaCling CLING)
+add_dependencies(MetaCling CLING clangCppInterOp)
 
 ##### libCling #############################################################
 
@@ -115,6 +120,7 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:ClingUtils>
         $<TARGET_OBJECTS:Dictgen>
         $<TARGET_OBJECTS:MetaCling>
+        $<TARGET_OBJECTS:clangCppInterOp>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
 # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.

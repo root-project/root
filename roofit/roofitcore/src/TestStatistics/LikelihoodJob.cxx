@@ -112,12 +112,11 @@ void LikelihoodJob::update_state()
    }
 }
 
-/// \warning In automatic mode, this function can start MultiProcess (forks, starts workers, etc)!
 std::size_t LikelihoodJob::getNEventTasks()
 {
    std::size_t val = n_event_tasks_;
    if (val == MultiProcess::Config::LikelihoodJob::automaticNEventTasks) {
-      val = get_manager()->process_manager().N_workers();
+      val = 1;
    }
    if (val > likelihood_->getNEvents()) {
       val = likelihood_->getNEvents();
@@ -125,11 +124,14 @@ std::size_t LikelihoodJob::getNEventTasks()
    return val;
 }
 
+/// \warning In automatic mode, this function can start MultiProcess (forks, starts workers, etc)!
 std::size_t LikelihoodJob::getNComponentTasks()
 {
    std::size_t val = n_component_tasks_;
    if (val == MultiProcess::Config::LikelihoodJob::automaticNComponentTasks) {
-      val = 1;
+      val = get_manager()
+               ->process_manager()
+               .N_workers(); // get_manager() is the call that can start MultiProcess, mentioned above
    }
    if (val > likelihood_->getNComponents()) {
       val = likelihood_->getNComponents();

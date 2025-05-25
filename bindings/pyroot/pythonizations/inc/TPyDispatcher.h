@@ -12,14 +12,6 @@
 #ifndef ROOT_TPyDispatcher
 #define ROOT_TPyDispatcher
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TPyDispatcher                                                            //
-//                                                                          //
-// Dispatcher for C++ callbacks into Python code.                           //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
 // ROOT
 #include "TObject.h"
 
@@ -51,12 +43,13 @@ struct Event_t;
 struct _object;
 typedef _object PyObject;
 
+/// Dispatcher for C++ callbacks into Python code.
 class TPyDispatcher : public TObject {
 public:
    TPyDispatcher(PyObject *callable);
    TPyDispatcher(const TPyDispatcher &);
    TPyDispatcher &operator=(const TPyDispatcher &);
-   ~TPyDispatcher();
+   ~TPyDispatcher() override;
 
 public:
    PyObject *DispatchVA(const char *format = 0, ...);

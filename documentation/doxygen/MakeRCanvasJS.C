@@ -37,22 +37,12 @@ void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bo
 
    // Build the html file inlining the json picture
    FILE *fh = fopen(TString::Format("%s/macros/%s.html",OutDir,IN), "w");
-   fprintf(fh,"<div id=\"draw_json_%s\" style=\"width:700px; height:500px\"></div>\n", IN);
-   fprintf(fh,"<script type=\"text/javascript\">\n");
-   fprintf(fh,"   function load_jsroot_%s() {\n", IN);
-   fprintf(fh,"      return new Promise(resolveFunc => {\n");
-   fprintf(fh,"         if (typeof JSROOT != 'undefined') return resolveFunc(true);\n");
-   fprintf(fh,"         let script = document.createElement('script');\n");
-   fprintf(fh,"         script.src = './js/scripts/JSRoot.core.js';\n");
-   fprintf(fh,"         script.onload = resolveFunc;\n");
-   fprintf(fh,"         document.head.appendChild(script);\n");
-   fprintf(fh,"      });\n");
-   fprintf(fh,"   }\n");
-   fprintf(fh,"   load_jsroot_%s().then(() => { \n", IN);
-   fprintf(fh,"      JSROOT.settings.HandleKeys = false;\n");
-   fprintf(fh,"      let obj = JSROOT.parse(%s);\n", json_str.c_str());
-   fprintf(fh,"      JSROOT.draw('draw_json_%s', obj);\n", IN);
-   fprintf(fh,"   });\n");
+   fprintf(fh,"<div id=\"draw_json_%s\" style=\"position: relative; width: 700px; height: 500px;\"></div>\n", IN);
+   fprintf(fh,"<script type=\"module\">\n");
+   fprintf(fh,"   import { settings, parse, draw } from './js/modules/main.mjs';\n");
+   fprintf(fh,"   settings.HandleKeys = false;\n");
+   fprintf(fh,"   let obj = parse(%s);\n", json_str.c_str());
+   fprintf(fh,"   draw('draw_json_%s', obj);\n", IN);
    fprintf(fh,"</script>\n");
    fclose(fh);
 }

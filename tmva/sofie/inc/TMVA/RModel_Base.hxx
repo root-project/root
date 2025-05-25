@@ -28,6 +28,15 @@ enum class Options {
    kGNNComponent = 0x10,
 };
 
+// Optimization levels inspired by ONNXRuntime.
+// We only get Operator Fusion with the Basic, and
+// memory reuse with Extended. kExtended is enabled
+// by default
+enum class OptimizationLevel {
+   kBasic = 0x0,
+   kExtended = 0x1,
+};
+
 enum class WeightFileType { None, RootBinary, Text };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
@@ -43,7 +52,6 @@ protected:
 
    std::unordered_set<std::string> fNeededBlasRoutines;
 
-   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
 
@@ -74,11 +82,15 @@ public:
    }
    void AddNeededStdLib(std::string libname)
    {
-      if (fAllowedStdLib.find(libname) != fAllowedStdLib.end()) {
+      static const std::unordered_set<std::string> allowedStdLib = {"vector", "algorithm", "cmath", "memory", "span"};
+      if (allowedStdLib.find(libname) != allowedStdLib.end()) {
          fNeededStdLib.insert(libname);
       }
    }
-   void AddNeededCustomHeader(std::string filename) { fCustomOpHeaders.insert(filename); }
+   void AddNeededCustomHeader(std::string filename)
+   {
+       fCustomOpHeaders.insert(filename);
+   }
    void GenerateHeaderInfo(std::string &hgname);
    void PrintGenerated() { std::cout << fGC; }
 
@@ -86,6 +98,7 @@ public:
    void OutputGenerated(std::string filename = "", bool append = false);
    void SetFilename(std::string filename) { fName = filename; }
    std::string GetFilename() { return fName; }
+   const std::string & GetName() const { return fName;}
 };
 
 enum class GraphType { INVALID = 0, GNN = 1, GraphIndependent = 2 };
@@ -97,11 +110,6 @@ enum class FunctionRelation { INVALID = 0, NODES_EDGES = 1, NODES_GLOBALS = 2, E
 
 class RModel_GNNBase : public RModel_Base {
 public:
-   /**
-       Default constructor. Needed to allow serialization of ROOT objects. See
-       https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
-   */
-   RModel_GNNBase() = default;
    virtual void Generate() = 0;
    virtual ~RModel_GNNBase() = default;
 };

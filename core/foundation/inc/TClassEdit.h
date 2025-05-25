@@ -16,6 +16,7 @@
 #include <ROOT/RConfig.hxx>
 #include "RConfigure.h"
 #include <stdlib.h>
+#include <stdexcept>
 #ifdef R__WIN32
 #ifndef UNDNAME_COMPLETE
 #define UNDNAME_COMPLETE 0x0000
@@ -151,6 +152,51 @@ namespace TClassEdit {
    private:
       TSplitType(const TSplitType&) = delete;
       TSplitType &operator=(const TSplitType &) = delete;
+   };
+
+   /// A RAII helper to remove and readd enclosing _Atomic()
+   /// It expects no spaces at the beginning or end of the string
+   class AtomicTypeNameHandlerRAII {
+   public:
+      enum class EBehavior : short {
+         kDetectStripReadd, // Detect if the _Atomic specifier is used, if yes, strip it and re-add it in the dtor
+         kDetectStrip,      // Detect if the _Atomic specifier is used, if yes, strip it
+         kReadd,            // Re-add the _Atomic specifier in the dtor
+         kNoOp              // Do nothing
+      };
+
+   private:
+      std::string &fTypeName;
+      bool fIsAtomic = false;
+      EBehavior fBehavior;
+      const char *fgPrefix = "_Atomic(";
+
+   public:
+      AtomicTypeNameHandlerRAII(std::string &typeName, EBehavior behavior = EBehavior::kDetectStripReadd)
+         : fTypeName(typeName), fBehavior(behavior)
+      {
+         if (fBehavior == EBehavior::kReadd || fBehavior == EBehavior::kNoOp)
+            return;
+         if (0 == fTypeName.find(fgPrefix)) {
+            fIsAtomic = true;
+            if (fBehavior == EBehavior::kDetectStrip || fBehavior == EBehavior::kDetectStripReadd) {
+               fTypeName.erase(0, 8);
+               if (0 == fTypeName.size() || ')' != fTypeName[fTypeName.size() - 1]) {
+                  throw std::runtime_error("Cannot remove substring \")\" at the end of typename \"" + typeName + "\"");
+               }
+               fTypeName.pop_back();
+            }
+         }
+      }
+
+      bool IsAtomic() { return fIsAtomic; }
+
+      ~AtomicTypeNameHandlerRAII()
+      {
+         if (fBehavior == EBehavior::kReadd || (fBehavior == EBehavior::kDetectStripReadd && fIsAtomic)) {
+            fTypeName = fgPrefix + fTypeName + ")";
+         }
+      }
    };
 
    void        Init(TClassEdit::TInterpreterLookupHelper *helper);

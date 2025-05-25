@@ -58,9 +58,8 @@
 #include "RooChi2Var.h"
 #endif
 
-using std::cout,std::endl, std::ostream, std::istream, std::list;
+using std::ostream, std::istream, std::list;
 
-ClassImp(RooFormulaVar);
 
 RooFormulaVar::RooFormulaVar() {}
 
@@ -149,7 +148,7 @@ RooFormula& RooFormulaVar::getFormula() const
 bool RooFormulaVar::ok() const { return getFormula().ok() ; }
 
 
-void RooFormulaVar::dumpFormula() { getFormula().dump() ; }
+void RooFormulaVar::dumpFormula() { getFormula().printMultiline(std::cout, 0) ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +162,7 @@ double RooFormulaVar::evaluate() const
 
 void RooFormulaVar::doEval(RooFit::EvalContext &ctx) const
 {
-   getFormula().doEval(ctx);
+   getFormula().doEval(_actualVars, ctx);
 }
 
 
@@ -211,7 +210,7 @@ void RooFormulaVar::printMetaArgs(ostream& os) const
 
 bool RooFormulaVar::readFromStream(istream& /*is*/, bool /*compact*/, bool /*verbose*/)
 {
-  coutE(InputArguments) << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
+  coutE(InputArguments) << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << std::endl ;
   return true ;
 }
 
@@ -223,7 +222,7 @@ bool RooFormulaVar::readFromStream(istream& /*is*/, bool /*compact*/, bool /*ver
 void RooFormulaVar::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
-    cout << getVal() << endl ;
+    std::cout << getVal() << std::endl ;
   } else {
     os << GetTitle() ;
   }
@@ -296,25 +295,24 @@ double RooFormulaVar::defaultErrorLevel() const
 
   if (nllArg && !chi2Arg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName()
-         << ") Formula contains a RooNLLVar, using its error level" << endl ;
+         << ") Formula contains a RooNLLVar, using its error level" << std::endl ;
     return nllArg->defaultErrorLevel() ;
   } else if (chi2Arg && !nllArg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName()
-    << ") Formula contains a RooChi2Var, using its error level" << endl ;
+    << ") Formula contains a RooChi2Var, using its error level" << std::endl ;
     return chi2Arg->defaultErrorLevel() ;
   } else if (!nllArg && !chi2Arg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-            << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
+            << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << std::endl ;
   } else {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-         << "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
+         << "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << std::endl ;
   }
 
   return 1.0 ;
 }
 
-void RooFormulaVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
+std::string RooFormulaVar::getUniqueFuncName() const
 {
-   getVal(); // to trigger the creation of the TFormula
-   ctx.addResult(this, ctx.buildCall(_formula->getTFormula()->GetUniqueFuncName().Data(), _actualVars));
+   return getFormula().getTFormula()->GetUniqueFuncName().Data();
 }

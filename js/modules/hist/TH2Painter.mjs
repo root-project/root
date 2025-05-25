@@ -1,6 +1,5 @@
 import { settings, gStyle, clTMultiGraph, kNoZoom } from '../core.mjs';
-import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
-import { getMaterialArgs } from '../base/base3d.mjs';
+import { getMaterialArgs, THREE } from '../base/base3d.mjs';
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
@@ -70,7 +69,7 @@ function drawTH2PolyLego(painter) {
                if (vert > 0)
                   dist2 = (currx-lastx)*(currx-lastx) + (curry-lasty)*(curry-lasty);
                if (dist2 > dist2limit) {
-                  pnts.push(new Vector2(currx, curry));
+                  pnts.push(new THREE.Vector2(currx, curry));
                   lastx = currx;
                   lasty = curry;
                }
@@ -78,12 +77,12 @@ function drawTH2PolyLego(painter) {
 
             try {
                if (pnts.length > 2)
-                  faces = ShapeUtils.triangulateShape(pnts, []);
-            } catch (e) {
+                  faces = THREE.ShapeUtils.triangulateShape(pnts, []);
+            } catch {
                faces = null;
             }
 
-            if (faces && (faces.length > pnts.length-3)) break;
+            if (faces && (faces.length > pnts.length - 3)) break;
          }
 
          if (faces?.length && pnts) {
@@ -125,7 +124,7 @@ function drawTH2PolyLego(painter) {
             }
          }
 
-         if (z1>z0) {
+         if (z1 > z0) {
             for (let n = 0; n < pnts.length; ++n) {
                const pnt1 = pnts[n], pnt2 = pnts[n > 0 ? n - 1 : pnts.length - 1];
 
@@ -162,12 +161,12 @@ function drawTH2PolyLego(painter) {
          }
       }
 
-      const geometry = new BufferGeometry();
-      geometry.setAttribute('position', new BufferAttribute(pos, 3));
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      const material = new MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false })),
-            mesh = new Mesh(geometry, material);
+      const material = new THREE.MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false, side: THREE.DoubleSide })),
+            mesh = new THREE.Mesh(geometry, material);
 
       pmain.add3DMesh(mesh);
 
@@ -178,21 +177,20 @@ function drawTH2PolyLego(painter) {
       mesh.tip_color = 0x00FF00;
 
       mesh.tooltip = function(/* intersects */) {
-         const p = this.painter, main = p.getFramePainter(),
-             bin = p.getObject().fBins.arr[this.bins_index],
-
-          tip = {
-           use_itself: true, // indicate that use mesh itself for highlighting
-           x1: main.grx(bin.fXmin),
-           x2: main.grx(bin.fXmax),
-           y1: main.gry(bin.fYmin),
-           y2: main.gry(bin.fYmax),
-           z1: this.draw_z0,
-           z2: this.draw_z1,
-           bin: this.bins_index,
-           value: bin.fContent,
-           color: this.tip_color,
-           lines: p.getPolyBinTooltips(this.bins_index)
+         const p = this.painter, fp = p.getFramePainter(),
+               tbin = p.getObject().fBins.arr[this.bins_index],
+         tip = {
+            use_itself: true, // indicate that use mesh itself for highlighting
+            x1: fp.grx(tbin.fXmin),
+            x2: fp.grx(tbin.fXmax),
+            y1: fp.gry(tbin.fYmin),
+            y2: fp.gry(tbin.fYmax),
+            z1: this.draw_z0,
+            z2: this.draw_z1,
+            bin: this.bins_index,
+            value: bin.fContent,
+            color: this.tip_color,
+            lines: p.getPolyBinTooltips(this.bins_index)
          };
 
          return tip;
@@ -211,16 +209,26 @@ class TH2Painter extends TH2Painter2D {
       const main = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
             histo = this.getHisto();
-      let pr = Promise.resolve(true);
+      let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
-      } else {
+         const res = is_main ? main.resize3D() : false;
+         if (res !== 1) {
+            full_draw = false;
+            if (res)
+               main.render3D();
+         }
+      }
+
+      if (full_draw) {
          const pad = this.getPadPainter().getRootPad(true),
                logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;
 
-         if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
+         if (this.options.ohmin && this.options.ohmax) {
+            this.zmin = this.options.hmin;
+            this.zmax = this.options.hmax;
+         } else if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
             this.zmin = this.options.minimum;
             this.zmax = this.options.maximum;
          } else if (this.draw_content || (this.gmaxbin !== 0)) {
@@ -239,9 +247,11 @@ class TH2Painter extends TH2Painter2D {
             pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
                main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2,
+               main.drawXYZ(main.toplevel, TAxisPainter, {
+                  ndim: 2, hist_painter: this, zmult, zoom: settings.Zooming,
                   draw: this.options.Axis !== -1, drawany: this.options.isCartesian(),
-                  reverse_x: this.options.RevX, reverse_y: this.options.RevY });
+                  reverse_x: this.options.RevX, reverse_y: this.options.RevY
+               });
             });
          }
 

@@ -51,7 +51,6 @@ the names of the arguments are not hard coded.
 
 using std::istream, std::ostream, std::endl;
 
-ClassImp(RooGenericPdf);
 
 RooGenericPdf::RooGenericPdf() {}
 
@@ -137,7 +136,7 @@ double RooGenericPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 void RooGenericPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  formula().doEval(ctx);
+  formula().doEval(_actualVars, ctx);
 }
 
 
@@ -159,7 +158,7 @@ void RooGenericPdf::printMultiline(ostream& os, Int_t content, bool verbose, TSt
 {
   RooAbsPdf::printMultiline(os,content,verbose,indent);
   if (verbose) {
-    os << " --- RooGenericPdf --- " << endl ;
+    os << " --- RooGenericPdf --- " << std::endl ;
     indent.Append("  ");
     os << indent ;
     formula().printMultiline(os,content,verbose,indent);
@@ -177,7 +176,7 @@ void RooGenericPdf::printMetaArgs(ostream& os) const
 }
 
 
-void RooGenericPdf::dumpFormula() { formula().dump() ; }
+void RooGenericPdf::dumpFormula() { formula().printMultiline(std::cout, 0) ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,14 +195,13 @@ bool RooGenericPdf::readFromStream(istream& /*is*/, bool /*compact*/, bool /*ver
 void RooGenericPdf::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
-    os << getVal() << endl ;
+    os << getVal() << std::endl ;
   } else {
     os << GetTitle() ;
   }
 }
 
-void RooGenericPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+std::string RooGenericPdf::getUniqueFuncName() const
 {
-   getVal(); // to trigger the creation of the TFormula
-   ctx.addResult(this, ctx.buildCall(_formula->getTFormula()->GetUniqueFuncName().Data(), _actualVars));
+   return formula().getTFormula()->GetUniqueFuncName().Data();
 }

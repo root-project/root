@@ -1,8 +1,9 @@
 /// \file
 /// \ingroup tutorial_io
+/// \notebook
 /// This macro shows the usage of TMPIFile to simulate event
 /// reconstruction and merging them in parallel.
-/// The JetEvent class is in $ROOTSYS/tutorials/tree/JetEvent.h,cxx
+/// The JetEvent class is in $ROOTSYS/tutorials/io/tree/JetEvent.h,cxx
 ///
 /// To run this macro do the following:
 /// ~~~{.bash}

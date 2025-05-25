@@ -109,11 +109,14 @@ enum Kind {
   kw_nuw,
   kw_nsw,
   kw_exact,
+  kw_disjoint,
   kw_inbounds,
+  kw_nneg,
   kw_inrange,
   kw_addrspace,
   kw_section,
   kw_partition,
+  kw_code_model,
   kw_alias,
   kw_ifunc,
   kw_module,
@@ -152,7 +155,6 @@ enum Kind {
   kw_spir_func,
   kw_x86_64_sysvcc,
   kw_win64cc,
-  kw_webkit_jscc,
   kw_anyregcc,
   kw_swiftcc,
   kw_swifttailcc,
@@ -170,9 +172,13 @@ enum Kind {
   kw_amdgpu_gs,
   kw_amdgpu_ps,
   kw_amdgpu_cs,
+  kw_amdgpu_cs_chain,
+  kw_amdgpu_cs_chain_preserve,
   kw_amdgpu_kernel,
   kw_amdgpu_gfx,
   kw_tailcc,
+  kw_m68k_rtdcc,
+  kw_graalcc,
 
   // Attributes:
   kw_attributes,
@@ -194,6 +200,24 @@ enum Kind {
   kw_argmemonly,
   kw_inaccessiblememonly,
   kw_inaccessiblemem_or_argmemonly,
+
+  // nofpclass attribute:
+  kw_all,
+  kw_nan,
+  kw_snan,
+  kw_qnan,
+  kw_inf,
+  // kw_ninf, - already an fmf
+  kw_pinf,
+  kw_norm,
+  kw_nnorm,
+  kw_pnorm,
+  // kw_sub,  - already an instruction
+  kw_nsub,
+  kw_psub,
+  kw_zero,
+  kw_nzero,
+  kw_pzero,
 
   kw_type,
   kw_opaque,
@@ -312,6 +336,7 @@ enum Kind {
   kw_extractelement,
   kw_insertelement,
   kw_shufflevector,
+  kw_splat,
   kw_extractvalue,
   kw_insertvalue,
   kw_blockaddress,
@@ -416,7 +441,6 @@ enum Kind {
   kw_versions,
   kw_memProf,
   kw_notcold,
-  kw_notcoldandcold,
 
   // GV's with __attribute__((no_sanitize("address"))), or things in
   // -fsanitize-ignorelist when built with ASan.

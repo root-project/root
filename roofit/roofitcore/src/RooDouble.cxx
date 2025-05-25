@@ -25,7 +25,6 @@ Minimal implementation of a TObject holding a double value.
 #include "RooDouble.h"
 #include <string>
 
-ClassImp(RooDouble);
 
 
 ////////////////////////////////////////////////////////////////////////////////

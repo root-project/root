@@ -11,7 +11,7 @@
 // Header file for class PtEtaPhiM4D
 //
 // Created by: fischler at Wed Jul 21 2005
-//   Similar to PtEtaPhiMSystem by moneta
+//   Successor to PtEtaPhiMSystem by moneta
 //
 // Last update: $Id$
 //

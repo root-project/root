@@ -37,7 +37,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 */
@@ -75,7 +75,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 */
@@ -117,7 +117,7 @@ nhi[0],nhi[1],nhi[2]); vol->SetLineWidth(2); top->AddNode(vol,1); gGeoManager->C
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 
@@ -230,7 +230,7 @@ void TGeoTube::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoTube::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoTube::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t saf[3];
    Double_t rsq = point[0] * point[0] + point[1] * point[1];
@@ -1443,7 +1443,7 @@ void TGeoTubeSeg::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoTubeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoTubeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t saf[3];
    Double_t rsq = point[0] * point[0] + point[1] * point[1];
@@ -2771,7 +2771,7 @@ void TGeoCtub::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoCtub::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoCtub::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t saf[4];
    Bool_t isseg = kTRUE;

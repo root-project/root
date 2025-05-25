@@ -70,8 +70,7 @@ template <class T>
 std::unique_ptr<T> compileForNormSet(T const &arg, RooArgSet const &normSet)
 {
    RooFit::Detail::CompileContext ctx{normSet};
-   std::unique_ptr<RooAbsArg> head = arg.compileForNormSet(normSet, ctx);
-   return std::unique_ptr<T>{static_cast<T *>(head.release())};
+   return std::unique_ptr<T>{static_cast<T *>(arg.compileForNormSet(normSet, ctx).release())};
 }
 
 } // namespace Detail

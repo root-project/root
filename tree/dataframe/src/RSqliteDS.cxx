@@ -196,11 +196,6 @@ int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile,
       return SQLITE_IOERR;
    }
 
-   if (!(p->fRawFile->GetFeatures() & ROOT::Internal::RRawFile::kFeatureHasSize)) {
-      ::Error("VfsRdOnlyOpen", "cannot determine file size of %s\n", zName);
-      return SQLITE_IOERR;
-   }
-
    p->pFile.pMethods = &io_methods;
    return SQLITE_OK;
 }
@@ -355,7 +350,7 @@ constexpr char const *RSqliteDS::fgTypeNames[];
 ///
 /// The constructor opens the sqlite file, prepares the query engine and determines the column names and types.
 RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
-   : fDataSet(std::make_unique<Internal::RSqliteDSDataSet>()), fNSlots(0), fNRow(0)
+   : fDataSet(std::make_unique<Internal::RSqliteDSDataSet>()), fNRow(0)
 {
    static bool hasSqliteVfs = RegisterSqliteVfs();
    if (!hasSqliteVfs)

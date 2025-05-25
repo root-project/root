@@ -54,8 +54,8 @@ using RooListProxy = RooCollectionProxy<RooArgList>;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
 namespace RooFit {
-namespace Detail {
-class CodeSquashContext;
+namespace Experimental {
+class CodegenContext;
 }
 }
 
@@ -124,63 +124,6 @@ public:
   bool dependsOn(TNamed const* namePtr, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
   bool overlaps(const RooAbsArg& testArg, bool valueOnly=false) const ;
   bool hasClients() const { return !_clientList.empty(); }
-
-  ////////////////////////////////////////////////////////////////////////////
-  /// \name Legacy RooFit interface.
-  /// This is a collection of functions that remain supported, but more elegant
-  /// interfaces are usually available.
-  /// @{
-
-  /// Retrieve a client iterator.
-  inline TIterator* clientIterator() const
-  R__DEPRECATED(6,34, "Use clients() and begin(), end() or range-based loops.") {
-    // Return iterator over all client RooAbsArgs
-    return makeLegacyIterator(_clientList);
-  }
-  inline TIterator* valueClientIterator() const
-  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
-    // Return iterator over all shape client RooAbsArgs
-    return makeLegacyIterator(_clientListValue);
-  }
-  inline TIterator* shapeClientIterator() const
-  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
-    // Return iterator over all shape client RooAbsArgs
-    return makeLegacyIterator(_clientListShape);
-  }
-  inline TIterator* serverIterator() const
-  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
-    // Return iterator over all server RooAbsArgs
-    return makeLegacyIterator(_serverList);
-  }
-
-  inline RooFIter valueClientMIterator() const
-  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
-    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListValue)));
-  }
-  inline RooFIter shapeClientMIterator() const
-  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
-    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListShape)));
-  }
-  inline RooFIter serverMIterator() const
-  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
-    return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_serverList)));
-  }
-
-  // --- Obsolete functions for backward compatibility
-  RooFit::OwningPtr<RooArgSet> getDependents(const RooArgSet& set) const;
-  RooFit::OwningPtr<RooArgSet> getDependents(const RooAbsData* set) const;
-  RooFit::OwningPtr<RooArgSet> getDependents(const RooArgSet* depList) const;
-  /// \deprecated Use observableOverlaps()
-  inline bool dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const { return observableOverlaps(dset,testArg) ; }
-  /// \deprecated Use observableOverlaps()
-  inline bool dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const { return observableOverlaps(depList, testArg) ; }
-  /// \deprecated Use checkObservables()
-  inline bool checkDependents(const RooArgSet* nset) const { return checkObservables(nset) ; }
-  /// \deprecated Use recursiveCheckObservables()
-  inline bool recursiveCheckDependents(const RooArgSet* nset) const { return recursiveCheckObservables(nset) ; }
-  // --- End obsolete functions for backward compatibility
-  /// @}
-  ////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////
   /// \anchor clientServerInterface
@@ -579,8 +522,6 @@ public:
   virtual std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const;
 
   virtual bool isCategory() const { return false; }
-
-  virtual void translate(RooFit::Detail::CodeSquashContext &ctx) const;
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;

@@ -29,31 +29,29 @@ public:
    RBrowserRCanvasWidget(const std::string &name) : ROOT::RBrowserWidget(name)
    {
       fCanvas = ROOT::Experimental::RCanvas::Create(name);
+
+      // ensure creation of web window
+      fCanvas->Show("embed");
    }
 
-   RBrowserRCanvasWidget(const std::string &name, std::shared_ptr<ROOT::Experimental::RCanvas> &canv) : ROOT::RBrowserWidget(name)
+   RBrowserRCanvasWidget(const std::string &name, std::shared_ptr<ROOT::Experimental::RCanvas> &canv, bool catched_canvas = false) : ROOT::RBrowserWidget(name)
    {
-      fCanvas = std::move(canv);
+      if (catched_canvas) {
+         fCanvas = canv;
+      } else {
+         fCanvas = std::move(canv);
+         // ensure creation of web window
+         fCanvas->Show("embed");
+      }
    }
 
    ~RBrowserRCanvasWidget() override = default;
 
    std::string GetKind() const override { return "rcanvas"s; }
 
-   void Show(const std::string &arg) override
-   {
-      fCanvas->Show(arg);
-   }
+   std::shared_ptr<ROOT::RWebWindow> GetWindow() override { return fCanvas->GetWindow(); }
 
-   std::string GetUrl() override
-   {
-      return fCanvas->GetWindowUrl(false);
-   }
-
-   std::string GetTitle() override
-   {
-      return fCanvas->GetTitle();
-   }
+   std::string GetTitle() override { return fCanvas->GetTitle(); }
 
    bool DrawElement(std::shared_ptr<RElement> &elem, const std::string &opt = "") override
    {
@@ -117,6 +115,17 @@ protected:
 
       return std::make_shared<RBrowserRCanvasWidget>(name, canv);
    }
+
+   std::shared_ptr<ROOT::RBrowserWidget> DetectWindow(ROOT::RWebWindow &win) final
+   {
+      for(auto & canv : ROOT::Experimental::RCanvas::GetCanvases()) {
+         if (canv->GetWindow().get() == &win)
+            return std::make_shared<RBrowserRCanvasWidget>(canv->GetTitle(), const_cast<std::shared_ptr<ROOT::Experimental::RCanvas> &>(canv), true);
+      }
+
+      return nullptr;
+   }
+
 
 public:
    RBrowserRCanvasProvider() : ROOT::RBrowserWidgetProvider("rcanvas") {}

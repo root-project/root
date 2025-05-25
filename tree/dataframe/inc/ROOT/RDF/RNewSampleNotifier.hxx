@@ -35,10 +35,11 @@ public:
 
 class RNewSampleNotifier {
    // TNotifyLink and RNewSampleFlags per processing slot
-   std::vector<std::unique_ptr<TNotifyLink<RNewSampleFlag>>> fNotifyLink;
-   std::vector<RNewSampleFlag> fFlags;
+   std::vector<std::unique_ptr<TNotifyLink<RNewSampleFlag>>> fNotifyLink{};
+   std::vector<RNewSampleFlag> fFlags{};
 
 public:
+   RNewSampleNotifier() = default;
    RNewSampleNotifier(unsigned int nSlots) : fNotifyLink(nSlots), fFlags(nSlots) {}
    bool CheckFlag(unsigned int slot) const { return fFlags[slot].CheckFlag(); }
    void SetFlag(unsigned int slot) { fFlags[slot].SetFlag(); }

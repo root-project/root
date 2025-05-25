@@ -71,8 +71,3 @@ RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet
                               static_cast<RooAbsReal const&>(_eff.arg()),
                               vars,prototype,auxProto,verbose) ;
 }
-
-void RooEffProd::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-  ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::effProd", _eff, _pdf));
-}

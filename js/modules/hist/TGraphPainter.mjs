@@ -17,7 +17,7 @@ class TGraphPainter extends TGraphPainter2D {
       this.createGraphDrawAttributes(true);
 
       const drawbins = this.optimizeBins(1000);
-      let first = 0, last = drawbins.length-1;
+      let first = 0, last = drawbins.length - 1;
 
       if (fp.zoom_ymin !== fp.zoom_ymax) {
          while ((first < last) && (drawbins[first].x < fp.zoom_ymin)) first++;
@@ -46,9 +46,10 @@ class TGraphPainter extends TGraphPainter2D {
    /** @summary Draw axis histogram
      * @private */
    async drawAxisHisto() {
-      return TH1Painter.draw(this.getDom(), this.createHistogram(), this.options.Axis);
+      return TH1Painter.draw(this.getDrawDom(), this.createHistogram(), this.options.Axis);
    }
 
+   /** @summary Draw TGraph */
    static async draw(dom, graph, opt) {
       return TGraphPainter._drawGraph(new TGraphPainter(dom, graph), opt);
    }

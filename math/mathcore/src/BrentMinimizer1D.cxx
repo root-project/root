@@ -30,7 +30,7 @@ static int gDefaultNpx = 100; // default nunmber of points used in the grid to b
 static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeted
 
 
-   BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(),
+   BrentMinimizer1D::BrentMinimizer1D():
                                          fFunction(nullptr),
                                          fLogScan(false), fNIter(0),
                                          fNpx(0), fStatus(-1),

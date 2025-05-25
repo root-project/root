@@ -8,8 +8,6 @@
  **********************************************************************/
 
 #include "Minuit2/MnPrint.h"
-#include "Minuit2/LAVector.h"
-#include "Minuit2/LASymMatrix.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnUserCovariance.h"
@@ -82,8 +80,6 @@ std::vector<std::string> gPrefixFilter;
 // temporarily turn logging on or off; Minuit2Minimizer does this, for example
 thread_local int gPrintLevel = 0;
 
-thread_local int gMaxNP = 10;
-
 // gPrefixStack must be thread-local
 thread_local PrefixStack<const char *> gPrefixStack;
 
@@ -134,17 +130,6 @@ int MnPrint::SetLevel(int level)
 int MnPrint::Level() const
 {
    return fLevel;
-}
-
-int MnPrint::SetMaxNP(int value)
-{
-   std::swap(gMaxNP, value);
-   return value;
-}
-
-int MnPrint::MaxNP()
-{
-   return gMaxNP;
 }
 
 void StreamFullPrefix(std::ostringstream &os)
@@ -218,59 +203,6 @@ std::ostream &operator<<(std::ostream &os, const MnPrint::Oneline &x)
    const int pr = os.precision(PRECISION);
    os << "FCN = " << std::setw(WIDTH) << x.fFcn << " Edm = " << std::setw(WIDTH) << x.fEdm
       << " NCalls = " << std::setw(6) << x.fNcalls;
-   os.precision(pr);
-   return os;
-}
-
-std::ostream &operator<<(std::ostream &os, const LAVector &vec)
-{
-   // print a vector
-   const int pr = os.precision(PRECISION);
-   const unsigned int nrow = vec.size();
-   const unsigned int np = std::min(nrow, static_cast<unsigned int>( MnPrint::MaxNP()) );
-   os << "\t[";
-   for (unsigned int i = 0; i < np; i++) {
-      os.width(WIDTH);
-      os << vec(i);
-   }
-   if (np < nrow) {
-      os << ".... ";
-      os.width(WIDTH);
-      os << vec(nrow-1);
-   }
-   os << "]\t";
-   os.precision(pr);
-   return os;
-}
-
-std::ostream &operator<<(std::ostream &os, const LASymMatrix &matrix)
-{
-   // print a matrix
-   const int pr = os.precision(8);
-   const unsigned int nrow = matrix.Nrow();
-   const unsigned int n = std::min(nrow, static_cast<unsigned int>( MnPrint::MaxNP()) );
-   for (unsigned int i = 0; i < nrow; i++) {
-      os << "\n";
-      if (i == 0)
-         os << "[[";
-      else {
-         if (i >= n) {
-            os << "....\n";
-            i = nrow-1;
-         }
-         os << " [";
-      }
-      for (unsigned int j = 0; j < nrow; j++) {
-         if (j >= n) {
-            os << ".... ";
-            j = nrow-1;
-         }
-         os.width(15);
-         os << matrix(i, j);
-      }
-      os << "]";
-   }
-   os << "]]";
    os.precision(pr);
    return os;
 }

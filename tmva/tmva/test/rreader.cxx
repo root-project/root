@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <ROOT/TestSupport.hxx>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -16,7 +17,7 @@ using namespace TMVA::Experimental;
 
 // Classification
 static const std::string modelClassification = "RReaderClassification/weights/RReaderClassification_BDT.weights.xml";
-static const std::string filenameClassification = std::string(gROOT->GetTutorialDir()) + "/tmva/data/tmva_class_example.root";
+static const std::string filenameClassification = std::string(gROOT->GetTutorialDir()) + "/machine_learning/data/tmva_class_example.root";
 static const std::vector<std::string> variablesClassification = {"var1", "var2", "var3", "var4"};
 
 void TrainClassificationModel()
@@ -58,7 +59,7 @@ void TrainClassificationModel()
 
 // Regression
 static const std::string modelRegression = "RReaderRegression/weights/RReaderRegression_BDTG.weights.xml";
-static const std::string filenameRegression = std::string(gROOT->GetTutorialDir()) + "/tmva/data/tmva_reg_example.root";
+static const std::string filenameRegression = std::string(gROOT->GetTutorialDir()) + "/machine_learning/data/tmva_reg_example.root";
 static const std::vector<std::string> variablesRegression = {"var1", "var2"};
 
 void TrainRegressionModel()
@@ -97,7 +98,7 @@ void TrainRegressionModel()
 
 // Multiclass
 static const std::string modelMulticlass = "RReaderMulticlass/weights/RReaderMulticlass_BDT.weights.xml";
-static const std::string filenameMulticlass = std::string(gROOT->GetTutorialDir()) + "/tmva/data/tmva_multiclass_example.root";
+static const std::string filenameMulticlass = std::string(gROOT->GetTutorialDir()) + "/machine_learning/data/tmva_multiclass_example.root";
 static const std::vector<std::string> variablesMulticlass = variablesClassification;
 
 void TrainMulticlassModel()
@@ -281,4 +282,23 @@ TEST(RReader, MulticlassComputeDataFrame)
    auto c = df3.Count();
    auto y = df2.Take<std::vector<float>>("y");
    EXPECT_EQ(y->size(), *c);
+}
+
+// https://its.cern.ch/jira/browse/ROOT-9833
+// https://its.cern.ch/jira/browse/ROOT-10018
+TEST(RReader, DataLoaderUndefinedVariables)
+{
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "TMVA::DataLoader::AddEvent",
+      "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (2)."
+      " Please check your variable definitions and statement ordering. This event will not be added.");
+   diagRAII.requiredDiag(kError, "TMVA::DataLoader::AddEvent",
+      "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (1)."
+      " Please check your variable definitions and statement ordering. This event will not be added.");
+   
+   std::vector<double> evData = {1, 2};
+   TMVA::DataLoader dl;
+   dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0);
+   TMVA::DataLoader d("dataset");
+   d.AddSignalTrainingEvent({0.0}, 1.0);
 }

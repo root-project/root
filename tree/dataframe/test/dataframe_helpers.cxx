@@ -358,9 +358,9 @@ TEST(RDFHelpers, SaveGraphRootFromTree)
    t.Write();
    f.Close();
 
-   static const std::string expectedGraph(
-      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=\"t\", "
-      "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
+   static const std::string expectedGraph("digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", "
+                                          "shape=\"box\"];\n\t0 [label=\"TTreeDS\", "
+                                          "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
 
    ROOT::RDataFrame df("t", "savegraphrootfromtree.root");
    auto c = df.Count();
@@ -381,9 +381,9 @@ TEST(RDFHelpers, SaveGraphToFile)
    t.Write();
    f.Close();
 
-   static const std::string expectedGraph(
-      "digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t0 [label=\"t\", "
-      "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
+   static const std::string expectedGraph("digraph {\n\t1 [label=\"Count\", style=\"filled\", fillcolor=\"#e47c7e\", "
+                                          "shape=\"box\"];\n\t0 [label=\"TTreeDS\", "
+                                          "style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t0 -> 1;\n}");
 
    ROOT::RDataFrame df("t", "savegraphtofile.root");
    auto c = df.Count();
@@ -687,6 +687,61 @@ TEST(RunGraphs, AlreadyRun)
 
    ROOT_EXPECT_WARNING(ROOT::RDF::RunGraphs({r1, r2, r3, r4}), "RunGraphs",
                        "Got 4 handles from which 2 link to results which are already ready.");
+}
+
+// Ensure that slot number in RunGraphs are unique across all graphs.
+TEST(RunGraphs, UniqueSlotNumbersInDefines)
+{
+#ifdef R__USE_IMT
+   ROOT::EnableImplicitMT();
+#endif // R__USE_IMT
+   std::set<unsigned int> assignedSlots;
+   std::mutex mutex;
+   auto slotTask = [&](unsigned int slot, ULong64_t x) {
+      {
+         std::scoped_lock lock{mutex};
+         EXPECT_TRUE(assignedSlots.insert(slot).second) << slot;
+      }
+      {
+         std::scoped_lock lock{mutex};
+         EXPECT_EQ(assignedSlots.erase(slot), 1) << slot;
+      }
+      return x;
+   };
+
+   constexpr unsigned int N = 100;
+
+   ROOT::RDataFrame df1(N);
+   auto df1a = df1.DefineSlot("x", slotTask, {"rdfentry_"});
+   auto r1 = df1a.Count();
+
+   ROOT::RDataFrame df2(N);
+   auto df2a = df2.DefineSlot("x", slotTask, {"rdfentry_"});
+   auto r3 = df2a.Max<ULong64_t>("x");
+   auto r4 = df2a.Count();
+
+   ROOT::RDataFrame df3(N);
+   auto df3a = df3.DefineSlot("x", slotTask, {"rdfentry_"});
+   auto r5 = df3a.Count();
+
+   std::vector<RResultHandle> v = {r1, r3, r4, r5};
+   ROOT::RDF::RunGraphs(v);
+   EXPECT_TRUE(assignedSlots.empty());
+
+   EXPECT_EQ(df1.GetNRuns(), 1u);
+   EXPECT_EQ(df2.GetNRuns(), 1u);
+   EXPECT_EQ(df3.GetNRuns(), 1u);
+
+   for (auto &h : v)
+      EXPECT_TRUE(h.IsReady());
+   EXPECT_EQ(r1.GetValue(), N);
+   EXPECT_EQ(r3.GetValue(), 99);
+   EXPECT_EQ(r4.GetValue(), N);
+   EXPECT_EQ(r5.GetValue(), N);
+
+#ifdef R__USE_IMT
+   ROOT::DisableImplicitMT();
+#endif // R__USE_IMT
 }
 
 int ret42 () {return 42;}

@@ -13,6 +13,7 @@
 #define ROOT_Compression
 
 #include "RtypesCore.h"
+#include "ROOT/RConfig.hxx"
 
 #include <string>
 
@@ -52,7 +53,8 @@ struct RCompressionSetting {
          kUseCompiledDefault = 101,
          /// Use the default analysis setting; fast reading but poor compression ratio
          kUseAnalysis = 404,
-         /// Use the new recommended general-purpose setting; it is a best trade-off between compression ratio/decompression speed
+         /// Use the new recommended general-purpose setting; it is a best trade-off between compression
+         /// ratio/decompression speed
          kUseGeneralPurpose = 505,
          /// Use the setting that results in the smallest files; very slow read and write
          kUseSmallest = 207,
@@ -72,7 +74,8 @@ struct RCompressionSetting {
          kDefaultZLIB = 1,
          /// Compression level reserved for LZ4 compression algorithm (trade-off between file ratio/decompression speed)
          kDefaultLZ4 = 4,
-         /// Compression level reserved for ZSTD compression algorithm (trade-off between file ratio/decompression speed)
+         /// Compression level reserved for ZSTD compression algorithm (trade-off between file ratio/decompression
+         /// speed)
          kDefaultZSTD = 5,
          /// Compression level reserved for old ROOT compression algorithm
          kDefaultOld = 6,
@@ -81,7 +84,7 @@ struct RCompressionSetting {
       };
    };
    struct EAlgorithm { /// Note: this is only temporarily a struct and will become a enum class hence the name
-                        /// convention used.
+                       /// convention used.
       enum EValues {
          /// Some objects use this value to denote that the compression algorithm
          /// should be inherited from the parent object (e.g., TBranch should get the algorithm from the TTree)
@@ -104,30 +107,18 @@ struct RCompressionSetting {
    };
 
    static std::string AlgorithmToString(EAlgorithm::EValues algorithm);
+   static EAlgorithm::EValues AlgorithmFromCompressionSettings(int compSettings)
+   {
+      return std::min(EAlgorithm::EValues::kUndefined, static_cast<EAlgorithm::EValues>(compSettings / 100));
+   }
 };
 
-enum ECompressionAlgorithm {
-   /// Deprecated name, do *not* use:
-   kUseGlobalCompressionSetting = RCompressionSetting::EAlgorithm::kUseGlobal,
-   /// Deprecated name, do *not* use:
-   kUseGlobalSetting = RCompressionSetting::EAlgorithm::kUseGlobal,
-   /// Deprecated name, do *not* use:
-   kZLIB = RCompressionSetting::EAlgorithm::kZLIB,
-   /// Deprecated name, do *not* use:
-   kLZMA = RCompressionSetting::EAlgorithm::kLZMA,
-   /// Deprecated name, do *not* use:
-   kOldCompressionAlgo = RCompressionSetting::EAlgorithm::kOldCompressionAlgo,
-   /// Deprecated name, do *not* use:
-   kLZ4 = RCompressionSetting::EAlgorithm::kLZ4,
-   /// Deprecated name, do *not* use:
-   kZSTD = RCompressionSetting::EAlgorithm::kZSTD,
-   /// Deprecated name, do *not* use:
-   kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
-};
+// clang-format off
 
 int CompressionSettings(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel);
-/// Deprecated name, do *not* use:
-int CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel);
+
+// clang-format on
+
 } // namespace ROOT
 
 #endif

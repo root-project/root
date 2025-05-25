@@ -29,7 +29,7 @@ public:
   ParamHistFunc(const char *name, const char *title, const RooArgList& vars, const RooArgList& paramSet, const TH1* hist );
 
   ParamHistFunc(const ParamHistFunc& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new ParamHistFunc(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new ParamHistFunc(*this, newname); }
 
   const RooArgList& paramList() const { return _paramSet ; }
 
@@ -46,6 +46,8 @@ public:
   const RooArgSet* get(Int_t masterIdx) const { return _dataSet.get( masterIdx ) ; }
   const RooArgSet* get(const RooArgSet& coord) const { return _dataSet.get( coord ) ; }
 
+  RooDataHist const& dataHist() const { return _dataSet; }
+
   double binVolume() const { return _dataSet.binVolume(); }
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
@@ -61,6 +63,7 @@ public:
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override;
   bool isBinnedDistribution(const RooArgSet& obs) const override { return _dataVars.overlaps(obs); }
 
+  const RooArgList& dataVars() const { return _dataVars; }
 
 protected:
 
@@ -102,8 +105,6 @@ protected:
   static Int_t GetNumBins( const RooArgSet& vars );
   double evaluate() const override;
   void doEval(RooFit::EvalContext &) const override;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   private:
   static NumBins getNumBinsPerDim(RooArgSet const& vars);

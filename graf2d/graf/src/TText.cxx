@@ -797,24 +797,18 @@ void TText::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TText::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   if (gROOT->ClassSaved(TText::Class()))
-      out<<"   ";
-   else
-      out<<"   TText *";
-
-   TString s = GetTitle();
-   s.ReplaceSpecialCppChars();
-
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC))
-      out<<"   text->SetNDC();"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "text",
+      TString::Format("%g, %g, \"%s\"", fX, fY, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
 
    SaveTextAttributes(out, "text", 11, 0, 1, 62, 0.05);
 
-   out<<"   text->Draw();"<<std::endl;
+   if (TestBit(kTextNDC))
+      out << "   text->SetNDC();\n";
+
+   SavePrimitiveDraw(out, "text", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -822,8 +816,7 @@ void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TText::SetNDC(Bool_t isNDC)
 {
-   ResetBit(kTextNDC);
-   if (isNDC) SetBit(kTextNDC);
+   SetBit(kTextNDC, isNDC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -872,32 +865,33 @@ void TText::Streamer(TBuffer &R__b)
 
 Rectangle_t TText::GetBBox()
 {
-   UInt_t w, h;
-   Int_t Dx, Dy;
-   Dx = Dy = 0;
-   GetBoundingBox(w, h, false);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      UInt_t w, h;
+      Int_t Dx = 0, Dy = 0;
+      GetBoundingBox(w, h, false);
 
-   Short_t halign = fTextAlign/10;
-   Short_t valign = fTextAlign - 10*halign;
+      Short_t halign = fTextAlign / 10;
+      Short_t valign = fTextAlign - 10 * halign;
 
-   switch (halign) {
-      case 1 : Dx = 0      ; break;
-      case 2 : Dx = w/2   ; break;
-      case 3 : Dx = w     ; break;
+      switch (halign) {
+      case 1: Dx = 0; break;
+      case 2: Dx = w / 2; break;
+      case 3: Dx = w; break;
+      }
+
+      switch (valign) {
+      case 1: Dy = h; break;
+      case 2: Dy = h / 2; break;
+      case 3: Dy = 0; break;
+      }
+
+      BBox.fX = gPad->XtoPixel(fX) - Dx;
+      BBox.fY = gPad->YtoPixel(fY) - Dy;
+      BBox.fWidth = w;
+      BBox.fHeight = h;
    }
-   switch (valign) {
-      case 1 : Dy = h     ; break;
-      case 2 : Dy = h/2   ; break;
-      case 3 : Dy = 0      ; break;
-   }
-
-   Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-   BBox.fX = gPad->XtoPixel(fX)-Dx;
-   BBox.fY = gPad->YtoPixel(fY)-Dy;
-   BBox.fWidth  = w;
-   BBox.fHeight = h;
-   return (BBox);
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -905,11 +899,12 @@ Rectangle_t TText::GetBBox()
 
 TPoint TText::GetBBoxCenter()
 {
-   TPoint p(0,0);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(fX));
-   p.SetY(gPad->YtoPixel(fY));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(fX));
+      p.SetY(gPad->YtoPixel(fY));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

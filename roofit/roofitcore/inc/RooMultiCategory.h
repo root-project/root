@@ -31,7 +31,7 @@ public:
   inline RooMultiCategory() { setShapeDirty(); }
   RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList);
   RooMultiCategory(const RooMultiCategory& other, const char *name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooMultiCategory(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooMultiCategory(*this,newname); }
 
   // Printing interface (human readable)
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override;

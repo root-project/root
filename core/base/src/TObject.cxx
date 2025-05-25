@@ -23,6 +23,18 @@ ROOT collection classes.
 TObject's bits can be used as flags, bits 0 - 13 and 24-31 are
 reserved as  global bits while bits 14 - 23 can be used in different
 class hierarchies (watch out for overlaps).
+
+\Note
+   Class inheriting directly or indirectly from TObject should not use
+   `= default` for any of the constructors.
+   The default implementation for a constructor can sometime do 'more' than we
+   expect (and still being standard compliant).  On some platforms it will reset
+   all the data member of the class including its base class's member before the
+   actual execution of the base class constructor.
+   `TObject`'s implementation of the `IsOnHeap` bit requires the memory occupied
+   by `TObject::fUniqueID` to *not* be reset between the execution of `TObject::operator new`
+   and the `TObject` constructor (Finding the magic pattern there is how we can determine
+   that the object was allocated on the heap).
 */
 
 #include <cstring>
@@ -34,6 +46,7 @@ class hierarchies (watch out for overlaps).
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include "Varargs.h"
 #include "snprintf.h"
@@ -117,6 +130,12 @@ bool DeleteChangesMemoryImpl()
    // can guess this is always the case and we can rely on the changes to fBits made
    // by ~TObject to detect use-after-delete error (and print a message rather than
    // stop the program with a segmentation fault)
+#if defined(_MSC_VER) && defined(__SANITIZE_ADDRESS__)
+   // on Windows, even __declspec(no_sanitize_address) does not prevent catching
+   // heap-use-after-free errorswhen using the /fsanitize=address compiler flag
+   // so don't even try
+   return true;
+#endif
    if ( *o_fbits != 0x01000000 ) {
       // operator delete tainted the memory, we can not rely on TestBit(kNotDeleted)
       return true;
@@ -183,13 +202,13 @@ void TObject::AddToTObjectTable(TObject *op)
 
 void TObject::AppendPad(Option_t *option)
 {
-   if (!gPad) {
+   if (!gPad)
       gROOT->MakeDefCanvas();
-   }
-   if (!gPad->IsEditable()) return;
-   SetBit(kMustCleanup);
-   gPad->GetListOfPrimitives()->Add(this,option);
-   gPad->Modified(kTRUE);
+
+   if (!gPad->IsEditable())
+      return;
+
+   gPad->Add(this, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,8 +330,7 @@ TObject *TObject::DrawClone(Option_t *option) const
       option = GetDrawOption();
 
    if (pad) {
-      pad->GetListOfPrimitives()->Add(newobj, option);
-      pad->Modified(kTRUE);
+      pad->Add(newobj, option);
       pad->Update();
    } else {
       newobj->Draw(option);
@@ -615,17 +633,18 @@ void TObject::Paint(Option_t *)
 
 void TObject::Pop()
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->GetListOfPrimitives())
+      return;
 
-   if (this == gPad->GetListOfPrimitives()->Last()) return;
+   if (this == gPad->GetListOfPrimitives()->Last())
+      return;
 
    TListIter next(gPad->GetListOfPrimitives());
    while (auto obj = next())
       if (obj == this) {
          TString opt = next.GetOption();
-         gPad->GetListOfPrimitives()->Remove((TObject*)this);
-         gPad->GetListOfPrimitives()->AddLast(this, opt.Data());
-         gPad->Modified();
+         gPad->Remove(this, kFALSE); // do not issue modified by remove
+         gPad->Add(this, opt.Data());
          return;
       }
 }
@@ -743,6 +762,71 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    out <<"}"<<std::endl;
    out.close();
    Info("SaveAs", "C++ Macro file: %s has been generated", fname.Data());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save object constructor in the output stream "out".
+/// Can be used as first statement when implementing SavePrimitive() method for the object
+
+void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs, Bool_t empty_line)
+{
+   if (empty_line)
+      out << "   \n";
+
+   out << "   ";
+   if (!gROOT->ClassSaved(cl))
+      out << cl->GetName() << " *";
+   out << variable_name << " = new " << cl->GetName() << "(" << constructor_agrs << ");\n";
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save array in the output stream "out" as vector.
+/// Create unique variable name based on prefix value
+/// Returns name of vector which can be used in constructor or in other places of C++ code
+
+TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line)
+{
+   thread_local int vectid = 0;
+
+   TString vectame = TString::Format("%s_vect%d", prefix, vectid++);
+
+   if (empty_line)
+      out << "   \n";
+
+   out << "   std::vector<Double_t> " << vectame;
+   if (len > 0) {
+      const auto old_precision{out.precision()};
+      constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+      out << std::setprecision(max_precision);
+      Bool_t use_new_lines = len > 15;
+
+      out << "{";
+      for (Int_t i = 0; i < len; i++) {
+         out << (((i % 10 == 0) && use_new_lines) ? "\n      " : " ") << arr[i];
+         if (i < len - 1)
+            out << ",";
+      }
+      out << (use_new_lines ? "\n   }" : " }");
+
+      out << std::setprecision(old_precision);
+   }
+   out << ";\n";
+   return vectame;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save invocation of primitive Draw() method
+/// Skipped if option contains "nodraw" string
+
+void TObject::SavePrimitiveDraw(std::ostream &out, const char *variable_name, Option_t *option)
+{
+   if (!option || !strstr(option, "nodraw")) {
+      out << "   " << variable_name << "->Draw(";
+      if (option && *option)
+         out << "\"" << TString(option).ReplaceSpecialCppChars() << "\"";
+      out << ");\n";
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1023,8 +1107,17 @@ void TObject::Fatal(const char *location, const char *va_(fmt), ...) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use this method to implement an "abstract" method that you don't
-/// want to leave purely abstract.
+/// Call this function within a function that you don't want to define as
+/// purely virtual, in order not to force all users deriving from that class to
+/// implement that maybe (on their side) unused function; but at the same time,
+/// emit a run-time warning if they try to call it, telling that it is not
+/// implemented in the derived class: action must thus be taken on the user side
+/// to override it. In other word, this method acts as a "runtime purely virtual"
+/// warning instead of a "compiler purely virtual" error.
+/// \warning This interface is a legacy function that is no longer recommended
+/// to be used by new development code.
+/// \note The name "AbstractMethod" does not imply that it's an abstract method
+/// in the strict C++ sense.
 
 void TObject::AbstractMethod(const char *method) const
 {

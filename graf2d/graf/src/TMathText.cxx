@@ -36,13 +36,13 @@ do it. The syntax is the same as the TeX's one.
 The following example demonstrate how to use TMathText:
 
 Begin_Macro(source)
-../../../tutorials/graphics/tmathtext.C
+../../../tutorials/visualisation/graphics/tmathtext.C
 End_Macro
 
 The list of all available symbols is given in the following example:
 
 Begin_Macro
-../../../tutorials/graphics/tmathtext2.C
+../../../tutorials/visualisation/graphics/tmathtext2.C
 End_Macro
 
 #### Limitation:
@@ -674,28 +674,17 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TMathText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TMathText::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   const char quote = '"';
+   SavePrimitiveConstructor(
+      out, Class(), "mathtex",
+      TString::Format("%g, %g, \"%s\"", fX, fY, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
 
-   if (gROOT->ClassSaved(TMathText::Class())) {
-      out << "   ";
-   } else {
-      out << "   TMathText *";
-   }
-
-   TString s = GetTitle();
-
-   s.ReplaceAll("\\","\\\\");
-   s.ReplaceAll("\"","\\\"");
-   out << "mathtex = new TMathText("<< fX << "," << fY << ","
-      << quote << s.Data() << quote << ");" << std::endl;
-   if (TestBit(kTextNDC)) {
-      out << "mathtex->SetNDC();" << std::endl;
-   }
+   if (TestBit(kTextNDC))
+      out << "   mathtex->SetNDC();\n";
 
    SaveTextAttributes(out, "mathtex", 11, 0, 1, 42, 0.05);
    SaveFillAttributes(out, "mathtex", 0, 1001);
 
-   out<<"   mathtex->Draw();" << std::endl;
+   SavePrimitiveDraw(out, "mathtex", option);
 }

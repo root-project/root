@@ -6,6 +6,7 @@
 
 # @author Stephan Hageboeck, CERN, 2019
 
+ROOT_ADD_GTEST(teststabilityTests stabilityTests.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooBernstein testRooBernstein.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooBifurGauss testRooBifurGauss.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooCrystalBall testRooCrystalBall.cxx LIBRARIES Gpad RooFit)
@@ -18,6 +19,7 @@ ROOT_ADD_GTEST(testRooKeysPdf testRooKeysPdf.cxx LIBRARIES Gpad RooFit)
 ROOT_ADD_GTEST(testRooLandau testRooLandau.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooParamHistFunc testRooParamHistFunc.cxx LIBRARIES Gpad RooFit)
 ROOT_ADD_GTEST(testRooPoisson testRooPoisson.cxx LIBRARIES RooFit)
+ROOT_ADD_GTEST(testRooStepFunc testRooStepFunc.cxx LIBRARIES RooFit)
 
 if(mathmore)
   ROOT_EXECUTABLE(testRooFit testRooFit.cxx LIBRARIES RooFit MathMore)
@@ -28,3 +30,5 @@ else()
   ROOT_EXECUTABLE(testRooFit testRooFit.cxx LIBRARIES RooFit)
   ROOT_ADD_TEST(test-fit-testRooFit COMMAND testRooFit)
 endif()
+
+add_subdirectory(vectorisedPDFs)

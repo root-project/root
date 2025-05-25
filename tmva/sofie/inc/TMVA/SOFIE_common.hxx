@@ -9,23 +9,48 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstring>
+#include <complex>
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 #include <regex>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
+#include <cassert>
+#include <limits>
 
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-//typedef RTensor tensor_t;
-
 enum class ETensorType{
-   UNDEFINED = 0, FLOAT = 1, UNINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
+   UNDEFINED = 0, FLOAT = 1, UINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
 };
+
+enum class EActivationType{
+   UNDEFINED = 0, RELU = 1, SOFTMAX = 2, SIGMOID = 3, LEAKYRELU = 4, TANH = 5, ELU = 6
+};
+
+constexpr size_t GetTypeSize(ETensorType type) {
+    switch (type) {
+        case ETensorType::FLOAT:     return sizeof(float);
+        case ETensorType::DOUBLE:    return sizeof(double);
+        case ETensorType::UINT8:     return sizeof(uint8_t);
+        case ETensorType::INT8:      return sizeof(int8_t);
+        case ETensorType::UINT16:    return sizeof(uint16_t);
+        case ETensorType::INT16:     return sizeof(int16_t);
+        case ETensorType::INT32:     return sizeof(int32_t);
+        case ETensorType::INT64:     return sizeof(int64_t);
+        case ETensorType::UINT32:    return sizeof(uint32_t);
+        case ETensorType::UINT64:    return sizeof(uint64_t);
+        case ETensorType::BOOL:      return sizeof(bool);
+        case ETensorType::STRING:    return sizeof(std::string);
+        default: return 0;
+    }
+}
 
 typedef std::int64_t int_t;
 
@@ -67,6 +92,61 @@ struct DynamicTensorInfo{
    std::vector<Dim> shape;
 };
 
+// template traits for Tensor type
+template <typename T>
+struct TensorType {};
+template<>
+struct TensorType<float> {
+   static const std::string Name() { return "float"; }
+};
+template<>
+struct TensorType<double> {
+   static const std::string Name() { return "double"; }
+};
+template<>
+struct TensorType<int64_t> {
+   static const std::string Name() { return "int64_t"; }
+};
+template<>
+struct TensorType<int32_t> {
+   static const std::string Name() { return "int32_t"; }
+};
+template<>
+struct TensorType<uint32_t> {
+   static const std::string Name() { return "uint32_t"; }
+};
+template<>
+struct TensorType<uint64_t> {
+   static const std::string Name() { return "uint64_t"; }
+};
+
+struct TensorMemoryInfo {
+   std::string_view tensor_name;
+   size_t tensor_size;
+
+   TensorMemoryInfo split(const std::string_view new_name, size_t new_size) {
+        if (new_size > tensor_size) {
+            throw std::invalid_argument("New size exceeds available tensor size.");
+        }
+        tensor_size -= new_size;
+        return TensorMemoryInfo{new_name, new_size};
+   }
+
+    // Method to merge another struct into this one
+   void merge(const TensorMemoryInfo& other) {
+        tensor_size += other.tensor_size;
+   }
+};
+
+struct MemoryPoolInfo {
+
+   // ordered map with chunk_idx as key and TensorMemoryInfo as value
+   std::map<size_t, TensorMemoryInfo> total_stack;
+
+   // ordered map with chunk_idx as key and chunk_size as value
+   std::map<size_t, size_t> available_stack;
+};
+
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
 
 std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
@@ -81,17 +161,52 @@ std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
 
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
+template<class T>
+std::string ConvertValToString(T value) {
+   std::stringstream ret;
+   if (std::is_floating_point_v<T>)
+      ret << std::setprecision(std::numeric_limits<T>::max_digits10);
+   ret << value;
+   return ret.str();
+}
+
+
+// convert list of values in a string taking into account the precision
+template<class T>
+std::string ConvertValuesToString(size_t n, const T * data) {
+   std::stringstream ret;
+   ret << "{ ";
+   for (size_t i = 0; i < n; i++) {
+      if (std::is_floating_point_v<T>)
+         ret << std::setprecision(std::numeric_limits<T>::max_digits10);
+      ret << data[i];
+      if (i < n-1) ret << ", ";
+   }
+   ret << "}";
+   return ret.str();
+}
+template<class T>
+std::string ConvertValuesToString(const std::vector<T> & data) {
+  return ConvertValuesToString(data.size(), data.data());
+}
+
 class InitializedTensor {
 public:
    InitializedTensor() = default;
-   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data)
-      : fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
+   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data, bool typeConstant = false)
+      : fConstant(typeConstant), fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
    {
    }
 
    ETensorType const &type() const { return fType; }
    std::vector<std::size_t> const &shape() const { return fShape; }
    std::shared_ptr<void> const &sharedptr() const { return fData; }
+   // query if tensor comes from a Constant operator
+   bool IsConstantTensor() const { return fConstant;}
+   // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
+   bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
+   // set not writable initialized tensors - i.e. tensor that must not be written in a file
+   void SetNotWritable() { fIsNotWritable = true;}
 
    template <class T = void>
    T const *data() const
@@ -143,6 +258,8 @@ public:
    }
 
 private:
+   bool  fConstant = false;      ///< Flag specifying if tensor is a Constant one (coming from a Constant operator)
+   bool  fIsNotWritable = false; ///< Flag to indicate that tensor values do not need to be written as weight or generated code
    ETensorType fType;               ///< Encodes the type of the data
    std::vector<std::size_t> fShape; ///< The shape of the data in terms of elements in each dimension
    std::shared_ptr<void> fData;     ///<! Transient shared data
@@ -153,7 +270,7 @@ private:
 template <typename T>
 ETensorType GetTemplatedType(T /*obj*/ ){
    if (std::is_same<T, float>::value) return ETensorType::FLOAT;
-   if (std::is_same<T, uint8_t>::value) return ETensorType::UNINT8;
+   if (std::is_same<T, uint8_t>::value) return ETensorType::UINT8;
    if (std::is_same<T, int8_t>::value) return ETensorType::INT8;
    if (std::is_same<T, uint16_t>::value) return ETensorType::UINT16;
    if (std::is_same<T, int16_t>::value) return ETensorType::INT16;
@@ -225,19 +342,32 @@ T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size
 // Broadcast a tensor from shape to targetShape according to numpy broadcasting rules
 // See more at https://numpy.org/doc/stable/user/basics.broadcasting.html
 // and https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md .
-template<typename T>
-T* BroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
-   // Size of the shapes
+template<typename T, class ConstContT = std::span<const T>, class ContT = std::span<T> >
+void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, ContT broadcastedData) {
+   // Size of the shapes (tensor input here have shapes with same sizes, we have already added the needed ones )
    size_t size = shape.size();
    // Current length of the broadcasted tensor
-   size_t curLength = ConvertShapeToLength(shape);
-   size_t targetLength = ConvertShapeToLength(targetShape);
-   // newShape is an aray of size equal to dimension along which we are broadcasting the tensor
-   T* broadcastedData = new T[targetLength];
-   std::copy(data, data + curLength, broadcastedData);
+   size_t curLength = data.size();
+   size_t targetLength = broadcastedData.size();
+   assert(ConvertShapeToLength(targetShape) == targetLength);
+   // special case when broadcasting last dimensions (initial shapes must be the same)
+   if (shape.front() == targetShape.front() && shape.back() == 1 && size > 1) {
+      size_t bsize = targetShape.back();
+      // compute the size of the data to broadcast
+      for (int k = int(size)-2; k >=0; k--) {
+         if (shape[k] != 1) break;
+         bsize *= targetShape[k];
+      }
+      for (size_t i = 0; i < curLength; i++) {
+         std::fill(broadcastedData.begin() + i*bsize, broadcastedData.begin() + (i+1)*bsize , data[i]);
+      }
+      return;
+   }
+
+   std::copy(data.begin(), data.end(), broadcastedData.begin());
    // Product of the previous dimensions of targetShape
    size_t arrayNum = 1;
-   // New broadcasted data
+   // New broadcasted data: is this needed?
    std::vector<T> newData(targetLength);
 
    for (size_t idx = 0; idx < size; idx++) {
@@ -254,8 +384,8 @@ T* BroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::v
             for (size_t arrayIdx = 0; arrayIdx < arrayNum; arrayIdx++) {
                for (size_t targetIdx = 0; targetIdx < targetDim; targetIdx++) {
                   size_t offset = arrayIdx * arrayLength * targetDim + targetIdx * arrayLength;
-                  std::copy(broadcastedData + arrayIdx * arrayLength,
-                     broadcastedData + (arrayIdx + 1) * arrayLength,
+                  std::copy(broadcastedData.begin() + arrayIdx * arrayLength,
+                     broadcastedData.begin() + (arrayIdx + 1) * arrayLength,
                      newData.begin() + offset);
                }
             }
@@ -269,15 +399,27 @@ T* BroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::v
          // Update current length
          curLength = newLength;
          // Update broadcasted data
-         std::copy(newData.begin(), newData.begin() + newLength, broadcastedData);
+         std::copy(newData.begin(), newData.begin() + newLength, broadcastedData.begin());
       }
       // Update the number of arrays
       arrayNum *= targetDim;
    }
-   return broadcastedData;
+   //return broadcastedData;
 }
 
-// Unidirectional broadcasting shape to targetShape
+// interface where we allocate a new array for broadcasted data
+template<typename T>
+T* CreateBroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, size_t targetLength) {
+   // newShape is an array of size equal to dimension along which we are broadcasting the tensor
+   T* broadcastedData = new T[targetLength];
+   std::span<T> bData(broadcastedData, broadcastedData+targetLength);
+   size_t curLength = ConvertShapeToLength(shape);
+   std::span<const T> inData(data, curLength);
+   BroadcastTensor<T, std::span<const T>, std::span<T>>(inData, shape, targetShape, bData);
+   return broadcastedData;
+}
+// Unidirectional broadcasting shape to targetShape// In unidirectional broadcast - only tensor B can have the shape changed not
+// tensor A - otherwise is a multidirectional broadcast
 template<typename T>
 T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
    // Prepend shape with ones
@@ -286,10 +428,28 @@ T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, cons
       std::vector<size_t> newShape(targetSize, 1);
       size_t offset = targetSize - shape.size();
       std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
-      return BroadcastTensor<T>(data, newShape, targetShape);
+      return CreateBroadcastTensor<T>(data, newShape, targetShape, ConvertShapeToLength(targetShape));
    }
-   return BroadcastTensor<T>(data, shape, targetShape);
+   return CreateBroadcastTensor<T>(data, shape, targetShape, ConvertShapeToLength(targetShape));
 }
+
+// Unidirectional broadcasting shape to targetShape using a passed vector to avoid allocations
+template<typename T>
+void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::span<T> broadcastedData) {
+   size_t curLength = ConvertShapeToLength(shape);
+   std::span<T> inData(const_cast<T*>(data), curLength);
+   // Prepend shape with ones
+   if (shape.size() < targetShape.size()) {
+      size_t targetSize = targetShape.size();
+      std::vector<size_t> newShape(targetSize, 1);
+      size_t offset = targetSize - shape.size();
+      std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
+      BroadcastTensor<T>(inData, newShape, targetShape, broadcastedData);
+   }
+   BroadcastTensor<T, std::span<T>>(inData, shape, targetShape, broadcastedData);
+}
+// specialization for vector of boolean
+void UnidirectionalBroadcast(const std::vector<bool> & data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::vector<bool> & broadcastedData);
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
@@ -458,7 +618,24 @@ void col2im(const Dtype* data_col, const int channels,
   //std::cout << "finishing col2imp" << std::endl;
 }
 
+// Used at the end of infer() to fill the return object.
+template <class T>
+void FillOutput(T const *arr, std::vector<T> &out, std::size_t n)
+{
+   out.resize(n);
+   for (std::size_t i = 0; i < n; ++i) {
+      out[i] = arr[i];
+   }
+}
 
+// Special case for std::vector<bool>.
+inline void FillOutput(std::vector<bool> const &vec, std::vector<std::uint8_t> &out, std::size_t n)
+{
+   out.resize(n);
+   for (std::size_t i = 0; i < n; ++i) {
+      out[i] = vec[i];
+   }
+}
 
 }  // end namespace UTILITY
 
@@ -541,6 +718,21 @@ inline GNN_Data Copy(const GNN_Data & data) {
    std::copy(data.global_data.GetData(), data.global_data.GetData()+ data.global_data.GetSize(), out.global_data.GetData());
    std::copy(data.edge_index.GetData(), data.edge_index.GetData()+ data.edge_index.GetSize(), out.edge_index.GetData());
    return out;
+}
+
+inline void Gemm_Call(float *output, bool transa, bool transb, int m, int n, int k, float alpha, const float *A,
+                      const float *B, float beta, const float *C)
+{
+   char ct = 't';
+   char cn = 'n';
+   const int *lda = transa ? &k : &m;
+   const int *ldb = transb ? &n : &k;
+   const int *ldc = &m;
+   if (C != nullptr) {
+      std::copy(C, C + m * n, output);
+   }
+   TMVA::Experimental::SOFIE::BLAS::sgemm_(transa ? &ct : &cn, transb ? &ct : &cn, &m, &n, &k, &alpha, A, lda, B, ldb,
+                                           &beta, output, ldc);
 }
 
 }//SOFIE

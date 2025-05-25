@@ -13,7 +13,7 @@
 if(builtin_unuran)
 
 set(UNR_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(UNR_VERSION "1.8.0-root")
+set(UNR_VERSION "1.11.0")
 set(UNR_TARNAME "unuran-${UNR_VERSION}")
 set(UNR_TARGZFILE ${UNR_SRCDIR}/${UNR_TARNAME}.tar.gz)
 set(UNR_TARFILE ${UNR_SRCDIR}/${UNR_TARNAME}.tar)
@@ -22,10 +22,6 @@ set(UNR_UNTARDIR ${CMAKE_CURRENT_BINARY_DIR}/${UNR_TARNAME})
 #---Untar sources at configuration/generation time (needed for listing sources)
 if(NOT EXISTS ${UNR_UNTARDIR})
   execute_process( COMMAND ${CMAKE_COMMAND} -E tar xzf ${UNR_TARGZFILE}
-                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
-  # This is necessary to replace the config.guess of unuran 1.8.0 as it does not allow to compile the 
-  # package on arm64.
-  execute_process( COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/config.guess_patch1 ${UNR_UNTARDIR}/autoconf/config.guess
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 endif()
 

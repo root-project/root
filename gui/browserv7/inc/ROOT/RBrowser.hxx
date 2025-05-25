@@ -57,6 +57,7 @@ protected:
 
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(unsigned connid, std::vector<std::string> &args);
+   std::string ProcessDrop(unsigned connid, std::vector<std::string> &args);
    std::string NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget);
    void ProcessRunMacro(const std::string &file_path);
    void ProcessSaveFile(const std::string &fname, const std::string &content);
@@ -71,7 +72,7 @@ protected:
 
    void AddInitWidget(const std::string &kind);
 
-   void CheckWidgtesModified();
+   void CheckWidgtesModified(unsigned connid);
 
    void ProcessPostponedRequests();
 

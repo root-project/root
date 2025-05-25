@@ -20,13 +20,10 @@ class THttpServer;
 
 namespace ROOT {
 
-namespace Experimental {
 class RLogChannel;
-} // namespace Experimental
 
 /// Log channel for WebGUI diagnostics.
-ROOT::Experimental::RLogChannel &WebGUILog();
-
+ROOT::RLogChannel &WebGUILog();
 
 class RWebWindow;
 
@@ -38,10 +35,10 @@ public:
    enum EBrowserKind {
       kChrome,   ///< Google Chrome browser
       kEdge,     ///< Microsoft Edge browser (Windows only)
+      kSafari,   ///< Safari browser
       kFirefox,  ///< Mozilla Firefox browser
       kNative,   ///< either Chrome or Firefox - both support major functionality
       kCEF,      ///< Chromium Embedded Framework - local display with CEF libs
-      kQt5,      ///< Qt5 QWebEngine libraries - Chromium code packed in qt5
       kQt6,      ///< Qt6 QWebEngine libraries - Chromium code packed in qt6
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kDefault,  ///< default system web browser, can not be used in batch mode
@@ -105,14 +102,14 @@ public:
    {
       return !IsHeadless() &&
              ((GetBrowserKind() == kOn) || (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) ||
-              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kDefault) ||
-              (GetBrowserKind() == kCustom));
+              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kSafari) || (GetBrowserKind() == kFirefox) ||
+              (GetBrowserKind() == kDefault) || (GetBrowserKind() == kCustom));
    }
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
    bool IsLocalDisplay() const
    {
-      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
+      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt6);
    }
 
    /// returns true if browser supports headless mode
@@ -120,7 +117,7 @@ public:
    {
       return (GetBrowserKind() == kNative) || (GetBrowserKind() == kDefault) || (GetBrowserKind() == kOn) ||
              (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) ||
-             (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
+             (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt6);
    }
 
    /// set window url
@@ -213,7 +210,10 @@ public:
    /// [internal] returns web-driver data, used to start window
    void *GetDriverData() const { return fDriverData; }
 
-   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x50000);
+   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x60000);
+
+   static std::string GetQtEmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x60000);
+
 };
 
 } // namespace ROOT

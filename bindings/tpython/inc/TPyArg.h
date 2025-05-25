@@ -12,14 +12,6 @@
 #ifndef ROOT_TPyArg
 #define ROOT_TPyArg
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TPyArg                                                                   //
-//                                                                          //
-// Morphing argument type from evaluating python expressions.               //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
 // ROOT
 #include "Rtypes.h"
 
@@ -30,6 +22,7 @@ typedef _object PyObject;
 // Standard
 #include <vector>
 
+/// Morphing argument type from evaluating python expressions.
 class TPyArg {
 public:
    // converting constructors

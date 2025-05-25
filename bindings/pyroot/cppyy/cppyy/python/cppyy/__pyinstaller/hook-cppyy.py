@@ -4,7 +4,7 @@
 #
 # See also setup.cfg.
 
-__all__ = ['data']
+__all__ = ['datas']
 
 
 def _backend_files():

@@ -26,6 +26,5 @@ RooTObjWrap is a minimal implementation of a TNamed holding a TObject
 
 #include "RooTObjWrap.h"
 
-ClassImp(RooTObjWrap);
 
 /// \endcond

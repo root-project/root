@@ -17,10 +17,14 @@
 #include <RooAbsPdf.h>
 
 #include <TClass.h>
-#include <TROOT.h>
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+
+// Include raw strings with initial export and import keys in JSON
+#include "RooFitHS3_wsexportkeys.cxx"
+#include "RooFitHS3_wsfactoryexpressions.cxx"
 
 namespace RooFit {
 namespace JSONIO {
@@ -34,9 +38,16 @@ void setupKeys()
 
    isAlreadySetup = true;
 
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+   {
+      std::stringstream exportkeys;
+      exportkeys << RooFitHS3_wsexportkeys;
+      loadExportKeys(exportkeys);
+   }
+   {
+      std::stringstream factoryexpressions;
+      factoryexpressions << RooFitHS3_wsfactoryexpressions;
+      loadFactoryExpressions(factoryexpressions);
+   }
 }
 
 ImportMap &importers()
@@ -134,22 +145,25 @@ void printExporters()
 
 void loadFactoryExpressions(const std::string &fname)
 {
-   auto &factoryExpressions = RooFit::JSONIO::importExpressions();
-
    // load a yml file defining the factory expressions
    std::ifstream infile(fname);
    if (!infile.is_open()) {
       std::cerr << "unable to read file '" << fname << "'" << std::endl;
       return;
    }
+   loadFactoryExpressions(infile);
+}
 
-   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(infile);
+void loadFactoryExpressions(std::istream &is)
+{
+   auto &factoryExpressions = RooFit::JSONIO::importExpressions();
+
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(is);
    const RooFit::Detail::JSONNode &n = tree->rootnode();
    for (const auto &cl : n.children()) {
       std::string key = cl.key();
       if (!cl.has_child("class")) {
-         std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!"
-                   << std::endl;
+         std::cerr << "error for entry '" << key << "': 'class' key is required!" << std::endl;
          continue;
       }
       std::string classname(cl["class"].val());
@@ -196,16 +210,20 @@ void printFactoryExpressions()
 
 void loadExportKeys(const std::string &fname)
 {
-   auto &exportKeys = RooFit::JSONIO::exportKeys();
-
    // load a yml file defining the export keys
    std::ifstream infile(fname);
    if (!infile.is_open()) {
       std::cerr << "unable to read file '" << fname << "'" << std::endl;
       return;
    }
+   loadExportKeys(infile);
+}
 
-   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(infile);
+void loadExportKeys(std::istream &is)
+{
+   auto &exportKeys = RooFit::JSONIO::exportKeys();
+
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(is);
    const RooFit::Detail::JSONNode &n = tree->rootnode();
    for (const auto &cl : n.children()) {
       std::string classname = cl.key();

@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT gui/qt5webdisplay package
+# CMakeLists.txt file for building ROOT gui/qt6webdisplay package
 ############################################################################
 
 find_package(Qt6 COMPONENTS Core WebEngineCore WebEngineWidgets CONFIG)
@@ -24,9 +24,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ROOT_LINKER_LIBRARY(ROOTQt6WebDisplay
-     ../qt5webdisplay/rootwebview.cpp
-     ../qt5webdisplay/rootwebpage.cpp
-     ../qt5webdisplay/rooturlschemehandler.cpp
+     rootwebview.cpp
+     rootwebpage.cpp
+     rooturlschemehandler.cpp
      rootqt6.cpp
   LIBRARIES
     Qt6::WebEngineCore

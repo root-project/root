@@ -27,6 +27,8 @@ class RooDecay(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooDecay'
+
     @cpp_signature(
         "RooDecay(const char *name, const char *title, RooRealVar& t, RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;"
     )
@@ -34,6 +36,7 @@ class RooDecay(object):
         r"""The RooDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
+        __cpp_name__ = 'RooDecay'
 
 
 class RooBDecay(object):
@@ -47,6 +50,7 @@ class RooBDecay(object):
         r"""The RooBDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
+        __cpp_name__ = 'RooBDecay'
 
 
 class RooBCPGenDecay(object):
@@ -55,10 +59,12 @@ class RooBCPGenDecay(object):
         "    RooAbsReal& tau, RooAbsReal& dm, RooAbsReal& avgMistag, RooAbsReal& a, RooAbsReal& b,"
         "    RooAbsReal& delMistag, RooAbsReal& mu, const RooResolutionModel& model, DecayType type=DoubleSided) ;"
     )
+
     def __init__(self, *args, **kwargs):
         r"""The RooBCPGenDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
+        __cpp_name__ = 'RooBCPGenDecay'
 
 
 class RooBCPEffDecay(object):
@@ -68,10 +74,12 @@ class RooBCPEffDecay(object):
         "    RooAbsReal& a, RooAbsReal& b, RooAbsReal& effRatio, RooAbsReal& delMistag,"
         "    const RooResolutionModel& model, DecayType type=DoubleSided) ;"
     )
+
     def __init__(self, *args, **kwargs):
         r"""The RooBCPEffDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
+        __cpp_name__ = 'RooBCPEffDecay'
 
 
 class RooBMixDecay(object):
@@ -84,3 +92,4 @@ class RooBMixDecay(object):
         r"""The RooBMixDecay constructor is pythonized with enum values."""
         kwargs = _decaytype_string_to_enum(self, kwargs)
         self._init(*args, **kwargs)
+        __cpp_name__ = 'RooBMixDecay'

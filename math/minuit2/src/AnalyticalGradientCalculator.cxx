@@ -8,7 +8,7 @@
  **********************************************************************/
 
 #include "Minuit2/AnalyticalGradientCalculator.h"
-#include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MinimumParameters.h"
@@ -57,12 +57,6 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
 {
    // needed from base class
    return (*this)(par);
-}
-
-bool AnalyticalGradientCalculator::CheckGradient() const
-{
-   // check to be sure FCN implements analytical gradient
-   return fGradFunc.CheckGradient();
 }
 
 // G2 can be computed directly without Hessian or via the Hessian

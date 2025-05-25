@@ -13,12 +13,11 @@
 #include "Minuit2/MnPrint.h"
 
 #include <algorithm>
+#include <iostream>
 
 namespace ROOT {
 
 namespace Minuit2 {
-
-LAVector eigenvalues(const LASymMatrix &);
 
 MinimumState MnPosDef::operator()(const MinimumState &st, const MnMachinePrecision &prec) const
 {

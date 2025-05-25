@@ -13,6 +13,7 @@
 #include "llvm/ExecutionEngine/JITLink/ELF.h"
 
 #include "llvm/BinaryFormat/ELF.h"
+#include "llvm/ExecutionEngine/JITLink/ELF_aarch32.h"
 #include "llvm/ExecutionEngine/JITLink/ELF_aarch64.h"
 #include "llvm/ExecutionEngine/JITLink/ELF_i386.h"
 #include "llvm/ExecutionEngine/JITLink/ELF_loongarch.h"
@@ -20,7 +21,6 @@
 #include "llvm/ExecutionEngine/JITLink/ELF_riscv.h"
 #include "llvm/ExecutionEngine/JITLink/ELF_x86_64.h"
 #include "llvm/Object/ELF.h"
-#include "llvm/Support/Endian.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include <cstring>
@@ -51,13 +51,29 @@ Expected<uint16_t> readTargetMachineArch(StringRef Buffer) {
     }
   }
 
+  if (Data[ELF::EI_DATA] == ELF::ELFDATA2MSB) {
+    if (Data[ELF::EI_CLASS] == ELF::ELFCLASS64) {
+      if (auto File = llvm::object::ELF64BEFile::create(Buffer)) {
+        return File->getHeader().e_machine;
+      } else {
+        return File.takeError();
+      }
+    } else if (Data[ELF::EI_CLASS] == ELF::ELFCLASS32) {
+      if (auto File = llvm::object::ELF32BEFile::create(Buffer)) {
+        return File->getHeader().e_machine;
+      } else {
+        return File.takeError();
+      }
+    }
+  }
+
   return ELF::EM_NONE;
 }
 
 Expected<std::unique_ptr<LinkGraph>>
 createLinkGraphFromELFObject(MemoryBufferRef ObjectBuffer) {
   StringRef Buffer = ObjectBuffer.getBuffer();
-  if (Buffer.size() < ELF::EI_MAG3 + 1)
+  if (Buffer.size() < ELF::EI_NIDENT)
     return make_error<JITLinkError>("Truncated ELF buffer");
 
   if (memcmp(Buffer.data(), ELF::ElfMagic, strlen(ELF::ElfMagic)) != 0)
@@ -71,6 +87,8 @@ createLinkGraphFromELFObject(MemoryBufferRef ObjectBuffer) {
   switch (*TargetMachineArch) {
   case ELF::EM_AARCH64:
     return createLinkGraphFromELFObject_aarch64(ObjectBuffer);
+  case ELF::EM_ARM:
+    return createLinkGraphFromELFObject_aarch32(ObjectBuffer);
   case ELF::EM_LOONGARCH:
     return createLinkGraphFromELFObject_loongarch(ObjectBuffer);
   case ELF::EM_PPC64: {
@@ -97,6 +115,12 @@ void link_ELF(std::unique_ptr<LinkGraph> G,
   switch (G->getTargetTriple().getArch()) {
   case Triple::aarch64:
     link_ELF_aarch64(std::move(G), std::move(Ctx));
+    return;
+  case Triple::arm:
+  case Triple::armeb:
+  case Triple::thumb:
+  case Triple::thumbeb:
+    link_ELF_aarch32(std::move(G), std::move(Ctx));
     return;
   case Triple::loongarch32:
   case Triple::loongarch64:

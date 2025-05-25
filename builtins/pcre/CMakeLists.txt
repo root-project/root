@@ -13,13 +13,19 @@ foreach(var PCRE_FOUND PCRE_VERSION PCRE_INCLUDE_DIR PCRE_PCRE_LIBRARY PCRE_LIBR
 endforeach()
 
 if(WIN32)
-  if(winrtdebug)
-    set(PCRE_POSTFIX $<$<CONFIG:Debug>:d>)
-    set(pcre_config_kind "Debug")
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+      set(PCRE_POSTFIX d)
+    endif()
   else()
-    set(pcre_config_kind "Release")
+    if(winrtdebug)
+      set(PCRE_POSTFIX $<$<CONFIG:Debug>:d>)
+      set(pcre_config_kind "Debug")
+    else()
+      set(pcre_config_kind "Release")
+    endif()
+    set(pcre_config "--config ${pcre_config_kind}")
   endif()
-  set(pcre_config "--config")
 endif()
 
 set(PCRE_VERSION "8.43" CACHE INTERNAL "" FORCE)
@@ -35,7 +41,7 @@ endif()
 
 ExternalProject_Add(PCRE
   URL ${CMAKE_CURRENT_SOURCE_DIR}/pcre-${PCRE_VERSION}.tar.bz2
-  URL_HASH SHA256=91e762520003013834ac1adb4a938d53b22a216341c061b0cf05603b290faf6b
+  URL_HASH SHA256=f1026a7f455b8ba726d6fff94d5f989e55ad55f7b4eb946938803ac2aa41743c
 
   LOG_DOWNLOAD  TRUE
   LOG_CONFIGURE TRUE
@@ -50,9 +56,11 @@ ExternalProject_Add(PCRE
     -DCMAKE_CXX_COMPILER:STRING=${CMAKE_CXX_COMPILER}
     -DCMAKE_BUILD_SHARED_LIBS:BOOL=FALSE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
+    -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5
+    -DPCRE_BUILD_TESTS:BOOL=FALSE
 
   BUILD_COMMAND
-    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_config} ${pcre_config_kind} --target pcre
+    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_config} --target pcre
 
   BUILD_BYPRODUCTS
     ${PCRE_BYPRODUCTS}

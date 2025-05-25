@@ -12,14 +12,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "RooFit/BatchModeDataHelpers.h"
 
 #include <RooAbsData.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 
 #include "RooFitImplHelpers.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #include <ROOT/StringUtils.hxx>
 
@@ -69,32 +69,26 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
       auto &buffer = buffers.top();
       buffers.emplace();
       auto &bufferSumW2 = buffers.top();
-      if (weight.empty()) {
-         // If the dataset has no weight, we fill the data spans with a scalar
-         // unity weight so we don't need to check for the existence of weights
-         // later in the likelihood.
-         buffer.push_back(1.0);
-         bufferSumW2.push_back(1.0);
-         assignSpan(weight, {buffer.data(), 1});
-         assignSpan(weightSumW2, {bufferSumW2.data(), 1});
-         nNonZeroWeight = nEvents;
-      } else {
-         buffer.reserve(nEvents);
-         bufferSumW2.reserve(nEvents);
-         for (std::size_t i = 0; i < nEvents; ++i) {
-            if (!skipZeroWeights || weight[i] != 0) {
-               buffer.push_back(weight[i]);
-               bufferSumW2.push_back(weightSumW2[i]);
-               ++nNonZeroWeight;
-            } else {
-               hasZeroWeight[i] = true;
-            }
+      buffer.reserve(nEvents);
+      bufferSumW2.reserve(nEvents);
+      for (std::size_t i = 0; i < nEvents; ++i) {
+         if (weight.empty()) {
+            // No weights in the dataset imply a constant weight of one
+            buffer.push_back(1.0);
+            bufferSumW2.push_back(1.0);
+            ++nNonZeroWeight;
+         } else if (!skipZeroWeights || weight[i] != 0) {
+            buffer.push_back(weight[i]);
+            bufferSumW2.push_back(weightSumW2[i]);
+            ++nNonZeroWeight;
+         } else {
+            hasZeroWeight[i] = true;
          }
-         assignSpan(weight, {buffer.data(), nNonZeroWeight});
-         assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
       }
-      insert(RooNLLVarNew::weightVarName, weight);
-      insert(RooNLLVarNew::weightVarNameSumW2, weightSumW2);
+      assignSpan(weight, {buffer.data(), nNonZeroWeight});
+      assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
+      insert(RooFit::Detail::RooNLLVarNew::weightVarName, weight);
+      insert(RooFit::Detail::RooNLLVarNew::weightVarNameSumW2, weightSumW2);
    }
 
    // Get the real-valued batches and cast the also to double branches to put in
@@ -204,10 +198,9 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
 ///            object can't be used directly (e.g. because you used the range
 ///            selection or the splitting by categories).
 std::map<RooFit::Detail::DataKey, std::span<const double>>
-RooFit::Detail::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string const &rangeName,
-                                                   RooSimultaneous const *simPdf, bool skipZeroWeights,
-                                                   bool takeGlobalObservablesFromData,
-                                                   std::stack<std::vector<double>> &buffers)
+RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string const &rangeName,
+                                           RooSimultaneous const *simPdf, bool skipZeroWeights,
+                                           bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers)
 {
    std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
@@ -267,8 +260,9 @@ RooFit::Detail::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::
 /// \return A `std::map` with output sizes for each node in the computation graph.
 /// \param[in] topNode The top node of the computation graph.
 /// \param[in] inputSizeFunc A function to get the input sizes.
-std::map<RooFit::Detail::DataKey, std::size_t> RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(
-   RooAbsArg const &topNode, std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc)
+std::map<RooFit::Detail::DataKey, std::size_t>
+RooFit::BatchModeDataHelpers::determineOutputSizes(RooAbsArg const &topNode,
+                                                   std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc)
 {
    std::map<RooFit::Detail::DataKey, std::size_t> output;
 

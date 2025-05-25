@@ -53,7 +53,7 @@ struct BasisFunction {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TLinearMinimizer
-/// \see Minuit2 for a newer version of this class
+/// \note See ROOT::Minuit2 for a newer version of this class.
 ///
 /// TLinearMinimizer, simple class implementing the ROOT::Math::Minimizer
 /// interface usingTLinearFitter. This class uses TLinearFitter to find directly
@@ -102,20 +102,6 @@ TLinearMinimizer::~TLinearMinimizer()
    // Destructor implementation.
    if (fFitter) delete fFitter;
 }
-
-TLinearMinimizer::TLinearMinimizer(const TLinearMinimizer &) :
-   Minimizer()
-{
-   // Implementation of copy constructor.
-}
-
-TLinearMinimizer & TLinearMinimizer::operator = (const TLinearMinimizer &rhs)
-{
-   // Implementation of assignment operator.
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 
 void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfunc) {
    // Set the function to be minimized. The function must be a Chi2 gradient function

@@ -108,7 +108,7 @@ Before going further, let us get a look and feel of interacting with the
 modeller. For this, we will use one of the examples illustrating the
 geometry package. To get an idea on the geometry structure created in
 this example, just look at the link:
-<http://root.cern.ch/root/html/tutorials/geom/rootgeom.C.html>. You will
+<http://root.cern.ch/root/html/tutorials/visualisation/geom/rootgeom.C.html>. You will
 notice that this is a bit more complex that just creating the "world"
 since several other volumes are created and put together in a hierarchy.
 The purpose here is just to learn how to interact with a geometry that
@@ -226,7 +226,7 @@ These are the nodes of the `physical` `tree` of positioned volumes
 represented by **`TGeoNode`** objects. This hierarchy is a tree since a
 node can have only one parent and several daughters. For a better
 understanding of the hierarchy, have a look at
-<http://root.cern.ch/root/htmldoc/TGeoManager.html>.
+<https://root.cern.ch/doc/master/classTGeoManager.html>.
 
 Just close now the `X3D` window and focus at the wire frame picture
 drawn in a pad. Activate Options/Event Status. Moving the mouse in the
@@ -508,7 +508,7 @@ initial material/mixture at time, while all resulting elements having a
 fractional weight less than precision are excluded.
 
 A demo macro for radioactive material features is
-`$ROOTSYS/tutorials/geom/RadioNuclides.C` It demonstrates also the decay
+`$ROOTSYS/tutorials/visualisation/geom/RadioNuclides.C` It demonstrates also the decay
 of a mixture made of radionuclides.
 
 ![Concentracion of elements derived

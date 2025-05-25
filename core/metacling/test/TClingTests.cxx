@@ -132,7 +132,7 @@ TEST_F(TClingTests, GetClassSharedLibs)
 {
    // Shortens the invocation.
    auto GetLibs = [](const char *cls) -> std::string {
-      if (const char *val = gInterpreter->GetClassSharedLibs(cls))
+      if (const char *val = gInterpreter->GetClassSharedLibs(cls,false))
          return val;
       return "";
    };
@@ -275,6 +275,96 @@ TEST_F(TClingTests, ROOT10499) {
 #endif
 }
 
+// ROOT-6913
+TEST_F(TClingTests, ClassInfoProperty)
+{
+   gInterpreter->Declare(R"cpp(
+class ClassHasExplicitCtor{
+   public:
+      ClassHasExplicitCtor(){};
+};
+
+class ClassHasExplicitDtor{
+   public:
+      ~ClassHasExplicitDtor(){};
+};
+
+class ClassHasImplicitCtor {
+   ClassHasExplicitCtor c;
+};
+
+class ClassHasImplicitDtor{
+   ClassHasExplicitDtor c;
+};
+
+class ClassHasDefaultCtor{
+   ClassHasDefaultCtor(){};
+};
+
+class ClassIsAbstract{
+   virtual void PureVirtual() = 0;
+};
+
+class ClassHasVirtual{
+   virtual void Virtual() {};
+};
+
+class ClassHasAssignOpr{
+   ClassHasAssignOpr& operator=(const ClassHasAssignOpr&);
+};
+
+// according to the C++ standard, being a POD implies being an aggregate
+struct ClassIsAggregate {
+    int x;
+    double y;
+};
+                          )cpp");
+
+   const std::vector<std::pair<std::string, Long_t>> classNPPairs{
+      {"ClassHasImplicitCtor", kClassHasImplicitCtor}, {"ClassHasExplicitCtor", kClassHasExplicitCtor},
+      {"ClassHasExplicitDtor", kClassHasExplicitDtor}, {"ClassHasImplicitDtor", kClassHasImplicitDtor},
+      {"ClassHasDefaultCtor", kClassHasDefaultCtor},   {"ClassHasDefaultCtor", kClassIsValid},
+      {"ClassIsAbstract", kClassIsAbstract},           {"ClassHasVirtual", kClassHasVirtual},
+      {"ClassHasAssignOpr", kClassHasAssignOpr},       {"ClassIsAggregate", kClassIsAggregate}};
+
+   for (auto &[clName, clPropRef] : classNPPairs) {
+      auto cl = TClass::GetClass(clName.c_str());
+      const auto prop = gInterpreter->ClassInfo_ClassProperty(cl->GetClassInfo());
+      EXPECT_TRUE(prop & clPropRef) << "Error checking property for class " << clName;
+   }
+}
+
+// #12108
+TEST_F(TClingTests, constexprFunctionReturn)
+{
+   gInterpreter->Declare(R"cpp(
+namespace issue_12108{
+
+template <typename T> struct ValueAndPushforward {
+  T value;
+};
+
+constexpr ValueAndPushforward<double> Ln10_pushforward() {
+    return {2.3025850929940459};
+}
+
+ValueAndPushforward<double> Ln10_pushforwardNoconstexpr() {
+    return {2.3025850929940459};
+}
+
+auto val1 = Ln10_pushforwardNoconstexpr();
+auto val2 = Ln10_pushforward();
+
+}
+   )cpp");
+
+   auto val1 = *(double *)(uintptr_t)gInterpreter->ProcessLine("&issue_12108::val1.value;");
+   auto val2 = *(double *)(uintptr_t)gInterpreter->ProcessLine("&issue_12108::val2.value;");
+
+   EXPECT_DOUBLE_EQ(2.3025850929940459, val1);
+   EXPECT_DOUBLE_EQ(2.3025850929940459, val2);
+}
+
 // #15511
 TEST_F(TClingTests, ManyConstConstructors)
 {
@@ -318,4 +408,30 @@ const Constructor c19(19);
    for (int i = 0; i < 20; i++) {
       EXPECT_EQ(constructors[i], i);
    }
+}
+
+// #8828
+TEST_F(TClingTests, RefreshNSShadowing)
+{
+   // These two lines would make the test fail because of two reasons:
+   // - An assertion failure "Assertion failed: (detail::isPresent(Val) && "dyn_cast on a non-existent value"), function dyn_cast, file Casting.h, line 662."
+   // - An error "Error in <TInterpreter::RefreshClassInfo>: Should not need to update the classInfo a non type decl: Detail"
+   // This is why there is no check performed.
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TInterpreter::RefreshClassInfo", "Should not need to update the classInfo a non type decl: Detail");
+   gInterpreter->Declare("namespace std { namespace Detail {} }; auto c = TClass::GetClass(\"Detail\");");
+   gInterpreter->ProcessLine("namespace Detail {}");
+}
+
+// #8367
+TEST_F(TClingTests, UndeclaredIdentifierCrash)
+{
+   auto expectedError = R"(error: use of undeclared identifier 'i'
+ for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault
+          ^
+)";
+   using namespace ROOT::TestSupport;
+   CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "cling", expectedError, false);
+   gInterpreter->ProcessLine("for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault");
 }

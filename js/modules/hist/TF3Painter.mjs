@@ -2,8 +2,8 @@ import { createHistogram, setHistogramTitle, kNoStats, settings, clTF3, clTH2F }
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar } from '../base/func.mjs';
 import { produceTAxisLogScale, scanTF1Options } from '../hist/TF1Painter.mjs';
-import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 
 
@@ -29,6 +29,8 @@ function findZValue(arrz, arrv, cross = 0) {
 
 class TF3Painter extends TH2Painter {
 
+   #use_saved_points; // use saved points for drawing
+
    /** @summary Returns drawn object name */
    getObjectName() { return this.$func?.fName ?? 'func'; }
 
@@ -42,7 +44,7 @@ class TF3Painter extends TH2Painter {
    getPrimaryObject() { return this.$func; }
 
    /** @summary Update histogram */
-   updateObject(obj /*, opt */) {
+   updateObject(obj /* , opt */) {
       if (!obj || (this.getClassName() !== obj._typename)) return false;
       delete obj.evalPar;
       const histo = this.getHisto();
@@ -61,7 +63,7 @@ class TF3Painter extends TH2Painter {
    /** @summary Redraw TF2
      * @private */
    redraw(reason) {
-      if (!this._use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'logy' || reason === 'zoom')) {
+      if (!this.#use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'logy' || reason === 'zoom')) {
          this.createTF3Histogram(this.$func, this.getHisto());
          this.scanContent();
       }
@@ -74,7 +76,7 @@ class TF3Painter extends TH2Painter {
    createTF3Histogram(func, hist) {
       const nsave = func.fSave.length - 9;
 
-      this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || (this.use_saved > 1));
+      this.#use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || (this.use_saved > 1));
 
       const fp = this.getFramePainter(),
             pad = this.getPadPainter()?.getRootPad(true),
@@ -131,7 +133,7 @@ class TF3Painter extends TH2Painter {
 
       delete this._fail_eval;
 
-      if (!this._use_saved_points) {
+      if (!this.#use_saved_points) {
          let iserror = false;
 
          if (!func.evalPar && !proivdeEvalPar(func))
@@ -172,18 +174,17 @@ class TF3Painter extends TH2Painter {
             this._fail_eval = true;
 
          if (iserror && (nsave > 0))
-            this._use_saved_points = true;
+            this.#use_saved_points = true;
       }
 
-      if (this._use_saved_points) {
+      if (this.#use_saved_points) {
          xmin = func.fSave[nsave]; xmax = func.fSave[nsave+1];
          ymin = func.fSave[nsave+2]; ymax = func.fSave[nsave+3];
          zmin = func.fSave[nsave+4]; zmax = func.fSave[nsave+5];
          npx = Math.round(func.fSave[nsave+6]);
          npy = Math.round(func.fSave[nsave+7]);
          npz = Math.round(func.fSave[nsave+8]);
-         // dx = (xmax - xmin) / npx,
-         // dy = (ymax - ymin) / npy,
+
          const dz = (zmax - zmin) / npz;
 
          ensureBins(npx + 1, npy + 1);
@@ -228,7 +229,7 @@ class TF3Painter extends TH2Painter {
 
       const func = this.$func, nsave = func?.fSave.length ?? 0;
 
-      if (nsave > 9 && this._use_saved_points) {
+      if (nsave > 9 && this.#use_saved_points) {
          this.xmin = Math.min(this.xmin, func.fSave[nsave-9]);
          this.xmax = Math.max(this.xmax, func.fSave[nsave-8]);
          this.ymin = Math.min(this.ymin, func.fSave[nsave-7]);
@@ -247,7 +248,7 @@ class TF3Painter extends TH2Painter {
    }
 
    /** @summary fill information for TWebCanvas
-    * @desc Used to inform webcanvas when evaluation failed
+     * @desc Used to inform web canvas when evaluation failed
      * @private */
    fillWebObjectOptions(opt) {
       opt.fcust = this._fail_eval && !this.use_saved ? 'func_fail' : '';
@@ -264,11 +265,6 @@ class TF3Painter extends TH2Painter {
          opt = 'surf1';
       else if (d.opt === 'SAME')
          opt = 'surf1 same';
-
-      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
-         if (!getElementMainPainter(dom))
-            opt = 'A_ADJUST_FRAME_' + opt.slice(4);
-      }
 
       let hist;
 

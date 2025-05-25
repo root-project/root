@@ -36,9 +36,12 @@ namespace ROOT {
 
 class TBackCompFitter : public TVirtualFitter {
 
+private:
+
+   TBackCompFitter(const TBackCompFitter &) = delete;
+   TBackCompFitter& operator=(const TBackCompFitter &) = delete;
+
 public:
-
-
 
    TBackCompFitter();
 
@@ -46,8 +49,6 @@ public:
    TBackCompFitter( const std::shared_ptr<ROOT::Fit::Fitter> & fitter, const std::shared_ptr<ROOT::Fit::FitData> & data  );
 
    ~TBackCompFitter() override;
-
-public:
 
    enum EStatusBits {
       kCanDeleteLast = BIT(9)  // object can be deleted before creating a new one

@@ -6,8 +6,7 @@
 ///
 /// \author  Sergey Linev
 
-import { BasePainter } from '/jsrootsys/modules/main.mjs';
-import { addDrawFunc } from '/jsrootsys/modules/draw.mjs';
+import { BasePainter, addDrawFunc } from 'jsroot';
 
 /** @summary this function produces url for http request
   * @desc here one provides id of last string received with previous request */

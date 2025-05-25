@@ -14,9 +14,6 @@
 namespace ROOT {
 namespace RDF {
 
-RDFDescription::RDFDescription(const std::string &briefDescription, const std::string &fullDescription)
-   : fBriefDescription(briefDescription), fFullDescription(fullDescription){};
-
 RDFDescription::RDFDescription(const std::string &briefDescription, const std::string &fullDescription,
                                unsigned int filecount)
    : fBriefDescription(briefDescription), fFullDescription(fullDescription), fFileCount(filecount){};

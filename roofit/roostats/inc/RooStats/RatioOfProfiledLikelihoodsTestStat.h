@@ -24,16 +24,6 @@ namespace RooStats {
    class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 
    public:
-      RatioOfProfiledLikelihoodsTestStat()
-         :
-
-           fAltPOI(nullptr),
-           fSubtractMLE(true),
-           fDetailedOutputEnabled(false),
-           fDetailedOutput(nullptr)
-      {
-         // Proof constructor. Don't use.
-      }
 
       RatioOfProfiledLikelihoodsTestStat(RooAbsPdf& nullPdf, RooAbsPdf& altPdf,
                                          const RooArgSet* altPOI=nullptr) :
@@ -141,9 +131,7 @@ namespace RooStats {
       bool fDetailedOutputEnabled;
       RooArgSet* fDetailedOutput;
 
-
-   protected:
-      ClassDefOverride(RatioOfProfiledLikelihoodsTestStat,3)  // implements the ratio of profiled likelihood as test statistic
+      ClassDefOverride(RatioOfProfiledLikelihoodsTestStat,0)  // implements the ratio of profiled likelihood as test statistic
    };
 
 }

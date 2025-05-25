@@ -31,8 +31,6 @@ namespace RooStats {
          HypoTestCalculatorGeneric(data, altModel, nullModel, sampler),
          fPriorNuisanceNull(MakeNuisancePdf(nullModel, "PriorNuisanceNull")),
          fPriorNuisanceAlt(MakeNuisancePdf(altModel, "PriorNuisanceAlt")),
-         fPriorNuisanceNullExternal(false),
-         fPriorNuisanceAltExternal(false),
          fNToysNull(-1),
          fNToysAlt(-1),
          fNToysNullTail(0),
@@ -94,8 +92,8 @@ namespace RooStats {
 
       // these flags tell us if the nuisance pdfs came from an external resource (via ForcePriorNuisance)
       // or were created internally and should be deleted
-      bool fPriorNuisanceNullExternal;
-      bool fPriorNuisanceAltExternal;
+      bool fPriorNuisanceNullExternal = false;
+      bool fPriorNuisanceAltExternal = false;
 
       // different number of toys for null and alt
       int fNToysNull;
@@ -106,7 +104,7 @@ namespace RooStats {
       int fNToysAltTail;
 
    protected:
-      ClassDefOverride(HybridCalculator,2)
+      ClassDefOverride(HybridCalculator,0)
    };
 }
 

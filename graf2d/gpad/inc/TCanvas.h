@@ -202,7 +202,7 @@ public:
    void              SetGrayscale(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsGrayscale
    void              SetWindowPosition(Int_t x, Int_t y);
    void              SetWindowSize(UInt_t ww, UInt_t wh);
-   void              SetCanvasImp(TCanvasImp *i) { fCanvasImp = i; }
+   void              SetCanvasImp(TCanvasImp *i);
    void              SetCanvasSize(UInt_t ww, UInt_t wh) override; // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }
    void              SetSelected(TObject *obj) override;

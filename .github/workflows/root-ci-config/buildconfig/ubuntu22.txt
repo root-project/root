@@ -1,3 +1,8 @@
+builtin_unuran=ON
 builtin_vdt=ON
+ccache=On
 pythia8=OFF
 r=ON
+test_distrdf_dask=OFF
+test_distrdf_pyspark=OFF
+tmva-sofie=ON

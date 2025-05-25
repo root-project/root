@@ -42,8 +42,7 @@ if(soversion)
       VERSION ${ROOT_VERSION}
       SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION} )
 else()
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
-      IMPORT_PREFIX ${libprefix} )
+  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION} )
 endif()
 
 include(CMakeParseArguments)
@@ -320,7 +319,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
        endforeach()
     endif()
 
-    # if (cxxmodules OR runtime_cxxmodules)
     # Comments from Vassil:
     # FIXME: We prepend ROOTSYS/include because if we have built a module
     # and try to resolve the 'same' header from a different location we will
@@ -336,7 +334,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/builtins")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
-    # endif()
 
     # this instruct rootcling do not store such paths in dictionary
     set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
@@ -382,12 +379,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     if(TARGET ${ARG_MODULE})
       get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
-      foreach(dir ${target_incdirs})
-        ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
-        if(NOT ${dir} MATCHES "^[$]")
-          list(APPEND incdirs ${dir})
-        endif()
-      endforeach()
+      if(target_incdirs)
+        foreach(dir ${target_incdirs})
+          ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
+          if(NOT ${dir} MATCHES "^[$]")
+            list(APPEND incdirs ${dir})
+          endif()
+        endforeach()
+      endif()
     endif()
 
     set(headerdirs_dflt)
@@ -593,6 +592,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
+        if(TARGET ${dep})
+          get_target_property(_dep_pcm_filename ${dep} ROOT_PCM_FILENAME)
+          if(_dep_pcm_filename)
+            list(APPEND pcm_dependencies ${_dep_pcm_filename})
+          endif()
+        endif()
       endif()
       set(newargs ${newargs} -m  ${dependent_pcm})
     endforeach()
@@ -676,6 +681,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(APPEND compIncPaths "-compilerI${implinc}")
   endforeach()
 
+  if(cpp_module_file AND TARGET ${ARG_MODULE})
+    set_target_properties(${ARG_MODULE} PROPERTIES
+      ROOT_PCM_FILENAME "${cpp_module_file}")
+  endif()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
@@ -687,6 +697,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                                         ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
                      DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
+                             ${pcm_dependencies}
                              ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
                              ${runtime_cxxmodule_dependencies}
                      COMMAND_EXPAND_LISTS)
@@ -1218,7 +1229,9 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] OPTIONS [options])
+#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>])
+# Glob for headers in the folder where this target is defined, and install them in
+# <buildDir>/include
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_HEADERS)
   CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER" ${ARGN})
@@ -1233,34 +1246,79 @@ function(ROOT_INSTALL_HEADERS)
     set (options ${options} REGEX "${f}" EXCLUDE)
   endforeach()
   set (filter "(${filter})")
+  set(include_files "")
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
                            COMPONENT headers
                            ${options})
     string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
-    ROOT_GLOB_FILES(include_files
+    ROOT_GLOB_FILES(globbed_files
       RECURSE
-      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/${d}
+      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       FILTER ${filter}
       ${d}/*.h ${d}/*.hxx ${d}/*.icc )
-    foreach (include_file ${include_files})
-      set (src ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${include_file})
-      set (dst ${CMAKE_BINARY_DIR}/include/${include_file})
-      add_custom_command(
-        OUTPUT ${dst}
-        COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
-        COMMENT "Copying header ${src} to ${CMAKE_BINARY_DIR}/include"
-        DEPENDS ${src})
-      list(APPEND dst_list ${dst})
-    endforeach()
+    list(APPEND include_files ${globbed_files})
   endforeach()
-  if (dst_list)
-    string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
-    string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
-    add_custom_target(${tgt} DEPENDS ${dst_list})
-  endif()
+
+  string(REPLACE ${CMAKE_SOURCE_DIR} "" target_name ${CMAKE_CURRENT_SOURCE_DIR})
+  string(REPLACE / _ target_name "copy_header_${target_name}")
+  string(REGEX REPLACE "_$" "" target_name ${target_name})
+
+  # Register the files to be copied for each target directory (e.g. include/ include/ROOT include/v7/inc/ ...)
+  list(REMOVE_DUPLICATES include_files)
+  list(TRANSFORM include_files REPLACE "(.*)/[^/]*" "\\1/" OUTPUT_VARIABLE subdirs)
+  list(REMOVE_DUPLICATES subdirs)
+  foreach(subdir ${subdirs})
+    set(input_files ${include_files})
+    list(FILTER input_files INCLUDE REGEX "^${subdir}[^/]*$")
+    set(output_files ${input_files})
+
+    string(REGEX REPLACE ".*/*inc/" "" destination ${subdir})
+
+    list(TRANSFORM input_files  PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
+    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination}")
+
+    set(destination destination_${destination})
+
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination} ${input_files})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination} ${output_files})
+  endforeach()
 endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#--- ROOT_CREATE_HEADER_COPY_TARGETS
+#    Creates a target to copy all headers that have been registered for copy in ROOT_INSTALL_HEADERS
+#---------------------------------------------------------------------------------------------------
+macro(ROOT_CREATE_HEADER_COPY_TARGETS)
+  get_property(HEADER_COPY_LISTS GLOBAL PROPERTY ROOT_HEADER_COPY_LISTS)
+  list(REMOVE_DUPLICATES HEADER_COPY_LISTS)
+  foreach(copy_list ${HEADER_COPY_LISTS})
+    get_property(inputs  GLOBAL PROPERTY ROOT_HEADER_INPUT_${copy_list})
+    get_property(outputs GLOBAL PROPERTY ROOT_HEADER_OUTPUT_${copy_list})
+
+    string(REPLACE "destination_" "${CMAKE_BINARY_DIR}/include/" destination ${copy_list})
+
+    list(LENGTH inputs LIST_LENGTH)
+    # Windows doesn't support long command lines, so split them in packs:
+    # foreach(.. RANGE start stop) is inclusive for both start and stop, so we
+    # need to decrement the LIST_LENGTH to get the desired logic.
+    math(EXPR LIST_LENGTH_MINUS_ONE "${LIST_LENGTH}-1")
+    foreach(range_start RANGE 0 ${LIST_LENGTH_MINUS_ONE} 100)
+      list(SUBLIST outputs ${range_start} 100 sub_outputs)
+      list(SUBLIST inputs ${range_start} 100 sub_inputs)
+      list(LENGTH sub_outputs SUB_LENGTH)
+      if(NOT SUB_LENGTH EQUAL 0)
+        add_custom_command(OUTPUT ${sub_outputs}
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different ${sub_inputs} ${destination}
+          COMMENT "Copy headers for ${destination} ${range_start}"
+          DEPENDS ${sub_inputs})
+      endif()
+    endforeach()
+    file(MAKE_DIRECTORY ${destination})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${outputs})
+  endforeach()
+endmacro()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname
@@ -1509,7 +1567,7 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [LABELS label1 label2]
 #                        [PYTHON_DEPS numpy numba keras torch ...] # List of python packages required to run this test.
 #                                                              A fixture will be added the tries to import them before the test starts.
-#                        [PROPERTIES prop1 value1 prop2 value2...] 
+#                        [PROPERTIES prop1 value1 prop2 value2...]
 #                       )
 #
 function(ROOT_ADD_TEST test)
@@ -1746,18 +1804,13 @@ function(ROOT_ADD_TEST test)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
-  if(ARG_PYTHON_DEPS)
-    foreach(python_dep ${ARG_PYTHON_DEPS})
-      if(NOT TEST test-import-${python_dep})
-        add_test(NAME test-import-${python_dep} COMMAND ${Python3_EXECUTABLE} -c "import ${python_dep}")
-        set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
-      endif()
-      list(APPEND fixtures "requires_${python_dep}")
-    endforeach()
-    if(fixtures)
-      set_tests_properties(${test} PROPERTIES FIXTURES_REQUIRED "${fixtures}")
+  foreach(python_dep ${ARG_PYTHON_DEPS})
+    ROOT_FIND_PYTHON_MODULE(${python_dep})
+    if(NOT ROOT_${python_dep}_FOUND)
+      set_property(TEST ${test} PROPERTY DISABLED True)
+      continue()
     endif()
-  endif()
+  endforeach()
 
   if(ARG_RUN_SERIAL)
     set_property(TEST ${test} PROPERTY RUN_SERIAL true)
@@ -1817,13 +1870,14 @@ endfunction()
 #                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
 #                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
 #                        [FAILREGEX ...] Fail test if this regex matches.
+#                        [ENVIRONMENT var1=val1 var2=val2 ...
 # Creates a new googletest exectuable, and registers it as a test.
 #----------------------------------------------------------------------------
 function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "TIMEOUT;REPEATS;FAILREGEX"
-    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1848,7 +1902,7 @@ function(ROOT_ADD_GTEST test_suite)
   endif(ARG_INCLUDE_DIRS)
 
   if(MSVC)
-    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
+    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
   endif()
@@ -1861,9 +1915,10 @@ function(ROOT_ADD_GTEST test_suite)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
   endif()
 
-  ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  ROOT_PATH_TO_STRING(name_with_path ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
   ROOT_ADD_TEST(
-    gtest${mangled_name}
+    gtest${clean_name_with_path}
     COMMAND ${test_suite} ${extra_command}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
     COPY_TO_BUILDDIR "${ARG_COPY_TO_BUILDDIR}"
@@ -1871,6 +1926,7 @@ function(ROOT_ADD_GTEST test_suite)
     TIMEOUT "${ARG_TIMEOUT}"
     LABELS "${ARG_LABELS}"
     FAILREGEX "${ARG_FAILREGEX}"
+    ENVIRONMENT "${ARG_ENVIRONMENT}"
   )
 endfunction()
 
@@ -1905,12 +1961,13 @@ endfunction()
 #----------------------------------------------------------------------------
 # ROOT_ADD_PYUNITTEST( <name> <file>
 #                     [WILLFAIL]
+#                     [GENERIC] # Run a generic Python command `python <file>` to run the test.
 #                     [COPY_TO_BUILDDIR copy_file1 copy_file1 ...]
 #                     [ENVIRONMENT var1=val1 var2=val2 ...]
 #                     [PYTHON_DEPS dep_x dep_y ...] # Communicate that this test requires python packages. A fixture checking for these will be run before the test.)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;GENERIC" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS" ${ARGN})
   if(MSVC)
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
@@ -1936,12 +1993,22 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(will_fail WILLFAIL)
   endif()
 
+  list(APPEND labels python)
   if(ARG_PYTHON_DEPS)
     list(APPEND labels python_runtime_deps)
   endif()
 
-  ROOT_ADD_TEST(pyunittests-${good_name}
-              COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+  ROOT_PATH_TO_STRING(name_with_path ${good_name} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
+
+  if(ARG_GENERIC)
+    set(test_cmd COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${file_name})
+  else()
+    set(test_cmd COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v)
+  endif()
+
+  ROOT_ADD_TEST(pyunittests${clean_name_with_path}
+              ${test_cmd}
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
@@ -1985,43 +2052,50 @@ macro(ROOT_ADD_COMPILE_OPTIONS flags)
 endmacro()
 
 #----------------------------------------------------------------------------
-# find_python_module(module [REQUIRED] [QUIET])
+# ROOT_FIND_PYTHON_MODULE(module [REQUIRED] [QUIET])
+# Try importing the python dependency and cache the result in
+# ROOT_TEST_<MODULE> (all upper case).
+# Also set ROOT_<MODULE>_FOUND (all upper case) as well as ROOT_<module>_FOUND
+# (the original spelling of the argument) in the parent scope of this function
+# for convenient testing in subsequent if().
 #----------------------------------------------------------------------------
-function(find_python_module module)
-   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
-   string(TOUPPER ${module} module_upper)
-   if(NOT PY_${module_upper})
-      if(ARG_REQUIRED)
-         set(py_${module}_FIND_REQUIRED TRUE)
-      endif()
-      if(ARG_QUIET)
-         set(py_${module}_FIND_QUIETLY TRUE)
-      endif()
-      # A module's location is usually a directory, but for binary modules
-      # it's a .so file.
-      execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
-         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
-         RESULT_VARIABLE _${module}_status
-         OUTPUT_VARIABLE _${module}_location
-         ERROR_VARIABLE _${module}_error
-         OUTPUT_STRIP_TRAILING_WHITESPACE
-         ERROR_STRIP_TRAILING_WHITESPACE)
-      if(NOT _${module}_status)
-         set(PY_${module_upper} ${_${module}_location} CACHE STRING "Location of Python module ${module}")
-         mark_as_advanced(PY_${module_upper})
+function(ROOT_FIND_PYTHON_MODULE module)
+  CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
+  string(TOUPPER ${module} module_upper)
+  set(CACHE_VAR ROOT_TEST_${module_upper})
+
+  if(NOT DEFINED ${CACHE_VAR})
+    execute_process(COMMAND "${Python3_EXECUTABLE}" "-c" "import ${module}"
+      RESULT_VARIABLE status
+      ERROR_QUIET)
+
+    if(${status} EQUAL 0)
+      set(${CACHE_VAR} ON CACHE BOOL "Enable tests depending on '${module}'")
+    else()
+      set(${CACHE_VAR} OFF CACHE BOOL "Enable tests depending on '${module}'")
+    endif()
+
+    if(NOT ARG_QUIET)
+      if(${CACHE_VAR})
+        message(STATUS "Found Python module ${module}")
       else()
-         if(NOT ARG_QUIET)
-            message(STATUS "Failed to find Python module ${module}: ${_${module}_error}")
-          endif()
+        message(STATUS "Could NOT find Python module ${module}. Corresponding tests will be disabled.")
       endif()
-   endif()
-   find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
-   set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
+    endif()
+  endif()
+
+  # Set the ROOT_xxx_FOUND to the (cached) result of the search:
+  set(ROOT_${module_upper}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
+  set(ROOT_${module}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
+
+  if(ARG_REQUIRED AND NOT ${CACHE_VAR})
+    message(FATAL_ERROR "Python module ${module} is required.")
+  endif()
 endfunction()
 
 #----------------------------------------------------------------------------
 # generateHeader(target input output)
-# Generate a help header file with build/misc/argparse2help.py script
+# Generate a help header file with cmake/scripts/argparse2help.py script
 # The 1st argument is the target to which the custom command will be attached
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output header file
@@ -2031,15 +2105,15 @@ function(generateHeader target input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
   target_sources(${target} PRIVATE ${output})
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate and install manual page with build/misc/argparse2help.py script
+# Generate and install manual page with cmake/scripts/argparse2help.py script
 # The 1st argument is the name of the manual page
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output manual page
@@ -2051,9 +2125,9 @@ function(generateManual name input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)

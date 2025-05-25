@@ -23,7 +23,7 @@ class RooNumRunningInt : public RooAbsCachedReal {
 public:
   RooNumRunningInt(const char *name, const char *title, RooAbsReal& _func, RooRealVar& _x, const char* binningName="cache");
   RooNumRunningInt(const RooNumRunningInt& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooNumRunningInt(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooNumRunningInt(*this,newname); }
   ~RooNumRunningInt() override ;
 
 protected:

@@ -45,7 +45,7 @@ When citing ROOT, please use both the reference reported below and the DOI speci
     See also "ROOT" [software], Release vX.YY/ZZ, dd/mm/yyyy
 
 ## Live Demo for CERN Users
-[![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
+[![](https://img.shields.io/badge/Launch-SWAN-orange)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
 
 See more screenshots on our [gallery](https://root.cern/gallery).
 
@@ -53,7 +53,7 @@ See more screenshots on our [gallery](https://root.cern/gallery).
 See https://root.cern/install for installation instructions.
 For instructions on how to build ROOT from these source files, see https://root.cern/install/build_from_source.
 
-Our ["Getting started with ROOT"](https://root.cern/get_started) page is then the perfect place to get familiar with ROOT.
+Our ["Getting started with ROOT"](https://root.cern/learn) page is then the perfect place to get familiar with ROOT.
 
 ## Help and Support
 - [Forum](https://root.cern/forum/)

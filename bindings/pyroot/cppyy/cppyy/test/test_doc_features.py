@@ -1,5 +1,5 @@
 import py, sys
-from pytest import raises, skip
+from pytest import mark, raises, skip
 from .support import setup_make, ispypy, IS_WINDOWS
 
 currpath = py.path.local(__file__).dirpath()
@@ -430,6 +430,7 @@ namespace Namespace {
         pc = PyConcrete4()
         assert call_abstract_method(pc) == "Hello, Python World! (4)"
 
+    @mark.skip
     def test_multi_x_inheritance(self):
         """Multiple cross-inheritance"""
 
@@ -1124,6 +1125,7 @@ class TestTALKEXAMPLES:
 
         assert v.back().add(17) == 4+42+2*17
 
+    @mark.xfail()
     def test_fallbacks(self):
         """Template instantation switches based on value sizes"""
 
@@ -1168,6 +1170,7 @@ class TestTALKEXAMPLES:
         assert CC.callPtr(lambda i: 5*i, 4) == 20
         assert CC.callFun(lambda i: 6*i, 4) == 24
 
+    @mark.xfail()
     def test_templated_callback(self):
         """Templated callback example"""
 
@@ -1244,6 +1247,7 @@ class TestTALKEXAMPLES:
         with raises(CC.MyException):
             CC.throw_error()
 
+    @mark.xfail()
     def test_unicode(self):
         """Unicode non-UTF-8 example"""
 

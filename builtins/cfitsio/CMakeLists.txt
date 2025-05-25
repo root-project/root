@@ -13,7 +13,7 @@ if(NOT WIN32)
   set(CFITSIO_C_FLAGS -fPIC)
 endif()
 
-if(WIN32)
+if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if(winrtdebug)
     set(CFITSIO_BUILD_COMMAND_FLAGS "--config Debug")
   else()
@@ -24,9 +24,10 @@ endif()
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
-  URL https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-${CFITSIO_VERSION}.tar.gz
+  URL https://lcgpackages.web.cern.ch/tarFiles/sources/cfitsio-${CFITSIO_VERSION}.tar.gz
   URL_HASH SHA256=95900cf95ae760839e7cb9678a7b2fad0858d6ac12234f934bd1cb6bfc246ba9
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
+             -DCMAKE_POLICY_VERSION_MINIMUM=3.5
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
              -DCMAKE_C_FLAGS=${CFITSIO_C_FLAGS}
              -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>

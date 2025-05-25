@@ -43,7 +43,6 @@ repeated applications of generate-and-fit operations on a workspace
 
 using std::string, std::endl, std::ios, std::list, std::ofstream;
 
-ClassImp(RooStudyManager);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,73 +88,6 @@ void RooStudyManager::run(Int_t nExperiments)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Open PROOF-Lite session
-
-void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, bool showGui)
-{
-  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
-  void* p = reinterpret_cast<void*>(gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)));
-
-  // Check that PROOF initialization actually succeeded
-  if (p==nullptr) {
-    coutE(Generation) << "RooStudyManager::runProof(" << GetName() << ") ERROR initializing proof, aborting" << endl ;
-    return ;
-  }
-
-  // Suppress GUI if so requested
-  if (!showGui) {
-    gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->SetProgressDialog(0) ;",reinterpret_cast<size_t>(p))) ;
-  }
-
-  // Propagate workspace to proof nodes
-  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") sending work package to PROOF servers" << endl ;
-  gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->AddInput((TObject*)0x%zx) ;",reinterpret_cast<size_t>(p),reinterpret_cast<size_t>(_pkg)) ) ;
-
-  // Run selector in parallel
-  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") starting PROOF processing of " << nExperiments << " experiments" << endl ;
-
-  gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->Process(\"RooProofDriverSelector\",%d) ;",reinterpret_cast<size_t>(p),nExperiments)) ;
-
-  // Aggregate results data
-  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
-  TList* olist = reinterpret_cast<TList*>(gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->GetOutputList()",reinterpret_cast<size_t>(p))));
-  aggregateData(olist) ;
-
-  // cleaning up
-  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") cleaning up input list" << endl ;
-  gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->GetInputList()->Remove((TObject*)0x%zx) ;",reinterpret_cast<size_t>(p),reinterpret_cast<size_t>(_pkg)) ) ;
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// "Option_t *option" takes the parameters forwarded to gProof->Close(option).
-///
-/// This function is intended for scripts that run in loops
-/// where it is essential to properly close all connections and delete
-/// the TProof instance (frees ports).
-
-void RooStudyManager::closeProof(Option_t *option)
-{
-  if (gROOT->GetListOfProofs()->LastIndex() != -1  &&  gROOT->ProcessLineFast("gProof;"))
-  {
-    gROOT->ProcessLineFast(Form("gProof->Close(\"%s\") ;",option)) ;
-    gROOT->ProcessLineFast("gProof->CloseProgressDialog() ;") ;
-
-    // CloseProgressDialog does not do anything when run without GUI. This detects
-    // whether the proof instance is still there and deletes it if that is the case.
-    if (gROOT->GetListOfProofs()->LastIndex() != -1  &&  gROOT->ProcessLineFast("gProof;")) {
-      gROOT->ProcessLineFast("delete gProof ;") ;
-    }
-  } else {
-    ooccoutI(nullptr,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
-  }
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, bool unifiedInput=false)
@@ -168,9 +100,9 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
     // Write header of driver script
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
-    bdr << "#!/bin/sh" << endl
-        << Form("if [ ! -f study_data_%s.root ] ; then",studyName) << endl
-        << "uudecode <<EOR" << endl ;
+    bdr << "#!/bin/sh" << std::endl
+        << Form("if [ ! -f study_data_%s.root ] ; then",studyName) << std::endl
+        << "uudecode <<EOR" << std::endl ;
     bdr.close() ;
 
     // Write uuencoded ROOT file (base64) in driver script
@@ -178,29 +110,29 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
     // Write remainder of driver script
     ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
-    bdr2 << "EOR" << endl
-    << "fi" << endl
-    << "root -l -b <<EOR" << endl
-    << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-    << ".q" << endl
-    << "EOR" << endl ;
+    bdr2 << "EOR" << std::endl
+    << "fi" << std::endl
+    << "root -l -b <<EOR" << std::endl
+    << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << std::endl
+    << ".q" << std::endl
+    << "EOR" << std::endl ;
     // Remove binary input file
     gSystem->Unlink(Form("study_data_%s.root",studyName)) ;
 
-    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-         << "     input data files is embedded in driver script" << endl ;
+    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << std::endl
+         << "     input data files is embedded in driver script" << std::endl ;
 
   } else {
 
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
-    bdr << "#!/bin/sh" << endl
-   << "root -l -b <<EOR" << endl
-   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-   << ".q" << endl
-   << "EOR" << endl ;
+    bdr << "#!/bin/sh" << std::endl
+   << "root -l -b <<EOR" << std::endl
+   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << std::endl
+   << ".q" << std::endl
+   << "EOR" << std::endl ;
 
-    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-         << "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
+    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << std::endl
+         << "     input data file is " << Form("study_data_%s.root",studyName) << std::endl ;
 
   }
 }
@@ -218,7 +150,7 @@ void RooStudyManager::processBatchOutput(const char* filePat)
   TList olist ;
 
   for (list<string>::iterator iter = flist.begin() ; iter!=flist.end() ; ++iter) {
-    coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << endl ;
+    coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << std::endl ;
     TFile f(iter->c_str()) ;
 
     for(auto * key : static_range_cast<TKey*>(*f.GetListOfKeys())) {

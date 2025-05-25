@@ -174,26 +174,23 @@ void TGMdiMenuBar::HideFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 
 void TGMdiMenuBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << std::endl;
-   out << "   // MDI menu bar" << std::endl;
+   out << "\n   // MDI menu bar\n";
 
-   out << "   TGMdiMenuBar *";
-   out << GetName() << " = new TGMdiMenuBar(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight() << ");" << std::endl;
+   out << "   TGMdiMenuBar *" << GetName() << " = new TGMdiMenuBar(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << ");\n";
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   if (!fList) return;
+   if (!fList)
+      return;
 
-   out << "   TGMenuBar *" << fBar->GetName() << " = " << GetName()
-       << "->GetMenuBar();" << std::endl;
+   out << "   TGMenuBar *" << fBar->GetName() << " = " << GetName() << "->GetMenuBar();\n";
 
-   TGFrameElement *el;
    TIter next(fBar->GetList());
 
-   while ((el = (TGFrameElement *)next())) {
+   while (auto el = static_cast<TGFrameElement *>(next())) {
       el->fFrame->SavePrimitive(out, option);
       el->fLayout->SavePrimitive(out, option);
-      out << ");" << std::endl;
+      out << ");\n";
    }
 }

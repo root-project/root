@@ -34,7 +34,7 @@ public:
   ///            performed when evaluating the function. In this case, the
   ///            effect RooWrapperPdf is not to change the evaluated values,
   ///            but only to wrap the function in something that is of type
-  ///            RooAbsPdf, which can be useful if some interface reqiures it.
+  ///            RooAbsPdf, which can be useful if some interface requires it.
   /// to pass a PDF, it only makes sense for non-PDF functions.
   RooWrapperPdf(const char *name, const char *title, RooAbsReal& inputFunction, bool selfNormalized=false) :
     RooAbsPdf(name, title),
@@ -46,15 +46,18 @@ public:
     _func("inputFunction", this, other._func),
     _selfNormalized{other._selfNormalized} { }
 
-  TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname=nullptr) const override {
     return new RooWrapperPdf(*this, newname);
   }
 
   bool selfNormalized() const override { return _selfNormalized; }
 
   // Analytical Integration handling
-  bool forceAnalyticalInt(const RooAbsArg& dep) const override {
-    return _func->forceAnalyticalInt(dep);
+  bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
+     // Just like with other wrapper classes like RooExtendPdf, we can safely
+     // use the analytical integration capabilities of the wrapped object,
+     // because we don't do any no-linear transformation.
+     return true;
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
       const char* rangeName=nullptr) const override {
@@ -104,7 +107,7 @@ public:
     return _func.arg().plotSamplingHint(obs, xlo, xhi);
   }
 
-
+  RooAbsReal const &function() const { return *_func; }
 
 private:
   RooRealProxy _func;

@@ -36,7 +36,7 @@ public:
   ~PiecewiseInterpolation() override ;
 
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new PiecewiseInterpolation(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new PiecewiseInterpolation(*this, newname); }
 
   /// Return pointer to the nominal hist function.
   const RooAbsReal* nominalHist() const {
@@ -61,15 +61,13 @@ public:
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
   bool positiveDefinite() const {return _positiveDefinite;}
 
-  void setInterpCode(RooAbsReal& param, int code, bool silent=false);
+  void setInterpCode(RooAbsReal& param, int code, bool silent=true);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override ;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 
@@ -101,6 +99,10 @@ protected:
 
   double evaluate() const override;
   void doEval(RooFit::EvalContext &) const override;
+
+private:
+
+  void setInterpCodeForParam(int iParam, int code);
 
   ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };

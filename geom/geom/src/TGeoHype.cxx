@@ -47,7 +47,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 
@@ -179,7 +179,7 @@ void TGeoHype::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoHype::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoHype::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t saf[3];
    Double_t rsq = point[0] * point[0] + point[1] * point[1];

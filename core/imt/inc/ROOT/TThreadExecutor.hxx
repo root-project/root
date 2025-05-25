@@ -65,6 +65,19 @@ namespace ROOT {
       //
       using TExecutorCRTP<TThreadExecutor>::Map;
 
+      // Extension of the Map interfaces with chunking, specific to this class
+      template <class F, class R, class Cond = validMapReturnCond<F>>
+      auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F>>;
+      template <class F, class INTEGER, class R, class Cond = validMapReturnCond<F, INTEGER>>
+      auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks)
+         -> std::vector<InvokeResult_t<F, INTEGER>>;
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
+      auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
+      auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
+      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
+      auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
+
       // MapReduce
       //
       // We need to reimplement the MapReduce interfaces to allow for parallel reduction, defined in
@@ -108,20 +121,6 @@ namespace ROOT {
       auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
       template <class F, class T, class Cond = validMapReturnCond<F, T>>
       auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
-
-      // Extension of the Map interfaces with chunking, specific to this class and
-      // only available from a MapReduce call.
-      template <class F, class R, class Cond = validMapReturnCond<F>>
-      auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F>>;
-      template <class F, class INTEGER, class R, class Cond = validMapReturnCond<F, INTEGER>>
-      auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks)
-         -> std::vector<InvokeResult_t<F, INTEGER>>;
-      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
-      auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
-      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
-      auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
-      template <class F, class T, class R, class Cond = validMapReturnCond<F, T>>
-      auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
 
       // Functions that interface with the parallel library used as a backend
       void   ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);

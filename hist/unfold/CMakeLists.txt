@@ -14,12 +14,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Unfold
     TUnfoldBinning.h
     TUnfoldBinningXML.h
     TUnfoldDensity.h
+    TUnfoldIterativeEM.h
     TUnfoldSys.h
   SOURCES
     src/TUnfold.cxx
     src/TUnfoldBinning.cxx
     src/TUnfoldBinningXML.cxx
     src/TUnfoldDensity.cxx
+    src/TUnfoldIterativeEM.cxx
     src/TUnfoldSys.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM

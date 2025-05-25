@@ -12,9 +12,9 @@
 
 #include "Minuit2/MnConfig.h"
 
-#include <vector>
+#include <ROOT/RSpan.hxx>
 
-#include "Minuit2/GenericFunction.h"
+#include <vector>
 
 namespace ROOT {
 
@@ -30,6 +30,10 @@ namespace Minuit2 {
   \ingroup Math
 */
 
+enum class GradientParameterSpace {
+  External, Internal
+};
+
 //______________________________________________________________________________
 /**
 
@@ -42,10 +46,11 @@ Interface (abstract class) defining the function to be minimized, which has to b
 
  */
 
-class FCNBase : public GenericFunction {
+class FCNBase {
 
 public:
-   ~FCNBase() override {}
+
+   virtual ~FCNBase() = default;
 
    /**
 
@@ -69,7 +74,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &v) const override = 0;
+   virtual double operator()(std::vector<double> const &v) const = 0;
 
    /**
 
@@ -104,6 +109,29 @@ public:
        Re-implement this function if needed.
    */
    virtual void SetErrorDef(double){};
+
+   virtual bool HasGradient() const { return false; }
+
+   virtual std::vector<double> Gradient(std::vector<double> const&) const { return {}; }
+   virtual std::vector<double> GradientWithPrevResult(std::vector<double> const& parameters, double * /*previous_grad*/,
+                                                      double * /*previous_g2*/, double * /*previous_gstep*/) const
+   {
+      return Gradient(parameters);
+   };
+
+   virtual GradientParameterSpace gradParameterSpace() const {
+      return GradientParameterSpace::External;
+   };
+
+   /// return second derivatives (diagonal of the Hessian matrix)
+   virtual std::vector<double> G2(std::vector<double> const&) const { return {};}
+
+   /// return Hessian
+   virtual std::vector<double> Hessian(std::vector<double> const&) const { return {};}
+
+   virtual bool HasHessian() const { return false; }
+
+   virtual bool HasG2() const { return false; }
 };
 
 } // namespace Minuit2

@@ -31,7 +31,6 @@ of the owning class
 **/
 
 
-ClassImp(RooAbsProxy);
 
 RooAbsProxy::RooAbsProxy() = default;
 

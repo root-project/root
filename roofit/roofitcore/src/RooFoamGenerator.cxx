@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -159,3 +161,5 @@ std::string const& RooFoamGenerator::generatorName() const {
    static const std::string name = "RooFoamGenerator";
    return name;
 }
+
+/// \endcond

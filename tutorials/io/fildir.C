@@ -89,7 +89,7 @@ void fildir(){
    obj2->AddText("Object");
    obj2->Draw();
    TLine *ldot = new TLine(10,15,2,11);
-   ldot->SetLineStyle(2);
+   ldot->SetLineStyle(kDashed);
    ldot->Draw();
    ldot->DrawLine(13,15,8,11);
    ldot->DrawLine(13,13,8,5);

@@ -23,7 +23,6 @@
 
 #include "Math/Util.h"
 
-ClassImp(RooLinearCombination);
 
 namespace {
   template <class T> inline void assign(RooFit::SuperFloat &var, const T &val) {

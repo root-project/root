@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TRatioPlot.h"
+#include "TColor.h"
 #include "TROOT.h"
 #include "TBrowser.h"
 #include "TH1.h"
@@ -24,6 +25,7 @@
 #include "TVirtualFitter.h"
 #include "TFitResult.h"
 #include "THStack.h"
+#include "TStyle.h"
 
 /** \class TRatioPlot
     \ingroup gpad
@@ -55,7 +57,7 @@ Available options are for `option`:
 | diffsig    | subtracts the histograms and divides by the uncertainty |
 
 Begin_Macro(source)
-../../../tutorials/hist/ratioplot1.C
+../../../tutorials/hist/hist029_TRatioPlot_simple.C
 End_Macro
 
 ## Fit residuals
@@ -71,7 +73,7 @@ the function value as the error.
 
 
 Begin_Macro(source)
-../../../tutorials/hist/ratioplot2.C
+../../../tutorials/hist/hist030_TRatioPlot_residual.C
 End_Macro
 
 ## Error options for difference divided by uncertainty and fit residual
@@ -80,8 +82,8 @@ options to the `option` argument.
 
 | Option     | Description                                                  |
 | ---------- | ------------------------------------------------------------ |
-| errasym    | Uses calculated asymmetric errors from `TH1::GetBinErrorUp`/`TH1::GetBinErrorLow`. Note that you need to set `TH1::SetBinErrorOption` first |
-| errfunc    | Uses \f$ \sqrt{f(x)} \f$ as the error |
+| errasym    | Uses calculated asymmetric errors from `TH1::GetBinErrorUp`/`TH1::GetBinErrorLow`. Note that you need to
+set `TH1::SetBinErrorOption` first | | errfunc    | Uses \f$ \sqrt{f(x)} \f$ as the error |
 
 The asymmetric error case uses the upper or lower error depending on the relative size
 of the bin contents, or the bin content and the function value.
@@ -96,13 +98,10 @@ is responsible for the range, which enables you to modify the range.
 \image html gpad_ratioplot.png
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot default constructor
 
-TRatioPlot::TRatioPlot()
-{
-}
+TRatioPlot::TRatioPlot() : fLeftMargin(gStyle->GetPadLeftMargin()), fRightMargin(gStyle->GetPadRightMargin()) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -184,7 +183,7 @@ void TRatioPlot::Init(TH1* h1, TH1* h2, Option_t *option)
 /// \param h2 Second histogram
 /// \param option Steers the error calculation, as well as ratio / difference
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
+TRatioPlot::TRatioPlot(TH1 *h1, TH1 *h2, Option_t *option) : TRatioPlot()
 {
    if (!h1 || !h2) {
       Warning("TRatioPlot", "Need two histograms.");
@@ -213,7 +212,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
 /// \param h2 The other histogram
 /// \param option Steers the calculation of the lower plot
 
-TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option)
+TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option) : TRatioPlot()
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
@@ -242,15 +241,51 @@ TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor which accepts a `THStack` and a histogram. Converts the
+/// stack to a regular sum of its containing histograms for processing.
+///
+/// \param h1 The other histogram
+/// \param st The THStack object
+/// \param option Steers the calculation of the lower plot
+
+TRatioPlot::TRatioPlot(TH1 *h1, THStack *st, Option_t *option) : TRatioPlot()
+{
+   if (!st || !h1) {
+      Warning("TRatioPlot", "Need a histogram and a stack");
+      return;
+   }
+
+   TList *stackHists = st->GetHists();
+
+   if (stackHists->GetSize() == 0) {
+      Warning("TRatioPlot", "Stack does not have histograms");
+      return;
+   }
+
+   auto tmpHist = static_cast<TH1 *>(stackHists->At(0)->Clone());
+   tmpHist->Reset();
+
+   for (int i = 0; i < stackHists->GetSize(); ++i) {
+      tmpHist->Add(static_cast<TH1 *>(stackHists->At(i)));
+   }
+
+   fHistDrawProxy = st;
+   fHistDrawProxyStack = kTRUE;
+
+   Init(h1, tmpHist, option);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Constructor for one histogram and a fit.
 ///
 /// \param h1 The histogram
 /// \param option Steers the error calculation
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 
-TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres)
-   : fH1(h1)
+TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres) : TRatioPlot()
 {
+   fH1 = h1;
    if (!fH1) {
       Warning("TRatioPlot", "Need a histogram.");
       return;
@@ -486,7 +521,7 @@ void TRatioPlot::SetRightMargin(Float_t margin)
 /// \param margin The new margin
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot6.C
+/// ../../../tutorials/hist/hist034_TRatioPlot_fit_margin.C
 /// End_Macro
 
 void TRatioPlot::SetSeparationMargin(Float_t margin)
@@ -664,7 +699,7 @@ void TRatioPlot::Draw(Option_t *option)
 /// graphs are only created then.
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot3.C
+/// ../../../tutorials/hist/hist031_TRatioPlot_residual_fit.C
 /// End_Macro
 
 TGraph *TRatioPlot::GetLowerRefGraph() const
@@ -792,7 +827,7 @@ void TRatioPlot::CreateGridlines()
    while (fGridlines.size() < fGridlinePositions.size()) {
       TLine *newline = new TLine(0, 0, 0, 0);
       newline->SetLineStyle(2);
-      fLowerPad->GetListOfPrimitives()->Add(newline);
+      fLowerPad->Add(newline);
       fGridlines.emplace_back(newline);
    }
 
@@ -1111,22 +1146,22 @@ void TRatioPlot::CreateVisualAxes()
 
    if (!fUpperGXaxis) {
       fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U");
-      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxis);
+      fTopPad->Add(fUpperGXaxis);
    }
 
    if (!fUpperGYaxis) {
       fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S");
-      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxis);
+      fTopPad->Add(fUpperGYaxis);
    }
 
    if (!fLowerGXaxis) {
       fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S");
-      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxis);
+      fTopPad->Add(fLowerGXaxis);
    }
 
    if (!fLowerGYaxis) {
       fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S");
-      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxis);
+      fTopPad->Add(fLowerGYaxis);
    }
 
    // Create the axes on the other sides of the graphs
@@ -1134,22 +1169,22 @@ void TRatioPlot::CreateVisualAxes()
 
    if (!fUpperGXaxisMirror && axistop) {
       fUpperGXaxisMirror = static_cast<TGaxis *>(fUpperGXaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxisMirror);
+      fTopPad->Add(fUpperGXaxisMirror);
    }
 
    if (!fLowerGXaxisMirror && axistop) {
       fLowerGXaxisMirror = static_cast<TGaxis *>(fLowerGXaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxisMirror);
+      fTopPad->Add(fLowerGXaxisMirror);
    }
 
    if (!fUpperGYaxisMirror && axisright) {
       fUpperGYaxisMirror = static_cast<TGaxis *>(fUpperGYaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxisMirror);
+      fTopPad->Add(fUpperGYaxisMirror);
    }
 
    if (!fLowerGYaxisMirror && axisright) {
       fLowerGYaxisMirror = static_cast<TGaxis *>(fLowerGYaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxisMirror);
+      fTopPad->Add(fLowerGYaxisMirror);
    }
 
    UpdateVisualAxes();
@@ -1629,7 +1664,7 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 /// \param gridlines Vector of y positions for the dashes lines
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot4.C
+/// ../../../tutorials/hist/hist032_TRatioPlot_fit_lines.C
 /// End_Macro
 
 void TRatioPlot::SetGridlines(std::vector<double> gridlines)
@@ -1659,13 +1694,23 @@ void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 /// \param ci2 Color of the 2 sigma band
 /// Sets the color of the 1 and 2 sigma bands in the fit residual case.
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot5.C
+/// ../../../tutorials/hist/hist033_TRatioPlot_fit_confidence.C
 /// End_Macro
 
 void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)
 {
    fCi1Color = ci1;
    fCi2Color = ci2;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the confidence interval colors.
+
+void TRatioPlot::SetConfidenceIntervalColors(TColorNumber ci1, TColorNumber ci2)
+{
+   fCi1Color = ci1.number();
+   fCi2Color = ci2.number();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

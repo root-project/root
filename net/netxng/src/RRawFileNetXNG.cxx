@@ -77,7 +77,8 @@ void ROOT::Internal::RRawFileNetXNG::OpenImpl()
    if( !st.IsOK() )
      throw std::runtime_error( "Cannot open '" + fUrl + "', " +
                                st.ToString() + "; " + st.GetErrorMessage() );
-   if( fOptions.fBlockSize < 0 ) fOptions.fBlockSize = kDefaultBlockSize;
+   if (fOptions.fBlockSize == ROptions::kUseDefaultBlockSize)
+      fOptions.fBlockSize = kDefaultBlockSize;
 }
 
 size_t ROOT::Internal::RRawFileNetXNG::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
@@ -157,25 +158,25 @@ ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVL
    strmResponse.str(response->ToString());
    delete response;
 
-   std::string readvIorMax;
-   std::string readvIovMax;
-   if (!std::getline(strmResponse, readvIorMax) || !std::getline(strmResponse, readvIovMax)) {
+   std::string readvMaxSingleSize;
+   std::string readvMaxReqs;
+   if (!std::getline(strmResponse, readvMaxSingleSize) || !std::getline(strmResponse, readvMaxReqs)) {
       if (gDebug >= 1)
          Info("GetReadVLimits", "unexpected response from querying readv limits, using default values");
       return *fIOVecLimits;
    }
 
-   if (!readvIovMax.empty() && std::isdigit(readvIovMax[0])) {
-      std::size_t val = std::stoi(readvIovMax);
+   if (!readvMaxReqs.empty() && std::isdigit(readvMaxReqs[0])) {
+      std::size_t val = std::stoi(readvMaxReqs);
       // Workaround a dCache bug reported here: https://sft.its.cern.ch/jira/browse/ROOT-6639
       if (val == 0x7FFFFFFF)
          return *fIOVecLimits;
 
-      fIOVecLimits->fMaxSingleSize = val;
+      fIOVecLimits->fMaxReqs = val;
    }
 
-   if (!readvIorMax.empty() && std::isdigit(readvIorMax[0])) {
-      fIOVecLimits->fMaxReqs = std::stoi(readvIorMax);
+   if (!readvMaxSingleSize.empty() && std::isdigit(readvMaxSingleSize[0])) {
+      fIOVecLimits->fMaxSingleSize = std::stoi(readvMaxSingleSize);
    }
 
    return *fIOVecLimits;

@@ -814,6 +814,7 @@ TString TTabCom::DetermineClass(const char varName[])
    assert(varName != nullptr);
    IfDebug(std::cerr << "DetermineClass(\"" << varName << "\");" << std::endl);
 
+   // @todo This is a long ugly workaround, replace with access via gInterpreter
    TString outf = ".TTabCom-";
    FILE *fout = gSystem->TempFileName(outf);
    if (!fout) return "";
@@ -868,10 +869,15 @@ TString TTabCom::DetermineClass(const char varName[])
    type.ReadToDelim(file1, ')');
    IfDebug(std::cerr << type << std::endl);
 
-   // new version of CINT returns: "class TClassName*const)0x12345"
-   // so we have to strip off "const"
-   if (type.EndsWith("const"))
+   // new version of Cling returns: "qualifiers TClassName *const) 0x12345"
+   // we start stripping off right "const"
+   if (type.EndsWith(" *const"))
       type.Remove(type.Length() - 5);
+   // we strip off left qualifiers
+   if (type.BeginsWith("const "))
+      type.Remove(0, 6);
+   if (type.BeginsWith("volatile ")) // this automatically takes care of variant "const volatile"
+      type.Remove(0, 9);
 
 cleanup:
    // done reading from file

@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -16,8 +18,6 @@
 #define ROO_MINIMIZER_FCN
 
 #include "Math/IFunction.h"
-#include "Fit/ParameterSettings.h"
-#include "Fit/FitResult.h"
 
 #include "RooAbsReal.h"
 #include "RooArgList.h"
@@ -26,10 +26,6 @@
 #include <vector>
 
 #include "RooAbsMinimizerFcn.h"
-
-template <typename T>
-class TMatrixTSym;
-using TMatrixDSym = TMatrixTSym<double>;
 
 // forward declaration
 class RooMinimizer;
@@ -51,8 +47,11 @@ public:
    void evaluateGradient(const double *x, double *out) const;
 
 private:
-   RooAbsReal *_funct;
+   RooAbsReal *_funct = nullptr;
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
+   mutable std::vector<double> _gradientOutput;
 };
 
 #endif
+
+/// \endcond

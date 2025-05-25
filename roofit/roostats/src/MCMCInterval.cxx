@@ -82,7 +82,6 @@
 #include <string>
 #include <algorithm>
 
-ClassImp(RooStats::MCMCInterval);
 
 using namespace RooFit;
 using namespace RooStats;
@@ -107,21 +106,7 @@ MCMCInterval::MCMCInterval(const char *name, const RooArgSet &parameters, Markov
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMCInterval::~MCMCInterval()
-{
-   // destructor
-   delete[] fAxes;
-   delete fHist;
-   delete fChain;
-   // kbelasco: check here for memory management errors
-   delete fDataHist;
-   delete fSparseHist;
-   delete fKeysPdf;
-   delete fProduct;
-   delete fHeaviside;
-   delete fKeysDataHist;
-   delete fCutoffVar;
-}
+MCMCInterval::~MCMCInterval() = default;
 
 struct CompareDataHistBins {
    CompareDataHistBins(RooDataHist* hist) : fDataHist(hist) {}
@@ -217,7 +202,7 @@ bool MCMCInterval::IsInInterval(const RooArgSet& point) const
    }
 
    coutE(InputArguments) << "Error in MCMCInterval::IsInInterval: "
-      << "Interval type not set.  Returning false." << endl;
+      << "Interval type not set.  Returning false." << std::endl;
    return false;
 }
 
@@ -242,7 +227,7 @@ void MCMCInterval::SetConfidenceLevel(double cl)
 //   }
 //   else {
 //      coutE(Eval) << "* Error in MCMCInterval::SetNumBins: " <<
-//                     "Negative number of bins given: " << numBins << endl;
+//                     "Negative number of bins given: " << numBins << std::endl;
 //      return;
 //   }
 //
@@ -260,7 +245,7 @@ void MCMCInterval::SetAxes(RooArgList& axes)
       coutE(InputArguments) << "* Error in MCMCInterval::SetAxes: " <<
                                "number of variables in axes (" << size <<
                                ") doesn't match number of parameters ("
-                               << fDimension << ")" << endl;
+                               << fDimension << ")" << std::endl;
       return;
    }
    for (Int_t i = 0; i < size; i++)
@@ -274,9 +259,9 @@ void MCMCInterval::CreateKeysPdf()
    // kbelasco: check here for memory leak.  does RooNDKeysPdf use
    // the RooArgList passed to it or does it make a clone?
    // also check for memory leak from chain, does RooNDKeysPdf clone that?
-   if (fAxes == nullptr || fParameters.empty()) {
+   if (fAxes.empty() || fParameters.empty()) {
       coutE(InputArguments) << "Error in MCMCInterval::CreateKeysPdf: "
-         << "parameters have not been set." << endl;
+         << "parameters have not been set." << std::endl;
       return;
    }
 
@@ -284,28 +269,24 @@ void MCMCInterval::CreateKeysPdf()
       coutE(InputArguments) <<
          "MCMCInterval::CreateKeysPdf: creation of Keys PDF failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
-      delete fKeysPdf;
-      delete fCutoffVar;
-      delete fHeaviside;
-      delete fProduct;
-      fKeysPdf = nullptr;
-      fCutoffVar = nullptr;
-      fHeaviside = nullptr;
-      fProduct = nullptr;
+         "in Markov chain." << std::endl;
+      fKeysPdf.reset();
+      fCutoffVar.reset();
+      fHeaviside.reset();
+      fProduct.reset();
       return;
    }
+   
+   std::unique_ptr<RooAbsData> chain{fChain->GetAsConstDataSet()->reduce(SelectVars(fParameters), EventRange(fNumBurnInSteps, fChain->Size()))};
 
-   std::unique_ptr<RooDataSet> chain{fChain->GetAsDataSet(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()))};
-   RooArgList* paramsList = new RooArgList();
+   RooArgList paramsList;
    for (Int_t i = 0; i < fDimension; i++)
-      paramsList->add(*fAxes[i]);
+      paramsList.add(*fAxes[i]);
 
-   fKeysPdf = new RooNDKeysPdf("keysPDF", "Keys PDF", *paramsList, *chain, "a");
-   fCutoffVar = new RooRealVar("cutoff", "cutoff", 0);
-   fHeaviside = new Heaviside("heaviside", "Heaviside", *fKeysPdf, *fCutoffVar);
-   fProduct = new RooProduct("product", "Keys PDF & Heaviside Product",
+   fKeysPdf = std::make_unique<RooNDKeysPdf>("keysPDF", "Keys PDF", paramsList, static_cast<RooDataSet&>(*chain), "a");
+   fCutoffVar = std::make_unique<RooRealVar>("cutoff", "cutoff", 0);
+   fHeaviside = std::make_unique<Heaviside>("heaviside", "Heaviside", *fKeysPdf, *fCutoffVar);
+   fProduct = std::make_unique<RooProduct>("product", "Keys PDF & Heaviside Product",
                                         RooArgSet(*fKeysPdf, *fHeaviside));
 }
 
@@ -313,43 +294,40 @@ void MCMCInterval::CreateKeysPdf()
 
 void MCMCInterval::CreateHist()
 {
-   if (fAxes == nullptr || fChain == nullptr) {
+   if (fAxes.empty() || fChain == nullptr) {
       coutE(Eval) << "* Error in MCMCInterval::CreateHist(): " <<
-                     "Crucial data member was nullptr." << endl;
-      coutE(Eval) << "Make sure to fully construct/initialize." << endl;
+                     "Crucial data member was nullptr." << std::endl;
+      coutE(Eval) << "Make sure to fully construct/initialize." << std::endl;
       return;
    }
-   if (fHist != nullptr) {
-      delete fHist;
-      fHist = nullptr;
-   }
+   fHist.reset();
 
    if (fNumBurnInSteps >= fChain->Size()) {
       coutE(InputArguments) <<
          "MCMCInterval::CreateHist: creation of histogram failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
       return;
    }
 
    if (fDimension == 1) {
-      fHist = new TH1F("posterior", "MCMC Posterior Histogram",
+      fHist = std::make_unique<TH1F>("posterior", "MCMC Posterior Histogram",
             fAxes[0]->numBins(), fAxes[0]->getMin(), fAxes[0]->getMax());
 
    } else if (fDimension == 2) {
-      fHist = new TH2F("posterior", "MCMC Posterior Histogram",
+      fHist = std::make_unique<TH2F>("posterior", "MCMC Posterior Histogram",
             fAxes[0]->numBins(), fAxes[0]->getMin(), fAxes[0]->getMax(),
             fAxes[1]->numBins(), fAxes[1]->getMin(), fAxes[1]->getMax());
 
    } else if (fDimension == 3) {
-      fHist = new TH3F("posterior", "MCMC Posterior Histogram",
+      fHist = std::make_unique<TH3F>("posterior", "MCMC Posterior Histogram",
             fAxes[0]->numBins(), fAxes[0]->getMin(), fAxes[0]->getMax(),
             fAxes[1]->numBins(), fAxes[1]->getMin(), fAxes[1]->getMax(),
             fAxes[2]->numBins(), fAxes[2]->getMin(), fAxes[2]->getMax());
 
    } else {
       coutE(Eval) << "* Error in MCMCInterval::CreateHist() : " <<
-                     "TH1* couldn't handle dimension: " << fDimension << endl;
+                     "TH1* couldn't handle dimension: " << fDimension << std::endl;
       return;
    }
 
@@ -359,15 +337,15 @@ void MCMCInterval::CreateHist()
    for (Int_t i = fNumBurnInSteps; i < size; i++) {
       entry = fChain->Get(i);
       if (fDimension == 1) {
-         (static_cast<TH1F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH1F&>(*fHist)).Fill(entry->getRealValue(fAxes[0]->GetName()),
                               fChain->Weight());
       } else if (fDimension == 2) {
-         (static_cast<TH2F*>(fHist))->Fill(entry->getRealValue(fAxes[0]->GetName()),
+         (static_cast<TH2F&>(*fHist)).Fill(entry->getRealValue(fAxes[0]->GetName()),
                               entry->getRealValue(fAxes[1]->GetName()),
                               fChain->Weight());
       } else {
-         (static_cast<TH3F *>(fHist))
-            ->Fill(entry->getRealValue(fAxes[0]->GetName()), entry->getRealValue(fAxes[1]->GetName()),
+         (static_cast<TH3F &>(*fHist))
+            .Fill(entry->getRealValue(fAxes[0]->GetName()), entry->getRealValue(fAxes[1]->GetName()),
                    entry->getRealValue(fAxes[2]->GetName()), fChain->Weight());
       }
    }
@@ -384,16 +362,13 @@ void MCMCInterval::CreateHist()
 
 void MCMCInterval::CreateSparseHist()
 {
-   if (fAxes == nullptr || fChain == nullptr) {
+   if (fAxes.empty() || fChain == nullptr) {
       coutE(InputArguments) << "* Error in MCMCInterval::CreateSparseHist(): "
-                            << "Crucial data member was nullptr." << endl;
+                            << "Crucial data member was nullptr." << std::endl;
       coutE(InputArguments) << "Make sure to fully construct/initialize."
-                            << endl;
+                            << std::endl;
       return;
    }
-   if (fSparseHist != nullptr)
-      delete fSparseHist;
-
    std::vector<double> min(fDimension);
    std::vector<double> max(fDimension);
    std::vector<Int_t> bins(fDimension);
@@ -402,7 +377,7 @@ void MCMCInterval::CreateSparseHist()
       max[i] = fAxes[i]->getMax();
       bins[i] = fAxes[i]->numBins();
    }
-   fSparseHist = new THnSparseF("posterior", "MCMC Posterior Histogram",
+   fSparseHist = std::make_unique<THnSparseF>("posterior", "MCMC Posterior Histogram",
          fDimension, bins.data(), min.data(), max.data());
 
    // kbelasco: it appears we need to call Sumw2() just to get the
@@ -414,7 +389,7 @@ void MCMCInterval::CreateSparseHist()
       coutE(InputArguments) <<
          "MCMCInterval::CreateSparseHist: creation of histogram failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
    }
 
    // Fill histogram
@@ -435,8 +410,8 @@ void MCMCInterval::CreateDataHist()
 {
    if (fParameters.empty() || fChain == nullptr) {
       coutE(Eval) << "* Error in MCMCInterval::CreateDataHist(): " <<
-                     "Crucial data member was nullptr or empty." << endl;
-      coutE(Eval) << "Make sure to fully construct/initialize." << endl;
+                     "Crucial data member was nullptr or empty." << std::endl;
+      coutE(Eval) << "Make sure to fully construct/initialize." << std::endl;
       return;
    }
 
@@ -444,13 +419,13 @@ void MCMCInterval::CreateDataHist()
       coutE(InputArguments) <<
          "MCMCInterval::CreateDataHist: creation of histogram failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
       fDataHist = nullptr;
       return;
    }
 
-   fDataHist = std::unique_ptr<RooDataHist>{fChain->GetAsDataHist(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()))}.release();
+   std::unique_ptr<RooAbsData> data{fChain->GetAsConstDataSet()->reduce(SelectVars(fParameters), EventRange(fNumBurnInSteps, fChain->Size()))};
+   fDataHist = std::unique_ptr<RooDataHist>{static_cast<RooDataSet &>(*data).binnedClone()};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -462,9 +437,9 @@ void MCMCInterval::CreateVector(RooRealVar* param)
 
    if (fChain == nullptr) {
       coutE(InputArguments) << "* Error in MCMCInterval::CreateVector(): " <<
-                     "Crucial data member (Markov chain) was nullptr." << endl;
+                     "Crucial data member (Markov chain) was nullptr." << std::endl;
       coutE(InputArguments) << "Make sure to fully construct/initialize."
-                            << endl;
+                            << std::endl;
       return;
    }
 
@@ -472,7 +447,7 @@ void MCMCInterval::CreateVector(RooRealVar* param)
       coutE(InputArguments) <<
          "MCMCInterval::CreateVector: creation of vector failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
    }
 
    // Fill vector
@@ -487,7 +462,7 @@ void MCMCInterval::CreateVector(RooRealVar* param)
    }
 
    stable_sort(fVector.begin(), fVector.end(),
-               CompareVectorIndices(fChain, param));
+               CompareVectorIndices(fChain.get(), param));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -497,9 +472,7 @@ void MCMCInterval::SetParameters(const RooArgSet& parameters)
    fParameters.removeAll();
    fParameters.add(parameters);
    fDimension = fParameters.size();
-   if (fAxes != nullptr)
-      delete[] fAxes;
-   fAxes = new RooRealVar*[fDimension];
+   fAxes.resize(fDimension);
    Int_t n = 0;
    for (auto *obj : fParameters) {
       if (dynamic_cast<RooRealVar *>(obj) != nullptr) {
@@ -525,7 +498,7 @@ void MCMCInterval::DetermineInterval()
          break;
       default:
          coutE(InputArguments) << "MCMCInterval::DetermineInterval(): " <<
-            "Error: Interval type not set" << endl;
+            "Error: Interval type not set" << std::endl;
          break;
    }
 }
@@ -548,22 +521,22 @@ void MCMCInterval::DetermineTailFractionInterval()
    if (fLeftSideTF < 0 || fLeftSideTF > 1) {
       coutE(InputArguments) << "MCMCInterval::DetermineTailFractionInterval: "
          << "Fraction must be in the range [0, 1].  "
-         << fLeftSideTF << "is not allowed." << endl;
+         << fLeftSideTF << "is not allowed." << std::endl;
       return;
    }
 
    if (fDimension != 1) {
       coutE(InputArguments) << "MCMCInterval::DetermineTailFractionInterval(): "
          << "Error: Can only find a tail-fraction interval for 1-D intervals"
-         << endl;
+         << std::endl;
       return;
    }
 
-   if (fAxes == nullptr) {
+   if (fAxes.empty()) {
       coutE(InputArguments) << "MCMCInterval::DetermineTailFractionInterval(): "
-                            << "Crucial data member was nullptr." << endl;
+                            << "Crucial data member was nullptr." << std::endl;
       coutE(InputArguments) << "Make sure to fully construct/initialize."
-                            << endl;
+                            << std::endl;
       return;
    }
 
@@ -669,7 +642,7 @@ void MCMCInterval::DetermineByKeys()
    if (full < 0.98) {
       coutW(Eval) << "Warning: Integral of Keys PDF came out to " << full
          << " instead of expected value 1.  Will continue using this "
-         << "factor to normalize further integrals of this PDF." << endl;
+         << "factor to normalize further integrals of this PDF." << std::endl;
    }
 
    // kbelasco: Is there a better way to set the search range?
@@ -728,7 +701,7 @@ void MCMCInterval::DetermineByKeys()
    }
 
    coutI(Eval) << "range set: [" << bottomCutoff << ", " << topCutoff << "]"
-               << endl;
+               << std::endl;
 
    cutoff = (topCutoff + bottomCutoff) / 2.0;
    confLevel = CalcConfLevel(cutoff, full);
@@ -748,7 +721,7 @@ void MCMCInterval::DetermineByKeys()
       }
       cutoff = (topCutoff + bottomCutoff) / 2.0;
       coutI(Eval) << "cutoff range: [" << bottomCutoff << ", "
-                  << topCutoff << "]" << endl;
+                  << topCutoff << "]" << std::endl;
       confLevel = CalcConfLevel(cutoff, full);
    }
 
@@ -787,7 +760,7 @@ void MCMCInterval::DetermineBySparseHist()
    std::vector<Long_t> bins(numBins);
    for (Int_t ibin = 0; ibin < numBins; ibin++)
       bins[ibin] = (Long_t)ibin;
-   std::stable_sort(bins.begin(), bins.end(), CompareSparseHistBins(fSparseHist));
+   std::stable_sort(bins.begin(), bins.end(), CompareSparseHistBins(fSparseHist.get()));
 
    double nEntries = fSparseHist->GetSumw();
    double sum = 0;
@@ -859,7 +832,7 @@ void MCMCInterval::DetermineByDataHist()
    std::vector<Int_t> bins(numBins);
    for (Int_t ibin = 0; ibin < numBins; ibin++)
       bins[ibin] = ibin;
-   std::stable_sort(bins.begin(), bins.end(), CompareDataHistBins(fDataHist));
+   std::stable_sort(bins.begin(), bins.end(), CompareDataHistBins(fDataHist.get()));
 
    double nEntries = fDataHist->sum(false);
    double sum = 0;
@@ -928,7 +901,7 @@ double MCMCInterval::GetActualConfidenceLevel()
       return fTFConfLevel;
    } else {
       coutE(InputArguments) << "MCMCInterval::GetActualConfidenceLevel: "
-         << "not implemented for this type of interval.  Returning 0." << endl;
+         << "not implemented for this type of interval.  Returning 0." << std::endl;
       return 0;
    }
 }
@@ -944,7 +917,7 @@ double MCMCInterval::LowerLimit(RooRealVar& param)
          return LowerLimitTailFraction(param);
       default:
          coutE(InputArguments) << "MCMCInterval::LowerLimit(): " <<
-            "Error: Interval type not set" << endl;
+            "Error: Interval type not set" << std::endl;
          return RooNumber::infinity();
    }
 }
@@ -960,7 +933,7 @@ double MCMCInterval::UpperLimit(RooRealVar& param)
          return UpperLimitTailFraction(param);
       default:
          coutE(InputArguments) << "MCMCInterval::UpperLimit(): " <<
-            "Error: Interval type not set" << endl;
+            "Error: Interval type not set" << std::endl;
          return RooNumber::infinity();
    }
 }
@@ -1041,7 +1014,7 @@ double MCMCInterval::LowerLimitBySparseHist(RooRealVar& param)
 {
    if (fDimension != 1) {
       coutE(InputArguments) << "In MCMCInterval::LowerLimitBySparseHist: "
-         << "Sorry, will not compute lower limit unless dimension == 1" << endl;
+         << "Sorry, will not compute lower limit unless dimension == 1" << std::endl;
       return param.getMin();
    }
    if (fHistCutoff < 0)
@@ -1051,7 +1024,7 @@ double MCMCInterval::LowerLimitBySparseHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::LowerLimitBySparseHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMin()." << endl;
+         << "steps in the Markov chain.  Returning param.getMin()." << std::endl;
       return param.getMin();
    }
 
@@ -1087,7 +1060,7 @@ double MCMCInterval::LowerLimitByDataHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::LowerLimitByDataHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMin()." << endl;
+         << "steps in the Markov chain.  Returning param.getMin()." << std::endl;
       return param.getMin();
    }
 
@@ -1118,7 +1091,7 @@ double MCMCInterval::UpperLimitBySparseHist(RooRealVar& param)
 {
    if (fDimension != 1) {
       coutE(InputArguments) << "In MCMCInterval::UpperLimitBySparseHist: "
-         << "Sorry, will not compute upper limit unless dimension == 1" << endl;
+         << "Sorry, will not compute upper limit unless dimension == 1" << std::endl;
       return param.getMax();
    }
    if (fHistCutoff < 0)
@@ -1128,7 +1101,7 @@ double MCMCInterval::UpperLimitBySparseHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::UpperLimitBySparseHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMax()." << endl;
+         << "steps in the Markov chain.  Returning param.getMax()." << std::endl;
       return param.getMax();
    }
 
@@ -1164,7 +1137,7 @@ double MCMCInterval::UpperLimitByDataHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::UpperLimitByDataHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMax()." << endl;
+         << "steps in the Markov chain.  Returning param.getMax()." << std::endl;
       return param.getMax();
    }
 
@@ -1204,7 +1177,7 @@ double MCMCInterval::LowerLimitByKeys(RooRealVar& param)
       coutE(Eval) << "in MCMCInterval::LowerLimitByKeys(): "
          << "couldn't find lower limit, check that the number of burn in "
          << "steps < number of total steps in the Markov chain.  Returning "
-         << "param.getMin()" << endl;
+         << "param.getMin()" << std::endl;
       return param.getMin();
    }
 
@@ -1244,7 +1217,7 @@ double MCMCInterval::UpperLimitByKeys(RooRealVar& param)
       coutE(Eval) << "in MCMCInterval::UpperLimitByKeys(): "
          << "couldn't find upper limit, check that the number of burn in "
          << "steps < number of total steps in the Markov chain.  Returning "
-         << "param.getMax()" << endl;
+         << "param.getMax()" << std::endl;
       return param.getMax();
    }
 
@@ -1283,7 +1256,7 @@ double MCMCInterval::GetKeysMax()
       coutE(Eval) << "in MCMCInterval::KeysMax(): "
          << "couldn't find Keys max value, check that the number of burn in "
          << "steps < number of total steps in the Markov chain.  Returning 0"
-         << endl;
+         << std::endl;
       return 0;
    }
 
@@ -1331,7 +1304,7 @@ double MCMCInterval::CalcConfLevel(double cutoff, double full)
    fCutoffVar->setVal(cutoff);
    std::unique_ptr<RooAbsReal> integral{fProduct->createIntegral(fParameters, NormSet(fParameters))};
    double confLevel = integral->getVal(fParameters) / full;
-   coutI(Eval) << "cutoff = " << cutoff << ", conf = " << confLevel << endl;
+   coutI(Eval) << "cutoff = " << cutoff << ", conf = " << confLevel << std::endl;
    return confLevel;
 }
 
@@ -1341,7 +1314,7 @@ TH1* MCMCInterval::GetPosteriorHist()
 {
    if (fConfidenceLevel == 0) {
       coutE(InputArguments) << "Error in MCMCInterval::GetPosteriorHist: "
-                            << "confidence level not set " << endl;
+                            << "confidence level not set " << std::endl;
    }
   if (fHist == nullptr)
      CreateHist();
@@ -1360,7 +1333,7 @@ RooNDKeysPdf* MCMCInterval::GetPosteriorKeysPdf()
 {
   if (fConfidenceLevel == 0) {
      coutE(InputArguments) << "Error in MCMCInterval::GetPosteriorKeysPdf: "
-                           << "confidence level not set " << endl;
+                           << "confidence level not set " << std::endl;
   }
    if (fKeysPdf == nullptr)
       CreateKeysPdf();
@@ -1379,7 +1352,7 @@ RooProduct* MCMCInterval::GetPosteriorKeysProduct()
 {
    if (fConfidenceLevel == 0) {
       coutE(InputArguments) << "MCMCInterval::GetPosteriorKeysProduct: "
-                            << "confidence level not set " << endl;
+                            << "confidence level not set " << std::endl;
    }
    if (fProduct == nullptr) {
       CreateKeysPdf();
@@ -1420,7 +1393,7 @@ bool MCMCInterval::WithinDeltaFraction(double a, double b)
 
 void MCMCInterval::CreateKeysDataHist()
 {
-   if (fAxes == nullptr)
+   if (fAxes.empty())
       return;
    if (fProduct == nullptr)
       DetermineByKeys();
@@ -1472,9 +1445,9 @@ void MCMCInterval::CreateKeysDataHist()
       }
    }
 
-   fKeysDataHist = new RooDataHist("_productDataHist",
+   fKeysDataHist = std::make_unique<RooDataHist>("_productDataHist",
          "Keys PDF & Heaviside Product Data Hist", fParameters);
-   fKeysDataHist = fProduct->fillDataHist(fKeysDataHist, &fParameters, 1.);
+   fProduct->fillDataHist(fKeysDataHist.get(), &fParameters, 1.);
 
    if (tempChangeBinning) {
       // set the binning back to normal

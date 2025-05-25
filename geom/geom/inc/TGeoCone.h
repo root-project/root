@@ -39,7 +39,7 @@ public:
    Double_t Capacity() const override;
    static Double_t Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    void ComputeBBox() override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    void ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize) override;
    static void ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t dz, Double_t rmin1,
                               Double_t rmax1, Double_t rmin2, Double_t rmax2);
@@ -128,7 +128,7 @@ public:
    static Double_t
    Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    void ComputeBBox() override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    void ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize) override;
    static void ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t dz, Double_t rmin1,
                               Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t c1, Double_t s1, Double_t c2,

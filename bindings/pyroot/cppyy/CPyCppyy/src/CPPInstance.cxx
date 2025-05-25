@@ -441,7 +441,7 @@ static int op_clear(CPPInstance* pyobj)
 // Garbage collector clear of held python member objects; this is a good time
 // to safely remove this object from the memory regulator.
     if (pyobj->fFlags & CPPInstance::kIsRegulated)
-        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));;
+        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));
 
     return 0;
 }
@@ -1101,6 +1101,9 @@ PyTypeObject CPPInstance_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                           // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                           // tp_versions_used
 #endif
 };
 

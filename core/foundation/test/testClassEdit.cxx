@@ -247,28 +247,89 @@ TEST(TClassEdit, SplitFuncErrors)
 // ROOT-9926
 TEST(TClassEdit, GetNameForIO)
 {
-   const std::vector<std::pair<std::string, std::string>> names{{"T", "unique_ptr<const T>"},
-                                                                {"T", "unique_ptr<const T*>"},
-                                                                {"T", "unique_ptr<const T* const*>"},
-                                                                {"T", "unique_ptr<T * const>"},
-                                                                {"T", "unique_ptr<T * const**const**&* const>"}};
+   const std::vector<std::pair<std::string, std::string>> names{{"T*", "unique_ptr<const T>"},
+                                                                {"T*", "unique_ptr<const T*>"},
+                                                                {"T*", "unique_ptr<const T* const*>"},
+                                                                {"T*", "unique_ptr<T * const>"},
+                                                                {"T*", "unique_ptr<T * const**const**&* const>"},
+                                                                {"vector<T*>", "vector<unique_ptr<T>>"},
+                                                                {"vector<const T*>", "vector<unique_ptr<const T>>"}};
    for (auto &&namesp : names) {
       EXPECT_EQ(namesp.first, TClassEdit::GetNameForIO(namesp.second.c_str()))
          << "Failure in transforming typename " << namesp.first << " into " << namesp.second;
    }
 }
 
-// ROOT-10574
+// ROOT-10574, https://github.com/root-project/root/issues/17295
 TEST(TClassEdit, ResolveTypedef)
 {
    gInterpreter->Declare("struct testPoint{}; typedef struct testPoint testPoint;");
    std::string non_existent = TClassEdit::ResolveTypedef("testPointAA");
    EXPECT_STREQ("testPointAA", non_existent.c_str());
    EXPECT_STRNE("::testPoint", TClassEdit::ResolveTypedef("::testPointXX").c_str());
+   gInterpreter->Declare("typedef const int mytype_t;");
+   gInterpreter->Declare("typedef const int cmytype_t;");
+   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("mytype_t").c_str());
+   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("cmytype_t").c_str());
 }
 
 // ROOT-11000
 TEST(TClassEdit, DefComp)
 {
    EXPECT_FALSE(TClassEdit::IsDefComp("std::less<>", "std::string"));
+}
+
+TEST(TClassEdit, DefAlloc)
+{
+   // https://github.com/root-project/root/issues/6607
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("class std::allocator<float>", "float"));
+
+   // Space handling issues (part of https://github.com/root-project/root/issues/18654)
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("std::allocator<std::pair<K,V>>", "K", "V"));
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("std::allocator<   std::pair<K,V>  >", "K", "V"));
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("std::allocator<std::pair<K,V>  const  >", "K", "V"));
+}
+
+
+TEST(TClassEdit, GetNormalizedName)
+{
+   std::string n;
+   
+   // https://github.com/root-project/root/issues/6607
+   TClassEdit::GetNormalizedName(n, "std::vector<float, class std::allocator<float>>");
+   EXPECT_STREQ("vector<float>", n.c_str());
+
+   // https://github.com/root-project/root/issues/18643
+   n.clear();
+   TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*)");
+   EXPECT_STREQ("_Atomic(map<string,TObjArray*>*)", n.c_str());
+
+   n.clear();
+   EXPECT_THROW(TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*"), std::runtime_error);
+}
+
+// https://github.com/root-project/root/issues/18654
+TEST(TClassEdit, UnorderedMapNameNormalization)
+{
+   // These two should normalise to map<string,char>.
+   // When this did not work, df104_CSVDataSource-py crashed while querying the classes
+   std::string in_cxx11{
+      "std::unordered_map<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char, "
+      "std::hash<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+      "std::equal_to<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+      "std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, "
+      "char> > >"};
+   std::string in{"std::unordered_map<std::basic_string<char, std::char_traits<char>, std::allocator<char> >, char, "
+                  "std::hash<std::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+                  "std::equal_to<std::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+                  "std::allocator<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > "
+                  "const, char> > >"};
+   const auto target = "unordered_map<string,char>";
+
+   std::string out;
+   TClassEdit::GetNormalizedName(out, in);
+   EXPECT_STREQ(target, out.c_str());
+
+   TClassEdit::GetNormalizedName(out, in_cxx11);
+   EXPECT_STREQ(target, out.c_str());
 }

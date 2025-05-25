@@ -12,6 +12,8 @@
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RSample.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h"
@@ -26,6 +28,8 @@
 #include "TROOT.h" // IsImplicitMTEnabled, GetThreadPoolSize
 #include "TTree.h"
 
+#include <fstream>
+#include <nlohmann/json.hpp> // nlohmann::json::parse
 #include <stdexcept>
 #include <string>
 #include <cstring>
@@ -34,9 +38,9 @@
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 
-ROOT::Experimental::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
+ROOT::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
 {
-   static ROOT::Experimental::RLogChannel c("ROOT.RDF");
+   static RLogChannel c("ROOT.RDF");
    return c;
 }
 
@@ -225,9 +229,9 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Throws if type name deduction fails.
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be RVec<T>.
-/// vector2rvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
+/// vector2RVec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, RDataSource *ds, RDefineBase *define,
-                                      bool vector2rvec)
+                                      bool vector2RVec)
 {
    std::string colType;
 
@@ -235,10 +239,10 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
    if (define) {
       colType = define->GetTypeName();
    } else if (ds && ds->HasColumn(colName)) {
-      colType = ds->GetTypeName(colName);
+      colType = ROOT::Internal::RDF::GetTypeNameWithOpts(*ds, colName, vector2RVec);
    } else if (tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
-      if (vector2rvec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
+      if (vector2RVec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
          std::vector<std::string> split;
          int dummy;
          TClassEdit::GetSplit(colType.c_str(), split, dummy);
@@ -342,8 +346,11 @@ void InterpreterDeclare(const std::string &code)
    }
 }
 
-Long64_t InterpreterCalc(const std::string &code, const std::string &context)
+void InterpreterCalc(const std::string &code, const std::string &context)
 {
+   if (code.empty())
+      return;
+
    R__LOG_DEBUG(10, RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
 
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError); // storage for cling errors
@@ -374,8 +381,6 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 
       callCalc(subs);
    }
-
-   return 0; // we used to forward the return value of Calc, but that's not possible anymore.
 }
 
 bool IsInternalColumn(std::string_view colName)
@@ -457,6 +462,135 @@ auto RStringCache::Insert(const std::string &string) -> decltype(fStrings)::cons
 
    return fStrings.insert(string).first;
 }
+
+ROOT::RDF::Experimental::RDatasetSpec RetrieveSpecFromJson(const std::string &jsonFile)
+{
+      const nlohmann::ordered_json fullData = nlohmann::ordered_json::parse(std::ifstream(jsonFile));
+   if (!fullData.contains("samples") || fullData["samples"].empty()) {
+      throw std::runtime_error(
+         R"(The input specification does not contain any samples. Please provide the samples in the specification like:
+{
+   "samples": {
+      "sampleA": {
+         "trees": ["tree1", "tree2"],
+         "files": ["file1.root", "file2.root"],
+         "metadata": {"lumi": 1.0, }
+      },
+      "sampleB": {
+         "trees": ["tree3", "tree4"],
+         "files": ["file3.root", "file4.root"],
+         "metadata": {"lumi": 0.5, }
+      },
+      ...
+   },
+})");
+   }
+
+   ROOT::RDF::Experimental::RDatasetSpec spec;
+   for (const auto &keyValue : fullData["samples"].items()) {
+      const std::string &sampleName = keyValue.key();
+      const auto &sample = keyValue.value();
+      // TODO: if requested in https://github.com/root-project/root/issues/11624
+      // allow union-like types for trees and files, see: https://github.com/nlohmann/json/discussions/3815
+      if (!sample.contains("trees")) {
+         throw std::runtime_error("A list of tree names must be provided for sample " + sampleName + ".");
+      }
+      std::vector<std::string> trees = sample["trees"];
+      if (!sample.contains("files")) {
+         throw std::runtime_error("A list of files must be provided for sample " + sampleName + ".");
+      }
+      std::vector<std::string> files = sample["files"];
+      if (!sample.contains("metadata")) {
+         spec.AddSample( ROOT::RDF::Experimental::RSample{sampleName, trees, files});
+      } else {
+         ROOT::RDF::Experimental::RMetaData m;
+         for (const auto &metadata : sample["metadata"].items()) {
+            const auto &val = metadata.value();
+            if (val.is_string())
+               m.Add(metadata.key(), val.get<std::string>());
+            else if (val.is_number_integer())
+               m.Add(metadata.key(), val.get<int>());
+            else if (val.is_number_float())
+               m.Add(metadata.key(), val.get<double>());
+            else
+               throw std::logic_error("The metadata keys can only be of type [string|int|double].");
+         }
+         spec.AddSample( ROOT::RDF::Experimental::RSample{sampleName, trees, files, m});
+      }
+   }
+   if (fullData.contains("friends")) {
+      for (const auto &friends : fullData["friends"].items()) {
+         std::string alias = friends.key();
+         std::vector<std::string> trees = friends.value()["trees"];
+         std::vector<std::string> files = friends.value()["files"];
+         if (files.size() != trees.size() && trees.size() > 1)
+            throw std::runtime_error("Mismatch between trees and files in a friend.");
+         spec.WithGlobalFriends(trees, files, alias);
+      }
+   }
+
+   if (fullData.contains("range")) {
+      std::vector<int> range = fullData["range"];
+
+      if (range.size() == 1)
+         spec.WithGlobalRange({range[0]});
+      else if (range.size() == 2)
+         spec.WithGlobalRange({range[0], range[1]});
+   }
+   return spec;
+};
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
+
+std::string
+ROOT::Internal::RDF::GetTypeNameWithOpts(const ROOT::RDF::RDataSource &df, std::string_view colName, bool vector2RVec)
+{
+   return df.GetTypeNameWithOpts(colName, vector2RVec);
+}
+
+const std::vector<std::string> &ROOT::Internal::RDF::GetTopLevelFieldNames(const ROOT::RDF::RDataSource &df)
+{
+   return df.GetTopLevelFieldNames();
+}
+
+const std::vector<std::string> &ROOT::Internal::RDF::GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &df)
+{
+   return df.GetColumnNamesNoDuplicates();
+}
+
+void ROOT::Internal::RDF::CallInitializeWithOpts(ROOT::RDF::RDataSource &ds,
+                                                 const std::set<std::string> &suppressErrorsForMissingColumns)
+{
+   ds.InitializeWithOpts(suppressErrorsForMissingColumns);
+}
+
+std::string ROOT::Internal::RDF::DescribeDataset(ROOT::RDF::RDataSource &ds)
+{
+   return ds.DescribeDataset();
+}
+
+ROOT::RDF::RSampleInfo ROOT::Internal::RDF::CreateSampleInfo(
+   const ROOT::RDF::RDataSource &ds,
+   const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap)
+{
+   return ds.CreateSampleInfo(sampleMap);
+}
+
+void ROOT::Internal::RDF::RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun)
+{
+   ds.RunFinalChecks(nodesLeftNotRun);
+}
+
+void ROOT::Internal::RDF::ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm)
+{
+   ds.ProcessMT(lm);
+}
+
+std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+ROOT::Internal::RDF::CreateColumnReader(ROOT::RDF::RDataSource &ds, unsigned int slot, std::string_view col,
+                                        const std::type_info &tid, TTreeReader *treeReader)
+{
+   return ds.CreateColumnReader(slot, col, tid, treeReader);
+}

@@ -31,6 +31,7 @@
 #include "Rtypes.h"
 #include "TError.h"
 
+#include <cassert>
 
 template<class Element> class TMatrixTSym;
 template<class Element> class TMatrixTSparse;
@@ -106,6 +107,8 @@ public:
    void MultT(const TMatrixT   <Element> &a,const TMatrixTSym<Element> &b) { Mult(a,b); }
    void MultT(const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b);
    void MultT(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b) { Mult(a,b); }
+
+   inline void SetElement(Int_t rown, Int_t coln, Element val);
 
    const Element *GetMatrixArray  () const override;
          Element *GetMatrixArray  () override;
@@ -281,6 +284,21 @@ template <class Element> inline Element &TMatrixT<Element>::operator()(Int_t row
       return TMatrixTBase<Element>::NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Efficiently sets element (rown,coln) equal to val
+/// Index bound checks can be deactivated by defining NDEBUG
+
+template <class Element>
+inline void TMatrixT<Element>::SetElement(Int_t rown, Int_t coln, Element val)
+{
+   assert(this->IsValid());
+   rown = rown - this->fRowLwb;
+   coln = coln - this->fColLwb;
+   assert((rown < this->fNrows && rown >= 0) && "SetElement() error: row index outside matrix range");
+   assert((coln < this->fNcols && coln >= 0) && "SetElement() error: column index outside matrix range");
+   fElements[rown * this->fNcols + coln] = val;
 }
 
 inline namespace TMatrixTAutoloadOps {

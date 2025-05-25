@@ -364,7 +364,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
          }
    }
    c->resize(left*fValDiff,0);
-   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
+   fEnv->fStart = left > 0 ? c->data() : 0;
    return;
 }
 
@@ -375,7 +375,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
    PCont_t c   = PCont_t(fEnv->fObject);
    c->resize(left*fValDiff,0);
    void *oldstart = fEnv->fStart;
-   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
+   fEnv->fStart = left > 0 ? c->data() : 0;
 
    char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
    switch ( fSTL_type )  {
@@ -454,7 +454,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
    if ( fEnv && fEnv->fObject )   {
       size_t nCurr = Size();
       PCont_t c = PCont_t(fEnv->fObject);
-      fEnv->fStart = nCurr>0 ? &(*c->begin()) : 0;
+      fEnv->fStart = nCurr > 0 ? c->data() : 0;
       if ( left == nCurr )  {
          return;
       }
@@ -477,7 +477,7 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
       if ( idx >= (s/fValDiff) )  {
          return 0;
       }
-      return idx<(s/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
+      return idx < (s / fValDiff) ? c->data() + idx * fValDiff : 0;
    }
    Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
    return 0;

@@ -120,7 +120,7 @@ public:
    EnvelopeTest2()
    {
       TMVA::Tools::Instance();
-      TString fname = gROOT->GetTutorialDir() + "/tmva/data/tmva_class_example.root";
+      TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
       if (!gSystem->AccessPathName(fname)) {
          inputfile = TFile::Open(fname); // check if file in local directory exists
       }

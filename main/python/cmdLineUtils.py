@@ -18,7 +18,7 @@ import os
 import sys
 from time import sleep
 from itertools import zip_longest
-
+import cppyy
 
 def fileno(file_or_fd):
     """
@@ -198,6 +198,9 @@ def isDirectoryKey(key):
     """
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
+    if cl == cppyy.nullptr:
+        logging.warning("Unknown class to ROOT: " + classname)
+        return False
     return cl.InheritsFrom(ROOT.TDirectory.Class())
 
 
@@ -207,6 +210,9 @@ def isTreeKey(key):
     """
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
+    if cl == cppyy.nullptr:
+        logging.warning("Unknown class to ROOT: " + classname)
+        return False
     return cl.InheritsFrom(ROOT.TTree.Class())
 
 
@@ -216,6 +222,9 @@ def isTHnSparseKey(key):
     """
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
+    if cl == cppyy.nullptr:
+        logging.warning("Unknown class to ROOT: " + classname)
+        return False
     return cl.InheritsFrom(ROOT.THnSparse.Class())
 
 
@@ -789,11 +798,12 @@ REPLACE_HELP = "replace object if already existing"
 
 def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
-    if ROOT.gSystem.InheritsFrom("TMacOSXSystem") or ROOT.gROOT.IsWebDisplay():
+    if ROOT.gSystem.InheritsFrom("TMacOSXSystem") or browser.IsWeb():
         print("Press ctrl+c to exit.")
         try:
             while True:
-                ROOT.gSystem.ProcessEvents()
+                if ROOT.gROOT.IsInterrupted() or ROOT.gSystem.ProcessEvents():
+                    break
                 sleep(0.01)
         except (KeyboardInterrupt, SystemExit):
             pass

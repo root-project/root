@@ -1878,36 +1878,26 @@ const TGGC &TGRadioButton::GetDefaultGC()
 
 void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
-   if (fState == kButtonDown) {
-      out << "   " << GetName() << "->SetState(kButtonDown);"  << std::endl;
-   }
-   if (fState == kButtonDisabled) {
-      out << "   " << GetName() << "->SetState(kButtonDisabled);"  << std::endl;
-   }
-   if (fState == kButtonEngaged) {
-      out << "   " << GetName() << "->SetState(kButtonEngaged);"  << std::endl;
-   }
-   if (fBackground != fgDefaultFrameBackground) {
+   if (fState == kButtonDown)
+      out << "   " << GetName() << "->SetState(kButtonDown);\n";
+   if (fState == kButtonDisabled)
+      out << "   " << GetName() << "->SetState(kButtonDisabled);\n";
+   if (fState == kButtonEngaged)
+      out << "   " << GetName() << "->SetState(kButtonEngaged);\n";
+
+   if (fBackground != GetDefaultFrameBackground()) {
       SaveUserColor(out, option);
-      out << "   " << GetName() << "->ChangeBackground(ucolor);" << std::endl;
+      out << "   " << GetName() << "->ChangeBackground(ucolor);\n";
    }
 
-   if (fTip) {
-      TString tiptext = fTip->GetText()->GetString();
-      tiptext.ReplaceAll("\n", "\\n");
-      out << "   ";
-      out << GetName() << "->SetToolTipText(" << quote
-          << tiptext << quote << ");"  << std::endl;
-   }
-   if (fCommand.Length() > 0) {
-      out << "   " << GetName() << "->SetCommand(" << quote << fCommand
-          << quote << ");" << std::endl;
-   }
+   if (fTip)
+      out << "   " << GetName() << "->SetToolTipText(\""
+          << TString(fTip->GetText()->GetString()).ReplaceSpecialCppChars() << "\");\n";
+   if (fCommand.Length() > 0)
+      out << "   " << GetName() << "->SetCommand(\"" << TString(fCommand).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1915,12 +1905,9 @@ void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    TString outext(fLabel->GetString());
    if (fLabel->GetHotPos() > 0)
       outext.Insert(fLabel->GetHotPos()-1, "&");
-   if (outext.First('\n') >= 0)
-      outext.ReplaceAll("\n", "\\n");
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
@@ -1942,37 +1929,33 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       }
    }
 
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-
-   out << "   TGTextButton *";
-   out << GetName() << " = new TGTextButton(" << fParent->GetName()
-       << "," << quote << outext.Data() << quote;
+   out << "   TGTextButton *" << GetName() << " = new TGTextButton(" << fParent->GetName()
+       << ", \"" << outext.ReplaceSpecialCppChars() << "\"";
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
-               out << ");" << std::endl;
+               out << ");\n";
             } else {
-               out << "," << fWidgetId <<");" << std::endl;
+               out << "," << fWidgetId <<");\n";
             }
          } else {
-            out << "," << fWidgetId << "," << parGC << ");" << std::endl;
+            out << "," << fWidgetId << "," << parGC << ");\n";
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << std::endl;
+         out << "," << fWidgetId << "," << parGC << "," << parFont << ");\n";
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << std::endl;
+      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");\n";
    }
 
-   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << std::endl;
-   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << std::endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");\n";
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << "," << fMTop << "," << fMBottom
+       << ");\n";
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");\n";
 
-   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
-       << ");" << std::endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight() << ");\n";
 
    TGButton::SavePrimitive(out,option);
 }
@@ -1983,7 +1966,7 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    if (!fPic) {
-      Error("SavePrimitive()", "pixmap not found or the file format is not supported for picture button %d ", fWidgetId);
+      Error("SavePrimitive", "pixmap not found or the file format is not supported for picture button %d ", fWidgetId);
       return;
    }
 
@@ -2000,29 +1983,24 @@ void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
       }
    }
 
-   char quote = '"';
    TString picname = gSystem->UnixPathName(fPic->GetName());
    gSystem->ExpandPathName(picname);
 
-   out <<"   TGPictureButton *";
-
-   out << GetName() << " = new TGPictureButton(" << fParent->GetName()
-       << ",gClient->GetPicture(" << quote
-       << picname << quote << ")";
+   out << "   TGPictureButton *" << GetName() << " = new TGPictureButton(" << fParent->GetName()
+       << ", gClient->GetPicture(\"" << picname.ReplaceSpecialCppChars() << "\")";
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {
          if (fWidgetId == -1) {
-            out << ");" << std::endl;
+            out << ");\n";
          } else {
-            out << "," << fWidgetId << ");" << std::endl;
+            out << "," << fWidgetId << ");\n";
          }
       } else {
-         out << "," << fWidgetId << "," << parGC.Data() << ");" << std::endl;
+         out << "," << fWidgetId << "," << parGC << ");\n";
       }
    } else {
-      out << "," << fWidgetId << "," << parGC.Data() << "," << GetOptionString()
-          << ");" << std::endl;
+      out << "," << fWidgetId << "," << parGC << "," << GetOptionString() << ");\n";
    }
 
    TGButton::SavePrimitive(out,option);
@@ -2033,23 +2011,18 @@ void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
 
 void TGCheckButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
    TString outext(fLabel->GetString());
    if (fLabel->GetHotPos() > 0)
       outext.Insert(fLabel->GetHotPos()-1, "&");
-   if (outext.First('\n') >= 0)
-      outext.ReplaceAll("\n", "\\n");
 
-   out <<"   TGCheckButton *";
-   out << GetName() << " = new TGCheckButton(" << fParent->GetName()
-       << "," << quote << outext.Data() << quote;
+   out <<"   TGCheckButton *" << GetName() << " = new TGCheckButton(" << fParent->GetName()
+       << ", \"" << outext.ReplaceSpecialCppChars() << "\"";
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    TString parGC, parFont;
-   parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
-   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
+   parFont.Form("%s::GetDefaultFontStruct()", IsA()->GetName());
+   parGC.Form("%s::GetDefaultGC()()", IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
@@ -2069,31 +2042,31 @@ void TGCheckButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
-               out << ");" << std::endl;
+               out << ");\n";
             } else {
-               out << "," << fWidgetId << ");" << std::endl;
+               out << "," << fWidgetId << ");\n";
             }
          } else {
-            out << "," << fWidgetId << "," << parGC << ");" << std::endl;
+            out << "," << fWidgetId << "," << parGC << ");\n";
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << std::endl;
+         out << "," << fWidgetId << "," << parGC << "," << parFont << ");\n";
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << std::endl;
+      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");\n";
    }
 
    TGButton::SavePrimitive(out,option);
    if (fState == kButtonDisabled) {
       if (IsDisabledAndSelected())
-         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << std::endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);\n";
       else
-         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << std::endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);\n";
    }
-   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << std::endl;
-   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << std::endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");\n";
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << "," << fMTop << "," << fMBottom
+       << ");\n";
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2101,23 +2074,18 @@ void TGCheckButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
    TString outext(fLabel->GetString());
    if (fLabel->GetHotPos() > 0)
-      outext.Insert(fLabel->GetHotPos()-1, "&");
-   if (outext.First('\n') >= 0)
-      outext.ReplaceAll("\n", "\\n");
+      outext.Insert(fLabel->GetHotPos() - 1, "&");
 
-   out << "   TGRadioButton *";
-   out << GetName() << " = new TGRadioButton(" << fParent->GetName()
-       << "," << quote << outext.Data() << quote;
+   out << "   TGRadioButton *" << GetName() << " = new TGRadioButton(" << fParent->GetName() << ", \""
+       << outext.ReplaceSpecialCppChars() << "\"";
 
    // font + GC
-   option = GetName()+5;         // unique digit id of the name
+   option = GetName() + 5; // unique digit id of the name
    TString parGC, parFont;
-   parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
-   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
+   parFont.Form("%s::GetDefaultFontStruct()", IsA()->GetName());
+   parGC.Form("%s::GetDefaultGC()()", IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
@@ -2137,31 +2105,31 @@ void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
-               out <<");" << std::endl;
+               out << ");\n";
             } else {
-               out << "," << fWidgetId << ");" << std::endl;
+               out << "," << fWidgetId << ");\n";
             }
          } else {
-            out << "," << fWidgetId << "," << parGC << ");" << std::endl;
+            out << "," << fWidgetId << "," << parGC << ");\n";
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << std::endl;
+         out << "," << fWidgetId << "," << parGC << "," << parFont << ");\n";
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << std::endl;
+      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");\n";
    }
 
-   TGButton::SavePrimitive(out,option);
+   TGButton::SavePrimitive(out, option);
    if (fState == kButtonDisabled) {
       if (IsDisabledAndSelected())
-         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << std::endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);\n";
       else
-         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << std::endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);\n";
    }
-   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << std::endl;
-   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << std::endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");\n";
+   out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << "," << fMTop << "," << fMBottom
+       << ");\n";
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

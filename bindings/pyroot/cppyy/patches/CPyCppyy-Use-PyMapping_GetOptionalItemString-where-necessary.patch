@@ -1,0 +1,44 @@
+From 386290cd2470da3ba20f0b12a6cfb81ed423471e Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Wed, 18 Dec 2024 02:51:40 +0100
+Subject: [PATCH] Use PyMapping_GetOptionalItemString where necessary with
+ Python 3.13
+
+With Python 3.13, some lookup methods like `PyMapping_GetItemString` and
+`PyObject_GetAttrString` became more strict. They are now always
+throwing an exception in case the attribute is not found.
+
+To make these optional lookups work again, the `GetOptional` family of
+functions needs to be used.
+
+See:
+  * https://docs.python.org/3/c-api/object.html#c.PyObject_GetOptionalAttrString
+  * https://docs.python.org/3/c-api/mapping.html#c.PyMapping_GetOptionalItemString
+
+This is the upstream version of the following ROOT commit:
+
+  * root-project/root@e78450dc45ed868b7a52a0
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
+index cdef2b8c7b..06731d6d85 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
+@@ -484,7 +484,12 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
+ // Python class to keep the inheritance tree intact)
+     for (const auto& name : protected_names) {
+          PyObject* disp_dct = PyObject_GetAttr(disp_proxy, PyStrings::gDict);
++#if PY_VERSION_HEX < 0x30d00f0
+          PyObject* pyf = PyMapping_GetItemString(disp_dct, (char*)name.c_str());
++#else
++         PyObject* pyf = nullptr;
++         PyMapping_GetOptionalItemString(disp_dct, (char*)name.c_str(), &pyf);
++#endif
+          if (pyf) {
+              PyObject_SetAttrString((PyObject*)klass, (char*)name.c_str(), pyf);
+              Py_DECREF(pyf);
+-- 
+2.47.0
+

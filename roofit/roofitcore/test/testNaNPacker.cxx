@@ -155,7 +155,7 @@ TEST(RooNaNPacker, FitSimpleLinear)
 
    RooArgSet normSet{x};
    ASSERT_FALSE(std::isnan(pdf.getVal(normSet)));
-   a1.setVal(-9.);
+   a1.setVal(-5.);
    ASSERT_TRUE(std::isnan(pdf.getVal(normSet)));
 
    RooMinimizer minim(*nll);
@@ -295,7 +295,6 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
    for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
       params.assign(evilValues);
 
-      RooMinimizer::cleanup();
       RooMinimizer minim(*nll);
       minim.setRecoverFromNaNStrength(tryRecover);
       minim.setPrintLevel(-1);

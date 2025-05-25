@@ -7,7 +7,7 @@
 // Standard
 #include <complex>
 #include <stddef.h>
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 #include <cstddef>
 #endif
 
@@ -20,9 +20,9 @@ class LowLevelView {
 public:
     enum EFlags {
         kDefault     = 0x0000,
-        kIsCppArray  = 0x0001,
-        kIsFixed     = 0x0002,
-        kIsOwner     = 0x0004 };
+        kIsCppArray  = 0x0001,    // allocated with new[]
+        kIsFixed     = 0x0002,    // fixed size array (assumed flat)
+        kIsOwner     = 0x0004 };  // Python owns
 
 public:
     PyObject_HEAD
@@ -49,13 +49,22 @@ CPPYY_DECL_VIEW_CREATOR(bool);
 CPPYY_DECL_VIEW_CREATOR(char);
 CPPYY_DECL_VIEW_CREATOR(signed char);
 CPPYY_DECL_VIEW_CREATOR(unsigned char);
-#if __cplusplus > 201402L
+#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_DECL_VIEW_CREATOR(std::byte);
 #endif
 PyObject* CreateLowLevelView_i8(int8_t*,  cdims_t shape);
 PyObject* CreateLowLevelView_i8(int8_t**, cdims_t shape);
 PyObject* CreateLowLevelView_i8(uint8_t*,  cdims_t shape);
 PyObject* CreateLowLevelView_i8(uint8_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i16(int16_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i16(int16_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i16(uint16_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i16(uint16_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i32(int32_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i32(int32_t**, cdims_t shape);
+PyObject* CreateLowLevelView_i32(uint32_t*,  cdims_t shape);
+PyObject* CreateLowLevelView_i32(uint32_t**, cdims_t shape);
+
 CPPYY_DECL_VIEW_CREATOR(short);
 CPPYY_DECL_VIEW_CREATOR(unsigned short);
 CPPYY_DECL_VIEW_CREATOR(int);

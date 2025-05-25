@@ -77,7 +77,7 @@ Begin_Macro
    gGeoManager->SetNsegments(30);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 */
@@ -363,7 +363,7 @@ void TGeoPcon::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoPcon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoPcon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    memset(norm, 0, 3 * sizeof(Double_t));
    Double_t r;

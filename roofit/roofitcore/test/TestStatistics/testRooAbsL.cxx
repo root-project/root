@@ -19,7 +19,6 @@
 #include <RooFitResult.h>
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
-#include "RooNLLVar.h"   // needed in BinnedDatasetTest.VSRooNLLVar
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RooFit/TestStatistics/RooBinnedL.h>
 #include <RooFit/TestStatistics/RooSumL.h>
@@ -340,16 +339,7 @@ TEST_F(BinnedDatasetTest, VSRooNLLVar)
    pdf->setAttribute("BinnedLikelihood");
    data = std::unique_ptr<RooAbsData>{pdf->generateBinned(*w.var("x"))};
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-
-   // manually create NLL, ripping all relevant parts from RooAbsPdf::createNLL, except here we also set binnedL = true;
-   // this is necessary, because the RooNLLVar ctor doesn't create a binned likelihood otherwise
-   RooArgSet projDeps;
-   RooAbsTestStatistic::Configuration nll_config;
-   nll_config.verbose = false;
-   nll_config.cloneInputData = false;
-   nll_config.binnedL = true;
-   int extended = 2;
-   nll = std::make_unique<RooNLLVar>("nlletje", "-log(likelihood)", *pdf, *data, projDeps, extended, nll_config);
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    auto AbsL_value = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
    auto RooNLL_value = nll->getVal();

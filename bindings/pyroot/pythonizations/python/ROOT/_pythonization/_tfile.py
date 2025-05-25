@@ -10,13 +10,7 @@
 ################################################################################
 
 r'''
-/**
-\class TFile
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-## PyROOT
+\pythondoc TFile
 
 In the same way as for TDirectory, it is possible to get the content of a
 TFile object with the familiar item-getting syntax.
@@ -66,10 +60,7 @@ the program to the gROOT object. If you want to restore the status of the
 current directory to some other file that was opened prior to the `with`
 statement, you can use the context manager functionality offered by TContext.
 
-\htmlonly
-</div>
-\endhtmlonly
-*/
+\endpythondoc
 '''
 
 from . import pythonization

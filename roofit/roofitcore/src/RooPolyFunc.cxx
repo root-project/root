@@ -36,7 +36,6 @@ part of the RooFit computation graph.
 using std::endl;
 using namespace RooFit;
 
-ClassImp(RooPolyFunc);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
@@ -115,7 +114,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsCollection &exponents)
    if (exponents.size() != _vars.size()) {
       coutE(InputArguments) << "RooPolyFunc::addTerm(" << GetName() << ") WARNING: number of exponents ("
                             << exponents.size() << ") provided do not match the number of variables (" << _vars.size()
-                            << ")" << endl;
+                            << ")" << std::endl;
    }
    int n_terms = _terms.size();
    std::string coeff_name = Form("%s_c%d", GetName(), n_terms);
@@ -136,7 +135,7 @@ RooPolyFunc::RooPolyFunc() {}
 /// Parameterised constructor
 
 RooPolyFunc::RooPolyFunc(const char *name, const char *title, const RooAbsCollection &vars)
-   : RooAbsReal(name, title), _vars("x", "list of dependent variables", this)
+   : RooAbsReal(name, title), _vars("vars", "list of dependent variables", this)
 {
    _vars.addTyped<RooAbsReal>(vars);
 }
@@ -144,8 +143,7 @@ RooPolyFunc::RooPolyFunc(const char *name, const char *title, const RooAbsCollec
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name)
-   : RooAbsReal(other, name), _vars("vars", this, other._vars)
+RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name) : RooAbsReal(other, name), _vars(this, other._vars)
 {
    for (auto const &term : other._terms) {
       _terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
@@ -224,6 +222,8 @@ void fixObservables(const RooAbsCollection &observables)
 //////////////////////////////////////////////////////////////////////////////
 /// Taylor expanding given function in terms of observables around
 /// observableValues. Supports expansions upto order 2.
+/// \param[in] name the name
+/// \param[in] title the title
 /// \param[in] func Function of variables that is taylor expanded.
 /// \param[in] observables Set of variables to perform the expansion.
 ///            It's type is RooArgList to ensure that it is always ordered the

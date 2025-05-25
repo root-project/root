@@ -67,21 +67,6 @@ public:
    */
    ~TMinuitMinimizer () override;
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   TMinuitMinimizer(const TMinuitMinimizer &);
-
-   /**
-      Assignment operator
-   */
-   TMinuitMinimizer & operator = (const TMinuitMinimizer & rhs);
-
-public:
-
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 

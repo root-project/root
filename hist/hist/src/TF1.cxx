@@ -31,6 +31,8 @@
 #include "TF1Helper.h"
 #include "TF1NormSum.h"
 #include "TF1Convolution.h"
+#include "TVectorD.h"
+#include "TMatrixDSym.h"
 #include "TVirtualMutex.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
@@ -487,15 +489,13 @@ TF1 *TF1::fgCurrent = nullptr;
 /// TF1 default constructor.
 
 TF1::TF1():
-   TNamed(), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(EFType::kFormula)
 {
    SetFillStyle(0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F1 constructor using a formula definition
+/// TF1 constructor using a formula definition
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 ///
@@ -509,7 +509,7 @@ TF1::TF1():
 /// titles for the X and Y axis respectively.
 
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList, bool vectorize) :
-   TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(EFType::kFormula)
+   TNamed(name, formula),  fType(EFType::kFormula)
 {
    if (xmin < xmax) {
       fXmin = xmin;
@@ -1530,6 +1530,26 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    return result;
 }
 
+/// Evaluate the uncertainty of the function at location x due to the parameter
+/// uncertainties. If covMatrix is nullptr, assumes uncorrelated uncertainties,
+/// otherwise the input covariance matrix (e.g. from a fit performed with
+/// option "S") is used. Implemented for 1-d only.
+/// @note to obtain confidence intervals of a fit result for drawing purposes,
+/// see instead ROOT::Fit::FitResult::GetConfidenceInterval()
+Double_t TF1::EvalUncertainty(Double_t x, const TMatrixDSym *covMatrix) const
+{
+   TVectorD grad(GetNpar());
+   GradientPar(&x, grad.GetMatrixArray());
+   if (!covMatrix) {
+      Double_t variance = 0;
+      for(Int_t iPar = 0; iPar < GetNpar(); iPar++) {
+         variance += grad(iPar)*grad(iPar)*GetParError(iPar)*GetParError(iPar);
+      }
+      return std::sqrt(variance);
+   }
+   return std::sqrt(covMatrix->Similarity(grad));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -1960,13 +1980,12 @@ Double_t TF1::GetProb() const
    return TMath::Prob(fChisquare, fNDF);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute Quantiles for density distribution of this function
 ///
-/// Quantile x_q of a probability distribution Function F is defined as
+/// Quantile x_p of a probability distribution Function F is defined as
 /// \f[
-///     F(x_{q}) = \int_{xmin}^{x_{q}} f dx = q with 0 <= q <= 1.
+///     F(x_{p}) = \int_{xmin}^{x_{p}} f dx = p \text{with} 0 <= p <= 1.
 /// \f]
 /// For instance the median \f$ x_{\frac{1}{2}} \f$ of a distribution is defined as that value
 /// of the random variable for which the distribution function equals 0.5:
@@ -1974,29 +1993,30 @@ Double_t TF1::GetProb() const
 ///        F(x_{\frac{1}{2}}) = \prod(x < x_{\frac{1}{2}}) = \frac{1}{2}
 /// \f]
 ///
-/// \param[in] nprobSum maximum size of array q and size of array probSum
-/// \param[out] q array filled with nq quantiles
-/// \param[in] probSum array of positions where quantiles will be computed.
-///     It is assumed to contain at least nprobSum values.
-/// \return value nq (<=nprobSum) with the number of quantiles computed
+/// \param[in] n maximum size of array xp and size of array p
+/// \param[out] xp array filled with n quantiles evaluated at p. Memory has to be preallocated by caller.
+/// \param[in] p array of cumulative probabilities where quantiles should be evaluated.
+///     It is assumed to contain at least n values.
+/// \return n, the number of quantiles computed (same as input argument n)
 ///
 ///  Getting quantiles from two histograms and storing results in a TGraph,
 ///  a so-called QQ-plot
 ///
 ///      TGraph *gr = new TGraph(nprob);
-///      f1->GetQuantiles(nprob,gr->GetX());
-///      f2->GetQuantiles(nprob,gr->GetY());
+///      f1->GetQuantiles(nprob,gr->GetX(),p);
+///      f2->GetQuantiles(nprob,gr->GetY(),p);
 ///      gr->Draw("alp");
 ///
 /// \author Eddy Offermann
+/// \warning Function leads to undefined behavior if xp or p are null or
+/// their size does not match with n
 
-
-Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
+Int_t TF1::GetQuantiles(Int_t n, Double_t *xp, const Double_t *p)
 {
    // LM: change to use fNpx
    // should we change code to use a root finder ?
    // It should be more precise and more efficient
-   const Int_t npx     = TMath::Max(fNpx, 2 * nprobSum);
+   const Int_t npx     = TMath::Max(fNpx, 2 * n);
    const Double_t xMin = GetXmin();
    const Double_t xMax = GetXmax();
    const Double_t dx   = (xMax - xMin) / npx;
@@ -2043,12 +2063,12 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
    // Be careful because of finite precision in the integral; Use the fact that the integral
    // is monotone increasing
-   for (i = 0; i < nprobSum; i++) {
-      const Double_t r = probSum[i];
+   for (i = 0; i < n; i++) {
+      const Double_t r = p[i];
       Int_t bin  = TMath::Max(TMath::BinarySearch(npx + 1, integral.GetArray(), r), (Long64_t)0);
       // in case the prob is 1
       if (bin == npx) {
-         q[i] = xMax;
+         xp[i] = xMax;
          continue;
       }
       // LM use a tolerance 1.E-12 (integral precision)
@@ -2065,14 +2085,14 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
             xx = (-beta[bin] + TMath::Sqrt(beta[bin] * beta[bin] + 2 * gamma[bin] * rr)) / gamma[bin];
          else if (beta[bin] != 0.)
             xx = rr / beta[bin];
-         q[i] = alpha[bin] + xx;
+         xp[i] = alpha[bin] + xx;
       } else {
-         q[i] = alpha[bin];
-         if (integral[bin + 1] == r) q[i] += dx;
+         xp[i] = alpha[bin];
+         if (integral[bin + 1] == r) xp[i] += dx;
       }
    }
 
-   return nprobSum;
+   return n;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -2442,7 +2462,7 @@ TAxis *TF1::GetZaxis() const
 ///
 /// If a parameter is fixed, the gradient on this parameter = 0
 
-Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
+Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps) const
 {
    return GradientParTempl<Double_t>(ipar, x, eps);
 }
@@ -2465,7 +2485,7 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 ///
 /// If a parameter is fixed, the gradient on this parameter = 0
 
-void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
+void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps) const
 {
    if (fFormula && fFormula->HasGeneratedGradient()) {
       // need to zero the gradient buffer
@@ -3126,6 +3146,7 @@ TH1   *TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
 
    // Copy Function attributes to histogram attributes.
    histogram->SetBit(TH1::kNoStats);
+   histogram->Sumw2(kFALSE);
    histogram->SetLineColor(GetLineColor());
    histogram->SetLineStyle(GetLineStyle());
    histogram->SetLineWidth(GetLineWidth());
@@ -3213,127 +3234,132 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Provide variable name for function for saving as primitive
+/// When TH1 or TGraph stores list of functions, it applies special coding of created variable names
+
+TString TF1::ProvideSaveName(Option_t *option)
+{
+   thread_local Int_t storeNumber = 0;
+   TString funcName = GetName();
+   const char *l = strstr(option, "#");
+   Int_t number = ++storeNumber;
+   if (l != nullptr)
+      sscanf(l + 1, "%d", &number);
+
+   funcName += number;
+   return gInterpreter->MapCppName(funcName);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   Int_t i;
-   char quote = '"';
-
-   // Save the function as C code independant from ROOT.
-   if (strstr(option, "cc")) {
-      out << "double " << GetName() << "(double xv) {" << std::endl;
+   // Save the function as C code independent from ROOT.
+   if (option && strstr(option, "cc")) {
+      out << "double " << GetName() << "(double xv) {\n";
       Double_t dx = (fXmax - fXmin) / (fNpx - 1);
-      out << "   double x[" << fNpx << "] = {" << std::endl;
+      out << "   double x[" << fNpx << "] = {\n";
       out << "   ";
       Int_t n = 0;
-      for (i = 0; i < fNpx; i++) {
-         out << fXmin + dx *i ;
-         if (i < fNpx - 1) out << ", ";
+      for (Int_t i = 0; i < fNpx; i++) {
+         out << fXmin + dx * i;
+         if (i < fNpx - 1)
+            out << ", ";
          if (n++ == 10) {
-            out << std::endl;
-            out << "   ";
+            out << "\n   ";
             n = 0;
          }
       }
-      out << std::endl;
-      out << "   };" << std::endl;
-      out << "   double y[" << fNpx << "] = {" << std::endl;
+      out << "\n";
+      out << "   };\n";
+      out << "   double y[" << fNpx << "] = {\n";
       out << "   ";
       n = 0;
-      for (i = 0; i < fNpx; i++) {
+      for (Int_t i = 0; i < fNpx; i++) {
          out << Eval(fXmin + dx * i);
-         if (i < fNpx - 1) out << ", ";
+         if (i < fNpx - 1)
+            out << ", ";
          if (n++ == 10) {
-            out << std::endl;
-            out << "   ";
+            out << "\n   ";
             n = 0;
          }
       }
-      out << std::endl;
-      out << "   };" << std::endl;
-      out << "   if (xv<x[0]) return y[0];" << std::endl;
-      out << "   if (xv>x[" << fNpx - 1 << "]) return y[" << fNpx - 1 << "];" << std::endl;
-      out << "   int i, j=0;" << std::endl;
-      out << "   for (i=1; i<" << fNpx << "; i++) { if (xv < x[i]) break; j++; }" << std::endl;
-      out << "   return y[j] + (y[j + 1] - y[j]) / (x[j + 1] - x[j]) * (xv - x[j]);" << std::endl;
-      out << "}" << std::endl;
+      out << "\n";
+      out << "   };\n";
+      out << "   if (xv<x[0]) return y[0];\n";
+      out << "   if (xv>x[" << fNpx - 1 << "]) return y[" << fNpx - 1 << "];\n";
+      out << "   int i, j=0;\n";
+      out << "   for (i=1; i<" << fNpx << "; i++) { if (xv < x[i]) break; j++; }\n";
+      out << "   return y[j] + (y[j + 1] - y[j]) / (x[j + 1] - x[j]) * (xv - x[j]);\n";
+      out << "}\n";
       return;
    }
 
-   out << "   " << std::endl;
-
-   // Either f1Number is computed locally or set from outside
-   static Int_t f1Number = 0;
-   TString f1Name(GetName());
-   const char *l = strstr(option, "#");
-   if (l != nullptr) {
-      sscanf(&l[1], "%d", &f1Number);
-   } else {
-      ++f1Number;
-   }
-   f1Name += f1Number;
+   TString f1Name = ProvideSaveName(option);
 
    const char *addToGlobList = fParent ? ", TF1::EAddToList::kNo" : ", TF1::EAddToList::kDefault";
 
+   out << "   \n";
    if (!fType) {
-      out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << GetName() << quote << "," << quote << GetTitle() << quote << "," << fXmin << "," << fXmax <<  addToGlobList << ");" << std::endl;
-      if (fNpx != 100) {
-         out << "   " << f1Name.Data() << "->SetNpx(" << fNpx << ");" << std::endl;
-      }
+      out << "   TF1 *" << f1Name << " = new TF1(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fXmin << "," << fXmax << addToGlobList << ");\n";
+      if (fNpx != 100)
+         out << "   " << f1Name << "->SetNpx(" << fNpx << ");\n";
    } else {
-      out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << "*" << GetName() << quote << "," << fXmin << "," << fXmax << "," << GetNpar() << ");" << std::endl;
-      out << "    //The original function : " << GetTitle() << " had originally been created by:" << std::endl;
-      out << "    //TF1 *" << GetName() << " = new TF1(" << quote << GetName() << quote << "," << GetTitle() << "," << fXmin << "," << fXmax << "," << GetNpar();
-      out << ", 1" << addToGlobList << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetRange(" << fXmin << "," << fXmax << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetName(" << quote << GetName() << quote << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-      if (fNpx != 100) {
-         out << "   " << f1Name.Data() << "->SetNpx(" << fNpx << ");" << std::endl;
+      out << "   TF1 *" << f1Name << " = new TF1(\"" << "*" << GetName() << "\", " << fXmin << "," << fXmax
+          << "," << GetNpar() << ");\n";
+      out << "   // The original function : " << GetTitle() << " had originally been created by:\n";
+      out << "   // TF1 *" << GetName() << " = new TF1(\"" << GetName() << "\", \"" << GetTitle() << "\", "
+          << fXmin << "," << fXmax << "," << GetNpar() << ", 1" << addToGlobList << ");\n";
+      out << "   " << f1Name << "->SetRange(" << fXmin << "," << fXmax << ");\n";
+      SavePrimitiveNameTitle(out, f1Name);
+      if (fNpx != 100)
+         out << "   " << f1Name << "->SetNpx(" << fNpx << ");\n";
+
+      Bool_t saved = kFALSE;
+      if (fSave.empty() && (fType != EFType::kCompositionFcn)) {
+         saved = kTRUE;
+         Save(fXmin, fXmax, 0, 0, 0, 0);
       }
-      Double_t dx = (fXmax - fXmin) / fNpx;
-      Double_t xv[1];
-      Double_t *parameters = GetParameters();
-      InitArgs(xv, parameters);
-      for (i = 0; i <= fNpx; i++) {
-         xv[0]    = fXmin + dx * i;
-         Double_t save = EvalPar(xv, parameters);
-         out << "   " << f1Name.Data() << "->SetSavedPoint(" << i << "," << save << ");" << std::endl;
+      if (!fSave.empty()) {
+         TString vect = SavePrimitiveVector(out, f1Name, fSave.size(), fSave.data());
+         out << "   for (int n = 0; n < " << fSave.size() << "; n++)\n";
+         out << "      " << f1Name << "->SetSavedPoint(n, "  << vect << "[n]);\n";
       }
-      out << "   " << f1Name.Data() << "->SetSavedPoint(" << fNpx + 1 << "," << fXmin << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetSavedPoint(" << fNpx + 2 << "," << fXmax << ");" << std::endl;
+
+      if (saved)
+         fSave.clear();
    }
 
-   if (TestBit(kNotDraw)) {
-      out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);" << std::endl;
-   }
+   if (TestBit(kNotDraw))
+      out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);\n";
 
-   SaveFillAttributes(out, f1Name.Data(), 0, 1001);
-   SaveMarkerAttributes(out, f1Name.Data(), 1, 1, 1);
-   SaveLineAttributes(out, f1Name.Data(), 1, 1, 4);
+   SaveFillAttributes(out, f1Name, -1, 0);
+   SaveMarkerAttributes(out, f1Name, -1, -1, -1);
+   SaveLineAttributes(out, f1Name, -1, -1, -1);
 
    if (GetChisquare() != 0) {
-      out << "   " << f1Name.Data() << "->SetChisquare(" << GetChisquare() << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetNDF(" << GetNDF() << ");" << std::endl;
+      out << "   " << f1Name << "->SetChisquare(" << GetChisquare() << ");\n";
+      out << "   " << f1Name << "->SetNDF(" << GetNDF() << ");\n";
    }
-
-   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f1Name.Data(), "->GetXaxis()");
-   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f1Name.Data(), "->GetYaxis()");
 
    Double_t parmin, parmax;
-   for (i = 0; i < GetNpar(); i++) {
-      out << "   " << f1Name.Data() << "->SetParameter(" << i << "," << GetParameter(i) << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetParError(" << i << "," << GetParError(i) << ");" << std::endl;
+   for (Int_t i = 0; i < GetNpar(); i++) {
+      out << "   " << f1Name << "->SetParameter(" << i << ", " << GetParameter(i) << ");\n";
+      out << "   " << f1Name << "->SetParError(" << i << ", " << GetParError(i) << ");\n";
       GetParLimits(i, parmin, parmax);
-      out << "   " << f1Name.Data() << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");" << std::endl;
+      out << "   " << f1Name << "->SetParLimits(" << i << ", " << parmin << ", " << parmax << ");\n";
    }
-   if (!strstr(option, "nodraw")) {
-      out << "   " << f1Name.Data() << "->Draw("
-          << quote << option << quote << ");" << std::endl;
-   }
-}
 
+   if (fHistogram && !strstr(option, "same")) {
+      GetXaxis()->SaveAttributes(out, f1Name, "->GetXaxis()");
+      GetYaxis()->SaveAttributes(out, f1Name, "->GetYaxis()");
+   }
+
+   SavePrimitiveDraw(out, f1Name, option);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function setting the current function.
@@ -3621,16 +3647,9 @@ void TF1::Update()
    if (fHistogram) {
       TString XAxisTitle = fHistogram->GetXaxis()->GetTitle();
       TString YAxisTitle = fHistogram->GetYaxis()->GetTitle();
-      Int_t XLabCol = fHistogram->GetXaxis()->GetLabelColor();
-      Int_t YLabCol = fHistogram->GetYaxis()->GetLabelColor();
-      Int_t XLabFont = fHistogram->GetXaxis()->GetLabelFont();
-      Int_t YLabFont = fHistogram->GetYaxis()->GetLabelFont();
-      Float_t XLabOffset = fHistogram->GetXaxis()->GetLabelOffset();
-      Float_t YLabOffset = fHistogram->GetYaxis()->GetLabelOffset();
-      Float_t XLabSize = fHistogram->GetXaxis()->GetLabelSize();
-      Float_t YLabSize = fHistogram->GetYaxis()->GetLabelSize();
-      Int_t XNdiv = fHistogram->GetXaxis()->GetNdivisions();
-      Int_t YNdiv = fHistogram->GetYaxis()->GetNdivisions();
+      TAttAxis attx, atty;
+      fHistogram->GetXaxis()->TAttAxis::Copy(attx);
+      fHistogram->GetYaxis()->TAttAxis::Copy(atty);
 
       delete fHistogram;
       fHistogram = nullptr;
@@ -3638,16 +3657,8 @@ void TF1::Update()
 
       fHistogram->GetXaxis()->SetTitle(XAxisTitle.Data());
       fHistogram->GetYaxis()->SetTitle(YAxisTitle.Data());
-      fHistogram->GetXaxis()->SetLabelColor(XLabCol);
-      fHistogram->GetYaxis()->SetLabelColor(YLabCol);
-      fHistogram->GetXaxis()->SetLabelFont(XLabFont);
-      fHistogram->GetYaxis()->SetLabelFont(YLabFont);
-      fHistogram->GetXaxis()->SetLabelOffset(XLabOffset);
-      fHistogram->GetYaxis()->SetLabelOffset(YLabOffset);
-      fHistogram->GetXaxis()->SetLabelSize(XLabSize);
-      fHistogram->GetYaxis()->SetLabelSize(YLabSize);
-      fHistogram->GetXaxis()->SetNdivisions(XNdiv);
-      fHistogram->GetYaxis()->SetNdivisions(YNdiv);
+      attx.Copy(*(fHistogram->GetXaxis()));
+      atty.Copy(*(fHistogram->GetYaxis()));
    }
    if (!fIntegral.empty()) {
       fIntegral.clear();

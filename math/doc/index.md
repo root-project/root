@@ -48,5 +48,5 @@ Further information is available at the following links:
 - [The Math page in the manual](https://root.cern/manual/math)
 - [The Linear Algebra section in the manual](https://root.cern/manual/math/#linear-algebra-packages)
 - [The Fitting histograms page in the manual](https://root.cern/manual/fitting/)
-- [Inventory of Math functions and algorithms] (http://project-mathlibs.web.cern.ch/project-mathlibs/mathTable.html)
+- [Inventory of Math functions and algorithms](http://project-mathlibs.web.cern.ch/project-mathlibs/mathTable.html)
 

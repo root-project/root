@@ -15,7 +15,9 @@
 #include "textinput/SignalHandler.h"
 
 #include <csignal>
-#ifndef _WIN32
+#ifdef _WIN32
+#include "windows.h"
+#else
 #include <sys/signal.h> // For SIGINT when building with -fmodules
 #endif
 
@@ -26,6 +28,14 @@ namespace textinput {
   SignalHandler::EmitCtrlZ() {
 #ifndef _WIN32
     raise(SIGTSTP);
+#endif
+  }
+  void
+  SignalHandler::EmitCtrlBackslash() {
+#ifdef _WIN32
+     TerminateProcess(GetCurrentProcess(), 0);
+#else
+     raise(SIGQUIT);
 #endif
   }
 }

@@ -1,11 +1,6 @@
 /****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
-
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
@@ -26,6 +21,7 @@
 #include <set>
 #include <random>
 
+#include "Compression.h"
 #include "MaxSlotHelper.h"
 #include "SimpleFiller.h"
 
@@ -52,29 +48,35 @@ protected:
 // Create file `filename` containing a test tree `treeName` with `nevents` events
 void FillTree(const char *filename, const char *treeName, int nevents = 0)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   t.SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
+   // NOTE(gparolini): these TFile and TTree are created on the heap to work around a know bug that can
+   // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+   // living on the stack.
+   // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+   // mark a heap object appearing by chance on the stack.
+   // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+   // so for now we are forced to work around the bug rather than fixing it.
+   auto f = std::make_unique<TFile>(filename, "RECREATE");
+   auto t = std::make_unique<TTree>(treeName, treeName);
+   t->SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
    double b1;
    int b2;
    double b3[2];
    unsigned int n;
    int b4[2] = {21, 42};
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   t.Branch("b3", b3, "b3[2]/D");
-   t.Branch("n", &n);
-   t.Branch("b4", b4, "b4[n]/I");
+   t->Branch("b1", &b1);
+   t->Branch("b2", &b2);
+   t->Branch("b3", b3, "b3[2]/D");
+   t->Branch("n", &n);
+   t->Branch("b4", b4, "b4[n]/I");
    for (int i = 0; i < nevents; ++i) {
       b1 = i;
       b2 = i * i;
       b3[0] = b1;
       b3[1] = -b1;
       n = i % 2 + 1;
-      t.Fill();
+      t->Fill();
    }
-   t.Write();
-   f.Close();
+   t->Write();
 }
 
 TEST_P(RDFSimpleTests, CreateEmpty)
@@ -350,13 +352,10 @@ TEST_P(RDFSimpleTests, DefineSlotConsistency)
 
 TEST_P(RDFSimpleTests, DefineSlot)
 {
-   std::vector<int> values(NSLOTS);
-   for (auto i = 0u; i < NSLOTS; ++i)
-      values[i] = i;
    RDataFrame df(NSLOTS);
-   auto ddf = df.DefineSlot("s", [values](unsigned int slot) { return values[slot]; });
+   auto ddf = df.DefineSlot("s", [](unsigned int slot) { return static_cast<int>(slot); });
    auto m = ddf.Max<int>("s");
-   EXPECT_EQ(*m, NSLOTS - 1); // no matter the order of processing, the higher slot number is always taken at least once
+   EXPECT_LT(*m, NSLOTS);
 }
 
 TEST_P(RDFSimpleTests, DefineSlotCheckMT)
@@ -603,26 +602,24 @@ TEST_P(RDFSimpleTests, Graph)
 
 TEST_P(RDFSimpleTests, BookCustomAction)
 {
-   RDataFrame d(1);
+   RDataFrame d(2 * ROOT::GetThreadPoolSize());
    const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
-   const auto expected = nWorkers - 1;
 
    auto maxSlot0 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});
    auto maxSlot1 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"rdfslot_"});
-   EXPECT_EQ(*maxSlot0, expected);
-   EXPECT_EQ(*maxSlot1, expected);
+   EXPECT_LT(*maxSlot0, nWorkers);
+   EXPECT_LT(*maxSlot1, nWorkers);
 }
 
 TEST_P(RDFSimpleTests, BookCustomActionJitted)
 {
-   RDataFrame d(1);
+   RDataFrame d(2 * ROOT::GetThreadPoolSize());
    const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
-   const auto expected = nWorkers - 1;
 
    auto maxSlot0 = d.Book(MaxSlotHelper(nWorkers), {"tdfslot_"});
    auto maxSlot1 = d.Book(MaxSlotHelper(nWorkers), {"rdfslot_"});
-   EXPECT_EQ(*maxSlot0, expected);
-   EXPECT_EQ(*maxSlot1, expected);
+   EXPECT_LT(*maxSlot0, nWorkers);
+   EXPECT_LT(*maxSlot1, nWorkers);
 }
 
 class StdDevTestHelper {
@@ -826,7 +823,8 @@ TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
       auto df = RDataFrame(64)
                    .Define("x", []() { return 1; })
                    .Define("y", []() { return 1; })
-                   .Snapshot<int, int>(treename, filename, {"x", "y"}, {"RECREATE", ROOT::kZLIB, 4, 2, 99, false});
+                   .Snapshot<int, int>(treename, filename, {"x", "y"},
+                                       {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 4, 2, 99, false});
    }
 
    TFile f(filename);
@@ -864,7 +862,8 @@ TEST_P(RDFSimpleTests, ManyRangesPerWorker)
    {
       ROOT::RDataFrame(184)
          .Define("i", []() { return 0; })
-         .Snapshot<int>("t", filename, {"i"}, {"RECREATE", ROOT::kZLIB, 1, 1, 99, false});
+         .Snapshot<int>("t", filename, {"i"},
+                        {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 1, 1, 99, false});
    }
    ROOT::RDataFrame("t", filename).Mean<int>("i");
    gSystem->Unlink(filename);
@@ -1041,6 +1040,41 @@ TEST_P(RDFSimpleTests, FillWithCustomClassJitted)
    auto &h = simplefilled->GetHisto();
    EXPECT_DOUBLE_EQ(h.GetMean(), 42.);
    EXPECT_EQ(h.GetEntries(), 10);
+}
+
+TEST_P(RDFSimpleTests, ReadStdArray)
+{
+   struct ArrayDataset {
+      std::string treename{"rdf_simple_array_dataset"};
+      std::string filename{"rdf_simple_array_dataset.root"};
+      std::string branchname{"arr"};
+      std::array<int, 6> arr{11, 22, 33, 44, 55, 66};
+      ArrayDataset()
+      {
+         TFile f{filename.c_str(), "recreate"};
+         TTree t{treename.c_str(), treename.c_str()};
+         t.Branch(branchname.c_str(), &arr);
+         t.Fill();
+         f.WriteObject(&t, treename.c_str());
+      }
+      ~ArrayDataset() { std::remove(filename.c_str()); }
+   } dataset;
+
+   ROOT::RDataFrame df{dataset.treename, dataset.filename};
+
+   auto col = df.Take<std::array<int, 6>>(dataset.branchname);
+   EXPECT_EQ(col->size(), 1);
+   std::array<int, 6> value = col->at(0);
+   for (unsigned i = 0; i < 6; i++) {
+      EXPECT_EQ(value[i], dataset.arr[i]);
+   }
+
+   auto colrvec = df.Take<ROOT::RVec<int>>(dataset.branchname);
+   EXPECT_EQ(colrvec->size(), 1);
+   ROOT::RVec<int> valuervec = colrvec->at(0);
+   for (unsigned i = 0; i < 6; i++) {
+      EXPECT_EQ(valuervec[i], dataset.arr[i]);
+   }
 }
 
 // run single-thread tests

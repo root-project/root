@@ -85,10 +85,13 @@ void erasePrefix(std::string &str, std::string_view prefix)
    }
 }
 
-void eraseSuffix(std::string &str, std::string_view suffix)
+bool eraseSuffix(std::string &str, std::string_view suffix)
 {
    if (endsWith(str, suffix)) {
       str.erase(str.size() - suffix.size());
+      return true;
+   } else {
+      return false;
    }
 }
 
@@ -780,10 +783,12 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             std::string sysname(var->GetName());
             erasePrefix(sysname, "alpha_");
             const auto *constraint = findConstraint(var);
-            if (!constraint)
+            if (!constraint && !var->isConstant()) {
                RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
-            sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i],
-                                        constraint ? constraint->IsA() : nullptr);
+            } else {
+               sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i],
+                                           constraint ? constraint->IsA() : nullptr);
+            }
          }
       }
       sortByName(sample.normsys);
@@ -797,9 +802,11 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             if (auto lo = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
                if (auto hi = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
                   const auto *constraint = findConstraint(var);
-                  if (!constraint)
+                  if (!constraint && !var->isConstant()) {
                      RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
-                  sample.histosys.emplace_back(sysname, var, lo, hi, constraint ? constraint->IsA() : nullptr);
+                  } else {
+                     sample.histosys.emplace_back(sysname, var, lo, hi, constraint ? constraint->IsA() : nullptr);
+                  }
                }
             }
          }
@@ -837,16 +844,23 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          } else { // other ShapeSys
             ShapeSys sys(phf->GetName());
             erasePrefix(sys.name, channelName + "_");
-            eraseSuffix(sys.name, "_ShapeSys");
+            bool isshapesys = eraseSuffix(sys.name, "_ShapeSys") || eraseSuffix(sys.name, "_shapeSys");
+            bool isshapefactor = eraseSuffix(sys.name, "_ShapeFactor") || eraseSuffix(sys.name, "_shapeFactor");
 
             for (const auto &g : phf->paramList()) {
                sys.parameters.push_back(g->GetName());
-               RooAbsPdf *constraint = findConstraint(g);
-               if (!constraint)
-                  constraint = ws->pdf(constraintName(g->GetName()));
-               if (!constraint && !g->isConstant()) {
-                  RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(g->GetName()));
-               } else if (!constraint) {
+               RooAbsPdf *constraint = nullptr;
+               if (isshapesys) {
+                  constraint = findConstraint(g);
+                  if (!constraint)
+                     constraint = ws->pdf(constraintName(g->GetName()));
+                  if (!constraint && !g->isConstant()) {
+                     RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(g->GetName()));
+                  }
+               } else if (!isshapefactor) {
+                  RooJSONFactoryWSTool::error("unknown type of shapesys " + std::string(phf->GetName()));
+               }
+               if (!constraint) {
                   sys.constraints.push_back(0.0);
                } else if (auto constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                   sys.constraints.push_back(1. / std::sqrt(constraint_p->getX().getVal()));
@@ -982,7 +996,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          auto &output = elem["axes"].set_seq();
          for (auto *obs : static_range_cast<RooRealVar *>(*varSet)) {
             auto &out = output.append_child().set_map();
-            out["name"] << obs->GetName();
+            std::string name = obs->GetName();
+            RooJSONFactoryWSTool::testValidName(name, false);
+            out["name"] << name;
             writeAxis(out, *obs);
          }
          observablesWritten = true;

@@ -32,8 +32,9 @@ using namespace std::string_literals;
 
 /** \class ROOT::RFileDialog
 \ingroup rbrowser
+\ingroup webwidgets
 
-web-based FileDialog.
+\brief Web-based FileDialog.
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////////

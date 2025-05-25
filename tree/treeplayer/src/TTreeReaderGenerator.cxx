@@ -31,9 +31,19 @@
 #include "TObjString.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
+#include "TInterpreter.h"
 
 namespace ROOT {
 namespace Internal {
+
+   /**
+    * @brief Convert a valid TTree branch name or filename into a valid C++ variable name
+    * @param name a TString with the original name
+    * @return a TString with the converted name valid to use as C++ variable in a script
+    */
+   TString GetCppName(TString name) {
+      return gInterpreter->MapCppName(name.Data());
+   }
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor. Analyzes the tree and writes selector.
@@ -807,7 +817,11 @@ namespace Internal {
 
       //======================Generate classname.h=====================
       TString thead;
-      thead.Form("%s.h", fClassname.Data());
+      const TString fileNameStem = fClassname;
+      const TString cppClassName = ROOT::Internal::GetCppName(fClassname);
+      if (cppClassName != fileNameStem)
+         Warning("TTreeReaderGenerator::WriteSelector", "The class name provided ('%s') is not a valid C++ identifier and will be converted to '%s', the code produced will likely fail to compile.", fileNameStem.Data(), cppClassName.Data());
+      thead.Form("%s.h", fileNameStem.Data());
       std::ofstream ofs (thead, std::ofstream::out);
       if (!ofs) {
          Error("WriteSelector","cannot open output file %s", thead.Data());
@@ -828,8 +842,8 @@ R"CODE(//////////////////////////////////////////////////////////
       ofs <<
 R"CODE(//////////////////////////////////////////////////////////
 
-#ifndef )CODE" << fClassname << R"CODE(_h
-#define )CODE" << fClassname << R"CODE(_h
+#ifndef )CODE" << cppClassName << R"CODE(_h
+#define )CODE" << cppClassName << R"CODE(_h
 
 #include <TROOT.h>
 #include <TChain.h>
@@ -854,7 +868,7 @@ R"CODE(#include <TSelector.h>
 
       // Generate class declaration with TTreeReaderValues and Arrays
       ofs <<
-R"CODE(class )CODE" << fClassname << R"CODE( : public TSelector {
+R"CODE(class )CODE" << cppClassName << R"CODE( : public TSelector {
 public :
    TTreeReader     fReader;  //!the tree reader
    TTree          *fChain = 0;   //!pointer to the analyzed TTree or TChain
@@ -864,17 +878,18 @@ public :
       next = &fListOfReaders;
       TTreeReaderDescriptor *descriptor;
       while ( ( descriptor = (TTreeReaderDescriptor*)next() ) ) {
+         const TString validName = ROOT::Internal::GetCppName(descriptor->fName);
          ofs << "   TTreeReader" << (descriptor->fType == TTreeReaderDescriptor::ReaderType::kValue ? "Value" : "Array")
                                  << "<" << descriptor->fDataType
-                                 << "> " << descriptor->fName
+                                 << "> " << validName
                                  << " = {fReader, \"" << descriptor->fBranchName << "\"};" << std::endl;
       }
       // Generate class member functions prototypes
       ofs <<
 R"CODE(
 
-   )CODE" << fClassname << R"CODE((TTree * /*tree*/ =0) { }
-   ~)CODE" << fClassname << R"CODE(() override { }
+   )CODE" << cppClassName << R"CODE((TTree * /*tree*/ =0) { }
+   ~)CODE" << cppClassName << R"CODE(() override { }
    Int_t   Version() const override { return 2; }
    void    Begin(TTree *tree) override;
    void    SlaveBegin(TTree *tree) override;
@@ -889,14 +904,14 @@ R"CODE(
    void    SlaveTerminate() override;
    void    Terminate() override;
 
-   ClassDefOverride()CODE" << fClassname << R"CODE(,0);
+   ClassDefOverride()CODE" << cppClassName << R"CODE(,0);
 
 };
 
 #endif
 
-#ifdef )CODE" << fClassname << R"CODE(_cxx
-void )CODE" << fClassname << R"CODE(::Init(TTree *tree)
+#ifdef )CODE" << cppClassName << R"CODE(_cxx
+void )CODE" << cppClassName << R"CODE(::Init(TTree *tree)
 {
    // The Init() function is called when the selector needs to initialize
    // a new tree or chain. Typically here the reader is initialized.
@@ -908,7 +923,7 @@ void )CODE" << fClassname << R"CODE(::Init(TTree *tree)
    fReader.SetTree(tree);
 }
 
-bool )CODE" << fClassname << R"CODE(::Notify()
+bool )CODE" << cppClassName << R"CODE(::Notify()
 {
    // The Notify() function is called when a new file is opened. This
    // can be either for a new TTree in a TChain or when when a new TTree
@@ -920,13 +935,13 @@ bool )CODE" << fClassname << R"CODE(::Notify()
 }
 
 
-#endif // #ifdef )CODE" << fClassname << R"CODE(_cxx
+#endif // #ifdef )CODE" << cppClassName << R"CODE(_cxx
 )CODE";
       ofs.close();
 
       //======================Generate classname.C=====================
       TString tcimp;
-      tcimp.Form("%s.C", fClassname.Data());
+      tcimp.Form("%s.C", fileNameStem.Data());
       std::ofstream ofsc (tcimp, std::ofstream::out);
       if (!ofsc) {
          Error("WriteSelector","cannot open output file %s", tcimp.Data());
@@ -934,8 +949,8 @@ bool )CODE" << fClassname << R"CODE(::Notify()
       }
 
       ofsc <<
-R"CODE(#define )CODE" << fClassname << R"CODE(_cxx
-// The class definition in )CODE" << fClassname << R"CODE(.h has been generated automatically
+R"CODE(#define )CODE" << cppClassName << R"CODE(_cxx
+// The class definition in )CODE" << cppClassName << R"CODE(.h has been generated automatically
 // by the ROOT utility TTree::MakeSelector(). This class is derived
 // from the ROOT class TSelector. For more information on the TSelector
 // framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
@@ -965,7 +980,7 @@ R"CODE(#define )CODE" << fClassname << R"CODE(_cxx
 #include <TH2.h>
 #include <TStyle.h>
 
-void )CODE" << fClassname << R"CODE(::Begin(TTree * /*tree*/)
+void )CODE" << cppClassName << R"CODE(::Begin(TTree * /*tree*/)
 {
    // The Begin() function is called at the start of the query.
    // When running with PROOF Begin() is only called on the client.
@@ -974,7 +989,7 @@ void )CODE" << fClassname << R"CODE(::Begin(TTree * /*tree*/)
    TString option = GetOption();
 }
 
-void )CODE" << fClassname << R"CODE(::SlaveBegin(TTree * /*tree*/)
+void )CODE" << cppClassName << R"CODE(::SlaveBegin(TTree * /*tree*/)
 {
    // The SlaveBegin() function is called after the Begin() function.
    // When running with PROOF SlaveBegin() is called on each slave server.
@@ -984,7 +999,7 @@ void )CODE" << fClassname << R"CODE(::SlaveBegin(TTree * /*tree*/)
 
 }
 
-bool )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
+bool )CODE" << cppClassName << R"CODE(::Process(Long64_t entry)
 {
    // The Process() function is called for each entry in the tree (or possibly
    // keyed object in the case of PROOF) to be processed. The entry argument
@@ -1007,7 +1022,7 @@ bool )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
    return true;
 }
 
-void )CODE" << fClassname << R"CODE(::SlaveTerminate()
+void )CODE" << cppClassName << R"CODE(::SlaveTerminate()
 {
    // The SlaveTerminate() function is called after all entries or objects
    // have been processed. When running with PROOF SlaveTerminate() is called
@@ -1015,7 +1030,7 @@ void )CODE" << fClassname << R"CODE(::SlaveTerminate()
 
 }
 
-void )CODE" << fClassname << R"CODE(::Terminate()
+void )CODE" << cppClassName << R"CODE(::Terminate()
 {
    // The Terminate() function is the last function to be called during
    // a query. It always runs on the client, it can be used to present

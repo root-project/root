@@ -16,7 +16,8 @@
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
-#include "Minuit2/MPIProcess.h"
+
+#include "./MPIProcess.h"
 
 #include <cmath>
 #include <cassert>
@@ -28,7 +29,7 @@ namespace Minuit2 {
 FunctionGradient HessianGradientCalculator::operator()(const MinimumParameters &par) const
 {
    // use initial gradient as starting point
-   InitialGradientCalculator gc(fFcn, fTransformation, fStrategy);
+   InitialGradientCalculator gc(fFcn, fTransformation);
    FunctionGradient gra = gc(par);
 
    return (*this)(par, gra);
@@ -53,18 +54,6 @@ unsigned int HessianGradientCalculator::Ncycle() const
 {
    // return number of calculation cycles (defined in strategy)
    return Strategy().HessianGradientNCycles();
-}
-
-double HessianGradientCalculator::StepTolerance() const
-{
-   // return tolerance on step size (defined in strategy)
-   return Strategy().GradientStepTolerance();
-}
-
-double HessianGradientCalculator::GradTolerance() const
-{
-   // return gradient tolerance (defines in strategy)
-   return Strategy().GradientTolerance();
 }
 
 std::pair<FunctionGradient, MnAlgebraicVector>
@@ -95,6 +84,8 @@ HessianGradientCalculator::DeltaGradient(const MinimumParameters &par, const Fun
    unsigned int startElementIndex = mpiproc.StartElementIndex();
    unsigned int endElementIndex = mpiproc.EndElementIndex();
 
+   MnFcnCaller fcnCaller{fFcn};
+
    for (unsigned int i = startElementIndex; i < endElementIndex; i++) {
       double xtf = x(i);
       double dmin = 4. * Precision().Eps2() * (xtf + Precision().Eps2());
@@ -111,9 +102,9 @@ HessianGradientCalculator::DeltaGradient(const MinimumParameters &par, const Fun
       double grdnew = 0.;
       for (unsigned int j = 0; j < Ncycle(); j++) {
          x(i) = xtf + d;
-         double fs1 = Fcn()(x);
+         double fs1 = fcnCaller(x);
          x(i) = xtf - d;
-         double fs2 = Fcn()(x);
+         double fs2 = fcnCaller(x);
          x(i) = xtf;
          //       double sag = 0.5*(fs1+fs2-2.*fcnmin);
          // LM: should I calculate also here second derivatives ???

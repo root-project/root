@@ -57,11 +57,15 @@ public:
       fLoopManager->Register(this);
    }
 
+   // Rule of five
+
    RRange(const RRange &) = delete;
    RRange &operator=(const RRange &) = delete;
+   RRange(RRange &&) = delete;
+   RRange &operator=(RRange &&) = delete;
    // must call Deregister here, before fPrevNode is destroyed,
    // otherwise if fPrevNode is fLoopManager we get a use after delete
-   ~RRange() { fLoopManager->Deregister(this); }
+   ~RRange() final { fLoopManager->Deregister(this); }
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
    bool CheckFilters(unsigned int slot, Long64_t entry) final

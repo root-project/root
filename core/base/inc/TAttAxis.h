@@ -14,6 +14,7 @@
 
 #include "Rtypes.h"
 
+class TColorNumber;
 
 class TAttAxis {
 protected:
@@ -61,6 +62,8 @@ public:
    virtual void     SetTitleSize(Float_t size=0.04);                  // *MENU*
    virtual void     SetTitleColor(Color_t color=1);                   // *MENU*
    virtual void     SetTitleFont(Style_t font=62);                    // *MENU*
+
+   void SetLabelColor(TColorNumber lcolor);
 
    ClassDef(TAttAxis,4);  //Axis attributes
 };

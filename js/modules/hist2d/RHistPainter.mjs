@@ -20,13 +20,15 @@ function assignRAxisMethods(axis) {
       axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; };
       axis.FindBin = function(x, add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); };
    } else if (axis._typename === `${nsREX}RAxisIrregular`) {
-      axis.min = axis.fBinBorders[0];
-      axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
+      axis.min = axis.fBinBorders.at(0);
+      axis.max = axis.fBinBorders.at(-1);
       axis.GetNumBins = function() { return this.fBinBorders.length; };
       axis.GetBinCoord = function(bin) {
          const indx = Math.round(bin);
-         if (indx <= 0) return this.fBinBorders[0];
-         if (indx >= this.fBinBorders.length) return this.fBinBorders[this.fBinBorders.length - 1];
+         if (indx <= 0)
+            return this.fBinBorders.at(0);
+         if (indx >= this.fBinBorders.length)
+            return this.fBinBorders.at(-1);
          if (indx === bin) return this.fBinBorders[indx];
          const indx2 = (bin < indx) ? indx - 1 : indx + 1;
          return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);
@@ -67,7 +69,6 @@ class RHistPainter extends RObjectPainter {
       this.draw_content = true;
       this.nbinsx = 0;
       this.nbinsy = 0;
-      this.accept_drops = true; // indicate that one can drop other objects like doing Draw('same')
       this.mode3d = false;
 
       // initialize histogram methods
@@ -242,7 +243,7 @@ class RHistPainter extends RObjectPainter {
    scanContent(/* when_axis_changed */) {
       // function will be called once new histogram or
       // new histogram content is assigned
-      // one should find min,max,nbins, maxcontent values
+      // one should find min, max, bins number, content min/max values
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
    }
 
@@ -452,7 +453,7 @@ class RHistPainter extends RObjectPainter {
       return true;
    }
 
-   /** @summary Toggle statbox drawing
+   /** @summary Toggle statistic box drawing
      * @desc Not yet implemented */
    toggleStat(/* arg */) {}
 
@@ -461,14 +462,17 @@ class RHistPainter extends RObjectPainter {
       // be aware - here indexes starts from 0
       const taxis = this.getAxis(axis),
             nbins = this['nbins'+axis] || 0;
-      let indx = 0;
 
-      if (this.options.second_x && axis === 'x') axis = 'x2';
-      if (this.options.second_y && axis === 'y') axis = 'y2';
+      if (this.options.second_x && axis === 'x')
+         axis = 'x2';
+      if (this.options.second_y && axis === 'y')
+         axis = 'y2';
 
       const main = this.getFramePainter(),
             min = main ? main[`zoom_${axis}min`] : 0,
             max = main ? main[`zoom_${axis}max`] : 0;
+
+      let indx;
 
       if ((min !== max) && taxis) {
          if (size === 'left')
@@ -481,7 +485,6 @@ class RHistPainter extends RObjectPainter {
             indx = nbins;
       } else
          indx = (size === 'left') ? 0 : nbins;
-
 
       return indx;
    }
@@ -526,6 +529,13 @@ class RHistPainter extends RObjectPainter {
       if (this.draw_content)
          pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
       if (!not_shown) pp.showPadButtons();
+   }
+
+   /** @summary Return histo bin errors
+    * @private */
+   getBinErrors(histo, bin /* , binz */) {
+      const err = histo.getBinError(bin);
+      return { low: err, up: err };
    }
 
    /** @summary get tool tips used in 3d mode */
@@ -627,7 +637,7 @@ class RHistPainter extends RObjectPainter {
          // menu for 3D drawings
 
          if (menu.size() > 0)
-            menu.add('separator');
+            menu.separator();
 
          const main = this.getMainPainter() || this;
 
@@ -702,7 +712,7 @@ class RHistPainter extends RObjectPainter {
       return this.interactiveRedraw('pad', 'drawopt');
    }
 
-   /** @summary Calculate histogram inidicies and axes values for each visible bin */
+   /** @summary Calculate histogram indices and axes values for each visible bin */
    prepareDraw(args) {
       if (!args) args = { rounding: true, extra: 0, middle: 0 };
 
@@ -781,7 +791,7 @@ class RHistPainter extends RObjectPainter {
          if ((res.i1 < res.i2-2) && (res.grx[res.i2-1] === res.grx[res.i2])) res.i2--;
       }
 
-      // copy last valid value to higher indicies
+      // copy last valid value to higher indices
       while (i < res.i2 + res.stepi + 1)
          res.grx[i++] = res.grx[res.i2];
 
@@ -808,14 +818,15 @@ class RHistPainter extends RObjectPainter {
          if ((res.j1 < res.j2-2) && (res.gry[res.j2-1] === res.gry[res.j2])) res.j2--;
       }
 
-      // copy last valid value to higher indicies
+      // copy last valid value to higher indices
       if (hdim > 1) {
          while (j < res.j2 + res.stepj + 1)
             res.gry[j++] = res.gry[res.j2];
       }
 
       //  find min/max values in selected range
-      this.maxbin = this.minbin = this.minposbin = null;
+      let is_first = true;
+      this.minposbin = 0;
 
       for (i = res.i1; i < res.i2; i += res.stepi) {
          for (j = res.j1; j < res.j2; j += res.stepj) {
@@ -823,22 +834,26 @@ class RHistPainter extends RObjectPainter {
             if (!Number.isFinite(binz)) continue;
             res.sumz += binz;
             if (args.pixel_density) {
-               binarea = (res.grx[i+res.stepi]-res.grx[i])*(res.gry[j]-res.gry[j+res.stepj]);
+               binarea = (res.grx[i+res.stepi] - res.grx[i]) * (res.gry[j] - res.gry[j+res.stepj]);
                if (binarea <= 0) continue;
                res.max = Math.max(res.max, binz);
                if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
-               binz = binz/binarea;
+               binz /= binarea;
             }
-            if (this.maxbin === null)
+            if (is_first) {
                this.maxbin = this.minbin = binz;
-            else {
+               is_first = false;
+            } else {
                this.maxbin = Math.max(this.maxbin, binz);
                this.minbin = Math.min(this.minbin, binz);
             }
-            if (binz > 0)
-               if ((this.minposbin === null) || (binz < this.minposbin)) this.minposbin = binz;
+            if ((binz > 0) && ((this.minposbin === 0) || (binz < this.minposbin)))
+               this.minposbin = binz;
          }
       }
+
+      if (is_first)
+         this.maxbin = this.minbin = 0;
 
       res.palette = pmain.getHistPalette();
 

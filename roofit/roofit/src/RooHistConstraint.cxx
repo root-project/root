@@ -27,7 +27,6 @@
 
 #include <Math/PdfFuncMathCore.h>
 
-ClassImp(RooHistConstraint);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new RooHistConstraint.

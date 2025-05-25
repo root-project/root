@@ -37,7 +37,7 @@ TPaveLabel::TPaveLabel(): TPave(), TAttText()
 /// Pavelabel normal constructor.
 ///
 /// a PaveLabel is a Pave with a label centered in the Pave
-/// The Pave is by default defined bith bordersize=5 and option ="br".
+/// The Pave is by default defined with bordersize=3 and option ="br".
 /// The text size is automatically computed as a function of the pave size.
 /// To remove the shadow or border of a TPaveLabel, use the function TPave::SetBorderSize
 
@@ -198,32 +198,18 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TPaveLabel::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPaveLabel::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPaveLabel::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TPaveLabel *";
-   }
-   TString s = fLabel.Data();
-   s.ReplaceAll("\"","\\\"");
-   if (fOption.Contains("NDC")) {
-      out<<"pl = new TPaveLabel("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
-   } else {
-      if (gPad) {
-         out<<"pl = new TPaveLabel("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
-            <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
-      }
-   }
-   if (fBorderSize != 3) {
-      out<<"   pl->SetBorderSize("<<fBorderSize<<");"<<std::endl;
-   }
-   SaveFillAttributes(out,"pl",19,1001);
-   SaveLineAttributes(out,"pl",1,1,1);
-   SaveTextAttributes(out,"pl",22,0,1,62,0);
+   TString lbl_arg = TString::Format("\"%s\"", TString(fLabel).ReplaceSpecialCppChars().Data());
+   SavePrimitiveConstructor(out, Class(), "pavelabel", GetSavePaveArgs(lbl_arg));
+   if (strcmp(GetName(), "TPave"))
+      out << "   pavelabel->SetName(\"" << GetName() << "\");\n";
+   if (fBorderSize != 3)
+      out << "   pavelabel->SetBorderSize(" << fBorderSize << ");\n";
 
-   out<<"   pl->Draw();"<<std::endl;
+   SaveFillAttributes(out, "pavelabel", 19, 1001);
+   SaveLineAttributes(out, "pavelabel", 1, 1, 1);
+   SaveTextAttributes(out, "pavelabel", 22, 0, 1, 62, 0);
+
+   SavePrimitiveDraw(out, "pavelabel", option);
 }

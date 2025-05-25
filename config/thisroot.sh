@@ -39,22 +39,27 @@ clean_environment()
       fi
       if [ -n "${LD_LIBRARY_PATH-}" ]; then
          drop_from_path "$LD_LIBRARY_PATH" "${old_rootsys}/lib"
+         drop_from_path "$LD_LIBRARY_PATH" "${old_rootsys}/lib/root"
          LD_LIBRARY_PATH=$newpath
       fi
       if [ -n "${DYLD_LIBRARY_PATH-}" ]; then
          drop_from_path "$DYLD_LIBRARY_PATH" "${old_rootsys}/lib"
+         drop_from_path "$DYLD_LIBRARY_PATH" "${old_rootsys}/lib/root"
          DYLD_LIBRARY_PATH=$newpath
       fi
       if [ -n "${SHLIB_PATH-}" ]; then
          drop_from_path "$SHLIB_PATH" "${old_rootsys}/lib"
+         drop_from_path "$SHLIB_PATH" "${old_rootsys}/lib/root"
          SHLIB_PATH=$newpath
       fi
       if [ -n "${LIBPATH-}" ]; then
          drop_from_path "$LIBPATH" "${old_rootsys}/lib"
+         drop_from_path "$LIBPATH" "${old_rootsys}/lib/root"
          LIBPATH=$newpath
       fi
       if [ -n "${PYTHONPATH-}" ]; then
          drop_from_path "$PYTHONPATH" "${old_rootsys}/lib"
+         drop_from_path "$PYTHONPATH" "${old_rootsys}/lib/root"
          PYTHONPATH=$newpath
       fi
       if [ -n "${MANPATH-}" ]; then
@@ -164,7 +169,7 @@ getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
    local trueExe nextTarget 2>/dev/null # ignore error in shells without `local`
    # Determine the shell executable filename.
    if [ -r "/proc/$$/cmdline" ]; then
-      trueExe=$(cut -d '' -f1 /proc/$$/cmdline) || return 1
+      trueExe=$(cut -d '' -f1 /proc/$$/cmdline 2>/dev/null) || trueExe=$(xargs -0 -n 1 < /proc/$$/cmdline | head -n 1) || return 1
       # Qemu emulation has cmdline start with the emulator
       if [ "${trueExe##*qemu*}" != "${trueExe}" ]; then
          # but qemu sets comm to the emulated command

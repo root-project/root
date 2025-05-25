@@ -775,7 +775,9 @@ void TDirectoryFile::FillBuffer(char *&buffer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find key with name keyname in the current directory
+/// Find key with name `keyname` in the current directory.
+/// `keyname` may be of the form name;cycle.
+/// See GetKey() for details on the semantics of this form.
 
 TKey *TDirectoryFile::FindKey(const char *keyname) const
 {
@@ -787,8 +789,10 @@ TKey *TDirectoryFile::FindKey(const char *keyname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find key with name keyname in the current directory or
+/// Find key with name `keyname` in the current directory or
 /// its subdirectories.
+/// `keyname` may be of the form name;cycle.
+/// See GetKey() for details on the semantics of this form.
 ///
 /// NOTE: that If a key is found, the directory containing the key becomes
 /// the current directory
@@ -1130,7 +1134,8 @@ Int_t TDirectoryFile::GetBufferSize() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to key with name,cycle
+/// Return pointer to key with name,cycle. If no key exists with the specified
+/// cycle, returns the key with the highest cycle that is lower than the requested cycle.
 ///
 ///  if cycle = 9999 returns highest cycle
 
@@ -1240,12 +1245,15 @@ TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *f
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a sub-directory "a" or a hierarchy of sub-directories "a/b/c/...".
 ///
-/// Returns 0 in case of error or if a sub-directory (hierarchy) with the requested
-/// name already exists.
-/// returnExistingDirectory returns a pointer to an already existing sub-directory instead of 0.
-/// Returns a pointer to the created sub-directory or to the top sub-directory of
-/// the hierarchy (in the above example, the returned TDirectory * always points
-/// to "a").
+/// @param name the name or hierarchy of the subdirectory ("a" or "a/b/c")
+/// @param title the title
+/// @param returnExistingDirectory if key-name is already existing, the returned
+/// value points to preexisting sub-directory if true and to `nullptr` if false.
+/// @return a pointer to the created sub-directory, not to the top sub-directory
+/// of the hierarchy (in the above example, the returned TDirectory * points
+/// to "c"). In case of an error, it returns `nullptr`. In case of a preexisting
+/// sub-directory (hierarchy) with the requested name, the return value depends
+/// on the parameter returnExistingDirectory.
 
 TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t returnExistingDirectory)
 {
@@ -1259,7 +1267,6 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t re
         return nullptr;
       }
    }
-   TDirectoryFile *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
       TString workname(name, Long_t(slash-name));
       TDirectoryFile *tmpdir = nullptr;
@@ -1268,16 +1275,12 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t re
          tmpdir = (TDirectoryFile*)mkdir(workname.Data(),title);
          if (!tmpdir) return nullptr;
       }
-      if (!newdir) newdir = tmpdir;
-      tmpdir->mkdir(slash+1);
-      return newdir;
+      return tmpdir->mkdir(slash + 1);
    }
 
    TDirectory::TContext ctxt(this);
 
-   newdir = new TDirectoryFile(name, title, "", this);
-
-   return newdir;
+   return new TDirectoryFile(name, title, "", this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1561,8 +1564,7 @@ void TDirectoryFile::Save()
       auto lnk = fList->FirstLink()->shared_from_this();
       while (lnk) {
          TObject *idcur = lnk->GetObject();
-         if (idcur && idcur->InheritsFrom(TDirectoryFile::Class())) {
-            TDirectoryFile *dir = (TDirectoryFile *)idcur;
+         if (TDirectoryFile *dir = dynamic_cast<TDirectoryFile *>(idcur)) {
             dir->Save();
          }
          lnk = lnk->NextSP();
@@ -1946,6 +1948,8 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    Int_t nch = strlen(oname);
    char *newName = nullptr;
    if (nch && oname[nch-1] == ' ') {
+      Warning("WriteTObject", "The key name '%s' will be stored in file without the trailing blanks.", obj->GetName());
+      // See https://github.com/root-project/root/issues/17003
       newName = new char[nch+1];
       strlcpy(newName,oname,nch+1);
       for (Int_t i=0;i<nch;i++) {

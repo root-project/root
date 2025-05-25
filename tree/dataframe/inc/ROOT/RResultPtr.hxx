@@ -96,15 +96,19 @@ namespace RDFInternal = ROOT::Internal::RDF;
 namespace RDFDetail = ROOT::Detail::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
-/// Smart pointer for the return type of actions
+/// Smart pointer for the return type of actions.
 /**
 \class ROOT::RDF::RResultPtr
 \ingroup dataframe
 \brief A wrapper around the result of RDataFrame actions able to trigger calculations lazily.
 \tparam T Type of the action result
 
-A smart pointer which allows to access the result of a RDataFrame action. The
-methods of the encapsulated object can be accessed via the arrow operator.
+A wrapper around a shared_ptr which allows to access the result of RDataFrame actions.
+The underlying object can be accessed by dereferencing the RResultPtr:
+~~~{.cpp}
+ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(...);
+histo->Draw(); // Starts running the event loop
+~~~
 Upon invocation of the arrow operator or dereferencing (`operator*`), the
 loop on the events and calculations of all scheduled actions are executed
 if needed.
@@ -114,12 +118,17 @@ for (auto& myItem : myResultProxy) { ... };
 ~~~
 If iteration is not supported by the type of the proxied object, a compilation error is thrown.
 
+When shared ownership to the result is desired, a copy of the underlying shared_ptr can be obtained:
+~~~{.cpp}
+std::shared_ptr<TH1D> ProduceResult(const char *columnname) {
+   auto ht = rdf.Histo1D(*h, columname);
+   return ht.GetSharedPtr();
+}
+~~~
+Note that this will run the event loop. If this is not desired, the RResultPtr can be copied.
 */
 template <typename T>
 class RResultPtr {
-   // private using declarations
-   using SPT_t = std::shared_ptr<T>;
-
    // friend declarations
    template <typename T1>
    friend class RResultPtr;
@@ -172,23 +181,13 @@ class RResultPtr {
    /// Non-owning pointer to the RLoopManager at the root of this computation graph.
    /// The RLoopManager is guaranteed to be always in scope if fLoopManager is not a nullptr.
    RDFDetail::RLoopManager *fLoopManager = nullptr;
-   SPT_t fObjPtr; ///< Shared pointer encapsulating the wrapped result
+   std::shared_ptr<T> fObjPtr; ///< Shared pointer encapsulating the wrapped result
    /// Owning pointer to the action that will produce this result.
    /// Ownership is shared with other copies of this ResultPtr.
    std::shared_ptr<RDFInternal::RActionBase> fActionPtr;
 
    /// Triggers the event loop in the RLoopManager
    void TriggerRun();
-
-   /// Get the pointer to the encapsulated result.
-   /// Ownership is not transferred to the caller.
-   /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T *Get()
-   {
-      if (fActionPtr != nullptr && !fActionPtr->HasRun())
-         TriggerRun();
-      return fObjPtr.get();
-   }
 
    void ThrowIfNull()
    {
@@ -223,33 +222,45 @@ public:
    {
    }
 
+   /// Produce the encapsulated result, and return a shared pointer to it.
+   /// If RDataFrame hasn't produced the result yet, triggers the event loop and execution
+   /// of all actions booked in the associated RLoopManager.
+   /// \note To share a "lazy" handle to the result without running the event loop, copy the RResultPtr.
+   std::shared_ptr<T> GetSharedPtr()
+   {
+      if (fActionPtr != nullptr && !fActionPtr->HasRun())
+         TriggerRun();
+      return fObjPtr;
+   }
+
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    const T &GetValue()
    {
       ThrowIfNull();
-      return *Get();
+      return *GetSharedPtr();
    }
 
    /// Get the pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
-   T *GetPtr() { return Get(); }
+   /// \note Ownership is not transferred to the caller.
+   T *GetPtr() { return GetSharedPtr().get(); }
 
-   /// Get a pointer to the encapsulated object.
+   /// Get a reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
    T &operator*()
    {
       ThrowIfNull();
-      return *Get();
+      return *GetSharedPtr();
    }
 
    /// Get a pointer to the encapsulated object.
-   /// Ownership is not transferred to the caller.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
+   /// \note Ownership is not transferred to the caller.
    T *operator->()
    {
       ThrowIfNull();
-      return Get();
+      return GetSharedPtr().get();
    }
 
    /// Return an iterator to the beginning of the contained object if this makes
@@ -307,10 +318,13 @@ public:
    /// When implicit multi-threading is enabled, the callback:
    /// - will never be executed by multiple threads concurrently: it needs not be thread-safe. For example the snippet
    ///   above that draws the partial histogram on a canvas works seamlessly in multi-thread event loops.
-   /// - will always be executed "everyNEvents": partial results will "contain" that number of events more from
-   ///   one call to the next
+   /// - will be executed by the first worker that arrives at the callback, and then only be executed when the same result
+   ///   is updated. For example, if dataframe uses N internal copies of a result, it will always be the `i`th < N object
+   ///   that is passed into the callback.
+   /// - will always be executed "everyNEvents": the partial result passed into the callback will have accumulated N more
+   ///   events, irrespective of the progress that other worker threads make.
    /// - might be executed by a different worker thread at different times: the value of `std::this_thread::get_id()`
-   ///   might change between calls
+   ///   might change between calls.
    ///
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one can use
    /// OnPartialResultSlot().
@@ -318,11 +332,18 @@ public:
    RResultPtr<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
       ThrowIfNull();
-      const auto nSlots = fLoopManager->GetNSlots();
       auto actionPtr = fActionPtr;
-      auto c = [nSlots, actionPtr, callback](unsigned int slot) {
-         if (slot != nSlots - 1)
+      constexpr auto kUninit = std::numeric_limits<unsigned int>::max();
+      auto activeSlot = std::make_shared<std::atomic_uint>(kUninit);
+      auto c = [=](unsigned int slot) {
+         if (activeSlot->load() == kUninit) {
+            // Try to grab the right to run the callback for our slot:
+            unsigned int expected = kUninit;
+            activeSlot->compare_exchange_strong(expected, slot);
+         }
+         if (activeSlot->load() != slot)
             return;
+
          auto partialResult = static_cast<Value_t *>(actionPtr->PartialUpdate(slot));
          callback(*partialResult);
       };

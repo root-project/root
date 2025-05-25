@@ -29,7 +29,7 @@ public:
   RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
           RooAbsReal::Ref norm, const char* rangeName=nullptr) ;
   RooExtendPdf(const RooExtendPdf& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooExtendPdf(*this,newname) ; }
 
   double evaluate() const override { return _pdf ; }
 
@@ -48,7 +48,7 @@ public:
   double expectedEvents(const RooArgSet* nset) const override ;
   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooAbsPdf const& pdf() const { return *_pdf; }
 
 protected:
 

@@ -261,9 +261,9 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
          llvm::StringRef tname(TT->getDecl()->getName());
-         if (tname.equals(fname)) {
+         if (tname == fname) {
             const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(GetDecl());
-            if (ndecl && !ndecl->getName().equals(fname)) {
+            if (ndecl && ndecl->getName() != fname) {
                // Constructor name matching the typedef type, use the decl name instead.
                return GetFunctionTemplate(ndecl->getName().str().c_str());
             }
@@ -308,9 +308,9 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
          llvm::StringRef tname(TT->getDecl()->getName());
-         if (tname.equals(fname)) {
+         if (tname == fname) {
             const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(GetDecl());
-            if (ndecl && !ndecl->getName().equals(fname)) {
+            if (ndecl && ndecl->getName() != fname) {
                // Constructor name matching the typedef type, use the decl name instead.
                return GetMethod(ndecl->getName().str().c_str());
             }
@@ -359,9 +359,9 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
          llvm::StringRef tname(TT->getDecl()->getName());
-         if (tname.equals(fname)) {
+         if (tname == fname) {
             const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(GetDecl());
-            if (ndecl && !ndecl->getName().equals(fname)) {
+            if (ndecl && ndecl->getName() != fname) {
                // Constructor name matching the typedef type, use the decl name instead.
                return GetMethod(ndecl->getName().str().c_str(),proto,
                                 objectIsConst,poffset,
@@ -453,9 +453,9 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
          llvm::StringRef tname(TT->getDecl()->getName());
-         if (tname.equals(fname)) {
+         if (tname == fname) {
             const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(GetDecl());
-            if (ndecl && !ndecl->getName().equals(fname)) {
+            if (ndecl && ndecl->getName() != fname) {
                // Constructor name matching the typedef type, use the decl name instead.
                return GetMethod(ndecl->getName().str().c_str(),proto,objectIsConst,poffset,
                                 mode,imode);
@@ -519,9 +519,9 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
          llvm::StringRef tname(TT->getDecl()->getName());
-         if (tname.equals(fname)) {
+         if (tname == fname) {
             const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(GetDecl());
-            if (ndecl && !ndecl->getName().equals(fname)) {
+            if (ndecl && ndecl->getName() != fname) {
                // Constructor name matching the typedef type, use the decl name instead.
                return GetMethod(ndecl->getName().str().c_str(),arglist,
                                 objectIsConst,poffset

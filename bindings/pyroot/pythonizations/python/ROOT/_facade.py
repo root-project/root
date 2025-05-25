@@ -1,18 +1,14 @@
 import importlib
-import types
-import sys
 import os
+import sys
+import types
 from functools import partial
 
 import cppyy
-
 import cppyy.ll
-
-from libROOTPythonizations import gROOT
 
 from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
-
 from ._pythonization import pythonization
 
 
@@ -36,7 +32,7 @@ class _gROOTWrapper(object):
 
     def __init__(self, facade):
         self.__dict__["_facade"] = facade
-        self.__dict__["_gROOT"] = gROOT
+        self.__dict__["_gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
     def __getattr__(self, name):
         if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
@@ -45,23 +41,6 @@ class _gROOTWrapper(object):
 
     def __setattr__(self, name, value):
         return setattr(self._gROOT, name, value)
-
-
-def _create_rdf_experimental_distributed_module(parent):
-    """
-    Create the ROOT.RDF.Experimental.Distributed python module.
-
-    This module will be injected into the ROOT.RDF namespace.
-
-    Arguments:
-        parent: The ROOT.RDF namespace. Needed to define __package__.
-
-    Returns:
-        types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
-    """
-    import DistRDF
-
-    return DistRDF.create_distributed_module(parent)
 
 
 def _subimport(name):
@@ -158,7 +137,7 @@ class ROOTFacade(types.ModuleType):
         elif hasattr(cppyy.gbl.ROOT, name):
             return getattr(cppyy.gbl.ROOT, name)
         else:
-            res = gROOT.FindObject(name)
+            res = self.gROOT.FindObject(name)
             if res:
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
@@ -204,7 +183,10 @@ class ROOTFacade(types.ModuleType):
 
     def _finalSetup(self):
         # Prevent this method from being re-entered through the gROOT wrapper
-        self.__dict__["gROOT"] = gROOT
+        self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
+
+        # Make sure the interpreter is initialized once gROOT has been initialized
+        cppyy.gbl.TInterpreter.Instance()
 
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
@@ -256,7 +238,7 @@ class ROOTFacade(types.ModuleType):
         # Run custom logon file (must be after creation of ROOT globals)
         hasargv = hasattr(sys, "argv")
         # -n disables the reading of the logon file, just like with root
-        if hasargv and not "-n" in sys.argv and not self.PyConfig.DisableRootLogon:
+        if hasargv and "-n" not in sys.argv and not self.PyConfig.DisableRootLogon:
             file_path_home = os.path.expanduser("~/.rootlogon.py")
             file_path_local = os.path.join(os.getcwd(), ".rootlogon.py")
             if os.path.exists(file_path_home):
@@ -323,7 +305,7 @@ class ROOTFacade(types.ModuleType):
             from ._pythonization._rvec import _AsRVec
 
             ns.AsRVec = _AsRVec
-        except:
+        except Exception:
             raise Exception("Failed to pythonize the namespace VecOps")
         del type(self).VecOps
         return ns
@@ -333,39 +315,88 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         self._finalSetup()
         ns = self._fallback_getattr("RDF")
-        try:
+
+        def MakeCSVDataFrame(fileName, readHeaders=True, delimiter=",", linesChunkSize=-1, colTypes={}, **kwargs):
+            options = ns.RCsvDS.ROptions()
+            options.fHeaders = readHeaders
+            options.fDelimiter = delimiter
+            options.fLinesChunkSize = linesChunkSize
+            options.fColumnTypes = colTypes
+            for key, val in kwargs.items():
+                structMemberName = "f" + key[0].upper() + key[1:]
+                if hasattr(options, structMemberName):
+                    setattr(options, structMemberName, val)
+            return ns._FromCSV(fileName, options)
+
+        if hasattr(ns, "FromCSV"):
+            # Provide a FromCSV factory method that uses keyword arguments instead of the ROptions config struct.
+            # In Python, the RCsvDS::ROptions struct members are available without the leading 'f' and in camelCase,
+            # e.g. fDelimiter --> delimiter.
+            # We need to keep the parameters of the old FromCSV signature for backward compatibility.
+            ns._FromCSV = ns.FromCSV
+            ns.FromCSV = MakeCSVDataFrame
+
+        # Make a copy of the arrays that have strides to make sure we read the correct values
+        # TODO a cleaner fix
+        def MakeNumpyDataFrameCopy(np_dict):
+            import numpy
+
             from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
-            # Make a copy of the arrays that have strides to make sure we read the correct values
-            # TODO a cleaner fix
-            def MakeNumpyDataFrameCopy(np_dict):
-                import numpy
+            for key in np_dict.keys():
+                if (np_dict[key].__array_interface__["strides"]) is not None:
+                    np_dict[key] = numpy.copy(np_dict[key])
+            return _MakeNumpyDataFrame(np_dict)
 
-                for key in np_dict.keys():
-                    if (np_dict[key].__array_interface__["strides"]) is not None:
-                        np_dict[key] = numpy.copy(np_dict[key])
-                return _MakeNumpyDataFrame(np_dict)
+        ns.FromNumpy = MakeNumpyDataFrameCopy
 
-            ns.FromNumpy = MakeNumpyDataFrameCopy
+        # make a RDataFrame from a Pandas dataframe
+        def MakePandasDataFrame(df):
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
-            # make a RDataFrame from a Pandas dataframe
-            def MakePandasDataFrame(df):
-                np_dict = {}
-                for key in df.columns:
-                    np_dict[key] = df[key].to_numpy()
-                return _MakeNumpyDataFrame(np_dict)
+            np_dict = {}
+            for key in df.columns:
+                np_dict[key] = df[key].to_numpy()
+            return _MakeNumpyDataFrame(np_dict)
 
-            ns.FromPandas = MakePandasDataFrame
+        ns.FromPandas = MakePandasDataFrame
 
-            try:
-                # Inject Experimental.Distributed package into namespace RDF if available
-                ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
-            except ImportError:
-                pass
-        except:
-            raise Exception("Failed to pythonize the namespace RDF")
+        try:
+            # Inject Pythonizations to interact between local and distributed RDF package
+            from ._pythonization._rdf_namespace import (
+                _create_distributed_module,
+                _fromspec,
+                _rungraphs,
+                _variationsfor,
+            )
+
+            ns.Distributed = _create_distributed_module(ns)
+            # Inject the experimental package which shows a warning before usage
+            ns.Experimental.Distributed = _create_distributed_module(ns, True)
+            ns.RunGraphs = _rungraphs(ns.Distributed.RunGraphs, ns.RunGraphs)
+            ns.Experimental.VariationsFor = _variationsfor(ns.Distributed.VariationsFor, ns.Experimental.VariationsFor)
+            ns.Experimental.FromSpec = _fromspec(ns.Distributed.FromSpec, ns.Experimental.FromSpec)
+        except ImportError:
+            pass
+
         del type(self).RDF
         return ns
+
+    @property
+    def RDataFrame(self):
+        """
+        Dispatch between the local and distributed RDataFrame depending on
+        input arguments.
+        """
+        local_rdf = self.__getattr__("RDataFrame")
+        try:
+            import DistRDF
+
+            from ._pythonization._rdf_namespace import _rdataframe
+
+            return _rdataframe(local_rdf, DistRDF.RDataFrame)
+        except ImportError:
+            return local_rdf
 
     # Overload RooFit namespace
     @property
@@ -375,7 +406,7 @@ class ROOTFacade(types.ModuleType):
         ns = self._fallback_getattr("RooFit")
         try:
             pythonize_roofit_namespace(ns)
-        except:
+        except Exception:
             raise Exception("Failed to pythonize the namespace RooFit")
         del type(self).RooFit
         return ns
@@ -383,19 +414,20 @@ class ROOTFacade(types.ModuleType):
     # Overload TMVA namespace
     @property
     def TMVA(self):
-        # this line is needed to import the pythonizations in _tmva directory
-        from ._pythonization import _tmva
+        # This line is needed to import the pythonizations in _tmva directory.
+        # The comment suppresses linter errors about unused imports.
+        from ._pythonization import _tmva  # noqa: F401
 
         ns = self._fallback_getattr("TMVA")
-        hasRDF = "dataframe" in gROOT.GetConfigFeatures()
+        hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
+                from ._pythonization._tmva import SaveXGBoost, _AsRTensor, inject_rbatchgenerator
 
                 inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
                 ns.Experimental.SaveXGBoost = SaveXGBoost
-            except:
+            except Exception:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA
         return ns
@@ -416,7 +448,8 @@ class ROOTFacade(types.ModuleType):
         if not hasattr(numba, "version_info") or numba.version_info < (0, 54):
             raise Exception("NumbaExt requires Numba version 0.54 or higher")
 
-        import cppyy.numba_ext
+        # The comment in the next line suppresses linter errors about unused imports
+        import cppyy.numba_ext  # noqa: F401
 
         # Return something as it is a property function
         return self
@@ -428,3 +461,17 @@ class ROOTFacade(types.ModuleType):
         tpd = cppyy.gbl.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd
+
+    # Create the uhi namespace
+    @property
+    def uhi(self):
+        uhi_module = types.ModuleType("uhi")
+        uhi_module.__file__ = "<module ROOT>"
+        uhi_module.__package__ = self
+        try:
+            from ._pythonization._uhi import _add_module_level_uhi_helpers
+
+            _add_module_level_uhi_helpers(uhi_module)
+        except ImportError:
+            raise Exception("Failed to pythonize the namespace uhi")
+        return uhi_module

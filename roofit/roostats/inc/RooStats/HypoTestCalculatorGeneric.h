@@ -44,9 +44,6 @@ namespace RooStats {
 
       ~HypoTestCalculatorGeneric() override;
 
-
-   public:
-
       /// inherited methods from HypoTestCalculator interface
       HypoTestResult* GetHypoTest() const override;
 
@@ -101,7 +98,7 @@ namespace RooStats {
 
 
    protected:
-   ClassDefOverride(HypoTestCalculatorGeneric,2)
+   ClassDefOverride(HypoTestCalculatorGeneric,0)
 };
 }
 

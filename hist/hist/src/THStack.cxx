@@ -105,7 +105,7 @@ End_Macro
 A more complex example:
 
 Begin_Macro(source)
-../../../tutorials/hist/hstack.C
+../../../tutorials/hist/hist023_THStack_simple.C
 End_Macro
 
 Note that picking is supported for all drawing modes.
@@ -117,17 +117,16 @@ Stacks of 2D histograms can also be painted as violin plots, combinations of can
 violin plots are possible as well:
 
 Begin_Macro(source)
-../../../tutorials/hist/candleplotstack.C
+../../../tutorials/hist/hist051_Graphics_candle_plot_stack.C
 End_Macro
 
 Automatic coloring according to the current palette is available as shown in the
 following example:
 
 Begin_Macro(source)
-../../../tutorials/hist/thstackpalettecolor.C
+../../../tutorials/hist/hist027_THStack_palette_color.C
 End_Macro
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor with name and title
@@ -456,10 +455,10 @@ void THStack::Draw(Option_t *option)
    opt.ToLower();
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (!opt.Contains("same")) {
+      if (!opt.Contains("same") && !opt.Contains("pads")) {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
-         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+         if (TestBit(kCanDelete)) gPad->Remove(this);
          gPad->Clear();
       }
    }
@@ -499,41 +498,43 @@ Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 {
    TString opt = option;
    opt.ToLower();
-   Bool_t lerr = kFALSE;
-   if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them = 0, themax = -std::numeric_limits<Double_t>::max(), c1, e1;
+   Bool_t lerr = opt.Contains("e");
+   Double_t themax = -std::numeric_limits<Double_t>::max();
    if (!fHists) return 0;
    Int_t nhists = fHists->GetSize();
-   TH1 *h;
-   Int_t first,last;
+
+   auto check_error = [&themax](TH1 *h) {
+      Int_t first = h->GetXaxis()->GetFirst();
+      Int_t last  = h->GetXaxis()->GetLast();
+      for (Int_t j = first; j <= last; j++) {
+         Double_t e1 = h->GetBinError(j);
+         Double_t c1 = h->GetBinContent(j);
+         themax = TMath::Max(themax, c1 + e1);
+      }
+   };
 
    if (!opt.Contains("nostack")) {
       BuildStack();
-      h = (TH1*)fStack->At(nhists-1);
-      if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
-                                              fHistogram->GetXaxis()->GetLast());
+      auto h = (TH1 *)fStack->At(nhists - 1);
+      if (fHistogram)
+         h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                 fHistogram->GetXaxis()->GetLast());
       themax = h->GetMaximum(maxval);
+      if (lerr)
+         check_error(h);
    } else {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
-                                                 fHistogram->GetXaxis()->GetLast());
-         them = h->GetMaximum(maxval);
-         if (fHistogram) h->GetXaxis()->SetRange(0,0);
-         if (them > themax) themax = them;
-      }
-   }
-
-   if (lerr) {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         first = h->GetXaxis()->GetFirst();
-         last  = h->GetXaxis()->GetLast();
-         for (Int_t j=first; j<=last;j++) {
-            e1     = h->GetBinError(j);
-            c1     = h->GetBinContent(j);
-            themax = TMath::Max(themax,c1+e1);
-         }
+      for (Int_t i = 0; i < nhists; i++) {
+         auto h = (TH1 *)fHists->At(i);
+         if (fHistogram)
+            h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                    fHistogram->GetXaxis()->GetLast());
+         Double_t them = h->GetMaximum(maxval);
+         if (them > themax)
+            themax = them;
+         if (lerr)
+            check_error(h);
+         if (fHistogram)
+            h->GetXaxis()->SetRange(0,0);
       }
    }
 
@@ -546,39 +547,44 @@ Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 
 Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 {
+   if (!fHists) return 0;
+
    TString opt = option;
    opt.ToLower();
-   Bool_t lerr = kFALSE;
-   if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them = 0, themin = std::numeric_limits<Double_t>::max(), c1, e1;
-   if (!fHists) return 0;
+   Bool_t lerr = opt.Contains("e");
+   Bool_t logy = gPad ? gPad->GetLogy() : kFALSE;
+   Double_t themin = std::numeric_limits<Double_t>::max();
    Int_t nhists = fHists->GetSize();
-   Int_t first,last;
-   TH1 *h;
+
+   auto check_error = [logy, &themin](TH1 *h) {
+      Int_t first = h->GetXaxis()->GetFirst();
+      Int_t last  = h->GetXaxis()->GetLast();
+      for (Int_t j = first; j <= last; j++) {
+         Double_t e1 = h->GetBinError(j);
+         Double_t c1 = h->GetBinContent(j);
+         if (!logy || (c1 - e1 > 0))
+            themin = TMath::Min(themin, c1 - e1);
+      }
+   };
 
    if (!opt.Contains("nostack")) {
       BuildStack();
-      h = (TH1*)fStack->At(nhists-1);
+      auto h = (TH1*)fStack->At(nhists-1);
       themin = h->GetMinimum(minval);
+      if (themin <= 0 && logy)
+         themin = h->GetMinimum(0);
+      if (lerr)
+         check_error(h);
    } else {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         them = h->GetMinimum(minval);
-         if (them <= 0 && gPad && gPad->GetLogy()) them = h->GetMinimum(0);
-         if (them < themin) themin = them;
-      }
-   }
-
-   if (lerr) {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         first = h->GetXaxis()->GetFirst();
-         last  = h->GetXaxis()->GetLast();
-         for (Int_t j=first; j<=last;j++) {
-             e1     = h->GetBinError(j);
-             c1     = h->GetBinContent(j);
-             themin = TMath::Min(themin,c1-e1);
-         }
+      for (Int_t i = 0; i < nhists; i++) {
+         auto h = (TH1 *)fHists->At(i);
+         Double_t them = h->GetMinimum(minval);
+         if (them <= 0 && logy)
+            them = h->GetMinimum(0);
+         if (them < themin)
+            themin = them;
+         if (lerr)
+            check_error(h);
       }
    }
 
@@ -705,7 +711,7 @@ void THStack::Paint(Option_t *chopt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create all additional objects and stack (if specified).
 
-void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
+void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stack)
 {
    if (!fHists) return;
    if (!fHists->GetSize()) return;
@@ -755,13 +761,17 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
       opt.ReplaceAll("noclear","");
    }
    if (opt.Contains("pads")) {
+      if (!paint)
+         return;
+
       Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
       //if pad is not already divided into subpads, divide it
       Int_t nps = 0;
       TIter nextp(padsav->GetListOfPrimitives());
       while (auto obj = nextp()) {
-         if (obj->InheritsFrom(TVirtualPad::Class())) nps++;
+         if (obj->InheritsFrom(TVirtualPad::Class()))
+            nps++;
       }
       if (nps < npads) {
          padsav->Clear();
@@ -770,17 +780,22 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          Int_t ny = nx;
          if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
-
-         Int_t i = 0;
-         auto lnk = fHists->FirstLink();
-         while (lnk) {
-            i++;
-            padsav->cd(i);
-            lnk->GetObject()->Draw(lnk->GetOption());
-            lnk = lnk->Next();
-         }
-         padsav->cd();
       }
+
+      Int_t i = 1;
+      auto lnk = fHists->FirstLink();
+      while (lnk) {
+         auto subpad = padsav->GetPad(i++);
+         if (!subpad) break;
+         // check if histogram already drawn on the pad
+         if (!subpad->FindObject(lnk->GetObject())) {
+            subpad->Clear();
+            subpad->Add(lnk->GetObject(), lnk->GetOption());
+            subpad->Paint(); // need to re-paint subpad immediately
+         }
+         lnk = lnk->Next();
+      }
+      padsav->cd();
       return;
    }
 
@@ -806,11 +821,17 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
    Bool_t candle   = loption.Contains("candle");
    Bool_t violin   = loption.Contains("violin");
 
-   // do not delete the stack. Another pad may contain the same object
-   // drawn in stack mode!
-   //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   if (!nostack && !candle && !violin) BuildStack();
+   if (!nostack && !candle && !violin) {
+      // do not delete the stack by default - only when needed.
+      // Another pad may contain the same object and use it
+      if (rebuild_stack && fStack) {
+         fStack->Delete();
+         delete fStack;
+         fStack = nullptr;
+      }
+      BuildStack();
+   }
 
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);
@@ -861,6 +882,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          }
       }
       fHistogram->SetStats(false);
+      fHistogram->Sumw2(kFALSE);
       TH1::AddDirectory(add);
    } else {
       fHistogram->SetTitle(GetTitle());
@@ -1010,51 +1032,43 @@ void THStack::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void THStack::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(THStack::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   THStack *";
-   }
-   out<<GetName()<<" = new THStack();"<<std::endl;
-   out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+   TString name = gInterpreter->MapCppName(GetName());
 
-   if (fMinimum != -1111) {
-      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<std::endl;
-   }
-   if (fMaximum != -1111) {
-      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<std::endl;
-   }
+   SavePrimitiveConstructor(out, Class(), name);
+   SavePrimitiveNameTitle(out, name);
 
-   static Int_t frameNumber = 0;
+   if (fMinimum != -1111)
+      out << "   " << name << "->SetMinimum(" << fMinimum << ");\n";
+   if (fMaximum != -1111)
+      out << "   " << name << "->SetMaximum(" << fMaximum << ");\n";
+
+   thread_local Int_t hcount = 0;
    if (fHistogram) {
-      frameNumber++;
       TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("%s_stack_%d", hname.Data(), frameNumber).Data());
-      fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   "<<GetName()<<"->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
-      out<<"   "<<std::endl;
+      fHistogram->SetName(TString::Format("%s_stack_%d", name.Data(), ++hcount).Data());
+      fHistogram->SavePrimitive(out, "nodraw");
+      out << "   " << name << "->SetHistogram(" << fHistogram->GetName() << ");\n";
+      out << "   \n";
       fHistogram->SetName(hname.Data()); // restore histogram name
    }
 
    if (fHists) {
       auto lnk = fHists->FirstLink();
-      Int_t hcount = 0;
       while (lnk) {
-         auto h = (TH1 *) lnk->GetObject();
+         auto h = static_cast<TH1 *>(lnk->GetObject());
          TString hname = h->GetName();
-         h->SetName(TString::Format("%s_stack_%d", hname.Data(), ++hcount).Data());
-         h->SavePrimitive(out,"nodraw");
-         out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-         lnk = lnk->Next();
+         h->SetName(TString::Format("%s_stack_%d", name.Data(), ++hcount).Data());
+         h->SavePrimitive(out, "nodraw");
+         out << "   " << name << "->Add(" << h->GetName() << ", \""
+             << TString(lnk->GetOption()).ReplaceSpecialCppChars() << "\");\n";
          h->SetName(hname.Data()); // restore histogram name
+         lnk = lnk->Next();
       }
    }
-   out<<"   "<<GetName()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
+
+   SavePrimitiveDraw(out, name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -28,7 +30,7 @@ In extended mode, a
 \f$ N_\mathrm{expect} - N_\mathrm{observed}*log(N_\mathrm{expect}) \f$ term is added.
 **/
 
-#include <RooNLLVar.h>
+#include "RooNLLVar.h"
 
 #include <RooAbsData.h>
 #include <RooAbsDataStore.h>
@@ -39,7 +41,7 @@ In extended mode, a
 #include <RooMsgService.h>
 #include <RooNaNPacker.h>
 #include <RooProdPdf.h>
-#include <RooRealMPFE.h>
+#include "RooRealMPFE.h"
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 
@@ -47,8 +49,6 @@ In extended mode, a
 #include "Math/Util.h"
 
 #include <algorithm>
-
-ClassImp(RooNLLVar)
 
 RooNLLVar::~RooNLLVar() {}
 
@@ -190,7 +190,7 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
       // Calculate log(Poisson(N|mu) for this bin
       double N = eventWeight ;
       double mu = _binnedPdf->getVal()*_binw[i] ;
-      //cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << endl ;
+      //cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << std::endl ;
 
       if (mu<=0 && N>0) {
 
@@ -358,3 +358,5 @@ void RooNLLVar::enableBinOffsetting(bool flag)
    }
    setValueDirty();
 }
+
+/// \endcond

@@ -28,7 +28,7 @@ public:
   RooPullVar(const char *name, const char *title, RooRealVar& measurement, RooAbsReal& truth) ;
 
   RooPullVar(const RooPullVar& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooPullVar(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooPullVar(*this, newname); }
 
 
 protected:

@@ -15,6 +15,11 @@ class RFunction_Update;
 class RFunction_Aggregate;
 
 struct GNN_Init {
+
+   // Explicitly define default constructor so cppyy doesn't attempt
+   // aggregate initialization.
+   GNN_Init() {}
+
    // update blocks
    std::unique_ptr<RFunction_Update> edges_update_block;
    std::unique_ptr<RFunction_Update> nodes_update_block;
@@ -33,17 +38,6 @@ struct GNN_Init {
    std::size_t num_global_features;
 
    std::string filename;
-
-   ~GNN_Init()
-   {
-      edges_update_block.reset();
-      nodes_update_block.reset();
-      globals_update_block.reset();
-
-      edge_node_agg_block.reset();
-      edge_global_agg_block.reset();
-      node_global_agg_block.reset();
-   }
 
    template <typename T>
    void createUpdateFunction(T &updateFunction)
@@ -111,19 +105,7 @@ private:
    std::size_t num_global_features;
 
 public:
-   /**
-       Default constructor. Needed to allow serialization of ROOT objects. See
-       https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
-   */
-   RModel_GNN() = default;
    RModel_GNN(GNN_Init &graph_input_struct);
-
-   // Rule of five: explicitly define move semantics, disallow copy
-   RModel_GNN(RModel_GNN &&other);
-   RModel_GNN &operator=(RModel_GNN &&other);
-   RModel_GNN(const RModel_GNN &other) = delete;
-   RModel_GNN &operator=(const RModel_GNN &other) = delete;
-   ~RModel_GNN() final = default;
 
    void Generate() final;
 };

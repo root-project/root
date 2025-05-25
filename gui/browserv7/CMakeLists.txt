@@ -12,6 +12,7 @@ ROOT_LINKER_LIBRARY(ROOTBrowserWidgets
      src/RBrowserWidget.cxx
   DEPENDENCIES
      ROOTBrowsable
+     ROOTWebDisplay
 )
 
 ROOT_LINKER_LIBRARY(ROOTBrowserTCanvasWidget
@@ -31,12 +32,14 @@ if(root7)
 )
 endif()
 
-ROOT_LINKER_LIBRARY(ROOTBrowserGeomWidget
-     src/RBrowserGeomWidget.cxx
-  DEPENDENCIES
-     ROOTBrowserWidgets
-     ROOTGeomViewer
-)
+if(geom)
+  ROOT_LINKER_LIBRARY(ROOTBrowserGeomWidget
+       src/RBrowserGeomWidget.cxx
+    DEPENDENCIES
+       ROOTBrowserWidgets
+       ROOTGeomViewer
+  )
+endif()
 
 ROOT_LINKER_LIBRARY(ROOTBrowserTreeWidget
      src/RBrowserTreeWidget.cxx

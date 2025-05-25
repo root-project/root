@@ -61,9 +61,12 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t w
       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
       if (ph && ph->LoadPlugin() != -1) {
-         auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, 0, 0, width, height);
-         if (imp) return imp;
+         auto imp = (TCanvasImp *)ph->ExecPlugin(6, c, title, 0, 0, width, height);
+         if (imp)
+            return imp;
       }
+
+      Error("CreateCanvasImp", "Fail to create TWebCanvas, please provide missing libWebGui6 or run 'root --web=off'");
    }
 
    return new TCanvasImp(c, title, width, height);
@@ -75,13 +78,16 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t w
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
    if (gROOT->IsWebDisplay()) {
-       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
-       if (ph && ph->LoadPlugin() != -1) {
-          auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, x, y, width, height);
-          if (imp) return imp;
-       }
-    }
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TCanvasImp *)ph->ExecPlugin(6, c, title, x, y, width, height);
+         if (imp)
+            return imp;
+      }
+
+      Error("CreateCanvasImp", "Fail to create TWebCanvas, please provide missing libWebGui6 or run 'root --web=off'");
+   }
 
    return new TCanvasImp(c, title, x, y, width, height);
 }
@@ -102,9 +108,13 @@ TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_
       auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", browserName);
 
       if (ph && ph->LoadPlugin() != -1) {
-         TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(5, b, title, width, height, opt);
-         if (imp) return imp;
+         auto imp = (TBrowserImp *)ph->ExecPlugin(5, b, title, width, height, opt);
+         if (imp)
+            return imp;
       }
+
+      Error("CreateBrowserImp", "Fail to create %s, please provide missing libraries or run 'root --web=off'",
+            browserName);
    }
 
    return new TBrowserImp(b, title, width, height);
@@ -126,9 +136,13 @@ TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t
       auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", browserName);
 
       if (ph && ph->LoadPlugin() != -1) {
-         TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(7, b, title, x, y, width, height, opt);
-         if (imp) return imp;
+         auto imp = (TBrowserImp *)ph->ExecPlugin(7, b, title, x, y, width, height, opt);
+         if (imp)
+            return imp;
       }
+
+      Error("CreateBrowserImp", "Fail to create %s, please provide missing libraries or run 'root --web=off'",
+            browserName);
    }
 
    return new TBrowserImp(b, title, x, y, width, height);
@@ -151,9 +165,13 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
       auto ph = gROOT->GetPluginManager()->FindHandler("TControlBarImp", "TWebControlBar");
 
       if (ph && ph->LoadPlugin() != -1) {
-         auto imp = (TControlBarImp *) ph->ExecPlugin(4, c, title, 0, 0);
-         if (imp) return imp;
+         auto imp = (TControlBarImp *)ph->ExecPlugin(4, c, title, 0, 0);
+         if (imp)
+            return imp;
       }
+
+      Error("CreateControlBarImp",
+            "Fail to create TWebControlBar, please provide missing libWebGui6 or run 'root --web=off'");
    }
 
    return new TControlBarImp(c, title);
@@ -168,9 +186,13 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
       auto ph = gROOT->GetPluginManager()->FindHandler("TControlBarImp", "TWebControlBar");
 
       if (ph && ph->LoadPlugin() != -1) {
-         auto imp = (TControlBarImp *) ph->ExecPlugin(4, c, title, x, y);
-         if (imp) return imp;
+         auto imp = (TControlBarImp *)ph->ExecPlugin(4, c, title, x, y);
+         if (imp)
+            return imp;
       }
+
+      Error("CreateControlBarImp",
+            "Fail to create TWebControlBar, please provide missing libWebGui6 or run 'root --web=off'");
    }
 
    return new TControlBarImp(c, title, x, y);

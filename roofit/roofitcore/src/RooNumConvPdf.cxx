@@ -73,7 +73,6 @@ convolution precision.
 
 using std::ostream;
 
-ClassImp(RooNumConvPdf);
 
 
 

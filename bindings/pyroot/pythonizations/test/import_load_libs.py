@@ -39,7 +39,10 @@ class ImportLoadLibs(unittest.TestCase):
             'libMultiProc',
             'libssl',
             'libcrypt.*', # by libssl
+            'oqsprovider', # loaded by libssl on e.g. centos10
+            'liboqs', # used by above
             'libtbb',
+            'libtbb_debug',
             'libtbbmalloc',
             'liburing', # by libRIO if uring option is enabled
             # On centos7 libssl links against kerberos pulling in all dependencies below, removed with libssl1.1.0
@@ -69,6 +72,7 @@ class ImportLoadLibs(unittest.TestCase):
             'libnss_.*',
             'ld.*',
             'libffi',
+            'libgcc_s',
             # AddressSanitizer runtime and ROOT configuration
             'libclang_rt.asan-.*',
             'libROOTSanitizerConfig',

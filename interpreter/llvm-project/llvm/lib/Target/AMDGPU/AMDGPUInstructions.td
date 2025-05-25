@@ -104,15 +104,18 @@ class PredicateControl {
 }
 
 class AMDGPUPat<dag pattern, dag result> : Pat<pattern, result>,
-      PredicateControl;
+      PredicateControl, GISelFlags;
+
+let GIIgnoreCopies = 1 in
+class AMDGPUPatIgnoreCopies<dag pattern, dag result> : AMDGPUPat<pattern, result>;
 
 let RecomputePerFunction = 1 in {
-def FP16Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().allFP64FP16Denormals()">;
-def FP32Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().allFP32Denormals()">;
-def FP64Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().allFP64FP16Denormals()">;
-def NoFP16Denormals : Predicate<"!MF->getInfo<SIMachineFunctionInfo>()->getMode().allFP64FP16Denormals()">;
-def NoFP32Denormals : Predicate<"!MF->getInfo<SIMachineFunctionInfo>()->getMode().allFP32Denormals()">;
-def NoFP64Denormals : Predicate<"!MF->getInfo<SIMachineFunctionInfo>()->getMode().allFP64FP16Denormals()">;
+def FP16Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().FP64FP16Denormals != DenormalMode::getPreserveSign()">;
+def FP32Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().FP32Denormals != DenormalMode::getPreserveSign()">;
+def FP64Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().FP64FP16Denormals != DenormalMode::getPreserveSign()">;
+def NoFP16Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().FP64FP16Denormals == DenormalMode::getPreserveSign()">;
+def NoFP32Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().FP32Denormals == DenormalMode::getPreserveSign()">;
+def NoFP64Denormals : Predicate<"MF->getInfo<SIMachineFunctionInfo>()->getMode().FP64FP16Denormals == DenormalMode::getPreserveSign()">;
 def UnsafeFPMath : Predicate<"TM.Options.UnsafeFPMath">;
 }
 
@@ -120,37 +123,61 @@ def FMA : Predicate<"Subtarget->hasFMA()">;
 
 def InstFlag : OperandWithDefaultOps <i32, (ops (i32 0))>;
 
-def u16ImmTarget : AsmOperandClass {
-  let Name = "U16Imm";
+def i1imm_0 : OperandWithDefaultOps<i1, (ops (i1 0))>;
+
+class CustomOperandClass<string name, bit optional, string predicateMethod,
+                         string parserMethod, string defaultMethod>
+    : AsmOperandClass {
+  let Name = name;
+  let PredicateMethod = predicateMethod;
+  let ParserMethod = parserMethod;
   let RenderMethod = "addImmOperands";
+  let IsOptional = optional;
+  let DefaultMethod = defaultMethod;
 }
 
-def s16ImmTarget : AsmOperandClass {
-  let Name = "S16Imm";
-  let RenderMethod = "addImmOperands";
+class CustomOperandProps<bit optional = 0, string name = NAME> {
+  string ImmTy = "ImmTy"#name;
+  string PredicateMethod = "is"#name;
+  string ParserMethod = "parse"#name;
+  string DefaultValue = "0";
+  string DefaultMethod = "[this]() { return "#
+    "AMDGPUOperand::CreateImm(this, "#DefaultValue#", SMLoc(), "#
+    "AMDGPUOperand::"#ImmTy#"); }";
+  string PrintMethod = "print"#name;
+  AsmOperandClass ParserMatchClass =
+    CustomOperandClass<name, optional, PredicateMethod, ParserMethod,
+                       DefaultMethod>;
+  string OperandType = "OPERAND_IMMEDIATE";
 }
 
-let OperandType = "OPERAND_IMMEDIATE" in {
+class CustomOperand<ValueType type, bit optional = 0, string name = NAME>
+  : Operand<type>, CustomOperandProps<optional, name>;
 
-def u32imm : Operand<i32> {
-  let PrintMethod = "printU32ImmOperand";
+class ImmOperand<ValueType type, string name = NAME, bit optional = 0,
+                 string printer = "print"#name>
+    : CustomOperand<type, optional, name> {
+  let ImmTy = "ImmTyNone";
+  let ParserMethod = "";
+  let PrintMethod = printer;
 }
 
-def u16imm : Operand<i16> {
-  let PrintMethod = "printU16ImmOperand";
-  let ParserMatchClass = u16ImmTarget;
-}
+def s16imm : ImmOperand<i16, "S16Imm", 0, "printU16ImmOperand">;
+def u16imm : ImmOperand<i16, "U16Imm", 0, "printU16ImmOperand">;
 
-def s16imm : Operand<i16> {
-  let PrintMethod = "printU16ImmOperand";
-  let ParserMatchClass = s16ImmTarget;
+class ValuePredicatedOperand<CustomOperand op, string valuePredicate,
+                             bit optional = 0>
+    : CustomOperand<op.Type, optional> {
+  let ImmTy = op.ImmTy;
+  defvar OpPredicate = op.ParserMatchClass.PredicateMethod;
+  let PredicateMethod =
+    "getPredicate([](const AMDGPUOperand &Op) -> bool { "#
+    "return Op."#OpPredicate#"() && "#valuePredicate#"; })";
+  let ParserMethod = op.ParserMatchClass.ParserMethod;
+  let DefaultValue = op.DefaultValue;
+  let DefaultMethod = op.DefaultMethod;
+  let PrintMethod = op.PrintMethod;
 }
-
-def u8imm : Operand<i8> {
-  let PrintMethod = "printU8ImmOperand";
-}
-
-} // End OperandType = "OPERAND_IMMEDIATE"
 
 //===--------------------------------------------------------------------===//
 // Custom Operands
@@ -210,6 +237,12 @@ class is_canonicalized<SDPatternOperator op> : PatFrag<
   }];
 }
 
+class FoldTernaryOpPat<SDPatternOperator op1, SDPatternOperator op2> : PatFrag<
+  (ops node:$src0, node:$src1, node:$src2),
+  (op2 (op1 node:$src0, node:$src1), node:$src2)
+>;
+
+def imad : FoldTernaryOpPat<mul, add>;
 
 let Properties = [SDNPCommutative, SDNPAssociative] in {
 def smax_oneuse : HasOneUseBinOp<smax>;
@@ -219,6 +252,8 @@ def umin_oneuse : HasOneUseBinOp<umin>;
 
 def fminnum_oneuse : HasOneUseBinOp<fminnum>;
 def fmaxnum_oneuse : HasOneUseBinOp<fmaxnum>;
+def fminimum_oneuse : HasOneUseBinOp<fminimum>;
+def fmaximum_oneuse : HasOneUseBinOp<fmaximum>;
 
 def fminnum_ieee_oneuse : HasOneUseBinOp<fminnum_ieee>;
 def fmaxnum_ieee_oneuse : HasOneUseBinOp<fmaxnum_ieee>;
@@ -527,19 +562,18 @@ def truncstorei16_#as : PatFrag<(ops node:$val, node:$ptr),
 def store_hi16_#as : StoreHi16 <truncstorei16, i16>;
 def truncstorei8_hi16_#as : StoreHi16<truncstorei8, i8>;
 def truncstorei16_hi16_#as : StoreHi16<truncstorei16, i16>;
-
 } // End let IsStore = 1, AddressSpaces = ...
 
 let IsAtomic = 1, AddressSpaces = !cast<AddressSpaceList>("StoreAddress_"#as).AddrSpaces in {
-def atomic_store_8_#as : PatFrag<(ops node:$ptr, node:$val),
-                                 (atomic_store_8 node:$ptr, node:$val)>;
-def atomic_store_16_#as : PatFrag<(ops node:$ptr, node:$val),
-                                  (atomic_store_16 node:$ptr, node:$val)>;
-def atomic_store_32_#as : PatFrag<(ops node:$ptr, node:$val),
-                                  (atomic_store_32 node:$ptr, node:$val)>;
-def atomic_store_64_#as : PatFrag<(ops node:$ptr, node:$val),
-                                  (atomic_store_64 node:$ptr, node:$val)>;
-}
+def atomic_store_8_#as : PatFrag<(ops node:$val, node:$ptr),
+                                 (atomic_store_8 node:$val, node:$ptr)>;
+def atomic_store_16_#as : PatFrag<(ops node:$val, node:$ptr),
+                                  (atomic_store_16 node:$val, node:$ptr)>;
+def atomic_store_32_#as : PatFrag<(ops node:$val, node:$ptr),
+                                  (atomic_store_32 node:$val, node:$ptr)>;
+def atomic_store_64_#as : PatFrag<(ops node:$val, node:$ptr),
+                                  (atomic_store_64 node:$val, node:$ptr)>;
+} // End let IsAtomic = 1, AddressSpaces = ...
 } // End foreach as
 
 multiclass noret_op {
@@ -605,8 +639,17 @@ defm int_amdgcn_flat_atomic_fadd : global_addr_space_atomic_op;
 defm int_amdgcn_global_atomic_fadd_v2bf16 : noret_op;
 defm int_amdgcn_global_atomic_fmin : noret_op;
 defm int_amdgcn_global_atomic_fmax : noret_op;
+defm int_amdgcn_global_atomic_csub : noret_op;
 defm int_amdgcn_flat_atomic_fadd : local_addr_space_atomic_op;
 defm int_amdgcn_ds_fadd_v2bf16 : noret_op;
+defm int_amdgcn_global_atomic_ordered_add_b64 : noret_op;
+defm int_amdgcn_flat_atomic_fmin_num : noret_op;
+defm int_amdgcn_flat_atomic_fmax_num : noret_op;
+defm int_amdgcn_global_atomic_fmin_num : noret_op;
+defm int_amdgcn_global_atomic_fmax_num : noret_op;
+defm int_amdgcn_atomic_cond_sub_u32 : local_addr_space_atomic_op;
+defm int_amdgcn_atomic_cond_sub_u32 : flat_addr_space_atomic_op;
+defm int_amdgcn_atomic_cond_sub_u32 : global_addr_space_atomic_op;
 
 multiclass noret_binary_atomic_op<SDNode atomic_op, bit IsInt = 1> {
   let HasNoUse = true in
@@ -638,6 +681,8 @@ defm atomic_load_umax : binary_atomic_op_all_as<atomic_load_umax>;
 defm atomic_load_umin : binary_atomic_op_all_as<atomic_load_umin>;
 defm atomic_load_xor : binary_atomic_op_all_as<atomic_load_xor>;
 defm atomic_load_fadd : binary_atomic_op_all_as<atomic_load_fadd, 0>;
+defm atomic_load_uinc_wrap : binary_atomic_op_all_as<atomic_load_uinc_wrap>;
+defm atomic_load_udec_wrap : binary_atomic_op_all_as<atomic_load_udec_wrap>;
 let MemoryVT = v2f16 in
 defm atomic_load_fadd_v2f16 : binary_atomic_op_all_as<atomic_load_fadd, 0>;
 defm AMDGPUatomic_cmp_swap : binary_atomic_op_all_as<AMDGPUatomic_cmp_swap>;

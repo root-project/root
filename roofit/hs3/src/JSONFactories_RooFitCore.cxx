@@ -65,19 +65,24 @@ namespace {
  * arguments are returned as a vector of strings.
  *
  * @param expr A string representing a mathematical expression.
- * @return A vector of strings representing the extracted arguments.
+ * @return A set of unique strings representing the extracted arguments.
  */
-std::vector<std::string> extractArguments(std::string expr)
+std::set<std::string> extractArguments(std::string expr)
 {
    // Get rid of whitespaces
    expr.erase(std::remove_if(expr.begin(), expr.end(), [](unsigned char c) { return std::isspace(c); }), expr.end());
 
-   std::vector<std::string> arguments;
+   std::set<std::string> arguments;
    size_t startidx = expr.size();
    for (size_t i = 0; i < expr.size(); ++i) {
       if (startidx >= expr.size()) {
          if (isalpha(expr[i])) {
             startidx = i;
+            // check this character is not part of scientific notation, e.g. 2e-5
+            if (TFormula::IsScientificNotation(expr, i)) {
+               // if it is, we ignore this character
+               startidx = expr.size();
+            }
          }
       } else {
          if (!isdigit(expr[i]) && !isalpha(expr[i]) && expr[i] != '_') {
@@ -87,12 +92,12 @@ std::vector<std::string> extractArguments(std::string expr)
             }
             std::string arg(expr.substr(startidx, i - startidx));
             startidx = expr.size();
-            arguments.push_back(arg);
+            arguments.insert(arg);
          }
       }
    }
    if (startidx < expr.size()) {
-      arguments.push_back(expr.substr(startidx));
+      arguments.insert(expr.substr(startidx));
    }
    return arguments;
 }
@@ -545,25 +550,15 @@ public:
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       TString expression(pdf->expression());
-      std::vector<std::pair<RooAbsArg *, std::size_t>> paramsWithIndex;
-      paramsWithIndex.reserve(pdf->nParameters());
-      for (size_t i = 0; i < pdf->nParameters(); ++i) {
-         paramsWithIndex.emplace_back(pdf->getParameter(i), i);
-      }
-      std::sort(paramsWithIndex.begin(), paramsWithIndex.end());
       // If the tokens follow the "x[#]" convention, the square braces enclosing each number
       // ensures that there is a unique mapping between the token and parameter name
-      for (auto [par, idx] : paramsWithIndex) {
-         expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
-      }
       // If the tokens follow the "@#" convention, the numbers are not enclosed by braces.
-      // So there may be tokens with numbers whose lower place value forms a subset string of ones with a higher place value,
-      // e.g. "@1" is a subset of "@10".
-      // So the names of these parameters must be applied descending from the highest place value
-      // in order to ensure each parameter name is uniquely applied to its token.
-      for (auto it = paramsWithIndex.rbegin(); it != paramsWithIndex.rend(); ++it) {
-         RooAbsArg* par = it->first;
-         std::size_t idx = it->second;
+      // So there may be tokens with numbers whose lower place value forms a subset string of ones with a higher place
+      // value, e.g. "@1" is a subset of "@10". So the names of these parameters must be applied descending from the
+      // highest place value in order to ensure each parameter name is uniquely applied to its token.
+      for (size_t idx = pdf->nParameters(); idx--;) {
+         const RooAbsArg *par = pdf->getParameter(idx);
+         expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
          expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
       }
       elem["expression"] << expression.Data();

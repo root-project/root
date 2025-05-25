@@ -23,7 +23,7 @@ public:
   RooGamma(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _gamma, RooAbsReal& _beta, RooAbsReal& _mu);
   RooGamma(const RooGamma& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooGamma(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooGamma(*this,newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
@@ -31,9 +31,10 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooAbsReal const &getX() const { return *x; }
+  RooAbsReal const &getGamma() const { return *gamma; }
+  RooAbsReal const &getBeta() const { return *beta; }
+  RooAbsReal const &getMu() const { return *mu; }
 
 protected:
 

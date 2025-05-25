@@ -99,11 +99,6 @@ OSXSDK         := @osxsdk@
 IOSVERS        := @iosvers@
 IOSSDK         := @iossdk@
 
-CXX11          := @c++11@
-CXX14          := @c++14@
-CXXMODULES     := @cxxmodules@
-LIBCXX         := @libc++@
-
 ENABLETHREAD   := @enable_thread@
 OSTHREADFLAG   := @threadflag@
 OSTHREADLIBDIR := @threadlibdir@
@@ -200,7 +195,6 @@ SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
 BUILDASIMAGE   := @buildasimage@
-BUILTINASIMAGE := @builtinafterimage@
 ASEXTRALIB     := @asextralib@
 ASEXTRALIBDIR  := @asextralibdir@
 ASJPEGINCDIR   := $(filter-out /usr/include, @asjpegincdir@)
@@ -256,16 +250,10 @@ XRDVERSION     := @xrdversion@
 HASXRDUTILS    := @hasxrdutils@
 XRDINCPRIVATE  := @xrdincprivate@
 BUILDNETXNG    := @buildnetxng@
-BUILDXPROOFD   := @buildxproofd@
 BUILDXRDCLT    := @buildxrdclt@
 
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
-
-BUILDMONALISA  := @buildmonalisa@
-MONALISALIBDIR := @monalisalibdir@
-MONALISACLILIB := @monalisalib@
-MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
 
 BUILDTBB       := @buildtbb@
 TBBLIBDIR      := @tbblibdir@

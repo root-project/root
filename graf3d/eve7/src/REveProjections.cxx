@@ -9,11 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TError.h"
-
 #include <ROOT/REveProjections.hxx>
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveUtil.hxx>
+
+#include "TError.h"
+#include "TString.h"
 
 #include <limits>
 

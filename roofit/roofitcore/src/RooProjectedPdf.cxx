@@ -35,7 +35,6 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 #include "RooRealVar.h"
 #include "RooNameReg.h"
 
-ClassImp(RooProjectedPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +79,7 @@ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
  RooProjectedPdf::RooProjectedPdf(const RooProjectedPdf& other, const char* name) :
    RooAbsPdf(other,name),
    intpdf("!IntegratedPdf",this,other.intpdf),
-   intobs("!IntegrationObservable",this,other.intobs),
+   intobs("!IntegrationObservables",this,other.intobs),
    deps("!Dependents",this,other.deps),
    _cacheMgr(other._cacheMgr,this)
 {
@@ -214,7 +213,7 @@ bool RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList,
   // Redetermine explicit list of dependents if intPdf is being replaced
   if (RooAbsArg* newPdf = newServerList.find(intpdf.arg().GetName())) {
 
-    // Determine if set of dependens of new p.d.f is different from old p.d.f.
+    // Determine if set of dependents of new p.d.f is different from old p.d.f.
     RooArgSet olddeps(deps) ;
     RooArgSet newdeps;
     newPdf->getParameters(&intobs, newdeps);

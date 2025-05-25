@@ -77,6 +77,7 @@ private:
    TClingDataMemberIter   fIter; // Current decl.
    std::string            fTitle; // The meta info for the member.
    bool                   fFirstTime = true; // We need to skip the first increment to support the cint Next() semantics.
+   int64_t                fEnumValue; // Special case to handle enums
 
    mutable std::string fIoType;
    mutable std::string fIoName;

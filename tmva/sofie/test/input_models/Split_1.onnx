@@ -1,0 +1,24 @@
+
+onnx-example:Û
+5split_values"Constant*
+value*:Bsplit 
+;
+input
+split_valuesoutput1output2"Split*
+axis 
+SplitGraphZ
+input
+
+
+
+b
+output1
+
+
+
+b
+output2
+
+
+
+B

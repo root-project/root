@@ -11,29 +11,38 @@ import { TH1Painter as TH1Painter2D } from '../hist2d/TH1Painter.mjs';
 class TH1Painter extends TH1Painter2D {
 
    /** @summary draw TH1 object in 3D mode */
-   draw3D(reason) {
+   async draw3D(reason) {
       this.mode3d = true;
 
       const main = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
             histo = this.getHisto(),
             zmult = 1 + 2*gStyle.fHistTopMargin;
-      let pr = Promise.resolve(true);
+      let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
-      } else {
+         const res = is_main ? main.resize3D() : false;
+         if (res !== 1) {
+            full_draw = false;
+            if (res)
+               main.render3D();
+         }
+      }
+
+      if (full_draw) {
          this.createHistDrawAttributes(true);
 
-         this.scanContent(true); // may be required for axis drawings
+         this.scanContent(reason === 'zoom'); // may be required for axis drawings
 
          if (is_main) {
             assignFrame3DMethods(main);
             pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
                main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1,
-                  draw: (this.options.Axis !== -1), drawany: this.options.isCartesian() });
+               main.drawXYZ(main.toplevel, TAxisPainter, {
+                  ndim: 1, hist_painter: this, use_y_for_z: true, zmult, zoom: settings.Zooming,
+                  draw: (this.options.Axis !== -1), drawany: this.options.isCartesian()
+               });
             });
          }
 
@@ -48,7 +57,7 @@ class TH1Painter extends TH1Painter2D {
       }
 
       if (is_main)
-         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14))));
+         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && this.options.canHavePalette()));
 
       return pr.then(() => this.updateFunctions())
                .then(() => this.updateHistTitle())

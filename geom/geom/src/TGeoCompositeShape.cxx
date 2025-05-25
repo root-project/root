@@ -311,7 +311,7 @@ void TGeoCompositeShape::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes normal vector in POINT to the composite shape.
 
-void TGeoCompositeShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoCompositeShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    if (fNode)
       fNode->ComputeNormal(point, dir, norm);

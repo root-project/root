@@ -34,7 +34,6 @@ orders.
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
 
-ClassImp(RooNumCdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a cumulative distribution function from given input p.d.f over observable x.

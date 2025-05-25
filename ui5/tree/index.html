@@ -3,6 +3,7 @@
    <head>
       <meta charset="utf-8">
       <title>Tree viewer</title>
+      <!--jsroot_importmap-->
       <style>
          html { height: 100%; }
          body { min-height: 100%; margin: 0; overflow: hidden }
@@ -19,9 +20,7 @@
          .sapMITBHead {
              margin: 0 !important;
          }
-
        </style>
-
    </head>
 
    <body>
@@ -31,8 +30,8 @@
 
    <script type='module'>
 
-     import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
-     import { parse, decodeUrl, toJSON, source_dir } from './jsrootsys/modules/core.mjs';
+     import { connectWebWindow } from 'jsroot/webwindow';
+     import { parse, decodeUrl, toJSON } from 'jsroot/core';
 
      connectWebWindow({
         ui5: true,
@@ -41,7 +40,7 @@
          sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
              XMLView.create({
                 viewName: "rootui5.tree.view.TreeViewer",
-                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
+                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON } }
              }).then(oView => oView.placeAt("ViewerDiv"));
           });
      });

@@ -63,7 +63,7 @@ class ROOTModule(unittest.TestCase):
         self.assertTrue(type(v) == str)
         # Fix for #14068: we take into account the different way of expressing the version
         # number before and starting with 6.32.00
-        self.assertIn("/", v) if ROOT.gROOT.GetVersionInt() < 63199 else self.assertNotIn("/", v)
+        self.assertIn("/", v) if ROOT.gROOT.GetVersionInt() < 63200 else self.assertNotIn("/", v)
         self.assertIn(".", v)
         self.assertEqual(v, ROOT.gROOT.GetVersion())
 
@@ -97,10 +97,10 @@ class ROOTModule(unittest.TestCase):
         #
 
         if root_module_has("RDF.Experimental.Distributed"):
-            import ROOT.RDF.Experimental.Distributed
+            import ROOT.RDF.Distributed
 
-        if root_module_has("Experimental.RNTuple"):
-            from ROOT.Experimental import RNTuple
+        if root_module_has("RNTuple"):
+            from ROOT import RNTuple
 
         if root_module_has("RooFit.Evaluator"):
             from ROOT.RooFit import Evaluator

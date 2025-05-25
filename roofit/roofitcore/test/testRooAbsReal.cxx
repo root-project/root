@@ -3,14 +3,18 @@
 //          Jonas Rembser, CERN 09/2022
 
 #include <RooAbsPdf.h>
+#include <RooAddPdf.h>
+#include <RooBinning.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooRealVar.h>
+#include <RooUniform.h>
 #include <RooWorkspace.h>
 
 #include <TFile.h>
+#include <TH1.h>
 #include <TTree.h>
 
 #include <gtest/gtest.h>
@@ -92,4 +96,37 @@ TEST(RooAbsReal, ErrorPropagation)
    EXPECT_LE(err2, err1)
       << "When propagating uncertainties to another PDF that is identical to the fit model except for one parameter, "
          "the uncertainty is expected to be smaller because that parameters uncertainty is not considered";
+}
+
+// Test that we can get the yield histogram from an extended pdf with
+// RooAbsReal::createHistogram() as described in the documentation.
+TEST(RooAbsReal, YieldsHistogram)
+{
+   using namespace RooFit;
+
+   // Define non-uniform boundaries and total yield.
+   // Second bin is three times larger than the first
+   double totalYield = 150.;
+   std::vector<double> boundaries{0., 2.5, 10.};
+   int nBins = boundaries.size() - 1;
+
+   // Define variable and binning
+   RooRealVar x{"x", "x", boundaries.front(), boundaries.back()};
+   RooBinning binning{nBins, boundaries.data()};
+   x.setBinning(binning);
+
+   // Create uniform extended pdf (shape doesn't matter for this test)
+   RooRealVar totalYieldVar{"total_yield", "", totalYield};
+   RooUniform pdf{"pdf", "", x};
+   RooAddPdf pdfExt{"pdf_ext", "", pdf, totalYieldVar};
+
+   std::unique_ptr<TH1> yields{pdfExt.createHistogram("hist", x)};
+
+   double c1 = yields->GetBinContent(1);
+   double c2 = yields->GetBinContent(2);
+
+   // since the underlying pdf is uniform, the yields are just proportional to
+   // the bin widths.
+   EXPECT_FLOAT_EQ(c1 * x.getBinWidth(1), c2 * x.getBinWidth(0)) << "relative yield is wrong";
+   EXPECT_FLOAT_EQ(c1 + c2, totalYield) << "total yield is wrong";
 }

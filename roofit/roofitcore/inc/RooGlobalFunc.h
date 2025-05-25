@@ -21,6 +21,7 @@
 #include "RooArgSet.h"
 
 #include "ROOT/RConfig.hxx"
+#include <TColor.h>
 
 #include <map>
 #include <string>
@@ -43,6 +44,7 @@ class RooConstVar ;
 class RooRealVar ;
 class RooAbsCategory ;
 class RooNumIntConfig ;
+
 class TH1 ;
 class TTree ;
 
@@ -52,7 +54,7 @@ The namespace RooFit contains mostly switches that change the behaviour of funct
 
 These switches are documented with the relevant functions, e.g. RooAbsPdf::fitTo().
 For an introduction to RooFit (not the namespace), check the [user's guides](https://root.cern/root-user-guides-and-manuals),
-[courses](https://root.cern/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
+[courses](https://root.cern/learn/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
 */
 namespace RooFit {
 
@@ -75,6 +77,9 @@ RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int cha
 RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4) ;
 
 } // Experimental
+
+std::string getBatchCompute();
+void setBatchCompute(std::string const &value);
 
 /**
  * \defgroup CmdArgs RooFit command arguments
@@ -102,11 +107,13 @@ RooCmdArg Range(const char* rangeName, bool adjustNorm=true) ;
 RooCmdArg Range(double lo, double hi, bool adjustNorm=true) ;
 RooCmdArg NormRange(const char* rangeNameList) ;
 RooCmdArg VLines() ;
-RooCmdArg LineColor(Color_t color) ;
+RooCmdArg LineColor(TColorNumber color) ;
 RooCmdArg LineStyle(Style_t style) ;
+RooCmdArg LineStyle(std::string const &style) ;
 RooCmdArg LineWidth(Width_t width) ;
-RooCmdArg FillColor(Color_t color) ;
+RooCmdArg FillColor(TColorNumber color) ;
 RooCmdArg FillStyle(Style_t style) ;
+RooCmdArg FillStyle(std::string const &style) ;
 RooCmdArg ProjectionRange(const char* rangeName) ;
 RooCmdArg Name(const char* name) ;
 RooCmdArg Invisible(bool inv=true) ;
@@ -135,8 +142,9 @@ RooCmdArg Binning(const RooAbsBinning& binning) ;
 RooCmdArg Binning(const char* binningName) ;
 RooCmdArg Binning(int nBins, double xlo=0.0, double xhi=0.0) ;
 RooCmdArg MarkerStyle(Style_t style) ;
+RooCmdArg MarkerStyle(std::string const &style) ;
 RooCmdArg MarkerSize(Size_t size) ;
-RooCmdArg MarkerColor(Color_t color) ;
+RooCmdArg MarkerColor(TColorNumber color) ;
 RooCmdArg CutRange(const char* rangeName) ;
 RooCmdArg XErrorSize(double width) ;
 RooCmdArg RefreshNorm() ;
@@ -218,6 +226,7 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 // RooChi2Var::ctor / RooNLLVar arguments
 RooCmdArg Extended(bool flag=true) ;
 RooCmdArg DataError(Int_t) ;
+RooCmdArg DataError(std::string const&) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
@@ -401,7 +410,7 @@ RooCmdArg BaseClassName(const char* name) ;
 RooCmdArg TagName(const char* name) ;
 RooCmdArg OutputStream(std::ostream& os) ;
 RooCmdArg Prefix(bool flag) ;
-RooCmdArg Color(Color_t color) ;
+RooCmdArg Color(TColorNumber color) ;
 
 // RooWorkspace::import() arguments
 RooCmdArg RenameConflictNodes(const char* suffix, bool renameOrigNodes=false) ;
@@ -486,7 +495,7 @@ auto flatMapToStdMap(FlatMap<Key_t, Val_t> const& flatMap) {
    return out;
 }
 
-// Internal variant of Slice(), Import(), and Link(), that take flat maps instad of std::map.
+// Internal variant of Slice(), Import(), and Link(), that take flat maps instead of std::map.
 RooCmdArg SliceFlatMap(FlatMap<RooCategory *, std::string> const &args);
 RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataHist *> const &args);
 RooCmdArg ImportFlatMap(FlatMap<std::string, TH1 *> const &args);

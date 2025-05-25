@@ -60,12 +60,12 @@ add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 
 
 # Creating a Google Test
-if (tmva-cpu)  # we need BLAS for compiling the models
+if (BLAS_FOUND)  # we need BLAS for compiling the models
 ROOT_ADD_GTEST(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
   LIBRARIES
+    MathCore
     ROOTTMVASofie
-    ${BLAS_LINKER_FLAGS}
-    ${BLAS_LIBRARIES}
+    BLAS::BLAS
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -84,7 +84,7 @@ target_include_directories(emitFromROOT PRIVATE
    ${CMAKE_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}
 )
-target_link_libraries(emitFromROOT protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser)
+target_link_libraries(emitFromROOT protobuf::libprotobuf RIO ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromROOT PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bounds)
@@ -102,23 +102,32 @@ add_custom_command(TARGET SofieCompileModels_ROOT POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT
 		USES_TERMINAL )
 
-# Creating a Google Test for Serialisation of RModel
-if (tmva-cpu)
-ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
-  LIBRARIES
-    ROOTTMVASofie
-    ${BLAS_LINKER_FLAGS}
-    ${BLAS_LIBRARIES}
-  INCLUDE_DIRS
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
-add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
+if (BLAS_FOUND)
+  # Creating a Google Test for Serialisation of RModel
+  ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
+    LIBRARIES
+      ROOTTMVASofie
+      BLAS::BLAS
+    INCLUDE_DIRS
+      ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
+
+  if (clad)
+    # Creating a Google Test for the automatic differentiation of Gemm_Call
+    ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx
+      LIBRARIES
+        BLAS::BLAS
+      INCLUDE_DIRS
+        ${CMAKE_CURRENT_BINARY_DIR}
+    )
+  endif()
 endif()
 
 # gtest
 # Look for needed python modules
-find_python_module(torch QUIET)
-if(PY_TORCH_FOUND)
+ROOT_FIND_PYTHON_MODULE(torch)
+if (ROOT_TORCH_FOUND)
   configure_file(Conv1dModelGenerator.py  Conv1dModelGenerator.py COPYONLY)
   configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
   configure_file(Conv3dModelGenerator.py  Conv3dModelGenerator.py COPYONLY)
@@ -126,17 +135,16 @@ if(PY_TORCH_FOUND)
   configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
   configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
 
-if (tmva-cpu)
-  ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
-    LIBRARIES
-      ROOTTMVASofie
-      ROOTTMVASofieParser
-      ${BLAS_LINKER_FLAGS}
-      ${BLAS_LIBRARIES}
-    INCLUDE_DIRS
-      ${CMAKE_CURRENT_BINARY_DIR}
-  )
- endif()
+  if (BLAS_FOUND)
+    ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
+      LIBRARIES
+        ROOTTMVASofie
+        ROOTTMVASofieParser
+        BLAS::BLAS
+      INCLUDE_DIRS
+        ${CMAKE_CURRENT_BINARY_DIR}
+    )
+  endif()
 endif()
 
 add_executable(emitGNN
@@ -154,7 +162,6 @@ target_link_libraries(emitGNN ROOTTMVASofie)
 set_target_properties(emitGNN PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitGNN PRIVATE -Wno-unused-parameter -Wno-array-bounds)
-
 
 add_executable(emitGraphIndependent
               GNN/EmitGraphIndependent.cxx

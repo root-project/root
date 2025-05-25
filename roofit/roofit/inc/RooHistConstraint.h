@@ -19,7 +19,7 @@ public:
   RooHistConstraint() {} ;
   RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, int threshold=1000000);
   RooHistConstraint(const RooHistConstraint& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooHistConstraint(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooHistConstraint(*this,newname); }
 
   double getLogVal(const RooArgSet* set=nullptr) const override ;
 

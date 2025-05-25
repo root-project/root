@@ -16,12 +16,13 @@
 import argparse
 import datetime
 import os
+import platform
 import re
 import shutil
 import subprocess
 import sys
 import tarfile
-from hashlib import sha1
+import time
 
 import openstack
 
@@ -29,9 +30,11 @@ from build_utils import (
     die,
     github_log_group,
     load_config,
+    calc_options_hash,
     subprocess_with_log,
     subprocess_with_capture,
-    upload_file
+    upload_file,
+    is_macos
 )
 import build_utils
 
@@ -57,7 +60,7 @@ def main():
 
     args = parse_args()
 
-    build_utils.log = build_utils.Tracer(args.image, args.dockeropts)
+    build_utils.log = build_utils.Tracer(args.platform, args.dockeropts)
 
     pull_request = args.head_ref and args.head_ref != args.base_ref
 
@@ -83,10 +86,20 @@ def main():
         if args.architecture == 'x86':
             options = "-AWin32 " + options
 
-    # The sha1 of the build option string is used to find existing artifacts
+    # The hash of the build option string is used to find existing artifacts
     # with matching build options on s3 storage.
-    option_hash = sha1(options.encode('utf-8')).hexdigest()
-    obj_prefix = f'{args.platform}/{args.base_ref}/{args.buildtype}/{option_hash}'
+    options_hash = calc_options_hash(options)
+
+    # Differentiate between macos versions: it's possible to have the same label
+    # for different macos versions, especially different minor versions.
+    macos_version_prefix = ''
+    if is_macos():
+        macos_version_tuple = platform.mac_ver()
+        macos_version = macos_version_tuple[0]
+        macos_version_prefix = f'{macos_version}/'
+    platform_machine = platform.machine()
+
+    obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
@@ -181,7 +194,6 @@ def parse_args():
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform",                           help="Platform to build on")
-    parser.add_argument("--image",           default=None,      help="Container image, if any")
     parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
@@ -243,10 +255,9 @@ def cleanup_previous_build():
 def git_pull(directory: str, repository: str, branch: str):
     returncode = 1
 
-    for _ in range(5):
-        if returncode == 0:
-            break
-
+    max_attempts = 6
+    sleep_time_unit = 3
+    for attempt in range(1, max_attempts+1):
         targetdir = os.path.join(WORKDIR, directory)
         if os.path.exists(os.path.join(targetdir, ".git")):
             returncode = subprocess_with_log(f"""
@@ -259,6 +270,13 @@ def git_pull(directory: str, repository: str, branch: str):
             returncode = subprocess_with_log(f"""
                 git clone --branch {branch} --single-branch {repository} "{targetdir}"
             """)
+        
+        if returncode == 0:
+            return
+
+        sleep_time = sleep_time_unit * attempt
+        build_utils.print_warning(f"""Attempt {attempt}: failed to pull/clone branch. Retrying in {sleep_time} seconds...""")
+        time.sleep(sleep_time)
 
     if returncode != 0:
         die(returncode, f"Failed to pull {branch}")
@@ -272,7 +290,12 @@ def download_artifacts(obj_prefix: str):
         print(f"\nExtracting archive {tar_path}")
 
         with tarfile.open(tar_path) as tar:
-            tar.extractall(WORKDIR)
+            # TODO: Simplify after ROOT is Python 3.12+ only
+            # c.f. https://docs.python.org/3.12/library/tarfile.html#extraction-filters
+            if hasattr(tarfile, "data_filter"):
+                tar.extractall(WORKDIR, filter="data")
+            else:
+                tar.extractall(WORKDIR)
 
         build_utils.log.add(f'\ncd {WORKDIR} && tar -xf {tar_path}\n')
 
@@ -518,7 +541,7 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
     if current_head == "latest-stable":
       # Resolve the 'latest-stable' branch to the latest merged head/tag
       current_head = get_stdout_subprocess(f"""
-           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\))
+           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\\(refname:short\\)
            """, "Failed capture of lastest-stable underlying branch name")
       return fetch_url, current_head
 

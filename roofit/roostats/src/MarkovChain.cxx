@@ -22,6 +22,7 @@ MarkovChain.
 
 #include "TNamed.h"
 #include "RooStats/MarkovChain.h"
+#include "RooGlobalFunc.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
@@ -29,7 +30,6 @@ MarkovChain.
 #include "RooDataHist.h"
 #include "THnSparse.h"
 
-ClassImp(RooStats::MarkovChain);
 
 using namespace RooFit;
 using namespace RooStats;
@@ -136,16 +136,7 @@ RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(RooArgSet* whichVars) co
       args.add(*whichVars);
    }
 
-   return RooFit::makeOwningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(args)});
-}
-
-RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(const RooCmdArg &arg1, const RooCmdArg &arg2,
-                                                        const RooCmdArg &arg3, const RooCmdArg &arg4,
-                                                        const RooCmdArg &arg5, const RooCmdArg &arg6,
-                                                        const RooCmdArg &arg7, const RooCmdArg &arg8) const
-{
-   return RooFit::makeOwningPtr<RooDataSet>(
-      std::unique_ptr<RooAbsData>{fChain->reduce(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)});
+   return RooFit::makeOwningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(RooFit::SelectVars(args))});
 }
 
 RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(RooArgSet* whichVars) const
@@ -159,17 +150,8 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(RooArgSet* whichVars) 
       args.add(*whichVars);
    }
 
-   std::unique_ptr<RooAbsData> data{fChain->reduce(args)};
+   std::unique_ptr<RooAbsData> data{fChain->reduce(RooFit::SelectVars(args))};
    return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet&>(*data).binnedClone()});
-}
-
-RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(const RooCmdArg &arg1, const RooCmdArg &arg2,
-                                                          const RooCmdArg &arg3, const RooCmdArg &arg4,
-                                                          const RooCmdArg &arg5, const RooCmdArg &arg6,
-                                                          const RooCmdArg &arg7, const RooCmdArg &arg8) const
-{
-   std::unique_ptr<RooAbsData> data{fChain->reduce(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)};
-   return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet &>(*data).binnedClone()});
 }
 
 THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const

@@ -38,7 +38,6 @@ a RooPlot.
 #include "Riostream.h"
 #include <iomanip>
 
-ClassImp(RooHist);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -522,7 +521,8 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWi
     return;
   }
 
-  double a= (double)(n1-n2)/(n1+n2);
+  const Int_t denominator = n1 + n2;
+  double a = 0 == denominator ? 0. : (double)(n1 - n2) / (denominator);
   addPoint(binCenter, a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
 }
 

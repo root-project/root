@@ -14,6 +14,8 @@
 #pragma link C++ class RooBukinPdf+ ;
 #pragma link C++ class RooCrystalBall+ ;
 #pragma link C++ class RooCBShape+ ;
+#pragma link C++ class RooFit::Detail::RooPyBind<RooAbsReal>+ ;
+#pragma link C++ class RooFit::Detail::RooPyBind<RooAbsPdf>+ ;
 #pragma link C++ class RooChebychev+ ;
 #pragma link C++ class RooDecay+ ;
 #pragma link C++ class RooDstD0BG+ ;
@@ -129,10 +131,6 @@
 #pragma link C++ class RooCFunction4Binding<double,double,double,double,bool>+ ;
 #pragma link C++ class RooCFunction4PdfBinding<double,double,double,double,bool>+ ;
 
-//#ifdef USE_FOR_AUTLOADING
-//#pragma link C++ class RooFit ;
-//#else
 #pragma link C++ namespace RooFit ;
-//#endif
-//
+
 #endif

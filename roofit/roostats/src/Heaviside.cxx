@@ -22,7 +22,6 @@ Evaluates to 1.0 when ((double)x) >= ((double)c), 0.0 otherwise.
 
 */
 
-ClassImp(RooStats::Heaviside);
 
 using namespace RooFit;
 using namespace RooStats;

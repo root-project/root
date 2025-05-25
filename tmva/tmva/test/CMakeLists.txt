@@ -36,8 +36,8 @@ if(dataframe)
 endif()
 
 if(dataframe)
-  find_python_module(xgboost QUIET)
-  if (PY_XGBOOST_FOUND)
+  ROOT_FIND_PYTHON_MODULE(xgboost QUIET)
+  if (ROOT_XGBOOST_FOUND)
     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
   endif()
 endif()
@@ -46,12 +46,13 @@ endif()
 
 ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
 
-if(tmva-gpu)
-  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
-endif()
+ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
 
 if(tmva-cpu)
   target_compile_definitions(stressTMVA PRIVATE DNNCPU)
 endif()
 
-ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
+if(tmva-gpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
+  set_property(TEST test-stresstmva PROPERTY RESOURCE_LOCK GPU)
+endif()

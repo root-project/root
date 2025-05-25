@@ -9,11 +9,12 @@
 #include <RooDataSet.h>
 #include <RooExtendPdf.h>
 #include <RooFitResult.h>
+#include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include <RooNLLVar.h>
+#include "../src/RooNLLVar.h"
 #endif
 #include <RooPlot.h>
 #include <RooPolyVar.h>
@@ -24,12 +25,14 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
-#include <ROOT/TestSupport.hxx>
+#include <TH1D.h>
+#include <TMath.h>
 
 #include "gtest_wrapper.h"
 
 #include <cmath>
 #include <memory>
+#include <numeric>
 
 namespace {
 
@@ -291,14 +294,7 @@ TEST_P(TestStatisticTest, EmptyData)
    std::unique_ptr<RooDataSet> data{model.generate(x, 0)};
    std::unique_ptr<RooDataHist> dataHist{data->binnedClone()};
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant.
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
@@ -309,14 +305,7 @@ TEST_P(TestStatisticTest, EmptyData)
    mean.setError(0.0);
    sigma.setError(0.0);
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant (same as above for the RooDataSet).
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
@@ -656,6 +645,62 @@ TEST_P(TestStatisticTest, HideOffset)
    RooAbsReal::setHideOffset(hideOffsetOrig);
 }
 
+// Test case where we have a constant pdf object that doesn't depend on any
+// observables or parameters.
+TEST_P(TestStatisticTest, ConstantPdf)
+{
+   std::vector<int> obsCounts{2, 3};
+   std::vector<double> predProbas{0.5, 0.5};
+   std::vector<double> binWidths{1., 1.};
+   double nPred = 2;
+   int obsCountTotal = std::accumulate(obsCounts.begin(), obsCounts.end(), 0);
+   double normInteg = std::accumulate(predProbas.begin(), predProbas.end(), 0.);
+
+   // calculate reference value
+   auto calcExtTerm = [](double n, double pred) { return n * std::log(pred) - pred; };
+   double nllRef = 0.;
+   for (std::size_t i = 0; i < obsCounts.size(); ++i) {
+      nllRef -= obsCounts[i] * std::log(predProbas[i] / normInteg / binWidths[i]);
+   }
+   nllRef -= calcExtTerm(obsCountTotal, nPred);
+
+   RooWorkspace ws{"w"};
+   ws.factory("x[1,3]");
+
+   ws.factory("p0[2.0, 0.0, 10.0]");
+   // Flat PDF: value is 0.5 so it integrates to 1 over [1, 3]
+   ws.factory("GenericPdf::bkg(0.5, {})");
+
+   // Extended model
+   ws.factory("ExtendPdf::bkg_ext(bkg, p0)");
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("bkg_ext");
+
+   // RooDataHist case
+   TH1D histMin("hist_min", "hist_min", 2, 1, 3);
+   for (std::size_t i = 0; i < obsCounts.size(); ++i) {
+      histMin.SetBinContent(i + 1, obsCounts[i]);
+   }
+   RooDataHist dh{"dh", "dh", {x}, &histMin};
+   std::unique_ptr<RooAbsReal> nllDh{model.createNLL(dh, _evalBackend)};
+   EXPECT_FLOAT_EQ(nllDh->getVal(), nllRef);
+
+   // RooDataSet case
+   RooArgSet dataVars{x};
+   RooDataSet ds{"ds", "ds", dataVars};
+   for (std::size_t i = 0; i < obsCounts.size(); ++i) {
+      x.setBin(i);
+      // We have to fill the dataset explicitly in a loop, so we avoid having a
+      // weighted dataset, which would go through the same code path as the
+      // RooDataHist.
+      for (int j = 0; j < obsCounts[i]; ++j) {
+         ds.add(dataVars);
+      }
+   }
+   std::unique_ptr<RooAbsReal> nllDs{model.createNLL(dh, _evalBackend)};
+   EXPECT_FLOAT_EQ(nllDs->getVal(), nllRef);
+}
+
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
@@ -754,4 +799,56 @@ TEST(NLL, SetData)
    // The dataset was built in such a way that the updated NLL is shifted by
    // 0.5, so this is what we analytically expect.
    EXPECT_DOUBLE_EQ(valSimB, valSimA + 0.5);
+}
+
+// In some frameworks like CMS combine, all constraints are contained in a
+// single RooProdPdf, even if the constrained parameters are not used in this
+// pdf. The RooFit logic to figure out constrained parameters should however
+// now be confused by this, and not strip away these parameters from the list
+// of constrained parameters.
+TEST(CreateNLL, CombineStyleConstraints)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::g_main_1(x_1[0., -10, 10], mu_1[0., -10, 10], 1.0)");
+   ws.factory("Gaussian::g_main_2(x_2[0., -10, 10], mu_2[0., -10, 10], 1.0)");
+   ws.factory("Gaussian::g_constr_1(mu_1, 0.0, 1.0)");
+   ws.factory("Gaussian::g_constr_2(mu_2, 0.0, 1.0)");
+
+   // The RooProdPdf model_1 will contain all the constraints, also the one
+   // that applies to g_main_1. This is the corner case that this test is
+   // covering.
+   ws.factory("PROD::model_1(g_main_1, g_constr_1, g_constr_2)");
+   ws.factory("PROD::model_2(g_main_2)");
+   ws.factory("SIMUL::model(cat[A=0, B=1], A=model_1, B=model_2)");
+
+   auto &x1 = *ws.var("x_1");
+   auto &x2 = *ws.var("x_2");
+   auto &cat = *ws.cat("cat");
+   auto &model = static_cast<RooSimultaneous &>(*ws.pdf("model"));
+
+   RooArgSet vars{x1, x2, cat};
+   RooDataSet data{"data", "data", vars};
+   cat.setIndex(0);
+   data.add(vars);
+   cat.setIndex(1);
+   data.add(vars);
+
+   RooArgSet parameters;
+   model.getParameters(data.get(), parameters);
+
+   model.getAllConstraints(*data.get(), parameters, true);
+
+   EXPECT_EQ(parameters.size(), 2);
+   EXPECT_EQ(parameters.find("mu_1"), ws.var("mu_1"));
+   EXPECT_EQ(parameters.find("mu_2"), ws.var("mu_2"));
+
+   // Now, try it out in the context of createNLL
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(data)};
+   const double proba = TMath::Gaus(0, 0, 1, true);
+   const double nChannels = model.indexCat().size();
+   //                                     main Gaussians                one constraint per channel
+   const double refNllVal = -nChannels * (std::log(proba / nChannels) + std::log(proba));
+   EXPECT_FLOAT_EQ(nll->getVal(), refNllVal);
 }

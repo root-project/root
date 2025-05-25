@@ -29,7 +29,7 @@ class RooMultiBinomial : public RooAbsReal {
 
   RooMultiBinomial(const char *name, const char *title, const RooArgList& effFuncList, const RooArgList& catList, bool ignoreNonVisible);
   RooMultiBinomial(const RooMultiBinomial& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooMultiBinomial(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooMultiBinomial(*this,newname); }
 
  protected:
 

@@ -18,16 +18,33 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <openssl/ssl.h>
-#include <cstdio>
-#include "strlcpy.h"
 #include "TSSLSocket.h"
 #include "TSystem.h"
+#include <iostream>
+#include <cstdio>
+#include "strlcpy.h"
 
 // Static properties
 char TSSLSocket::fgSSLCAFile[FILENAME_MAX] = "";
 char TSSLSocket::fgSSLCAPath[FILENAME_MAX] = "";
 char TSSLSocket::fgSSLUCert[FILENAME_MAX]  = "";
 char TSSLSocket::fgSSLUKey[FILENAME_MAX]   = "";
+
+////////////////////////////////////////////////////////////////////////////////
+// SSL debugging
+
+void ssl_info_callback(const SSL* ssl, int where, int ret)
+{
+   if (ret == 0) {
+      std::cout << "-- ssl_info_callback: error occured.\n";
+      return;
+   }
+   if (where) {
+      std::cout << " - " << SSL_state_string_long(ssl);
+      std::cout << " - " << SSL_state_string(ssl);
+      std::cout << std::endl;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Wraps the socket with OpenSSL.
@@ -62,6 +79,9 @@ void TSSLSocket::WrapWithSSL(void)
       Error("WrapWithSSL", "cannot create the ssl struct");
       goto wrapFailed;
    }
+
+   if (gDebug > 0)
+      SSL_set_info_callback(fSSL, ssl_info_callback);
 
    // Bind to the socket
    if (SSL_set_fd(fSSL, fSocket) != 1) {

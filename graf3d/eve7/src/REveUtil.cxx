@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/REveUtil.hxx>
-#include <ROOT/REveElement.hxx>
 #include <ROOT/REveManager.hxx>
+#include <ROOT/REveElement.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include <ROOT/RLogger.hxx>
 
@@ -29,6 +29,7 @@
 #include <list>
 #include <algorithm>
 #include <string>
+#include <regex>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -108,6 +109,25 @@ void REveUtil::LoadMacro(const char* mac)
    if (CheckMacro(mac) == kFALSE) {
       gROOT->LoadMacro(mac);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Input string verification and sanitization
+
+bool REveUtil::VerifyObjectFilterOrTableExpression(std::string_view expr)
+{
+   static const std::regex bad_re("[^\\w](?:gSystem|gROOT)[^\\w]", std::regex::optimize);
+   static const std::regex public_extra_re("(?:\\|\")", std::regex::optimize);
+
+   auto beg = expr.cbegin(), end = expr.cend();
+   if (std::regex_search(beg, end, bad_re))
+      return false;
+
+   const bool is_public = true; // to come from gEve
+   if (is_public && std::regex_search(beg, end, public_extra_re))
+      return false;
+
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

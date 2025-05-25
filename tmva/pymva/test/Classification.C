@@ -35,7 +35,7 @@ void Classification()
    factory->AddSpectator("spec2 := var1*3",  "Spectator 2", "units", 'F');
 
    TFile *input(nullptr);
-   TString fname = gROOT->GetTutorialDir() + "/tmva/data/tmva_class_example.root";
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
    }

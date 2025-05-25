@@ -87,7 +87,6 @@ public:
 
 
 class TGPicturePool : public TObject {
-
 protected:
    const TGClient    *fClient;    ///< client for which we keep icon pool
    TString            fPath;      ///< icon search path
@@ -103,6 +102,7 @@ public:
 
    const char      *GetPath() const { return fPath; }
    const TGPicture *GetPicture(const char *name);
+   const TGPicture *GetPictureOrEmpty(const char *name);
    const TGPicture *GetPicture(const char *name, char **xpm);
    const TGPicture *GetPicture(const char *name, UInt_t new_width, UInt_t new_height);
    const TGPicture *GetPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask =  0);

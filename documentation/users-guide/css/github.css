@@ -13,12 +13,15 @@ body > *:first-child {
 body > *:last-child {
   margin-bottom: 0 !important; }
 
-a {
+a, a:visited {
   text-decoration: none;
   color: #4183C4; }
-a.absent {
+a:hover {
+    text-decoration: underline;
+    color: #4183C4; }
+a:absent {
   color: #cc0000; }
-a.anchor {
+a:anchor {
   display: block;
   padding-left: 30px;
   margin-left: -30px;
@@ -113,14 +116,19 @@ h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
 
 li p.first {
   display: inline-block; }
+  
 li {
   margin: 0; }
+
+ul {
+  margin: 0; }
+
 ul, ol {
   padding-left: 30px; }
 
 ul :first-child, ol :first-child {
   margin-top: 0; }
-
+  
 dl {
   padding: 0; }
   dl dt {

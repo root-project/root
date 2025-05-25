@@ -359,7 +359,7 @@ Int_t TChain::Add(TChain* chain)
 ///  }
 /// ~~~
 ///
-/// \note To add all the files of a another \p TChain to this one, use
+/// \note To add all the files of another \p TChain to this one, use
 ///       TChain::Add(TChain* chain).
 
 Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */)
@@ -455,9 +455,13 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
 ///
 /// B. If nentries > 0, the file is not opened, and nentries is assumed
 ///    to be the number of entries in the file. In this case, no check
-///    is made that the file exists nor that the tree exists in the file.
+///    is made that the file exists nor that the tree exists in the file,
+///    nor that the real TTree entries match with the input argument.
 ///    This second mode is interesting in case the number of entries in
 ///    the file is already stored in a run database for example.
+///    \warning If you pass `nentries` > `tree_entries`, this may lead to silent
+///    data corruption in your analysis or undefined behavior in your program.
+///    Use the other options if unsure.
 ///
 /// C. If nentries == TTree::kMaxEntries (default), the file is not opened.
 ///    The number of entries in each file will be read only when the file
@@ -981,7 +985,18 @@ Long64_t TChain::GetEntries() const
       return fProofChain->GetEntries();
    }
    if (fEntries == TTree::kMaxEntries) {
-      const_cast<TChain*>(this)->LoadTree(TTree::kMaxEntries-1);
+      // If the following is true, we are within a recursion about friend,
+      // and `LoadTree` will be no-op.
+      if (kLoadTree & fFriendLockStatus)
+         return fEntries;
+      const auto readEntry = fReadEntry;
+      auto *thisChain = const_cast<TChain *>(this);
+      thisChain->LoadTree(TTree::kMaxEntries - 1);
+      thisChain->InvalidateCurrentTree();
+      if (readEntry >= 0)
+         thisChain->LoadTree(readEntry);
+      else
+         thisChain->fReadEntry = readEntry;
    }
    return fEntries;
 }
@@ -1164,16 +1179,34 @@ TObjArray* TChain::GetListOfLeaves()
 
 Double_t TChain::GetMaximum(const char* columname)
 {
-   Double_t theMax = -DBL_MAX;
-   for (Int_t file = 0; file < fNtrees; file++) {
-      Long64_t first = fTreeOffset[file];
-      LoadTree(first);
-      Double_t curmax = fTree->GetMaximum(columname);
-      if (curmax > theMax) {
-         theMax = curmax;
+   Double_t cmax = -DBL_MAX;
+   TLeaf *leaf = nullptr;
+   TBranch *branch = nullptr;
+   Int_t treenumber = -1;
+   for (Long64_t i = 0; i < fEntries; ++i) {
+      Long64_t entryNumber = this->GetEntryNumber(i);
+      if (entryNumber < 0)
+         break;
+      Long64_t localEntryNumber = this->LoadTree(entryNumber);
+      if (localEntryNumber < 0)
+         break;
+      if (treenumber != this->GetTreeNumber()) {
+         leaf = this->GetLeaf(columname);
+         if (leaf)
+            branch = leaf->GetBranch();
+      }
+      treenumber = this->GetTreeNumber();
+      if (!branch)
+         continue;
+      branch->GetEntry(localEntryNumber);
+      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+         Double_t val = leaf->GetValue(j);
+         if (val > cmax) {
+            cmax = val;
+         }
       }
    }
-   return theMax;
+   return cmax;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1181,16 +1214,34 @@ Double_t TChain::GetMaximum(const char* columname)
 
 Double_t TChain::GetMinimum(const char* columname)
 {
-   Double_t theMin = DBL_MAX;
-   for (Int_t file = 0; file < fNtrees; file++) {
-      Long64_t first = fTreeOffset[file];
-      LoadTree(first);
-      Double_t curmin = fTree->GetMinimum(columname);
-      if (curmin < theMin) {
-         theMin = curmin;
+   Double_t cmin = DBL_MAX;
+   TLeaf *leaf = nullptr;
+   TBranch *branch = nullptr;
+   Int_t treenumber = -1;
+   for (Long64_t i = 0; i < fEntries; ++i) {
+      Long64_t entryNumber = this->GetEntryNumber(i);
+      if (entryNumber < 0)
+         break;
+      Long64_t localEntryNumber = this->LoadTree(entryNumber);
+      if (localEntryNumber < 0)
+         break;
+      if (treenumber != this->GetTreeNumber()) {
+         leaf = this->GetLeaf(columname);
+         if (leaf)
+            branch = leaf->GetBranch();
+      }
+      treenumber = this->GetTreeNumber();
+      if (!branch)
+         continue;
+      branch->GetEntry(localEntryNumber);
+      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+         Double_t val = leaf->GetValue(j);
+         if (val < cmin) {
+            cmin = val;
+         }
       }
    }
-   return theMin;
+   return cmin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1305,7 +1356,7 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 /// In case of error, LoadTree returns a negative number:
 ///   * -1: The chain is empty.
 ///   * -2: The requested entry number is less than zero or too large for the chain.
-///   * -3: The file corresponding to the entry could not be correctly open
+///   * -3: The file corresponding to the entry could not be correctly opened
 ///   * -4: The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
 ///   * -5: Internal error, please report the circumstance when this happen
@@ -1663,7 +1714,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
          TTree* t = fe->GetTree();
          if (!t) continue;
          if (t->GetTreeIndex()) {
-            t->GetTreeIndex()->UpdateFormulaLeaves(nullptr);
+            t->GetTreeIndex()->UpdateFormulaLeaves(GetTree());
          }
          if (t->GetTree() && t->GetTree()->GetTreeIndex()) {
             t->GetTree()->GetTreeIndex()->UpdateFormulaLeaves(GetTree());
@@ -2501,6 +2552,11 @@ void TChain::ResetBranchAddress(TBranch *branch)
 
 void TChain::ResetBranchAddresses()
 {
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (kResetBranchAddresses & fFriendLockStatus) {
+      return;
+   }
    TIter next(fStatus);
    TChainElement* element = nullptr;
    while ((element = (TChainElement*) next())) {
@@ -2508,6 +2564,15 @@ void TChain::ResetBranchAddresses()
    }
    if (fTree) {
       fTree->ResetBranchAddresses();
+   }
+   if (fFriends) {
+      TFriendLock lock(this, kResetBranchAddresses);
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends)) {
+         auto *frTree = frEl->GetTree();
+         if (frTree) {
+            frTree->ResetBranchAddresses();
+         }
+      }
    }
 }
 

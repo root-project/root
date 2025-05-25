@@ -27,7 +27,6 @@ namespace RDF {
 /// It shows how to implement the RDataSource API for a complex kind of source such as TTrees.
 class RRootDS final : public ROOT::RDF::RDataSource {
 private:
-   unsigned int fNSlots = 0U;
    std::string fTreeName;
    std::string fFileNameGlob;
    mutable TChain fModelChain; // Mutable needed for getting the column type name
@@ -44,7 +43,14 @@ protected:
 
 public:
    RRootDS(std::string_view treeName, std::string_view fileNameGlob);
-   ~RRootDS();
+   // Rule of five
+   RRootDS(const RRootDS &) = delete;
+   RRootDS &operator=(const RRootDS &) = delete;
+   RRootDS(RRootDS &&) = delete;
+   RRootDS &operator=(RRootDS &&) = delete;
+   ~RRootDS() final;
+
+   std::size_t GetNFiles() const final;
    std::string GetTypeName(std::string_view colName) const final;
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;

@@ -66,7 +66,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphErrors default constructor.
 
-TGraphErrors::TGraphErrors(): TGraph()
+TGraphErrors::TGraphErrors()
 {
    if (!CtorAllocate()) return;
 }
@@ -220,9 +220,9 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 ///
 /// Convention for format (default=`"%lg %lg %lg %lg"`)
 ///
-///   - format = `%lg %lg`         read only 2 first columns into X,Y
-///   - format = `%lg %lg %lg`     read only 3 first columns into X,Y and EY
-///   - format = `%lg %lg %lg %lg` read only 4 first columns into X,Y,EX,EY.
+///   - format = `"%lg %lg"` read only 2 first columns into X,Y
+///   - format = `"%lg %lg %lg"` read only 3 first columns into X,Y and EY
+///   - format = `"%lg %lg %lg %lg"` read only 4 first columns into X,Y,EX,EY.
 ///
 /// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
 /// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
@@ -371,6 +371,14 @@ TGraphErrors::~TGraphErrors()
    delete [] fEY;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with errorbars to the graph.
+
+void TGraphErrors::AddPointError(Double_t x, Double_t y, Double_t ex, Double_t ey)
+{
+   AddPoint(x, y); // fNpoints will increase automatically
+   SetPointError(fNpoints - 1, ex, ey);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply function to all the data points \f$ y = f(x,y) \f$.
@@ -713,25 +721,16 @@ void TGraphErrors::Print(Option_t *) const
 
 void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << "   " << std::endl;
-   static Int_t frameNumber = 1000;
-   frameNumber++;
+   auto xname  = SavePrimitiveVector(out, "gre_fx", fNpoints, fX, kTRUE);
+   auto yname  = SavePrimitiveVector(out, "gre_fy", fNpoints, fY);
+   auto exname = SavePrimitiveVector(out, "gre_fex", fNpoints, fEX);
+   auto eyname = SavePrimitiveVector(out, "gre_fey", fNpoints, fEY);
 
-   auto fXName  = SaveArray(out, "fx", frameNumber, fX);
-   auto fYName  = SaveArray(out, "fy", frameNumber, fY);
-   auto fEXName = SaveArray(out, "fex", frameNumber, fEX);
-   auto fEYName = SaveArray(out, "fey", frameNumber, fEY);
+   SavePrimitiveConstructor(
+      out, Class(), "gre",
+      TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data()", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
 
-   if (gROOT->ClassSaved(TGraphErrors::Class()))
-      out << "   ";
-   else
-      out << "   TGraphErrors *";
-   out << "gre = new TGraphErrors(" << fNpoints << ","
-                                    << fXName   << ","  << fYName  << ","
-                                    << fEXName  << ","  << fEYName << ");"
-                                    << std::endl;
-
-   SaveHistogramAndFunctions(out, "gre", frameNumber, option);
+   SaveHistogramAndFunctions(out, "gre", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

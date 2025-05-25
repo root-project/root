@@ -478,14 +478,14 @@ already implicitly introduced (for example in the section
 [Configure ROOT at start-up](#configure-root-at-start-up)).
 The most important among them are presented in the following:
 
--   **[gROOT](http://root.cern.ch/root/htmldoc/TROOT.html)**: the `gROOT`
+-   **[gROOT](https://root.cern.ch/doc/master/classTROOT.html)**: the `gROOT`
     variable is the entry point to the ROOT system. Technically it is an
     instance of the `TROOT` class. Using the `gROOT` pointer one has
     access to basically every object created in a ROOT based program.
     The `TROOT` object is essentially a container of several lists
     pointing to the main `ROOT` objects.
 
--   **[gStyle](http://root.cern.ch/root/htmldoc/TStyle.html)**: By default
+-   **[gStyle](https://root.cern.ch/doc/master/classTStyle.html)**: By default
     ROOT creates a default style that can be accessed via the `gStyle`
     pointer. This class includes functions to set some of the following
     object attributes.
@@ -501,7 +501,7 @@ The most important among them are presented in the following:
     -   Histogram Statistics and Titles
     -   etc ...
 
--   **[gSystem](http://root.cern.ch/root/htmldoc/TSystem.html)**: An
+-   **[gSystem](https://root.cern.ch/doc/master/classTSystem.html)**: An
     instance of a base class defining a generic interface to the
     underlying Operating System, in our case `TUnixSystem`.
 

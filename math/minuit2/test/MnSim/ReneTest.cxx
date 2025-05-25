@@ -26,11 +26,9 @@ using namespace ROOT::Minuit2;
 class ReneFcn : public FCNBase {
 
 public:
-   ReneFcn(const std::vector<double> &meas) : fMeasurements(meas) {}
+   ReneFcn(std::span<const double> meas) : fMeasurements(meas.begin(), meas.end()) {}
 
-   ~ReneFcn() override {}
-
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::vector<double> const &par) const override
    {
       double a = par[2];
       double b = par[1];
@@ -77,11 +75,11 @@ class ReneFcn : public FCNBase {
 
 public:
 
-  ReneFcn(const std::vector<double>& meas) : fMeasurements(meas) {}
+  ReneFcn(std::span<const double> meas) : fMeasurements(meas) {}
 
   virtual ~ReneFcn() {}
 
-  virtual double operator()(const std::vector<double>& par) const {
+  virtual double operator()(std::span<const double> par) const {
     double mypar[6];
     for(std::vector<double>::const_iterator ipar = par.begin();
         ipar != par.end(); ipar++)
@@ -190,7 +188,7 @@ int main()
    {
       std::vector<double> params(6, 1.);
       std::vector<double> Error(6, 1.);
-      MnScan scan(fFCN, params, Error);
+      MnScan scan(fFCN, {params, Error});
       std::cout << "scan parameters: " << scan.Parameters() << std::endl;
       MnPlot plot;
       for (unsigned int i = 0; i < upar.VariableParameters(); i++) {
@@ -204,7 +202,7 @@ int main()
    {
       std::vector<double> params(6, 1.);
       std::vector<double> Error(6, 1.);
-      MnScan scan(fFCN, params, Error);
+      MnScan scan(fFCN, {params, Error});
       std::cout << "scan parameters: " << scan.Parameters() << std::endl;
       FunctionMinimum min2 = scan();
       //     std::cout<<min2<<std::endl;

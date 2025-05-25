@@ -351,8 +351,26 @@ inline PyObject* CPyCppyy_tp_call(PyObject* cb, PyObject* args, size_t, PyObject
 }
 #endif
 
+// weakref forced strong reference
+#if PY_VERSION_HEX < 0x30d0000
+static inline PyObject* CPyCppyy_GetWeakRef(PyObject* ref) {
+    PyObject* pyobject = PyWeakref_GetObject(ref);
+    if (!pyobject || pyobject == Py_None)
+        return nullptr;
+    Py_INCREF(pyobject);
+    return pyobject;
+}
+#else
+static inline PyObject* CPyCppyy_GetWeakRef(PyObject* ref) {
+    PyObject* pyobject = nullptr;
+    if (PyWeakref_GetRef(ref, &pyobject) != -1)
+        return pyobject;
+    return nullptr;
+}
+#endif
+
 // Py_TYPE as inline function
-#if PY_VERSION_HEX < 0x030900A4 && !defined(Py_SET_TYPE)
+#if PY_VERSION_HEX < 0x03090000 && !defined(Py_SET_TYPE)
 static inline
 void _Py_SET_TYPE(PyObject *ob, PyTypeObject *type) { ob->ob_type = type; }
 #define Py_SET_TYPE(ob, type) _Py_SET_TYPE((PyObject*)(ob), type)

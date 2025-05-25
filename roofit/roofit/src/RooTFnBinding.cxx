@@ -18,18 +18,15 @@
 #include "Riostream.h"
 
 #include "RooTFnBinding.h"
-#include "RooAbsCategory.h"
 #include "TF3.h"
 
-using std::ostream;
-
-ClassImp(RooTFnBinding);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list) :
   RooAbsReal(name,title),
   _olist("obs","obs",this),
+  _plist("params","params",this),
   _func(func)
 {
   _olist.add(list) ;
@@ -38,12 +35,8 @@ RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* func, con
 ////////////////////////////////////////////////////////////////////////////////
 
 RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& obsList, const RooArgList& paramList) :
-  RooAbsReal(name,title),
-  _olist("obs","obs",this),
-  _plist("params","params",this),
-  _func(func)
+  RooTFnBinding{name, title, func, obsList}
 {
-  _olist.add(obsList) ;
   _plist.add(paramList) ;
 }
 
@@ -51,8 +44,8 @@ RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* func, con
 
 RooTFnBinding::RooTFnBinding(const RooTFnBinding& other, const char* name) :
   RooAbsReal(other,name),
-  _olist("obs",this,other._olist),
-  _plist("params",this,other._plist),
+  _olist(this,other._olist),
+  _plist(this,other._plist),
   _func(other._func)
 {
 }
@@ -72,7 +65,7 @@ double RooTFnBinding::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTFnBinding::printArgs(ostream& os) const
+void RooTFnBinding::printArgs(std::ostream& os) const
 {
   // Print object arguments and name/address of function pointer
   os << "[ TFn={" << _func->GetName() << "=" << _func->GetTitle() << "} " ;

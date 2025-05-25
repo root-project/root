@@ -29,7 +29,6 @@ any external RooAbsPdf input function provided in the constructor.
 
 using std::endl;
 
-ClassImp(RooCachedPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +99,7 @@ void RooCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   (const_cast<RooAbsPdf &>(static_cast<RooAbsPdf const&>(pdf.arg()))).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
 
   if (cache.hist()->get()->size()>1) {
-    ccoutP(Eval) << endl ;
+    ccoutP(Eval) << std::endl ;
   }
 
   cache.pdf()->setUnitNorm(true) ;

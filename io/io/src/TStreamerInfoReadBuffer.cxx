@@ -326,15 +326,19 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       }
 
       // skip Class *  not derived from TObject with comment field  //->
-      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp: {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp:
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp + TStreamerInfo::kOffsetL: {
          DOLOOP {
-            b.SkipObjectAny();
+            for (Int_t j = 0; j < compinfo->fLength; j++) {
+               b.SkipObjectAny();
+            }
          }
          break;
       }
 
       // skip Class*   not derived from TObject
-      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP: {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP:
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL: {
          DOLOOP {
             for (Int_t j=0;j<compinfo->fLength;j++) {
                b.SkipObjectAny();
@@ -344,9 +348,12 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       }
 
       // skip Any Class not derived from TObject
-      case TStreamerInfo::kSkip + TStreamerInfo::kAny:    {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAny:
+      case TStreamerInfo::kSkip + TStreamerInfo::kAny + TStreamerInfo::kOffsetL: {
          DOLOOP {
-            b.SkipObjectAny();
+            for (Int_t j = 0; j < compinfo->fLength; j++) {
+               b.SkipObjectAny();
+            }
          }
          break;
       }
@@ -369,10 +376,13 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       }
 
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamLoop:
+      case TStreamerInfo::kSkip + TStreamerInfo::kStreamLoop + TStreamerInfo::kOffsetL:
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamer: {
          DOLOOP {
-            b.SkipObjectAny();
+            for (Int_t j = 0; j < compinfo->fLength; j++) {
+               b.SkipObjectAny();
             }
+         }
          break;
       }
       default:
@@ -541,7 +551,7 @@ Int_t TStreamerInfo::ReadBufferArtificial(TBuffer &b, const T &arr,
    // Process the result
    if (readfunc) {
       TVirtualObject obj(0);
-      TVirtualArray *objarr = ((TBufferFile&)b).PeekDataCache();
+      TVirtualArray *objarr = b.PeekDataCache();
       if (objarr) {
          obj.fClass = objarr->fClass;
 
@@ -782,17 +792,17 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
       if (R__TestUseCache<T>(aElement)) {
          Int_t bufpos = b.Length();
-         if (((TBufferFile&)b).PeekDataCache()==0) {
+         if (b.PeekDataCache() == 0) {
             Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",thisVar->GetName(),aElement->GetName());
             thisVar->ReadBufferSkip(b,arr,compinfo[i],compinfo[i]->fType+TStreamerInfo::kSkip,aElement,narr,eoffset);
          } else {
             if (gDebug > 1) {
                printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
-                  " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
-                  fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,
-                  aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
+                      " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                      fClass->GetName(), aElement->GetName(), i, compinfo[i]->fType, aElement->ClassName(), b.Length(),
+                      arr[0], eoffset, b.PeekDataCache()->GetObjectAt(0));
             }
-            thisVar->ReadBuffer(b,*((TBufferFile&)b).PeekDataCache(),compinfo,i,i+1,narr,eoffset, arrayMode);
+            thisVar->ReadBuffer(b, *b.PeekDataCache(), compinfo, i, i + 1, narr, eoffset, arrayMode);
          }
          if (aElement->TestBit(TStreamerElement::kRepeat)) { b.SetBufferOffset(bufpos); }
          continue;
@@ -1082,7 +1092,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
          case TStreamerInfo::kAnyP:    // Class*  not derived from TObject with no comment field NOTE:: Re-added by Phil
          case TStreamerInfo::kAnyP+TStreamerInfo::kOffsetL: {
             DOLOOP {
-               b.ReadFastArray((void**)(arr[k]+ioffset),cle,compinfo[i]->fLength,isPreAlloc,pstreamer);
+               b.ReadFastArray((void **)(arr[k] + ioffset), newCle ? newCle : cle, compinfo[i]->fLength, isPreAlloc,
+                               pstreamer, cle);
             }
          }
          continue;
@@ -1183,7 +1194,29 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            Int_t nobjects;
                            b >> nobjects;
                            env = newProxy->Allocate(nobjects,true);
-                           subinfo->ReadBufferSTL(b,newProxy,nobjects,/* offset */ 0, vers>=7 );
+                           if (!nobjects && (vers>=7)) {
+                              // Do nothing but in version 6 of TStreamerInfo and below,
+                              // we were calling ReadBuffer for empty collection.
+                           } else {
+                              TStreamerInfoActions::TActionSequence *actions = nullptr;
+                              if (newProxy != oldProxy) {
+                                 actions = newProxy->GetConversionReadMemberWiseActions( oldProxy->GetValueClass(), vClVersion );
+                              } else {
+                                 actions = oldProxy->GetReadMemberWiseActions( vClVersion );
+                              }
+                              char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              void *begin = &(startbuf[0]);
+                              void *end = &(endbuf[0]);
+                              newProxy->GetFunctionCreateIterators(/* read = */ kTRUE)(env, &begin, &end, newProxy);
+                              // We can not get here with a split vector of pointer, so we can indeed assume
+                              // that actions->fConfiguration != null.
+                              b.ApplySequence(*actions, begin, end);
+                              if (begin != &(startbuf[0])) {
+                                 // assert(end != endbuf);
+                                 newProxy->GetFunctionDeleteTwoIterators()(begin,end);
+                              }
+                           }
                            newProxy->Commit(env);
                         }
                      }
@@ -1271,7 +1304,30 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            Int_t nobjects;
                            b >> nobjects;
                            void* env = newProxy->Allocate(nobjects,true);
-                           subinfo->ReadBufferSTL(b,newProxy,nobjects,/* offset */ 0, vers >= 7);
+                           if (!nobjects && (vers>=7)) {
+                              // Do nothing but in version 6 of TStreamerInfo and below,
+                              // we were calling ReadBuffer for empty collection.
+                           } else {
+                              TStreamerInfoActions::TActionSequence *actions = nullptr;
+                              if (newProxy != oldProxy) {
+                                 actions = newProxy->GetConversionReadMemberWiseActions( oldProxy->GetValueClass(), vClVersion );
+                              } else {
+                                 actions = oldProxy->GetReadMemberWiseActions( vClVersion );
+                              }
+
+                              char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              void *begin_iter = &(startbuf[0]);
+                              void *end_iter = &(endbuf[0]);
+                              newProxy->GetFunctionCreateIterators(/* read = */ kTRUE)(env, &begin_iter, &end_iter, newProxy);
+                              // We can not get here with a split vector of pointer, so we can indeed assume
+                              // that actions->fConfiguration != null.
+                              b.ApplySequence(*actions, begin_iter, end_iter);
+                              if (begin_iter != &(startbuf[0])) {
+                                 // assert(end != endbuf);
+                                 newProxy->GetFunctionDeleteTwoIterators()(begin_iter,end_iter);
+                              }
+                           }
                            newProxy->Commit(env);
                         }
                      }
@@ -1304,7 +1360,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             continue;
 
          case TStreamerInfo::kObject: // Class derived from TObject
-            if (cle->IsStartingWithTObject() && cle->GetState() > TClass::kEmulated) {
+            if (cle == newCle && cle->IsStartingWithTObject() && cle->GetState() > TClass::kEmulated) {
                DOLOOP {((TObject*)(arr[k]+ioffset))->Streamer(b);}
                continue; // intentionally inside the if statement.
                       // if the class does not start with its TObject part (or does
@@ -1335,7 +1391,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
          case TStreamerInfo::kAny+TStreamerInfo::kOffsetL: {
             DOLOOP {
-               b.ReadFastArray((void*)(arr[k]+ioffset),cle,compinfo[i]->fLength,pstreamer);
+               b.ReadFastArray((void *)(arr[k] + ioffset), newCle ? newCle : cle, compinfo[i]->fLength, pstreamer, cle);
             }
             continue;
          }
@@ -1381,7 +1437,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             //  Backward compatibility. Some TStreamerElement's where without
             //  Streamer but were not removed from element list
             UInt_t start,count;
-            Version_t v = b.ReadVersion(&start, &count, cle);
+            Version_t v = b.ReadVersion(&start, &count, this->IsA());
             if (fOldVersion<3){   // case of old TStreamerInfo
                if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {
                   b.SetBufferOffset(start);  //it was no byte count
@@ -1640,12 +1696,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             continue;
          }
 
-         case TStreamerInfo::kCacheNew:
-            ((TBufferFile&)b).PushDataCache( new TVirtualArray( aElement->GetClassPointer(), narr ) );
-            continue;
-         case TStreamerInfo::kCacheDelete:
-            delete ((TBufferFile&)b).PopDataCache();
-            continue;
+         case TStreamerInfo::kCacheNew: b.PushDataCache(new TVirtualArray(aElement->GetClassPointer(), narr)); continue;
+         case TStreamerInfo::kCacheDelete: delete b.PopDataCache(); continue;
 
          case -1:
             // -- Skip an ignored TObject base class.

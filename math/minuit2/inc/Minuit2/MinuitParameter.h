@@ -66,8 +66,6 @@ public:
       }
    }
 
-   ~MinuitParameter() {}
-
    MinuitParameter(const MinuitParameter &par)
       : fNum(par.fNum), fValue(par.fValue), fError(par.fError), fConst(par.fConst), fFix(par.fFix),
         fLoLimit(par.fLoLimit), fUpLimit(par.fUpLimit), fLoLimValid(par.fLoLimValid), fUpLimValid(par.fUpLimValid),
@@ -105,7 +103,13 @@ public:
    // interaction
    void SetName(const std::string &name) { fName = name; }
 
-   void SetValue(double val) { fValue = val; }
+   void SetValue(double val) {
+      fValue = val;
+      if (fLoLimValid && val < fLoLimit)
+         fValue = fLoLimit;
+      else if (fUpLimValid && val > fUpLimit)
+         fValue = fUpLimit;
+   }
    void SetError(double err) { fError = err; }
    void SetLimits(double low, double up)
    {

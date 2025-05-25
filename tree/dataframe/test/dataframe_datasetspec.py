@@ -43,8 +43,8 @@ class RDatasetSpecTest(unittest.TestCase):
             REntryRange(),
             REntryRange(1, 4),
             REntryRange(2, 4),
-            REntryRange(100),
-            REntryRange(1, 100),
+            REntryRange(5),
+            REntryRange(1, 5),
             REntryRange(2, 2),
             REntryRange(7, 7),
         ]
@@ -139,7 +139,7 @@ class RDatasetSpecTest(unittest.TestCase):
                 # self.assertEqual(fr3[j], expectedRess[i][j])
 
     def test_FromSpec(self):
-        rdf = ROOT.RDF.Experimental.FromSpec("spec.json")
+        rdf = ROOT.RDF.Experimental.FromSpec("pyspec.json")
         rdf = rdf.DefinePerSample("name", "rdfsampleinfo_.GetSampleName()")
         rdf = rdf.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")')
 

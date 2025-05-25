@@ -37,7 +37,7 @@ public:
 
   void addTerm(RooAbsArg* term);
 
-  TObject* clone(const char* newname) const override { return new RooProduct(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooProduct(*this, newname); }
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                                    const RooArgSet* normSet,
@@ -63,7 +63,6 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
   void setCacheAndTrackHints(RooArgSet&) override ;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:
 
   void ioStreamerPass2() override ;

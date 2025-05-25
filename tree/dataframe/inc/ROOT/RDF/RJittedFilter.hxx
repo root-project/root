@@ -41,7 +41,14 @@ class RJittedFilter final : public RFilterBase {
 
 public:
    RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations);
-   ~RJittedFilter();
+
+   // Rule of five
+
+   RJittedFilter(const RJittedFilter &) = delete;
+   RJittedFilter &operator=(const RJittedFilter &) = delete;
+   RJittedFilter(RJittedFilter &&) = delete;
+   RJittedFilter &operator=(RJittedFilter &&) = delete;
+   ~RJittedFilter() final;
 
    void SetFilter(std::unique_ptr<RFilterBase> f);
 

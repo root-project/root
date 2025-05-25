@@ -28,7 +28,6 @@ bin coordinates of the input sliceSet.
 #include "RooAbsLValue.h"
 #include "RooDataHistSliceIter.h"
 
-ClassImp(RooDataHistSliceIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an iterator over all bins of RooDataHist 'hist' in the slice defined
@@ -48,9 +47,9 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
 
   _nStep = dynamic_cast<RooAbsLValue&>(*sliceArgInt).numBins() ;
 
-//   cout << "RooDataHistSliceIter" << endl ;
+//   std::cout << "RooDataHistSliceIter" << std::endl ;
 //   hist.Print() ;
-//   cout << "hist._iterator = " << hist._iterator << endl ;
+//   std::cout << "hist._iterator = " << hist._iterator << std::endl ;
 
   Int_t i=0 ;
   for (const auto arg : hist._vars) {

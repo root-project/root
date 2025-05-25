@@ -95,7 +95,8 @@ public:
 
    TGScrollBar(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kChildFrame,
-               Pixel_t back = GetDefaultFrameBackground());
+               Pixel_t back = GetDefaultFrameBackground(),
+               const char *headPicName = "", const char *tailPicName = "");
    ~TGScrollBar() override;
 
    void           GrabPointer(Bool_t grab) { fGrabPointer = grab; }

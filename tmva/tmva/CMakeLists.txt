@@ -415,19 +415,7 @@ if(tmva-cpu)
   target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES})
   set_target_properties(TMVA PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
-
-  if(BLAS_FOUND)
-    target_link_libraries(TMVA PRIVATE ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
-  elseif(GSL_FOUND)
-    target_compile_definitions(TMVA PRIVATE -DDNN_USE_CBLAS)
-    target_include_directories(TMVA SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
-    target_link_libraries(TMVA PRIVATE ${GSL_CBLAS_LIBRARY})
-    if(builtin_gsl)
-      add_dependencies(TMVA GSL)
-    endif()
-  else()
-    message(FATAL_ERROR "tmva-cpu enabled but neither BLAS nor GSL BLAS were found")
-  endif()
+  target_link_libraries(TMVA PRIVATE ROOT::BLAS)
 endif()
 
 if(tmva-gpu)
@@ -442,8 +430,7 @@ if(tmva-gpu)
     target_sources(TMVA PRIVATE
                    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
                    src/DNN/Architectures/Cudnn.cu)
-    target_include_directories(TMVA PRIVATE ${CUDNN_INCLUDE_DIRS} )
-    target_link_libraries(TMVA PRIVATE ${CUDNN_LIBRARIES})
+    target_link_libraries(TMVA PRIVATE ROOT::cuDNN)
   else()
     message(STATUS "cuDNN not found or disabled - use only Cuda+Cublas for TMVA Deep Learning on GPU")
   endif()
@@ -459,9 +446,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx
   TMVA/RSofieReader.hxx
-  TMVA/RBatchGenerator.hxx
-  TMVA/RBatchLoader.hxx
-  TMVA/RChunkLoader.hxx
+  TMVA/BatchGenerator/RBatchGenerator.hxx
+  TMVA/BatchGenerator/RBatchLoader.hxx
+  TMVA/BatchGenerator/RChunkLoader.hxx
 
   SOURCES
 

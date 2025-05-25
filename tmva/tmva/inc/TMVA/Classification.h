@@ -57,7 +57,7 @@ void classification(UInt_t jobs = 2)
    TMVA::Tools::Instance();
 
    TFile *input(0);
-   TString fname = gROOT->GetTutorialDir() + "/tmva/data/tmva_class_example.root";
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
    if (!gSystem->AccessPathName(fname)) {
       input = TFile::Open(fname); // check if file in local directory exists
    }

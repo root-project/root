@@ -1,8 +1,9 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Example on the  usage of the adaptive 1D integration algorithm of MathMore
-/// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
+/// Example on the  usage of the adaptive 1D integration algorithm of MathMore.
+///
+/// It calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
 /// to execute the macro type it (you need to compile with AClic)
 ///
 /// ~~~{.cpp}
@@ -162,8 +163,8 @@ void  DrawCumulative(double x1, double x2, int n = 100){
    cum0->SetLineColor(kBlack);
    cum0->SetTitle("BreitWigner - the cumulative");
    cum0->SetStats(false);
-   cum1->SetLineStyle(2);
-   cum2->SetLineStyle(3);
+   cum1->SetLineStyle(kDashed);
+   cum2->SetLineStyle(kDotted);
    cum1->SetLineColor(kBlue);
    cum2->SetLineColor(kRed);
    c1->cd(1);

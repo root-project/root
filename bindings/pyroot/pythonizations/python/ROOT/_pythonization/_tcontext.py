@@ -9,13 +9,7 @@
 ################################################################################
 
 r'''
-/**
-\class TDirectory::TContext
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-## PyROOT
+\pythondoc TDirectory::TContext
 
 The functionality offered by TContext can be used in PyROOT with a context manager. Here are a few examples:
 \code{.py}
@@ -30,7 +24,7 @@ with TDirectory.TContext():
 
 # After the 'with' statement, the current directory is restored to ROOT.gROOT
 \endcode
-\n 
+\n
 \code{.py}
 import ROOT
 from ROOT import TDirectory
@@ -49,7 +43,7 @@ with TDirectory.TContext(file1):
 
 # After the statement, the current directory is restored to file3
 \endcode
-\n 
+\n
 \code{.py}
 import ROOT
 from ROOT import TDirectory
@@ -69,10 +63,8 @@ with TDirectory.TContext(file1, file2):
 Note that TContext restores the current directory to its status before the 'with'
 statement, but does not change the status of any file that has been opened inside
 the context (e.g. it does not automatically close the file).
-\htmlonly
-</div>
-\endhtmlonly
-*/
+
+\endpythondoc
 '''
 
 from . import pythonization

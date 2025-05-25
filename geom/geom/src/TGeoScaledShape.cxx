@@ -106,7 +106,7 @@ void TGeoScaledShape::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoScaledShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoScaledShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t local[3], ldir[3], lnorm[3];
    fScale->MasterToLocal(point, local);

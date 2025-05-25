@@ -39,6 +39,7 @@ public:
             const char* s1=nullptr, const char* s2=nullptr,
             const TObject* o1=nullptr, const TObject* o2=nullptr, const RooCmdArg* ca=nullptr, const char* s3=nullptr,
             const RooArgSet* c1=nullptr, const RooArgSet* c2=nullptr) ;
+
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
@@ -106,6 +107,8 @@ public:
 
   bool procSubArgs() const { return _procSubArgs; }
   bool prefixSubArgs() const { return _prefixSubArgs; }
+
+  std::string constructorCode() const;
 
 private:
 

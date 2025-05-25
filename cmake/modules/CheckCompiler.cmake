@@ -149,7 +149,9 @@ endif()
 # https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
 # but note that compilers might denote partial implementations of new standards (e.g. c++1z)
 # with other non-standard values.
-if (${CXX_STANDARD_STRING} STRGREATER "201703L")
+if (${CXX_STANDARD_STRING} STRGREATER "202002L")
+   set(CXX_STANDARD_STRING 23 CACHE STRING "")
+elseif (${CXX_STANDARD_STRING} STRGREATER "201703L")
    set(CXX_STANDARD_STRING 20 CACHE STRING "")
 elseif(${CXX_STANDARD_STRING} STRGREATER "201402L")
    set(CXX_STANDARD_STRING 17 CACHE STRING "")
@@ -161,8 +163,8 @@ set(CMAKE_CXX_STANDARD ${CXX_STANDARD_STRING} CACHE STRING "")
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "")
 
-if(NOT CMAKE_CXX_STANDARD MATCHES "17|20")
-  message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}. Supported standards are: 17, 20.")
+if(NOT CMAKE_CXX_STANDARD MATCHES "17|20|23")
+  message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}. Supported standards are: 17, 20, 23.")
 endif()
 
 #---Check for libcxx option------------------------------------------------------------

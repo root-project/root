@@ -89,8 +89,8 @@ index 3ab4c8b3a1..ae0e31cac8 100644
      }
 +#endif
  
-     // This pythonization is disabled for ROOT because it is a bit buggy
- #if 0
+     if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
+     // create a pseudo-constructor to allow initializer-style object creation
 -- 
 2.44.0
 

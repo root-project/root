@@ -63,6 +63,13 @@ public:
       kGeoHype = BIT(30),
       kGeoSavePrimitive = BIT(20)
    };
+
+   enum EInside {
+      kInside = 1,
+      kOutside = 2,
+      kSurface = 3
+   };
+
    virtual void ClearThreadData() const {}
    virtual void CreateThreadData(Int_t) {}
 
@@ -94,7 +101,7 @@ public:
    virtual Double_t Capacity() const = 0;
    void CheckShape(Int_t testNo, Int_t nsamples = 10000, Option_t *option = "");
    virtual void ComputeBBox() = 0;
-   virtual void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) = 0;
+   virtual void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const = 0;
    virtual void ComputeNormal_v(const Double_t *, const Double_t *, Double_t *, Int_t) {}
    virtual Bool_t Contains(const Double_t *point) const = 0;
    virtual void Contains_v(const Double_t *, Bool_t *, Int_t) const {}
@@ -126,6 +133,7 @@ public:
    const char *GetName() const override;
    virtual Int_t GetNmeshVertices() const { return 0; }
    const char *GetPointerName() const;
+   virtual EInside Inside(const Double_t *point) const;
    virtual Bool_t IsAssembly() const { return kFALSE; }
    virtual Bool_t IsComposite() const { return kFALSE; }
    virtual Bool_t IsCylType() const = 0;
@@ -170,5 +178,32 @@ public:
 
    ClassDefOverride(TGeoShape, 2) // base class for shapes
 };
+
+namespace tgeo_impl {
+/// @brief Generic implementation of the inside function using just Contains and GetNormal
+template <typename Solid>
+TGeoShape::EInside Inside(const Double_t *point, Solid const *solid)
+{
+   // This emulates the Inside funtionality in Geant4 and VecGeom, i.e instead of
+   // just 'inside' and 'outside', points closer to the shape surface by less than
+   // TGeoShape::Tolerance() (1.e-9 mm) are considered on surface.
+   // This function is expensive because it costs 2 * Contains + 1 * GetNormal calls
+
+   // Compute the normal in the point, along a radial direction
+   constexpr TGeoShape::EInside kTable[4] = {TGeoShape::kOutside, TGeoShape::kSurface, TGeoShape::kSurface,
+                                             TGeoShape::kInside};
+   constexpr double dir[3] = {1., 0., 0.};
+   double pt_push[3], pt_pull[3], norm[3];
+   solid->ComputeNormal(point, &dir[0], norm);
+   // Move the point back and forth along the normal and check if the Contains changes
+   for (auto i = 0; i < 3; ++i) {
+      pt_push[i] = point[i] + 10. * TGeoShape::Tolerance() * norm[i];
+      pt_pull[i] = point[i] - 10. * TGeoShape::Tolerance() * norm[i];
+   }
+   int in_push = solid->Contains(pt_push);
+   int in_pull = solid->Contains(pt_pull);
+   return kTable[in_push + 2 * in_pull];
+}
+} // namespace tgeo_impl
 
 #endif

@@ -75,8 +75,7 @@ std::unique_ptr<JSONTree> JSONTree::createImpl(Args &&...args)
 #ifdef ROOFIT_WITH_RYML
       return std::make_unique<TRYMLTree>(std::forward<Args>(args)...);
 #else
-      throw std::runtime_error(
-         "Requesting JSON tree with rapidyaml backend, but rapidyaml could not be found by ROOT when it was compiled.");
+      throw std::runtime_error("Requesting JSON tree with rapidyaml backend, which is currently unsupported.");
 #endif
    }
    return std::make_unique<TJSONTree>(std::forward<Args>(args)...);

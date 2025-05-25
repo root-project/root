@@ -16,8 +16,6 @@ from cppyy.gbl import gSystem
 
 from .. import pythonization
 
-from libROOTPythonizations import gROOT
-
 from ._factory import Factory
 from ._dataloader import DataLoader
 from ._crossvalidation import CrossValidation
@@ -45,7 +43,7 @@ def inject_rbatchgenerator(ns):
 
 from ._gnn import RModel_GNN, RModel_GraphIndependent
 
-hasRDF = "dataframe" in gROOT.GetConfigFeatures()
+hasRDF = "dataframe" in cppyy.gbl.ROOT.GetROOT().GetConfigFeatures()
 if hasRDF:
     from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor, _AsRTensor
 

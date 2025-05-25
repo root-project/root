@@ -47,7 +47,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         # Create a data set with a derived weight
         wFunc = ROOT.RooFormulaVar("w", "event weight", "(x*x+10)", [x])
         w = data.addColumn(wFunc)
-        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
+        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data.get(), Import=data, WeightVar=w.GetName())
 
         self.assertEqual(set(wdata.to_numpy().keys()), {"x", "cat", "w"})
 
@@ -96,7 +96,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         w = data.addColumn(wFunc)
 
         # Instruct dataset wdata to use w as event weight and not observable
-        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
+        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data.get(), Import=data, WeightVar=w.GetName())
 
         np_data = wdata.to_numpy()
 

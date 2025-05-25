@@ -185,7 +185,9 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
 
    AddLocation("jsrootsys/", fJSROOTSYS.Data());
 
-   if (!basic_sniffer) {
+   if (basic_sniffer) {
+      AddLocation("rootsys_fonts/", TString::Format("%s/fonts", TROOT::GetDataDir().Data()));
+   } else {
       AddLocation("currentdir/", ".");
       AddLocation("rootsys/", TROOT::GetRootSys());
    }
@@ -194,13 +196,18 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
    fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    TRootSniffer *sniff = nullptr;
-   if (basic_sniffer) {
+   if (!basic_sniffer) {
+      static const TClass *snifferClass = TClass::GetClass("TRootSnifferFull");
+      if (snifferClass && snifferClass->IsLoaded())
+         sniff = (TRootSniffer *)snifferClass->New();
+      else
+         ::Warning("THttpServer::THttpServer", "Fail to load TRootSnifferFull class, use basic functionality");
+   }
+
+   if (!sniff) {
       sniff = new TRootSniffer();
       sniff->SetScanGlobalDir(kFALSE);
       sniff->CreateOwnTopFolder(); // use dedicated folder
-   } else {
-      static const TClass *snifferClass = TClass::GetClass("TRootSnifferFull");
-      sniff = (TRootSniffer *)snifferClass->New();
    }
 
    SetSniffer(sniff);
@@ -343,8 +350,8 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 ///
 /// One could specify address like:
 ///
-/// * https://root.cern/js/7.6.0/
-/// * https://jsroot.gsi.de/7.6.0/
+/// * https://root.cern/js/7.9.0/
+/// * https://jsroot.gsi.de/7.9.0/
 ///
 /// This allows to get new JSROOT features with old server,
 /// reduce load on THttpServer instance, also startup time can be improved
@@ -927,22 +934,36 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const s
       }
 
       static std::map<std::string, std::string> modules = {
-         {"jsroot", "main.mjs"}, {"jsroot/core", "core.mjs"}, {"jsroot/io", "io.mjs"}, {"jsroot/tree", "tree.mjs"},
-         {"jsroot/draw", "draw.mjs"}, {"jsroot/geom", "geom.mjs"}, {"jsroot/gui", "gui.mjs"}, {"jsroot/webwindow", "webwindow.mjs"}
+         {"jsroot", "main.mjs"}, {"jsroot/core", "core.mjs"},
+         {"jsroot/io", "io.mjs"}, {"jsroot/tree", "tree.mjs"},
+         {"jsroot/draw", "draw.mjs"}, {"jsroot/gui", "gui.mjs"},
+         {"jsroot/d3", "d3.mjs"}, {"jsroot/three", "three.mjs"}, {"jsroot/three_addons", "three_addons.mjs"},
+         {"jsroot/geom", "geom/TGeoPainter.mjs"}, {"jsroot/hpainter", "gui/HierarchyPainter.mjs"},
+         {"jsroot/webwindow", "webwindow.mjs"}
       };
 
+      TString space_prefix;
+      auto pspace = p;
+      while ((--pspace > 0) && (arg->fContent[pspace] == ' ') && (space_prefix.Length() < 20))
+         space_prefix.Append(" ");
+
       bool first = true;
-      TString importmap = "<script type=\"importmap\">\n{\n   \"imports\": ";
+      TString importmap = "<script type=\"importmap\">\n";
+      importmap += space_prefix + "{\n";
+      importmap += space_prefix + "  \"imports\": ";
       for (auto &entry : modules) {
-         importmap.Append(TString::Format("%s\n      \"%s\": \"%smodules/%s\"", first ? "{" : ",", entry.first.c_str(), jsroot_prefix.c_str(), entry.second.c_str()));
+         importmap.Append(TString::Format("%s\n%s    \"%s\": \"%smodules/%s\"", first ? "{" : ",", space_prefix.Data(), entry.first.c_str(), jsroot_prefix.c_str(), entry.second.c_str()));
          first = false;
       }
-      importmap.Append(TString::Format(",\n      \"jsrootsys/\": \"%s\"", jsroot_prefix.c_str()));
+      importmap.Append(TString::Format(",\n%s    \"jsrootsys/\": \"%s\"", space_prefix.Data(), jsroot_prefix.c_str()));
 
       for (auto &entry : fLocations)
          if (entry.first != "jsrootsys/")
-            importmap.Append(TString::Format(",\n      \"%s\": \"%s%s\"", entry.first.c_str(), path_prefix.c_str(), entry.first.c_str()));
-      importmap.Append("\n   }\n}\n</script>\n");
+            importmap.Append(TString::Format(",\n%s    \"%s\": \"%s%s\"", space_prefix.Data(), entry.first.c_str(), path_prefix.c_str(), entry.first.c_str()));
+      importmap.Append("\n");
+      importmap.Append(space_prefix + "  }\n");
+      importmap.Append(space_prefix + "}\n");
+      importmap.Append(space_prefix + "</script>\n");
 
       arg->fContent.erase(p, place_holder.length());
 

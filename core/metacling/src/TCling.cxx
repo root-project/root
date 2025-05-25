@@ -115,6 +115,8 @@ clang/LLVM technology.
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
+#include "clang/Interpreter/CppInterOp.h"
+
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
 
@@ -630,9 +632,9 @@ extern "C" int TCling__AutoParseCallback(const char* className)
    return ((TCling*)gCling)->AutoParse(className);
 }
 
-extern "C" const char* TCling__GetClassSharedLibs(const char* className)
+extern "C" const char* TCling__GetClassSharedLibs(const char* className, bool skipCore)
 {
-   return ((TCling*)gCling)->GetClassSharedLibs(className);
+   return ((TCling*)gCling)->GetClassSharedLibs(className, skipCore);
 }
 
 // Returns 0 for failure 1 for success
@@ -785,17 +787,10 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
          }
          fileContent += "#pragma link C++ class ";
          fileContent +=    *it + "+;\n" ;
-         fileContent += "#pragma link C++ class ";
-         if (iSTLType != sSTLTypes.end()) {
-            // STL class; we cannot (and don't need to) store iterators;
-            // their shadow and the compiler's version don't agree. So
-            // don't ask for the '+'
-            fileContent +=    *it + "::*;\n" ;
-         }
-         else {
+         if (iSTLType == sSTLTypes.end()) {
             // Not an STL class; we need to allow the I/O of contained
             // classes (now that we have a dictionary for them).
-            fileContent +=    *it + "::*+;\n" ;
+            fileContent += "#pragma link C++ class " + *it + "::*+;\n" ;
          }
       }
       fileContent += "#endif\n";
@@ -967,26 +962,24 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    if (lastPos != inner)   // Main switch: case 1 - scoped enum, case 2 global enum
    {
       // We have a scope
-      // All of this C gymnastic is to avoid allocations on the heap
       const auto enName = lastPos;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)inner) / sizeof(decltype(*lastPos)) - 2;
-      char *scopeName = new char[scopeNameSize + 1];
-      strncpy(scopeName, inner, scopeNameSize);
-      scopeName[scopeNameSize] = '\0';
+      const auto scopeNameSize = (lastPos - inner) / sizeof(decltype(*lastPos)) - 2;
+      std::string scopeName{inner, scopeNameSize};
       // Check if the scope is in the list of classes
-      if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
+      if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName.c_str()))) {
          auto enumTable = dynamic_cast<const THashList *>(scope->GetListOfEnums(false));
-         if (enumTable && enumTable->THashList::FindObject(enName)) { delete [] scopeName; return true; }
+         if (enumTable && enumTable->THashList::FindObject(enName))
+            return true;
       }
       // It may still be in one of the loaded protoclasses
-      else if (auto scope = static_cast<TProtoClass *>(gClassTable->GetProtoNorm(scopeName))) {
+      else if (auto scope = static_cast<TProtoClass *>(gClassTable->GetProtoNorm(scopeName.c_str()))) {
          auto listOfEnums = scope->GetListOfEnums();
          if (listOfEnums) { // it could be null: no enumerators in the protoclass
             auto enumTable = dynamic_cast<const THashList *>(listOfEnums);
-            if (enumTable && enumTable->THashList::FindObject(enName)) { delete [] scopeName; return true; }
+            if (enumTable && enumTable->THashList::FindObject(enName))
+               return true;
          }
       }
-      delete [] scopeName;
    } else
    {
       // We don't have any scope: this could only be a global enum
@@ -1155,7 +1148,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
 #ifndef NDEBUG
                   SourceManager &SM = ND->getASTContext().getSourceManager();
                   SourceLocation Loc = ND->getLocation();
-                  const FileEntry *FE = SM.getFileEntryForID(SM.getFileID(Loc));
+                  OptionalFileEntryRef FE = SM.getFileEntryRefForID(SM.getFileID(Loc));
                   (void)FE;
                   assert(FE->getName().contains("input_line_"));
 #endif
@@ -1342,10 +1335,11 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 /// \param title title for TInterpreter
 /// \param argv - array of arguments passed to the cling::Interpreter constructor
 ///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
+/// \param interpLibHandle handle to interpreter library
 
 TCling::TCling(const char *name, const char *title, const char* const argv[], void *interpLibHandle)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fMapfile(nullptr),
-  fRootmapFiles(nullptr), fLockProcessLine(true), fNormalizedCtxt(nullptr),
+  fRootmapFiles(nullptr), fLockProcessLine(true), fNormalizedCtxt(nullptr), fLookupHelper(nullptr),
   fPrevLoadedDynLibInfo(nullptr), fClingCallbacks(nullptr), fAutoLoadCallBack(nullptr),
   fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
 {
@@ -1545,6 +1539,14 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
                                                        llvmResourceDir, extensions,
                                                        interpLibHandle);
 
+   if (!fInterpreter->getCI()) { // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
+      return;
+   }
+
+   // Tell CppInterOp that the cling::Interpreter instance is managed externally by ROOT
+   // Sets the interpreter by passing the fInterpreter handle as soon as TCling is initialized
+   Cpp::UseExternalInterpreter((Cpp::TInterp_t*)fInterpreter.get());
+
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHOrModuleValidation =
       DisableValidationForModuleKind::All;
@@ -1613,7 +1615,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
                         /*prepend=*/true);
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
-         return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
+         return stem.starts_with("libNew") || stem.starts_with("libcppyy_backend");
       };
       // Initialize the dyld for AutoloadLibraryGenerator.
       DLM.initializeDyld(ShouldPermanentlyIgnore);
@@ -1644,6 +1646,8 @@ TCling::~TCling()
 
 void TCling::Initialize()
 {
+   if (!fClingCallbacks) // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
+      return;
    fClingCallbacks->Initialize();
 
    // We are set up. Enable ROOT's AutoLoading.
@@ -1701,6 +1705,7 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM from TFile; returns true on success.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::LoadPCMImpl(TFile &pcmFile)
 {
@@ -1816,6 +1821,7 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a rdict PCM, issues diagnostics if it fails.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::LoadPCM(std::string pcmFileNameFullPath)
 {
@@ -2015,6 +2021,7 @@ void TCling::ProcessClassesToUpdate()
 /// libraries.
 /// The payload code is injected "as is" in the interpreter.
 /// The value of 'triggerFunc' is used to find the shared library location.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::RegisterModule(const char* modulename,
                             const char** headers,
@@ -2270,7 +2277,7 @@ void TCling::RegisterModule(const char* modulename,
    bool ModuleWasSuccessfullyLoaded = false;
    if (hasCxxModule) {
       std::string ModuleName = modulename;
-      if (llvm::StringRef(modulename).startswith("lib"))
+      if (llvm::StringRef(modulename).starts_with("lib"))
          ModuleName = llvm::StringRef(modulename).substr(3).str();
 
       // In case we are directly loading the library via gSystem->Load() without
@@ -2980,9 +2987,12 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             // if we can not find the member (which should not really happen),
             // let's consider it transient.
             Bool_t transient = isTransient || !mbr || !mbr->IsPersistent();
-
+            if (!mbr || !mbr->IsPersistent())
+               insp.IncrementNestedTransient();
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
+            if (!mbr || !mbr->IsPersistent())
+               insp.DecrementNestedTransient();
 
          }
       }
@@ -3077,6 +3087,14 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                                  insp, isTransient);
       }
    } // loop over bases
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if constructor exited correctly, ie the instance is in a valid state
+/// \return true if there is a compiler instance available, false otherwise
+bool TCling::IsValid() const
+{
+   return fInterpreter->getCI() != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3243,8 +3261,8 @@ Bool_t TCling::IsLoaded(const char* filename) const
                            clang::SourceLocation(),
                            /*isAngled*/ false,
                            /*FromDir*/ nullptr, CurDir,
-                           clang::ArrayRef<std::pair<const clang::FileEntry *,
-                           const clang::DirectoryEntry *>>(),
+                           clang::ArrayRef<std::pair<clang::OptionalFileEntryRef,
+                           clang::DirectoryEntryRef>>(),
                            /*SearchPath*/ nullptr,
                            /*RelativePath*/ nullptr,
                            /*RequestingModule*/ nullptr,
@@ -4092,7 +4110,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
    // Handle the special case of 'tuple' where we ignore the real implementation
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
-   if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+   if (strncmp(cl->GetName(),"tuple<",std::char_traits<char>::length("tuple<"))==0) {
       if (!reload)
          name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper(), silent);
       if (reload || name.empty()) {
@@ -5449,7 +5467,7 @@ const char* TCling::GetTopLevelMacroName() const
 ///   std::cout << "  TCling::GetTopLevelMacroName() returns " <<
 ///      TCling::GetTopLevelMacroName() << std::endl;
 ///   std::cout << "  Now calling inclfile..." << std::endl;
-///   gInterpreter->ProcessLine(".x inclfile.C");;
+///   gInterpreter->ProcessLine(".x inclfile.C");
 ///   }
 /// ~~~
 /// Running mymacro.C will print:
@@ -6619,8 +6637,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    std::string libName = DLM.searchLibrariesForSymbol(mangled_name,
                                                       /*searchSystem=*/ true);
 
-   assert(!llvm::StringRef(libName).startswith("libNew") &&
-          "We must not resolve symbols from libNew!");
+   assert(!llvm::StringRef(libName).starts_with("libNew") && "We must not resolve symbols from libNew!");
 
    if (libName.empty())
       return nullptr;
@@ -6653,13 +6670,29 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alia
          cl->ResetCaches();
          TClass::RemoveClassDeclId(cci->GetDeclId());
          if (def) {
-            // It's a tag decl, not a namespace decl.
-            cci->Init(*cci->GetType());
-            TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
+            if (cci->GetType()) {
+               // It's a tag decl, not a namespace decl.
+               cci->Init(*cci->GetType());
+               TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
+            } else {
+               Error("RefreshClassInfo", "Should not need to update the classInfo a non type decl: %s", oldDef->getNameAsString().c_str());
+            }
          }
       }
    } else if (!cl->TestBit(TClass::kLoading) && !cl->fHasRootPcmInfo) {
       cl->ResetCaches();
+      if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+         // We need to use the Emulated Tuple but we should not trigger parsing
+         // yet, so delay the creation of the ClassInfo
+         delete ((TClingClassInfo *)cl->fClassInfo);
+         cl->fClassInfo = nullptr;
+         cl->fCanLoadClassInfo = true;
+         cl->RemoveStreamerInfo(cl->fClassVersion);
+         if (cl->fState != TClass::kHasTClassInit) {
+            cl->fState = TClass::kInterpreted;
+         }
+         return;
+      }
       // yes, this is almost a waste of time, but we do need to lookup
       // the 'type' corresponding to the TClass anyway in order to
       // preserve the opaque typedefs (Double32_t)
@@ -6998,7 +7031,7 @@ const char* TCling::GetSharedLibs()
    return fSharedLibs;
 }
 
-static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHelper &LH)
+static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHelper &LH, bool skipCore)
 {
    if (!cls || !*cls)
       return {};
@@ -7041,6 +7074,7 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
             case TemplateArgument::Integral:
             case TemplateArgument::Pack:
             case TemplateArgument::NullPtr:
+            case TemplateArgument::StructuralValue:
             case TemplateArgument::Expression:
             case TemplateArgument::Template:
             case TemplateArgument::TemplateExpansion: return;
@@ -7076,7 +7110,7 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
          if (!M->LinkLibraries.size())
             continue;
          // We have preloaded the Core module thus libCore.so
-         if (M->Name == "Core")
+         if (M->Name == "Core" && skipCore)
             continue;
          assert(M->LinkLibraries.size() == 1);
          if (!result.empty())
@@ -7093,8 +7127,10 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
 /// The first library in the list is the one containing the class, the
 /// others are the libraries the first one depends on. Returns 0
 /// in case the library is not found.
+/// \param cls the name of the class
+/// \param skipCore if true (default), remove "Core" from the returned list
 
-const char* TCling::GetClassSharedLibs(const char* cls)
+const char* TCling::GetClassSharedLibs(const char* cls, bool skipCore)
 {
    if (fCxxModulesEnabled) {
       // Lock the interpreter mutex before interacting with cling.
@@ -7113,7 +7149,7 @@ const char* TCling::GetClassSharedLibs(const char* cls)
       // Limit the recursion which can be induced by GetClassSharedLibsForModule.
       SuspendAutoLoadingRAII AutoLoadingDisabled(this);
       cling::LookupHelper &LH = fInterpreter->getLookupHelper();
-      std::string libs = GetClassSharedLibsForModule(cls, LH);
+      std::string libs = GetClassSharedLibsForModule(cls, LH, skipCore);
       if (!libs.empty()) {
          fAutoLoadLibStorage.push_back(libs);
          return fAutoLoadLibStorage.back().c_str();
@@ -7255,7 +7291,7 @@ static bool hasParsedRootmapForLibrary(llvm::StringRef lib)
 {
    // Check if we have parsed a rootmap file.
    llvm::SmallString<256> rootmapName;
-   if (!lib.startswith("lib"))
+   if (!lib.starts_with("lib"))
       rootmapName.append("lib");
 
    rootmapName.append(llvm::sys::path::filename(lib));
@@ -8728,7 +8764,7 @@ void TCling::SetDeclAttr(DeclId_t declId, const char* attribute)
 {
    Decl* decl = static_cast<Decl*>(const_cast<void*>(declId));
    ASTContext &C = decl->getASTContext();
-   decl->addAttr(AnnotateAttr::CreateImplicit(C, attribute));
+   decl->addAttr(AnnotateAttr::CreateImplicit(C, attribute, nullptr, 0));
 }
 
 //______________________________________________________________________________
@@ -8907,7 +8943,7 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
       if (md->isVirtual()) {
          property |= kIsVirtual;
       }
-      if (md->isPure()) {
+      if (md->isPureVirtual()) {
          property |= kIsPureVirtual;
       }
       if (const clang::CXXConstructorDecl *cd =
@@ -9590,14 +9626,6 @@ bool TCling::IsVoidPointerType(const void * QualTypePtr) const
 {
    clang::QualType QT = clang::QualType::getFromOpaquePtr(QualTypePtr);
    return QT->isVoidPointerType();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool TCling::FunctionDeclId_IsMethod(DeclId_t fdeclid) const
-{
-   clang::FunctionDecl *FD = (clang::FunctionDecl *) fdeclid;
-   return llvm::isa_and_nonnull<clang::CXXMethodDecl>(FD);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

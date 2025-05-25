@@ -70,11 +70,11 @@ void FTContour::evaluateCubicCurve()
 }
 
 
-FTContour::FTContour( FT_Vector* contour, char* pointTags, unsigned int numberOfPoints)
+FTContour::FTContour( FT_Vector* contour, PointTag_t* pointTags, unsigned int numberOfPoints)
 {
     for( unsigned int pointIndex = 0; pointIndex < numberOfPoints; ++ pointIndex)
     {
-        char pointTag = pointTags[pointIndex];
+        PointTag_t pointTag = pointTags[pointIndex];
 
         if( pointTag == FT_Curve_Tag_On || numberOfPoints < 2)
         {
@@ -93,9 +93,9 @@ FTContour::FTContour( FT_Vector* contour, char* pointTags, unsigned int numberOf
 
         if( pointTag == FT_Curve_Tag_Conic)
         {
-            char nextPointTag = ( pointIndex == numberOfPoints - 1)
-                                ? pointTags[0]
-                                : pointTags[pointIndex + 1];
+            PointTag_t nextPointTag = ( pointIndex == numberOfPoints - 1)
+                                      ? pointTags[0]
+                                      : pointTags[pointIndex + 1];
 
             while( nextPointTag == FT_Curve_Tag_Conic)
             {

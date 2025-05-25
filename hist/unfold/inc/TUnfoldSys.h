@@ -1,9 +1,13 @@
 // Author: Stefan Schmitt
 // DESY, 23/01/09
 
-//  Version 17.5, bug fixes in TUnfold fix problem with GetEmatrixSysUncorr
+//  Version 17.9, parallel to changes in TUnfold
 //
 //  History:
+//    Version 17.8, parallel to changes in TUnfold
+//    Version 17.7, bug fix in GetBackground()
+//    Version 17.6, with updated doxygen comments
+//    Version 17.5, bug fixes in TUnfold fix problem with GetEmatrixSysUncorr
 //    Version 17.4, in parallel to changes in TUnfoldBinning
 //    Version 17.3, in parallel to changes in TUnfoldBinning
 //    Version 17.2, add methods to find back systematic and background sources

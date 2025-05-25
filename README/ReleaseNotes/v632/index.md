@@ -34,7 +34,7 @@ The following people have contributed to this new version:
  Bernhard Manfred Gruber,\
  Enrico Guiraud,
  Jonas Hahnfeld, CERN/Goethe University Frankfurt,\
- Fernando Hueso Gonzalez, CSIC/University of Valencia\
+ Fernando Hueso Gonzalez, University of Valencia\
  Attila Krasznahorkay, CERN/EP-ADP-OS,\
  Wim Lavrijsen, LBL,\
  Dennis Klein, GSI,\
@@ -52,7 +52,6 @@ The following people have contributed to this new version:
  Ianna Osborne, Princeton University,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
- Huilin Qu, CERN/EP-CMG,\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
  Andrea Rizzi, University of Pisa,\
@@ -80,7 +79,6 @@ The following people have contributed to this new version:
 - Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
 - The `TList::TList(TObject*)` constructor is deprecated and will be removed in ROOT 6.34
 - The deprecated `TProofOutputList::TProofOutputList(TObject *o)` constructor was removed
-- On the ROOT prompt or in interpreted scripts, CINT-like implicit declarations such as `i = 0;` are now deprecated and might no longer be supported in future ROOT releases.   Update those declarations by explicitly using the `auto` keyword: `auto i=0`.    The deprecation is marked by printing this kind of warning: `declaration without the 'auto' keyword is deprecated`.
 
 ## Core Libraries
 
@@ -372,7 +370,7 @@ See: https://github.com/root-project/root/issues/15153#issuecomment-2040504962
 
 ### No more implicit conversion of static size `char` buffer to Python strings
 
-A static size character buffer of type `char[n]` is not converted to a Python string anymore. 
+A static size character buffer of type `char[n]` is not converted to a Python string anymore.
 The reason for this: since it was previously assumed the string was
 null-terminated, there was no way to get the bytes after a `null`, even if you
 wanted to.
@@ -739,122 +737,3 @@ More than 200 items were addressed for this release. The full list is:
 * [[ROOT-10958](https://its.cern.ch/jira/browse/ROOT-10958)] - jupyter notebook does not render geometries with new pyroot
 * [[ROOT-10977](https://its.cern.ch/jira/browse/ROOT-10977)] - Exit code 0 with failing C++ notebook in nbconvert
 * [[ROOT-11006](https://its.cern.ch/jira/browse/ROOT-11006)] - [TTreeReader] Crash when reading array branch
-
-## Release 6.32.02
-
-Published on June 18, 2024
-
-### Items addressed in this release
-
-* [[#7236](https://github.com/root-project/root/issues/7236)] - Memory leak in TFile::WriteObjectAny, depending on data type
-* [[#10075](https://github.com/root-project/root/issues/10075)] - Difficult to configure Xrootd to use non-builtin openssl
-* [[#14051](https://github.com/root-project/root/issues/14051)] - [web graphics] Web graphics resizes canvas despite canvas size definition in the macro
-* [[#15321](https://github.com/root-project/root/issues/15321)] - [MSVC] Root is failed with error G694476FC: static_assert failed "Unexpected size"
-* [[#15405](https://github.com/root-project/root/issues/15405)] - [RF] ExternalConstraints documentation incorrect for RooMCStudy
-* [[#15430](https://github.com/root-project/root/issues/15430)] - Test failures with Python 3.13
-* [[#15473](https://github.com/root-project/root/issues/15473)] - Segmentation fault when building with the mold linker
-* [[#15498](https://github.com/root-project/root/issues/15498)] - gPad is not consistent in pyROOT with web canvas
-* [[#15511](https://github.com/root-project/root/issues/15511)] - Possible memory corruption in cling
-* [[#15579](https://github.com/root-project/root/issues/15579)] - Performance regression (slowdown) in ALICE event generation
-* [[#15686](https://github.com/root-project/root/issues/15686)] - JITted code changes the execution order of computation graph nodes
-* [[#15688](https://github.com/root-project/root/issues/15688)] - [PyROOT] TProfile2D::Fill ambiguities preventing use of some signatures in pyROOT
-* [[#15690](https://github.com/root-project/root/issues/15690)] - [RF] SegFault in RooBernstein::fillBuffer
-* [[#15694](https://github.com/root-project/root/issues/15694)] - [RF] New RooFit EvalBackend returning incorrect result for binned likelihoods
-* [[#15703](https://github.com/root-project/root/issues/15703)] - Leaking memory though strings in PyROOT
-* [[#15727](https://github.com/root-project/root/issues/15727)] - Windows CMake project cannot find_library() after integrating with ROOT.
-* [[#15751](https://github.com/root-project/root/issues/15751)] - [RF] Using a conditional RooProdPdf in a multi-channel fit spawns too many integrals with new CPU evaluation backend
-* [[#15791](https://github.com/root-project/root/issues/15791)] - JS ROOT does not draw tprofile2d correctly with "TEXT" draw option
-* [[#15799](https://github.com/root-project/root/issues/15799)] - pyunittests-pyroot-pyz-ttree-setbranchaddress segfaults with Python 3.13
-* [[ROOT-7412](https://its.cern.ch/jira/browse/ROOT-7412)] - Strange results looking for nested types
-* [[ROOT-8439](https://its.cern.ch/jira/browse/ROOT-8439)] - PyROOT does not treat exceptions properly in overloaded methods
-* [[ROOT-9307](https://its.cern.ch/jira/browse/ROOT-9307)] - TPad::GetListOfPrimitives() double deletion error in TList::Clear()
-
-## Release 6.32.04
-
-Published on August 14, 2024
-
-### Items addressed in this release
-* [[#7223](https://github.com/root-project/root/issues/7223)] - [RF] RDataFrame to RooDataSet/RooDataHist conversion
-* [[#7782](https://github.com/root-project/root/issues/7782)] - [RF] Allow to set nbins for RooPlot (or disallow)
-* [[#9838](https://github.com/root-project/root/issues/9838)] - [RF] RooCurve::Average() overestimating average values of standard precision curves on small
-* [[#11565](https://github.com/root-project/root/issues/11565)] - [RF] Crash in RooStats::ToyMCSample::GenerateToyData
-* [[#13387](https://github.com/root-project/root/issues/13387)] - Please recover SrvAuthenticate from libSrvAuth library
-* [[#14541](https://github.com/root-project/root/issues/14541)] - [ROOT-6193] Editor for palette axis cannot set title properties
-* [[#15104](https://github.com/root-project/root/issues/15104)] - new PyROOT/cppyy fails to pickle enums
-* [[#15161](https://github.com/root-project/root/issues/15161)] - Attribute (__getitem__) differences for PyROOT objects in ROOT master
-* [[#15234](https://github.com/root-project/root/issues/15234)] - cppyy - wrong object type when iterating over a polymorphic container
-* [[#15269](https://github.com/root-project/root/issues/15269)] - Iterators in pyROOT working differently in ROOT master compared to 6.30/02
-* [[#15315](https://github.com/root-project/root/issues/15315)] - [PyROOT] Example with inheriting from ROOT.Math.IMultiGenFunction doesn't work after recent cppyy upgrade
-* [[#15425](https://github.com/root-project/root/issues/15425)] - TTreeProcessorMP processes events multiple times when there are more threads than entries
-* [[#15755](https://github.com/root-project/root/issues/15755)] - [RF][HS3] Higgs discovery workspaces roundtrip
-* [[#15874](https://github.com/root-project/root/issues/15874)] - [Hist] Backwards compatibility broken for THnSparseL in 6.32
-* [[#15887](https://github.com/root-project/root/issues/15887)] - Broken plot .C macros for default Name() argument in plotOn()
-* [[#15977](https://github.com/root-project/root/issues/15977)] - [gui] Event StatusBar does not work well when TMarker outside of zoom region
-* [[#15986](https://github.com/root-project/root/issues/15986)] - Problems with TUri compilation
-* [[#16031](https://github.com/root-project/root/issues/16031)] - VecOps binary functions not using the right types
-* [[#16038](https://github.com/root-project/root/issues/16038)] - Could NOT find Vdt error when using 6.32.02 docker image
-* [[#16087](https://github.com/root-project/root/issues/16087)] - [docs] Potential typo in function name case: DistanceToPrimitive
-* [[#16201](https://github.com/root-project/root/issues/16201)] - [PyROOT] Support most recent numba version 0.60.0
-intervals
-* [[ROOT-6286](https://its.cern.ch/jira/browse/ROOT-6286)] - Reading a TChain and TTreeCache
-* [[ROOT-7991](https://its.cern.ch/jira/browse/ROOT-7991)] - THnSparse::ProjectionND yields disfunctional histogram
-* [[ROOT-8238](https://its.cern.ch/jira/browse/ROOT-8238)] - TPrincipal tries to make histograms with nbin=0
-* [[ROOT-8519](https://its.cern.ch/jira/browse/ROOT-8519)] - Bug when use simple math functions in TTree::SetAlias()
-
-## Release 6.32.06
-
-Published on September 22, 2024
-
-### Items addressed in this release
-
-This is the first ROOT release supporting macOS 15 Sequoia.
-
-* [[#15178](https://github.com/root-project/root/issues/15178)] - ROOT generates CMake warnings when building from the tarball
-* [[#16219](https://github.com/root-project/root/issues/16219)] - Module map on the new XCode version for macos15-beta
-* [[#16249](https://github.com/root-project/root/issues/16249)] - Iterating with a range for does one extra iteration
-* [[ROOT-10902](https://its.cern.ch/jira/browse/ROOT-10902)] - SMatrix read from TTree contains all zeroes
-
-## Release 6.32.08
-
-Published on November 14, 2024
-
-### Items addressed in this release
-
-Besides the fixes listed below, a scaling problem RDataFrame was fixed.
-
-* [[10239](https://github.com/root-project/root/issues/10239)] - "?" wildcard broken in TChain::Add()
-* [[16475](https://github.com/root-project/root/issues/16475)] - Unable to use EOS tokens with RDataFrame since 6.32
-* [[16562](https://github.com/root-project/root/issues/16562)] - TTreeViewer save session absolute path	
-* [[16771](https://github.com/root-project/root/issues/16771)] - Copying a default constructed `TH2Poly` fails.	
-
-## Release 6.32.10
-
-Published on February 9, 2025
-
-### Items addressed in this release
-
-In this release, minor fixes for RDataFrame were integrated, and a mechanism was added to specify binding options when opening sockets with TSocketServer.
-In addition, these items were addressed:
-
-* [[#17444](https://github.com/root-project/root/issues/17444)] - ROOT doesn't compile with gcc-15
-* [[#16189](https://github.com/root-project/root/issues/16189)] - TFile::k630forwardCompatibility does not apply to new files correctly
-
-## Release 6.32.12
-
-Published on April 8, 2025
-
-### Items addressed in this release
-
-This branch includes minor bugfixes as well as the changes necessary to build and run on macOS Sequoia 15.4 and XCode 16.3.
-
-The following items were addressed:
-
-* [[#18195](https://github.com/root-project/root/issues/18195)] - TBufferJSON not serializing std::map
-* [[#17992](https://github.com/root-project/root/issues/17992)] - Spurrious auto parsing when looking up a TClass
-* [[#17978](https://github.com/root-project/root/issues/17978)] - root build fails in clad when using more than one job
-* [[#17753](https://github.com/root-project/root/issues/17753)] - Race condition in TClass::fStreamerImpl value for emulated classes.
-
-### Externals updates
- * The version of builtin veccore has been updated to 0.8.2
-
-## HEAD of the v6-32-00-patches branch

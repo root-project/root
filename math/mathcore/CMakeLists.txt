@@ -189,6 +189,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/TRandomGen.cxx
     src/TStatistic.cxx
     src/UnBinData.cxx
+    src/Util.cxx
     src/VectorizedTMath.cxx
   LIBRARIES
     ${MATHCORE_LIBRARIES}

@@ -395,41 +395,35 @@ void TGVProgressBar::DoRedraw()
 
 void TGProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   const char *barcolor;
-   char quote = '"';
    switch (fBarType) {
-      case kFancy:
-         if (GetOptions() != (kSunkenFrame | kDoubleBorder | kOwnBackground))
-            out << "   " << GetName() << "->ChangeOptions(" << GetOptionString()
-                << ");" << std::endl;
-         if (GetBackground() != GetWhitePixel()) {
-            SaveUserColor(out, option);
-            out << "   " << GetName() << "->SetBackgroundColor(ucolor);" << std::endl;
-         }
-         break;
+   case kFancy:
+      if (GetOptions() != (kSunkenFrame | kDoubleBorder | kOwnBackground))
+         out << "   " << GetName() << "->ChangeOptions(" << GetOptionString() << ");\n";
+      if (GetBackground() != GetWhitePixel()) {
+         SaveUserColor(out, option);
+         out << "   " << GetName() << "->SetBackgroundColor(ucolor);\n";
+      }
+      break;
 
-      case kStandard:
-         if (GetOptions() != (kSunkenFrame | kOwnBackground))
-            out << "   " << GetName() << "->ChangeOptions(" << GetOptionString()
-                << ");" << std::endl;
-         if (GetBackground() != GetDefaultFrameBackground()) {
-            SaveUserColor(out, option);
-            out << "   " << GetName() << "->SetBackgroundColor(ucolor);" << std::endl;
-         }
-         break;
+   case kStandard:
+      if (GetOptions() != (kSunkenFrame | kOwnBackground))
+         out << "   " << GetName() << "->ChangeOptions(" << GetOptionString() << ");\n";
+      if (GetBackground() != GetDefaultFrameBackground()) {
+         SaveUserColor(out, option);
+         out << "   " << GetName() << "->SetBackgroundColor(ucolor);\n";
+      }
+      break;
    }
 
    if (fBarColorGC.GetForeground() != GetDefaultSelectedBackground()) {
-      barcolor = TColor::PixelAsHexString(fBarColorGC.GetForeground());
-      out << "   " << GetName() <<"->SetBarColor(" << quote << barcolor << quote
-          << ");"  << std::endl;
+      out << "   " << GetName() << "->SetBarColor(\"" << TColor::PixelAsHexString(fBarColorGC.GetForeground())
+          << "\");\n";
    }
 
    if (fMin != 0 && fMax != 100)
-      out << "   " << GetName() << "->SetRange(" << fMin << "," << fMax << ");" << std::endl;
+      out << "   " << GetName() << "->SetRange(" << fMin << "," << fMax << ");\n";
 
-   out <<"   "<< GetName() <<"->SetPosition("<< fPos <<");"<< std::endl;
-
+   out << "   " << GetName() << "->SetPosition(" << fPos << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -437,23 +431,19 @@ void TGProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGVProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
+   out << "   TGVProgressBar *" << GetName() << " = new TGVProgressBar(" << fParent->GetName();
 
-   out << "   TGVProgressBar *";
-   out << GetName() << " = new TGVProgressBar(" << fParent->GetName();
-
-   if ((fBarType == kFancy) && (fBarWidth == kProgressBarTextWidth)) {
-      out << ",TGProgressBar::kFancy";
-   } else if ((fBarType == kStandard) && (fBarWidth == kProgressBarStandardWidth)){
-      out << ",TGProgressBar::kStandard";
-   }
-
-   out << "," << GetHeight() <<");" << std::endl;
+   if ((fBarType == kFancy) && (fBarWidth == kProgressBarTextWidth))
+      out << ", TGProgressBar::kFancy";
+   else if ((fBarType == kStandard) && (fBarWidth == kProgressBarStandardWidth))
+      out << ", TGProgressBar::kStandard";
+   out << ", " << GetHeight() << ");\n";
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (GetFillType() == kBlockFill)
-      out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< std::endl;
+      out << "   " << GetName() << "->SetFillType(TGProgressBar::kBlockFill);\n";
 
    TGProgressBar::SavePrimitive(out, option);
 }
@@ -463,36 +453,32 @@ void TGVProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGHProgressBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-
-   out <<"   TGHProgressBar *";
-   out << GetName() <<" = new TGHProgressBar("<< fParent->GetName();
+   out << "   TGHProgressBar *" << GetName() << " = new TGHProgressBar(" << fParent->GetName();
 
    if ((fBarType == kFancy) && (fBarWidth == kProgressBarTextWidth)) {
       out << ",TGProgressBar::kFancy";
-   } else if ((fBarType == kStandard) && (fBarWidth == kProgressBarStandardWidth)){
+   } else if ((fBarType == kStandard) && (fBarWidth == kProgressBarStandardWidth)) {
       out << ",TGProgressBar::kStandard";
    }
+   out << "," << GetWidth() << ");\n";
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
-
-   out << "," << GetWidth() << ");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (GetFillType() == kBlockFill)
-      out << "   " << GetName() <<"->SetFillType(TGProgressBar::kBlockFill);"<< std::endl;
+      out << "   " << GetName() << "->SetFillType(TGProgressBar::kBlockFill);\n";
 
    if (GetShowPos()) {
-      out << "   " << GetName() <<"->ShowPosition(kTRUE,";
+      out << "   " << GetName() << "->ShowPosition(kTRUE,";
       if (UsePercent()) {
          out << "kTRUE,";
       } else {
          out << "kFALSE,";
       }
-      out << quote << GetFormat() << quote << ");"<< std::endl;
+      out << "\"" << GetFormat() << "\");\n";
 
    } else if (UsePercent() && !GetFillType()) {
-      out << "   " << GetName() <<"->ShowPosition();" << std::endl;
+      out << "   " << GetName() << "->ShowPosition();\n";
    }
    TGProgressBar::SavePrimitive(out, option);
 }

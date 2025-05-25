@@ -24,8 +24,8 @@ private:
    Double_t  *fSumLog;     //Sum of logs (array of fNlog elements)
    TMinuit   *fMinuit;     //pointer to the TMinuit object
 
-   TFitter(const TFitter&); // Not implemented
-   TFitter& operator=(const TFitter&); // Not implemented
+   TFitter(const TFitter &) = delete;
+   TFitter& operator=(const TFitter &) = delete;
 
 public:
    TFitter(Int_t maxpar = 25);

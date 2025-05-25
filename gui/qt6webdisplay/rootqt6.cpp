@@ -30,9 +30,9 @@
 #include "THttpServer.h"
 #include "TSystem.h"
 
-#include "../qt5webdisplay/rootwebview.h"
-#include "../qt5webdisplay/rootwebpage.h"
-#include "../qt5webdisplay/rooturlschemehandler.h"
+#include "rootwebview.h"
+#include "rootwebpage.h"
+#include "rooturlschemehandler.h"
 
 #include <memory>
 
@@ -68,7 +68,8 @@ namespace ROOT {
 class RQt6WebDisplayHandle : public RWebDisplayHandle {
 protected:
 
-   RootWebView *fView{nullptr};  ///< pointer on widget, need to release when handle is destroyed
+   RootWebView *fView = nullptr;  ///< pointer on widget, need to release when handle is destroyed
+   bool fDeleteView = true;       ///< is view must be deleted
 
    class Qt6Creator : public Creator {
       QApplication *qapp{nullptr};  ///< created QApplication
@@ -139,7 +140,13 @@ protected:
          RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
 
          if (!args.IsHeadless()) {
-            if (!qparent) handle->fView = view;
+            if (!qparent) {
+               handle->fView = view;
+               if (!args.IsStandalone()) {
+                  handle->fDeleteView = false;
+                  view->setAttribute(Qt::WA_DeleteOnClose);
+               }
+            }
             view->load(QUrl(fullurl));
             view->show();
          } else {
@@ -217,7 +224,7 @@ public:
    ~RQt6WebDisplayHandle() override
    {
       // now view can be safely destroyed
-      if (fView) {
+      if (fView && fDeleteView) {
          delete fView;
          fView = nullptr;
       }

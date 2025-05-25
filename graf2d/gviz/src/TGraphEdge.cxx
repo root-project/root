@@ -208,7 +208,7 @@ void TGraphEdge::SavePrimitive(std::ostream &, Option_t *)
 
 void TGraphEdge::SaveAttributes(std::ostream &out, const char* name)
 {
-   SaveLineAttributes(out,name,1,1,1);
+   SaveLineAttributes(out, name, 1, 1, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

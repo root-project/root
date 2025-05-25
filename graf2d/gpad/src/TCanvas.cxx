@@ -64,8 +64,11 @@ const Size_t kDefaultCanvasSize   = 20;
 ClassImpQ(TCanvas)
 
 
-auto GetNewCanvasName()
+TString GetNewCanvasName(const char *arg = nullptr)
 {
+   if (arg && *arg)
+      return arg;
+
    const char *defcanvas = gROOT->GetDefCanvasName();
    TString cdef = defcanvas;
 
@@ -176,7 +179,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    if (!build || TClass::IsCallingNew() != TClass::kRealNew) {
       Constructor();
    } else {
-      TString cdef = GetNewCanvasName();
+      auto cdef = GetNewCanvasName();
 
       Constructor(cdef.Data(), cdef.Data(), 1);
    }
@@ -247,7 +250,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
    if (!fCanvasImp) return;
 
    CreatePainter();
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    Build();
 }
 
@@ -347,7 +350,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -433,7 +436,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -520,7 +523,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -957,8 +960,7 @@ TObject *TCanvas::DrawClonePad()
    TIter next(GetListOfPrimitives());
    while (auto obj = next()) {
       pad->cd();
-      auto clone = obj->Clone();
-      pad->GetListOfPrimitives()->Add(clone, next.GetOption());
+      pad->Add(obj->Clone(), next.GetOption(), kFALSE); // do not issue modified for each object
    }
    pad->ResizePad();
    pad->Modified();
@@ -1513,9 +1515,9 @@ void TCanvas::ls(Option_t *option) const
 
 TCanvas *TCanvas::MakeDefCanvas()
 {
-   TString cdef = GetNewCanvasName();
+   auto cdef = GetNewCanvasName();
 
-   TCanvas *c = new TCanvas(cdef.Data(), cdef.Data(), 1);
+   auto c = new TCanvas(cdef.Data(), cdef.Data(), 1);
 
    ::Info("TCanvas::MakeDefCanvas"," created default TCanvas with name %s", cdef.Data());
    return c;
@@ -1776,37 +1778,27 @@ void TCanvas::RunAutoExec()
 void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Write canvas options (in $TROOT or $TStyle)
-   if (gStyle->GetOptFit()) {
-      out<<"   gStyle->SetOptFit(1);"<<std::endl;
-   }
-   if (!gStyle->GetOptStat()) {
-      out<<"   gStyle->SetOptStat(0);"<<std::endl;
-   }
-   if (!gStyle->GetOptTitle()) {
-      out<<"   gStyle->SetOptTitle(0);"<<std::endl;
-   }
-   if (gROOT->GetEditHistograms()) {
-      out<<"   gROOT->SetEditHistograms();"<<std::endl;
-   }
-   if (GetShowEventStatus()) {
-      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<std::endl;
-   }
-   if (GetShowToolTips()) {
-      out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
-   }
-   if (GetShowToolBar()) {
-      out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
-   }
-   if (GetHighLightColor() != 5) {
-      if (TColor::SaveColor(out, GetHighLightColor()))
-         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
-      else
-         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
-   }
+   out << "   gStyle->SetOptFit(" << gStyle->GetOptFit() << ");\n";
+   out << "   gStyle->SetOptStat(" << gStyle->GetOptStat() << ");\n";
+   out << "   gStyle->SetOptTitle(" << gStyle->GetOptTitle() << ");\n";
+
+   if (gROOT->GetEditHistograms())
+      out << "   gROOT->SetEditHistograms();\n";
+
+   if (GetShowEventStatus())
+      out << "   " << GetName() << "->ToggleEventStatus();\n";
+
+   if (GetShowToolTips())
+      out << "   " << GetName() << "->ToggleToolTips();\n";
+
+   if (GetShowToolBar())
+      out << "   " << GetName() << "->ToggleToolBar();\n";
+   if (GetHighLightColor() != 5)
+      out << "   " << GetName() << "->SetHighLightColor(" << TColor::SavePrimitiveColor(GetHighLightColor()) << ");\n";
 
    // Now recursively scan all pads of this canvas
    cd();
-   TPad::SavePrimitive(out,option);
+   TPad::SavePrimitive(out, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1822,24 +1814,25 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    // Reset the ClassSaved status of all classes
    gROOT->ResetClassSaved();
 
-   char quote = '"';
-   std::ofstream out;
-   TString fname;
-   const char *cname = GetName();
+   TString cname0 = GetName();
    Bool_t invalid = kFALSE;
-   //    if filename is given, open this file, otherwise create a file
-   //    with a name equal to the canvasname.C
-   if (filename && (strlen(filename) > 0)) {
+
+   TString cname = cname0.Strip(TString::kBoth);
+   if (cname.IsNull()) {
+      invalid = kTRUE;
+      cname = "c1";
+   }
+
+   //  if filename is given, open this file, otherwise create a file
+   //  with a name equal to the canvasname.C
+   TString fname;
+   if (filename && *filename) {
       fname = filename;
    } else {
-      fname = cname;
-      fname = fname.Strip(TString::kBoth);
-      if (fname.IsNull()) {
-         invalid = kTRUE;
-         fname = "c1";
-      }
-      fname.Append(".C");
+      fname = cname + ".C";
    }
+
+   std::ofstream out;
    out.open(fname.Data(), std::ios::out);
    if (!out.good()) {
       Error("SaveSource", "Cannot open file: %s", fname.Data());
@@ -1892,56 +1885,42 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 
    //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()
-         <<quote<<", "<<quote<<GetTitle()<<quote<<","<<w<<","<<h<<");"<<std::endl;
+      out << "   " << ClassName() << " *" << cname << " = new " << ClassName() << "(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << w << ", " << h << ");\n";
    } else {
-   //   Write canvas parameters (TCanvas case)
-      out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-         <<quote;
-      if (!HasMenuBar())
-         out<<",-"<<topx<<","<<topy<<","<<w<<","<<h<<");"<<std::endl;
-      else
-         out<<","<<topx<<","<<topy<<","<<w<<","<<h<<");"<<std::endl;
+      //   Write canvas parameters (TCanvas case)
+      out << "   TCanvas *" << cname << " = new TCanvas(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << (HasMenuBar() ? topx : -topx) << ", " << topy
+          << ", " << w << ", " << h << ");\n";
    }
    //   Write canvas options (in $TROOT or $TStyle)
-   if (gStyle->GetOptFit()) {
-      out<<"   gStyle->SetOptFit(1);"<<std::endl;
-   }
-   if (!gStyle->GetOptStat()) {
-      out<<"   gStyle->SetOptStat(0);"<<std::endl;
-   }
-   if (!gStyle->GetOptTitle()) {
-      out<<"   gStyle->SetOptTitle(0);"<<std::endl;
-   }
-   if (gROOT->GetEditHistograms()) {
-      out<<"   gROOT->SetEditHistograms();"<<std::endl;
-   }
-   if (GetShowEventStatus()) {
-      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<std::endl;
-   }
-   if (GetShowToolTips()) {
-      out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
-   }
-   if (GetHighLightColor() != 5) {
-      if (TColor::SaveColor(out, GetHighLightColor()))
-         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
-      else
-         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
-   }
+   out << "   gStyle->SetOptFit(" << gStyle->GetOptFit() << ");\n";
+   out << "   gStyle->SetOptStat(" << gStyle->GetOptStat() << ");\n";
+   out << "   gStyle->SetOptTitle(" << gStyle->GetOptTitle() << ");\n";
+   if (gROOT->GetEditHistograms())
+      out << "   gROOT->SetEditHistograms();\n";
+   if (GetShowEventStatus())
+      out << "   " << GetName() << "->ToggleEventStatus();\n";
+   if (GetShowToolTips())
+      out << "   " << GetName() << "->ToggleToolTips();\n";
+   if (GetHighLightColor() != 5)
+      out << "   " << GetName() << "->SetHighLightColor(" << TColor::SavePrimitiveColor(GetHighLightColor()) << ");\n";
+
+   TColor::SaveColorsPalette(out);
 
    //   Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
+   if (invalid) fName = cname;
    TPad::SavePrimitive(out,"toplevel");
 
    //   Write canvas options related to pad editor
-   out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<std::endl;
-   if (GetShowToolBar()) {
-      out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
-   }
-   if (invalid) SetName(" ");
+   out << "   " << GetName() << "->SetSelected(" << GetName() << ");\n";
+   if (GetShowToolBar())
+      out << "   " << GetName() << "->ToggleToolBar();\n";
+   if (invalid)
+      fName = cname0;
 
-   out <<"}"<<std::endl;
+   out <<"}\n";
    out.close();
    Info("SaveSource","C++ Macro file: %s has been generated", fname.Data());
 
@@ -2041,16 +2020,13 @@ void TCanvas::SetFolder(Bool_t isfolder)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set canvas name. In case `name` is an empty string, a default name is set.
+/// Canvas automatically marked as modified when SetName method called
 
 void TCanvas::SetName(const char *name)
 {
-   if (name && *name)
-      fName = name;
-   else
-      fName = GetNewCanvasName();
+   fName = GetNewCanvasName(name);
 
-   if (gPad && TestBit(kMustCleanup))
-      gPad->Modified();
+   Modified();
 }
 
 
@@ -2181,6 +2157,30 @@ void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set canvas implementation
+/// If web-based implementation provided, some internal fields also initialized
+
+void TCanvas::SetCanvasImp(TCanvasImp *imp)
+{
+   Bool_t was_web = IsWeb();
+
+   fCanvasImp = imp;
+
+   if (!was_web && IsWeb()) {
+      fCanvasID = fCanvasImp->InitWindow();
+      fPixmapID = 0;
+      fMother = this;
+      if (!fCw) fCw = 800;
+      if (!fCh) fCh = 600;
+   } else if (was_web && !imp) {
+      fCanvasID = -1;
+      fPixmapID = -1;
+      fMother = nullptr;
+      fCw = fCh = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the canvas scale in centimeters.
 ///
 /// This information is used by PostScript to set the page size.
@@ -2250,7 +2250,19 @@ void TCanvas::Streamer(TBuffer &b)
                   delete colcur;
                }
                colors->Remove(colold);
-               if (root_colors) root_colors->AddAtAndExpand(colold, cn);
+               if (root_colors) {
+                  if (colcur) {
+                     root_colors->AddAtAndExpand(colold, cn);
+                  }
+                  else {
+                     // Copy to current session
+                     // do not use copy constructor which does not update highest color index
+                     [[maybe_unused]] TColor* const colnew = new TColor(cn, colold->GetRed(), colold->GetGreen(), colold->GetBlue(), colold->GetName(), colold->GetAlpha());
+                     delete colold;
+                     // No need to delete colnew, as the constructor adds it to global list of colors
+                     assert(root_colors->At(cn) == colnew);
+                  }
+               }
             }
          }
          //restore the palette if needed
@@ -2697,7 +2709,8 @@ Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, O
          return (Bool_t) gROOT->ProcessLine(cmd);
       }
 
-      ::Warning("TCanvas::SaveAll", "TWebCanvas does not support image format %s - use normal ROOT functionality", fname.Data());
+      if ((ext != "root") && (ext != "xml"))
+         ::Warning("TCanvas::SaveAll", "TWebCanvas does not support image format %s - using normal ROOT functionality", fname.Data());
    }
 
    // store all pads into single PDF/PS files

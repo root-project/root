@@ -29,6 +29,5 @@
 
 #include "RooWrapperPdf.h"
 
-ClassImp(RooWrapperPdf)
 
 

@@ -36,7 +36,7 @@ public:
 
   RooNumConvolution(const RooNumConvolution& other, const char* name=nullptr) ;
 
-  TObject* clone(const char* newname) const override { return new RooNumConvolution(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooNumConvolution(*this,newname) ; }
   ~RooNumConvolution() override ;
 
   double evaluate() const override ;

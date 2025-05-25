@@ -66,8 +66,7 @@ protected:
    Double_t         **ShrinkAndCopy(Int_t size, Int_t iend);
    virtual Bool_t     DoMerge(const TGraph * g);
 
-   TString            SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr);
-   void               SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option);
+   void               SaveHistogramAndFunctions(std::ostream &out, const char *varname, Option_t *option);
 
 public:
    // TGraph status bits
@@ -96,6 +95,7 @@ public:
    ~TGraph() override;
 
    virtual void          AddPoint(Double_t x, Double_t y) { SetPoint(fNpoints, x, y); } ///< Append a new point to the graph.
+   virtual void          Add(TF1 *f, Double_t c1=1);
    virtual void          Apply(TF1 *f);
    void                  Browse(TBrowser *b) override;
    virtual Double_t      Chisquare(TF1 *f1, Option_t *option="") const;

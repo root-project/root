@@ -213,13 +213,13 @@ void TGFileBrowser::CreateBrowser()
             kLHintsExpandX, 2, 2, 2, 2));
 
    fContextMenu = new TContextMenu("FileBrowserContextMenu");
-   fFilter      = 0;
+   fFilter      = nullptr;
    fGroupSize   = 1000;
    fListLevel   = 0;
    fCurrentDir  = 0;
    fRootDir     = 0;
-   fDir         = 0;
-   fFile        = 0;
+   fDir         = nullptr;
+   fFile        = nullptr;
    fNKeys       = 0;
    fCnt         = 0;
    fFilterStr   = "*";
@@ -260,6 +260,9 @@ TGFileBrowser::~TGFileBrowser()
 
    delete fContextMenu;
    delete fListTree;
+   delete fFilter;
+   delete fDir;
+   delete fFile;
    if (fRootIcon) fClient->FreePicture(fRootIcon);
    if (fCachedPic && (fCachedPic != fFileIcon))
       fClient->FreePicture(fCachedPic);
@@ -823,8 +826,9 @@ void TGFileBrowser::ApplyFilter(Int_t id)
    // Long64_t size;
    // Long_t fid, flags, modtime;
 
-   if (fFilter) delete fFilter;
-   fFilter = 0;
+   if (fFilter)
+      delete fFilter;
+   fFilter = nullptr;
    if ((id > 1) && (id < 5))
       fFilter = new TRegexp(filters[id], kTRUE);
    else if ((id < 0) || (id > 4)) {

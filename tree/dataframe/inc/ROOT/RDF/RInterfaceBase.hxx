@@ -53,8 +53,6 @@ class RInterfaceBase {
 protected:
    ///< The RLoopManager at the root of this computation graph. Never null.
    std::shared_ptr<ROOT::Detail::RDF::RLoopManager> fLoopManager;
-   /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
-   RDataSource *fDataSource = nullptr;
 
    /// Contains the columns defined up to this node.
    RDFInternal::RColumnRegister fColRegister;
@@ -77,7 +75,7 @@ protected:
 
       for (auto &colName : colNames) {
          RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                         GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
 
@@ -89,22 +87,32 @@ protected:
             throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
                                      "does not return an RVec of RVecs.");
 
+         // Check for type mismatches. We are interested in two cases:
+         // - All columns that are going to be varied must be of the same type
+         // - The return type of the expression must match the type of the nominal column
          auto colTypes = GetColumnTypeNamesList(colNames);
-         auto allColTypesEqual =
-            std::all_of(colTypes.begin() + 1, colTypes.end(), [&](const std::string &t) { return t == colTypes[0]; });
-         if (!allColTypesEqual)
-            throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
-
+         auto &&nColTypes = colTypes.size();
+         // Cache type_info when requested
+         std::vector<const std::type_info *> colTypeIDs(nColTypes);
          const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
-
-         for (auto i = 0u; i < colTypes.size(); ++i) {
+         for (decltype(nColTypes) i{}; i < nColTypes; ++i) {
+            // Need to retrieve the type_info for each column. We start with
+            // checking if the column comes from a Define, in which case the
+            // type_info is cached already. Otherwise, we need to retrieve it
+            // via TypeName2TypeID, which eventually might call the interpreter.
             const auto *define = fColRegister.GetDefine(colNames[i]);
-            const auto *expectedTypeID = define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(colTypes[i]);
-            if (innerTypeID != *expectedTypeID)
+            colTypeIDs[i] = define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(colTypes[i]);
+            // First check: whether the current column type is the same as the first one.
+            if (*colTypeIDs[i] != *colTypeIDs[0]) {
+               throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
+            }
+            // Second check: mismatch between varied type and nominal type
+            if (innerTypeID != *colTypeIDs[i])
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
                                         colTypes[i] + ").");
          }
+
       } else { // we are varying a single column, RetType is RVec<T>
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
@@ -126,17 +134,18 @@ protected:
    }
 
    RDFDetail::RLoopManager *GetLoopManager() const { return fLoopManager.get(); }
+   RDataSource *GetDataSource() const { return fLoopManager->GetDataSource(); }
 
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {
-      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fColRegister, fDataSource);
+      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fColRegister, GetDataSource());
    }
 
    template <typename... ColumnTypes>
    void CheckAndFillDSColumns(ColumnNames_t validCols, TTraits::TypeList<ColumnTypes...> typeList)
    {
-      if (fDataSource != nullptr)
-         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList, fColRegister);
+      if (auto dataSource = GetDataSource())
+         RDFInternal::AddDSColumns(validCols, *fLoopManager, *dataSource, typeList, fColRegister);
    }
 
    /// Create RAction object, return RResultPtr for the action
@@ -170,9 +179,10 @@ protected:
    template <typename ActionTag, typename... ColTypes, typename ActionResultType, typename RDFNode,
              typename HelperArgType = ActionResultType,
              std::enable_if_t<RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
-   RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                             const std::shared_ptr<HelperArgType> &helperArg,
-                                             const std::shared_ptr<RDFNode> &proxiedPtr, const int nColumns = -1)
+   RResultPtr<ActionResultType>
+   CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
+                const std::shared_ptr<HelperArgType> &helperArg, const std::shared_ptr<RDFNode> &proxiedPtr,
+                const int nColumns = -1, const bool vector2RVec = true)
    {
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
 
@@ -188,9 +198,9 @@ protected:
                                                                              fColRegister, proxiedPtr->GetVariations());
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
-      auto toJit =
-         RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType), typeid(ActionTag),
-                                     helperArgOnHeap, tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
+      auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
+                                               typeid(ActionTag), helperArgOnHeap, tree, nSlots, fColRegister,
+                                               GetDataSource(), jittedActionOnHeap, vector2RVec);
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }

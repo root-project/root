@@ -85,16 +85,11 @@ namespace ROOT {
          RootFinder(RootFinder::EType type = RootFinder::kBRENT);
          virtual ~RootFinder();
 
-      private:
-         // usually copying is non trivial, so we make this unaccessible
-         RootFinder(const RootFinder & ) {}
-         RootFinder & operator = (const RootFinder & rhs)
-         {
-            if (this == &rhs) return *this;  // time saving self-test
-            return *this;
-         }
-
-      public:
+         // usually copying is non trivial, so we delete this
+         RootFinder(const RootFinder & ) = delete;
+         RootFinder & operator = (const RootFinder & rhs) = delete;
+         RootFinder(RootFinder && ) = delete;
+         RootFinder & operator = (RootFinder && rhs) = delete;
 
          bool SetMethod(RootFinder::EType type = RootFinder::kBRENT);
 

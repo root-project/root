@@ -95,10 +95,6 @@ public:
   int GetBinLow() { return fBinLow; }
   int GetBinHigh() { return fBinHigh; }
 
-  /// do not produce any plots or tables, just save the model
-  void SetExportOnly( bool ExportOnly ) { fExportOnly = ExportOnly; }
-  bool GetExportOnly() { return fExportOnly; }
-
   void PrintTree( std::ostream& = std::cout ); /// Print to a stream
   void PrintXML( std::string Directory="", std::string NewOutputPrefix="" );
 
@@ -140,7 +136,7 @@ private:
   double fLumiRelErr;
   int fBinLow;
   int fBinHigh;
-  bool fExportOnly;
+  bool fExportOnly = true;
   std::string fInterpolationScheme;
 
   /// Channels that make up this measurement

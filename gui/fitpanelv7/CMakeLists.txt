@@ -27,6 +27,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTFitPanelv7
     Gpad
     ROOTWebDisplay
     ROOTGpadv7
-    ROOTHistDraw
   ${EXTRA_DICT_OPTS}
 )

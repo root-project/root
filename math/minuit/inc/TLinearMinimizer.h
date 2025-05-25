@@ -47,21 +47,6 @@ public:
    */
    ~TLinearMinimizer () override;
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   TLinearMinimizer(const TLinearMinimizer &);
-
-   /**
-      Assignment operator
-   */
-   TLinearMinimizer & operator = (const TLinearMinimizer & rhs);
-
-public:
-
    /// set the fit model function
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 

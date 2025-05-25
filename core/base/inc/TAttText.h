@@ -15,6 +15,8 @@
 
 #include "Rtypes.h"
 
+class TColorNumber;
+
 class TAttText {
 
 protected:
@@ -46,6 +48,8 @@ public:
    virtual void     SetTextFont(Font_t tfont=62) { fTextFont = tfont;}     ///< Set the text font
    virtual void     SetTextSize(Float_t tsize=1) { fTextSize = tsize;}     ///< Set the text size
    virtual void     SetTextSizePixels(Int_t npixels);                      ///< Set the text size in pixel
+
+   void SetTextColor(TColorNumber lcolor);
 
    ClassDef(TAttText,2)  //Text attributes
 };

@@ -12,7 +12,7 @@
 #ifndef ROOT_TGeoBoolNode
 #define ROOT_TGeoBoolNode
 
-#include "TObject.h"
+#include "TGeoShape.h"
 
 #include <mutex>
 #include <vector>
@@ -64,7 +64,7 @@ public:
    ~TGeoBoolNode() override;
    // methods
    virtual void ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) = 0;
-   virtual void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) = 0;
+   virtual void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const = 0;
    virtual Bool_t Contains(const Double_t *point) const = 0;
    virtual Int_t DistanceToPrimitive(Int_t px, Int_t py) = 0;
    virtual Double_t DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
@@ -72,11 +72,12 @@ public:
    virtual Double_t DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
                                     Double_t *safe = nullptr) const = 0;
    virtual EGeoBoolType GetBooleanOperator() const = 0;
-   virtual Int_t GetNpoints() = 0;
+   Int_t GetNpoints();
    TGeoMatrix *GetLeftMatrix() const { return fLeftMat; }
    TGeoMatrix *GetRightMatrix() const { return fRightMat; }
    TGeoShape *GetLeftShape() const { return fLeft; }
    TGeoShape *GetRightShape() const { return fRight; }
+   TGeoShape::EInside Inside(const Double_t *point) const;
    virtual TGeoBoolNode *MakeClone() const = 0;
    void Paint(Option_t *option) override;
    void RegisterMatrices();
@@ -91,12 +92,7 @@ public:
    ClassDefOverride(TGeoBoolNode, 1) // a boolean node
 };
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoUnion - Boolean node representing a union between two components.    //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
+/// Boolean node representing a union between two components.
 class TGeoUnion : public TGeoBoolNode {
 public:
    // constructors
@@ -108,7 +104,7 @@ public:
    ~TGeoUnion() override;
    // methods
    void ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    Bool_t Contains(const Double_t *point) const override;
    Int_t DistanceToPrimitive(Int_t px, Int_t py) override;
    Double_t DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
@@ -116,7 +112,6 @@ public:
    Double_t DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
                             Double_t *safe = nullptr) const override;
    EGeoBoolType GetBooleanOperator() const override { return kGeoUnion; }
-   Int_t GetNpoints() override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void Sizeof3D() const override;
@@ -128,13 +123,7 @@ public:
    ClassDefOverride(TGeoUnion, 1) // union node
 };
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoIntersection - Boolean node representing an intersection between two //
-// components.                                                              //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
+/// Boolean node representing an intersection between two components.
 class TGeoIntersection : public TGeoBoolNode {
 public:
    // constructors
@@ -146,7 +135,7 @@ public:
    ~TGeoIntersection() override;
    // methods
    void ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    Bool_t Contains(const Double_t *point) const override;
    Int_t DistanceToPrimitive(Int_t px, Int_t py) override;
    Double_t DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
@@ -154,7 +143,6 @@ public:
    Double_t DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
                             Double_t *safe = nullptr) const override;
    EGeoBoolType GetBooleanOperator() const override { return kGeoIntersection; }
-   Int_t GetNpoints() override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void Sizeof3D() const override;
@@ -166,12 +154,7 @@ public:
    ClassDefOverride(TGeoIntersection, 1) // intersection node
 };
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoSubtraction - Boolean node representing a subtraction.               //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
+/// Boolean node representing a subtraction
 class TGeoSubtraction : public TGeoBoolNode {
 public:
    // constructors
@@ -183,7 +166,7 @@ public:
    ~TGeoSubtraction() override;
    // methods
    void ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    Bool_t Contains(const Double_t *point) const override;
    Int_t DistanceToPrimitive(Int_t px, Int_t py) override;
    Double_t DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
@@ -191,7 +174,6 @@ public:
    Double_t DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = 0,
                             Double_t *safe = nullptr) const override;
    EGeoBoolType GetBooleanOperator() const override { return kGeoSubtraction; }
-   Int_t GetNpoints() override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void Sizeof3D() const override;

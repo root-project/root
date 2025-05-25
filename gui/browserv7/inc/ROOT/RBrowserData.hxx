@@ -25,12 +25,10 @@
 
 namespace ROOT {
 
-namespace Experimental {
 class RLogChannel;
-} // namespace Experimental
 
 /// Log channel for Browser diagnostics.
-ROOT::Experimental::RLogChannel &BrowserLog();
+ROOT::RLogChannel &BrowserLog();
 
 class RBrowserDataCleanup;
 

@@ -345,7 +345,7 @@ Long64_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
    if (!parent) return -3;
    // We reached the end of the parent tree
    Long64_t pentry = parent->GetReadEntry();
-   if (pentry >= parent->GetEntries())
+   if (pentry >= parent->GetEntriesFast())
       return -2;
    GetMajorFormulaParent(parent);
    GetMinorFormulaParent(parent);

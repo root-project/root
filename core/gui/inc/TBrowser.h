@@ -92,6 +92,7 @@ public:
    void          BrowseObject(TObject *obj)    { if (fImp) fImp->BrowseObj(obj); }
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
+   Bool_t        IsWeb() const                 { return fImp ? fImp->IsWeb() : kFALSE; }
    void          SetBrowserImp(TBrowserImp *i) { fImp = i; }
    TContextMenu *GetContextMenu() const        { return fContextMenu; }
    Bool_t        GetRefreshFlag() const        { return fNeedRefresh; }
@@ -104,6 +105,7 @@ public:
    void          Show()                        { if (fImp) fImp->Show(); }
    void          SetDrawOption(Option_t *option="") override { if (fImp) fImp->SetDrawOption(option); }
    Option_t     *GetDrawOption() const override { return  (fImp) ? fImp->GetDrawOption() : nullptr; }
+   void          Draw(Option_t *option="") override;
 
    Longptr_t     ExecPlugin(const char *name = nullptr, const char *fname = nullptr,
                             const char *cmd = nullptr, Int_t pos = 1, Int_t subpos = -1) {

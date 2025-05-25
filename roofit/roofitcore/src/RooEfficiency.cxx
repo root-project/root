@@ -38,7 +38,6 @@ F may have an arbitrary number of dependents and parameters
 
 #include "TError.h"
 
-ClassImp(RooEfficiency);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,16 +84,4 @@ int RooEfficiency::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars
 double RooEfficiency::analyticalIntegral(int /*code*/, const char * /*rangeName*/) const
 {
    return 1.0;
-}
-
-void RooEfficiency::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   int sigCatIndex = _cat->lookupIndex(_sigCatName.Data());
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::efficiency", _effFunc, _cat, sigCatIndex));
-}
-
-std::string RooEfficiency::buildCallToAnalyticIntegral(int /*code*/, const char * /*rangeName*/,
-                                                       RooFit::Detail::CodeSquashContext &) const
-{
-   return "1.0";
 }

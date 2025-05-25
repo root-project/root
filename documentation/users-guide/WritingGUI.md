@@ -560,7 +560,7 @@ This section presents all currently supported widgets in ROOT and their
 most useful methods. All of them can be considered as building blocks
 for an application, and most of them can be found in dialogs. Provided
 snippets of the code will give you practical guidelines where and how to
-use certain widgets. The macro `$ROOTSYS/tutorials/gui/guitest.C`
+use certain widgets. The macro `$ROOTSYS/tutorials/visualisation/gui/guitest.C`
 contains the complete source code.
 
 ![Widgets created by ROOT GUI classes](pictures/02000204.jpg)
@@ -2600,7 +2600,7 @@ Every object editor follows a simple naming convention: to have as a
 name the object class name concatenated with ‘*`Editor`*' (e.g. for
 **`TGraph`** objects the object editor is **`TGraphEditor`**). Thanks to
 the signals/slots communication mechanism and to the method
-`DistanceToPrimitive()` that computes a ‘‘distance'' to an object from
+`DistancetoPrimitive()` that computes a ‘‘distance'' to an object from
 the mouse position, it was possible to implement a signal method of the
 canvas that says which is the selected object and to which pad it
 belongs. Having this information the graphics editor loads the

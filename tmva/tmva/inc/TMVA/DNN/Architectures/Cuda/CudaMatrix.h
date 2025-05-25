@@ -160,8 +160,8 @@ public:
    size_t GetNcols() const {return fNCols;}
    size_t GetNoElements() const {return fNRows * fNCols;}
 
-   const AFloat * GetDataPointer() const {return fElementBuffer;}
-   AFloat *       GetDataPointer()       {return fElementBuffer;}
+   const AFloat * GetDataPointer() const {return fElementBuffer.data();}
+   AFloat *       GetDataPointer()       {return fElementBuffer.data();}
    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
 
    inline  TCudaDeviceBuffer<AFloat> GetDeviceBuffer() const { return fElementBuffer;}
@@ -309,7 +309,7 @@ inline AFloat TCudaMatrix<AFloat>::GetDeviceReturn()
 template<typename AFloat>
 TCudaDeviceReference<AFloat> TCudaMatrix<AFloat>::operator()(size_t i, size_t j) const
 {
-    AFloat * elementPointer = fElementBuffer;
+    AFloat * elementPointer = fElementBuffer.data();
     elementPointer += j * fNRows + i;
     return TCudaDeviceReference<AFloat>(elementPointer);
 }

@@ -34,8 +34,8 @@
 class TGraphSmooth: public TNamed {
 
 private:
-   TGraphSmooth(const TGraphSmooth&); // Not implented
-   TGraphSmooth& operator=(const TGraphSmooth&); // Not implented
+   TGraphSmooth(const TGraphSmooth&) = delete;
+   TGraphSmooth& operator=(const TGraphSmooth&) = delete;
 
 protected:
    Int_t       fNin;        ///< Number of input points
@@ -48,7 +48,6 @@ protected:
 public :
    TGraphSmooth();
    TGraphSmooth(const char *name);
-//      TGraphSmooth(const TGraphSmooth &smoothReg);   //??
    ~TGraphSmooth() override;
 
    TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=nullptr,

@@ -666,7 +666,7 @@ std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
       std::string fNameOutput    = PyStringAsString(PyList_GetItem(fOutputs,0));
       std::string fNameShape     = fLayerName + "ReshapeAxes";
       std::unique_ptr<ROperator> op;
-      op.reset(new ROperator_Reshape<float>(fOpMode, /*allow zero*/0, fNameData, fNameShape, fNameOutput));
+      op.reset(new ROperator_Reshape(fOpMode, /*allow zero*/0, fNameData, fNameShape, fNameOutput));
       return op;
 }
 
@@ -689,7 +689,7 @@ std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
 
       int axis = (int)PyLong_AsLong(GetValueFromDict(fAttributes,"axis"));
       std::unique_ptr<ROperator> op;
-      op.reset(new ROperator_Concat<float>(inputs, axis, 0,  output));
+      op.reset(new ROperator_Concat(inputs, axis, 0,  output));
       return op;
 }
 
@@ -763,6 +763,7 @@ std::unique_ptr<ROperator> MakeKerasIdentity(PyObject* fLayer)
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \param[in] filename file location of Keras .h5
+/// \param[in] batch_size if not given, 1 is used if the model does not provide it
 /// \return Parsed RModel object
 ///
 /// The `Parse()` function defined in `TMVA::Experimental::SOFIE::PyKeras` will

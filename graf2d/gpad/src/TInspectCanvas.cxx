@@ -139,6 +139,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
    Int_t nh = nrows*15;
    Int_t nw = 700;
    TVirtualPad *canvas = GetVirtCanvas();
+   SetEditable(kTRUE);
    if (canvas) {
       canvas->Clear();                // remove primitives from canvas
       canvas->SetCanvasSize(nw, nh);  // set new size of drawing area
@@ -336,6 +337,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
          ytext -= dy;
       }
    }
+   SetEditable(kFALSE);
    Update();
    fCurObject = obj;
 }

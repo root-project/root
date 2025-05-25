@@ -54,7 +54,8 @@ static constexpr double c_squared = c_light * c_light;
 // hbar  = 6.58212e-13 MeV*ns
 // hbarc = 197.32705e-12 MeV*mm
 //
-static constexpr double h_Planck = 6.62606896e-34 * joule * s;
+// h_Planck taken from CODATA2022 https://doi.org/10.1103/RevModPhys.97.025002
+static constexpr double h_Planck = 6.62607015e-34 * joule * s;
 static constexpr double hbar_Planck = h_Planck / twopi;
 static constexpr double hbarc = hbar_Planck * c_light;
 static constexpr double hbarc_squared = hbarc * hbarc;

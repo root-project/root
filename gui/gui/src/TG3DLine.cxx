@@ -61,23 +61,13 @@ void TGHorizontal3DLine::DrawBorder()
 
 void TGHorizontal3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out);
 
-   out << "   TGHorizontal3DLine *";
-   out << GetName() << " = new TGHorizontal3DLine(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGHorizontal3DLine *" << GetName() << " = new TGHorizontal3DLine(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out << ");" << std::endl;
-      } else {
-         out << "," << GetOptionString() << ");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,21 +96,11 @@ void TGVertical3DLine::DrawBorder()
 
 void TGVertical3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out);
 
-   out << "   TGVertical3DLine *";
-   out << GetName() << " = new TGVertical3DLine(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGVertical3DLine *" << GetName() << " = new TGVertical3DLine(" << fParent->GetName() << "," << GetWidth()
+       << "," << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out << ");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 }

@@ -398,6 +398,11 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
 
       const auto &treeIndex = finfo.fTreeIndexInfos[i];
       if (treeIndex) {
+         // The call to LoadTree is necessary to make sure that the schema is
+         // properly loaded and all branches are correctly connected with the
+         // friend chain. Not doing so would result in the index not being able
+         // to probe the friend chain afterwards.
+         frChain->LoadTree(0);
          auto *copyOfIndex = static_cast<TVirtualIndex *>(treeIndex->Clone());
          copyOfIndex->SetTree(frChain.get());
          frChain->SetTreeIndex(copyOfIndex);
@@ -412,7 +417,7 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Recursively expand the glob to take care of potential wildcard
 /// specials for subdirectories in the glob.
-/// \param[in] l The list of full paths to files.
+/// \param[in] out The list of full paths to files.
 /// \param[in] glob The glob to expand.
 /// \throws std::runtime_error If the directory parts of the glob refer to a
 ///         path that cannot be opened.
@@ -508,6 +513,7 @@ void RecursiveGlob(TList &out, const std::string &glob)
 std::vector<std::string> ExpandGlob(const std::string &glob)
 {
    TList l;
+   l.SetOwner();
    RecursiveGlob(l, glob);
 
    // Sort the files in alphanumeric order
@@ -525,7 +531,7 @@ std::vector<std::string> ExpandGlob(const std::string &glob)
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Returns the cluster boundaries and number of entries of the input tree.
 /// \param[in] treename Name of the tree.
-/// \param[in] filename Path to the file.
+/// \param[in] path Path to the file.
 /// \return a pair (cluster_boundaries, n_entries). The vector of cluster
 ///         of cluster boundaries contains the beginning entry of the first
 ///         cluster up to the ending entry of the last cluster, e.g. for a tree

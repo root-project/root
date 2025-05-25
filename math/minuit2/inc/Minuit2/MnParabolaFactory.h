@@ -18,17 +18,10 @@ class MnParabola;
 class MnParabolaPoint;
 
 class MnParabolaFactory {
-
 public:
-   MnParabolaFactory() {}
-
-   ~MnParabolaFactory() {}
-
    MnParabola operator()(const MnParabolaPoint &, const MnParabolaPoint &, const MnParabolaPoint &) const;
 
    MnParabola operator()(const MnParabolaPoint &, double, const MnParabolaPoint &) const;
-
-private:
 };
 
 } // namespace Minuit2

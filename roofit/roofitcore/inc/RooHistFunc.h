@@ -38,7 +38,7 @@ public:
   RooHistFunc(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
              std::unique_ptr<RooDataHist> dhist, int intOrder=0);
   RooHistFunc(const RooHistFunc& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooHistFunc(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooHistFunc(*this,newname); }
   ~RooHistFunc() override ;
 
   /// Return RooDataHist that is represented.
@@ -98,10 +98,6 @@ public:
 
   Int_t getBin() const;
   std::vector<Int_t> getBins(RooFit::EvalContext & ctx) const;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
   RooArgSet const &variables() const { return _depList; }
 

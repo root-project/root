@@ -274,60 +274,72 @@ std::string CPyCppyy::CPPMethod::GetSignatureString(bool fa)
 //----------------------------------------------------------------------------
 void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 {
-// helper to report errors in a consistent format (derefs msg)
-    std::string details{};
+// Helper to report errors in a consistent format (derefs msg).
+//
+// Handles three cases:
+//   1. No Python error occured yet:
+//      Set a new TypeError with the message "msg" and the docstring of this
+//      C++ method to give some context.
+//   2. A C++ exception has occured:
+//      Augment the exception message with the docstring of this method
+//   3. A Python exception has occured:
+//      Do nothing, Python exceptions are already informative enough
 
-    PyObject *etype = nullptr, *evalue = nullptr;
+#if PY_VERSION_HEX >= 0x030c0000
+    PyObject *evalue = PyErr_Occurred() ? PyErr_GetRaisedException() : nullptr;
+    PyObject *etype = evalue ? (PyObject *)Py_TYPE(evalue) : nullptr;
+#else
+    PyObject *etype = nullptr;
+    PyObject *evalue = nullptr;
+    PyObject *etrace = nullptr;
+
     if (PyErr_Occurred()) {
-        PyObject* etrace = nullptr;
-
         PyErr_Fetch(&etype, &evalue, &etrace);
-
-        if (evalue) {
-            PyObject* descr = PyObject_Str(evalue);
-            if (descr) {
-                details = CPyCppyy_PyText_AsString(descr);
-                Py_DECREF(descr);
-            }
-        }
-
-        Py_XDECREF(etrace);
     }
+#endif
+
+    const bool isCppExc = evalue && PyType_IsSubtype((PyTypeObject*)etype, &CPPExcInstance_Type);
+ // If the error is not a CPPExcInstance, the error from Python itself is
+ // already complete and messing with it would only make it less informative.
+ // Just restore and return.
+     if (evalue && !isCppExc) {
+#if PY_VERSION_HEX >= 0x030c0000
+        PyErr_SetRaisedException(evalue);
+#else
+        PyErr_Restore(etype, evalue, etrace);
+#endif
+        return;
+     }
 
     PyObject* doc = GetDocString();
-    PyObject* errtype = etype;
-    if (!errtype)
-        errtype = PyExc_TypeError;
+    const char* cdoc = CPyCppyy_PyText_AsString(doc);
+    const char* cmsg = msg ? CPyCppyy_PyText_AsString(msg) : nullptr;
+    PyObject* errtype = etype ? etype : PyExc_TypeError;
     PyObject* pyname = PyObject_GetAttr(errtype, PyStrings::gName);
     const char* cname = pyname ? CPyCppyy_PyText_AsString(pyname) : "Exception";
 
-    if (!PyType_IsSubtype((PyTypeObject*)errtype, &CPPExcInstance_Type)) {
-        if (details.empty()) {
-            PyErr_Format(errtype, "%s =>\n    %s: %s", CPyCppyy_PyText_AsString(doc),
-                 cname, msg ? CPyCppyy_PyText_AsString(msg) : "");
-        } else if (msg) {
-            PyErr_Format(errtype, "%s =>\n    %s: %s (%s)",
-                CPyCppyy_PyText_AsString(doc), cname, CPyCppyy_PyText_AsString(msg),
-                details.c_str());
-        } else {
-            PyErr_Format(errtype, "%s =>\n    %s: %s",
-                CPyCppyy_PyText_AsString(doc), cname, details.c_str());
-        }
+    if (!isCppExc) {
+    // this is the case where no Python error has occured yet, and we set a new
+    // error with context info
+        PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
     } else {
-        Py_XDECREF(((CPPExcInstance*)evalue)->fTopMessage);
+    // augment the top message with context information
+        PyObject *&topMessage = ((CPPExcInstance*)evalue)->fTopMessage;
+        Py_XDECREF(topMessage);
         if (msg) {
-            ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
-                "%s =>\n    %s: %s | ", CPyCppyy_PyText_AsString(doc), cname, CPyCppyy_PyText_AsString(msg));
+            topMessage = CPyCppyy_PyText_FromFormat("%s =>\n    %s: %s | ", cdoc, cname, cmsg);
         } else {
-            ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
-                 "%s =>\n    %s: ", CPyCppyy_PyText_AsString(doc), cname);
+            topMessage = CPyCppyy_PyText_FromFormat("%s =>\n    %s: ", cdoc, cname);
         }
-        PyErr_SetObject(errtype, evalue);
+        // restore the updated error
+#if PY_VERSION_HEX >= 0x030c0000
+        PyErr_SetRaisedException(evalue);
+#else
+        PyErr_Restore(etype, evalue, etrace);
+#endif
     }
 
     Py_XDECREF(pyname);
-    Py_XDECREF(evalue);
-    Py_XDECREF(etype);
     Py_DECREF(doc);
     Py_XDECREF(msg);
 }
@@ -410,7 +422,9 @@ PyObject* CPyCppyy::CPPMethod::GetPrototype(bool fa)
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::CPPMethod::GetTypeName()
 {
-    PyObject* cppname = CPyCppyy_PyText_FromString((GetReturnTypeName() + " (*)").c_str());
+    PyObject* cppname = CPyCppyy_PyText_FromString(
+        (GetReturnTypeName() + \
+        " (" + (fScope ? Cppyy::GetScopedFinalName(fScope) + "::*)" : "*)")).c_str());
     CPyCppyy_PyText_AppendAndDel(&cppname, GetSignature(false /* show_formalargs */));
     return cppname;
 }
@@ -611,14 +625,29 @@ PyObject* CPyCppyy::CPPMethod::GetArgDefault(int iarg, bool silent)
         PyObject* gdct = *dctptr;
         PyObject* scope = nullptr;
 
-        if (defvalue.find("::") != std::string::npos) {
-        // try to tickle scope creation, just in case
-            scope = CreateScopeProxy(defvalue.substr(0, defvalue.rfind('(')));
-            if (!scope) PyErr_Clear();
-
-        // rename '::' -> '.'
-            TypeManip::cppscope_to_pyscope(defvalue);
+        if (defvalue.rfind('(') != std::string::npos) {    // constructor-style call
+        // try to tickle scope creation, just in case, first look in the scope where
+        // the function lives, then in the global scope
+            std::string possible_scope = defvalue.substr(0, defvalue.rfind('('));
+            if (!Cppyy::IsBuiltin(possible_scope)) {
+                std::string cand_scope = Cppyy::GetScopedFinalName(fScope)+"::"+possible_scope;
+                scope = CreateScopeProxy(cand_scope);
+                if (!scope) {
+                    PyErr_Clear();
+                // search within the global scope instead
+                    scope = CreateScopeProxy(possible_scope);
+                    if (!scope) PyErr_Clear();
+                } else {
+                // re-scope the scope; alternatively, the expression could be
+                // compiled in the dictionary of the function's namespace, but
+                // that would affect arguments passed to the constructor, too
+                    defvalue = cand_scope + defvalue.substr(defvalue.rfind('('), std::string::npos);
+                }
+            }
         }
+
+    // replace '::' -> '.'
+        TypeManip::cppscope_to_pyscope(defvalue);
 
         if (!scope) {
         // a couple of common cases that python doesn't like (technically, 'L' is okay with older
@@ -629,6 +658,10 @@ PyObject* CPyCppyy::CPPMethod::GetArgDefault(int iarg, bool silent)
                 if (2 < defvalue.size() && defvalue[defvalue.size()-2] == 'U')
                     offset = 2;
                 defvalue = defvalue.substr(0, defvalue.size()-offset);
+            } else if (defvalue == "true") {
+                defvalue = "True";
+            } else if (defvalue == "false") {
+                defvalue = "False";
             }
         }
 
@@ -956,13 +989,6 @@ PyObject* CPyCppyy::CPPMethod::Execute(void* self, ptrdiff_t offset, CallContext
         result = ExecuteProtected(self, offset, ctxt);
     }
 
-// TODO: the following is dreadfully slow and dead-locks on Apache: revisit
-// raising exceptions through callbacks by using magic returns
-//    if (result && Utility::PyErr_Occurred_WithGIL()) {
-//    // can happen in the case of a CINT error: trigger exception processing
-//        Py_DECREF(result);
-//        result = 0;
-//    } else if (!result && PyErr_Occurred())
     if (!result && PyErr_Occurred())
         SetPyError_(0);
 

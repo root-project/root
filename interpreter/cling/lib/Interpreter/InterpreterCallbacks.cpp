@@ -13,12 +13,10 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/CodeCompleteConsumer.h"
 #include "clang/Sema/MultiplexExternalSemaSource.h"
 #include "clang/Sema/Sema.h"
-#include "clang/Serialization/ASTDeserializationListener.h"
 #include "clang/Serialization/ASTReader.h"
 
 #include <optional>
@@ -27,15 +25,15 @@ using namespace clang;
 
 namespace cling {
 
-  ///\brief Translates 'interesting' for the interpreter
-  /// ASTDeserializationListener events into interpreter callback.
+  ///\brief Translates 'interesting' for the interpreter into interpreter
+  /// callback.
   ///
   class InterpreterPPCallbacks : public PPCallbacks {
   private:
     cling::InterpreterCallbacks* m_Callbacks;
   public:
     InterpreterPPCallbacks(InterpreterCallbacks* C) : m_Callbacks(C) { }
-    ~InterpreterPPCallbacks() { }
+    ~InterpreterPPCallbacks() override {}
 
     void InclusionDirective(clang::SourceLocation HashLoc,
                             const clang::Token &IncludeTok,
@@ -69,40 +67,6 @@ namespace cling {
     }
   };
 
-  ///\brief Translates 'interesting' for the interpreter
-  /// ASTDeserializationListener events into interpreter callback.
-  ///
-  class InterpreterDeserializationListener : public ASTDeserializationListener {
-  private:
-    cling::InterpreterCallbacks* m_Callbacks;
-  public:
-    InterpreterDeserializationListener(InterpreterCallbacks* C)
-      : m_Callbacks(C) {}
-
-    void DeclRead(serialization::DeclID, const Decl *D) override {
-      if (m_Callbacks)
-        m_Callbacks->DeclDeserialized(D);
-    }
-
-    void TypeRead(serialization::TypeIdx, QualType T) override {
-      if (m_Callbacks)
-        m_Callbacks->TypeDeserialized(T.getTypePtr());
-    }
-  };
-
-  /// \brief Wraps an ASTDeserializationListener in an ASTConsumer so that
-  /// it can be used with a MultiplexConsumer.
-  class DeserializationListenerWrapper : public ASTConsumer {
-    ASTDeserializationListener* m_Listener;
-
-  public:
-    DeserializationListenerWrapper(ASTDeserializationListener* Listener)
-        : m_Listener(Listener) {}
-    ASTDeserializationListener* GetASTDeserializationListener() override {
-      return m_Listener;
-    }
-  };
-
   /// \brief wraps an ExternalASTSource in an ExternalSemaSource. No functional
   /// difference between the original source and this wrapper intended.
   class ExternalASTSourceWrapper : public ExternalSemaSource {
@@ -113,100 +77,99 @@ namespace cling {
       assert(m_Source && "Can't wrap nullptr ExternalASTSource");
     }
 
-    virtual Decl* GetExternalDecl(uint32_t ID) override {
+    Decl* GetExternalDecl(uint32_t ID) override {
       return m_Source->GetExternalDecl(ID);
     }
 
-    virtual Selector GetExternalSelector(uint32_t ID) override {
+    Selector GetExternalSelector(uint32_t ID) override {
       return m_Source->GetExternalSelector(ID);
     }
 
-    virtual uint32_t GetNumExternalSelectors() override {
+    uint32_t GetNumExternalSelectors() override {
       return m_Source->GetNumExternalSelectors();
     }
 
-    virtual Stmt* GetExternalDeclStmt(uint64_t Offset) override {
+    Stmt* GetExternalDeclStmt(uint64_t Offset) override {
       return m_Source->GetExternalDeclStmt(Offset);
     }
 
-    virtual CXXCtorInitializer**
+    CXXCtorInitializer**
     GetExternalCXXCtorInitializers(uint64_t Offset) override {
       return m_Source->GetExternalCXXCtorInitializers(Offset);
     }
 
-    virtual CXXBaseSpecifier*
-    GetExternalCXXBaseSpecifiers(uint64_t Offset) override {
+    CXXBaseSpecifier* GetExternalCXXBaseSpecifiers(uint64_t Offset) override {
       return m_Source->GetExternalCXXBaseSpecifiers(Offset);
     }
 
-    virtual void updateOutOfDateIdentifier(IdentifierInfo& II) override {
+    void updateOutOfDateIdentifier(IdentifierInfo& II) override {
       m_Source->updateOutOfDateIdentifier(II);
     }
 
-    virtual bool FindExternalVisibleDeclsByName(const DeclContext* DC,
-                                                DeclarationName Name) override {
+    bool FindExternalVisibleDeclsByName(const DeclContext* DC,
+                                        DeclarationName Name) override {
       return m_Source->FindExternalVisibleDeclsByName(DC, Name);
     }
 
-    virtual void completeVisibleDeclsMap(const DeclContext* DC) override {
+    bool LoadExternalSpecializations(const Decl* D, bool OnlyPartial) override {
+      return m_Source->LoadExternalSpecializations(D, OnlyPartial);
+    }
+
+    bool LoadExternalSpecializations(
+        const Decl* D, ArrayRef<TemplateArgument> TemplateArgs) override {
+      return m_Source->LoadExternalSpecializations(D, TemplateArgs);
+    }
+
+    void completeVisibleDeclsMap(const DeclContext* DC) override {
       m_Source->completeVisibleDeclsMap(DC);
     }
 
-    virtual Module* getModule(unsigned ID) override {
-      return m_Source->getModule(ID);
-    }
+    Module* getModule(unsigned ID) override { return m_Source->getModule(ID); }
 
-    virtual std::optional<ASTSourceDescriptor>
+    std::optional<ASTSourceDescriptor>
     getSourceDescriptor(unsigned ID) override {
       return m_Source->getSourceDescriptor(ID);
     }
 
-    virtual ExtKind hasExternalDefinitions(const Decl* D) override {
+    ExtKind hasExternalDefinitions(const Decl* D) override {
       return m_Source->hasExternalDefinitions(D);
     }
 
-    virtual void
+    void
     FindExternalLexicalDecls(const DeclContext* DC,
                              llvm::function_ref<bool(Decl::Kind)> IsKindWeWant,
                              SmallVectorImpl<Decl*>& Result) override {
       m_Source->FindExternalLexicalDecls(DC, IsKindWeWant, Result);
     }
 
-    virtual void FindFileRegionDecls(FileID File, unsigned Offset,
-                                     unsigned Length,
-                                     SmallVectorImpl<Decl*>& Decls) override {
+    void FindFileRegionDecls(FileID File, unsigned Offset, unsigned Length,
+                             SmallVectorImpl<Decl*>& Decls) override {
       m_Source->FindFileRegionDecls(File, Offset, Length, Decls);
     }
 
-    virtual void CompleteRedeclChain(const Decl* D) override {
+    void CompleteRedeclChain(const Decl* D) override {
       m_Source->CompleteRedeclChain(D);
     }
 
-    virtual void CompleteType(TagDecl* Tag) override {
-      m_Source->CompleteType(Tag);
-    }
+    void CompleteType(TagDecl* Tag) override { m_Source->CompleteType(Tag); }
 
-    virtual void CompleteType(ObjCInterfaceDecl* Class) override {
+    void CompleteType(ObjCInterfaceDecl* Class) override {
       m_Source->CompleteType(Class);
     }
 
-    virtual void ReadComments() override { m_Source->ReadComments(); }
+    void ReadComments() override { m_Source->ReadComments(); }
 
-    virtual void StartedDeserializing() override {
-      m_Source->StartedDeserializing();
-    }
+    void StartedDeserializing() override { m_Source->StartedDeserializing(); }
 
-    virtual void FinishedDeserializing() override {
-      m_Source->FinishedDeserializing();
-    }
+    void FinishedDeserializing() override { m_Source->FinishedDeserializing(); }
 
-    virtual void StartTranslationUnit(ASTConsumer* Consumer) override {
+    void StartTranslationUnit(ASTConsumer* Consumer) override {
       m_Source->StartTranslationUnit(Consumer);
     }
 
-    virtual void PrintStats() override { m_Source->PrintStats(); }
+    void PrintStats() override { m_Source->PrintStats(); }
 
-    virtual bool layoutRecordType(
+    bool layoutRecordType(
         const RecordDecl* Record, uint64_t& Size, uint64_t& Alignment,
         llvm::DenseMap<const FieldDecl*, uint64_t>& FieldOffsets,
         llvm::DenseMap<const CXXRecordDecl*, CharUnits>& BaseOffsets,
@@ -236,7 +199,7 @@ namespace cling {
     InterpreterExternalSemaSource(InterpreterCallbacks* C)
       : m_Callbacks(C), m_Sema(nullptr) {}
 
-    ~InterpreterExternalSemaSource() {
+    ~InterpreterExternalSemaSource() override {
       // FIXME: Another gross hack due to the missing multiplexing AST external
       // source see Interpreter::setCallbacks.
       if (m_Sema) {
@@ -297,7 +260,6 @@ namespace cling {
 
   InterpreterCallbacks::InterpreterCallbacks(Interpreter* interp,
                              bool enableExternalSemaSourceCallbacks/* = false*/,
-                        bool enableDeserializationListenerCallbacks/* = false*/,
                                              bool enablePPCallbacks/* = false*/)
     : m_Interpreter(interp), m_ExternalSemaSource(nullptr), m_PPCallbacks(nullptr),
       m_IsRuntime(false) {
@@ -340,27 +302,6 @@ namespace cling {
         }
     }
 
-    if (enableDeserializationListenerCallbacks && Reader) {
-      // Create a new deserialization listener.
-      m_DeserializationListener.
-        reset(new InterpreterDeserializationListener(this));
-
-      // Wrap the deserialization listener in an MultiplexConsumer and then
-      // combine it with the existing Consumer.
-      // FIXME: Maybe it's better to make MultiplexASTDeserializationListener
-      // public instead. See also: https://reviews.llvm.org/D37475
-      std::unique_ptr<DeserializationListenerWrapper> wrapper(
-          new DeserializationListenerWrapper(m_DeserializationListener.get()));
-
-      std::vector<std::unique_ptr<ASTConsumer>> Consumers;
-      Consumers.push_back(std::move(wrapper));
-      Consumers.push_back(m_Interpreter->getCI()->takeASTConsumer());
-
-      std::unique_ptr<clang::MultiplexConsumer> multiConsumer(
-          new clang::MultiplexConsumer(std::move(Consumers)));
-      m_Interpreter->getCI()->setASTConsumer(std::move(multiConsumer));
-    }
-
     if (enablePPCallbacks) {
       Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
       m_PPCallbacks = new InterpreterPPCallbacks(this);
@@ -382,11 +323,6 @@ namespace cling {
   ExternalSemaSource*
   InterpreterCallbacks::getInterpreterExternalSemaSource() const {
     return m_ExternalSemaSource;
-  }
-
-  ASTDeserializationListener*
-  InterpreterCallbacks::getInterpreterDeserializationListener() const {
-    return m_DeserializationListener.get();
   }
 
   bool InterpreterCallbacks::FileNotFound(llvm::StringRef) {
@@ -526,7 +462,8 @@ namespace test {
     // Annotate the decl to give a hint in cling. FIXME: Current implementation
     // is a gross hack, because TClingCallbacks shouldn't know about
     // EvaluateTSynthesizer at all!
-    TopmostFunc->addAttr(AnnotateAttr::CreateImplicit(C, "__ResolveAtRuntime"));
+    TopmostFunc->addAttr(
+        AnnotateAttr::CreateImplicit(C, "__ResolveAtRuntime", nullptr, 0));
     R.addDecl(Res);
     DC->addDecl(Res);
     // Say that we can handle the situation. Clang should try to recover

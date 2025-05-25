@@ -579,11 +579,11 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// ParamArr is an array containing the function argument values.
-/// If nparam = -1 then paramArr must contain values for all function
-/// arguments, otherwise Nargs-NargsOpt <= nparam <= Nargs, where
-/// Nargs is the number of all arguments and NargsOpt is the number
-/// of default arguments.
+/// \brief Set pointers to parameters
+/// \param paramArr an array containing the function argument values.
+/// \param nparam number of parameters should fulfill Nargs-NargsOpt <= nparam 
+///  <= Nargs, where Nargs is the number of all arguments and NargsOpt is the 
+///  number of default arguments.
 
 void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
 {

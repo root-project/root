@@ -34,7 +34,6 @@ side of that error will be used:
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 
-ClassImp(RooPullVar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct the pull of the RooRealVar 'meas'.

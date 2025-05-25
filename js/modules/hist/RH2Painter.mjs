@@ -31,7 +31,8 @@ class RH2Painter extends RH2Painter2D {
       let pr = Promise.resolve(this);
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
+         if (is_main && main.resize3D())
+            main.render3D();
          return pr;
       }
 
@@ -59,11 +60,11 @@ class RH2Painter extends RH2Painter2D {
 
       return pr.then(() => this.drawingBins(reason)).then(() => {
          // called when bins received from server, must be reentrant
-         const main = this.getFramePainter();
+         const fp = this.getFramePainter();
 
          this.draw3DBins();
-         main.render3D();
-         main.addKeysHandler();
+         fp.render3D();
+         fp.addKeysHandler();
 
          return this;
       });

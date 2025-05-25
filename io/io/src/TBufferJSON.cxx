@@ -47,6 +47,12 @@ All STL containers by default converted into JSON Array. Vector of integers:
 ~~~
 Will produce JSON code "[1, 4, 7]".
 
+IMPORTANT: Before using any of `map` classes in I/O, one should create dictionary
+for it with the command like:
+```
+gInterpreter->GenerateDictionary("std::map<int,std::string>", "map;string")
+```
+
 There are special handling for map classes like `map` and `multimap`.
 They will create Array of pair objects with "first" and "second" as data members. Code:
 ~~~{.cpp}
@@ -63,9 +69,10 @@ Will generate json string:
 ]
 ~~~
 In special cases map container can be converted into JSON object. For that key parameter
-must be `std::string` and compact parameter should be 5.
-Like in example:
+must be `std::string` and compact parameter should be 5. Like in example:
 ~~~{.cpp}
+gInterpreter->GenerateDictionary("std::map<std::string,int>", "map;string")
+
 std::map<std::string,int> data;
 data["name1"] = 11;
 data["name2"] = 22;
@@ -717,8 +724,10 @@ TString TBufferJSON::StoreObject(const void *obj, const TClass *cl)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts selected data member into json
-/// Parameter ptr specifies address in memory, where data member is located
-/// compact parameter defines compactness of produced JSON (from 0 to 3)
+/// Parameter ptr specifies address in memory, where data member is located.
+/// Note; if data member described by 'member'is pointer, `ptr` should be the
+/// value of the pointer, not the address of the pointer.
+/// compact parameter defines compactness of produced JSON (from 0 to 3).
 /// arraylen (when specified) is array length for this data member,  //[fN] case
 
 TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member, Int_t compact, Int_t arraylen)
@@ -1002,6 +1011,8 @@ void *TBufferJSON::ConvertFromJSONChecked(const char *str, const TClass *expecte
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert single data member to JSON structures
+/// Note; if data member described by 'member'is pointer, `ptr` should be the
+/// value of the pointer, not the address of the pointer.
 /// Returns string with converted member
 
 TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass, Int_t arraylen)
@@ -1034,7 +1045,13 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
       if (indx.IsArray() && (tid == kChar_t))
          shift = indx.ReduceDimension();
 
+      auto unitSize = member->GetUnitSize();
       char *ppp = (char *)ptr;
+      if (member->IsaPointer()) {
+         // UnitSize was the sizeof(void*)
+         assert(member->GetDataType());
+         unitSize = member->GetDataType()->Size();
+      }
 
       if (indx.IsArray())
          fOutBuffer.Append(indx.GetBegin());
@@ -1075,7 +1092,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
          if (indx.IsArray())
             fOutBuffer.Append(indx.NextSeparator());
 
-         ppp += shift * member->GetUnitSize();
+         ppp += shift * unitSize;
 
       } while (!indx.IsDone());
 
@@ -1354,6 +1371,12 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          map_convert = 2; // mapped into normal object
       else
          map_convert = 1;
+
+      if (!cl->HasDictionary()) {
+         Error("JsonWriteObject", "Cannot stream class %s without dictionary", cl->GetName());
+         AppendOutput(map_convert == 1 ? "[]" : "null");
+         goto post_process;
+      }
    }
 
    if (!obj) {
@@ -1610,61 +1633,78 @@ void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
    // collection treated as JS Array
    AppendOutput("[");
 
-   bool islist = col->InheritsFrom(TList::Class());
-   TMap *map = nullptr;
-   if (col->InheritsFrom(TMap::Class()))
-      map = dynamic_cast<TMap *>(col);
+   auto map = dynamic_cast<TMap *>(col);
+   auto lst = dynamic_cast<TList *>(col);
 
    TString sopt;
-   if (islist) {
+   Bool_t first = kTRUE;
+
+   if (lst) {
+      // handle TList with extra options
       sopt.Capacity(500);
       sopt = "[";
-   }
 
-   TIter iter(col);
-   TObject *obj;
-   Bool_t first = kTRUE;
-   while ((obj = iter()) != nullptr) {
-      if (!first)
-         AppendOutput(fArraySepar.Data());
+      auto lnk = lst->FirstLink();
+      while (lnk) {
+         if (!first) {
+            AppendOutput(fArraySepar.Data());
+            sopt.Append(fArraySepar.Data());
+         }
 
-      if (map) {
+         WriteObjectAny(lnk->GetObject(), TObject::Class());
+
+         if (dynamic_cast<TObjOptLink *>(lnk)) {
+            sopt.Append("\"");
+            sopt.Append(lnk->GetAddOption());
+            sopt.Append("\"");
+         } else
+            sopt.Append("null");
+
+         lnk = lnk->Next();
+         first = kFALSE;
+      }
+   } else if (map) {
+      // handle TMap with artificial TPair object
+      TIter iter(col);
+      while (auto obj = iter()) {
+         if (!first)
+            AppendOutput(fArraySepar.Data());
+
          // fJsonrCnt++; // do not account map pair as JSON object
          AppendOutput("{", "\"$pair\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"TPair\"");
          AppendOutput(fArraySepar.Data(), "\"first\"");
          AppendOutput(fSemicolon.Data());
-      }
 
-      WriteObjectAny(obj, TObject::Class());
+         WriteObjectAny(obj, TObject::Class());
 
-      if (map) {
          AppendOutput(fArraySepar.Data(), "\"second\"");
          AppendOutput(fSemicolon.Data());
          WriteObjectAny(map->GetValue(obj), TObject::Class());
          AppendOutput("", "}");
+         first = kFALSE;
       }
-
-      if (islist) {
+   } else {
+      TIter iter(col);
+      while (auto obj = iter()) {
          if (!first)
-            sopt.Append(fArraySepar.Data());
-         sopt.Append("\"");
-         sopt.Append(iter.GetOption());
-         sopt.Append("\"");
-      }
+            AppendOutput(fArraySepar.Data());
 
-      first = kFALSE;
+         WriteObjectAny(obj, TObject::Class());
+         first = kFALSE;
+      }
    }
 
    AppendOutput("]");
 
-   if (islist) {
+   if (lst) {
       sopt.Append("]");
       AppendOutput(Stack()->NextMemberSeparator(), "\"opt\"");
       AppendOutput(fSemicolon.Data());
       AppendOutput(sopt.Data());
    }
+
    fValue.Clear();
 }
 
@@ -1757,8 +1797,11 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 
          map->Add(tobj, static_cast<TObject *>(subobj2));
       } else if (lst) {
-         std::string opt = json->at("opt").at(n).get<std::string>();
-         lst->Add(tobj, opt.c_str());
+         auto &elem = json->at("opt").at(n);
+         if (elem.is_null())
+            lst->Add(tobj);
+         else
+            lst->Add(tobj, elem.get<std::string>().c_str());
       } else {
          // generic method, all kinds of TCollection should work
          col->Add(tobj);
@@ -1839,6 +1882,11 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
        (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) {
       map_convert = json->is_object() ? 2 : 1; // check if map was written as array or as object
+
+      if (objClass && !objClass->HasDictionary()) {
+         Error("JsonReadObject", "Cannot stream class %s without dictionary", objClass->GetName());
+         return obj;
+      }
    }
 
    // from now all operations performed with sub-element,

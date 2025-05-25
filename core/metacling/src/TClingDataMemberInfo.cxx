@@ -43,6 +43,8 @@ from the Clang C++ compiler, not CINT.
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 
+#include "clang/Interpreter/CppInterOp.h"
+
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ADT/APSInt.h"
@@ -397,16 +399,17 @@ Longptr_t TClingDataMemberInfo::Offset()
    // clang there is misbehaviour in MangleContext::shouldMangleDeclName.
    // enum constants are essentially numbers and don't get addresses. However
    // ROOT expects the address to the enum constant initializer to be returned.
-   else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D))
+   else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D)) {
       // The raw data is stored as a long long, so we need to find the 'long'
       // part.
-#ifdef R__BYTESWAP
-      // In this case at the beginning.
-      return reinterpret_cast<Longptr_t>(ECD->getInitVal().getRawData());
-#else
-      // In this case in the second part.
-      return reinterpret_cast<Longptr_t>(((char*)ECD->getInitVal().getRawData())+sizeof(Longptr_t) );
-#endif
+
+      // The memory leak for `EnumConstantDecl` was fixed in:
+      // https://github.com/llvm/llvm-project/pull/78311
+      // We were relying on the leak to provide the address for EnumConstantDecl.
+      // Now store the data value as a member instead.
+      fEnumValue = ECD->getInitVal().getExtValue();
+      return reinterpret_cast<Longptr_t>(&fEnumValue);
+   }
    return -1L;
 }
 
@@ -553,14 +556,7 @@ int TClingDataMemberInfo::TypeSize() const
       // Error, was not a data member, variable, or enumerator.
       return -1;
    }
-   clang::QualType qt = vd->getType();
-   if (qt->isIncompleteType()) {
-      // We cannot determine the size of forward-declared types.
-      return -1;
-   }
-   clang::ASTContext &context = GetDecl()->getASTContext();
-   // Truncate cast to fit to cint interface.
-   return static_cast<int>(context.getTypeSizeInChars(qt).getQuantity());
+   return Cpp::GetSizeOfType(vd->getType().getAsOpaquePtr());
 }
 
 const char *TClingDataMemberInfo::TypeName() const

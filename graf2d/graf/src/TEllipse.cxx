@@ -47,7 +47,7 @@ call the function `SetNoEdges()`. To remove completely the ellipse
 outline it is enough to specify 0 as line style.
 
 Begin_Macro(source)
-../../../tutorials/graphics/ellipse.C
+../../../tutorials/visualisation/graphics/ellipse.C
 End_Macro
 */
 
@@ -621,23 +621,19 @@ void TEllipse::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TEllipse::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TEllipse::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TEllipse::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TEllipse *";
-   }
-   out<<"ellipse = new TEllipse("<<fX1<<","<<fY1<<","<<fR1<<","<<fR2
-      <<","<<fPhimin<<","<<fPhimax<<","<<fTheta<<");"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "ellipse",
+      TString::Format("%g, %g, %g, %g, %g, %g, %g", fX1, fY1, fR1, fR2, fPhimin, fPhimax, fTheta));
 
-   SaveFillAttributes(out,"ellipse",0,1001);
-   SaveLineAttributes(out,"ellipse",1,1,1);
+   SaveFillAttributes(out, "ellipse", 0, 1001);
+   SaveLineAttributes(out, "ellipse", 1, 1, 1);
 
-   if (GetNoEdges()) out<<"   ellipse->SetNoEdges();"<<std::endl;
+   if (GetNoEdges())
+      out << "   ellipse->SetNoEdges();\n";
 
-   out<<"   ellipse->Draw();"<<std::endl;
+   SavePrimitiveDraw(out, "ellipse", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -697,14 +693,14 @@ void TEllipse::Streamer(TBuffer &R__b)
 
 Rectangle_t TEllipse::GetBBox()
 {
-   Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-   if (!gPad) return (BBox);
-   BBox.fX = gPad->XtoPixel(fX1-fR1);
-   BBox.fY = gPad->YtoPixel(fY1+fR2);
-   BBox.fWidth = gPad->XtoPixel(fX1+fR1)-gPad->XtoPixel(fX1-fR1);
-   BBox.fHeight = gPad->YtoPixel(fY1-fR2)-gPad->YtoPixel(fY1+fR2);
-   return (BBox);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      BBox.fX = gPad->XtoPixel(fX1 - fR1);
+      BBox.fY = gPad->YtoPixel(fY1 + fR2);
+      BBox.fWidth = gPad->XtoPixel(fX1 + fR1) - gPad->XtoPixel(fX1 - fR1);
+      BBox.fHeight = gPad->YtoPixel(fY1 - fR2) - gPad->YtoPixel(fY1 + fR2);
+   }
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -712,12 +708,12 @@ Rectangle_t TEllipse::GetBBox()
 
 TPoint TEllipse::GetBBoxCenter()
 {
-   TPoint p(0,0);
-   if (!gPad) return (p);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(fX1));
-   p.SetY(gPad->YtoPixel(fY1));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(fX1));
+      p.SetY(gPad->YtoPixel(fY1));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

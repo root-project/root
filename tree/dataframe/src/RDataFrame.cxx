@@ -11,6 +11,7 @@
 #include "ROOT/InternalTreeUtils.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
+#include "ROOT/RTTreeDS.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
@@ -61,12 +62,12 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
 
 ## Table of Contents
 - [Cheat sheet](\ref cheatsheet)
-- [Introduction](\ref introduction)
+- [Introduction](\ref rdf_intro)
 - [Crash course](\ref crash-course)
-- [Working with collections](\ref collections)
+- [Working with collections](\ref working_with_collections)
 - [Transformations: manipulating data](\ref transformations)
 - [Actions: getting results](\ref actions)
-- [Distributed execution in Python](\ref distrdf)
+- [Distributed execution in Python](\ref rdf_distrdf)
 - [Performance tips and parallel execution](\ref parallel-execution)
 - [More features](\ref more-features)
    - [Systematic variations](\ref systematics)
@@ -84,7 +85,8 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
    - [Activating RDataFrame execution logs](\ref rdf-logging)
    - [Creating an RDataFrame from a dataset specification file](\ref rdf-from-spec)
    - [Adding a progress bar](\ref progressbar)
-- [Efficient analysis in Python](\ref python)
+   - [Working with missing values in the dataset](\ref missing-values)
+- [Python interface](classROOT_1_1RDataFrame.html#python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
 \anchor cheatsheet
@@ -97,11 +99,14 @@ Transformations are a way to manipulate the data.
 | **Transformation** | **Description** |
 |------------------|--------------------|
 | Alias() | Introduce an alias for a particular column name. |
+| DefaultValueFor() | If the value of the input column is missing, provide a default value instead. |
 | Define() | Create a new column in the dataset. Example usages include adding a column that contains the invariant mass of a particle, or a selection of elements of an array (e.g. only the `pt`s of "good" muons). |
 | DefinePerSample() | Define a new column that is updated when the input sample changes, e.g. when switching tree being processed in a chain. |
-| DefineSlot() | Same as Define(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe Define() transformation when using RDataFrame after ROOT::EnableImplicitMT(). DefineSlot() works just as well with single-thread execution: in that case `slot` will always be `0`.  |
+| DefineSlot() | Same as Define(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, in the range [0, nThread-1], for each thread of execution. This is meant as a helper in writing thread-safe Define() transformations when using RDataFrame after ROOT::EnableImplicitMT(). DefineSlot() works just as well with single-thread execution: in that case `slot` will always be `0`.  |
 | DefineSlotEntry() | Same as DefineSlot(), but the entry number is passed in addition to the slot number. This is meant as a helper in case the expression depends on the entry number. For details about entry numbers in multi-threaded runs, see [here](\ref helper-cols). |
 | Filter() | Filter rows based on user-defined conditions. |
+| FilterAvailable() | Specialized Filter. If the value of the input column is available, keep the entry, otherwise discard it. |
+| FilterMissing() | Specialized Filter. If the value of the input column is missing, keep the entry, otherwise discard it. |
 | Range() | Filter rows based on entry number (single-thread only). |
 | Redefine() | Overwrite the value and/or type of an existing column. See Define() for more information. |
 | RedefineSlot() | Overwrite the value and/or type of an existing column. See DefineSlot() for more information. |
@@ -127,7 +132,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 | Display() | Provides a printable representation of the dataset contents. The method returns a ROOT::RDF::RDisplay() instance which can print a tabular representation of the data or return it as a string. |
 | Fill() | Fill a user-defined object with the values of the specified columns, as if by calling `Obj.Fill(col1, col2, ...)`. |
 | Graph() | Fills a TGraph with the two columns provided. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
-| GraphAsymmErrors() | Fills a TGraphAsymmErrors. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
+| GraphAsymmErrors() | Fills a TGraphAsymmErrors. Should be used for any type of graph with errors, including cases with errors on one of the axes only. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
 | Histo1D(), Histo2D(), Histo3D() | Fill a one-, two-, three-dimensional histogram with the processed column values. |
 | HistoND() | Fill an N-dimensional histogram with the processed column values. |
 | Max() | Return the maximum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
@@ -164,7 +169,7 @@ These operations do not modify the dataframe or book computations but simply ret
 | GetNSlots() | Return the number of processing slots that RDataFrame will use during the event loop (i.e. the concurrency level). |
 | SaveGraph() | Store the computation graph of an RDataFrame in [DOT format (graphviz)](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) for easy inspection. See the [relevant section](\ref representgraph) for details. |
 
-\anchor introduction
+\anchor rdf_intro
 ## Introduction
 Users define their analysis as a sequence of operations to be performed on the dataframe object; the framework
 takes care of the management of the loop over entries as well as low-level details such as I/O and parallelization.
@@ -456,6 +461,42 @@ executed at the moment they are called, but they are **lazy**, i.e. delayed unti
 accessed through the smart pointer. At that time, the event loop is triggered and *all* results are produced
 simultaneously.
 
+### Properly exploiting RDataFrame laziness
+
+For yet another example of the difference between the correct and incorrect running of the event-loop, see the following
+two code snippets. We assume our ROOT file has branches a, b and c.
+
+The correct way - the dataset is only processed once.
+~~~{.py}
+df_correct = ROOT.RDataFrame(treename, filename);
+
+h_a = df_correct.Histo1D("a")
+h_b = df_correct.Histo1D("b")
+h_c = df_correct.Histo1D("c")
+
+h_a_val = h_a.GetValue()
+h_b_val = h_b.GetValue()
+h_c_val = h_c.GetValue()
+
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} time.") # The answer will be 1 time. 
+~~~
+
+An incorrect way - the dataset is processed three times.
+~~~{.py}
+df_incorrect = ROOT.RDataFrame(treename, filename);
+
+h_a = df_incorrect.Histo1D("a")
+h_a_val = h_a.GetValue()
+
+h_b = df_incorrect.Histo1D("b")
+h_b_val = h_b.GetValue()
+
+h_c = df_incorrect.Histo1D("c")
+h_c_val = h_c.GetValue()
+
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} times.") # The answer will be 3 times. 
+~~~
+
 It is therefore good practice to declare all your transformations and actions *before* accessing their results, allowing
 RDataFrame to run the loop once and produce all results in one go.
 
@@ -468,7 +509,7 @@ ROOT::EnableImplicitMT();
 ~~~
 Simple as that. More details are given [below](#parallel-execution).
 
-\anchor collections
+\anchor working_with_collections
 ## Working with collections and object selections
 
 RDataFrame reads collections as the special type [ROOT::RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html): for example, a column containing an array of floating point numbers can be read as a ROOT::RVecF. C-style arrays (with variable or static size), STL vectors and most other collection types can be read this way.
@@ -592,8 +633,36 @@ are lazy, the others are instant.
 ### Return type of a lazy action
 
 When a lazy action is called, it returns a \link ROOT::RDF::RResultPtr ROOT::RDF::RResultPtr<T>\endlink, where T is the
-type of the result of the action. The final result will be stored in the `RResultPtr` and can be retrieved by
-dereferencing it or via its `GetValue` method.
+type of the result of the action. The final result will be stored in the `RResultPtr`, and can be retrieved by
+dereferencing it or via its `GetValue` method. Retrieving the result also starts the event loop if the result
+hasn't been produced yet.
+
+The RResultPtr shares ownership of the result object. To directly access result, use:
+~~~{.cpp}
+ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(...);
+histo->Draw(); // Starts running the event loop
+~~~
+
+To return results from functions, a copy of the underlying shared_ptr can be obtained:
+~~~{.cpp}
+std::shared_ptr<TH1D> ProduceResult(const char *columnname) {
+   ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(*h, columname);
+   return histo.GetSharedPtr(); // Runs the event loop
+}
+~~~
+If the result had been returned by reference or bare pointer, it would have gotten destroyed
+when the function exits.
+
+To share ownership but not produce the result ("keep it lazy"), copy the RResultPtr:
+~~~{.cpp}
+std::vector<RResultPtr<TH1D>> allHistograms;
+ROOT::RDF::RResultPtr<TH1D> BookHistogram(const char *columnname) {
+   ROOT::RDF::RResultPtr<TH1D> histo = rdf.Histo1D(*h, columname);
+   allHistograms.push_back(histo); // Will not produce the result yet
+   return histo;
+}
+~~~
+
 
 ### Actions that return collections
 
@@ -630,24 +699,23 @@ auto graph = df2.Graph<int, int>("x","y");
 The `Graph` action is going to request first the value from column "x", then that of column "y". Specifically, the order
 of execution of the operations of nodes in this branch of the computation graph is guaranteed to be top to bottom.
 
-\anchor distrdf
+\anchor rdf_distrdf
 ## Distributed execution
 
 RDataFrame applications can be executed in parallel through distributed computing frameworks on a set of remote machines
-thanks to the Python package `ROOT.RDF.Experimental.Distributed`. This experimental, **Python-only** package allows to scale the
+thanks to the Python package `ROOT.RDF.Distributed`. This **Python-only** package allows to scale the
 optimized performance RDataFrame can achieve on a single machine to multiple nodes at the same time. It is designed so
 that different backends can be easily plugged in, currently supporting [Apache Spark](http://spark.apache.org/) and
-[Dask](https://dask.org/). To make use of distributed RDataFrame, you only need to switch `ROOT.RDataFrame` with
-the backend-specific `RDataFrame` of your choice, for example:
+[Dask](https://dask.org/). Here is a minimal example usage of distributed RDataFrame:
 
 ~~~{.py}
 import ROOT
-
-# Point RDataFrame calls to the Spark specific RDataFrame
-RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-
+from distributed import Client
 # It still accepts the same constructor arguments as traditional RDataFrame
-df = RDataFrame("mytree", "myfile.root")
+# but needs a client object which allows connecting to one of the supported
+# schedulers (read more info below)
+client = Client(...)
+df = ROOT.RDataFrame("mytree", "myfile.root", executor=client)
 
 # Continue the application with the traditional RDataFrame API
 sum = df.Filter("x > 10").Sum("y")
@@ -659,11 +727,15 @@ h.Draw()
 
 The main goal of this package is to support running any RDataFrame application distributedly. Nonetheless, not all
 parts of the RDataFrame API currently work with this package. The subset that is currently available is:
+- Alias
 - AsNumpy
 - Count
+- DefaultValueFor
 - Define
 - DefinePerSample
 - Filter
+- FilterAvailable
+- FilterMissing
 - Graph
 - Histo[1,2,3]D
 - HistoND
@@ -680,10 +752,7 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - Parallel submission of distributed graphs: [RunGraphs](\ref ROOT::RDF::RunGraphs).
 - Information about the dataframe: GetColumnNames.
 
-with support for more operations coming in the future. Data sources other than TTree and TChain (e.g. CSV, RNTuple) are
-currently not supported.
-
-\note The distributed RDataFrame module requires at least Python version 3.8.
+with support for more operations coming in the future. Currently, to the supported data sources belong TTree, TChain, RNTuple and RDatasetSpec.
 
 ### Connecting to a Spark cluster
 
@@ -699,16 +768,16 @@ import ROOT
 conf = SparkConf().setAppName(appName).setMaster(master)
 sc = SparkContext(conf=conf)
 
-# Point RDataFrame calls to the Spark specific RDataFrame
-RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-
 # The Spark RDataFrame constructor accepts an optional "sparkcontext" parameter
 # and it will distribute the application to the connected cluster
-df = RDataFrame("mytree", "myfile.root", sparkcontext = sc)
+df = ROOT.RDataFrame("mytree", "myfile.root", executor = sc)
 ~~~
 
-If an instance of [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
-is not provided, the default behaviour is to create one in the background for you.
+Note that with the usage above the case of `executor = None` is not supported. One
+can explicitly create a `ROOT.RDF.Distributed.Spark.RDataFrame` object
+in order to get a default instance of 
+[SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
+in case it is not already provided as argument.
 
 ### Connecting to a Dask cluster
 
@@ -719,10 +788,6 @@ of the cluster schedulers supported by Dask (more information in the
 ~~~{.py}
 import ROOT
 from dask.distributed import Client
-
-# Point RDataFrame calls to the Dask specific RDataFrame
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-
 # In a Python script the Dask client needs to be initalized in a context
 # Jupyter notebooks / Python session don't need this
 if __name__ == "__main__":
@@ -730,14 +795,17 @@ if __name__ == "__main__":
     client = Client("dask_scheduler.domain.com:8786")
 
     # The Dask RDataFrame constructor accepts the Dask Client object as an optional argument
-    df = RDataFrame("mytree","myfile.root", daskclient=client)
+    df = ROOT.RDataFrame("mytree","myfile.root", executor=client)
     # Proceed as usual
     df.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
-If an instance of [distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client) is not
-provided to the RDataFrame object, it will be created for you and it will run the computations in the local machine
-using all cores available.
+Note that with the usage above the case of `executor = None` is not supported. One
+can explicitly create a `ROOT.RDF.Distributed.Dask.RDataFrame` object
+in order to get a default instance of 
+[distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client)
+in case it is not already provided as argument. This will run multiple processes
+on the local machine using all available cores.
 
 ### Choosing the number of distributed tasks
 
@@ -757,19 +825,51 @@ backend used:
 ~~~{.py}
 import ROOT
 
-# Define correct imports and access the distributed RDataFrame appropriate for the
-# backend used in the analysis
-RDataFrame = ROOT.RDF.Experimental.Distributed.[BACKEND].RDataFrame
-
 if __name__ == "__main__":
     # The `npartitions` optional argument tells the RDataFrame how many tasks are desired
-    df = RDataFrame("mytree","myfile.root", npartitions=NPARTITIONS)
+    df = ROOT.RDataFrame("mytree", "myfile.root", executor=SupportedExecutor(...), npartitions=NPARTITIONS)
     # Proceed as usual
     df.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
 Note that when processing a TTree or TChain dataset, the `npartitions` value should not exceed the number of clusters in
 the dataset. The number of clusters in a TTree can be retrieved by typing `rootls -lt myfile.root` at a command line.
+
+### Distributed FromSpec 
+
+RDataFrame can be also built from a JSON sample specification file using the FromSpec function. In distributed mode, two arguments need to be provided: the path to the specification 
+jsonFile (same as for local RDF case) and an additional executor argument - in the same manner as for the RDataFrame constructors above - an executor can either be a spark connection or a dask client. 
+If no second argument is given, the local version of FromSpec will be run. Here is an example of FromSpec usage in distributed RDF using either spark or dask backends. 
+For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. 
+
+Using spark:
+~~~{.py}
+import pyspark
+import ROOT
+
+conf = SparkConf().setAppName(appName).setMaster(master)
+sc = SparkContext(conf=conf)
+
+# The FromSpec function accepts an optional "sparkcontext" parameter
+# and it will distribute the application to the connected cluster
+df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor = sc)
+# Proceed as usual
+df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
+~~~
+
+Using dask: 
+~~~{.py}
+import ROOT
+from dask.distributed import Client
+
+if __name__ == "__main__":
+    client = Client("dask_scheduler.domain.com:8786")
+
+    # The FromSpec function accepts the Dask Client object as an optional argument
+    df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor=client) 
+    # Proceed as usual
+    df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
+~~~
 
 ### Distributed Snapshot
 
@@ -788,19 +888,17 @@ triggered concurrently to send multiple computation graphs to a distributed clus
 
 ~~~{.py}
 import ROOT
-RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-RunGraphs = ROOT.RDF.Experimental.Distributed.RunGraphs
 
 # Create 3 different dataframes and book an histogram on each one
 histoproxies = [
-   RDataFrame(100)
+   ROOT.RDataFrame(100, executor=SupportedExecutor(...))
          .Define("x", "rdfentry_")
          .Histo1D(("name", "title", 10, 0, 100), "x")
    for _ in range(4)
 ]
 
 # Execute the 3 computation graphs
-RunGraphs(histoproxies)
+ROOT.RDF.RunGraphs(histoproxies)
 # Retrieve all the histograms in one go
 histos = [histoproxy.GetValue() for histoproxy in histoproxies]
 ~~~
@@ -815,10 +913,9 @@ computed, e.g. the axis range and the number of bins:
 
 ~~~{.py}
 import ROOT
-RDataFrame = ROOT.RDF.Experimental.Distributed.[BACKEND].RDataFrame
 
 if __name__ == "__main__":
-    df = RDataFrame("mytree","myfile.root").Define("x","someoperation")
+    df = ROOT.RDataFrame("mytree","myfile.root",executor=SupportedExecutor(...)).Define("x","someoperation")
     # The model can be passed either as a tuple with the arguments in the correct order
     df.Histo1D(("name", "title", 10, 0, 10), "x")
     # Or by creating the specific struct
@@ -837,12 +934,12 @@ of a distributed RDataFrame application.
 It enables visualizing intermediate results as they are computed across multiple nodes of a Dask cluster
 by creating a canvas and continuously updating it as partial results become available. 
 
-The LiveVisualize() function can be imported from the Python package **ROOT.RDF.Experimental.Distributed**:
+The LiveVisualize() function can be imported from the Python package **ROOT.RDF.Distributed**:
 
 ~~~{.py}
 import ROOT
 
-LiveVisualize = ROOT.RDF.Experimental.Distributed.LiveVisualize
+LiveVisualize = ROOT.RDF.Distributed.LiveVisualize
 ~~~
 
 The function takes drawable objects (e.g. histograms) and optional callback functions as argument, it accepts 4 different input formats:
@@ -859,7 +956,7 @@ You can also include a global callback function that will be applied to all plot
 
 ~~~{.py}
 def set_fill_color(hist):
-    hist.SetFillColor(ROOT.kBlue)
+    hist.SetFillColor("kBlue")
 
 LiveVisualize([h_gaus, h_exp, h_random], set_fill_color)
 ~~~
@@ -891,15 +988,75 @@ LiveVisualize(plot_callback_dict, write_to_tfile)
 
 \warning The Live Visualization feature is only supported for the Dask backend.
 
+### Injecting C++ code and using external files into distributed RDF script
+
+Distributed RDF provides an interface for the users who want to inject the C++ code (via header files, shared libraries or declare the code directly)
+into their distributed RDF application, or their application needs to use information from external files which should be distributed 
+to the workers (for example, a JSON or a txt file with necessary parameters information). 
+
+The examples below show the usage of these interface functions: firstly, how this is done in a local Python 
+RDF application and secondly, how it is done distributedly.
+
+#### Include and distribute header files.
+
+~~~{.py}
+# Local RDataFrame script
+ROOT.gInterpreter.AddIncludePath("myheader.hxx")
+df.Define(...)
+
+# Distributed RDF script
+ROOT.RDF.Distributed.DistributeHeaders("myheader.hxx")
+df.Define(...)
+~~~
+
+#### Load and distribute shared libraries 
+
+~~~{.py}
+# Local RDataFrame script
+ROOT.gSystem.Load("my_library.so")
+df.Define(...)
+
+# Distributed RDF script
+ROOT.RDF.Distributed.DistributeSharedLibs("my_library.so")
+df.Define(...)
+~~~
+
+#### Declare and distribute the cpp code
+
+The cpp code is always available to all dataframes. 
+
+~~~{.py}
+# Local RDataFrame script
+ROOT.gInterpreter.Declare("my_code")
+df.Define(...)
+
+# Distributed RDF script
+ROOT.RDF.Distributed.DistributeCppCode("my_code")
+df.Define(...)
+~~~
+
+#### Distribute additional files (other than headers or shared libraries). 
+
+~~~{.py}
+# Local RDataFrame script is not applicable here as local RDF application can simply access the external files it needs. 
+
+# Distributed RDF script
+ROOT.RDF.Distributed.DistributeFiles("my_file")
+df.Define(...)
+~~~
+
 \anchor parallel-execution
 ## Performance tips and parallel execution
 As pointed out before in this document, RDataFrame can transparently perform multi-threaded event loops to speed up
 the execution of its actions. Users have to call ROOT::EnableImplicitMT() *before* constructing the RDataFrame
 object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
 subset of entries**, and their partial results are merged before returning the final values to the user.
-There are no guarantees on the order in which threads will process the batches of entries.
-In particular, note that this means that, for multi-thread event loops, there is no
-guarantee on the order in which Snapshot() will _write_ entries: they could be scrambled with respect to the input dataset. The values of the special `rdfentry_` column will also not correspond to the entry numbers in the input dataset (e.g. TChain) in multi-thread runs.
+
+\warning There are no guarantees on the order in which threads will process the batches of
+entries. In particular, note that this means that, for multi-thread event loops, there is no
+guarantee on the order in which Snapshot() will _write_ entries: they could be scrambled with respect to the input
+dataset. The values of the special `rdfentry_` column will also not correspond to the entry numbers in the input dataset (e.g. TChain) in multi-threaded
+runs. Likewise, Take(), AsNumpy(), ... do not preserve the original ordering.
 
 \warning By default, RDataFrame will use as many threads as the hardware supports, using up **all** the resources on
 a machine. This might be undesirable on shared computing resources such as a batch cluster. Therefore, when running on shared computing resources, use
@@ -920,9 +1077,9 @@ which eliminates all risks of race conditions.
 In order to facilitate writing of thread-safe operations, some RDataFrame features such as Foreach(), Define() or \link ROOT::RDF::RResultPtr::OnPartialResult OnPartialResult()\endlink
 offer thread-aware counterparts (ForeachSlot(), DefineSlot(), \link ROOT::RDF::RResultPtr::OnPartialResultSlot OnPartialResultSlot()\endlink): their only difference is that they
 will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
-concurrently, RDataFrame guarantees that different threads will employ different values of the `slot` parameter,
-where `slot` will be a number between 0 and `GetNSlots() - 1`.
-In other words, within a slot, computation runs sequentially and events are processed sequentially.
+concurrently, RDataFrame guarantees that different threads will see different values of the `slot` parameter,
+where `slot` will be a number between 0 and `GetNSlots() - 1`. Note that not all slot numbers may be reached, or some slots may be reached more often depending on how computation tasks are scheduled.
+In other words, within a slot, computations run sequentially, and events are processed sequentially.
 Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
 will never receive the same slot at the same time.
 This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different
@@ -957,7 +1114,7 @@ Similarly, `Histo1D("x")` requires just-in-time compilation after the type of `x
 should be preferred for performance-critical applications.
 
 Python applications cannot easily specify template parameters or pass C++ callables to RDataFrame.
-See [Efficient analysis in Python](#python) for possible ways to speed up hot paths in this case.
+See [Python interface](classROOT_1_1RDataFrame.html#python) for possible ways to speed up hot paths in this case.
 
 Just-in-time compilation happens once, right before starting an event loop. To reduce the runtime cost of this step, make sure to book all operations *for all RDataFrame computation graphs*
 before the first event loop is triggered: just-in-time compilation will happen once for all code required to be generated up to that point, also across different computation graphs.
@@ -1079,7 +1236,7 @@ shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
       interfaces might still evolve and improve based on user feedback. We expect that some aspects of the related
       programming model will be streamlined in future versions.
 
-\note Currently, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
+\note Currently, the results of a Snapshot() or Display() call cannot be varied (i.e. it is not possible to
       call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" on them. These limitations will be lifted in future releases.
 
 See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html) 
@@ -1162,8 +1319,9 @@ auto h = d1.Filter([](int b1, int b2) { return b1 > b2; }) // will act on "b1" a
 
 // just one default column this time
 RDataFrame d2("myTree", "file.root", {"b1"});
-auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still specify non-default column lists
-             .Min(); // returns the minimum value of "b1" for the filtered entries
+auto d2f = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still specify non-default column lists
+auto min = d2f.Min(); // returns the minimum value of "b1" for the filtered entries
+auto vals = d2f.Take<double>(); // return the values for all entries passing the selection as a vector
 ~~~
 
 \anchor helper-cols
@@ -1528,7 +1686,7 @@ ROOT::RDF::Experimental::AddProgressBar(df);
 
 Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility 
 For example, it can be called at any computational node, such as Filter or Define, not only the head node,
-with no change to the ProgressBar function itself (please see the [Efficient analysis in Python](#python) 
+with no change to the ProgressBar function itself (please see the [Python interface](classROOT_1_1RDataFrame.html#python) 
 section for appropriate usage in Python): 
 ~~~{.cpp}
 ROOT::RDataFrame df("tree", "file.root");
@@ -1536,6 +1694,143 @@ auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
 ROOT::RDF::Experimental::AddProgressBar(df_1);
 ~~~
 Examples of implemented progress bars can be seen by running [Higgs to Four Lepton tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py_source.html) and [Dimuon tutorial](https://root.cern/doc/master/df102__NanoAODDimuonAnalysis_8C.html). 
+
+\anchor missing-values
+### Working with missing values in the dataset
+
+In certain situations a dataset might be missing one or more values at one or
+more of its entries. For example:
+
+- If the dataset is composed of multiple files and one or more files is
+  missing one or more columns required by the analysis.
+- When joining different datasets horizontally according to some index value
+  (e.g. the event number), if the index does not find a match in one or more
+  other datasets for a certain entry.
+
+For example, suppose that column "y" does not have a value for entry 42:
+
+\code{.unparsed}
++-------+---+---+
+| Entry | x | y |
++-------+---+---+
+| 42    | 1 |   |
++-------+---+---+
+\endcode
+
+If the RDataFrame application reads that column, for example if a Take() action
+was requested, the default behaviour is to throw an exception indicating
+that that column is missing an entry.
+
+The following paragraphs discuss the functionalities provided by RDataFrame to
+work with missing values in the dataset.
+
+#### FilterAvailable and FilterMissing
+
+FilterAvailable and FilterMissing are specialized RDataFrame Filter operations.
+They take as input argument the name of a column of the dataset to watch for
+missing values. Like Filter, they will either keep or discard an entire entry
+based on whether a condition returns true or false. Specifically:
+
+- FilterAvailable: the condition is whether the value of the column is present.
+  If so, the entry is kept. Otherwise if the value is missing the entry is
+  discarded.
+- FilterMissing: the condition is whether the value of the column is missing. If
+  so, the entry is kept. Otherwise if the value is present the entry is
+  discarded.
+
+\code{.py}
+df = ROOT.RDataFrame(dataset)
+
+# Anytime an entry from "col" is missing, the entire entry will be filtered out
+df_available = df.FilterAvailable("col")
+df_available = df_available.Define("twice", "col * 2")
+
+# Conversely, if we want to select the entries for which the column has missing
+# values, we do the following
+df_missingcol = df.FilterMissing("col")
+# Following operations in the same branch of the computation graph clearly
+# cannot access that same column, since there would be no value to read
+df_missingcol = df_missingcol.Define("observable", "othercolumn * 2")
+\endcode
+
+\code{.cpp}
+ROOT::RDataFrame df{dataset};
+
+// Anytime an entry from "col" is missing, the entire entry will be filtered out
+auto df_available = df.FilterAvailable("col");
+auto df_twicecol = df_available.Define("twice", "col * 2");
+
+// Conversely, if we want to select the entries for which the column has missing
+// values, we do the following
+auto df_missingcol = df.FilterMissing("col");
+// Following operations in the same branch of the computation graph clearly
+// cannot access that same column, since there would be no value to read
+auto df_observable = df_missingcol.Define("observable", "othercolumn * 2");
+\endcode
+
+#### DefaultValueFor
+
+DefaultValueFor creates a node of the computation graph which just forwards the
+values of the columns necessary for other downstream nodes, when they are
+available. In case a value of the input column passed to this function is not
+available, the node will provide the default value passed to this function call
+instead. Example:
+
+\code{.py}
+df = ROOT.RDataFrame(dataset)
+# Anytime an entry from "col" is missing, the value will be the default one
+default_value = ... # Some sensible default value here
+df = df.DefaultValueFor("col", default_value) 
+df = df.Define("twice", "col * 2")
+\endcode
+
+\code{.cpp}
+ROOT::RDataFrame df{dataset};
+// Anytime an entry from "col" is missing, the value will be the default one
+constexpr auto default_value = ... // Some sensible default value here
+auto df_default = df.DefaultValueFor("col", default_value);
+auto df_col = df_default.Define("twice", "col * 2");
+\endcode
+
+#### Mixing different strategies to work with missing values in the same RDataFrame
+
+All the operations presented above only act on the particular branch of the
+computation graph where they are called, so that different results can be
+obtained by mixing and matching the filtering or providing a default value
+strategies:
+
+\code{.py}
+df = ROOT.RDataFrame(dataset)
+# Anytime an entry from "col" is missing, the value will be the default one
+default_value = ... # Some sensible default value here
+df_default = df.DefaultValueFor("col", default_value).Define("twice", "col * 2")
+df_filtered = df.FilterAvailable("col").Define("twice", "col * 2")
+
+# Same number of total entries as the input dataset, with defaulted values
+df_default.Display(["twice"]).Print()
+# Only keep the entries where "col" has values
+df_filtered.Display(["twice"]).Print()
+\endcode
+
+\code{.cpp}
+ROOT::RDataFrame df{dataset};
+
+// Anytime an entry from "col" is missing, the value will be the default one
+constexpr auto default_value = ... // Some sensible default value here
+auto df_default = df.DefaultValueFor("col", default_value).Define("twice", "col * 2");
+auto df_filtered = df.FilterAvailable("col").Define("twice", "col * 2");
+
+// Same number of total entries as the input dataset, with defaulted values
+df_default.Display({"twice"})->Print();
+// Only keep the entries where "col" has values
+df_filtered.Display({"twice"})->Print();
+\endcode
+
+#### Further considerations
+
+Note that working with missing values is currently supported with a TTree-based
+data source. Support of this functionality for other data sources may come in
+the future.
 
 */
 // clang-format on
@@ -1553,27 +1848,17 @@ using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultColumns)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(
+        std::make_unique<ROOT::Internal::RDF::RTTreeDS>(treeName, dirPtr), defaultColumns))
 {
-   if (!dirPtr) {
-      auto msg = "Invalid TDirectory!";
-      throw std::runtime_error(msg);
-   }
-   const std::string treeNameInt(treeName);
-   auto tree = static_cast<TTree *>(dirPtr->Get(treeNameInt.c_str()));
-   if (!tree) {
-      auto msg = "Tree \"" + treeNameInt + "\" cannot be found!";
-      throw std::runtime_error(msg);
-   }
-   GetProxiedPtr()->SetTree(std::shared_ptr<TTree>(tree, [](TTree *) {}));
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
-/// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
+/// \param[in] fileNameGlob TDirectory where the tree is stored, e.g. a TFile.
 /// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename glob supports the same type of expressions as TChain::Add(), and it is passed as-is to TChain's
@@ -1581,43 +1866,28 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
-#ifdef R__HAS_ROOT7
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
    : RInterface(ROOT::Detail::RDF::CreateLMFromFile(treeName, fileNameGlob, defaultColumns))
 {
 }
-#else
-RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
-   : RInterface(ROOT::Detail::RDF::CreateLMFromTTree(treeName, fileNameGlob, defaultColumns))
-{
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
-/// \param[in] treeName Name of the tree contained in the directory
-/// \param[in] fileglobs Collection of file names of filename globs
+/// \param[in] datasetName Name of the dataset contained in the directory
+/// \param[in] fileNameGlobs Collection of file names of filename globs
 /// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename globs support the same type of expressions as TChain::Add(), and each glob is passed as-is
 /// to TChain's constructor.
 ///
 /// The default columns are looked at in case no column is specified in the booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
-#ifdef R__HAS_ROOT7
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                        const ColumnNames_t &defaultColumns)
    : RInterface(ROOT::Detail::RDF::CreateLMFromFile(datasetName, fileNameGlobs, defaultColumns))
 {
 }
-#else
-RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
-                       const ColumnNames_t &defaultColumns)
-   : RInterface(ROOT::Detail::RDF::CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns))
-{
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
@@ -1626,7 +1896,7 @@ RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::stri
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultColumns))
 {
@@ -1639,7 +1909,7 @@ RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns)
 /// An empty-source dataframe constructed with a number of entries will
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined columns.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(ULong64_t numEntries)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(numEntries))
 
@@ -1652,7 +1922,7 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 /// \param[in] defaultColumns Collection of default column names to fall back to when none is specified.
 ///
 /// A dataframe associated to a data source will query it to access column values.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultColumns))
 {
@@ -1728,79 +1998,7 @@ namespace Experimental {
 ///~~~
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
-   const nlohmann::ordered_json fullData = nlohmann::ordered_json::parse(std::ifstream(jsonFile));
-   if (!fullData.contains("samples") || fullData["samples"].empty()) {
-      throw std::runtime_error(
-         R"(The input specification does not contain any samples. Please provide the samples in the specification like:
-{
-   "samples": {
-      "sampleA": {
-         "trees": ["tree1", "tree2"],
-         "files": ["file1.root", "file2.root"],
-         "metadata": {"lumi": 1.0, }
-      },
-      "sampleB": {
-         "trees": ["tree3", "tree4"],
-         "files": ["file3.root", "file4.root"],
-         "metadata": {"lumi": 0.5, }
-      },
-      ...
-   },
-})");
-   }
-
-   RDatasetSpec spec;
-   for (const auto &keyValue : fullData["samples"].items()) {
-      const std::string &sampleName = keyValue.key();
-      const auto &sample = keyValue.value();
-      // TODO: if requested in https://github.com/root-project/root/issues/11624
-      // allow union-like types for trees and files, see: https://github.com/nlohmann/json/discussions/3815
-      if (!sample.contains("trees")) {
-         throw std::runtime_error("A list of tree names must be provided for sample " + sampleName + ".");
-      }
-      std::vector<std::string> trees = sample["trees"];
-      if (!sample.contains("files")) {
-         throw std::runtime_error("A list of files must be provided for sample " + sampleName + ".");
-      }
-      std::vector<std::string> files = sample["files"];
-      if (!sample.contains("metadata")) {
-         spec.AddSample(RSample{sampleName, trees, files});
-      } else {
-         RMetaData m;
-         for (const auto &metadata : sample["metadata"].items()) {
-            const auto &val = metadata.value();
-            if (val.is_string())
-               m.Add(metadata.key(), val.get<std::string>());
-            else if (val.is_number_integer())
-               m.Add(metadata.key(), val.get<int>());
-            else if (val.is_number_float())
-               m.Add(metadata.key(), val.get<double>());
-            else
-               throw std::logic_error("The metadata keys can only be of type [string|int|double].");
-         }
-         spec.AddSample(RSample{sampleName, trees, files, m});
-      }
-   }
-   if (fullData.contains("friends")) {
-      for (const auto &friends : fullData["friends"].items()) {
-         std::string alias = friends.key();
-         std::vector<std::string> trees = friends.value()["trees"];
-         std::vector<std::string> files = friends.value()["files"];
-         if (files.size() != trees.size() && trees.size() > 1)
-            throw std::runtime_error("Mismatch between trees and files in a friend.");
-         spec.WithGlobalFriends(trees, files, alias);
-      }
-   }
-
-   if (fullData.contains("range")) {
-      std::vector<int> range = fullData["range"];
-
-      if (range.size() == 1)
-         spec.WithGlobalRange({range[0]});
-      else if (range.size() == 2)
-         spec.WithGlobalRange({range[0], range[1]});
-   }
-   return ROOT::RDataFrame(spec);
+   return ROOT::RDataFrame(ROOT::Internal::RDF::RetrieveSpecFromJson(jsonFile));
 }
 
 } // namespace Experimental
@@ -1825,23 +2023,10 @@ std::string printValue(ROOT::RDataFrame *df)
       throw std::runtime_error("Cannot print information about this RDataFrame, "
                                "it was not properly created. It must be discarded.");
    }
-   auto *tree = lm->GetTree();
    auto defCols = lm->GetDefaultColumnNames();
 
    std::ostringstream ret;
-   if (tree) {
-      ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
-      if (!defCols.empty()) {
-         if (defCols.size() == 1)
-            ret << "\nDefault column: " << defCols[0];
-         else {
-            ret << "\nDefault columns:\n";
-            for (auto &&col : defCols) {
-               ret << " - " << col << "\n";
-            }
-         }
-      }
-   } else if (auto ds = df->fDataSource) {
+   if (auto ds = df->GetDataSource()) {
       ret << "A data frame associated to the data source \"" << cling::printValue(ds) << "\"";
    } else {
       ret << "An empty data frame that will create " << lm->GetNEmptyEntries() << " entries\n";

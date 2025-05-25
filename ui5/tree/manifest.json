@@ -1,5 +1,5 @@
 {
-    "_version": "6.27.01",
+    "_version": "6.33.01",
     "sap.app": {
         "id": "rootui5.tree"
     },
@@ -11,7 +11,7 @@
             "id": "TreeViewer"
         },
         "dependencies": {
-            "minUI5Version": "1.82.0",
+            "minUI5Version": "1.98.0",
             "libs": {
                 "sap.ui.core": {},
                 "sap.ui.layout": {},

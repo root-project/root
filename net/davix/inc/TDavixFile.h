@@ -60,12 +60,9 @@ class TDavixFileInternal;
 struct Davix_fd;
 
 namespace ROOT {
-namespace Experimental {
 class RLogChannel;
-}
-}
-
-ROOT::Experimental::RLogChannel &TDavixLogChannel();
+ROOT::RLogChannel &TDavixLogChannel();
+} // namespace ROOT
 
 class TDavixFile : public TFile {
 private:

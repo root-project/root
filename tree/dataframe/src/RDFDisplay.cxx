@@ -218,8 +218,69 @@ std::string RDisplay::DashesBetweenLines(size_t lastColToPrint, bool allColumnsF
    return DashesStr;
 }
 
-void RDisplay::Print() const
+void RDisplay::Print(const RPrintOptions &options) const
 {
+   auto ret = AsStringInternal(true, options);
+   std::cout << ret;
+}
+
+std::string RDisplay::AsString(const RPrintOptions &options) const
+{
+   return AsStringInternal(false, options);
+}
+
+std::string RDisplay::AsStringInternal(bool considerDots, const RPrintOptions &options) const
+{
+   switch (options.fFormat) {
+   case EPrintFormat::kMarkdown: return AsStringMarkdown(considerDots);
+   case EPrintFormat::kHtml: return AsStringHtml();
+   default: R__ASSERT(false);
+   }
+   return {};
+}
+
+std::string RDisplay::AsStringHtml() const
+{
+   std::stringstream ss;
+
+   ss << "<table style=\"border: 1px solid black; border-collapse: collapse;\">\n";
+   auto nrRows = fTable.size();
+   std::string elemType = "th";
+   int bgColorIdx = 0;
+   for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
+      const auto &row = fTable[rowIndex];
+
+      bool isRowSeparator =
+         std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit);
+
+      // Alternate rows' background color
+      static const char *bgColors[2] = {"#fff", "#eee"};
+      bgColorIdx = (bgColorIdx + isRowSeparator) & 1;
+      std::string bgColor = bgColors[bgColorIdx];
+
+      if (isRowSeparator) {
+         ss << "  <tr style=\"border-top: 1px dotted; background: " + bgColor + "\">\n";
+      } else {
+         ss << "  <tr style=\"background: " + bgColor + "\">\n";
+      }
+
+      for (const auto &element : row) {
+         ss << "    <" + elemType + " style=\"padding: 1px 4px; border-right: 1px solid\">"
+            << element.GetRepresentation() << "</" + elemType + ">\n";
+      }
+      ss << "  </tr>\n";
+
+      elemType = "td";
+   }
+   ss << "</table>";
+
+   return ss.str();
+}
+
+std::string RDisplay::AsStringMarkdown(bool considerDots) const
+{
+   std::stringstream ss;
+
    size_t columnsToPrint = fNColumns;
    const size_t columnsToShorten = GetNColumnsToShorten();
    bool allColumnsFit = true;
@@ -232,35 +293,38 @@ void RDisplay::Print() const
                // Thus, the first column is only the Row column and the actual first column is printed
          columnsToPrint = 2;
       }
-      Info("Print", "Only showing %zu columns out of %zu\n", columnsToPrint, fNColumns);
+      if (considerDots)
+         Info("Print", "Only showing %zu columns out of %zu\n", columnsToPrint, fNColumns);
+
       allColumnsFit = false;
    }
 
    if (fNMaxCollectionElements < 1)
-      Info("Print", "No collections shown since fNMaxCollectionElements is %zu\n", fNMaxCollectionElements);
+      Info("Print", "No collections shown since fNMaxCollectionElements is 0\n");
 
    auto nrRows = fTable.size();
-   std::cout << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the top of the table
+   ss << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the top of the table
    for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
-      auto &row = fTable[rowIndex];
+      const auto &row = fTable[rowIndex];
 
       std::stringstream stringRow;
       bool isRowEmpty = true; // It may happen during compacting that some rows are empty, this happens for example if
                               // collections have different size. Thanks to this flag, these rows are just ignored.
-      if (std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit)){
+      if (std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit)) {
          // Check if the first column (Row) contains a digit to use it as indication for new row/entry
-         std::cout << DashesBetweenLines(columnsToPrint, allColumnsFit);
+         ss << DashesBetweenLines(columnsToPrint, allColumnsFit);
       }
       stringRow << "| ";
       for (size_t columnIndex = 0; columnIndex < columnsToPrint; ++columnIndex) {
          const auto &element = row[columnIndex];
          std::string printedElement = "";
 
-         if (element.IsDot()) {
+         // TODO: add a function option to avoid this behavior
+         if (considerDots && element.IsDot()) {
             printedElement = "...";
-         } else if (element.IsPrint()) {
+         } else if (!considerDots || element.IsPrint()) {
             printedElement = element.GetRepresentation();
-         } else {     // IsIgnore
+         } else { // IsIgnore
             // Do nothing, printedElement remains ""
          }
          if (!printedElement.empty()) {
@@ -272,36 +336,16 @@ void RDisplay::Print() const
                    << " | ";
       }
       if (!isRowEmpty) {
-         if (!allColumnsFit){ // If there are column(s), that do not fit, a single column of dots is displayed
-                              // in the right end of each (non-empty) row.
+         if (!allColumnsFit) { // If there are column(s), that do not fit, a single column of dots is displayed
+                               // in the right end of each (non-empty) row.
             stringRow << "... | ";
          }
-         std::cout << stringRow.str() << std::endl;
+         ss << stringRow.str() << "\n";
       }
    }
-   std::cout << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the bottom of the table
-}
+   ss << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the bottom of the table
 
-std::string RDisplay::AsString() const
-{
-   // This method works as Print() but without any check on collection. It just returns a string with the whole
-   // representation
-   std::stringstream stringRepresentation;
-   auto size = fWidths.size(); // To be used for the number of columns passed to the DashesBetweenLines
-   stringRepresentation << DashesBetweenLines(size, true); // 'true' since no columns are skipped
-   for (auto row : fTable) {
-      if (std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit)){
-         stringRepresentation << DashesBetweenLines(size, true);
-      }
-      stringRepresentation << "| ";
-      for (size_t i = 0; i < row.size(); ++i) {
-         stringRepresentation << std::left << std::setw(fWidths[i]) << std::setfill(fgSeparator)
-                              << row[i].GetRepresentation() << " | ";
-      }
-      stringRepresentation << "\n";
-   }
-   stringRepresentation << DashesBetweenLines(size, true);
-   return stringRepresentation.str();
+   return ss.str();
 }
 
 } // namespace RDF

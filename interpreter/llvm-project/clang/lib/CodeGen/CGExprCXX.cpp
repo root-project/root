@@ -41,7 +41,7 @@ commonEmitCXXMemberOrOperatorCall(CodeGenFunction &CGF, GlobalDecl GD,
 
   assert(CE == nullptr || isa<CXXMemberCallExpr>(CE) ||
          isa<CXXOperatorCallExpr>(CE));
-  assert(MD->isInstance() &&
+  assert(MD->isImplicitObjectMemberFunction() &&
          "Trying to emit a member or operator call expr on a static method!");
 
   // Push the this ptr.
@@ -66,7 +66,12 @@ commonEmitCXXMemberOrOperatorCall(CodeGenFunction &CGF, GlobalDecl GD,
     Args.addFrom(*RtlArgs);
   } else if (CE) {
     // Special case: skip first argument of CXXOperatorCall (it is "this").
-    unsigned ArgsToSkip = isa<CXXOperatorCallExpr>(CE) ? 1 : 0;
+    unsigned ArgsToSkip = 0;
+    if (const auto *Op = dyn_cast<CXXOperatorCallExpr>(CE)) {
+      if (const auto *M = dyn_cast<CXXMethodDecl>(Op->getCalleeDecl()))
+        ArgsToSkip =
+            static_cast<unsigned>(!M->isExplicitObjectMemberFunction());
+    }
     CGF.EmitCallArgs(Args, FPT, drop_begin(CE->arguments(), ArgsToSkip),
                      CE->getDirectCallee());
   } else {
@@ -446,9 +451,9 @@ CodeGenFunction::EmitCXXMemberPointerCallExpr(const CXXMemberCallExpr *E,
   // Emit the 'this' pointer.
   Address This = Address::invalid();
   if (BO->getOpcode() == BO_PtrMemI)
-    This = EmitPointerWithAlignment(BaseExpr);
+    This = EmitPointerWithAlignment(BaseExpr, nullptr, nullptr, KnownNonNull);
   else
-    This = EmitLValue(BaseExpr).getAddress(*this);
+    This = EmitLValue(BaseExpr, KnownNonNull).getAddress(*this);
 
   EmitTypeCheck(TCK_MemberCall, E->getExprLoc(), This.getPointer(),
                 QualType(MPT->getClass(), 0));
@@ -484,7 +489,7 @@ RValue
 CodeGenFunction::EmitCXXOperatorMemberCallExpr(const CXXOperatorCallExpr *E,
                                                const CXXMethodDecl *MD,
                                                ReturnValueSlot ReturnValue) {
-  assert(MD->isInstance() &&
+  assert(MD->isImplicitObjectMemberFunction() &&
          "Trying to emit a member call expr on a static method!");
   return EmitCXXMemberOrOperatorMemberCallExpr(
       E, MD, ReturnValue, /*HasQualifier=*/false, /*Qualifier=*/nullptr,
@@ -502,7 +507,7 @@ static void EmitNullBaseClassInitialization(CodeGenFunction &CGF,
   if (Base->isEmpty())
     return;
 
-  DestPtr = CGF.Builder.CreateElementBitCast(DestPtr, CGF.Int8Ty);
+  DestPtr = DestPtr.withElementType(CGF.Int8Ty);
 
   const ASTRecordLayout &Layout = CGF.getContext().getASTRecordLayout(Base);
   CharUnits NVSize = Layout.getNonVirtualSize();
@@ -555,8 +560,7 @@ static void EmitNullBaseClassInitialization(CodeGenFunction &CGF,
         std::max(Layout.getNonVirtualAlignment(), DestPtr.getAlignment());
     NullVariable->setAlignment(Align.getAsAlign());
 
-    Address SrcPtr =
-        Address(CGF.EmitCastToVoidPtr(NullVariable), CGF.Int8Ty, Align);
+    Address SrcPtr(NullVariable, CGF.Int8Ty, Align);
 
     // Get and call the appropriate llvm.memcpy overload.
     for (std::pair<CharUnits, CharUnits> Store : Stores) {
@@ -596,12 +600,12 @@ CodeGenFunction::EmitCXXConstructExpr(const CXXConstructExpr *E,
   // already zeroed.
   if (E->requiresZeroInitialization() && !Dest.isZeroed()) {
     switch (E->getConstructionKind()) {
-    case CXXConstructExpr::CK_Delegating:
-    case CXXConstructExpr::CK_Complete:
+    case CXXConstructionKind::Delegating:
+    case CXXConstructionKind::Complete:
       EmitNullInitialization(Dest.getAddress(), E->getType());
       break;
-    case CXXConstructExpr::CK_VirtualBase:
-    case CXXConstructExpr::CK_NonVirtualBase:
+    case CXXConstructionKind::VirtualBase:
+    case CXXConstructionKind::NonVirtualBase:
       EmitNullBaseClassInitialization(*this, Dest.getAddress(),
                                       CD->getParent());
       break;
@@ -637,21 +641,21 @@ CodeGenFunction::EmitCXXConstructExpr(const CXXConstructExpr *E,
     bool Delegating = false;
 
     switch (E->getConstructionKind()) {
-     case CXXConstructExpr::CK_Delegating:
+    case CXXConstructionKind::Delegating:
       // We should be emitting a constructor; GlobalDecl will assert this
       Type = CurGD.getCtorType();
       Delegating = true;
       break;
 
-     case CXXConstructExpr::CK_Complete:
+    case CXXConstructionKind::Complete:
       Type = Ctor_Complete;
       break;
 
-     case CXXConstructExpr::CK_VirtualBase:
+    case CXXConstructionKind::VirtualBase:
       ForVirtualBase = true;
       [[fallthrough]];
 
-     case CXXConstructExpr::CK_NonVirtualBase:
+    case CXXConstructionKind::NonVirtualBase:
       Type = Ctor_Base;
      }
 
@@ -768,7 +772,7 @@ static llvm::Value *EmitCXXNewAllocSize(CodeGenFunction &CGF,
     // wider than that, check whether it's already too big, and if so,
     // overflow.
     else if (numElementsWidth > sizeWidth &&
-             numElementsWidth - sizeWidth > count.countLeadingZeros())
+             numElementsWidth - sizeWidth > count.countl_zero())
       hasAnyOverflow = true;
 
     // Okay, compute a count at the right width.
@@ -829,8 +833,8 @@ static llvm::Value *EmitCXXNewAllocSize(CodeGenFunction &CGF,
     // going to have to do a comparison for (2), and this happens to
     // take care of (1), too.
     if (numElementsWidth > sizeWidth) {
-      llvm::APInt threshold(numElementsWidth, 1);
-      threshold <<= sizeWidth;
+      llvm::APInt threshold =
+          llvm::APInt::getOneBitSet(numElementsWidth, sizeWidth);
 
       llvm::Value *thresholdV
         = llvm::ConstantInt::get(numElementsType, threshold);
@@ -1034,11 +1038,25 @@ void CodeGenFunction::EmitNewArrayInitializer(
     return true;
   };
 
+  const InitListExpr *ILE = dyn_cast<InitListExpr>(Init);
+  const CXXParenListInitExpr *CPLIE = nullptr;
+  const StringLiteral *SL = nullptr;
+  const ObjCEncodeExpr *OCEE = nullptr;
+  const Expr *IgnoreParen = nullptr;
+  if (!ILE) {
+    IgnoreParen = Init->IgnoreParenImpCasts();
+    CPLIE = dyn_cast<CXXParenListInitExpr>(IgnoreParen);
+    SL = dyn_cast<StringLiteral>(IgnoreParen);
+    OCEE = dyn_cast<ObjCEncodeExpr>(IgnoreParen);
+  }
+
   // If the initializer is an initializer list, first do the explicit elements.
-  if (const InitListExpr *ILE = dyn_cast<InitListExpr>(Init)) {
+  if (ILE || CPLIE || SL || OCEE) {
     // Initializing from a (braced) string literal is a special case; the init
     // list element does not initialize a (single) array element.
-    if (ILE->isStringLiteralInit()) {
+    if ((ILE && ILE->isStringLiteralInit()) || SL || OCEE) {
+      if (!ILE)
+        Init = IgnoreParen;
       // Initialize the initial portion of length equal to that of the string
       // literal. The allocation must be for at least this much; we emitted a
       // check for that earlier.
@@ -1050,12 +1068,13 @@ void CodeGenFunction::EmitNewArrayInitializer(
                                 AggValueSlot::DoesNotOverlap,
                                 AggValueSlot::IsNotZeroed,
                                 AggValueSlot::IsSanitizerChecked);
-      EmitAggExpr(ILE->getInit(0), Slot);
+      EmitAggExpr(ILE ? ILE->getInit(0) : Init, Slot);
 
       // Move past these elements.
       InitListElements =
-          cast<ConstantArrayType>(ILE->getType()->getAsArrayTypeUnsafe())
-              ->getSize().getZExtValue();
+          cast<ConstantArrayType>(Init->getType()->getAsArrayTypeUnsafe())
+              ->getSize()
+              .getZExtValue();
       CurPtr = Builder.CreateConstInBoundsGEP(
           CurPtr, InitListElements, "string.init.end");
 
@@ -1069,7 +1088,9 @@ void CodeGenFunction::EmitNewArrayInitializer(
       return;
     }
 
-    InitListElements = ILE->getNumInits();
+    ArrayRef<const Expr *> InitExprs =
+        ILE ? ILE->inits() : CPLIE->getInitExprs();
+    InitListElements = InitExprs.size();
 
     // If this is a multi-dimensional array new, we will initialize multiple
     // elements with each init list element.
@@ -1077,7 +1098,7 @@ void CodeGenFunction::EmitNewArrayInitializer(
     if (const ConstantArrayType *CAT = dyn_cast_or_null<ConstantArrayType>(
             AllocType->getAsArrayTypeUnsafe())) {
       ElementTy = ConvertTypeForMem(AllocType);
-      CurPtr = Builder.CreateElementBitCast(CurPtr, ElementTy);
+      CurPtr = CurPtr.withElementType(ElementTy);
       InitListElements *= getContext().getConstantArrayElementCount(CAT);
     }
 
@@ -1097,30 +1118,28 @@ void CodeGenFunction::EmitNewArrayInitializer(
     }
 
     CharUnits StartAlign = CurPtr.getAlignment();
-    for (unsigned i = 0, e = ILE->getNumInits(); i != e; ++i) {
+    unsigned i = 0;
+    for (const Expr *IE : InitExprs) {
       // Tell the cleanup that it needs to destroy up to this
       // element.  TODO: some of these stores can be trivially
       // observed to be unnecessary.
       if (EndOfInit.isValid()) {
-        auto FinishedPtr =
-          Builder.CreateBitCast(CurPtr.getPointer(), BeginPtr.getType());
-        Builder.CreateStore(FinishedPtr, EndOfInit);
+        Builder.CreateStore(CurPtr.getPointer(), EndOfInit);
       }
       // FIXME: If the last initializer is an incomplete initializer list for
       // an array, and we have an array filler, we can fold together the two
       // initialization loops.
-      StoreAnyExprIntoOneUnit(*this, ILE->getInit(i),
-                              ILE->getInit(i)->getType(), CurPtr,
+      StoreAnyExprIntoOneUnit(*this, IE, IE->getType(), CurPtr,
                               AggValueSlot::DoesNotOverlap);
       CurPtr = Address(Builder.CreateInBoundsGEP(
                            CurPtr.getElementType(), CurPtr.getPointer(),
                            Builder.getSize(1), "array.exp.next"),
                        CurPtr.getElementType(),
-                       StartAlign.alignmentAtOffset((i + 1) * ElementSize));
+                       StartAlign.alignmentAtOffset((++i) * ElementSize));
     }
 
     // The remaining elements are filled with the array filler expression.
-    Init = ILE->getArrayFiller();
+    Init = ILE ? ILE->getArrayFiller() : CPLIE->getArrayFiller();
 
     // Extract the initializer for the individual array elements by pulling
     // out the array filler from all the nested initializer lists. This avoids
@@ -1134,7 +1153,7 @@ void CodeGenFunction::EmitNewArrayInitializer(
     }
 
     // Switch back to initializing one base element at a time.
-    CurPtr = Builder.CreateElementBitCast(CurPtr, BeginPtr.getElementType());
+    CurPtr = CurPtr.withElementType(BeginPtr.getElementType());
   }
 
   // If all elements have already been initialized, skip any further
@@ -1559,16 +1578,23 @@ llvm::Value *CodeGenFunction::EmitCXXNewExpr(const CXXNewExpr *E) {
   // 1. Build a call to the allocation function.
   FunctionDecl *allocator = E->getOperatorNew();
 
-  // If there is a brace-initializer, cannot allocate fewer elements than inits.
+  // If there is a brace-initializer or C++20 parenthesized initializer, cannot
+  // allocate fewer elements than inits.
   unsigned minElements = 0;
   if (E->isArray() && E->hasInitializer()) {
-    const InitListExpr *ILE = dyn_cast<InitListExpr>(E->getInitializer());
-    if (ILE && ILE->isStringLiteralInit())
+    const Expr *Init = E->getInitializer();
+    const InitListExpr *ILE = dyn_cast<InitListExpr>(Init);
+    const CXXParenListInitExpr *CPLIE = dyn_cast<CXXParenListInitExpr>(Init);
+    const Expr *IgnoreParen = Init->IgnoreParenImpCasts();
+    if ((ILE && ILE->isStringLiteralInit()) ||
+        isa<StringLiteral>(IgnoreParen) || isa<ObjCEncodeExpr>(IgnoreParen)) {
       minElements =
-          cast<ConstantArrayType>(ILE->getType()->getAsArrayTypeUnsafe())
-              ->getSize().getZExtValue();
-    else if (ILE)
-      minElements = ILE->getNumInits();
+          cast<ConstantArrayType>(Init->getType()->getAsArrayTypeUnsafe())
+              ->getSize()
+              .getZExtValue();
+    } else if (ILE || CPLIE) {
+      minElements = ILE ? ILE->getNumInits() : CPLIE->getInitExprs().size();
+    }
   }
 
   llvm::Value *numElements = nullptr;
@@ -1657,7 +1683,7 @@ llvm::Value *CodeGenFunction::EmitCXXNewExpr(const CXXNewExpr *E) {
     CharUnits allocationAlign = allocAlign;
     if (!E->passAlignment() &&
         allocator->isReplaceableGlobalAllocationFunction()) {
-      unsigned AllocatorAlign = llvm::PowerOf2Floor(std::min<uint64_t>(
+      unsigned AllocatorAlign = llvm::bit_floor(std::min<uint64_t>(
           Target.getNewAlign(), getContext().getTypeSize(allocType)));
       allocationAlign = std::max(
           allocationAlign, getContext().toCharUnitsFromBits(AllocatorAlign));
@@ -1716,7 +1742,7 @@ llvm::Value *CodeGenFunction::EmitCXXNewExpr(const CXXNewExpr *E) {
   }
 
   llvm::Type *elementTy = ConvertTypeForMem(allocType);
-  Address result = Builder.CreateElementBitCast(allocation, elementTy);
+  Address result = allocation.withElementType(elementTy);
 
   // Passing pointer through launder.invariant.group to avoid propagation of
   // vptrs information which may be included in previous type.
@@ -2074,6 +2100,7 @@ void CodeGenFunction::EmitCXXDeleteExpr(const CXXDeleteExpr *E) {
 
   Builder.CreateCondBr(IsNull, DeleteEnd, DeleteNotNull);
   EmitBlock(DeleteNotNull);
+  Ptr.setKnownNonNull();
 
   QualType DeleteTy = E->getDestroyedType();
 
@@ -2106,7 +2133,8 @@ void CodeGenFunction::EmitCXXDeleteExpr(const CXXDeleteExpr *E) {
 
     Ptr = Address(Builder.CreateInBoundsGEP(Ptr.getElementType(),
                                             Ptr.getPointer(), GEP, "del.first"),
-                  ConvertTypeForMem(DeleteTy), Ptr.getAlignment());
+                  ConvertTypeForMem(DeleteTy), Ptr.getAlignment(),
+                  Ptr.isKnownNonNull());
   }
 
   assert(ConvertTypeForMem(DeleteTy) == Ptr.getElementType());
@@ -2193,13 +2221,20 @@ static llvm::Value *EmitTypeidFromVTable(CodeGenFunction &CGF, const Expr *E,
 }
 
 llvm::Value *CodeGenFunction::EmitCXXTypeidExpr(const CXXTypeidExpr *E) {
-  llvm::Type *StdTypeInfoPtrTy =
-    ConvertType(E->getType())->getPointerTo();
+  llvm::Type *PtrTy = llvm::PointerType::getUnqual(getLLVMContext());
+  LangAS GlobAS = CGM.GetGlobalVarAddressSpace(nullptr);
+
+  auto MaybeASCast = [=](auto &&TypeInfo) {
+    if (GlobAS == LangAS::Default)
+      return TypeInfo;
+    return getTargetHooks().performAddrSpaceCast(CGM,TypeInfo, GlobAS,
+                                                 LangAS::Default, PtrTy);
+  };
 
   if (E->isTypeOperand()) {
     llvm::Constant *TypeInfo =
         CGM.GetAddrOfRTTIDescriptor(E->getTypeOperand(getContext()));
-    return Builder.CreateBitCast(TypeInfo, StdTypeInfoPtrTy);
+    return MaybeASCast(TypeInfo);
   }
 
   // C++ [expr.typeid]p2:
@@ -2209,12 +2244,10 @@ llvm::Value *CodeGenFunction::EmitCXXTypeidExpr(const CXXTypeidExpr *E) {
   //   type) to which the glvalue refers.
   // If the operand is already most derived object, no need to look up vtable.
   if (E->isPotentiallyEvaluated() && !E->isMostDerived(getContext()))
-    return EmitTypeidFromVTable(*this, E->getExprOperand(),
-                                StdTypeInfoPtrTy);
+    return EmitTypeidFromVTable(*this, E->getExprOperand(), PtrTy);
 
   QualType OperandTy = E->getExprOperand()->getType();
-  return Builder.CreateBitCast(CGM.GetAddrOfRTTIDescriptor(OperandTy),
-                               StdTypeInfoPtrTy);
+  return MaybeASCast(CGM.GetAddrOfRTTIDescriptor(OperandTy));
 }
 
 static llvm::Value *EmitDynamicCastToNull(CodeGenFunction &CGF,
@@ -2228,8 +2261,8 @@ static llvm::Value *EmitDynamicCastToNull(CodeGenFunction &CGF,
   if (!CGF.CGM.getCXXABI().EmitBadCastCall(CGF))
     return nullptr;
 
-  CGF.EmitBlock(CGF.createBasicBlock("dynamic_cast.end"));
-  return llvm::UndefValue::get(DestLTy);
+  CGF.Builder.ClearInsertionPoint();
+  return llvm::PoisonValue::get(DestLTy);
 }
 
 llvm::Value *CodeGenFunction::EmitDynamicCast(Address ThisAddr,
@@ -2242,17 +2275,16 @@ llvm::Value *CodeGenFunction::EmitDynamicCast(Address ThisAddr,
   // C++ [expr.dynamic.cast]p7:
   //   If T is "pointer to cv void," then the result is a pointer to the most
   //   derived object pointed to by v.
-  const PointerType *DestPTy = DestTy->getAs<PointerType>();
-
-  bool isDynamicCastToVoid;
+  bool IsDynamicCastToVoid = DestTy->isVoidPointerType();
   QualType SrcRecordTy;
   QualType DestRecordTy;
-  if (DestPTy) {
-    isDynamicCastToVoid = DestPTy->getPointeeType()->isVoidType();
+  if (IsDynamicCastToVoid) {
+    SrcRecordTy = SrcTy->getPointeeType();
+    // No DestRecordTy.
+  } else if (const PointerType *DestPTy = DestTy->getAs<PointerType>()) {
     SrcRecordTy = SrcTy->castAs<PointerType>()->getPointeeType();
     DestRecordTy = DestPTy->getPointeeType();
   } else {
-    isDynamicCastToVoid = false;
     SrcRecordTy = SrcTy;
     DestRecordTy = DestTy->castAs<ReferenceType>()->getPointeeType();
   }
@@ -2265,18 +2297,30 @@ llvm::Value *CodeGenFunction::EmitDynamicCast(Address ThisAddr,
   EmitTypeCheck(TCK_DynamicOperation, DCE->getExprLoc(), ThisAddr.getPointer(),
                 SrcRecordTy);
 
-  if (DCE->isAlwaysNull())
-    if (llvm::Value *T = EmitDynamicCastToNull(*this, DestTy))
+  if (DCE->isAlwaysNull()) {
+    if (llvm::Value *T = EmitDynamicCastToNull(*this, DestTy)) {
+      // Expression emission is expected to retain a valid insertion point.
+      if (!Builder.GetInsertBlock())
+        EmitBlock(createBasicBlock("dynamic_cast.unreachable"));
       return T;
+    }
+  }
 
   assert(SrcRecordTy->isRecordType() && "source type must be a record type!");
+
+  // If the destination is effectively final, the cast succeeds if and only
+  // if the dynamic type of the pointer is exactly the destination type.
+  bool IsExact = !IsDynamicCastToVoid &&
+                 CGM.getCodeGenOpts().OptimizationLevel > 0 &&
+                 DestRecordTy->getAsCXXRecordDecl()->isEffectivelyFinal() &&
+                 CGM.getCXXABI().shouldEmitExactDynamicCast(DestRecordTy);
 
   // C++ [expr.dynamic.cast]p4:
   //   If the value of v is a null pointer value in the pointer case, the result
   //   is the null pointer value of type T.
   bool ShouldNullCheckSrcValue =
-      CGM.getCXXABI().shouldDynamicCastCallBeNullChecked(SrcTy->isPointerType(),
-                                                         SrcRecordTy);
+      IsExact || CGM.getCXXABI().shouldDynamicCastCallBeNullChecked(
+                     SrcTy->isPointerType(), SrcRecordTy);
 
   llvm::BasicBlock *CastNull = nullptr;
   llvm::BasicBlock *CastNotNull = nullptr;
@@ -2292,30 +2336,38 @@ llvm::Value *CodeGenFunction::EmitDynamicCast(Address ThisAddr,
   }
 
   llvm::Value *Value;
-  if (isDynamicCastToVoid) {
-    Value = CGM.getCXXABI().EmitDynamicCastToVoid(*this, ThisAddr, SrcRecordTy,
-                                                  DestTy);
+  if (IsDynamicCastToVoid) {
+    Value = CGM.getCXXABI().emitDynamicCastToVoid(*this, ThisAddr, SrcRecordTy);
+  } else if (IsExact) {
+    // If the destination type is effectively final, this pointer points to the
+    // right type if and only if its vptr has the right value.
+    Value = CGM.getCXXABI().emitExactDynamicCast(
+        *this, ThisAddr, SrcRecordTy, DestTy, DestRecordTy, CastEnd, CastNull);
   } else {
     assert(DestRecordTy->isRecordType() &&
            "destination type must be a record type!");
-    Value = CGM.getCXXABI().EmitDynamicCastCall(*this, ThisAddr, SrcRecordTy,
+    Value = CGM.getCXXABI().emitDynamicCastCall(*this, ThisAddr, SrcRecordTy,
                                                 DestTy, DestRecordTy, CastEnd);
-    CastNotNull = Builder.GetInsertBlock();
   }
+  CastNotNull = Builder.GetInsertBlock();
 
+  llvm::Value *NullValue = nullptr;
   if (ShouldNullCheckSrcValue) {
     EmitBranch(CastEnd);
 
     EmitBlock(CastNull);
+    NullValue = EmitDynamicCastToNull(*this, DestTy);
+    CastNull = Builder.GetInsertBlock();
+
     EmitBranch(CastEnd);
   }
 
   EmitBlock(CastEnd);
 
-  if (ShouldNullCheckSrcValue) {
+  if (CastNull) {
     llvm::PHINode *PHI = Builder.CreatePHI(Value->getType(), 2);
     PHI->addIncoming(Value, CastNotNull);
-    PHI->addIncoming(llvm::Constant::getNullValue(Value->getType()), CastNull);
+    PHI->addIncoming(NullValue, CastNull);
 
     Value = PHI;
   }

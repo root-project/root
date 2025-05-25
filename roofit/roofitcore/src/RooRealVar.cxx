@@ -48,7 +48,6 @@ or integrals to sub ranges. The range without any name is used as default range.
 
 using std::endl, std::ostream, std::istream;
 
-ClassImp(RooRealVar);
 
 
 bool RooRealVar::_printScientific(false) ;
@@ -81,22 +80,6 @@ void RooRealVar::cleanup()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooRealVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   if(!isConstant()) {
-      ctx.addResult(this, GetName());
-   }
-   // Just return a formatted version of the const value.
-   // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
-   std::stringstream ss;
-   ss.precision(max_precision);
-   // Just use toString to make sure we do not output 'inf'.
-   // This is really ugly for large numbers...
-   ss << std::fixed << RooNumber::toString(_value);
-   ctx.addResult(this, ss.str());
-}
 
 /// Return a dummy object to use when properties are not initialised.
 RooRealVarSharedProperties& RooRealVar::_nullProp()
@@ -350,7 +333,7 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, bool verbose, bool creat
   auto binning = new RooRangeBinning(getMin(),getMax(),name) ;
   if (verbose) {
     coutI(Eval) << "RooRealVar::getBinning(" << GetName() << ") new range named '"
-      << name << "' created with default bounds" << endl ;
+      << name << "' created with default bounds" << std::endl ;
   }
   sharedProp()->_altBinning[name] = binning;
 
@@ -454,7 +437,7 @@ void RooRealVar::setMin(const char* name, double value)
   // Check if new limit is consistent
   if (value >= getMax()) {
     coutW(InputArguments) << "RooRealVar::setMin(" << GetName()
-           << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
+           << "): Proposed new fit min. larger than max., setting min. to max." << std::endl ;
     binning.setMin(getMax()) ;
   } else {
     binning.setMin(value) ;
@@ -484,7 +467,7 @@ void RooRealVar::setMax(const char* name, double value)
   // Check if new limit is consistent
   if (value < getMin()) {
     coutW(InputArguments) << "RooRealVar::setMax(" << GetName()
-           << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+           << "): Proposed new fit max. smaller than min., setting max. to min." << std::endl ;
     binning.setMax(getMin()) ;
   } else {
     binning.setMax(value) ;
@@ -521,7 +504,7 @@ void RooRealVar::setRange(const char* name, double min, double max)
   // Check if new limit is consistent
   if (min>max) {
     coutW(InputArguments) << "RooRealVar::setRange(" << GetName()
-           << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+           << "): Proposed new fit max. smaller than min., setting max. to min." << std::endl ;
     binning.setRange(min,min) ;
   } else {
     binning.setRange(min,max) ;
@@ -530,7 +513,7 @@ void RooRealVar::setRange(const char* name, double min, double max)
   if (!exists) {
     coutI(Eval) << "RooRealVar::setRange(" << GetName()
       << ") new range named '" << name << "' created with bounds ["
-      << min << "," << max << "]" << endl ;
+      << min << "," << max << "]" << std::endl ;
   }
 
   setShapeDirty() ;
@@ -637,7 +620,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
        parser.expectToken(")",true)) break ;
 //    setPlotRange(plotMin,plotMax) ;
    coutW(Eval) << "RooRealVar::readFromStream(" << GetName()
-        << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
+        << ") WARNING: plot range deprecated, removed P(...) token" << std::endl ;
 
       } else if (!token.CompareTo("F")) {
 
@@ -655,7 +638,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
    //setBins(fitBins) ;
    //setRange(fitMin,fitMax) ;
    coutW(Eval) << "RooRealVar::readFromStream(" << GetName()
-        << ") WARNING: F(lo-hi:bins) token deprecated, use L(lo-hi) B(bins)" << endl ;
+        << ") WARNING: F(lo-hi:bins) token deprecated, use L(lo-hi) B(bins)" << std::endl ;
    if (!haveConstant) setConstant(false) ;
 
       } else if (!token.CompareTo("L")) {
@@ -722,7 +705,7 @@ void RooRealVar::writeToStream(ostream& os, bool compact) const
 
       os << " " ;
     } else {
-      os << std::unique_ptr<TString>{format(_printSigDigits,"EFA")}->Data() << " " ;
+      os << format(_printSigDigits,"EFA") << " " ;
     }
 
     // Append limits if not constants
@@ -808,7 +791,7 @@ void RooRealVar::printExtras(ostream& os) const
   if (!_unit.IsNull())
     os << "// [" << getUnit() << "]" ;
 
-//   cout << " _value = " << &_value << " _error = " << &_error ;
+//   std::cout << " _value = " << &_value << " _error = " << &_error ;
 
 
 }
@@ -832,10 +815,10 @@ Int_t RooRealVar::defaultPrintContents(Option_t* opt) const
 void RooRealVar::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooAbsRealLValue::printMultiline(os,contents,verbose,indent);
-  os << indent << "--- RooRealVar ---" << endl;
+  os << indent << "--- RooRealVar ---" << std::endl;
   TString unit(_unit);
   if(!unit.IsNull()) unit.Prepend(' ');
-  os << indent << "  Error = " << getError() << unit << endl;
+  os << indent << "  Error = " << getError() << unit << std::endl;
 }
 
 
@@ -846,7 +829,7 @@ void RooRealVar::printMultiline(ostream& os, Int_t contents, bool verbose, TStri
 /// taken by paramOn() and translates them to an option string
 /// parsed by RooRealVar::format(Int_t sigDigits, const char *options)
 
-TString* RooRealVar::format(const RooCmdArg& formatArg) const
+std::string RooRealVar::format(const RooCmdArg& formatArg) const
 {
   RooCmdArg tmp(formatArg) ;
   tmp.setProcessRecArgs(true) ;
@@ -865,7 +848,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
   // Process & check varargs
   pc.process(tmp) ;
   if (!pc.ok(true)) {
-    return nullptr ;
+    return "";
   }
 
   // Extract values from named arguments
@@ -916,7 +899,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
 /// F = force fixed precision
 ///
 
-TString *RooRealVar::format(Int_t sigDigits, const char *options) const
+std::string RooRealVar::format(Int_t sigDigits, const char *options) const
 {
   // parse the options string
   TString opts(options);
@@ -960,89 +943,83 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
   if (_value<0) whereVal -= 1 ;
   snprintf(fmtVal,16,"%%.%df", whereVal < 0 ? -whereVal : 0);
   snprintf(fmtErr,16,"%%.%df", whereErr < 0 ? -whereErr : 0);
-  TString *text= new TString();
-  if(latexMode) text->Append("$");
+  std::string text;
+  if(latexMode) text += "$";
   // begin the string with "<name> = " if requested
   if(showName || showTitle) {
     if (latexTableMode && latexVerbatimName) {
-      text->Append("\\verb+") ;
+      text += "\\verb+";
     }
-    text->Append(label);
-    if (latexVerbatimName) text->Append("+") ;
+    text += label;
+    if (latexVerbatimName) text += "+";
 
     if (!latexTableMode) {
-      text->Append(" = ");
+      text += " = ";
     } else {
-      text->Append(" $ & $ ");
+      text += " $ & $ ";
     }
   }
 
   // Add leading space if value is positive
-  if (_value>=0) text->Append(" ") ;
+  if (_value>=0) text += " ";
 
   // append our value if requested
   char buffer[256];
   if(!hideValue) {
     chopAt(_value, whereVal);
     snprintf(buffer, 256,fmtVal, _value);
-    text->Append(buffer);
+    text += buffer;
   }
 
   // append our error if requested and this variable is not constant
   if(hasError(false) && showError && !(asymError && hasAsymError(false))) {
     if(tlatexMode) {
-      text->Append(" #pm ");
-    }
-    else if(latexMode) {
-      text->Append("\\pm ");
+      text += " #pm ";
     }
     else {
-      text->Append(" +/- ");
+      text += latexMode ? "\\pm " : " +/- ";
     }
     snprintf(buffer, 256,fmtErr, getError());
-    text->Append(buffer);
+    text += buffer;
   }
 
   if (asymError && hasAsymError() && showError) {
     if(tlatexMode) {
-      text->Append(" #pm ");
-      text->Append("_{") ;
+      text += " #pm _{";
       snprintf(buffer, 256,fmtErr, getAsymErrorLo());
-      text->Append(buffer);
-      text->Append("}^{+") ;
+      text += buffer;
+      text += "}^{+";
       snprintf(buffer, 256,fmtErr, getAsymErrorHi());
-      text->Append(buffer);
-      text->Append("}") ;
+      text += buffer;
+      text += "}";
     }
     else if(latexMode) {
-      text->Append("\\pm ");
-      text->Append("_{") ;
+      text += "\\pm _{";
       snprintf(buffer, 256,fmtErr, getAsymErrorLo());
-      text->Append(buffer);
-      text->Append("}^{+") ;
+      text += buffer;
+      text += "}^{+";
       snprintf(buffer, 256,fmtErr, getAsymErrorHi());
-      text->Append(buffer);
-      text->Append("}") ;
+      text += buffer;
+      text += "}";
     }
     else {
-      text->Append(" +/- ");
-      text->Append(" (") ;
+      text += " +/-  (";
       snprintf(buffer, 256, fmtErr, getAsymErrorLo());
-      text->Append(buffer);
-      text->Append(", ") ;
+      text += buffer;
+      text += ", ";
       snprintf(buffer, 256, fmtErr, getAsymErrorHi());
-      text->Append(buffer);
-      text->Append(")") ;
+      text += buffer;
+      text += ")";
     }
 
   }
 
   // append our units if requested
   if(!_unit.IsNull() && showUnit) {
-    text->Append(' ');
-    text->Append(_unit);
+    text += ' ';
+    text += _unit;
   }
-  if(latexMode) text->Append("$");
+  if(latexMode) text += "$";
   return text;
 }
 
@@ -1103,8 +1080,8 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
 {
   // Follow usual procedure for value
   RooAbsReal::attachToTree(t,bufSize) ;
-//   cout << "RooRealVar::attachToTree(" << this << ") name = " << GetName()
-//        << " StoreError = " << (getAttribute("StoreError")?"T":"F") << endl ;
+//   std::cout << "RooRealVar::attachToTree(" << this << ") name = " << GetName()
+//        << " StoreError = " << (getAttribute("StoreError")?"T":"F") << std::endl ;
 
   // Attach/create additional branch for error
   if (getAttribute("StoreError")) {
@@ -1158,7 +1135,7 @@ void RooRealVar::fillTreeBranch(TTree& t)
   TString cleanName(cleanBranchName()) ;
   TBranch* valBranch = t.GetBranch(cleanName) ;
   if (!valBranch) {
-    coutE(Eval) << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    coutE(Eval) << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << std::endl ;
     assert(0) ;
   }
   valBranch->Fill() ;
@@ -1225,7 +1202,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
     RooAbsRealLValue::Streamer(R__b);
     if (R__v==1) {
-      coutI(Eval) << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << endl ;
+      coutI(Eval) << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << std::endl ;
       double fitMin;
       double fitMax;
       Int_t fitBins ;

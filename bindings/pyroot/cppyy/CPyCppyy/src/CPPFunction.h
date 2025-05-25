@@ -12,6 +12,10 @@ class CPPFunction : public CPPMethod {
 public:
     using CPPMethod::CPPMethod;
 
+public:
+    virtual PyObject* GetTypeName();
+
+public:
     virtual PyCallable* Clone() { return new CPPFunction(*this); }
     virtual PyObject* Call(CPPInstance*& self,
         CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);

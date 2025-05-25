@@ -1509,6 +1509,7 @@ Bool_t TRootSniffer::CallProduceImage(const std::string &/*kind*/, const std::st
 /// * "exe.txt"   - method execution with debug output
 /// * "cmd.json"  - execution of registered commands
 ///
+/// @param options specific options 
 /// @param res returns result - binary or text.
 
 Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res)
@@ -1629,6 +1630,7 @@ TFolder *TRootSniffer::GetSubFolder(const char *subfolder, Bool_t force)
 ////////////////////////////////////////////////////////////////////////////////
 /// Register object in subfolder structure
 ///
+/// @param obj pointer to TObject
 /// @param subfolder can have many levels like:
 ///
 ///     TRootSniffer* sniff = new TRootSniffer("sniff");

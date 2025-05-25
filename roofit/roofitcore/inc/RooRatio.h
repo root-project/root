@@ -31,12 +31,13 @@ public:
    TObject *clone(const char *newname) const override { return new RooRatio(*this, newname); }
    ~RooRatio() override;
 
+   RooAbsReal const &numerator() const { return *_numerator; }
+   RooAbsReal const &denominator() const { return *_denominator; }
+
 protected:
    double evaluate() const override;
    void doEval(RooFit::EvalContext &) const override;
    inline bool canComputeBatchWithCuda() const override { return true; }
-
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
    RooRealProxy _numerator;
    RooRealProxy _denominator;

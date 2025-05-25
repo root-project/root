@@ -19,7 +19,6 @@ namespace Minuit2 {
 class MnFcn;
 class MnUserTransformation;
 class MnMachinePrecision;
-class MnStrategy;
 
 /**
    Class to calculate an initial estimate of the gradient
@@ -27,10 +26,7 @@ class MnStrategy;
 class InitialGradientCalculator : public GradientCalculator {
 
 public:
-   InitialGradientCalculator(const MnFcn &fcn, const MnUserTransformation &par, const MnStrategy &stra)
-      : fFcn(fcn), fTransformation(par), fStrategy(stra){};
-
-   ~InitialGradientCalculator() override {}
+   InitialGradientCalculator(const MnFcn &fcn, const MnUserTransformation &par) : fFcn(fcn), fTransformation(par) {}
 
    FunctionGradient operator()(const MinimumParameters &) const override;
 
@@ -39,16 +35,10 @@ public:
    const MnFcn &Fcn() const { return fFcn; }
    const MnUserTransformation &Trafo() const { return fTransformation; }
    const MnMachinePrecision &Precision() const;
-   const MnStrategy &Strategy() const { return fStrategy; }
-
-   unsigned int Ncycle() const;
-   double StepTolerance() const;
-   double GradTolerance() const;
 
 private:
    const MnFcn &fFcn;
    const MnUserTransformation &fTransformation;
-   const MnStrategy &fStrategy;
 };
 
 } // namespace Minuit2

@@ -71,7 +71,7 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &
       gr2(i) = g2;
       gst(i) = gstep;
 
-      print.Debug("Computed initial gradient for parameter", Trafo().Name(exOfIn), "value", var, "[", vmin, ",", vplu,
+      print.Trace("Computed initial gradient for parameter", Trafo().Name(exOfIn), "value", var, "[", vmin, ",", vplu,
                   "]", "dirin", dirin, "grd", grd, "g2", g2);
    }
 
@@ -88,24 +88,6 @@ const MnMachinePrecision &InitialGradientCalculator::Precision() const
 {
    // return precision (is set in transformation class)
    return fTransformation.Precision();
-}
-
-unsigned int InitialGradientCalculator::Ncycle() const
-{
-   // return ncyles (from Strategy)
-   return Strategy().GradientNCycles();
-}
-
-double InitialGradientCalculator::StepTolerance() const
-{
-   // return Gradient step tolerance (from Strategy)
-   return Strategy().GradientStepTolerance();
-}
-
-double InitialGradientCalculator::GradTolerance() const
-{
-   // return Gradient tolerance
-   return Strategy().GradientTolerance();
 }
 
 } // namespace Minuit2

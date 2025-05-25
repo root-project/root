@@ -1,10 +1,13 @@
-name: clang-tools code analysis
+name: code analysis
 
 on: pull_request
   # push:
   #   branches: [ $default-branch ]
   # pull_request:
   #   branches: [ $default-branch ]
+
+permissions:
+  contents: read
 
 jobs:
   clang-format:
@@ -21,9 +24,75 @@ jobs:
       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
     steps:
     - uses: actions/checkout@v4
-    - name: Fetch base_ref HEAD
-      run: git fetch --depth=1 origin +refs/heads/${{github.base_ref}}:refs/remotes/origin/${{github.base_ref}}
+    - name: Fetch base sha
+      run: git fetch --depth=1 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
     - name: install clang-format
       run: sudo apt-get install -y clang-format
     - name: run clang-format script
       run: .ci/format_script.sh
+
+  ruff:
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get the list of changed files
+      id: diff
+      run: |
+        git fetch --depth=1 origin $GITHUB_BASE_REF 
+        git diff --name-only origin/$GITHUB_BASE_REF > changed_files.txt
+
+    - name: Install ruff
+      uses: astral-sh/ruff-action@v3
+      with:
+        args: "--version"
+
+    - name: Lint code
+      run: |
+        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        if [ -n "$files" ]; then
+          echo "$files" | xargs ruff check --diff || true
+          echo "$files" | xargs ruff check
+        else
+          echo "No python files to lint"
+        fi
+
+    - name: Format code
+      if: always()
+      run: |
+        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        if [ -n "$files" ]; then
+          diff_command=""
+          apply_command=""
+          for file in $files; do
+            while IFS=- read -r start length; do
+              [ -z "$start" ] && continue
+              length=${length:-1}
+              # Skip invalid ranges
+              if [ "$start" -eq 0 ] || [ "$length" -eq 0 ]; then
+                continue
+              fi
+              end=$((start + length))
+              diff_command+="ruff format --diff --range $start-$end $file && "
+              apply_command+="ruff format --range $start-$end $file && "
+            done < <(git diff --unified=0 origin/$GITHUB_BASE_REF "$file" | grep '^@@' | sed -E 's/^@@ -[0-9]+(,[0-9]+)? \+([0-9]+)(,([0-9]+))? @@.*/\2-\4/')
+          done
+
+          if [ -n "$diff_command" ]; then
+            diff_command=${diff_command% && }
+            if ! eval "$diff_command"; then
+              apply_command=${apply_command% && }
+              echo -e "::error::Formatting failed. To apply the changes locally, run the following command:\n$apply_command"
+              exit 123
+            fi
+          else
+            echo "No ranges detected to format."
+          fi
+        else
+          echo "No python files to format"
+        fi

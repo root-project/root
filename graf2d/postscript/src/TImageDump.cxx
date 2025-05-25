@@ -247,7 +247,7 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    frame[0].fX = pxl;                 frame[0].fY = pyl;
    frame[1].fX = pxl + bordersize;    frame[1].fY = pyl - bordersize;
    frame[2].fX = pxl + bordersize;    frame[2].fY = pyt + bordersize;
-   frame[3].fX = pxt - bordersize;    frame[3].fY = pyt + bordersize;;
+   frame[3].fX = pxt - bordersize;    frame[3].fY = pyt + bordersize;
    frame[4].fX = pxt;                 frame[4].fY = pyt;
    frame[5].fX = pxl;                 frame[5].fY = pyt;
 

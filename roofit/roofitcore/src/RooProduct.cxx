@@ -34,7 +34,6 @@ Represents the product of a given set of RooAbsReal objects.
 #include <cmath>
 #include <memory>
 
-ClassImp(RooProduct);
 
 class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;
 
@@ -486,13 +485,6 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
       }
     }
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::product", _compRSet, _compRSet.size()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

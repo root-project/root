@@ -51,8 +51,6 @@ public:
   virtual TObject* clone() const { return new RooFitResult(*this); }
   ~RooFitResult() override ;
 
-  static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
-
   static RooFitResult *prefitResult(const RooArgList &paramList);
 
   // Printing interface (human readable)
@@ -173,7 +171,6 @@ public:
 
 protected:
 
-  void fillCorrMatrix() ;
   void fillLegacyCorrMatrix() const ;
   void fillPrefitCorrMatrix();
   double correlation(Int_t row, Int_t col) const;

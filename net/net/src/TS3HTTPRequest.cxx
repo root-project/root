@@ -160,8 +160,13 @@ TS3HTTPRequest& TS3HTTPRequest::SetTimeStamp()
    time_t now = time(NULL);
    char result[128];
    struct tm dateFormat;
+#ifdef R__WIN32
+   gmtime_s(&dateFormat, &now);
+   strftime(result, sizeof(result), "%a, %d %b %Y %H:%M:%S GMT", &dateFormat);
+#else
    strftime(result, sizeof(result), "%a, %d %b %Y %H:%M:%S GMT",
       gmtime_r(&now, &dateFormat));
+#endif
    fTimeStamp = result;
    return *this;
 }

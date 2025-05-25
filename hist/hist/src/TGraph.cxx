@@ -40,6 +40,8 @@
 #include <fstream>
 #include <cstring>
 #include <numeric>
+#include <limits>
+#include <iomanip>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
@@ -105,7 +107,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph default constructor.
 
-TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(0, 1000), TAttMarker()
+TGraph::TGraph() : TAttFill(0, 1000)
 {
    fNpoints = -1;  //will be reset to 0 in CtorAllocate
    if (!CtorAllocate()) return;
@@ -116,7 +118,7 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(0, 1000), TAttMarker()
 /// the arrays x and y will be set later
 
 TGraph::TGraph(Int_t n)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    fNpoints = n;
    if (!CtorAllocate()) return;
@@ -127,7 +129,7 @@ TGraph::TGraph(Int_t n)
 /// Graph normal constructor with ints.
 
 TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -145,7 +147,7 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
 /// Graph normal constructor with floats.
 
 TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -164,7 +166,7 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 /// values `start`, `start+step`, `start+2*step`, `start+3*step`, etc ...
 
 TGraph::TGraph(Int_t n, const Double_t *y, Double_t start, Double_t step)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!y) {
       fNpoints = 0;
@@ -182,7 +184,7 @@ TGraph::TGraph(Int_t n, const Double_t *y, Double_t start, Double_t step)
 /// Graph normal constructor with doubles.
 
 TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!x || !y) {
       fNpoints = 0;
@@ -295,7 +297,7 @@ TGraph& TGraph::operator=(const TGraph &gr)
 /// in vx and vy.
 
 TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
@@ -314,7 +316,7 @@ TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
 /// in vx and vy.
 
 TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
@@ -330,7 +332,7 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 /// Graph constructor importing its parameters from the TH1 object passed as argument
 
 TGraph::TGraph(const TH1 *h)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    if (!h) {
       Error("TGraph", "Pointer to histogram is null");
@@ -372,7 +374,7 @@ TGraph::TGraph(const TH1 *h)
 ///                at the fNpx+1 points of f and the integral is normalized to 1.
 
 TGraph::TGraph(const TF1 *f, Option_t *option)
-   : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", "Graph"), TAttFill(0, 1000)
 {
    char coption = ' ';
    if (!f) {
@@ -437,7 +439,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// Note in that case, the instantiation is about two times slower.
 
 TGraph::TGraph(const char *filename, const char *format, Option_t *option)
-   : TNamed("Graph", filename), TAttLine(), TAttFill(0, 1000), TAttMarker()
+   : TNamed("Graph", filename), TAttFill(0, 1000)
 {
    Double_t x, y;
    TString fname = filename;
@@ -610,6 +612,23 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    }
    fMaxSize = arraySize;
    return newarrays;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Performs the operation: `y = y + c1*f(x,y)`
+/// Errors are not recalculated.
+///
+/// \param f may be a 1-D function TF1 or 2-d function TF2
+/// \param c1 a scaling factor, 1 by default
+
+void TGraph::Add(TF1 *f, Double_t c1)
+{
+   if (fHistogram) SetBit(kResetHisto);
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fY[i] += c1*f->Eval(fX[i], fY[i]);
+   }
+   if (gPad) gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1398,8 +1417,7 @@ Double_t TGraph::GetErrorYlow(Int_t) const
 
 TF1 *TGraph::GetFunction(const char *name) const
 {
-   if (!fFunctions) return nullptr;
-   return (TF1*)fFunctions->FindObject(name);
+   return dynamic_cast<TF1*>(FindObject(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2127,64 +2145,27 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
 
 void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << "   " << std::endl;
-   static Int_t frameNumber = 0;
-   frameNumber++;
-
-   TString fXName, fYName;
-
+   TString args;
    if (fNpoints >= 1) {
-      fXName = SaveArray(out, "fx", frameNumber, fX);
-      fYName = SaveArray(out, "fy", frameNumber, fY);
+      TString xname = SavePrimitiveVector(out, "graph_x", fNpoints, fX, kTRUE);
+      TString yname = SavePrimitiveVector(out, "graph_y", fNpoints, fY);
+      args.Form("%d, %s.data(), %s.data()", fNpoints, xname.Data(), yname.Data());
    }
 
-   if (gROOT->ClassSaved(TGraph::Class()))
-      out << "   ";
-   else
-      out << "   TGraph *";
+   SavePrimitiveConstructor(out, Class(), "graph", args, fNpoints < 1);
 
-   if (fNpoints >= 1)
-      out << "graph = new TGraph(" << fNpoints << "," << fXName << "," << fYName << ");" << std::endl;
-   else
-      out << "graph = new TGraph();" << std::endl;
-
-   SaveHistogramAndFunctions(out, "graph", frameNumber, option);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Save array as C++ code
-/// Returns name of created array
-
-TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr)
-{
-   TString name = gInterpreter->MapCppName(GetName());
-   if (name.IsNull())
-      name = "Graph";
-   TString arrname = TString::Format("%s_%s%d", name.Data(), suffix, frameNumber);
-
-   out << "   Double_t " << arrname << "[" << fNpoints << "] = { ";
-   for (Int_t i = 0; i < fNpoints-1; i++) {
-      out << arr[i] << ",";
-      if (i && (i % 16 == 0))
-         out << std::endl << "   ";
-      else
-         out << " ";
-   }
-   out << arr[fNpoints-1] << " };" << std::endl;
-
-   return arrname;
+   SaveHistogramAndFunctions(out, "graph", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save histogram and list of functions of TGraph as C++ statement
 /// Used in all TGraph-derived classes
 
-void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option)
+void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Option_t *option)
 {
-   char quote = '"';
+   thread_local Int_t frameNumber = 0;
 
-   out << "   "<<varname<<"->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   "<<varname<<"->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+   SavePrimitiveNameTitle(out, varname);
 
    SaveFillAttributes(out, varname, 0, 1001);
    SaveLineAttributes(out, varname, 1, 1, 1);
@@ -2192,45 +2173,30 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber).Data());
+      fHistogram->SetName(TString::Format("Graph_histogram%d", ++frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   " <<varname << "->SetHistogram(" << gInterpreter->MapCppName(fHistogram->GetName()) << ");"
-          << std::endl;
-      out << "   " << std::endl;
+      out << "   " <<varname << "->SetHistogram(" << fHistogram->GetName() << ");\n";
+      out << "   \n";
       fHistogram->SetName(hname.Data());
    }
 
-   // save list of functions
-   TIter next(fFunctions);
-   while (auto obj = next()) {
-      obj->SavePrimitive(out, TString::Format("nodraw #%d\n", ++frameNumber).Data());
-      if (obj->InheritsFrom("TPaveStats")) {
-         out << "   "<<varname<<"->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent("<<varname<<"->GetListOfFunctions());" << std::endl;
-      } else {
-         auto objname = TString::Format("%s%d",obj->GetName(), frameNumber);
-         if (obj->InheritsFrom("TF1")) {
-            out << "   " << objname << "->SetParent("<<varname<<");\n";
-         }
-         out << "   "<<varname<<"->GetListOfFunctions()->Add(" << objname << ");" << std::endl;
-      }
-   }
+   TH1::SavePrimitiveFunctions(out, varname, fFunctions);
 
-   const char *soption = option ? option : "";
-   const char *l = strstr(soption, "multigraph");
+   if (!option)
+      option = "";
+   const char *l = strstr(option, "multigraph");
    if (l) {
-      out << "   multigraph->Add("<<varname<<"," << quote << l + 10 << quote << ");" << std::endl;
+      out << "   multigraph->Add(" << varname << ",\"" << l + 10 << "\");\n";
       return;
    }
-   l = strstr(soption, "th2poly");
+   l = strstr(option, "th2poly");
    if (l) {
-      out << "   " << l + 7 << "->AddBin("<<varname<<");" << std::endl;
+      out << "   " << l + 7 << "->AddBin(" << varname << ");\n";
       return;
    }
-   out << "   "<<varname<<"->Draw(" << quote << soption << quote << ");" << std::endl;
 
+   SavePrimitiveDraw(out, varname, option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply the values of a TGraph by a constant c1.

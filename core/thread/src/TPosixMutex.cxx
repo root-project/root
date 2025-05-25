@@ -51,7 +51,7 @@ TPosixMutex::TPosixMutex(Bool_t recursive) : TMutexImp()
 
    } else {
 
-      int rc = pthread_mutex_init(&fMutex, 0);
+      int rc = pthread_mutex_init(&fMutex, nullptr);
       if (rc)
          SysError("TPosixMutex", "pthread_mutex_init error");
 

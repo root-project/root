@@ -85,7 +85,7 @@ TCudaMatrix<AFloat>::TCudaMatrix(const TMatrixT<AFloat> & Host)
       }
    }
 
-   cudaMemcpy(fElementBuffer, buffer, fNRows * fNCols * sizeof(AFloat),
+   cudaMemcpy(fElementBuffer.data(), buffer, fNRows * fNCols * sizeof(AFloat),
               cudaMemcpyHostToDevice);
 }
 
@@ -152,7 +152,7 @@ TCudaMatrix<AFloat>::operator TMatrixT<AFloat>() const
    TMatrixT<AFloat> hostMatrix(GetNrows(), GetNcols());
 
    AFloat * buffer = new AFloat[fNRows * fNCols];
-   cudaMemcpy(buffer, fElementBuffer, fNRows * fNCols * sizeof(AFloat),
+   cudaMemcpy(buffer, fElementBuffer.data(), fNRows * fNCols * sizeof(AFloat),
               cudaMemcpyDeviceToHost);
 
    size_t index = 0;

@@ -31,7 +31,6 @@ any external RooAbsReal input function provided in the constructor.
 
 using std::endl;
 
-ClassImp(RooCachedReal);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +123,7 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
     }
     if (nDim>nCat+1) {
         coutP(Eval) << "RooCachedReal::fillCacheObject(" << GetName() << ") filling "
-                    << nCat << " + " << nDim-nCat <<" dimensional cache (" << cache.hist()->numEntries() << " points)" <<endl;
+                    << nCat << " + " << nDim-nCat <<" dimensional cache (" << cache.hist()->numEntries() << " points)" << std::endl;
     }
   }
 

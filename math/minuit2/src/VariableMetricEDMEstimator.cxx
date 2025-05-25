@@ -15,8 +15,6 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-double similarity(const LAVector &, const LASymMatrix &);
-
 double VariableMetricEDMEstimator::Estimate(const FunctionGradient &g, const MinimumError &e) const
 {
    // estimate the edm (expected distance to the minimum) =  0.5 * g^T V g  (where V is the error matrix, inverse of

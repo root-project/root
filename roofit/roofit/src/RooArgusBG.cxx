@@ -35,7 +35,6 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 
 #include <cmath>
 
-ClassImp(RooArgusBG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -116,7 +115,7 @@ double RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
     aHigh = 0.5*m0*m0*exp(c*f2)/(c*sqrt(c)) * (0.5*sqrt(pi)*(RooMath::faddeeva(sqrt(c*f2))).imag() - sqrt(c*f2));
   }
   double area = aHigh - aLow;
-  //cout << "c = " << c << "aHigh = " << aHigh << " aLow = " << aLow << " area = " << area << endl ;
+  //cout << "c = " << c << "aHigh = " << aHigh << " aLow = " << aLow << " area = " << area << std::endl ;
   return area;
 
 }

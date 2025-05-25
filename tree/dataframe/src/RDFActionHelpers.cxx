@@ -10,6 +10,7 @@
 
 #include "ROOT/RDF/ActionHelpers.hxx"
 #include "ROOT/RDF/Utils.hxx" // CacheLineStep
+#include "ROOT/RNTuple.hxx"   // ValidateSnapshotRNTupleOutput
 
 namespace ROOT {
 namespace Internal {
@@ -147,12 +148,6 @@ double &MeanHelper::PartialUpdate(unsigned int slot)
    return fPartialMeans[slot];
 }
 
-template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<double> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
-template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
 StdDevHelper::StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
    : fNSlots(nSlots), fResultStdDev(meanVPtr), fCounts(nSlots, 0), fMeans(nSlots, 0), fDistancesfromMean(nSlots, 0)
 {
@@ -204,12 +199,6 @@ void StdDevHelper::Finalize()
    *fResultStdDev = std::sqrt(variance);
 }
 
-template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<double> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
-template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
 // External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute
 #if __GNUC__ > 5
 template class TakeHelper<bool, bool, std::vector<bool>>;
@@ -223,7 +212,8 @@ template class TakeHelper<float, float, std::vector<float>>;
 template class TakeHelper<double, double, std::vector<double>>;
 #endif
 
-void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName)
+void EnsureValidSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName,
+                                    const std::string &fileName)
 {
    TString fileMode = opts.fMode;
    fileMode.ToLower();
@@ -254,6 +244,151 @@ void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &tre
    }
 }
 
+void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::string &ntupleName,
+                                      const std::string &fileName)
+{
+   TString fileMode = opts.fMode;
+   fileMode.ToLower();
+   if (fileMode != "update")
+      return;
+
+   // output file opened in "update" mode: must check whether output RNTuple is already present in file
+   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "update")};
+   if (!outFile || outFile->IsZombie())
+      throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
+
+   auto *outNTuple = outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
+
+   if (outNTuple) {
+      if (opts.fOverwriteIfExists) {
+         outFile->Delete((ntupleName + ";*").c_str());
+         return;
+      } else {
+         const std::string msg = "Snapshot: RNTuple \"" + ntupleName + "\" already present in file \"" + fileName +
+                                 "\". If you want to delete the original ntuple and write another, please set "
+                                 "the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
+         throw std::invalid_argument(msg);
+      }
+   }
+
+   // Also check if there is any object other than an RNTuple with the provided ntupleName.
+   TObject *outObj = outFile->Get(ntupleName.c_str());
+
+   if (!outObj)
+      return;
+
+   // An object called ntupleName is already present in the file.
+   if (opts.fOverwriteIfExists) {
+      if (auto tree = dynamic_cast<TTree *>(outObj)) {
+         tree->Delete("all");
+      } else {
+         outFile->Delete((ntupleName + ";*").c_str());
+      }
+   } else {
+      const std::string msg = "Snapshot: object \"" + ntupleName + "\" already present in file \"" + fileName +
+                              "\". If you want to delete the original object and write a new RNTuple, please set "
+                              "the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
+      throw std::invalid_argument(msg);
+   }
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
+
+namespace {
+void CreateCStyleArrayBranch(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF::RBranchSet &outputBranches,
+                             const std::string &inputBranchName, const std::string &outputBranchName, int basketSize)
+{
+   TBranch *inputBranch = nullptr;
+   if (inputTree) {
+      inputBranch = inputTree->GetBranch(inputBranchName.c_str());
+      if (!inputBranch) // try harder
+         inputBranch = inputTree->FindBranch(inputBranchName.c_str());
+   }
+   if (!inputBranch)
+      return;
+   const auto STLKind = TClassEdit::IsSTLCont(inputBranch->GetClassName());
+   if (STLKind == ROOT::ESTLType::kSTLvector || STLKind == ROOT::ESTLType::kROOTRVec)
+      return;
+   // must construct the leaflist for the output branch and create the branch in the output tree
+   const auto *leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
+   if (!leaf)
+      return;
+   const auto bname = leaf->GetName();
+   auto *sizeLeaf = leaf->GetLeafCount();
+   const auto sizeLeafName = sizeLeaf ? std::string(sizeLeaf->GetName()) : std::to_string(leaf->GetLenStatic());
+
+   // We proceed only if branch is a fixed-or-variable-sized array
+   if (sizeLeaf || leaf->GetLenStatic() > 1) {
+      if (sizeLeaf && !outputBranches.Get(sizeLeafName)) {
+         // The output array branch `bname` has dynamic size stored in leaf `sizeLeafName`, but that leaf has not been
+         // added to the output tree yet. However, the size leaf has to be available for the creation of the array
+         // branch to be successful. So we create the size leaf here.
+         const auto sizeTypeStr = ROOT::Internal::RDF::TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
+         // Use Original basket size for Existing Branches otherwise use Custom basket Size.
+         const auto bufSize = (basketSize > 0) ? basketSize : sizeLeaf->GetBranch()->GetBasketSize();
+         auto *outputBranch = outputTree.Branch(sizeLeafName.c_str(), static_cast<void *>(nullptr),
+                                                (sizeLeafName + '/' + sizeTypeStr).c_str(), bufSize);
+         outputBranches.Insert(sizeLeafName, outputBranch);
+      }
+
+      const auto btype = leaf->GetTypeName();
+      const auto rootbtype = ROOT::Internal::RDF::TypeName2ROOTTypeName(btype);
+      if (rootbtype == ' ') {
+         Warning("Snapshot",
+                 "RDataFrame::Snapshot: could not correctly construct a leaflist for C-style array in column %s. The "
+                 "leaf is of type '%s'. This column will not be written out.",
+                 bname, btype);
+         return;
+      }
+
+      const auto leaflist = std::string(bname) + "[" + sizeLeafName + "]/" + rootbtype;
+      // Use original basket size for existing branches and new basket size for new branches
+      const auto bufSize = (basketSize > 0) ? basketSize : inputBranch->GetBasketSize();
+      auto *outputBranch =
+         outputTree.Branch(outputBranchName.c_str(), static_cast<void *>(nullptr), leaflist.c_str(), bufSize);
+      outputBranch->SetTitle(inputBranch->GetTitle());
+      outputBranches.Insert(outputBranchName, outputBranch);
+   }
+}
+} // namespace
+
+void ROOT::Internal::RDF::SetEmptyBranchesHelper(TTree *inputTree, TTree &outputTree,
+                                                 ROOT::Internal::RDF::RBranchSet &outputBranches,
+                                                 const std::string &inputBranchName,
+                                                 const std::string &outputBranchName, const std::type_info &typeInfo,
+                                                 int basketSize)
+{
+   const auto bufSize = (basketSize > 0) ? basketSize : 32000;
+   auto *classPtr = TClass::GetClass(typeInfo);
+   if (!classPtr) {
+      // Case of a leaflist of fundamental type, logic taken from
+      // TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize,
+      // Int_t splitlevel)
+      auto typeName = ROOT::Internal::RDF::TypeID2TypeName(typeInfo);
+      auto rootTypeChar = ROOT::Internal::RDF::TypeName2ROOTTypeName(typeName);
+      if (rootTypeChar == ' ') {
+         Warning(
+            "Snapshot",
+            "RDataFrame::Snapshot: could not correctly construct a leaflist for fundamental type in column %s. This "
+            "column will not be written out.",
+            outputBranchName.c_str());
+         return;
+      }
+      std::string leafList{outputBranchName + '/' + rootTypeChar};
+      auto *outputBranch =
+         outputTree.Branch(outputBranchName.c_str(), static_cast<void *>(nullptr), leafList.c_str(), bufSize);
+      outputBranches.Insert(outputBranchName, outputBranch);
+      return;
+   }
+
+   // Find if there is an input branch, check for cases where we need a leaflist (e.g. C-style arrays)
+   CreateCStyleArrayBranch(inputTree, outputTree, outputBranches, inputBranchName, outputBranchName, basketSize);
+
+   // General case
+   if (!outputBranches.Get(outputBranchName)) {
+      auto *outputBranch = outputTree.Branch(outputBranchName.c_str(), classPtr->GetName(), nullptr, bufSize);
+      outputBranches.Insert(outputBranchName, outputBranch);
+   }
+}

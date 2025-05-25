@@ -71,8 +71,6 @@ public:
 
    TList() : fAscending(kTRUE) { }
 
-   TList(TObject *) R__DEPRECATED(6, 34, "The argument is ignored. Use the default constructor TList::TList().") : fAscending(kTRUE) { } // for backward compatibility, don't use
-
    virtual           ~TList();
    void              Clear(Option_t *option="") override;
    void              Delete(Option_t *option="") override;

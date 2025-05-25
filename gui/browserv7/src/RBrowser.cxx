@@ -22,6 +22,7 @@
 
 #include "RBrowserWidget.hxx"
 
+#include "TVirtualPad.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TError.h"
@@ -68,15 +69,12 @@ public:
    std::string fItemPath;   ///<! item path in the browser
 
    RBrowserEditorWidget(const std::string &name, bool is_editor = true) : RBrowserWidget(name), fIsEditor(is_editor) {}
-   virtual ~RBrowserEditorWidget() = default;
+   ~RBrowserEditorWidget() override = default;
 
    void ResetConn() override { fFirstSend = false; }
 
    std::string GetKind() const override { return fIsEditor ? "editor"s : "image"s; }
    std::string GetTitle() override { return fTitle; }
-   std::string GetUrl() override { return ""s; }
-
-   void Show(const std::string &) override {}
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string & = "") override
    {
@@ -148,15 +146,12 @@ public:
       Refresh();
    }
 
-   virtual ~RBrowserInfoWidget() = default;
+   ~RBrowserInfoWidget() override = default;
 
    void ResetConn() override { fFirstSend = false; }
 
    std::string GetKind() const override { return "info"s; }
    std::string GetTitle() override { return fTitle; }
-   std::string GetUrl() override { return ""s; }
-
-   void Show(const std::string &) override {}
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string & = "") override { return false; }
 
@@ -238,13 +233,13 @@ public:
    RWebWindow  *fWindow{nullptr};   // catched widget, TODO: to be changed to shared_ptr
    std::string fCatchedKind;  // kind of catched widget
 
-   void Show(const std::string &) override {}
-
    std::string GetKind() const override { return "catched"s; }
 
-   std::string GetUrl() override { return fWindow->GetUrl(false); }
+   std::string GetUrl() override { return fWindow ? ".."s + fWindow->GetUrl(false) : ""s; }
 
    std::string GetTitle() override { return fCatchedKind; }
+
+   bool IsValid() override { return fWindow != nullptr; }
 
    RBrowserCatchedWidget(const std::string &name, RWebWindow *win, const std::string &kind) :
       RBrowserWidget(name),
@@ -261,6 +256,8 @@ using namespace ROOT;
 
 /** \class ROOT::RBrowser
 \ingroup rbrowser
+\ingroup webwidgets
+
 \brief Web-based %ROOT files and objects browser
 
 \image html v7_rbrowser.png
@@ -310,9 +307,20 @@ RBrowser::RBrowser(bool use_rcanvas)
       else if (args.GetWidgetKind() == "RTreeViewer")
          kind = "tree";
 
-      if (!fWebWindow || !fCatchWindowShow || kind.empty()) return false;
+      if (!fWebWindow || !fCatchWindowShow || kind.empty())
+         return false;
 
-      auto widget = AddCatchedWidget(&win, kind);
+      // before create new widget check if other disappear
+      CheckWidgtesModified(0);
+
+      auto widget = RBrowserWidgetProvider::DetectCatchedWindow(kind, win);
+      if (widget) {
+         widget->fBrowser = this;
+         fWidgets.emplace_back(widget);
+         fActiveWidgetName = widget->GetName();
+      } else {
+         widget = AddCatchedWidget(&win, kind);
+      }
 
       if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
          fWebWindow->Send(0, NewWidgetMsg(widget));
@@ -320,18 +328,18 @@ RBrowser::RBrowser(bool use_rcanvas)
       return widget ? true : false;
    });
 
+   fWebWindow->GetManager()->SetDeleteCallback([this](RWebWindow &win) -> void {
+      for (auto &widget : fWidgets) {
+         auto catched = dynamic_cast<RBrowserCatchedWidget *>(widget.get());
+         if (catched && (catched->fWindow == &win))
+            catched->fWindow = nullptr;
+      }
+
+      if (fWebWindow)
+         CheckWidgtesModified(0);
+   });
+
    Show();
-
-   // add first canvas by default
-
-   //if (GetUseRCanvas())
-   //   AddWidget("rcanvas");
-   //else
-   //   AddWidget("tcanvas");
-
-   // AddWidget("geom");  // add geometry viewer at the beginning
-
-   // AddWidget("editor"); // one can add empty editor if necessary
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -339,8 +347,11 @@ RBrowser::RBrowser(bool use_rcanvas)
 
 RBrowser::~RBrowser()
 {
-   if (fWebWindow)
+   if (fWebWindow) {
       fWebWindow->GetManager()->SetShowCallback(nullptr);
+      fWebWindow->GetManager()->SetDeleteCallback(nullptr);
+      fWebWindow->Reset();
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,8 +441,6 @@ std::string RBrowser::ProcessDblClick(unsigned connid, std::vector<std::string> 
 
       // assign back pointer
       new_widget->fBrowser = this;
-
-      new_widget->Show("embed");
       fWidgets.emplace_back(new_widget);
       fActiveWidgetName = new_widget->GetName();
 
@@ -499,6 +508,34 @@ std::string RBrowser::ProcessDblClick(unsigned connid, std::vector<std::string> 
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Process drop of item in the current tab
+
+std::string RBrowser::ProcessDrop(unsigned connid, std::vector<std::string> &args)
+{
+   auto path = fBrowsable.GetWorkingPath();
+   path.insert(path.end(), args.begin(), args.end());
+
+   R__LOG_DEBUG(0, BrowserLog()) << "DoubleClick " << Browsable::RElement::GetPathAsString(path);
+
+   auto elem = fBrowsable.GetSubElement(path);
+   if (!elem) return ""s;
+
+   fLastProgressSend = 0;
+   Browsable::RProvider::ProgressHandle handle(elem.get(), [this, connid](float progress, void *) {
+      SendProgress(connid, progress);
+   });
+
+   auto widget = GetActiveWidget();
+   if (widget && widget->DrawElement(elem, "<append>")) {
+      widget->SetPath(path);
+      return widget->SendWidgetContent();
+   }
+
+   return ""s;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Show or update RBrowser in web window
 /// If web window already started - just refresh it like "reload" button does
 /// If no web window exists or \param always_start_new_browser configured, starts new window
@@ -508,8 +545,6 @@ void RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
    if (!fWebWindow->NumConnections() || always_start_new_browser) {
       fWebWindow->Show(args);
-   } else {
-      SendInitMsg(0);
    }
 }
 
@@ -559,9 +594,7 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
    }
 
    widget->fBrowser = this;
-   widget->Show("embed");
    fWidgets.emplace_back(widget);
-
    fActiveWidgetName = name;
 
    return widget;
@@ -572,7 +605,8 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
 
 std::shared_ptr<RBrowserWidget> RBrowser::AddCatchedWidget(RWebWindow *win, const std::string &kind)
 {
-   if (!win || kind.empty()) return nullptr;
+   if (!win || kind.empty())
+      return nullptr;
 
    std::string name = "catched"s + std::to_string(++fWidgetCnt);
 
@@ -677,7 +711,7 @@ void RBrowser::SendInitMsg(unsigned connid)
 
    for (auto &widget : fWidgets) {
       widget->ResetConn();
-      reply.emplace_back(std::vector<std::string>({ widget->GetKind(), ".."s + widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
+      reply.emplace_back(std::vector<std::string>({ widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
    }
 
    if (!fActiveWidgetName.empty())
@@ -741,7 +775,7 @@ std::string RBrowser::GetCurrentWorkingDirectory()
 
 std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 {
-   std::vector<std::string> arr = { widget->GetKind(), ".."s + widget->GetUrl(), widget->GetName(), widget->GetTitle(),
+   std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle(),
                                     Browsable::RElement::GetPathAsString(widget->GetPath()) };
    return "NEWWIDGET:"s + TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces).Data();
 }
@@ -749,8 +783,20 @@ std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Check if any widget was modified and update if necessary
 
-void RBrowser::CheckWidgtesModified()
+void RBrowser::CheckWidgtesModified(unsigned connid)
 {
+   std::vector<std::string> del_names;
+
+   for (auto &widget : fWidgets)
+      if (!widget->IsValid())
+         del_names.push_back(widget->GetName());
+
+   if (!del_names.empty())
+      fWebWindow->Send(connid, "CLOSE_WIDGETS:"s + TBufferJSON::ToJSON(&del_names, TBufferJSON::kNoSpaces).Data());
+
+   for (auto name : del_names)
+      CloseTab(name);
+
    for (auto &widget : fWidgets)
       widget->CheckModified();
 }
@@ -775,6 +821,9 @@ void RBrowser::ProcessPostponedRequests()
 
    if (kind == "DBLCLK") {
       reply = ProcessDblClick(connid, arr);
+      if (reply.empty()) reply = "NOPE";
+   } else if (kind == "DROP") {
+      reply = ProcessDrop(connid, arr);
       if (reply.empty()) reply = "NOPE";
    }
 
@@ -812,6 +861,19 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
       if (arr && (arr->size() > 2)) {
+         arr->push_back(kind);
+         arr->push_back(std::to_string(connid));
+         fPostponed.push_back(*arr);
+         if (fPostponed.size() == 1)
+            fTimer->TurnOn();
+      } else {
+         fWebWindow->Send(connid, "NOPE");
+      }
+
+   } else if (kind == "DROP") {
+
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
+      if (arr && arr->size()) {
          arr->push_back(kind);
          arr->push_back(std::to_string(connid));
          fPostponed.push_back(*arr);
@@ -867,7 +929,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             widget->RefreshFromLogs(sPrompt + msg, GetRootLogs());
       }
 
-      CheckWidgtesModified();
+      CheckWidgtesModified(connid);
    } else if (kind == "GETHISTORY") {
 
       auto history = GetRootHistory();
@@ -896,7 +958,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             if ((arr->size() == 6) && (arr->at(5) == "RUN")) {
                ProcessSaveFile(editor->fFileName, editor->fContent);
                ProcessRunMacro(editor->fFileName);
-               CheckWidgtesModified();
+               CheckWidgtesModified(connid);
             }
          }
       }
@@ -910,6 +972,13 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       auto widget = AddWidget(msg);
       if (widget)
          fWebWindow->Send(connid, NewWidgetMsg(widget));
+   } else if (kind == "NEWCHANNEL") {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
+      if (arr && (arr->size() == 2)) {
+         auto widget = FindWidget((*arr)[0]);
+         if (widget)
+            RWebWindow::ShowWindow(widget->GetWindow(), { fWebWindow, connid, std::stoi((*arr)[1]) });
+      }
    } else if (kind == "CDWORKDIR") {
       auto wrkdir = Browsable::RSysFile::GetWorkingPath();
       if (fBrowsable.GetWorkingPath() != wrkdir) {

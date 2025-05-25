@@ -175,28 +175,6 @@ THelix::THelix(Double_t const* xyz, Double_t const* v, Double_t w,
 }
 
 
-#if 0
-////////////////////////////////////////////////////////////////////////////////
-/// Helix copy constructor.
-
-THelix::THelix(const THelix &h) : TPolyLine3D()
-{
-   fX0   = h.fX0;
-   fY0   = h.fY0;
-   fZ0   = h.fZ0;
-   fVt   = h.fVt;
-   fPhi0 = h.fPhi0;
-   fVz   = h.fVz;
-   fW    = h.fW;
-   for (Int_t i=0; i<3; i++) fAxis[i] = h.fAxis[i];
-   fRotMat = new TRotMatrix(*(h.fRotMat));
-   fRange[0] = h.fRange[0];
-   fRange[1] = h.fRange[1];
-
-   fOption = h.fOption;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 /// assignment operator
 
@@ -296,26 +274,24 @@ void THelix::Print(Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void THelix::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void THelix::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(THelix::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   THelix *";
-   }
-   out<<"helix = new THelix("<<fX0<<","<<fY0<<","<<fZ0<<","
-      <<fVt*TMath::Cos(fPhi0)<<","<<fVt*TMath::Sin(fPhi0)<<","<<fVz<<","
-      <<fW<<","<<fRange[0]<<","<<fRange[1]<<","<<(Int_t)kHelixT<<","
-      <<fAxis[0]<<","<<fAxis[1]<<","<<fAxis[2]<<","
-      <<quote<<fOption<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "helix",
+                            TString::Format("%g, %g, %g, %g, %g, %g, %g", fX0, fY0, fZ0, fVt * TMath::Cos(fPhi0),
+                                            fVt * TMath::Sin(fPhi0), fVz, fW));
 
-   SaveLineAttributes(out,"helix",1,1,1);
+   if ((fRange[0] != 0.) || (fRange[1] != 1.))
+      out << "   helix->SetRange(" << fRange[0] << ", " << fRange[1] << ", kHelixT);\n";
 
-   out<<"   helix->Draw();"<<std::endl;
+   if ((fAxis[0] != 0.) || (fAxis[1] != 0.) || (fAxis[2] != 1.))
+      out << "   helix->SetAxis(" << fAxis[0] << ", " << fAxis[1] << ", " << fAxis[2] << ");\n";
+   if (fOption.Length())
+      out << "   helix->SetOption(\"" << TString(fOption).ReplaceSpecialCppChars() << "\");\n";
+
+   SaveLineAttributes(out, "helix", 1, 1, 1);
+
+   SavePrimitiveDraw(out, "helix", option);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a new axis for the helix.  This will make a new rotation matrix.

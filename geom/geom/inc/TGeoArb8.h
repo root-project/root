@@ -42,7 +42,7 @@ public:
    // methods
    Double_t Capacity() const override;
    void ComputeBBox() override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    void ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize) override;
    void ComputeTwist();
    Bool_t Contains(const Double_t *point) const override;

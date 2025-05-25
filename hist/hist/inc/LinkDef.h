@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -26,7 +26,6 @@
 #pragma link C++ class TFitResult+;
 #pragma link C++ class TFitResultPtr+;
 #pragma link C++ class TF1NormSum+;
-#pragma link C++ class TF1Convolution+;
 #pragma link C++ class TF1-;
 #pragma link C++ class ROOT::v5::TF1Data-;
 #pragma read sourceClass="TF1" targetClass="ROOT::v5::TF1Data";

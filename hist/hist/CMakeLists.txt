@@ -174,3 +174,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+if(clad)
+  target_compile_definitions(Hist PUBLIC ROOT_SUPPORT_CLAD)
+endif()

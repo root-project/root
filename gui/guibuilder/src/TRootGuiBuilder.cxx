@@ -42,7 +42,6 @@
 #include "TGProgressBar.h"
 #include "TVirtualX.h"
 
-
 /** \class TRootGuiBuilder
     \ingroup guibuilder
 
@@ -52,7 +51,7 @@
  to embedded editing concept - WYSIWYE ("what you see is what you edit").
  The ROOT GUI Builder allows modifying real GUI objects.
  For example, one can edit the existing GUI application created by
- $ROOTSYS/tutorials/gui/guitest.C.
+ $ROOTSYS/tutorials/visualisation/gui/guitest.C.
  GUI components can be added to a design area from a widget palette,
  or can be borrowed from another application.
  One can drag and and drop TCanvas's menu bar into the application.
@@ -108,7 +107,6 @@
   - Ctrl-N    - create new main frame
 
 */
-
 
 const char gHelpBuilder[] = "\
                Start/Stop Edit Mode\n\

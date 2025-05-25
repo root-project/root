@@ -25,6 +25,7 @@ class RooAbsCollection(object):
     params.printLatex(Sibling=initParams, Columns =2)
     \endcode
     """
+    __cpp_name__ = 'RooAbsCollection'
 
     def addClone(self, arg, silent=False):
 

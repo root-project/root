@@ -2,6 +2,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RTrivialDS.hxx"
 #include "ROOT/TSeq.hxx"
+#include "Compression.h"
 #include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -10,6 +11,12 @@
 #include "gtest/gtest.h"
 #include <memory>
 #include <thread>
+
+#include <TTreeReader.h>
+#include <TTreeReaderArray.h>
+
+#include "DummyHeader.hxx"
+
 using namespace ROOT;              // RDataFrame
 using namespace ROOT::RDF;         // RInterface
 using namespace ROOT::VecOps;      // RVec
@@ -59,6 +66,187 @@ protected:
    RInterface<RLoopManager> tdf;
 };
 #endif // R__USE_IMT
+
+// Test for custom basket size in Snapshot
+class SnapshotCustomBasketRAII {
+private:
+   std::string fInputFile;
+   std::string fOutputFileCustom;
+   std::string fOutputFileCollection;
+
+public:
+   SnapshotCustomBasketRAII()
+      : fInputFile("input_file.root"),
+        fOutputFileCustom("output_file_custom_basket.root"),
+        fOutputFileCollection("output_file_collection_basket.root")
+   {
+
+      // Create file and tree inside the constructor body
+      TFile fFile(fInputFile.c_str(), "RECREATE");
+      TTree fTree("tree", "Test Tree");
+
+      // Create scalar branch
+      float value = 0;
+      fTree.Branch("branch_x", &value);
+
+      // Create vector branch
+      std::vector<float> vec_values;
+      fTree.Branch("branch_vec", &vec_values);
+
+      // Fill the tree with some data
+      for (int i = 0; i < 1000; ++i) {
+         value = i;
+         vec_values.clear();
+         // Add some random number of elements to the vector
+         int vec_size = i % 10 + 1; // 1 to 10 elements
+         for (int j = 0; j < vec_size; ++j) {
+            vec_values.push_back(i + j * 0.1f);
+         }
+         fTree.Fill();
+      }
+      fFile.Write();
+   }
+
+   ~SnapshotCustomBasketRAII()
+   {
+      gSystem->Unlink(fInputFile.c_str());
+      gSystem->Unlink(fOutputFileCustom.c_str());
+      gSystem->Unlink(fOutputFileCollection.c_str());
+   }
+
+   const std::string &GetInputFile() const { return fInputFile; }
+   const std::string &GetOutputFileCustom() const { return fOutputFileCustom; }
+   const std::string &GetOutputFileCollection() const { return fOutputFileCollection; }
+};
+
+void TestCustomBasketSize()
+{
+   SnapshotCustomBasketRAII raii;
+
+   ROOT::RDataFrame df("tree", raii.GetInputFile());
+
+   auto df_with_new_columns = df.Define("branch_x_new", [](float x) { return x * 2; }, {"branch_x"})
+                                 .Define("branch_vec_new",
+                                         [](const std::vector<float> &vec) {
+                                            std::vector<float> result;
+                                            result.reserve(vec.size());
+                                            for (auto v : vec)
+                                               result.push_back(v * 2);
+                                            return result;
+                                         },
+                                         {"branch_vec"});
+
+   ROOT::RDF::RSnapshotOptions options;
+   options.fBasketSize = 2048;
+
+   df_with_new_columns.Snapshot<float, float>("tree", raii.GetOutputFileCustom(), {"branch_x", "branch_x_new"},
+                                              options);
+
+   df_with_new_columns.Snapshot<std::vector<float>, std::vector<float>>("tree", raii.GetOutputFileCollection(),
+                                                                        {"branch_vec", "branch_vec_new"}, options);
+
+   TFile output_file_custom(raii.GetOutputFileCustom().c_str());
+   auto output_tree_custom = output_file_custom.Get<TTree>("tree");
+
+   for (auto b : TRangeDynCast<TBranch>(*output_tree_custom->GetListOfBranches())) {
+      ASSERT_TRUE(b != nullptr);
+      EXPECT_EQ(b->GetBasketSize(), 2048) << "Incorrect basket size for scalar branch " << b->GetName();
+   }
+
+   TFile output_file_collection(raii.GetOutputFileCollection().c_str());
+   auto output_tree_collection = output_file_collection.Get<TTree>("tree");
+
+   for (auto b : TRangeDynCast<TBranch>(*output_tree_collection->GetListOfBranches())) {
+      ASSERT_TRUE(b != nullptr);
+      EXPECT_EQ(b->GetBasketSize(), 2048) << "Incorrect basket size for vector branch " << b->GetName();
+   }
+}
+
+void TestDefaultBasketSize()
+{
+   SnapshotCustomBasketRAII helper;
+   const Int_t defaultBasketSize = 32000;
+
+   ROOT::RDataFrame df("tree", helper.GetInputFile());
+
+   df.Snapshot("tree", helper.GetOutputFileCustom());
+
+   std::unique_ptr<TFile> f(TFile::Open(helper.GetOutputFileCustom().c_str()));
+   ASSERT_TRUE(f != nullptr);
+
+   auto tree = f->Get<TTree>("tree");
+   ASSERT_TRUE(tree != nullptr);
+
+   auto branchX = tree->GetBranch("branch_x");
+   ASSERT_TRUE(branchX != nullptr);
+   EXPECT_EQ(branchX->GetBasketSize(), defaultBasketSize) << "Scalar branch doesn't have default basket size";
+
+   auto branchVec = tree->GetBranch("branch_vec");
+   ASSERT_TRUE(branchVec != nullptr);
+   EXPECT_EQ(branchVec->GetBasketSize(), defaultBasketSize) << "Vector branch doesn't have default basket size";
+}
+
+void TestBasketSizePreservation()
+{
+   SnapshotCustomBasketRAII helper;
+
+   // Define the columns we want to snapshot
+   const std::vector<std::string> columns = {"branch_x", "branch_vec"};
+
+   // First create a tree with custom basket size
+   {
+      ROOT::RDataFrame df("tree", helper.GetInputFile());
+      ROOT::RDF::RSnapshotOptions options;
+      options.fBasketSize = 64000; // 64KB
+      df.Snapshot<float, std::vector<float>>("tree", helper.GetOutputFileCustom(), columns, options);
+   }
+
+   // Now read that tree and create new snapshot without specifying basket size
+   {
+      ROOT::RDataFrame df("tree", helper.GetOutputFileCustom());
+      df.Snapshot<float, std::vector<float>>("tree", helper.GetOutputFileCollection(), columns);
+   }
+
+   // Open both files and compare basket sizes
+   std::unique_ptr<TFile> f1(TFile::Open(helper.GetOutputFileCustom().c_str()));
+   std::unique_ptr<TFile> f2(TFile::Open(helper.GetOutputFileCollection().c_str()));
+   ASSERT_TRUE(f1 != nullptr);
+   ASSERT_TRUE(f2 != nullptr);
+
+   auto tree1 = f1->Get<TTree>("tree");
+   auto tree2 = f2->Get<TTree>("tree");
+   ASSERT_TRUE(tree1 != nullptr);
+   ASSERT_TRUE(tree2 != nullptr);
+
+   // Check both branches
+   for (const auto &branchName : columns) {
+      auto branch1 = tree1->GetBranch(branchName.c_str());
+      auto branch2 = tree2->GetBranch(branchName.c_str());
+      ASSERT_TRUE(branch1 != nullptr);
+      ASSERT_TRUE(branch2 != nullptr);
+
+      EXPECT_EQ(branch2->GetBasketSize(), branch1->GetBasketSize())
+         << "Branch '" << branchName << "' basket size not preserved";
+   }
+}
+
+// Test for custom basket size
+TEST(RDFSnapshotMore, CustomBasketSize)
+{
+   TestCustomBasketSize();
+}
+
+// Test for default basket size
+TEST(RDFSnapshotMore, DefaultBasketSize)
+{
+   TestDefaultBasketSize();
+}
+
+// Test for basket size preservation
+TEST(RDFSnapshotMore, BasketSizePreservation)
+{
+   TestBasketSizePreservation();
+}
 
 // fixture that provides fixed and variable sized arrays as RDF columns
 class RDFSnapshotArrays : public ::testing::Test {
@@ -231,7 +419,8 @@ void test_snapshot_options(RInterface<RLoopManager> &tdf)
    opts.fCompressionLevel = 6;
 
    const auto outfile = "snapshot_test_opts.root";
-   for (auto algorithm : {ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4, ROOT::kZSTD}) {
+   using RCAlgo = ROOT::RCompressionSetting::EAlgorithm;
+   for (auto algorithm : {RCAlgo::kZLIB, RCAlgo::kLZMA, RCAlgo::kLZ4, RCAlgo::kZSTD}) {
       opts.fCompressionAlgorithm = algorithm;
 
       auto s = tdf.Snapshot<int>("t", outfile, {"ans"}, opts);
@@ -673,7 +862,7 @@ TEST(RDFSnapshotMore, Lazy)
       ++v;
       return 42;
    };
-   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   RSnapshotOptions opts = {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, true};
    auto ds = d.Define("c0", genf).Snapshot<int>(treename, fname0, {"c0"}, opts);
    EXPECT_EQ(v, 0U);
    EXPECT_TRUE(gSystem->AccessPathName(fname0)); // This returns FALSE if the file IS there
@@ -695,7 +884,7 @@ TEST(RDFSnapshotMore, LazyJitted)
    // make sure the file is not here beforehand
    gSystem->Unlink(fname);
    RDataFrame d(1);
-   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   RSnapshotOptions opts = {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, true};
    auto ds = d.Alias("c0", "rdfentry_").Snapshot(treename, fname, {"c0"}, opts);
    EXPECT_TRUE(gSystem->AccessPathName(fname)); // This returns FALSE if the file IS there
    *ds;
@@ -713,7 +902,11 @@ void BookLazySnapshot()
 
 TEST(RDFSnapshotMore, LazyNotTriggered)
 {
-   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot",
+                       "A lazy Snapshot action was booked but never triggered. The tree 't' in output file "
+                       "'lazysnapshotnottriggered_shouldnotbecreated.root' was not created. "
+                       "In case it was desired instead, remember to trigger the Snapshot operation, by "
+                       "storing its result in a variable and for example calling the GetValue() method on it.");
 }
 
 RResultPtr<RInterface<RLoopManager, void>> ReturnLazySnapshot(const char *fname)
@@ -969,6 +1162,83 @@ TEST(RDFSnapshotMore, OutOfOrderSizeBranch)
    gSystem->Unlink(outFile);
 }
 
+TEST(RDFSnapshotMore, PreserveStdVectorWithOptions)
+{
+   struct DatasetGuard {
+
+      const char *fFileName{"rdfsnapshotmore_preservestdvectorwithoptions.root"};
+      const char *fTreeName{"rdfsnapshotmore_preservestdvectorwithoptions"};
+      const char *fSnapFileDefault{"rdfsnapshotmore_preservestdvectorwithoptions_snap_default.root"};
+      const char *fSnapTreeDefault{"rdfsnapshotmore_preservestdvectorwithoptions_snap_default"};
+      const char *fSnapFileOpts{"rdfsnapshotmore_preservestdvectorwithoptions_snap_opts.root"};
+      const char *fSnapTreeOpts{"rdfsnapshotmore_preservestdvectorwithoptions_snap_opts"};
+
+      DatasetGuard()
+      {
+         std::unique_ptr<TFile> f{TFile::Open(fFileName, "RECREATE")};
+         auto t = std::make_unique<TTree>(fTreeName, fTreeName);
+         std::vector<int> a{11, 22, 33};
+         std::vector<float> b{44.f, 55.f, 66.f};
+         std::vector<double> c{77., 88., 99.};
+         t->Branch("a", &a);
+         t->Branch("b", &b);
+         t->Branch("c", &c);
+         t->Fill();
+         t->Write();
+      }
+
+      ~DatasetGuard()
+      {
+         std::remove(fFileName);
+         std::remove(fSnapFileDefault);
+         std::remove(fSnapFileOpts);
+      }
+   } dataset;
+
+   // Snapshot with default options: std::vector branches are converted to ROOT::RVec
+   {
+      ROOT::RDataFrame df{dataset.fTreeName, dataset.fFileName};
+      df.Snapshot(dataset.fSnapTreeDefault, dataset.fSnapFileDefault);
+   }
+
+   {
+      std::unique_ptr<TFile> f{TFile::Open(dataset.fSnapFileDefault)};
+      std::unique_ptr<TTree> t{f->Get<TTree>(dataset.fSnapTreeDefault)};
+      std::vector<std::string> expected_typenames_default{"ROOT::VecOps::RVec<int>", "ROOT::VecOps::RVec<float>",
+                                                          "ROOT::VecOps::RVec<double>"};
+      std::vector<std::string> typenames_default;
+      for (const auto *leaf : ROOT::Detail::TRangeStaticCast<TLeaf>(t->GetListOfLeaves())) {
+         typenames_default.push_back(leaf->GetTypeName());
+      }
+      EXPECT_EQ(expected_typenames_default.size(), typenames_default.size());
+      for (std::size_t i = 0; i < expected_typenames_default.size(); i++) {
+         EXPECT_EQ(expected_typenames_default[i], typenames_default[i]);
+      }
+   }
+
+   // Pass option to Snapshot to avoid the type conversion
+   {
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fVector2RVec = false;
+      ROOT::RDataFrame df{dataset.fTreeName, dataset.fFileName};
+      df.Snapshot(dataset.fSnapTreeOpts, dataset.fSnapFileOpts, df.GetColumnNames(), opts);
+   }
+
+   {
+      std::unique_ptr<TFile> f{TFile::Open(dataset.fSnapFileOpts)};
+      std::unique_ptr<TTree> t{f->Get<TTree>(dataset.fSnapTreeOpts)};
+      std::vector<std::string> expected_typenames_default{"vector<int>", "vector<float>", "vector<double>"};
+      std::vector<std::string> typenames_default;
+      for (const auto *leaf : ROOT::Detail::TRangeStaticCast<TLeaf>(t->GetListOfLeaves())) {
+         typenames_default.push_back(leaf->GetTypeName());
+      }
+      EXPECT_EQ(expected_typenames_default.size(), typenames_default.size());
+      for (std::size_t i = 0; i < expected_typenames_default.size(); i++) {
+         EXPECT_EQ(expected_typenames_default[i], typenames_default[i]);
+      }
+   }
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(RDFSnapshotMT, Snapshot_update_diff_treename)
@@ -1207,19 +1477,37 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
    ROOT::EnableImplicitMT(4);
-   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot",
+                       "A lazy Snapshot action was booked but never triggered. The tree 't' in output file "
+                       "'lazysnapshotnottriggered_shouldnotbecreated.root' was not created. "
+                       "In case it was desired instead, remember to trigger the Snapshot operation, by "
+                       "storing its result in a variable and for example calling the GetValue() method on it.");
    ROOT::DisableImplicitMT();
+}
+
+TEST(RDFSnapshotMore, LazyTriggeredMT)
+{
+   TIMTEnabler _(4);
+   auto fname = "LazyTriggeredMT.root";
+   ROOT_EXPECT_NODIAG(*ReturnLazySnapshot(fname));
+   gSystem->Unlink(fname);
 }
 
 TEST(RDFSnapshotMore, EmptyBuffersMT)
 {
+   // Test that a tree gets created when only one worker yields events
    const auto fname = "emptybuffersmt.root";
    const auto treename = "t";
    const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
    ROOT::EnableImplicitMT(nslots);
    ROOT::RDataFrame d(10);
-   auto dd = d.DefineSlot("x", [&](unsigned int s) {
-                 return s == nslots - 1 ? 0 : 1;
+   std::atomic_bool firstWorker{true};
+   auto dd = d.DefineSlot("x", [&](unsigned int) {
+                 bool expected = true;
+                 if (firstWorker.compare_exchange_strong(expected, false)) {
+                    return 0;
+                 }
+                 return 1;
               }).Filter([](int x) { return x == 0; }, {"x"}, "f");
    auto r = dd.Report();
    dd.Snapshot<int>(treename, fname, {"x"});
@@ -1358,6 +1646,29 @@ TEST(RDFSnapshotMore, ZeroOutputEntriesMT)
    // TTree "t" should *not* be in there, differently from the single-thread case: see ROOT-10868
    EXPECT_NE(t, nullptr);
    gSystem->Unlink(fname);
+}
+
+TEST(RDFSnapshotMore, CustomBasketSizeMT)
+{
+   ROOT::EnableImplicitMT();
+   TestCustomBasketSize();
+   ROOT::DisableImplicitMT();
+}
+
+// Test for default basket size
+TEST(RDFSnapshotMore, DefaultBasketSizeMT)
+{
+   ROOT::EnableImplicitMT();
+   TestDefaultBasketSize();
+   ROOT::DisableImplicitMT();
+}
+
+// Test for basket size preservation
+TEST(RDFSnapshotMore, BasketSizePreservationMT)
+{
+   ROOT::EnableImplicitMT();
+   TestBasketSizePreservation();
+   ROOT::DisableImplicitMT();
 }
 
 #endif // R__USE_IMT

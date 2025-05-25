@@ -185,6 +185,17 @@ int xRooNLLVar::xRooHypoSpace::AddPoints(const char *parName, size_t nPoints, do
       throw std::runtime_error("Unknown parameter");
    _par->setAttribute("axis");
 
+   if (low < _par->getMin()) {
+      Warning("AddPoints", "low edge of hypoSpace %g below lower bound of parameter: %g. Changing to lower bound", low,
+              _par->getMin());
+      low = _par->getMin();
+   }
+   if (high > _par->getMax()) {
+      Warning("AddPoints", "high edge of hypoSpace %g above upper bound of parameter: %g. Changing to upper bound",
+              high, _par->getMax());
+      high = _par->getMax();
+   }
+
    if (nPoints == 1) {
       _par->setVal((high + low) * 0.5);
       AddPoint();
@@ -291,6 +302,17 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       // force use of two-sided test statistic for any new points
       fTestStatType = xRooFit::Asymptotics::TwoSided;
       sType.ReplaceAll("plr", "ts");
+   } else if (sType.Contains("pnull") && fTestStatType == xRooFit::Asymptotics::Unknown) {
+      // for pnull (aka discovery) "scan" (may just be a single point) default to use of
+      // uncapped test stat
+      fTestStatType = xRooFit::Asymptotics::Uncapped;
+      // and ensure altVal is set
+      for (auto a : axes()) {
+         if (!a->getStringAttribute("altVal") || !strlen(p->getStringAttribute("altVal"))) {
+            ::Info("xRooHypoSpace::scan", "No altVal set for %s, setting to 1", a->GetName());
+            a->setStringAttribute("altVal", "1");
+         }
+      }
    }
 
    if (high < low || (high == low && nPoints != 1)) {
@@ -345,7 +367,7 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
    if (!gDirectory || !gDirectory->IsWritable()) {
       // locate a TMemFile in the open list of files and move to that
       // or create one if cannot find
-      for (auto file : *gROOT->GetListOfFiles()) {
+      /*for (auto file : *gROOT->GetListOfFiles()) {
          if (auto f = dynamic_cast<TMemFile *>(file)) {
             f->cd();
             break;
@@ -353,7 +375,13 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       }
       if (!gDirectory || !gDirectory->IsWritable()) {
          new TMemFile("fitDatabase", "RECREATE");
-      }
+      }*/
+      // now we create a TMemFile of our own, so that we don't get in the way of other hypoSpaces
+      fFitDb = std::shared_ptr<TMemFile>(new TMemFile(TString::Format("fitDatabase_%s",GetName()),"RECREATE"),[](TFile *) {});
+      // db can last longer than the hypoSpace, so that the fits are fully available in the browser
+      // if a scan was initiated through the browser. If user wants to cleanup they can do manually
+      // through root's GetListOfFiles()
+      // would like to clean it up ourself when the hypoSpace is destroyed, but would need way to keep alive for the browser
    }
 
    int out = 0;

@@ -153,7 +153,7 @@ namespace textinput {
       Cmd = Editor::Command(Editor::kCmdDel);
 
     if (Cmd.GetKind() == Editor::kCKControl
-        && (Cmd.GetChar() == 3 || Cmd.GetChar() == 26)) {
+        && (Cmd.GetChar() == 3 || Cmd.GetChar() == 26 || Cmd.GetChar() == 28)) {
       // If there are modifications in the queue, process them now.
       UpdateDisplay(R);
       HandleControl(Cmd.GetChar(), R);
@@ -247,6 +247,10 @@ namespace textinput {
       ReleaseInputOutput();
       SignalHandler* Signal = fContext->GetSignalHandler();
       Signal->EmitCtrlZ();
+    } else if (C == 28) { // Control+\ (SIGQUIT)
+       ReleaseInputOutput();
+       SignalHandler* Signal = fContext->GetSignalHandler();
+       Signal->EmitCtrlBackslash();
     }
 
     GrabInputOutput();

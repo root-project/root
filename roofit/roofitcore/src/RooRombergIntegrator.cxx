@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -186,7 +188,7 @@ std::pair<double, int> integrate1d(std::function<double(double)> func, bool doTr
             }
          }
          if (allZero) {
-            // cout << "Roo1DIntegrator(" << this << "): zero convergence at step " << j << ", value = " << 0 <<
+            // std::cout << "Roo1DIntegrator(" << this << "): zero convergence at step " << j << ", value = " << 0 <<
             // std::endl ;
             return {0, j};
          }
@@ -196,7 +198,7 @@ std::pair<double, int> integrate1d(std::function<double(double)> func, bool doTr
 
          // Fixed step mode, return result after fixed number of steps
          if (j == fixSteps) {
-            // cout << "returning result at fixed step " << j << std::endl ;
+            // std::cout << "returning result at fixed step " << j << std::endl ;
             return {sArr[j], j};
          }
 
@@ -550,3 +552,5 @@ double RooRombergIntegrator::integral(int iDim, int nSeg, std::span<double> wksp
 
    return output;
 }
+
+/// \endcond

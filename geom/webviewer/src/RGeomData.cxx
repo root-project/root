@@ -46,9 +46,9 @@
 #include <algorithm>
 #include <array>
 
-ROOT::Experimental::RLogChannel &ROOT::RGeomLog()
+ROOT::RLogChannel &ROOT::RGeomLog()
 {
-   static ROOT::Experimental::RLogChannel sLog("ROOT.Geom");
+   static ROOT::RLogChannel sLog("ROOT.Geom");
    return sLog;
 }
 
@@ -482,7 +482,7 @@ void RGeomDescription::ClearDescription()
    fDesc.clear();
    fNodes.clear();
    fSortMap.clear();
-   ClearDrawData();
+   _ClearDrawData();
    fDrawIdCut = 0;
    fDrawVolume = nullptr;
    fSelectedStack.clear();
@@ -1225,7 +1225,7 @@ void RGeomDescription::ResetRndrInfos()
 ///  }
 ///
 ///  In JSROOT one loads data from JSON file and call `build` function to
-///  produce three.js model. Also see example in tutorials/webgui/geom/ folder
+///  produce three.js model. Also see example in tutorials/visualisation/webgui/geom/ folder
 
 std::string RGeomDescription::ProduceJson(bool all_nodes)
 {
@@ -1365,14 +1365,14 @@ void RGeomDescription::ProduceDrawData()
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Clear raw data. Will be rebuild when next connection will be established
+/// Clear drawing data.
+/// Will be rebuild when next connection established or new message need to be send
 
 void RGeomDescription::ClearDrawData()
 {
    TLockGuard lock(fMutex);
 
-   fDrawJson.clear();
-   fSearchJson.clear();
+   _ClearDrawData();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1380,11 +1380,12 @@ void RGeomDescription::ClearDrawData()
 
 void RGeomDescription::ClearCache()
 {
-   ClearDrawData();
-
    TLockGuard lock(fMutex);
+
    fShapes.clear();
    fSearch.clear();
+
+   _ClearDrawData();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1887,7 +1888,7 @@ bool RGeomDescription::ChangeNodeVisibility(const std::vector<std::string> &path
          break;
       }
 
-   ClearDrawData(); // after change raw data is no longer valid
+   _ClearDrawData(); // after change raw data is no longer valid
 
    return true;
 }
@@ -1958,7 +1959,7 @@ bool RGeomDescription::SelectTop(const std::vector<std::string> &path)
 
    fSelectedStack = stack;
 
-   ClearDrawData();
+   _ClearDrawData();
 
    return true;
 }
@@ -1987,7 +1988,7 @@ bool RGeomDescription::SetPhysNodeVisibility(const std::vector<std::string> &pat
          bool changed = iter->visible != on;
          if (changed) {
             iter->visible = on;
-            ClearDrawData();
+            _ClearDrawData();
 
             // no need for custom settings if match with description
             if ((fDesc[nodeid].vis > 0) == on)
@@ -1999,13 +2000,13 @@ bool RGeomDescription::SetPhysNodeVisibility(const std::vector<std::string> &pat
 
       if (res > 0) {
          fVisibility.emplace(iter, stack, on);
-         ClearDrawData();
+         _ClearDrawData();
          return true;
       }
    }
 
    fVisibility.emplace_back(stack, on);
-   ClearDrawData();
+   _ClearDrawData();
    return true;
 }
 
@@ -2076,7 +2077,7 @@ bool RGeomDescription::ClearPhysNodeVisibility(const std::vector<std::string> &p
    for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter++)
       if (compare_stacks(iter->stack, stack) == 0) {
          fVisibility.erase(iter);
-         ClearDrawData();
+         _ClearDrawData();
          return true;
       }
 
@@ -2094,7 +2095,7 @@ bool RGeomDescription::ClearAllPhysVisibility()
       return false;
 
    fVisibility.clear();
-   ClearDrawData();
+   _ClearDrawData();
    return true;
 }
 
@@ -2118,7 +2119,7 @@ bool RGeomDescription::ChangeConfiguration(const std::string &json)
 
    fCfg = *cfg; // use assign
 
-   ClearDrawData();
+   _ClearDrawData();
 
    return true;
 }

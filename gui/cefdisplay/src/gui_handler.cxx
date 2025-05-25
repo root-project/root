@@ -41,10 +41,9 @@
 #include "TBase64.h"
 #include <ROOT/RLogger.hxx>
 
-
-ROOT::Experimental::RLogChannel &CefWebDisplayLog()
+ROOT::RLogChannel &CefWebDisplayLog()
 {
-   static ROOT::Experimental::RLogChannel sChannel("ROOT.CefWebDisplay");
+   static ROOT::RLogChannel sChannel("ROOT.CefWebDisplay");
    return sChannel;
 }
 

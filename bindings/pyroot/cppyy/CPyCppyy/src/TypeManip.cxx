@@ -190,7 +190,7 @@ void CPyCppyy::TypeManip::cppscope_to_legalname(std::string& cppscope)
 {
 // Change characters illegal in a variable name into '_' to form a legal name.
     for (char& c : cppscope) {
-        for (char needle : {':', '>', '<', ' ', ',', '&', '='})
+        for (char needle : {':', '>', '<', ' ', ',', '&', '=', '*'})
             if (c == needle) c = '_';
     }
 }

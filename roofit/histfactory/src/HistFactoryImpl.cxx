@@ -34,12 +34,12 @@ namespace Detail {
  * ranges for the gamma parameter and provides a reasonable starting point for
  * pre-fit errors.
  *
- * @param gammas   The gamma parameters to be configured.
- * @param sigmaRel The relative sigma values to be used for configuring the
- *                 limits and errors.
- * @param minSigma The minimum relative sigma threshold. If a relative sigma is
- *                 below this threshold, the gamma parameter is set to be
- *                 constant.
+ * @param gammas    The gamma parameters to be configured.
+ * @param relSigmas The relative sigma values to be used for configuring the
+ *                  limits and errors.
+ * @param minSigma  The minimum relative sigma threshold. If a relative sigma is
+ *                  below this threshold, the gamma parameter is set to be
+ *                  constant.
  */
 void configureConstrainedGammas(RooArgList const &gammas, std::span<const double> relSigmas, double minSigma)
 {
@@ -58,6 +58,8 @@ void configureConstrainedGammas(RooArgList const &gammas, std::span<const double
       // Set reasonable ranges
       gamma.setMax(1. + 5. * sigmaRel);
       gamma.setMin(0.);
+      // Set initial error too
+      gamma.setError(sigmaRel);
 
       // Give reasonable starting point for pre-fit errors by setting it to the
       // absolute sigma Mostly useful for pre-fit plotting.

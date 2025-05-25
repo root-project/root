@@ -49,7 +49,7 @@ with other statistical frameworks, and also ease of manipulation, it
 may be useful to store statistical models in text form.
 
 The RooJSONFactoryWSTool is a helper class to achieve exactly this,
-exporting to and importing from JSON and YML.
+exporting to and importing from JSON.
 
 In order to import a workspace from a JSON file, you can do
 
@@ -86,11 +86,6 @@ tool.exportJSON("myjson.json");
 ~~~
 
 For more details, consult the tutorial <a href="rf515__hfJSON_8py.html">rf515_hfJSON</a>.
-
-In order to import and export YML files, `ROOT` needs to be compiled
-with the external dependency <a
-href="https://github.com/biojppm/rapidyaml">RapidYAML</a>, which needs
-to be installed on your system when building `ROOT`.
 
 The RooJSONFactoryWSTool only knows about a limited set of classes for
 import and export. If import or export of a class you're interested in
@@ -189,34 +184,6 @@ bool isNumber(const std::string &str)
          return false;
       first = false;
    }
-   return true;
-}
-
-/**
- * @brief Check if a string is a valid name.
- *
- * A valid name should start with a letter or an underscore, followed by letters, digits, or underscores.
- * Only characters from the ASCII character set are allowed.
- *
- * @param str The string to be checked.
- * @return bool Returns true if the string is a valid name; otherwise, returns false.
- */
-bool isValidName(const std::string &str)
-{
-   // Check if the string is empty or starts with a non-letter/non-underscore character
-   if (str.empty() || !(std::isalpha(str[0]) || str[0] == '_')) {
-      return false;
-   }
-
-   // Check the remaining characters in the string
-   for (char c : str) {
-      // Allow letters, digits, and underscore
-      if (!(std::isalnum(c) || c == '_')) {
-         return false;
-      }
-   }
-
-   // If all characters are valid, the string is a valid name
    return true;
 }
 
@@ -370,8 +337,9 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
          RooJSONFactoryWSTool::error(errMsg.str());
       } else if (p[k].is_seq()) {
          bool firstInner = true;
+         expression << "{";
          for (RooAbsArg *arg : tool->requestArgList<RooAbsReal>(p, k)) {
-            expression << (firstInner ? "{" : ",") << arg->GetName();
+            expression << (firstInner ? "" : ",") << arg->GetName();
             firstInner = false;
          }
          expression << "}";
@@ -455,7 +423,7 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
 
    // RooConstVars are not a thing in HS3, and also for RooFit they are not
    // that important: they are just constants. So we don't need to remember
-   // any intormation about them.
+   // any information about them.
    if (dynamic_cast<RooConstVar const *>(arg)) {
       return;
    }
@@ -528,11 +496,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
 
-   if (!::isValidName(name)) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() data name '" << name << "' is not valid!" << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-   }
+   RooJSONFactoryWSTool::testValidName(name, true);
 
    std::string const &type = p["type"].val();
    if (type == "binned") {
@@ -718,7 +682,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    for (const auto &p : pars) {
       if (mc->GetParametersOfInterest()->find(*p))
          continue;
-      if (p->isConstant() && !mainPars.find(*p)) {
+      if (p->isConstant() && !mainPars.find(*p) && domainPars.find(*p)) {
          globs.add(*p);
       } else if (domainPars.find(*p)) {
          nps.add(*p);
@@ -871,6 +835,50 @@ JSONNode const *RooJSONFactoryWSTool::findNamedChild(JSONNode const &node, std::
    }
 
    return nullptr;
+}
+
+/**
+ * @brief Check if a string is a valid name.
+ *
+ * A valid name should start with a letter or an underscore, followed by letters, digits, or underscores.
+ * Only characters from the ASCII character set are allowed.
+ *
+ * @param str The string to be checked.
+ * @return bool Returns true if the string is a valid name; otherwise, returns false.
+ */
+bool RooJSONFactoryWSTool::isValidName(const std::string &str)
+{
+   // Check if the string is empty or starts with a non-letter/non-underscore character
+   if (str.empty() || !(std::isalpha(str[0]) || str[0] == '_')) {
+      return false;
+   }
+
+   // Check the remaining characters in the string
+   for (char c : str) {
+      // Allow letters, digits, and underscore
+      if (!(std::isalnum(c) || c == '_')) {
+         return false;
+      }
+   }
+
+   // If all characters are valid, the string is a valid name
+   return true;
+}
+
+bool RooJSONFactoryWSTool::allowExportInvalidNames(true);
+bool RooJSONFactoryWSTool::testValidName(const std::string &name, bool forceError)
+{
+   if (!RooJSONFactoryWSTool::isValidName(name)) {
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() name '" << name << "' is not valid!" << std::endl;
+      if (RooJSONFactoryWSTool::allowExportInvalidNames && !forceError) {
+         RooJSONFactoryWSTool::warning(ss.str());
+         return false;
+      } else {
+         RooJSONFactoryWSTool::error(ss.str());
+      }
+   }
+   return true;
 }
 
 std::string RooJSONFactoryWSTool::name(const JSONNode &n)
@@ -1178,11 +1186,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    auto const &factoryExpressions = RooFit::JSONIO::importExpressions();
 
    // some preparations: what type of function are we dealing with here?
-   if (!::isValidName(name)) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() function name '" << name << "' is not valid!" << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-   }
+   RooJSONFactoryWSTool::testValidName(name, true);
 
    // if the RooAbsArg already exists, we don't need to do anything
    if (_workspace.arg(name)) {
@@ -1297,7 +1301,9 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(vars)) {
       JSONNode &obsNode = observablesNode.append_child().set_map();
-      obsNode["name"] << var->GetName();
+      std::string name = var->GetName();
+      RooJSONFactoryWSTool::testValidName(name, false);
+      obsNode["name"] << name;
       if (var->getBinning().isUniform()) {
          obsNode["min"] << var->getMin();
          obsNode["max"] << var->getMax();
@@ -1651,12 +1657,7 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
 {
    // import a RooRealVar object
    std::string name(RooJSONFactoryWSTool::name(p));
-
-   if (!::isValidName(name)) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() variable name '" << name << "' is not valid!" << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-   }
+   RooJSONFactoryWSTool::testValidName(name, true);
 
    if (_workspace.var(name))
       return;
@@ -1787,6 +1788,16 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       npDomain.writeJSON(appendNamedChild(domainsNode, npDomainName));
    }
 
+   if (mc.GetGlobalObservables()) {
+      std::string globDomainName = analysisName + "_global_observables";
+      domains.append_child() << globDomainName;
+      RooFit::JSONIO::Detail::Domains::ProductDomain globDomain;
+      for (auto *glob : static_range_cast<const RooRealVar *>(*mc.GetGlobalObservables())) {
+         globDomain.readVariable(*glob);
+      }
+      globDomain.writeJSON(appendNamedChild(domainsNode, globDomainName));
+   }
+
    if (mc.GetParametersOfInterest()) {
       std::string poiDomainName = analysisName + "_parameters_of_interest";
       domains.append_child() << poiDomainName;
@@ -1874,13 +1885,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
                   do_export = true;
                }
             }
-            if (do_export && !::isValidName(arg->GetName())) {
-               std::stringstream ss;
-               ss << "RooJSONFactoryWSTool() variable '" << arg->GetName() << "' has an invalid name!" << std::endl;
-               RooJSONFactoryWSTool::error(ss.str());
-            }
-            if (do_export)
+            if (do_export) {
+               RooJSONFactoryWSTool::testValidName(arg->GetName(), true);
                snapshotSorted.add(*arg);
+            }
          }
       }
       snapshotSorted.sort();
@@ -2119,11 +2127,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    if (auto paramPointsNode = n.find("parameter_points")) {
       for (const auto &snsh : paramPointsNode->children()) {
          std::string name = RooJSONFactoryWSTool::name(snsh);
-         if (!::isValidName(name)) {
-            std::stringstream ss;
-            ss << "RooJSONFactoryWSTool() node name '" << name << "' is not valid!" << std::endl;
-            RooJSONFactoryWSTool::error(ss.str());
-         }
+         RooJSONFactoryWSTool::testValidName(name, true);
 
          RooArgSet vars;
          for (const auto &var : snsh["parameters"].children()) {

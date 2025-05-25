@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -52,7 +54,7 @@ getGlobalObservables(RooAbsPdf const &pdf, RooArgSet const *globalObservables, c
 
    if (globalObservablesTag) {
       std::unique_ptr<RooArgSet> allVars{pdf.getVariables()};
-      return std::unique_ptr<RooArgSet>{static_cast<RooArgSet *>(allVars->selectByAttrib(globalObservablesTag, true))};
+      return std::unique_ptr<RooArgSet>{allVars->selectByAttrib(globalObservablesTag, true)};
    }
 
    // no global observables specified
@@ -92,13 +94,11 @@ getGlobalObservables(RooAbsPdf const &pdf, RooArgSet const *globalObservables, c
 ///            `globalObservables` or `globalObservablesTag` parameters, the
 ///            values of all global observables that are not stored in the
 ///            dataset are taken from the model.
-/// \param[in] removeConstraintsFromPdf If true, the constraints that are extracted
-///            from the PDF are removed from the original PDF.
 std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbsPdf const &pdf, RooAbsData const &data,
                                                  RooArgSet const *constrainedParameters,
                                                  RooArgSet const *externalConstraints,
                                                  RooArgSet const *globalObservables, const char *globalObservablesTag,
-                                                 bool takeGlobalObservablesFromData, bool removeConstraintsFromPdf)
+                                                 bool takeGlobalObservablesFromData)
 {
    RooArgSet const &observables = *data.get();
 
@@ -123,7 +123,7 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
 
    if (!cPars.empty()) {
       std::unique_ptr<RooArgSet> internalConstraints{
-         pdf.getAllConstraints(observables, cPars, doStripDisconnected, removeConstraintsFromPdf)};
+         pdf.getAllConstraints(observables, cPars, doStripDisconnected)};
       allConstraints.add(*internalConstraints);
    }
    if (externalConstraints) {
@@ -177,3 +177,5 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
    // no constraints
    return nullptr;
 }
+
+/// \endcond

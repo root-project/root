@@ -51,7 +51,6 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    const PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
-   unsigned int fNSlots{0};
 
    Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id) final
    {
@@ -125,7 +124,12 @@ public:
    {
    }
 
-   ~RLazyDS()
+   // Rule of five
+   RLazyDS(const RLazyDS &) = delete;
+   RLazyDS &operator=(const RLazyDS &) = delete;
+   RLazyDS(RLazyDS &&) = delete;
+   RLazyDS &operator=(RLazyDS &&) = delete;
+   ~RLazyDS() final
    {
       for (auto &&ptrHolderv : fPointerHolders) {
          for (auto &&ptrHolder : ptrHolderv) {

@@ -32,9 +32,9 @@
 using namespace ROOT;
 using namespace std::string_literals;
 
-ROOT::Experimental::RLogChannel &ROOT::BrowserLog()
+ROOT::RLogChannel &ROOT::BrowserLog()
 {
-   static ROOT::Experimental::RLogChannel sLog("ROOT.Browser");
+   static ROOT::RLogChannel sLog("ROOT.Browser");
    return sLog;
 }
 

@@ -8,7 +8,7 @@ class TObjectComparisonOps(unittest.TestCase):
     """
     Test for the comparison operators of TObject and subclasses:
     __eq__, __ne__, __lt__, __le__, __gt__, __ge__.
-    Such pythonisations rely on TObject::IsEqual and TObject::Compare,
+    Such pythonizations rely on TObject::IsEqual and TObject::Compare,
     which can be reimplemented in subclasses.
     """
 

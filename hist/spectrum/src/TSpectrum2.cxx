@@ -351,19 +351,19 @@ void TSpectrum2::SetResolution(Double_t resolution)
 /// ### Example 1 - Background_gamma64.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Background_gamma64.C
+/// ../../../tutorials/legacy/spectrum/Background_gamma64.C
 /// End_Macro
 ///
 /// ### Example 2- Background_gamma256.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Background_gamma256.C
+/// ../../../tutorials/legacy/spectrum/Background_gamma256.C
 /// End_Macro
 ///
 /// ### Example 3- Background_synt256.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Background_synt256.C
+/// ../../../tutorials/legacy/spectrum/Background_synt256.C
 /// End_Macro
 
 const char *TSpectrum2::Background(Double_t **spectrum,
@@ -576,7 +576,7 @@ const char *TSpectrum2::Background(Double_t **spectrum,
 /// ### Example 4 - Smooth.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Smooth.C
+/// ../../../tutorials/legacy/spectrum/Smooth.C
 /// End_Macro
 
 const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
@@ -817,19 +817,19 @@ const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssiz
 /// ### Example 5 - Deconvolution2_1.c
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Deconvolution2_1.C
+/// ../../../tutorials/legacy/spectrum/Deconvolution2_1.C
 /// End_Macro
 ///
 /// ### Example 6 - Deconvolution2_2.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Deconvolution2_2.C
+/// ../../../tutorials/legacy/spectrum/Deconvolution2_2.C
 /// End_Macro
 ///
 /// ### Example 7 - Deconvolution2_HR.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Deconvolution2_HR.C
+/// ../../../tutorials/legacy/spectrum/Deconvolution2_HR.C
 /// End_Macro
 
 const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
@@ -1060,31 +1060,31 @@ const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
 /// ### Example 8 - Src.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Src.C
+/// ../../../tutorials/legacy/spectrum/Src.C
 /// End_Macro
 ///
 /// ### Example 9 - Src2.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Src2.C
+/// ../../../tutorials/legacy/spectrum/Src2.C
 /// End_Macro
 ///
 /// ### Example 10 - Src3.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Src3.C
+/// ../../../tutorials/legacy/spectrum/Src3.C
 /// End_Macro
 ///
 /// ### Example 11 - Src4.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Src4.C
+/// ../../../tutorials/legacy/spectrum/Src4.C
 /// End_Macro
 ///
 /// ### Example 12 - Src5.C
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/spectrum/Src5.C
+/// ../../../tutorials/legacy/spectrum/Src5.C
 /// End_Macro
 
 Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex, Int_t ssizey,

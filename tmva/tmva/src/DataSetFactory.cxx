@@ -1128,7 +1128,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "events in training trees    : " << availableTraining  << Endl;
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "events in testing trees     : " << availableTesting   << Endl;
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "events in unspecified trees : " << availableUndefined << Endl;
-      Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "requested for training      : " << requestedTraining << Endl;;
+      Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "requested for training      : " << requestedTraining << Endl;
 
       if(presel_scale<1)
          Log() << " ( " << eventCounts[cls].nTrainingEventsRequested

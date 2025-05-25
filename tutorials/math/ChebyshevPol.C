@@ -2,7 +2,7 @@
 /// \ingroup tutorial_math
 /// \notebook
 /// Example of Chebyshev polynomials
-/// using new TFormula pre-defined definitions of chebyshev polynomials
+/// using TFormula pre-defined definitions of chebyshev polynomials.
 ///
 /// \macro_image
 /// \macro_code

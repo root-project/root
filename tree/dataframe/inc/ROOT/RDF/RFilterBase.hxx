@@ -53,8 +53,13 @@ public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
                const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
                const std::vector<std::string> &prevVariations, const std::string &variation = "nominal");
-   RFilterBase &operator=(const RFilterBase &) = delete;
 
+   // Rule of five
+
+   RFilterBase(const RFilterBase &) = delete;
+   RFilterBase &operator=(const RFilterBase &) = delete;
+   RFilterBase(RFilterBase &&) = delete;
+   RFilterBase &operator=(RFilterBase &&) = delete;
    ~RFilterBase() override;
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;

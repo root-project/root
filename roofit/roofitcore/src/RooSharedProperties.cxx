@@ -28,10 +28,7 @@ that can be stored in RooSharedPropertiesList.
 #include "RooTrace.h"
 
 #include "Riostream.h"
-using std::cout ;
-using std::endl ;
 
-ClassImp(RooSharedProperties);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,5 +74,5 @@ bool RooSharedProperties::operator==(const RooSharedProperties& other) const
 
 void RooSharedProperties::Print(Option_t* /*opts*/) const
 {
-  cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << endl ;
+  std::cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << std::endl ;
 }

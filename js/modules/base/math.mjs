@@ -1,20 +1,22 @@
 /**
  * A math namespace - all functions can be exported from base/math.mjs.
- * Also all these functions can be used with TFormula calcualtions
+ * Also all these functions can be used with TFormula calculations
  * @namespace Math
  */
 
-/* eslint-disable no-loss-of-precision */
-/* eslint-disable space-in-parens */
 /* eslint-disable curly */
-/* eslint-disable operator-linebreak */
-/* eslint-disable no-floating-decimal */
-/* eslint-disable brace-style */
-/* eslint-disable comma-spacing */
+/* eslint-disable no-loss-of-precision */
+/* eslint-disable no-useless-assignment */
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-else-return */
+/* eslint-disable no-shadow */
+/* eslint-disable operator-assignment */
+/* eslint-disable @stylistic/js/comma-spacing */
+/* eslint-disable @stylistic/js/no-floating-decimal */
+/* eslint-disable @stylistic/js/space-in-parens */
 
 // this can be improved later
 
-/* eslint-disable no-unreachable-loop */
 /* eslint-disable eqeqeq */
 
 const kMACHEP = 1.11022302462515654042363166809e-16,
@@ -1892,7 +1894,7 @@ function Chebyshev10(x, ...args) {
 
 // =========================================================================
 
-/** @summary Caluclate ClopperPearson
+/** @summary Calculate ClopperPearson
   * @memberof Math */
 function eff_ClopperPearson(total,passed,level,bUpper) {
    const alpha = (1.0 - level) / 2;
@@ -1902,7 +1904,7 @@ function eff_ClopperPearson(total,passed,level,bUpper) {
    return ((passed == 0) ? 0.0 : beta_quantile(alpha,passed,total-passed+1.0));
 }
 
-/** @summary Caluclate normal
+/** @summary Calculate normal
   * @memberof Math */
 function eff_Normal(total,passed,level,bUpper) {
    if (total == 0) return bUpper ? 1 : 0;
@@ -1992,26 +1994,24 @@ function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
          return beta_quantile((1+level)/2,a,b);
       else
          return 1;
-   } else {
-      if ((a > 0) && (b > 0))
-         return beta_quantile((1-level)/2,a,b);
-      else
-         return 0;
-   }
+   } else if ((a > 0) && (b > 0))
+      return beta_quantile((1-level)/2,a,b);
+
+   return 0;
 }
 
 /** @summary Return function to calculate boundary of TEfficiency
   * @memberof Math */
 function getTEfficiencyBoundaryFunc(option, isbayessian) {
    const kFCP = 0,       // Clopper-Pearson interval (recommended by PDG)
-          kFNormal = 1,   // Normal approximation
-          kFWilson = 2,   // Wilson interval
-          kFAC = 3,       // Agresti-Coull interval
-          kFFC = 4,       // Feldman-Cousins interval, too complicated for JavaScript
-          // kBJeffrey = 5,  // Jeffrey interval (Prior ~ Beta(0.5,0.5)
-          // kBUniform = 6,  // Prior ~ Uniform = Beta(1,1)
-          // kBBayesian = 7, // User specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
-          kMidP = 8;      // Mid-P Lancaster interval
+         kFNormal = 1,   // Normal approximation
+         kFWilson = 2,   // Wilson interval
+         kFAC = 3,       // Agresti-Coull interval
+         kFFC = 4,       // Feldman-Cousins interval, too complicated for JavaScript
+         // kBJeffrey = 5,  // Jeffrey interval (Prior ~ Beta(0.5,0.5)
+         // kBUniform = 6,  // Prior ~ Uniform = Beta(1,1)
+         // kBBayesian = 7, // User specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+         kMidP = 8;      // Mid-P Lancaster interval
 
    if (isbayessian)
       return eff_Bayesian;
@@ -2069,7 +2069,6 @@ function InvPi()
 {
    return 1 / Math.PI;
 }
-
 
 
 export { gamma, gamma as tgamma, gamma as Gamma,

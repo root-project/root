@@ -1,0 +1,205 @@
+From a3f213ef4a7e293152c272cce78ad5d10a3ede52 Mon Sep 17 00:00:00 2001
+From: Vassil Vassilev <v.g.vassilev@gmail.com>
+Date: Fri, 22 Dec 2023 08:38:23 +0000
+Subject: [PATCH] [clang-repl] Add a interpreter-specific overload of operator
+ new for C++.
+
+This patch brings back the basic support for C by inserting the required for
+value printing runtime only when we are in C++ mode. Additionally, it defines
+a new overload of operator placement new because we can't really forward declare
+it in a library-agnostic way.
+
+Fixes the issue described in llvm/llvm-project#69072.
+---
+ clang/include/clang/Interpreter/Interpreter.h |  4 +--
+ clang/lib/Interpreter/Interpreter.cpp         | 33 +++++++++++++++----
+ clang/test/Interpreter/incremental-mode.cpp   |  3 +-
+ .../unittests/Interpreter/InterpreterTest.cpp | 29 +++-------------
+ 4 files changed, 36 insertions(+), 33 deletions(-)
+
+diff --git a/clang/include/clang/Interpreter/Interpreter.h b/clang/include/clang/Interpreter/Interpreter.h
+index 01858dfcc90ac5..292fa566ae7037 100644
+--- a/clang/include/clang/Interpreter/Interpreter.h
++++ b/clang/include/clang/Interpreter/Interpreter.h
+@@ -129,7 +129,7 @@ class Interpreter {
+   llvm::Expected<llvm::orc::ExecutorAddr>
+   getSymbolAddressFromLinkerName(llvm::StringRef LinkerName) const;
+ 
+-  enum InterfaceKind { NoAlloc, WithAlloc, CopyArray };
++  enum InterfaceKind { NoAlloc, WithAlloc, CopyArray, NewTag };
+ 
+   const llvm::SmallVectorImpl<Expr *> &getValuePrintingInfo() const {
+     return ValuePrintingInfo;
+@@ -144,7 +144,7 @@ class Interpreter {
+ 
+   llvm::DenseMap<CXXRecordDecl *, llvm::orc::ExecutorAddr> Dtors;
+ 
+-  llvm::SmallVector<Expr *, 3> ValuePrintingInfo;
++  llvm::SmallVector<Expr *, 4> ValuePrintingInfo;
+ };
+ } // namespace clang
+ 
+diff --git a/clang/lib/Interpreter/Interpreter.cpp b/clang/lib/Interpreter/Interpreter.cpp
+index c9fcef5b5b5af1..9f97a3c6b0be9e 100644
+--- a/clang/lib/Interpreter/Interpreter.cpp
++++ b/clang/lib/Interpreter/Interpreter.cpp
+@@ -248,7 +248,7 @@ Interpreter::~Interpreter() {
+ // can't find the precise resource directory in unittests so we have to hard
+ // code them.
+ const char *const Runtimes = R"(
+-    void* operator new(__SIZE_TYPE__, void* __p) noexcept;
++#ifdef __cplusplus
+     void *__clang_Interpreter_SetValueWithAlloc(void*, void*, void*);
+     void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*);
+     void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, void*);
+@@ -256,15 +256,18 @@ const char *const Runtimes = R"(
+     void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, double);
+     void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, long double);
+     void __clang_Interpreter_SetValueNoAlloc(void*,void*,void*,unsigned long long);
++    struct __clang_Interpreter_NewTag{} __ci_newtag;
++    void* operator new(__SIZE_TYPE__, void* __p, __clang_Interpreter_NewTag) noexcept;
+     template <class T, class = T (*)() /*disable for arrays*/>
+     void __clang_Interpreter_SetValueCopyArr(T* Src, void* Placement, unsigned long Size) {
+       for (auto Idx = 0; Idx < Size; ++Idx)
+-        new ((void*)(((T*)Placement) + Idx)) T(Src[Idx]);
++        new ((void*)(((T*)Placement) + Idx), __ci_newtag) T(Src[Idx]);
+     }
+     template <class T, unsigned long N>
+     void __clang_Interpreter_SetValueCopyArr(const T (*Src)[N], void* Placement, unsigned long Size) {
+       __clang_Interpreter_SetValueCopyArr(Src[0], Placement, Size);
+     }
++#endif // __cplusplus
+ )";
+ 
+ llvm::Expected<std::unique_ptr<Interpreter>>
+@@ -279,7 +282,7 @@ Interpreter::create(std::unique_ptr<CompilerInstance> CI) {
+   if (!PTU)
+     return PTU.takeError();
+ 
+-  Interp->ValuePrintingInfo.resize(3);
++  Interp->ValuePrintingInfo.resize(4);
+   // FIXME: This is a ugly hack. Undo command checks its availability by looking
+   // at the size of the PTU list. However we have parsed something in the
+   // beginning of the REPL so we have to mark them as 'Irrevocable'.
+@@ -500,7 +503,7 @@ Interpreter::CompileDtorCall(CXXRecordDecl *CXXRD) {
+ static constexpr llvm::StringRef MagicRuntimeInterface[] = {
+     "__clang_Interpreter_SetValueNoAlloc",
+     "__clang_Interpreter_SetValueWithAlloc",
+-    "__clang_Interpreter_SetValueCopyArr"};
++    "__clang_Interpreter_SetValueCopyArr", "__ci_newtag"};
+ 
+ bool Interpreter::FindRuntimeInterface() {
+   if (llvm::all_of(ValuePrintingInfo, [](Expr *E) { return E != nullptr; }))
+@@ -530,6 +533,9 @@ bool Interpreter::FindRuntimeInterface() {
+   if (!LookupInterface(ValuePrintingInfo[CopyArray],
+                        MagicRuntimeInterface[CopyArray]))
+     return false;
++  if (!LookupInterface(ValuePrintingInfo[NewTag],
++                       MagicRuntimeInterface[NewTag]))
++    return false;
+   return true;
+ }
+ 
+@@ -607,7 +613,9 @@ class RuntimeInterfaceBuilder
+                 .getValuePrintingInfo()[Interpreter::InterfaceKind::CopyArray],
+             SourceLocation(), Args, SourceLocation());
+       }
+-      Expr *Args[] = {AllocCall.get()};
++      Expr *Args[] = {
++          AllocCall.get(),
++          Interp.getValuePrintingInfo()[Interpreter::InterfaceKind::NewTag]};
+       ExprResult CXXNewCall = S.BuildCXXNew(
+           E->getSourceRange(),
+           /*UseGlobal=*/true, /*PlacementLParen=*/SourceLocation(), Args,
+@@ -628,8 +636,9 @@ class RuntimeInterfaceBuilder
+           Interp.getValuePrintingInfo()[Interpreter::InterfaceKind::NoAlloc],
+           E->getBeginLoc(), Args, E->getEndLoc());
+     }
++    default:
++      llvm_unreachable("Unhandled Interpreter::InterfaceKind");
+     }
+-    llvm_unreachable("Unhandled Interpreter::InterfaceKind");
+   }
+ 
+   Interpreter::InterfaceKind VisitRecordType(const RecordType *Ty) {
+@@ -814,3 +823,15 @@ __clang_Interpreter_SetValueNoAlloc(void *This, void *OutVal, void *OpaqueType,
+   VRef = Value(static_cast<Interpreter *>(This), OpaqueType);
+   VRef.setLongDouble(Val);
+ }
++
++// A trampoline to work around the fact that operator placement new cannot
++// really be forward declared due to libc++ and libstdc++ declaration mismatch.
++// FIXME: __clang_Interpreter_NewTag is ODR violation because we get the same
++// definition in the interpreter runtime. We should move it in a runtime header
++// which gets included by the interpreter and here.
++struct __clang_Interpreter_NewTag {};
++REPL_EXTERNAL_VISIBILITY void *
++operator new(size_t __sz, void *__p, __clang_Interpreter_NewTag) noexcept {
++  // Just forward to the standard operator placement new.
++  return operator new(__sz, __p);
++}
+diff --git a/clang/test/Interpreter/incremental-mode.cpp b/clang/test/Interpreter/incremental-mode.cpp
+index e6350d237ef578..d63cee0dd6d15f 100644
+--- a/clang/test/Interpreter/incremental-mode.cpp
++++ b/clang/test/Interpreter/incremental-mode.cpp
+@@ -1,3 +1,4 @@
+ // RUN: clang-repl -Xcc -E
+-// RUN: clang-repl -Xcc -emit-llvm 
++// RUN: clang-repl -Xcc -emit-llvm
++// RUN: clang-repl -Xcc -xc
+ // expected-no-diagnostics
+diff --git a/clang/unittests/Interpreter/InterpreterTest.cpp b/clang/unittests/Interpreter/InterpreterTest.cpp
+index 5f2911e9a7adad..1e0854b3c4af46 100644
+--- a/clang/unittests/Interpreter/InterpreterTest.cpp
++++ b/clang/unittests/Interpreter/InterpreterTest.cpp
+@@ -248,28 +248,10 @@ TEST(IncrementalProcessing, FindMangledNameSymbol) {
+ #endif // _WIN32
+ }
+ 
+-static void *AllocateObject(TypeDecl *TD, Interpreter &Interp) {
++static Value AllocateObject(TypeDecl *TD, Interpreter &Interp) {
+   std::string Name = TD->getQualifiedNameAsString();
+-  const clang::Type *RDTy = TD->getTypeForDecl();
+-  clang::ASTContext &C = Interp.getCompilerInstance()->getASTContext();
+-  size_t Size = C.getTypeSize(RDTy);
+-  void *Addr = malloc(Size);
+-
+-  // Tell the interpreter to call the default ctor with this memory. Synthesize:
+-  // new (loc) ClassName;
+-  static unsigned Counter = 0;
+-  std::stringstream SS;
+-  SS << "auto _v" << Counter++ << " = "
+-     << "new ((void*)"
+-     // Windows needs us to prefix the hexadecimal value of a pointer with '0x'.
+-     << std::hex << std::showbase << (size_t)Addr << ")" << Name << "();";
+-
+-  auto R = Interp.ParseAndExecute(SS.str());
+-  if (!R) {
+-    free(Addr);
+-    return nullptr;
+-  }
+-
++  Value Addr;
++  cantFail(Interp.ParseAndExecute("new " + Name + "()", &Addr));
+   return Addr;
+ }
+ 
+@@ -317,7 +299,7 @@ TEST(IncrementalProcessing, InstantiateTemplate) {
+   }
+ 
+   TypeDecl *TD = cast<TypeDecl>(LookupSingleName(*Interp, "A"));
+-  void *NewA = AllocateObject(TD, *Interp);
++  Value NewA = AllocateObject(TD, *Interp);
+ 
+   // Find back the template specialization
+   VarDecl *VD = static_cast<VarDecl *>(*PTUDeclRange.begin());
+@@ -328,8 +310,7 @@ TEST(IncrementalProcessing, InstantiateTemplate) {
+   typedef int (*TemplateSpecFn)(void *);
+   auto fn =
+       cantFail(Interp->getSymbolAddress(MangledName)).toPtr<TemplateSpecFn>();
+-  EXPECT_EQ(42, fn(NewA));
+-  free(NewA);
++  EXPECT_EQ(42, fn(NewA.getPtr()));
+ }
+ 
+ #ifdef CLANG_INTERPRETER_NO_SUPPORT_EXEC

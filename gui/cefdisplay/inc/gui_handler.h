@@ -21,12 +21,10 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 class RLogChannel;
 }
-}
 
-ROOT::Experimental::RLogChannel &CefWebDisplayLog();
+ROOT::RLogChannel &CefWebDisplayLog();
 
 class THttpServer;
 

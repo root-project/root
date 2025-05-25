@@ -400,6 +400,59 @@ TPad::~TPad()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add an object to list of primitives with speicified draw option
+/// When \par modified set to kTRUE (default) pad will be marked as modified
+/// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
+///
+/// ~~~{.cpp}
+/// auto c1 = new TCanvas("c1","Canvas with subpoads", 600, 600);
+/// c1->Divide(2,2);
+///
+/// for (Int_t n = 1; n <= 4; ++n) {
+///    auto h1 = new TH1I(TString::Format("hist_%d",n), "Random hist", 100, -5, 5);
+///    h1->FillRandom("gaus", 2000 + n*1000);
+///    c1->GetPad(n)->Add(h1);
+/// }
+/// ~~~
+
+void TPad::Add(TObject *obj, Option_t *opt, Bool_t modified)
+{
+   if (!obj)
+      return;
+
+   if (!fPrimitives)
+      fPrimitives = new TList;
+
+   obj->SetBit(kMustCleanup);
+
+   fPrimitives->Add(obj, opt);
+
+   if (modified)
+      Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add an object as first in list of primitives with speicified draw option
+/// When \par modified set to kTRUE (default) pad will be marked as modified
+/// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
+
+void TPad::AddFirst(TObject *obj, Option_t *opt, Bool_t modified)
+{
+   if (!obj)
+      return;
+
+   if (!fPrimitives)
+      fPrimitives = new TList;
+
+   obj->SetBit(kMustCleanup);
+
+   fPrimitives->AddFirst(obj, opt);
+
+   if (modified)
+      Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a new TExec object to the list of Execs.
 ///
 /// When an event occurs in the pad (mouse click, etc) the list of C++ commands
@@ -504,55 +557,98 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 {
    TList *lop = GetListOfPrimitives();
    if (!lop) return nullptr;
+   TList *lof = nullptr;
    TLegend *leg = nullptr;
+   TObject *obj = nullptr;
    TIter next(lop);
    TString mes;
    TString opt;
+
+   auto AddEntryFromListOfFunctions = [&]() {
+      TIter nextobj(lof);
+      while ((obj = nextobj())) {
+         if (obj->InheritsFrom(TNamed::Class())) {
+            if (strlen(obj->GetTitle()))
+               mes = obj->GetTitle();
+            else
+               mes = obj->GetName();
+         } else {
+            mes = obj->ClassName();
+         }
+         leg->AddEntry(obj, mes.Data(), "lpf");
+      }
+   };
+
    while(auto o = next()) {
       if ((o->InheritsFrom(TAttLine::Class()) || o->InheritsFrom(TAttMarker::Class()) ||
           o->InheritsFrom(TAttFill::Class())) &&
          ( !(o->InheritsFrom(TFrame::Class())) && !(o->InheritsFrom(TPave::Class())) )) {
-            if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
-            if (o->InheritsFrom(TNamed::Class()) && strlen(o->GetTitle()))
-               mes = o->GetTitle();
-            else if (strlen(o->GetName()))
-               mes = o->GetName();
-            else
-               mes = o->ClassName();
-            if (option && strlen(option)) {
-               opt = option;
-            } else {
-               if (o->InheritsFrom(TAttLine::Class()))   opt += "l";
-               if (o->InheritsFrom(TAttMarker::Class())) opt += "p";
-               if (o->InheritsFrom(TAttFill::Class()))   opt += "f";
-            }
-            leg->AddEntry(o,mes.Data(),opt.Data());
-      } else if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
-         if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
+         if (!leg)
+            leg = new TLegend(x1, y1, x2, y2, title);
+         if (o->InheritsFrom(TNamed::Class()) && strlen(o->GetTitle()))
+            mes = o->GetTitle();
+         else if (strlen(o->GetName()))
+            mes = o->GetName();
+         else
+            mes = o->ClassName();
+         if (option && strlen(option)) {
+            opt = option;
+         } else {
+            if (o->InheritsFrom(TAttLine::Class()))
+               opt += "l";
+            if (o->InheritsFrom(TAttMarker::Class()))
+               opt += "p";
+            if (o->InheritsFrom(TAttFill::Class()))
+               opt += "f";
+         }
+         leg->AddEntry(o,mes.Data(), opt.Data());
+         if (o->InheritsFrom(TH1::Class())) {
+            lof = ((TH1 *)o)->GetListOfFunctions();
+            AddEntryFromListOfFunctions();
+         }
+         if (o->InheritsFrom(TGraph::Class())) {
+            lof = ((TGraph *)o)->GetListOfFunctions();
+            AddEntryFromListOfFunctions();
+         }
+      } else if (o->InheritsFrom(TMultiGraph::Class())) {
+         if (!leg)
+            leg = new TLegend(x1, y1, x2, y2, title);
          TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
          TIter nextgraph(grlist);
-         TGraph * gr;
-         TObject * obj;
+         TGraph *gr = nullptr;
          while ((obj = nextgraph())) {
             gr = (TGraph*) obj;
-            if      (strlen(gr->GetTitle())) mes = gr->GetTitle();
-            else if (strlen(gr->GetName()))  mes = gr->GetName();
-            else                             mes = gr->ClassName();
-            if (option && strlen(option))    opt = option;
-            else                             opt = "lpf";
-            leg->AddEntry( obj, mes.Data(), opt );
+            if (strlen(gr->GetTitle()))
+               mes = gr->GetTitle();
+            else if (strlen(gr->GetName()))
+               mes = gr->GetName();
+            else
+               mes = gr->ClassName();
+            if (option && strlen(option))
+               opt = option;
+            else
+               opt = "lpf";
+            leg->AddEntry(obj, mes.Data(), opt);
          }
-      } else if ( o->InheritsFrom(THStack::Class() ) ) {
-         if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
+         lof = ((TMultiGraph *)o)->GetListOfFunctions();
+         AddEntryFromListOfFunctions();
+      } else if (o->InheritsFrom(THStack::Class())) {
+         if (!leg)
+            leg = new TLegend(x1, y1, x2, y2, title);
          TList * hlist = ((THStack *)o)->GetHists();
          TIter nexthist(hlist);
-         while (auto obj = nexthist()) {
+         while ((obj = nexthist())) {
             TH1 *hist = (TH1*) obj;
-            if      (strlen(hist->GetTitle())) mes = hist->GetTitle();
-            else if (strlen(hist->GetName()))  mes = hist->GetName();
-            else                               mes = hist->ClassName();
-            if (option && strlen(option))      opt = option;
-            else                               opt = "lpf";
+            if (strlen(hist->GetTitle()))
+               mes = hist->GetTitle();
+            else if (strlen(hist->GetName()))
+               mes = hist->GetName();
+            else
+               mes = hist->ClassName();
+            if (option && strlen(option))
+               opt = option;
+            else
+               opt = "lpf";
             leg->AddEntry( obj, mes.Data(), opt );
          }
       }
@@ -853,16 +949,20 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
 
 Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc, Double_t *yc, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
+   if (n <= 0)
+      return 0;
+   
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
    std::vector<Double_t> xc2(nn), yc2(nn);
 
    // Clip against the left boundary
-   x1 = x[n-1]; y1 = y[n-1];
+   x1 = x[n - 1];
+   y1 = y[n - 1];
    nc2 = 0;
    Int_t i;
-   for (i=0; i<n; i++) {
+   for (i = 0; i < n; i++) {
       x2 = x[i]; y2 = y[i];
       if (x1 == x2) {
          slope = 0;
@@ -885,9 +985,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    }
 
    // Clip against the top boundary
-   x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+   if (nc2 > 0) {
+      x1 = xc2[nc2 - 1];
+      y1 = yc2[nc2 - 1];
+   }
    nc = 0;
-   for (i=0; i<nc2; i++) {
+   for (i = 0; i < nc2; i++) {
       x2 = xc2[i]; y2 = yc2[i];
       if (y1 == y2) {
          slope = 0;
@@ -909,12 +1012,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       x1 = x2; y1 = y2;
    }
 
-   if (nc>0) {
-
-      // Clip against the right boundary
-      x1 = xc[nc-1]; y1 = yc[nc-1];
+   // Clip against the right boundary
+   if (nc > 0) {
+      x1 = xc[nc - 1];
+      y1 = yc[nc - 1];
       nc2 = 0;
-      for (i=0; i<nc; i++) {
+      for (i = 0; i < nc; i++) {
          x2 = xc[i]; y2 = yc[i];
          if (x1 == x2) {
             slope = 0;
@@ -937,9 +1040,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       }
 
       // Clip against the bottom boundary
-      x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+      if (nc2 > 0) {
+         x1 = xc2[nc2 - 1];
+         y1 = yc2[nc2 - 1];
+      }
       nc = 0;
-      for (i=0; i<nc2; i++) {
+      for (i = 0; i < nc2; i++) {
          x2 = xc2[i]; y2 = yc2[i];
          if (y1 == y2) {
             slope = 0;
@@ -962,7 +1068,8 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       }
    }
 
-   if (nc < 3) nc =0;
+   if (nc < 3)
+      nc = 0;
    return nc;
 }
 
@@ -1007,10 +1114,10 @@ void TPad::Close(Option_t *)
 
       // remove from the mother's list of primitives
       if (fMother) {
-         if (fMother->GetListOfPrimitives())
-            fMother->GetListOfPrimitives()->Remove(this);
+         fMother->Remove(this, kFALSE); // do not produce modified
 
-         if (gPad == this) fMother->cd();
+         if (gPad == this)
+            fMother->cd();
       }
       if (fCanvas) {
          if (fCanvas->GetPadSave() == this)
@@ -1276,7 +1383,7 @@ void TPad::Draw(Option_t *option)
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
       if (fMother && !ROOT::Detail::HasBeenDeleted(fMother))
-            if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
+            fMother->Remove(this, kFALSE);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
       //
@@ -1292,7 +1399,7 @@ void TPad::Draw(Option_t *option)
    }
 
    if (gPad->IsRetained() && gPad != this && fMother)
-      if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);
+      fMother->Add(this, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2275,6 +2382,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    Int_t nbd, inc, bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
+   bool resetAxisRange = false;
    static std::unique_ptr<TBox> zoombox;
    Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
@@ -2428,8 +2536,12 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       bin2 = axis->GetLast()+inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
+      resetAxisRange = (bin1 == 1 && axis->GetFirst() == 1 && bin2 == axis->GetNbins() && axis->GetLast() == axis->GetNbins());
       if (bin2>bin1) {
          axis->SetRange(bin1,bin2);
+      }
+      if (resetAxisRange) axis->ResetBit(TAxis::kAxisRange);
+      if (bin2>bin1) {
          gPad->Modified();
          gPad->Update();
       }
@@ -3339,8 +3451,8 @@ void TPad::FillCollideGridTH1(TObject *o)
             else         y2l = fUymin;
          }
          y2 = (Int_t)((y2l-fY1)/ys);
-         for (j=y1; j<=y2; j++) {
-         NotFree(x1, j);
+         for (j=y1; j<y2; j++) {
+            NotFree(x1, j);
          }
       }
       x1l = h->GetBinLowEdge(i);
@@ -3574,7 +3686,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Short_t px1,py1,px2,py2;
    Double_t xl, xt, yl, yt;
 
-   // GetDarkColor() and GetLightColor() use GetFillColor()
+   // GetColorDark() and GetColorBright() use GetFillColor()
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();
@@ -4679,17 +4791,19 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
 void TPad::Pop()
 {
-   if (!fMother) return;
-   if (ROOT::Detail::HasBeenDeleted(fMother)) return;
-   if (!fPrimitives) fPrimitives = new TList;
-   if (this == fMother->GetListOfPrimitives()->Last()) return;
+   if (!fMother || ROOT::Detail::HasBeenDeleted(fMother) || !fMother->GetListOfPrimitives())
+      return;
+   if (!fPrimitives)
+      fPrimitives = new TList;
+   if (this == fMother->GetListOfPrimitives()->Last())
+      return;
 
    TListIter next(fMother->GetListOfPrimitives());
    while (auto obj = next())
       if (obj == this) {
          TString opt = next.GetOption();
-         fMother->GetListOfPrimitives()->Remove(this);
-         fMother->GetListOfPrimitives()->AddLast(this, opt.Data());
+         fMother->Remove(this, kFALSE); // do not issue modified
+         fMother->Add(this, opt.Data());
          return;
       }
 }
@@ -5302,6 +5416,21 @@ void TPad::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Remove object from list of primitives
+/// When \par modified set to kTRUE (default) pad will be marked as modified - if object really removed
+/// Returns result of GetListOfPrimitives()->Remove(obj) or nullptr if list of primitives not exists
+
+TObject *TPad::Remove(TObject *obj, Bool_t modified)
+{
+   TObject *res = nullptr;
+   if (fPrimitives)
+      res = fPrimitives->Remove(obj);
+   if (res && modified)
+      Modified();
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///  Redraw the frame axis.
 ///
 ///  Redrawing axis may be necessary in case of superimposed histograms
@@ -5735,13 +5864,12 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 {
    TContext ctxt(this, kFALSE); // not interactive
 
-   char quote = '"';
-
    TString padName = GetName();
 
    // check for space in the pad name
    auto p = padName.Index(" ");
-   if (p != kNPOS) padName.Resize(p);
+   if (p != kNPOS)
+      padName.Resize(p);
 
    TString opt = option;
    if (!opt.Contains("toplevel")) {
@@ -5763,153 +5891,103 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 
    //   Write pad parameters
    if (this != gPad->GetCanvas()) {
-      out <<"  "<<std::endl;
-      out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
-
-      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
-      <<","<<fXlowNDC
-      <<","<<fYlowNDC
-      <<","<<fXlowNDC+fWNDC
-      <<","<<fYlowNDC+fHNDC
-      <<");"<<std::endl;
-      out<<"   "<<cname<<"->Draw();"<<std::endl;
-      out<<"   "<<cname<<"->cd();"<<std::endl;
+      out << "   \n";
+      out << "// ------------>Primitives in pad: " << GetName() << "\n";
+      out << "   TPad *" << cname << " = new TPad(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fXlowNDC << ", " << fYlowNDC << ", "
+          << fXlowNDC + fWNDC << ", " << fYlowNDC + fHNDC << ");\n";
+      out << "   " << cname << "->Draw();\n";
+      out << "   " << cname << "->cd();\n";
    }
-   out<<"   "<<cname<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   out << "   " << cname << "->Range(" << fX1 << "," << fY1 << "," << fX2 << "," << fY2 << ");\n";
    TView *view = GetView();
    if (view) {
       Double_t rmin[3], rmax[3];
       view->GetRange(rmin, rmax);
-      static Int_t viewNumber = 0;
-      out<<"   TView *view"<<++viewNumber<<" = TView::CreateView(1);"<<std::endl;
-      out<<"   view"<<viewNumber<<"->SetRange("<<rmin[0]<<","<<rmin[1]<<","<<rmin[2]<<","
-                               <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<std::endl;
+      out << "   TView::CreateView(1)->SetRange(" << rmin[0] << ", " << rmin[1] << ", " << rmin[2] << ", " << rmax[0]
+          << ", " << rmax[1] << ", " << rmax[2] << ");\n";
    }
 
    SaveFillAttributes(out, cname, 19, 1001);
 
-   if (GetBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
-   }
-   if (GetBorderSize() != 4) {
-      out<<"   "<<cname<<"->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
-   }
-   if (GetLogx()) {
-      out<<"   "<<cname<<"->SetLogx();"<<std::endl;
-   }
-   if (GetLogy()) {
-      out<<"   "<<cname<<"->SetLogy();"<<std::endl;
-   }
-   if (GetLogz()) {
-      out<<"   "<<cname<<"->SetLogz();"<<std::endl;
-   }
-   if (GetGridx()) {
-      out<<"   "<<cname<<"->SetGridx();"<<std::endl;
-   }
-   if (GetGridy()) {
-      out<<"   "<<cname<<"->SetGridy();"<<std::endl;
-   }
-   if (GetTickx()) {
-      out<<"   "<<cname<<"->SetTickx("<<GetTickx()<<");"<<std::endl;
-   }
-   if (GetTicky()) {
-      out<<"   "<<cname<<"->SetTicky("<<GetTicky()<<");"<<std::endl;
-   }
-   if (GetTheta() != 30) {
-      out<<"   "<<cname<<"->SetTheta("<<GetTheta()<<");"<<std::endl;
-   }
-   if (GetPhi() != 30) {
-      out<<"   "<<cname<<"->SetPhi("<<GetPhi()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fLeftMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetLeftMargin("<<GetLeftMargin()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fRightMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetRightMargin("<<GetRightMargin()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fTopMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetTopMargin("<<GetTopMargin()<<");"<<std::endl;
-   }
-   if (TMath::Abs(fBottomMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<std::endl;
-   }
+   if (GetBorderMode() != 1)
+      out << "   " << cname << "->SetBorderMode(" << GetBorderMode() << ");\n";
+   if (GetBorderSize() != 4)
+      out << "   " << cname << "->SetBorderSize(" << GetBorderSize() << ");\n";
+   if (GetLogx())
+      out << "   " << cname << "->SetLogx();\n";
+   if (GetLogy())
+      out << "   " << cname << "->SetLogy();\n";
+   if (GetLogz())
+      out << "   " << cname << "->SetLogz();\n";
+   if (GetGridx())
+      out << "   " << cname << "->SetGridx();\n";
+   if (GetGridy())
+      out << "   " << cname << "->SetGridy();\n";
+   if (GetTickx())
+      out << "   " << cname << "->SetTickx(" << GetTickx() << ");\n";
+   if (GetTicky())
+      out << "   " << cname << "->SetTicky(" << GetTicky() << ");\n";
+   if (GetTheta() != 30)
+      out << "   " << cname << "->SetTheta(" << GetTheta() << ");\n";
+   if (GetPhi() != 30)
+      out << "   " << cname << "->SetPhi(" << GetPhi() << ");\n";
+   if (TMath::Abs(fLeftMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetLeftMargin(" << GetLeftMargin() << ");\n";
+   if (TMath::Abs(fRightMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetRightMargin(" << GetRightMargin() << ");\n";
+   if (TMath::Abs(fTopMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetTopMargin(" << GetTopMargin() << ");\n";
+   if (TMath::Abs(fBottomMargin - 0.1) > 0.01)
+      out << "   " << cname << "->SetBottomMargin(" << GetBottomMargin() << ");\n";
 
-   if (GetFrameFillColor() != GetFillColor()) {
-      if (TColor::SaveColor(out, GetFrameFillColor()))
-         out<<"   "<<cname<<"->SetFrameFillColor(ci);" << std::endl;
-      else
-         out<<"   "<<cname<<"->SetFrameFillColor("<<GetFrameFillColor()<<");"<<std::endl;
-   }
-   if (GetFrameFillStyle() != 1001) {
-      out<<"   "<<cname<<"->SetFrameFillStyle("<<GetFrameFillStyle()<<");"<<std::endl;
-   }
-   if (GetFrameLineStyle() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineStyle("<<GetFrameLineStyle()<<");"<<std::endl;
-   }
-   if (GetFrameLineColor() != 1) {
-      if (TColor::SaveColor(out, GetFrameLineColor()))
-         out<<"   "<<cname<<"->SetFrameLineColor(ci);" << std::endl;
-      else
-         out<<"   "<<cname<<"->SetFrameLineColor("<<GetFrameLineColor()<<");"<<std::endl;
-   }
-   if (GetFrameLineWidth() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineWidth("<<GetFrameLineWidth()<<");"<<std::endl;
-   }
-   if (GetFrameBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetFrameBorderMode("<<GetFrameBorderMode()<<");"<<std::endl;
-   }
-   if (GetFrameBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<GetFrameBorderSize()<<");"<<std::endl;
-   }
+   if (GetFrameFillColor() != GetFillColor())
+      out << "   " << cname << "->SetFrameFillColor(" << TColor::SavePrimitiveColor(GetFrameFillColor()) << ");\n";
+   if (GetFrameFillStyle() != 1001)
+      out << "   " << cname << "->SetFrameFillStyle(" << GetFrameFillStyle() << ");\n";
+   if (GetFrameLineStyle() != 1)
+      out << "   " << cname << "->SetFrameLineStyle(" << GetFrameLineStyle() << ");\n";
+   if (GetFrameLineColor() != 1)
+      out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(GetFrameLineColor()) << ");\n";
+   if (GetFrameLineWidth() != 1)
+      out << "   " << cname << "->SetFrameLineWidth(" << GetFrameLineWidth() << ");\n";
+   if (GetFrameBorderMode() != 1)
+      out << "   " << cname << "->SetFrameBorderMode(" << GetFrameBorderMode() << ");\n";
+   if (GetFrameBorderSize() != 1)
+      out << "   " << cname << "->SetFrameBorderSize(" << GetFrameBorderSize() << ");\n";
 
    TFrame *frame = fFrame;
-   if (!frame) frame = (TFrame*)GetPrimitive("TFrame");
+   if (!frame)
+      frame = (TFrame *)GetPrimitive("TFrame");
    if (frame) {
-      if (frame->GetFillColor() != GetFillColor()) {
-         if (TColor::SaveColor(out, frame->GetFillColor()))
-            out<<"   "<<cname<<"->SetFrameFillColor(ci);" << std::endl;
-         else
-            out<<"   "<<cname<<"->SetFrameFillColor("<<frame->GetFillColor()<<");"<<std::endl;
-      }
-      if (frame->GetFillStyle() != 1001) {
-         out<<"   "<<cname<<"->SetFrameFillStyle("<<frame->GetFillStyle()<<");"<<std::endl;
-      }
-      if (frame->GetLineStyle() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineStyle("<<frame->GetLineStyle()<<");"<<std::endl;
-      }
-      if (frame->GetLineColor() != 1) {
-         if (TColor::SaveColor(out, frame->GetLineColor()))
-            out<<"   "<<cname<<"->SetFrameLineColor(ci);" << std::endl;
-         else
-            out<<"   "<<cname<<"->SetFrameLineColor("<<frame->GetLineColor()<<");"<<std::endl;
-      }
-      if (frame->GetLineWidth() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineWidth("<<frame->GetLineWidth()<<");"<<std::endl;
-      }
-      if (frame->GetBorderMode() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderMode("<<frame->GetBorderMode()<<");"<<std::endl;
-      }
-      if (frame->GetBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<frame->GetBorderSize()<<");"<<std::endl;
-      }
+      if (frame->GetFillColor() != GetFillColor())
+         out << "   " << cname << "->SetFrameFillColor(" << TColor::SavePrimitiveColor(frame->GetFillColor()) << ");\n";
+      if (frame->GetFillStyle() != 1001)
+         out << "   " << cname << "->SetFrameFillStyle(" << frame->GetFillStyle() << ");\n";
+      if (frame->GetLineStyle() != 1)
+         out << "   " << cname << "->SetFrameLineStyle(" << frame->GetLineStyle() << ");\n";
+      if (frame->GetLineColor() != 1)
+         out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(frame->GetLineColor()) << ");\n";
+      if (frame->GetLineWidth() != 1)
+         out << "   " << cname << "->SetFrameLineWidth(" << frame->GetLineWidth() << ");\n";
+      if (frame->GetBorderMode() != 1)
+         out << "   " << cname << "->SetFrameBorderMode(" << frame->GetBorderMode() << ");\n";
+      if (frame->GetBorderSize() != 1)
+         out << "   " << cname << "->SetFrameBorderSize(" << frame->GetBorderSize() << ");\n";
    }
 
    TIter next(GetListOfPrimitives());
-   Int_t grnum = 0;
 
    while (auto obj = next()) {
-      if (obj->InheritsFrom(TGraph::Class()))
-         if (!strcmp(obj->GetName(),"Graph"))
-            ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
       if (obj->InheritsFrom(TPad::Class())) {
          if (opt.Contains("toplevel"))
-            out<<"   "<<pname<<"->cd();"<<std::endl;
+            out << "   " << pname << "->cd();\n";
          else
-            out<<"   "<<cname<<"->cd();"<<std::endl;
+            out << "   " << cname << "->cd();\n";
       }
    }
-   out<<"   "<<cname<<"->Modified();"<<std::endl;
+   out << "   " << cname << "->Modified();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7157,27 +7235,31 @@ TVirtualPadPainter *TPad::GetPainter()
 
 Rectangle_t TPad::GetBBox()
 {
-   Rectangle_t BBox;
-   BBox.fX = gPad->XtoPixel(fXlowNDC*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1());
-   BBox.fY = gPad->YtoPixel((fYlowNDC+fHNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1());
-   BBox.fWidth = gPad->XtoPixel((fXlowNDC+fWNDC)*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1()) - gPad->XtoPixel(fXlowNDC*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1());
-   BBox.fHeight = gPad->YtoPixel((fYlowNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1()) - gPad->YtoPixel((fYlowNDC+fHNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1());
-   return (BBox);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      BBox.fX = gPad->XtoPixel(fXlowNDC * (gPad->GetX2() - gPad->GetX1()) + gPad->GetX1());
+      BBox.fY = gPad->YtoPixel((fYlowNDC + fHNDC) * (gPad->GetY2() - gPad->GetY1()) + gPad->GetY1());
+      BBox.fWidth = gPad->XtoPixel((fXlowNDC + fWNDC) * (gPad->GetX2() - gPad->GetX1()) + gPad->GetX1()) -
+                    gPad->XtoPixel(fXlowNDC * (gPad->GetX2() - gPad->GetX1()) + gPad->GetX1());
+      BBox.fHeight = gPad->YtoPixel((fYlowNDC) * (gPad->GetY2() - gPad->GetY1()) + gPad->GetY1()) -
+                     gPad->YtoPixel((fYlowNDC + fHNDC) * (gPad->GetY2() - gPad->GetY1()) + gPad->GetY1());
+   }
+   return BBox;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the center of the Pad as TPoint in pixels
 
 TPoint TPad::GetBBoxCenter()
 {
-   TPoint p;
-   Double_t x = ((fXlowNDC+0.5*fWNDC)*(gPad->GetX2()-gPad->GetX1())) + gPad->GetX1();
-   Double_t y = ((fYlowNDC+0.5*fHNDC)*(gPad->GetY2()-gPad->GetY1())) + gPad->GetY1();
-
-   p.SetX(gPad->XtoPixel(x));
-   p.SetY(gPad->YtoPixel(y));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      Double_t x = ((fXlowNDC + 0.5 * fWNDC) * (gPad->GetX2() - gPad->GetX1())) + gPad->GetX1();
+      Double_t y = ((fYlowNDC + 0.5 * fHNDC) * (gPad->GetY2() - gPad->GetY1())) + gPad->GetY1();
+      p.SetX(gPad->XtoPixel(x));
+      p.SetY(gPad->YtoPixel(y));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7185,8 +7267,11 @@ TPoint TPad::GetBBoxCenter()
 
 void TPad::SetBBoxCenter(const TPoint &p)
 {
-   fXlowNDC = (gPad->PixeltoX(p.GetX()) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
-   fYlowNDC = (gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
+   if (!gPad)
+      return;
+   fXlowNDC = (gPad->PixeltoX(p.GetX()) - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1()) - 0.5 * fWNDC;
+   fYlowNDC =
+      (gPad->PixeltoY(p.GetY() - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1()) - 0.5 * fHNDC;
    ResizePad();
 }
 
@@ -7195,6 +7280,8 @@ void TPad::SetBBoxCenter(const TPoint &p)
 
 void TPad::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad)
+      return;
    fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
    ResizePad();
 }
@@ -7204,7 +7291,9 @@ void TPad::SetBBoxCenterX(const Int_t x)
 
 void TPad::SetBBoxCenterY(const Int_t y)
 {
-   fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
+   if (!gPad)
+      return;
+   fYlowNDC = (gPad->PixeltoY(y - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1()) - 0.5 * fHNDC;
    ResizePad();
 }
 
@@ -7214,7 +7303,9 @@ void TPad::SetBBoxCenterY(const Int_t y)
 
 void TPad::SetBBoxX1(const Int_t x)
 {
-   fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+   if (!gPad)
+      return;
+   fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1());
    fWNDC = fXUpNDC - fXlowNDC;
    ResizePad();
 }
@@ -7225,7 +7316,9 @@ void TPad::SetBBoxX1(const Int_t x)
 
 void TPad::SetBBoxX2(const Int_t x)
 {
-   fWNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-fXlowNDC;
+   if (!gPad)
+      return;
+   fWNDC = (gPad->PixeltoX(x) - gPad->GetX1()) / (gPad->GetX2() - gPad->GetX1()) - fXlowNDC;
    ResizePad();
 }
 
@@ -7234,7 +7327,9 @@ void TPad::SetBBoxX2(const Int_t x)
 
 void TPad::SetBBoxY1(const Int_t y)
 {
-   fHNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-fYlowNDC;
+   if (!gPad)
+      return;
+   fHNDC = (gPad->PixeltoY(y - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1()) - fYlowNDC;
    ResizePad();
 }
 
@@ -7244,7 +7339,9 @@ void TPad::SetBBoxY1(const Int_t y)
 
 void TPad::SetBBoxY2(const Int_t y)
 {
-   fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+   if (!gPad)
+      return;
+   fYlowNDC = (gPad->PixeltoY(y - gPad->VtoPixel(0)) - gPad->GetY1()) / (gPad->GetY2() - gPad->GetY1());
    fHNDC = fYUpNDC - fYlowNDC;
    ResizePad();
 }

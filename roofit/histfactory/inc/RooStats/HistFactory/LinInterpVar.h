@@ -32,7 +32,7 @@ namespace HistFactory{
     LinInterpVar(const char *name, const char *title);
     LinInterpVar(const LinInterpVar&, const char*);
 
-    TObject* clone(const char* newname) const override { return new LinInterpVar(*this, newname); }
+    TObject* clone(const char* newname=nullptr) const override { return new LinInterpVar(*this, newname); }
 
 
   protected:

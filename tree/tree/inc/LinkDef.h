@@ -96,4 +96,5 @@
 #pragma link C++ class ROOT::Internal::TreeUtils::RNoCleanupNotifier;
 #pragma link C++ class TNotifyLink<ROOT::Internal::TreeUtils::RNoCleanupNotifierHelper>;
 
+#pragma link C++ class ROOT::Experimental::Internal::TBulkBranchRead+;
 #endif

@@ -22,9 +22,6 @@ enum toysStrategies { EQUALTOYSPERDENSITY, EXPONENTIALTOYDISTRIBUTION };
 class ToyMCImportanceSampler: public ToyMCSampler {
 
    public:
-      /// Proof constructor. Do not use.
-      ToyMCImportanceSampler() = default;
-
       ToyMCImportanceSampler(TestStatistic &ts, Int_t ntoys) : ToyMCSampler(ts, ntoys) {}
 
       ~ToyMCImportanceSampler() override;
@@ -177,8 +174,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       mutable std::vector<std::unique_ptr<RooAbsReal>> fNullNLLs;    ///<!
       mutable std::vector<std::unique_ptr<RooAbsReal>> fImpNLLs;     ///<!
 
-   protected:
-   ClassDefOverride(ToyMCImportanceSampler,2) // An implementation of importance sampling
+   ClassDefOverride(ToyMCImportanceSampler,0) // An implementation of importance sampling
 };
 }
 

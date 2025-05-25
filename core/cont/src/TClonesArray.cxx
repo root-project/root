@@ -170,6 +170,17 @@ static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
    }
 }
 
+namespace ROOT::Internal {
+
+class TClonesArrayOwnershipRAII {
+   TClonesArray *fClonesArray;
+   bool fIsOwner;
+
+public:
+   TClonesArrayOwnershipRAII(TClonesArray *arr) : fClonesArray(arr), fIsOwner(arr->TCollection::IsOwner()) {}
+   ~TClonesArrayOwnershipRAII() { fClonesArray->TCollection::SetOwner(fIsOwner); }
+};
+} // namespace ROOT::Internal
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
@@ -428,8 +439,8 @@ void TClonesArray::Clear(Option_t *option)
    }
 
    // Protect against erroneously setting of owner bit
-   SetOwner(kFALSE);
-
+   ROOT::Internal::TClonesArrayOwnershipRAII ownRaii(this);
+   TObjArray::SetOwner(kFALSE);
    TObjArray::Clear();
 }
 
@@ -458,8 +469,8 @@ void TClonesArray::Delete(Option_t *)
    }
 
    // Protect against erroneously setting of owner bit.
-   SetOwner(kFALSE);
-
+   ROOT::Internal::TClonesArrayOwnershipRAII ownRaii(this);
+   TObjArray::SetOwner(kFALSE);
    TObjArray::Clear();
 }
 

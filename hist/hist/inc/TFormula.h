@@ -148,7 +148,7 @@ protected:
    TString                             fFormula;            ///<   String representing the formula expression
    Int_t                               fNdim;               ///<   Dimension - needed for lambda expressions
    Int_t                               fNpar;               ///<!  Number of parameter (transient since we save the vector)
-   Int_t                               fNumber;             ///<!
+   Int_t                               fNumber;             ///<   Number used to identify pre-defined functions (gaus, expo,..)
    std::vector<TObject*>               fLinearParts;        ///<   Vector of linear functions
    Bool_t                              fVectorized = false; ///<   Whether we should use vectorized or regular variables
    // (we default to false since a lot of functions still cannot be expressed in vectorized form)
@@ -156,7 +156,6 @@ protected:
    static Bool_t IsOperator(const char c);
    static Bool_t IsBracket(const char c);
    static Bool_t IsFunctionNameChar(const char c);
-   static Bool_t IsScientificNotation(const TString & formula, int ipos);
    static Bool_t IsHexadecimal(const TString & formula, int ipos);
    static Bool_t IsAParameterName(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
@@ -238,6 +237,8 @@ public:
       return fHessFuncPtr != nullptr;
    }
 
+   static Bool_t IsScientificNotation(const TString & formula, int ipos);
+
    // template <class T>
    // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
    template <class T>
@@ -247,7 +248,7 @@ public:
 #ifdef R__HAS_VECCORE
    ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = nullptr) const;
 #endif
-   TString        GetExpFormula(Option_t *option="") const;
+   TString        GetExpFormula(Option_t *option = "", const char *fl_format = "%g") const;
    TString        GetGradientFormula() const;
    TString        GetHessianFormula() const;
    TString        GetUniqueFuncName() const {
@@ -286,7 +287,7 @@ public:
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
    void SetVectorized(Bool_t vectorized);
 
-   ClassDefOverride(TFormula,13)
+   ClassDefOverride(TFormula,14)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +322,7 @@ void TFormula::SetParNames(Args &&...args)
 /// and evaluate formula.
 
 template <typename... Args>
-Double_t TFormula::Eval(Args... args) const 
+Double_t TFormula::Eval(Args... args) const
 {
    if (sizeof...(args) > 4) {
       Error("Eval", "Eval() only support setting up to 4 variables");

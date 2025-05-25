@@ -10,42 +10,6 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-RModel_GNN::RModel_GNN(RModel_GNN&& other) {
-    edges_update_block = std::move(other.edges_update_block);
-    nodes_update_block = std::move(other.nodes_update_block);
-    globals_update_block = std::move(other.globals_update_block);
-
-    edge_node_agg_block = std::move(other.edge_node_agg_block);
-    edge_global_agg_block = std::move(other.edge_global_agg_block);
-    node_global_agg_block = std::move(other.node_global_agg_block);
-
-    num_nodes = std::move(other.num_nodes);
-    num_edges = std::move(other.num_edges);
-
-    fName = std::move(other.fName);
-    fFileName = std::move(other.fFileName);
-    fParseTime = std::move(other.fParseTime);
-}
-
-RModel_GNN& RModel_GNN::operator=(RModel_GNN&& other) {
-    edges_update_block = std::move(other.edges_update_block);
-    nodes_update_block = std::move(other.nodes_update_block);
-    globals_update_block = std::move(other.globals_update_block);
-
-    edge_node_agg_block = std::move(other.edge_node_agg_block);
-    edge_global_agg_block = std::move(other.edge_global_agg_block);
-    node_global_agg_block = std::move(other.node_global_agg_block);
-
-    num_nodes = std::move(other.num_nodes);
-    num_edges = std::move(other.num_edges);
-
-    fName = std::move(other.fName);
-    fFileName = std::move(other.fFileName);
-    fParseTime = std::move(other.fParseTime);
-
-    return *this;
-}
-
 RModel_GNN::RModel_GNN(GNN_Init& graph_input_struct) {
     edges_update_block = std::move(graph_input_struct.edges_update_block);
     nodes_update_block = std::move(graph_input_struct.nodes_update_block);

@@ -100,20 +100,25 @@ public:
       fNInputs.reserve(inputNames.size());
       for (auto & name : inputNames)
          fNInputs.push_back(UTILITY::Clean_name(name));
+
+      fInputTensorNames.resize(fNInputs.size());
+      std::transform(fNInputs.begin(), fNInputs.end(), fInputTensorNames.begin(),
+                  [](const std::string& s) -> std::string_view { return s; });
+      fOutputTensorNames = { fNY };
    }
 
    // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
    // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = std::vector<std::vector<size_t>>(1, input[0]);
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       for (auto &it : fNInputs) {
          if (!model.CheckIfTensorAlreadyExist(it)) {
             throw std::runtime_error("TMVA SOFIE BasicNary Op Input Tensor " + it + " is not found in model");
@@ -139,7 +144,7 @@ public:
       fType = ConvertTypeToString(model.GetTensorType(fNInputs[0]));
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE BasicNary called to Generate without being initialized first");
@@ -176,7 +181,7 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetStdLibs() {return { std::string("cmath") }; }
+   std::vector<std::string> GetStdLibs() override {return { std::string("cmath") }; }
 };
 
 }//SOFIE

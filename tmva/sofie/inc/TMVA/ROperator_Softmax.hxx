@@ -28,18 +28,18 @@ public:
    ROperator_Softmax(int64_t attr_axis, std::string nameX, std::string nameY)
       : fAttrAxis(attr_axis), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
    {
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) { return input; }
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override { return input; }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input)
-   {
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input; // suggest copy to compiler
       return ret;
    }
 
-   void Initialize(RModel &model)
-   {
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) ==
           false) { // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Softmax Op Input Tensor is not found in model");
@@ -47,10 +47,12 @@ public:
       fShape = model.GetTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
+      if (model.Verbose()) {
+         std::cout << "Softmax -> " << fNY << " " << ConvertShapeToString(fShape) << std::endl;
+      }
    }
 
-   std::string Generate(std::string OpName)
-   {
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Operator Softmax called to Generate without being initialized first");
@@ -59,11 +61,16 @@ public:
       size_t size = fShape.size();
       size_t length = ConvertShapeToLength(fShape);
       size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
-      out << "\n" << SP << "//------ SOFTMAX\n";
+      out << "\n" << SP << "//------ SOFTMAX - " << size << "  " << length << "  " << axis << "\n";
+      // use safe numerically implementation by subtracting max of tensor
       if (size == 1) {
+         out << SP << fType << " vmax = tensor_" << fNX << "[0];\n";
+         out << SP << "for (size_t i = 1; i < " << length << " ; i++){\n";
+         out << SP << SP << "if (tensor_" << fNX << "[i] > vmax) vmax = tensor_" << fNX << "[i];\n";
+         out << SP << "}\n";
          out << SP << fType << " sum = 0.0;\n";
          out << SP << "for (size_t i = 0; i < " << length << " ; i++){\n";
-         out << SP << SP << "tensor_" << fNY << "[i] = std::exp(tensor_" << fNX << "[i]);\n";
+         out << SP << SP << "tensor_" << fNY << "[i] = std::exp(tensor_" << fNX << "[i] - vmax);\n";
          out << SP << SP << "sum += tensor_" << fNY << "[i];\n";
          out << SP << "}\n";
          out << SP << "for (size_t i = 0; i < " << length << " ; i++){\n";
@@ -128,25 +135,32 @@ public:
          out << SP << SP << SP << fType << " sum = 0.;\n";
          out << SP << SP << SP << "size_t index = 0";
          if (notBatch) {
-            out << "+ n * " << bStride;
+            out << " + n * " << bStride;
          }
          if (notChannel) {
             out << "+ c * " << cStride;
          }
          if (notDepth) {
-            out << "+ d * " << dStride;
+            out << " + d * " << dStride;
          }
          if (notHeight) {
-            out << "+ h * " << hStride;
+            out << " + h * " << hStride;
          }
          if (notWidth) {
             out << " + w";
          }
          out << ";\n";
-         // apply softmax along the axis
+         // apply softmax along the axis - find first maximum value for numerical stability
+         if (N == 0)
+            throw std::runtime_error("TMVA::SOFIE - Softmax operator is along axis with zero elements");
+         out << SP << SP << SP << fType << " vmax = tensor_" << fNX << "[index];\n";
+         out << SP << SP << SP << "for (size_t i = 1; i < " << N << "; i++) {\n";
+         out << SP << SP << SP << SP << "if (tensor_" << fNX << "[index + i*" << iStride << "] > vmax)\n";
+         out << SP << SP << SP << SP << SP << "vmax = tensor_" << fNX << "[index + i*" << iStride << "];\n";
+         out << SP << SP << SP << "}\n";
          out << SP << SP << SP << "for (size_t i = 0; i < " << N << "; i++) {\n";
          out << SP << SP << SP << SP << "tensor_" << fNY << "[index + i*" << iStride << "] = std::exp(tensor_" << fNX
-             << "[index + i*" << iStride << "]);\n";
+             << "[index + i*" << iStride << "] - vmax);\n";
          out << SP << SP << SP << SP << "sum += tensor_" << fNY << "[index + i*" << iStride << "];\n";
          out << SP << SP << SP << "}\n";
          out << SP << SP << SP << "for (size_t i = 0; i < " << N << "; i++) {\n";

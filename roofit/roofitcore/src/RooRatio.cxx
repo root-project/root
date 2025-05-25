@@ -35,7 +35,6 @@ Represents the ratio of two RooAbsReal objects.
 
 #include <cmath>
 
-ClassImp(RooRatio);
 
 RooRatio::RooRatio()
 {
@@ -122,9 +121,4 @@ void RooRatio::doEval(RooFit::EvalContext &ctx) const
 {
    RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Ratio, ctx.output(),
                             {ctx.at(_numerator), ctx.at(_denominator)});
-}
-
-void RooRatio::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::ratio", _numerator, _denominator));
 }

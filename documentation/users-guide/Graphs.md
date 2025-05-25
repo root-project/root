@@ -229,7 +229,7 @@ gStyle->SetEndErrorSize(np);
 The four parameters of **`TGraphErrors`** are: `X, Y` (as in
 **`TGraph`**), `X`-errors, and `Y`-errors - the size of the errors
 in the `x` and `y` direction. Next example is
-`$ROOTSYS/tutorials/graphs/gerrors.C.`
+`$ROOTSYS/tutorials/visualisation/graphs/gr002_errors.C.`
 
 ``` {.cpp}
 {
@@ -660,7 +660,7 @@ similar `X` and `Y` ranges.
 }                           // use "tri1 p0" to generate the right one
 ```
 
-A more complete example is `$ROOTSYS/tutorials/fit/graph2dfit.C` that
+A more complete example is `$ROOTSYS/tutorials/math/fit/graph2dfit.C` that
 produces the next figure.
 
 ![Output of macro graph2dfit.C](pictures/0300005C.png)
@@ -670,7 +670,7 @@ produces the next figure.
 
 A **`TGraph2DErrors`** is a **`TGraph2D`** with errors. It is useful to
 perform fits with errors on a 2D graph. An example is the macro
-`$ROOTSYS/tutorials/graphs/graph2derrorsfit.C`.
+`$ROOTSYS/tutorials/visualisation/graphs/gr011_graph2d_errorsfit.C`.
 
 ## Fitting a Graph
 
@@ -702,7 +702,7 @@ root[] gr5->Draw("ALP")
 ```
 
 For more graph examples see the scripts: `$ROOTSYS/tutorials` directory
-`graph.C`, `gerrors.C`, `zdemo.C`, and `gerrors2.C`.
+`gr001_simple.C`, `gr002_errors.C`, `gr303_zdemo.C`, and `gr003_errors2.C`.
 
 ![A graph with axis titles](pictures/0300005D.png)
 

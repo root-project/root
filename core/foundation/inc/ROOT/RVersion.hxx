@@ -3,16 +3,16 @@
 
 /* Update on release: */
 #define ROOT_VERSION_MAJOR 6
-#define ROOT_VERSION_MINOR 32
-#define ROOT_VERSION_PATCH 12
-#define ROOT_RELEASE_DATE "Apr 8 2025"
+#define ROOT_VERSION_MINOR 36
+#define ROOT_VERSION_PATCH 00
+#define ROOT_RELEASE_DATE "May 26 2025"
 
 /* Don't change the lines below. */
 
 /*
  * These macros can be used in the following way:
  *
- *    #if ROOT_VERSION_CODE >= ROOT_VERSION(6,32,6)
+ *    #if ROOT_VERSION_CODE >= ROOT_VERSION(6,32,4)
  *       #include <newheader.h>
  *    #else
  *       #include <oldheader.h>

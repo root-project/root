@@ -58,6 +58,6 @@ ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform}
 
 target_compile_definitions(${libname} PRIVATE NDEBUG)
 
-ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER})
+ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} CMAKENOEXPORT)
 
 endif()

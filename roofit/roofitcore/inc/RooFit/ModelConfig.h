@@ -309,7 +309,12 @@ public:
    /// alias for GetWS()
    RooWorkspace *GetWorkspace() const { return GetWS(); }
 
-   void GuessObsAndNuisance(const RooAbsData &data, bool printModelConfig = true);
+   void GuessObsAndNuisance(const RooArgSet &obsSet, bool printModelConfig = true);
+
+   inline void GuessObsAndNuisance(const RooDataSet &data, bool printModelConfig = true)
+   {
+      return GuessObsAndNuisance(*data.get(), printModelConfig);
+   }
 
    /// overload the print method
    void Print(Option_t *option = "") const override;
@@ -321,7 +326,7 @@ public:
    }
 
    template <typename... CmdArgs_t>
-   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, CmdArgs_t const &...cmdArgs)
+   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, CmdArgs_t const &...cmdArgs) const
    {
       return fitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...));
    }
@@ -362,7 +367,7 @@ protected:
 
 private:
    std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
-   std::unique_ptr<RooFitResult> fitToImpl(RooAbsData &data, const RooLinkedList &cmdList);
+   std::unique_ptr<RooFitResult> fitToImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
 
    ClassDefOverride(ModelConfig,
                     6); ///< A class that holds configuration information for a model using a workspace as a store

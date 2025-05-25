@@ -30,6 +30,24 @@
 
 #include <vector>
 
+/**
+\class RooCacheManager
+\ingroup Roofitcore
+
+Manages the storage of any type of data indexed on
+the choice of normalization and optionally the set of integrated observables.
+The purpose of this class is to facilitate storage of intermediate results
+in operator p.d.f.s whose value and inner working are often highly dependent
+on the user provided choice of normalization in getVal().
+
+For efficiency reasons these normalization set pointer are
+dereferenced as little as possible. This class contains a lookup
+table for RooArgSet pointer pairs -> normalization lists.  Distinct
+pointer pairs that represent the same normalization/projection are
+recognized and will all point to the same normalization list. Lists
+for up to 'maxSize' different normalization/ projection
+configurations can be cached.
+**/
 
 template<class T>
 class RooCacheManager : public RooAbsCache {
@@ -223,7 +241,7 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
     // Found sterile slot that can should be recycled [ sterileIndex only set if isetRangeName matches ]
 
     if (sterileIdx>=_maxSize) {
-      //cout << "RooCacheManager<T>::setObj()/SI increasing object cache size from " << _maxSize << " to " << sterileIdx+4 << endl ;
+      //cout << "RooCacheManager<T>::setObj()/SI increasing object cache size from " << _maxSize << " to " << sterileIdx+4 << std::endl ;
       _maxSize = sterileIdx+4;
       _object.resize(_maxSize,nullptr) ;
       _nsetCache.resize(_maxSize) ;
@@ -239,13 +257,13 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   }
 
   if (_size>=_maxSize-1) {
-    //cout << "RooCacheManager<T>::setObj() increasing object cache size from " << _maxSize << " to " << _maxSize*2 << endl ;
+    //cout << "RooCacheManager<T>::setObj() increasing object cache size from " << _maxSize << " to " << _maxSize*2 << std::endl ;
     _maxSize *=2 ;
     _object.resize(_maxSize,nullptr) ;
     _nsetCache.resize(_maxSize) ;
   }
 
-  //cout << "RooCacheManager::setObj<T>(" << this << ") _size = " << _size << " _maxSize = " << _maxSize << endl ;
+  //cout << "RooCacheManager::setObj<T>(" << this << ") _size = " << _size << " _maxSize = " << _maxSize << std::endl ;
   _nsetCache[_size].autoCache(_owner,nset,iset,isetRangeName,true) ;
   if (_object[_size]) {
     delete _object[_size] ;

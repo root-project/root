@@ -20,7 +20,6 @@ HypoTestCalculatorGeneric (e.g. HybridCalculator or FrequentistCalculator)  clas
 #include "RooStats/HypoTestResult.h"
 #include "RooStats/SamplingDistribution.h"
 
-ClassImp(RooStats::HypoTestPlot);
 
 using namespace RooStats;
 

@@ -65,6 +65,7 @@
 #include <bcrypt.h>
 #include <chrono>
 #include <thread>
+#include <cstdio>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -2629,7 +2630,7 @@ int TWinNTSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
 
 int TWinNTSystem::Rename(const char *f, const char *t)
 {
-   int ret = ::rename(f, t);
+   int ret = std::rename(f, t);
    GetLastErrorString() = GetError();
    return ret;
 }
@@ -2943,6 +2944,12 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    const char *p;
    char   *cmd = nullptr;
    char  *q;
+
+   // We do want the messages from the gROOT initialization
+   // So let's force it rather than having as a side effect of the
+   // TUrl construction.
+   if (!ROOT::Internal::gROOTLocal || !ROOT::Internal::gROOTLocal->Initialized())
+      (void)gROOT;
 
    Int_t old_level = gErrorIgnoreLevel;
    gErrorIgnoreLevel = kFatal; // Explicitly remove all messages

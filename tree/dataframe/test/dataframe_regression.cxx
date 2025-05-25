@@ -5,15 +5,11 @@
 #include "TVector3.h"
 #include "TSystem.h"
 #include "Math/Vector4D.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <algorithm>
 
 #include "gtest/gtest.h"
-
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
 
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFRegressionTests : public ::testing::TestWithParam<bool> {
@@ -61,6 +57,11 @@ TEST(RDFRegressionTests, AliasAndSubBranches)
    t.Fill();
    t.Fill();
 
+#ifndef NDEBUG
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kWarning, "RTreeColumnReader::Get",
+                                              "Branch topbranch.fCoordinates.fX hangs from a non-split branch. A copy "
+                                              "is being performed in order to properly read the content."};
+#endif
    auto df = ROOT::RDataFrame(t).Alias("alias", "topbranch");
    // Here, before the fix for #11207 we transformed `"alias.fCoordinates.fX.size() == 2"` into
    // `[](std::vector<XYZTVector> &var0) { return var0.fCoordinates.fX.size() == 2; }`, which is not valid C++
@@ -324,6 +325,16 @@ TEST_P(RDFRegressionTests, FileNameQueryNoExt)
    constexpr auto fileNameWithQuery{"dataframe_regression_filenamequerynoext?myq=xyz"};
    ROOT::RDataFrame df{dataset.fTreeName, fileNameWithQuery};
    EXPECT_EQ(df.Count().GetValue(), 10);
+}
+
+TEST_P(RDFRegressionTests, EmptyFileList)
+{
+   try {
+      ROOT::RDataFrame df{"", {}};
+   } catch (const std::invalid_argument &e) {
+      const std::string expected{"RDataFrame: empty list of input files."};
+      EXPECT_EQ(e.what(), expected);
+   }
 }
 
 // run single-thread tests

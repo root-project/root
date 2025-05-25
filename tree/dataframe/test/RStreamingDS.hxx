@@ -7,15 +7,21 @@
 #include <type_traits>
 
 /// A RDataSource that provides multiple entry ranges
-class RStreamingDS : public ROOT::RDF::RDataSource {
-   unsigned int fNSlots = 0u;
+class RStreamingDS final : public ROOT::RDF::RDataSource {
    unsigned int fCounter = 0u;
    const int fAns = 42;
    const int *fAnsPtr = &fAns;
    const std::vector<std::string> fColumnNames = {"ans"};
 
 public:
-   void SetNSlots(unsigned int nSlots) final { fNSlots = nSlots; }
+   RStreamingDS() = default;
+   // Rule of five
+   RStreamingDS(const RStreamingDS &) = delete;
+   RStreamingDS &operator=(const RStreamingDS &) = delete;
+   RStreamingDS(RStreamingDS &&) = delete;
+   RStreamingDS &operator=(RStreamingDS &&) = delete;
+   ~RStreamingDS() final = default;
+
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
    bool HasColumn(std::string_view name) const final { return std::string(name) == "ans" ? true : false; }
    std::string GetTypeName(std::string_view) const final { return "int"; }

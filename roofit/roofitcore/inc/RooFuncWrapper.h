@@ -60,9 +60,7 @@ public:
 
    void writeDebugMacro(std::string const &) const;
 
-   std::string declareFunction(std::string const &funcBody);
-
-   std::string buildCode(RooAbsReal const &head);
+   std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
 
 protected:
    double evaluate() const override;
@@ -70,12 +68,10 @@ protected:
 private:
    void updateGradientVarBuffer() const;
 
-   void loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,
-                          RooSimultaneous const *simPdf);
+   std::map<RooFit::Detail::DataKey, std::span<const double>>
+   loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf);
 
    void buildFuncAndGradFunctors();
-
-   bool declareToInterpreter(std::string const &code);
 
    using Func = double (*)(double *, double const *, double const *);
    using Grad = void (*)(double *, double const *, double const *, double *);
@@ -96,9 +92,8 @@ private:
    mutable std::vector<double> _gradientVarBuffer;
    std::vector<double> _observables;
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
-   std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    std::vector<double> _xlArr;
-   std::stringstream _allCode;
+   std::vector<std::string> _collectedFunctions;
 };
 
 } // namespace Experimental

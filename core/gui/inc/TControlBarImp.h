@@ -13,20 +13,13 @@
 #define ROOT_TControlBarImp
 
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TControlBarImp                                                             //
-//                                                                            //
-// ABC describing GUI independent control bar (see TControlBar)               //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
 #include "Rtypes.h"
 
 
 class TControlBar;
 class TControlBarButton;
 
+/// @see TControlBar
 class TControlBarImp {
 
 protected:

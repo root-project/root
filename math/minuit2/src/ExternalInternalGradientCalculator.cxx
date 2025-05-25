@@ -9,7 +9,7 @@
 
 #include <vector>
 #include "Minuit2/ExternalInternalGradientCalculator.h"
-#include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MinimumParameters.h"

@@ -226,7 +226,7 @@ bool CPyCppyy::Instance_IsLively(PyObject* pyobject)
 
 // the instance fails the lively test if it owns the C++ object while having a
 // reference count of 1 (meaning: it could delete the C++ instance any moment)
-    if (pyobject->ob_refcnt <= 1 && (((CPPInstance*)pyobject)->fFlags & CPPInstance::kIsOwner))
+    if (Py_REFCNT(pyobject) <= 1 && (((CPPInstance*)pyobject)->fFlags & CPPInstance::kIsOwner))
         return false;
 
     return true;
@@ -413,7 +413,16 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
                           << std::endl;
             }
          };
+
+#if PY_VERSION_HEX < 0x30d00f0
          WideStringListAppendHelper(&fConfig.argv, Py_GetProgramName());
+#else
+         PyObject* progname = PySys_GetObject("executable");    // borrowed
+         wchar_t buf[4096];
+         Py_ssize_t sz = CPyCppyy_PyUnicode_AsWideChar(progname, buf, 4095);
+         if (0 < sz)
+             WideStringListAppendHelper(&fConfig.argv, buf);
+#endif
          for (const auto &iarg : argv2) {
             WideStringListAppendHelper(&fConfig.argv, iarg.c_str());
          }

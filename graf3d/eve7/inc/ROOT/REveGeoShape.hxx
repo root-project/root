@@ -14,6 +14,7 @@
 
 #include <ROOT/REveShape.hxx>
 
+class TGeoManager;
 class TGeoShape;
 class TGeoHMatrix;
 class TGeoCompositeShape;

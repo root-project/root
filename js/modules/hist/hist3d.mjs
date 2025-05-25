@@ -1,22 +1,23 @@
 import { constants, isFunc, isStr, getDocument, isNodeJs } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { REVISION, DoubleSide, Object3D, Color, Vector2, Vector3, Matrix4, Line3,
-         BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
-         LineSegments, LineDashedMaterial, LineBasicMaterial,
-         Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
-import { TextGeometry } from '../three_addons.mjs';
-import { assign3DHandler, disposeThreejsObject, createOrbitControl,
-         createLineSegments, Box3D, getMaterialArgs,
+import { THREE, assign3DHandler, disposeThreejsObject, createOrbitControl,
+         createLineSegments, Box3D, getMaterialArgs, importThreeJs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
-         cleanupRender3D, HelveticerRegularFont, createSVGRenderer, create3DLineMaterial } from '../base/base3d.mjs';
+         cleanupRender3D, getHelveticaFont, createSVGRenderer, create3DLineMaterial } from '../base/base3d.mjs';
 import { isPlainText, translateLaTeX, produceLatex } from '../base/latex.mjs';
 import { kCARTESIAN, kPOLAR, kCYLINDRICAL, kSPHERICAL, kRAPIDITY } from '../hist2d/THistPainter.mjs';
 import { buildHist2dContour, buildSurf3D } from '../hist2d/TH2Painter.mjs';
 
 
-function createTextGeometry(painter, lbl, size) {
+function createLatexGeometry(painter, lbl, size) {
+   const geom_args = { font: getHelveticaFont(), size, height: 0, curveSegments: 5 };
+   if (THREE.REVISION > 162)
+      geom_args.depth = 0;
+   else
+      geom_args.height = 0;
+
    if (isPlainText(lbl))
-      return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
+      return new THREE.TextGeometry(translateLaTeX(lbl), geom_args);
 
    const font_size = size * 100, geoms = [];
    let stroke_width = 5;
@@ -63,8 +64,6 @@ function createTextGeometry(painter, lbl, size) {
       }
 
       attr(name, value) {
-         // console.log(`attr ${name} = ${value}`);
-
          const get = () => {
                   if (!value) return '';
                   const res = value[0];
@@ -117,8 +116,8 @@ function createTextGeometry(painter, lbl, size) {
 
             const pos = new Float32Array(pnts);
 
-            this.geom = new BufferGeometry();
-            this.geom.setAttribute('position', new BufferAttribute(pos, 3));
+            this.geom = new THREE.BufferGeometry();
+            this.geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             this.geom.scale(0.01, -0.01, 0.01);
             this.geom.computeVertexNormals();
 
@@ -129,20 +128,23 @@ function createTextGeometry(painter, lbl, size) {
 
       text(v) {
          if (this.kind === 'text') {
-            this.geom = new TextGeometry(v, { font: HelveticerRegularFont, size: Math.round(0.01*this.font_size), height: 0, curveSegments: 5 });
+            geom_args.size = Math.round(0.01*this.font_size);
+            this.geom = new THREE.TextGeometry(v, geom_args);
             geoms.push(this.geom);
          }
       }
 
-}
+   } // class TextParseWrapper
 
    const node = new TextParseWrapper(),
          arg = { font_size, latex: 1, x: 0, y: 0, text: lbl, align: ['start', 'top'], fast: true, font: { size: font_size, isMonospace: () => false, aver_width: 0.9 } };
 
    produceLatex(painter, node, arg);
 
-   if (!geoms.length)
-      return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
+   if (!geoms.length) {
+      geom_args.size = size;
+      return new THREE.TextGeometry(translateLaTeX(lbl), geom_args);
+   }
 
    node.translate(); // apply translate attributes
 
@@ -160,16 +162,16 @@ function createTextGeometry(painter, lbl, size) {
 
    geoms.forEach(geom => {
       const p1 = geom.getAttribute('position').array,
-          n1 = geom.getAttribute('normal').array;
+            n1 = geom.getAttribute('normal').array;
       for (let i = 0; i < p1.length; ++i, ++indx) {
          pos[indx] = p1[i];
          norm[indx] = n1[i];
       }
    });
 
-   const fullgeom = new BufferGeometry();
-   fullgeom.setAttribute('position', new BufferAttribute(pos, 3));
-   fullgeom.setAttribute('normal', new BufferAttribute(norm, 3));
+   const fullgeom = new THREE.BufferGeometry();
+   fullgeom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+   fullgeom.setAttribute('normal', new THREE.BufferAttribute(norm, 3));
    return fullgeom;
 }
 
@@ -290,16 +292,16 @@ function convertLegoBuf(painter, pos, binsx, binsy) {
 }
 
 function createLegoGeom(painter, positions, normals, binsx, binsy) {
-   const geometry = new BufferGeometry();
+   const geometry = new THREE.BufferGeometry();
    if (painter.options.System === kCARTESIAN) {
-      geometry.setAttribute('position', new BufferAttribute(positions, 3));
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       if (normals)
-         geometry.setAttribute('normal', new BufferAttribute(normals, 3));
+         geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
       else
          geometry.computeVertexNormals();
    } else {
       convertLegoBuf(painter, positions, binsx, binsy);
-      geometry.setAttribute('position', new BufferAttribute(positions, 3));
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geometry.computeVertexNormals();
    }
 
@@ -314,48 +316,63 @@ function create3DCamera(fp, orthographic) {
    }
 
    if (orthographic)
-      fp.camera = new OrthographicCamera(-1.3*fp.size_x3d, 1.3*fp.size_x3d, 2.3*fp.size_z3d, -0.7*fp.size_z3d, 0.001, 40*fp.size_z3d);
+      fp.camera = new THREE.OrthographicCamera(-1.3*fp.size_x3d, 1.3*fp.size_x3d, 2.3*fp.size_z3d, -0.7*fp.size_z3d, 0.001, 40*fp.size_z3d);
    else
-      fp.camera = new PerspectiveCamera(45, fp.scene_width / fp.scene_height, 1, 40*fp.size_z3d);
+      fp.camera = new THREE.PerspectiveCamera(45, fp.scene_width / fp.scene_height, 1, 40*fp.size_z3d);
 
    fp.camera.up.set(0, 0, 1);
 
-   fp.pointLight = new DirectionalLight(0xffffff, 3);
+   fp.pointLight = new THREE.DirectionalLight(0xffffff, 3);
    fp.pointLight.position.set(fp.size_x3d/2, fp.size_y3d/2, fp.size_z3d/2);
    fp.camera.add(fp.pointLight);
-   fp.lookat = new Vector3(0, 0, orthographic ? 0.3*fp.size_z3d : 0.8*fp.size_z3d);
+   fp.lookat = new THREE.Vector3(0, 0, orthographic ? 0.3*fp.size_z3d : 0.8*fp.size_z3d);
    fp.scene.add(fp.camera);
+}
+
+/** @summary Returns camera default position
+  * @private */
+function getCameraDefaultPosition(fp, first_time) {
+   const pad = fp.getPadPainter().getRootPad(true),
+         kz = fp.camera.isOrthographicCamera ? 1 : 1.4;
+   let max3dx = Math.max(0.75*fp.size_x3d, fp.size_z3d),
+       max3dy = Math.max(0.75*fp.size_y3d, fp.size_z3d),
+       pos = null;
+
+   if (first_time) {
+      pos = new THREE.Vector3();
+      if (max3dx === max3dy)
+         pos.set(-1.6*max3dx, -3.5*max3dy, kz*fp.size_z3d);
+      else if (max3dx > max3dy)
+         pos.set(-2*max3dx, -3.5*max3dy, kz*fp.size_z3d);
+      else
+         pos.set(-3.5*max3dx, -2*max3dy, kz*fp.size_z3d);
+   }
+
+   if (pad && (first_time || !fp.zoomChangedInteractive())) {
+      if (Number.isFinite(pad.fTheta) && Number.isFinite(pad.fPhi) && ((pad.fTheta !== fp.camera_Theta) || (pad.fPhi !== fp.camera_Phi))) {
+         if (!pos)
+            pos = new THREE.Vector3();
+         max3dx = 3*Math.max(fp.size_x3d, fp.size_z3d);
+         max3dy = 3*Math.max(fp.size_y3d, fp.size_z3d);
+         const phi = (270 - pad.fPhi) / 180 * Math.PI,
+               theta = (pad.fTheta - 10) / 180 * Math.PI;
+         pos.set(max3dx*Math.cos(phi)*Math.cos(theta),
+                 max3dy*Math.sin(phi)*Math.cos(theta),
+                 fp.size_z3d + (kz-0.9)*(max3dx+max3dy)*Math.sin(theta));
+      }
+   }
+
+   return pos;
 }
 
 /** @summary Set default camera position
   * @private */
 function setCameraPosition(fp, first_time) {
-   const pad = fp.getPadPainter().getRootPad(true),
-         kz = fp.camera.isOrthographicCamera ? 1 : 1.4;
-   let max3dx = Math.max(0.75*fp.size_x3d, fp.size_z3d),
-       max3dy = Math.max(0.75*fp.size_y3d, fp.size_z3d);
+   const pos = getCameraDefaultPosition(fp, first_time);
 
-   if (first_time) {
-      if (max3dx === max3dy)
-         fp.camera.position.set(-1.6*max3dx, -3.5*max3dy, kz*fp.size_z3d);
-      else if (max3dx > max3dy)
-         fp.camera.position.set(-2*max3dx, -3.5*max3dy, kz*fp.size_z3d);
-      else
-         fp.camera.position.set(-3.5*max3dx, -2*max3dy, kz*fp.size_z3d);
-   }
-
-   if (pad && (first_time || !fp.zoomChangedInteractive())) {
-      if (Number.isFinite(pad.fTheta) && Number.isFinite(pad.fPhi) && ((pad.fTheta !== fp.camera_Theta) || (pad.fPhi !== fp.camera_Phi))) {
-         fp.camera_Phi = pad.fPhi;
-         fp.camera_Theta = pad.fTheta;
-         max3dx = 3*Math.max(fp.size_x3d, fp.size_z3d);
-         max3dy = 3*Math.max(fp.size_y3d, fp.size_z3d);
-         const phi = (270-pad.fPhi)/180*Math.PI, theta = (pad.fTheta-10)/180*Math.PI;
-         fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta),
-                                max3dy*Math.sin(phi)*Math.cos(theta),
-                                fp.size_z3d + (kz-0.9)*(max3dx+max3dy)*Math.sin(theta));
-         first_time = true;
-      }
+   if (pos) {
+      fp.camera.position.copy(pos);
+      first_time = true;
    }
 
    if (first_time)
@@ -363,7 +380,8 @@ function setCameraPosition(fp, first_time) {
 
    if (first_time && fp.camera.isOrthographicCamera && fp.scene_width && fp.scene_height) {
       const screen_ratio = fp.scene_width / fp.scene_height,
-          szx = fp.camera.right - fp.camera.left, szy = fp.camera.top - fp.camera.bottom;
+            szx = fp.camera.right - fp.camera.left,
+            szy = fp.camera.top - fp.camera.bottom;
 
       if (screen_ratio > szx / szy) {
          // screen wider than actual geometry
@@ -371,7 +389,7 @@ function setCameraPosition(fp, first_time) {
          fp.camera.left = m - szy * screen_ratio / 2;
          fp.camera.right = m + szy * screen_ratio / 2;
       } else {
-         // screen heigher than actual geometry
+         // screen higher than actual geometry
          const m = (fp.camera.top + fp.camera.bottom) / 2;
          fp.camera.top = m + szx / screen_ratio / 2;
          fp.camera.bottom = m - szx / screen_ratio / 2;
@@ -381,10 +399,34 @@ function setCameraPosition(fp, first_time) {
     fp.camera.updateProjectionMatrix();
 }
 
+function getCameraPosition(fp) {
+   const p = fp.camera.position, p0 = fp.lookat,
+         dist = p.distanceTo(p0),
+         dist_xy = Math.sqrt((p.x-p0.x)**2 + (p.y-p0.y)**2),
+         new_theta = Math.atan2((p.z - p0.z)/dist, dist_xy/dist) / Math.PI * 180,
+         new_phi = 270 - Math.atan2((p.y - p0.y)/dist_xy, (p.x - p0.x)/dist_xy) / Math.PI * 180,
+         pad = fp.getPadPainter()?.getRootPad(true);
+
+   fp.camera_Phi = new_phi >= 360 ? new_phi - 360 : new_phi;
+   fp.camera_Theta = new_theta;
+
+   if (pad && Number.isFinite(fp.camera_Phi) && Number.isFinite(fp.camera_Theta)) {
+      pad.fPhi = fp.camera_Phi;
+      pad.fTheta = fp.camera_Theta;
+   }
+}
+
 function create3DControl(fp) {
    fp.control = createOrbitControl(fp, fp.camera, fp.scene, fp.renderer, fp.lookat);
 
    const frame_painter = fp, obj_painter = fp.getMainPainter();
+
+   if (fp.access3dKind() === constants.Embed3D.Embed) {
+      // tooltip scaling only need when GL canvas embed into
+      const scale = fp.getCanvPainter()?.getPadScale();
+      if (scale)
+         fp.control.tooltip?.setScale(scale);
+   }
 
    fp.control.processMouseMove = function(intersects) {
       let tip = null, mesh = null, zoom_mesh = null;
@@ -402,7 +444,8 @@ function create3DControl(fp) {
          const delta_x = 1e-4*frame_painter.size_x3d,
                delta_y = 1e-4*frame_painter.size_y3d,
                delta_z = 1e-4*frame_painter.size_z3d;
-         if ((tip.x1 > tip.x2) || (tip.y1 > tip.y2) || (tip.z1 > tip.z2)) console.warn('check 3D hints coordinates');
+         if ((tip.x1 > tip.x2) || (tip.y1 > tip.y2) || (tip.z1 > tip.z2))
+            console.warn('check 3D hints coordinates');
          tip.x1 -= delta_x; tip.x2 += delta_x;
          tip.y1 -= delta_y; tip.y2 += delta_y;
          tip.z1 -= delta_z; tip.z2 += delta_z;
@@ -442,9 +485,9 @@ function create3DControl(fp) {
          }
       }
 
-      const fp = obj_painter.getFramePainter();
-      if (isFunc(fp?.showContextMenu))
-         fp.showContextMenu(kind, pos, p);
+      const ofp = obj_painter.getFramePainter();
+      if (isFunc(ofp?.showContextMenu))
+         ofp.showContextMenu(kind, pos, p);
    };
 }
 
@@ -486,6 +529,9 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
 
       this.mode3d = false;
 
+      if (this.draw_g)
+         this.createFrameG();
+
       return;
    }
 
@@ -497,9 +543,9 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
       disposeThreejsObject(this.toplevel);
       delete this.tooltip_mesh;
       delete this.toplevel;
-      if (this.control) this.control.HideTooltip();
+      this.control?.hideTooltip();
 
-      const newtop = new Object3D();
+      const newtop = new THREE.Object3D();
       this.scene.add(newtop);
       this.toplevel = newtop;
 
@@ -517,33 +563,37 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
    const sz = this.getSizeFor3d(undefined, render3d);
 
    this.size_z3d = 100;
-   this.size_x3d = this.size_y3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width/sz.height*this.size_z3d) : this.size_z3d;
-   if (x3dscale) this.size_x3d *= x3dscale;
-   if (y3dscale) this.size_y3d *= y3dscale;
+   this.x3dscale = x3dscale || 1;
+   this.y3dscale = y3dscale || 1;
+   const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width/sz.height*this.size_z3d) : this.size_z3d;
+   this.size_x3d = xy3d * this.x3dscale;
+   this.size_y3d = xy3d * this.y3dscale;
 
-   // three.js 3D drawing
-   this.scene = new Scene();
-   // scene.fog = new Fog(0xffffff, 500, 3000);
+   return importThreeJs().then(() => {
+      // three.js 3D drawing
+      this.scene = new THREE.Scene();
+      // scene.fog = new Fog(0xffffff, 500, 3000);
 
-   this.toplevel = new Object3D();
-   this.scene.add(this.toplevel);
-   this.scene_width = sz.width;
-   this.scene_height = sz.height;
-   this.scene_x = sz.x ?? 0;
-   this.scene_y = sz.y ?? 0;
+      this.toplevel = new THREE.Object3D();
+      this.scene.add(this.toplevel);
+      this.scene_width = sz.width;
+      this.scene_height = sz.height;
+      this.scene_x = sz.x ?? 0;
+      this.scene_y = sz.y ?? 0;
 
-   this.camera_Phi = 30;
-   this.camera_Theta = 30;
+      this.camera_Phi = 30;
+      this.camera_Theta = 30;
 
-   create3DCamera(this, orthographic);
+      create3DCamera(this, orthographic);
 
-   setCameraPosition(this, true);
+      setCameraPosition(this, true);
 
-   return createRender3D(this.scene_width, this.scene_height, render3d).then(r => {
+      return createRender3D(this.scene_width, this.scene_height, render3d);
+   }).then(r => {
       this.renderer = r;
 
-      this.webgl = (render3d === constants.Render3D.WebGL);
-      this.add3dCanvas(sz, this.renderer.jsroot_dom, this.webgl);
+      this.webgl = r.jsroot_render3d === constants.Render3D.WebGL;
+      this.add3dCanvas(sz, r.jsroot_dom, this.webgl);
 
       this.first_render_tm = 0;
       this.enable_highlight = false;
@@ -608,7 +658,7 @@ function remove3DMeshes(painter) {
   * @param {number} tmout - specifies delay, after which actual rendering will be invoked
   * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
   * superimposed with each other.
-  * If tmeout <= 0, rendering performed immediately
+  * If tmout <= 0, rendering performed immediately
   * If tmout === -1111, immediate rendering with SVG renderer is performed
   * @private */
 function render3D(tmout) {
@@ -627,7 +677,8 @@ function render3D(tmout) {
       return rrr.domElement;
    }
 
-   if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
+   if (tmout === undefined)
+      tmout = 5; // by default, rendering happens with timeout
 
    const batch_mode = this.isBatchMode();
 
@@ -642,7 +693,8 @@ function render3D(tmout) {
       delete this.render_tmout;
    }
 
-   if (!this.renderer) return;
+   if (!this.renderer)
+      return;
 
    beforeRender3D(this.renderer);
 
@@ -661,8 +713,9 @@ function render3D(tmout) {
       this.first_render_tm = tm2.getTime() - tm1.getTime();
       this.enable_highlight = (this.first_render_tm < 1200) && this.isTooltipAllowed();
       if (this.first_render_tm > 500)
-         console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
-   }
+         console.log(`three.js r${THREE.REVISION}, first render tm = ${this.first_render_tm}`);
+   } else
+      getCameraPosition(this);
 
    if (this.processRender3D) {
       this.getPadPainter()?.painters?.forEach(objp => {
@@ -679,9 +732,11 @@ function resize3D() {
 
    this.apply3dSize(sz);
 
-   if ((this.scene_width === sz.width) && (this.scene_height === sz.height)) return false;
+   if ((this.scene_width === sz.width) && (this.scene_height === sz.height))
+      return false;
 
-   if ((sz.width < 10) || (sz.height < 10)) return false;
+   if ((sz.width < 10) || (sz.height < 10))
+      return false;
 
    this.scene_width = sz.width;
    this.scene_height = sz.height;
@@ -691,16 +746,28 @@ function resize3D() {
 
    this.renderer.setSize(this.scene_width, this.scene_height);
 
+   const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width/sz.height*this.size_z3d) : this.size_z3d,
+         x3d = xy3d * this.x3dscale,
+         y3d = xy3d * this.y3dscale;
+
+   if ((Math.abs(x3d - this.size_x3d) > 0.15*this.size_z3d) || (Math.abs(y3d - this.size_y3d) > 0.15*this.size_z3d)) {
+      this.size_x3d = x3d;
+      this.size_y3d = y3d;
+      this.control?.position0?.copy(getCameraDefaultPosition(this, true));
+      return 1; // indicate significant resize
+   }
+
    return true;
 }
 
-/** @summary Hilight bin in frame painter 3D drawing
+/** @summary Highlight bin in frame painter 3D drawing
   * @private */
 function highlightBin3D(tip, selfmesh) {
    const want_remove = !tip || (tip.x1 === undefined) || !this.enable_highlight;
    let changed = false, tooltip_mesh = null, changed_self = true, mainp = this.getMainPainter();
 
-   if (mainp && (!mainp.provideUserTooltip || !mainp.hasUserTooltip())) mainp = null;
+   if (!mainp?.provideUserTooltip || !mainp?.hasUserTooltip())
+      mainp = null;
 
    if (this.tooltip_selfmesh) {
       changed_self = (this.tooltip_selfmesh !== selfmesh);
@@ -717,14 +784,16 @@ function highlightBin3D(tip, selfmesh) {
    }
 
    if (want_remove) {
-      if (changed) this.render3D();
-      if (changed && mainp) mainp.provideUserTooltip(null);
+      if (changed) {
+         this.render3D();
+         mainp?.provideUserTooltip(null);
+      }
       return;
    }
 
    if (tip.use_itself) {
       selfmesh.save_color = selfmesh.material.color;
-      selfmesh.material.color = new Color(tip.color);
+      selfmesh.material.color = new THREE.Color(tip.color);
       this.tooltip_selfmesh = selfmesh;
       changed = changed_self;
    } else {
@@ -733,7 +802,7 @@ function highlightBin3D(tip, selfmesh) {
       const indicies = Box3D.Indexes,
             normals = Box3D.Normals,
             vertices = Box3D.Vertices,
-            color = new Color(tip.color ? tip.color : 0xFF0000),
+            color = new THREE.Color(tip.color ? tip.color : 0xFF0000),
             opacity = tip.opacity || 1;
 
       let pos, norm;
@@ -741,11 +810,11 @@ function highlightBin3D(tip, selfmesh) {
       if (!tooltip_mesh) {
          pos = new Float32Array(indicies.length*3);
          norm = new Float32Array(indicies.length*3);
-         const geom = new BufferGeometry();
-         geom.setAttribute('position', new BufferAttribute(pos, 3));
-         geom.setAttribute('normal', new BufferAttribute(norm, 3));
-         const material = new MeshBasicMaterial({ color, opacity, vertexColors: false });
-         tooltip_mesh = new Mesh(geom, material);
+         const geom = new THREE.BufferGeometry();
+         geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+         geom.setAttribute('normal', new THREE.BufferAttribute(norm, 3));
+         const material = new THREE.MeshBasicMaterial({ color, opacity, vertexColors: false });
+         tooltip_mesh = new THREE.Mesh(geom, material);
       } else {
          pos = tooltip_mesh.geometry.attributes.position.array;
          tooltip_mesh.geometry.attributes.position.needsUpdate = true;
@@ -753,8 +822,10 @@ function highlightBin3D(tip, selfmesh) {
          tooltip_mesh.material.opacity = opacity;
       }
 
-      if (tip.x1 === tip.x2) console.warn(`same tip X ${tip.x1} ${tip.x2}`);
-      if (tip.y1 === tip.y2) console.warn(`same tip Y ${tip.y1} ${tip.y2}`);
+      if (tip.x1 === tip.x2)
+         console.warn(`same tip X ${tip.x1} ${tip.x2}`);
+      if (tip.y1 === tip.y2)
+         console.warn(`same tip Y ${tip.y1} ${tip.y2}`);
       if (tip.z1 === tip.z2) tip.z2 = tip.z1 + 0.0001;  // avoid zero faces
 
       for (let k = 0, nn = -3; k < indicies.length; ++k) {
@@ -801,7 +872,7 @@ function set3DOptions(hopt) {
 /** @summary Draw axes in 3D mode
   * @private */
 function drawXYZ(toplevel, AxisPainter, opts) {
-   if (!opts) opts = {};
+   if (!opts) opts = { ndim: 2 };
 
    if (opts.drawany === false)
       opts.draw = false;
@@ -838,7 +909,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.use_y_for_z) {
       this.zmin = this.ymin; this.zmax = this.ymax;
       zmin = ymin; zmax = ymax; z_zoomed = y_zoomed;
-      // if (!z_zoomed && (this.hmin!==this.hmax)) { zmin = this.hmin; zmax = this.hmax; }
       ymin = 0; ymax = 1;
    }
 
@@ -850,33 +920,37 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    this.x_handle = new AxisPainter(null, this.xaxis);
    if (opts.v7) {
-      this.x_handle.setPadName(this.getPadName());
-      this.x_handle.snapid = this.snapid;
-   }
+      this.x_handle.pad_name = this.pad_name;
+      this.x_handle.assignSnapId(this.snapid);
+   } else if (opts.hist_painter)
+      this.x_handle.setHistPainter(opts.hist_painter, 'x');
+
    this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
-                               { log: pad?.fLogx ?? 0, reverse: opts.reverse_x });
+                               { log: pad?.fLogx ?? 0, reverse: opts.reverse_x, logcheckmin: true });
    this.x_handle.assignFrameMembers(this, 'x');
    this.x_handle.extractDrawAttributes(scalingSize);
 
    this.y_handle = new AxisPainter(null, this.yaxis);
    if (opts.v7) {
-      this.y_handle.setPadName(this.getPadName());
-      this.y_handle.snapid = this.snapid;
-   }
+      this.y_handle.pad_name = this.pad_name;
+      this.y_handle.assignSnapId(this.snapid);
+   } else if (opts.hist_painter)
+      this.y_handle.setHistPainter(opts.hist_painter, 'y');
    this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
-                               { log: pad && !opts.use_y_for_z ? pad.fLogy : 0, reverse: opts.reverse_y });
+                               { log: pad && !opts.use_y_for_z ? pad.fLogy : 0, reverse: opts.reverse_y, logcheckmin: opts.ndim > 1 });
    this.y_handle.assignFrameMembers(this, 'y');
    this.y_handle.extractDrawAttributes(scalingSize);
 
    this.z_handle = new AxisPainter(null, this.zaxis);
    if (opts.v7) {
-      this.z_handle.setPadName(this.getPadName());
-      this.z_handle.snapid = this.snapid;
-   }
-
+      this.z_handle.pad_name = this.pad_name;
+      this.z_handle.assignSnapId(this.snapid);
+   } else if (opts.hist_painter)
+      this.z_handle.setHistPainter(opts.hist_painter, 'z');
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
-                               { log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
-                                  reverse: opts.reverse_z });
+                               { value_axis: (opts.ndim === 1) || (opts.ndim === 2),
+                                 log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
+                                 reverse: opts.reverse_z, logcheckmin: opts.ndim > 2 });
    this.z_handle.assignFrameMembers(this, 'z');
    this.z_handle.extractDrawAttributes(scalingSize);
 
@@ -893,23 +967,25 @@ function drawXYZ(toplevel, AxisPainter, opts) {
           linewidth = (kind === 'ticks') ? handle.ticksWidth : handle.lineatt.width,
        name = `${col}_${linewidth}`;
       if (!lineMaterials[name])
-         lineMaterials[name] = new LineBasicMaterial(getMaterialArgs(col, { linewidth, vertexColors: false }));
+         lineMaterials[name] = new THREE.LineBasicMaterial(getMaterialArgs(col, { linewidth, vertexColors: false }));
       return lineMaterials[name];
    }
 
    function getTextMaterial(handle, kind, custom_color) {
       const col = custom_color || ((kind === 'title') ? handle.titleFont?.color : handle.labelsFont?.color) || 'black';
       if (!textMaterials[col])
-         textMaterials[col] = new MeshBasicMaterial(getMaterialArgs(col, { vertexColors: false }));
+         textMaterials[col] = new THREE.MeshBasicMaterial(getMaterialArgs(col, { vertexColors: false }));
       return textMaterials[col];
    }
 
    // main element, where all axis elements are placed
-   const top = new Object3D();
+   const top = new THREE.Object3D();
    top.axis_draw = true; // mark element as axis drawing
    toplevel.add(top);
 
-   let ticks = [], lbls = [], maxtextheight = 0;
+   let ticks = [], lbls = [], maxtextheight = 0, maxtextwidth = 0;
+   const center_x = this.x_handle.isCenteredLabels(),
+         rotate_x = this.x_handle.isRotateLabels();
 
    while (xticks.next()) {
       const grx = xticks.grpos;
@@ -922,11 +998,11 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          is_major = false; lbl = '';
       }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_x || !xticks.last_major())) {
          const mod = xticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         const text3d = createTextGeometry(this, lbl, this.x_handle.labelsFont.size);
+         const text3d = createLatexGeometry(this, lbl, this.x_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -934,6 +1010,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
 
+         maxtextwidth = Math.max(maxtextwidth, draw_width);
          maxtextheight = Math.max(maxtextheight, draw_height);
 
          if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -946,8 +1023,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             if ((draw_width > 0) && (space > 0))
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
+         if (rotate_x)
+            text3d.rotate = 1;
 
-         if (this.x_handle.isCenteredLabels()) {
+         if (center_x) {
             if (!space) space = Math.min(grx - grminx, grmaxx - grx);
             text3d.grx += space/2;
          }
@@ -957,13 +1036,16 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    if (this.x_handle.fTitle && opts.draw) {
-      const text3d = createTextGeometry(this, this.x_handle.fTitle, this.x_handle.titleFont.size);
+      const text3d = createLatexGeometry(this, this.x_handle.fTitle, this.x_handle.titleFont.size);
       text3d.computeBoundingBox();
       text3d.center = this.x_handle.titleCenter;
       text3d.opposite = this.x_handle.titleOpposite;
       text3d.offsety = 1.6 * this.x_handle.titleOffset + (grmaxy - grminy) * 0.005;
       text3d.grx = (grminx + grmaxx)/2; // default position for centered title
       text3d.kind = 'title';
+      if (this.x_handle.isRotateTitle())
+         text3d.rotate = 2;
+
       lbls.push(text3d);
    }
 
@@ -986,38 +1068,39 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    };
 
    const createZoomMesh = (kind, size_3d, use_y_for_z) => {
-      const geom = new BufferGeometry(), tsz = Math.max(this[kind+'_handle'].ticksSize, 0.005 * size_3d);
+      const geom = new THREE.BufferGeometry(), tsz = Math.max(this[kind+'_handle'].ticksSize, 0.005 * size_3d);
       let positions;
       if (kind === 'z')
          positions = new Float32Array([0, 0, 0, tsz*4, 0, 2*size_3d, tsz*4, 0, 0, 0, 0, 0, 0, 0, 2*size_3d, tsz*4, 0, 2*size_3d]);
       else
          positions = new Float32Array([-size_3d, 0, 0, size_3d, -tsz*4, 0, size_3d, 0, 0, -size_3d, 0, 0, -size_3d, -tsz*4, 0, size_3d, -tsz*4, 0]);
 
-      geom.setAttribute('position', new BufferAttribute(positions, 3));
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geom.computeVertexNormals();
 
-      const material = new MeshBasicMaterial({ transparent: true, vertexColors: false, side: DoubleSide, opacity: 0 }),
-          mesh = new Mesh(geom, material);
+      const material = new THREE.MeshBasicMaterial({ transparent: true, vertexColors: false, side: THREE.DoubleSide, opacity: 0 }),
+            mesh = new THREE.Mesh(geom, material);
       mesh.zoom = kind;
       mesh.size_3d = size_3d;
       mesh.tsz = tsz;
       mesh.use_y_for_z = use_y_for_z;
-      if (kind === 'y') mesh.rotateZ(Math.PI/2).rotateX(Math.PI);
+      if (kind === 'y')
+         mesh.rotateZ(Math.PI/2).rotateX(Math.PI);
 
-      mesh.v1 = new Vector3(positions[0], positions[1], positions[2]);
-      mesh.v2 = new Vector3(positions[6], positions[7], positions[8]);
-      mesh.v3 = new Vector3(positions[3], positions[4], positions[5]);
+      mesh.v1 = new THREE.Vector3(positions[0], positions[1], positions[2]);
+      mesh.v2 = new THREE.Vector3(positions[6], positions[7], positions[8]);
+      mesh.v3 = new THREE.Vector3(positions[3], positions[4], positions[5]);
 
       mesh.globalIntersect = function(raycaster) {
          if (!this.v1 || !this.v2 || !this.v3) return undefined;
 
-         const plane = new Plane();
+         const plane = new THREE.Plane();
          plane.setFromCoplanarPoints(this.v1, this.v2, this.v3);
          plane.applyMatrix4(this.matrixWorld);
 
          const v1 = raycaster.ray.origin.clone(),
              v2 = v1.clone().addScaledVector(raycaster.ray.direction, 1e10),
-             pnt = plane.intersectLine(new Line3(v1, v2), new Vector3());
+             pnt = plane.intersectLine(new THREE.Line3(v1, v2), new THREE.Vector3());
 
          if (!pnt) return undefined;
 
@@ -1035,7 +1118,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       mesh.showSelection = function(pnt1, pnt2) {
          // used to show selection
 
-         const kind = this.zoom;
          let tgtmesh = this.children ? this.children[0] : null, gg;
          if (!pnt1 || !pnt2) {
             if (tgtmesh) {
@@ -1045,29 +1127,31 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             return tgtmesh;
          }
 
-         if (!this.geometry) return false;
+         if (!this.geometry)
+            return false;
 
          if (!tgtmesh) {
             gg = this.geometry.clone();
             const pos = gg.getAttribute('position').array;
 
             // original vertices [0, 2, 1, 0, 3, 2]
-            if (kind === 'z') pos[6] = pos[3] = pos[15] = this.tsz;
-                         else pos[4] = pos[16] = pos[13] = -this.tsz;
-            tgtmesh = new Mesh(gg, new MeshBasicMaterial({ color: 0xFF00, side: DoubleSide, vertexColors: false }));
+            if (this.zoom === 'z')
+               pos[6] = pos[3] = pos[15] = this.tsz;
+            else
+               pos[4] = pos[16] = pos[13] = -this.tsz;
+            tgtmesh = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({ color: 0xFF00, side: THREE.DoubleSide, vertexColors: false }));
             this.add(tgtmesh);
          } else
             gg = tgtmesh.geometry;
 
-
          const pos = gg.getAttribute('position').array;
 
-         if (kind === 'z') {
-            pos[2] = pos[11] = pos[8] = pnt1[kind];
-            pos[5] = pos[17] = pos[14] = pnt2[kind];
+         if (this.zoom === 'z') {
+            pos[2] = pos[11] = pos[8] = pnt1[this.zoom];
+            pos[5] = pos[17] = pos[14] = pnt2[this.zoom];
          } else {
-            pos[0] = pos[9] = pos[12] = pnt1[kind];
-            pos[6] = pos[3] = pos[15] = pnt2[kind];
+            pos[0] = pos[9] = pos[12] = pnt1[this.zoom];
+            pos[6] = pos[3] = pos[15] = pnt2[this.zoom];
          }
 
          gg.getAttribute('position').needsUpdate = true;
@@ -1078,10 +1162,11 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       return mesh;
    };
 
-   let xcont = new Object3D(), xtickslines;
+   let xcont = new THREE.Object3D(), xtickslines;
    xcont.position.set(0, grminy, grminz);
    xcont.rotation.x = 1/4*Math.PI;
    xcont.xyid = 2;
+   xcont.painter = this.x_handle;
 
    if (opts.draw) {
       xtickslines = createLineSegments(ticks, getLineMaterial(this.x_handle, 'ticks'));
@@ -1089,17 +1174,28 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    lbls.forEach(lbl => {
-      const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-          posx = lbl.center ? lbl.grx - w/2 : (lbl.opposite ? grminx : grmaxx - w),
-          m = new Matrix4();
+      const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+            dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+            w = (lbl.rotate === 1) ? dy : dx,
+            posx = lbl.center ? lbl.grx - w/2 : (lbl.opposite ? grminx : grmaxx - w),
+            posy = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.x_handle.ticksSize - lbl.offsety,
+            m = new THREE.Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
       m.set(text_scale, 0, 0, posx,
-            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, text_scale, 0, posy,
             0, 0, 1, 0,
             0, 0, 0, 1);
 
-      const mesh = new Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+      const mesh = new THREE.Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+
+      if (lbl.rotate)
+         mesh.rotateZ(lbl.rotate * Math.PI / 2);
+      if (lbl.rotate === 1)
+         mesh.translateY(-dy);
+      if (lbl.rotate === 2)
+         mesh.translateX(-dx);
+
       mesh.applyMatrix4(m);
       xcont.add(mesh);
    });
@@ -1108,24 +1204,35 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
-   xcont = new Object3D();
+   xcont = new THREE.Object3D();
    xcont.position.set(0, grmaxy, grminz);
    xcont.rotation.x = 3/4*Math.PI;
+   xcont.painter = this.x_handle;
 
    if (opts.draw)
-      xcont.add(new LineSegments(xtickslines.geometry, xtickslines.material));
+      xcont.add(new THREE.LineSegments(xtickslines.geometry, xtickslines.material));
 
    lbls.forEach(lbl => {
-      const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-            posx = (lbl.center ? lbl.grx + w/2 : lbl.opposite ? grminx + w : grmaxx),
-            m = new Matrix4();
+      const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+            dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+            w = (lbl.rotate === 1) ? dy : dx,
+            posx = lbl.center ? lbl.grx + w/2 : (lbl.opposite ? grminx + w: grmaxx),
+            posy = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.x_handle.ticksSize - lbl.offsety,
+            m = new THREE.Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
       m.set(-text_scale, 0, 0, posx,
-            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, text_scale, 0, posy,
             0, 0, -1, 0,
             0, 0, 0, 1);
-      const mesh = new Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+
+      const mesh = new THREE.Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
+      if (lbl.rotate)
+         mesh.rotateZ(lbl.rotate * Math.PI / 2);
+      if (lbl.rotate === 1)
+         mesh.translateY(-dy);
+      if (lbl.rotate === 2)
+         mesh.translateX(-dx);
       mesh.applyMatrix4(m);
       xcont.add(mesh);
    });
@@ -1135,7 +1242,13 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
-   lbls = []; text_scale = 1; maxtextheight = 0; ticks = [];
+   lbls = [];
+   text_scale = 1;
+   maxtextwidth = maxtextheight = 0;
+   ticks = [];
+
+   const center_y = this.y_handle.isCenteredLabels(),
+         rotate_y = this.y_handle.isRotateLabels();
 
    while (yticks.next()) {
       const gry = yticks.grpos;
@@ -1148,16 +1261,17 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          is_major = false; lbl = '';
       }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_y || !yticks.last_major())) {
          const mod = yticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         const text3d = createTextGeometry(this, lbl, this.y_handle.labelsFont.size);
+         const text3d = createLatexGeometry(this, lbl, this.y_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true;
 
+         maxtextwidth = Math.max(maxtextwidth, draw_width);
          maxtextheight = Math.max(maxtextheight, draw_height);
 
          if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -1171,45 +1285,59 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             if (draw_width > 0)
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
-         if (this.y_handle.isCenteredLabels()) {
+         if (center_y) {
             if (!space) space = Math.min(gry - grminy, grmaxy - gry);
             text3d.gry += space/2;
          }
+         if (rotate_y)
+            text3d.rotate = 1;
       }
       ticks.push(0, gry, 0, this.y_handle.ticksSize*(is_major ? -1 : -0.6), gry, 0);
    }
 
    if (this.y_handle.fTitle && opts.draw) {
-      const text3d = createTextGeometry(this, this.y_handle.fTitle, this.y_handle.titleFont.size);
+      const text3d = createLatexGeometry(this, this.y_handle.fTitle, this.y_handle.titleFont.size);
       text3d.computeBoundingBox();
       text3d.center = this.y_handle.titleCenter;
       text3d.opposite = this.y_handle.titleOpposite;
       text3d.offsetx = 1.6 * this.y_handle.titleOffset + (grmaxx - grminx) * 0.005;
       text3d.gry = (grminy + grmaxy)/2; // default position for centered title
       text3d.kind = 'title';
+      if (this.y_handle.isRotateTitle())
+         text3d.rotate = 2;
       lbls.push(text3d);
    }
 
    if (!opts.use_y_for_z) {
-      let yticksline, ycont = new Object3D();
+      let yticksline, ycont = new THREE.Object3D();
       ycont.position.set(grminx, 0, grminz);
       ycont.rotation.y = -1/4*Math.PI;
+      ycont.painter = this.y_handle;
       if (opts.draw) {
          yticksline = createLineSegments(ticks, getLineMaterial(this.y_handle, 'ticks'));
          ycont.add(yticksline);
       }
 
       lbls.forEach(lbl => {
-         const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-             posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
-             m = new Matrix4();
-         // matrix to swap y and z scales and shift along z to its position
-         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+         const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+               dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+               w = (lbl.rotate === 1) ? dy : dx,
+               posx = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.y_handle.ticksSize - lbl.offsetx,
+               posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
+               m = new THREE.Matrix4();
+         m.set(0, text_scale, 0, posx,
                -text_scale, 0, 0, posy,
                0, 0, 1, 0,
                0, 0, 0, 1);
 
-         const mesh = new Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         const mesh = new THREE.Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         if (lbl.rotate)
+            mesh.rotateZ(lbl.rotate * Math.PI / 2);
+         if (lbl.rotate === 1)
+            mesh.translateY(-dy);
+         if (lbl.rotate === 2)
+            mesh.translateX(-dx);
+
          mesh.applyMatrix4(m);
          ycont.add(mesh);
       });
@@ -1219,22 +1347,34 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          ycont.add(createZoomMesh('y', this.size_y3d));
       top.add(ycont);
 
-      ycont = new Object3D();
+      ycont = new THREE.Object3D();
       ycont.position.set(grmaxx, 0, grminz);
       ycont.rotation.y = -3/4*Math.PI;
+      ycont.painter = this.y_handle;
       if (opts.draw)
-         ycont.add(new LineSegments(yticksline.geometry, yticksline.material));
+         ycont.add(new THREE.LineSegments(yticksline.geometry, yticksline.material));
 
       lbls.forEach(lbl => {
-         const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
-             posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
-             m = new Matrix4();
-         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+         const dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+               dy = lbl.boundingBox.max.y - lbl.boundingBox.min.y,
+               w = (lbl.rotate === 1) ? dy : dx,
+               posx = -text_scale * (lbl.rotate === 1 ? maxtextwidth : maxtextheight) - this.y_handle.ticksSize - lbl.offsetx,
+               posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
+               m = new THREE.Matrix4();
+
+         m.set(0, text_scale, 0, posx,
                text_scale, 0, 0, posy,
                0, 0, -1, 0,
                0, 0, 0, 1);
 
-         const mesh = new Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         const mesh = new THREE.Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
+         if (lbl.rotate)
+            mesh.rotateZ(lbl.rotate * Math.PI / 2);
+         if (lbl.rotate === 1)
+            mesh.translateY(-dy);
+         if (lbl.rotate === 2)
+            mesh.translateX(-dx);
+
          mesh.applyMatrix4(m);
          ycont.add(mesh);
       });
@@ -1248,6 +1388,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    let zgridx = null, zgridy = null, lastmajorz = null, maxzlblwidth = 0;
 
+   const center_z = this.z_handle.isCenteredLabels(),
+         rotate_z = this.z_handle.isRotateLabels();
+
    if (this.size_z3d && opts.drawany) {
       zgridx = []; zgridy = [];
    }
@@ -1259,14 +1402,14 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (lbl === null) { is_major = false; lbl = ''; }
 
-      if (is_major && lbl && opts.draw) {
+      if (is_major && lbl && opts.draw && (!center_z || !zticks.last_major())) {
          const mod = zticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         const text3d = createTextGeometry(this, lbl, this.z_handle.labelsFont.size);
+         const text3d = createLatexGeometry(this, lbl, this.z_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.translate(-draw_width, -draw_height/2, 0);
 
         if (mod?.fTextColor) text3d.color = this.getColor(mod.fTextColor);
@@ -1292,7 +1435,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    if (zgridx && (zgridx.length > 0)) {
-      const material = new LineDashedMaterial({ color: this.x_handle.ticksColor, dashSize: 2, gapSize: 2 }),
+      const material = new THREE.LineDashedMaterial({ color: this.x_handle.ticksColor, dashSize: 2, gapSize: 2 }),
             lines1 = createLineSegments(zgridx, material);
 
       lines1.position.set(0, grmaxy, 0);
@@ -1300,7 +1443,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       lines1.visible = false;
       top.add(lines1);
 
-      const lines2 = new LineSegments(lines1.geometry, material);
+      const lines2 = new THREE.LineSegments(lines1.geometry, material);
       lines2.position.set(0, grminy, 0);
       lines2.grid = 4; // mark as grid
       lines2.visible = false;
@@ -1308,7 +1451,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    if (zgridy && (zgridy.length > 0)) {
-      const material = new LineDashedMaterial({ color: this.y_handle.ticksColor, dashSize: 2, gapSize: 2 }),
+      const material = new THREE.LineDashedMaterial({ color: this.y_handle.ticksColor, dashSize: 2, gapSize: 2 }),
             lines1 = createLineSegments(zgridy, material);
 
       lines1.position.set(grmaxx, 0, 0);
@@ -1316,7 +1459,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       lines1.visible = false;
       top.add(lines1);
 
-      const lines2 = new LineSegments(lines1.geometry, material);
+      const lines2 = new THREE.LineSegments(lines1.geometry, material);
       lines2.position.set(grminx, 0, 0);
       lines2.grid = 1; // mark as grid
       lines2.visible = false;
@@ -1325,13 +1468,15 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    const zcont = [], zticksline = opts.draw ? createLineSegments(ticks, getLineMaterial(this.z_handle, 'ticks')) : null;
    for (let n = 0; n < 4; ++n) {
-      zcont.push(new Object3D());
+      zcont.push(new THREE.Object3D());
 
       lbls.forEach((lbl, indx) => {
-         const m = new Matrix4();
+         const m = new THREE.Matrix4(),
+               dx = lbl.boundingBox.max.x - lbl.boundingBox.min.x;
+
          let grz = lbl.grz;
 
-         if (this.z_handle.isCenteredLabels()) {
+         if (center_z) {
             if (indx < lbls.length - 1)
                grz = (grz + lbls[indx+1].grz) / 2;
             else if (indx > 0)
@@ -1342,36 +1487,42 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + this.z_handle.labelsOffset,
                          0, 0, 1, 0,
                          0, text_scale, 0, grz);
-         const mesh = new Mesh(lbl, getTextMaterial(this.z_handle));
+         const mesh = new THREE.Mesh(lbl, getTextMaterial(this.z_handle));
+         if (rotate_z)
+            mesh.rotateZ(-Math.PI/2).translateX(dx/2);
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
       });
 
       if (this.z_handle.fTitle && opts.draw) {
-         const text3d = createTextGeometry(this, this.z_handle.fTitle, this.z_handle.titleFont.size);
+         const text3d = createLatexGeometry(this, this.z_handle.fTitle, this.z_handle.titleFont.size);
          text3d.computeBoundingBox();
-         const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             posz = this.z_handle.titleCenter ? (grmaxz + grminz - draw_width)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - draw_width);
+         const dx = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
+               dy = text3d.boundingBox.max.y - text3d.boundingBox.min.y,
+               rotate = this.z_handle.isRotateTitle(),
+               posz = this.z_handle.titleCenter ? (grmaxz + grminz - dx)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - dx) + (rotate ? dx : 0),
+               m = new THREE.Matrix4();
 
-         text3d.rotateZ(Math.PI/2);
-
-         const m = new Matrix4();
          m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + maxzlblwidth + this.z_handle.titleOffset,
                          0, 0, 1, 0,
                          0, text_scale, 0, posz);
-         const mesh = new Mesh(text3d, getTextMaterial(this.z_handle, 'title'));
+         const mesh = new THREE.Mesh(text3d, getTextMaterial(this.z_handle, 'title'));
+         mesh.rotateZ(Math.PI*(rotate ? 1.5 : 0.5));
+         if (rotate) mesh.translateY(-dy);
+
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
       }
 
       if (opts.draw && zticksline)
-         zcont[n].add(n === 0 ? zticksline : new LineSegments(zticksline.geometry, zticksline.material));
+         zcont[n].add(n === 0 ? zticksline : new THREE.LineSegments(zticksline.geometry, zticksline.material));
 
       if (opts.zoom && opts.drawany)
          zcont[n].add(createZoomMesh('z', this.size_z3d, opts.use_y_for_z));
 
       zcont[n].zid = n + 2;
       top.add(zcont[n]);
+      zcont[n].painter = this.z_handle;
    }
 
    zcont[0].position.set(grminx, grmaxy, 0);
@@ -1392,12 +1543,12 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    const linex_material = getLineMaterial(this.x_handle),
        linex_geom = createLineSegments([grminx, 0, 0, grmaxx, 0, 0], linex_material, null, true);
    for (let n = 0; n < 2; ++n) {
-      let line = new LineSegments(linex_geom, linex_material);
+      let line = new THREE.LineSegments(linex_geom, linex_material);
       line.position.set(0, grminy, n === 0 ? grminz : grmaxz);
       line.xyboxid = 2; line.bottom = (n === 0);
       top.add(line);
 
-      line = new LineSegments(linex_geom, linex_material);
+      line = new THREE.LineSegments(linex_geom, linex_material);
       line.position.set(0, grmaxy, n === 0 ? grminz : grmaxz);
       line.xyboxid = 4; line.bottom = (n === 0);
       top.add(line);
@@ -1406,12 +1557,12 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    const liney_material = getLineMaterial(this.y_handle),
        liney_geom = createLineSegments([0, grminy, 0, 0, grmaxy, 0], liney_material, null, true);
    for (let n = 0; n < 2; ++n) {
-      let line = new LineSegments(liney_geom, liney_material);
+      let line = new THREE.LineSegments(liney_geom, liney_material);
       line.position.set(grminx, 0, n === 0 ? grminz : grmaxz);
       line.xyboxid = 3; line.bottom = (n === 0);
       top.add(line);
 
-      line = new LineSegments(liney_geom, liney_material);
+      line = new THREE.LineSegments(liney_geom, liney_material);
       line.position.set(grmaxx, 0, n === 0 ? grminz : grmaxz);
       line.xyboxid = 1; line.bottom = (n === 0);
       top.add(line);
@@ -1420,7 +1571,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    const linez_material = getLineMaterial(this.z_handle),
        linez_geom = createLineSegments([0, 0, grminz, 0, 0, grmaxz], linez_material, null, true);
    for (let n = 0; n < 4; ++n) {
-      const line = new LineSegments(linez_geom, linez_material);
+      const line = new THREE.LineSegments(linez_geom, linez_material);
       line.zboxid = zcont[n].zid;
       line.position.copy(zcont[n].position);
       top.add(line);
@@ -1428,14 +1579,14 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 }
 
 
-/** @summary Converts 3D coordiante to the pad NDC
+/** @summary Converts 3D coordinate to the pad NDC
   * @private */
 function convert3DtoPadNDC(x, y, z) {
    x = this.x_handle.gr(x);
    y = this.y_handle.gr(y);
    z = this.z_handle.gr(z);
 
-   const vector = new Vector3().set(x, y, z);
+   const vector = new THREE.Vector3().set(x, y, z);
 
    // map to normalized device coordinate (NDC) space
    vector.project(this.camera);
@@ -1461,10 +1612,44 @@ function assignFrame3DMethods(fpainter) {
    Object.assign(fpainter, { create3DScene, add3DMesh, remove3DMeshes, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
+function _meshLegoToolTip(intersect) {
+   if ((intersect.faceIndex < 0) || (intersect.faceIndex >= this.face_to_bins_index.length))
+      return null;
+
+   const p = this.painter,
+         handle = this.handle,
+         main = p.getFramePainter(),
+         histo = p.getHisto(),
+         tip = p.get3DToolTip(this.face_to_bins_index[intersect.faceIndex]),
+         x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
+         x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
+         y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]))),
+         y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1])));
+
+   tip.x1 = Math.min(x1, x2);
+   tip.x2 = Math.max(x1, x2);
+   tip.y1 = Math.min(y1, y2);
+   tip.y2 = Math.max(y1, y2);
+
+   let binz1 = this.baseline, binz2 = tip.value;
+   if (histo.$baseh) binz1 = histo.$baseh.getBinContent(tip.ix, tip.iy);
+   if (binz2 < binz1) [binz1, binz2] = [binz2, binz1];
+
+   tip.z1 = main.grz(Math.max(this.zmin, binz1));
+   tip.z2 = main.grz(Math.min(this.zmax, binz2));
+
+   tip.color = this.tip_color;
+   tip.$painter = p;
+   tip.$projection = p.is_projection && (p.getDimension() === 2);
+
+   return tip;
+}
+
 /** @summary Draw histograms in 3D mode
   * @private */
 function drawBinsLego(painter, is_v7 = false) {
-   if (!painter.draw_content) return;
+   if (!painter.draw_content)
+      return;
 
    // Perform TH1/TH2 lego plot with BufferGeometry
 
@@ -1475,7 +1660,7 @@ function drawBinsLego(painter, is_v7 = false) {
          // reduced line segments
          rsegments = [0, 1, 1, 2, 2, 3, 3, 0],
          // reduced vertices
-         rvertices = [new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 1, 0), new Vector3(1, 0, 0)],
+         rvertices = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, 0, 0)],
          main = painter.getFramePainter(),
          handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1 }),
          test_cutg = painter.options.cutg,
@@ -1487,7 +1672,7 @@ function drawBinsLego(painter, is_v7 = false) {
 
    if ((i1 >= i2) || (j1 >= j2)) return;
 
-   let zmin, zmax, i, j, k, vert, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
+   let zmin, zmax, i, j, k, vert, binz1, binz2, reduced, nobottom, notop,
        axis_zmin = main.z_handle.getScaleMin(),
        axis_zmax = main.z_handle.getScaleMax();
 
@@ -1507,18 +1692,21 @@ function drawBinsLego(painter, is_v7 = false) {
 
       if ((binz1 >= zmax) || (binz2 < zmin)) return false;
 
-      if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(ii + 0.5),
-                 histo.fYaxis.GetBinCoord(jj + 0.5))) return false;
+      if (test_cutg &&
+         !test_cutg.IsInside(histo.fXaxis.GetBinCoord(ii + 0.5), histo.fYaxis.GetBinCoord(jj + 0.5)))
+         return false;
 
       reduced = (binz2 === zmin) || (binz1 >= binz2);
 
-      if (!reduced || (level > 0)) return true;
+      if (!reduced || (level > 0))
+         return true;
 
-      if (basehisto) return false; // do not draw empty bins on top of other bins
+      if (basehisto)
+         return false; // do not draw empty bins on top of other bins
 
       if (painter.options.Zero || (axis_zmin > 0)) return true;
 
-      return painter._show_empty_bins;
+      return painter.options.ShowEmpty;
    };
 
    let levels = [axis_zmin, axis_zmax], palette = null;
@@ -1532,26 +1720,24 @@ function drawBinsLego(painter, is_v7 = false) {
          palette = main.getHistPalette();
          painter.createContour(main, palette, { full_z_range: true });
          levels = palette.getContour();
-         axis_zmin = levels[0];
-         axis_zmax = levels[levels.length-1];
+         axis_zmin = levels.at(0);
+         axis_zmax = levels.at(-1);
       } else {
          const cntr = painter.createContour(histo.fContour ? histo.fContour.length : 20, main.lego_zmin, main.lego_zmax);
          levels = cntr.arr;
          palette = painter.getHistPalette();
-         // axis_zmin = levels[0];
-         // axis_zmax = levels[levels.length-1];
       }
    }
 
-   for (let nlevel = 0; nlevel < levels.length-1; ++nlevel) {
+   for (let nlevel = 0; nlevel < levels.length - 1; ++nlevel) {
       zmin = levels[nlevel];
       zmax = levels[nlevel+1];
 
       // artificially extend last level of color palette to maximal visible value
-      if (palette && (nlevel === levels.length-2) && zmax < axis_zmax) zmax = axis_zmax;
+      if (palette && (nlevel === levels.length - 2) && zmax < axis_zmax) zmax = axis_zmax;
 
       const grzmin = main.grz(zmin), grzmax = main.grz(zmax);
-      let z1 = 0, z2 = 0, numvertices = 0, num2vertices = 0;
+      let numvertices = 0, num2vertices = 0;
 
       // now calculate size of buffer geometry for boxes
 
@@ -1560,7 +1746,7 @@ function drawBinsLego(painter, is_v7 = false) {
             if (!getBinContent(i, j, nlevel)) continue;
 
             nobottom = !reduced && (nlevel > 0);
-            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length-2);
+            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length - 2);
 
             numvertices += (reduced ? 12 : indicies.length);
             if (nobottom) numvertices -= 6;
@@ -1580,22 +1766,21 @@ function drawBinsLego(painter, is_v7 = false) {
             norm2 = (num2vertices === 0) ? null : new Float32Array(num2vertices*3),
             face_to_bins_indx2 = (num2vertices === 0) ? null : (use16indx ? new Uint16Array(num2vertices/3) : new Uint32Array(num2vertices/3));
 
-      let v = 0, v2 = 0, vert, k, nn;
+      let v = 0, v2 = 0, nn;
 
       for (i = i1; i < i2; ++i) {
-         x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]);
-         x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
+         const x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]),
+               x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
          for (j = j1; j < j2; ++j) {
             if (!getBinContent(i, j, nlevel)) continue;
 
             nobottom = !reduced && (nlevel > 0);
-            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length-2);
+            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length - 2);
 
-            y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
-            y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
-
-            z1 = (binz1 <= zmin) ? grzmin : main.grz(binz1);
-            z2 = (binz2 > zmax) ? grzmax : main.grz(binz2);
+            const y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]),
+                  y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]),
+                  z1 = (binz1 <= zmin) ? grzmin : main.grz(binz1),
+                  z2 = (binz2 > zmax) ? grzmax : main.grz(binz2);
 
             nn = 0; // counter over the normals, each normals correspond to 6 vertices
             k = 0; // counter over vertices
@@ -1641,7 +1826,7 @@ function drawBinsLego(painter, is_v7 = false) {
                if (k % 6 === 0) {
                   nn += 3;
                   if (notop && (k === indicies.length - 12)) {
-                     k += 6; nn += 3; // jump over notop indexes
+                     k += 6; nn += 3; // jump over no-top indexes
                   }
                }
             }
@@ -1659,8 +1844,8 @@ function drawBinsLego(painter, is_v7 = false) {
          fcolor = 'white';
       }
 
-      const material = new MeshBasicMaterial(getMaterialArgs(fcolor, { vertexColors: false })),
-          mesh = new Mesh(geometry, material);
+      const material = new THREE.MeshBasicMaterial(getMaterialArgs(fcolor, { vertexColors: false })),
+            mesh = new THREE.Mesh(geometry, material);
 
       mesh.face_to_bins_index = face_to_bins_index;
       mesh.painter = painter;
@@ -1669,50 +1854,19 @@ function drawBinsLego(painter, is_v7 = false) {
       mesh.baseline = (painter.options.BaseLine !== false) ? painter.options.BaseLine : (painter.options.Zero ? axis_zmin : 0);
       mesh.tip_color = (rootcolor=== 3) ? 0xFF0000 : 0x00FF00;
       mesh.handle = handle;
-
-      mesh.tooltip = function(intersect) {
-         if ((intersect.faceIndex < 0) || (intersect.faceIndex >= this.face_to_bins_index.length)) return null;
-
-         const p = this.painter,
-               handle = this.handle,
-               main = p.getFramePainter(),
-               histo = p.getHisto(),
-               tip = p.get3DToolTip(this.face_to_bins_index[intersect.faceIndex]),
-               x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
-               x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
-               y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]))),
-               y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1])));
-
-         tip.x1 = Math.min(x1, x2);
-         tip.x2 = Math.max(x1, x2);
-         tip.y1 = Math.min(y1, y2);
-         tip.y2 = Math.max(y1, y2);
-
-         let binz1 = this.baseline, binz2 = tip.value;
-         if (histo.$baseh) binz1 = histo.$baseh.getBinContent(tip.ix, tip.iy);
-         if (binz2 < binz1) [binz1, binz2] = [binz2, binz1];
-
-         tip.z1 = main.grz(Math.max(this.zmin, binz1));
-         tip.z2 = main.grz(Math.min(this.zmax, binz2));
-
-         tip.color = this.tip_color;
-         tip.$painter = p;
-         tip.$projection = p.is_projection && (p.getDimension() === 2);
-
-         return tip;
-      };
+      mesh.tooltip = _meshLegoToolTip;
 
       main.add3DMesh(mesh);
 
       if (num2vertices > 0) {
          const geom2 = createLegoGeom(painter, pos2, norm2),
-               color2 = (rootcolor < 2) ? new Color(0xFF0000) : new Color(d3_rgb(fcolor).darker(0.5).toString()),
-               material2 = new MeshBasicMaterial({ color: color2, vertexColors: false }),
-               mesh2 = new Mesh(geom2, material2);
+               color2 = new THREE.Color(rootcolor < 2 ? 0xFF0000 : d3_rgb(fcolor).darker(0.5).toString()),
+               material2 = new THREE.MeshBasicMaterial({ color: color2, vertexColors: false }),
+               mesh2 = new THREE.Mesh(geom2, material2);
          mesh2.face_to_bins_index = face_to_bins_indx2;
          mesh2.painter = painter;
          mesh2.handle = mesh.handle;
-         mesh2.tooltip = mesh.tooltip;
+         mesh2.tooltip = _meshLegoToolTip;
          mesh2.zmin = mesh.zmin;
          mesh2.zmax = mesh.zmax;
          mesh2.baseline = mesh.baseline;
@@ -1746,31 +1900,30 @@ function drawBinsLego(painter, is_v7 = false) {
    // skip index usage at all. It happens for relatively large histograms (100x100 bins)
    const uselineindx = (numlinevertices <= 0xFFF0);
 
-   if (!uselineindx) numlinevertices = numsegments*3;
+   if (!uselineindx)
+      numlinevertices = numsegments * 3;
 
    const lpositions = new Float32Array(numlinevertices * 3),
          lindicies = uselineindx ? new Uint16Array(numsegments) : null,
          grzmin = main.grz(axis_zmin),
          grzmax = main.grz(axis_zmax);
-   let z1 = 0, z2 = 0, ll = 0, ii = 0;
+   let ll = 0, ii = 0;
 
    for (i = i1; i < i2; ++i) {
-      x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]);
-      x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
+      const x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]),
+            x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
       for (j = j1; j < j2; ++j) {
          if (!getBinContent(i, j, 0)) continue;
 
-         y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
-         y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
-
-         z1 = (binz1 <= axis_zmin) ? grzmin : main.grz(binz1);
-         z2 = (binz2 > axis_zmax) ? grzmax : main.grz(binz2);
-
-         const seg = reduced ? rsegments : segments,
+         const y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]),
+               y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]),
+               z1 = (binz1 <= axis_zmin) ? grzmin : main.grz(binz1),
+               z2 = (binz2 > axis_zmax) ? grzmax : main.grz(binz2),
+               seg = reduced ? rsegments : segments,
                vvv = reduced ? rvertices : vertices;
 
          if (uselineindx) {
-            // array of indicies for the lines, to avoid duplication of points
+            // array of indices for the lines, to avoid duplication of points
             for (k = 0; k < seg.length; ++k) {
                // intersect_index[ii] = bin_index;
                lindicies[ii++] = ll/3 + seg[k];
@@ -1799,7 +1952,7 @@ function drawBinsLego(painter, is_v7 = false) {
 
    // create boxes
    const lcolor = is_v7 ? painter.v7EvalColor('line_color', 'lightblue') : painter.getColor(histo.fLineColor),
-         material = new LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
+         material = new THREE.LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
          line = createLineSegments(convertLegoBuf(painter, lpositions), material, uselineindx ? lindicies : null);
 
    /*
@@ -1814,6 +1967,32 @@ function drawBinsLego(painter, is_v7 = false) {
    main.add3DMesh(line);
 }
 
+function _lineErrToolTip(intersect) {
+   const pos = Math.floor(intersect.index / 6);
+   if ((pos < 0) || (pos >= this.intersect_index.length))
+      return null;
+   const p = this.painter,
+         histo = p.getHisto(),
+         main = p.getFramePainter(),
+         tip = p.get3DToolTip(this.intersect_index[pos]),
+         tx1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)))),
+         tx2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)))),
+         ty1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)))),
+         ty2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1))));
+
+   tip.x1 = Math.min(tx1, tx2);
+   tip.x2 = Math.max(tx1, tx2);
+   tip.y1 = Math.min(ty1, ty2);
+   tip.y2 = Math.max(ty1, ty2);
+
+   tip.z1 = main.grz(tip.value - tip.error < this.zmin ? this.zmin : tip.value - tip.error);
+   tip.z2 = main.grz(tip.value + tip.error > this.zmax ? this.zmax : tip.value + tip.error);
+
+   tip.color = this.tip_color;
+
+   return tip;
+}
+
 /** @summary Draw TH2 histogram in error mode
   * @private */
 function drawBinsError3D(painter, is_v7 = false) {
@@ -1823,16 +2002,16 @@ function drawBinsError3D(painter, is_v7 = false) {
          zmin = main.z_handle.getScaleMin(),
          zmax = main.z_handle.getScaleMax(),
          test_cutg = painter.options.cutg;
-   let i, j, bin, binz, binerr, x1, y1, x2, y2, z1, z2,
+   let i, j, bin, binz, errs, x1, y1, x2, y2, z1, z2,
        nsegments = 0, lpos = null, binindx = null, lindx = 0;
 
    const check_skip_min = () => {
        // return true if minimal histogram value should be skipped
        if (painter.options.Zero || (zmin > 0)) return false;
-       return !painter._show_empty_bins;
+       return !painter.options.ShowEmpty;
    };
 
-    // loop over the points - first loop counts points, second fill arrays
+   // loop over the points - first loop counts points, second fill arrays
    for (let loop = 0; loop < 2; ++loop) {
       for (i = handle.i1; i < handle.i2; ++i) {
          x1 = handle.grx[i];
@@ -1849,14 +2028,14 @@ function drawBinsError3D(painter, is_v7 = false) {
             if (loop === 0) { nsegments += 3; continue; }
 
             bin = histo.getBin(i + 1, j + 1);
-            binerr = histo.getBinError(bin);
+            errs = painter.getBinErrors(histo, bin, binz);
             binindx[lindx / 18] = bin;
 
             y1 = handle.gry[j];
             y2 = handle.gry[j + 1];
 
-            z1 = main.grz((binz - binerr < zmin) ? zmin : binz - binerr);
-            z2 = main.grz((binz + binerr > zmax) ? zmax : binz + binerr);
+            z1 = main.grz((binz - errs.low < zmin) ? zmin : binz - errs.low);
+            z2 = main.grz((binz + errs.up > zmax) ? zmax : binz + errs.up);
 
             lpos[lindx] = x1; lpos[lindx + 3] = x2;
             lpos[lindx + 1] = lpos[lindx + 4] = (y1 + y2) / 2;
@@ -1882,41 +2061,17 @@ function drawBinsError3D(painter, is_v7 = false) {
       }
    }
 
-    // create lines
-    const lcolor = is_v7 ? painter.v7EvalColor('line_color', 'lightblue') : painter.getColor(histo.fLineColor),
-          material = new LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
-          line = createLineSegments(lpos, material);
+   // create lines
+   const lcolor = is_v7 ? painter.v7EvalColor('line_color', 'lightblue') : painter.getColor(histo.fLineColor),
+         material = new THREE.LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
+         line = createLineSegments(lpos, material);
 
-    line.painter = painter;
-    line.intersect_index = binindx;
-    line.zmin = zmin;
-    line.zmax = zmax;
-    line.tip_color = (histo.fLineColor === 3) ? 0xFF0000 : 0x00FF00;
-
-    line.tooltip = function(intersect) {
-       const pos = Math.floor(intersect.index / 6);
-       if ((pos < 0) || (pos >= this.intersect_index.length)) return null;
-       const p = this.painter,
-           histo = p.getHisto(),
-           main = p.getFramePainter(),
-           tip = p.get3DToolTip(this.intersect_index[pos]),
-           x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)))),
-           x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)))),
-           y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)))),
-           y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1))));
-
-       tip.x1 = Math.min(x1, x2);
-       tip.x2 = Math.max(x1, x2);
-       tip.y1 = Math.min(y1, y2);
-       tip.y2 = Math.max(y1, y2);
-
-       tip.z1 = main.grz(tip.value-tip.error < this.zmin ? this.zmin : tip.value-tip.error);
-       tip.z2 = main.grz(tip.value+tip.error > this.zmax ? this.zmax : tip.value+tip.error);
-
-       tip.color = this.tip_color;
-
-       return tip;
-    };
+   line.painter = painter;
+   line.intersect_index = binindx;
+   line.zmin = zmin;
+   line.zmax = zmax;
+   line.tip_color = (histo.fLineColor === 3) ? 0xFF0000 : 0x00FF00;
+   line.tooltip = _lineErrToolTip;
 
     main.add3DMesh(line);
 }
@@ -1960,8 +2115,6 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    const histo = painter.getHisto(),
          main = painter.getFramePainter(),
          axis_zmin = main.z_handle.getScaleMin(),
-         // axis_zmax = main.z_handle.getScaleMax();
-         // first adjust ranges
          main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value),
          main_grz_min = 0, main_grz_max = 2*main.size_z3d;
 
@@ -2026,7 +2179,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
             for (let jj = handle.j1; jj < handle.j2; ++jj) {
                const bin = ((ii-handle.i1) * (handle.j2 - handle.j1) + (jj - handle.j1)) * 8;
 
-               if (normindx[bin] === -1) continue; // nothing there
+               if (normindx[bin] === -1)
+                  continue; // nothing there
 
                const beg = (normindx[bin] >= 0) ? bin : bin + 9 + normindx[bin],
                      end = bin + 8;
@@ -2040,7 +2194,9 @@ function drawBinsSurf3D(painter, is_v7 = false) {
                   sumz += normals[indx+2];
                }
 
-               sumx = sumx/(end-beg); sumy = sumy/(end-beg); sumz = sumz/(end-beg);
+               sumx /= end - beg;
+               sumy /= end - beg;
+               sumz /= end - beg;
 
                for (let kk = beg; kk < end; ++kk) {
                   const indx = normindx[kk];
@@ -2058,17 +2214,22 @@ function drawBinsSurf3D(painter, is_v7 = false) {
        else if (palette)
          color = palette.calcColor(lvl, levels.length);
        else {
-         color = histo.fFillColor > 1 ? painter.getColor(histo.fFillColor) : 'white';
-         if ((painter.options.Surf === 14) && (histo.fFillColor < 2)) color = painter.getColor(48);
+         const indx = painter.options.histoFillColor || histo.fFillColor;
+         if (painter.options.Surf === 13)
+            color = 'white';
+         else if (painter.options.Surf === 14)
+            color = indx > 1 ? painter.getColor(indx) : 'grey';
+         else
+            color = indx > 1 ? painter.getColor(indx) : 'white';
       }
 
       if (!color) color = 'white';
       if (painter.options.Surf === 14)
-         material = new MeshLambertMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false }));
+         material = new THREE.MeshLambertMaterial(getMaterialArgs(color, { side: THREE.DoubleSide, vertexColors: false }));
       else
-         material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false }));
+         material = new THREE.MeshBasicMaterial(getMaterialArgs(color, { side: THREE.DoubleSide, vertexColors: false }));
 
-      const mesh = new Mesh(geometry, material);
+      const mesh = new THREE.Mesh(geometry, material);
 
       main.add3DMesh(mesh);
 
@@ -2079,10 +2240,10 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
       if (isgrid) {
          material = (painter.options.Surf === 1)
-                      ? new LineDashedMaterial({ color: 0x0, dashSize: 2, gapSize: 2 })
-                      : new LineBasicMaterial(getMaterialArgs(color));
+                      ? new THREE.LineDashedMaterial({ color: 0x0, dashSize: 2, gapSize: 2 })
+                      : new THREE.LineBasicMaterial(getMaterialArgs(color));
       } else
-         material = new LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth }));
+         material = new THREE.LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth }));
 
 
       const line = createLineSegments(convertLegoBuf(painter, lpos, handle.i2 - handle.i1, handle.j2 - handle.j1), material);
@@ -2097,11 +2258,11 @@ function drawBinsSurf3D(painter, is_v7 = false) {
       handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 100, middle: 0 });
 
       // get levels
-      const levels = painter.getContourLevels(), // init contour
-            palette = painter.getHistPalette();
+      const levels2 = painter.getContourLevels(), // init contour
+            palette2 = painter.getHistPalette();
       let lastcolindx = -1, layerz = main_grz_max;
 
-      buildHist2dContour(histo, handle, levels, palette,
+      buildHist2dContour(histo, handle, levels2, palette2,
          (colindx, xp, yp, iminus, iplus) => {
              // no need for duplicated point
              if ((xp[iplus] === xp[iminus]) && (yp[iplus] === yp[iminus])) iplus--;
@@ -2113,12 +2274,12 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
              for (let i = iminus; i <= iplus; ++i) {
                 if ((i === iminus) || (xp[i] !== xp[i-1]) || (yp[i] !== yp[i-1]))
-                   pnts.push(new Vector2(xp[i], yp[i]));
+                   pnts.push(new THREE.Vector2(xp[i], yp[i]));
              }
 
              if (pnts.length < 3) return;
 
-             const faces = ShapeUtils.triangulateShape(pnts, []);
+             const faces = THREE.ShapeUtils.triangulateShape(pnts, []);
 
              if (!faces || (faces.length === 0)) return;
 
@@ -2147,8 +2308,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
              }
 
              const geometry = createLegoGeom(painter, pos, norm, handle.i2 - handle.i1, handle.j2 - handle.j1),
-                   material = new MeshBasicMaterial(getMaterialArgs(palette.getColor(colindx), { side: DoubleSide, opacity: 0.5, vertexColors: false })),
-                   mesh = new Mesh(geometry, material);
+                   material = new THREE.MeshBasicMaterial(getMaterialArgs(palette2.getColor(colindx), { side: THREE.DoubleSide, opacity: 0.5, vertexColors: false })),
+                   mesh = new THREE.Mesh(geometry, material);
              mesh.painter = painter;
              main.add3DMesh(mesh);
          }

@@ -317,21 +317,14 @@ char *TGHtml::ResolveUri(const char *zUri)
       ReplaceStr(&base->fZQuery, term->fZQuery);
       ReplaceStr(&base->fZFragment, term->fZFragment);
    } else if (term->fZPath && base->fZPath) {
-      int i, j, zBufSz = strlen(base->fZPath) + strlen(term->fZPath) + 2;
+      TString pathTmp;
+      pathTmp += base->fZPath;
+      pathTmp += term->fZPath;
+      int i, j, zBufSz = pathTmp.Length() + 2;
+      pathTmp.ReplaceAll("/./", "/"); // replace redundant "/./"
       char *zBuf = new char[zBufSz];
       if (zBuf) {
-         strlcpy(zBuf, base->fZPath, zBufSz);
-         for (i = strlen(zBuf) - 1; i >= 0 && zBuf[i] != '/'; --i) {
-            zBuf[i] = 0;
-         }
-         strlcat(zBuf, term->fZPath, zBufSz);
          for (i = 0; zBuf[i]; i++) {
-            if (zBuf[i] == '/' && zBuf[i+1] == '.' && zBuf[i+2] == '/') {
-               // coverity[secure_coding]
-               strcpy(&zBuf[i+1], &zBuf[i+3]); // NOLINT
-               --i;
-               continue;
-            }
             if (zBuf[i] == '/' && zBuf[i+1] == '.' && zBuf[i+2] == 0) {
                zBuf[i+1] = 0;
                continue;

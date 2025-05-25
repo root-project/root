@@ -29,7 +29,6 @@ change calls and constant term optimization management calls
 #include "RooAbsArg.h"
 #include "RooArgList.h"
 
-ClassImp(RooAbsCacheElement);
 
 
 ////////////////////////////////////////////////////////////////////////////////

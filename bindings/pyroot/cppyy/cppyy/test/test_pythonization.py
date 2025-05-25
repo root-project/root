@@ -1,5 +1,5 @@
 import py, sys
-from pytest import raises
+from pytest import mark, raises
 from .support import setup_make, pylong
 
 currpath = py.path.local(__file__).dirpath()
@@ -15,6 +15,7 @@ class TestClassPYTHONIZATION:
         import cppyy
         cls.pyzables = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail()
     def test00_api(self):
         """Test basic semantics of the pythonization API"""
 

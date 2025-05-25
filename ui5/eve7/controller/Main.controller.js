@@ -17,7 +17,7 @@ sap.ui.define(['sap/ui/core/Component',
    return Controller.extend("rootui5.eve7.controller.Main", {
       onInit: function () {
          this.mgr = new EveManager();
-         this.initClientLog();
+         // this.initClientLog();
 
          let conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
          this.mgr.UseConnection(conn_handle);
@@ -65,7 +65,7 @@ sap.ui.define(['sap/ui/core/Component',
          };
 
          consoleObj.stdwarn = console.warn.bind(console);
-         console.warning = function ()
+         console.warn = function ()
          {
             consoleObj.data.push({ type: "Warning", title: Array.from(arguments), counter: ++consoleObj.cntWarn });
             consoleObj.stdwarn.apply(console, arguments);
@@ -172,12 +172,15 @@ sap.ui.define(['sap/ui/core/Component',
          let main = this;
          // create missing view
          console.log("Creating view", viewid);
-
+ 
+         // TODO: Generalize instantiation without  the if/else statements
          let vtype = "rootui5.eve7.view.GL";
          if (elem.fName === "Table")
-            vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
+            vtype = "rootui5.eve7.view.EveTable";
          else if (elem.fName === "Lego")
-            vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
+            vtype = "rootui5.eve7.view.Lego";
+         else if (elem.fName === "GeoTable")
+               vtype = "rootui5.eve7.view.GeoTable";
 
          let oOwnerComponent = Component.getOwnerComponentFor(this.getView());
          let view = oOwnerComponent.runAsOwner(function() {
@@ -282,7 +285,6 @@ sap.ui.define(['sap/ui/core/Component',
             for (let i = 0; i < siList.length; ++i)
             {
                let scene = this.mgr.GetElement(siList[i].fSceneId);
-               console.log("going to destroy ", scene);
                this.mgr.recursiveDestroy(scene);
             }
 
@@ -331,7 +333,7 @@ sap.ui.define(['sap/ui/core/Component',
             bar.removeContent(bar.getContent().length - 1);
 
          var bb = new sap.m.Button({
-            type: sap.m.ButtonType.Default,
+            type: MobileLibrary.ButtonType.Default,
             text: "Back",
             enabled: true,
             press: function () {

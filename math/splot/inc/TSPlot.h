@@ -32,10 +32,10 @@ protected:
    TObjArray fYpdfHists;     //histograms of pdfs
    TObjArray fSWeightsHists; //histograms of weighted variables
 
-   TTree    *fTree;          //!
-   TString* fTreename;       //The name of the data tree
-   TString* fVarexp;         //Variables used for splot
-   TString* fSelection;      //Selection on the tree
+   TTree    *fTree = nullptr;     //!
+   TString* fTreename = nullptr;  //The name of the data tree
+   TString* fVarexp = nullptr;    //Variables used for splot
+   TString* fSelection = nullptr; //Selection on the tree
 
 
    Int_t    fNx;             //Number of control variables

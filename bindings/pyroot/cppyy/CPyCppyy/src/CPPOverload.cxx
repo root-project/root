@@ -54,18 +54,18 @@ public:
         fCallable = callable;
     }
 
-    virtual ~TPythonCallback() {
+    ~TPythonCallback() override {
         Py_DECREF(fCallable);
         fCallable = nullptr;
     }
 
-    virtual PyObject* GetSignature(bool /*show_formalargs*/ = true) {
+    PyObject* GetSignature(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("*args, **kwargs");
     }
-    virtual PyObject* GetPrototype(bool /*show_formalargs*/ = true) {
+    PyObject* GetPrototype(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("<callback>");
     }
-    virtual PyObject* GetDocString() {
+    PyObject* GetDocString() override {
         if (PyObject_HasAttrString(fCallable, "__doc__")) {
             return PyObject_GetAttrString(fCallable, "__doc__");
         } else {
@@ -73,29 +73,29 @@ public:
         }
     }
 
-    virtual int GetPriority() { return 100; };
-    virtual bool IsGreedy() { return false; };
+    int GetPriority() override { return 100; };
+    bool IsGreedy() override { return false; };
 
-    virtual int GetMaxArgs() { return 100; };
-    virtual PyObject* GetCoVarNames() { // TODO: pick these up from the callable
+    int GetMaxArgs() override { return 100; };
+    PyObject* GetCoVarNames() override { // TODO: pick these up from the callable
         Py_RETURN_NONE;
     }
-    virtual PyObject* GetArgDefault(int /* iarg */, bool /* silent */ =true) {
+    PyObject* GetArgDefault(int /* iarg */, bool /* silent */ =true) override {
         Py_RETURN_NONE;      // TODO: pick these up from the callable
     }
 
-    virtual PyObject* GetScopeProxy() { // should this be the module ??
+    PyObject* GetScopeProxy() override { // should this be the module ??
         Py_RETURN_NONE;
     }
 
-    virtual Cppyy::TCppFuncAddr_t GetFunctionAddress() {
+    Cppyy::TCppFuncAddr_t GetFunctionAddress() override {
         return (Cppyy::TCppFuncAddr_t)nullptr;
     }
 
-    virtual PyCallable* Clone() { return new TPythonCallback(*this); }
+    PyCallable* Clone() override { return new TPythonCallback(*this); }
 
-    virtual PyObject* Call(CPPInstance*& self,
-            CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* /* ctxt = 0 */) {
+    PyObject* Call(CPPInstance*& self,
+            CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* /* ctxt = 0 */) override {
 
 #if PY_VERSION_HEX >= 0x03080000
         if (self) {
@@ -697,7 +697,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
                 continue;    // did not set implicit conversion, so don't try again
 
             PyObject* result = methods[i]->Call(im_self, args, nargsf, kwds, &ctxt);
-            if (result != 0) {
+            if (result) {
             // success: update the dispatch map for subsequent calls
                 if (!memoized_pc)
                     dispatchMap.push_back(std::make_pair(sighash, methods[i]));
@@ -712,9 +712,6 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
                     }
                 }
 
-            // clear collected errors
-                if (!errors.empty())
-                    std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
                 return HandleReturn(pymeth, im_self, result);
             }
 
@@ -758,7 +755,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 // first summarize, then add details
     PyObject* topmsg = CPyCppyy_PyText_FromFormat(
         "none of the %d overloaded methods succeeded. Full details:", (int)nMethods);
-    SetDetailedException(errors, topmsg /* steals */, PyExc_TypeError /* default error */);
+    SetDetailedException(std::move(errors), topmsg /* steals */, PyExc_TypeError /* default error */);
 
 // report failure
     return nullptr;
@@ -1055,6 +1052,9 @@ PyTypeObject CPPOverload_Type = {
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                                // tp_watched
 #endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                                // tp_versions_used
+#endif
 };
 
 } // namespace CPyCppyy
@@ -1072,10 +1072,19 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
     if (name == "__init__")
         fMethodInfo->fFlags |= (CallContext::kIsCreator | CallContext::kIsConstructor);
 
-// special case, in heuristics mode also tag *Clone* methods as creators
-    if (CallContext::sMemoryPolicy == CallContext::kUseHeuristics && \
-            name.find("Clone") != std::string::npos)
-        fMethodInfo->fFlags |= CallContext::kIsCreator;
+// special case, in heuristics mode also tag *Clone* methods as creators. Only
+// check that Clone is present in the method name, not in the template argument
+// list.
+    if (CallContext::sMemoryPolicy == CallContext::kUseHeuristics) {
+        std::string_view name_maybe_template = name;
+        auto begin_template = name_maybe_template.find_first_of('<');
+        if (begin_template <= name_maybe_template.size()) {
+            name_maybe_template = name_maybe_template.substr(0, begin_template);
+        }
+        if (name_maybe_template.find("Clone") != std::string_view::npos) {
+            fMethodInfo->fFlags |= CallContext::kIsCreator;
+        }
+    }
 
 #if PY_VERSION_HEX >= 0x03080000
     fVectorCall = (vectorcallfunc)mp_vectorcall;

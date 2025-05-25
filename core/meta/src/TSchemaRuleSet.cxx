@@ -110,18 +110,25 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
 
    // Check only if we have some information about the class, otherwise we have
    // nothing to check against
-   bool streamerInfosTest;
-   {
-     R__LOCKGUARD(gInterpreterMutex);
-     streamerInfosTest = (fClass->GetStreamerInfos()==nullptr || fClass->GetStreamerInfos()->IsEmpty());
-   }
-   if (rule->GetTarget()  && fClass->GetState() > TClass::kEmulated && streamerInfosTest)
-   {
+
+   // Do not generate/build the StreamerInfo if it is not already there.
+   TVirtualStreamerInfo *info = fClass->GetCurrentStreamerInfo();
+   if (rule->GetTarget() && (fClass->GetState() > TClass::kEmulated || info)) {
       TObjArrayIter titer( rule->GetTarget() );
       TObject* obj;
       while( (obj = titer.Next()) ) {
          TObjString* str = (TObjString*)obj;
-         if( !fClass->GetDataMember( str->GetString() ) && !fClass->GetBaseClass( str->GetString() ) ) {
+         bool found = false;
+         // Note: an alternative would be to use the ListOfRealData which
+         // is populated in both cases but it might or might not have already
+         // been set and would make detecting if the data member is local to
+         // the current class (as opposed to a base class) more difficult.
+         if (fClass->GetState() > TClass::kEmulated) {
+            found = fClass->GetDataMember(str->GetString()) || fClass->GetBaseClass(str->GetString());
+         } else if (info) {
+            found = info->GetElements()->FindObject(str->GetString());
+         }
+         if (!found) {
             if (checkConsistency == kCheckAll) {
                if (errmsg) {
                   errmsg->Form("the target member (%s) is unknown",str->GetString().Data());

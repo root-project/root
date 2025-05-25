@@ -32,7 +32,6 @@ PDF implementing the Crystal Ball line shape.
 
 #include <cmath>
 
-ClassImp(RooCBShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,11 +63,6 @@ double RooCBShape::evaluate() const
    return RooFit::Detail::MathFuncs::cbShape(m, m0, sigma, alpha, n);
 }
 
-void RooCBShape::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::cbShape", m, m0, sigma, alpha, n));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Crystal ball Shape distribution.
 void RooCBShape::doEval(RooFit::EvalContext &ctx) const
@@ -93,13 +87,6 @@ double RooCBShape::analyticalIntegral(Int_t /*code*/, const char *rangeName) con
 {
    using namespace RooFit::Detail::MathFuncs;
    return cbShapeIntegral(m.min(rangeName), m.max(rangeName), m0, sigma, alpha, n);
-}
-
-std::string
-RooCBShape::buildCallToAnalyticIntegral(Int_t /*code*/, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const
-{
-   return ctx.buildCall("RooFit::Detail::MathFuncs::cbShapeIntegral",
-                        m.min(rangeName), m.max(rangeName), m0, sigma, alpha, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

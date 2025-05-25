@@ -31,15 +31,15 @@
 class TTree;
 class TTreeReader;
 
-
+namespace ROOT::RDF::Experimental {
+class RDatasetSpec;
+}
 namespace ROOT {
 namespace RDF {
 using ColumnNames_t = std::vector<std::string>;
 }
 
-namespace Experimental {
 class RLogChannel;
-}
 
 namespace RDF {
 class RDataSource;
@@ -50,7 +50,7 @@ namespace RDF {
 
 using ROOT::RDF::ColumnNames_t;
 
-ROOT::Experimental::RLogChannel &RDFLogChannel();
+ROOT::RLogChannel &RDFLogChannel();
 
 // fwd decl for ColumnName2ColumnTypeName
 class RDefineBase;
@@ -125,12 +125,15 @@ struct IsVector_t : public std::false_type {};
 template <typename T, typename A>
 struct IsVector_t<std::vector<T, A>> : public std::true_type {};
 
+std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName);
+
 const std::type_info &TypeName2TypeID(const std::string &name);
 
 std::string TypeID2TypeName(const std::type_info &id);
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RDefineBase *,
-                                      bool vector2rvec = true);
+std::string GetTypeNameWithOpts(const ROOT::RDF::RDataSource &df, std::string_view colName, bool vector2RVec);
+std::string
+ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RDefineBase *, bool vector2RVec = true);
 
 char TypeName2ROOTTypeName(const std::string &b);
 
@@ -196,8 +199,7 @@ void InterpreterDeclare(const std::string &code);
 
 /// Jit code in the interpreter with TInterpreter::Calc, throw in case of errors.
 /// The optional `context` parameter, if present, is mentioned in the error message.
-/// The pointer returned by the call to TInterpreter::Calc is returned in case of success.
-Long64_t InterpreterCalc(const std::string &code, const std::string &context = "");
+void InterpreterCalc(const std::string &code, const std::string &context = "");
 
 /// Whether custom column with name colName is an "internal" column such as rdfentry_ or rdfslot_
 bool IsInternalColumn(std::string_view colName);
@@ -317,6 +319,24 @@ struct CallGuaranteedOrder {
       f(std::forward<Args>(args)...);
    }
 };
+
+template <typename T>
+auto MakeAliasedSharedPtr(T *rawPtr)
+{
+   const static std::shared_ptr<T> fgRawPtrCtrlBlock;
+   return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
+}
+
+
+/**
+ * \brief Function to retrieve RDatasetSpec from JSON file provided
+ * \param[in] jsonFile Path to the dataset specification JSON file.
+ *
+ * This function allows us to have access to an RDatasetSpec which needs to
+ * be created when we use the FromSpec factory function.
+ */
+ROOT::RDF::Experimental::RDatasetSpec RetrieveSpecFromJson(const std::string &jsonFile);
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

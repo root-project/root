@@ -667,69 +667,41 @@ void TGTableLayoutHints::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    // Save table layout hints as a C++ statement(s) on output stream out.
 
-   TString hints;
    UInt_t pad = GetPadLeft()+GetPadRight()+GetPadTop()+GetPadBottom();
 
-   if (!GetLayoutHints()) return;
+   if (!GetLayoutHints())
+      return;
 
-   if ((fLayoutHints == kLHintsNormal) && (pad == 0)) return;
+   if ((fLayoutHints == kLHintsNormal) && (pad == 0))
+      return;
 
-   if (fLayoutHints & kLHintsLeft) {
-      if (hints.Length() == 0) hints  = "kLHintsLeft";
-      else                     hints += " | kLHintsLeft";
-   }
-   if (fLayoutHints & kLHintsCenterX) {
-      if  (hints.Length() == 0) hints  = "kLHintsCenterX";
-      else                     hints += " | kLHintsCenterX";
-   }
-   if (fLayoutHints & kLHintsRight) {
-      if (hints.Length() == 0) hints  = "kLHintsRight";
-      else                     hints += " | kLHintsRight";
-   }
-   if (fLayoutHints & kLHintsTop) {
-      if (hints.Length() == 0) hints  = "kLHintsTop";
-      else                     hints += " | kLHintsTop";
-   }
-   if (fLayoutHints & kLHintsCenterY) {
-      if (hints.Length() == 0) hints  = "kLHintsCenterY";
-      else                     hints += " | kLHintsCenterY";
-   }
-   if (fLayoutHints & kLHintsBottom) {
-      if (hints.Length() == 0) hints  = "kLHintsBottom";
-      else                     hints += " | kLHintsBottom";
-   }
-   if (fLayoutHints & kLHintsExpandX) {
-      if (hints.Length() == 0) hints  = "kLHintsExpandX";
-      else                     hints += " | kLHintsExpandX";
-   }
-   if (fLayoutHints & kLHintsExpandY) {
-      if (hints.Length() == 0) hints  = "kLHintsExpandY";
-      else                     hints += " | kLHintsExpandY";
-   }
-   if (fLayoutHints & kLHintsShrinkX) {
-      if (hints.Length() == 0) hints  = "kLHintsShrinkX";
-      else                     hints += " | kLHintsShrinkX";
-   }
-   if (fLayoutHints & kLHintsShrinkY) {
-      if (hints.Length() == 0) hints  = "kLHintsShrinkY";
-      else                     hints += " | kLHintsShrinkY";
-   }
-   if (fLayoutHints & kLHintsFillX) {
-      if (hints.Length() == 0) hints  = "kLHintsFillX";
-      else                     hints += " | kLHintsFillX";
-   }
-   if (fLayoutHints & kLHintsFillY) {
-      if (hints.Length() == 0) hints  = "kLHintsFillY";
-      else                     hints += " | kLHintsFillY";
-   }
-   out << ", new TGTableLayoutHints(" << GetAttachLeft() << "," << GetAttachRight()
-       << "," << GetAttachTop()  << "," << GetAttachBottom()
-       << "," << hints;
+   TString hints;
+   auto add = [this, &hints](UInt_t mask, const char *name) {
+      if (fLayoutHints & mask) {
+         if (hints.Length())
+            hints.Append(" | ");
+         hints.Append(name);
+      }
+   };
 
-   if (pad) {
-      out << "," << GetPadLeft() << "," << GetPadRight()
-          << "," << GetPadTop()  << "," << GetPadBottom();
-   }
+   add(kLHintsLeft, "kLHintsLeft");
+   add(kLHintsCenterX, "kLHintsCenterX");
+   add(kLHintsRight, "kLHintsRight");
+   add(kLHintsTop, "kLHintsTop");
+   add(kLHintsCenterY, "kLHintsCenterY");
+   add(kLHintsBottom, "kLHintsBottom");
+   add(kLHintsExpandX, "kLHintsExpandX");
+   add(kLHintsExpandY, "kLHintsExpandY");
+   add(kLHintsShrinkX, "kLHintsShrinkX");
+   add(kLHintsShrinkY, "kLHintsShrinkY");
+   add(kLHintsFillX, "kLHintsFillX");
+   add(kLHintsFillY, "kLHintsFillY");
+
+   out << ", new TGTableLayoutHints(" << GetAttachLeft() << "," << GetAttachRight() << "," << GetAttachTop() << ","
+       << GetAttachBottom() << "," << hints;
+
+   if (pad)
+      out << "," << GetPadLeft() << "," << GetPadRight() << "," << GetPadTop() << "," << GetPadBottom();
    out << ")";
 }
 
@@ -746,9 +718,8 @@ void TGTableLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
          out << ", kTRUE";
       else
          out << ", kFALSE";
-   out << fSep;
+      out << fSep;
    }
-   out  << ")";
+   out << ")";
    // hints parameter is not used/saved currently
-
 }

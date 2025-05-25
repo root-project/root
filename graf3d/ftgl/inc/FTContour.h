@@ -18,6 +18,15 @@
 class FTGL_EXPORT FTContour
 {
     public:
+ #define FREETYPE_VER_HEX ((FREETYPE_MAJOR << 16) | (FREETYPE_MINOR << 8) | (FREETYPE_PATCH))
+ #if FREETYPE_VER_HEX >= 0x20d03
+    // enabled from 2.13.3
+    using PointTag_t = unsigned char;
+ #else
+    using PointTag_t = char;
+ #endif
+ #undef FREETYPE_VER_HEX
+
         /**
          * Constructor
          *
@@ -25,7 +34,7 @@ class FTGL_EXPORT FTContour
          * @param pointTags
          * @param numberOfPoints
          */
-        FTContour( FT_Vector* contour, char* pointTags, unsigned int numberOfPoints);
+        FTContour( FT_Vector* contour, PointTag_t* pointTags, unsigned int numberOfPoints);
 
         /**
          * Destructor

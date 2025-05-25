@@ -27,8 +27,6 @@ class FumiliGradientCalculator : public AnalyticalGradientCalculator {
 public:
    FumiliGradientCalculator(const FumiliFCNBase &fcn, const MnUserTransformation &trafo, int n);
 
-   ~FumiliGradientCalculator() override {}
-
    FunctionGradient operator()(const MinimumParameters &) const override;
 
    FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;

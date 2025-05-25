@@ -270,75 +270,57 @@ void TGToolBar::ButtonClicked()
 
 void TGToolBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+   auto extra_args = SaveCtorArgs(out);
 
-   out << std::endl;
-   out << "   // tool bar" << std::endl;
+   out << "\n   // tool bar\n";
 
-   out << "   TGToolBar *";
-   out << GetName() << " = new TGToolBar(" << fParent->GetName()
-       << "," << GetWidth() << "," << GetHeight();
+   out << "   TGToolBar *" << GetName() << " = new TGToolBar(" << fParent->GetName() << "," << GetWidth() << ","
+       << GetHeight() << extra_args << ");\n";
 
-   if (fBackground == GetDefaultFrameBackground()) {
-      if (!GetOptions()) {
-         out <<");" << std::endl;
-      } else {
-         out << "," << GetOptionString() <<");" << std::endl;
-      }
-   } else {
-      out << "," << GetOptionString() << ",ucolor);" << std::endl;
-   }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
-
-   char quote = '"';
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    int i = 0;
 
-   TGFrameElement *f;
    TIter next(GetList());
 
-   while ((f = (TGFrameElement *) next())) {
+   while (auto f = static_cast<TGFrameElement *>(next())) {
       if (f->fFrame->InheritsFrom(TGPictureButton::Class())) {
          if (!gROOT->ClassSaved(TGPictureButton::Class())) {
             //  declare a structure used for picture buttons
-            out << std::endl << "   ToolBarData_t t;" << std::endl;
+            out << "   ToolBarData_t toolbardata;\n";
          }
 
          TGPictureButton *pb = (TGPictureButton *)f->fFrame;
          TString picname = gSystem->UnixPathName(pb->GetPicture()->GetName());
          gSystem->ExpandPathName(picname);
 
-         out << "   t.fPixmap = " << quote << picname << quote << ";" << std::endl;
-         out << "   t.fTipText = " << quote
-             << pb->GetToolTip()->GetText()->GetString() << quote << ";" << std::endl;
+         out << "   toolbardata.fPixmap = \"" << picname.ReplaceSpecialCppChars() << "\";\n";
+         out << "   toolbardata.fTipText = \""
+             << TString(pb->GetToolTip()->GetText()->GetString()).ReplaceSpecialCppChars() << "\";\n";
+         if (pb->GetState() == kButtonDown)
+            out << "   toolbardata.fStayDown = kTRUE;\n";
+          else
+            out << "   toolbardata.fStayDown = kFALSE;\n";
+         out << "   toolbardata.fId = " << i + 1 << ";\n";
+         out << "   toolbardata.fButton = nullptr;\n";
+         out << "   " << GetName() << "->AddButton(" << GetParent()->GetName() << ", &toolbardata, "
+             << f->fLayout->GetPadLeft() << ");\n";
          if (pb->GetState() == kButtonDown) {
-            out << "   t.fStayDown = kTRUE;" << std::endl;
-         } else {
-            out << "   t.fStayDown = kFALSE;" << std::endl;
-         }
-         out << "   t.fId = " << i+1 << ";" << std::endl;
-         out << "   t.fButton = 0;" << std::endl;
-         out << "   " << GetName() << "->AddButton(" << GetParent()->GetName()
-             << ",&t," << f->fLayout->GetPadLeft() << ");" << std::endl;
-         if (pb->GetState() == kButtonDown) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << std::endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonDown);"  << std::endl;
+            out << "   toolbardata.fButton->SetState(kButtonDown);\n";
          }
          if (pb->GetState() == kButtonDisabled) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << std::endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonDisabled);" << std::endl;
+            out << "   toolbardata.fButton->SetState(kButtonDisabled);\n";
          }
          if (pb->GetState() == kButtonEngaged) {
-            out << "   TGButton *" << pb->GetName() <<  " = t.fButton;" << std::endl;
-            out << "   " << pb->GetName() << "->SetState(kButtonEngaged);"  << std::endl;
+            out << "   toolbardata.fButton->SetState(kButtonEngaged);\n";
          }
          i++;
       } else {
          f->fFrame->SavePrimitive(out, option);
-         out << "   " << GetName()<<"->AddFrame(" << f->fFrame->GetName();
+         out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
          f->fLayout->SavePrimitive(out, option);
-         out << ");"<< std::endl;
+         out << ");\n";
       }
    }
 }

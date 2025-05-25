@@ -33,40 +33,29 @@ following example shows how to use it:
 Begin_Macro(source)
 {
    auto c = new TCanvas("c","TGraph2DAsymmErrors example",0,0,600,600);
+
    Double_t P = 6.;
-   Int_t np   = 200;
-
-   Double_t *rx=0, *ry=0, *rz=0;
-   Double_t *exl=0, *exh=0, *eyl=0, *eyh=0, *ezl=0, *ezh=0;
-
-   rx  = new Double_t[np];
-   ry  = new Double_t[np];
-   rz  = new Double_t[np];
-   exl = new Double_t[np];
-   exh = new Double_t[np];
-   eyl = new Double_t[np];
-   eyh = new Double_t[np];
-   ezl = new Double_t[np];
-   ezh = new Double_t[np];
-
-   auto r = new TRandom();
+   const Int_t np   = 200;
+   std::vector<Double_t> rx(np), ry(np), rz(np), exl(np), exh(np), eyl(np), eyh(np), ezl(np), ezh(np);
+   TRandom r;
 
    for (Int_t N=0; N<np;N++) {
-      rx[N] = 2*P*(r->Rndm(N))-P;
-      ry[N] = 2*P*(r->Rndm(N))-P;
+      rx[N] = 2*P*(r.Rndm(N))-P;
+      ry[N] = 2*P*(r.Rndm(N))-P;
       rz[N] = rx[N]*rx[N]-ry[N]*ry[N];
-      rx[N] = 10.+rx[N];
-      ry[N] = 10.+ry[N];
-      rz[N] = 40.+rz[N];
-      exl[N] = r->Rndm(N);
-      exh[N] = r->Rndm(N);
-      eyl[N] = r->Rndm(N);
-      eyh[N] = r->Rndm(N);
-      ezl[N] = 10*r->Rndm(N);
-      ezh[N] = 10*r->Rndm(N);
+      rx[N] += 10.;
+      ry[N] += 10.;
+      rz[N] += 40.;
+      exl[N] = r.Rndm(N);
+      exh[N] = r.Rndm(N);
+      eyl[N] = r.Rndm(N);
+      eyh[N] = r.Rndm(N);
+      ezl[N] = 10*r.Rndm(N);
+      ezh[N] = 10*r.Rndm(N);
    }
 
-   auto g = new TGraph2DAsymmErrors(np, rx, ry, rz, exl, exh, eyl, eyh, ezl, ezh);
+   auto g = new TGraph2DAsymmErrors(np, rx.data(), ry.data(), rz.data(), exl.data(), exh.data(), eyl.data(), eyh.data(), ezl.data(), ezh.data());
+
    g->SetTitle("TGraph2D with asymmetric error bars: option \"ERR\"");
    g->SetFillColor(29);
    g->SetMarkerSize(0.8);
@@ -84,9 +73,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraph2DAsymmErrors default constructor
 
-TGraph2DAsymmErrors::TGraph2DAsymmErrors(): TGraph2D()
-{
-}
+TGraph2DAsymmErrors::TGraph2DAsymmErrors() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +216,16 @@ TGraph2DAsymmErrors & TGraph2DAsymmErrors::operator=(const TGraph2DAsymmErrors &
       fEZhigh[n] = g.fEZhigh[n];
    }
    return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a 3D point with asymmetric errorbars to an existing graph
+
+void TGraph2DAsymmErrors::AddPointError(Double_t x, Double_t y, Double_t z, Double_t exl, Double_t exh, Double_t eyl,
+                                        Double_t eyh, Double_t ezl, Double_t ezh)
+{
+   AddPoint(x, y, z);
+   SetPointError(fNpoints - 1, exl, exh, eyl, eyh, ezl, ezh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -576,6 +573,51 @@ void TGraph2DAsymmErrors::SetPoint(Int_t i, Double_t x, Double_t y, Double_t z)
    fZ[i] = z;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Saves primitive as a C++ statement(s) on output stream out
+
+void TGraph2DAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option)
+{
+   TString arrx = SavePrimitiveVector(out, "gr2daerr_x", fNpoints, fX, kTRUE);
+   TString arry = SavePrimitiveVector(out, "gr2daerr_y", fNpoints, fY);
+   TString arrz = SavePrimitiveVector(out, "gr2daerr_z", fNpoints, fZ);
+   TString arrexl = SavePrimitiveVector(out, "gr2daerr_exl", fNpoints, fEXlow);
+   TString arrexh = SavePrimitiveVector(out, "gr2daerr_exh", fNpoints, fEXhigh);
+   TString arreyl = SavePrimitiveVector(out, "gr2daerr_eyl", fNpoints, fEYlow);
+   TString arreyh = SavePrimitiveVector(out, "gr2daerr_eyh", fNpoints, fEYhigh);
+   TString arrezl = SavePrimitiveVector(out, "gr2daerr_ezl", fNpoints, fEZlow);
+   TString arrezh = SavePrimitiveVector(out, "gr2daerr_ezh", fNpoints, fEZhigh);
+
+   SavePrimitiveConstructor(
+      out, Class(), "gr2daerr",
+      TString::Format(
+         "%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+         fNpoints, arrx.Data(), arry.Data(), arrz.Data(), arrexl.Data(), arrexh.Data(), arreyl.Data(), arreyh.Data(),
+         arrezl.Data(), arrezh.Data()),
+      kFALSE);
+
+   if (strcmp(GetName(), "Graph2D"))
+      out << "   gr2daerr->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
+
+   TString title = GetTitle();
+   if (fHistogram)
+      title = TString(fHistogram->GetTitle()) + ";" + fHistogram->GetXaxis()->GetTitle() + ";" +
+              fHistogram->GetYaxis()->GetTitle() + ";" + fHistogram->GetZaxis()->GetTitle();
+
+   out << "   gr2daerr->SetTitle(\"" << title.ReplaceSpecialCppChars() << "\");\n";
+
+   if (!fDirectory)
+      out << "   gr2daerr->SetDirectory(nullptr);\n";
+
+   SaveFillAttributes(out, "gr2daerr", 0, 1001);
+   SaveLineAttributes(out, "gr2daerr", 1, 1, 1);
+   SaveMarkerAttributes(out, "gr2daerr", 1, 1, 1);
+
+   TH1::SavePrimitiveFunctions(out, "gr2daerr", fFunctions);
+
+   SavePrimitiveDraw(out, "gr2daerr", option);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set ex, ey and ez values for point number i

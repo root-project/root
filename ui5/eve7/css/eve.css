@@ -67,6 +67,15 @@
    color: lightgray;
 }
 
+.geomColorBox {                /* style the CSS class that has been written by the renderer method */
+   display: inline-block;      /* enable squares to appear next to each other within one line */
+   position: absolute;
+   top: 1px;
+   bottom: 1px;
+   left: 1px;
+   right: 1px;
+}
+
 .eve_tooltip {
   position:      absolute;
   min-width:     50px;

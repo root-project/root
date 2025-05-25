@@ -69,9 +69,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphAsymmErrors default constructor.
 
-TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
-{
-}
+TGraphAsymmErrors::TGraphAsymmErrors() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +185,6 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
 /// in vx and vy.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, const TVectorF  &vexl, const TVectorF  &vexh, const TVectorF  &veyl, const TVectorF  &veyh)
-                  :TGraph()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
@@ -217,7 +214,6 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, c
 /// in vx and vy.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh)
-                  :TGraph()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
@@ -252,7 +248,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
       fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
       fEXhigh[i] = fEXlow[i];
       fEYlow[i]  = h->GetBinErrorLow(i+1);
-      fEYhigh[i] = h->GetBinErrorUp(i+1);;
+      fEYhigh[i] = h->GetBinErrorUp(i+1);
    }
 }
 
@@ -288,17 +284,19 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t
 /// TGraphAsymmErrors constructor reading input from filename
 /// filename is assumed to contain at least 2 columns of numbers
 ///
-/// convention for format (default=`"%lg %lg %lg %lg %lg %lg"`)
-///  - format = `"%lg %lg"`         read only 2 first columns into X, Y
-///  - format = `"%lg %lg %lg %lg"`     read only 4 first columns into X, Y,  ELY, EHY
-///  - format = `"%lg %lg %lg %lg %lg %lg"` read only 6 first columns into X, Y, EXL, EYH, EYL, EHY
+/// Convention for format (default=`"%lg %lg %lg %lg %lg %lg"`)
 ///
-/// For files separated by a specific delimiter different from `' '` and `'\\t'` (e.g. `';'` in csv files)
-/// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `"option" argument,
-/// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters `(' ', '\\t', ',', ';')`
-/// used once `(e.g. "1;1")` or in a combined way `(" 1;,;;  1")`.
+///  - format = `"%lg %lg"` read only 2 first columns into X, Y
+///  - format = `"%lg %lg %lg %lg"` read only 4 first columns into X, Y, EYL, EYH
+///  - format = `"%lg %lg %lg %lg %lg %lg"` read only 6 first columns into X, Y, EXL, EXH, EYL, EYH
+///
+/// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
+/// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
+/// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters (`' ', '\\t', ',', ';'`)
+/// used once (e.g. `"1;1"`) or in a combined way (`" 1;,;;  1"`).
+///
 /// Note in that case, the instantiation is about 2 times slower.
-/// In case a delimiter is specified, the format `"%lg %lg %lg"` will read X,Y,EX.
+/// In case a delimiter is specified, the format `"%lg %lg %lg"` will read X,Y,EXL.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, Option_t *option)
    : TGraph(100)
@@ -366,8 +364,8 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
             ntokensToBeSaved++ ;
          }
       }
-      if (ntokens >= 2 && (ntokensToBeSaved < 2 || ntokensToBeSaved > 4)) { //first condition not to repeat the previous error message
-         Error("TGraphAsymmErrors", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2,3 or 4 are expected!", ntokensToBeSaved);
+      if (ntokens >= 2 && (ntokensToBeSaved < 2 || ntokensToBeSaved > 6)) { //first condition not to repeat the previous error message
+         Error("TGraphAsymmErrors", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2, 3, 4, 5 or 6 are expected!", ntokensToBeSaved);
          delete [] isTokenToBeSaved;
          return ;
       }
@@ -405,7 +403,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
                token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
-            if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2,3 or 4
+            if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2, 3, 4, 5 or 6
                x = value[0];
                y = value[1];
                exl = value[2];
@@ -447,6 +445,15 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
 
 Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
    return AllocateArrays(6, size);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with asymmetric errorbars to the graph.
+
+void TGraphAsymmErrors::AddPointError(Double_t x, Double_t y, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
+{
+   AddPoint(x, y);
+   SetPointError(fNpoints - 1, exl, exh, eyl, eyh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1235,28 +1242,20 @@ void TGraphAsymmErrors::Print(Option_t *) const
 
 void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << "   " << std::endl;
-   static Int_t frameNumber = 3000;
-   frameNumber++;
+   auto xname  = SavePrimitiveVector(out, "grae_fx", fNpoints, fX, kTRUE);
+   auto yname  = SavePrimitiveVector(out, "grae_fy", fNpoints, fY);
+   auto exlname = SavePrimitiveVector(out, "grae_fexl", fNpoints, fEXlow);
+   auto exhname = SavePrimitiveVector(out, "grae_fexh", fNpoints, fEXhigh);
+   auto eylname = SavePrimitiveVector(out, "grae_feyl", fNpoints, fEYlow);
+   auto eyhname = SavePrimitiveVector(out, "grae_feyh", fNpoints, fEYhigh);
 
-   auto fXName   = SaveArray(out, "fx", frameNumber, fX);
-   auto fYName   = SaveArray(out, "fy", frameNumber, fY);
-   auto fElXName = SaveArray(out, "felx", frameNumber, fEXlow);
-   auto fElYName = SaveArray(out, "fely", frameNumber, fEYlow);
-   auto fEhXName = SaveArray(out, "fehx", frameNumber, fEXhigh);
-   auto fEhYName = SaveArray(out, "fehy", frameNumber, fEYhigh);
+   SavePrimitiveConstructor(out, Class(), "grae",
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+                                            fNpoints, xname.Data(), yname.Data(), exlname.Data(), exhname.Data(),
+                                            eylname.Data(), eyhname.Data()),
+                            kFALSE);
 
-   if (gROOT->ClassSaved(TGraphAsymmErrors::Class()))
-      out<<"   ";
-   else
-      out << "   TGraphAsymmErrors *";
-   out << "grae = new TGraphAsymmErrors("<< fNpoints << ","
-                                    << fXName   << ","  << fYName  << ","
-                                    << fElXName  << ","  << fEhXName << ","
-                                    << fElYName  << ","  << fEhYName << ");"
-                                    << std::endl;
-
-   SaveHistogramAndFunctions(out, "grae", frameNumber, option);
+   SaveHistogramAndFunctions(out, "grae", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

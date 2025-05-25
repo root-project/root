@@ -1,6 +1,6 @@
-From c5c0a50babb33db7f0b193fc824fca2b02ed6b41 Mon Sep 17 00:00:00 2001
+From 096daee5b75ace6438e924c6d72bdb0065f626e0 Mon Sep 17 00:00:00 2001
 From: Jonas Rembser <jonas.rembser@cern.ch>
-Date: Tue, 12 Mar 2024 09:39:45 +0100
+Date: Tue, 17 Dec 2024 13:06:45 +0100
 Subject: [PATCH] [cppyy] Remove unneeded `std::endl` workaround for Windows
 
 ---
@@ -8,11 +8,11 @@ Subject: [PATCH] [cppyy] Remove unneeded `std::endl` workaround for Windows
  1 file changed, 7 deletions(-)
 
 diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
-index 2a169cadee..957443289d 100644
+index 50c148621b..b5ea3d087f 100644
 --- a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
 +++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
-@@ -430,10 +430,3 @@ def multi(*bases):      # after six, see also _typemap.py
-         def __new__(cls, name, this_bases, d):
+@@ -470,10 +470,3 @@ def multi(*bases):      # after six, see also _typemap.py
+         def __new__(mcs, name, this_bases, d):
              return nc_meta(name, bases, d)
      return type.__new__(faux_meta, 'faux_meta', (), {})
 -
@@ -23,5 +23,5 @@ index 2a169cadee..957443289d 100644
 -    std::basic_ostream<char, std::char_traits<char>>& __cdecl std::endl<char, std::char_traits<char>>(
 -        std::basic_ostream<char, std::char_traits<char>>&);""")
 -- 
-2.44.0
+2.47.0
 

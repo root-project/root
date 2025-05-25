@@ -117,6 +117,44 @@ REveElement::~REveElement()
    }
 }
 
+// MIR execution variables and helper functions
+
+thread_local REveElement *REveElement::stlMirAlpha = nullptr;
+thread_local int          REveElement::stlMirError = 0;
+thread_local std::string  REveElement::stlMirErrorString;
+
+void REveElement::ClearMirContext() {
+   stlMirAlpha = nullptr;
+   stlMirError = 0;
+   stlMirErrorString.clear();
+}
+
+void REveElement::SetMirContext(REveElement *el) {
+   stlMirAlpha = el;
+}
+
+void REveElement::SetMirError(int error, std::string_view err_str) {
+   stlMirError = error;
+   if ( ! err_str.empty()) {
+      AppendMirErrorString(err_str);
+   }
+}
+
+void REveElement::AppendMirErrorString(std::string_view err_str) {
+   if (stlMirErrorString.empty()) {
+      stlMirErrorString = err_str;
+   } else {
+      std::string s;
+      s.reserve(stlMirErrorString.size() + err_str.size() + 4);
+      s = err_str;
+      s += " :: ";
+      s += stlMirErrorString;
+      stlMirErrorString.swap(s);
+   }
+}
+
+// Element IDs etc
+
 ElementId_t REveElement::get_mother_id() const
 {
    return fMother ? fMother->GetElementId() : 0;
@@ -549,16 +587,23 @@ void REveElement::CheckReferenceCount(const std::string& from)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return class for this element
+/// Return REveElement class in case dicitonary is not exisiting
+////////////////////////////////////////////////////////////////////////////////
 
 TClass *REveElement::IsA() const
 {
-   return TClass::GetClass(typeid(*this), kTRUE, kTRUE);
+   TClass* res = TClass::GetClass(typeid(*this), kTRUE, kTRUE);
+   if (!res) {
+      R__LOG_WARNING(REveLog()) << "REveElement::IsA() no dictionary found for " << typeid(*this).name();
+      res = TClass::GetClass("ROOT::Experimental::REveElement");
+   }
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Export render-element to CINT with variable name var_name.
 
-void REveElement::ExportToCINT(const char *var_name)
+void REveElement::ExportToInterpreter(const char *var_name)
 {
    const char* cname = IsA()->GetName();
    gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%zx;", cname, var_name, cname, (size_t)this));
@@ -1485,9 +1530,9 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          nlohmann::json rd = {};
 
          rd["rnr_offset"] = rnr_offset;
-         rd["rnr_func"] = fRenderData->GetRnrFunc();
-         rd["vert_size"] = fRenderData->SizeV();
-         rd["norm_size"] = fRenderData->SizeN();
+         rd["rnr_func"]   = fRenderData->GetRnrFunc();
+         rd["vert_size"]  = fRenderData->SizeV();
+         rd["norm_size"]  = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
          rd["trans_size"] = fRenderData->SizeT();
 

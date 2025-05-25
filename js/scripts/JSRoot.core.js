@@ -180,8 +180,8 @@ function v6_require(need) {
       else if (name == 'painter')
          arr.push(loadPainter());
       else if (name == 'hierarchy')
-         arr.push(Promise.all([import('../modules/gui/HierarchyPainter.mjs'), import('../modules/draw/TTree.mjs')]).then(arr => {
-            Object.assign(globalThis.JSROOT, arr[0], arr[1]);
+         arr.push(Promise.all([import('../modules/gui/display.mjs'), import('../modules/gui/HierarchyPainter.mjs'), import('../modules/draw/TTree.mjs')]).then(arr => {
+            Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
             getHPainter = arr[0].getHPainter;
             globalThis.JSROOT.hpainter = getHPainter();
             return globalThis.JSROOT;
@@ -221,7 +221,7 @@ exports.define = function(req, factoryFunc) {
    sync_promises.push(pr); // will wait until other PRs are finished
 }
 
-/// duplicate function here, used before loading any other functionality
+// duplicate function here, used before loading any other functionality
 exports.decodeUrl = function(url) {
    let res = {
       opts: {},
@@ -254,7 +254,8 @@ exports.decodeUrl = function(url) {
          res.opts[url.slice(0,pos)] = '';
       } if (eq > 0) {
          let val = url.slice(eq+1, pos);
-         if (((val[0] === "'") || (val[0] === '"')) && (val[0] === val[val.length-1])) val = val.slice(1, val.length-1);
+         if (((val[0] === "'") || (val[0] === '"')) && (val.at(0) === val.at(-1)))
+            val = val.slice(1, val.length - 1);
          res.opts[url.slice(0,eq)] = val;
       }
       if ((pos >= url.length) || (url[pos] == '#')) break;

@@ -77,7 +77,7 @@ public:
 protected:
   mutable Int_t _ncall ;  ///< Function call counter
   UInt_t _dimension;      ///< Number of observables
-  bool _valid;          ///< Is binding in valid state?
+  bool _valid;            ///< Is binding in valid state?
    ClassDef(RooAbsFunc,0) ///< Abstract real-valued function interface
 };
 

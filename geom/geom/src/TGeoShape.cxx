@@ -267,6 +267,14 @@ Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Implementation of the inside function using just Contains and GetNormal
+
+TGeoShape::EInside TGeoShape::Inside(const Double_t *point) const
+{
+   return tgeo_impl::Inside(point, this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// True if point is closer than epsil to one of the phi planes defined by c1,s1 or c2,s2
 
 Bool_t

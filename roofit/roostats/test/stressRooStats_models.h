@@ -84,7 +84,7 @@ inline void buildPoissonProductModel(RooWorkspace *w)
 
 //__________________________________________________________________________________
 // Insightful comments on model courtesy of Kyle Cranmer, Wouter Verkerke, Sven Kreiss
-//    from $ROOTSYS/tutorials/roostats/HybridInstructional.C
+//    from $ROOTSYS/tutorials/roofit/roostats/HybridInstructional.C
 inline void buildOnOffModel(RooWorkspace &ws)
 {
    // Build model for prototype on/off problem

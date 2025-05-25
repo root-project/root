@@ -101,7 +101,7 @@ public:
   RooArgList(const RooArgList& other, const char *name="");
   /// Move constructor.
   RooArgList(RooArgList && other) : RooAbsCollection(std::move(other)) {}
-  TObject* clone(const char* newname) const override { return new RooArgList(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooArgList(*this,newname); }
   TObject* create(const char* newname) const override { return new RooArgList(newname); }
   RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
 

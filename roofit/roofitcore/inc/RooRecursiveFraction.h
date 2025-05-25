@@ -19,9 +19,6 @@
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
 
-class RooRealVar;
-class RooArgList ;
-
 class RooRecursiveFraction : public RooAbsReal {
 public:
 
@@ -29,9 +26,9 @@ public:
   RooRecursiveFraction(const char *name, const char *title, const RooArgList& fracSet) ;
 
   RooRecursiveFraction(const RooRecursiveFraction& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooRecursiveFraction(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooRecursiveFraction(*this, newname); }
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooArgList const &variables() const { return _list; }
 
 protected:
 

@@ -9,7 +9,7 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog };
+enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos, kAbs };
 
 template <typename T, EBasicUnaryOperator Op>
 struct UnaryOpTraits {
@@ -45,6 +45,24 @@ struct UnaryOpTraits<T, EBasicUnaryOperator::kLog> {
    static std::string Op(const std::string &X) { return "std::log(" + X + ")"; }
 };
 
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kSin> {
+   static std::string Name() { return "Sin"; }
+   static std::string Op(const std::string &X) { return "std::sin(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kCos> {
+   static std::string Name() { return "Cos"; }
+   static std::string Op(const std::string &X) { return "std::cos(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAbs> {
+   static std::string Name() { return "Abs"; }
+   static std::string Op(const std::string &X) { return "std::abs(" + X + ")"; }
+};
+
 template <typename T, EBasicUnaryOperator Op>
 class ROperator_BasicUnary final : public ROperator {
 private:
@@ -59,14 +77,16 @@ public:
 
    ROperator_BasicUnary(std::string nameX, std::string nameY)
       : fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
-   {}
+   {
+         fInputTensorNames =  { fNX };
+         fOutputTensorNames = { fNY };
+   }
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override { return input; }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override { return input; }
 
-   void Initialize(RModel &model) override
-   {
+   void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }
@@ -86,6 +106,14 @@ public:
       out << SP << SP << "tensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("tensor_" + fNX + "[i]") << ";\n";
       out << SP << "}\n";
       return out.str();
+   }
+
+   std::vector<std::string> GetStdLibs() override {
+      if (Op == EBasicUnaryOperator::kSqrt || Op == EBasicUnaryOperator::kExp || Op == EBasicUnaryOperator::kLog) {
+         return { std::string("cmath") };
+      } else {
+         return {};
+      }
    }
 };
 

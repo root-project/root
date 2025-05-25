@@ -14,7 +14,9 @@ if(dataframe)
         ROOT/_pythonization/_rdataframe.py
         ROOT/_pythonization/_rdfdescription.py
         ROOT/_pythonization/_rdf_conversion_maps.py
-        ROOT/_pythonization/_rdf_pyz.py)
+        ROOT/_pythonization/_rdf_pyz.py
+        ROOT/_pythonization/_rdisplay.py
+        ROOT/_pythonization/_rdf_namespace.py)
 endif()
 
 if(roofit)
@@ -42,6 +44,7 @@ if(roofit)
         ROOT/_pythonization/_roofit/_roorealvar.py
         ROOT/_pythonization/_roofit/_roosimultaneous.py
         ROOT/_pythonization/_roofit/_roosimwstool.py
+        ROOT/_pythonization/_roofit/_roostats.py
         ROOT/_pythonization/_roofit/_roovectordatastore.py
         ROOT/_pythonization/_roofit/_rooworkspace.py
         ROOT/_pythonization/_roofit/_utils.py)
@@ -79,43 +82,59 @@ set(py_sources
   ROOT/_facade.py
   ROOT/__init__.py
   ROOT/_numbadeclare.py
+  ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py
   ROOT/_pythonization/_generic.py
-  ROOT/_pythonization/__init__.py
+  ROOT/_pythonization/_memory_utils.py
   ROOT/_pythonization/_pyz_utils.py
-  ROOT/_pythonization/_rvec.py
+  ROOT/_pythonization/_rntuple.py
   ROOT/_pythonization/_runtime_error.py
+  ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
   ROOT/_pythonization/_tarray.py
   ROOT/_pythonization/_tclass.py
   ROOT/_pythonization/_tclonesarray.py
   ROOT/_pythonization/_tcollection.py
+  ROOT/_pythonization/_tcolor.py
   ROOT/_pythonization/_tcomplex.py
   ROOT/_pythonization/_tcontext.py
-  ROOT/_pythonization/_tdirectoryfile.py
   ROOT/_pythonization/_tdirectory.py
+  ROOT/_pythonization/_tdirectoryfile.py
+  ROOT/_pythonization/_tefficiency.py
+  ROOT/_pythonization/_tentrylist.py
+  ROOT/_pythonization/_teventlist.py
+  ROOT/_pythonization/_tf1.py
+  ROOT/_pythonization/_tf2.py
+  ROOT/_pythonization/_tf3.py
   ROOT/_pythonization/_tfile.py
+  ROOT/_pythonization/_tfilemerger.py
+  ROOT/_pythonization/_tformula.py
   ROOT/_pythonization/_tgraph.py
+  ROOT/_pythonization/_tgraph2d.py
   ROOT/_pythonization/_th1.py
+  ROOT/_pythonization/_th2.py
+  ROOT/_pythonization/_th3.py
+  ROOT/_pythonization/_thistpainter.py
   ROOT/_pythonization/_titer.py
   ROOT/_pythonization/_tobject.py
   ROOT/_pythonization/_tobjstring.py
+  ROOT/_pythonization/_tscatter.py
   ROOT/_pythonization/_tseqcollection.py
   ROOT/_pythonization/_tstring.py
+  ROOT/_pythonization/_tstyle.py
   ROOT/_pythonization/_ttree.py
   ROOT/_pythonization/_tvector3.py
   ROOT/_pythonization/_tvectort.py
+  ROOT/_pythonization/_uhi.py
   ${PYROOT_EXTRA_PYTHON_SOURCES}
 )
 
 set(cpp_sources
     src/PyROOTModule.cxx
-    src/PyROOTWrapper.cxx
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx
     src/TClassPyz.cxx
-    src/TMemoryRegulator.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
     src/CPPInstancePyz.cxx
@@ -180,9 +199,9 @@ endif()
 # Compile .py files
 foreach(py_source ${py_sources})
   add_custom_command(TARGET ${libname}
+                      POST_BUILD
                       COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
                       COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
-                      DEPENDS ${localruntimedir}/${py_source}
                       COMMENT "Compiling PyROOT source ${py_source} for Python ${Python3_VERSION}")
 endforeach()
 

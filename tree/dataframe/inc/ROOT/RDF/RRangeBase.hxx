@@ -46,7 +46,12 @@ public:
    RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
               const unsigned int nSlots, const std::vector<std::string> &prevVariations);
 
+   // Rule of five
+
+   RRangeBase(const RRangeBase &) = delete;
    RRangeBase &operator=(const RRangeBase &) = delete;
+   RRangeBase(RRangeBase &&) = delete;
+   RRangeBase &operator=(RRangeBase &&) = delete;
    ~RRangeBase() override;
 
    void InitNode();

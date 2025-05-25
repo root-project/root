@@ -102,6 +102,13 @@ using namespace ROOT;
 using namespace std::string_literals;
 
 
+/** \class ROOT::RTreeViewer
+\ingroup webwidgets
+
+\brief Web-based %ROOT TTree viewer
+*/
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -127,7 +134,8 @@ RTreeViewer::RTreeViewer(TTree *tree)
 
 RTreeViewer::~RTreeViewer()
 {
-
+   if (fWebWindow)
+      fWebWindow->Reset();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////

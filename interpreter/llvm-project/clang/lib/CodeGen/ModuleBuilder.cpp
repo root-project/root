@@ -179,8 +179,8 @@ namespace clang {
         << " Replacements (llvm::StringMap<llvm::TrackingVH<llvm::Constant>>\n";
       for(auto I = Builder->Replacements.begin(),
             E = Builder->Replacements.end(); I != E; ++I) {
-        out << I->getKey().str().c_str();
-        (*I->getValue()).print(out);
+        out << I->first.str().c_str();
+        (*I->second).print(out);
         out << "\n";
       }
 

@@ -23,7 +23,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ProofPlayer
     TPerfStats.h
     TProofLimitsFinder.h
     TProofMonSender.h
-    TProofMonSenderML.h
     TProofMonSenderSQL.h
     TProofPlayer.h
     TProofPlayerLite.h
@@ -41,7 +40,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ProofPlayer
     TPerfStats.cxx
     TProofLimitsFinder.cxx
     TProofMonSender.cxx
-    TProofMonSenderML.cxx
     TProofMonSenderSQL.cxx
     TProofPlayer.cxx
     TProofPlayerLite.cxx

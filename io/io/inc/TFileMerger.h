@@ -55,6 +55,8 @@ protected:
    TList          fMergeList;                 ///< list of TObjString containing the name of the files need to be merged
    TList          fExcessFiles;               ///<! List of TObjString containing the name of the files not yet added to fFileList due to user or system limitation on the max number of files opened.
 
+   bool fOutFileWasExplicitlyClosed = false; ///<! the user has called CloseOutputFile(), so we shouldn't error out in RecursiveRemove
+
    Bool_t         OpenExcessFiles();
    virtual Bool_t AddFile(TFile *source, Bool_t own, Bool_t cpProgress);
    virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist, Int_t type = kRegular | kAll);
@@ -101,6 +103,7 @@ public:
    void        AddObjectNames(const char *name) {fObjectNames += name; fObjectNames += " ";}
    const char *GetObjectNames() const {return fObjectNames.Data();}
    void        ClearObjectNames() {fObjectNames.Clear();}
+   void        CloseOutputFile();
 
     //--- file management interface
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }

@@ -676,14 +676,22 @@ int TSystem::ClosePipe(FILE*)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute command and return output in TString.
+/// @param command the command to be executed
+/// @param ret pointer to the memory where to store the returned value of the
+/// command, i.e. the result of ClosePipe (p-close stream, the status of its child).
+/// If ret is nullptr, the returned value is not stored anywhere.
+/// @param redirectStderr if true, stderr will be redirected to stdout
+/// @return the stdout of the command as TString (from the p-opened FILE stream)
 
-TString TSystem::GetFromPipe(const char *command)
+TString TSystem::GetFromPipe(const char *command, Int_t *ret, Bool_t redirectStderr)
 {
    TString out;
-
-   FILE *pipe = OpenPipe(command, "r");
+   TString scommand = command;
+   if (redirectStderr)
+      scommand += " 2>&1";
+   FILE *pipe = OpenPipe(scommand.Data(), "r");
    if (!pipe) {
-      SysError("GetFromPipe", "cannot run command \"%s\"", command);
+      SysError("GetFromPipe", "cannot run command \"%s\"", scommand.Data());
       return out;
    }
 
@@ -696,7 +704,10 @@ TString TSystem::GetFromPipe(const char *command)
 
    Int_t r = ClosePipe(pipe);
    if (r) {
-      Error("GetFromPipe", "command \"%s\" returned %d", command, r);
+      Error("GetFromPipe", "command \"%s\" returned %d", scommand.Data(), r);
+   }
+   if (ret) {
+      *ret = r;
    }
    return out;
 }
@@ -832,6 +843,7 @@ int TSystem::MakeDirectory(const char *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a directory. Returns 0 if directory does not exist.
+/// \note Remember to call `TSystem::FreeDirectory(returned_pointer)` later, to prevent a memory leak
 
 void *TSystem::OpenDirectory(const char *)
 {
@@ -2976,6 +2988,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (! IsAbsoluteFileName(library) ) {
          AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
       }
+      libname_noext = library_specified;
       library = TString(library) + "." + fSoExt;
    }
    library = gSystem->UnixPathName(library);
@@ -3527,7 +3540,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
    PrependPathName(TROOT::GetBinDir(), rcling);
-   rcling += " -v0 \"--lib-list-prefix=";
+   rcling += " \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" ");
@@ -4318,9 +4331,12 @@ TString TSystem::SplitAclicMode(const char *filename, TString &aclicMode,
          delete []fname;
          return "";
       } else if (s2) {
-         s2--;
-         while (s2 && *s2 == ' ') s2--;
-         s2++;
+         if (s2 > fname) {
+            // Skip/trim spaces
+            s2--;
+            while (s2 > fname && *s2 == ' ') s2--;
+            s2++;
+         }
          io = s2; // ssave = *s2;
          *s2 = 0;
       } else

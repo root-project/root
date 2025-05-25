@@ -218,10 +218,9 @@ to `gStyle->SetOptFit(111)`
 The following example show how to remove and add a line in a statistics box.
 
 Begin_Macro(source)
-../../../tutorials/hist/statsEditing.C
+../../../tutorials/hist/hist036_TH2_labels.C
 End_Macro
 */
-
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 
@@ -317,6 +316,29 @@ void TPaveStats::SetOptStat(Int_t stat)
 void TPaveStats::SetStatFormat(const char *form)
 {
    fStatFormat = form;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change drawing option for stats box
+/// While stats should not appear in pad list of primitives,
+/// this is the only way to modify drawing option.
+/// SetDrawOption will not have effect
+/// Redefined here to add **MENU** qualifier to show it in context menu
+
+void TPaveStats::SetOption(Option_t *option)
+{
+   TPaveText::SetOption(option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalid method to change drawing option for stats box
+/// While stats box should never appear in pad list of primitives, this method cannot work
+/// Please use SetOption() method insted
+/// Redefined here to remove **MENU** qualifier and exclude it from context menu
+
+void TPaveStats::SetDrawOption(Option_t *option)
+{
+   TPaveText::SetDrawOption(option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -501,36 +523,23 @@ void TPaveStats::Paint(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPaveStats::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   Bool_t saved = gROOT->ClassSaved(TPaveStats::Class());
-   if (saved) {
-      out<<"   ";
-   } else {
-      out<<"   "<<ClassName()<<" *";
-   }
-   if (fOption.Contains("NDC")) {
-      out<<"ptstats = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-      <<","<<quote<<fOption<<quote<<");"<<std::endl;
-   } else {
-      out<<"ptstats = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<quote<<fOption<<quote<<");"<<std::endl;
-   }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   ptstats->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   }
-   if (fBorderSize != 4) {
-      out<<"   ptstats->SetBorderSize("<<fBorderSize<<");"<<std::endl;
-   }
-   SaveFillAttributes(out,"ptstats",19,1001);
-   SaveLineAttributes(out,"ptstats",1,1,1);
-   SaveTextAttributes(out,"ptstats",22,0,1,62,0);
-   SaveLines(out,"ptstats",saved);
-   out<<"   ptstats->SetOptStat("<<GetOptStat()<<");"<<std::endl;
-   out<<"   ptstats->SetOptFit("<<GetOptFit()<<");"<<std::endl;
-   out<<"   ptstats->Draw();"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "ptstats", GetSavePaveArgs());
+
+   if (strcmp(GetName(), "TPave"))
+      out << "   ptstats->SetName(\"" << GetName() << "\");\n";
+   if (fBorderSize != 4)
+      out << "   ptstats->SetBorderSize(" << fBorderSize << ");\n";
+
+   SaveFillAttributes(out, "ptstats", 19, 1001);
+   SaveLineAttributes(out, "ptstats", 1, 1, 1);
+   SaveTextAttributes(out, "ptstats", 22, 0, 1, 62, 0);
+   SaveLines(out, "ptstats", kTRUE);
+   out << "   ptstats->SetOptStat(" << GetOptStat() << ");\n";
+   out << "   ptstats->SetOptFit(" << GetOptFit() << ");\n";
+
+   SavePrimitiveDraw(out, "ptstats", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

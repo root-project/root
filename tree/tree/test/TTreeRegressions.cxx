@@ -3,6 +3,7 @@
 #include "TTree.h"
 #include "TInterpreter.h"
 #include "TSystem.h"
+#include "TLeafObject.h"
 
 #include "gtest/gtest.h"
 
@@ -144,4 +145,88 @@ TEST(TTreeRegressions, LeafLongString)
    s[0] = 0;
    t.GetEntry(2);
    EXPECT_EQ(strlen(s), 999);
+}
+
+// https://github.com/root-project/root/issues/9319
+TEST(TTreeRegressions, PrintClustersRounding)
+{
+   TMemFile file("tree9319_clusters.root", "RECREATE");
+   TTree t("t", "t");
+   t.SetAutoFlush(5966);
+   int x = 0;
+   t.Branch("x", &x);
+   for (auto i = 0; i < 10000; ++i) {
+      t.Fill();
+   }
+
+   testing::internal::CaptureStdout();
+
+   t.Print("clusters");
+
+   const std::string output = testing::internal::GetCapturedStdout();
+   const auto ref = "******************************************************************************\n"
+                    "*Tree    :t         : t                                                      *\n"
+                    "*Entries :    10000 : Total =           40973 bytes  File  Size =        202 *\n"
+                    "*        :          : Tree compression factor = 118.46                       *\n"
+                    "******************************************************************************\n"
+                    "Cluster Range #  Entry Start      Last Entry           Size   Number of clusters\n"
+                    "0                0                9999                 5966          2\n"
+                    "Total number of clusters: 2 \n"; // This was 1 before the fix
+   EXPECT_EQ(output, ref);
+}
+
+// Issue ROOT-9961
+TEST(TTreeRegressions, PrintTopOnly)
+{
+   TTree tree("newtree", "");
+   tree.Branch("brancha", 0, "brancha/I");
+   tree.Branch("branchb", 0, "branchb/I");
+
+   testing::internal::CaptureStdout();
+
+   tree.Print("toponly");
+
+   const std::string output = testing::internal::GetCapturedStdout();
+   const auto ref = "******************************************************************************\n"
+                    "*Tree    :newtree   :                                                        *\n"
+                    "*Entries :        0 : Total =            1285 bytes  File  Size =          0 *\n"
+                    "*        :          : Tree compression factor =   1.00                       *\n"
+                    "******************************************************************************\n"
+                    "branch: brancha                      0\n"
+                    "branch: branchb                      0\n";
+   EXPECT_EQ(output, ref);
+}
+
+// Issue ROOT-7926
+struct Event {
+   double x;
+   double y;
+};
+TEST(TTreeRegressions, PrintTopOnlySplit)
+{
+   gInterpreter->Declare("struct Event { double x; double y; };");
+   TTree tree("newtree", "");
+   Event ev;
+   tree.Branch("ev", &ev); // by default, this calls splitlevel=1
+   tree.Fill();
+
+   testing::internal::CaptureStdout();
+
+   tree.Print("toponly");
+
+   const std::string output = testing::internal::GetCapturedStdout();
+   const auto ref = "******************************************************************************\n"
+                    "*Tree    :newtree   :                                                        *\n"
+                    "*Entries :        1 : Total =            2188 bytes  File  Size =          0 *\n"
+                    "*        :          : Tree compression factor =   1.00                       *\n"
+                    "******************************************************************************\n"
+                    "branch: ev                           0\n";
+   EXPECT_EQ(output, ref);
+}
+
+// https://github.com/root-project/root/issues/12537
+TEST(TTreeRegressions, EmptyLeafObject)
+{
+   TLeafObject tlo;
+   EXPECT_EQ(tlo.GetObject(), nullptr);
 }

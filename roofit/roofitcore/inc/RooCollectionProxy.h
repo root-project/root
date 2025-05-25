@@ -30,9 +30,12 @@ the serverRedirect changes.
 #ifndef roofit_roofitcore_RooFit_RooCollectionProxy_h
 #define roofit_roofitcore_RooFit_RooCollectionProxy_h
 
-#include <RooAbsProxy.h>
 #include <RooAbsArg.h>
+#include <RooAbsProxy.h>
 #include <RooArgSet.h>
+#include <RooMsgService.h>
+
+#include <ROOT/RConfig.hxx> // for R__SUGGEST_ALTERNATIVE
 
 #include <exception>
 
@@ -53,9 +56,27 @@ public:
    }
 
    /// Copy constructor.
+   /// \note Copying a collection proxy and giving it a name different from the
+   /// original proxy doesn't make sense in the context of how this class is
+   /// used. The copy constructor that doesn't take a name as the first
+   /// parameter should be preferred.
    template <class Other_t>
    RooCollectionProxy(const char *inName, RooAbsArg *owner, const Other_t &other)
+      R__SUGGEST_ALTERNATIVE("Copying a collection proxy and giving it a name different from the original proxy "
+                             "doesn't make sense in the context of how this class is used. The copy constructor that "
+                             "doesn't take a name as the first parameter should be preferred.")
       : RooCollection_t(other, inName),
+        _owner(owner),
+        _defValueServer(other.defValueServer()),
+        _defShapeServer(other.defShapeServer())
+   {
+      _owner->registerProxy(*this);
+   }
+
+   /// Copy constructor.
+   template <class Other_t>
+   RooCollectionProxy(RooAbsArg *owner, const Other_t &other)
+      : RooCollection_t(other, other.GetName()),
         _owner(owner),
         _defValueServer(other.defValueServer()),
         _defShapeServer(other.defShapeServer())

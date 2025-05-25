@@ -20,11 +20,9 @@ namespace Minuit2 {
 class GaussRandomGen {
 
 public:
-   GaussRandomGen() : fMean(0.), fSigma(1.) {}
+   GaussRandomGen() = default;
 
    GaussRandomGen(double mean, double sigma) : fMean(mean), fSigma(sigma) {}
-
-   ~GaussRandomGen() {}
 
    double Mean() const { return fMean; }
 
@@ -47,8 +45,8 @@ public:
    }
 
 private:
-   double fMean;
-   double fSigma;
+   double fMean = 0.;
+   double fSigma = 1.;
 };
 
 } // namespace Minuit2

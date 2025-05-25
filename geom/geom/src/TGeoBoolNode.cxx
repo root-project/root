@@ -218,6 +218,52 @@ void TGeoBoolNode::AssignPoints(Int_t npoints, Double_t *points)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns number of vertices for the composite shape described by this node.
+
+Int_t TGeoBoolNode::GetNpoints()
+{
+   Int_t itot = 0;
+   if (fNpoints)
+      return fNpoints;
+   // Local points for the left shape
+   Int_t nleft = fLeft->GetNmeshVertices();
+   Int_t nright = fRight->GetNmeshVertices();
+   if (nleft + nright == 0) return 0;
+
+   Double_t *points1 = (nleft > 0) ? new Double_t[3 * nleft] : nullptr;
+   if (nleft > 0) fLeft->SetPoints(points1);
+   // Local points for the right shape
+   Double_t *points2 = (nright > 0) ? new Double_t[3 * nright] : nullptr;
+   if (nright > 0) fRight->SetPoints(points2);
+   Double_t *points = new Double_t[3 * (nleft + nright)];
+   for (Int_t i = 0; i < nleft; i++) {
+      fLeftMat->LocalToMaster(&points1[3 * i], &points[3 * itot]);
+      if (Inside(&points[3 * itot]) == TGeoShape::kSurface)
+         itot++;
+   }
+   for (Int_t i = 0; i < nright; i++) {
+      fRightMat->LocalToMaster(&points2[3 * i], &points[3 * itot]);
+      if (Inside(&points[3 * itot]) == TGeoShape::kSurface)
+         itot++;
+   }
+
+   AssignPoints(itot, points);
+
+   delete[] points1;
+   delete[] points2;
+   delete[] points;
+   return fNpoints;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation of the inside function using just Contains and GetNormal
+
+TGeoShape::EInside TGeoBoolNode::Inside(const Double_t *point) const
+{
+   return tgeo_impl::Inside(point, this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Expands the boolean expression either on left or right branch, creating
 /// component elements (composite shapes and boolean nodes). Returns true on success.
 
@@ -551,7 +597,7 @@ Bool_t TGeoUnion::Contains(const Double_t *point) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
 
-void TGeoUnion::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoUnion::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    ThreadData_t &td = GetThreadData();
    norm[0] = norm[1] = 0.;
@@ -773,50 +819,6 @@ TGeoUnion::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iac
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns number of vertices for the composite shape described by this union.
-
-Int_t TGeoUnion::GetNpoints()
-{
-   Int_t itot = 0;
-   Double_t point[3];
-   Double_t tolerance = TGeoShape::Tolerance();
-   if (fNpoints)
-      return fNpoints;
-   // Local points for the left shape
-   Int_t nleft = fLeft->GetNmeshVertices();
-   Double_t *points1 = new Double_t[3 * nleft];
-   fLeft->SetPoints(points1);
-   // Local points for the right shape
-   Int_t nright = fRight->GetNmeshVertices();
-   Double_t *points2 = new Double_t[3 * nright];
-   fRight->SetPoints(points2);
-   Double_t *points = new Double_t[3 * (nleft + nright)];
-   for (Int_t i = 0; i < nleft; i++) {
-      if (TMath::Abs(points1[3 * i]) < tolerance && TMath::Abs(points1[3 * i + 1]) < tolerance)
-         continue;
-      fLeftMat->LocalToMaster(&points1[3 * i], &points[3 * itot]);
-      fRightMat->MasterToLocal(&points[3 * itot], point);
-      if (!fRight->Contains(point))
-         itot++;
-   }
-   for (Int_t i = 0; i < nright; i++) {
-      if (TMath::Abs(points2[3 * i]) < tolerance && TMath::Abs(points2[3 * i + 1]) < tolerance)
-         continue;
-      fRightMat->LocalToMaster(&points2[3 * i], &points[3 * itot]);
-      fLeftMat->MasterToLocal(&points[3 * itot], point);
-      if (!fLeft->Contains(point))
-         itot++;
-   }
-
-   AssignPoints(itot, points);
-
-   delete[] points1;
-   delete[] points2;
-   delete[] points;
-   return fNpoints;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Compute safety distance for a union node;
 
 Double_t TGeoUnion::Safety(const Double_t *point, Bool_t in) const
@@ -962,7 +964,7 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
 
-void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    ThreadData_t &td = GetThreadData();
    norm[0] = norm[1] = 0.;
@@ -1127,48 +1129,6 @@ Double_t TGeoSubtraction::DistFromOutside(const Double_t *point, const Double_t 
       fRightMat->MasterToLocal(&master[0], &local[0]);
       inside = kTRUE;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns number of vertices for the composite shape described by this subtraction.
-
-Int_t TGeoSubtraction::GetNpoints()
-{
-   Int_t itot = 0;
-   Double_t point[3];
-   Double_t tolerance = TGeoShape::Tolerance();
-   if (fNpoints)
-      return fNpoints;
-   Int_t nleft = fLeft->GetNmeshVertices();
-   Int_t nright = fRight->GetNmeshVertices();
-   Double_t *points = new Double_t[3 * (nleft + nright)];
-   Double_t *points1 = new Double_t[3 * nleft];
-   fLeft->SetPoints(points1);
-   for (Int_t i = 0; i < nleft; i++) {
-      if (TMath::Abs(points1[3 * i]) < tolerance && TMath::Abs(points1[3 * i + 1]) < tolerance)
-         continue;
-      fLeftMat->LocalToMaster(&points1[3 * i], &points[3 * itot]);
-      fRightMat->MasterToLocal(&points[3 * itot], point);
-      if (!fRight->Contains(point))
-         itot++;
-   }
-   Double_t *points2 = new Double_t[3 * nright];
-   fRight->SetPoints(points2);
-   for (Int_t i = 0; i < nright; i++) {
-      if (TMath::Abs(points2[3 * i]) < tolerance && TMath::Abs(points2[3 * i + 1]) < tolerance)
-         continue;
-      fRightMat->LocalToMaster(&points2[3 * i], &points[3 * itot]);
-      fLeftMat->MasterToLocal(&points[3 * itot], point);
-      if (fLeft->Contains(point))
-         itot++;
-   }
-
-   AssignPoints(itot, points);
-
-   delete[] points1;
-   delete[] points2;
-   delete[] points;
-   return fNpoints;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1395,7 +1355,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
 
-void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    ThreadData_t &td = GetThreadData();
    Double_t local[3], ldir[3], lnorm[3];
@@ -1591,48 +1551,6 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
       }
    }
    return snext;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns number of vertices for the composite shape described by this intersection.
-
-Int_t TGeoIntersection::GetNpoints()
-{
-   Int_t itot = 0;
-   Double_t point[3];
-   Double_t tolerance = TGeoShape::Tolerance();
-   if (fNpoints)
-      return fNpoints;
-   Int_t nleft = fLeft->GetNmeshVertices();
-   Int_t nright = fRight->GetNmeshVertices();
-   Double_t *points = new Double_t[3 * (nleft + nright)];
-   Double_t *points1 = new Double_t[3 * nleft];
-   fLeft->SetPoints(points1);
-   for (Int_t i = 0; i < nleft; i++) {
-      if (TMath::Abs(points1[3 * i]) < tolerance && TMath::Abs(points1[3 * i + 1]) < tolerance)
-         continue;
-      fLeftMat->LocalToMaster(&points1[3 * i], &points[3 * itot]);
-      fRightMat->MasterToLocal(&points[3 * itot], point);
-      if (fRight->Contains(point))
-         itot++;
-   }
-   Double_t *points2 = new Double_t[3 * nright];
-   fRight->SetPoints(points2);
-   for (Int_t i = 0; i < nright; i++) {
-      if (TMath::Abs(points2[3 * i]) < tolerance && TMath::Abs(points2[3 * i + 1]) < tolerance)
-         continue;
-      fRightMat->LocalToMaster(&points2[3 * i], &points[3 * itot]);
-      fLeftMat->MasterToLocal(&points[3 * itot], point);
-      if (fLeft->Contains(point))
-         itot++;
-   }
-
-   AssignPoints(itot, points);
-
-   delete[] points1;
-   delete[] points2;
-   delete[] points;
-   return fNpoints;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

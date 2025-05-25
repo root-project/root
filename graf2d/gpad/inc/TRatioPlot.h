@@ -27,6 +27,7 @@
 
 #include "TFitResultPtr.h"
 
+class TColorNumber;
 class TH1;
 class TPad;
 class TVirtualPad;
@@ -162,6 +163,8 @@ public:
 
    TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois");
 
+   TRatioPlot(TH1* h1, THStack* st, Option_t *option = "pois");
+
    TRatioPlot(TH1* h1, Option_t *option = "", TFitResult *fitres = nullptr);
 
    void SetH1DrawOpt(Option_t *opt);
@@ -240,6 +243,7 @@ public:
    virtual void SetGridlines(std::vector<double> gridlines);
 
    void SetConfidenceIntervalColors(Color_t ci1 = kYellow, Color_t ci2 = kGreen);
+   void SetConfidenceIntervalColors(TColorNumber ci1, TColorNumber ci2);
 
    void SetC1(Double_t c1) { fC1 = c1; }
    void SetC2(Double_t c2) { fC2 = c2; }

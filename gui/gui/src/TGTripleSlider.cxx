@@ -659,11 +659,8 @@ void TGTripleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
 {
    SaveUserColor(out, option);
 
-   out <<"   TGTripleHSlider *";
-   out << GetName() << " = new TGTripleHSlider(" << fParent->GetName()
-       << "," << GetWidth() << ",";
-   out << GetSString() << "," << WidgetId() << ",";
-   out << GetOptionString() << ",ucolor";
+   out << "   TGTripleHSlider *" << GetName() << " = new TGTripleHSlider(" << fParent->GetName() << "," << GetWidth()
+       << "," << GetSString() << "," << WidgetId() << "," << GetOptionString() << ", ucolor";
    if (fMarkEnds) {
       if (fReversedScale)
          out << ",kTRUE,kTRUE";
@@ -676,31 +673,27 @@ void TGTripleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    }
    if (!fConstrained) {
       if (fRelative)
-         out << ",kFALSE,kTRUE);" << std::endl;
+         out << ",kFALSE,kTRUE);\n";
       else
-         out << ",kFALSE,kFALSE);" << std::endl;
-   }
-   else if (fRelative) {
-      out << ",kTRUE);" << std::endl;
-   }
-   else {
-      out << ");" << std::endl;
+         out << ",kFALSE,kFALSE);\n";
+   } else if (fRelative) {
+      out << ",kTRUE);\n";
+   } else {
+      out << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
-      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
-          << ");" << std::endl;
+      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax << ");\n";
 
-   if (fSmin != fWidth/8*3 || fSmax != fWidth/8*5)
-      out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << std::endl;
+   if (fSmin != fWidth / 8 * 3 || fSmax != fWidth / 8 * 5)
+      out << "   " << GetName() << "->SetPosition(" << GetMinPosition() << "," << GetMaxPosition() << ");\n";
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
+      out << "   " << GetName() << "->SetScale(" << fScale << ");\n";
 
-   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");" << std::endl;
+   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -710,11 +703,8 @@ void TGTripleVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
 {
    SaveUserColor(out, option);
 
-   out<<"   TGTripleVSlider *";
-   out << GetName() << " = new TGTripleVSlider("<< fParent->GetName()
-       << "," << GetHeight() << ",";
-   out << GetSString() << "," << WidgetId() << ",";
-   out << GetOptionString() << ",ucolor";
+   out << "   TGTripleVSlider *" << GetName() << " = new TGTripleVSlider(" << fParent->GetName() << "," << GetHeight()
+       << "," << GetSString() << "," << WidgetId() << "," << GetOptionString() << ", ucolor";
    if (fMarkEnds) {
       if (fReversedScale)
          out << ",kTRUE,kTRUE";
@@ -727,29 +717,25 @@ void TGTripleVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    }
    if (!fConstrained) {
       if (fRelative)
-         out << ",kFALSE,kTRUE);" << std::endl;
+         out << ",kFALSE,kTRUE);\n";
       else
-         out << ",kFALSE,kFALSE);" << std::endl;
-   }
-   else if (fRelative) {
-      out << ",kTRUE);" << std::endl;
-   }
-   else {
-      out << ");" << std::endl;
+         out << ",kFALSE,kFALSE);\n";
+   } else if (fRelative) {
+      out << ",kTRUE);\n";
+   } else {
+      out << ");\n";
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");\n";
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
-      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax
-          << ");" << std::endl;
+      out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax << ");\n";
 
-   if (fSmin != fHeight/8*3 || fSmax != fHeight/8*5)
-      out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << std::endl;
+   if (fSmin != fHeight / 8 * 3 || fSmax != fHeight / 8 * 5)
+      out << "   " << GetName() << "->SetPosition(" << GetMinPosition() << "," << GetMaxPosition() << ");\n";
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
+      out << "   " << GetName() << "->SetScale(" << fScale << ");\n";
 
-   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");" << std::endl;
+   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");\n";
 }

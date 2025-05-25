@@ -29,38 +29,6 @@ struct RBaseType {
    using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
 };
 
-#if (__cplusplus < 201700L)
-
-template <typename T, bool isDynamic = true, bool isPolymorphic = std::is_polymorphic<RBaseType<T>>::value>
-struct RCast {
-   template <typename U>
-   static T cast(U &&u)
-   {
-      return dynamic_cast<T>(u);
-   }
-};
-
-template <typename T>
-struct RCast<T, false, false> {
-   template <typename U>
-   static T cast(U &&u)
-   {
-      return static_cast<T>(u);
-   }
-};
-
-template <typename T>
-struct RCast<T, false, true> {
-   template <typename U>
-   static T cast(U &&u)
-   {
-      assert(dynamic_cast<T>(u));
-      return static_cast<T>(u);
-   }
-};
-
-#endif
-
 // For SFINAE-based checks for the existence of the `begin` and `end` methods.
 template <typename T>
 constexpr auto hasBeginEnd(int) -> decltype(std::begin(std::declval<T>()), std::end(std::declval<T>()), true)
@@ -97,16 +65,8 @@ public:
    void swap(TypedIter &other) { fIter.swap(other.fIter); }
 
    // We want to know at compile time whether dynamic_cast or static_cast is
-   // used. First of all to avoid overhead, but also to avoid a compiler
-   // error when using dynamic_cast on a non-polymorphic class. In C++17,
-   // this can be done easily with `if constexpr`, but for the older
-   // standards we have to use a more verbose alternative. Both ways are
-   // explicitely implemented for different standards, so that when the
-   // minimum C++ standard for ROOT is raised to C++17 it's easy to remember
-   // that we can avoid much boilerplate code in this file.
-#if (__cplusplus < 201700L)
-   T operator*() { return ROOT::Internal::RCast<T, isDynamic>::cast(*fIter); }
-#else
+   // used. First of all to avoid overhead, but also to avoid a compiler error
+   // when using dynamic_cast on a non-polymorphic class.
    T operator*()
    {
       if constexpr (isDynamic) {
@@ -118,7 +78,6 @@ public:
          return static_cast<T>(*fIter);
       }
    }
-#endif
 
 private:
    WrappedIterator_t fIter;

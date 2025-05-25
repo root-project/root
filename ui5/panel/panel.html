@@ -3,7 +3,8 @@
 <html lang="en">
    <head>
       <meta charset="utf-8">
-      <title>ROOT7 web panel</title>
+      <title>ROOT web panel</title>
+      <!--jsroot_importmap-->
    </head>
 
    <style>
@@ -26,8 +27,8 @@
 
    <script type='module'>
 
-      import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
-      import * as jsroot from './jsrootsys/modules/core.mjs';
+      import { connectWebWindow } from 'jsroot/webwindow';
+      import * as jsroot from 'jsroot/core';
 
       connectWebWindow({
          first_recv: "SHOWPANEL:",

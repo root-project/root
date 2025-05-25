@@ -52,33 +52,40 @@
  taken with regard to performance. In the constructor, always the
  shape of the matrix has to be specified in some form . Data can be
  entered through the following methods :
- 1. constructor
+ 1. constructor from COO matrix format
 ~~~
     TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,
                    Int_t col_upb,Int_t nr_nonzeros,
                    Int_t *row, Int_t *col,Element *data);
 ~~~
     It uses SetMatrixArray(..), see below
- 2. copy constructors
- 3. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)
+ 2. constructor from Harwell-Boeing (CSR) matrix format
+~~~
+    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,
+                   Int_t col_upb,
+                   Int_t *rowptr, Int_t *col,Element *data);
+~~~
+    It copies input arrays into matrix .
+ 3. copy constructors
+ 4. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)
     where it is expected that the irow,icol and data array contain
     nr entries . Only the entries with non-zero data[i] value are
     inserted. Be aware that the input data array will be modified
     inside the routine for doing the necessary sorting of indices !
- 4. SetMatrixArray(Int_t nr,Int_t nrows,Int_t ncols,Int_t *irow,
+ 5. SetMatrixArray(Int_t nr,Int_t nrows,Int_t ncols,Int_t *irow,
     Int_t *icol,Element *data) where it is expected that the irow,
     icol and data array contain nr entries . It allows to reshape
     the matrix according to nrows and ncols. Only the entries with
     non-zero data[i] value are inserted. Be aware that the input
     data array will be modified inside the routine for doing the
     necessary sorting of indices !
- 5. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
+ 6. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
     This is a very flexible method but expensive :
     - if no entry for slot (i,j) is found in the sparse index table
       it will be entered, which involves some memory management !
     - before invoking this method in a loop it is smart to first
       set the index table through a call to SetSparseIndex(..)
- 5. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)
+ 7. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)
     the matrix to be inserted at position (row_lwb,col_lwb) can be
     both dense or sparse .
 
@@ -106,15 +113,18 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t no_rows,Int_t no_cols)
 /// Space is allocated for row/column indices and data, but the sparse structure
 /// information has still to be set !
 
-template<class Element>
-TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
+template <class Element>
+TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t nr_nonzeros)
 {
-   Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb,1);
+   Allocate(row_upb - row_lwb + 1, col_upb - col_lwb + 1, row_lwb, col_lwb, 1, nr_nonzeros);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Space is allocated for row/column indices and data. Sparse row/column index
-/// structure together with data is coming from the arrays, row, col and data, resp .
+/// structure together with data is coming from the arrays, row, col and data, resp.
+/// Here row, col and data are arrays of length nr (number of nonzero elements), i.e.
+/// the matrix is stored in COO (coordinate) format. Note that the input arrays are
+/// not passed as const since they will be modified !
 
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
@@ -151,6 +161,48 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lw
    Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb,1,nr);
 
    SetMatrixArray(nr,row,col,data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Space is allocated for row/column indices and data. Sparsity pattern is given by
+/// column indices and row pointers from arrays col and rowptr, resp, while matrix
+/// entries come from the array data. Arrays col and data are assumed to have length
+/// nr (number of nonzero elements), while array rowptr has length (n+1), where
+/// n=row_upb-row_lwb+1 is the number of rows.
+
+template <class Element>
+TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t *rowptr,
+                                        Int_t *col, Element *data)
+{
+   Int_t n = row_upb - row_lwb + 1;
+   Int_t nr = rowptr[n];
+   if (n <= 0 || nr < 0) {
+      Error("TMatrixTSparse", "Inconsistency in row indices");
+   }
+   if (nr == 0) {
+      Allocate(row_upb - row_lwb + 1, col_upb - col_lwb + 1, row_lwb, col_lwb, 1, nr);
+      return;
+   }
+   const Int_t icolmin = TMath::LocMin(nr, col);
+   const Int_t icolmax = TMath::LocMax(nr, col);
+
+   if (col[icolmin] < col_lwb || col[icolmax] > col_upb) {
+      Error("TMatrixTSparse", "Inconsistency between column index and its range");
+      if (col[icolmin] < col_lwb) {
+         Info("TMatrixTSparse", "column index lower bound adjusted to %d", col[icolmin]);
+         col_lwb = col[icolmin];
+      }
+      if (col[icolmax] > col_upb) {
+         Info("TMatrixTSparse", "column index upper bound adjusted to %d", col[icolmax]);
+         col_upb = col[icolmax];
+      }
+   }
+
+   Allocate(row_upb - row_lwb + 1, col_upb - col_lwb + 1, row_lwb, col_lwb, 1, nr);
+   memcpy(fElements, data, this->fNelems * sizeof(Element));
+   memcpy(fRowIndex, rowptr, this->fNrowIndex * sizeof(Int_t));
+   memcpy(fColIndex, col, this->fNelems * sizeof(Int_t));
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +270,7 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
       case kAtA:
       {
          const TMatrixTSparse<Element> at(TMatrixTSparse<Element>::kTransposed,prototype);
-         AMultBt(at,at,1);
+         AMultB(at, prototype, 1);
          break;
       }
 
@@ -491,111 +543,115 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix multiplication. Replace this matrix with C such that C = A * B'.
-/// Note, matrix C is allocated for constr=1.
+/// General Sparse Matrix Multiplication (SpMM). This code is an adaptation of
+/// Eigen SpMM implementation. This product is conservative, meaning that it
+/// preserves the symbolic non zeros. Given lhs, rhs, it computes this = rhs * lhs.
+/// Note, result matrix is only allocated when constr=1.
 
-template<class Element>
-void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr)
+template <class Element>
+void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMatrixTSparse<Element> &lhs,
+                                                                      const TMatrixTSparse<Element> &rhs, Int_t constr)
 {
    if (gMatrixCheck) {
-      R__ASSERT(a.IsValid());
-      R__ASSERT(b.IsValid());
+      R__ASSERT(lhs.IsValid());
+      R__ASSERT(rhs.IsValid());
 
-      if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
-         Error("AMultBt","A and B columns incompatible");
-         return;
-      }
-
-      if (!constr && this->GetMatrixArray() == a.GetMatrixArray()) {
-         Error("AMultB","this = &a");
-         return;
-      }
-
-      if (!constr && this->GetMatrixArray() == b.GetMatrixArray()) {
-         Error("AMultB","this = &b");
+      if (lhs.GetNrows() != rhs.GetNcols() || rhs.GetColLwb() != lhs.GetRowLwb()) {
+         Error("conservative_sparse_sparse_product_impl", "lhs and rhs columns incompatible");
          return;
       }
    }
 
-   const Int_t * const pRowIndexa = a.GetRowIndexArray();
-   const Int_t * const pColIndexa = a.GetColIndexArray();
-   const Int_t * const pRowIndexb = b.GetRowIndexArray();
-   const Int_t * const pColIndexb = b.GetColIndexArray();
+   // we fake the storage order.
+   Int_t rows = lhs.GetNcols();
+   Int_t cols = rhs.GetNrows();
+   Int_t rowsLwb = lhs.GetColLwb();
+   Int_t colsLwb = rhs.GetRowLwb();
 
-   Int_t *pRowIndexc;
-   Int_t *pColIndexc;
+   auto mask = std::unique_ptr<bool[]>(new bool[rows]);
+   auto values = std::unique_ptr<Element[]>(new Element[rows]);
+   auto indices = std::unique_ptr<Int_t[]>(new Int_t[rows]);
+
+   std::memset(mask.get(), false, sizeof(bool) * rows);
+   std::memset(values.get(), 0, sizeof(Element) * rows);
+   std::memset(indices.get(), 0, sizeof(Int_t) * rows);
+
+   const Int_t *pRowIndexlhs = lhs.GetRowIndexArray();
+   const Int_t *pRowIndexrhs = rhs.GetRowIndexArray();
+   const Int_t *lhsCol = lhs.GetColIndexArray();
+   const Int_t *rhsCol = rhs.GetColIndexArray();
+   const Element *lhsVal = lhs.GetMatrixArray();
+   const Element *rhsVal = rhs.GetMatrixArray();
+
    if (constr) {
-      // make a best guess of the sparse structure; it will guarantee
-      // enough allocated space !
-
-      Int_t nr_nonzero_rowa = 0;
-      {
-         for (Int_t irowa = 0; irowa < a.GetNrows(); irowa++)
-            if (pRowIndexa[irowa] < pRowIndexa[irowa+1])
-               nr_nonzero_rowa++;
-      }
-      Int_t nr_nonzero_rowb = 0;
-      {
-         for (Int_t irowb = 0; irowb < b.GetNrows(); irowb++)
-            if (pRowIndexb[irowb] < pRowIndexb[irowb+1])
-              nr_nonzero_rowb++;
-      }
-
-      const Int_t nc = nr_nonzero_rowa*nr_nonzero_rowb; // best guess
-      Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1,nc);
-
-      pRowIndexc = this->GetRowIndexArray();
-      pColIndexc = this->GetColIndexArray();
-
-      pRowIndexc[0] = 0;
-      Int_t ielem = 0;
-      for (Int_t irowa = 0; irowa < a.GetNrows(); irowa++) {
-         pRowIndexc[irowa+1] = pRowIndexc[irowa];
-         if (pRowIndexa[irowa] >= pRowIndexa[irowa+1]) continue;
-         for (Int_t irowb = 0; irowb < b.GetNrows(); irowb++) {
-            if (pRowIndexb[irowb] >= pRowIndexb[irowb+1]) continue;
-            pRowIndexc[irowa+1]++;
-            pColIndexc[ielem++] = irowb;
-         }
-      }
-   } else {
-      pRowIndexc = this->GetRowIndexArray();
-      pColIndexc = this->GetColIndexArray();
-   }
-
-   const Element * const pDataa = a.GetMatrixArray();
-   const Element * const pDatab = b.GetMatrixArray();
-   Element * const pDatac = this->GetMatrixArray();
-   Int_t indexc_r = 0;
-   for (Int_t irowc = 0; irowc < this->GetNrows(); irowc++) {
-      const Int_t sIndexa = pRowIndexa[irowc];
-      const Int_t eIndexa = pRowIndexa[irowc+1];
-      for (Int_t icolc = 0; icolc < this->GetNcols(); icolc++) {
-         const Int_t sIndexb = pRowIndexb[icolc];
-         const Int_t eIndexb = pRowIndexb[icolc+1];
-         Element sum = 0.0;
-         Int_t indexb = sIndexb;
-         for (Int_t indexa = sIndexa; indexa < eIndexa && indexb < eIndexb; indexa++) {
-            const Int_t icola = pColIndexa[indexa];
-            while (indexb < eIndexb && pColIndexb[indexb] <= icola) {
-               if (icola == pColIndexb[indexb]) {
-                 sum += pDataa[indexa]*pDatab[indexb];
-                 break;
+      // compute the number of non zero entries
+      Int_t estimated_nnz_prod = 0;
+      for (Int_t j = 0; j < cols; ++j) {
+         Int_t nnz = 0;
+         for (Int_t l = pRowIndexrhs[j]; l < pRowIndexrhs[j + 1]; ++l) {
+            Int_t k = *(rhsCol + l);
+            for (Int_t m = pRowIndexlhs[k]; m < pRowIndexlhs[k + 1]; ++m) {
+               Int_t i = *(lhsCol + m);
+               if (!mask[i]) {
+                  mask[i] = true;
+                  ++nnz;
                }
-               indexb++;
             }
          }
-         if (sum != 0.0) {
-            pColIndexc[indexc_r] = icolc;
-            pDatac[indexc_r] = sum;
-            indexc_r++;
-         }
+         estimated_nnz_prod += nnz;
+         std::memset(mask.get(), false, sizeof(bool) * rows);
       }
-      pRowIndexc[irowc+1] = indexc_r;
+
+      const Int_t nc = estimated_nnz_prod; // rows*cols;
+
+      Allocate(cols, rows, colsLwb, rowsLwb, 1, nc);
+
+      if (nc == 0)
+         return;
    }
 
-   if (constr)
-      SetSparseIndex(indexc_r);
+   Int_t *pRowIndex = this->GetRowIndexArray();
+   Int_t *pColIndex = this->GetColIndexArray();
+   Element *pData = this->GetMatrixArray();
+
+   // we compute each column of the result, one after the other
+   for (Int_t j = 0; j < cols; ++j) {
+      Int_t nnz = 0;
+      for (Int_t l = pRowIndexrhs[j]; l < pRowIndexrhs[j + 1]; ++l) {
+         double y = *(rhsVal + l);
+         Int_t k = *(rhsCol + l);
+         for (Int_t m = pRowIndexlhs[k]; m < pRowIndexlhs[k + 1]; ++m) {
+            Int_t i = *(lhsCol + m);
+            double x = *(lhsVal + m);
+            if (!mask[i]) {
+               mask[i] = true;
+               values[i] = x * y;
+               indices[nnz] = i;
+               ++nnz;
+            } else
+               values[i] += x * y;
+         }
+      }
+      pRowIndex[j + 1] = pRowIndex[j];
+      for (Int_t i = 0; i < rows; ++i) {
+         if (mask[i]) {
+            mask[i] = false;
+            Int_t p = pRowIndex[j + 1];
+            ++pRowIndex[j + 1];
+            pColIndex[p] = i;
+            pData[p] = values[i];
+         }
+      }
+   }
+
+   if (gMatrixCheck) {
+      if (this->fNelems != pRowIndex[cols]) {
+         Error("conservative_sparse_sparse_product_impl", "non zeros numbers do not match");
+         return;
+      }
+   }
+
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1216,6 +1272,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    }
 
    TMatrixTBase<Element>::DoubleLexSort(nr,row,col,data);
+   nr = ReduceSparseMatrix(nr, row, col, data);
 
    Int_t nr_nonzeros = 0;
    const Element *ep        = data;
@@ -1260,6 +1317,36 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    }
 
    return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sum matrix entries corresponding to the same matrix element (i,j). The reduced
+/// extries remain dangling. It is assumed
+/// that the arrays row, col and data are sorted with DoubleLexSort.
+/// Note that the input arrays are not passed as const since they will be modified !
+template <class Element>
+Int_t TMatrixTSparse<Element>::ReduceSparseMatrix(Int_t nr, Int_t *row, Int_t *col, Element *data)
+{
+
+   Int_t nz = nr;
+   Int_t i = 0;
+
+   while (i < nz - 1) {
+      if ((row[i] == row[i + 1]) && (col[i] == col[i + 1])) {
+         // sum values corresponding to same element
+         data[i] += data[i + 1];
+         // shift vectors row and col to the left by one index
+         nz--;
+         for (Int_t j = i + 1; j < nz; j++) {
+            data[j] = data[j + 1];
+            row[j] = row[j + 1];
+            col[j] = col[j + 1];
+         }
+      }
+      i++;
+   }
+
+   return nz;
 }
 
 template <class Element>
@@ -1329,6 +1416,7 @@ TMatrixTSparse<Element>::SetMatrixArray(Int_t nr, Int_t nrows, Int_t ncols, Int_
    }
 
    TMatrixTBase<Element>::DoubleLexSort(nr, row, col, data);
+   nr = ReduceSparseMatrix(nr, row, col, data);
 
    Int_t nr_nonzeros = 0;
    const Element *ep = data;

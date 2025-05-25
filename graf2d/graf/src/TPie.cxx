@@ -37,7 +37,7 @@ Draw a Pie Chart,
 Example:
 
 Begin_Macro(source)
-../../../tutorials/graphics/piechart.C
+../../../tutorials/visualisation/graphics/piechart.C
 End_Macro
 */
 
@@ -1119,22 +1119,16 @@ void TPie::Paint(Option_t *option)
 
 void TPie::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   out << "   " << std::endl;
-   if (gROOT->ClassSaved(TPie::Class()))
-      out << "   ";
-   else
-      out << "   TPie *";
+   SavePrimitiveConstructor(out, Class(), "pie", TString::Format("\"%s\", \"%s\", %d", GetName(), TString(GetTitle()).ReplaceSpecialCppChars().Data(), fNvals));
 
-   out << "pie = new TPie(\"" << GetName() << "\", \"" << GetTitle()
-       << "\", " << fNvals << ");" << std::endl;
-   out << "   pie->SetCircle(" << fX << ", " << fY << ", " << fRadius << ");" << std::endl;
-   out << "   pie->SetValueFormat(\"" << GetValueFormat() << "\");" << std::endl;
-   out << "   pie->SetLabelFormat(\"" << GetLabelFormat() << "\");" << std::endl;
-   out << "   pie->SetPercentFormat(\"" << GetPercentFormat()   << "\");" << std::endl;
-   out << "   pie->SetLabelsOffset(" << GetLabelsOffset() << ");" << std::endl;
-   out << "   pie->SetAngularOffset(" << GetAngularOffset() << ");" << std::endl;
+   out << "   pie->SetCircle(" << fX << ", " << fY << ", " << fRadius << ");\n";
+   out << "   pie->SetValueFormat(\"" << GetValueFormat() << "\");\n";
+   out << "   pie->SetLabelFormat(\"" << GetLabelFormat() << "\");\n";
+   out << "   pie->SetPercentFormat(\"" << GetPercentFormat() << "\");\n";
+   out << "   pie->SetLabelsOffset(" << GetLabelsOffset() << ");\n";
+   out << "   pie->SetAngularOffset(" << GetAngularOffset() << ");\n";
 
-   SaveTextAttributes(out,"pie",11,0,1,62,0.05);
+   SaveTextAttributes(out, "pie", 11, 0, 1, 62, 0.05);
 
    // Save the values for the slices
    for (Int_t i = 0; i < fNvals; ++i) {
@@ -1142,7 +1136,7 @@ void TPie::SavePrimitive(std::ostream &out, Option_t *option)
       fPieSlices[i]->SavePrimitive(out, slice_name.Data());
    }
 
-   out << "   pie->Draw(\"" << option << "\");" << std::endl;
+   SavePrimitiveDraw(out, "pie", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

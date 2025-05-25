@@ -36,7 +36,7 @@ A diamond has line attributes (see TAttLine) and fill area attributes (see TAttF
 Like for the class TPaveText, a TDiamond may have one or more line(s) of text inside.
 
 Begin_Macro(source)
-../../../tutorials/graphics/diamond.C
+../../../tutorials/visualisation/graphics/diamond.C
 End_Macro
 */
 
@@ -458,20 +458,15 @@ void TDiamond::Paint(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
 
-void TDiamond::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TDiamond::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   Bool_t saved = gROOT->ClassSaved(TDiamond::Class());
-   if (saved) {
-      out<<"   ";
-   } else {
-      out<<"   TDiamond *";
-   }
-   out<<"diamond = new TDiamond("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "diamond", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2));
 
-   SaveFillAttributes(out,"diamond",0,1001);
-   SaveLineAttributes(out,"diamond",1,1,1);
-   SaveTextAttributes(out,"diamond",11,0,1,62,0.05);
+   SaveFillAttributes(out, "diamond", 0, 1001);
+   SaveLineAttributes(out, "diamond", 1, 1, 1);
+   SaveTextAttributes(out, "diamond", 11, 0, 1, 62, 0.05);
 
-   SaveLines(out,"diamond",saved);
-   out<<"   diamond->Draw();"<<std::endl;
+   SaveLines(out, "diamond", kTRUE);
+
+   SavePrimitiveDraw(out, "diamond", option);
 }

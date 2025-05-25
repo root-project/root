@@ -39,10 +39,9 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 
 #include <RooFit/Detail/MathFuncs.h>
 
-ClassImp(RooBernstein);
 
 RooBernstein::RooBernstein(const char *name, const char *title, RooAbsRealLValue &x, const RooArgList &coefList)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefficients", "List of coefficients", this)
+   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this)
 {
    _coefList.addTyped<RooAbsReal>(coefList);
 }
@@ -50,7 +49,7 @@ RooBernstein::RooBernstein(const char *name, const char *title, RooAbsRealLValue
 RooBernstein::RooBernstein(const RooBernstein &other, const char *name)
    : RooAbsPdf(other, name),
      _x("x", this, other._x),
-     _coefList("coefList", this, other._coefList),
+     _coefList(this, other._coefList),
      _refRangeName{other._refRangeName},
      _buffer{other._buffer}
 {
@@ -81,13 +80,6 @@ double RooBernstein::evaluate() const
    return RooFit::Detail::MathFuncs::bernstein(_x, xmin(), xmax(), _buffer.data(), _coefList.size());
 }
 
-void RooBernstein::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   fillBuffer();
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::bernstein", _x, xmin(), xmax(), _coefList,
-                                     _coefList.size()));
-}
-
 /// Compute multiple values of Bernstein distribution.
 void RooBernstein::doEval(RooFit::EvalContext &ctx) const
 {
@@ -105,12 +97,4 @@ double RooBernstein::analyticalIntegral(Int_t /*code*/, const char *rangeName) c
    fillBuffer();
    return RooFit::Detail::MathFuncs::bernsteinIntegral(_x.min(rangeName), _x.max(rangeName), xmin(), xmax(),
                                                                  _buffer.data(), _coefList.size());
-}
-
-std::string RooBernstein::buildCallToAnalyticIntegral(Int_t /*code*/, const char *rangeName,
-                                                      RooFit::Detail::CodeSquashContext &ctx) const
-{
-   fillBuffer(); // to get the right xmin() and xmax()
-   return ctx.buildCall("RooFit::Detail::MathFuncs::bernsteinIntegral", _x.min(rangeName), _x.max(rangeName),
-                        xmin(), xmax(), _coefList, _coefList.size());
 }

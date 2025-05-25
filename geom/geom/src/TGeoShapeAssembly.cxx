@@ -164,7 +164,7 @@ void TGeoShapeAssembly::RecomputeBoxLast()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT. Should not be called.
 
-void TGeoShapeAssembly::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoShapeAssembly::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    if (!fBBoxOK)
       ((TGeoShapeAssembly *)this)->ComputeBBox();

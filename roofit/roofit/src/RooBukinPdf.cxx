@@ -34,7 +34,6 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 
 #include <cmath>
 
-ClassImp(RooBukinPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a Bukin PDF.

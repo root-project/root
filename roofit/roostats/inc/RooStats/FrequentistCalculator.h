@@ -32,8 +32,6 @@ namespace RooStats {
                         TestStatSampler* sampler=nullptr
       ) :
          HypoTestCalculatorGeneric(data, altModel, nullModel, sampler),
-         fConditionalMLEsNull(nullptr),
-         fConditionalMLEsAlt(nullptr),
          fNToysNull(-1),
          fNToysAlt(-1),
          fNToysNullTail(0),
@@ -94,8 +92,8 @@ namespace RooStats {
 
    protected:
       // MLE inputs
-      const RooArgSet* fConditionalMLEsNull;
-      const RooArgSet* fConditionalMLEsAlt;
+      const RooArgSet* fConditionalMLEsNull = nullptr;
+      const RooArgSet* fConditionalMLEsAlt = nullptr;
 
       // different number of toys for null and alt
       int fNToysNull;
@@ -110,7 +108,7 @@ namespace RooStats {
       bool fStoreFitInfo;
 
    protected:
-      ClassDefOverride(FrequentistCalculator,1)
+      ClassDefOverride(FrequentistCalculator,0)
    };
 }
 

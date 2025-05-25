@@ -37,7 +37,7 @@ public:
   RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
              std::unique_ptr<RooDataHist> dhist, int intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooHistPdf(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooHistPdf(*this,newname); }
 
   RooDataHist& dataHist()  {
     // Return RooDataHist that is represented
@@ -95,11 +95,9 @@ public:
 
   void doEval(RooFit::EvalContext &) const override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+  RooArgSet const &variables() const { return _pdfObsList; }
 
-  protected:
+protected:
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   bool importWorkspaceHook(RooWorkspace& ws) override ;
@@ -147,13 +145,6 @@ private:
                                              double xlo,
                                              double xhi);
 
-  static void rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
-                                   RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize, bool cdfBoundaries);
-
-  static std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
-                                                  const RooArgSet &obs, bool histFuncMode);
-
-private:
   inline void initializeOwnedDataHist(std::unique_ptr<RooDataHist> &&dataHist)
   {
      _ownedDataHist = std::move(dataHist);

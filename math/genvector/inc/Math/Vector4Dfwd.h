@@ -31,8 +31,6 @@ namespace ROOT {
     template<typename T> class PtEtaPhiE4D;
     template<typename T> class PxPyPzM4D;
     template<typename T> class PtEtaPhiM4D;
-//     template<typename T> class EEtaPhiMSystem;
-
 
     // for LorentzVector have only double classes (define the vector in the global ref frame)
 
@@ -84,13 +82,6 @@ namespace ROOT {
        See the documentation on the LorentzVector page.
     */
     typedef LorentzVector<PtEtaPhiM4D<double> > PtEtaPhiMVector;
-
-//     /**
-//        LorentzVector based on the coordinates E, Eta, Phi and Mass in double precision. These coordinates are normally used to represents a cluster objects in a calorimeter at a collider experiment.
-//     */
-//     typedef BasicLorentzVector<EEtaPhiMSystem<double> > LorentzVectorEEtaPhiM;
-
-
 
   } // end namespace Math
 

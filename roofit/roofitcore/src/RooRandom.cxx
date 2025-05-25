@@ -29,7 +29,6 @@ By default a private copy of TRandom3 is used to generate all random numbers.
 
 #include "TRandom3.h"
 
-ClassImp(RooRandom);
 
 
 TRandom* RooRandom::_theGenerator = nullptr;

@@ -16,6 +16,7 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
 endif()
 
 set(BASE_HEADERS
+  ROOT/RFloat16.hxx
   ROOT/TErrorDefaultHandler.hxx
   ROOT/TExecutorCRTP.hxx
   ROOT/TSequentialExecutor.hxx
@@ -197,15 +198,6 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
-if(root7)
-  set(BASE_HEADER_DIRS inc/ v7/inc/)
-  list(APPEND BASE_HEADERS
-      ROOT/RFloat16.hxx
-      ROOT/RDirectoryEntry.hxx
-      ROOT/RIndexIter.hxx)
-  target_sources(Core PRIVATE v7/src/RDirectory.cxx)
-endif()
-
 # only here complete list of headers can be propogated to parent cmake file
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
 
@@ -213,7 +205,6 @@ target_sources(Core PRIVATE ${BASE_SOURCES})
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
 
 if(PCRE2_FOUND)
@@ -233,9 +224,6 @@ if(NOT MSVC)
 #---addRootC++CmdMan-------------------------------------------------------------------------
 generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/man/root.1)
 generateManual(haddMan ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/man/hadd.1)
-if (roofit)
-generateManual(hist2workspaceMan ${CMAKE_SOURCE_DIR}/roofit/histfactory/src/hist2workspace-argparse.py ${CMAKE_BINARY_DIR}/man/hist2workspace.1)
-endif()
 generateManual(rootclingMan ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/man/rootcling.1)
 
 #---addRootPyCmdMan---------------------------------------------------------------------------

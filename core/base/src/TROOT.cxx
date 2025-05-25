@@ -552,6 +552,31 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
+   /// @param[in] config Configuration to use. The default is kWholeMachine, which
+   ///                   will create a thread pool that spans the whole machine.
+   ///
+   /// EnableImplicitMT calls in turn EnableThreadSafety.
+   /// If ImplicitMT is already enabled, this function does nothing.
+
+   void EnableImplicitMT(ROOT::EIMTConfig config)
+   {
+#ifdef R__USE_IMT
+      if (ROOT::Internal::IsImplicitMTEnabledImpl())
+         return;
+      EnableThreadSafety();
+      static void (*sym)(ROOT::EIMTConfig) =
+         (void (*)(ROOT::EIMTConfig))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT_Config");
+      if (sym)
+         sym(config);
+      ROOT::Internal::IsImplicitMTEnabledImpl() = true;
+#else
+      ::Warning("EnableImplicitMT",
+                "Cannot enable implicit multi-threading with config %d, please build ROOT with -Dimt=ON",
+                static_cast<int>(config));
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
    /// Disables the implicit multi-threading in ROOT (see EnableImplicitMT).
    void DisableImplicitMT()
    {
@@ -731,6 +756,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fTimer       = 0;
    fApplication = nullptr;
    fColors      = setNameLocked(new TObjArray(1000), "ListOfColors");
+   fColors->SetOwner();
    fTypes       = nullptr;
    fGlobals     = nullptr;
    fGlobalFunctions = nullptr;
@@ -959,8 +985,7 @@ TROOT::~TROOT()
       SafeDelete(fGlobalFunctions);
       fEnums.load()->Delete();
 
-      // FIXME: Causes segfault in rootcling, debug and uncomment
-      // fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
+      fClasses->Delete(); SafeDelete(fClasses);     // TClass'es must be deleted last
 #endif
 
       // Remove shared libraries produced by the TSystem::CompileMacro() call
@@ -1399,7 +1424,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       if (glast) {where = glast; temp = glast->FindObject(name);}
    }
    if (!temp && gDirectory) {
-      temp  = gDirectory->Get(name);
+      gDirectory->GetObject(name, temp);
       where = gDirectory;
    }
    if (!temp && gPad) {
@@ -2060,6 +2085,7 @@ void TROOT::InitThreads()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the interpreter. Should be called only after main(),
 /// to make sure LLVM/Clang is fully initialized.
+/// This function must be called in a single thread context (static initialization)
 
 void TROOT::InitInterpreter()
 {
@@ -2531,6 +2557,8 @@ static void CallCloseFiles()
 /// for headers. Calls TCling::RegisterModule() unless gCling
 /// is NULL, i.e. during startup, where the information is buffered in
 /// the static GetModuleHeaderInfoBuffer().
+/// The caller of this function should be holding the ROOT Write lock or be
+/// single threaded (dlopen)
 
 void TROOT::RegisterModule(const char* modulename,
                            const char** headers,
@@ -2817,10 +2845,9 @@ void TROOT::SetBatch(Bool_t batch)
 ///  - "chrome": select Google Chrome browser for interactive web display
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
-///  - "qt5": uses QWebEngine from Qt5, no real http server started (requires `qt5web` component build for ROOT)
 ///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
 ///  - "cef": uses Chromium Embeded Framework, no real http server started (requires `cefweb` component build for ROOT)
-///  - "local": select on of available local (without http server) engines like qt5/qt6/cef
+///  - "local": select one of available local (without http server) engines like qt6/cef
 ///  - "default": system default web browser, invoked with `xdg-open` on Linux, `start` on Mac or `open` on Windows
 ///  - "on": try "local", then "native", then "default" option
 ///  - "off": turns off the web display and comes back to normal graphics in
@@ -2835,6 +2862,7 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    // store default values to set them back when needed
    static TString brName = gEnv->GetValue("Browser.Name", "");
    static TString trName = gEnv->GetValue("TreeViewer.Name", "");
+   static TString geomName = gEnv->GetValue("GeomPainter.Name", "");
 
    fIsWebDisplayBatch = fBatch;
 
@@ -2869,11 +2897,13 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       // This is necessary when SetWebDisplay() called several times and therefore current settings may differ
       gEnv->SetValue("Canvas.Name", "TWebCanvas");
       gEnv->SetValue("Browser.Name", brName);
-      gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
+      gEnv->SetValue("TreeViewer.Name", trName);
+      gEnv->SetValue("GeomPainter.Name", geomName);
    } else {
       gEnv->SetValue("Canvas.Name", "TRootCanvas");
       gEnv->SetValue("Browser.Name", "TRootBrowser");
-      gEnv->SetValue("TreeViewer.Name", trName);
+      gEnv->SetValue("TreeViewer.Name", "TTreeViewer");
+      gEnv->SetValue("GeomPainter.Name", "root");
    }
 }
 

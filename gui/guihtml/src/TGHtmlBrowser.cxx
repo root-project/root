@@ -28,6 +28,8 @@
 #include "TGText.h"
 #include "TError.h"
 #include "TVirtualX.h"
+#include "HelpText.h"
+#include "TRootHelpDialog.h"
 #include "snprintf.h"
 #ifdef R__SSL
 #include "TSSLSocket.h"
@@ -667,10 +669,6 @@ Bool_t TGHtmlBrowser::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 
                   case kM_HELP_ABOUT:
                      {
-#ifdef R__UNIX
-                        TString rootx = TROOT::GetBinDir() + "/root -a &";
-                        gSystem->Exec(rootx);
-#else
 #ifdef WIN32
                         new TWin32SplashThread(kTRUE);
 #else
@@ -680,7 +678,6 @@ Bool_t TGHtmlBrowser::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                                                                   600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
 #endif
                      }
                      break;

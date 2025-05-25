@@ -45,7 +45,7 @@ public:
   RooRealVar(const char *name, const char *title, double value,
       double minValue, double maxValue, const char *unit= "") ;
   RooRealVar(const RooRealVar& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooRealVar(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooRealVar(*this,newname); }
   ~RooRealVar() override;
 
   // Parameter value and error accessors
@@ -118,8 +118,8 @@ public:
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
 
-  TString* format(const RooCmdArg& formatArg) const ;
-  TString* format(Int_t sigDigits, const char *options) const ;
+  std::string format(const RooCmdArg& formatArg) const ;
+  std::string format(Int_t sigDigits, const char *options) const ;
 
   static void printScientific(bool flag=false) ;
   static void printSigDigits(Int_t ndig=5) ;
@@ -131,8 +131,6 @@ public:
   void copyCacheFast(const RooRealVar& other, bool setValDirty=true) { _value = other._value ; if (setValDirty) setValueDirty() ; }
 
   static void cleanup() ;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   protected:
 

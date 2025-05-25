@@ -33,10 +33,9 @@ in the two sets.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
-#include "RooFuncWrapper.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
@@ -46,7 +45,6 @@ in the two sets.
 #include <algorithm>
 #include <cmath>
 
-ClassImp(RooAddition);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,40 +154,6 @@ void RooAddition::doEval(RooFit::EvalContext &ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   if (_set.empty()) {
-      ctx.addResult(this, "0.0");
-   }
-   std::string result;
-   if (_set.size() > 1)
-      result += "(";
-
-   std::size_t i = 0;
-   for (auto *component : static_range_cast<RooAbsReal *>(_set)) {
-
-      // if (dynamic_cast<RooNLLVarNew *>(component)) {
-      //    result += ctx.getResultFrom
-      // } else {
-      if (!dynamic_cast<RooNLLVarNew *>(component) || _set.size() == 1) {
-         result += ctx.getResult(*component);
-         ++i;
-         if (i < _set.size()) result += '+';
-         continue;
-      }
-      auto &wrp = *ctx._wrapper;
-      auto funcName = wrp.declareFunction(wrp.buildCode(*component));
-      result += funcName + "(params, obs, xlArr)";
-      ++i;
-      if (i < _set.size()) result += '+';
-   }
-   if (_set.size() > 1)
-      result += ')';
-   ctx.addResult(this, result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return the default error level for MINUIT error analysis
 /// If the addition contains one or more RooNLLVars and
 /// no RooChi2Vars, return the defaultErrorLevel() of
@@ -205,7 +169,7 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVarNew*>(arg)) {
+    if (dynamic_cast<RooFit::Detail::RooNLLVarNew*>(arg)) {
       nllArg = static_cast<RooAbsReal*>(arg) ;
     }
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND

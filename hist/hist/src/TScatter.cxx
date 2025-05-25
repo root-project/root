@@ -39,7 +39,7 @@ color map and the fourth on the marker size.
 The following example demonstrates how it works:
 
 Begin_Macro(source)
-../../../tutorials/graphs/scatter.C
+../../../tutorials/visualisation/graphs/gr006_scatter.C
 End_Macro
 
 ### TScatter's plotting options
@@ -50,7 +50,6 @@ TScatter can be drawn with the following options:
 | "A"      | Produce a new plot with Axis around the graph |
 
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TScatter default constructor.
@@ -128,6 +127,13 @@ TScatter::~TScatter()
 
 Int_t TScatter::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   // Are we on the axis?
+   Int_t distance;
+   if (this->GetHistogram()) {
+      distance = this->GetHistogram()->DistancetoPrimitive(px,py);
+      if (distance <= 5) return distance;
+   }
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter)
       return painter->DistancetoPrimitiveHelper(this->GetGraph(), px, py);
@@ -169,14 +175,42 @@ TH2F *TScatter::GetHistogram() const
       double dx = (rwxmax-rwxmin)*fMargin;
       double dy = (rwymax-rwymin)*fMargin;
       auto h = new TH2F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin-dx,rwxmax+dx,npt,rwymin-dy,rwymax+dy);
-//          h->SetMinimum(rwymin-dy);
-//          h->SetMaximum(rwymax+dy);
       h->SetBit(TH1::kNoStats);
       h->SetDirectory(nullptr);
       h->Sumw2(kFALSE);
       const_cast<TScatter *>(this)->fHistogram = h;
    }
    return fHistogram;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's x axis.
+
+TAxis *TScatter::GetXaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetXaxis() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's y axis.
+
+TAxis *TScatter::GetYaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetYaxis() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the scatter's z axis.
+
+TAxis *TScatter::GetZaxis() const
+{
+   auto h = GetHistogram();
+   return h ? h->GetZaxis() : nullptr;
 }
 
 
@@ -222,58 +256,36 @@ void TScatter::SetMargin(Double_t margin)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TScatter::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out << "   " << std::endl;
-   static Int_t frameNumber = 1000;
-   frameNumber++;
+   TString arr_x = SavePrimitiveVector(out, "scat_x", fNpoints, fGraph->GetX(), kTRUE);
+   TString arr_y = SavePrimitiveVector(out, "scat_y", fNpoints, fGraph->GetY());
+   TString arr_col = SavePrimitiveVector(out, "scat_col", fNpoints, fColor);
+   TString arr_size = SavePrimitiveVector(out, "scat_size", fNpoints, fSize);
 
-   Int_t i;
-   Double_t *X        = fGraph->GetX();
-   Double_t *Y        = fGraph->GetY();
-   TString fXName     = TString::Format("%s_fx%d",GetName(),frameNumber);
-   TString fYName     = TString::Format("%s_fy%d", GetName(),frameNumber);
-   TString fColorName = TString::Format("%s_fcolor%d",GetName(),frameNumber);
-   TString fSizeName  = TString::Format("%s_fsize%d",GetName(),frameNumber);
-   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << X[i] << "," << std::endl;
-   out << "   " << X[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << Y[i] << "," << std::endl;
-   out << "   " << Y[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fColorName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fColor[i] << "," << std::endl;
-   out << "   " << fColor[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fSizeName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fSize[i] << "," << std::endl;
-   out << "   " << fSize[fNpoints-1] << "};" << std::endl;
+   SavePrimitiveConstructor(out, Class(), "scat",
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data()", fNpoints, arr_x.Data(),
+                                            arr_y.Data(), arr_col.Data(), arr_size.Data()),
+                            kFALSE);
 
-   if (gROOT->ClassSaved(TScatter::Class()))
-      out << "   ";
-   else
-      out << "   TScatter *";
-   out << "scat = new TScatter(" << fNpoints << "," << fXName   << ","  << fYName  << ","
-                                 << fColorName  << ","  << fSizeName << ");" << std::endl;
-
-   out << "   scat->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   scat->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-   out << "   scat->SetMargin(" << GetMargin() << ");" << std::endl;
-   out << "   scat->SetMinMarkerSize(" << GetMinMarkerSize() << ");" << std::endl;
-   out << "   scat->SetMaxMarkerSize(" << GetMaxMarkerSize() << ");" << std::endl;
-
+   SavePrimitiveNameTitle(out, "scat");
    SaveFillAttributes(out, "scat", 0, 1001);
    SaveLineAttributes(out, "scat", 1, 1, 1);
    SaveMarkerAttributes(out, "scat", 1, 1, 1);
 
+   out << "   scat->SetMargin(" << GetMargin() << ");\n";
+   out << "   scat->SetMinMarkerSize(" << GetMinMarkerSize() << ");\n";
+   out << "   scat->SetMaxMarkerSize(" << GetMaxMarkerSize() << ");\n";
+
    if (fHistogram) {
+      static int histcnt = 0;
       TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber));
+      fHistogram->SetName(TString::Format("scat_stack_hist%d", histcnt++));
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   scat->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
-      out << "   " << std::endl;
+      out << "   scat->SetHistogram(" << fHistogram->GetName() << ");\n";
+      out << "   \n";
       fHistogram->SetName(hname);
    }
 
-   out << "   scat->Draw(" << quote << option << quote << ");" << std::endl;
+   SavePrimitiveDraw(out, "scat", option);
 }

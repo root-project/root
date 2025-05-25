@@ -84,6 +84,8 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
 {
 
    auto handle = std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
+   if (!args.IsStandalone())
+      handle->fCloseBrowser = false;
 
    if (fCefApp) {
       fCefApp->SetNextHandle(handle.get());
@@ -100,6 +102,12 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
    }
 
    bool use_views = GuiHandler::PlatformInit();
+
+   TString env_use_views = gEnv->GetValue("WebGui.CefUseViews", "");
+   if ((env_use_views == "yes") || (env_use_views == "1"))
+      use_views = true;
+   else if ((env_use_views == "no") || (env_use_views == "0"))
+      use_views = false;
 
 #ifdef OS_WIN
    CefMainArgs main_args(GetModuleHandle(nullptr));
@@ -227,7 +235,7 @@ RCefWebDisplayHandle::~RCefWebDisplayHandle()
 
 void RCefWebDisplayHandle::CloseBrowser()
 {
-   if (fBrowser) {
+   if (fBrowser && fCloseBrowser) {
       auto host = fBrowser->GetHost();
       if (host) host->CloseBrowser(true);
       fBrowser = nullptr;

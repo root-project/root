@@ -152,29 +152,26 @@ TSlider::~TSlider()
 
 void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   if (gROOT->ClassSaved(TSlider::Class()))
-      out<<"   ";
-   else
-      out<<"   TSlider *";
+   auto sbox = dynamic_cast<TSliderBox *>(fPrimitives->FindObject("TSliderBox"));
 
-   auto sbox = dynamic_cast<TSliderBox*>(fPrimitives->FindObject("TSliderBox"));
-
-   out<<"slider = new TSlider("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
-      <<", "<< gPad->GetX1() + (gPad->GetX2() - gPad->GetX1()) * GetXlowNDC()
-      <<", "<< gPad->GetY1() + (gPad->GetY2() - gPad->GetY1()) * GetYlowNDC()
-      <<", "<< gPad->GetX1() + (gPad->GetX2() - gPad->GetX1()) * (GetXlowNDC() + GetWNDC())
-      <<", "<< gPad->GetY1() + (gPad->GetY2() - gPad->GetY1()) * (GetYlowNDC() + GetHNDC())
-      <<", "<< (sbox ? sbox->GetFillColor() : GetFillColor()) <<", "<< GetBorderSize() <<", "<< GetBorderMode() <<");"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "slider",
+      TString::Format("\"%s\", \"%s\", %g, %g, %g, %g, %d, %d, %d", TString(GetName()).ReplaceSpecialCppChars().Data(),
+                      TString(GetTitle()).ReplaceSpecialCppChars().Data(),
+                      gPad->GetX1() + (gPad->GetX2() - gPad->GetX1()) * GetXlowNDC(),
+                      gPad->GetY1() + (gPad->GetY2() - gPad->GetY1()) * GetYlowNDC(),
+                      gPad->GetX1() + (gPad->GetX2() - gPad->GetX1()) * (GetXlowNDC() + GetWNDC()),
+                      gPad->GetY1() + (gPad->GetY2() - gPad->GetY1()) * (GetYlowNDC() + GetHNDC()),
+                      sbox ? sbox->GetFillColor() : GetFillColor(), GetBorderSize(), GetBorderMode()));
 
    SaveFillAttributes(out, "slider", 16, 1001);
    SaveLineAttributes(out, "slider", 1, 1, 1);
 
-   out<<"   slider->SetRange("<< fMinimum <<", "<< fMaximum <<");"<<std::endl;
+   out << "   slider->SetRange(" << fMinimum << ", " << fMaximum << ");\n";
 
    TString cmethod = GetMethod();
    if (cmethod.Length() > 0)
-      out<<"   slider->SetMethod("<<quote<<cmethod.ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
+      out << "   slider->SetMethod(\"" << cmethod.ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

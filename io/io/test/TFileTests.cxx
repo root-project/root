@@ -1,9 +1,12 @@
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "gtest/gtest.h"
 
 #include "TFile.h"
+#include "TMemFile.h"
+#include "TDirectory.h"
 #include "TKey.h"
 #include "TNamed.h"
 #include "TPluginManager.h"
@@ -41,7 +44,6 @@ TEST(TFile, WriteObjectVector)
 {
     auto filename{"tfile_writeobject_vector.root"};
     auto vec_name{"object name"}; // Decided arbitrarily
-    auto vec_title{"object title"}; // Default title for non-TObject-derived instances
 
     {
         std::vector<int> myvec{1,2,3,4,5};
@@ -63,7 +65,7 @@ TEST(TFile, WriteObjectVector)
     }
 
     EXPECT_STREQ(retkey->GetName(), vec_name);
-    EXPECT_STREQ(retkey->GetTitle(), vec_title);
+    EXPECT_STREQ(retkey->GetTitle(), ""); // Objects that don't derive from TObject have no title
 
     input.Close();
     gSystem->Unlink(filename);
@@ -156,4 +158,46 @@ TEST(TFile, k630forwardCompatibility)
    ASSERT_EQ(fileu.TestBit(TFile::k630forwardCompatibility), true);  
    fileu.Close();
    gSystem->Unlink(filename.c_str());
+}
+
+// https://github.com/root-project/root/issues/17824
+TEST(TFile, MakeSubDirectory)
+{
+   // create test file
+   TMemFile outFile("dirTest17824.root", "RECREATE");
+   // create test dir
+   auto d = outFile.mkdir("test");
+   // check if returned pointer points to test dir
+   EXPECT_EQ(std::string(d->GetName()), "test");
+   // move to dir and check
+   d->cd();
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/test");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "test");
+
+   // make test2 subdir
+   auto d2 = outFile.mkdir("test/test2");
+   // check if returned pointer points to test2 subdir
+   EXPECT_NE(d2, d);
+   EXPECT_EQ(std::string(d2->GetName()), "test2");
+   // move to test2 subdir
+   d2->cd();
+   EXPECT_EQ(d2, gDirectory);
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/test/test2");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "test2");
+   // rebase (because paths in cd() are relative) and move to test2 subdir via gDirectory and explicit path
+   outFile.cd();
+   gDirectory->cd("test/test2");
+   // check location again
+   EXPECT_EQ(d2, gDirectory);
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/test/test2");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "test2");
+   // test now three-level as in the doxygen docu
+   outFile.cd();
+   auto c = outFile.mkdir("a/b/c");
+   EXPECT_EQ(std::string(c->GetPath()), "dirTest17824.root:/a/b/c");
+   EXPECT_EQ(std::string(c->GetName()), "c");
+   gDirectory->cd("a/b/c");
+   EXPECT_EQ(c, gDirectory);
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/a/b/c");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "c");
 }

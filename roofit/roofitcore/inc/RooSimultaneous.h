@@ -61,7 +61,7 @@ public:
   RooSimultaneous(const char *name, const char *title, RooFit::Detail::FlatMap<std::string,RooAbsPdf*> const &pdfMap, RooAbsCategoryLValue& inIndexCat);
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const RooSimultaneous& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooSimultaneous(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooSimultaneous(*this,newname) ; }
   ~RooSimultaneous() override ;
 
   double evaluate() const override ;

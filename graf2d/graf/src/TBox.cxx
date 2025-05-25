@@ -709,19 +709,14 @@ void TBox::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TBox::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   if (gROOT->ClassSaved(TBox::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TBox *";
-   }
-   out<<"box = new TBox("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "box", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2));
 
-   SaveFillAttributes(out,"box",0,1001);
-   SaveLineAttributes(out,"box",1,1,1);
+   SaveFillAttributes(out, "box", 0, 1001);
+   SaveLineAttributes(out, "box", 1, 1, 1);
 
-   out<<"   box->Draw();"<<std::endl;
+   SavePrimitiveDraw(out, "box", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -780,23 +775,30 @@ void TBox::Streamer(TBuffer &R__b)
 Rectangle_t TBox::GetBBox()
 {
    Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-   Int_t px1, py1, px2, py2;
-   px1 = gPad->XtoPixel(fX1);
-   px2 = gPad->XtoPixel(fX2);
-   py1 = gPad->YtoPixel(fY1);
-   py2 = gPad->YtoPixel(fY2);
+   if (gPad) {
+      Int_t px1 = gPad->XtoPixel(fX1);
+      Int_t px2 = gPad->XtoPixel(fX2);
+      Int_t py1 = gPad->YtoPixel(fY1);
+      Int_t py2 = gPad->YtoPixel(fY2);
 
-   Int_t tmp;
-   if (px1>px2) { tmp = px1; px1 = px2; px2 = tmp;}
-   if (py1>py2) { tmp = py1; py1 = py2; py2 = tmp;}
+      if (px1 > px2) {
+         Int_t tmp = px1;
+         px1 = px2;
+         px2 = tmp;
+      }
+      if (py1 > py2) {
+         Int_t tmp = py1;
+         py1 = py2;
+         py2 = tmp;
+      }
 
-   BBox.fX = px1;
-   BBox.fY = py1;
-   BBox.fWidth = px2-px1;
-   BBox.fHeight = py2-py1;
+      BBox.fX = px1;
+      BBox.fY = py1;
+      BBox.fWidth = px2 - px1;
+      BBox.fHeight = py2 - py1;
+   }
 
-   return (BBox);
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -804,11 +806,12 @@ Rectangle_t TBox::GetBBox()
 
 TPoint TBox::GetBBoxCenter()
 {
-   TPoint p(0,0);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
-   p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(TMath::Min(fX1, fX2) + 0.5 * (TMath::Max(fX1, fX2) - TMath::Min(fX1, fX2))));
+      p.SetY(gPad->YtoPixel(TMath::Min(fY1, fY2) + 0.5 * (TMath::Max(fY1, fY2) - TMath::Min(fY1, fY2))));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

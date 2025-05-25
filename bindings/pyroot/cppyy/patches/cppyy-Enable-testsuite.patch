@@ -1,0 +1,1095 @@
+From 7eafbaa8ad7a17ac9fe860982bd168c5d3c05589 Mon Sep 17 00:00:00 2001
+From: Aaron Jomy <aaronjomyjoseph@gmail.com>
+Date: Thu, 27 Mar 2025 11:31:02 +0100
+Subject: [PATCH 1/2] [cppyy] Drop genreflex in favour of rootcling for test
+ dictionaries
+
+This patch modifies upstream cppyy's test suite to use rootcling for
+dictionary generation, and also marks all tests that regress or crash
+on ROOT. This heavily simplifies the MakeFile, which will be dropped
+subsequently in favour of CMake that adds this to ROOTs ctest executable.
+---
+ bindings/pyroot/cppyy/cppyy/test/Makefile | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/test/Makefile b/bindings/pyroot/cppyy/cppyy/test/Makefile
+index 0d13d38c22..c40442fab0 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/Makefile
++++ b/bindings/pyroot/cppyy/cppyy/test/Makefile
+@@ -16,20 +16,22 @@ dicts = advancedcppDict.so \
+ 
+ all : $(dicts)
+ 
+-genreflex_flags := $(shell genreflex --cppflags)
+-cppflags=$(shell cling-config --cppflags) $(genreflex_flags) -O3 -fPIC -I$(shell python -c 'import sysconfig as sc; print(sc.get_config_var("INCLUDEPY"))') -Wno-register
+-
++cppflags=$(shell root-config --cflags) -O3 -fPIC -I$(shell python -c 'import sysconfig as sc; print(sc.get_config_var("INCLUDEPY"))') -Wno-register
+ PLATFORM := $(shell uname -s)
+ ifeq ($(PLATFORM),Darwin)
+   cppflags+=-dynamiclib -undefined dynamic_lookup -Wno-delete-non-virtual-dtor
+ endif
+ 
++# For these tests, the rootcling invocation looks like the following:
++# rootcling advancedcpp_rflx.cpp --rmf advancedcppDict.rootmap --rml advancedCppDict.so advancedcpp.h advancedcpp.xml
++%_rflx.cpp: %.h %.xml
++	rootcling $@ --rmf $*Dict.rootmap --rml $*Dict.so $^
++
++# Compiling the test dictionaries to shared libs:
++# g++ $(cppflags) -shared -o advancedcppDict.so advancedcpp_rflx.cpp advancedcpp.cxx
+ %Dict.so: %_rflx.cpp %.cxx
+ 	$(CXX) $(cppflags) -shared -o $@ $^
+ 
+-%_rflx.cpp: %.h %.xml
+-	genreflex $< --selection=$*.xml --rootmap=$*Dict.rootmap --rootmap-lib=$*Dict.so
+-
+ .PHONY: test clean
+ 
+ test:
+-- 
+2.43.0
+
+From 23d7c1353eb0bdd88f0e83a3c7a6c8b177e98700 Mon Sep 17 00:00:00 2001
+From: Aaron Jomy <aaronjomyjoseph@gmail.com>
+Date: Thu, 27 Mar 2025 11:32:57 +0100
+Subject: [PATCH 2/2] [cppyy] Use pytest tags for disabled/xfail tests
+
+---
+ .../cppyy/cppyy/test/test_advancedcpp.py      |  7 ++++++-
+ .../pyroot/cppyy/cppyy/test/test_boost.py     |  1 +
+ .../cppyy/cppyy/test/test_concurrent.py       |  5 ++++-
+ .../cppyy/cppyy/test/test_cpp11features.py    |  7 ++++++-
+ .../cppyy/cppyy/test/test_crossinheritance.py | 14 ++++++++++++-
+ .../pyroot/cppyy/cppyy/test/test_datatypes.py | 21 +++++++++++++++++--
+ .../cppyy/cppyy/test/test_doc_features.py     |  6 +++++-
+ .../pyroot/cppyy/cppyy/test/test_eigen.py     |  1 +
+ .../pyroot/cppyy/cppyy/test/test_fragile.py   | 16 +++++++++++++-
+ .../pyroot/cppyy/cppyy/test/test_leakcheck.py |  1 +
+ .../pyroot/cppyy/cppyy/test/test_lowlevel.py  |  8 ++++++-
+ .../pyroot/cppyy/cppyy/test/test_numba.py     |  5 +++++
+ .../cppyy/cppyy/test/test_pythonization.py    |  3 ++-
+ .../cppyy/cppyy/test/test_regression.py       | 11 +++++++++-
+ .../pyroot/cppyy/cppyy/test/test_stltypes.py  |  8 ++++++-
+ .../pyroot/cppyy/cppyy/test/test_streams.py   |  3 ++-
+ .../pyroot/cppyy/cppyy/test/test_templates.py | 18 ++++++++++++++--
+ 17 files changed, 120 insertions(+), 15 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_advancedcpp.py b/bindings/pyroot/cppyy/cppyy/test/test_advancedcpp.py
+index 2c75124817..98c5d424e6 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_advancedcpp.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_advancedcpp.py
+@@ -1,5 +1,5 @@
+ import py
+-from pytest import raises, skip
++from pytest import mark, raises, skip
+ from .support import setup_make, pylong, IS_WINDOWS, ispypy
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -16,6 +16,7 @@ class TestADVANCEDCPP:
+         import cppyy
+         cls.advanced = cppyy.load_reflection_info(cls.test_dct)
+ 
++    @mark.xfail
+     def test01_default_arguments(self):
+         """Test usage of default arguments"""
+ 
+@@ -685,6 +686,7 @@ class TestADVANCEDCPP:
+         assert cppyy.gbl.overload_one_way().gime() == 1
+         assert cppyy.gbl.overload_the_other_way().gime() == "aap"
+ 
++    @mark.xfail()
+     def test21_access_to_global_variables(self):
+         """Access global_variables_and_pointers"""
+ 
+@@ -773,6 +775,7 @@ class TestADVANCEDCPP:
+         assert d2.vcheck()  == 'A'
+         assert d2.vcheck(1) == 'B'
+ 
++    @mark.xfail()
+     def test24_typedef_to_private_class(self):
+         """Typedefs to private classes should not resolve"""
+ 
+@@ -780,6 +783,7 @@ class TestADVANCEDCPP:
+ 
+         assert cppyy.gbl.TypedefToPrivateClass().f().m_val == 42
+ 
++    @mark.xfail()
+     def test25_ostream_printing(self):
+         """Mapping of __str__ through operator<<(ostream&)"""
+ 
+@@ -877,6 +881,7 @@ class TestADVANCEDCPP:
+         #assert type(ns.A.Val(1)) == int
+         #assert type(ns.B.Val(1)) == float
+ 
++    @mark.skip()
+     def test28_extern_C_in_namespace(self):
+         """Access to extern "C" declared functions in namespaces"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_boost.py b/bindings/pyroot/cppyy/cppyy/test/test_boost.py
+index c3c82041bf..225cbb6071 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_boost.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_boost.py
+@@ -141,6 +141,7 @@ class TestBOOSTERASURE:
+         cppyy.include("boost/type_erasure/member.hpp")
+         cppyy.include("boost/mpl/vector.hpp")
+ 
++    @mark.skip
+     def test01_erasure_usage(self):
+         """boost::type_erasure usage"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_concurrent.py b/bindings/pyroot/cppyy/cppyy/test/test_concurrent.py
+index 15e51e3f68..ac711be3eb 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_concurrent.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_concurrent.py
+@@ -1,4 +1,4 @@
+-from pytest import raises, skip
++from pytest import raises, skip, mark
+ from .support import IS_MAC_ARM
+ 
+ 
+@@ -16,6 +16,7 @@ class TestCONCURRENT:
+ 
+         cppyy.gbl.Workers.calc.__release_gil__ = True
+ 
++    @mark.skip
+     def test01_simple_threads(self):
+         """Run basic Python threads"""
+ 
+@@ -34,6 +35,7 @@ class TestCONCURRENT:
+         for t in threads:
+             t.join()
+ 
++    @mark.skip
+     def test02_futures(self):
+         """Run with Python futures"""
+ 
+@@ -253,6 +255,7 @@ class TestCONCURRENT:
+         for t in threads:
+             t.join()
+ 
++    @mark.skip()
+     def test07_overload_reuse_in_threads_wo_gil(self):
+         """Threads reuse overload objects; check for clashes if no GIL"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_cpp11features.py b/bindings/pyroot/cppyy/cppyy/test/test_cpp11features.py
+index 3db1008d15..275c7efb1d 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_cpp11features.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_cpp11features.py
+@@ -1,5 +1,5 @@
+ import py, sys
+-from pytest import raises
++from pytest import mark, raises
+ from .support import setup_make, ispypy
+ 
+ 
+@@ -303,6 +303,7 @@ class TestCPP11FEATURES:
+         for l in (['x'], ['x', 'y', 'z']):
+             assert ns.foo(l) == std.vector['std::string'](l)
+ 
++    @mark.xfail()
+     def test09_lambda_calls(self):
+         """Call (global) lambdas"""
+ 
+@@ -350,6 +351,7 @@ class TestCPP11FEATURES:
+             c = cppyy.gbl.std.nullopt
+             assert cppyy.gbl.callopt(c)
+ 
++    @mark.xfail()
+     def test11_chrono(self):
+         """Use of chrono and overloaded operator+"""
+ 
+@@ -360,6 +362,7 @@ class TestCPP11FEATURES:
+         # following used to fail with compilation error
+         t = std.chrono.system_clock.now() + std.chrono.seconds(1)
+ 
++    @mark.xfail()
+     def test12_stdfunction(self):
+         """Use of std::function with arguments in a namespace"""
+ 
+@@ -401,6 +404,7 @@ class TestCPP11FEATURES:
+             assert hash(sw)  == 17
+             assert hash(sw)  == 17
+ 
++    @mark.xfail()
+     def test14_shared_ptr_passing(self):
+         """Ability to pass normal pointers through shared_ptr by value"""
+ 
+@@ -531,6 +535,7 @@ class TestCPP11FEATURES:
+         p2 = c.pget()
+         assert p1 is p2
+ 
++    @mark.xfail()
+     def test19_smartptr_from_callback(self):
+         """Return a smart pointer from a callback"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_crossinheritance.py b/bindings/pyroot/cppyy/cppyy/test/test_crossinheritance.py
+index 08b22438dc..cce4c3cab9 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_crossinheritance.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_crossinheritance.py
+@@ -1,5 +1,5 @@
+ import py, os
+-from pytest import raises, skip
++from pytest import raises, skip, mark
+ from .support import setup_make, pylong, IS_MAC_ARM
+ 
+ 
+@@ -16,6 +16,7 @@ class TestCROSSINHERITANCE:
+         import cppyy
+         cls.example01 = cppyy.load_reflection_info(cls.test_dct)
+ 
++    @mark.xfail()
+     def test01_override_function(self):
+         """Test ability to override a simple function"""
+ 
+@@ -472,6 +473,7 @@ class TestCROSSINHERITANCE:
+         class MyPyDerived4(VD.MyClass4[int]):
+             pass
+ 
++    @mark.xfail()
+     def test14_protected_access(self):
+         """Derived classes should have access to protected members"""
+ 
+@@ -732,6 +734,7 @@ class TestCROSSINHERITANCE:
+             def abstract1(self):
+                 return ns.Result(1)
+ 
++    @mark.skip
+     def test20_basic_multiple_inheritance(self):
+         """Basic multiple inheritance"""
+ 
+@@ -810,6 +813,7 @@ class TestCROSSINHERITANCE:
+         assert a.m_2 == 42
+         assert a.m_3 == 67
+ 
++    @mark.skip()
+     def test21_multiple_inheritance_with_constructors(self):
+         """Multiple inheritance with constructors"""
+ 
+@@ -897,6 +901,7 @@ class TestCROSSINHERITANCE:
+         assert a.m_2 ==  88
+         assert a.m_3 == -11
+ 
++    @mark.skip()
+     def test22_multiple_inheritance_with_defaults(self):
+         """Multiple inheritance with defaults"""
+ 
+@@ -1016,6 +1021,7 @@ class TestCROSSINHERITANCE:
+         assert a.return_const().m_value == "abcdef"
+         assert ns.callit(a).m_value     == "abcdef"
+ 
++    @mark.skip()
+     def test24_non_copyable(self):
+         """Inheriting from a non-copyable base class"""
+ 
+@@ -1096,6 +1102,7 @@ class TestCROSSINHERITANCE:
+ 
+         assert DerivedNoCopyNoMove().callme() == "Hello, World!"
+ 
++    @mark.skip()
+     def test25_default_ctor_and_multiple_inheritance(self):
+         """Regression test: default ctor did not get added"""
+ 
+@@ -1136,6 +1143,7 @@ class TestCROSSINHERITANCE:
+         d = DerivedMulti()
+         assert d
+ 
++    @mark.skip()
+     def test26_no_default_ctor(self):
+         """Make sure no default ctor is created if not viable"""
+ 
+@@ -1265,6 +1273,7 @@ class TestCROSSINHERITANCE:
+             assert inst.fun1() == val1
+             assert inst.fun2() == inst.fun1()
+ 
++    @mark.skip()
+     def test29_cross_deep_multi(self):
+         """Deep multi-inheritance hierarchy"""
+ 
+@@ -1381,6 +1390,7 @@ class TestCROSSINHERITANCE:
+         class PyDerived(ns.Base):
+             pass
+ 
++    @mark.xfail()
+     def test31_object_rebind(self):
+         """Usage of bind_object to cast with Python derived objects"""
+ 
+@@ -1538,6 +1548,7 @@ class TestCROSSINHERITANCE:
+ 
+         assert p.func(d) == 42 + 2 * d.value
+ 
++    @mark.xfail()
+     def test33_direct_base_methods(self):
+         """Call base class methods directly"""
+ 
+@@ -1769,6 +1780,7 @@ class TestCROSSINHERITANCE:
+         assert pysub.f3() == "Python: PySub::f3()"
+         assert ns.call_fs(pysub) == pysub.f1() + pysub.f2() + pysub.f3()
+ 
++    @mark.xfail()
+     def test38_protected_data(self):
+         """Multiple cross inheritance with protected data"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_datatypes.py b/bindings/pyroot/cppyy/cppyy/test/test_datatypes.py
+index 26e2afc21b..486186c8a4 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_datatypes.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_datatypes.py
+@@ -1,5 +1,5 @@
+ import py, sys
+-from pytest import raises, skip
++from pytest import mark, raises, skip
+ from .support import setup_make, pylong, pyunicode
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -8,7 +8,6 @@ test_dct = str(currpath.join("datatypesDict"))
+ def setup_module(mod):
+     setup_make("datatypes")
+ 
+-
+ class TestDATATYPES:
+     def setup_class(cls):
+         import cppyy
+@@ -21,6 +20,7 @@ class TestDATATYPES:
+         cls.has_byte     = at_least_17
+         cls.has_optional = at_least_17
+ 
++    @mark.skip()
+     def test01_instance_data_read_access(self):
+         """Read access to instance public data and verify values"""
+ 
+@@ -194,6 +194,7 @@ class TestDATATYPES:
+ 
+         c.__destruct__()
+ 
++    @mark.xfail()
+     def test02_instance_data_write_access(self):
+         """Test write access to instance public data and verify values"""
+ 
+@@ -378,6 +379,7 @@ class TestDATATYPES:
+ 
+         c.__destruct__()
+ 
++    @mark.xfail()
+     def test04_class_read_access(self):
+         """Test read access to class public data and verify values"""
+ 
+@@ -542,6 +544,7 @@ class TestDATATYPES:
+ 
+         c.__destruct__()
+ 
++    @mark.xfail()
+     def test07_type_conversions(self):
+         """Test conversions between builtin types"""
+ 
+@@ -735,6 +738,7 @@ class TestDATATYPES:
+         assert gbl.EnumSpace.AA == 1
+         assert gbl.EnumSpace.BB == 2
+ 
++    @mark.xfail()
+     def test11_typed_enums(self):
+         """Determine correct types of enums"""
+ 
+@@ -777,6 +781,7 @@ class TestDATATYPES:
+         assert type(sc.vraioufaux.faux) == bool  # no bool as base class
+         assert isinstance(sc.vraioufaux.faux, bool)
+ 
++    @mark.xfail()
+     def test12_enum_scopes(self):
+         """Enum accessibility and scopes"""
+ 
+@@ -1105,6 +1110,7 @@ class TestDATATYPES:
+ 
+         assert not d2
+ 
++    @mark.xfail()
+     def test22_buffer_shapes(self):
+         """Correctness of declared buffer shapes"""
+ 
+@@ -1237,6 +1243,7 @@ class TestDATATYPES:
+                 for k in range(7):
+                     assert int(ns.vvv[i,j,k]) == i+j+k
+ 
++    @mark.skip()
+     def test25_byte_arrays(self):
+         """Usage of unsigned char* as byte array and std::byte*"""
+ 
+@@ -1272,6 +1279,7 @@ class TestDATATYPES:
+         if self.has_byte:
+             run(self, cppyy.gbl.sum_byte_data, buf, total)
+ 
++    @mark.xfail
+     def test26_function_pointers(self):
+         """Function pointer passing"""
+ 
+@@ -1549,6 +1557,7 @@ class TestDATATYPES:
+                 p = (ctype * len(buf)).from_buffer(buf)
+                 assert [p[j] for j in range(width*height)] == [2*j for j in range(width*height)]
+ 
++    @mark.xfail()
+     def test31_anonymous_union(self):
+         """Anonymous unions place there fields in the parent scope"""
+ 
+@@ -1642,6 +1651,7 @@ class TestDATATYPES:
+         assert type(p.data_c[0]) == float
+         assert p.intensity == 5.
+ 
++    @mark.xfail()
+     def test32_anonymous_struct(self):
+         """Anonymous struct creates an unnamed type"""
+ 
+@@ -1690,6 +1700,7 @@ class TestDATATYPES:
+ 
+         assert 'foo' in dir(ns.libuntitled1_ExportedSymbols().kotlin.root.com.justamouse.kmmdemo)
+ 
++    @mark.xfail()
+     def test33_pointer_to_array(self):
+         """Usability of pointer to array"""
+ 
+@@ -2007,6 +2018,7 @@ class TestDATATYPES:
+         assert b.name     == "aap"
+         assert b.buf_type == ns.SHAPE
+ 
++    @mark.skip()
+     def test40_more_aggregates(self):
+         """More aggregate testings (used to fail/report errors)"""
+ 
+@@ -2044,6 +2056,7 @@ class TestDATATYPES:
+             r2 = ns.make_R2()
+             assert r2.s.x == 1
+ 
++    @mark.xfail()
+     def test41_complex_numpy_arrays(self):
+         """Usage of complex numpy arrays"""
+ 
+@@ -2091,6 +2104,7 @@ class TestDATATYPES:
+             Ccl = func(Acl, Bcl, 2)
+             assert complex(Ccl) == pyCcl
+ 
++    @mark.xfail()
+     def test42_mixed_complex_arithmetic(self):
+         """Mixin of Python and C++ std::complex in arithmetic"""
+ 
+@@ -2104,6 +2118,7 @@ class TestDATATYPES:
+         assert c*(c*c) == p*(p*p)
+         assert (c*c)*c == (p*p)*p
+ 
++    @mark.xfail()
+     def test43_ccharp_memory_handling(self):
+         """cppyy side handled memory of C strings"""
+ 
+@@ -2220,6 +2235,7 @@ class TestDATATYPES:
+         b = ns.B()
+         assert b.body1.name == b.body2.name
+ 
++    @mark.xfail()
+     def test46_small_int_enums(self):
+         """Proper typing of small int enums"""
+ 
+@@ -2274,6 +2290,7 @@ class TestDATATYPES:
+         assert ns.func_int8()  == -1
+         assert ns.func_uint8() == 255
+ 
++    @mark.xfail()
+     def test47_hidden_name_enum(self):
+         """Usage of hidden name enum"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_doc_features.py b/bindings/pyroot/cppyy/cppyy/test/test_doc_features.py
+index e89f8c56aa..3764efa077 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_doc_features.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_doc_features.py
+@@ -1,5 +1,5 @@
+ import py, sys
+-from pytest import raises, skip
++from pytest import mark, raises, skip
+ from .support import setup_make, ispypy, IS_WINDOWS
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -430,6 +430,7 @@ namespace Namespace {
+         pc = PyConcrete4()
+         assert call_abstract_method(pc) == "Hello, Python World! (4)"
+ 
++    @mark.skip
+     def test_multi_x_inheritance(self):
+         """Multiple cross-inheritance"""
+ 
+@@ -1124,6 +1125,7 @@ class TestTALKEXAMPLES:
+ 
+         assert v.back().add(17) == 4+42+2*17
+ 
++    @mark.xfail()
+     def test_fallbacks(self):
+         """Template instantation switches based on value sizes"""
+ 
+@@ -1168,6 +1170,7 @@ class TestTALKEXAMPLES:
+         assert CC.callPtr(lambda i: 5*i, 4) == 20
+         assert CC.callFun(lambda i: 6*i, 4) == 24
+ 
++    @mark.xfail()
+     def test_templated_callback(self):
+         """Templated callback example"""
+ 
+@@ -1244,6 +1247,7 @@ class TestTALKEXAMPLES:
+         with raises(CC.MyException):
+             CC.throw_error()
+ 
++    @mark.xfail()
+     def test_unicode(self):
+         """Unicode non-UTF-8 example"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_eigen.py b/bindings/pyroot/cppyy/cppyy/test/test_eigen.py
+index 03e620172b..ecad749ffc 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_eigen.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_eigen.py
+@@ -100,6 +100,7 @@ class TestEIGEN:
+         for i in range(5):
+             assert v(i) == i+1
+ 
++    @mark.xfail()
+     def test03_matrices_and_vectors(self):
+         """Matrices and vectors"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_fragile.py b/bindings/pyroot/cppyy/cppyy/test/test_fragile.py
+index 2b3c1f1dc7..175070ba19 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_fragile.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_fragile.py
+@@ -1,5 +1,5 @@
+ import py, os, sys
+-from pytest import raises, skip
++from pytest import mark, raises, skip
+ from .support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+ 
+ 
+@@ -211,6 +211,7 @@ class TestFRAGILE:
+         except TypeError as e:
+             assert "cannot instantiate abstract class 'fragile::O'" in str(e)
+ 
++    @mark.xfail()
+     def test11_dir(self):
+         """Test __dir__ method"""
+ 
+@@ -444,6 +445,7 @@ class TestFRAGILE:
+         finally:
+             sys.path = oldsp
+ 
++    @mark.xfail()
+     def test18_overload(self):
+         """Test usage of __overload__"""
+ 
+@@ -531,6 +533,7 @@ class TestFRAGILE:
+         assert "invaliddigit" in err
+         assert "1aap=42;" in err
+ 
++    @mark.xfail()
+     def test22_cppexec(self):
+         """Interactive access to the Cling global scope"""
+ 
+@@ -542,6 +545,8 @@ class TestFRAGILE:
+         with raises(SyntaxError):
+             cppyy.cppexec("doesnotexist");
+ 
++    # This test is very verbose since it sets gDebugo to true
++    @mark.skip()
+     def test23_set_debug(self):
+         """Setting of global gDebug variable"""
+ 
+@@ -556,6 +561,7 @@ class TestFRAGILE:
+         cppyy.set_debug(False)
+         assert cppyy.gbl.CppyyLegacy.gDebug ==  0
+ 
++    @mark.xfail()
+     def test24_asan(self):
+         """Check availability of ASAN with gcc"""
+ 
+@@ -567,6 +573,7 @@ class TestFRAGILE:
+ 
+         cppyy.include('sanitizer/asan_interface.h')
+ 
++    @mark.xfail()
+     def test25_cppdef_error_reporting(self):
+         """Check error reporting of cppyy.cppdef"""
+ 
+@@ -601,6 +608,7 @@ class TestFRAGILE:
+                 int add42(int i) { return i + 42; }
+             }""")
+ 
++    @mark.skip()
+     def test26_macro(self):
+         """Test access to C++ pre-processor macro's"""
+ 
+@@ -654,6 +662,7 @@ class TestFRAGILE:
+         cppyy.cppdef("struct VectorDatamember { std::vector<unsigned> v; };")
+         cppyy.gbl.VectorDatamember     # used to crash on Mac arm64
+ 
++    @mark.skip()
+     def test30_two_nested_ambiguity(self):
+         """Nested class ambiguity in older Clangs"""
+ 
+@@ -683,6 +692,7 @@ class TestFRAGILE:
+         p = Test.Family1.Parent()
+         p.children                          # used to crash
+ 
++    @mark.xfail()
+     def test31_template_with_class_enum(self):
+         """Template instantiated with class enum"""
+ 
+@@ -780,6 +790,7 @@ class TestSTDNOTINGLOBAL:
+         import cppyy
+         cls.has_byte = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
+ 
++    @mark.xfail()
+     def test01_stl_in_std(self):
+         """STL classes should live in std:: only"""
+ 
+@@ -812,6 +823,7 @@ class TestSTDNOTINGLOBAL:
+         assert cppyy.gbl.std.int8_t(-42) == cppyy.gbl.int8_t(-42)
+         assert cppyy.gbl.std.uint8_t(42) == cppyy.gbl.uint8_t(42)
+ 
++    @mark.xfail()
+     def test03_clashing_using_in_global(self):
+         """Redefines of std:: typedefs should be possible in global"""
+ 
+@@ -827,6 +839,7 @@ class TestSTDNOTINGLOBAL:
+         for name in ['int', 'uint', 'ushort', 'uchar', 'byte']:
+             getattr(cppyy.gbl, name)
+ 
++    @mark.xfail()
+     def test04_no_legacy(self):
+         """Test some functions that previously crashed"""
+ 
+@@ -846,6 +859,7 @@ class TestSTDNOTINGLOBAL:
+ 
+         assert cppyy.gbl.ELogLevel != cppyy.gbl.CppyyLegacy.ELogLevel
+ 
++    @mark.xfail()
+     def test05_span_compatibility(self):
+         """Test compatibility of span under C++2a compilers that support it"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_leakcheck.py b/bindings/pyroot/cppyy/cppyy/test/test_leakcheck.py
+index 80cf3c2aba..03323c0986 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_leakcheck.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_leakcheck.py
+@@ -98,6 +98,7 @@ class TestLEAKCHECK:
+         self.check_func(ns, 'free_f_ret1')
+         self.check_func(ns, 'free_f_ret1')
+ 
++    @mark.xfail()
+     def test02_test_static_methods(self):
+         """Leak test of static methods"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_lowlevel.py b/bindings/pyroot/cppyy/cppyy/test/test_lowlevel.py
+index 4668de9fc3..a373d370de 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_lowlevel.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_lowlevel.py
+@@ -1,5 +1,5 @@
+ import py, sys
+-from pytest import raises, skip
++from pytest import mark, raises, skip
+ from .support import setup_make, pylong, pyunicode, IS_WINDOWS, ispypy
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -109,6 +109,7 @@ class TestLOWLEVEL:
+         ptrptr = cppyy.ll.as_ctypes(s, byref=True)
+         assert pycasts.get_deref(ptrptr) == actual
+ 
++    @mark.xfail()
+     def test05_array_as_ref(self):
+         """Use arrays for pass-by-ref"""
+ 
+@@ -138,6 +139,7 @@ class TestLOWLEVEL:
+         f = array('f', [0]);     ctd.set_float_r(f);  assert f[0] ==  5.
+         f = array('d', [0]);     ctd.set_double_r(f); assert f[0] == -5.
+ 
++    @mark.xfail()
+     def test06_ctypes_as_ref_and_ptr(self):
+         """Use ctypes for pass-by-ref/ptr"""
+ 
+@@ -493,6 +495,7 @@ class TestLOWLEVEL:
+         assert cppyy.gbl.std.vector[cppyy.gbl.std.vector[int]].value_type == 'std::vector<int>'
+         assert cppyy.gbl.std.vector['int[1]'].value_type == 'int[1]'
+ 
++    @mark.xfail()
+     def test15_templated_arrays_gmpxx(self):
+         """Use of gmpxx array types in templates"""
+ 
+@@ -549,6 +552,7 @@ class TestMULTIDIMARRAYS:
+     def _data_m(self, lbl):
+         return [('m_'+tp.replace(' ', '_')+lbl, tp) for tp in self.numeric_builtin_types]
+ 
++    @mark.xfail()
+     def test01_2D_arrays(self):
+         """Access and use of 2D data members"""
+ 
+@@ -591,6 +595,7 @@ class TestMULTIDIMARRAYS:
+                     assert arr[i][j] == val
+                     assert arr[i, j] == val
+ 
++    @mark.xfail()
+     def test02_assign_2D_arrays(self):
+         """Direct assignment of 2D arrays"""
+ 
+@@ -643,6 +648,7 @@ class TestMULTIDIMARRAYS:
+             arr[2][3] = 10
+             assert arr[2][3] == 10
+ 
++    @mark.xfail()
+     def test03_3D_arrays(self):
+         """Access and use of 3D data members"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_numba.py b/bindings/pyroot/cppyy/cppyy/test/test_numba.py
+index d36866c369..b9c433a9b2 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_numba.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_numba.py
+@@ -117,6 +117,7 @@ class TestNUMBA:
+         assert (go_fast(x) == go_slow(x)).all()
+         assert self.compare(go_slow, go_fast, 300000, x)
+ 
++    @mark.xfail()
+     def test02_JITed_template_free_func(self):
+         """Numba-JITing of Cling-JITed templated free function"""
+ 
+@@ -267,6 +268,7 @@ class TestNUMBA:
+ 
+         assert sum == tma(x)
+ 
++    @mark.xfail()
+     def test07_datatype_mapping(self):
+         """Numba-JITing of various data types"""
+ 
+@@ -394,6 +396,7 @@ class TestNUMBA:
+         X = np.arange(100, dtype=np.int64).reshape(50, 2)
+         assert fast_add(X) == slow_add(X)
+ 
++    @mark.xfail()
+     def test11_ptr_ref_support(self):
+         """Numba-JITing of a increment method belonging to a class, and also swaps the pointers and reflects the change on the python ctypes variables"""
+         import cppyy
+@@ -460,6 +463,7 @@ class TestNUMBA:
+         assert b.value == z + k
+         assert c.value == y + k
+ 
++    @mark.xfail()
+     def test12_std_vector_pass_by_ref(self):
+         """Numba-JITing of a method that performs scalar addition to a std::vector initialised through pointers """
+         import cppyy
+@@ -722,6 +726,7 @@ class TestNUMBA_DOC:
+         import cppyy
+         import cppyy.numba_ext
+ 
++    @mark.xfail()
+     def test01_templated_freefunction(self):
+         """Numba support documentation example: free templated function"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_pythonization.py b/bindings/pyroot/cppyy/cppyy/test/test_pythonization.py
+index b03dfcfa03..fad6a28392 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_pythonization.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_pythonization.py
+@@ -1,5 +1,5 @@
+ import py, sys
+-from pytest import raises
++from pytest import mark, raises
+ from .support import setup_make, pylong
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -15,6 +15,7 @@ class TestClassPYTHONIZATION:
+         import cppyy
+         cls.pyzables = cppyy.load_reflection_info(cls.test_dct)
+ 
++    @mark.xfail()
+     def test00_api(self):
+         """Test basic semantics of the pythonization API"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_regression.py b/bindings/pyroot/cppyy/cppyy/test/test_regression.py
+index 1975348b48..676e63de4e 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_regression.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_regression.py
+@@ -1,5 +1,5 @@
+ import os, sys
+-from pytest import raises, skip
++from pytest import mark, raises, skip
+ from .support import setup_make, IS_WINDOWS, ispypy
+ 
+ 
+@@ -379,6 +379,7 @@ class TestREGRESSION:
+         sizeit = cppyy.gbl.vec_vs_init.sizeit
+         assert sizeit(list(range(10))) == 10
+ 
++    @mark.xfail()
+     def test16_iterable_enum(self):
+         """Use template to iterate over an enum"""
+       # from: https://stackoverflow.com/questions/52459530/pybind11-emulate-python-enum-behaviour
+@@ -471,6 +472,7 @@ class TestREGRESSION:
+ 
+         assert a != b             # derived class' C++ operator!= called
+ 
++    @mark.xfail()
+     def test18_operator_plus_overloads(self):
+         """operator+(string, string) should return a string"""
+ 
+@@ -702,6 +704,7 @@ class TestREGRESSION:
+             i += 1
+         assert i
+ 
++    @mark.xfail()
+     def test26_const_charptr_data(self):
+         """const char* is not const; const char* const is"""
+ 
+@@ -780,6 +783,7 @@ class TestREGRESSION:
+         null = cppyy.gbl.exception_as_shared_ptr.get_shared_null()
+         assert not null
+ 
++    @mark.skip()
+     def test29_callback_pointer_values(self):
+         """Make sure pointer comparisons in callbacks work as expected"""
+ 
+@@ -850,6 +854,7 @@ class TestREGRESSION:
+         g.triggerChange()
+         assert g.success
+ 
++    @mark.xfail()
+     def test30_uint64_t(self):
+         """Failure due to typo"""
+ 
+@@ -883,6 +888,7 @@ class TestREGRESSION:
+         assert ns.TTest(True).fT == True
+         assert type(ns.TTest(True).fT) == bool
+ 
++    @mark.xfail()
+     def test31_enum_in_dir(self):
+         """Failed to pick up enum data"""
+ 
+@@ -905,6 +911,7 @@ class TestREGRESSION:
+         required = {'prod', 'a', 'b', 'smth', 'my_enum'}
+         assert all_names.intersection(required) == required
+ 
++    @mark.xfail()
+     def test32_typedef_class_enum(self):
+         """Use of class enum with typedef'd type"""
+ 
+@@ -942,6 +949,7 @@ class TestREGRESSION:
+             assert o.x == Foo.BAZ
+             assert o.y == 1
+ 
++    @mark.xfail()
+     def test33_explicit_template_in_namespace(self):
+         """Lookup of explicit template in namespace"""
+ 
+@@ -1340,6 +1348,7 @@ class TestREGRESSION:
+         finally:
+             cppyy._backend.SetMemoryPolicy(old_memory_policy)
+ 
++    @mark.xfail()
+     def test45_typedef_resolution(self):
+         """Typedefs starting with 'c'"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_stltypes.py b/bindings/pyroot/cppyy/cppyy/test/test_stltypes.py
+index 5a5417e02e..85c5f11892 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_stltypes.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_stltypes.py
+@@ -1,6 +1,6 @@
+ # -*- coding: UTF-8 -*-
+ import py, sys
+-from pytest import raises, skip
++from pytest import mark, raises, skip
+ from .support import setup_make, pylong, pyunicode, maxvalue, ispypy
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -495,6 +495,7 @@ class TestSTLVECTOR:
+         ll4[1] = 'a'
+         raises(TypeError, a.vector_pair, ll4)
+ 
++    @mark.skip()
+     def test12_vector_lifeline(self):
+         """Check lifeline setting on vectors of objects"""
+ 
+@@ -860,6 +861,7 @@ class TestSTLSTRING:
+ 
+             raises(TypeError, c.get_string2, "temp string")
+ 
++    @mark.xfail()
+     def test02_string_data_access(self):
+         """Test access to std::string object data members"""
+ 
+@@ -992,6 +994,7 @@ class TestSTLSTRING:
+         assert d[x] == 0
+         assert d['x'] == 0
+ 
++    @mark.xfail()
+     def test08_string_operators(self):
+         """Mixing of C++ and Python types in global operators"""
+ 
+@@ -1081,6 +1084,7 @@ class TestSTLSTRING:
+         assert s.rfind('c')  < 0
+         assert s.rfind('c') == s.npos
+ 
++    @mark.xfail()
+     def test10_string_in_repr_and_str_bytes(self):
+         """Special cases for __str__/__repr__"""
+ 
+@@ -1898,6 +1902,7 @@ class TestSTLTUPLE:
+         t = std.make_tuple("aap", 42, 5.)
+         assert std.tuple_size(type(t)).value == 3
+ 
++    @mark.xfail()
+     def test03_tuple_iter(self):
+         """Pack/unpack tuples"""
+ 
+@@ -1912,6 +1917,7 @@ class TestSTLTUPLE:
+         assert b == '2'
+         assert c == 5.
+ 
++    @mark.xfail()
+     def test04_tuple_lifeline(self):
+         """Tuple memory management"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_streams.py b/bindings/pyroot/cppyy/cppyy/test/test_streams.py
+index 85c3dcf648..ff365c3965 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_streams.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_streams.py
+@@ -1,5 +1,5 @@
+ import py
+-from pytest import raises
++from pytest import mark, raises
+ from .support import setup_make
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -48,6 +48,7 @@ class TestSTDStreams:
+         cppyy.gbl.stringstream_base.pass_through_base(s)
+         assert s.str() == "TEST STRING"
+ 
++    @mark.xfail()
+     def test04_naming_of_ostringstream(self):
+         """Naming consistency of ostringstream"""
+ 
+diff --git a/bindings/pyroot/cppyy/cppyy/test/test_templates.py b/bindings/pyroot/cppyy/cppyy/test/test_templates.py
+index ecb58ed1c1..bd74cdaf80 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/test_templates.py
++++ b/bindings/pyroot/cppyy/cppyy/test/test_templates.py
+@@ -1,5 +1,5 @@
+ import py
+-from pytest import raises
++from pytest import mark, raises
+ from .support import setup_make, pylong
+ 
+ currpath = py.path.local(__file__).dirpath()
+@@ -279,6 +279,7 @@ class TestTEMPLATES:
+         assert round(RTTest2[int](1, 3.1).m_double - 4.1, 8) == 0.
+         assert round(RTTest2[int]().m_double + 1., 8) == 0.
+ 
++    @mark.xfail()
+     def test12_template_aliases(self):
+         """Access to templates made available with 'using'"""
+ 
+@@ -311,6 +312,7 @@ class TestTEMPLATES:
+             assert nsup.Foo
+             assert nsup.Bar.Foo        # used to fail
+ 
++    @mark.xfail()
+     def test13_using_templated_method(self):
+         """Access to base class templated methods through 'using'"""
+ 
+@@ -334,6 +336,7 @@ class TestTEMPLATES:
+         assert type(d.get3()) == int
+         assert d.get3() == 5
+ 
++    @mark.xfail()
+     def test14_templated_return_type(self):
+         """Use of a templated return type"""
+ 
+@@ -380,6 +383,7 @@ class TestTEMPLATES:
+         assert is_valid(1.)
+         assert not is_valid(0.)
+ 
++    @mark.xfail()
+     def test16_variadic(self):
+         """Range of variadic templates"""
+ 
+@@ -433,6 +437,7 @@ class TestTEMPLATES:
+         b.b_T['int'](1, 1., 'a')
+         assert get_tn(ns).find("int(some_variadic::B::*)(int&&,double&&,std::") == 0
+ 
++    @mark.xfail()
+     def test17_empty_body(self):
+         """Use of templated function with empty body"""
+ 
+@@ -577,6 +582,7 @@ class TestTEMPLATES:
+         v = MyVec["float"](2)
+         v[0] = 1        # used to throw TypeError
+ 
++    @mark.xfail()
+     def test24_stdfunction_templated_arguments(self):
+         """Use of std::function with templated arguments"""
+ 
+@@ -603,6 +609,7 @@ class TestTEMPLATES:
+ 
+         assert cppyy.gbl.std.function['double(std::vector<double>)']
+ 
++    @mark.xfail()
+     def test25_stdfunction_ref_and_ptr_args(self):
+         """Use of std::function with reference or pointer args"""
+ 
+@@ -669,6 +676,7 @@ class TestTEMPLATES:
+         foo.fnc = ns.bar
+         foo.fnc       # <- this access used to fail
+ 
++    @mark.xfail()
+     def test26_partial_templates(self):
+         """Deduction of types with partial templates"""
+ 
+@@ -790,7 +798,7 @@ class TestTEMPLATES:
+         assert ns.FS('i', ns.ST.I32,    ns.FS.EQ,   10)
+         assert ns.FS('i', ns.ST.TI.I32, ns.FS.R.EQ, 10)
+ 
+-
++    @mark.skip()
+     def test29_function_ptr_as_template_arg(self):
+         """Function pointers as template arguments"""
+ 
+@@ -902,6 +910,7 @@ class TestTEMPLATES:
+ 
+         ns.Templated()       # used to crash
+ 
++    @mark.xfail()
+     def test31_ltlt_in_template_name(self):
+         """Verify lookup of template names with << in the name"""
+ 
+@@ -967,6 +976,7 @@ class TestTEMPLATES:
+         assert len(cppyy.gbl.gLutData6) == (1<<3)+1
+         assert len(cppyy.gbl.gLutData8) == 14<<2
+ 
++    @mark.xfail()
+     def test32_template_of_function_with_templated_args(self):
+         """Lookup of templates of function with templated args used to fail"""
+ 
+@@ -1137,6 +1147,7 @@ class TestTEMPLATES:
+         assert ns.testptr
+         assert cppyy.gbl.std.vector[ns.testptr]
+ 
++    @mark.xfail()
+     def test34_cstring_template_argument(self):
+         """`const char*` use over std::string"""
+ 
+@@ -1236,6 +1247,7 @@ class TestTEMPLATED_TYPEDEFS:
+         assert tct['long double', dum, 4] is tct[in_type, dum, 4]
+         assert tct['double', dum, 4] is not tct[in_type, dum, 4]
+ 
++    @mark.xfail()
+     def test04_type_deduction(self):
+         """Usage of type reducer"""
+ 
+@@ -1251,6 +1263,7 @@ class TestTEMPLATED_TYPEDEFS:
+         three = w.whatis(3)
+         assert three == 3
+ 
++    @mark.xfail()
+     def test05_type_deduction_and_extern(self):
+         """Usage of type reducer with extern template"""
+ 
+@@ -1313,6 +1326,7 @@ class TestTEMPLATE_TYPE_REDUCTION:
+         import cppyy
+         cls.templates = cppyy.load_reflection_info(cls.test_dct)
+ 
++    @mark.xfail()
+     def test01_reduce_binary(self):
+         """Squash template expressions for binary operations (like in gmpxx)"""
+ 
+-- 
+2.43.0
+

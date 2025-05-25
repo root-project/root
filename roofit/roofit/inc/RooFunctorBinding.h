@@ -33,7 +33,7 @@ public:
   RooFunctorBinding() = default;
   RooFunctorBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorBinding(const RooFunctorBinding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooFunctorBinding(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooFunctorBinding(*this,newname); }
   inline ~RooFunctorBinding() override { delete[] x ; }
   void printArgs(std::ostream& os) const override ;
 
@@ -58,7 +58,7 @@ public:
   RooFunctorPdfBinding() = default;
   RooFunctorPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorPdfBinding(const RooFunctorPdfBinding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooFunctorPdfBinding(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooFunctorPdfBinding(*this,newname); }
   inline ~RooFunctorPdfBinding() override { delete[] x ; }
   void printArgs(std::ostream& os) const override ;
 

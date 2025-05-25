@@ -154,7 +154,7 @@ public:
       CreateIter();
    }
 
-   virtual ~TDirectoryLevelIter() = default;
+   ~TDirectoryLevelIter() override = default;
 
    bool Next() override { return NextDirEntry(); }
 
@@ -262,7 +262,7 @@ public:
       }
    }
 
-   virtual ~TDirectoryElement() = default;
+   ~TDirectoryElement() override = default;
 
    /** Name of TDirectoryElement */
    std::string GetName() const override
@@ -366,7 +366,7 @@ public:
       fKeyObjSize = key->GetNbytes();
    }
 
-   virtual ~TKeyElement() = default;
+   ~TKeyElement() override = default;
 
    /** Name of TKeyElement, includes key cycle */
    std::string GetName() const override
@@ -554,7 +554,7 @@ std::shared_ptr<RElement> TDirectoryLevelIter::GetDirElement(bool read_dir)
    if (!fKeysIter && fObj)
       return std::make_shared<TObjectElement>(fObj);
 
-   if ("ROOT::Experimental::RNTuple"s == fKey->GetClassName())
+   if ("ROOT::RNTuple"s == fKey->GetClassName())
       return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
 
    std::string key_class = fKey->GetClassName();

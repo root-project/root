@@ -30,7 +30,7 @@ public:
   RooSuperCategory();
   RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList);
   RooSuperCategory(const RooSuperCategory& other, const char *name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooSuperCategory(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooSuperCategory(*this,newname); }
 
   bool setIndex(value_type index, bool printError = true) override ;
   using RooAbsCategoryLValue::setIndex;

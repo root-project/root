@@ -57,7 +57,6 @@ uniformly over their intervals before construction of the MarkovChain begins.
 #include "RooRandom.h"
 #include "TMath.h"
 
-ClassImp(RooStats::MetropolisHastings);
 
 using namespace RooFit;
 using namespace RooStats;
@@ -79,13 +78,13 @@ MarkovChain* MetropolisHastings::ConstructChain()
 {
    if (fParameters.empty() || !fPropFunc || !fFunction) {
       coutE(Eval) << "Critical members uninitialized: parameters, proposal " <<
-                     " function, or (log) likelihood function" << endl;
+                     " function, or (log) likelihood function" << std::endl;
          return nullptr;
    }
    if (fSign == kSignUnset || fType == kTypeUnset) {
       coutE(Eval) << "Please set type and sign of your function using "
          << "MetropolisHastings::SetType() and MetropolisHastings::SetSign()" <<
-         endl;
+         std::endl;
       return nullptr;
    }
 
@@ -158,7 +157,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
    if(hadEvalError) {
       coutE(Eval) << "Problem finding a good starting point in " <<
-                     "MetropolisHastings::ConstructChain() " << endl;
+                     "MetropolisHastings::ConstructChain() " << std::endl;
    }
 
 
@@ -230,14 +229,14 @@ MarkovChain* MetropolisHastings::ConstructChain()
    // make sure to add the last point
    if (weight != 0.0)
       chain->Add(x, CalcNLL(xL), (double)weight);
-   ooccoutP((TObject *)nullptr, Generation) << endl;
+   ooccoutP((TObject *)nullptr, Generation) << std::endl;
 
    RooMsgService::instance().setGlobalKillBelow(oldMsgLevel);
 
    Int_t numAccepted = chain->Size();
    coutI(Eval) << "Proposal acceptance rate: " <<
-                   numAccepted/(Float_t)fNumIters * 100 << "%" << endl;
-   coutI(Eval) << "Number of steps in chain: " << numAccepted << endl;
+                   numAccepted/(Float_t)fNumIters * 100 << "%" << std::endl;
+   coutI(Eval) << "Number of steps in chain: " << numAccepted << std::endl;
 
    //TFile chainDataFile("chainData.root", "recreate");
    //chain->GetDataSet()->Write();

@@ -26,7 +26,7 @@
 //- data and local helpers ---------------------------------------------------
 namespace CPyCppyy {
     extern PyObject* gThisModule;
-    extern std::map<std::string, std::vector<PyObject*>> gPythonizations;
+    std::map<std::string, std::vector<PyObject*>> &pythonizations();
 }
 
 namespace {
@@ -237,8 +237,8 @@ struct CountedItemGetter : public ItemGetter {
 
 struct TupleItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() { return PyTuple_GET_SIZE(fPyObject); }
-    virtual PyObject* get() {
+    Py_ssize_t size() override { return PyTuple_GET_SIZE(fPyObject); }
+    PyObject* get() override {
         if (fCur < PyTuple_GET_SIZE(fPyObject)) {
             PyObject* item = PyTuple_GET_ITEM(fPyObject, fCur++);
             Py_INCREF(item);
@@ -251,8 +251,8 @@ struct TupleItemGetter : public CountedItemGetter {
 
 struct ListItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() { return PyList_GET_SIZE(fPyObject); }
-    virtual PyObject* get() {
+    Py_ssize_t size() override { return PyList_GET_SIZE(fPyObject); }
+    PyObject* get() override {
         if (fCur < PyList_GET_SIZE(fPyObject)) {
             PyObject* item = PyList_GET_ITEM(fPyObject, fCur++);
             Py_INCREF(item);
@@ -265,7 +265,7 @@ struct ListItemGetter : public CountedItemGetter {
 
 struct SequenceItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() {
+    Py_ssize_t size() override {
         Py_ssize_t sz = PySequence_Size(fPyObject);
         if (sz < 0) {
             PyErr_Clear();
@@ -273,13 +273,13 @@ struct SequenceItemGetter : public CountedItemGetter {
         }
         return sz;
     }
-    virtual PyObject* get() { return PySequence_GetItem(fPyObject, fCur++); }
+    PyObject* get() override { return PySequence_GetItem(fPyObject, fCur++); }
 };
 
 struct IterItemGetter : public ItemGetter {
     using ItemGetter::ItemGetter;
-    virtual Py_ssize_t size() { return PyObject_LengthHint(fPyObject, 8); }
-    virtual PyObject* get() { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
+    Py_ssize_t size() override { return PyObject_LengthHint(fPyObject, 8); }
+    PyObject* get() override { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
 };
 
 static ItemGetter* GetGetter(PyObject* args)
@@ -535,12 +535,14 @@ PyObject* VectorData(PyObject* self, PyObject*)
 // It is temporarily removed to prevent errors due to -Wunused-function, since it is no longer added.
 #if 0
 //---------------------------------------------------------------------------
-PyObject* VectorArray(PyObject* self, PyObject* /* args */)
+PyObject* VectorArray(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* pydata = VectorData(self, nullptr);
-    PyObject* view = PyObject_CallMethodNoArgs(pydata, PyStrings::gArray);
+    PyObject* arrcall = PyObject_GetAttr(pydata, PyStrings::gArray);
+    PyObject* newarr = PyObject_Call(arrcall, args, kwargs);
+    Py_DECREF(arrcall);
     Py_DECREF(pydata);
-    return view;
+    return newarr;
 }
 #endif
 
@@ -554,7 +556,7 @@ static PyObject* vector_iter(PyObject* v) {
 
 // tell the iterator code to set a life line if this container is a temporary
     vi->vi_flags = vectoriterobject::kDefault;
-    if (v->ob_refcnt <= 2 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
+    if (Py_REFCNT(v) <= 2 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
         vi->vi_flags = vectoriterobject::kNeedLifeLine;
 
     PyObject* pyvalue_type = PyObject_GetAttr((PyObject*)Py_TYPE(v), PyStrings::gValueType);
@@ -1242,7 +1244,7 @@ PyObject* STLStringDecode(CPPInstance* self, PyObject* args, PyObject* kwds)
         return nullptr;
 
     char* keywords[] = {(char*)"encoding", (char*)"errors", (char*)nullptr};
-    const char* encoding; const char* errors;
+    const char* encoding = nullptr; const char* errors = nullptr;
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
             const_cast<char*>("s|s"), keywords, &encoding, &errors))
         return nullptr;
@@ -1727,9 +1729,8 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 #endif
 
-    // This pythonization is disabled for ROOT because it is a bit buggy
-#if 0
-    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
+    if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0 &&
+        name.compare(0, 6, "tuple<", 6) != 0) {
     // create a pseudo-constructor to allow initializer-style object creation
         Cppyy::TCppType_t kls = ((CPPClass*)pyclass)->fCppType;
         Cppyy::TCppIndex_t ndata = Cppyy::GetNumDatamembers(kls);
@@ -1796,7 +1797,6 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
             }
         }
     }
-#endif
 
 
 //- class name based pythonization -------------------------------------------
@@ -1824,8 +1824,9 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         // the safe option is to disable this function and no longer add it.
 #if 0
         // numpy array conversion
-            Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray);
+            Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray, METH_VARARGS | METH_KEYWORDS /* unused */);
 #endif
+
         // checked getitem
             if (HasAttrDirect(pyclass, PyStrings::gLen)) {
                 Utility::AddToClass(pyclass, "_getitem__unchecked", "__getitem__");
@@ -1977,9 +1978,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 // the global ones (the idea is to allow writing a pythonizor that see all classes)
     bool pstatus = true;
     std::string outer_scope = TypeManip::extract_namespace(name);
+    auto &pyzMap = pythonizations();
     if (!outer_scope.empty()) {
-        auto p = gPythonizations.find(outer_scope);
-        if (p != gPythonizations.end()) {
+        auto p = pyzMap.find(outer_scope);
+        if (p != pyzMap.end()) {
             PyObject* subname = CPyCppyy_PyText_FromString(
                 name.substr(outer_scope.size()+2, std::string::npos).c_str());
             pstatus = run_pythonizors(pyclass, subname, p->second);
@@ -1988,8 +1990,8 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 
     if (pstatus) {
-        auto p = gPythonizations.find("");
-        if (p != gPythonizations.end())
+        auto p = pyzMap.find("");
+        if (p != pyzMap.end())
             pstatus = run_pythonizors(pyclass, pyname, p->second);
     }
 

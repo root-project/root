@@ -66,6 +66,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooParamHistFunc.h
     RooPoisson.h
     RooPolynomial.h
+    RooPyBind.h
     RooSpline.h
     RooStepFunction.h
     RooTFnBinding.h

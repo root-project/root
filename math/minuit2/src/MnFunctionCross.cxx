@@ -18,12 +18,14 @@
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPrint.h"
 
+#include <array>
+
 namespace ROOT {
 
 namespace Minuit2 {
 
-MnCross MnFunctionCross::operator()(const std::vector<unsigned int> &par, const std::vector<double> &pmid,
-                                    const std::vector<double> &pdir, double tlr, unsigned int maxcalls) const
+MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span<const double> pmid,
+                                    std::span<const double> pdir, double tlr, unsigned int maxcalls) const
 {
    // evaluate crossing point where function is equal to MIN + UP,
    // with direction pdir from values pmid
@@ -44,14 +46,15 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int> &par, const 
    // for finding the point :
    double tlf = tlr * up;
    double tla = tlr;
-   unsigned int maxitr = 15;
+   unsigned int maxitr = 30;
    unsigned int ipt = 0;
    double aminsv = fFval;
    double aim = aminsv + up;
    // std::cout<<"aim= "<<aim<<std::endl;
    double aopt = 0.;
    bool limset = false;
-   std::vector<double> alsb(3, 0.), flsb(3, 0.);
+   std::array<double, 3> alsb{0., 0., 0.};
+   std::array<double, 3> flsb{0., 0., 0.};
 
    MnPrint print("MnFunctionCross");
 
@@ -169,14 +172,23 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int> &par, const 
 
    print.Info("Result after 2nd Migrad", MnPrint::Oneline(min1), min1.UserState().Parameters());
 
-   if (min1.Fval() < fFval - tlf) // case of new minimum found
+   if (min1.Fval() < fFval - tlf) {
+      // case of new minimum found
+      print.Debug("A new minimum is found: return");
       return MnCross(min1.UserState(), nfcn, MnCross::CrossNewMin());
-   if (min1.HasReachedCallLimit())
+   }
+   if (min1.HasReachedCallLimit()) {
+      print.Debug("FCN call limit is reached: return");
       return MnCross(min1.UserState(), nfcn, MnCross::CrossFcnLimit());
-   if (!min1.IsValid())
+   }
+   if (!min1.IsValid()) {
+      print.Debug("Migrad failed: return ");
       return MnCross(fState, nfcn);
-   if (limset == true && min1.Fval() < aim)
+   }
+   if (limset == true && min1.Fval() < aim) {
+      print.Debug("Parameter(s) at limit: return ");
       return MnCross(min1.UserState(), nfcn, MnCross::CrossParLimit());
+   }
 
    ipt++;
    alsb[1] = aopt;
@@ -218,14 +230,22 @@ L300:
 
          print.Info("Result after Migrad", MnPrint::Oneline(min1), '\n', min1.UserState().Parameters());
 
-         if (min1.Fval() < fFval - tlf) // case of new minimum found
+         if (min1.Fval() < fFval - tlf) { // case of new minimum found
+            print.Debug("A new minimum is found: return");
             return MnCross(min1.UserState(), nfcn, MnCross::CrossNewMin());
-         if (min1.HasReachedCallLimit())
+         }
+         if (min1.HasReachedCallLimit()) {
+            print.Debug("FCN call limit is reached: return");
             return MnCross(min1.UserState(), nfcn, MnCross::CrossFcnLimit());
-         if (!min1.IsValid())
+         }
+         if (!min1.IsValid()){
+            print.Debug("Migrad failed: return ");
             return MnCross(fState, nfcn);
-         if (limset == true && min1.Fval() < aim)
+         }
+         if (limset == true && min1.Fval() < aim) {
+            print.Debug("Parameter(s) at limit: return ");
             return MnCross(min1.UserState(), nfcn, MnCross::CrossParLimit());
+         }
          ipt++;
          alsb[1] = aopt;
          flsb[1] = min1.Fval();
@@ -254,10 +274,14 @@ L460:
    tla = tlr;
    if (std::fabs(aopt) > 1.)
       tla = tlr * std::fabs(aopt);
-   if (adist < tla && fdist < tlf)
+   if (adist < tla && fdist < tlf) {
+      print.Info("Return: Found good value for aopt = ",aopt);
       return MnCross(aopt, min1.UserState(), nfcn);
-   if (ipt > maxitr)
+   }
+   if (ipt > maxitr) {
+      print.Info("Number of iterations",ipt,"larger than max",maxitr,": return");
       return MnCross(fState, nfcn);
+   }
    double bmin = std::min(alsb[0], alsb[1]) - 1.;
    if (aopt < bmin)
       aopt = bmin;
@@ -285,14 +309,22 @@ L460:
 
    print.Info("Result after Migrad (3rd):", MnPrint::Oneline(min2), min2.UserState().Parameters());
 
-   if (min2.Fval() < fFval - tlf) // case of new minimum found
+   if (min2.Fval() < fFval - tlf) {// case of new minimum found
+      print.Debug("A new minimum is found: return");
       return MnCross(min2.UserState(), nfcn, MnCross::CrossNewMin());
-   if (min2.HasReachedCallLimit())
+   }
+   if (min2.HasReachedCallLimit()) {
+      print.Debug("FCN call limit is reached: return");
       return MnCross(min2.UserState(), nfcn, MnCross::CrossFcnLimit());
-   if (!min2.IsValid())
+   }
+   if (!min2.IsValid()) {
+      print.Debug("Migrad failed: return ");
       return MnCross(fState, nfcn);
-   if (limset == true && min2.Fval() < aim)
+   }
+   if (limset == true && min2.Fval() < aim) {
+      print.Debug("Parameter(s) at limit: return ");
       return MnCross(min2.UserState(), nfcn, MnCross::CrossParLimit());
+   }
 
    ipt++;
    alsb[2] = aopt;
@@ -328,15 +360,17 @@ L460:
    if (noless == 1 || noless == 2)
       goto L500;
    // if all three are above AIM, third point must be the closest to AIM, return it
-   if (noless == 0 && ibest != 2)
+   if (noless == 0 && ibest != 2) {
+      print.Debug("all 3 points are above - invalid result- return");
       return MnCross(fState, nfcn);
+   }
    // if all three below and third is not best then the slope has again gone negative,
    // re-iterate and look for positive slope
    if (noless == 3 && ibest != 2) {
       alsb[1] = alsb[2];
       flsb[1] = flsb[2];
 
-      print.Debug("All three points below - look again fir positive slope");
+      print.Debug("All three points below - look again for positive slope");
       goto L300;
    }
 
@@ -401,8 +435,10 @@ L500:
       print.Debug("Delta(aopt)", std::fabs(aopt - alsb[ibest]), "tla", tla, "Delta(F)", std::fabs(flsb[ibest] - aim),
                   "tlf", tlf);
 
-      if (std::fabs(aopt - alsb[ibest]) < tla && std::fabs(flsb[ibest] - aim) < tlf)
+      if (std::fabs(aopt - alsb[ibest]) < tla && std::fabs(flsb[ibest] - aim) < tlf) {
+         print.Debug("Return: Found best value is within tolerance, aopt",aopt,"F=",flsb[ibest]);
          return MnCross(aopt, min2.UserState(), nfcn);
+      }
 
       //     if(ipt > maxitr) return MnCross();
 
@@ -486,14 +522,22 @@ L500:
 
       print.Info("Result after new Migrad:", MnPrint::Oneline(min2), min2.UserState().Parameters());
 
-      if (min2.Fval() < fFval - tlf) // case of new minimum found
+      if (min2.Fval() < fFval - tlf) { // case of new minimum found
+         print.Debug("A new minimum is found: return");
          return MnCross(min2.UserState(), nfcn, MnCross::CrossNewMin());
-      if (min2.HasReachedCallLimit())
+      }
+      if (min2.HasReachedCallLimit()) {
+         print.Debug("FCN call limit is reached: return");
          return MnCross(min2.UserState(), nfcn, MnCross::CrossFcnLimit());
-      if (!min2.IsValid())
+      }
+      if (!min2.IsValid()) {
+         print.Debug("Migrad failed: return ");
          return MnCross(fState, nfcn);
-      if (limset == true && min2.Fval() < aim)
+      }
+      if (limset == true && min2.Fval() < aim) {
+         print.Debug("Parameter(s) at limit: return ");
          return MnCross(min2.UserState(), nfcn, MnCross::CrossParLimit());
+      }
 
       ipt++;
       // replace odd point with new one (which is the best of three)
@@ -504,6 +548,7 @@ L500:
 
    // goto L500;
 
+   print.Debug("Best point is not found: return invalid result after many trial",ipt);
    return MnCross(fState, nfcn);
 }
 

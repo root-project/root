@@ -252,7 +252,7 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 bool RooAdaptiveGaussKronrodIntegrator1D::setLimits(double* xmin, double* xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE(nullptr, Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr, Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << std::endl;
     return false;
   }
 
@@ -381,7 +381,7 @@ double RooAdaptiveGaussKronrodIntegrator1D::integral(const double *yvec)
 #define GSL_ENOMEM   8  /* malloc failed */
 #define GSL_EBADTOL 13  /* user specified an invalid tolerance */
 #define GSL_ETOL    14  /* failed to reach the specified tolerance */
-#define GSL_ERROR(a,b) oocoutE(nullptr,Integration) << "RooAdaptiveGaussKronrodIntegrator1D::integral() ERROR: " << a << endl ; return b ;
+#define GSL_ERROR(a,b) oocoutE(nullptr,Integration) << "RooAdaptiveGaussKronrodIntegrator1D::integral() ERROR: " << a << std::endl ; return b ;
 #define GSL_DBL_MIN        2.2250738585072014e-308
 #define GSL_DBL_MAX        1.7976931348623157e+308
 #define GSL_DBL_EPSILON    2.2204460492503131e-16

@@ -37,7 +37,6 @@ the selectFastAlgorithm() method.
 #include <cmath>
 #include <complex>
 
-ClassImp(RooVoigtian);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a RooVoigtian PDF, which represents the convolution of a

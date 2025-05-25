@@ -32,7 +32,6 @@ of the unblind parameter
 #include "RooArgSet.h"
 #include "RooUnblindPrecision.h"
 
-ClassImp(RooUnblindPrecision);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters

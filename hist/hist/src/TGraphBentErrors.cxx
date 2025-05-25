@@ -59,7 +59,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphBentErrors default constructor.
 
-TGraphBentErrors::TGraphBentErrors(): TGraph()
+TGraphBentErrors::TGraphBentErrors()
 {
    if (!CtorAllocate()) return;
 }
@@ -186,6 +186,15 @@ TGraphBentErrors::~TGraphBentErrors()
    delete [] fEYhighd;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with bent errors to the graph.
+
+void TGraphBentErrors::AddPointError(Double_t x, Double_t y, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
+                                     Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
+{
+   AddPoint(x, y);
+   SetPointError(fNpoints - 1, exl, exh, eyl, eyh, exld, exhd, eyld, eyhd);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply a function to all data points \f$ y = f(x,y) \f$.
@@ -541,34 +550,26 @@ void TGraphBentErrors::Scale(Double_t c1, Option_t *option)
 
 void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << "   " << std::endl;
-   static Int_t frameNumber = 2000;
-   frameNumber++;
+   auto xname  = SavePrimitiveVector(out, "grbe_fx", fNpoints, fX, kTRUE);
+   auto yname  = SavePrimitiveVector(out, "grbe_fy", fNpoints, fY);
+   auto exlname = SavePrimitiveVector(out, "grbe_fexl", fNpoints, fEXlow);
+   auto exhname = SavePrimitiveVector(out, "grbe_fexh", fNpoints, fEXhigh);
+   auto eylname = SavePrimitiveVector(out, "grbe_feyl", fNpoints, fEYlow);
+   auto eyhname = SavePrimitiveVector(out, "grbe_feyh", fNpoints, fEYhigh);
+   auto exldname = SavePrimitiveVector(out, "grbe_fexld", fNpoints, fEXlowd);
+   auto exhdname = SavePrimitiveVector(out, "grbe_fexhd", fNpoints, fEXhighd);
+   auto eyldname = SavePrimitiveVector(out, "grbe_feyld", fNpoints, fEYlowd);
+   auto eyhdname = SavePrimitiveVector(out, "grbe_feyhd", fNpoints, fEYhighd);
 
-   auto fXName   = SaveArray(out, "fx", frameNumber, fX);
-   auto fYName   = SaveArray(out, "fy", frameNumber, fY);
-   auto fElXName = SaveArray(out, "felx", frameNumber, fEXlow);
-   auto fElYName = SaveArray(out, "fely", frameNumber, fEYlow);
-   auto fEhXName = SaveArray(out, "fehx", frameNumber, fEXhigh);
-   auto fEhYName = SaveArray(out, "fehy", frameNumber, fEYhigh);
-   auto fEldXName = SaveArray(out, "feldx", frameNumber, fEXlowd);
-   auto fEldYName = SaveArray(out, "feldy", frameNumber, fEYlowd);
-   auto fEhdXName = SaveArray(out, "fehdx", frameNumber, fEXhighd);
-   auto fEhdYName = SaveArray(out, "fehdy", frameNumber, fEYhighd);
+   SavePrimitiveConstructor(out, Class(), "grbe",
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), "
+                                            "%s.data(), %s.data(), %s.data(), %s.data()",
+                                            fNpoints, xname.Data(), yname.Data(), exlname.Data(), exhname.Data(),
+                                            eylname.Data(), eyhname.Data(), exldname.Data(), exhdname.Data(),
+                                            eyldname.Data(), eyhdname.Data()),
+                            kFALSE);
 
-   if (gROOT->ClassSaved(TGraphBentErrors::Class()))
-      out << "   ";
-   else
-      out << "   TGraphBentErrors *";
-   out << "grbe = new TGraphBentErrors("<< fNpoints << ","
-                                    << fXName     << ","  << fYName  << ","
-                                    << fElXName   << ","  << fEhXName << ","
-                                    << fElYName   << ","  << fEhYName << ","
-                                    << fEldXName  << ","  << fEhdXName << ","
-                                    << fEldYName  << ","  << fEhdYName << ");"
-                                    << std::endl;
-
-   SaveHistogramAndFunctions(out, "grbe", frameNumber, option);
+   SaveHistogramAndFunctions(out, "grbe", option);
 }
 
 
@@ -650,7 +651,7 @@ void TGraphBentErrors::SwapPoints(Int_t pos1, Int_t pos2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update the fX, fY, fEXlow, fEXhigh, fEXlowd, fEXhighd, fEYlow, fEYhigh, fEYlowd,  
+/// Update the fX, fY, fEXlow, fEXhigh, fEXlowd, fEXhighd, fEYlow, fEYhigh, fEYlowd,
 /// and fEYhighd arrays with the sorted values.
 
 void TGraphBentErrors::UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low)

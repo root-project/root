@@ -22,10 +22,9 @@
 class RooProfileLL : public RooAbsReal {
 public:
 
-  RooProfileLL() ;
   RooProfileLL(const char *name, const char *title, RooAbsReal& nll, const RooArgSet& observables);
   RooProfileLL(const RooProfileLL& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooProfileLL(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooProfileLL(*this,newname); }
 
   void setAlwaysStartFromMin(bool flag) { _startFromMin = flag ; }
   bool alwaysStartFromMin() const { return _startFromMin ; }

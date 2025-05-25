@@ -576,6 +576,9 @@ cplusplus17
 cplusplus20
   C++20 support is available.
 
+cplusplus23
+  C++23 support is available.
+
 c99
   C99 support is available.
 
@@ -584,6 +587,9 @@ c11
 
 c17
   C17 support is available.
+
+c23
+  C23 support is available.
 
 freestanding
   A freestanding environment is available.

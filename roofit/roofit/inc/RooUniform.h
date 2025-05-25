@@ -26,17 +26,13 @@ public:
   RooUniform() {} ;
   RooUniform(const char *name, const char *title, const RooArgSet& _x);
   RooUniform(const RooUniform& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooUniform(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooUniform(*this,newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 

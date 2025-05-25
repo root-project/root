@@ -24,6 +24,8 @@
 #include "TMatrixTSym.h"
 #include "TMatrixTSparse.h"
 
+#include <ROOT/RSpan.hxx>
+
 template<class Element> class TVectorT : public TObject {
 
 protected:
@@ -75,6 +77,26 @@ public:
 
    inline          Element  *GetMatrixArray  ()       { return fElements; }
    inline const    Element  *GetMatrixArray  () const { return fElements; }
+
+   // For compatibility with STL classes
+   inline          std::size_t size() const { return fNrows; }
+
+   inline          Element  *data()       { return fElements; }
+   inline const    Element  *data() const { return fElements; }
+
+   // Implicit conversion of TVectorT to std::span, both non-const and const
+   // version. Can be removed once the minimum C++ standard in C++20, because
+   // then it's enough to implement the contiguous_range and sized_range
+   // concepts. This should alredy be the case since data() and size() are
+   // available.
+   inline operator std::span<Element>()
+   {
+      return std::span<Element>{data(), size()};
+   }
+   inline operator std::span<const Element>() const
+   {
+      return std::span<const Element>{data(), size()};
+   }
 
    inline void     Invalidate ()       { SetBit(kStatus); }
    inline void     MakeValid  ()       { ResetBit(kStatus); }

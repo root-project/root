@@ -119,9 +119,11 @@ observable snapshots are stored in the dataset.
 
 #include <iostream>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <unordered_map>
 
 
-ClassImp(RooAbsData);
 
 RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 
@@ -397,7 +399,7 @@ void RooAbsData::setDirtyProp(bool flag)
 /// </table>
 
 RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,const RooCmdArg& arg4,
-                const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)
+                const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) const
 {
   // Define configuration for this method
   RooCmdConfig pc("RooAbsData::reduce(" + std::string(GetName()) + ")");
@@ -469,7 +471,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const Roo
 /// other variables, such as intermediate formula objects, use the equivalent
 /// reduce method specifying the as a RooFormulVar reference.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut) const
 {
   RooFormulaVar cutVar(cut,cut,*get()) ;
   auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
@@ -482,7 +484,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut)
 /// The 'cutVar' formula variable is used to select the subset of data points to be
 /// retained in the reduced data collection.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar) const
 {
   auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
@@ -497,7 +499,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar)
 /// other variables, such as intermediate formula objects, use the equivalent
 /// reduce method specifying the as a RooFormulVar reference.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const char* cut) const
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
@@ -527,7 +529,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, con
 /// The 'cutVar' formula variable is used to select the subset of data points to be
 /// retained in the reduced data collection.
 
-RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) const
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
@@ -1240,21 +1242,12 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   meanv->setPlotLabel("Mean") ;
   std::unique_ptr<RooRealVar> rms{rmsVar(*static_cast<RooRealVar*>(frame->getPlotVar()),cutSpec,cutRange)};
   rms->setPlotLabel("RMS") ;
-  std::unique_ptr<TString> rmsText;
-  std::unique_ptr<TString> meanText;
-  std::unique_ptr<TString> NText;
-  if (options) {
-    rmsText.reset(rms->format(sigDigits,options));
-    meanText.reset(meanv->format(sigDigits,options));
-    NText.reset(N.format(sigDigits,options));
-  } else {
-    rmsText.reset(rms->format(*formatCmd));
-    meanText.reset(meanv->format(*formatCmd));
-    NText.reset(N.format(*formatCmd));
-  }
-  if (showR) box->AddText(rmsText->Data());
-  if (showM) box->AddText(meanText->Data());
-  if (showN) box->AddText(NText->Data());
+  std::string rmsText = options ? rms->format(sigDigits,options) : rms->format(*formatCmd);
+  std::string meanText = options ? meanv->format(sigDigits,options) : meanv->format(*formatCmd);
+  std::string NText = options ? N.format(sigDigits,options) : N.format(*formatCmd);
+  if (showR) box->AddText(rmsText.c_str());
+  if (showM) box->AddText(meanText.c_str());
+  if (showN) box->AddText(NText.c_str());
 
   // add the optional label if specified
   if(showLabel) box->AddText(label);
@@ -1897,7 +1890,7 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   RooAbsRealLValue* dataVar = static_cast<RooAbsRealLValue*>(_vars.find(var->GetName())) ;
   double nEnt(sumEntries()) ;
   if (dataVar->getMin()<var->getMin() || dataVar->getMax()>var->getMax()) {
-    std::unique_ptr<RooAbsData> tmp{const_cast<RooAbsData*>(this)->reduce(*var)};
+    std::unique_ptr<RooAbsData> tmp{const_cast<RooAbsData*>(this)->reduce(RooFit::SelectVars(*var))};
     nEnt = tmp->sumEntries() ;
   }
 
@@ -2417,7 +2410,7 @@ bool RooAbsData::hasFilledCache() const
 const TTree *RooAbsData::tree() const
 {
    if (storageType == RooAbsData::Tree) {
-      return _dstore->tree();
+      return static_cast<RooTreeDataStore&>(*_dstore).tree();
    } else {
       coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
                             << "Use GetClonedTree() instead or convert to tree storage." << std::endl;
@@ -2432,11 +2425,10 @@ const TTree *RooAbsData::tree() const
 TTree *RooAbsData::GetClonedTree() const
 {
    if (storageType == RooAbsData::Tree) {
-      auto tmp = const_cast<TTree *>(_dstore->tree());
-      return tmp->CloneTree();
+      return static_cast<RooTreeDataStore&>(*_dstore).tree()->CloneTree();
    } else {
       RooTreeDataStore buffer(GetName(), GetTitle(), *get(), *_dstore);
-      return buffer.tree().CloneTree();
+      return buffer.tree()->CloneTree();
    }
 }
 
@@ -2639,4 +2631,25 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
    }
 
    return histogram;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a string to the value of the RooAbsData::ErrorType enum with the
+/// same name.
+RooAbsData::ErrorType RooAbsData::errorTypeFromString(std::string const &name)
+{
+   using Map = std::unordered_map<std::string, RooAbsData::ErrorType>;
+   static Map enumMap{{"Poisson", RooAbsData::Poisson},
+                      {"SumW2", RooAbsData::SumW2},
+                      {"None", RooAbsData::None},
+                      {"Auto", RooAbsData::Auto},
+                      {"Expected", RooAbsData::Expected}};
+   auto found = enumMap.find(name);
+   if (found == enumMap.end()) {
+      std::stringstream msg;
+      msg << "Unsupported error type type passed to DataError(). "
+             "Supported decay types are : \"Poisson\", \"SumW2\", \"Auto\", \"Expected\", and None.";
+      throw std::invalid_argument(msg.str());
+   }
+   return found->second;
 }

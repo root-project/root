@@ -10,13 +10,15 @@ import { TLinePainter } from './TLinePainter.mjs';
  * @private
  */
 
+const k_upper_pad = 'upper_pad', k_lower_pad = 'lower_pad', k_top_pad = 'top_pad';
+
 class TRatioPlotPainter extends ObjectPainter {
 
    /** @summary Set grids range */
    setGridsRange(xmin, xmax, ymin, ymax, low_p) {
       const ratio = this.getObject();
       if (xmin === xmax) {
-         const x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad)?.getFramePainter()?.x_handle;
+         const x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, k_lower_pad, clTPad)?.getFramePainter()?.x_handle;
          if (!x_handle) return;
          if (xmin === 0) {
             // in case of unzoom full range should be used
@@ -49,9 +51,9 @@ class TRatioPlotPainter extends ObjectPainter {
    configureInteractive() {
       const ratio = this.getObject(),
             pp = this.getPadPainter(),
-            up_p = pp.findPainterFor(ratio.fUpperPad, 'upper_pad', clTPad),
+            up_p = pp.findPainterFor(ratio.fUpperPad, k_upper_pad, clTPad),
             up_fp = up_p?.getFramePainter(),
-            low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
+            low_p = pp.findPainterFor(ratio.fLowerPad, k_lower_pad, clTPad),
             low_fp = low_p?.getFramePainter();
 
       if (!up_p || !low_p)
@@ -118,7 +120,7 @@ class TRatioPlotPainter extends ObjectPainter {
    async redrawOld() {
       const ratio = this.getObject(),
             pp = this.getPadPainter(),
-            top_p = pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad),
+            top_p = pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad),
             pad = pp.getRootPad(),
             mirrow_axis = (pad.fFrameFillStyle === 0) ? 1 : 0,
             tick_x = pad.fTickx || mirrow_axis,
@@ -126,10 +128,10 @@ class TRatioPlotPainter extends ObjectPainter {
 
       top_p?.disablePadDrawing();
 
-      const up_p = pp.findPainterFor(ratio.fUpperPad, 'upper_pad', clTPad),
+      const up_p = pp.findPainterFor(ratio.fUpperPad, k_upper_pad, clTPad),
             up_main = up_p?.getMainPainter(),
             up_fp = up_p?.getFramePainter(),
-            low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
+            low_p = pp.findPainterFor(ratio.fLowerPad, k_lower_pad, clTPad),
             low_main = low_p?.getMainPainter(),
             low_fp = low_p?.getFramePainter();
       let promise_up = Promise.resolve(true);
@@ -166,7 +168,6 @@ class TRatioPlotPainter extends ObjectPainter {
          low_p.getRootPad().fTicky = tick_y;
 
          const arr = [];
-         let currpad;
 
          // add missing lines in old ratio painter
          if ((ratio.fGridlinePositions.length > 0) && (ratio.fGridlines.length < ratio.fGridlinePositions.length)) {
@@ -182,18 +183,15 @@ class TRatioPlotPainter extends ObjectPainter {
                   line.fY1 = line.fY2 = gridy;
                   line.fLineStyle = 2;
                   ratio.fGridlines.push(line);
-                  if (currpad === undefined)
-                     currpad = this.selectCurrentPad(ratio.fLowerPad.fName);
-                  arr.push(TLinePainter.draw(this.getDom(), line));
+                  arr.push(TLinePainter.draw(low_p, line));
                }
             });
          }
 
-         return Promise.all(arr).then(() => {
-            if (currpad !== undefined)
-               this.selectCurrentPad(currpad);
-            return low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax);
-         });
+         return Promise.all(arr)
+                       .then(() => low_fp.zoomSingle('x', up_fp.scale_xmin, up_fp.scale_xmax))
+                       .then(changed => { return changed ? true : low_p.redrawPad(); })
+                       .then(() => this);
       });
    }
 
@@ -203,7 +201,7 @@ class TRatioPlotPainter extends ObjectPainter {
             pp = this.getPadPainter();
 
       if (this.$oldratio === undefined)
-         this.$oldratio = !!pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad);
+         this.$oldratio = Boolean(pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad));
 
       // configure ratio interactive at the end
       pp.$userInteractive = () => this.configureInteractive();
@@ -233,7 +231,6 @@ class TRatioPlotPainter extends ObjectPainter {
    /** @summary Draw TRatioPlot */
    static async draw(dom, ratio, opt) {
       const painter = new TRatioPlotPainter(dom, ratio, opt);
-
       return ensureTCanvas(painter, false).then(() => painter.redraw());
    }
 

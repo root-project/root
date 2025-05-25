@@ -89,7 +89,7 @@ constructed providing a string boolean expression between the components names.
 ## Example for building a simple geometry
 
 Begin_Macro(source)
-../../../tutorials/geom/rootgeom.C
+../../../tutorials/visualisation/geom/rootgeom.C
 End_Macro
 
 ## TGeoManager - the manager class for the geometry package.
@@ -138,7 +138,7 @@ this process.
 ## An interactive session
 
   Provided that a geometry was successfully built and closed (for instance the
-previous example $ROOTSYS/tutorials/geom/rootgeom.C ), the manager class will register
+previous example $ROOTSYS/tutorials/visualisation/geom/rootgeom.C ), the manager class will register
 itself to ROOT and the logical/physical structures will become immediately browsable.
 The ROOT browser will display starting from the geometry folder : the list of
 transformations and media, the top volume and the top logical node. These last
@@ -2916,9 +2916,15 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
    if (!fPainter) {
-      const char *kind = "root";
-      if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
-         kind = "web";
+      const char *kind = nullptr;
+      if (gPad)
+         kind = gPad->IsWeb() ? "web" : "root";
+      else
+         kind = gEnv->GetValue("GeomPainter.Name", "");
+
+      if (!kind || !*kind)
+         kind = (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch()) ? "web" : "root";
+
       if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter", kind)) {
          if (h->LoadPlugin() == -1) {
             Error("GetGeomPainter", "could not load plugin for %s geo_painter", kind);

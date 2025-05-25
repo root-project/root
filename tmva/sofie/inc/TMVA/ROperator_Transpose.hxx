@@ -32,17 +32,21 @@ public:
    ROperator_Transpose(){}
    ROperator_Transpose(std::vector<int_t> attr_perm, std::string nameData, std::string nameOutput):
       fAttrPerm(attr_perm), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)) {
+            fInputTensorNames = { fNData };
+            fOutputTensorNames = { fNOutput };
    }
 
    ROperator_Transpose(std::string nameData, std::string nameOutput):
       fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)) {
+         fInputTensorNames = { fNData };
+         fOutputTensorNames = { fNOutput };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       if (input.size() > 1) throw std::runtime_error("TMVA SOFIE Tranpose Op Shape Inference only need 1 input tensor");
       auto& data = input[0];
       if (fAttrPerm.size() != data.size() )
@@ -58,9 +62,9 @@ public:
    }
 
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNData) == false){   //input must be a graph input, or already initialized intermediate tensor
-         std::cout<<"Input tensor for transspose: "<<fNData<<'\n';
+         std::cout<<"Input tensor for transpose: "<<fNData<<'\n';
          throw std::runtime_error("TMVA SOFIE Tranpose Op Input Tensor is not found in model");
       }
       fShapeData = model.GetTensorShape(fNData);
@@ -72,10 +76,45 @@ public:
       }
       std::vector<std::vector<size_t>> inputs = { fShapeData };
       fShapeOutput = ShapeInference(inputs).front();
-      model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+      if (model.IsInitializedTensor(fNData)) {
+         fIsOutputConstant = true;
+         // case input is a constant or initialized tensor we perform here the transpose
+         auto inStrides = UTILITY::ComputeStrideFromShape(fShapeData);
+         auto outStrides = UTILITY::ComputeStrideFromShape(fShapeOutput);
+         size_t length = ConvertShapeToLength(fShapeOutput);
+         auto inputData = static_cast<T*>(model.GetInitializedTensorData(fNData).get());
+         size_t dim = fShapeData.size();
+         std::vector<size_t> outputIdx(dim);
+         std::vector<T> outputData(length);
+         for (size_t i = 0; i < length; i++) {
+            outputIdx[0] = i / outStrides[0];
+            for (size_t j = 1; j < dim; j++) {
+               outputIdx[j] = (i % outStrides[j-1]) / outStrides[j];
+            }
+            // compute input index
+            size_t inputIndex = 0;
+            for (size_t j = 0; j < dim; j++) {
+               // find value in fAtrrPerm corresponding to j
+               int k = std::find(fAttrPerm.begin(), fAttrPerm.end(), j) - fAttrPerm.begin();
+               inputIndex += outputIdx[k] * inStrides[j];
+            }
+            outputData[i] = inputData[inputIndex];
+         }
+         model.AddConstantTensor<T>(fNOutput, fShapeOutput, outputData.data());
+         if (model.Verbose()) {
+            std::cout << "Transpose: output is a constant tensor " << ConvertShapeToString(fShapeOutput) << " : "
+               << ConvertValuesToString(outputData) << std::endl;
+         }
+      } else {
+         model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         if (model.Verbose()) {
+            std::cout << "Transpose ---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
+         }
+      }
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
+      if (fIsOutputConstant) return "";  //no op for constant tensors
       OpName = "op_" + OpName;
       if (fShapeData.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Transpose Op called to Generate without being initialized first");

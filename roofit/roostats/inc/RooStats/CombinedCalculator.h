@@ -63,11 +63,7 @@ in a common way for several concrete calculators.
 
    public:
 
-      CombinedCalculator() :
-         fSize(0.),
-         fPdf(nullptr),
-         fData(nullptr)
-      {}
+      CombinedCalculator() = default;
 
       CombinedCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest,
                          double size = 0.05, const RooArgSet* nullParams = nullptr, const RooArgSet* altParams = nullptr, const RooArgSet* nuisParams = nullptr) :
@@ -155,10 +151,10 @@ in a common way for several concrete calculators.
       RooAbsPdf * GetPdf() const { return fPdf; }
       RooAbsData * GetData() const { return fData; }
 
-      double fSize; ///< size of the test (eg. specified rate of Type I error)
+      double fSize = 0.0; ///< size of the test (eg. specified rate of Type I error)
 
-      RooAbsPdf  * fPdf;
-      RooAbsData * fData;
+      RooAbsPdf  * fPdf = nullptr;
+      RooAbsData * fData = nullptr;
       RooArgSet fPOI;             ///< RooArgSet specifying parameters of interest for interval
       RooArgSet fNullParams;      ///< RooArgSet specifying null parameters for hypothesis test
       RooArgSet fAlternateParams; ///< RooArgSet specifying alternate parameters for hypothesis test

@@ -280,10 +280,9 @@ TEST(TChainParsing, RecursiveGlob)
    const auto *regexChainFiles = regex.GetListOfFiles();
    ASSERT_TRUE(regexChainFiles);
    EXPECT_EQ(regexChainFiles->GetEntries(), 3);
-   std::vector<std::string> expectedFileNamesRegex{
-      ConcatUnixFileName(cwd, "testglob/subdir1/1a.root"),
-      ConcatUnixFileName(cwd, "testglob/subdir1/1b.root"),
-      ConcatUnixFileName(cwd, "testglob/subdir3/3a.root")};
+   std::vector<std::string> expectedFileNamesRegex{ConcatUnixFileName(cwd, "testglob/subdir1/1a.root"),
+                                                   ConcatUnixFileName(cwd, "testglob/subdir1/1b.root"),
+                                                   ConcatUnixFileName(cwd, "testglob/subdir3/3a.root")};
    auto regexChainFileNames = GetFileNamesVec(regexChainFiles);
    EXPECT_VEC_EQ(regexChainFileNames, expectedFileNamesRegex);
 }

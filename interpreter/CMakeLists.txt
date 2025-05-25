@@ -1,10 +1,17 @@
+# Do not depend on CMake scripts from the rest of the ROOT build
+set(CMAKE_MODULE_PATH "")
+
 #--- Check if we need to build llvm and clang ------------------------------------------------------
+if (builtin_llvm AND NOT builtin_clang)
+  message(FATAL_ERROR "Cannot enable builtin LLVM, but provide external Clang")
+endif()
+
 if (NOT builtin_clang)
   message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
 endif()
 
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
-set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 16)
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 18)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
@@ -49,7 +56,7 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
 
 # will be set again in case NOT builtin_llvm
-set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm")
+set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
@@ -58,26 +65,6 @@ endif()
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
-
-# The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
-# somehow lands in our cling libraries on OS X and doesn't get hidden
-# by visibility-inlines-hidden, so we suddenly have a global weak symbol
-# from LLVM in cling which our visiblity=hidden compiled LLVM libraries
-# reference. This is triggering some build system warnings like this:
-#   ld: warning: direct access in function '(anonymous namespace)::NewGVN::runGVN()'
-#   from file 'interpreter/llvm-project/llvm/lib/libLLVMScalarOpts.a(NewGVN.cpp.o)' to global weak symbol
-#   'llvm::ReverseIterate<bool>::value' from file 'interpreter/llvm-project/llvm/lib/libclingUtils.a(AST.cpp.o)'
-#   means the weak symbol cannot be overridden at runtime. This was likely caused by different
-#   translation units being compiled with different visibility settings.
-# There is no apparent reason why this is happening and it looks like a compiler bug,
-# so let's just disable the part of the code that provides this symbol.
-# As it's in the validation part of LLVM and not in something that providing functionality,
-# this shouldn't cause any problems.
-# TODO: We maybe can remove this code once we upgrade to LLVM>=6.0 as this symbol
-# was introduced quite recently into LLVM 5.0 and probably is also causing problems
-# for some other projects.
-set(LLVM_ENABLE_ABI_BREAKING_CHECKS OFF CACHE BOOL "" FORCE)
-set(LLVM_ABI_BREAKING_CHECKS FORCE_OFF CACHE BOOL "" FORCE)
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
@@ -91,6 +78,8 @@ elseif(ROOT_ARCHITECTURE MATCHES s390)
   set(ROOT_CLING_TARGET "SystemZ")
 elseif(ROOT_ARCHITECTURE MATCHES riscv64)
   set(ROOT_CLING_TARGET "RISCV")
+elseif(ROOT_ARCHITECTURE MATCHES loong64)
+  set(ROOT_CLING_TARGET "LoongArch")
 elseif(ROOT_ARCHITECTURE MATCHES freebsd OR ROOT_ARCHITECTURE MATCHES linux OR ROOT_ARCHITECTURE MATCHES macosx)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
@@ -147,19 +136,6 @@ if (NOT MSVC AND NOT APPLE)
 endif()
 set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
 
-#--- Build LLVM/Clang with modules -----------------------------------------------------------------
-if(cxxmodules)
-  # LLVM knows how to configure its modules builds. We cannot just add the flags
-  # because the cxxmodules builds in llvm have different build dependency order.
-  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-  if(libcxx)
-    # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
-    # FIXME: We cannot build LLVM/clang with modules on with libc++, too.
-    #set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
-  endif(libcxx)
-endif(cxxmodules)
-
 if(gcctoolchain)
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
 endif()
@@ -213,11 +189,15 @@ if(builtin_llvm)
     string(TOUPPER ${LLVM_BUILD_TYPE} LLVM_BUILD_TYPE)
     set(LLVM_C_FLAGS ${CMAKE_C_FLAGS_${LLVM_BUILD_TYPE}})
     set(LLVM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${LLVM_BUILD_TYPE}})
-    foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
-      string(TOUPPER ${CONFIG} CONFIG)
-      set(CMAKE_C_FLAGS_${CONFIG} ${LLVM_C_FLAGS})
-      set(CMAKE_CXX_FLAGS_${CONFIG} ${LLVM_CXX_FLAGS})
-    endforeach()
+    # On Windows, use the same compiler flags than ROOT and not
+    # the other way around
+    if(NOT MSVC)
+      foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+        string(TOUPPER ${CONFIG} CONFIG)
+        set(CMAKE_C_FLAGS_${CONFIG} ${LLVM_C_FLAGS})
+        set(CMAKE_CXX_FLAGS_${CONFIG} ${LLVM_CXX_FLAGS})
+      endforeach()
+    endif()
   elseif(NOT LLVM_BUILD_TYPE STREQUAL CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
   endif()
@@ -229,6 +209,17 @@ if(builtin_llvm)
 
   set(LLVM_ENABLE_PROJECTS "clang" CACHE STRING "")
 
+  # Always build LLVM with C++17. It is not necessary to compile with the same
+  # C++ standard as the rest of ROOT and sometimes it doesn't even work.
+  set(_cxx_standard ${CMAKE_CXX_STANDARD})
+  set(CMAKE_CXX_STANDARD 17)
+
+  #---Reduce log level to suppress STATUS messages from LLVM
+  if(NOT DEFINED CMAKE_MESSAGE_LOG_LEVEL)
+    set(CMAKE_MESSAGE_LOG_LEVEL "NOTICE")
+    set(_unset_log_level TRUE)
+  endif()
+
   #---Add the sub-directory excluding all the targets from all-----------------------------------------
   if(CMAKE_GENERATOR MATCHES "Xcode")
     add_subdirectory(llvm-project/llvm)
@@ -236,8 +227,14 @@ if(builtin_llvm)
     add_subdirectory(llvm-project/llvm EXCLUDE_FROM_ALL)
   endif()
 
-  set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/llvm/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/include
+  if(DEFINED _unset_log_level)
+    unset(CMAKE_MESSAGE_LOG_LEVEL)
+  endif()
+
+  set(CMAKE_CXX_STANDARD ${_cxx_standard})
+
+  set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
+    ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
     CACHE STRING "LLVM include directories."
     )
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/cmake/modules")
@@ -250,82 +247,29 @@ if(builtin_llvm)
   get_directory_property(LLVM_TARGETS_TO_BUILD DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGETS_TO_BUILD)
 
   if(MSVC)
-      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/$<CONFIG>/bin/llvm-tblgen.exe")
-  else()
-      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
-  endif()
-else()
-  # Rely on llvm-config.
-  set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config-${ROOT_LLVM_VERSION_REQUIRED_MAJOR}" "llvm-config")
-  if(LLVM_CONFIG)
-    message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
-    set(CONFIG_COMMAND ${LLVM_CONFIG}
-      "--assertion-mode"
-      "--bindir"
-      "--libdir"
-      "--includedir"
-      "--prefix"
-      "--cmakedir"
-      "--build-mode"
-      "--version")
-    execute_process(
-      COMMAND ${CONFIG_COMMAND}
-      RESULT_VARIABLE HAD_ERROR
-      OUTPUT_VARIABLE CONFIG_OUTPUT
-    )
-    if(NOT HAD_ERROR)
-      string(REGEX REPLACE
-        "[ \t]*[\r\n]+[ \t]*" ";"
-        CONFIG_OUTPUT ${CONFIG_OUTPUT})
+    if(CMAKE_GENERATOR MATCHES Ninja)
+      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen.exe")
     else()
-      string(REPLACE ";" " " CONFIG_COMMAND_STR "${CONFIG_COMMAND}")
-      message(STATUS "${CONFIG_COMMAND_STR}")
-      message(FATAL_ERROR "llvm-config failed with status ${HAD_ERROR}")
+      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/$<CONFIG>/bin/llvm-tblgen.exe")
     endif()
   else()
-    message(FATAL_ERROR "llvm-config not found -- ${LLVM_CONFIG}")
+    set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
   endif()
+else()
+  find_package(LLVM REQUIRED CONFIG)
+  message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} in ${LLVM_CMAKE_DIR}")
 
-  list(GET CONFIG_OUTPUT 0 ENABLE_ASSERTIONS)
-  list(GET CONFIG_OUTPUT 1 TOOLS_BINARY_DIR)
-  list(GET CONFIG_OUTPUT 2 LIBRARY_DIR)
-  list(GET CONFIG_OUTPUT 3 INCLUDE_DIR)
-  list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
-  list(GET CONFIG_OUTPUT 5 LLVM_CONFIG_CMAKE_PATH)
-  list(GET CONFIG_OUTPUT 6 LLVM_BUILD_MODE)
-  list(GET CONFIG_OUTPUT 7 LLVM_VERSION)
+  separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+  add_definitions(${LLVM_DEFINITIONS_LIST})
+  include_directories(${LLVM_INCLUDE_DIRS})
 
-  message(STATUS "External llvm built in ${LLVM_BUILD_MODE} mode.")
-
-  if(NOT MSVC_IDE)
-    set(LLVM_ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}
-      CACHE BOOL "Enable assertions")
-    # Assertions should follow llvm-config's.
-    mark_as_advanced(LLVM_ENABLE_ASSERTIONS)
-  endif()
-
-  set(LLVM_TOOLS_BINARY_DIR ${TOOLS_BINARY_DIR} CACHE PATH "Path to llvm/bin")
-  set(LLVM_LIBRARY_DIR ${LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
-  set(LLVM_MAIN_INCLUDE_DIR ${INCLUDE_DIR} CACHE PATH "Path to llvm/include")
-  set(LLVM_BINARY_DIR ${LLVM_OBJ_ROOT} CACHE PATH "Path to LLVM build tree")
-
-  set(LLVM_DIR "${LLVM_BINARY_DIR}")
-
-  # Normalize LLVM_CMAKE_PATH. --cmakedir might contain backslashes.
-  # CMake assumes slashes as PATH.
-  file(TO_CMAKE_PATH ${LLVM_CONFIG_CMAKE_PATH} LLVM_CMAKE_PATH)
+  # Make some LLVM variables globally available.
+  set(LLVM_INCLUDE_DIRS ${LLVM_INCLUDE_DIRS} CACHE PATH "Path to llvm/include")
+  set(LLVM_LIBRARY_DIR ${LLVM_LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
 
   find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
     NO_DEFAULT_PATH)
 
-  set(LLVMCONFIG_FILE "${LLVM_CMAKE_PATH}/LLVMConfig.cmake")
-  if(EXISTS ${LLVMCONFIG_FILE})
-    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
-    include(${LLVMCONFIG_FILE})
-  else()
-    message(FATAL_ERROR "Not found: ${LLVMCONFIG_FILE}")
-  endif()
   # We already FORCE-d the CACHE value to OFF, but LLVMConfig.cmake might have
   # set the variable to ON again...
   set(LLVM_ENABLE_WARNINGS OFF)
@@ -357,22 +301,15 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.1(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.0.x")
+    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.1.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
     set(LLVM_INCLUDE_TESTS ON)
   endif()
-
-  include_directories("${LLVM_BINARY_DIR}/include" "${LLVM_MAIN_INCLUDE_DIR}")
-  link_directories("${LLVM_LIBRARY_DIR}")
-
-#  set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
-#  set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
-#  set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
 
   if(LLVM_INCLUDE_TESTS OR clingtest)
     find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
@@ -428,10 +365,6 @@ else()
     endif()
   endif()
 
-  set(LLVM_INCLUDE_DIRS ${LLVM_MAIN_INCLUDE_DIR}
-    CACHE STRING "System LLVM include directories."
-    )
-
   # We checked above that LLVM_VERSION is what we require in ROOT_LLVM_VERSION_REQUIRED_MAJOR.
   # To simplify code, just forward that requirement to the rest of ROOT, for example to
   # construct the resource directory in core/clingutils.
@@ -446,7 +379,14 @@ else()
     # Disable linking against shared LLVM
     set(LLVM_LINK_LLVM_DYLIB OFF)
 
+    # Always build LLVM with C++17. It is not necessary to compile with the same
+    # C++ standard as the rest of ROOT and sometimes it doesn't even work.
+    set(_cxx_standard ${CMAKE_CXX_STANDARD})
+    set(CMAKE_CXX_STANDARD 17)
+
     add_subdirectory(llvm-project/clang EXCLUDE_FROM_ALL)
+
+    set(CMAKE_CXX_STANDARD ${_cxx_standard})
   endif(builtin_clang)
 
   set( CLANG_BUILT_STANDALONE 1 )
@@ -455,18 +395,18 @@ endif(builtin_llvm)
 
 if (builtin_clang)
   if (builtin_llvm)
-    # For builtin LLVM this is set in interpreter/llvm-project/llvm/CMakeLists.txt
-    set(Clang_DIR "${LLVM_BINARY_DIR}/tools/clang/")
+    set(CLANG_BINARY_DIR "${LLVM_BINARY_DIR}/tools/clang/")
   else()
-    set(Clang_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm-project/clang/")
-    set(Clang_Config_ExtraPathHints "${Clang_DIR}cmake/modules/CMakeFiles")
+    set(CLANG_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/clang/")
   endif()
   set(CLANG_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/clang/include
-    ${Clang_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
+    ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
+  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib/cmake/clang/")
 else()
-  set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
+  find_package(Clang REQUIRED CONFIG)
+  message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
 endif()
 
 # Reset the compiler flags after compiling LLVM and Clang
@@ -495,7 +435,7 @@ if (builtin_cling)
     set(CLING_CXXFLAGS " ${LLVM_DEFS} -DNOMINMAX -D_XKEYCHECK_H")
   else()
     # FIXME: Work hard to remove -Wno-shadow and -Wno-unused-parameter
-    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
+    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter")
   endif()
 
   # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.
@@ -514,7 +454,7 @@ if (builtin_cling)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
-  set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
+  set(CLING_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/cling/include CACHE STRING "")
 
 
 
@@ -588,3 +528,26 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        C_INCLUDE_DIRS DEFAULT_SYSROOT FFI_INCLUDE_DIR FFI_LIBRARY_DIR
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
+
+##################### LIBINTEROP ###########################
+
+#---Set InterOp include directories, for any ROOT component that requires the headers--------------------------------------------------------
+set(CPPINTEROP_INCLUDE_DIRS
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include
+  CACHE STRING "CppInterOp include directories.")
+
+#---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
+set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
+set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
+
+#---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
+if(testing)
+  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "" FORCE)
+else()
+  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "")
+endif()
+
+add_subdirectory(CppInterOp)
+if(testing)
+  set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
+endif()

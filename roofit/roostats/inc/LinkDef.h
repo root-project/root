@@ -17,12 +17,6 @@
 #pragma link C++ namespace RooStats;
 #pragma link C++ namespace RooStats::NumberCountingUtils;
 
-// for auto-loading namespaces
-#ifdef USE_FOR_AUTLOADING
-#pragma link C++ class RooStats::NumberCountingUtils;
-#pragma link C++ class RooStats;
-#endif
-
 #pragma link C++ class RooStats::SPlot+;
 #pragma link C++ class RooStats::NumberCountingPdfFactory+;
 
@@ -63,10 +57,7 @@
 #pragma link C++ class RooStats::TestStatSampler+; // interface, not concrete
 #pragma link C++ class RooStats::DebuggingSampler+;
 #pragma link C++ class RooStats::ToyMCSampler+;
-#pragma link C++ class RooStats::ToyMCStudy+;
-#pragma link C++ class RooStats::ProofConfig+;
 #pragma link C++ class RooStats::ToyMCImportanceSampler+;
-#pragma link C++ class RooStats::ToyMCPayload+;
 
 #pragma link C++ class RooStats::TestStatistic+; // interface
 #pragma link C++ class RooStats::DebuggingTestStat+;
@@ -75,7 +66,6 @@
 #pragma link C++ class RooStats::NumEventsTestStat+;
 #pragma link C++ class RooStats::SimpleLikelihoodRatioTestStat+;
 #pragma link C++ class RooStats::MaxLikelihoodEstimateTestStat+;
-#pragma link C++ class RooStats::MinNLLTestStat+;
 
 #pragma link C++ class RooStats::SamplingDistribution+;
 #pragma link C++ class RooStats::NeymanConstruction+;

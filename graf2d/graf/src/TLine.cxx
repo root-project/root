@@ -428,21 +428,22 @@ void TLine::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TLine::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   if (gROOT->ClassSaved(TLine::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TLine *";
-   }
-   out<<"line = new TLine("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "line", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2), kFALSE);
 
-   SaveLineAttributes(out,"line",1,1,1);
+   SaveLineAttributes(out, "line", 1, 1, 1);
 
    if (TestBit(kLineNDC))
-      out<<"   line->SetNDC();"<<std::endl;
+      out << "   line->SetNDC();\n";
 
-   out<<"   line->Draw();"<<std::endl;
+   if (TestBit(kVertical))
+      out << "   line->SetBit(TLine::kVertical);\n";
+
+   if (TestBit(kHorizontal))
+      out << "   line->SetBit(TLine::kHorizontal);\n";
+
+   SavePrimitiveDraw(out, "line", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,8 +467,7 @@ Bool_t TLine::IsVertical()
 
 void TLine::SetNDC(Bool_t isNDC)
 {
-   ResetBit(kLineNDC);
-   if (isNDC) SetBit(kLineNDC);
+   SetBit(kLineNDC, isNDC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -543,24 +543,30 @@ void TLine::Streamer(TBuffer &R__b)
 
 Rectangle_t TLine::GetBBox()
 {
-   Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-   Int_t px1, py1, px2, py2;
-   px1 = gPad->XtoPixel(fX1);
-   px2 = gPad->XtoPixel(fX2);
-   py1 = gPad->YtoPixel(fY1);
-   py2 = gPad->YtoPixel(fY2);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      Int_t px1 = gPad->XtoPixel(fX1);
+      Int_t px2 = gPad->XtoPixel(fX2);
+      Int_t py1 = gPad->YtoPixel(fY1);
+      Int_t py2 = gPad->YtoPixel(fY2);
 
-   Int_t tmp;
-   if (px1>px2) { tmp = px1; px1 = px2; px2 = tmp;}
-   if (py1>py2) { tmp = py1; py1 = py2; py2 = tmp;}
+      if (px1 > px2) {
+         Int_t tmp = px1;
+         px1 = px2;
+         px2 = tmp;
+      }
+      if (py1 > py2) {
+         Int_t tmp = py1;
+         py1 = py2;
+         py2 = tmp;
+      }
 
-   BBox.fX = px1;
-   BBox.fY = py1;
-   BBox.fWidth = px2-px1;
-   BBox.fHeight = py2-py1;
-
-   return (BBox);
+      BBox.fX = px1;
+      BBox.fY = py1;
+      BBox.fWidth = px2 - px1;
+      BBox.fHeight = py2 - py1;
+   }
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -568,11 +574,12 @@ Rectangle_t TLine::GetBBox()
 
 TPoint TLine::GetBBoxCenter()
 {
-   TPoint p(0,0);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
-   p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(TMath::Min(fX1, fX2) + 0.5 * (TMath::Max(fX1, fX2) - TMath::Min(fX1, fX2))));
+      p.SetY(gPad->YtoPixel(TMath::Min(fY1, fY2) + 0.5 * (TMath::Max(fY1, fY2) - TMath::Min(fY1, fY2))));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

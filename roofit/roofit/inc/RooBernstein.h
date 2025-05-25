@@ -32,14 +32,17 @@ public:
    double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override;
    void selectNormalizationRange(const char *rangeName = nullptr, bool force = false) override;
 
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-   std::string buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
-                                           RooFit::Detail::CodeSquashContext &ctx) const override;
+   RooAbsRealLValue const &x() const { return *_x; }
+   RooArgList const &coefList() const { return _coefList; }
+
+   // Implementation detail. Do not use.
+   void fillBuffer() const;
+   // Implementation detail. Do not use.
+   inline double xmin() const { return _buffer[_coefList.size()]; }
+   // Implementation detail. Do not use.
+   inline double xmax() const { return _buffer[_coefList.size() + 1]; }
 
 private:
-   void fillBuffer() const;
-   inline double xmin() const { return _buffer[_coefList.size()]; }
-   inline double xmax() const { return _buffer[_coefList.size() + 1]; }
 
    RooTemplateProxy<RooAbsRealLValue> _x;
    RooListProxy _coefList;

@@ -203,9 +203,9 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
     stream.avail_out = (uInt)(*tgtsize) - HDRSIZE;
 
-    stream.zalloc    = (alloc_func)0;
-    stream.zfree     = (free_func)0;
-    stream.opaque    = (voidpf)0;
+    stream.zalloc = nullptr;
+    stream.zfree = nullptr;
+    stream.opaque = nullptr;
 
     if (cxlevel > 9) cxlevel = 9;
     err = deflateInit(&stream, cxlevel);
@@ -242,12 +242,6 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     *irep = stream.total_out + HDRSIZE;
 }
 
-
-void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
-   R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep,
-                           ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
-}
-
 /**
  * Below are the routines for unzipping (inflating) buffers.
  */
@@ -281,6 +275,25 @@ static int is_valid_header(unsigned char *src)
 {
    return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
           is_valid_header_lz4(src) || is_valid_header_zstd(src);
+}
+
+ROOT::RCompressionSetting::EAlgorithm::EValues R__getCompressionAlgorithm(const unsigned char *buf, size_t bufsize)
+{
+   if (bufsize < 3)
+      return ROOT::RCompressionSetting::EAlgorithm::kUndefined;
+
+   if (is_valid_header_zstd(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kZSTD;
+   if (is_valid_header_zlib(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kZLIB;
+   if (is_valid_header_lz4(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kLZ4;
+   if (is_valid_header_lzma(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kLZMA;
+   if (is_valid_header_old(const_cast<unsigned char *>(buf)))
+      return ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo;
+
+   return ROOT::RCompressionSetting::EAlgorithm::kUndefined;
 }
 
 int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
@@ -402,9 +415,9 @@ void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
      stream.avail_in = (uInt)(*srcsize) - HDRSIZE;
      stream.next_out = (Bytef *)tgt;
      stream.avail_out = (uInt)(*tgtsize);
-     stream.zalloc = (alloc_func)0;
-     stream.zfree = (free_func)0;
-     stream.opaque = (voidpf)0;
+     stream.zalloc = nullptr;
+     stream.zfree = nullptr;
+     stream.opaque = nullptr;
 
      err = inflateInit(&stream);
      if (err != Z_OK) {

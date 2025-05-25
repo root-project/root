@@ -1,2 +1,3 @@
 pythia8=OFF
-tmva-cpu=OFF
+tmva-sofie=ON
+ccache=On

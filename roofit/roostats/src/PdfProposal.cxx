@@ -61,7 +61,6 @@ for future versions.
 
 #include <map>
 
-ClassImp(RooStats::PdfProposal);
 
 using namespace RooFit;
 using namespace RooStats;

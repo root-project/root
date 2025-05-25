@@ -130,6 +130,7 @@ public:
       TEfficiency&  operator+=(const TEfficiency& rhs);
       TEfficiency&  operator=(const TEfficiency& rhs);
       void          Paint(Option_t* opt) override;
+      void          RecursiveRemove(TObject *obj) override;
       void          SavePrimitive(std::ostream& out,Option_t* opt="") override;
       void          SetBetaAlpha(Double_t alpha);
       void          SetBetaBeta(Double_t beta);
@@ -137,7 +138,7 @@ public:
       void          SetConfidenceLevel(Double_t level);
       void          SetDirectory(TDirectory* dir);
       void          SetName(const char* name) override;
-      Bool_t        SetPassedEvents(Int_t bin,Int_t events);
+      Bool_t        SetPassedEvents(Int_t bin, Double_t events);
       Bool_t        SetPassedHistogram(const TH1& rPassed,Option_t* opt);
       void          SetPosteriorMode(Bool_t on = true) { SetBit(kPosteriorMode,on); SetShortestInterval(on); }
       void          SetPosteriorAverage(Bool_t on = true) { SetBit(kPosteriorMode,!on); }

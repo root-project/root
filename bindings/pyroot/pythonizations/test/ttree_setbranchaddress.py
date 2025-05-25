@@ -72,22 +72,38 @@ class TTreeSetBranchAddress(unittest.TestCase):
 
         for ds in t, c:
             a = array("d", self.arraysize * [0.0])
-            ds.SetBranchAddress("arrayb", a)
+
+            status = ds.SetBranchAddress("arrayb", a)
+            self.assertEqual(status, 0)  # should return status 0 for success
+
             ds.GetEntry(0)
 
             for j in range(self.arraysize):
                 self.assertEqual(a[j], j)
+
+            # check if type mismatch is correctly detected
+            a_wrong_type = array("f", self.arraysize * [0.0])
+            status = ds.SetBranchAddress("arrayb", a_wrong_type)
+            self.assertEqual(status, -2)  # should return error code because of type mismatch
 
     def test_numpy_array_branch(self):
         f, t, c = self.get_tree_and_chain()
 
         for ds in t, c:
             a = np.array(self.arraysize * [0.0])  # dtype='float64'
-            ds.SetBranchAddress("arrayb", a)
+
+            status = ds.SetBranchAddress("arrayb", a)
+            self.assertEqual(status, 0)  # should return status 0 for success
+
             ds.GetEntry(0)
 
             for j in range(self.arraysize):
                 self.assertEqual(a[j], j)
+
+            # check if type mismatch is correctly detected
+            a_wrong_type = np.zeros(self.arraysize, dtype=np.float32)
+            status = ds.SetBranchAddress("arrayb", a_wrong_type)
+            self.assertEqual(status, -2)  # should return error code because of type mismatch
 
     def test_struct_branch_leaflist(self):
         f, t, c = self.get_tree_and_chain()
@@ -167,6 +183,46 @@ class TTreeSetBranchAddress(unittest.TestCase):
             ds.GetEntry(1)
             self.assertEqual(mc.foo[0], 1.0)
             self.assertEqual(mc.foo[1], 2.0)
+
+    def test_np_conversion(self):
+        # 18365
+        a = np.zeros(3, np.uint16)
+        a[0] = 1
+        a[1] = 2
+        a[2] = 3
+        c = np.zeros(3, np.int16)
+        c[0] = 4
+        c[1] = 5
+        c[2] = 6
+        t = ROOT.TTree("t", "t")
+        t.Branch("b", a, "b[3]/s")
+        t.Branch("d", c, "d[3]/S")
+        t.Fill()
+        a[0] = 10
+        a[1] = 20
+        a[2] = 30
+        c[0] = 40
+        c[1] = 50
+        c[2] = 60
+        t.Fill()
+        # t.Print()
+        # t.Scan()
+        t.SetBranchAddress("b", a)
+        t.SetBranchAddress("d", c)
+        t.GetEntry(0)
+        self.assertEqual(a[0], 1)
+        self.assertEqual(a[1], 2)
+        self.assertEqual(a[2], 3)
+        self.assertEqual(c[0], 4)
+        self.assertEqual(c[1], 5)
+        self.assertEqual(c[2], 6)
+        t.GetEntry(1)
+        self.assertEqual(a[0], 10)
+        self.assertEqual(a[1], 20)
+        self.assertEqual(a[2], 30)
+        self.assertEqual(c[0], 40)
+        self.assertEqual(c[1], 50)
+        self.assertEqual(c[2], 60)
 
 
 if __name__ == "__main__":

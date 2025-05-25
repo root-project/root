@@ -15,6 +15,19 @@
 #include <stdexcept> // std::logic_error
 #include <utility> // std::declval
 
+namespace ROOT::Internal::RDF {
+template <typename T>
+class HasMakeNew {
+   template <typename C, typename = decltype(std::declval<C>().MakeNew((void *)(nullptr), std::string_view{}))>
+   static std::true_type Test(int);
+   template <typename C>
+   static std::false_type Test(...);
+
+public:
+   static constexpr bool value = decltype(Test<T>(0))::value;
+};
+} // namespace ROOT::Internal::RDF
+
 namespace ROOT {
 namespace Detail {
 namespace RDF {
@@ -48,18 +61,18 @@ public:
       throw std::logic_error("This action does not support callbacks!");
    }
 
-   template <typename T = Helper>
-   auto CallMakeNew(void *typeErasedResSharedPtr) -> decltype(std::declval<T>().MakeNew(typeErasedResSharedPtr))
+   Helper CallMakeNew(void *typeErasedResSharedPtr, std::string_view variation = "nominal")
    {
-      return static_cast<Helper *>(this)->MakeNew(typeErasedResSharedPtr);
-   }
-
-   template <typename... Args>
-   [[noreturn]] Helper CallMakeNew(void *, Args...)
-   {
-      const auto &actionName = static_cast<Helper *>(this)->GetActionName();
-      throw std::logic_error("The MakeNew method is not implemented for this action helper (" + actionName +
-                             "). Cannot Vary its result.");
+      if constexpr (ROOT::Internal::RDF::HasMakeNew<Helper>::value)
+         return static_cast<Helper *>(this)->MakeNew(typeErasedResSharedPtr, variation);
+      else {
+         // Avoid unused parameter warning with GCC
+         (void)typeErasedResSharedPtr;
+         (void)variation;
+         const auto &actionName = static_cast<Helper *>(this)->GetActionName();
+         throw std::logic_error("The MakeNew method is not implemented for this action helper (" + actionName +
+                                "). Cannot Vary its result.");
+      }
    }
 
    // Helper functions for RMergeableValue

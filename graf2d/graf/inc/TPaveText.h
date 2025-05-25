@@ -55,7 +55,7 @@ public:
    virtual void     PaintPrimitives(Int_t mode);
    void             Print(Option_t *option="") const override;
    virtual void     ReadFile(const char *filename, Option_t *option="", Int_t nlines=50, Int_t fromline=0); // *MENU*
-   virtual void     SaveLines(std::ostream &out, const char *name, Bool_t saved);
+   virtual void     SaveLines(std::ostream &out, const char *name, Bool_t);
    void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetAllWith(const char *text, Option_t *option, Double_t value); // *MENU*
    virtual void     SetLabel(const char *label) {fLabel = label;} // *MENU*

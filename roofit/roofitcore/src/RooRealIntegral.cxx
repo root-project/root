@@ -35,8 +35,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooConstVar.h>
 #include <RooDouble.h>
 #include <RooExpensiveObjectCache.h>
-#include <RooFuncWrapper.h>
-#include <RooHelpers.h>
 #include <RooInvTransform.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
@@ -46,12 +44,9 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooSuperCategory.h>
 #include <RooTrace.h>
 
-#include "RooFitImplHelpers.h"
-
 #include <iostream>
 #include <memory>
 
-ClassImp(RooRealIntegral);
 
 namespace {
 
@@ -343,7 +338,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Choose same expensive object cache as integrand
   setExpensiveObjectCache(function.expensiveObjectCache()) ;
-//   cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
+//   std::cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
 
   // Use objects integrator configuration if none is specified
   if (!_iconfig) _iconfig = const_cast<RooNumIntConfig*>(function.getIntegratorConfig());
@@ -395,17 +390,23 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Initial fill of list of LValue branches
   RooArgSet exclLVBranches("exclLVBranches") ;
   RooArgSet branchList;
-  RooArgSet branchListVD;
   function.branchNodeServerList(&branchList) ;
+
+  RooArgList branchListVDAll;
+  function.treeNodeServerList(&branchListVDAll,nullptr,true,false,/*valueOnly=*/true);
+  // The branchListVD is similar to branchList but considers only value
+  // dependence, and we want to exclude the function itself
+  RooArgSet branchListVD;
+  branchListVD.reserve(branchListVDAll.size());
+  for (RooAbsArg *branch : branchListVDAll) {
+    if (branch != &function) branchListVD.add(*branch);
+  }
 
   for (auto branch: branchList) {
     RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(branch) ;
     RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(branch) ;
     if ((realArgLV && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {
       exclLVBranches.add(*branch) ;
-    }
-    if (branch != &function && function.dependsOnValue(*branch)) {
-      branchListVD.add(*branch) ;
     }
   }
   exclLVBranches.remove(depList,true,true) ;
@@ -816,7 +817,7 @@ double RooRealIntegral::evaluate() const
 
       if (cacheVal) {
         retVal = *cacheVal ;
-   // cout << "using cached value of integral" << GetName() << std::endl ;
+   // std::cout << "using cached value of integral" << GetName() << std::endl ;
       } else {
 
 
@@ -851,7 +852,7 @@ double RooRealIntegral::evaluate() const
         if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
           RooDouble* val = new RooDouble(retVal) ;
           expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
-          //     cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
+          //     std::cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
         }
 
       }
@@ -1030,73 +1031,6 @@ bool RooRealIntegral::getAllowComponentSelection() const {
 
 void RooRealIntegral::setAllowComponentSelection(bool allow){
   _respectCompSelect = allow;
-}
-
-void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   if (_sumList.empty() && _intList.empty()) {
-      ctx.addResult(this, _function.arg().buildCallToAnalyticIntegral(_mode, RooNameReg::str(_rangeName), ctx));
-      return;
-   }
-
-   if (intVars().size() != 1 || _intList.size() != 1) {
-      std::stringstream errorMsg;
-      errorMsg << "Only analytical integrals and 1D numeric integrals are supported for AD for class"
-               << _function.GetName();
-      coutE(Minimization) << errorMsg.str() << std::endl;
-      throw std::runtime_error(errorMsg.str().c_str());
-   }
-
-   auto &intVar = static_cast<RooAbsRealLValue &>(*_intList[0]);
-
-   RooFit::Experimental::RooFuncWrapper wrapper{GetName(), GetTitle(), *_function};
-
-   RooArgSet params;
-   _function->getParameters(nullptr, params);
-
-   std::string paramsName = ctx.getTmpVarName();
-
-   std::stringstream ss;
-
-   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
-   ctx.addResult(this, resName);
-   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
-
-   ss  << "double " << paramsName << "[] = {";
-   std::string args;
-   int intVarIdx = 0;
-   for (RooAbsArg *param : params) {
-      // Fill the integration variable with dummy value for now. This will then
-      // be reset in the sampling loop.
-      if (param->namePtr() == intVar.namePtr()) {
-         args += "0.0,";
-      } else if (!param->isConstant()) {
-         args += ctx.getResult(*param) + ",";
-         intVarIdx++;
-      }
-   }
-   if (!args.empty()) {
-      args.pop_back();
-   }
-   ss << args << "};\n";
-
-   // TODO: once Clad has support for higher-order functions (follow also the
-   // Clad issue #637), we could refactor this code into an actual function
-   // instead of hardcoding it here as a string.
-   ss << "{\n"
-      << "   const int n = 1000; // number of sampling points\n"
-      << "   double d = " << intVar.getMax(intRange()) << " - " << intVar.getMin(intRange()) << ";\n"
-      << "   double eps = d / n;\n"
-      << "   for (int i = 0; i < n; ++i) {\n"
-      << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * i;\n"
-      << "      double tmpA = " << ctx.buildCall(wrapper.funcName(), paramsName, nullptr, nullptr) << ";\n"
-      << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * (i + 1);\n"
-      << "      double tmpB = " << ctx.buildCall(wrapper.funcName(), paramsName, nullptr, nullptr) << ";\n"
-      << "      " << resName << " += (tmpA + tmpB) * 0.5 * eps;\n"
-      << "   }\n"
-      << "}\n";
-
-   ctx.addToGlobalScope(ss.str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

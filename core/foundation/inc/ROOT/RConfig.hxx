@@ -238,6 +238,14 @@
 #   define NEED_SIGJMP
 #endif
 
+#if defined(linux) && defined(__loongarch_lp64)
+#   define R__LINUX
+#   define R__UNIX
+#   define R__BYTESWAP
+#   define R__B64
+#   define NEED_SIGJMP
+#endif
+
 #if defined(__MACH__) && defined(__i386__) && !defined(__APPLE__)
 #   define R__HURD
 #   define f2cFortran   /* cfortran.h does not know HURD - sigh */
@@ -477,7 +485,7 @@
 
 /* USE AS `R__DEPRECATED(6,34, "Not threadsafe; use TFoo::Bar().")`
    To be removed by 6.34 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,33,0)
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,33,2)
 # define _R__DEPRECATED_634(REASON) _R__DEPRECATED_LATER(REASON)
 #else
 # define _R__DEPRECATED_634(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
@@ -489,6 +497,14 @@
 # define _R__DEPRECATED_636(REASON) _R__DEPRECATED_LATER(REASON)
 #else
 # define _R__DEPRECATED_636(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+#endif
+
+/* USE AS `R__DEPRECATED(6,38, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.38 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,37,0)
+# define _R__DEPRECATED_638(REASON) _R__DEPRECATED_LATER(REASON)
+#else
+# define _R__DEPRECATED_638(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`

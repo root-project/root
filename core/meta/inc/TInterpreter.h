@@ -157,7 +157,7 @@ public:
    virtual Int_t    GenerateDictionary(const char *classes, const char *includes = nullptr, const char *options = nullptr) = 0;
    virtual char    *GetPrompt() = 0;
    virtual const char *GetSharedLibs() = 0;
-   virtual const char *GetClassSharedLibs(const char *cls) = 0;
+   virtual const char *GetClassSharedLibs(const char *cls, bool skipCore = true) = 0;
    virtual const char *GetSharedLibDeps(const char *lib, bool tryDyld = false) = 0;
    virtual const char *GetIncludePath() = 0;
    virtual const char *GetSTLIncludePath() const { return ""; }
@@ -167,6 +167,7 @@ public:
    virtual void     InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Bool_t   IsLibraryLoaded(const char *libname) const = 0;
+   virtual bool     IsValid() const = 0;
    virtual Bool_t   HasPCMForLibrary(const char *libname) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = nullptr) = 0;
@@ -557,9 +558,6 @@ public:
    virtual Bool_t IsFloatingType(const void * /* QualTypePtr */) const {return 0;}
    virtual Bool_t IsPointerType(const void * /* QualTypePtr */) const {return 0;}
    virtual Bool_t IsVoidPointerType(const void * /* QualTypePtr */) const {return 0;}
-
-   // FunctionDecl interface
-   virtual Bool_t FunctionDeclId_IsMethod(DeclId_t /* fdeclid */) const {return 0;}
 
    static TInterpreter *Instance();
 

@@ -16,8 +16,9 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 
-#include <ROOT/REveTableInfo.hxx>
 #include <ROOT/REveManager.hxx>
+#include <ROOT/REveTableInfo.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include <sstream>
 
@@ -95,6 +96,8 @@ void REveTableViewInfo::SetDisplayedCollection(ElementId_t collectionId)
 
 void REveTableViewInfo::AddNewColumnToCurrentCollection(const char* expr, const char* title, int prec)
 {
+   static const REveException eh("REveTableViewInfo::AddNewColumnToCurrentCollection");
+
    if (!fDisplayedCollection)
       return;
 
@@ -104,21 +107,24 @@ void REveTableViewInfo::AddNewColumnToCurrentCollection(const char* expr, const 
       return;
    }
 
+   if ( ! REveUtil::VerifyObjectFilterOrTableExpression(expr)) {
+      throw eh + "column-expression verification failed.";
+   }
+
    const char *rtyp = "void";
    auto icls = col->GetItemClass();
    std::function<void(void *)> fooptr;
    std::stringstream s;
    s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex << std::showbase
-     << (size_t)(&fooptr) << ") = [](" << icls->GetName() << "* p){" << icls->GetName() << " &i=*p; return (" << expr
-     << "); }";
+     << (size_t)(&fooptr) << ") = [](" << icls->GetName() << "* p){" << icls->GetName()
+     << " &i=*p; return (" << expr << "); }";
 
    // make ProcessLine() call to check if expr is valid
    // there may be more efficient check 
    int err;
    gROOT->ProcessLine(s.str().c_str(), &err);
    if (err != TInterpreter::kNoError) {
-      std::cout << "REveTableViewInfo::AddNewColumnToCurrentCollection failed." << std::endl;
-      return;
+      throw eh + "column expression compilation check failed.";
    }
 
    fConfigChanged = true;

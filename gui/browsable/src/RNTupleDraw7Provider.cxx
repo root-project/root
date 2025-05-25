@@ -31,18 +31,20 @@ public:
 
    RNTupleDraw7Provider()
    {
-      RegisterDraw7(TClass::GetClass<ROOT::Experimental::RNTuple>(), [this](std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw7(TClass::GetClass<ROOT::RNTuple>(),
+                    [this](std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj,
+                           const std::string &opt) -> bool {
+                       auto h1 = DrawField(dynamic_cast<RFieldHolder *>(obj.get()));
+                       if (!h1)
+                          return false;
 
-         auto h1 = DrawField(dynamic_cast<RFieldHolder*> (obj.get()));
-         if (!h1) return false;
+                       std::shared_ptr<TH1> shared;
+                       shared.reset(h1);
 
-         std::shared_ptr<TH1> shared;
-         shared.reset(h1);
-
-         subpad->Draw<ROOT::Experimental::TObjectDrawable>(shared, opt);
-         subpad->GetCanvas()->Update(true);
-         return true;
-      });
+                       subpad->Draw<ROOT::Experimental::TObjectDrawable>(shared, opt);
+                       subpad->GetCanvas()->Update(true);
+                       return true;
+                    });
    }
 
 } newRNTupleDraw7Provider;

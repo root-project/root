@@ -45,8 +45,7 @@ namespace {
                       Sema* S) :
       m_Policy(Policy), m_Addresses(Addresses), m_Sema(S) {}
 
-    virtual ~StmtPrinterHelper() {}
-
+    ~StmtPrinterHelper() override {}
 
     // Handle only DeclRefExprs since they are local and the call wrapper
     // won't "see" them. Consequently we don't need to handle:
@@ -721,12 +720,11 @@ namespace cling {
     Expr* ExprTemplate = ConstructConstCharPtrExpr(OS.str());
 
     // 3. Build the array of addresses
-    QualType VarAddrTy = m_Sema->BuildArrayType(m_Context->VoidPtrTy,
-                                                ArrayType::Normal,
-                                                /*ArraySize*/nullptr,
-                                                /*IndexTypeQuals*/0,
-                                                m_NoRange,
-                                                DeclarationName() );
+    QualType VarAddrTy =
+        m_Sema->BuildArrayType(m_Context->VoidPtrTy, ArraySizeModifier::Normal,
+                               /*ArraySize*/ nullptr,
+                               /*IndexTypeQuals*/ 0, m_NoRange,
+                               DeclarationName());
 
     llvm::SmallVector<Expr*, 2> Inits;
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
@@ -812,13 +810,13 @@ namespace cling {
 
     unsigned bitSize = m_Context->getTypeSize(m_Context->VoidPtrTy);
     llvm::APInt ArraySize(bitSize, Value.size() + 1);
-    const QualType CCArray = m_Context->getConstantArrayType(CChar,
-                                                             ArraySize,
-                                                           /*SizeExpr=*/nullptr,
-                                                             ArrayType::Normal,
-                                                          /*IndexTypeQuals=*/0);
+    const QualType CCArray =
+        m_Context->getConstantArrayType(CChar, ArraySize,
+                                        /*SizeExpr=*/nullptr,
+                                        ArraySizeModifier::Normal,
+                                        /*IndexTypeQuals=*/0);
 
-    StringLiteral::StringKind Kind = StringLiteral::Ordinary;
+    StringLiteralKind Kind = StringLiteralKind::Ordinary;
     Expr* Result = StringLiteral::Create(*m_Context,
                                          Value,
                                          Kind,
@@ -911,7 +909,7 @@ namespace cling {
   bool EvaluateTSynthesizer::ShouldVisit(FunctionDecl* D) {
     // FIXME: Here we should have our custom attribute.
     if (AnnotateAttr* A = D->getAttr<AnnotateAttr>())
-      if (A->getAnnotation().equals("__ResolveAtRuntime"))
+      if (A->getAnnotation() == "__ResolveAtRuntime")
         return true;
     return false;
   }

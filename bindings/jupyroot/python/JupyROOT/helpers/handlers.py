@@ -101,7 +101,7 @@ class Runner(object):
     >>> r.AsyncRun("ss");time.sleep(1)
     ss
     >>> def g(msg):
-    ...    time.sleep(.5)
+    ...    time.sleep(.25)
     ...    print(msg)
     >>> r= Runner(g, p)
     >>> r.AsyncRun("Asynchronous");print("Synchronous");time.sleep(1)

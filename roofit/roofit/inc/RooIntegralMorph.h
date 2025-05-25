@@ -32,7 +32,7 @@ public:
            RooAbsReal& _x,
          RooAbsReal& _alpha, bool cacheAlpha=false);
   RooIntegralMorph(const RooIntegralMorph& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooIntegralMorph(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooIntegralMorph(*this,newname); }
 
   bool selfNormalized() const override {
     // P.d.f is self normalized

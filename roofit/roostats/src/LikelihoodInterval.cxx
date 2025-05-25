@@ -66,7 +66,6 @@
 #include <cctype>   // need to use c version of toupper defined here
 
 
-ClassImp(RooStats::LikelihoodInterval);
 
 using namespace RooStats;
 
@@ -247,8 +246,8 @@ bool LikelihoodInterval::CreateMinimizer() {
    const auto& config = GetGlobalRooStatsConfig();
 
    // now do binding of NLL with a functor for Minimizer
-   if (config.useLikelihoodOffset) {
-      ccoutI(InputArguments) << "LikelihoodInterval: using nll offset - set all RooAbsReal to hide the offset  " << std::endl;
+   if (config.useLikelihoodOffset == "initial") {
+      ccoutI(InputArguments) << "LikelihoodInterval: using nll offset \"initial\" - set all RooAbsReal to hide the offset  " << std::endl;
       RooAbsReal::setHideOffset(false); // need to keep this false
    }
    fFunctor = std::make_shared<RooFunctor>(nll, RooArgSet(), params);

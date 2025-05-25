@@ -10,12 +10,16 @@
 #ifndef ROOT_Minuit2_MnFcn
 #define ROOT_Minuit2_MnFcn
 
-#include "Minuit2/MnConfig.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnMatrix.h"
+
+#include <vector>
 
 namespace ROOT {
 
 namespace Minuit2 {
+
+class MnUserTransformation;
 
 class FCNBase;
 /**
@@ -30,27 +34,51 @@ class FCNBase;
 class MnFcn {
 
 public:
-   /// constructor of
    explicit MnFcn(const FCNBase &fcn, int ncall = 0) : fFCN(fcn), fNumCall(ncall) {}
+   explicit MnFcn(const FCNBase &fcn, const MnUserTransformation &trafo, int ncall = 0)
+      : fFCN(fcn), fNumCall(ncall), fTransform(&trafo)
+   {
+   }
 
-   virtual ~MnFcn();
-
-   virtual double operator()(const MnAlgebraicVector &) const;
    unsigned int NumOfCalls() const { return fNumCall; }
 
-   //
-   // forward interface
-   //
-   double ErrorDef() const;
-   double Up() const;
+   double ErrorDef() const
+   {
+      return fFCN.Up();
+   }
+
+   double Up() const
+   {
+      return fFCN.Up();
+   }
 
    const FCNBase &Fcn() const { return fFCN; }
 
+   // Access the parameter transformations.
+   // For internal use in the Minuit2 implementation.
+   const MnUserTransformation *Trafo() const { return fTransform; }
+
+   double CallWithTransformedParams(std::vector<double> const &vpar) const;
+   double CallWithoutDoingTrafo(const MnAlgebraicVector &) const;
+
 private:
    const FCNBase &fFCN;
-
-protected:
    mutable int fNumCall;
+   const MnUserTransformation *fTransform = nullptr;
+};
+
+// Helper class to call the MnFcn, caching the transformed parameters if necessary.
+class MnFcnCaller {
+public:
+   MnFcnCaller(const MnFcn &mfcn);
+
+   double operator()(const MnAlgebraicVector &v);
+
+private:
+   MnFcn const &fMfcn;
+   bool fDoInt2ext = false;
+   std::vector<double> fLastInput;
+   std::vector<double> fVpar;
 };
 
 } // namespace Minuit2

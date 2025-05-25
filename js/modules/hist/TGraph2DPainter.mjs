@@ -1,11 +1,10 @@
 import { settings, createHistogram, setHistogramTitle, kNoZoom,
-         clTH2F, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
-import { Color, DoubleSide, LineBasicMaterial, MeshBasicMaterial, Mesh } from '../three.mjs';
-import { DrawOptions } from '../base/BasePainter.mjs';
+         clTH2D, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
+import { buildSvgCurve, DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { Triangles3DHandler } from '../hist2d/TH2Painter.mjs';
-import { createLineSegments, PointsCreator, getMaterialArgs } from '../base/base3d.mjs';
+import { createLineSegments, PointsCreator, getMaterialArgs, THREE } from '../base/base3d.mjs';
 import { convertLegoBuf, createLegoGeom } from './hist3d.mjs';
 
 function getMax(arr) {
@@ -22,7 +21,7 @@ function getMin(arr) {
    return v;
 }
 
-function TMath_Sort(np, values, indicies /*, down */) {
+function TMath_Sort(np, values, indicies /* , down */) {
    const arr = new Array(np);
    for (let i = 0; i < np; ++i)
       arr[i] = { v: values[i], i };
@@ -75,7 +74,7 @@ class TGraphDelaunay {
    }
 
    ComputeZ(x, y) {
-      // Initialise the Delaunay algorithm if needed.
+      // Initialize the Delaunay algorithm if needed.
       // CreateTrianglesDataStructure computes fXoffset, fYoffset,
       // fXScaleFactor and fYScaleFactor;
       // needed in this function.
@@ -126,7 +125,7 @@ class TGraphDelaunay {
    }
 
 
-   /// Is point e inside the triangle t1-t2-t3 ?
+   // Is point e inside the triangle t1-t2-t3 ?
 
    Enclose(t1, t2, t3, e) {
       const x = [this.fXN[t1], this.fXN[t2], this.fXN[t3], this.fXN[t1]],
@@ -147,9 +146,9 @@ class TGraphDelaunay {
    }
 
 
-   /// Files the triangle defined by the 3 vertices p, n and m into the
-   /// fxTried arrays. If these arrays are to small they are automatically
-   /// expanded.
+   // Files the triangle defined by the 3 vertices p, n and m into the
+   // fxTried arrays. If these arrays are to small they are automatically
+   // expanded.
 
    FileIt(p, n, m) {
       let swap, tmp, ps = p, ns = n, ms = m;
@@ -169,16 +168,16 @@ class TGraphDelaunay {
    }
 
 
-   /// Attempt to find all the Delaunay triangles of the point set. It is not
-   /// guaranteed that it will fully succeed, and no check is made that it has
-   /// fully succeeded (such a check would be possible by referencing the points
-   /// that make up the convex hull). The method is to check if each triangle
-   /// shares all three of its sides with other triangles. If not, a point is
-   /// generated just outside the triangle on the side(s) not shared, and a new
-   /// triangle is found for that point. If this method is not working properly
-   /// (many triangles are not being found) it's probably because the new points
-   /// are too far beyond or too close to the non-shared sides. Fiddling with
-   /// the size of the `alittlebit' parameter may help.
+   // Attempt to find all the Delaunay triangles of the point set. It is not
+   // guaranteed that it will fully succeed, and no check is made that it has
+   // fully succeeded (such a check would be possible by referencing the points
+   // that make up the convex hull). The method is to check if each triangle
+   // shares all three of its sides with other triangles. If not, a point is
+   // generated just outside the triangle on the side(s) not shared, and a new
+   // triangle is found for that point. If this method is not working properly
+   // (many triangles are not being found) it's probably because the new points
+   // are too far beyond or too close to the non-shared sides. Fiddling with
+   // the size of the `alittlebit' parameter may help.
 
    FindAllTriangles() {
       if (this.fAllTri) return;
@@ -211,7 +210,7 @@ class TGraphDelaunay {
       // loop over all Delaunay triangles (including those constantly being
       // produced within the loop) and check to see if their 3 sides also
       // correspond to the sides of other Delaunay triangles, i.e. that they
-      // have all their neighbours.
+      // have all their neighbors.
       t1 = 1;
       while (t1 <= this.fNdt) {
          // get the three points that make up this triangle
@@ -246,7 +245,7 @@ class TGraphDelaunay {
             // forget about it
             if (s[0] && s[1] && s[2]) continue;
          }
-         // Looks like t1 is missing a neighbour on at least one side.
+         // Looks like t1 is missing a neighbor on at least one side.
          // For each side, take a point a little bit beyond it and calculate
          // the Delaunay triangle for that point, this should be the triangle
          // which shares the side.
@@ -279,8 +278,8 @@ class TGraphDelaunay {
                nx = sy;
                ny = -sx;
                nn = Math.sqrt(nx*nx+ny*ny);
-               nx = nx/nn;
-               ny = ny/nn;
+               nx /= nn;
+               ny /= nn;
                mx = this.fXN[p3]-xm;
                my = this.fYN[p3]-ym;
                mdotn = mx*nx+my*ny;
@@ -306,11 +305,11 @@ class TGraphDelaunay {
       }
    }
 
-   /// Finds those points which make up the convex hull of the set. If the xy
-   /// plane were a sheet of wood, and the points were nails hammered into it
-   /// at the respective coordinates, then if an elastic band were stretched
-   /// over all the nails it would form the shape of the convex hull. Those
-   /// nails in contact with it are the points that make up the hull.
+   // Finds those points which make up the convex hull of the set. If the xy
+   // plane were a sheet of wood, and the points were nails hammered into it
+   // at the respective coordinates, then if an elastic band were stretched
+   // over all the nails it would form the shape of the convex hull. Those
+   // nails in contact with it are the points that make up the hull.
 
    FindHull() {
       if (!this.fHullPoints)
@@ -333,7 +332,7 @@ class TGraphDelaunay {
    }
 
 
-   /// Is point e inside the hull defined by all points apart from x ?
+   // Is point e inside the hull defined by all points apart from x ?
 
    InHull(e, x) {
       let n1, n2, n, m, ntry,
@@ -354,7 +353,7 @@ class TGraphDelaunay {
       }
 
       //  n1 and n2 will represent the two points most separated by angle
-      //  from point e. Initially the angle between them will be <180 degs.
+      //  from point e. Initially the angle between them will be <180 degrees.
       //  But subsequent points will increase the n1-e-n2 angle. If it
       //  increases above 180 degrees then point e must be surrounded by
       //  points - it is not part of the hull.
@@ -420,7 +419,7 @@ class TGraphDelaunay {
                   if (dphi < 0) dphi += Math.PI*2;
                   if ((dphi - Math.PI)*(lastdphi - Math.PI) < 0) {
                      // The addition of point m means the angle n1-e-n2 has risen
-                     // above 180 degs, the point is in the hull.
+                     // above 180 degrees, the point is in the hull.
                      deTinhull = true;
                      return deTinhull;
                   }
@@ -433,9 +432,8 @@ class TGraphDelaunay {
       return deTinhull;
    }
 
-
-   /// Finds the z-value at point e given that it lies
-   /// on the plane defined by t1,t2,t3
+   // Finds the z-value at point e given that it lies
+   // on the plane defined by t1,t2,t3
 
    InterpolateOnPlane(TI1, TI2, TI3, e) {
       let tmp, swap, t1 = TI1, t2 = TI2, t3 = TI3;
@@ -463,14 +461,15 @@ class TGraphDelaunay {
       return u*this.fXN[e] + v*this.fYN[e] + w;
    }
 
-   /// Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
-   /// calculate a z-value for it by linearly interpolating the z-values that
-   /// make up that triangle.
+   // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
+   // calculate a z-value for it by linearly interpolating the z-values that
+   // make up that triangle.
 
    Interpolate(xx, yy) {
       let thevalue,
           it, ntris_tried, p, n, m,
           i, j, k, l, z, f, d, o1, o2, a, b, t1, t2, t3,
+          /* eslint-disable-next-line no-useless-assignment */
           ndegen = 0, degen = 0, fdegen = 0, o1degen = 0, o2degen = 0,
           vxN, vyN,
           d1, d2, d3, c1, c2, dko1, dko2, dfo1,
@@ -478,7 +477,7 @@ class TGraphDelaunay {
           dx1, dx2, dx3, dy1, dy2, dy3, u, v;
       const dxz = [0, 0, 0], dyz = [0, 0, 0];
 
-      // initialise the Delaunay algorithm if needed
+      // initialize the Delaunay algorithm if needed
       this.Initialize();
 
       // create vectors needed for sorting
@@ -530,7 +529,7 @@ class TGraphDelaunay {
       }
 
       // sort array 'fDist' to find closest points
-      TMath_Sort(this.fNpoints, this.fDist, this.fOrder /*, false */);
+      TMath_Sort(this.fNpoints, this.fDist, this.fOrder /* , false */);
       for (it=0; it<this.fNpoints; it++) this.fOrder[it]++;
 
       // loop over triplets of close points to try to find a triangle that
@@ -544,9 +543,9 @@ class TGraphDelaunay {
                p = this.fOrder[i-1];
                if (ntris_tried > this.fMaxIter) {
                   // perhaps this point isn't in the hull after all
-   ///            Warning("Interpolate",
-   ///                    "Abandoning the effort to find a Delaunay triangle (and thus interpolated z-value) for point %g %g"
-   ///                    ,xx,yy);
+                  /* Warning("Interpolate",
+                             "Abandoning the effort to find a Delaunay triangle (and thus interpolated z-value) for point %g %g"
+                              ,xx,yy); */
                   return thevalue;
                }
                ntris_tried++;
@@ -629,23 +628,21 @@ class TGraphDelaunay {
                            // different fZ's. If they don't then this is harmless.
                            console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                         }
-                     } else {
-                        if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
-                           skip_this_triangle = true;
-                           break;
-                           // goto L90;
-                        } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) === 0) {
-                           // At least two points are sitting on top of each other - see above.
-                           console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
-                        }
+                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
+                        skip_this_triangle = true;
+                        break;
+                        // goto L90;
+                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) === 0) {
+                        // At least two points are sitting on top of each other - see above.
+                        console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                      }
                      // point is outside the circle, move to next point
                      continue; // goto L50;
                   }
 
-                  if (skip_this_triangle) break; // deepscan-disable-line
+                  if (skip_this_triangle) break;
 
-   ///            Error("Interpolate", "Should not get to here");
+                  /* Error("Interpolate", "Should not get to here"); */
                   // may as well soldier on
                   // SL: initialize before try to find better values
                   f = m;
@@ -681,7 +678,7 @@ class TGraphDelaunay {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f = m; o1 = p; o2 = n; // deepscan-disable-line
+                           f = m; o1 = p; o2 = n;
                         } else if (l === 2) {
                            f = p; o1 = n; o2 = m;
                         } else {
@@ -746,12 +743,12 @@ class TGraphDelaunay {
                if (ndegen > 0) {
                   // but is degenerate with at least one other,
                   // haven't figured out what to do if more than 4 points are involved
-   ///            if (ndegen > 1) {
-   ///               Error("Interpolate",
-   ///                     "More than 4 points lying on a circle. No decision making process formulated for triangulating this region in a non-arbitrary way %d %d %d %d",
-   ///                     p,n,m,degen);
-   ///               return thevalue;
-   ///            }
+                  /* if (ndegen > 1) {
+                     Error("Interpolate",
+                            "More than 4 points lying on a circle. No decision making process formulated for triangulating this region in a non-arbitrary way %d %d %d %d",
+                             p,n,m,degen);
+                     return thevalue;
+                  } */
 
                   // we have a quadrilateral which can be split down either diagonal
                   // (d<->f or o1<->o2) to form valid Delaunay triangles. Choose diagonal
@@ -800,32 +797,221 @@ class TGraphDelaunay {
             }
          }
       }
-      if (shouldbein) // deepscan-disable-line
+      if (shouldbein)
          console.error(`Interpolate Point outside hull when expected inside: this point could be dodgy ${xx}  ${yy} ${ntris_tried}`);
       return thevalue;
    }
 
-   /// Defines the number of triangles tested for a Delaunay triangle
-   /// (number of iterations) before abandoning the search
-
+   /** @summary Defines the number of triangles tested for a Delaunay triangle
+    * @desc (number of iterations) before abandoning the search */
    SetMaxIter(n = 100000) {
       this.fAllTri = false;
       this.fMaxIter = n;
    }
 
-   /// Sets the histogram bin height for points lying outside the convex hull ie:
-   /// the bins in the margin.
-
+   /** @summary Sets the histogram bin height for points lying outside the convex hull ie:
+     * @desc the bins in the margin. */
    SetMarginBinsContent(z) {
       this.fZout = z;
    }
 
-}
+   /** @summary Returns the X and Y graphs building a contour.
+    * @desc A contour level may consist in several parts not connected to each other.
+    * This function finds them and returns them in a graphs' list. */
+   GetContourList(contour) {
+      if (!this.fNdt)
+         return null;
+
+      let graph,     // current graph
+          // Find all the segments making the contour
+          r21, r20, r10, p0, p1, p2, x0, y0, z0, x1, y1, z1, x2, y2, z2,
+          it, i0, i1, i2, nbSeg = 0,
+          // Allocate space to store the segments. They cannot be more than the
+          // number of triangles.
+          xs0c, ys0c, xs1c, ys1c;
+
+      const t = [0, 0, 0],
+            xs0 = new Array(this.fNdt).fill(0),
+            ys0 = new Array(this.fNdt).fill(0),
+            xs1 = new Array(this.fNdt).fill(0),
+            ys1 = new Array(this.fNdt).fill(0);
+
+      // Loop over all the triangles in order to find all the line segments
+      // making the contour.
+
+      // old implementation
+      for (it = 0; it < this.fNdt; it++) {
+         t[0] = this.fPTried[it];
+         t[1] = this.fNTried[it];
+         t[2] = this.fMTried[it];
+         p0 = t[0] - 1;
+         p1 = t[1] - 1;
+         p2 = t[2] - 1;
+         x0 = this.fX[p0]; x2 = this.fX[p0];
+         y0 = this.fY[p0]; y2 = this.fY[p0];
+         z0 = this.fZ[p0]; z2 = this.fZ[p0];
+
+         // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
+         // After this z0 < z1 < z2
+         /* eslint-disable-next-line no-useless-assignment */
+         i0 = i1 = i2 = 0;
+         if (this.fZ[p1] <= z0) { z0 = this.fZ[p1]; x0 = this.fX[p1]; y0 = this.fY[p1]; i0 = 1; }
+         if (this.fZ[p1] > z2) { z2 = this.fZ[p1]; x2 = this.fX[p1]; y2 = this.fY[p1]; i2 = 1; }
+         if (this.fZ[p2] <= z0) { z0 = this.fZ[p2]; x0 = this.fX[p2]; y0 = this.fY[p2]; i0 = 2; }
+         if (this.fZ[p2] > z2) { z2 = this.fZ[p2]; x2 = this.fX[p2]; y2 = this.fY[p2]; i2 = 2; }
+         if (i0 === 0 && i2 === 0) {
+            console.error('GetContourList: wrong vertices ordering');
+            return null;
+         }
+
+         i1 = 3 - i2 - i0;
+
+         x1 = this.fX[t[i1]-1];
+         y1 = this.fY[t[i1]-1];
+         z1 = this.fZ[t[i1]-1];
+
+         if (contour >= z0 && contour <=z2) {
+            r20 = (contour-z0)/(z2-z0);
+            xs0c = r20*(x2-x0)+x0;
+            ys0c = r20*(y2-y0)+y0;
+            if (contour >= z1 && contour <=z2) {
+               r21 = (contour-z1)/(z2-z1);
+               xs1c = r21*(x2-x1)+x1;
+               ys1c = r21*(y2-y1)+y1;
+            } else {
+               r10 = (contour-z0)/(z1-z0);
+               xs1c = r10*(x1-x0)+x0;
+               ys1c = r10*(y1-y0)+y0;
+            }
+            // do not take the segments equal to a point
+            if (xs0c !== xs1c || ys0c !== ys1c) {
+               nbSeg++;
+               xs0[nbSeg-1] = xs0c;
+               ys0[nbSeg-1] = ys0c;
+               xs1[nbSeg-1] = xs1c;
+               ys1[nbSeg-1] = ys1c;
+            }
+         }
+      }
+
+      const list = [], // list holding all the graphs
+            segUsed = new Array(this.fNdt).fill(false);
+
+      // Find all the graphs making the contour. There is two kind of graphs,
+      // either they are "opened" or they are "closed"
+
+      // Find the opened graphs
+      let xc=0, yc=0, xnc=0, ync=0,
+          findNew, s0, s1, is, js;
+
+      for (is = 0; is < nbSeg; is++) {
+         if (segUsed[is]) continue;
+         s0 = s1 = false;
+
+         // Find to which segment is is connected. It can be connected
+         // via 0, 1 or 2 vertices.
+         for (js = 0; js < nbSeg; js++) {
+            if (is === js) continue;
+            if (xs0[is] === xs0[js] && ys0[is] === ys0[js]) s0 = true;
+            if (xs0[is] === xs1[js] && ys0[is] === ys1[js]) s0 = true;
+            if (xs1[is] === xs0[js] && ys1[is] === ys0[js]) s1 = true;
+            if (xs1[is] === xs1[js] && ys1[is] === ys1[js]) s1 = true;
+         }
+
+         // Segment is is alone, not connected. It is stored in the
+         // list and the next segment is examined.
+         if (!s0 && !s1) {
+            graph = [];
+            graph.push(xs0[is], ys0[is]);
+            graph.push(xs1[is], ys1[is]);
+            segUsed[is] = true;
+            list.push(graph);
+            continue;
+         }
+
+         // Segment is is connected via 1 vertex only and can be considered
+         // as the starting point of an opened contour.
+         if (!s0 || !s1) {
+            // Find all the segments connected to segment is
+            graph = [];
+            if (s0) { xc = xs0[is]; yc = ys0[is]; xnc = xs1[is]; ync = ys1[is]; }
+            if (s1) { xc = xs1[is]; yc = ys1[is]; xnc = xs0[is]; ync = ys0[is]; }
+            graph.push(xnc, ync);
+            segUsed[is] = true;
+            js = 0;
+
+            while (true) {
+               findNew = false;
+               while (js < nbSeg && segUsed[js])
+                  js++;
+
+               if (xc === xs0[js] && yc === ys0[js]) {
+                  xc = xs1[js];
+                  yc = ys1[js];
+                  findNew = true;
+               } else if (xc === xs1[js] && yc === ys1[js]) {
+                  xc = xs0[js];
+                  yc = ys0[js];
+                  findNew = true;
+               }
+               if (findNew) {
+                  segUsed[js] = true;
+                  graph.push(xc, yc);
+                  js = 0;
+               } else if (++js >= nbSeg)
+                  break;
+            }
+            list.push(graph);
+         }
+      }
+
+
+      // Find the closed graphs. At this point all the remaining graphs
+      // are closed. Any segment can be used to start the search.
+      for (is = 0; is < nbSeg; is++) {
+         if (segUsed[is]) continue;
+
+         // Find all the segments connected to segment is
+         graph = [];
+         segUsed[is] = true;
+         xc = xs0[is];
+         yc = ys0[is];
+         js = 0;
+         graph.push(xc, yc);
+         while (true) {
+            while (js < nbSeg && segUsed[js])
+               js++;
+            findNew = false;
+            if (xc === xs0[js] && yc === ys0[js]) {
+               xc = xs1[js];
+               yc = ys1[js];
+               findNew = true;
+            } else if (xc === xs1[js] && yc === ys1[js]) {
+               xc = xs0[js];
+               yc = ys0[js];
+               findNew = true;
+            }
+            if (findNew) {
+               segUsed[js] = true;
+               graph.push(xc, yc);
+               js = 0;
+            } else if (++js >= nbSeg)
+               break;
+         }
+         graph.push(xs0[is], ys0[is]);
+         list.push(graph);
+      }
+
+      return list;
+   }
+
+} // class TGraphDelaunay
 
    /** @summary Function handles tooltips in the mesh */
 function graph2DTooltip(intersect) {
    let indx = Math.floor(intersect.index / this.nvertex);
-   if ((indx < 0) || (indx >= this.index.length)) return null;
+   if ((indx < 0) || (indx >= this.index.length))
+      return null;
    const sqr = v => v*v;
 
    indx = this.index[indx];
@@ -863,7 +1049,6 @@ function graph2DTooltip(intersect) {
 }
 
 
-
 /**
  * @summary Painter for TGraph2D classes
  * @private
@@ -872,7 +1057,7 @@ function graph2DTooltip(intersect) {
 class TGraph2DPainter extends ObjectPainter {
 
    /** @summary Decode options string  */
-   decodeOptions(opt, _gr) {
+   decodeOptions(opt) {
       const d = new DrawOptions(opt);
 
       if (!this.options)
@@ -887,8 +1072,10 @@ class TGraph2DPainter extends ObjectPainter {
          gr2d.fLineColor = d.color;
 
       d.check('SAME');
-      if (d.check('TRI1'))
-         res.Triangles = 11; // wireframe and colors
+      if (d.check('CONT5'))
+         res.Contour = 15;
+      else if (d.check('TRI1'))
+         res.Triangles = 11; // wire-frame and colors
       else if (d.check('TRI2'))
          res.Triangles = 10; // only color triangles
       else if (d.check('TRIW'))
@@ -910,14 +1097,16 @@ class TGraph2DPainter extends ObjectPainter {
 
       if (!res.Markers) res.Color = false;
 
-      if (res.Color || res.Triangles >= 10)
+      if (res.Color || res.Triangles >= 10 || res.Contour)
          res.Zscale = d.check('Z');
 
       res.isAny = function() {
-         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles;
+         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles || res.Contour;
       };
 
-      if (res.isAny()) {
+      if (res.Contour)
+         res.Axis = '';
+      else if (res.isAny()) {
          res.Axis = 'lego2';
          if (res.Zscale) res.Axis += 'z';
       } else
@@ -981,7 +1170,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       this._own_histogram = true; // when histogram created on client side
 
-      const histo = createHistogram(clTH2F, graph.fNpx, graph.fNpy);
+      const histo = createHistogram(clTH2D, graph.fNpx, graph.fNpy);
       histo.fName = graph.fName + '_h';
       setHistogramTitle(histo, graph.fTitle);
       histo.fXaxis.fXmin = uxmin;
@@ -1063,16 +1252,16 @@ class TGraph2DPainter extends ObjectPainter {
       triangles.callFuncs((lvl, pos) => {
          const geometry = createLegoGeom(this.getMainPainter(), pos, null, 100, 100),
                color = plain_mode ? this.getColor(graph.fFillColor) : palette.calcColor(lvl, levels.length),
-               material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false })),
+               material = new THREE.MeshBasicMaterial(getMaterialArgs(color, { side: THREE.DoubleSide, vertexColors: false })),
 
-          mesh = new Mesh(geometry, material);
+          mesh = new THREE.Mesh(geometry, material);
 
          fp.add3DMesh(mesh, this);
 
          mesh.painter = this; // to let use it with context menu
       }, (_isgrid, lpos) => {
          const lcolor = this.getColor(graph.fLineColor),
-              material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
+              material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: graph.fLineWidth }),
               linemesh = createLineSegments(convertLegoBuf(this.getMainPainter(), lpos, 100, 100), material);
          fp.add3DMesh(linemesh, this);
       });
@@ -1115,20 +1304,62 @@ class TGraph2DPainter extends ObjectPainter {
       return promise.then(() => this.drawGraph2D());
    }
 
+   async drawContour(fp, main, graph) {
+      const dulaunay = this.buildDelaunay(graph);
+      if (!dulaunay)
+         return this;
+
+      const cntr = main.getContour(),
+            palette = main.getHistPalette(),
+            levels = cntr.getLevels(),
+            funcs = fp.getGrFuncs();
+
+      this.createG(true);
+
+      this.createAttLine({ attr: graph, nocolor: true });
+
+      for (let k = 0; k < levels.length; ++k) {
+         const lst = dulaunay.GetContourList(levels[k]),
+               color = cntr.getPaletteColor(palette, levels[k]);
+         let path = '';
+         for (let i = 0; i < lst.length; ++i) {
+            const gr = lst[i], arr = [];
+            for (let n = 0; n < gr.length; n += 2)
+               arr.push({ grx: funcs.grx(gr[n]), gry: funcs.gry(gr[n+1]) });
+            path += buildSvgCurve(arr, { cmd: 'M', line: true });
+         }
+
+         this.lineatt.color = color;
+
+         this.draw_g.append('svg:path')
+             .attr('d', path)
+             .style('fill', 'none')
+             .call(this.lineatt.func);
+      }
+
+      return this;
+   }
+
    /** @summary Actual drawing of TGraph2D object
      * @return {Promise} for drawing ready */
    async drawGraph2D() {
-      const main = this.getMainPainter(),
-            fp = this.getFramePainter(),
+      const fp = this.getFramePainter(),
+            main = this.getMainPainter(),
             graph = this.getObject();
 
-      if (!graph || !main || !fp || !fp.mode3d)
+      if (!graph || !main || !fp)
+         return this;
+
+      if (this.options.Contour)
+         return this.drawContour(fp, main, graph);
+
+      if (!fp.mode3d)
          return this;
 
       fp.remove3DMeshes(this);
 
       if (!this.options.isAny()) {
-         // no need to draw somthing if histogram content was drawn
+         // no need to draw smoothing if histogram content was drawn
          if (main.draw_content)
             return this;
          if ((graph.fMarkerSize === 1) && (graph.fMarkerStyle === 1))
@@ -1140,11 +1371,9 @@ class TGraph2DPainter extends ObjectPainter {
       const countSelected = (zmin, zmax) => {
          let cnt = 0;
          for (let i = 0; i < graph.fNpoints; ++i) {
-            if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
-                (graph.fY[i] < fp.scale_ymin) || (graph.fY[i] > fp.scale_ymax) ||
-                (graph.fZ[i] < zmin) || (graph.fZ[i] >= zmax)) continue;
-
-            ++cnt;
+            if ((graph.fX[i] >= fp.scale_xmin) && (graph.fX[i] <= fp.scale_xmax) &&
+                (graph.fY[i] >= fp.scale_ymin) && (graph.fY[i] <= fp.scale_ymax) &&
+                (graph.fZ[i] >= zmin) && (graph.fZ[i] < zmax)) ++cnt;
          }
          return cnt;
       };
@@ -1170,7 +1399,8 @@ class TGraph2DPainter extends ObjectPainter {
       if (this.options.Circles)
          scale = 0.06 * fp.size_x3d;
 
-      if (fp.usesvg) scale *= 0.3;
+      if (fp.usesvg)
+         scale *= 0.3;
 
       scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
@@ -1182,27 +1412,21 @@ class TGraph2DPainter extends ObjectPainter {
       if (this.options.Triangles)
          this.drawTriangles(fp, graph, levels, palette);
 
-      for (let lvl = 0; lvl < levels.length-1; ++lvl) {
+      for (let lvl = 0; lvl < levels.length - 1; ++lvl) {
          const lvl_zmin = Math.max(levels[lvl], fp.scale_zmin),
                lvl_zmax = Math.min(levels[lvl+1], fp.scale_zmax);
 
-         if (lvl_zmin >= lvl_zmax) continue;
+         if (lvl_zmin >= lvl_zmax)
+            continue;
 
          const size = Math.floor(countSelected(lvl_zmin, lvl_zmax) / step),
-               index = new Int32Array(size);
-         let pnts = null, select = 0, icnt = 0,
-             err = null, asymm = false, line = null, ierr = 0, iline = 0;
+               index = new Int32Array(size),
+               pnts = this.options.Markers || this.options.Circles ? new PointsCreator(size, fp.webgl, scale/3) : null,
+               err = this.options.Error ? new Float32Array(size*6*3) : null,
+               asymm = err && this.matchObjectType(clTGraph2DAsymmErrors),
+               line = this.options.Line ? new Float32Array((size-1)*6) : null;
 
-         if (this.options.Markers || this.options.Circles)
-            pnts = new PointsCreator(size, fp.webgl, scale/3);
-
-         if (this.options.Error) {
-            err = new Float32Array(size*6*3);
-            asymm = this.matchObjectType(clTGraph2DAsymmErrors);
-          }
-
-         if (this.options.Line)
-            line = new Float32Array((size-1)*6);
+         let select = 0, icnt = 0, ierr = 0, iline = 0;
 
          for (let i = 0; i < graph.fNpoints; ++i) {
             if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
@@ -1216,11 +1440,9 @@ class TGraph2DPainter extends ObjectPainter {
 
             index[icnt++] = i; // remember point index for tooltip
 
-            const x = fp.grx(graph.fX[i]),
-                y = fp.gry(graph.fY[i]),
-                z = fp.grz(graph.fZ[i]);
+            const x = fp.grx(graph.fX[i]), y = fp.gry(graph.fY[i]), z = fp.grz(graph.fZ[i]);
 
-            if (pnts) pnts.addPoint(x, y, z);
+            pnts?.addPoint(x, y, z);
 
             if (err) {
                err[ierr] = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
@@ -1247,11 +1469,11 @@ class TGraph2DPainter extends ObjectPainter {
             }
 
             if (line) {
-               if (iline>=6) {
+               if (iline >= 6) {
                   line[iline] = line[iline-3];
                   line[iline+1] = line[iline-2];
                   line[iline+2] = line[iline-1];
-                  iline+=3;
+                  iline += 3;
                }
                line[iline] = x;
                line[iline+1] = y;
@@ -1262,7 +1484,7 @@ class TGraph2DPainter extends ObjectPainter {
 
          if (line && (iline > 3) && (line.length === iline)) {
             const lcolor = this.getColor(graph.fLineColor),
-                  material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
+                  material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: graph.fLineWidth }),
                   linemesh = createLineSegments(line, material);
             fp.add3DMesh(linemesh, this);
 
@@ -1280,7 +1502,7 @@ class TGraph2DPainter extends ObjectPainter {
 
          if (err) {
             const lcolor = this.getColor(graph.fLineColor),
-                  material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
+                  material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: graph.fLineWidth }),
                   errmesh = createLineSegments(err, material);
             fp.add3DMesh(errmesh, this);
 
@@ -1301,7 +1523,7 @@ class TGraph2DPainter extends ObjectPainter {
             if (!this.options.Circles || this.options.Color)
                color = palette?.calcColor(lvl, levels.length) ?? this.getColor(graph.fMarkerColor);
 
-            const pr = pnts.createPoints({ color, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
+            const pr = pnts.createPoints({ color, fill: this.options.Circles ? 'white' : undefined, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
                mesh.graph = graph;
                mesh.fp = fp;
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
@@ -1318,11 +1540,22 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       return Promise.all(promises).then(() => {
-         if (this.options.Zscale && this.axes_draw) {
-            const pal = this.getMainPainter()?.findFunction(clTPaletteAxis),
-                  pal_painter = this.getPadPainter()?.findPainterFor(pal);
-            return pal_painter?.drawPave();
-         }
+         const main2 = this.getMainPainter(),
+               handle_palette = this.axes_draw || (main2?.draw_content === false);
+         if (!handle_palette)
+            return;
+
+         const pal = main2?.findFunction(clTPaletteAxis),
+               pal_painter = this.getPadPainter()?.findPainterFor(pal);
+         if (!pal_painter)
+            return;
+
+         pal_painter.Enabled = this.options.Zscale;
+
+         if (this.options.Zscale)
+            return pal_painter.drawPave();
+
+         pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
       }).then(() => {
          fp.render3D(100);
          return this;

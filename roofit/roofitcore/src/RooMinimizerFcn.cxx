@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -34,7 +36,7 @@
 #include <fstream>
 #include <iomanip>
 
-using std::cout, std::endl, std::setprecision;
+using std::setprecision;
 
 namespace {
 
@@ -54,9 +56,12 @@ RooArgSet getParameters(RooAbsReal const &funct)
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
    : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
 {
+   unsigned int nDim = getNDim();
+
    if (context->_cfg.useGradient && funct->hasGradient()) {
+      _gradientOutput.resize(_allParams.size());
       _multiGenFcn = std::make_unique<ROOT::Math::GradFunctor>(this, &RooMinimizerFcn::operator(),
-                                                               &RooMinimizerFcn::evaluateGradient, getNDim());
+                                                               &RooMinimizerFcn::evaluateGradient, nDim);
    } else {
       _multiGenFcn = std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim());
    }
@@ -71,7 +76,7 @@ void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, 
 double RooMinimizerFcn::operator()(const double *x) const
 {
    // Set the parameter values for this iteration
-   for (unsigned index = 0; index < _nDim; index++) {
+   for (unsigned index = 0; index < getNDim(); index++) {
       if (_logfile)
          (*_logfile) << x[index] << " ";
       SetPdfParamVal(index, x[index]);
@@ -86,11 +91,11 @@ double RooMinimizerFcn::operator()(const double *x) const
 
    // Optional logging
    if (_logfile)
-      (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
+      (*_logfile) << setprecision(15) << fvalue << setprecision(4) << std::endl;
    if (cfg().verbose) {
-      cout << "\nprevFCN" << (_funct->isOffsetting() ? "-offset" : "") << " = " << setprecision(10) << fvalue
+      std::cout << "\nprevFCN" << (_funct->isOffsetting() ? "-offset" : "") << " = " << setprecision(10) << fvalue
            << setprecision(4) << "  ";
-      cout.flush();
+      std::cout.flush();
    }
 
    finishDoEval();
@@ -101,13 +106,23 @@ double RooMinimizerFcn::operator()(const double *x) const
 void RooMinimizerFcn::evaluateGradient(const double *x, double *out) const
 {
    // Set the parameter values for this iteration
-   for (unsigned index = 0; index < _nDim; index++) {
+   for (unsigned index = 0; index < getNDim(); index++) {
       if (_logfile)
          (*_logfile) << x[index] << " ";
       SetPdfParamVal(index, x[index]);
    }
 
-   _funct->gradient(out);
+   _funct->gradient(_gradientOutput.data());
+
+   std::size_t iAll = 0;
+   std::size_t iFloating = 0;
+   for (RooAbsArg *param : _allParamsInit) {
+      if (!treatAsConstant(*param)) {
+         out[iFloating] = _gradientOutput[iAll];
+         ++iFloating;
+      }
+      ++iAll;
+   }
 
    // Optional logging
    if (cfg().verbose) {
@@ -132,3 +147,5 @@ void RooMinimizerFcn::setOffsetting(bool flag)
 {
    _funct->enableOffsetting(flag);
 }
+
+/// \endcond

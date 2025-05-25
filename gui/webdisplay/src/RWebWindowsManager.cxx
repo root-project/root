@@ -24,13 +24,14 @@
 #include "TString.h"
 #include "TApplication.h"
 #include "TTimer.h"
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TError.h"
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TExec.h"
 #include "TSocket.h"
 #include "TThread.h"
+#include "TObjArray.h"
 
 #include <thread>
 #include <chrono>
@@ -167,6 +168,89 @@ void RWebWindowsManager::SetUseSessionKey(bool on)
 void RWebWindowsManager::SetUseConnectionKey(bool on)
 {
    gEnv->SetValue("WebGui.OnetimeKey", on ? "yes" : "no");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable single connection mode (default on)
+/// If enabled, one connection only with any web widget is possible
+/// Any attempt to establish more connections will fail
+/// if this mode is disabled some widgets like geom viewer or web canvas will be able to
+/// to serve several clients - only when they are connected with required authentication keys
+
+void RWebWindowsManager::SetSingleConnMode(bool on)
+{
+   gEnv->SetValue("WebGui.SingleConnMode", on ? "yes" : "no");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Configure server location which can be used for loading of custom scripts or files
+/// When THttpServer instance of RWebWindowsManager will be created,
+/// THttpServer::AddLocation() method with correspondent arguments will be invoked.
+
+void RWebWindowsManager::AddServerLocation(const std::string &server_prefix, const std::string &files_path)
+{
+   if (server_prefix.empty() || files_path.empty())
+      return;
+   auto loc = GetServerLocations();
+   std::string prefix = server_prefix;
+   if (prefix.back() != '/')
+      prefix.append("/");
+   loc[prefix] = files_path;
+
+   // now convert back to plain string
+   TString cfg;
+   for (auto &entry : loc) {
+      if (cfg.Length() > 0)
+         cfg.Append(";");
+      cfg.Append(entry.first.c_str());
+      cfg.Append(":");
+      cfg.Append(entry.second.c_str());
+   }
+
+   gEnv->SetValue("WebGui.ServerLocations", cfg);
+
+   auto serv = Instance()->GetServer();
+   if (serv)
+      serv->AddLocation(prefix.c_str(), files_path.c_str());
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns server locations as <std::string, std::string>
+/// Key is location name (with slash at the end) and value is file path
+
+std::map<std::string, std::string> RWebWindowsManager::GetServerLocations()
+{
+   std::map<std::string, std::string> res;
+
+   TString cfg = gEnv->GetValue("WebGui.ServerLocations","");
+   auto arr = cfg.Tokenize(";");
+   if (arr) {
+      TIter next(arr);
+      while(auto obj = next()) {
+         TString arg = obj->GetName();
+
+         auto p = arg.First(":");
+         if (p == kNPOS) continue;
+
+         TString prefix = arg(0, p);
+         if (!prefix.EndsWith("/"))
+            prefix.Append("/");
+         TString path = arg(p+1, arg.Length() - p);
+
+         res[prefix.Data()] = path.Data();
+      }
+      delete arr;
+   }
+   return res;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Clear all server locations
+/// Does not change configuration of already running HTTP server
+
+void RWebWindowsManager::ClearServerLocations()
+{
+   gEnv->SetValue("WebGui.ServerLocations", "");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +431,13 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///
 ///      WebGui.FastCgiServer: https://your_apache_server.com/root_cgi_path
 ///
+/// For some custom applications one requires to load JavaScript modules or other files.
+/// For such applications one may require to load files from other locations which can be configured
+/// with AddServerLocation() method or directly via:
+///
+///      WebGui.ServerLocations: location1:/file/path/to/location1;location2:/file/path/to/location2
+
+
 
 bool RWebWindowsManager::CreateServer(bool with_http)
 {
@@ -395,6 +486,10 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       }
 
       fServer->AddLocation("rootui5sys/", ui5dir.Data());
+
+      auto loc = GetServerLocations();
+      for (auto &entry : loc)
+         fServer->AddLocation(entry.first.c_str(), entry.second.c_str());
    }
 
    if (!with_http || fServer->IsAnyEngine())
@@ -439,13 +534,13 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    if ((http_timer > 0) && !IsUseHttpThread())
       fServer->SetTimer(http_timer);
 
+   TRandom3 rnd;
+
    if (http_port < 0) {
       ntry = 0;
    } else {
-
       if (http_port == 0)
-         gRandom->SetSeed(0);
-
+         rnd.SetSeed(0);
       if (http_max - http_min < ntry)
          ntry = http_max - http_min;
    }
@@ -463,7 +558,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             return false;
          }
 
-         http_port = (int)(http_min + (http_max - http_min) * gRandom->Rndm(1));
+         http_port = (int)(http_min + (http_max - http_min) * rnd.Rndm(1));
       }
 
       TString engine, url;
@@ -554,7 +649,7 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
 
    auto wshandler = win->CreateWSHandler(Instance(), ++fIdCnt, dflt_tmout);
 
-   if (gEnv->GetValue("WebGui.RecordData", 0) > 0) {
+   if (RWebWindowWSHandler::GetBoolEnv("WebGui.RecordData") > 0) {
       std::string fname, prefix;
       if (fIdCnt > 1) {
          prefix = std::string("f") + std::to_string(fIdCnt) + "_";
@@ -592,6 +687,9 @@ void RWebWindowsManager::Unregister(RWebWindow &win)
 {
    if (win.fWSHandler)
       fServer->UnregisterWS(win.fWSHandler);
+
+   if (fDeleteCallback)
+      fDeleteCallback(win);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -658,14 +756,16 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 /// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.
 /// See RWebDisplayArgs::SetBrowserKind() for all available options. Default value for the browser can be configured
 /// when starting root with --web argument like: "root --web=chrome". When root started in web server mode "root --web=server",
-/// no any web browser will be started - just URL will be printout, which can be entered in any running web browser
+/// no web browser will be started - just the URL will be printed, which can be opened in any running web browser.
+/// Also configurable via ROOT_WEBDISPLAY environment variable taking the same options.
 ///
 /// If allowed, same window can be displayed several times (like for RCanvas or TCanvas)
 ///
 /// Following parameters can be configured in rootrc file:
 ///
-///      WebGui.Display: kind of display like chrome or firefox or browser, can be overwritten by --web=value command line argument
+///      WebGui.Display: kind of display, identical to --web option and ROOT_WEBDISPLAY environment variable documented above
 ///      WebGui.OnetimeKey: if configured requires unique key every time window is connected (default yes)
+///      WebGui.SingleConnMode: if configured the only connection and the only user of any widget is possible (default yes)
 ///      WebGui.Chrome: full path to Google Chrome executable
 ///      WebGui.ChromeBatch: command to start chrome in batch, used for image production, like "$prog --headless --disable-gpu $geometry $url"
 ///      WebGui.ChromeHeadless: command to start chrome in headless mode, like "fork: --headless --disable-gpu $geometry $url"
@@ -675,15 +775,17 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.FirefoxInteractive: command to start Firefox in interactive mode, like "$prog --private-window \'$url\' &"
 ///      WebGui.FirefoxProfile: name of Firefox profile to use
 ///      WebGui.FirefoxProfilePath: file path to Firefox profile
-///      WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for headless mode (dflt), 1 - always
+///      WebGui.FirefoxRandomProfile: usage of random Firefox profile "no" - disabled, "yes" - enabled (default)
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
+///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
+///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
-///      WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
+///      WebGui.RecordData: if specified enables data recording for each web window; "yes" or "no" (default)
 ///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
-///      WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
+///      WebGui.ForceHttp: "no" (default), "yes" - always create real http server to run web window
 ///      WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
-///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/
+///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.128.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
 ///      WebGui.openui5theme: openui5 theme like sap_belize (default) or sap_fiori_3
 ///
@@ -722,7 +824,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    }
 
    bool normal_http = RWebDisplayHandle::NeedHttpServer(args);
-   if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
+   if (!normal_http && (RWebWindowWSHandler::GetBoolEnv("WebGui.ForceHttp") > 0))
       normal_http = true;
 
    std::string key;
@@ -752,8 +854,13 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (!args.IsHeadless() && normal_http) {
       auto winurl = args.GetUrl();
       winurl.erase(0, fAddr.length());
-      InformListener(std::string("win:") + winurl);
+      InformListener(std::string("win:") + winurl + "\n");
    }
+
+   auto server = GetServer();
+
+   if (win.IsUseCurrentDir() && server)
+      server->AddLocation("currentdir/", ".");
 
    if (!args.IsHeadless() && ((args.GetBrowserKind() == RWebDisplayArgs::kServer) || gROOT->IsWebDisplayBatch()) /*&& (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)*/) {
       std::cout << "New web window: " << args.GetUrl() << std::endl;
@@ -781,11 +888,6 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       }
    }
 #endif
-
-   auto server = GetServer();
-
-   if (win.IsUseCurrentDir())
-      server->AddLocation("currentdir/", ".");
 
    if (!normal_http)
       args.SetHttpServer(server);
@@ -852,6 +954,9 @@ void RWebWindowsManager::Terminate()
 {
    if (fServer)
       fServer->SetTerminate();
+
+   // set flag which sometimes checked in TSystem::ProcessEvents
+   gROOT->SetInterrupt(kTRUE);
 
    if (gApplication)
       TTimer::SingleShot(100, "TApplication",  gApplication, "Terminate()");

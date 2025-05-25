@@ -337,19 +337,11 @@ void RFitPanel::AssignCanvas(std::shared_ptr<RCanvas> &canv)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// assign histogram for fitting
-
-void RFitPanel::AssignHistogram(std::shared_ptr<RH1D> &hist)
-{
-   fFitHist = hist;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Show FitPanel
 
-void RFitPanel::Show(const std::string &where)
+void RFitPanel::Show(const RWebDisplayArgs &args)
 {
-   GetWindow()->Show(where);
+   RWebWindow::ShowWindow(GetWindow(), args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

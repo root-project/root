@@ -48,14 +48,21 @@ TEST(RDataFrameInterface, CreateFromStrings)
 class TreeInFileRAII {
 private:
    std::string fPath;
-   TFile fFile;
 
 public:
-   explicit TreeInFileRAII(const std::string &path) : fPath(path), fFile(path.c_str(), "recreate")
+   explicit TreeInFileRAII(const std::string &path) : fPath(path)
    {
-      TTree t("t", "t");
-      fFile.WriteObject(&t, "t");
-      fFile.Close();
+      // NOTE(vpadulan): these TFile and TTree are created on the heap to work around a know bug that can
+      // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+      // living on the stack.
+      // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+      // mark a heap object appearing by chance on the stack.
+      // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+      // so for now we are forced to work around the bug rather than fixing it.
+      auto f = std::make_unique<TFile>(path.c_str(), "RECREATE");
+      const char *treeName{"t"};
+      auto t = std::make_unique<TTree>(treeName, treeName);
+      f->Write();
    }
    ~TreeInFileRAII() { std::remove(fPath.c_str()); }
 };
@@ -626,11 +633,13 @@ TEST(RDataFrameInterface, JittedExprWithMultipleReturns)
 
 TEST(RDataFrameInterface, JittedExprWithManyVars)
 {
-   std::string expr = "x + x + x + x";
-   for (int i = 0; i < 10; ++i) {
-      expr = expr + '+' + expr;
-   }
-   expr = expr + ">0";
+   // Build expression "x + x + ... + x > 0"
+   // With 100 occurences of 'x'
+   std::string expr{"x"};
+   for (int i = 0; i < 99; ++i)
+      expr += " + x";
+   expr += " > 0";
+
    const auto counts = ROOT::RDataFrame(1)
                           .Define("x", [] { return 1; })
                           .Filter(expr)
@@ -920,7 +929,7 @@ TEST(RDataFrameInterface, PrintValueFromTree)
    TTree t("t", "t");
    RDataFrame df(t);
    auto printValue = cling::printValue(&df);
-   EXPECT_EQ(printValue, "A data frame built on top of the t dataset.");
+   EXPECT_EQ(printValue, "A data frame associated to the data source \"TTree data source\"");
 }
 
 TEST(RDataFrameInterface, PrintValueNoData)
@@ -936,4 +945,45 @@ TEST(RDataFrameInterface, PrintValueDataSource)
    RDataFrame df(std::move(ds));
    auto printValue = cling::printValue(&df);
    EXPECT_EQ(printValue, "A data frame associated to the data source \"trivial data source\"");
+}
+
+TEST(RDataFrameInterface, GetNFilesFromOneFile)
+{
+   auto filename{"GetNFilesFromTTree.root"};
+   TreeInFileRAII r{filename};
+
+   ROOT::RDataFrame df{"t", filename};
+   EXPECT_EQ(df.GetNFiles(), 1);
+}
+
+TEST(RDataFrameInterface, GetNFilesFromTTree)
+{
+   TTree t{"t", "t"};
+   ROOT::RDataFrame df{t};
+   EXPECT_EQ(df.GetNFiles(), 0);
+}
+
+TEST(RDataFrameInterface, GetNFilesFromTChain)
+{
+   std::vector<std::string> filenames{"GetNFilesFromTChain1.root", "GetNFilesFromTChain2.root",
+                                      "GetNFilesFromTChain3.root"};
+   TreeInFileRAII r1{filenames[0]};
+   TreeInFileRAII r2{filenames[1]};
+   TreeInFileRAII r3{filenames[2]};
+   TChain c{"t"};
+   for (const auto &fn : filenames)
+      c.Add(fn.c_str());
+   ROOT::RDataFrame df{c};
+   EXPECT_EQ(df.GetNFiles(), 3);
+}
+
+TEST(RDataFrameInterface, GetNFilesFromMoreFiles)
+{
+   std::vector<std::string> filenames{"GetNFilesFromTChain1.root", "GetNFilesFromTChain2.root",
+                                      "GetNFilesFromTChain3.root"};
+   TreeInFileRAII r1{filenames[0]};
+   TreeInFileRAII r2{filenames[1]};
+   TreeInFileRAII r3{filenames[2]};
+   ROOT::RDataFrame df{"t", filenames};
+   EXPECT_EQ(df.GetNFiles(), 3);
 }

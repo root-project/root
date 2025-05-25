@@ -1883,16 +1883,12 @@ void TGFontPool::Print(Option_t *opt) const
 
 void TGFont::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
+   out << "   \n";
 
-   if (gROOT->ClassSaved(TGFont::Class())) {
-      out << std::endl;
-   } else {
-      //  declare a font object to reflect required user changes
-      out << std::endl;
-      out << "   TGFont *ufont;         // will reflect user font changes" << std::endl;
-   }
-   out << "   ufont = gClient->GetFont(" << quote << GetName() << quote << ");" << std::endl;
+   //  declare a font object to reflect required user changes
+   if (!gROOT->ClassSaved(TGFont::Class()))
+      out << "   TGFont *ufont;         // will reflect user font changes\n";
+   out << "   ufont = gClient->GetFont(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

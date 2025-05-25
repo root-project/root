@@ -65,6 +65,17 @@ namespace RDF {
 class RDisplay {
    template<typename T>
    friend class ROOT::Internal::RDF::DisplayHelper;
+
+public:
+   enum class EPrintFormat {
+      kMarkdown,
+      kHtml
+   };
+
+   struct RPrintOptions {
+      EPrintFormat fFormat;
+   };
+
 private:
    using VecStr_t = std::vector<std::string>;
    using DElement_t = ROOT::Internal::RDF::RDisplayElement;
@@ -72,8 +83,6 @@ private:
    static constexpr unsigned fgMaxWidth = 100; ///< Maximum width of the table that Print() displays
 
    VecStr_t fTypes; ///< This attribute stores the type of each column. It is needed by the interpreter to print it.
-   std::vector<bool> fIsCollection; ///< True if the column contains a collection. Collections are treated differently
-                                    ///< during the printing.
    std::vector<std::vector<DElement_t>> fTable; ///< String representation of the data to be printed.
    std::vector<unsigned short> fWidths; ///< Tracks the maximum width of each column, based on the largest element.
 
@@ -270,7 +279,7 @@ private:
       std::stringstream calc; // JITted code
       int columnIndex = 0;
       // Unwrapping the parameters to create the JITted code.
-      fIsCollection = {AddInterpreterString(calc, columns, columnIndex++)...};
+      bool isCollection [] {AddInterpreterString(calc, columns, columnIndex++)...};
 
       // Let cling::printValue handle the conversion. This can be done only through cling-compiled code.
       const std::string toJit = calc.str();
@@ -279,7 +288,7 @@ private:
 
       // Populate the fTable using the results of the JITted code.
       for (size_t i = 0; i < fNColumns; ++i) {
-         if (fIsCollection[i]) {
+         if (isCollection[i]) {
             AddCollectionToRow(fCollectionsRepresentations[i]);
          } else {
             AddToRow(fRepresentations[i]);
@@ -288,6 +297,10 @@ private:
    }
 
    void EnsureCurrentColumnWidth(size_t w);
+
+   std::string AsStringInternal(bool considerDots, const RPrintOptions &options = {EPrintFormat::kMarkdown}) const;
+   std::string AsStringMarkdown(bool considerDots) const;
+   std::string AsStringHtml() const;
 
 public:
    ////////////////////////////////////////////////////////////////////////////
@@ -302,11 +315,11 @@ public:
    ///
    /// Collections are shortened to the first and last element. The overall width
    /// is shortened to a fixed number of columns that should fit the screen width.
-   void Print() const;
+   void Print(const RPrintOptions &options = {EPrintFormat::kMarkdown}) const;
 
    ////////////////////////////////////////////////////////////////////////////
    /// Returns the representation as a string
-   std::string AsString() const;
+   std::string AsString(const RPrintOptions &options = {EPrintFormat::kMarkdown}) const;
 };
 
 } // namespace RDF

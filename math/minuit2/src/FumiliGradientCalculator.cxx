@@ -17,7 +17,7 @@
 #include "Minuit2/MnPrint.h"
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/MnStrategy.h"
-#include "Minuit2/MnUserFcn.h"
+#include "Minuit2/MnFcn.h"
 
 namespace ROOT {
 
@@ -39,13 +39,14 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &p
    // Need to apply internal to external for parameters and the external to int transformation
    // for the return gradient and Hessian
 
+   MnPrint print("FumiliGradientCalculator");
+
    int nvar = par.Vec().size();
    std::vector<double> extParam = fTransformation(par.Vec());
 
    // eval Gradient
    FumiliFCNBase &fcn = const_cast<FumiliFCNBase &>(fFcn);
 
-   // evaluate gradient and Hessian
    fcn.EvaluateAll(extParam);
 
    MnAlgebraicVector v(nvar);
@@ -70,14 +71,16 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &p
       }
    }
 
-   MnPrint print("FumiliGradientCalculator");
+
    print.Debug([&](std::ostream &os) {
       // compare Fumili with Minuit gradient
+      os << "Comparison of Fumili Gradient and standard (numerical) Minuit Gradient (done only when debugging enabled)" << std::endl;
       int plevel = MnPrint::SetGlobalLevel(MnPrint::GlobalLevel()-1);
-      Numerical2PGradientCalculator gc(MnUserFcn(fFcn, fTransformation), fTransformation, MnStrategy(1));
+      Numerical2PGradientCalculator gc(MnFcn{fFcn, fTransformation}, fTransformation, MnStrategy(1));
       FunctionGradient grd2 = gc(par);
-      os << "Fumili Gradient:" << v << "\nMinuit Gradient" << grd2.Vec();
-      os << "\nFumili Hessian:  " << h << std::endl;
+      os << "Fumili Gradient:" << v << std::endl;
+      os << "Minuit Gradient" << grd2.Vec() << std::endl;
+      os << "Fumili Hessian:  " << h << std::endl;
       os << "Numerical g2 " << grd2.G2() << std::endl;
       MnPrint::SetGlobalLevel(plevel);
    });

@@ -8,13 +8,18 @@
 
 
 //-----------------------------------------------------------------------------
-PyObject* CPyCppyy::DispatchPtr::Get() const
+PyObject* CPyCppyy::DispatchPtr::Get(bool borrowed) const
 {
-    if (fPyHardRef) return fPyHardRef;
+    if (fPyHardRef) {
+        if (!borrowed) Py_INCREF(fPyHardRef);
+        return fPyHardRef;
+    }
     if (fPyWeakRef) {
-        PyObject* disp = PyWeakref_GetObject(fPyWeakRef);
-        if (disp != Py_None)      // dispatcher object disappeared?
+        PyObject* disp = CPyCppyy_GetWeakRef(fPyWeakRef);
+        if (disp) {               // dispatcher object disappeared?
+            if (borrowed) Py_DECREF(disp);
             return disp;
+        }
     }
     return nullptr;
 }
@@ -36,9 +41,10 @@ CPyCppyy::DispatchPtr::DispatchPtr(PyObject* pyobj, bool strong) : fPyHardRef(nu
 //-----------------------------------------------------------------------------
 CPyCppyy::DispatchPtr::DispatchPtr(const DispatchPtr& other, void* cppinst) : fPyWeakRef(nullptr)
 {
-    PyObject* pyobj = other.Get();
+    PyObject* pyobj = other.Get(false /* not borrowed */);
     fPyHardRef = pyobj ? (PyObject*)((CPPInstance*)pyobj)->Copy(cppinst) : nullptr;
     if (fPyHardRef) ((CPPInstance*)fPyHardRef)->SetDispatchPtr(this);
+    Py_XDECREF(pyobj);
 }
 
 //-----------------------------------------------------------------------------
@@ -48,9 +54,10 @@ CPyCppyy::DispatchPtr::~DispatchPtr() {
 // is "notified" by nulling out the reference and an exception will be raised on
 // continued access
     if (fPyWeakRef) {
-        PyObject* pyobj = PyWeakref_GetObject(fPyWeakRef);
-        if (pyobj && pyobj != Py_None && ((CPPScope*)Py_TYPE(pyobj))->fFlags & CPPScope::kIsPython)
+        PyObject* pyobj = CPyCppyy_GetWeakRef(fPyWeakRef);
+        if (pyobj && ((CPPScope*)Py_TYPE(pyobj))->fFlags & CPPScope::kIsPython)
             ((CPPInstance*)pyobj)->GetObjectRaw() = nullptr;
+        Py_XDECREF(pyobj);
         Py_DECREF(fPyWeakRef);
     } else if (fPyHardRef) {
         ((CPPInstance*)fPyHardRef)->GetObjectRaw() = nullptr;
@@ -64,9 +71,10 @@ CPyCppyy::DispatchPtr& CPyCppyy::DispatchPtr::assign(const DispatchPtr& other, v
     if (this != &other) {
         Py_XDECREF(fPyWeakRef); fPyWeakRef = nullptr;
         Py_XDECREF(fPyHardRef);
-        PyObject* pyobj = other.Get();
+        PyObject* pyobj = other.Get(false /* not borrowed */);
         fPyHardRef = pyobj ? (PyObject*)((CPPInstance*)pyobj)->Copy(cppinst) : nullptr;
         if (fPyHardRef) ((CPPInstance*)fPyHardRef)->SetDispatchPtr(this);
+        Py_XDECREF(pyobj);
     }
     return *this;
 }
@@ -86,9 +94,7 @@ void CPyCppyy::DispatchPtr::CppOwns()
 {
 // C++ maintains the hardref, keeping the PyObject alive w/o outstanding ref
     if (fPyWeakRef) {
-        fPyHardRef = PyWeakref_GetObject(fPyWeakRef);
-        if (fPyHardRef == Py_None) fPyHardRef = nullptr;
-        Py_XINCREF(fPyHardRef);
+        fPyHardRef = CPyCppyy_GetWeakRef(fPyWeakRef);
         Py_DECREF(fPyWeakRef); fPyWeakRef = nullptr;
     }
 }

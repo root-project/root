@@ -12,11 +12,13 @@
 
 #include "Minuit2/MnConfig.h"
 
-#include <sstream>
-#include <utility>
 #include <cassert>
-#include <string>
 #include <ios>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <functional>
 
 namespace ROOT {
 namespace Minuit2 {
@@ -30,12 +32,6 @@ std::ostream &operator<<(std::ostream &, const FunctionMinimum &);
 
 class MinimumState;
 std::ostream &operator<<(std::ostream &, const MinimumState &);
-
-class LAVector;
-std::ostream &operator<<(std::ostream &, const LAVector &);
-
-class LASymMatrix;
-std::ostream &operator<<(std::ostream &, const LASymMatrix &);
 
 class MnUserParameters;
 std::ostream &operator<<(std::ostream &, const MnUserParameters &);
@@ -110,14 +106,6 @@ public:
 
    static void AddFilter(const char *prefix);
    static void ClearFilter();
-
-   // Whether to cut the maximum number of parameters shown for vector and matrices
-   // set maximum number of printed parameters and return previous value
-   // A negative value will mean all parameters are printed
-   static int SetMaxNP(int value);
-
-   // retrieve maximum number of printed parameters
-   static int MaxNP();
 
    // set print level and return the previous one
    int SetLevel(int level);

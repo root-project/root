@@ -37,6 +37,8 @@ but the type metadata comes from the Clang C++ compiler, not CINT.
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Frontend/CompilerInstance.h"
 
+#include "clang/Interpreter/CppInterOp.h"
+
 #include <cstdio>
 #include <string>
 
@@ -235,21 +237,7 @@ int TClingTypeInfo::Size() const
    if (!IsValid()) {
       return 1;
    }
-   if (fQualType->isDependentType()) {
-      // Dependent on a template parameter, we do not know what it is yet.
-      return 0;
-   }
-   if (const clang::RecordType *RT = fQualType->getAs<clang::RecordType>()) {
-      if (!RT->getDecl()->getDefinition()) {
-         // This is a forward-declared class.
-         return 0;
-      }
-   }
-   clang::ASTContext &Context = fInterp->getCI()->getASTContext();
-   // Note: This is an int64_t.
-   clang::CharUnits::QuantityType Quantity =
-      Context.getTypeSizeInChars(fQualType).getQuantity();
-   return static_cast<int>(Quantity);
+   return Cpp::GetSizeOfType(QualTypePtr());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

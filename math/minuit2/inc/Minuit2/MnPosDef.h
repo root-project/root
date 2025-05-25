@@ -23,16 +23,9 @@ class MnMachinePrecision;
    by adding extra terms in the diagonal
  */
 class MnPosDef {
-
 public:
-   MnPosDef() {}
-
-   ~MnPosDef() {}
-
    MinimumState operator()(const MinimumState &, const MnMachinePrecision &) const;
    MinimumError operator()(const MinimumError &, const MnMachinePrecision &) const;
-
-private:
 };
 
 } // namespace Minuit2

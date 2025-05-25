@@ -16,19 +16,21 @@ dicts = advancedcppDict.so \
 
 all : $(dicts)
 
-genreflex_flags := $(shell genreflex --cppflags)
-cppflags=$(shell cling-config --cppflags) $(genreflex_flags) -O3 -fPIC -I$(shell python -c 'import sysconfig as sc; print(sc.get_config_var("INCLUDEPY"))') -Wno-register
-
+cppflags=$(shell root-config --cflags) -O3 -fPIC -I$(shell python -c 'import sysconfig as sc; print(sc.get_config_var("INCLUDEPY"))') -Wno-register
 PLATFORM := $(shell uname -s)
 ifeq ($(PLATFORM),Darwin)
   cppflags+=-dynamiclib -undefined dynamic_lookup -Wno-delete-non-virtual-dtor
 endif
 
+# For these tests, the rootcling invocation looks like the following:
+# rootcling advancedcpp_rflx.cpp --rmf advancedcppDict.rootmap --rml advancedCppDict.so advancedcpp.h advancedcpp.xml
+%_rflx.cpp: %.h %.xml
+	rootcling $@ --rmf $*Dict.rootmap --rml $*Dict.so $^
+
+# Compiling the test dictionaries to shared libs:
+# g++ $(cppflags) -shared -o advancedcppDict.so advancedcpp_rflx.cpp advancedcpp.cxx
 %Dict.so: %_rflx.cpp %.cxx
 	$(CXX) $(cppflags) -shared -o $@ $^
-
-%_rflx.cpp: %.h %.xml
-	genreflex $< --selection=$*.xml --rootmap=$*Dict.rootmap --rootmap-lib=$*Dict.so
 
 .PHONY: test clean
 

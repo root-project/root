@@ -56,10 +56,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseElu.cxx
     src/ParseFuseConvAdd.cxx
     src/ParseFuseConvTransposeAdd.cxx
+    src/ParseFuseGemmRelu.cxx
+    src/ParseFuseBatchnormRelu.cxx
     src/ParseFuseMatMulAdd.cxx
     src/ParseMatMul.cxx
     src/ParseComparision.cxx
     src/ParseEyeLike.cxx
+    src/ParseConstant.cxx
+    src/ParseTopK.cxx
+    src/ParseTile.cxx
+    src/ParseSplit.cxx
+    src/ParseIf.cxx
+    src/ParsePad.cxx
+    src/ParseWhere.cxx
+    src/ParseEinsum.cxx
+    src/ParseRandom.cxx
+    src/ParseScatterElements.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf
@@ -70,5 +82,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
 
 target_include_directories(ROOTTMVASofieParser PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+target_include_directories(ROOTTMVASofieParser BEFORE PUBLIC
+  ${Protobuf_INCLUDE_DIRS})
 set_target_properties(ROOTTMVASofieParser PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)

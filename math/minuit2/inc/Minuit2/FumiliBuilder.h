@@ -13,7 +13,6 @@
 #include "Minuit2/MinimumBuilder.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
 #include "Minuit2/FumiliErrorUpdator.h"
-#include "Minuit2/MnFcn.h"
 #include "Minuit2/FunctionMinimum.h"
 
 #include <vector>
@@ -21,6 +20,8 @@
 namespace ROOT {
 
 namespace Minuit2 {
+
+class MnFcn;
 
 /**
 
@@ -40,9 +41,10 @@ section 5
 class FumiliBuilder : public MinimumBuilder {
 
 public:
-   FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()), fErrorUpdator(FumiliErrorUpdator()) {}
 
-   ~FumiliBuilder() override {}
+   enum FumiliMethodType { kLineSearch = 0, kTrustRegion = 1, kTrustRegionScaled = 2};
+
+   void SetMethod(FumiliMethodType type) { fMethodType = type;}
 
    /**
 
@@ -131,6 +133,7 @@ public:
 private:
    VariableMetricEDMEstimator fEstimator;
    FumiliErrorUpdator fErrorUpdator;
+   FumiliMethodType fMethodType = kTrustRegion;   // use Trust region as default method
 };
 
 } // namespace Minuit2
