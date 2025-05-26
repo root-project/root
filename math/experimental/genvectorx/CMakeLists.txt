@@ -10,6 +10,10 @@
 
 message(STATUS "Experimental GenVectorX")
 
+
+include("${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/tools/AdaptiveCpp/adaptivecpp-config.cmake")
+export(PACKAGE AdaptiveCpp)
+
 ROOT_LINKER_LIBRARY(GenVectorSYCL
     src/3DConversions.cxx
     src/3DDistances.cxx
@@ -55,7 +59,18 @@ add_sycl_to_target(
     src/RotationZYX.cxx
     src/VectorUtil.cxx
 )
-target_link_libraries(GenVectorSYCL INTERFACE AdaptiveCpp::acpp-rt)
+
+set(ACPP_EXPORTS acpp-rt acpp-common)
+
+foreach(target IN LISTS ACPP_EXPORTS)
+   install(TARGETS ${target} EXPORT ROOTExports)
+endforeach()
+
+target_include_directories(GenVectorSYCL SYSTEM PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/tools/AdaptiveCpp/include/AdaptiveCpp>
+  $<INSTALL_INTERFACE:include/AdaptiveCpp>)
+
+target_link_libraries(GenVectorSYCL INTERFACE acpp-rt)
 target_compile_options(GenVectorSYCL PUBLIC ${SYCL_COMPILER_FLAGS})
 target_compile_definitions(GenVectorSYCL PUBLIC ROOT_MATH_SYCL)
 
