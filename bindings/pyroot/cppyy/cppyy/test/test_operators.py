@@ -1,10 +1,9 @@
-import py, pytest, os
+import pytest, os
 from pytest import raises, skip, mark
 from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC, no_root_errors
 
 
-currpath = os.getcwd()
-test_dct = currpath + "/liboperatorsDict"
+test_dct = "operators_cxx"
 
 
 class TestOPERATORS:

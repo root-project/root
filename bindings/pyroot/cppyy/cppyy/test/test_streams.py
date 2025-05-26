@@ -1,10 +1,9 @@
-import py, pytest, os
+import pytest, os
 from pytest import mark, raises
 from support import setup_make
 
 
-currpath = os.getcwd()
-test_dct = currpath + "/libstd_streamsDict"
+test_dct = "std_streams_cxx"
 
 
 class TestSTDStreams:

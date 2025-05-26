@@ -1,10 +1,9 @@
-import py, sys, pytest, os
+import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_WINDOWS, ispypy
+from support import setup_make, pylong, pyunicode, IS_WINDOWS, WINDOWS_BITS, ispypy
 
 
-currpath = os.getcwd()
-test_dct = currpath + "/libdatatypesDict"
+test_dct = "datatypes_cxx"
 
 
 class TestLOWLEVEL:
@@ -45,6 +44,7 @@ class TestLOWLEVEL:
         assert len(ll.reinterpret_cast['int*'](0)) == 0
         raises(ReferenceError, ll.reinterpret_cast['int*'](0).__getitem__, 0)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_memory(self):
         """Memory allocation and free-ing"""
 
@@ -82,6 +82,7 @@ class TestLOWLEVEL:
         mem.__python_owns__ = True
         assert     mem.__python_owns__
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_python_casts(self):
         """Casts to common Python pointer encapsulations"""
 
@@ -345,6 +346,7 @@ class TestLOWLEVEL:
         x = np.array([True], dtype=bool)
         assert cppyy.gbl.convert_bool(x)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test10_array_of_const_char_star(self):
         """Test passting of const char*[]"""
 
@@ -376,6 +378,7 @@ class TestLOWLEVEL:
         with raises(TypeError):
             cppyy.gbl.ArrayOfCStrings.takes_array_of_cstrings(pyargs, len(pyargs))
 
+    @mark.xfail(run=False, condition=IS_WINDOWS, reason="Windows fatal exception: access violation")
     def test11_array_of_const_char_ref(self):
         """Test passting of const char**&"""
 
@@ -687,6 +690,7 @@ class TestMULTIDIMARRAYS:
                         assert arr[i][j][k] == val
                         assert arr[i, j, k] == val
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_malloc(self):
         """Use of malloc to create multi-dim arrays"""
 

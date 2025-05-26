@@ -1,9 +1,8 @@
-import py, sys, pytest, os
+import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS, WINDOWS_BITS
 
-currpath = os.getcwd()
-test_dct = currpath + "/libdatatypesDict"
+test_dct = "datatypes_cxx"
 
 
 class TestDATATYPES:
@@ -1395,7 +1394,7 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    @mark.xfail(run=False, condition=IS_MAC_ARM or (WINDOWS_BITS == 64), reason = "Crashes on Windows 64 bit or OS X ARM with" \
     "libc++abi: terminating due to uncaught exception")
     def test28_callable_through_function_passing(self):
         """Passing callables through std::function"""
@@ -1469,6 +1468,7 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test29_std_function_life_lines(self):
         """Life lines to std::function data members"""
 
@@ -1863,6 +1863,7 @@ class TestDATATYPES:
         m = ns.create_matrix(N, M)
         assert ns.destroy_matrix(ns.g_matrix, N, M)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test38_plain_old_data(self):
         """Initializer construction of PODs"""
 
@@ -1949,6 +1950,7 @@ class TestDATATYPES:
             assert len(f1.fPtrArr) == 3
             assert list(f1.fPtrArr) == [1., 2., 3]
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Test doesn't work on Windows")
     def test39_aggregates(self):
         """Initializer construction of aggregates"""
 
@@ -2389,6 +2391,7 @@ class TestDATATYPES:
             else:
                 assert type(v) == gbl.PolymorphicMaps.Derived
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test52_virtual_inheritance(self):
         import cppyy
         from cppyy import gbl

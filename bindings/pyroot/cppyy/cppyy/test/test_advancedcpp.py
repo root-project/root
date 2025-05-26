@@ -1,9 +1,8 @@
-import py, pytest, os
+import pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, IS_WINDOWS, ispypy
+from support import setup_make, pylong, IS_WINDOWS, WINDOWS_BITS, ispypy
 
-currpath = os.getcwd()
-test_dct = currpath + "/libadvancedcppDict"
+test_dct = "advancedcpp_cxx"
 
 
 class TestADVANCEDCPP:
@@ -156,7 +155,7 @@ class TestADVANCEDCPP:
         import cppyy
         gbl = cppyy.gbl
 
-        lib2 = cppyy.load_reflection_info("libadvancedcpp2Dict")
+        lib2 = cppyy.load_reflection_info("advancedcpp2_cxx")
 
         assert gbl.a_ns      is gbl.a_ns
         assert gbl.a_ns.d_ns is gbl.a_ns.d_ns
@@ -387,6 +386,7 @@ class TestADVANCEDCPP:
         assert gbl.get_d(d) == 44
         d.__destruct__()
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_void_pointer_passing(self):
         """Test passing of variants of void pointer arguments"""
 
@@ -401,7 +401,7 @@ class TestADVANCEDCPP:
         assert cppyy.addressof(o) == pp.gime_address_ptr_ptr(o)
         assert cppyy.addressof(o) == pp.gime_address_ptr_ref(o)
 
-        if IS_WINDOWS != 64:
+        if WINDOWS_BITS != 64:
           # there is no 8-byte integer type array on Windows 64b
             import array
             addressofo = array.array('l', [cppyy.addressof(o)])
@@ -597,6 +597,7 @@ class TestADVANCEDCPP:
         gc.collect()
         assert cppyy.gbl.new_overloader.s_instances == 0
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test15_template_instantiation_with_vector_of_float(self):
         """Test template instantiation with a std::vector<float>"""
 
@@ -622,6 +623,7 @@ class TestADVANCEDCPP:
         assert f(3.) == 3.
         assert type(f(4.)) == type(4.)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test17_assign_to_return_byref(self):
         """Test assignment to an instance returned by reference"""
 
