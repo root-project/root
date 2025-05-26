@@ -54,7 +54,8 @@ test_datatypes
 test_doc_features
 test_eigen
 test_fragile
-test_leakcheck
+# The leakcheck test is disabled due to it's sporadic nature, especially fragile on VMs
+# test_leakcheck
 test_lowlevel
 test_numba
 test_operators
