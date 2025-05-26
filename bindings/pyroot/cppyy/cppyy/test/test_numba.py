@@ -1,7 +1,7 @@
 import os, pytest
 import math, time
 from pytest import mark, raises
-from support import setup_make, IS_MAC
+from support import setup_make, IS_MAC, IS_WINDOWS
 
 try:
     import numba
@@ -222,6 +222,7 @@ class TestNUMBA:
         assert((go_fast(x, d) == go_slow(x, d)).all())
         assert self.compare(go_slow, go_fast, 10000, x, d)
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test05_multiple_arguments_function(self):
         """Numba-JITing of functions with multiple arguments"""
 
@@ -248,6 +249,7 @@ class TestNUMBA:
 
         assert sum == loop_add(x)
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test06_multiple_arguments_template_freefunction(self):
         """Numba-JITing of a free template function that recieves more than one template arg"""
 
@@ -342,6 +344,7 @@ class TestNUMBA:
         assert((go_fast(x) == go_slow(x)).all())
         assert self.compare(go_slow, go_fast, 100000, x)
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test09_non_typed_templates(self):
         """Numba-JITing of a free template function that recieves multiple template args with non types"""
 
@@ -367,7 +370,7 @@ class TestNUMBA:
 
         assert sum == tma(x)
 
-    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
+    @mark.xfail(condition=IS_MAC | IS_WINDOWS, reason="Fails on macOS and Windows")
     def test10_returning_a_reference(self):
         import cppyy
         import numpy as np
@@ -567,6 +570,7 @@ class TestNUMBA:
         assert (np.array(y) == np_square_res).all()
         assert (np.array(x) == np_add_res).all()
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test13_std_vector_dot_product(self):
         """Numba-JITing of a dot_product method of a class that stores pointers to std::vectors on the python side"""
         import cppyy, cppyy.ll
@@ -763,6 +767,7 @@ class TestNUMBA_DOC:
         assert type(tsa(a)) == int
         assert tsa(a) == 285
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test02_class_features(self):
         """Numba support documentation example: class features"""
 

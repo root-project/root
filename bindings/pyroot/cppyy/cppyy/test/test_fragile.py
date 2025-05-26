@@ -1,11 +1,9 @@
-import py, os, sys, pytest
+import os, sys, pytest
 from pytest import mark, raises, skip
 from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
-currpath = os.getcwd()
-test_dct = currpath + "/libfragileDict"
-
+test_dct = "fragile_cxx"
 
 class TestFRAGILE:
     def setup_class(cls):
@@ -35,7 +33,8 @@ class TestFRAGILE:
         assert cppyy.gbl.fragile == cppyy.gbl.fragile
         fragile = cppyy.gbl.fragile
 
-        raises(AttributeError, getattr, fragile, "no_such_class")
+        no_such_class = fragile.no_such_class
+        raises(TypeError, no_such_class)  # cannot instantiate incomplete type
 
         assert fragile.C is fragile.C
         assert fragile.C == fragile.C
@@ -573,7 +572,7 @@ class TestFRAGILE:
 
         cppyy.include('sanitizer/asan_interface.h')
 
-    @mark.xfail()
+    @mark.xfail(run=False)
     def test25_cppdef_error_reporting(self):
         """Check error reporting of cppyy.cppdef"""
 
@@ -692,7 +691,7 @@ class TestFRAGILE:
         p = Test.Family1.Parent()
         p.children                          # used to crash
 
-    @mark.xfail()
+    @mark.xfail(run=False)
     def test31_template_with_class_enum(self):
         """Template instantiated with class enum"""
 

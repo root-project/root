@@ -1,10 +1,9 @@
-import py, sys, pytest, os
+import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM, WINDOWS_BITS
 
 
-currpath = os.getcwd()
-test_dct = currpath + "/libdoc_helperDict"
+test_dct = "doc_helper_cxx"
 
 
 class TestDOCFEATURES:
@@ -381,6 +380,7 @@ namespace Namespace {
 
         pass
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_x_inheritance(self):
         import cppyy
         from cppyy.gbl import Abstract, Concrete, call_abstract_method
@@ -446,7 +446,7 @@ namespace Namespace {
         assert cppyy.gbl.call_abstract_method1(pc) == "first message"
         assert cppyy.gbl.call_abstract_method2(pc) == "second message"
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    @mark.xfail(run=False, condition=IS_MAC_ARM | (WINDOWS_BITS == 64), reason = "Crashes on Windows 64 bit and macOS ARM with" \
     "libc++abi: terminating due to uncaught exception")
     def test_exceptions(self):
         """Exception throwing and catching"""
@@ -568,6 +568,7 @@ namespace Zoo {
         assert not isinstance(i, int)
         assert isinstance(i, Integer1)
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_STL_containers(self):
         """Instantiate STL contaienrs with new class"""
 
@@ -784,6 +785,7 @@ class TestADVERTISED:
         Advert02.Picam_OpenFirstCamera(cam)
         assert Advert02.Picam_CloseCamera(cam)
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test03_use_of_ctypes_and_enum(self):
         """Use of (opaque) enum through ctypes.c_void_p"""
 
@@ -835,6 +837,7 @@ class TestADVERTISED:
         assert list(arr) == [1, 42, 1, 42]
         cppyy.gbl.free(vp)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_ptr_ptr_python_owns(self):
         """Example of ptr-ptr use where python owns"""
 
@@ -920,6 +923,7 @@ class TestADVERTISED:
         val = createit(ptr)
         assert destroyit(ptr) == val
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test07_array_of_arrays(self):
         """Example of array of array usage"""
 
@@ -1073,6 +1077,7 @@ class TestTALKEXAMPLES:
 
         cppyy.gbl.talk_examples
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_template_instantiation(self):
         """Run-time template instantiation example"""
 
@@ -1144,6 +1149,7 @@ class TestTALKEXAMPLES:
         assert CC.passT(2**64-1) == 2**64-1
         assert 'unsigned long long' in CC.passT.__doc__
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_callbacks(self):
         """Function callback example"""
 
@@ -1223,8 +1229,8 @@ class TestTALKEXAMPLES:
         assert type(b) == CC.Derived
         assert d is b
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception")
+    @mark.xfail(run=False, condition=IS_MAC_ARM | IS_WINDOWS, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception, and also on Windows")
     def test_exceptions(self):
         """Exceptions example"""
 

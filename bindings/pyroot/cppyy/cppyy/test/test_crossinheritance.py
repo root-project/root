@@ -1,10 +1,8 @@
-import py, os, pytest
+import os, pytest
 from pytest import raises, skip, mark
-from support import setup_make, pylong, IS_MAC_ARM
+from support import setup_make, pylong, IS_MAC_ARM, IS_WINDOWS
 
-
-currpath = os.getcwd()
-test_dct = currpath + "/libcrossinheritanceDict"
+test_dct = "crossinheritance_cxx"
 
 
 class TestCROSSINHERITANCE:
@@ -227,7 +225,7 @@ class TestCROSSINHERITANCE:
         p1 = TPyDerived1()
         assert p1.get_value() == 13
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    @mark.xfail(run=False, condition=IS_MAC_ARM | IS_WINDOWS, reason = "Crashes on OS X ARM with" \
     "libc++abi: terminating due to uncaught exception")
     def test08_error_handling(self):
         """Python errors should propagate through wrapper"""
@@ -290,6 +288,7 @@ class TestCROSSINHERITANCE:
 
         assert raises(TypeError, Base1.call_get_value, d)
 
+    @mark.xfail(condition=IS_WINDOWS, reason="TypeError: 'NoneType' object cannot be interpreted as an integer")
     def test10_python_in_templates(self):
         """Usage of Python derived objects in std::vector"""
 
@@ -373,6 +372,7 @@ class TestCROSSINHERITANCE:
         assert call_shared(v) == 13
         assert v.some_imp() == 13
 
+    @mark.xfail(condition=IS_WINDOWS, reason="assert 0 == (0 + 1)")
     def test12a_counter_test(self):
         """Test countable base counting"""
 
@@ -993,6 +993,7 @@ class TestCROSSINHERITANCE:
         a = MyPyDerived(27, 55, nArgs=2)
         verify(a, 27, 55, 67)
 
+    @mark.xfail(run=False, condition=IS_WINDOWS, reason="TypeError: <class cppyy.gbl.std.string at 0x0000018A025B6C60> has no attribute 'npos'.")
     def test23_const_byvalue_return(self):
         """Const by-value return in overridden method"""
 

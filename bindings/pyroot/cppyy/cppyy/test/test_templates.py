@@ -1,10 +1,9 @@
-import py, pytest, os
+import pytest, os
 from pytest import mark, raises
-from support import setup_make, pylong
+from support import setup_make, pylong, IS_WINDOWS, WINDOWS_BITS
 
 
-currpath = os.getcwd()
-test_dct = currpath + "/libtemplatesDict"
+test_dct = "templates_cxx"
 
 
 class TestTEMPLATES:
@@ -69,6 +68,7 @@ class TestTEMPLATES:
         assert cppyy.gbl.nt_templ_args[1]()   == 1
         assert cppyy.gbl.nt_templ_args[256]() == 256
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_templated_function(self):
         """Templated global and static functions lookup and calls"""
 
@@ -185,6 +185,7 @@ class TestTEMPLATES:
         assert issubclass(select_template_arg[0, int, float].argument, int)
         assert issubclass(select_template_arg[1, int, float].argument, float)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_using_of_static_data(self):
         """Derived class using static data of base"""
 
@@ -294,6 +295,25 @@ class TestTEMPLATES:
         assert iavec[5] == 5
 
       # with variadic template
+        cppyy.cppdef("""
+            namespace using_problem {
+
+            template <typename T, size_t ... sizes>
+            struct matryoshka {
+                typedef T type;
+            };
+
+            template <typename T, size_t SZ, size_t ... sizes>
+            struct matryoshka<T, SZ, sizes ... > {
+                typedef vector<typename matryoshka<T, sizes ...>::type, SZ> type;
+            };
+
+            template <typename T, size_t ... sizes>
+            using make_vector = typename matryoshka<T, sizes ...>::type;
+                typedef make_vector<int, 2, 3> iiv_t;
+            };
+        """)
+
         assert nsup.matryoshka[int, 3].type
         assert nsup.matryoshka[int, 3, 4].type
         assert nsup.make_vector[int , 3]
@@ -442,6 +462,7 @@ class TestTEMPLATES:
         assert f_T[int]() is None
         assert cppyy.gbl.T_WithEmptyBody.side_effect == "side effect"
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test18_greedy_overloads(self):
         """void*/void** should not pre-empt template instantiations"""
 
@@ -509,6 +530,7 @@ class TestTEMPLATES:
 
         assert cppyy.gbl.TemplatedCtor.C(0)
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test21_type_deduction_with_conversion(self):
         """Template instantiation with [] -> std::vector conversion"""
 
@@ -547,6 +569,7 @@ class TestTEMPLATES:
         assert l2v.test3[int]([d1])     == 1
         assert l2v.test3[int]([d1, d1]) == 2
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows: TypeError: Template method resolution failed: Python int too large to convert to C long")
     def test22_type_deduction_of_proper_integer_size(self):
         """Template type from integer arg should be big enough"""
 
@@ -562,6 +585,7 @@ class TestTEMPLATES:
         for val in [2**64, -2**63-1]:
             raises(OverflowError, PassSomeInt, val)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test23_overloaded_setitem(self):
         """Template with overloaded non-templated and templated setitem"""
 

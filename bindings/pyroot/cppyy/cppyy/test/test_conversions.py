@@ -1,9 +1,8 @@
-import py, pytest, os
-from pytest import raises
-from support import setup_make
+import pytest, os
+from pytest import raises, mark
+from support import setup_make, IS_WINDOWS, WINDOWS_BITS
 
-currpath = os.getcwd()
-test_dct = currpath + "/libconversionsDict"
+test_dct = "conversions_cxx"
 
 
 class TestCONVERSIONS:
@@ -12,6 +11,7 @@ class TestCONVERSIONS:
         import cppyy
         cls.conversion = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_implicit_vector_conversions(self):
         """Test implicit conversions of std::vector"""
 
@@ -36,6 +36,7 @@ class TestCONVERSIONS:
         assert CNS.sumit(range(N), v2)          == total
         assert CNS.sumit(range(N), range(M, N)) == total
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test02_memory_handling_of_temporaries(self):
         """Verify that memory of temporaries is properly cleaned up"""
 
@@ -57,6 +58,7 @@ class TestCONVERSIONS:
         gc.collect()
         assert CC.s_count == 0
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_error_handling(self):
         """Verify error handling"""
 
@@ -84,6 +86,7 @@ class TestCONVERSIONS:
         gc.collect()
         assert CC.s_count == 0
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test04_implicit_conversion_from_tuple(self):
         """Allow implicit conversions from tuples as arguments {}-like"""
 

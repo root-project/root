@@ -25,27 +25,29 @@ else:
     pyunicode = unicode
     maxvalue = sys.maxint
 
-IS_WINDOWS = 0
-if 'win32' in sys.platform:
+IS_WINDOWS = 'win32' in sys.platform
+WINDOWS_BITS = 0
+
+if IS_WINDOWS:
     import platform
     if '64' in platform.architecture()[0]:
-        IS_WINDOWS = 64
+        WINDOWS_BITS = 64
         maxvalue = 2**31-1
     else:
-        IS_WINDOWS = 32
+        WINDOWS_BITS = 32
 
-IS_MAC_ARM = 0
-IS_MAC_X86 = 0
+IS_MAC_ARM = False
+IS_MAC_X86 = False
 if 'darwin' in sys.platform:
     import platform
     if 'arm64' in platform.machine():
-        IS_MAC_ARM = 64
+        IS_MAC_ARM = True
         os.environ["CPPYY_UNCAUGHT_QUIET"] = "1"
     else:
-        IS_MAC_X86 = 1
+        IS_MAC_X86 =True
 
 IS_MAC = IS_MAC_ARM or IS_MAC_X86
-IS_LINUX = not (IS_WINDOWS or IS_MAC) 
+IS_LINUX = not (IS_WINDOWS or IS_MAC)
 
 def _register_root_error_counter():
 

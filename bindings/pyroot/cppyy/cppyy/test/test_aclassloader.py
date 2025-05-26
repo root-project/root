@@ -1,9 +1,8 @@
-import py, pytest, os
+import pytest, os
 from pytest import raises, mark
 from support import setup_make, IS_MAC
 
-currpath = os.getcwd()
-test_dct = currpath + "/libexample01Dict"
+test_dct = "libexample_cxx"
 
 
 class TestACLASSLOADER:
@@ -11,7 +10,7 @@ class TestACLASSLOADER:
     def setup_class(cls):
         import cppyy
 
-    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
+    @mark.xfail(reason="rootmap files are a legacy feature")
     def test01_class_autoloading(self):
         """Test whether a class can be found through .rootmap."""
         import cppyy
