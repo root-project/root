@@ -8,7 +8,7 @@
 
 ### Minuit2
 
-* Behavior change: building ROOT using `minuit2_omp=ON` option no longer enables OpenMP parallelization by default. One has to call now additionaly GradientCalculator::DoParallelOMP().
+* Behavior change: building ROOT using `minuit2_omp=ON` option no longer enables OpenMP parallelization by default. One has to call now additionaly GradientCalculator::SetParallelOMP().
 
 ## RooFit
 

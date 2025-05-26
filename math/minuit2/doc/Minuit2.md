@@ -25,7 +25,7 @@ or the Minuit2 test program
 
 \note Some gradient calculations, such as `Numerical2PGradientCalculator` support parallelization
 via OpenMP. To profit from this acceleration, one needs to build ROOT using `minuit2_omp=ON`
-and later call GradientCalculator::DoParallelOMP()
+and later call GradientCalculator::SetParallelOMP()
 
 A standalone version of Minuit2 (independent of %ROOT) can be easily built and installed using `CMake`.
 See this [`README`](https://github.com/root-project/root/blob/master/math/minuit2/README.md)

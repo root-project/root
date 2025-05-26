@@ -72,7 +72,7 @@ namespace ROOT {
 
    \note Some Minuit2 gradient calculations, such as `Numerical2PGradientCalculator` support parallelization
    via OpenMP. To profit from this acceleration, one needs to build ROOT using `minuit2_omp=ON`
-   and later call GradientCalculator::DoParallelOMP()
+   and later call GradientCalculator::SetParallelOMP()
 
    - Fumili (class TFumiliMinimizer)
 

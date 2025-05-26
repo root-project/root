@@ -18,7 +18,7 @@ namespace Minuit2 {
  * and an error is printed if doParallel=true; parallelization is disabled in any case.
  * \return false if OPENMP is not available and doParallel=true, otherwise it returns true.
  */
-bool GradientCalculator::DoParallelOMP(bool doParallel)
+bool GradientCalculator::SetParallelOMP(bool doParallel)
 {
 #ifndef _OPENMP
    if (doParallel) {
