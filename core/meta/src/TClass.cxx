@@ -2102,9 +2102,14 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
       // do something useful.
 
    } else {
-      TAutoInspector insp(b);
-      CallShowMembers(obj,insp,kFALSE);
-      return insp.fCount;
+      if (fBrowse) {
+         fBrowse(obj, b);
+         return 1;
+      } else {
+         TAutoInspector insp(b);
+         CallShowMembers(obj,insp,kFALSE);
+         return insp.fCount;
+      }
    }
 
    return 0;

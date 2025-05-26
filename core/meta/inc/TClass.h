@@ -233,7 +233,7 @@ private:
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
    mutable std::atomic<TMethodCall*> fIsAMethod;       //!saved info to call a IsA member function
 
-   ROOT::BrowseFunc_t  fBrowse;         //pointer to a functionen implementing the TBrowser Browse() call.
+   ROOT::BrowseFunc_t  fBrowse;         //pointer to a function implementing the TBrowser Browse() call.
    ROOT::MergeFunc_t   fMerge;          //pointer to a function implementing Merging objects of this class.
    ROOT::ResetAfterMergeFunc_t fResetAfterMerge; //pointer to a function implementing Merging objects of this class.
    ROOT::NewFunc_t     fNew;            //pointer to a function newing one object.
