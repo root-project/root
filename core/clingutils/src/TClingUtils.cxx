@@ -1148,12 +1148,14 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
 const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
                                                const char *method, const char *proto,
                                                const cling::Interpreter &interp,
-                                               bool diagnose)
+                                               bool diagnose,
+                                               bool objectIsConst = false)
 {
    const clang::FunctionDecl* funcD
       = interp.getLookupHelper().findFunctionProto(cinfo, method, proto,
                                                    diagnose ? cling::LookupHelper::WithDiagnostics
-                                                   : cling::LookupHelper::NoDiagnostics);
+                                                   : cling::LookupHelper::NoDiagnostics,
+                                                   objectIsConst);
    if (funcD)
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
 
@@ -1254,12 +1256,14 @@ bool ROOT::TMetaUtils::CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl,
                                                 const char *methodname,
                                                 const char *proto,
                                                 const cling::Interpreter &interp,
-                                                bool diagnose)
+                                                bool diagnose,
+                                                bool objectIsConst)
 {
    const clang::CXXMethodDecl *method
       = GetMethodWithProto(cl,methodname,proto, interp,
                            diagnose ? cling::LookupHelper::WithDiagnostics
-                           : cling::LookupHelper::NoDiagnostics);
+                           : cling::LookupHelper::NoDiagnostics,
+                           objectIsConst);
    return (method && method->getAccess() == clang::AS_public);
 }
 
@@ -1276,7 +1280,6 @@ bool ROOT::TMetaUtils::HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl, const
 
    return CheckPublicFuncWithProto(cl,name,proto,interp, false /*diags*/);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)

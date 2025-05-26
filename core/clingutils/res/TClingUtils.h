@@ -446,7 +446,8 @@ bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
 
 //______________________________________________________________________________
 bool CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*,
-                              const cling::Interpreter&, bool diagnose);
+                              const cling::Interpreter&, bool diagnose,
+                              bool objectIsConst = false);
 
 //______________________________________________________________________________
 long GetLineNumber(clang::Decl const*);
