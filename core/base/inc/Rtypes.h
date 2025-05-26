@@ -45,6 +45,7 @@
 //---- forward declared class types --------------------------------------------
 
 class TClass;
+class TBrowser;
 class TBuffer;
 class TDirectory;
 class TMemberInspector;
@@ -119,6 +120,7 @@ namespace ROOT {
    typedef void  (*DirAutoAdd_t)(void *, TDirectory *);
    typedef Long64_t (*MergeFunc_t)(void *, TCollection *, TFileMergeInfo *);
    typedef void  (*ResetAfterMergeFunc_t)(void *, TFileMergeInfo *);
+   typedef void (*BrowseFunc_t)(const void *, TBrowser *);
 
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 
