@@ -1148,12 +1148,14 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
 const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
                                                const char *method, const char *proto,
                                                const cling::Interpreter &interp,
-                                               bool diagnose)
+                                               bool diagnose,
+                                               bool objectIsConst = false)
 {
    const clang::FunctionDecl* funcD
       = interp.getLookupHelper().findFunctionProto(cinfo, method, proto,
                                                    diagnose ? cling::LookupHelper::WithDiagnostics
-                                                   : cling::LookupHelper::NoDiagnostics);
+                                                   : cling::LookupHelper::NoDiagnostics,
+                                                   objectIsConst);
    if (funcD)
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
 
@@ -1250,16 +1252,13 @@ bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true, if the function (defined by the name and prototype) exists and is public
 
-bool ROOT::TMetaUtils::CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl,
-                                                const char *methodname,
-                                                const char *proto,
-                                                const cling::Interpreter &interp,
-                                                bool diagnose)
+bool ROOT::TMetaUtils::CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl, const char *methodname,
+                                                const char *proto, const cling::Interpreter &interp, bool diagnose,
+                                                bool objectIsConst)
 {
-   const clang::CXXMethodDecl *method
-      = GetMethodWithProto(cl,methodname,proto, interp,
-                           diagnose ? cling::LookupHelper::WithDiagnostics
-                           : cling::LookupHelper::NoDiagnostics);
+   const clang::CXXMethodDecl *method = GetMethodWithProto(
+      cl,methodname,proto, interp,
+      diagnose ? cling::LookupHelper::WithDiagnostics : cling::LookupHelper::NoDiagnostics, objectIsConst);
    return (method && method->getAccess() == clang::AS_public);
 }
 
@@ -1274,9 +1273,8 @@ bool ROOT::TMetaUtils::HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl, const
    const char *proto = "TDirectory*";
    const char *name = "DirectoryAutoAdd";
 
-   return CheckPublicFuncWithProto(cl,name,proto,interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)
@@ -1289,7 +1287,7 @@ bool ROOT::TMetaUtils::HasNewMerge(const clang::CXXRecordDecl *cl, const cling::
    const char *proto = "TCollection*,TFileMergeInfo*";
    const char *name = "Merge";
 
-   return CheckPublicFuncWithProto(cl,name,proto,interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1303,7 +1301,7 @@ bool ROOT::TMetaUtils::HasOldMerge(const clang::CXXRecordDecl *cl, const cling::
    const char *proto = "TCollection*";
    const char *name = "Merge";
 
-   return CheckPublicFuncWithProto(cl,name,proto, interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
 
 
@@ -1319,7 +1317,7 @@ bool ROOT::TMetaUtils::HasResetAfterMerge(const clang::CXXRecordDecl *cl, const 
    const char *proto = "TFileMergeInfo*";
    const char *name = "ResetAfterMerge";
 
-   return CheckPublicFuncWithProto(cl,name,proto, interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
 
 
