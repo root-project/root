@@ -4,7 +4,7 @@ from support import setup_make, pylong, IS_MAC_ARM
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/crossinheritanceDict"
+test_dct = currpath + "/libcrossinheritanceDict"
 
 
 class TestCROSSINHERITANCE:
