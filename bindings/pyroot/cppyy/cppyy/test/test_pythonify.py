@@ -4,7 +4,7 @@ from support import setup_make, pylong, ispypy
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/example01Dict"
+test_dct = currpath + "/libexample01Dict"
 
 
 class TestPYTHONIFY:

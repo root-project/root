@@ -3,7 +3,7 @@ from pytest import mark, raises, skip
 from support import setup_make, pylong, pyunicode, IS_MAC_ARM
 
 currpath = os.getcwd()
-test_dct = currpath + "/datatypesDict"
+test_dct = currpath + "/libdatatypesDict"
 
 
 class TestDATATYPES:

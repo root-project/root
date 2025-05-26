@@ -3,7 +3,7 @@ from pytest import mark, raises, skip
 from support import setup_make, pylong, IS_WINDOWS, ispypy
 
 currpath = os.getcwd()
-test_dct = currpath + "/advancedcppDict"
+test_dct = currpath + "/libadvancedcppDict"
 
 
 class TestADVANCEDCPP:
@@ -156,7 +156,7 @@ class TestADVANCEDCPP:
         import cppyy
         gbl = cppyy.gbl
 
-        lib2 = cppyy.load_reflection_info("advancedcpp2Dict")
+        lib2 = cppyy.load_reflection_info("libadvancedcpp2Dict")
 
         assert gbl.a_ns      is gbl.a_ns
         assert gbl.a_ns.d_ns is gbl.a_ns.d_ns

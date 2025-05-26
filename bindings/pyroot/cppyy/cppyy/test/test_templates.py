@@ -4,7 +4,7 @@ from support import setup_make, pylong
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/templatesDict"
+test_dct = currpath + "/libtemplatesDict"
 
 
 class TestTEMPLATES:

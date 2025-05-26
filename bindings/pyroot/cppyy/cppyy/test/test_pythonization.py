@@ -4,7 +4,7 @@ from support import setup_make, pylong
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/pythonizablesDict"
+test_dct = currpath + "/libpythonizablesDict"
 
 
 class TestClassPYTHONIZATION:
