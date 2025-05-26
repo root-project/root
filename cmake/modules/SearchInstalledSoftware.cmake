@@ -1643,6 +1643,33 @@ if (vecgeom)
   endif()
 endif()
 
+if(experimental_adaptivecpp)
+  # Building adaptivecpp requires an internet connection, if we're not side-loading the source directory
+  if(NOT DEFINED ADAPTIVECPP_SOURCE_DIR)
+    ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("experimental_adaptivecpp")
+  endif()
+  include(SetupAdaptiveCpp)
+  set(HIPSYCL_NO_FIBERS ON)
+  set(WITH_OPENCL_BACKEND OFF)
+  set(WITH_LEVEL_ZERO_BACKEND OFF)
+
+  find_package(AdaptiveCpp REQUIRED)
+  if (AdaptiveCpp_FOUND)
+    set(sycl ON)
+    set(SYCL_COMPILER_FLAGS "-ffast-math ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")
+    message(STATUS "SYCL compiler flags: ${SYCL_COMPILER_FLAGS}")
+    separate_arguments(SYCL_COMPILER_FLAGS NATIVE_COMMAND ${SYCL_COMPILER_FLAGS})
+    message(STATUS "AdaptiveCpp sycl enabled")
+  else()
+    if(fail-on-missing)
+      message(FATAL_ERROR "AdaptiveCpp library not found")
+    else()
+      message(STATUS "AdaptiveCpp library not found")
+      set(sycl OFF CACHE BOOL "Disabled because no SYCL implementation is not found" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for protobuf-------------------------------------------------------------------
 
 if(tmva-sofie)
