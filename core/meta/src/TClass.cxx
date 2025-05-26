@@ -1145,7 +1145,7 @@ TClass::TClass() :
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
    fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
+   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
    fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
@@ -1183,7 +1183,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
    fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
+   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
    fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
@@ -1231,7 +1231,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
    fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
+   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
    fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
@@ -1259,7 +1259,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
    fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
+   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
    fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
@@ -1305,7 +1305,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
    fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
+   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
    fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
@@ -1356,7 +1356,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
    fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
+   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
    fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
@@ -1388,7 +1388,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
    fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
+   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
    fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
@@ -7120,6 +7120,14 @@ void TClass::SetConvStreamerFunc(ClassConvStreamerFunc_t strm)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Install a new wrapper around 'Browse'.
+
+void TClass::SetBrowse(ROOT::BrowseFunc_t newBrowse)
+{
+   fBrowse = newBrowse;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Install a new wrapper around 'Merge'.
 
 void TClass::SetMerge(ROOT::MergeFunc_t newMerge)
@@ -7613,6 +7621,14 @@ Bool_t TClass::HasLocalHashMember() const
    if (fProperty == (-1))
       Property();
    return TestBit(kHasLocalHashMember);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the wrapper around Browse.
+
+ROOT::BrowseFunc_t TClass::GetBrowse() const
+{
+   return fBrowse;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
