@@ -4,7 +4,7 @@ from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/overloadsDict"
+test_dct = currpath + "/liboverloadsDict"
 
 
 class TestOVERLOADS:

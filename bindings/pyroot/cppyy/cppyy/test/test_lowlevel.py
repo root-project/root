@@ -4,7 +4,7 @@ from support import setup_make, pylong, pyunicode, IS_WINDOWS, ispypy
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/datatypesDict"
+test_dct = currpath + "/libdatatypesDict"
 
 
 class TestLOWLEVEL:

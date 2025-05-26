@@ -5,7 +5,7 @@ from support import setup_make, pylong, pyunicode, maxvalue, ispypy
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/stltypesDict"
+test_dct = currpath + "/libstltypesDict"
 
 
 # after CPython's Lib/test/seq_tests.py

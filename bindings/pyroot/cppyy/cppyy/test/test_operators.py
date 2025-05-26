@@ -4,7 +4,7 @@ from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/operatorsDict"
+test_dct = currpath + "/liboperatorsDict"
 
 
 class TestOPERATORS:

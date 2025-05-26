@@ -3,7 +3,7 @@ from pytest import raises, mark
 from support import setup_make, IS_MAC
 
 currpath = os.getcwd()
-test_dct = currpath + "/example01Dict"
+test_dct = currpath + "/libexample01Dict"
 
 
 class TestACLASSLOADER:

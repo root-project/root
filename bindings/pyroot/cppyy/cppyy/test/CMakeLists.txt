@@ -22,23 +22,13 @@ std_streams
 templates
 stltypes)
 
-if(MSVC)
-    set(DICT_GEN ${CMAKE_BINARY_DIR}/bin/rootcling.exe)
-else()
-    set(DICT_GEN ${CMAKE_BINARY_DIR}/bin/rootcling)
-endif()
-
 foreach(DICT ${CPPYY_TEST_DICTS})
     # Generate dictionary for the tests
-    add_custom_command(OUTPUT ${DICT}_rflx_rdict.pcm ${DICT}_rflx.cpp
-                       COMMAND ${DICT_GEN} ${DICT}_rflx.cpp -f --rmf ${DICT}Dict.rootmap --rml ${DICT}Dict.so ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.h ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.xml
-                       DEPENDS rootcling ${DICT}.h ${DICT}.xml)
-
-    # Create shared necessary libraries for the tests
-    add_library(${DICT}Dict SHARED ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.cxx ${DICT}_rflx.cpp)
+    ROOT_GENERATE_DICTIONARY(G__${DICT}Dict ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.h LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.xml)
+    # Create necessary shared libraries for the tests
+    add_library(${DICT}Dict SHARED ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.cxx G__${DICT}Dict.cxx)
     target_include_directories(${DICT}Dict PUBLIC ${Python3_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include)
     target_link_libraries(${DICT}Dict PUBLIC Python3::Python ROOT::Core)
-    set_target_properties(${DICT}Dict PROPERTIES PREFIX "")
     target_compile_options(${DICT}Dict PRIVATE "-w")
 endforeach()
 

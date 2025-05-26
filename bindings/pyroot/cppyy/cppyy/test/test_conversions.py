@@ -3,7 +3,7 @@ from pytest import raises
 from support import setup_make
 
 currpath = os.getcwd()
-test_dct = currpath + "/conversionsDict"
+test_dct = currpath + "/libconversionsDict"
 
 
 class TestCONVERSIONS:

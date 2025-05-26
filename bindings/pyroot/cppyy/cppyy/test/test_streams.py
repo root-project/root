@@ -4,7 +4,7 @@ from support import setup_make
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/std_streamsDict"
+test_dct = currpath + "/libstd_streamsDict"
 
 
 class TestSTDStreams:

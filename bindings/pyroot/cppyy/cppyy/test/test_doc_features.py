@@ -4,7 +4,7 @@ from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/doc_helperDict"
+test_dct = currpath + "/libdoc_helperDict"
 
 
 class TestDOCFEATURES:

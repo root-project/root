@@ -4,7 +4,7 @@ from support import setup_make, ispypy
 
 
 currpath = os.getcwd()
-test_dct = currpath + "/cpp11featuresDict"
+test_dct = currpath + "/libcpp11featuresDict"
 
 
 class TestCPP11FEATURES:
