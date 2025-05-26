@@ -99,7 +99,7 @@ jobs:
           - platform: mac13   
             arch: ARM64
             overrides: ["builtin_zlib=ON"]       
-          - platform: macOS-VM
+          - platform: macOS-VM-13
             arch: ARM64
             overrides: ["builtin_zlib=ON"]
 
