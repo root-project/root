@@ -34,6 +34,4 @@ install(DIRECTORY ${localruntimedir}/cppyy
         COMPONENT libraries
         PATTERN *.so EXCLUDE)
 
-if(NOT MSVC)
-  ROOT_ADD_TEST_SUBDIRECTORY(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)

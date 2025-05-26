@@ -1,10 +1,8 @@
-import py, sys, pytest, os
+import sys, pytest, os
 from pytest import mark, raises
-from support import setup_make, pylong
+from support import setup_make, pylong, WINDOWS_BITS
 
-
-currpath = os.getcwd()
-test_dct = currpath + "/libpythonizablesDict"
+test_dct = "pythonizables_cxx"
 
 
 class TestClassPYTHONIZATION:
@@ -224,10 +222,112 @@ class TestClassPYTHONIZATION:
         # associative  container, with 'index' a key, not a counter
         #raises(IndexError, d.__getitem__, 1)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test09_cpp_side_pythonization(self):
         """Use of C++ side pythonizations"""
 
         import cppyy
+
+        # These definitions are not part of pythonizables.h/.cxx, because they
+        # require "Python.h". It is fragile to link dictionaries against
+        # libpython, as the right flags depend on the platform. Just declaring
+        # this code in the Python session is easier, because then Python.h and
+        # libpython are always available.
+        cppyy.cppdef("""\
+        // as recommended by:
+        // https://docs.python.org/3/c-api/intro.html#include-files
+        #define PY_SSIZE_T_CLEAN
+        #include "Python.h"
+
+        namespace pyzables {
+
+        //===========================================================================
+        class WithCallback1 {
+        public:
+            WithCallback1(int i);
+
+        public:
+            int get_int();
+            void set_int(int i);
+
+        private:
+            int m_int;
+
+        public:
+            static void __cppyy_explicit_pythonize__(PyObject* klass, const std::string&);
+            static std::string klass_name;
+        };
+
+        class WithCallback2 {
+        public:
+            WithCallback2(int i);
+
+        public:
+            int get_int();
+            void set_int(int i);
+
+        protected:
+            int m_int;
+
+        public:
+            static void __cppyy_pythonize__(PyObject* klass, const std::string&);
+            static std::string klass_name;
+        };
+
+        class WithCallback3 : public WithCallback2 {
+        public:
+            using WithCallback2::WithCallback2;
+
+        public:
+            int get_int();
+            void set_int(int i);
+        };
+
+        } // namespace pyzables
+
+        //===========================================================================
+        pyzables::WithCallback1::WithCallback1(int i) : m_int(i) {}
+
+        int pyzables::WithCallback1::get_int() { return m_int; }
+        void pyzables::WithCallback1::set_int(int i) { m_int = i; }
+
+        static inline void replace_method_name(PyObject* klass, const char* n1, const char* n2) {
+            PyObject* meth = PyObject_GetAttrString(klass, n1);
+            PyObject_SetAttrString(klass, n2, meth);
+            Py_DECREF(meth);
+            PyObject_DelAttrString(klass, n1);
+        }
+
+        void pyzables::WithCallback1::WithCallback1::__cppyy_explicit_pythonize__(PyObject* klass, const std::string& name) {
+        // change methods to camel case
+            replace_method_name(klass, "get_int", "GetInt");
+            replace_method_name(klass, "set_int", "SetInt");
+
+        // store the provided class name
+            klass_name = name;
+        }
+
+        std::string pyzables::WithCallback1::klass_name{"not set"};
+
+        pyzables::WithCallback2::WithCallback2(int i) : m_int(i) {}
+
+        int pyzables::WithCallback2::get_int() { return m_int; }
+        void pyzables::WithCallback2::set_int(int i) { m_int = i; }
+
+        void pyzables::WithCallback2::WithCallback2::__cppyy_pythonize__(PyObject* klass, const std::string& name) {
+        // change methods to camel case
+            replace_method_name(klass, "get_int", "GetInt");
+            replace_method_name(klass, "set_int", "SetInt");
+
+        // store the provided class name
+            klass_name = name;
+        }
+
+        std::string pyzables::WithCallback2::klass_name{"not set"};
+
+        int pyzables::WithCallback3::get_int() { return 2*m_int; }
+        void pyzables::WithCallback3::set_int(int i) { m_int = 2*i; }
+        """)
 
       # explicit pythonization
         for kls in [cppyy.gbl.pyzables.WithCallback1, cppyy.gbl.pyzables.WithCallback2]:

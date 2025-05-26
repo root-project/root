@@ -4,72 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-# Dictionary list
-set(CPPYY_TEST_DICTS
-advancedcpp
-advancedcpp2
-conversions
-cpp11features
-crossinheritance
-datatypes
-doc_helper
-example01
-fragile
-operators
-overloads
-pythonizables
-std_streams
-templates
-stltypes)
-
-foreach(DICT ${CPPYY_TEST_DICTS})
-    set(CMAKE_ROOTTEST_NOROOTMAP OFF)
-    # only disable rootmap for all but example01 and stltypes which require them
-    if(NOT DICT STREQUAL "example01" AND NOT DICT STREQUAL "stltypes")
-        set(CMAKE_ROOTTEST_NOROOTMAP ON)
-    endif()
-    # Generate dictionary for the tests
-    ROOT_GENERATE_DICTIONARY(G__${DICT}Dict ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.h LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.xml)
-    # Create necessary shared libraries for the tests
-    add_library(${DICT}Dict SHARED ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.cxx G__${DICT}Dict.cxx)
-    target_include_directories(${DICT}Dict PUBLIC ${Python3_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include)
-    target_link_libraries(${DICT}Dict PUBLIC ROOT::Core)
-    target_compile_options(${DICT}Dict PRIVATE "-w")
-    if(MSVC)
-      target_link_libraries(${DICT}Dict PUBLIC Python3::Python)
-    elseif(APPLE)
-      target_link_libraries(${DICT}Dict PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup)
-    else()
-      target_link_libraries(${DICT}Dict PUBLIC -Wl,--unresolved-symbols=ignore-all)
-    endif()
-endforeach()
-unset(CMAKE_ROOTTEST_NOROOTMAP)
-
-# Tests list
-set(CPPYY_TESTS
-test_aclassloader
-test_advancedcpp
-test_api
-test_boost
-test_conversions
-test_crossinheritance
-test_datatypes
-test_doc_features
-test_eigen
-test_fragile
-# The leakcheck test is disabled due to its sporadic nature, especially fragile on VMs
-# test_leakcheck
-test_lowlevel
-test_numba
-test_operators
-test_overloads
-test_pythonify
-test_pythonization
-test_regression
-test_streams
-test_templates
-test_concurrent)
-
+set(enable_test_cpp11features FALSE)
 if(NOT CMAKE_CXX_STANDARD EQUAL 23)
     # test_cpp11features crashes when run with C++23
     if(APPLE)
@@ -79,21 +14,81 @@ if(NOT CMAKE_CXX_STANDARD EQUAL 23)
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         if(MACOS_VERSION VERSION_LESS "26.0")
-            # Parts of this test suite fail with std::make_unique 
-            list(APPEND CPPYY_TEST_DICTS test_cpp11features)
+            # Parts of this test suite fail with std::make_unique
+            set(enable_test_cpp11features TRUE)
         endif()
     else()
-        list(APPEND CPPYY_TESTS test_cpp11features)
+        set(enable_test_cpp11features TRUE)
     endif()
 endif()
 
-if(NOT APPLE)
-    # test_stltypes completely fails on OSX
-    # because it is unable to load the necessary shared libraries
-    list(APPEND CPPYY_TESTS test_stltypes)
+if(MSVC)
+  set(common_args GENERIC PYTHON_DEPS pytest)
+else()
+  set(common_args GENERIC ENVIRONMENT ${ld_library_path}=${CMAKE_CURRENT_BINARY_DIR} PYTHON_DEPS pytest)
 endif()
 
-# Configure the tests
-foreach(TEST ${CPPYY_TESTS})
-    ROOT_ADD_PYUNITTEST(${TEST} ${TEST}.py GENERIC ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR} PYTHON_DEPS pytest)
-endforeach()
+set(root_cmd $<TARGET_FILE:root.exe> -b -q -l)
+
+function(ADD_PYUNITTEST_ACLIC TESTNAME)
+  set(options)
+  set(oneValueArgs)
+  set(multiValueArgs DICTNAME)
+  cmake_parse_arguments(ARG
+    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
+  )
+
+  ROOT_ADD_PYUNITTEST(${TESTNAME} ${TESTNAME}.py ${common_args}
+    COPY_TO_BUILDDIR ${ARG_DICTNAME}.cxx ${ARG_DICTNAME}.h
+    PRECMD ${root_cmd} -e ".L ${ARG_DICTNAME}.cxx++"
+  )
+endfunction()
+
+ADD_PYUNITTEST_ACLIC(test_conversions DICTNAME conversions)
+ADD_PYUNITTEST_ACLIC(test_crossinheritance DICTNAME crossinheritance)
+ADD_PYUNITTEST_ACLIC(test_doc_features DICTNAME doc_helper)
+ADD_PYUNITTEST_ACLIC(test_fragile DICTNAME fragile)
+ADD_PYUNITTEST_ACLIC(test_operators DICTNAME operators)
+ADD_PYUNITTEST_ACLIC(test_overloads DICTNAME overloads)
+ADD_PYUNITTEST_ACLIC(test_streams DICTNAME std_streams)
+ADD_PYUNITTEST_ACLIC(test_templates DICTNAME templates)
+ADD_PYUNITTEST_ACLIC(test_pythonization DICTNAME pythonizables)
+
+ROOT_ADD_PYUNITTEST(test_pythonify test_pythonify.py ${common_args}
+  COPY_TO_BUILDDIR example01.cxx example01.h
+  PRECMD ${root_cmd} -e ".L example01.cxx++"
+  FIXTURES_SETUP example01_dict_fixture
+)
+
+ROOT_ADD_PYUNITTEST(test_advancedcpp test_advancedcpp.py ${common_args}
+  COPY_TO_BUILDDIR advancedcpp.cxx advancedcpp.h advancedcpp2.cxx advancedcpp2.h
+  PRECMD ${root_cmd} -e ".L advancedcpp.cxx++" -e ".L advancedcpp2.cxx++"
+)
+
+ROOT_ADD_PYUNITTEST(test_lowlevel test_lowlevel.py ${common_args}
+  COPY_TO_BUILDDIR datatypes.cxx datatypes.h
+  PRECMD ${root_cmd} -e ".L datatypes.cxx++"
+  FIXTURES_SETUP datatypes_dict_fixture
+)
+
+ROOT_ADD_PYUNITTEST(test_aclassloader test_aclassloader.py ${common_args} FIXTURES_REQUIRED example01_dict_fixture)
+ROOT_ADD_PYUNITTEST(test_api test_api.py ${common_args})
+ROOT_ADD_PYUNITTEST(test_boost test_boost.py ${common_args})
+ROOT_ADD_PYUNITTEST(test_concurrent test_concurrent.py ${common_args})
+ROOT_ADD_PYUNITTEST(test_datatypes test_datatypes.py ${common_args} FIXTURES_REQUIRED datatypes_dict_fixture)
+ROOT_ADD_PYUNITTEST(test_eigen test_eigen.py ${common_args})
+ROOT_ADD_PYUNITTEST(test_numba test_numba.py ${common_args})
+ROOT_ADD_PYUNITTEST(test_regression test_regression.py ${common_args})
+
+if(NOT APPLE)
+  # test_stltypes completely fails on OSX
+  # because it is unable to load the necessary shared libraries
+  ADD_PYUNITTEST_ACLIC(test_stltypes DICTNAME stltypes)
+endif()
+
+if(enable_test_cpp11features)
+  ADD_PYUNITTEST_ACLIC(test_cpp11features DICTNAME cpp11features)
+endif()
+
+# The leakcheck test is disabled due to its sporadic nature, especially fragile on VMs
+# ROOT_ADD_PYUNITTEST(test_leakcheck test_leakcheck.py ${common_args})

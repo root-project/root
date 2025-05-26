@@ -1,10 +1,9 @@
-import py, sys, pytest, os
+import sys, pytest, os
 from pytest import mark, raises
-from support import setup_make, ispypy, IS_MAC_ARM
+from support import setup_make, ispypy, IS_MAC_ARM, IS_WINDOWS, WINDOWS_BITS
 
 
-currpath = os.getcwd()
-test_dct = currpath + "/libcpp11featuresDict"
+test_dct = "cpp11features_cxx"
 
 
 class TestCPP11FEATURES:
@@ -264,6 +263,7 @@ class TestCPP11FEATURES:
         assert cppyy.gbl.TestMoving1.s_instance_counter == 0
         assert cppyy.gbl.TestMoving2.s_instance_counter == 0
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_initializer_list(self):
         """Initializer list construction"""
 
@@ -385,10 +385,24 @@ class TestCPP11FEATURES:
         f = FunctionNS.FNCreateTestStructFunc()
         assert f(t) == 27
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test13_stdhash(self):
         """Use of std::hash"""
 
         import cppyy
+
+        cppyy.cppdef("""
+        struct StructWithHash {};    // for std::hash<> testing
+        struct StructWithoutHash {};
+
+        namespace std {
+            template<>
+            struct hash<StructWithHash> {
+                size_t operator()(const StructWithHash&) const { return 17; }
+            };
+        } // namespace std
+        """)
+
         from cppyy.gbl import StructWithHash, StructWithoutHash
 
         for i in range(3):   # to test effect of caching
@@ -426,6 +440,7 @@ class TestCPP11FEATURES:
             gc.collect()
             assert TestSmartPtr.s_counter == 0
 
+    @mark.xfail(condition=IS_WINDOWS, reason='ValueError: Could not find "make_unique<int>"')
     def test15_unique_ptr_template_deduction(self):
         """Argument type deduction with std::unique_ptr"""
 
@@ -445,6 +460,7 @@ class TestCPP11FEATURES:
         with raises(ValueError):  # not an RValue
             cppyy.gbl.UniqueTempl.returnptr[int](uptr_in)
 
+    @mark.xfail(condition=IS_WINDOWS, reason='TypeError: Could not find "make_unique<int>"')
     def test16_unique_ptr_moves(self):
         """std::unique_ptr requires moves"""
 

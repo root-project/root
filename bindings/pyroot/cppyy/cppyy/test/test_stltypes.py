@@ -1,10 +1,9 @@
 # -*- coding: UTF-8 -*-
-import py, sys, pytest, os
+import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, maxvalue, ispypy, no_root_errors
+from support import setup_make, pylong, pyunicode, maxvalue, ispypy, no_root_errors, IS_WINDOWS, WINDOWS_BITS
 
-currpath = os.getcwd()
-test_dct = currpath + "/libstltypesDict"
+test_dct = "stltypes_cxx"
 
 global_n = 5
 
@@ -190,6 +189,7 @@ def getslice_cpython_test(type2test):
     assert a[3::maxvalue]      == type2test([3])
 
 
+@mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
 class TestSTLVECTOR:
     def setup_class(cls):
         cls.test_dct = test_dct
@@ -197,6 +197,7 @@ class TestSTLVECTOR:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = global_n
 
+    @mark.xfail(run=False, condition=IS_WINDOWS, reason="Fails on Windows")
     def test01_builtin_type_vector_types(self):
         """Test access to std::vector<int>/std::vector<double>"""
 
@@ -252,6 +253,7 @@ class TestSTLVECTOR:
             assert v.size() == self.N
             assert len(v) == self.N
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test02_user_type_vector_type(self):
         """Test access to an std::vector<just_a_class>"""
 
@@ -284,6 +286,7 @@ class TestSTLVECTOR:
         assert len(v) == self.N
         v.__destruct__()
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_empty_vector_type(self):
         """Test behavior of empty std::vector<>"""
 
@@ -298,6 +301,7 @@ class TestSTLVECTOR:
         for x in cppyy.gbl.std.vector["std::string*"]():
             pass
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_vector_iteration(self):
         """Test iteration over an std::vector<int>"""
 
@@ -323,6 +327,7 @@ class TestSTLVECTOR:
 
         v.__destruct__()
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test05_push_back_iterables_with_iadd(self):
         """Test usage of += of iterable on push_back-able container"""
 
@@ -361,6 +366,7 @@ class TestSTLVECTOR:
         v += []
         assert len(v) == sz
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test06_vector_indexing(self):
         """Test python-style indexing to an std::vector<int>"""
 
@@ -388,6 +394,7 @@ class TestSTLVECTOR:
         assert v2[-1] == v[-2]
         assert v2[self.N-4] == v[-2]
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test07_vector_bool(self):
         """Usability of std::vector<bool> which can be a specialization"""
 
@@ -406,6 +413,7 @@ class TestSTLVECTOR:
         assert len(vb[4:8]) == 4
         assert list(vb[4:8]) == [False]*3+[True]
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_vector_enum(self):
         """Usability of std::vector<> of some enums"""
 
@@ -439,6 +447,7 @@ class TestSTLVECTOR:
 
         raises(TypeError, cppyy.gbl.std.vector["std::string"], "abc")
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test10_vector_std_distance(self):
         """Use of std::distance with vector"""
 
@@ -450,6 +459,7 @@ class TestSTLVECTOR:
         assert std.distance(v.begin(), v.end()) == v.size()
         assert std.distance[type(v).iterator](v.begin(), v.end()) == v.size()
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test11_vector_of_pair(self):
         """Use of std::vector<std::pair>"""
 
@@ -526,6 +536,7 @@ class TestSTLVECTOR:
         for val in l:
             assert hasattr(val, '__lifeline')
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test13_vector_smartptr_iteration(self):
         """Iteration over smart pointers"""
 
@@ -559,6 +570,7 @@ class TestSTLVECTOR:
             i += 1
         assert i == len(result)
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test14_vector_of_vector_of_(self):
         """Nested vectors"""
 
@@ -574,6 +586,7 @@ class TestSTLVECTOR:
         assert vv[1][0] == 3
         assert vv[1][1] == 4
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test15_vector_slicing(self):
         """Advanced test of vector slicing"""
 
@@ -600,6 +613,7 @@ class TestSTLVECTOR:
       # additional test from CPython's test suite
         getslice_cpython_test(vector[int])
 
+    @mark.xfail(run=False, condition=IS_WINDOWS, reason="Fails on Windows")
     def test16_vector_construction(self):
         """Vector construction following CPython's sequence"""
 
@@ -616,7 +630,7 @@ class TestSTLVECTOR:
         v = cppyy.gbl.std.vector(l)
         assert list(l) == l
 
-    @mark.xfail
+    @mark.xfail(run=False)
     def test18_array_interface(self):
         """Test usage of __array__ from numpy"""
 
@@ -851,6 +865,7 @@ class TestSTLSTRING:
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_string_argument_passing(self):
         """Test mapping of python strings and std::[w]string"""
 
@@ -933,8 +948,6 @@ class TestSTLSTRING:
 
         assert tuple(cppyy.gbl.str_array_1) == ('a', 'b', 'c')
         str_array_2 = cppyy.gbl.str_array_2
-        # fix up the size
-        str_array_2.size = 4
         assert tuple(str_array_2) == ('d', 'e', 'f', 'g')
         assert tuple(str_array_2) == ('d', 'e', 'f', 'g')
 
@@ -953,6 +966,7 @@ class TestSTLSTRING:
                 for k in range(2):
                     assert str_array_4[i][j][k] == vals[i*4+j*2+k]
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test05_stlstring_and_unicode(self):
         """Mixing unicode and std::string"""
 
@@ -1045,6 +1059,7 @@ class TestSTLSTRING:
         assert s1+s2 == "Hello, World!"
         assert s2+s1 == ", World!Hello"
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test09_string_as_str_bytes(self):
         """Python-style methods of str/bytes on std::string"""
 
@@ -1151,6 +1166,7 @@ class TestSTLLIST:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = 13
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_builtin_list_type(self):
         """Test access to a list<int>"""
 
@@ -1267,6 +1283,7 @@ class TestSTLMAP:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = 13
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_builtin_map_type(self):
         """Test access to a map<int,int>"""
 
@@ -1305,6 +1322,7 @@ class TestSTLMAP:
                 assert key   == self.N-1
                 assert value == (self.N-1)*(self.N-1)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test02_keyed_maptype(self):
         """Test access to a map<std::string,int>"""
 
@@ -1397,6 +1415,7 @@ class TestSTLMAP:
             assert m['1'] == 2
             assert m['2'] == 1
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_map_derived_objects(self):
         """Enter derived objects through an initializer list"""
 
@@ -1444,6 +1463,7 @@ class TestSTLITERATOR:
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_builtin_vector_iterators(self):
         """Test iterator comparison with operator== reflected"""
 
@@ -1471,6 +1491,7 @@ class TestSTLITERATOR:
         assert b1 != b2
         assert b1 == e2
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test02_STL_like_class_iterators(self):
         """Test the iterator protocol mapping for an STL like class"""
 
@@ -1606,6 +1627,7 @@ class TestSTLARRAY:
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_array_of_basic_types(self):
         """Usage of std::array of basic types"""
 
@@ -1618,6 +1640,7 @@ class TestSTLARRAY:
             a[i] = i
             assert a[i] == i
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test02_array_of_pods(self):
         """Usage of std::array of PODs"""
 
@@ -1641,6 +1664,7 @@ class TestSTLARRAY:
         assert a[2].px == 6
         assert a[2].py == 7
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_array_of_pointer_to_pods(self):
         """Usage of std::array of pointer to PODs"""
 
@@ -1671,6 +1695,7 @@ class TestSTLARRAY:
             assert gbl.ArrayTest.get_pa_px(a.data(), i) == 13*i
             assert gbl.ArrayTest.get_pa_py(a.data(), i) == 42*i
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_array_from_aggregate(self):
         """Initialize an array from an aggregate contructor"""
 
@@ -1693,6 +1718,7 @@ class TestSTLSTRING_VIEW:
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_string_through_string_view(self):
         """Usage of std::string_view as formal argument"""
 
@@ -1756,6 +1782,7 @@ class TestSTLDEQUE:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = global_n
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_deque_byvalue_regression(self):
         """Return by value of a deque used to crash"""
 
@@ -1783,6 +1810,7 @@ class TestSTLSET:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = global_n
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_set_iteration(self):
         """Iterate over a set"""
 
@@ -1800,6 +1828,7 @@ class TestSTLSET:
             assert i in s
             assert i in r
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test02_set_iterators(self):
         """Access to set iterators and their comparisons"""
 
@@ -1883,6 +1912,7 @@ class TestSTLTUPLE:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = global_n
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test01_tuple_creation_and_access(self):
         """Create tuples and access their elements"""
 
@@ -1917,6 +1947,7 @@ class TestSTLTUPLE:
 
         # TODO: should be easy enough to add iterators over std::tuple?
 
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test02_tuple_size(self):
         """Usage of tuple_size helper class"""
 
@@ -2114,6 +2145,7 @@ class TestSTLEXCEPTION:
         gc.collect()
         assert cppyy.gbl.GetMyErrorCount() == 0
 
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_from_cpp(self):
         """Catch C++ exceptiosn from C++"""
 

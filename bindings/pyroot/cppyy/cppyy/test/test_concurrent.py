@@ -1,6 +1,6 @@
 import pytest
 from pytest import raises, skip, mark
-from support import IS_MAC_ARM
+from support import IS_MAC_ARM, IS_WINDOWS
 
 
 class TestCONCURRENT:
@@ -91,6 +91,7 @@ class TestCONCURRENT:
         if t.is_alive():        # was timed-out
             cppyy.gbl.test12_timeout.stopit[0] = True
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test04_cpp_threading_with_exceptions(self):
         """Threads and Python exceptions"""
 
