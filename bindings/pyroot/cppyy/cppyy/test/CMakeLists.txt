@@ -31,7 +31,7 @@ endif()
 foreach(DICT ${CPPYY_TEST_DICTS})
     # Generate dictionary for the tests
     add_custom_command(OUTPUT ${DICT}_rflx_rdict.pcm ${DICT}_rflx.cpp
-                       COMMAND ${DICT_GEN} ${DICT}_rflx.cpp --rmf ${DICT}Dict.rootmap --rml ${DICT}Dict.so ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.h ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.xml
+                       COMMAND ${DICT_GEN} ${DICT}_rflx.cpp -f --rmf ${DICT}Dict.rootmap --rml ${DICT}Dict.so ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.h ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.xml
                        DEPENDS rootcling ${DICT}.h ${DICT}.xml)
 
     # Create shared necessary libraries for the tests
