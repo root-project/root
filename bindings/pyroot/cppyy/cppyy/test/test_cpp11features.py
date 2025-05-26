@@ -349,7 +349,7 @@ class TestCPP11FEATURES:
             c = cppyy.gbl.std.nullopt
             assert cppyy.gbl.callopt(c)
 
-    @mark.xfail()
+    @mark.xfail(run = False, reason = "Crashes")
     def test11_chrono(self):
         """Use of chrono and overloaded operator+"""
 
