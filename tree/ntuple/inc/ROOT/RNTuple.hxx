@@ -18,6 +18,7 @@
 
 #include <cstdint>
 
+class TBrowser;
 class TCollection;
 class TFile;
 class TFileMergeInfo;
@@ -128,6 +129,9 @@ public:
    /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
+
+   /// Custom callback for the classic TBrowser
+   void Browse(TBrowser *) const;
 
    /// NOTE: if you change this version you also need to update RTFNTuple::fClassVersion in RMiniFile.cxx
    ClassDefNV(RNTuple, 2);
