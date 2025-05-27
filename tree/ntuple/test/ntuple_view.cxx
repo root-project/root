@@ -217,6 +217,57 @@ TEST(RNTuple, VoidView)
    EXPECT_STREQ("pt", viewPt.GetField().GetFieldName().c_str());
 }
 
+TEST(RNTuple, VoidViewThrow)
+{
+   FileRaii fileGuard("test_ntuple_voidview_throw.root");
+
+   auto model = RNTupleModel::Create();
+   *model->MakeField<char>("c") = 42;
+   *model->MakeField<unsigned char>("h") = 42;
+   *model->MakeField<short>("s") = 42;
+   *model->MakeField<unsigned short>("t") = 42;
+   *model->MakeField<int>("i") = 42;
+   *model->MakeField<unsigned int>("j") = 42;
+   *model->MakeField<long>("l") = 42;
+   *model->MakeField<unsigned long>("m") = 42;
+   *model->MakeField<float>("f") = 42.f;
+   *model->MakeField<double>("d") = 42.;
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+   auto vc = reader->GetView<void>("c");
+   auto vh = reader->GetView<void>("h");
+   auto vs = reader->GetView<void>("s");
+   auto vt = reader->GetView<void>("t");
+   auto vi = reader->GetView<void>("i");
+   auto vj = reader->GetView<void>("j");
+   auto vl = reader->GetView<void>("l");
+   auto vm = reader->GetView<void>("m");
+   auto vf = reader->GetView<void>("f");
+   auto vd = reader->GetView<void>("d");
+   EXPECT_THROW(vc.GetValue().GetRef<short>(), ROOT::RException);
+   EXPECT_THROW(vh.GetValue().GetRef<unsigned short>(), ROOT::RException);
+   EXPECT_THROW(vs.GetValue().GetRef<int>(), ROOT::RException);
+   EXPECT_THROW(vt.GetValue().GetRef<unsigned int>(), ROOT::RException);
+   EXPECT_THROW(vi.GetValue().GetRef<long>(), ROOT::RException);
+   EXPECT_THROW(vj.GetValue().GetRef<unsigned long>(), ROOT::RException);
+   EXPECT_THROW(vl.GetValue().GetRef<short>(), ROOT::RException);
+   EXPECT_THROW(vm.GetValue().GetRef<unsigned short>(), ROOT::RException);
+   EXPECT_THROW(vf.GetValue().GetRef<double>(), ROOT::RException);
+   EXPECT_THROW(vf.GetValue().GetRef<Double_t>(), ROOT::RException);
+   EXPECT_THROW(vd.GetValue().GetRef<float>(), ROOT::RException);
+   EXPECT_THROW(vd.GetValue().GetRef<Float_t>(), ROOT::RException);
+   EXPECT_THROW(vd.GetValue().GetRef<long double>(), ROOT::RException);
+   vf(0);
+   EXPECT_FLOAT_EQ(vf.GetValue().GetRef<Float_t>(), 42.f);
+   vd(0);
+   EXPECT_FLOAT_EQ(vd.GetValue().GetRef<Double_t>(), 42.);
+}
+
 TEST(RNTuple, MissingViewNames)
 {
    FileRaii fileGuard("test_ntuple_missing_view_names.root");
