@@ -22,7 +22,7 @@
 class RooEllipse : public TGraph, public RooPlotable {
 public:
   RooEllipse() = default;
-  RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho= 0, Int_t points= 100);
+  RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho = 0, Int_t points = 100, double k = 1);
 
 
   void printName(std::ostream& os) const override ;

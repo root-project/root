@@ -216,7 +216,7 @@ const char* RooFitResult::statusLabelHistory(UInt_t icycle) const
 /// of the following (not case sensitive):
 ///
 /// *  M - a marker at the best fit result
-/// *  E - an error ellipse calculated at 1-sigma using the error matrix at the minimum
+/// *  E - an error ellipse calculated at 39%CL using the error matrix at the minimum
 /// *  1 - the 1-sigma error bar for parameter 1
 /// *  2 - the 1-sigma error bar for parameter 2
 /// *  B - the bounding box for the error ellipse
@@ -259,9 +259,9 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
   double s2= par2->getError();
   double rho= correlation(parName1, parName2);
 
-  // add a 1-sigma error ellipse, if requested
+  // add a 39%CL error ellipse, if requested
   if(opt.Contains("E")) {
-    RooEllipse *contour= new RooEllipse("contour",x1,x2,s1,s2,rho);
+    RooEllipse *contour= new RooEllipse("contour",x1,x2,s1,s2,rho,100,1);
     contour->SetLineWidth(2) ;
     frame->addPlotable(contour);
   }
