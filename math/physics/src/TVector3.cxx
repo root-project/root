@@ -301,10 +301,11 @@ void TVector3::Rotate(Double_t angle, const TVector3 & axis){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Rotates reference frame from Uz to newUz (unit vector) (Geant4).
-/// (z' is parallel to direction, x' is in the theta plane and y' in the xy
-/// plane as well as perpendicular to the theta plane) to the (x,y,z) frame.
-/// It is composition of two simple rotations:
+/// With respect to the (x,y,z) frame, z' is parallel to direction, x' is in the theta plane and y' in the xy
+/// plane as well as perpendicular to the theta plane.
+/// The full rotation is a composition of two simple rotations:
 /// theta around oy [0, pi], then phi around oz [0, 2pi] (non commutative).
+///
 /// For the special case of u1=0,u2=0,
 /// phi is set to 0 and theta = pi if u3=-1 or 0 if u3=1.
 /// The x' and y' axes are thus not guaranteed to follow the "shortest rotation
@@ -312,20 +313,11 @@ void TVector3::Rotate(Double_t angle, const TVector3 & axis){
 /// since the first rotation is restricted to be from 0 to pi, theta<0 is not
 /// taken into account. This is e.g. the case for u2=0 and u1<0.
 /// The resulting rotation matrix C is the composition of Az(phi) x By(theta), ie:
-A = 
-u1/up  -u2/up 0
-u2/up   u1/up 0
-0       0     1
-
-B =
-u3  0 up
-0   1 0
--up 0 u3
 /// \f[ A = \left( \begin{array}{ccc} u1/up & -u2/up & 0 \\ u2/up & u1/up & 0 \\ 0 & 0 & 1 \end{array} \right) \f]
 /// \f[ up = \sqrt{u1*u1 + u2*u2} >= 0 \f]
 /// \f[ A = Az(\phi = acos(u1/up) = asin(u2/up) \in [0, 2pi])\f]
 /// \f[ B = \left( \begin{array}{ccc} u3 & 0 & up \\ 0 & 1 & 0 \\ -up & 0 & u3 \end{array} \right) \f]
-/// \f[ B = By(\theta = acos(u3) = asin(up) \in [0, pi]\f]
+/// \f[ B = By(\theta = acos(u3) = asin(up) \in [0, pi] ) \f]
 /// \note NewUzVector must be normalized !
 
 void TVector3::RotateUz(const TVector3& NewUzVector) {
