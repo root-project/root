@@ -37,9 +37,9 @@ async function drawText() {
       text.fTextAlign = 22;
    }
 
-   this.createG(use_frame ? 'frame2d' : undefined, is_url);
+   const g = this.createG(use_frame ? 'frame2d' : undefined, is_url);
 
-   this.draw_g.attr('transform', null); // remove transform from interactive changes
+   g.attr('transform', null); // remove transform from interactive changes
 
    this.pos_x = this.axisToSvg('x', pos_x, this.isndc);
    this.pos_y = this.axisToSvg('y', pos_y, this.isndc);
@@ -58,9 +58,9 @@ async function drawText() {
    }
 
    if (is_url) {
-      this.draw_g.attr('href', text.fName);
+      g.attr('href', text.fName);
       if (!this.isBatchMode())
-         this.draw_g.append('svg:title').text(`link on ${text.fName}`);
+         g.append('svg:title').text(`link on ${text.fName}`);
    }
 
    return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(pp, fact /* , 0.05 */))
@@ -71,7 +71,7 @@ async function drawText() {
          return this;
 
       if (pp.isButton() && !pp.isEditable()) {
-         this.draw_g.on('click', () => this.getCanvPainter().selectActivePad(pp));
+         g.on('click', () => this.getCanvPainter().selectActivePad(pp));
          return this;
       }
 
@@ -81,7 +81,7 @@ async function drawText() {
          this.moveDrag = function(dx, dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
-            makeTranslate(this.draw_g, this.pos_dx, this.pos_dy);
+            makeTranslate(this.getG(), this.pos_dx, this.pos_dy);
          };
       }
 
@@ -108,7 +108,7 @@ async function drawText() {
             const pos = fp.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
                   new_x = this.axisToSvg('x', pos.x, true),
                   new_y = this.axisToSvg('y', pos.y, true);
-            makeTranslate(this.draw_g, new_x - this.pos_x, new_y - this.pos_y);
+            makeTranslate(this.getG(), new_x - this.pos_x, new_y - this.pos_y);
          };
       }
 
@@ -121,10 +121,8 @@ async function drawText() {
          }));
       };
 
-      if (this.matchObjectType(clTLink)) {
-         this.draw_g.style('cursor', 'pointer')
-                    .on('click', () => this.submitCanvExec('ExecuteEvent(kButton1Up, 0, 0);;'));
-      }
+      if (this.matchObjectType(clTLink))
+         g.style('cursor', 'pointer').on('click', () => this.submitCanvExec('ExecuteEvent(kButton1Up, 0, 0);;'));
 
       return this;
    });
@@ -140,9 +138,8 @@ function drawEllipse() {
    this.createAttLine({ attr: ellipse });
    this.createAttFill({ attr: ellipse });
 
-   this.createG();
-
-   const funcs = this.getAxisToSvgFunc(),
+   const g = this.createG(),
+         funcs = this.getAxisToSvgFunc(),
          x = funcs.x(ellipse.fX1),
          y = funcs.y(ellipse.fY1),
          rx = is_crown && (ellipse.fR1 <= 0) ? (funcs.x(ellipse.fX1 + ellipse.fR2) - x) : (funcs.x(ellipse.fX1 + ellipse.fR1) - x),
@@ -212,7 +209,7 @@ function drawEllipse() {
    this.x = x;
    this.y = y;
 
-   makeTranslate(this.draw_g.append('svg:path'), x, y)
+   makeTranslate(g.append('svg:path'), x, y)
       .attr('d', path)
       .call(this.lineatt.func)
       .call(this.fillatt.func);
@@ -224,7 +221,7 @@ function drawEllipse() {
    this.moveDrag = function(dx, dy) {
       this.x += dx;
       this.y += dy;
-      makeTranslate(this.draw_g.select('path'), this.x, this.y);
+      makeTranslate(this.getG().select('path'), this.x, this.y);
    };
 
    this.moveEnd = function(not_changed) {
@@ -239,16 +236,15 @@ function drawEllipse() {
 /** @summary Draw TPie
   * @private */
 function drawPie() {
-   this.createG();
-
-   const pie = this.getObject(),
+   const g = this.createG(),
+         pie = this.getObject(),
          nb = pie.fPieSlices.length,
          xc = this.axisToSvg('x', pie.fX),
          yc = this.axisToSvg('y', pie.fY),
          rx = this.axisToSvg('x', pie.fX + pie.fRadius) - xc,
          ry = this.axisToSvg('y', pie.fY + pie.fRadius) - yc;
 
-   makeTranslate(this.draw_g, xc, yc);
+   makeTranslate(g, xc, yc);
 
    // Draw the slices
    let total = 0,
@@ -269,11 +265,10 @@ function drawPie() {
       const x2 = Math.round(rx*Math.cos(af)),
             y2 = Math.round(ry*Math.sin(af));
 
-      this.draw_g
-          .append('svg:path')
-          .attr('d', `M0,0L${x1},${y1}A${rx},${ry},0,0,0,${x2},${y2}z`)
-          .call(this.lineatt.func)
-          .call(this.fillatt.func);
+      g.append('svg:path')
+       .attr('d', `M0,0L${x1},${y1}A${rx},${ry},0,0,0,${x2},${y2}z`)
+       .call(this.lineatt.func)
+       .call(this.fillatt.func);
       x1 = x2; y1 = y2;
    }
 }
@@ -292,7 +287,7 @@ function drawMarker() {
 
    this.createAttMarker({ attr: marker });
 
-   this.createG(use_frame ? 'frame2d' : undefined);
+   const g = this.createG(use_frame ? 'frame2d' : undefined);
 
    let x = this.axisToSvg('x', marker.fX, this.isndc),
        y = this.axisToSvg('y', marker.fY, this.isndc);
@@ -302,9 +297,9 @@ function drawMarker() {
    const path = this.markeratt.create(x, y);
 
    if (path) {
-      this.draw_g.append('svg:path')
-          .attr('d', path)
-          .call(this.markeratt.func);
+      g.append('svg:path')
+       .attr('d', path)
+       .call(this.markeratt.func);
    }
 
    if (d.check('NO_INTERACTIVE'))
@@ -319,12 +314,12 @@ function drawMarker() {
    this.moveDrag = function(dx, dy) {
       this.dx += dx;
       this.dy += dy;
-      if (this.draw_g)
-         makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
+      if (this.getG())
+         makeTranslate(this.getG().select('path'), this.dx, this.dy);
    };
 
    this.moveEnd = function(not_changed) {
-      if (not_changed || !this.draw_g)
+      if (not_changed || !this.getG())
          return;
       const mrk = this.getObject();
       let fx = this.svgToAxis('x', this.axisToSvg('x', mrk.fX, this.isndc) + this.dx, this.isndc),
@@ -346,16 +341,16 @@ function drawPolyMarker() {
 
    this.createAttMarker({ attr: poly });
 
-   this.createG();
+   const g = this.createG();
 
    let path = '';
    for (let n = 0; n <= poly.fLastPoint; ++n)
       path += this.markeratt.create(func.x(poly.fX[n]), func.y(poly.fY[n]));
 
    if (path) {
-      this.draw_g.append('svg:path')
-          .attr('d', path)
-          .call(this.markeratt.func);
+      g.append('svg:path')
+       .attr('d', path)
+       .call(this.markeratt.func);
    }
 
    assignContextMenu(this);
@@ -367,14 +362,15 @@ function drawPolyMarker() {
    this.moveDrag = function(dx, dy) {
       this.dx += dx;
       this.dy += dy;
-      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
+      if (this.getG())
+         makeTranslate(this.getG().select('path'), this.dx, this.dy);
    };
 
    this.moveEnd = function(not_changed) {
-      if (not_changed) return;
+      if (not_changed || !this.getG())
+         return;
       const poly2 = this.getObject(),
             func2 = this.getAxisToSvgFunc();
-
       let exec = '';
       for (let n = 0; n <= poly2.fLastPoint; ++n) {
          const x = this.svgToAxis('x', func2.x(poly2.fX[n]) + this.dx),

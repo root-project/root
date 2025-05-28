@@ -118,7 +118,8 @@ class TSplinePainter extends ObjectPainter {
      * @private */
    processTooltipEvent(pnt) {
       const spline = this.getObject(),
-            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
+            o = this.getOptions(),
+            funcs = this.getFramePainter()?.getGrFuncs(o.second_x, o.second_y);
       let cleanup = false, xx, yy, knot = null, indx = 0;
 
       if ((pnt === null) || !spline || !funcs)
@@ -139,16 +140,16 @@ class TSplinePainter extends ObjectPainter {
          }
       }
 
-      let gbin = this.draw_g?.selectChild('.tooltip_bin');
+      let gbin = this.getG()?.selectChild('.tooltip_bin');
       const radius = this.lineatt.width + 3;
 
-      if (cleanup || !this.draw_g) {
+      if (cleanup || !this.getG()) {
          gbin?.remove();
          return null;
       }
 
       if (gbin.empty()) {
-         gbin = this.draw_g.append('svg:circle')
+         gbin = this.getG().append('svg:circle')
                            .attr('class', 'tooltip_bin')
                            .style('pointer-events', 'none')
                            .attr('r', radius)
@@ -196,17 +197,17 @@ class TSplinePainter extends ObjectPainter {
      * @private */
    redraw() {
       const spline = this.getObject(),
-            funcs = this.getFramePainter().getGrFuncs(this.options.second_x, this.options.second_y),
+            o = this.getOptions(),
+            funcs = this.getFramePainter().getGrFuncs(o.second_x, o.second_y),
             w = funcs.getFrameWidth(),
-            h = funcs.getFrameHeight();
-
-      this.createG(true);
+            h = funcs.getFrameHeight(),
+            g = this.createG(true);
 
       this.#knot_size = 5; // used in tooltip handling
 
       this.createAttLine({ attr: spline });
 
-      if (this.options.Line || this.options.Curve) {
+      if (o.Line || o.Curve) {
          const npx = Math.max(10, spline.fNpx), bins = []; // index of current knot
          let xmin = Math.max(funcs.scale_xmin, spline.fXmin),
              xmax = Math.min(funcs.scale_xmax, spline.fXmax),
@@ -228,14 +229,14 @@ class TSplinePainter extends ObjectPainter {
             bins.push({ x, y, grx: funcs.grx(x), gry: funcs.gry(y) });
          }
 
-         this.draw_g.append('svg:path')
-             .attr('class', 'line')
-             .attr('d', buildSvgCurve(bins))
-             .style('fill', 'none')
-             .call(this.lineatt.func);
+         g.append('svg:path')
+          .attr('class', 'line')
+          .attr('d', buildSvgCurve(bins))
+          .style('fill', 'none')
+          .call(this.lineatt.func);
       }
 
-      if (this.options.Mark) {
+      if (o.Mark) {
          // for tooltips use markers only if nodes where not created
 
          this.createAttMarker({ attr: spline });
@@ -257,9 +258,9 @@ class TSplinePainter extends ObjectPainter {
          }
 
          if (path) {
-            this.draw_g.append('svg:path')
-                       .attr('d', path)
-                       .call(this.markeratt.func);
+            g.append('svg:path')
+             .attr('d', path)
+             .call(this.markeratt.func);
          }
       }
    }
@@ -274,13 +275,8 @@ class TSplinePainter extends ObjectPainter {
 
    /** @summary Decode options for TSpline drawing */
    decodeOptions(opt) {
-      const d = new DrawOptions(opt);
-
-      if (!this.options) this.options = {};
-
-      const has_main = Boolean(this.getMainPainter());
-
-      Object.assign(this.options, {
+      const d = new DrawOptions(opt),
+            o = this.setOptions({
          Same: d.check('SAME'),
          Line: d.check('L'),
          Curve: d.check('C'),
@@ -290,11 +286,11 @@ class TSplinePainter extends ObjectPainter {
          second_y: false
       });
 
-      if (!this.options.Line && !this.options.Curve && !this.options.Mark)
-         this.options.Curve = true;
+      if (!o.Line && !o.Curve && !o.Mark)
+         o.Curve = true;
 
-      if (d.check('X+')) { this.options.Hopt += 'X+'; this.options.second_x = has_main; }
-      if (d.check('Y+')) { this.options.Hopt += 'Y+'; this.options.second_y = has_main; }
+      if (d.check('X+')) { o.Hopt += 'X+'; o.second_x = Boolean(this.getMainPainter()); }
+      if (d.check('Y+')) { o.Hopt += 'Y+'; o.second_y = Boolean(this.getMainPainter()); }
 
       this.storeDrawOpt(opt);
    }

@@ -117,7 +117,7 @@ function addDragHandler(_painter, arg) {
       arg.cleanup = true;
 
    if (!isFunc(arg.getDrawG))
-      arg.getDrawG = () => painter?.draw_g;
+      arg.getDrawG = () => painter?.getG();
 
    function makeResizeElements(group, handler) {
       function addElement(cursor, d) {
@@ -375,7 +375,7 @@ class TooltipHandler extends ObjectPainter {
       if (!this.tooltip_enabled || !this.isTooltipAllowed())
          return false;
       const hintsg = this.hints_layer().selectChild('.objects_hints');
-      return hintsg.empty() ? false : hintsg.property('hints_pad') === this.getPadName();
+      return hintsg.empty() ? false : hintsg.property('hints_pad') === this.getPadPainter()?.getPadName();
    }
 
    /** @summary set tooltips enabled on/off */
@@ -388,7 +388,7 @@ class TooltipHandler extends ObjectPainter {
    processFrameTooltipEvent(pnt, evnt) {
       if (pnt?.handler) {
          // special use of interactive handler in the frame painter
-         const rect = this.draw_g?.selectChild('.main_layer');
+         const rect = this.getG()?.selectChild('.main_layer');
          if (!rect || rect.empty())
             pnt = null; // disable
          else if (pnt.touch && evnt) {
@@ -419,7 +419,7 @@ class TooltipHandler extends ObjectPainter {
       const hints = pp?.processPadTooltipEvent(pnt) ?? [];
 
       if (pnt && frame_rect)
-         pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints ? hints[0]?.painter?.snapid : '');
+         pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints ? hints[0]?.painter?.getSnapId() : '');
 
       for (let n = 0; n < hints.length; ++n) {
          const hint = hints[n];
@@ -529,14 +529,14 @@ class TooltipHandler extends ObjectPainter {
 
       let frame_shift = { x: 0, y: 0 }, trans = frame_rect.transform || '';
       if (!pp?.isCanvas()) {
-         frame_shift = getAbsPosInCanvas(this.getPadSvg(), frame_shift);
+         frame_shift = getAbsPosInCanvas(pp.getPadSvg(), frame_shift);
          trans = `translate(${frame_shift.x},${frame_shift.y}) ${trans}`;
       }
 
       // copy transform attributes from frame itself
       hintsg.attr('transform', trans)
             .property('last_point', pnt)
-            .property('hints_pad', this.getPadName());
+            .property('hints_pad', pp.getPadName());
 
       let viewmode = hintsg.property('viewmode') || '',
           actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
@@ -735,8 +735,8 @@ class FrameInteractive extends TooltipHandler {
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
       }
 
-      const top_rect = this.draw_g.selectChild('path'),
-            main_svg = this.draw_g.selectChild('.main_layer');
+      const top_rect = this.getG().selectChild('path'),
+            main_svg = this.getG().selectChild('.main_layer');
 
       top_rect.style('pointer-events', 'visibleFill')  // let process mouse events inside frame
               .style('cursor', 'default');             // show normal cursor
@@ -773,9 +773,11 @@ class FrameInteractive extends TooltipHandler {
 
       const hintsg = this.hints_layer().selectChild('.objects_hints');
       // if tooltips were visible before, try to reconstruct them after short timeout
-      if (!hintsg.empty() && this.isTooltipAllowed() && (hintsg.property('hints_pad') === this.getPadName()))
+      if (!hintsg.empty() && this.isTooltipAllowed() && (hintsg.property('hints_pad') === this.getPadPainter()?.getPadName()))
          setTimeout(() => this.processFrameTooltipEvent(hintsg.property('last_point'), null), 10);
    }
+
+   getFrameSvg() { return this.getPadPainter().getFrameSvg(); }
 
    /** @summary Add interactive handlers */
    async addFrameInteractivity(for_second_axes) {
@@ -937,7 +939,7 @@ class FrameInteractive extends TooltipHandler {
       if (evnt.buttons === this._shifting_buttons) {
          const frame = this.getFrameSvg(),
                pos = d3_pointer(evnt, frame.node()),
-               main_svg = this.draw_g.selectChild('.main_layer'),
+               main_svg = this.getG().selectChild('.main_layer'),
                dx = pos0[0] - pos[0],
                dy = (this.scales_ndim === 1) ? 0 : pos0[1] - pos[1],
                w = this.getFrameWidth(), h = this.getFrameHeight();
@@ -966,7 +968,7 @@ class FrameInteractive extends TooltipHandler {
     /** @summary Shift scales on defined positions */
    performScalesShift() {
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-            main_svg = this.draw_g.selectChild('.main_layer'),
+            main_svg = this.getG().selectChild('.main_layer'),
             gr = this.getGrFuncs(),
             xmin = gr.revertAxis('x', this._shifting_dx),
             xmax = gr.revertAxis('x', this._shifting_dx + w),
@@ -1406,18 +1408,14 @@ class FrameInteractive extends TooltipHandler {
       * @desc it is typically for 2-Dim histograms or
       * when histogram not draw, defined by other painters */
    isAllowedDefaultYZooming() {
-      if (this.self_drawaxes) return true;
+      if (this.self_drawaxes)
+         return true;
 
-      const pad_painter = this.getPadPainter();
-      if (pad_painter?.painters) {
-         for (let k = 0; k < pad_painter.painters.length; ++k) {
-            const subpainter = pad_painter.painters[k];
-            if (subpainter?.wheel_zoomy !== undefined)
-               return subpainter.wheel_zoomy;
-         }
-      }
-
-      return false;
+      let res;
+      this.forEachPainter(objp => {
+         res = res ?? objp._wheel_zoomy;
+      }, 'objects');
+      return res;
    }
 
    /** @summary Handles mouse wheel event */
@@ -1561,7 +1559,7 @@ class FrameInteractive extends TooltipHandler {
     * @private */
    moveTouchHandling(evnt, kind, pos0) {
       const frame = this.getFrameSvg(),
-            main_svg = this.draw_g.selectChild('.main_layer');
+            main_svg = this.getG().selectChild('.main_layer');
       let pos;
 
       try {
@@ -2165,7 +2163,6 @@ class TFramePainter extends FrameInteractive {
       pad.fY2 = pad.fUymax + ry/my*pad.fTopMargin;
    }
 
-
    /** @summary Draw axes grids
      * @desc Called immediately after axes drawing */
    drawGrids(draw_grids) {
@@ -2175,16 +2172,15 @@ class TFramePainter extends FrameInteractive {
       layer.selectAll('.ygrid').remove();
 
       const pp = this.getPadPainter(),
-         pad = pp?.getRootPad(true),
-         h = this.getFrameHeight(),
-         w = this.getFrameWidth(),
-         grid_style = gStyle.fGridStyle;
+            pad = pp?.getRootPad(true),
+            h = this.getFrameHeight(),
+            w = this.getFrameWidth(),
+            grid_style = gStyle.fGridStyle;
 
       // add a grid on x axis, if the option is set
       if (pad?.fGridx && draw_grids && this.x_handle?.ticks) {
          const colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('x')?.fAxisColor ?? 1);
          let gridx = '';
-
          this.x_handle.ticks.forEach(pos => {
             gridx += this.#swap_xy ? `M0,${pos}h${w}` : `M${pos},0v${h}`;
          });
@@ -2201,7 +2197,6 @@ class TFramePainter extends FrameInteractive {
       if (pad?.fGridy && draw_grids && this.y_handle?.ticks) {
          const colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('y')?.fAxisColor ?? 1);
          let gridy = '';
-
          this.y_handle.ticks.forEach(pos => {
             gridy += this.#swap_xy ? `M${pos},0v${h}` : `M0,${pos}h${w}`;
          });
@@ -2382,7 +2377,7 @@ class TFramePainter extends FrameInteractive {
          this.createAttFill({ attr: tframe });
          this.#border_mode = tframe.fBorderMode;
          this.#border_size = tframe.fBorderSize;
-      } else if (this.fillatt === undefined) {
+      } else if (!this.fillatt) {
          if (pad?.fFrameFillColor)
             this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
          else if (pad)
@@ -2451,7 +2446,7 @@ class TFramePainter extends FrameInteractive {
       this.x2_handle?.removeG();
       this.y2_handle?.removeG();
 
-      this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
+      this.getG()?.selectChild('.axis_layer').selectAll('*').remove();
       this.#axes_drawn = this.#axes2_drawn = false;
    }
 
@@ -2478,24 +2473,22 @@ class TFramePainter extends FrameInteractive {
       this.scale_ymin = this.scale_ymax = 0;
       this.scale_zmin = this.scale_zmax = 0;
 
-      this.draw_g?.selectChild('.main_layer').selectAll('*').remove();
-      this.draw_g?.selectChild('.upper_layer').selectAll('*').remove();
+      this.getG()?.selectChild('.main_layer').selectAll('*').remove();
+      this.getG()?.selectChild('.upper_layer').selectAll('*').remove();
 
       this.xaxis = null;
       this.yaxis = null;
       this.zaxis = null;
 
-      if (this.draw_g) {
-         this.draw_g.selectAll('*').remove();
-         this.draw_g.on('mousedown', null)
-                    .on('dblclick', null)
-                    .on('wheel', null)
-                    .on('contextmenu', null)
-                    .property('interactive_set', null);
-         this.draw_g.remove();
-      }
+      this.getG()?.selectAll('*').remove();
+      this.getG()?.on('mousedown', null)
+                  .on('dblclick', null)
+                  .on('wheel', null)
+                  .on('contextmenu', null)
+                  .property('interactive_set', null)
+                  .remove();
 
-      delete this.draw_g; // frame <g> element managed by the pad
+      this.setG(undefined); // frame <g> element managed by the pad
 
       if (this.#keys_handler) {
          window.removeEventListener('keydown', this.#keys_handler, false);
@@ -2544,35 +2537,34 @@ class TFramePainter extends FrameInteractive {
     * @private */
    createFrameG() {
       // this is svg:g object - container for every other items belonging to frame
-      this.draw_g = this.getFrameSvg();
+      let g = this.setG(this.getFrameSvg()),
+          top_rect, main_svg;
 
-      let top_rect, main_svg;
-
-      if (this.draw_g.empty()) {
-         this.draw_g = this.getLayerSvg('primitives_layer').append('svg:g').attr('class', 'root_frame');
+      if (g.empty()) {
+         g = this.setG(this.getPadPainter().getLayerSvg('primitives_layer').append('svg:g').attr('class', 'root_frame'));
 
          // empty title on the frame required to suppress title of the canvas
          if (!this.isBatchMode())
-            this.draw_g.append('svg:title').text('');
+            g.append('svg:title').text('');
 
-         top_rect = this.draw_g.append('svg:path');
+         top_rect = g.append('svg:path');
 
-         main_svg = this.draw_g.append('svg:svg')
-                           .attr('class', 'main_layer')
-                           .attr('x', 0)
-                           .attr('y', 0)
-                           .attr('overflow', 'hidden');
+         main_svg = g.append('svg:svg')
+                     .attr('class', 'main_layer')
+                     .attr('x', 0)
+                     .attr('y', 0)
+                     .attr('overflow', 'hidden');
 
-         this.draw_g.append('svg:g').attr('class', 'axis_layer');
-         this.draw_g.append('svg:g').attr('class', 'upper_layer');
+         g.append('svg:g').attr('class', 'axis_layer');
+         g.append('svg:g').attr('class', 'upper_layer');
       } else {
-         top_rect = this.draw_g.selectChild('path');
-         main_svg = this.draw_g.selectChild('.main_layer');
+         top_rect = g.selectChild('path');
+         main_svg = g.selectChild('.main_layer');
       }
 
       this.#axes_drawn = this.#axes2_drawn = false;
 
-      this.draw_g.attr('transform', this.#frame_trans);
+      g.attr('transform', this.#frame_trans);
 
       top_rect.attr('d', `M0,0H${this.#frame_width}V${this.#frame_height}H0Z`)
               .call(this.fillatt.func)
@@ -2582,19 +2574,19 @@ class TFramePainter extends FrameInteractive {
               .attr('height', this.#frame_height)
               .attr('viewBox', `0 0 ${this.#frame_width} ${this.#frame_height}`);
 
-      this.draw_g.selectAll('.frame_deco').remove();
+      g.selectAll('.frame_deco').remove();
       if (this.#border_mode && this.fillatt.hasColor()) {
          const paths = getBoxDecorations(0, 0, this.#frame_width, this.#frame_height, this.#border_mode, this.#border_size || 2, this.#border_size || 2);
-         this.draw_g.insert('svg:path', '.main_layer')
-                    .attr('class', 'frame_deco')
-                    .attr('d', paths[0])
-                    .call(this.fillatt.func)
-                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
-         this.draw_g.insert('svg:path', '.main_layer')
-                    .attr('class', 'frame_deco')
-                    .attr('d', paths[1])
-                    .call(this.fillatt.func)
-                    .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
+         g.insert('svg:path', '.main_layer')
+          .attr('class', 'frame_deco')
+          .attr('d', paths[0])
+          .call(this.fillatt.func)
+          .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
+         g.insert('svg:path', '.main_layer')
+          .attr('class', 'frame_deco')
+          .attr('d', paths[1])
+          .call(this.fillatt.func)
+          .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
       return this;
@@ -2608,7 +2600,7 @@ class TFramePainter extends FrameInteractive {
             pad = pp?.getRootPad(true);
       if (!pad) return;
 
-      pp._interactively_changed = true;
+      pp.options._interactively_changed = true;
 
       const name = `fLog${axis}`;
 
@@ -2729,7 +2721,7 @@ class TFramePainter extends FrameInteractive {
          }
          menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log', flag => {
             faxis.SetBit(EAxisBits.kMoreLogLabels, flag);
-            if (hist_painter?.snapid && (kind.length === 1))
+            if (hist_painter?.getSnapId() && (kind.length === 1))
                hist_painter.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
@@ -2738,7 +2730,7 @@ class TFramePainter extends FrameInteractive {
             faxis.SetBit(EAxisBits.kNoExponent, flag);
             if (handle) handle.noexp_changed = true;
             this[`${kind}_noexp_changed`] = true;
-            if (hist_painter?.snapid && (kind.length === 1))
+            if (hist_painter?.getSnapId() && (kind.length === 1))
                hist_painter.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
@@ -2841,7 +2833,7 @@ class TFramePainter extends FrameInteractive {
          y: this.#frame_y || 0,
          width: this.getFrameWidth(),
          height: this.getFrameHeight(),
-         transform: this.draw_g?.attr('transform') || '',
+         transform: this.getG()?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
       };
@@ -2982,12 +2974,12 @@ class TFramePainter extends FrameInteractive {
 
          // than try to unzoom all overlapped objects
          if (!changed) {
-            this.getPadPainter()?.painters?.forEach(painter => {
+            this.forEachPainter(painter => {
                if (isFunc(painter?.unzoomUserRange)) {
                   if (painter.unzoomUserRange(unzoom_x, unzoom_y, unzoom_z))
                      changed = true;
                   }
-            });
+            }, 'objects');
          }
       }
       if (!changed)

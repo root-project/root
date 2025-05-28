@@ -514,6 +514,9 @@ class BasePainter {
    /** @summary Returns assigned dom element */
    getDom() { return this.#divid; }
 
+   /** @summary Returns argument for draw function */
+   getDrawDom() { return this.#divid; }
+
    /** @summary Selects main HTML element assigned for drawing
      * @desc if main element was layout, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place

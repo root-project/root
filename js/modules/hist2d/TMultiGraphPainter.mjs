@@ -289,8 +289,7 @@ class TMultiGraphPainter extends ObjectPainter {
             subp.setSecondaryId(this, subid);
             this.#painters.push(subp);
          }
-
-         return this.drawNextGraph(indx+1);
+         return this.drawNextGraph(indx + 1);
       });
    }
 
@@ -334,7 +333,6 @@ class TMultiGraphPainter extends ObjectPainter {
          });
       } else if (d.check('A') || !this.getMainPainter()) {
          const histo = this.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, this.getPadPainter()?.getRootPad(true));
-
          promise = this.drawAxisHist(histo, hopt).then(ap => {
             ap.setSecondaryId(this, 'hist'); // mark that axis painter generated from mg
             this.#firstpainter = ap;

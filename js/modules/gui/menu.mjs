@@ -744,7 +744,7 @@ class JSRootMenu {
       });
       this.addchk(faxis.TestBit(EAxisBits.kCenterTitle), 'Center',
             arg => { faxis.SetBit(EAxisBits.kCenterTitle, arg); painter.interactiveRedraw('pad', `exec:CenterTitle(${arg})`, kind); });
-      if (!painter?.snapid) {
+      if (!painter?.hasSnapId()) {
          this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
                 arg => { faxis.SetBit(EAxisBits.kOppositeTitle, arg); painter.redrawPad(); });
       }
@@ -1678,8 +1678,8 @@ internals._modalProgress = function(msg, click_handle) {
 /** @summary Assign handler for context menu for painter draw element
   * @private */
 function assignContextMenu(painter, kind) {
-   if (!painter?.isBatchMode() && painter?.draw_g)
-      painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
+   if (!painter?.isBatchMode())
+      painter?.getG()?.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 
 Object.assign(internals.jsroot, { createMenu, closeMenu, assignContextMenu, kToFront, kNoReorder });
