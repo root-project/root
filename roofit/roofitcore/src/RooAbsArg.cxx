@@ -2463,8 +2463,11 @@ void RooRefArray::Streamer(TBuffer &R__b)
       refArray->Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, refArray->IsA());
 
-      // Schedule deferred processing of TRefArray into proxy list
-      RooAbsArg::_ioEvoList[RooAbsArg::_ioReadStack.top()] = std::move(refArray);
+      // Schedule deferred processing of TRefArray into proxy list. Doesn't
+      // need to be done if there are no proxies anyway.
+      if(!refArray->IsEmpty()) {
+         RooAbsArg::_ioEvoList[RooAbsArg::_ioReadStack.top()] = std::move(refArray);
+      }
 
    } else {
 
