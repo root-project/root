@@ -1625,9 +1625,13 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
    }
    // Triage cases when nary is not 0, that is used for construction of multiple objects
    // use Cpp::Construct 
+   
+   // if (nary) {
+   //    // std::cout<<"NARY used: "<<nary<<"\n";
+   // }
 
-   if (nary) {
-      // std::cout<<"NARY used: "<<nary<<"\n";
+   if (tcling_callfunc_ctor_Wrapper_t wrapper = make_ctor_wrapper(info, kind, type_name)) { 
+   
    }
 
    const clang::Decl* D = info->GetDecl();
