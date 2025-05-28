@@ -231,7 +231,8 @@ class TF2Painter extends TH2Painter {
    /** @summary return tooltips for TF2 */
    getTF2Tooltips(pnt) {
       const lines = [this.getObjectHint()],
-            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
+            o = this.getOptions(),
+            funcs = this.getFramePainter()?.getGrFuncs(o.second_x, o.second_y);
 
       if (!funcs || !isFunc(this.#func?.evalPar)) {
          lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
@@ -259,9 +260,9 @@ class TF2Painter extends TH2Painter {
       if (this.#use_saved_points)
          return super.processTooltipEvent(pnt);
 
-      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+      let ttrect = this.getG()?.selectChild('.tooltip_bin');
 
-      if (!this.draw_g || !pnt) {
+      if (!this.getG() || !pnt) {
          ttrect?.remove();
          return null;
       }
@@ -276,7 +277,7 @@ class TF2Painter extends TH2Painter {
          ttrect.remove();
       else {
          if (ttrect.empty()) {
-            ttrect = this.draw_g.append('svg:circle')
+            ttrect = this.getG().append('svg:circle')
                                 .attr('class', 'tooltip_bin')
                                 .style('pointer-events', 'none')
                                 .style('fill', 'none')

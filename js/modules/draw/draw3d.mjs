@@ -24,7 +24,7 @@ function before3DDraw(painter) {
 
    return pr.then(geop => {
       const pp = painter.getPadPainter();
-      if (pp) pp._disable_dragging = true;
+      if (pp) pp.options._disable_dragging = true;
 
       if (geop.options.dummy && isFunc(painter.get3DBox))
          geop.extendCustomBoundingBox(painter.get3DBox());

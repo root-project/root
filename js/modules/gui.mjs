@@ -183,6 +183,8 @@ function readStyleFromURL(url) {
       settings.ToolBarVert = true;
    get_float_style('datex', 'fDateX');
    get_float_style('datey', 'fDateY');
+   get_float_style('barwidth', 'fBarWidth');
+   get_float_style('baroffset', 'fBarOffset');
 
    get_int_style('opttitle', 'fOptTitle', 1);
    if (d.has('utc'))

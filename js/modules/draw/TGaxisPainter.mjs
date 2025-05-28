@@ -127,12 +127,10 @@ class TGaxisPainter extends TAxisPainter {
          axis_func: this.axis_func
       });
 
-      this.createG();
-
       this.gaxis_x = x1;
       this.gaxis_y = y2;
 
-      return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), makeTranslate(this.gaxis_x, this.gaxis_y) || '').then(() => {
+      return this.drawAxis(this.createG(), Math.abs(w), Math.abs(h), makeTranslate(this.gaxis_x, this.gaxis_y) || '').then(() => {
          addMoveHandler(this);
          assignContextMenu(this, kNoReorder);
          return this;

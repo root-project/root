@@ -51,7 +51,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Returns canvas name */
    getCanvasName() {
-      const title = this.pad?.fTitle;
+      const title = this.getRootPad()?.fTitle;
       return (!title || !isStr(title)) ? 'rcanvas' : title.replace(/ /g, '_');
    }
 
@@ -291,7 +291,7 @@ class RCanvasPainter extends RPadPainter {
              snap = parse(msg.slice(p1+1));
          this.syncDraw(true)
              .then(() => {
-                if (!this.snapid && snap?.fWinSize)
+                if (!this.getSnapId() && snap?.fWinSize)
                    this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
              }).then(() => this.redrawPadSnap(snap))
              .then(() => {
@@ -371,7 +371,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Submit request to RDrawable object on server side */
    submitDrawableRequest(kind, req, painter, method) {
-      if (!this.getWebsocket() || !req?._typename || !painter.snapid || !isStr(painter.snapid))
+      if (!this.getWebsocket() || !req?._typename || !painter.getSnapId())
          return null;
 
       if (kind && method) {
@@ -392,7 +392,7 @@ class RCanvasPainter extends RPadPainter {
          painter._requests[kind] = req; // keep reference on the request
       }
 
-      req.id = painter.snapid;
+      req.id = painter.getSnapId();
 
       if (method) {
          if (!this.#nextreqid) this.#nextreqid = 1;
@@ -504,9 +504,9 @@ class RCanvasPainter extends RPadPainter {
             console.log('TPave is moved inside RCanvas - that to do?');
             break;
          default:
-            if ((kind.slice(0, 5) === 'exec:') && painter?.snapid)
+            if ((kind.slice(0, 5) === 'exec:') && painter?.getSnapId())
                this.submitExec(painter, kind.slice(5), subelem);
-             else
+            else
                console.log('UNPROCESSED CHANGES', kind);
       }
 
@@ -710,18 +710,19 @@ function drawRPadSnapshot(dom, snap, opt) {
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
   * @return {Promise} for ready
   * @private */
-async function ensureRCanvas(painter, frame_kind) {
+async function ensureRCanvas(painter /* , frame_kind */) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
 
    // simple check - if canvas there, can use painter
-   const pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* noframe */) : Promise.resolve(true);
+   const pad_painter = painter.getPadPainter(),
+         pr = pad_painter ? Promise.resolve(pad_painter) :
+              RCanvasPainter.draw(painter.getDom(), null /* noframe */);
 
-   return pr.then(() => {
-      if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty())
-         return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
-   }).then(() => {
-      painter.addToPadPrimitives();
+   return pr.then(pp => {
+      // if ((frame_kind !== false) && pp.getFrameSvg().selectChild('.main_layer').empty())
+      //   return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
+      painter.addToPadPrimitives(pp);
       return painter;
    });
 }
@@ -755,9 +756,9 @@ function drawRFrameTitle(reason, drag) {
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
    }
 
-   this.createG();
+   const g = this.createG();
 
-   makeTranslate(this.draw_g, fx, Math.round(fy-title_margin-title_height));
+   makeTranslate(g, fx, Math.round(fy-title_margin-title_height));
 
    return this.startTextDrawingAsync(textFont, 'font').then(() => {
       this.drawText({ x: title_width/2, y: title_height/2, text: title.fText, latex: 1 });
@@ -815,7 +816,7 @@ registerMethods(`${nsREX}RPalette`, {
    },
 
    deleteContour() {
-      delete this.fContour;
+      this.fContour = undefined;
    },
 
    calcColor(value, entry1, entry2) {

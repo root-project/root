@@ -1,5 +1,5 @@
 import { BIT, settings, isArrayProto, isRootCollection, isObject, isFunc, isStr, getMethods,
-         create, createHistogram, createTGraph, prROOT,
+         create, createHistogram, createTGraph, getKindForType,
          clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3, kNoStats } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
          kCharStar, kDouble, kDouble32,
@@ -2879,7 +2879,7 @@ function treeHierarchy(tree_node, obj) {
 
       const subitem = {
          _name: ClearName(branch.fName),
-         _kind: prROOT + branch._typename,
+         _kind: getKindForType(branch._typename),
          _title: branch.fTitle,
          _obj: branch
       };
@@ -2905,7 +2905,7 @@ function treeHierarchy(tree_node, obj) {
                  bnode._childs.push({
                     _name: '@size',
                     _title: 'container size',
-                    _kind: prROOT + 'TLeafElement',
+                    _kind: getKindForType('TLeafElement'),
                     _icon: 'img_leaf',
                     _obj: bobj.fLeaves.arr[0],
                     _more: false
@@ -2926,7 +2926,7 @@ function treeHierarchy(tree_node, obj) {
                      bnode._childs.push({
                         _name: key+'()',
                         _title: `function ${key} of class ${object_class}`,
-                        _kind: prROOT + clTBranchFunc, // fictional class, only for drawing
+                        _kind: getKindForType(clTBranchFunc), // fictional class, only for drawing
                         _obj: { _typename: clTBranchFunc, branch: bobj, func: key },
                         _more: false
                      });
@@ -2946,7 +2946,7 @@ function treeHierarchy(tree_node, obj) {
             branch.fLeaves.arr[j].$branch = branch; // keep branch pointer for drawing
             const leafitem = {
                _name: ClearName(branch.fLeaves.arr[j].fName),
-               _kind: prROOT + branch.fLeaves.arr[j]._typename,
+               _kind: getKindForType(branch.fLeaves.arr[j]._typename),
                _obj: branch.fLeaves.arr[j]
             };
             subitem._childs.push(leafitem);

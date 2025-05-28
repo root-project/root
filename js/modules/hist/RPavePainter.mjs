@@ -31,11 +31,10 @@ class RPavePainter extends RObjectPainter {
             offsetx = this.v7EvalLength('offsetX', rect.width, 0.02),
             offsety = this.v7EvalLength('offsetY', rect.height, 0.02),
             pave_width = this.v7EvalLength('width', rect.width, 0.3),
-            pave_height = this.v7EvalLength('height', rect.height, 0.3);
+            pave_height = this.v7EvalLength('height', rect.height, 0.3),
+            g = this.createG();
 
-      this.createG();
-
-      this.draw_g.classed('most_upper_primitives', true); // this primitive will remain on top of list
+      g.classed('most_upper_primitives', true); // this primitive will remain on top of list
 
       if (!visible)
          return this;
@@ -65,15 +64,15 @@ class RPavePainter extends RObjectPainter {
             pave_y = fr.y + offsety;
       }
 
-      makeTranslate(this.draw_g, pave_x, pave_y);
+      makeTranslate(g, pave_x, pave_y);
 
-      this.draw_g.append('svg:rect')
-                 .attr('x', 0)
-                 .attr('width', pave_width)
-                 .attr('y', 0)
-                 .attr('height', pave_height)
-                 .call(this.lineatt.func)
-                 .call(this.fillatt.func);
+      g.append('svg:rect')
+       .attr('x', 0)
+       .attr('width', pave_width)
+       .attr('y', 0)
+       .attr('height', pave_height)
+       .call(this.lineatt.func)
+       .call(this.fillatt.func);
 
       this.pave_width = pave_width;
       this.pave_height = pave_height;
@@ -84,7 +83,7 @@ class RPavePainter extends RObjectPainter {
          if (!this.isBatchMode()) {
             // TODO: provide pave context menu as in v6
             if (settings.ContextMenu && this.paveContextMenu)
-               this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
+               g.on('contextmenu', evnt => this.paveContextMenu(evnt));
 
             addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
                                    minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
@@ -131,7 +130,7 @@ class RPavePainter extends RObjectPainter {
       this.v7AttrChange(changes, 'height', this.pave_height / rect.height);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
-      this.draw_g.selectChild('rect')
+      this.getG().selectChild('rect')
                  .attr('width', this.pave_width)
                  .attr('height', this.pave_height);
 
@@ -200,30 +199,23 @@ class RLegendPainter extends RPavePainter {
             }
 
             if (entry.fFill && objp?.fillatt) {
-               this.draw_g
-                  .append('svg:path')
-                  .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
-                  .call(objp.fillatt.func);
+               this.appendPath(`M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
+                   .call(objp.fillatt.func);
             }
 
             if (entry.fLine && objp?.lineatt) {
-               this.draw_g
-                  .append('svg:path')
-                  .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
-                  .call(objp.lineatt.func);
+               this.appendPath(`M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
+                   .call(objp.lineatt.func);
             }
 
             if (entry.fError && objp?.lineatt) {
-               this.draw_g
-                  .append('svg:path')
-                  .attr('d', `M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
-                  .call(objp.lineatt.func);
+               this.appendPath(`M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
+                   .call(objp.lineatt.func);
             }
 
             if (entry.fMarker && objp?.markeratt) {
-               this.draw_g.append('svg:path')
-                  .attr('d', objp.markeratt.create(margin_x + width/8, posy + stepy/2))
-                  .call(objp.markeratt.func);
+               this.appendPath(objp.markeratt.create(margin_x + width/8, posy + stepy/2))
+                   .call(objp.markeratt.func);
             }
 
             posy += stepy;
