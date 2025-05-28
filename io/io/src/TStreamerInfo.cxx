@@ -5439,7 +5439,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print value of element i in a TClonesArray.
+/// Print value of element i in an STL container.
 
 void TStreamerInfo::PrintValueSTL(const char *name, TVirtualCollectionProxy *cont, Int_t i, Int_t eoffset, Int_t lenmax) const
 {
