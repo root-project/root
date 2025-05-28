@@ -108,6 +108,7 @@ enum class ENTupleColumnType {
 /// The fields in the ntuple model tree can carry different structural information about the type system.
 /// Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
 /// materialization on the primitive column layer.
+// IMPORTANT: if you add members, remember to change the related `operator<<` below.
 enum class ENTupleStructure : std::uint16_t {
    kInvalid,
    kLeaf,
@@ -117,6 +118,18 @@ enum class ENTupleStructure : std::uint16_t {
    kStreamer,
    kUnknown
 };
+
+inline std::ostream &operator<<(std::ostream &os, ENTupleStructure structure)
+{
+   static const char *const names[] = {"Invalid", "Leaf", "Collection", "Record", "Variant", "Streamer", "Unknown"};
+   static_assert((std::size_t)ENTupleStructure::kUnknown + 1 == std::size(names));
+
+   if (R__likely(static_cast<std::size_t>(structure) <= std::size(names)))
+      os << names[static_cast<std::uint16_t>(structure)];
+   else
+      os << "(invalid)";
+   return os;
+}
 
 /// Integer type long enough to hold the maximum number of entries in a column
 using NTupleSize_t = std::uint64_t;
