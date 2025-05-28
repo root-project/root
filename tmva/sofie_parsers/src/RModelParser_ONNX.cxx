@@ -20,11 +20,14 @@ namespace SOFIE {
 extern ParserFuncSignature ParseSqrt;
 extern ParserFuncSignature ParseReciprocal;
 extern ParserFuncSignature ParseNeg;
+extern ParserFuncSignature ParseNot;
 extern ParserFuncSignature ParseExp;
 extern ParserFuncSignature ParseLog;
 extern ParserFuncSignature ParseSin;
 extern ParserFuncSignature ParseCos;
 extern ParserFuncSignature ParseAbs;
+extern ParserFuncSignature ParseRound;
+
 // Binary operators
 extern ParserFuncSignature ParseAdd;
 extern ParserFuncSignature ParseSub;
@@ -69,6 +72,7 @@ extern ParserFuncSignature ParseIdentity;
 extern ParserFuncSignature ParseSoftmax;
 extern ParserFuncSignature ParseConcat;
 extern ParserFuncSignature ParseCast;
+extern ParserFuncSignature ParseCastLike;
 extern ParserFuncSignature ParseExpand;
 extern ParserFuncSignature ParseShape;
 extern ParserFuncSignature ParseMatMul;
@@ -158,11 +162,14 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Sqrt", ParseSqrt);
    RegisterOperator("Reciprocal", ParseReciprocal);
    RegisterOperator("Neg", ParseNeg);
+   RegisterOperator("Not", ParseNot);
    RegisterOperator("Exp", ParseExp);
    RegisterOperator("Log", ParseLog);
    RegisterOperator("Sin", ParseSin);
    RegisterOperator("Cos", ParseCos);
    RegisterOperator("Abs", ParseAbs);
+   RegisterOperator("Round", ParseRound);
+
    // Binary operators
    RegisterOperator("Add", ParseAdd);
    RegisterOperator("Sub", ParseSub);
@@ -190,6 +197,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Constant", ParseConstant);
    RegisterOperator("ConstantOfShape", ParseConstant);
    RegisterOperator("Cast", ParseCast);
+   RegisterOperator("CastLike", ParseCastLike);
    RegisterOperator("Concat", ParseConcat);
    RegisterOperator("Conv", ParseConv);
    RegisterOperator("ConvTranspose", ParseConvTranspose);
