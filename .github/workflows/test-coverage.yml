@@ -98,7 +98,7 @@ jobs:
       INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
 
     container:
-      image: registry.cern.ch/root-ci/alma9:buildready
+      image: registry.cern.ch/root-ci/alma10:buildready
       options: '--security-opt label=disable --rm'
 
     steps:
@@ -156,7 +156,7 @@ jobs:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
-                    --platform       alma9
+                    --platform       alma10
                     --incremental    $INCREMENTAL
                     --coverage       true
                     --base_ref       ${{ github.base_ref }}
@@ -171,7 +171,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --binaries       ${{ inputs.binaries }}
                     --buildtype      ${{ inputs.buildtype }}
-                    --platform       alma9
+                    --platform       alma10
                     --incremental    ${{ inputs.incremental }}
                     --coverage       true
                     --base_ref       ${{ inputs.base_ref }}
@@ -185,7 +185,7 @@ jobs:
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
-                    --platform       alma9
+                    --platform       alma10
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ github.ref_name }}
