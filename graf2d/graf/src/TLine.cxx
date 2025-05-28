@@ -375,6 +375,36 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the slope of this TLine
+
+Double_t TLine::GetSlope() const
+{
+   Double_t m = 0;
+   if (fX2 == fX1) {
+      Error("GetSlope", "This line is vertical. The slope in undefined");
+      m = TMath::Infinity();
+   } else {
+      m = (fY2-fY1)/(fX2-fX1);
+   }
+   return m;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the Y-Intercept of this TLine
+
+Double_t TLine::GetYIntercept() const
+{
+   Double_t b = 0;
+   if (fX2 == fX1) {
+      Error("GetYIntercept", "This line is vertical. The Y-Intercept in undefined");
+      b = TMath::Infinity();
+   } else {
+      b = (fY1*fX2-fY2*fX1)/(fX2-fX1);
+   }
+   return b;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// List this line with its attributes.
 
 void TLine::ls(Option_t *) const
