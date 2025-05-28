@@ -32,13 +32,13 @@ public:
    TVirtualGeoTrack *AddTrack(Int_t, Int_t, TObject *) override;
    void       AddTrackPoint(Double_t *, Double_t *, Bool_t =kFALSE) override;
    void       BombTranslation(const Double_t *, Double_t *) override {}
-   void       CheckPoint(Double_t =0, Double_t =0, Double_t =0, Option_t * ="", Double_t = 0.) override {}
-   void       CheckShape(TGeoShape *, Int_t, Int_t, Option_t *) override {}
-   void       CheckBoundaryErrors(Int_t =1000000, Double_t =-1.) override {}
-   void       CheckBoundaryReference(Int_t =-1) override {}
-   void       CheckGeometryFull(Bool_t =kTRUE, Bool_t =kTRUE, Int_t =10000, const Double_t * = nullptr) override {}
-   void       CheckGeometry(Int_t, Double_t, Double_t, Double_t) const override {}
-   void       CheckOverlaps(const TGeoVolume *, Double_t =0.1, Option_t * ="") const override {}
+   void       CheckPoint(Double_t =0, Double_t =0, Double_t =0, Option_t * ="", Double_t = 0.) override;
+   void       CheckShape(TGeoShape *, Int_t, Int_t, Option_t *) override;
+   void       CheckBoundaryErrors(Int_t =1000000, Double_t =-1.) override;
+   void       CheckBoundaryReference(Int_t =-1) override;
+   void       CheckGeometryFull(Bool_t =kTRUE, Bool_t =kTRUE, Int_t =10000, const Double_t * = nullptr) override;
+   void       CheckGeometry(Int_t, Double_t, Double_t, Double_t) const override;
+   void       CheckOverlaps(const TGeoVolume *, Double_t =0.1, Option_t * ="") const override;
    Int_t      CountVisibleNodes() override { return 0; }
    void       DefaultAngles() override {}
    void       DefaultColors() override {}
