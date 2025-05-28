@@ -679,9 +679,8 @@ private:
   friend class RooFitResult;
 
  public:
-  static std::map<RooAbsArg*,std::unique_ptr<TRefArray>> _ioEvoList; // temporary holding list for proxies needed in schema evolution
- protected:
-  static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
+  // Used internally for schema evolution.
+  static void addToIoEvoList(RooAbsArg *newObj, TRefArray const &onfileProxyList);
   /// \endcond
 
  private:
