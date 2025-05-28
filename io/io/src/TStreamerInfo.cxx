@@ -4678,7 +4678,7 @@ template Long64_t TStreamerInfo::GetTypedValueSTL(TVirtualCollectionProxy *cont,
 template LongDouble_t TStreamerInfo::GetTypedValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, int k, Int_t eoffset) const;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return value of element i in object number j in a TClonesArray and eventually
+/// Return value of element i in object number j in an STL container and eventually
 /// element k in a sub-array.
 
 template <typename T>
