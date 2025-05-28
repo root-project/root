@@ -1924,6 +1924,7 @@ namespace Cpp {
       // Make a code string that follows this pattern:
       //
       // ClassName(args...)
+      // ClassName[nary](args...)
       //
 
       if (array)
@@ -2128,7 +2129,12 @@ namespace Cpp {
         //  Write the return value assignment part.
         //
         indent(callbuf, indent_level);
-        callbuf << "if (n_objs > 1) {\n";
+        auto *CD = dyn_cast<CXXConstructorDecl>(FD);
+
+        // FIXME : There can also arise ambiguity if there are
+        // multiple default construct array only if no params
+        if (!CD->isDefaultConstructor() || CD->getMinRequiredArguments() == 0) {
+          callbuf << "if (n_objs > 1) {\n";
           indent(callbuf, indent_level);
           callbuf << "(*(" << class_name << "**)ret) = ";
           callbuf << "(obj) ? new (*(" << class_name << "**)ret) ";
@@ -2143,25 +2149,27 @@ namespace Cpp {
           //  End the new expression statement.
           //
           callbuf << ";\n";
+          indent(callbuf, indent_level);
+          callbuf << "}\n";
+          callbuf << "else {\n";
+        }
         indent(callbuf, indent_level);
-        callbuf << "}\n";
-        callbuf << "else {\n";
-                    indent(callbuf, indent_level);
-          callbuf << "(*(" << class_name << "**)ret) = ";
-          callbuf << "(obj) ? new (*(" << class_name << "**)ret) ";
-          make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level);
+        callbuf << "(*(" << class_name << "**)ret) = ";
+        callbuf << "(obj) ? new (*(" << class_name << "**)ret) ";
+        make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level);
 
-          callbuf << ": new ";
-          //
-          //  Write the actual expression.
-          //
-          make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level);
-          //
-          //  End the new expression statement.
-          //
-          callbuf << ";\n";
+        callbuf << ": new ";
+        //
+        //  Write the actual expression.
+        //
+        make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level);
+        //
+        //  End the new expression statement.
+        //
+        callbuf << ";\n";
         indent(callbuf, --indent_level);
-        callbuf << "}\n";
+        if (!CD->isDefaultConstructor() || CD->getMinRequiredArguments() == 0)
+          callbuf << "}\n";
         
         //
         //  Output the whole new expression and return statement.
@@ -2737,7 +2745,6 @@ namespace Cpp {
       if (get_wrapper_code(I, FD, wrapper_name, wrapper_code) == 0)
         return 0;
 
-      // std::cout<<"WRAPPER NAME: "<<wrapper_name<<"\nWRAPPER CODE:\n"<<wrapper_code;
       //
       //   Compile the wrapper code.
       //
@@ -2750,7 +2757,6 @@ namespace Cpp {
       if (wrapper) {
         // gWrapperStore.insert(std::make_pair(FunctionDeclInfo(FD, cct), wrapper));
         gWrapperStore.insert(std::make_pair(FD, wrapper));
-        // std::cout<<"WRAPPER CODE: \n"<<wrapper<<"\n"; 
       } else {
         llvm::errs() << "TClingCallFunc::make_wrapper"
                      << ":"
