@@ -196,9 +196,8 @@ void ModelConfig::Print(Option_t *) const
 
 void ModelConfig::SetWS(RooWorkspace &ws)
 {
-   if (!fRefWS.GetObject()) {
+   if (!fRefWS) {
       fRefWS = &ws;
-      fWSName = ws.GetName();
    } else {
       RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
@@ -208,16 +207,15 @@ void ModelConfig::SetWS(RooWorkspace &ws)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get from TRef
+/// Get workspace.
 
 RooWorkspace *ModelConfig::GetWS() const
 {
-   RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject());
-   if (!ws) {
+   if (!fRefWS) {
       coutE(ObjectHandling) << "workspace not set" << std::endl;
       return nullptr;
    }
-   return ws;
+   return fRefWS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

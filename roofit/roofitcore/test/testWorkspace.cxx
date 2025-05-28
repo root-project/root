@@ -264,3 +264,43 @@ TEST(RooWorkspace, Issue_7809)
    ASSERT_EQ(static_cast<RooProdPdf*>(ws.pdf("p3"))->pdfList().size(), 2);
    ASSERT_EQ(static_cast<RooProduct*>(ws.function("p4"))->components().size(), 2);
 }
+
+/// Check if handles to the owning RooWorkspace are correctly updated when
+/// copying the workspace.
+TEST(RooWorkspace, RooWorkspaceHandleCopy)
+{
+   RooWorkspace ws1{"ws"};
+   RooFit::ModelConfig mc("ModelConfig");
+   mc.SetWS(ws1);
+   ws1.import(mc);
+   auto mc1 = static_cast<RooFit::ModelConfig *>(ws1.obj("ModelConfig"));
+   EXPECT_EQ(mc1->GetWS(), &ws1);
+
+   RooWorkspace ws2{ws1};
+   auto mc2 = static_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   EXPECT_EQ(mc2->GetWS(), &ws2);
+}
+
+/// Check if handles to the owning RooWorkspace are correctly updated when
+/// streaming the workspace.
+TEST(RooWorkspace, RooWorkspaceHandleCopyWithStreamer)
+{
+   {
+      RooWorkspace ws1{"ws"};
+      RooFit::ModelConfig mc("ModelConfig");
+      mc.SetWS(ws1);
+      ws1.import(mc);
+      auto mc1 = static_cast<RooFit::ModelConfig *>(ws1.obj("ModelConfig"));
+      EXPECT_EQ(mc1->GetWS(), &ws1);
+
+      ws1.writeToFile("test_rooworkspace.root");
+   }
+
+   std::unique_ptr<TFile> file(TFile::Open("test_rooworkspace.root", "read"));
+   auto &ws2 = *file->Get<RooWorkspace>("ws");
+
+   auto mc2 = static_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   EXPECT_EQ(mc2->GetWS(), &ws2);
+
+   file->Close();
+}
