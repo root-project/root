@@ -5525,8 +5525,10 @@ Long64_t TTree::GetEntries(const char *selection)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to the 1st Leaf named name in any Branch of this Tree or
-/// any branch in the list of friend trees.
+/// Returns a number corresponding to:
+/// - The number of entries in this tree, if greater than zero
+/// - The number of entries in the first friend tree, if there are any friends
+/// - 0 otherwise
 
 Long64_t TTree::GetEntriesFriend() const
 {
