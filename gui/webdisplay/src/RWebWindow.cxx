@@ -1475,6 +1475,14 @@ std::vector<unsigned> RWebWindow::GetConnections(unsigned excludeid) const
 
 bool RWebWindow::HasConnection(unsigned connid, bool only_active) const
 {
+   if (fMaster) {
+      auto lst = GetMasterConnections(connid);
+      for (auto & entry : lst)
+         if (fMaster->HasConnection(entry.connid, only_active))
+            return true;
+      return false;
+   }
+
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &conn : fConn) {
