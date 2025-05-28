@@ -992,17 +992,17 @@ class RAxisPainter extends RObjectPainter {
 
       this.configureAxis('axis', min, max, smin, smax, drawable.fVertical, undefined, len, { reverse, labels: labels_len > 0 });
 
-      this.createG();
+      const g = this.createG();
 
       this.standalone = true;  // no need to clean axis container
 
-      const promise = this.drawAxis(this.draw_g, makeTranslate(pos.x, pos.y));
+      const promise = this.drawAxis(g, makeTranslate(pos.x, pos.y));
 
       if (this.isBatchMode()) return promise;
 
       return promise.then(() => {
          if (settings.ContextMenu) {
-            this.draw_g.on('contextmenu', evnt => {
+            g.on('contextmenu', evnt => {
                evnt.stopPropagation(); // disable main context menu
                evnt.preventDefault();  // disable browser context menu
                createMenu(evnt, this).then(menu => {
@@ -1017,14 +1017,14 @@ class RAxisPainter extends RObjectPainter {
          addDragHandler(this, { x: pos.x, y: pos.y, width: this.vertical ? 10 : len, height: this.vertical ? len : 10,
                                 only_move: true, redraw: d => this.positionChanged(d) });
 
-         this.draw_g.on('dblclick', () => this.zoomStandalone());
+         g.on('dblclick', () => this.zoomStandalone());
 
          if (settings.ZoomWheel) {
-            this.draw_g.on('wheel', evnt => {
+            g.on('wheel', evnt => {
                evnt.stopPropagation();
                evnt.preventDefault();
 
-               const pos2 = d3_pointer(evnt, this.draw_g.node()),
+               const pos2 = d3_pointer(evnt, this.getG().node()),
                      coord = this.vertical ? (1 - pos2[1] / len) : pos2[0] / len,
                      item = this.analyzeWheelEvent(evnt, coord);
 

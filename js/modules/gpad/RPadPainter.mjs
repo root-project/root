@@ -1,9 +1,10 @@
 import { gStyle, settings, browser, constants, internals, addMethods, isPromise, getPromise, postponePromise,
          isBatchMode, isObject, isFunc, isStr, clTFrame, nsREX, nsSVG, urlClassPrefix } from '../core.mjs';
+import { select as d3_select } from '../d3.mjs';
 import { ColorPalette, addColor, getRootColors, convertColor } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { prSVG, getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
-import { selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
+import { selectActivePad, getActivePad, isPadPainter } from '../base/ObjectPainter.mjs';
 import { registerForResize, saveFile } from '../gui/utils.mjs';
 import { BrowserLayout, getHPainter } from '../gui/display.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
@@ -19,6 +20,9 @@ import { PadButtonsHandler, webSnapIds } from './TPadPainter.mjs';
 class RPadPainter extends RObjectPainter {
 
    #iscan;      // is canvas flag
+   #pad_name;   // name of the pad
+   #pad;        // RPad object
+   #painters;   // painters in the pad
    #pad_scale;  // scaling factor of the pad
    #pad_x;      // pad x coordinate
    #pad_y;      // pad y coordinate
@@ -39,16 +43,16 @@ class RPadPainter extends RObjectPainter {
    /** @summary constructor */
    constructor(dom, pad, opt, iscan, add_to_primitives) {
       super(dom, pad, '', 'pad');
-      this.pad = pad;
+      this.#pad = pad;
       this.#iscan = iscan; // indicate if working with canvas
-      this.this_pad_name = '';
+      this.#pad_name = '';
       if (!iscan && pad) {
          if (pad.fObjectID)
-            this.this_pad_name = 'pad' + pad.fObjectID; // use objectid as pad name
+            this.#pad_name = 'pad' + pad.fObjectID; // use objectid as pad name
          else
-            this.this_pad_name = 'ppp' + internals.id_counter++; // artificial name
+            this.#pad_name = 'ppp' + internals.id_counter++; // artificial name
       }
-      this.painters = []; // complete list of all painters in the pad
+      this.#painters = []; // complete list of all painters in the pad
       this.#has_canvas = true;
       this.forEachPainter = this.forEachPainterInPad;
 
@@ -62,12 +66,16 @@ class RPadPainter extends RObjectPainter {
       if (add_to_primitives) {
          if ((add_to_primitives !== 'webpad') && this.getCanvSvg().empty()) {
             this.#has_canvas = false;
-            this.this_pad_name = '';
+            this.#pad_name = '';
             this.setTopPainter();
          } else
             this.addToPadPrimitives(); // must be here due to pad painter
       }
-  }
+   }
+
+   /** @summary Returns pad name
+     * @protected */
+   getPadName() { return this.#pad_name; }
 
    /** @summary Indicates that drawing runs in batch mode
      * @private */
@@ -104,9 +112,48 @@ class RPadPainter extends RObjectPainter {
    /** @summary Returns true if it is canvas or top pad without canvas */
    isTopPad() { return this.isCanvas() || !this.#has_canvas; }
 
-   /** @summary Returns SVG element for the pad itself
-     * @private */
-   svg_this_pad() { return this.getPadSvg(this.this_pad_name); }
+   /** @summary returns pad painter
+     * @protected */
+   getPadPainter() { return this.isTopPad() ? null : super.getPadPainter(); }
+
+   /** @summary returns canvas painter
+     * @protected */
+   getCanvPainter(try_select) { return this.isTopPad() ? this : super.getCanvPainter(try_select); }
+
+   /** @summary Canvas main svg element
+     * @return {object} d3 selection with canvas svg
+     * @protected */
+   getCanvSvg() { return this.selectDom().select('.root_canvas'); }
+
+   /** @summary Pad svg element
+     * @return {object} d3 selection with pad svg
+     * @protected */
+   getPadSvg() {
+      const c = this.getCanvSvg();
+      if (!this.#pad_name || c.empty())
+         return c;
+
+      return c.select('.primitives_layer .__root_pad_' + this.#pad_name);
+   }
+
+   /** @summary Method selects immediate layer under canvas/pad main element
+     * @param {string} name - layer name like 'primitives_layer', 'btns_layer', 'info_layer'
+     * @protected */
+   getLayerSvg(name) { return this.getPadSvg().selectChild('.' + name); }
+
+   /** @summary Returns svg element for the frame in current pad
+     * @protected */
+   getFrameSvg() {
+      const layer = this.getLayerSvg('primitives_layer');
+      if (layer.empty()) return layer;
+      let node = layer.node().firstChild;
+      while (node) {
+         const elem = d3_select(node);
+         if (elem.classed('root_frame')) return elem;
+         node = node.nextSibling;
+      }
+      return d3_select(null);
+   }
 
    /** @summary Returns main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
@@ -125,9 +172,9 @@ class RPadPainter extends RObjectPainter {
       if (this.#doing_draw)
          console.error('pad drawing is not completed when cleanup is called');
 
-      this.painters.forEach(p => p.cleanup());
+      this.#painters.forEach(p => p.cleanup());
 
-      const svg_p = this.svg_this_pad();
+      const svg_p = this.getPadSvg();
       if (!svg_p.empty()) {
          svg_p.property('pad_painter', null);
          if (!this.isCanvas()) svg_p.remove();
@@ -139,11 +186,10 @@ class RPadPainter extends RObjectPainter {
       this.#doing_draw = undefined;
       delete this._dfltRFont;
 
-      this.painters = [];
-      this.pad = null;
+      this.#painters = [];
+      this.#pad = undefined;
       this.assignObject(null);
-      this.pad_frame = null;
-      this.this_pad_name = undefined;
+      this.#pad_name = undefined;
       this.#has_canvas = false;
 
       selectActivePad({ pp: this, active: false });
@@ -209,7 +255,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary return RPad object */
    getRootPad(is_root6) {
-      return (is_root6 === undefined) || !is_root6 ? this.pad : null;
+      return (is_root6 === undefined) || !is_root6 ? this.#pad : null;
    }
 
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove
@@ -224,11 +270,11 @@ class RPadPainter extends RObjectPainter {
 
       let is_any = false;
 
-      for (let k = this.painters.length - 1; k >= 0; --k) {
-         const subp = this.painters[k];
+      for (let k = this.#painters.length - 1; k >= 0; --k) {
+         const subp = this.#painters[k];
          if (selector(subp)) {
             subp.cleanup();
-            this.painters.splice(k, 1);
+            this.#painters.splice(k, 1);
             is_any = true;
          }
       }
@@ -250,9 +296,9 @@ class RPadPainter extends RObjectPainter {
    removePrimitive(arg, clean_only_secondary) {
       let indx, prim = null;
       if (Number.isInteger(arg)) {
-         indx = arg; prim = this.painters[indx];
+         indx = arg; prim = this.#painters[indx];
       } else {
-         indx = this.painters.indexOf(arg); prim = arg;
+         indx = this.#painters.indexOf(arg); prim = arg;
       }
       if (indx < 0)
          return indx;
@@ -260,14 +306,14 @@ class RPadPainter extends RObjectPainter {
       const arr = [];
       let resindx = indx - 1; // object removed itself
       arr.push(prim);
-      this.painters.splice(indx, 1);
+      this.#painters.splice(indx, 1);
 
       let len0 = 0;
       while (len0 < arr.length) {
-         for (let k = this.painters.length - 1; k >= 0; --k) {
-            if (this.painters[k].isSecondary(arr[len0])) {
-               arr.push(this.painters[k]);
-               this.painters.splice(k, 1);
+         for (let k = this.#painters.length - 1; k >= 0; --k) {
+            if (this.#painters[k].isSecondary(arr[len0])) {
+               arr.push(this.#painters[k]);
+               this.#painters.splice(k, 1);
                if (k <= indx) resindx--;
             }
          }
@@ -300,7 +346,7 @@ class RPadPainter extends RObjectPainter {
      * histogram functions
      * @private */
    findPainterFor(selobj, selname, seltype) {
-      return this.painters.find(p => {
+      return this.#painters.find(p => {
          const pobj = p.getObject();
          if (!pobj) return false;
 
@@ -347,18 +393,27 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Returns number of painters
-     * @private */
-   getNumPainters() { return this.painters.length; }
+     * @protected */
+   getNumPainters() { return this.#painters.length; }
+
+   /** @summary Add painter to pad list of painters
+     * @protected */
+   addToPrimitives(painter) {
+      if (this.#painters.indexOf(painter) < 0)
+         this.#painters.push(painter);
+      return this;
+   }
 
    /** @summary Call function for each painter in pad
      * @param {function} userfunc - function to call
      * @param {string} kind - 'all' for all objects (default), 'pads' only pads and sub-pads, 'objects' only for object in current pad
      * @private */
    forEachPainterInPad(userfunc, kind) {
-      if (!kind) kind = 'all';
+      if (!kind)
+         kind = 'all';
       if (kind !== 'objects') userfunc(this);
-      for (let k = 0; k < this.painters.length; ++k) {
-         const sub = this.painters[k];
+      for (let k = 0; k < this.#painters.length; ++k) {
+         const sub = this.#painters[k];
          if (isFunc(sub.forEachPainterInPad)) {
             if (kind !== 'objects') sub.forEachPainterInPad(userfunc, kind);
          } else if (kind !== 'pads') userfunc(sub);
@@ -391,7 +446,7 @@ class RPadPainter extends RObjectPainter {
          painter = this;
 
       if (pos && !this.isTopPad())
-         pos = getAbsPosInCanvas(this.svg_this_pad(), pos);
+         pos = getAbsPosInCanvas(this.getPadSvg(), pos);
 
       selectActivePad({ pp: this, active: true });
 
@@ -402,7 +457,7 @@ class RPadPainter extends RObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this.#fast_drawing;
-      this.#fast_drawing = (this.snapid === undefined) && settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
+      this.#fast_drawing = !this.hasSnapId() && settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this.#fast_drawing)
          this.showPadButtons();
    }
@@ -448,7 +503,7 @@ class RPadPainter extends RObjectPainter {
             return false;
 
          if (!this.isBatchMode())
-            btns = this.getLayerSvg('btns_layer', this.this_pad_name);
+            btns = this.getLayerSvg('btns_layer');
 
          frect = svg.selectChild('.canvas_fillrect');
       } else {
@@ -489,14 +544,14 @@ class RPadPainter extends RObjectPainter {
          }
 
          factor = 0.66;
-         if (this.pad && this.pad.fWinSize[0] && this.pad.fWinSize[1]) {
-            factor = this.pad.fWinSize[1] / this.pad.fWinSize[0];
+         if (this.#pad?.fWinSize[0] && this.#pad.fWinSize[1]) {
+            factor = this.#pad.fWinSize[1] / this.#pad.fWinSize[0];
             if ((factor < 0.1) || (factor > 10)) factor = 0.66;
          }
 
          if (this.#fixed_size) {
             render_to.style('overflow', 'auto');
-            rect = { width: this.pad.fWinSize[0], height: this.pad.fWinSize[1] };
+            rect = { width: this.#pad.fWinSize[0], height: this.#pad.fWinSize[1] };
             if (!rect.width || !rect.height)
                rect = getElementRect(render_to);
          } else
@@ -506,7 +561,7 @@ class RPadPainter extends RObjectPainter {
       this.createAttFill({ pattern: 1001, color: 0 });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         if (this.snapid === undefined) {
+         if (!this.hasSnapId()) {
             svg.style('display', 'none');
             console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
          }
@@ -580,7 +635,7 @@ class RPadPainter extends RObjectPainter {
       const svg_can = this.getCanvSvg(),
             pad_enlarged = svg_can.property('pad_enlarged');
 
-      if (this.isTopPad() || (!pad_enlarged && !this.hasObjectsToDraw() && !this.painters)) {
+      if (this.isTopPad() || (!pad_enlarged && !this.hasObjectsToDraw() && !this.#painters)) {
          if (this.#fixed_size) return; // canvas cannot be enlarged in such mode
          if (!this.enlargeMain(is_escape ? false : 'toggle')) return;
          if (this.enlargeMain('state') === 'off')
@@ -589,9 +644,9 @@ class RPadPainter extends RObjectPainter {
             selectActivePad({ pp: this, active: true });
       } else if (!pad_enlarged && !is_escape) {
          this.enlargeMain(true, true);
-         svg_can.property('pad_enlarged', this.pad);
+         svg_can.property('pad_enlarged', this.#pad);
          selectActivePad({ pp: this, active: true });
-      } else if (pad_enlarged === this.pad) {
+      } else if (pad_enlarged === this.#pad) {
          this.enlargeMain(false);
          svg_can.property('pad_enlarged', null);
       } else if (!is_escape && is_dblclick)
@@ -608,7 +663,7 @@ class RPadPainter extends RObjectPainter {
          return true;
       }
 
-      const svg_parent = this.getPadSvg(this.getPadName()), // getPadName MUST be here to select parent pad
+      const svg_parent = this.getPadPainter()?.getPadSvg(),
             svg_can = this.getCanvSvg(),
             width = svg_parent.property('draw_width'),
             height = svg_parent.property('draw_height'),
@@ -617,16 +672,16 @@ class RPadPainter extends RObjectPainter {
           w = width, h = height, x = 0, y = 0,
           svg_pad, svg_rect, btns = null;
 
-      if (this.pad?.fPos && this.pad?.fSize) {
-         x = Math.round(width * this.pad.fPos.fHoriz.fArr[0]);
-         y = Math.round(height * this.pad.fPos.fVert.fArr[0]);
-         w = Math.round(width * this.pad.fSize.fHoriz.fArr[0]);
-         h = Math.round(height * this.pad.fSize.fVert.fArr[0]);
+      if (this.#pad?.fPos && this.#pad?.fSize) {
+         x = Math.round(width * this.#pad.fPos.fHoriz.fArr[0]);
+         y = Math.round(height * this.#pad.fPos.fVert.fArr[0]);
+         w = Math.round(width * this.#pad.fSize.fHoriz.fArr[0]);
+         h = Math.round(height * this.#pad.fSize.fVert.fArr[0]);
       }
 
       if (pad_enlarged) {
          pad_visible = false;
-         if (pad_enlarged === this.pad)
+         if (pad_enlarged === this.#pad)
             pad_visible = true;
          else
             this.forEachPainterInPad(pp => { if (pp.getObject() === pad_enlarged) pad_visible = true; }, 'pads');
@@ -635,16 +690,16 @@ class RPadPainter extends RObjectPainter {
       }
 
       if (only_resize) {
-         svg_pad = this.svg_this_pad();
+         svg_pad = this.getPadSvg();
          svg_rect = svg_pad.selectChild('.root_pad_border');
          if (!this.isBatchMode())
-            btns = this.getLayerSvg('btns_layer', this.this_pad_name);
+            btns = this.getLayerSvg('btns_layer');
          this.addPadInteractive(true);
       } else {
          svg_pad = svg_parent.selectChild('.primitives_layer')
              .append('svg:svg') // here was g before, svg used to blend all drawings outside
-             .classed('__root_pad_' + this.this_pad_name, true)
-             .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
+             .classed('__root_pad_' + this.#pad_name, true)
+             .attr('pad', this.#pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
 
          if (!this.isBatchMode())
@@ -671,9 +726,9 @@ class RPadPainter extends RObjectPainter {
          }
       }
 
-      this.createAttFill({ attr: this.pad });
+      this.createAttFill({ attr: this.#pad });
 
-      this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode === 0 ? 'none' : '' });
+      this.createAttLine({ attr: this.#pad, color0: this.#pad.fBorderMode === 0 ? 'none' : '' });
 
       svg_pad.style('display', pad_visible ? null : 'none')
              .attr('viewBox', `0 0 ${w} ${h}`) // due to svg
@@ -700,7 +755,7 @@ class RPadPainter extends RObjectPainter {
 
       // special case of 3D canvas overlay
       if (svg_pad.property('can3d') === constants.Embed3D.Overlay) {
-         this.selectDom().select('.draw3d_' + this.this_pad_name)
+         this.selectDom().select('.draw3d_' + this.#pad_name)
              .style('display', pad_visible ? '' : 'none');
       }
 
@@ -722,7 +777,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary returns true if any objects beside sub-pads exists in the pad */
    hasObjectsToDraw() {
-      return this.pad?.fPrimitives?.find(obj => obj._typename !== `${nsREX}RPadDisplayItem`);
+      return this.#pad?.fPrimitives?.find(obj => obj._typename !== `${nsREX}RPadDisplayItem`);
    }
 
    /** @summary sync drawing/redrawing/resize of the pad
@@ -772,12 +827,12 @@ class RPadPainter extends RObjectPainter {
             this.#start_draw_tm = new Date().getTime();
 
          // set number of primitives
-         this.#num_primitives = this.pad?.fPrimitives?.length ?? 0;
+         this.#num_primitives = this.#pad?.fPrimitives?.length ?? 0;
 
          return this.syncDraw(true).then(() => this.drawPrimitives(0));
       }
 
-      if (!this.pad || (indx >= this.#num_primitives)) {
+      if (!this.#pad || (indx >= this.#num_primitives)) {
          this.confirmDraw();
 
          if (this.#start_draw_tm) {
@@ -790,7 +845,7 @@ class RPadPainter extends RObjectPainter {
       }
 
       // handle used to invoke callback only when necessary
-      return this.drawObject(this, this.pad.fPrimitives[indx], '').then(op => {
+      return this.drawObject(this, this.#pad.fPrimitives[indx], '').then(op => {
          // mark painter as belonging to primitives
          if (isObject(op))
             op._primitive = true;
@@ -814,7 +869,7 @@ class RPadPainter extends RObjectPainter {
       const painters = [], hints = [];
 
       // first count - how many processors are there
-      this.painters?.forEach(obj => {
+      this.#painters?.forEach(obj => {
          if (isFunc(obj.processTooltipEvent)) painters.push(obj);
       });
 
@@ -823,7 +878,8 @@ class RPadPainter extends RObjectPainter {
       painters.forEach(obj => {
          const hint = obj.processTooltipEvent(pnt) || { user_info: null };
          hints.push(hint);
-         if (pnt?.painters) hint.painter = obj;
+         if (pnt?.painters)
+            hint.painter = obj;
       });
 
       return hints;
@@ -867,7 +923,7 @@ class RPadPainter extends RObjectPainter {
       if (this.enlargeMain() || (!this.isTopPad() && this.hasObjectsToDraw()))
          menu.addchk((this.enlargeMain('state') === 'on'), 'Enlarge ' + (this.isCanvas() ? 'canvas' : 'pad'), () => this.enlargePad());
 
-      const fname = this.this_pad_name || (this.isCanvas() ? 'canvas' : 'pad');
+      const fname = this.#pad_name || (this.isCanvas() ? 'canvas' : 'pad');
       menu.sub('Save as');
       ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.isCanvas(), `${fname}.${fmt}`)));
       menu.endsub();
@@ -913,10 +969,10 @@ class RPadPainter extends RObjectPainter {
 
       let showsubitems = true;
       const redrawNext = indx => {
-         while (indx < this.painters.length) {
-            const sub = this.painters[indx++];
+         while (indx < this.#painters.length) {
+            const sub = this.#painters[indx++];
             let res = 0;
-            if (showsubitems || sub.this_pad_name)
+            if (showsubitems || isPadPainter(sub))
                res = sub.redraw(reason);
 
             if (isPromise(res))
@@ -950,12 +1006,12 @@ class RPadPainter extends RObjectPainter {
    /** @summary Checks if pad should be redrawn by resize
      * @private */
    needRedrawByResize() {
-      const elem = this.svg_this_pad();
+      const elem = this.getPadSvg();
       if (!elem.empty() && elem.property('can3d') === constants.Embed3D.Overlay) return true;
 
-      for (let i = 0; i < this.painters.length; ++i) {
-         if (isFunc(this.painters[i].needRedrawByResize))
-            if (this.painters[i].needRedrawByResize()) return true;
+      for (let i = 0; i < this.#painters.length; ++i) {
+         if (isFunc(this.#painters[i].needRedrawByResize))
+            if (this.#painters[i].needRedrawByResize()) return true;
       }
 
       return false;
@@ -978,29 +1034,29 @@ class RPadPainter extends RObjectPainter {
 
       let changed = false;
       const redrawNext = indx => {
-         if (!changed || (indx >= this.painters.length)) {
+         if (!changed || (indx >= this.#painters.length)) {
             this.confirmDraw();
             return changed;
          }
 
-         return getPromise(this.painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
+         return getPromise(this.#painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
       };
 
 
       return sync_promise.then(() => {
          changed = this.createCanvasSvg(force ? 2 : 1, size);
 
-         if (changed && this.isCanvas() && this.pad && this.online_canvas && !this.embed_canvas && !this.isBatchMode()) {
+         if (changed && this.isCanvas() && this.#pad && this.online_canvas && !this.embed_canvas && !this.isBatchMode()) {
             if (this.#resize_tmout)
                clearTimeout(this.#resize_tmout);
             this.#resize_tmout = setTimeout(() => {
                this.#resize_tmout = undefined;
-               if (!this.pad?.fWinSize)
+               if (!this.#pad?.fWinSize)
                   return;
                const cw = this.getPadWidth(), ch = this.getPadHeight();
-               if ((cw > 0) && (ch > 0) && ((this.pad.fWinSize[0] !== cw) || (this.pad.fWinSize[1] !== ch))) {
-                  this.pad.fWinSize[0] = cw;
-                  this.pad.fWinSize[1] = ch;
+               if ((cw > 0) && (ch > 0) && ((this.#pad.fWinSize[0] !== cw) || (this.#pad.fWinSize[1] !== ch))) {
+                  this.#pad.fWinSize[0] = cw;
+                  this.#pad.fWinSize[1] = ch;
                   this.sendWebsocket(`RESIZED:[${cw},${ch}]`);
                }
             }, 1000); // long enough delay to prevent multiple occurrence
@@ -1018,15 +1074,15 @@ class RPadPainter extends RObjectPainter {
       if (!obj)
          return false;
 
-      this.pad.fStyle = obj.fStyle;
-      this.pad.fAttr = obj.fAttr;
+      this.#pad.fStyle = obj.fStyle;
+      this.#pad.fAttr = obj.fAttr;
 
       if (this.isCanvas()) {
-         this.pad.fTitle = obj.fTitle;
-         this.pad.fWinSize = obj.fWinSize;
+         this.#pad.fTitle = obj.fTitle;
+         this.#pad.fWinSize = obj.fWinSize;
       } else {
-         this.pad.fPos = obj.fPos;
-         this.pad.fSize = obj.fSize;
+         this.#pad.fPos = obj.fPos;
+         this.#pad.fSize = obj.fSize;
       }
 
       return true;
@@ -1035,10 +1091,10 @@ class RPadPainter extends RObjectPainter {
    /** @summary Add object painter to list of primitives
      * @private */
    addObjectPainter(objpainter, lst, indx) {
-      if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
+      if (objpainter && lst && lst[indx] && !objpainter.hasSnapId()) {
          // keep snap id in painter, will be used for the
-         if (this.painters.indexOf(objpainter) < 0)
-            this.painters.push(objpainter);
+         if (this.#painters.indexOf(objpainter) < 0)
+            this.#painters.push(objpainter);
          objpainter.assignSnapId(lst[indx].fObjectID);
          if (!objpainter.rstyle)
             objpainter.rstyle = lst[indx].fStyle || this.rstyle;
@@ -1167,14 +1223,14 @@ class RPadPainter extends RObjectPainter {
       // try to locate existing object painter, only allowed when redrawing pad snap
       let objpainter, promise;
 
-      while ((pindx !== undefined) && (pindx < this.painters.length)) {
-         const subp = this.painters[pindx++];
+      while ((pindx !== undefined) && (pindx < this.#painters.length)) {
+         const subp = this.#painters[pindx++];
 
-         if (subp.snapid === snap.fObjectID) {
+         if (subp.getSnapId() === snap.fObjectID) {
             objpainter = subp;
             break;
-         } else if (subp.snapid && !subp.isSecondary() && !is_subpad) {
-            console.warn(`Mismatch in snapid between painter ${subp?.snapid} secondary: ${subp?.isSecondary()} type: ${subp?.getClassName()} and primitive ${snap.fObjectID} kind ${snap.fKind} type ${snap.fDrawable?._typename}`);
+         } else if (subp.getSnapId() && !subp.isSecondary() && !is_subpad) {
+            console.warn(`Mismatch in snapid between painter ${subp.getSnapId()} secondary: ${subp.isSecondary()} type: ${subp.getClassName()} and primitive ${snap.fObjectID} kind ${snap.fKind} type ${snap.fDrawable?._typename}`);
             break;
          }
       }
@@ -1219,16 +1275,18 @@ class RPadPainter extends RObjectPainter {
                 (checkid.indexOf(snapid) === (checkid.length - snapid.length));
       }
 
-      if (check(this.snapid)) return this;
+      if (check(this.getSnapId()))
+         return this;
 
-      if (!this.painters) return null;
+      if (!this.#painters)
+         return null;
 
-      for (let k=0; k<this.painters.length; ++k) {
-         let sub = this.painters[k];
+      for (let k=0; k < this.#painters.length; ++k) {
+         let sub = this.#painters[k];
 
          if (!onlyid && isFunc(sub.findSnap))
             sub = sub.findSnap(snapid);
-         else if (!check(sub.snapid))
+         else if (!check(sub.getSnapId()))
             sub = null;
 
          if (sub) return sub;
@@ -1249,13 +1307,13 @@ class RPadPainter extends RObjectPainter {
       if (this.isCanvas(true) && snap.fTitle && !this.embed_canvas && (typeof document !== 'undefined'))
          document.title = snap.fTitle;
 
-      if (this.snapid === undefined) {
+      if (!this.hasSnapId()) {
          // first time getting snap, create all gui elements first
 
          this.assignSnapId(snap.fObjectID);
 
          this.assignObject(snap);
-         this.pad = snap;
+         this.#pad = snap;
 
          if (this.isBatchMode() && this.isCanvas())
              this.#fixed_size = true;
@@ -1291,12 +1349,12 @@ class RPadPainter extends RObjectPainter {
       let missmatch = false, i = 0, k = 0;
 
       // match painters with new list of primitives
-      while (k < this.painters.length) {
-         const sub = this.painters[k];
+      while (k < this.#painters.length) {
+         const sub = this.#painters[k];
 
          // skip check secondary painters or painters without snapid
          // also frame painter will be excluded here
-         if (!isStr(sub.snapid) || sub.isSecondary()) {
+         if (!sub.hasSnapId() || sub.isSecondary()) {
             k++;
             continue; // look only for painters with snapid
          }
@@ -1307,7 +1365,7 @@ class RPadPainter extends RObjectPainter {
 
          const prim = snap.fPrimitives[i];
 
-         if (prim.fObjectID === sub.snapid) {
+         if (prim.fObjectID === sub.getSnapId()) {
             i++;
             k++;
          } else if (prim.fDummy || !prim.fObjectID || ((prim._typename === `${nsREX}TObjectDisplayItem`) && ((prim.fKind === webSnapIds.kStyle) || (prim.fKind === webSnapIds.kColors) || (prim.fKind === webSnapIds.kPalette) || (prim.fKind === webSnapIds.kFont)))) {
@@ -1321,7 +1379,7 @@ class RPadPainter extends RObjectPainter {
 
       let cnt = 1000;
       // remove painters without primitives, limit number of checks
-      while (!missmatch && (k < this.painters.length) && (--cnt >= 0)) {
+      while (!missmatch && (k < this.#painters.length) && (--cnt >= 0)) {
          if (this.removePrimitive(k) === -111)
             missmatch = true;
       }
@@ -1329,8 +1387,8 @@ class RPadPainter extends RObjectPainter {
          missmatch = true;
 
       if (missmatch) {
-         const old_painters = this.painters;
-         this.painters = [];
+         const old_painters = this.#painters;
+         this.#painters = [];
          old_painters.forEach(objp => objp.cleanup());
          this.setMainPainter(undefined, true);
          if (isFunc(this.removePadButtons))
@@ -1367,7 +1425,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Show context menu for specified item
      * @private */
    itemContextMenu(name) {
-      const rrr = this.svg_this_pad().node().getBoundingClientRect(),
+      const rrr = this.getPadSvg().node().getBoundingClientRect(),
             evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
 
       // use timeout to avoid conflict with mouse click and automatic menu close
@@ -1388,7 +1446,8 @@ class RPadPainter extends RObjectPainter {
             break;
          default: {
             const indx = parseInt(name);
-            if (Number.isInteger(indx)) selp = this.painters[indx];
+            if (Number.isInteger(indx))
+               selp = this.#painters[indx];
          }
       }
 
@@ -1397,7 +1456,7 @@ class RPadPainter extends RObjectPainter {
 
       return createMenu(evnt, selp).then(menu => {
          const offline_menu = selp.fillContextMenu(menu, selkind);
-         if (offline_menu || selp.snapid)
+         if (offline_menu || selp.getSnapId())
             selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
       });
    }
@@ -1406,13 +1465,13 @@ class RPadPainter extends RObjectPainter {
      * @desc Used from context menu */
    saveAs(kind, full_canvas, filename) {
       if (!filename)
-         filename = (this.this_pad_name || (this.isCanvas() ? 'canvas' : 'pad')) + '.' + kind;
+         filename = (this.#pad_name || (this.isCanvas() ? 'canvas' : 'pad')) + '.' + kind;
 
       this.produceImage(full_canvas, kind).then(imgdata => {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         if ((browser.qt6 || browser.cef3) && this.snapid) {
+         if ((browser.qt6 || browser.cef3) && this.getSnapId()) {
             console.warn(`sending file ${filename} to server`);
             let res = imgdata;
             if (kind !== 'svg') {
@@ -1434,7 +1493,7 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format, args) {
       const use_frame = (full_canvas === 'frame'),
-            elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
+            elem = use_frame ? this.getFrameSvg() : (full_canvas ? this.getCanvSvg() : this.getPadSvg()),
             painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
             items = []; // keep list of replaced elements, which should be moved back at the end
 
@@ -1452,11 +1511,11 @@ class RPadPainter extends RObjectPainter {
       if (!use_frame) {
          // do not make transformations for the frame
          painter.forEachPainterInPad(pp => {
-            const item = { prnt: pp.svg_this_pad() };
+            const item = { prnt: pp.getPadSvg() };
             items.push(item);
 
             // remove buttons from each sub-pad
-            const btns = pp.getLayerSvg('btns_layer', this.this_pad_name);
+            const btns = pp.getLayerSvg('btns_layer');
             item.btns_node = btns.node();
             if (item.btns_node) {
                item.btns_prnt = item.btns_node.parentNode;
@@ -1487,7 +1546,7 @@ class RPadPainter extends RObjectPainter {
                item.foreign.remove();
             }
 
-            const svg_frame = main.getFrameSvg();
+            const svg_frame = fp.getFrameSvg();
             item.frame_node = svg_frame.node();
             if (item.frame_node) {
                item.frame_next = item.frame_node.nextSibling;
@@ -1572,10 +1631,10 @@ class RPadPainter extends RObjectPainter {
                   menu.add('Z axis', 'zaxis', this.itemContextMenu);
             }
 
-            if (this.painters?.length) {
+            if (this.#painters?.length) {
                menu.separator();
                const shown = [];
-               this.painters.forEach((pp, indx) => {
+               this.#painters.forEach((pp, indx) => {
                   const obj = pp?.getObject();
                   if (!obj || (shown.indexOf(obj) >= 0) || pp.isSecondary()) return;
                   let name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
@@ -1595,8 +1654,8 @@ class RPadPainter extends RObjectPainter {
       let done = false;
       const prs = [];
 
-      for (let i = 0; i < this.painters.length; ++i) {
-         const pp = this.painters[i];
+      for (let i = 0; i < this.#painters.length; ++i) {
+         const pp = this.#painters[i];
 
          if (isFunc(pp.clickPadButton))
             prs.push(pp.clickPadButton(funcname, evnt));
@@ -1705,17 +1764,14 @@ class RPadPainter extends RObjectPainter {
       const pad = this.getObject();
       if (!pad) return;
 
-      const d = new DrawOptions(opt);
+      const d = new DrawOptions(opt),
+            o = this.setOptions({ GlobalColors: true, LocalColors: false, IgnorePalette: false, RotateFrame: false, FixFrame: false });
 
-      if (!this.options) this.options = {};
-
-      Object.assign(this.options, { GlobalColors: true, LocalColors: false, IgnorePalette: false, RotateFrame: false, FixFrame: false });
-
-      if (d.check('NOCOLORS') || d.check('NOCOL')) this.options.GlobalColors = this.options.LocalColors = false;
-      if (d.check('LCOLORS') || d.check('LCOL')) { this.options.GlobalColors = false; this.options.LocalColors = true; }
-      if (d.check('NOPALETTE') || d.check('NOPAL')) this.options.IgnorePalette = true;
-      if (d.check('ROTATE')) this.options.RotateFrame = true;
-      if (d.check('FIXFRAME')) this.options.FixFrame = true;
+      if (d.check('NOCOLORS') || d.check('NOCOL')) o.GlobalColors = o.LocalColors = false;
+      if (d.check('LCOLORS') || d.check('LCOL')) { o.GlobalColors = false; o.LocalColors = true; }
+      if (d.check('NOPALETTE') || d.check('NOPAL')) o.IgnorePalette = true;
+      if (d.check('ROTATE')) o.RotateFrame = true;
+      if (d.check('FIXFRAME')) o.FixFrame = true;
 
       if (d.check('WHITE')) pad.fFillColor = 0;
       if (d.check('LOGX')) pad.fLogx = 1;

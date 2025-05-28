@@ -24,7 +24,7 @@ class TPolyLinePainter extends ObjectPainter {
    moveDrag(dx, dy) {
       this.#dx += dx;
       this.#dy += dy;
-      makeTranslate(this.draw_g.select('path'), this.#dx, this.#dy);
+      makeTranslate(this.getG().select('path'), this.#dx, this.#dy);
    }
 
    /** @summary End dragging object
@@ -66,9 +66,8 @@ class TPolyLinePainter extends ObjectPainter {
 
    /** @summary Redraw poly line */
    redraw() {
-      this.createG();
-
-      const polyline = this.getObject(),
+      const g = this.createG(),
+            polyline = this.getObject(),
             isndc = polyline.TestBit(kPolyLineNDC),
             opt = this.getDrawOpt() || polyline.fOption,
             dofill = (polyline._typename === clTPolyLine) && (isStr(opt) && opt.toLowerCase().indexOf('f') >= 0),
@@ -81,10 +80,10 @@ class TPolyLinePainter extends ObjectPainter {
       for (let n = 0; n <= polyline.fLastPoint; ++n)
          cmd += `${n > 0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-      this.draw_g.append('svg:path')
-                 .attr('d', cmd + (dofill ? 'Z' : ''))
-                 .call(dofill ? () => {} : this.lineatt.func)
-                 .call(this.fillatt.func);
+      g.append('svg:path')
+       .attr('d', cmd + (dofill ? 'Z' : ''))
+       .call(dofill ? () => {} : this.lineatt.func)
+       .call(this.fillatt.func);
 
       assignContextMenu(this);
 

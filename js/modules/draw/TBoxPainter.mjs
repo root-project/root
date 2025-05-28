@@ -35,7 +35,7 @@ class TBoxPainter extends ObjectPainter {
       if (this.c_y1) this.y1 += dy;
       if (this.c_y2) this.y2 += dy;
 
-      const nodes = this.draw_g.selectAll('path').nodes(),
+      const nodes = this.getG().selectAll('path').nodes(),
             pathes = this.getPathes();
 
       pathes.forEach((path, i) => d3_select(nodes[i]).attr('d', path));
@@ -93,7 +93,7 @@ class TBoxPainter extends ObjectPainter {
       if (!this.fillatt.empty() && !draw_line)
          this.lineatt.color = 'none';
 
-      this.createG(fp);
+      const g = this.createG(fp);
 
       this.x1 = this.axisToSvg('x', box.fX1);
       this.x2 = this.axisToSvg('x', box.fX2);
@@ -108,22 +108,21 @@ class TBoxPainter extends ObjectPainter {
 
       const paths = this.getPathes();
 
-      this.draw_g
-          .append('svg:path')
-          .attr('d', paths[0])
-          .call(this.lineatt.func)
-          .call(this.fillatt.func);
+      g.append('svg:path')
+       .attr('d', paths[0])
+       .call(this.lineatt.func)
+       .call(this.fillatt.func);
 
       if (this.borderMode) {
-         this.draw_g.append('svg:path')
-                    .attr('d', paths[1])
-                    .call(this.fillatt.func)
-                    .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
+         g.append('svg:path')
+          .attr('d', paths[1])
+          .call(this.fillatt.func)
+          .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatRgb());
 
-         this.draw_g.append('svg:path')
-                    .attr('d', paths[2])
-                    .call(this.fillatt.func)
-                    .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
+         g.append('svg:path')
+          .attr('d', paths[2])
+          .call(this.fillatt.func)
+          .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatRgb());
       }
 
       assignContextMenu(this);

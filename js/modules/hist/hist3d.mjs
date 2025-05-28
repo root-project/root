@@ -529,7 +529,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
 
       this.mode3d = false;
 
-      if (this.draw_g)
+      if (this.getG())
          this.createFrameG();
 
       return;
@@ -718,10 +718,10 @@ function render3D(tmout) {
       getCameraPosition(this);
 
    if (this.processRender3D) {
-      this.getPadPainter()?.painters?.forEach(objp => {
+      this.forEachPainter(objp => {
          if (isFunc(objp.handleRender3D))
             objp.handleRender3D();
-      });
+      }, 'objects');
    }
 }
 
@@ -924,8 +924,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    this.x_handle = new AxisPainter(null, this.xaxis);
    if (opts.v7) {
-      this.x_handle.setPadName(this.getPadName());
-      this.x_handle.assignSnapId(this.snapid);
+      this.x_handle.setPadPainter(this.getPadPainter());
+      this.x_handle.assignSnapId(this.getSnapId());
    } else if (opts.hist_painter)
       this.x_handle.setHistPainter(opts.hist_painter, 'x');
 
@@ -936,8 +936,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    this.y_handle = new AxisPainter(null, this.yaxis);
    if (opts.v7) {
-      this.y_handle.setPadName(this.getPadName());
-      this.y_handle.assignSnapId(this.snapid);
+      this.y_handle.setPadPainter(this.getPadPainter());
+      this.y_handle.assignSnapId(this.getSnapId());
    } else if (opts.hist_painter)
       this.y_handle.setHistPainter(opts.hist_painter, 'y');
    this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
@@ -947,8 +947,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    this.z_handle = new AxisPainter(null, this.zaxis);
    if (opts.v7) {
-      this.z_handle.setPadName(this.getPadName());
-      this.z_handle.assignSnapId(this.snapid);
+      this.z_handle.setPadPainter(this.getPadPainter());
+      this.z_handle.assignSnapId(this.getSnapId());
    } else if (opts.hist_painter)
       this.z_handle.setHistPainter(opts.hist_painter, 'z');
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],

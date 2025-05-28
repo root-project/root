@@ -17,6 +17,7 @@ class TH1Painter extends TH1Painter2D {
       const fp = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
             histo = this.getHisto(),
+            o = this.getOptions(),
             zmult = 1 + 2*gStyle.fHistTopMargin;
       let pr = Promise.resolve(true), full_draw = true;
 
@@ -36,12 +37,12 @@ class TH1Painter extends TH1Painter2D {
 
          if (is_main) {
             assignFrame3DMethods(fp);
-            pr = fp.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
+            pr = fp.create3DScene(o.Render3D, o.x3dscale, o.y3dscale, o.Ortho).then(() => {
                fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
-               fp.set3DOptions(this.options);
+               fp.set3DOptions(o);
                fp.drawXYZ(fp.toplevel, TAxisPainter, {
                   ndim: 1, hist_painter: this, use_y_for_z: true, zmult, zoom: settings.Zooming,
-                  draw: (this.options.Axis !== -1), drawany: this.options.isCartesian()
+                  draw: (o.Axis !== -1), drawany: o.isCartesian()
                });
             });
          }
@@ -57,7 +58,7 @@ class TH1Painter extends TH1Painter2D {
       }
 
       if (is_main)
-         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && this.options.canHavePalette()));
+         pr = pr.then(() => this.drawColorPalette(o.Zscale && o.canHavePalette()));
 
       return pr.then(() => this.updateFunctions())
                .then(() => this.updateHistTitle())

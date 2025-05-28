@@ -38,13 +38,13 @@ class TWebPaintingPainter extends ObjectPainter {
     * @desc Redirect mouse click events to the ROOT application
     * @private */
    handleMouseClick(evnt) {
-      const pos = d3_pointer(evnt, this.draw_g.node()),
-            pp = this.getPadPainter(),
+      const pp = this.getPadPainter(),
             rect = pp?.getPadRect();
 
-      if (pp && rect && this.snapid)
+      if (pp && rect && this.getSnapId()) {
+         const pos = d3_pointer(evnt, this.getG().node());
          pp.selectObjectPainter(this, { x: pos[0] + rect.x, y: pos[1] + rect.y });
-         // pp.deliverWebCanvasEvent('click', pos[0] + rect.x, pos[1] + rect.y, this.snapid);
+      }
    }
 
    /** @summary draw TWebPainting object */
@@ -57,7 +57,8 @@ class TWebPaintingPainter extends ObjectPainter {
       let indx = 0, attr = {}, lastpath = null, lastkind = 'none', d = '',
           oper, npoints, n;
 
-      const arr = obj.fOper.split(';'),
+      const g = this.createG(),
+            arr = obj.fOper.split(';'),
       check_attributes = kind => {
          if (kind === lastkind)
             return;
@@ -73,7 +74,7 @@ class TWebPaintingPainter extends ObjectPainter {
             return;
 
          lastkind = kind;
-         lastpath = this.draw_g.append('svg:path').attr('d', ''); // placeholder for 'd' to have it always in front
+         lastpath = g.append('svg:path').attr('d', ''); // placeholder for 'd' to have it always in front
          switch (kind) {
             case 'f': lastpath.call(this.fillatt.func); break;
             case 'l': lastpath.call(this.lineatt.func).style('fill', 'none'); break;
@@ -153,7 +154,7 @@ class TWebPaintingPainter extends ObjectPainter {
                      check_attributes();
 
                      const height = (attr.fTextSize > 1) ? attr.fTextSize : this.getPadPainter().getPadHeight() * attr.fTextSize,
-                           group = this.draw_g.append('svg:g');
+                           group = g.append('svg:g');
 
                      return this.startTextDrawingAsync(attr.fTextFont, height, group).then(() => {
                         let text = arr[k].slice(1),
@@ -191,13 +192,12 @@ class TWebPaintingPainter extends ObjectPainter {
          return Promise.resolve(true);
       };
 
-      this.createG();
 
       return process(-1).then(() => {
          check_attributes();
          assignContextMenu(this);
          if (!this.isBatchMode())
-            this.draw_g.on('click', evnt => this.handleMouseClick(evnt));
+            g.on('click', evnt => this.handleMouseClick(evnt));
          return this;
       });
    }

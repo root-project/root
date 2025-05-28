@@ -34,13 +34,10 @@ class TGraphTimePainter extends ObjectPainter {
    decodeOptions(opt) {
       const d = new DrawOptions(opt || 'REPEAT');
 
-      if (!this.options)
-         this.options = {};
-
-      Object.assign(this.options, {
-          once: d.check('ONCE'),
-          repeat: d.check('REPEAT'),
-          first: d.check('FIRST')
+      this.setOptions({
+         once: d.check('ONCE'),
+         repeat: d.check('REPEAT'),
+         first: d.check('FIRST')
       });
 
       this.storeDrawOpt(opt);
@@ -67,12 +64,10 @@ class TGraphTimePainter extends ObjectPainter {
 
    /** @summary Continue drawing */
    continueDrawing() {
-      if (!this.options)
-         return;
+      const gr = this.getObject(),
+            o = this.getOptions();
 
-      const gr = this.getObject();
-
-      if (this.options.first) {
+      if (o.first) {
          // draw only single frame, cancel all others
          this.#step = undefined;
          return;
@@ -107,7 +102,7 @@ class TGraphTimePainter extends ObjectPainter {
          let sleeptime = Math.max(gr.fSleepTime, 10);
 
          if (++this.#step > gr.fSteps.arr.length) {
-            if (this.options.repeat) {
+            if (o.repeat) {
                this.#step = 0; // start again
                sleeptime = Math.max(5000, 5*sleeptime); // increase sleep time
             } else {

@@ -14,15 +14,20 @@ import { TH2Painter } from './TH2Painter.mjs';
 class TScatterPainter extends TGraphPainter {
 
    #color_palette; // color palette
+   #contour; // colors contour
 
    /** @summary Cleanup painter */
    cleanup() {
       this.clearHistPalette();
+      this.#contour = undefined;
       super.cleanup();
    }
 
    /** @summary Return drawn graph object */
    getGraph() { return this.getObject()?.fGraph; }
+
+   /** @summary Return colors contour */
+   getContour() { return this.#contour; }
 
    /** @summary Is TScatter object */
    isScatter() { return true; }
@@ -35,7 +40,7 @@ class TScatterPainter extends TGraphPainter {
    async drawAxisHisto() {
       const need_histo = !this.getHistogram(),
             histo = this.createHistogram(need_histo, need_histo);
-      return TH2Painter.draw(this.getDrawDom(), histo, this.options.Axis + ';IGNORE_PALETTE');
+      return TH2Painter.draw(this.getDrawDom(), histo, this.getOptions().Axis + ';IGNORE_PALETTE');
    }
 
   /** @summary Provide palette, create if necessary
@@ -81,7 +86,7 @@ class TScatterPainter extends TGraphPainter {
       if (axis !== 'z')
          return super.canZoomInside(axis, min, max);
 
-      const levels = this.fContour?.getLevels();
+      const levels = this.#contour?.getLevels();
       if (!levels)
          return false;
       // match at least full color level inside
@@ -102,7 +107,7 @@ class TScatterPainter extends TGraphPainter {
       if (isFunc(pp?.getCustomPalette))
          pal = pp.getCustomPalette();
       if (!pal)
-         pal = getColorPalette(this.options.Palette, pp?.isGrayscale());
+         pal = getColorPalette(this.getOptions().Palette, pp?.isGrayscale());
       this.#color_palette = pal;
       return pal;
    }
@@ -139,9 +144,9 @@ class TScatterPainter extends TGraphPainter {
             maxc = minc < 0 ? 0.9*minc : (minc > 0 ? 1.1*minc : 1);
          else if ((minc > 0) && (minc < 0.3*maxc))
             minc = 0;
-         this.fContour = new HistContour(minc, maxc);
-         this.fContour.createNormal(30);
-         this.fContour.configIndicies(0, 0);
+         this.#contour = new HistContour(minc, maxc);
+         this.#contour.createNormal(30);
+         this.#contour.configIndicies(0, 0);
 
          fp.zmin = minc;
          fp.zmax = maxc;
@@ -167,9 +172,8 @@ class TScatterPainter extends TGraphPainter {
          offset = mins;
       }
 
-      this.createG(!fp.pad_layer);
-
-      const funcs = fp.getGrFuncs(),
+      const g = this.createG(!fp.pad_layer),
+            funcs = fp.getGrFuncs(),
             is_zoom = (fp.zoom_zmin !== fp.zoom_zmax) && scatter.fColor,
             bins = this._getBins();
 
@@ -181,12 +185,12 @@ class TScatterPainter extends TGraphPainter {
                grx = funcs.grx(pnt.x),
                gry = funcs.gry(pnt.y),
                size = scatter.fSize ? scatter.fMinMarkerSize + scale * (scatter.fSize[i] - offset) : scatter.fMarkerSize,
-               color = scatter.fColor ? this.fContour.getPaletteColor(palette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
+               color = scatter.fColor ? this.#contour.getPaletteColor(palette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
                handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
 
-          this.draw_g.append('svg:path')
-                     .attr('d', handle.create(grx, gry))
-                     .call(handle.func);
+         g.append('svg:path')
+          .attr('d', handle.create(grx, gry))
+          .call(handle.func);
       }
 
       return this;

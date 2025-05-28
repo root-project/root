@@ -34,7 +34,7 @@ class TLinePainter extends ObjectPainter {
    moveDrag(dx, dy) {
       if (this.#side !== 1) { this.x1 += dx; this.y1 += dy; }
       if (this.#side !== -1) { this.x2 += dx; this.y2 += dy; }
-      this.draw_g.select('path').attr('d', this.createPath());
+      this.getG().select('path').attr('d', this.createPath());
    }
 
    /** @summary Finish interactive moving */
@@ -109,8 +109,7 @@ class TLinePainter extends ObjectPainter {
    redraw() {
       this.prepareDraw();
 
-      const elem = this.draw_g.append('svg:path')
-                       .attr('d', this.createPath())
+      const elem = this.appendPath(this.createPath())
                        .call(this.lineatt.func);
 
       if (this.getObject()?.$do_not_draw)

@@ -206,7 +206,9 @@ class TH2Painter extends TH2Painter2D {
 
       const fp = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
-            histo = this.getHisto();
+            histo = this.getHisto(),
+            o = this.getOptions();
+
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
@@ -223,12 +225,12 @@ class TH2Painter extends TH2Painter2D {
                logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;
 
-         if (this.options.ohmin && this.options.ohmax) {
-            this.zmin = this.options.hmin;
-            this.zmax = this.options.hmax;
-         } else if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
-            this.zmin = this.options.minimum;
-            this.zmax = this.options.maximum;
+         if (o.ohmin && o.ohmax) {
+            this.zmin = o.hmin;
+            this.zmax = o.hmax;
+         } else if (o.minimum !== kNoZoom && o.maximum !== kNoZoom) {
+            this.zmin = o.minimum;
+            this.zmax = o.maximum;
          } else if (this.draw_content || this.gmaxbin) {
             this.zmin = logz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
@@ -242,13 +244,13 @@ class TH2Painter extends TH2Painter2D {
 
          if (is_main) {
             assignFrame3DMethods(fp);
-            pr = fp.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
+            pr = fp.create3DScene(o.Render3D, o.x3dscale, o.y3dscale, o.Ortho).then(() => {
                fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
-               fp.set3DOptions(this.options);
+               fp.set3DOptions(o);
                fp.drawXYZ(fp.toplevel, TAxisPainter, {
                   ndim: 2, hist_painter: this, zmult, zoom: settings.Zooming,
-                  draw: this.options.Axis !== -1, drawany: this.options.isCartesian(),
-                  reverse_x: this.options.RevX, reverse_y: this.options.RevY
+                  draw: o.Axis !== -1, drawany: o.isCartesian(),
+                  reverse_x: o.RevX, reverse_y: o.RevY
                });
             });
          }
@@ -258,15 +260,15 @@ class TH2Painter extends TH2Painter2D {
                if (this.draw_content) {
                   if (this.isTH2Poly())
                      drawTH2PolyLego(this);
-                  else if (this.options.Contour)
+                  else if (o.Contour)
                      drawBinsContour3D(this, true);
-                  else if (this.options.Surf)
+                  else if (o.Surf)
                      drawBinsSurf3D(this);
-                  else if (this.options.Error)
+                  else if (o.Error)
                      drawBinsError3D(this);
                   else
                      drawBinsLego(this);
-               } else if (this.options.Axis && this.options.Zscale) {
+               } else if (o.Axis && o.Zscale) {
                   this.getContourLevels(true);
                   this.getHistPalette();
                }
@@ -279,8 +281,8 @@ class TH2Painter extends TH2Painter2D {
 
       //  (re)draw palette by resize while canvas may change dimension
       if (is_main) {
-         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14) ||
-                                                  (this.options.Surf === 11) || (this.options.Surf === 12))));
+         pr = pr.then(() => this.drawColorPalette(o.Zscale && ((o.Lego === 12) || (o.Lego === 14) ||
+                                                  (o.Surf === 11) || (o.Surf === 12))));
       }
 
       return pr.then(() => this.updateFunctions())

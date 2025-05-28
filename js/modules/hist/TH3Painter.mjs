@@ -371,13 +371,15 @@ class TH3Painter extends THistPainter {
       if (!this.draw_content)
          return false;
 
-      let box_option = this.options.BoxStyle;
+      const o = this.getOptions();
 
-      if (!box_option && this.options.Scat) {
+      let box_option = o.BoxStyle;
+
+      if (!box_option && o.Scat) {
          const promise = this.draw3DScatter();
          if (promise !== false) return promise;
          box_option = 12; // fall back to box2 draw option
-      } else if (!box_option && !this.options.GLBox && !this.options.GLColor && !this.options.Lego)
+      } else if (!box_option && !o.GLBox && !o.GLColor && !o.Lego)
          box_option = 12; // default draw option
 
       const histo = this.getHisto(),
@@ -390,13 +392,13 @@ class TH3Painter extends THistPainter {
           fillcolor = this.getColor(histo.fFillColor),
           tipscale = 0.5, single_bin_geom;
 
-      if (!box_option && this.options.Lego)
-         box_option = (this.options.Lego === 1) ? 10 : this.options.Lego;
+      if (!box_option && o.Lego)
+         box_option = (o.Lego === 1) ? 10 : o.Lego;
 
-      if ((this.options.GLBox === 11) || (this.options.GLBox === 12)) {
+      if ((o.GLBox === 11) || (o.GLBox === 12)) {
          tipscale = 0.4;
          use_lambert = true;
-         if (this.options.GLBox === 12)
+         if (o.GLBox === 12)
             use_colors = true;
 
          single_bin_geom = new THREE.SphereGeometry(0.5, fp.webgl ? 16 : 8, fp.webgl ? 12 : 6);
@@ -428,7 +430,7 @@ class TH3Painter extends THistPainter {
          else if (box_option === 13) {
             use_colors = true;
             use_helper = false;
-         } else if (this.options.GLColor) {
+         } else if (o.GLColor) {
             use_colors = true;
             use_opacity = 0.5;
             use_scale = false;
@@ -486,7 +488,7 @@ class TH3Painter extends THistPainter {
                   gry2 = fp.gry(histo.fYaxis.GetBinLowEdge(j+2));
             for (let k = k1; k < k2; ++k) {
                const bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if (!this.options.GLColor && ((bin_content === 0) || (bin_content < this.gminbin))) continue;
+               if (!o.GLColor && ((bin_content === 0) || (bin_content < this.gminbin))) continue;
 
                const wei = get_bin_weight(bin_content);
                if (wei < 1e-3) continue; // do not show very small bins
@@ -622,7 +624,9 @@ class TH3Painter extends THistPainter {
    /** @summary Redraw TH3 histogram */
    async redraw(reason) {
       const fp = this.getFramePainter(), // who makes axis and 3D drawing
-            histo = this.getHisto();
+            histo = this.getHisto(),
+            o = this.getOptions();
+
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
@@ -636,12 +640,12 @@ class TH3Painter extends THistPainter {
 
       if (full_draw) {
          assignFrame3DMethods(fp);
-         pr = fp.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
+         pr = fp.create3DScene(o.Render3D, o.x3dscale, o.y3dscale, o.Ortho).then(() => {
             fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
-            fp.set3DOptions(this.options);
+            fp.set3DOptions(o);
             fp.drawXYZ(fp.toplevel, TAxisPainter, {
                ndim: 3, hist_painter: this, zoom: settings.Zooming,
-               draw: this.options.Axis !== -1, drawany: this.options.isCartesian()
+               draw: o.Axis !== -1, drawany: o.isCartesian()
             });
             return this.draw3DBins();
          }).then(() => {
@@ -652,7 +656,7 @@ class TH3Painter extends THistPainter {
       }
 
       if (this.isMainPainter())
-        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this.#box_option === 12 || this.#box_option === 13 || this.options.GLBox === 12)));
+        pr = pr.then(() => this.drawColorPalette(o.Zscale && (this.#box_option === 12 || this.#box_option === 13 || o.GLBox === 12)));
 
       return pr.then(() => this.updateFunctions())
                .then(() => this.updateHistTitle())

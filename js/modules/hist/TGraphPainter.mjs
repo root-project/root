@@ -11,8 +11,10 @@ class TGraphPainter extends TGraphPainter2D {
       if (!fp.mode3d || !fp.grx || !fp.gry || !fp.grz || !fp.toplevel)
          return console.log('Frame painter missing base 3d elements');
 
+      const o = this.getOptions();
+
       if (fp.zoom_xmin !== fp.zoom_xmax)
-        if ((this.options.pos3d < fp.zoom_xmin) || (this.options.pos3d > fp.zoom_xmax)) return;
+        if ((o.pos3d < fp.zoom_xmin) || (o.pos3d > fp.zoom_xmax)) return;
 
       this.createGraphDrawAttributes(true);
 
@@ -26,7 +28,7 @@ class TGraphPainter extends TGraphPainter2D {
 
       if (first === last) return;
 
-      const pnts = [], grx = fp.grx(this.options.pos3d);
+      const pnts = [], grx = fp.grx(o.pos3d);
       let p0 = drawbins[first];
 
       for (let n = first + 1; n <= last; ++n) {
@@ -46,7 +48,7 @@ class TGraphPainter extends TGraphPainter2D {
    /** @summary Draw axis histogram
      * @private */
    async drawAxisHisto() {
-      return TH1Painter.draw(this.getDrawDom(), this.createHistogram(), this.options.Axis);
+      return TH1Painter.draw(this.getDrawDom(), this.createHistogram(), this.getOptions().Axis);
    }
 
    /** @summary Draw TGraph */
