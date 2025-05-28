@@ -151,32 +151,86 @@ public:
          fShapeY = fShapeA;
       }
       // check case of constant  output (if all inputs are defined)
-      if (model.IsInitializedTensor(fNA) && model.IsInitializedTensor(fNB) && model.IsInitializedTensor(fNC)) {
-         std::string nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
-         std::string nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
-         std::string nameC = fNBroadcastedC.empty()? fNC : fNBroadcastedC;
-         auto dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());
-         auto dataB = static_cast<T *>(model.GetInitializedTensorData(nameB).get());
-         auto dataC = static_cast<bool *>(model.GetInitializedTensorData(nameC).get());
-         std::vector<T> dataY(ConvertShapeToLength(fShapeY));
-         for (size_t i = 0; i < dataY.size(); i++)
-             dataY[i] = (dataC[i]) ? dataA[i] : dataB[i];
-         model.AddConstantTensor<T>(fNY, fShapeY, dataY.data());
-         // flag tensors to not be written in a file
-         model.SetNotWritableInitializedTensor(nameA);
-         model.SetNotWritableInitializedTensor(nameB);
-         model.SetNotWritableInitializedTensor(nameC);
+      if (model.IsInitializedTensor(fNC)) {
 
-         fIsOutputConstant = true;
-         if (model.Verbose())
+         std::string nameC = fNBroadcastedC.empty()? fNC : fNBroadcastedC;
+         auto dataC = static_cast<bool *>(model.GetInitializedTensorData(nameC).get());
+         model.SetNotWritableInitializedTensor(nameC);
+         T * dataA = nullptr;
+         T * dataB = nullptr;
+         std::vector<Dim> shapeDataA;
+         std::vector<Dim> shapeDataB;
+         if (model.IsInitializedTensor(fNA)) {
+             std::string nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
+             dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());
+            // flag tensors to not be written in a file
+            model.SetNotWritableInitializedTensor(nameA);
+         } else if (model.IsShapeTensor(fNA))
+            shapeDataA = model.GetShapeTensorValues(fNA);
+         if (model.IsInitializedTensor(fNB)) {
+            std::string nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
+            dataB = static_cast<T *>(model.GetInitializedTensorData(nameB).get());
+            model.SetNotWritableInitializedTensor(nameB);
+         } else if (model.IsShapeTensor(fNB))
+            shapeDataB = model.GetShapeTensorValues(fNB);
+
+         std::vector<T> dataY;
+         std::vector<Dim> shapeDataY;
+
+         bool isOutputConstantTensor = true;
+         if (dataA && dataB) {
+            dataY.resize(ConvertShapeToLength(fShapeY));
+            for (size_t i = 0; i < dataY.size(); i++)
+                dataY[i] = (dataC[i]) ? dataA[i] : dataB[i];
+         }
+         else if (dataA && shapeDataB.size()>0 ) {
+            shapeDataY.resize(ConvertShapeToLength(fShapeY));
+            for (size_t i = 0; i < shapeDataY.size(); i++) {
+               shapeDataY[i] = (dataC[i]) ? Dim{size_t(dataA[i])} : shapeDataB[i];
+               isOutputConstantTensor &= !shapeDataY[i].isParam;
+            }
+         }
+         else if (dataB && shapeDataA.size()>0 ) {
+            shapeDataY.resize(ConvertShapeToLength(fShapeY));
+            for (size_t i = 0; i < shapeDataY.size(); i++) {
+               shapeDataY[i] = (dataC[i]) ? shapeDataB[i] : Dim{size_t(dataB[i])};
+               isOutputConstantTensor &= !shapeDataY[i].isParam;
+            }
+         }
+         else if (shapeDataB.size() > 0  && shapeDataA.size()>0 ) {
+            shapeDataY.resize(ConvertShapeToLength(fShapeY));
+            for (size_t i = 0; i < shapeDataY.size(); i++) {
+               shapeDataY[i] = (dataC[i]) ? shapeDataA[i] : shapeDataB[i];
+               isOutputConstantTensor &= !shapeDataY[i].isParam;
+            }
+         }
+         fIsOutputConstant = true;  // this contains both case constant tensor output ans shape tensor output
+         if (isOutputConstantTensor && dataY.empty()) {
+            dataY.resize(shapeDataY.size());
+            for (size_t i = 0; i < shapeDataY.size(); i++)
+               dataY[i] = static_cast<T>(shapeDataY[i].dim);
+         }
+         if (dataY.size() > 0)
+            model.AddConstantTensor<T>(fNY, fShapeY, dataY.data());
+         else if (shapeDataY.size() > 0 )
+           model.AddShapeTensor(fNY, shapeDataY, fShapeY.size() == 0);
+         else {
+            fIsOutputConstant = false;
+         }
+         if (fIsOutputConstant && model.Verbose())
             std::cout << "Where op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
-               << ConvertValuesToString(dataY) << std::endl;
-         
+               << ((dataY.size() > 0) ? ConvertValuesToString(dataY) : ConvertShapeToString(shapeDataY) )
+               << ((dataY.size() > 0) ? " (constant)" : " (shape)") << std::endl;
+
          // output is a constant tensor
-         fOutputTensorNames.pop_back();
+         if (fIsOutputConstant) fOutputTensorNames.pop_back();
       }
-      else {
+      if (!fIsOutputConstant) {
         model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
+        if (model.Verbose())
+            std::cout << "Where op " << " condition : " << fNC << "  " << ConvertShapeToString(fShapeC) <<
+                   " X " << fNA << "  " << ConvertShapeToString(fShapeA) << " Y " <<  fNB << "  " << ConvertShapeToString(fShapeB)
+                   << " ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << std::endl;
       }
    }
 
@@ -185,17 +239,17 @@ public:
       return out.str();
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
 
       if (fIsOutputConstant) return "";
 
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
 
       if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Where Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//-------- Where   \n";
+      out << SP << "\n//-------- Where " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
       std::string typeName = TensorType<T>::Name();
       // Broadcast A if it's uninitialized

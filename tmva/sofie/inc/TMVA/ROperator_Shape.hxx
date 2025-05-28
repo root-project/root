@@ -24,7 +24,7 @@ private:
    int fEnd = 0; // default is input length (all input tensor shape included)
    std::string fNX;
    std::string fNY;
-   std::vector<size_t> fShape;
+   std::vector<Dim> fShape;
    std::vector<size_t> fOutput_shape;
 
 public:
@@ -39,7 +39,7 @@ public:
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Shape Op Input Tensor " + fNX + " is not found in model");
       }
-      fShape = model.GetTensorShape(fNX);
+      fShape = model.GetDimTensorShape(fNX);
       size_t length = fShape.size();  // this the size of shape not length of tensor
       fStart = std::max(fStart,(int) -length);
       fStart = std::min(fStart,(int) length);
@@ -52,8 +52,9 @@ public:
       // in case the input tensor is not a dynamic tensor we should register the output as a Constant tensor since we know
       // its content
       if (!model.IsDynamicTensor(fNX) && !fOutput_shape.empty()) {
+         auto shape = model.GetTensorShape(fNX);
          std::shared_ptr<void> data(malloc(length * sizeof(int64_t)), free);
-         auto shape_values = std::vector<int64_t>(fShape.begin()+fStart, fShape.begin() + fEnd );
+         auto shape_values = std::vector<int64_t>(shape.begin()+fStart, shape.begin() + fEnd );
          std::memcpy(data.get(), (void*) shape_values.data(), length * sizeof(int64_t));
          model.AddConstantTensor(fNY, ETensorType::INT64, fOutput_shape, data);
          fOutputTensorNames.pop_back();
@@ -65,12 +66,15 @@ public:
          }
          fIsOutputConstant = true;
       }
-      else
-         model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
-
-
+      else {
+         // add tensor as a shape tensor (and also as initialized one??)
+         //model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
+         fIsOutputConstant = true;
+         model.AddShapeTensor(fNY, std::vector<Dim>(fShape.begin() + fStart, fShape.begin() + fEnd));
+      }
    }
 
+   // generate is not needed
    std::string Generate(std::string OpName) override {
       // no need to generate code if the output is constant
       if (fIsOutputConstant) return "";
