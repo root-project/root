@@ -214,14 +214,13 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 
   // Copy generic objects
   for(TObject * gobj : other._genObjects) {
-    TObject *theClone = gobj->Clone();
+    _genObjects.Add(gobj->Clone());
+  }
 
-    auto handle = dynamic_cast<RooWorkspaceHandle*>(theClone);
-    if (handle) {
+  for(TObject * gobj : allGenericObjects()) {
+    if (auto handle = dynamic_cast<RooWorkspaceHandle*>(gobj)) {
       handle->ReplaceWS(this);
     }
-
-    _genObjects.Add(theClone);
   }
 }
 
@@ -2468,6 +2467,12 @@ void RooWorkspace::Streamer(TBuffer &R__b)
             }
          }
 #endif
+      }
+
+      for(TObject * gobj : allGenericObjects()) {
+        if (auto handle = dynamic_cast<RooWorkspaceHandle*>(gobj)) {
+          handle->ReplaceWS(this);
+        }
       }
 
    } else {
