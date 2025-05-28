@@ -2,9 +2,10 @@
 # Author: Kristupas Pranckietis, Vilnius University 05/2024
 # Author: Nopphakorn Subsa-Ard, King Mongkut's University of Technology Thonburi (KMUTT) (TH) 08/2024
 # Author: Vincenzo Eduardo Padulano, CERN 10/2024
+# Author: Martin Føll, University of Oslo (UiO) & CERN 05/2025
 
 ################################################################################
-# Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -20,12 +21,13 @@ if TYPE_CHECKING:
     import numpy as np
     import tensorflow as tf
     import torch
+    import ROOT
 
 
 class BaseGenerator:
     def get_template(
         self,
-        x_rdf: RNode,
+        x_rdf: ROOT.RDF.RNode,
         columns: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
     ) -> Tuple[str, list[int]]:
@@ -80,9 +82,10 @@ class BaseGenerator:
 
     def __init__(
         self,
-        rdataframe: RNode,
+        rdataframe: ROOT.RDF.RNode,
         batch_size: int,
         chunk_size: int,
+        block_size: int,            
         columns: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
         vec_padding: int = 0,
@@ -92,6 +95,7 @@ class BaseGenerator:
         max_chunks: int = 0,
         shuffle: bool = True,
         drop_remainder: bool = True,
+        set_seed: int = 0,
     ):
         """Wrapper around the Cpp RBatchGenerator
 
@@ -126,6 +130,10 @@ class BaseGenerator:
             drop_remainder (bool):
                 Drop the remainder of data that is too small to compose full batch.
                 Defaults to True.
+            set_seed (int):
+                For reproducibility: Set the seed for the random number generator used
+                to split the dataset into training and validation and shuffling of the chunks
+                Defaults to 0 which means that the seed is set to the random device.
         """
 
         import ROOT
@@ -153,11 +161,6 @@ class BaseGenerator:
             )
 
         self.noded_rdf = RDF.AsRNode(rdataframe)
-
-        if ROOT.Internal.RDF.GetDataSourceLabel(self.noded_rdf) != "TTreeDS":
-            raise ValueError(
-                "RNode object must be created out of TTrees or files of TTree"
-            )
 
         if isinstance(target, str):
             target = [target]
@@ -221,15 +224,16 @@ class BaseGenerator:
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
             self.noded_rdf,
             chunk_size,
+            block_size,            
             batch_size,
             self.given_columns,
-            self.num_columns,
             max_vec_sizes_list,
             vec_padding,
             validation_split,
             max_chunks,
             shuffle,
             drop_remainder,
+            set_seed,
         )
 
         atexit.register(self.DeActivate)
@@ -238,6 +242,9 @@ class BaseGenerator:
     def is_active(self):
         return self.generator.IsActive()
 
+    def is_training_active(self):
+        return self.generator.TrainingIsActive()
+    
     def Activate(self):
         """Initialize the generator to be used for a loop"""
         self.generator.Activate()
@@ -245,6 +252,30 @@ class BaseGenerator:
     def DeActivate(self):
         """Deactivate the generator"""
         self.generator.DeActivate()
+
+    def ActivateTrainingEpoch(self):
+        """Activate the generator"""
+        self.generator.ActivateTrainingEpoch()
+
+    def ActivateValidationEpoch(self):
+        """Activate the generator"""
+        self.generator.ActivateValidationEpoch()
+    
+    def DeActivateTrainingEpoch(self):
+        """Deactivate the generator"""
+        self.generator.DeActivateTrainingEpoch()
+
+    def DeActivateValidationEpoch(self):
+        """Deactivate the generator"""
+        self.generator.DeActivateValidationEpoch()
+
+    def CreateTrainBatches(self):
+        """Deactivate the generator"""
+        self.generator.CreateTrainBatches()
+
+    def CreateValidationBatches(self):
+        """Deactivate the generator"""
+        self.generator.CreateValidationBatches()
 
     def GetSample(self):
         """
@@ -445,12 +476,14 @@ class BaseGenerator:
 class LoadingThreadContext:
     def __init__(self, base_generator: BaseGenerator):
         self.base_generator = base_generator
-
+        # create training batches from the first chunk
+        self.base_generator.CreateTrainBatches();
+        
     def __enter__(self):
-        self.base_generator.Activate()
+        self.base_generator.ActivateTrainingEpoch()
 
     def __exit__(self, type, value, traceback):
-        self.base_generator.DeActivate()
+        self.base_generator.DeActivateTrainingEpoch()
         return True
 
 
@@ -468,6 +501,7 @@ class TrainRBatchGenerator:
         """
         self.base_generator = base_generator
         self.conversion_function = conversion_function
+
 
     def Activate(self):
         """Start the loading of training batches"""
@@ -503,6 +537,7 @@ class TrainRBatchGenerator:
         return self.base_generator.generator.TrainRemainderRows()
 
     def __iter__(self):
+
         self._callable = self.__call__()
 
         return self
@@ -522,16 +557,28 @@ class TrainRBatchGenerator:
             Union[np.NDArray, torch.Tensor]: A batch of data
         """
 
-        with LoadingThreadContext(self.base_generator):
+        with LoadingThreadContext(self.base_generator):        
             while True:
                 batch = self.base_generator.GetTrainBatch()
-
                 if batch is None:
                     break
-
                 yield self.conversion_function(batch)
+        
+        return None    
+    
+class LoadingThreadContextVal:
+    def __init__(self, base_generator: BaseGenerator):
+        self.base_generator = base_generator
+        # create validation batches from the first chunk
+        self.base_generator.CreateValidationBatches()        
 
-        return None
+    def __enter__(self):
+        self.base_generator.ActivateValidationEpoch()
+
+    def __exit__(self, type, value, traceback):
+        self.base_generator.DeActivateValidationEpoch()
+        return True
+   
 
 
 class ValidationRBatchGenerator:
@@ -588,27 +635,27 @@ class ValidationRBatchGenerator:
         return batch
 
     def __call__(self) -> Any:
-        """Loop through the validation batches
+        """Start the loading of batches and yield the results
 
         Yields:
             Union[np.NDArray, torch.Tensor]: A batch of data
         """
-        if self.base_generator.is_active:
-            self.base_generator.DeActivate()
-
-        while True:
-            batch = self.base_generator.GetValidationBatch()
-
-            if not batch:
-                break
-
-            yield self.conversion_function(batch)
-
-
+        
+        with LoadingThreadContextVal(self.base_generator):                
+            while True:
+                batch = self.base_generator.GetValidationBatch()
+                if batch is None:
+                    self.base_generator.DeActivateValidationEpoch()                    
+                    break
+                yield self.conversion_function(batch)
+        
+        return None    
+    
 def CreateNumPyGenerators(
-    rdataframe: RNode,
+    rdataframe: ROOT.RDF.RNode,
     batch_size: int,
     chunk_size: int,
+    block_size: int,        
     columns: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
@@ -618,6 +665,7 @@ def CreateNumPyGenerators(
     max_chunks: int = 0,
     shuffle: bool = True,
     drop_remainder=True,
+    set_seed: int = 0,
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two batch generators based on the given ROOT file and tree or RDataFrame
@@ -676,6 +724,7 @@ def CreateNumPyGenerators(
         rdataframe,
         batch_size,
         chunk_size,
+        block_size,        
         columns,
         max_vec_sizes,
         vec_padding,
@@ -685,6 +734,7 @@ def CreateNumPyGenerators(
         max_chunks,
         shuffle,
         drop_remainder,
+        set_seed,        
     )
 
     train_generator = TrainRBatchGenerator(
@@ -702,9 +752,10 @@ def CreateNumPyGenerators(
 
 
 def CreateTFDatasets(
-    rdataframe: RNode,
+    rdataframe: ROOT.RDF.RNode,
     batch_size: int,
     chunk_size: int,
+    block_size: int,        
     columns: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
@@ -714,6 +765,7 @@ def CreateTFDatasets(
     max_chunks: int = 0,
     shuffle: bool = True,
     drop_remainder=True,
+    set_seed: int = 0,        
 ) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
@@ -771,6 +823,7 @@ def CreateTFDatasets(
         rdataframe,
         batch_size,
         chunk_size,
+        block_size,
         columns,
         max_vec_sizes,
         vec_padding,
@@ -780,6 +833,7 @@ def CreateTFDatasets(
         max_chunks,
         shuffle,
         drop_remainder,
+        set_seed,        
     )
 
     train_generator = TrainRBatchGenerator(
@@ -847,9 +901,10 @@ def CreateTFDatasets(
 
 
 def CreatePyTorchGenerators(
-    rdataframe: RNode,
+    rdataframe: ROOT.RDF.RNode,
     batch_size: int,
     chunk_size: int,
+    block_size: int,        
     columns: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
@@ -859,6 +914,7 @@ def CreatePyTorchGenerators(
     max_chunks: int = 0,
     shuffle: bool = True,
     drop_remainder=True,
+    set_seed: int = 0,        
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
@@ -914,6 +970,7 @@ def CreatePyTorchGenerators(
         rdataframe,
         batch_size,
         chunk_size,
+        block_size,
         columns,
         max_vec_sizes,
         vec_padding,
@@ -923,6 +980,7 @@ def CreatePyTorchGenerators(
         max_chunks,
         shuffle,
         drop_remainder,
+        set_seed,        
     )
 
     train_generator = TrainRBatchGenerator(
