@@ -3179,7 +3179,7 @@ void TBranchElement::InitializeOffsets()
          return;
       }
       // Make sure we can instantiate our class streamer info.
-      infoimp = GetInfoImp();
+      TStreamerInfo *infoimp = GetInfoImp();
       if (!infoimp) {
          Warning("InitializeOffsets", "No streamer info available for branch: %s of class: %s", GetName(), fBranchClass.GetClass()->GetName());
          fInitOffsets = true;
