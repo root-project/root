@@ -3058,7 +3058,7 @@ void* TBranchElement::GetValuePointer() const
 {
    ValidateAddress();
 
-   auto infoimp = nullptr;
+   TStreamerInfo *infoimp = nullptr;
    Int_t prID = fID;
    char *object = fObject;
    if (TestBit(kCache)) {
