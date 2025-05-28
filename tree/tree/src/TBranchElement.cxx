@@ -1053,9 +1053,10 @@ void TBranchElement::Browse(TBrowser* b)
                // we can only find out asking the streamer given our ID
                TStreamerElement *element=nullptr;
                TClass* clsub=nullptr;
-               if (fID>=0 && GetInfoImp()
-                   && GetInfoImp()->IsCompiled()
-                   && ((element=GetInfoImp()->GetElement(fID)))
+               auto infoimp = (fID >= 0) ? GetInfoImp() : nullptr;
+               if (infoimp
+                   && infoimp->IsCompiled()
+                   && ((element=infoimp->GetElement(fID)))
                    && ((clsub=element->GetClassPointer())))
                   cl=clsub;
             }
@@ -3041,8 +3042,9 @@ T TBranchElement::GetTypedValue(Int_t j, Int_t len, bool subarr) const
          return GetInfoImp()->GetTypedValueSTLP<T>(((TBranchElement*) this)->GetCollectionProxy(), prID, j/len, j%len, fOffset);
       }
    } else {
-      if (GetInfoImp()) {
-         return GetInfoImp()->GetTypedValue<T>(object, prID, j, -1);
+      auto infoimp = GetInfoImp();
+      if (infoimp) {
+         return infoimp->GetTypedValue<T>(object, prID, j, -1);
       }
       return 0;
    }
@@ -3056,10 +3058,12 @@ void* TBranchElement::GetValuePointer() const
 {
    ValidateAddress();
 
+   auto infoimp = nullptr;
    Int_t prID = fID;
    char *object = fObject;
    if (TestBit(kCache)) {
-      if (GetInfoImp()->GetElements()->At(fID)->TestBit(TStreamerElement::kRepeat)) {
+      infoimp = GetInfoImp();
+      if (infoimp->GetElements()->At(fID)->TestBit(TStreamerElement::kRepeat)) {
          prID = fID+1;
       } else if (fOnfileObject) {
          object = fOnfileObject->GetObjectAt(0);
@@ -3112,8 +3116,10 @@ void* TBranchElement::GetValuePointer() const
       return object;
    } else {
       //return GetInfoImp()->GetValue(object,fID,j,-1);
-      if (!GetInfoImp() || !object) return nullptr;
-      char **val = (char**)(object+GetInfoImp()->TStreamerInfo::GetElementOffset(prID));
+      if (!infoimp)
+         infoimp = GetInfoImp();
+      if (!infoimp || !object) return nullptr;
+      char **val = (char**)(object+infoimp->TStreamerInfo::GetElementOffset(prID));
       return *val;
    }
 }
@@ -3173,7 +3179,8 @@ void TBranchElement::InitializeOffsets()
          return;
       }
       // Make sure we can instantiate our class streamer info.
-      if (!GetInfoImp()) {
+      infoimp = GetInfoImp();
+      if (!infoimp) {
          Warning("InitializeOffsets", "No streamer info available for branch: %s of class: %s", GetName(), fBranchClass.GetClass()->GetName());
          fInitOffsets = true;
          return;
@@ -3195,7 +3202,7 @@ void TBranchElement::InitializeOffsets()
          // member of a base class or a split class, in which case our
          // streamer info will be for our containing sub-object, while
          // we are actually a different type.
-         TVirtualStreamerInfo* si = GetInfoImp();
+         TVirtualStreamerInfo* si = infoimp;
          // Note: We tested to make sure the streamer info was available previously.
          if (!si->IsCompiled()) {
             Warning("InitializeOffsets", "Streamer info for branch: %s has no elements array!", GetName());
@@ -3863,12 +3870,12 @@ void TBranchElement::Print(Option_t* option) const
    }
    if (strncmp(option,"debugInfo",length("debugInfo"))==0)  {
       Printf("Branch %s uses:",GetName());
-      if (fID>=0) {
+      TStreamerInfo *localInfo = GetInfoImp();
+      if (fID>= 0) {
          // GetInfoImp()->GetElement(fID)->ls();
          // for(UInt_t i=0; i< fIDs.size(); ++i) {
          //    GetInfoImp()->GetElement(fIDs[i])->ls();
          // }
-         TStreamerInfo *localInfo = GetInfoImp();
          if (fType == 3 || fType == 4) {
             // Search for the correct version.
             localInfo = FindOnfileInfo(fClonesClass, fBranches);
@@ -3881,8 +3888,7 @@ void TBranchElement::Print(Option_t* option) const
          if (fReadActionSequence) fReadActionSequence->Print(option);
          Printf("   with write actions:");
          if (fFillActionSequence) fFillActionSequence->Print(option);
-      } else if (!fNewIDs.empty() && GetInfoImp()) {
-         TStreamerInfo *localInfo = GetInfoImp();
+      } else if (!fNewIDs.empty() && localInfo) {
          if (fType == 3 || fType == 4) {
             // Search for the correct version.
             localInfo = FindOnfileInfo(fClonesClass, fBranches);
@@ -3970,8 +3976,8 @@ void TBranchElement::PrintValue(Int_t lenmax) const
             TLeafElement* leaf = (TLeafElement*) fLeaves.UncheckedAt(0);
             n = n * leaf->GetLenStatic();
          }
-         if (GetInfoImp()) {
-            GetInfoImp()->PrintValue(GetName(), fAddress, atype, n, lenmax);
+         if (info) {
+            info->PrintValue(GetName(), fAddress, atype, n, lenmax);
          }
          return;
       } else if (fType <= 2) {
@@ -3981,12 +3987,12 @@ void TBranchElement::PrintValue(Int_t lenmax) const
             Int_t atype = fStreamerType - 20;
             TBranchElement* counterElement = (TBranchElement*) fBranchCount;
             Int_t n = (Int_t) counterElement->GetValue(0, 0);
-            if (GetInfoImp()) {
-               GetInfoImp()->PrintValue(GetName(), fAddress, atype, n, lenmax);
+            if (info) {
+               info->PrintValue(GetName(), fAddress, atype, n, lenmax);
             }
          } else {
-            if (GetInfoImp()) {
-               GetInfoImp()->PrintValue(GetName(), object, prID, -1, lenmax);
+            if (info) {
+               info->PrintValue(GetName(), object, prID, -1, lenmax);
             }
          }
          return;
@@ -3995,17 +4001,17 @@ void TBranchElement::PrintValue(Int_t lenmax) const
       printf(" %-15s = %d\n", GetName(), fNdata);
    } else if (fType == 31) {
       TClonesArray* clones = (TClonesArray*) object;
-      if (GetInfoImp()) {
-         GetInfoImp()->PrintValueClones(GetName(), clones, prID, fOffset, lenmax);
+      if (info) {
+         info->PrintValueClones(GetName(), clones, prID, fOffset, lenmax);
       }
    } else if (fType == 41) {
       TVirtualCollectionProxy::TPushPop helper(((TBranchElement*) this)->GetCollectionProxy(), object);
-      if (GetInfoImp()) {
-         GetInfoImp()->PrintValueSTL(GetName(), ((TBranchElement*) this)->GetCollectionProxy(), prID, fOffset, lenmax);
+      if (info) {
+         info->PrintValueSTL(GetName(), ((TBranchElement*) this)->GetCollectionProxy(), prID, fOffset, lenmax);
       }
    } else {
-      if (GetInfoImp()) {
-         GetInfoImp()->PrintValue(GetName(), object, prID, -1, lenmax);
+      if (info) {
+         info->PrintValue(GetName(), object, prID, -1, lenmax);
       }
    }
 }
