@@ -18,19 +18,22 @@ tree_name = "sig_tree"
 file_name = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
 
 batch_size = 128
-chunk_size = 5_000
+chunk_size = 5000
+block_size = 300
 
 rdataframe = ROOT.RDataFrame(tree_name, file_name)
-
-target = "Type"
+target = ["Type"]
 
 # Returns two TF.Dataset for training and validation batches.
 ds_train, ds_valid = ROOT.TMVA.Experimental.CreateTFDatasets(
     rdataframe,
-    batch_size,
+    batch_size,    
     chunk_size,
-    validation_split=0.3,
-    target=target,
+    block_size,        
+    target = target,
+    validation_split = 0.3,
+    shuffle = True,
+    drop_remainder = True
 )
 
 num_of_epochs = 2
@@ -61,9 +64,10 @@ model = tf.keras.Sequential(
         tf.keras.layers.Dense(1, activation=tf.nn.sigmoid),
     ]
 )
+
 loss_fn = tf.keras.losses.BinaryCrossentropy()
 model.compile(optimizer="adam", loss=loss_fn, metrics=["accuracy"])
 
-# Train model
 model.fit(ds_train_repeated, steps_per_epoch=train_batches_per_epoch, validation_data=ds_valid_repeated,\
           validation_steps=validation_batches_per_epoch, epochs=num_of_epochs)
+
