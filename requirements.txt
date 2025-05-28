@@ -20,8 +20,10 @@ numba>=0.48
 cffi>=1.9.1
 
 # Notebooks: ROOT C++ kernel
-notebook>=4.4.1
+IPython
+jupyter
 metakernel>=0.20.0
+notebook>=4.4.1
 
 # Distributed RDataFrame
 pyspark>=2.4 # Spark backend
@@ -33,6 +35,11 @@ ipywidgets
 
 # Unified Histogram Interface (UHI)
 uhi
+
+# For testing
+nbconvert>=7.4.0
+pytest
+setuptools
 
 # Look for CPU-only versions of PyTorch to avoid pulling CUDA in the CI docker images.
 -f https://download.pytorch.org/whl/cpu/torch_stable.html
