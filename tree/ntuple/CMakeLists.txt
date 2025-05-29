@@ -64,6 +64,7 @@ SOURCES
   src/RFieldVisitor.cxx
   src/RMiniFile.cxx
   src/RNTuple.cxx
+  src/RNTupleClassicBrowse.cxx
   src/RNTupleDescriptor.cxx
   src/RNTupleDescriptorFmt.cxx
   src/RNTupleFillContext.cxx
