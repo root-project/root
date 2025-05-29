@@ -383,11 +383,11 @@ jobs:
           - image: alma9
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF", "builtin_zlib=ON", "builtin_zstd=ON"]
           - image: alma9
             is_special: true
             property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
             architecture: ARM64
           - image: alma9-clang
             is_special: true
