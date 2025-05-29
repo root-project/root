@@ -1053,10 +1053,10 @@ void TBranchElement::Browse(TBrowser* b)
                // we can only find out asking the streamer given our ID
                TStreamerElement *element=nullptr;
                TClass* clsub=nullptr;
-               auto infoimp = (fID >= 0) ? GetInfoImp() : nullptr;
-               if (infoimp
-                   && infoimp->IsCompiled()
-                   && ((element=infoimp->GetElement(fID)))
+               auto info = (fID >= 0) ? GetInfoImp() : nullptr;
+               if (info
+                   && info->IsCompiled()
+                   && ((element=info->GetElement(fID)))
                    && ((clsub=element->GetClassPointer())))
                   cl=clsub;
             }
@@ -3042,9 +3042,9 @@ T TBranchElement::GetTypedValue(Int_t j, Int_t len, bool subarr) const
          return GetInfoImp()->GetTypedValueSTLP<T>(((TBranchElement*) this)->GetCollectionProxy(), prID, j/len, j%len, fOffset);
       }
    } else {
-      auto infoimp = GetInfoImp();
-      if (infoimp) {
-         return infoimp->GetTypedValue<T>(object, prID, j, -1);
+      auto info = GetInfoImp();
+      if (info) {
+         return info->GetTypedValue<T>(object, prID, j, -1);
       }
       return 0;
    }
@@ -3058,12 +3058,12 @@ void* TBranchElement::GetValuePointer() const
 {
    ValidateAddress();
 
-   TStreamerInfo *infoimp = nullptr;
+   TStreamerInfo *info = nullptr;
    Int_t prID = fID;
    char *object = fObject;
    if (TestBit(kCache)) {
-      infoimp = GetInfoImp();
-      if (infoimp->GetElements()->At(fID)->TestBit(TStreamerElement::kRepeat)) {
+      info = GetInfoImp();
+      if (info->GetElements()->At(fID)->TestBit(TStreamerElement::kRepeat)) {
          prID = fID+1;
       } else if (fOnfileObject) {
          object = fOnfileObject->GetObjectAt(0);
@@ -3116,10 +3116,10 @@ void* TBranchElement::GetValuePointer() const
       return object;
    } else {
       //return GetInfoImp()->GetValue(object,fID,j,-1);
-      if (!infoimp)
-         infoimp = GetInfoImp();
-      if (!infoimp || !object) return nullptr;
-      char **val = (char**)(object+infoimp->TStreamerInfo::GetElementOffset(prID));
+      if (!info)
+         info = GetInfoImp();
+      if (!info || !object) return nullptr;
+      char **val = (char**)(object+info->TStreamerInfo::GetElementOffset(prID));
       return *val;
    }
 }
@@ -3179,8 +3179,8 @@ void TBranchElement::InitializeOffsets()
          return;
       }
       // Make sure we can instantiate our class streamer info.
-      TStreamerInfo *infoimp = GetInfoImp();
-      if (!infoimp) {
+      TStreamerInfo *info = GetInfoImp();
+      if (!info) {
          Warning("InitializeOffsets", "No streamer info available for branch: %s of class: %s", GetName(), fBranchClass.GetClass()->GetName());
          fInitOffsets = true;
          return;
@@ -3202,7 +3202,7 @@ void TBranchElement::InitializeOffsets()
          // member of a base class or a split class, in which case our
          // streamer info will be for our containing sub-object, while
          // we are actually a different type.
-         TVirtualStreamerInfo* si = infoimp;
+         TVirtualStreamerInfo* si = info;
          // Note: We tested to make sure the streamer info was available previously.
          if (!si->IsCompiled()) {
             Warning("InitializeOffsets", "Streamer info for branch: %s has no elements array!", GetName());
