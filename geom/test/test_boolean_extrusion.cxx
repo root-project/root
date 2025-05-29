@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <TGeoManager.h>
+#include <TROOT.h>
 
 /**
    Test to verify that child volumes spanning over more than one component of their Boolean parent
@@ -9,6 +10,9 @@
 */
 TEST(Geometry, NoExtrusionInUnionSpan)
 {
+   // switch web display while TGeoChecker instantiated via plain TGeoPainter
+   gROOT->SetWebDisplay("off");
+
    // import a GDML geometry with a policone inside a union of two polycones and a tube
    auto geom = TGeoManager::Import("no_extrusion.gdml");
    EXPECT_NE(geom, nullptr);
