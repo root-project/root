@@ -110,3 +110,47 @@ void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
    // start browser
    fViewer->Show();
 }
+
+static int gWebGeomWarnCnt = 0;
+
+void RGeoPainter::CheckPoint(Double_t, Double_t, Double_t, Option_t *, Double_t)
+{
+   if (gWebGeomWarnCnt++ < 5)
+      Warning("CheckPoint", "Not implemented in web mode, run --web=off to activate TGeoChecker");
+}
+
+void RGeoPainter::CheckShape(TGeoShape *, Int_t, Int_t, Option_t *)
+{
+   if (gWebGeomWarnCnt++ < 5)
+      Warning("CheckShape", "Not implemented in web mode, run --web=off to activate TGeoChecker");
+}
+
+void RGeoPainter::CheckBoundaryErrors(Int_t, Double_t)
+{
+   if (gWebGeomWarnCnt++ < 5)
+      Warning("CheckBoundaryErrors", "Not implemented in web mode, run --web=off to activate TGeoChecker");
+}
+
+void RGeoPainter::CheckBoundaryReference(Int_t)
+{
+   if (gWebGeomWarnCnt++ < 5)
+      Warning("CheckBoundaryReference", "Not implemented in web mode, run --web=off to activate TGeoChecker");
+}
+
+void RGeoPainter::CheckGeometryFull(Bool_t, Bool_t, Int_t, const Double_t *)
+{
+   if (gWebGeomWarnCnt++ < 5)
+      Warning("CheckGeometryFull", "Not implemented in web mode, run --web=off to activate TGeoChecker");
+}
+
+void RGeoPainter::CheckGeometry(Int_t, Double_t, Double_t, Double_t) const
+{
+   if (gWebGeomWarnCnt++ < 5)
+      Warning("CheckGeometry", "Not implemented in web mode, run --web=off to activate TGeoChecker");
+}
+
+void RGeoPainter::CheckOverlaps(const TGeoVolume *, Double_t, Option_t *) const
+{
+   if (gWebGeomWarnCnt++ < 5)
+      Warning("CheckOverlaps", "Not implemented in web mode, run --web=off to activate TGeoChecker");
+}
