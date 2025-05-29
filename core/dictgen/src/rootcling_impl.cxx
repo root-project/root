@@ -4224,7 +4224,7 @@ int RootClingMain(int argc,
 
    const char *includeDir = gDriverConfig->fTROOT__GetIncludeDir();
    if (includeDir) {
-       clingArgs.push_back(std::string("-I") + includeDir);
+       clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(includeDir));
    }
 
    std::vector<std::string> pcmArgs;
