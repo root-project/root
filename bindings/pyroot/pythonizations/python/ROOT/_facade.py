@@ -25,7 +25,7 @@ class PyROOTConfiguration(object):
 class _gROOTWrapper(object):
     """Internal class to manage lookups of gROOT in the facade.
     This wrapper calls _finalSetup on the facade when it
-    receives a lookup, unless the lookup is for SetBatch.
+    receives a lookup, with variations if the lookup is for SetBatch.
     This allows to evaluate the command line parameters
     before checking if batch mode is on in _finalSetup
     """
@@ -35,8 +35,8 @@ class _gROOTWrapper(object):
         self.__dict__["_gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
     def __getattr__(self, name):
-        if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
-            self._facade._finalSetup()
+        if self._facade.__dict__["gROOT"] != self._gROOT:
+            self._facade._finalSetup(name == "SetBatch")
         return getattr(self._gROOT, name)
 
     def __setattr__(self, name, value):
@@ -181,7 +181,11 @@ class ROOTFacade(types.ModuleType):
         for name, target in executor_aliases.items():
             CPyCppyyRegisterExecutorAlias(name, target)
 
-    def _finalSetup(self):
+    def _finalSetup(self, setBatch = False):
+        if setBatch:
+            if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
+               self.app.init_graphics()
+            return
         # Prevent this method from being re-entered through the gROOT wrapper
         self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
