@@ -4697,7 +4697,7 @@ template Long64_t TStreamerInfo::GetTypedValueSTLP(TVirtualCollectionProxy *cont
 template LongDouble_t TStreamerInfo::GetTypedValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, int k, Int_t eoffset) const;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return value of element i in object number j in a virtual table (STL) and eventually
+/// Return value of element i in object number j in a pointer to STL container and eventually
 /// element k in a sub-array.
 
 template <typename T>
