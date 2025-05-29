@@ -23,6 +23,10 @@ An example of using this interface is the %ROOT tutorial _tutorials/math/Numeric
 or the Minuit2 test program
 [<tt>testMinimize.cxx</tt>](https://github.com/cxx-hep/root-cern/blob/master/math/minuit2/test/testMinimize.cxx).
 
+\note Some gradient calculations, such as `Numerical2PGradientCalculator` support parallelization
+via OpenMP. To profit from this acceleration, one needs to build ROOT using `minuit2_omp=ON`
+and later call GradientCalculator::SetParallelOMP()
+
 A standalone version of Minuit2 (independent of %ROOT) can be easily built and installed using `CMake`.
 See this [`README`](https://github.com/root-project/root/blob/master/math/minuit2/README.md)
 for the instructions on how to get the sources, building and installing a stand-alone Minuit2.

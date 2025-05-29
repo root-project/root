@@ -48,7 +48,7 @@ namespace ROOT {
 /**
    Abstract Minimizer class, defining  the interface for the various minimizer
    (like Minuit2, Minuit, GSL, etc..) in ROOT.
-   Plug-in's exist in ROOT to be able to instantiate the derived classes without linking the library
+   Plug-ins exist in ROOT to be able to instantiate the derived classes without linking the library
    using the static function ROOT::Math::Factory::CreateMinimizer.
 
    Here is the list of all possible minimizers and their respective methods (algorithms) that can be instantiated:
@@ -69,6 +69,10 @@ namespace ROOT {
      - Minimize
      - Fumili (Fumili2)
      - Scan
+
+   \note Some Minuit2 gradient calculations, such as `Numerical2PGradientCalculator` support parallelization
+   via OpenMP. To profit from this acceleration, one needs to build ROOT using `minuit2_omp=ON`
+   and later call GradientCalculator::SetParallelOMP()
 
    - Fumili (class TFumiliMinimizer)
 
