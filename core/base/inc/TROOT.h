@@ -118,7 +118,7 @@ protected:
 
    TString         fConfigOptions;                    ///< ROOT ./configure set build options
    TString         fConfigFeatures;                   ///< ROOT ./configure detected build features
-   TString         fVersion;                          ///< ROOT version (from CMZ VERSQQ) ex 0.05/01
+   TString         fVersion;                          ///< ROOT version as TString, example: 0.05.01
    Int_t           fVersionInt = 0;                   ///< ROOT version in integer format (501)
    Int_t           fVersionCode = 0;                  ///< ROOT version code as used in RVersion.h
    Int_t           fVersionDate = 0;                  ///< Date of ROOT version (ex 951226)
