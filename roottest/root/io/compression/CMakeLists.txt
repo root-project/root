@@ -1,13 +1,9 @@
 ROOTTEST_GENERATE_DICTIONARY(IoCompressionDict Event.h
   LINKDEF EventLinkDef.h
-  NO_ROOTMAP NO_CXXMODULE
   FIXTURES_SETUP io-compression-dict)
 
 # The libgen library target is automatically created by ROOTTEST_GENERATE_DICTIONARY
 target_sources(IoCompressionDictlibgen PRIVATE Event.cxx)
-
-# For TLorentzVector
-target_link_libraries(IoCompressionDictlibgen Physics)
 
 ROOTTEST_GENERATE_EXECUTABLE(IoCompressionGenerator
   MainEvent.cxx
