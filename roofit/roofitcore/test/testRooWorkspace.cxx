@@ -302,8 +302,19 @@ TEST(RooWorkspace, RooWorkspaceHandleCopyWithStreamer)
 
    auto mc2 = static_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
    EXPECT_EQ(mc2->GetWS(), &ws2);
+}
 
-   file->Close();
+/// Like the RooWorkspaceHandleCopyWithStreamer test, but with a workspace that
+/// contains the old ModelConfig class version 6, where the reference to the
+/// owning workspace was still a TRef and not a transient raw pointer. So this
+/// test checks if the schema evolution works correctly.
+TEST(RooWorkspace, RooWorkspaceHandleCopyWithStreamerFromModelConfig6)
+{
+   std::unique_ptr<TFile> file(TFile::Open("workspace_with_model_config_classdef_6.root", "read"));
+   auto &ws2 = *file->Get<RooWorkspace>("workspace");
+
+   auto mc2 = static_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   EXPECT_EQ(mc2->GetWS(), &ws2);
 }
 
 // This test covers an issue that was reported after updates to ROOT IO:
