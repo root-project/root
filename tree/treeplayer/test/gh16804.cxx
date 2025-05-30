@@ -212,7 +212,6 @@ TEST_F(RegresssionGH16804, WrongBranchName)
    EXPECT_EQ(wrongBranchRetBeforeLoadTree, 5);
 
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> wrong");
    diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
    diagRAII.requiredDiag(kError, "TTree::SetBranchAddress", "unknown branch -> wrong");
 
@@ -351,32 +350,8 @@ TEST_F(RegresssionGH16804, TTreeTwoFriendTChains)
    std::iota(expectedValue.begin(), expectedValue.end(), 100);
    std::iota(expectedA.begin(), expectedA.end(), 200);
    std::iota(expectedB.begin(), expectedB.end(), 300);
+
    auto nEntries = mainTree->GetEntriesFast();
-
-   // FIXME: The following diagnostics should not happen. This is the situation:
-   // We have main tree with branch "mainBranch", friend tree 1 with branches
-   // "index","value", friend tree 2 with branches "a","b". In the previous calls
-   // to SetBranchAddress, we registered *all* branches "index","value","a","b"
-   // as TChainElements of the two friend TChains. This has to be like this, since
-   // a priori we cannot know which branch belongs to which TChain as the trees
-   // haven't been loaded yet (and SetBranchAddress does not trigger loading the first
-   // tree of a TChain). What ends up happening is that "index" and "value" are
-   // correctly paired with friend 1, as well as "a" and "b" with friend 2. But,
-   // crucially, friend 1 still has TChainElements for "a" and "b" and viceversa
-   // for friend 2. So, when calling LoadTree on friend 1, SetBranchStatus is
-   // called for all TChainElements, leading to friend 1 looking for branches
-   // "a" and "b" and not being able to find them. Again, the converse happens
-   // for friend 2. This happens at every file boundary, so the errors are printed
-   // 2 times for friend 1 and 4 times for friend 2. It is yet unclear how this
-   // could be prevented. Note that the values are properly found and loaded for
-   // all branches of all friends and in fact the EXPECT_EQ calls in the
-   // following for loop all pass.
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> a");
-   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> b");
-   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> index");
-   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> value");
-
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       mainTree->GetEntry(i);
       EXPECT_EQ(expectedMainBranch[i], mainBranch);
@@ -384,6 +359,54 @@ TEST_F(RegresssionGH16804, TTreeTwoFriendTChains)
       EXPECT_EQ(expectedValue[i], value);
       EXPECT_EQ(expectedA[i], a);
       EXPECT_EQ(expectedB[i], b);
+   }
+
+   // Now test with TTree::Scan
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(mainTree->GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"regression_16804_ttreetwofriendtchains_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         mainTree->Scan("mainBranch:index:value:a:b");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(************************************************************************
+*    Row   * mainBranc *     index *     value *         a *         b *
+************************************************************************
+*        0 *        19 *         0 *       100 *       200 *       300 *
+*        1 *        18 *         1 *       101 *       201 *       301 *
+*        2 *        17 *         2 *       102 *       202 *       302 *
+*        3 *        16 *         3 *       103 *       203 *       303 *
+*        4 *        15 *         4 *       104 *       204 *       304 *
+*        5 *        14 *         5 *       105 *       205 *       305 *
+*        6 *        13 *         6 *       106 *       206 *       306 *
+*        7 *        12 *         7 *       107 *       207 *       307 *
+*        8 *        11 *         8 *       108 *       208 *       308 *
+*        9 *        10 *         9 *       109 *       209 *       309 *
+*       10 *         9 *        10 *       110 *       210 *       310 *
+*       11 *         8 *        11 *       111 *       211 *       311 *
+*       12 *         7 *        12 *       112 *       212 *       312 *
+*       13 *         6 *        13 *       113 *       213 *       313 *
+*       14 *         5 *        14 *       114 *       214 *       314 *
+*       15 *         4 *        15 *       115 *       215 *       315 *
+*       16 *         3 *        16 *       116 *       216 *       316 *
+*       17 *         2 *        17 *       117 *       217 *       317 *
+*       18 *         1 *        18 *       118 *       218 *       318 *
+*       19 *         0 *        19 *       119 *       219 *       319 *
+************************************************************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
 }
 
