@@ -8613,7 +8613,7 @@ Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TCla
       int status{kMissingBranch};
       for (auto *fe : TRangeDynCast<TFriendElement>(fFriends)) {
          if (auto *tree = fe->GetTree()) {
-            status = tree->SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
+            status = tree->SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr, /*delayTChainElement*/ true);
             // We exit early from visiting all friends only if a perfect match was found
             if (status == kMatch)
                return status;
@@ -8631,6 +8631,12 @@ Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TCla
       *ptr = nullptr;
    Error("SetBranchAddress", "unknown branch -> %s", bname);
    return kMissingBranch;
+}
+
+Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                              bool isptr, bool)
+{
+   return SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

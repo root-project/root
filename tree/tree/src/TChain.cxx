@@ -1746,10 +1746,19 @@ Long64_t TChain::LoadTree(Long64_t entry)
    TIter next(fStatus);
    while ((element = (TChainElement*) next())) {
       Int_t status = element->GetStatus();
-      // Only set the branch status if it has a value provided
-      // by the user
-      if (status != -1)
-         fTree->SetBranchStatus(element->GetName(), status);
+      if (element->IsDelayed()) {
+         // In case we don't want spurious error message about missing branch in this tree
+         UInt_t dummyFound = std::numeric_limits<UInt_t>::max();
+         // Only set the branch status if it has a value provided
+         // by the user
+         if (status != -1)
+            fTree->SetBranchStatus(element->GetName(), status, &dummyFound);
+      } else {
+         // Only set the branch status if it has a value provided
+         // by the user
+         if (status != -1)
+            fTree->SetBranchStatus(element->GetName(), status);
+      }
    }
 
    // Set the branch addresses for the newly opened file.
@@ -3181,4 +3190,15 @@ void TChain::Streamer(TBuffer& b)
 
 void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
 {
+}
+
+Int_t TChain::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                               bool isptr, bool delayTChainElement)
+{
+   auto ret = SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
+   auto *element = static_cast<TChainElement *>(fStatus->FindObject(bname));
+   // The previous call to SetBranchAddress must have created the element
+   assert(element);
+   element->IsDelayed(delayTChainElement);
+   return ret;
 }
