@@ -2457,9 +2457,7 @@ Int_t TFormula::Compile(const char *expression)
 
 
    if (err) { fNdim = 0; return 1; }
-   //   Convert(5);
-   //
-   //MI change
+
    Optimize();
 
    return 0;
