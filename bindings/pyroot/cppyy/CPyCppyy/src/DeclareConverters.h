@@ -36,7 +36,7 @@ public:                                                                      \
 class name##Converter : public base##Converter {                             \
 public:                                                                      \
     PyObject* FromMemory(void*) override;                                    \
-    bool ToMemory(PyObject*, void*, PyObject* = nullptr); override           \
+    bool ToMemory(PyObject*, void*, PyObject* = nullptr) override;           \
 };                                                                           \
                                                                              \
 class Const##name##RefConverter : public Converter {                         \
