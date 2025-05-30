@@ -33,7 +33,13 @@ public:
       fShape(shape),
       fValues(values),
       fAttrType(type)
-      {
+      {  
+         fKind = OperatorKind::CONSTANT;
+         if (!fNX.empty()) {
+            // case of ConstantOfShape (since no inputs in case of Constant operator)
+            fIsConstantOfShape  = true;
+            fKind = OperatorKind::CONSTANTOFSHAPE;
+         }
          fInputTensorNames = { };
          fOutputTensorNames = { };
       }
@@ -50,9 +56,9 @@ public:
    void Initialize(RModel& model) override {
        //input must be a graph input, or already initialized intermediate tensor
       size_t length = 1;
+      
+      // constant of shape case
       if (!fNX.empty()) {
-         // case of ConstantOfShape (since no inputs in case of Constant operator)
-         fIsConstantOfShape  = true;
          if (model.CheckIfTensorAlreadyExist(fNX) == false){
            throw std::runtime_error("TMVA SOFIE ConstantOfShape Op Input Tensor is not found in model");
          }

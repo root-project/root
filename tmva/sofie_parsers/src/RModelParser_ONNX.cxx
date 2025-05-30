@@ -676,7 +676,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    } while ((int)nodesOrder.size() < graph.node_size());
 
 
-   // find list of children for each operator (used for fusing oiperators)
+   // find list of children for each operator (used for fusing operators)
    std::vector<std::vector<int>> nodesChildren(graph.node_size());
 
    for (int k = 0; k < graph.node_size(); k++) {
