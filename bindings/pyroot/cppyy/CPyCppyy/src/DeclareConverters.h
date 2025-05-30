@@ -20,8 +20,8 @@ namespace {
 #define CPPYY_DECLARE_BASIC_CONVERTER(name)                                  \
 class name##Converter : public Converter {                                   \
 public:                                                                      \
-    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);      \
-    virtual PyObject* FromMemory(void*);                                     \
+    bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;     \
+    PyObject* FromMemory(void*) override;                                    \
     virtual bool ToMemory(PyObject*, void*, PyObject* = nullptr);            \
 };                                                                           \
                                                                              \
