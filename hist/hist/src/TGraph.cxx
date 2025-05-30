@@ -2445,7 +2445,7 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph *, Int_t, Int_t) /*=TGraph:
    // Create a vector to store the indices of the graph data points.
    // We use std::vector<Int_t> instead of std::vector<ULong64_t> to match the input type
    // required by the comparison operator's signature provided as `greaterfunc`
-   std::vector<Int_t> sorting_indices(fNpoints);
+   std::vector<int> sorting_indices(fNpoints);
    std::iota(sorting_indices.begin(), sorting_indices.end(), 0);
 
    // Sort the indices using the provided comparison function
@@ -2453,7 +2453,7 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph *, Int_t, Int_t) /*=TGraph:
    // is not standard-compliant until LLVM 14 which caused errors on the mac nodes
    // of our CI, related issue: https://github.com/llvm/llvm-project/issues/21211
    std::stable_sort(sorting_indices.begin() + low, sorting_indices.begin() + high + 1,
-             [&](const auto &left, const auto &right) { return greaterfunc(this, left, right) != ascending; });
+             [&](int left, int right) { return left != right && greaterfunc(this, left, right) != ascending; });
 
    Int_t numSortedPoints = high - low + 1;
    UpdateArrays(sorting_indices, numSortedPoints, low);
