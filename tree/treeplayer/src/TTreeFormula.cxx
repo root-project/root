@@ -5797,7 +5797,7 @@ bool TTreeFormula::SwitchToFormLeafInfo(Int_t code)
    return true;
 }
 
-Bool_t TTreeFormula::AnalyzePrimitive(TString&, TObjArray&, Int_t&, Int_t )
+Bool_t TTreeFormula::AnalyzePrimitive(TString &, TObjArray &, Int_t &, Int_t)
 {
   // TTreeFormula version of AnalyzePrimitive(). Does nothing. Predefined
   // primitive functions are not supported by TTreeFormula since they
