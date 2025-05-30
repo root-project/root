@@ -472,10 +472,10 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
 /// Check if the given string matches a defined function primitive
 /// \see TFormula::AnalyzeFunction
-Bool_t TFormula::AnalyzePrimitive(TString &chaine, TObjArray &argArr, Int_t &err, Int_t offset)
+Bool_t TFormula::AnalyzePrimitive(TString &chain, TObjArray &argArr, Int_t &err, Int_t offset)
 {
 
-   TString cbase(chaine);
+   TString cbase(chain);
    Int_t args_paran = cbase.First("(");
    if (args_paran>0){
       cbase[args_paran]=0;

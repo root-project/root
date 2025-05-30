@@ -96,7 +96,7 @@ protected:
    TFuncG               fOptimal; //!pointer to optimal function
 
    Int_t             PreCompile();
-   virtual Bool_t    AnalyzePrimitive(TString &chaine, TObjArray &args, Int_t &err, Int_t offset=0);
+   virtual Bool_t    AnalyzePrimitive(TString &chain, TObjArray &args, Int_t &err, Int_t offset=0);
    virtual Bool_t    CheckOperands(Int_t operation, Int_t &err);
    virtual Bool_t    CheckOperands(Int_t leftoperand, Int_t rightoperartion, Int_t &err);
    virtual Bool_t    StringToNumber(Int_t code);
