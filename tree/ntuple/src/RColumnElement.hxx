@@ -1514,9 +1514,9 @@ public:
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
 
-   bool IsMappable() const { return kIsMappable; }
-   void Pack(void *, const void *, std::size_t) const {}
-   void Unpack(void *, const void *, std::size_t) const {}
+   bool IsMappable() const final { return kIsMappable; }
+   void Pack(void *, const void *, std::size_t) const final {}
+   void Unpack(void *, const void *, std::size_t) const final {}
 
    RIdentifier GetIdentifier() const final
    {
