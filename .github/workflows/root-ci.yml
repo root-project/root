@@ -366,7 +366,7 @@ jobs:
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: alma8
           - image: alma9
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           - image: alma10
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
