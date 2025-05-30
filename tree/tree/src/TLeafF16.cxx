@@ -105,7 +105,8 @@ void TLeafF16::Import(TClonesArray *list, Int_t n)
       if (clone)
          memcpy(&fValue[j], clone + fOffset, 4 * fLen);
       else
-         memcpy(&fValue[j], &kFloatUndefined, 4 * fLen);
+         for (Int_t k = 0; k < fLen; ++k)
+            fValue[j + k] = kFloatUndefined;
       j += fLen;
    }
 }
