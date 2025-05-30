@@ -28,7 +28,7 @@ class TVirtualMapFile : public TObject {
 public:
    virtual void Close(Option_t *option = "") = 0;
 
-   ClassDef(TVirtualMapFile, 0); // Base of TMapFile
+   ClassDefOverride(TVirtualMapFile, 0); // Base of TMapFile
 };
 
 #endif
