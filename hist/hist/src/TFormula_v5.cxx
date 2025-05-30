@@ -147,8 +147,7 @@ TFormula::TFormula()
    fNstring= 0;
    fNames  = nullptr;
    fNval   = 0;
-   //
-   //MI change
+
    fNOperOptimized = 0;
    fExprOptimized  = nullptr;
    fOperOptimized  = nullptr;
@@ -175,8 +174,7 @@ TFormula::TFormula(const char *name,const char *expression) :
    fNstring= 0;
    fNames  = nullptr;
    fNval   = 0;
-   //
-   //MI change
+
    fNOperOptimized = 0;
    fExprOptimized  = nullptr;
    fOperOptimized  = nullptr;
@@ -477,9 +475,6 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 Bool_t TFormula::AnalyzePrimitive(TString &chaine, TObjArray &argArr, Int_t &err, Int_t offset)
 {
 
-   // MI change - extended space of functions
-   // not forward compatible change
-   //
    TString cbase(chaine);
    Int_t args_paran = cbase.First("(");
    if (args_paran>0){
@@ -488,7 +483,7 @@ Bool_t TFormula::AnalyzePrimitive(TString &chaine, TObjArray &argArr, Int_t &err
 
    ROOT::v5::TFormulaPrimitive *prim = ROOT::v5::TFormulaPrimitive::FindFormula(cbase, args_paran>0 ? cbase.Data() + args_paran + 1 : (const char*)nullptr);
    if (prim) {
-      // TO BE DONE ALSO IN TTREFORMULA - temporary fix MI
+      // TO BE DONE ALSO IN TTREFORMULA - temporary fix
       // Analyze the arguments
       TIter next(&argArr);
       TObjString *objstr;
@@ -2248,8 +2243,7 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    if (fParams) { delete [] fParams; fParams = nullptr;}
    fFunctions.Delete();
    fLinearParts.Delete();
-   //
-   //MI change
+
    if (fPredefined)    { delete [] fPredefined;    fPredefined    = nullptr;}
    if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = nullptr;}
    if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = nullptr;}
@@ -2507,10 +2501,7 @@ void TFormula::Copy(TObject &obj) const
    while ( (fobj = next()) ) {
       ((TFormula&)obj).fFunctions.Add( fobj->Clone() );
    }
-   //
-   // MI change
-   //
-   //
+
    if (fNoper) {
       if(fExprOptimized) {
          ((TFormula&)obj).fExprOptimized   = new TString[fNoper];
@@ -2642,9 +2633,7 @@ Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
       if (fNdim < 4) fNdim = 4;
       return 3;
    }
-   // MI change
-   // extended defined variable (MI)
-   //
+
    if (chaine.Data()[0]=='x'){
       if (chaine.Data()[1]=='[' && chaine.Data()[3]==']'){
          const char ch0 = '0';
@@ -3293,8 +3282,7 @@ void TFormula::Print(Option_t *) const
       Printf(" fExpr[%d] = %s  action = %d action param = %d ",
              i,(const char*)fExpr[i],GetAction(i),GetActionParam(i));
    }
-   //MI change
-   //
+
    if (fNOperOptimized>0){
       Printf("Optimized expression");
       for (i=0;i<fNOperOptimized;i++) {
