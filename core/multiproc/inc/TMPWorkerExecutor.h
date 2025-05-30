@@ -170,7 +170,7 @@ class TMPWorkerExecutor<F, T, void> : public TMPWorker {
 public:
    TMPWorkerExecutor(F func, const std::vector<T> &args) : TMPWorker(), fFunc(func), fArgs(std::move(args)) {}
    ~TMPWorkerExecutor() {}
-   void HandleInput(MPCodeBufPair &msg) ///< Execute instructions received from a TProcessExecutor client
+   void HandleInput(MPCodeBufPair &msg) override ///< Execute instructions received from a TProcessExecutor client
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();
