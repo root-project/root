@@ -46,10 +46,10 @@ public:
     VoidArrayConverter(bool keepControl = true) { fKeepControl = keepControl; }
 
 public:
-    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
-    virtual PyObject* FromMemory(void* address);
-    virtual bool ToMemory(PyObject* value, void* address, PyObject* ctxt = nullptr);
-    virtual bool HasState() { return true; }
+    bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
+    PyObject* FromMemory(void* address) override;
+    bool ToMemory(PyObject* value, void* address, PyObject* ctxt = nullptr) override;
+    bool HasState() override { return true; }
 
 protected:
     virtual bool GetAddressSpecialCase(PyObject* pyobject, void*& address);
@@ -66,9 +66,9 @@ public:
         VoidArrayConverter(keepControl), fClass(klass) {}
 
 public:
-    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
-    virtual PyObject* FromMemory(void* address);
-    virtual bool ToMemory(PyObject* value, void* address, PyObject* ctxt = nullptr);
+    bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
+    PyObject* FromMemory(void* address) override;
+    bool ToMemory(PyObject* value, void* address, PyObject* ctxt = nullptr) override;
 
 protected:
     Cppyy::TCppType_t fClass;
@@ -79,7 +79,7 @@ public:
     using InstancePtrConverter<false>::InstancePtrConverter;
 
 protected:
-    virtual bool GetAddressSpecialCase(PyObject*, void*&) { return false; }
+    bool GetAddressSpecialCase(PyObject*, void*&) override { return false; }
 };
 
 } // namespace CPyCppyy
