@@ -114,3 +114,10 @@ bool RooConstraintSum::setData(RooAbsData const& data, bool /*cloneData=true*/) 
   }
   return true;
 }
+
+void RooConstraintSum::fillVariableGroups(RooFit::VariableGroups &out) const
+{
+   for (RooAbsArg *arg : _set1) {
+      arg->fillVariableGroups(out);
+   }
+}
