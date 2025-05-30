@@ -136,8 +136,11 @@ void TLeafI::Import(TClonesArray *list, Int_t n)
    char *clone;
    for (Int_t i=0;i<n;i++) {
       clone = (char*)list->UncheckedAt(i);
-      if (clone) memcpy(&fValue[j],clone + fOffset, 4*fLen);
-      else       memcpy(&fValue[j],&kIntUndefined,  4*fLen);
+      if (clone)
+         memcpy(&fValue[j],clone + fOffset, 4*fLen);
+      else
+         for (Int_t k = 0; k < fLen; ++k)
+            fValue[j + k] = kIntUndefined;
       j += fLen;
    }
 }

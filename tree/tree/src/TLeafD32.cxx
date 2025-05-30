@@ -101,7 +101,8 @@ void TLeafD32::Import(TClonesArray *list, Int_t n)
       if (clone)
          memcpy(&fValue[j], clone + fOffset, 8 * fLen);
       else
-         memcpy(&fValue[j], &kDoubleUndefined, 8 * fLen);
+         for (Int_t k = 0; k < fLen; ++k)
+            fValue[j + k] = kDoubleUndefined;
       j += fLen;
    }
 }
