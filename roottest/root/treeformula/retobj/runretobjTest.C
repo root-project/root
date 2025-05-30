@@ -7,8 +7,8 @@ gSystem->Load("libTreePlayer");
 gROOT->ProcessLine(".L helper.C");
 #endif
 
-gSystem->Load("libEvent");
-TFile *Event = TFile::Open("Event.new.split0.root");
+gSystem->Load("libTreeFormulaRetobjGeneration");
+TFile *Event = TFile::Open("Event.root");
 #ifdef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine("TTree *tree = (TTree*)gFile->Get(\"T\"); TTreeFormula *tf;TObject * o;");
    gROOT->ProcessLine(".L helper.C");
