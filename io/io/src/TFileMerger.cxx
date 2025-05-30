@@ -657,10 +657,18 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
                   if (key2) {
                      hobj = key2->ReadObj();
                      if (!hobj) {
-                        Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
-                           keyname, keytitle, nextsource->GetName());
-                              nextsource = (TFile*)sourcelist->After(nextsource);
-                              return kTRUE;
+                        switch (fErrBehavior) {
+                        case EErrorBehavior::kFailOnError:
+                           Error("MergeRecursive", "could not read object for key {%s, %s}; in file %s", keyname,
+                                 keytitle, nextsource->GetName());
+                           nextsource = (TFile *)sourcelist->After(nextsource);
+                           return kFALSE;
+                        case EErrorBehavior::kSkipOnError:
+                           Warning("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                   keyname, keytitle, nextsource->GetName());
+                           nextsource = (TFile *)sourcelist->After(nextsource);
+                           return kTRUE;
+                        }
                      }
                      todelete.Add(hobj);
                   }
@@ -735,10 +743,18 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
                   if (key2) {
                      TObject *hobj = key2->ReadObj();
                      if (!hobj) {
-                        Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
-                              keyname, keytitle, nextsource->GetName());
-                        nextsource = (TFile*)sourcelist->After(nextsource);
-                        return kTRUE;
+                        switch (fErrBehavior) {
+                        case EErrorBehavior::kFailOnError:
+                           Error("MergeRecursive", "could not read object for key {%s, %s}; in file %s", keyname,
+                                 keytitle, nextsource->GetName());
+                           nextsource = (TFile *)sourcelist->After(nextsource);
+                           return kFALSE;
+                        case EErrorBehavior::kSkipOnError:
+                           Warning("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                   keyname, keytitle, nextsource->GetName());
+                           nextsource = (TFile *)sourcelist->After(nextsource);
+                           return kTRUE;
+                        }
                      }
                      // Set ownership for collections
                      if (hobj->InheritsFrom(TCollection::Class())) {
