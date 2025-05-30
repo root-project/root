@@ -585,3 +585,12 @@ More than 200 items were addressed for this release. The full list is:
   * [[ROOT-4663](https://its.cern.ch/jira/browse/4663)] - GetFromPipe() loses the return value
   * [[ROOT-4012](https://its.cern.ch/jira/browse/4012)] - TTree::SetAlias() fail to interpret the constant
   * [[ROOT-118](https://its.cern.ch/jira/browse/118)] - Implement support for access to nested objects
+
+## Release 6.36.02
+
+### Items addressed in this release
+
+* [#18665](https://github.com/root-project/root/issues/18665) - `TFileMerger`'s (and `hadd`'s) default behavior on encountering invalid/corrupt objects while merging has changed: previously the corrupt object would be skipped without aborting the merging process; now the merging process will abort by default. The "skip" behavior can be restored by:
+  * calling the new method `TFileMerger::SetErrorBehavior()` (if using `TFileMerger` directly), or
+  * using the `-k` flag if using `hadd`.
+ 
