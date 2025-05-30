@@ -112,6 +112,15 @@ void TListOfFunctionTemplates::AddAt(TObject *obj, Int_t idx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Insert object at location idx in the list, with options.
+
+void TListOfFunctionTemplates::AddAt(TObject *obj, Int_t idx, Option_t *opt)
+{
+   THashList::AddAt(obj, idx, opt);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Insert object after object after in the list.
 
 void TListOfFunctionTemplates::AddAfter(const TObject *after, TObject *obj)
@@ -130,6 +139,24 @@ void TListOfFunctionTemplates::AddAfter(TObjLink *after, TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list, with options.
+
+void TListOfFunctionTemplates::AddAfter(const TObject *after, TObject *obj, Option_t *opt)
+{
+   THashList::AddAfter(after, obj, opt);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list, with options.
+
+void TListOfFunctionTemplates::AddAfter(TObjLink *after, TObject *obj, Option_t *opt)
+{
+   THashList::AddAfter(after, obj, opt);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Insert object before object before in the list.
 
 void TListOfFunctionTemplates::AddBefore(const TObject *before, TObject *obj)
@@ -144,6 +171,24 @@ void TListOfFunctionTemplates::AddBefore(const TObject *before, TObject *obj)
 void TListOfFunctionTemplates::AddBefore(TObjLink *before, TObject *obj)
 {
    THashList::AddBefore(before, obj);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list, with options.
+
+void TListOfFunctionTemplates::AddBefore(const TObject *before, TObject *obj, Option_t *opt)
+{
+   THashList::AddBefore(before, obj, opt);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list, with options.
+
+void TListOfFunctionTemplates::AddBefore(TObjLink *before, TObject *obj, Option_t *opt)
+{
+   THashList::AddBefore(before, obj, opt);
    MapObject(obj);
 }
 
