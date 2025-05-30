@@ -248,7 +248,7 @@ public:
     }
     using SCharArrayConverter::SCharArrayConverter;
     bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
-    PyObject* FromMemory(void* address) override
+    PyObject* FromMemory(void* address) override;
     bool ToMemory(PyObject*, void*, PyObject* = nullptr) override;
 
 private:
