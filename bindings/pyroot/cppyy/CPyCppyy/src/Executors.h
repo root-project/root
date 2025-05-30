@@ -25,7 +25,7 @@ class RefExecutor : public Executor {
 public:
     RefExecutor() : fAssignable(nullptr) {}
     virtual bool SetAssignable(PyObject*);
-    virtual bool HasState() { return true; }
+    bool HasState() override { return true; }
 
 protected:
     PyObject* fAssignable;

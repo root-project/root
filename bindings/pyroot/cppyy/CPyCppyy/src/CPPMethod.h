@@ -50,30 +50,30 @@ public:
     virtual ~CPPMethod();
 
 public:
-    virtual PyObject* GetSignature(bool show_formalargs = true);
-    virtual PyObject* GetPrototype(bool show_formalargs = true);
-    virtual PyObject* GetTypeName();
-    virtual PyObject* Reflex(Cppyy::Reflex::RequestId_t request,
-                             Cppyy::Reflex::FormatId_t = Cppyy::Reflex::OPTIMAL);
+    PyObject* GetSignature(bool show_formalargs = true) override;
+    PyObject* GetPrototype(bool show_formalargs = true) override;
+    PyObject* GetTypeName() override;
+    PyObject* Reflex(Cppyy::Reflex::RequestId_t request,
+                             Cppyy::Reflex::FormatId_t = Cppyy::Reflex::OPTIMAL) override;
 
-    virtual int       GetPriority();
-    virtual bool      IsGreedy();
+    int       GetPriority() override;
+    bool      IsGreedy() override;
 
-    virtual int       GetMaxArgs();
-    virtual PyObject* GetCoVarNames();
-    virtual PyObject* GetArgDefault(int iarg, bool silent=true);
-    virtual bool      IsConst();
+    int       GetMaxArgs() override;
+    PyObject* GetCoVarNames() override;
+    PyObject* GetArgDefault(int iarg, bool silent=true) override;
+    bool      IsConst() override;
 
-    virtual PyObject* GetScopeProxy();
-    virtual Cppyy::TCppFuncAddr_t GetFunctionAddress();
+    PyObject* GetScopeProxy() override;
+    Cppyy::TCppFuncAddr_t GetFunctionAddress() override;
 
-    virtual PyCallable* Clone() { return new CPPMethod(*this); }
+    PyCallable* Clone() override { return new CPPMethod(*this); }
 
-    virtual int       GetArgMatchScore(PyObject* args_tuple);
+    int       GetArgMatchScore(PyObject* args_tuple) override;
 
 public:
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 
 protected:
     virtual bool ProcessArgs(PyCallArgs& args);
