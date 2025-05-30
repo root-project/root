@@ -183,10 +183,10 @@ class ROOTFacade(types.ModuleType):
 
     def _finalSetup(self, setBatch = False):
         if setBatch:
-           if self.__dict__["gROOT"] != cppyy.gbl.ROOT.GetROOT():
-              return
+            if self.__dict__["gROOT"] != cppyy.gbl.ROOT.GetROOT():
+                return
             if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
-               self.app.init_graphics()
+                self.app.init_graphics()
             return
         # Prevent this method from being re-entered through the gROOT wrapper
         self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
