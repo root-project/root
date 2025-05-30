@@ -13,10 +13,12 @@ ROOTTEST_ADD_TEST(NestedCollectionStreamerInfo
                   MACRO execNestedCollectionStreamerInfo.cxx+
                   OUTREF execNestedCollectionStreamerInfo.ref)
 
-ROOTTEST_ADD_TEST(RelativePath
-                  MACRO execRelativePath.C
-                  COPY_TO_BUILDDIR geodemo.root
-                  OUTREF execRelativePath.ref)
+if(geom)
+  ROOTTEST_ADD_TEST(RelativePath
+                    MACRO execRelativePath.C
+                    COPY_TO_BUILDDIR geodemo.root
+                    OUTREF execRelativePath.ref)
+endif()
 
 ROOTTEST_ADD_TEST(StreamerInfoHash
                   MACRO execStreamerInfoHash.cxx+

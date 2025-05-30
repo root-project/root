@@ -22,7 +22,9 @@ void exectsinclude(){
                    "TBrowser.h",
                    "TMatrixD.h",
                    "TF1.h",
+#if __has_include("TGeoSphere.h")
                    "TGeoSphere.h",
+#endif
 #if __has_include("TGLClip.h")
                    "TGLClip.h",
 #endif
