@@ -474,7 +474,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
 /// Check if the given string matches a defined function primitive
 /// \see TFormula::AnalyzeFunction
-Bool_t TFormula::AnalyzePrimitive(TString &chaine, TObjArray& argArr, Int_t &err, Int_t offset)
+Bool_t TFormula::AnalyzePrimitive(TString &chaine, TObjArray &argArr, Int_t &err, Int_t offset)
 {
 
    // MI change - extended space of functions
