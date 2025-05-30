@@ -78,14 +78,14 @@ class TestSelector : public TSelector {
 public:
    TParameter<int> fParameter;
 
-   virtual void SlaveBegin(TTree *) {}
-   virtual bool Process(Long64_t)
+   void SlaveBegin(TTree *) override {}
+   bool Process(Long64_t) override
    {
       auto newVal = fParameter.GetVal() + 1;
       fParameter.SetVal(newVal);
       return true;
    }
-   virtual void SlaveTerminate() { GetOutputList()->Add(fParameter.Clone()); }
+   void SlaveTerminate() override { GetOutputList()->Add(fParameter.Clone()); }
 };
 
 // See issue #15425
