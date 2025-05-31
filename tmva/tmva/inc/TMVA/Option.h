@@ -172,7 +172,7 @@ namespace TMVA {
    }
 
    template<class T>
-      inline TString TMVA::Option<T>::GetValue( Int_t ) const override {
+      inline TString TMVA::Option<T>::GetValue( Int_t ) const {
       std::stringstream str;
       str << std::scientific << this->Value();
       return str.str();
