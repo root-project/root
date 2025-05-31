@@ -76,10 +76,10 @@ Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt) overrd
 Bool_t Disconnect(const char *sig=nullptr,void *rcvr=nullptr,const char *slt=nullptr) overrd {return fQObject.Disconnect(sig,rcvr,slt);}\
 void HighPriority(const char *signal_name,const char *slot_name=nullptr) overrd {fQObject.HighPriority(signal_name,slot_name);}\
 void LowPriority(const char *signal_name,const char *slot_name=nullptr) overrd {fQObject.LowPriority(signal_name,slot_name);}\
-template <typename... T> void EmitVA(const char *signal_name, Int_t nargs, const T&... params) overrd \
+template <typename... T> void EmitVA(const char *signal_name, Int_t nargs, const T&... params) \
 { fQObject.EmitVA(signal_name,nargs,params...); } \
 void Emit(const char *signal){EmitVA(signal, /*nargs*/0);} \
-template <typename T> void Emit(const char *signal, const T& arg) overrd { EmitVA(signal, /*nargs*/ 1, arg); } \
+template <typename T> void Emit(const char *signal, const T& arg) { EmitVA(signal, /*nargs*/ 1, arg); } \
 
 #define RQ_OBJECT2(sender_class)\
 void Destroyed(){Emit("Destroyed()");}\
