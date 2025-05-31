@@ -106,7 +106,7 @@ private:
 
    double DoEval(const double *x) const override { return fFunc(fTransform->Transformation(x)); }
 
-   double DoDerivative(const double * /* x */, unsigned int /*icoord*/) const override
+   virtual double DoDerivative(const double * /* x */, unsigned int /*icoord*/) const
    {
       // not used
       throw std::runtime_error("FitTransformFunction::DoDerivative");
