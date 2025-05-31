@@ -43,18 +43,18 @@ public:
 
    virtual ~TDavixSystem();
 
-   virtual void FreeDirectory(void *dirp);
-   virtual const char *GetDirEntry(void *dirp);
-   virtual Bool_t ConsistentWith(const char *path, void *dirptr);
+   void FreeDirectory(void *dirp) override;
+   const char *GetDirEntry(void *dirp) override;
+   Bool_t ConsistentWith(const char *path, void *dirptr) override;
 
-   virtual Int_t GetPathInfo(const char* path, FileStat_t &buf);
-   virtual Bool_t IsPathLocal(const char *path);
+   Int_t GetPathInfo(const char* path, FileStat_t &buf) override;
+   Bool_t IsPathLocal(const char *path) override;
    virtual Int_t Locate(const char* path, TString &endurl);
-   virtual Int_t MakeDirectory(const char* dir);
-   virtual void *OpenDirectory(const char* dir);
-   virtual int Unlink(const char *path);
+   Int_t MakeDirectory(const char* dir) override;
+   void *OpenDirectory(const char* dir) override;
+   int Unlink(const char *path) override;
 
-   ClassDef(TDavixSystem, 0);
+   ClassDefOverride(TDavixSystem, 0);
 };
 
 #endif
