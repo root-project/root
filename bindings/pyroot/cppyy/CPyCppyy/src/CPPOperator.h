@@ -15,9 +15,9 @@ public:
     CPPOperator(Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method, const std::string& name);
 
 public:
-    virtual PyCallable* Clone() { return new CPPOperator(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPOperator(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 
 private:
     binaryfunc fStub;
