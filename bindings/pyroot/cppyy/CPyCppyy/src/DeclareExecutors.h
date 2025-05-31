@@ -19,8 +19,8 @@ namespace {
 #define CPPYY_DECL_EXEC(name)                                                \
 class name##Executor : public Executor {                                     \
 public:                                                                      \
-    virtual PyObject* Execute(                                               \
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);             \
+    PyObject* Execute(                                                       \
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;    \
 }
 
 // executors for built-ins
@@ -57,9 +57,9 @@ class name##ArrayExecutor : public Executor {                                \
     dims_t fShape;                                                           \
 public:                                                                      \
     name##ArrayExecutor(dims_t dims) : fShape(dims) {}                       \
-    virtual PyObject* Execute(                                               \
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);             \
-    virtual bool HasState() { return true; }                                 \
+    PyObject* Execute(                                                       \
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;    \
+    bool HasState() override { return true; }                                \
 }
 CPPYY_ARRAY_DECL_EXEC(Void);
 CPPYY_ARRAY_DECL_EXEC(Bool);
@@ -93,9 +93,9 @@ CPPYY_DECL_EXEC(STLWString);
 class InstancePtrExecutor : public Executor {
 public:
     InstancePtrExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-    virtual bool HasState() { return true; }
+    PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
+    bool HasState() override { return true; }
 
 protected:
     Cppyy::TCppType_t fClass;
@@ -104,9 +104,9 @@ protected:
 class InstanceExecutor : public Executor {
 public:
     InstanceExecutor(Cppyy::TCppType_t klass);
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-    virtual bool HasState() { return true; }
+    PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
+    bool HasState() override { return true; }
 
 protected:
     Cppyy::TCppType_t fClass;
@@ -124,8 +124,8 @@ CPPYY_DECL_EXEC(PyObject);
 #define CPPYY_DECL_REFEXEC(name)                                             \
 class name##RefExecutor : public RefExecutor {                               \
 public:                                                                      \
-    virtual PyObject* Execute(                                               \
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);             \
+    PyObject* Execute(                                                       \
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;    \
 }
 
 CPPYY_DECL_REFEXEC(Bool);
@@ -151,8 +151,8 @@ CPPYY_DECL_REFEXEC(STLString);
 class InstanceRefExecutor : public RefExecutor {
 public:
     InstanceRefExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
+    PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
 
 protected:
     Cppyy::TCppType_t fClass;
@@ -161,23 +161,23 @@ protected:
 class InstancePtrPtrExecutor : public InstanceRefExecutor {
 public:
     using InstanceRefExecutor::InstanceRefExecutor;
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
+    PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
 };
 
 class InstancePtrRefExecutor : public InstanceRefExecutor {
 public:
     using InstanceRefExecutor::InstanceRefExecutor;
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
+    PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
 };
 
 class InstanceArrayExecutor : public InstancePtrExecutor {
 public:
     InstanceArrayExecutor(Cppyy::TCppType_t klass, dim_t array_size)
         : InstancePtrExecutor(klass), fSize(array_size) {}
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
+    PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
 
 protected:
     dim_t fSize;
@@ -187,8 +187,8 @@ class FunctionPointerExecutor : public Executor {
 public:
     FunctionPointerExecutor(const std::string& ret, const std::string& sig) :
         fRetType(ret), fSignature(sig) {}
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
+    PyObject* Execute(
+        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
 
 protected:
     std::string fRetType;
