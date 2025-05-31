@@ -219,7 +219,7 @@ namespace ROOT {
             return DoDerivativeWithPrevResult(x, icoord, previous_grad, previous_g2, previous_gstep);
          }
 
-         bool HasGradient() const { return true; }
+         bool HasGradient() const override { return true; }
 
          virtual bool returnsInMinuit2ParameterSpace() const { return false; }
 
@@ -288,7 +288,7 @@ namespace ROOT {
       private:
 
          /// Function to evaluate the derivative with respect each coordinate. To be implemented by the derived class.
-         virtual  double  DoDerivative(double x) const = 0;
+         virtual double  DoDerivative(double x) const = 0;
       };
 
 
