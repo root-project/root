@@ -70,10 +70,10 @@
 private:\
 TQObjSender fQObject;\
 public:\
-TList *GetListOfSignals() const overrd {return fQObject.GetListOfSignals();}\
-Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt) overrd\
+TList *GetListOfSignals() const {return fQObject.GetListOfSignals();}\
+Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt)\
 {fQObject.SetSender(this);fQObject.SetSenderClassName(sender_class);return fQObject.Connect(sig,cl,rcvr,slt);}\
-Bool_t Disconnect(const char *sig=nullptr,void *rcvr=nullptr,const char *slt=nullptr) overrd {return fQObject.Disconnect(sig,rcvr,slt);}\
+Bool_t Disconnect(const char *sig=nullptr,void *rcvr=nullptr,const char *slt=nullptr) {return fQObject.Disconnect(sig,rcvr,slt);}\
 void HighPriority(const char *signal_name,const char *slot_name=nullptr) overrd {fQObject.HighPriority(signal_name,slot_name);}\
 void LowPriority(const char *signal_name,const char *slot_name=nullptr) overrd {fQObject.LowPriority(signal_name,slot_name);}\
 template <typename... T> void EmitVA(const char *signal_name, Int_t nargs, const T&... params) \
