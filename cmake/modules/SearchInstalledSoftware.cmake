@@ -1602,6 +1602,10 @@ if (vecgeom)
   endif()
 endif()
 
+# if(experimental_builtin_adaptivecpp)
+#   ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("experimental_builtin_adaptivecpp")
+# endif()
+
 #---Check for protobuf-------------------------------------------------------------------
 
 if(tmva-sofie)
