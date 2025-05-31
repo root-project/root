@@ -192,7 +192,7 @@ private:
    }
 
    // for derivatives
-   double DoDerivative(const double * x, unsigned int icoord) const override {
+   virtual double DoDerivative(const double * x, unsigned int icoord) const {
       Gradient(x, &fGrad[0]);
       return fGrad[icoord];
    }
