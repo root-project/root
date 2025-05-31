@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPythonizations import AddPrettyPrintingPyz
+from ROOT.libROOTPythonizations import AddPrettyPrintingPyz
 
 def _add_getitem_checked(klass):
     # Parameters:
