@@ -129,7 +129,7 @@ namespace TMVA {
       // destructor
       virtual ~DecisionTreeNode();
 
-      virtual Node* CreateNode() const { return new DecisionTreeNode(); }
+      Node* CreateNode() const override { return new DecisionTreeNode(); }
 
       inline void SetNFisherCoeff(Int_t nvars){fFisherCoeff.resize(nvars);}
       inline UInt_t GetNFisherCoeff() const { return fFisherCoeff.size();}
@@ -139,10 +139,10 @@ namespace TMVA {
       Double_t GetFisherCoeff(Int_t ivar) const {return fFisherCoeff.at(ivar);}
 
       // test event if it descends the tree at this node to the right
-      virtual Bool_t GoesRight( const Event & ) const;
+      Bool_t GoesRight( const Event & ) const override;
 
       // test event if it descends the tree at this node to the left
-      virtual Bool_t GoesLeft ( const Event & ) const;
+      Bool_t GoesLeft ( const Event & ) const override;
 
       /// set index of variable used for discrimination at this node
       void SetSelector( Short_t i) { fSelector = i; }
@@ -266,13 +266,13 @@ namespace TMVA {
       Float_t GetSeparationGain( void ) const  { return fTrainInfo ? fTrainInfo->fSeparationGain : -1.; }
 
       // printout of the node
-      virtual void Print( std::ostream& os ) const;
+      void Print( std::ostream& os ) const override;
 
       // recursively print the node and its daughters (--> print the 'tree')
-      virtual void PrintRec( std::ostream&  os ) const;
+      void PrintRec( std::ostream&  os ) const override;
 
-      virtual void AddAttributesToNode(void* node) const;
-      virtual void AddContentToNode(std::stringstream& s) const;
+      void AddAttributesToNode(void* node) const override;
+      void AddContentToNode(std::stringstream& s) const override;
 
       // recursively clear the nodes content (S/N etc, but not the cut criteria)
       void ClearNodeAndAllDaughters();
@@ -280,14 +280,14 @@ namespace TMVA {
       // get pointers to children, mother in the tree
 
       // return pointer to the left/right daughter or parent node
-      inline virtual DecisionTreeNode* GetLeft( )   const { return static_cast<DecisionTreeNode*>(fLeft); }
-      inline virtual DecisionTreeNode* GetRight( )  const { return static_cast<DecisionTreeNode*>(fRight); }
-      inline virtual DecisionTreeNode* GetParent( ) const { return static_cast<DecisionTreeNode*>(fParent); }
+      inline DecisionTreeNode* GetLeft( )   const override { return static_cast<DecisionTreeNode*>(fLeft); }
+      inline DecisionTreeNode* GetRight( )  const override { return static_cast<DecisionTreeNode*>(fRight); }
+      inline DecisionTreeNode* GetParent( ) const override { return static_cast<DecisionTreeNode*>(fParent); }
 
       // set pointer to the left/right daughter and parent node
-      inline virtual void SetLeft  (Node* l) { fLeft   = l;}
-      inline virtual void SetRight (Node* r) { fRight  = r;}
-      inline virtual void SetParent(Node* p) { fParent = p;}
+      inline void SetLeft  (Node* l) override { fLeft   = l;}
+      inline void SetRight (Node* r) override { fRight  = r;}
+      inline void SetParent(Node* p) override { fParent = p;}
 
       /// set the node resubstitution estimate, R(t), for Cost Complexity pruning, if traininfo defined
       inline void SetNodeR( Double_t r ) { if(fTrainInfo) fTrainInfo->fNodeR = r;    }
@@ -366,9 +366,9 @@ namespace TMVA {
       static bool IsTraining();
       static UInt_t GetTmvaVersionCode();
 
-      virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual void ReadContent(std::stringstream& s);
+      Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE ) override;
+      void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE ) override;
+      void ReadContent(std::stringstream& s) override;
 
    protected:
 
@@ -394,7 +394,7 @@ namespace TMVA {
 
    private:
 
-      ClassDef(DecisionTreeNode,0); // Node for the Decision Tree
+      ClassDefOverride(DecisionTreeNode,0); // Node for the Decision Tree
    };
 } // namespace TMVA
 

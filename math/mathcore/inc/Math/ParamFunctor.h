@@ -88,16 +88,16 @@ public:
 //    inline double operator() (const double * x, const double *p) const {
 //       return fFunc(x,p);
 //    }
-   inline EvalType operator() (EvalType * x, double *p)  {
+   inline EvalType operator() (EvalType * x, double *p) override {
       return FuncEvaluator<Func, EvalType>::Eval(fFunc,x,p);
    }
 
-   inline EvalType operator() (const EvalType * x, const double *p)  {
+   inline EvalType operator() (const EvalType * x, const double *p) override {
       return FuncEvaluator<Func, EvalType>::EvalConst(fFunc,x,p);
    }
 
    // clone (use same pointer)
-   ParamFunctorHandler  * Clone() const {
+   ParamFunctorHandler  * Clone() const override {
       return new ParamFunctorHandler(fFunc);
    }
 

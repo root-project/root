@@ -58,7 +58,7 @@ namespace TMVA {
       OptionBase( const TString& name, const TString& desc );
       virtual ~OptionBase() {}
 
-      virtual const char* GetName() const { return fNameAllLower.Data(); }
+      const char* GetName() const override { return fNameAllLower.Data(); }
       virtual const char* TheName() const { return fName.Data(); }
       virtual TString     GetValue(Int_t i=-1) const = 0;
 
@@ -87,7 +87,7 @@ namespace TMVA {
       static MsgLogger& Log();
    protected:
 
-       ClassDef(OptionBase,1);
+       ClassDefOverride(OptionBase,1);
    };
 
    // ---------------------------------------------------------------------------
@@ -103,12 +103,12 @@ namespace TMVA {
       virtual ~Option() {}
 
       // getters
-      virtual TString  GetValue( Int_t i=-1 ) const;
+      TString  GetValue( Int_t i=-1 ) const override;
       virtual const T& Value   ( Int_t i=-1 ) const;
-      virtual Bool_t HasPreDefinedVal() const { return (fPreDefs.size()!=0); }
-      virtual Bool_t IsPreDefinedVal( const TString& ) const;
-      virtual Bool_t IsArrayOpt()   const { return kFALSE; }
-      virtual Int_t  GetArraySize() const { return 0; }
+      Bool_t HasPreDefinedVal() const override { return (fPreDefs.size()!=0); }
+      Bool_t IsPreDefinedVal( const TString& ) const override;
+      Bool_t IsArrayOpt()   const override { return kFALSE; }
+      Int_t  GetArraySize() const override { return 0; }
 
       // setters
       virtual void AddPreDefVal(const T&);
@@ -172,7 +172,7 @@ namespace TMVA {
    }
 
    template<class T>
-      inline TString TMVA::Option<T>::GetValue( Int_t ) const {
+      inline TString TMVA::Option<T>::GetValue( Int_t ) const override {
       std::stringstream str;
       str << std::scientific << this->Value();
       return str.str();
