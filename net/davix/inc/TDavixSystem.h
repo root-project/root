@@ -54,7 +54,7 @@ public:
    virtual void *OpenDirectory(const char* dir);
    virtual int Unlink(const char *path);
 
-   ClassDef(TDavixSystem, 0);
+   ClassDefOverride(TDavixSystem, 0);
 };
 
 #endif
