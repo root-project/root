@@ -1829,6 +1829,61 @@ TEST(FunctionReflectionTest, GetFunctionArgDefault) {
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 3), "0.");
 }
 
+TEST(FunctionReflectionTest, ConstructArray) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+  if (llvm::sys::RunningOnValgrind())
+    GTEST_SKIP() << "XFAIL due to Valgrind report";
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+
+  Cpp::CreateInterpreter();
+
+  Interp->declare(R"(
+    #include <new>
+    extern "C" int printf(const char*,...);
+    class C {
+      int x;
+      C() {
+        x = 12345;
+        printf("\nConstructor Executed\n");
+      }
+    };
+    )");
+
+  Cpp::TCppScope_t scope = Cpp::GetNamed("C");
+  Cpp::TCppObject_t object;
+  std::string output;
+
+  size_t a = 5; // Construct array 5 objects
+  void* where = Cpp::Allocate(scope, a); // Placement new
+  EXPECT_TRUE(where == Cpp::Construct(scope, where, a));
+  // Check for the value of x which should be at the start of the object.
+  // EXPECT_TRUE(*(int *)where == 12345);
+  // // Check for the value of x in the second object
+  // int* obj_2 =
+  //     reinterpret_cast<int*>(reinterpret_cast<char*>(where) + Cpp::SizeOf(scope));
+  // EXPECT_TRUE(*obj_2 == 12345);
+
+  //   // Check for the value of x in the second object
+  // int* obj_3 =
+  //     reinterpret_cast<int*>(reinterpret_cast<char*>(where) + Cpp::SizeOf(scope) * 3);
+  // EXPECT_TRUE(*obj_3 == 12345);
+  // Cpp::Deallocate(scope, where);
+  // output = testing::internal::GetCapturedStdout();
+  // EXPECT_EQ(output, "Constructor Executed");
+  // output.clear();
+
+  // testing::internal::CaptureStdout();
+  //   object = Cpp::Construct(scope);
+  //   EXPECT_TRUE(object != nullptr);
+  // output = testing::internal::GetCapturedStdout();
+  // EXPECT_EQ(output, "Constructor Executed");
+  // output.clear();
+}
+
 TEST(FunctionReflectionTest, Construct) {
 #ifdef EMSCRIPTEN
 #if CLANG_VERSION_MAJOR < 20
@@ -1874,7 +1929,7 @@ TEST(FunctionReflectionTest, Construct) {
   EXPECT_EQ(output, "Constructor Executed");
   output.clear();
 
-  // C API
+    // C API
   testing::internal::CaptureStdout();
   auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
   auto scope_c = make_scope(static_cast<clang::Decl*>(scope), I);

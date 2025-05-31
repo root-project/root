@@ -70,6 +70,7 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include <map>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 using namespace ROOT;
 using namespace llvm;
@@ -1013,6 +1014,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
+   // Forward to JitCall's version of make_wrapper
    const Decl *D = GetFunctionOrShadowDecl();
 
    auto I = gWrapperStore.find(D);
@@ -1070,6 +1072,17 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
 {
    // Make a code string that follows this pattern:
    //
+   // This can be a single line if nary and arena are not passed.
+   // TODO : split this into map with 4 wrappers per decl:
+   // *ret = new ClassName;
+   // *ret = new ClassName[nary];
+   // *ret = new (arena) ClassName;
+   // *ret = new (arena) ClassName[nary];
+   // Based on the incoming request
+
+   // Use https://llvm.org/doxygen/classllvm_1_1PointerIntPair.html
+
+
    // void
    // unique_wrapper_ddd(void** ret, void* arena, unsigned long nary)
    // {
@@ -1545,6 +1558,7 @@ template <typename T>
 T TClingCallFunc::ExecT(void *address)
 {
    IFacePtr();
+   // These checks should be similarly done, with a JitCall API checking if it is valid
    if (!fWrapper) {
       ::Error("TClingCallFunc::ExecT",
             "Called with no wrapper, not implemented!");
@@ -1609,21 +1623,44 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
       ::Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return nullptr;
    }
-   if (tcling_callfunc_ctor_Wrapper_t wrapper = make_ctor_wrapper(info, kind, type_name)) {
-      //if (!info->HasDefaultConstructor()) {
-      //   // FIXME: We might have a ROOT ioctor, we might
-      //   //        have to check for that here.
-      //   ::Error("TClingCallFunc::ExecDefaultConstructor",
-      //         "Class has no default constructor: %s",
-      //         info->Name());
-      //   return 0;
-      //}
-      void *obj = nullptr;
-      (*wrapper)(&obj, address, nary);
-      return obj;
+   // Triage cases when nary is not 0, that is used for construction of multiple objects
+   // use Cpp::Construct 
+   
+   // if (nary) {
+   //    // std::cout<<"NARY used: "<<nary<<"\n";
+   // }
+
+   if (tcling_callfunc_ctor_Wrapper_t wrapper = make_ctor_wrapper(info, kind, type_name)) { 
+   
    }
-   ::Error("TClingCallFunc::ExecDefaultConstructor", "Called with no wrapper, not implemented!");
-   return nullptr;
+
+   const clang::Decl* D = info->GetDecl();
+   if (Cpp::IsClass(D))
+      D = (clang::Decl *)Cpp::GetDefaultConstructorConst(D);
+   if (!Cpp::IsConstructor(D)) {
+      ::Error("TClingCallFunc::ExecDefaultConstructor", "Could not find a default constructor for this scope");
+      return nullptr;
+   }
+
+   Cpp::JitCall JC = Cpp::MakeFunctionCallable(D);
+   
+   if(JC.getKind() == Cpp::JitCall::kUnknown) {
+      ::Error("TClingCallFunc::ExecDefaultConstructor", "Wrapper codegen unsuccesful");
+      return nullptr;
+   }
+
+   if(address) {
+      JC.Invoke(&address, {}, (void*)~0, nary);
+      return address;
+   }
+   else {
+   // Invoke:
+   void *obj = nullptr;
+   JC.Invoke(&obj);
+   return obj;
+   }
+   // ::Error("TClingCallFunc::ExecDefaultConstructor", "Called with no wrapper, not implemented!");
+   // return nullptr;
 }
 
 void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /*=0*/,
