@@ -50,15 +50,15 @@ namespace TMVA {
       MinuitWrapper( IFitterTarget& target, Int_t maxpar);
       virtual ~MinuitWrapper() {}
 
-      Int_t Eval(Int_t, Double_t*, Double_t&, Double_t*, Int_t);
+      Int_t Eval(Int_t, Double_t*, Double_t&, Double_t*, Int_t) override;
       void SetFitterTarget( IFitterTarget& target ) { fFitterTarget = target; }
 
       Int_t ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
-      void  Clear(Option_t * = nullptr);
+      void  Clear(Option_t * = nullptr) override;
       Int_t GetStats    (Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx);
       Int_t GetErrors   (Int_t ipar, Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc);
       Int_t SetParameter(Int_t ipar,const char *parname, Double_t value, Double_t verr, Double_t vlow, Double_t vhigh);
-      TObject *Clone(char const*) const;
+      TObject *Clone(char const*) const override;
 
    private:
 
@@ -66,7 +66,7 @@ namespace TMVA {
       std::vector<Double_t> fParameters;   ///< vector holding the current parameters
       Int_t                 fNumPar;       ///< number of parameters
 
-      ClassDef(MinuitWrapper,0); // Wrapper around TMinuit
+      ClassDefOverride(MinuitWrapper,0); // Wrapper around TMinuit
    };
 
 } // namespace TMVA

@@ -69,13 +69,13 @@ namespace TMVA {
       // destructor
       virtual ~BinarySearchTreeNode ();
 
-      virtual Node* CreateNode() const { return new BinarySearchTreeNode(); }
+      Node* CreateNode() const override { return new BinarySearchTreeNode(); }
 
       // test event if it descends the tree at this node to the right
-      virtual Bool_t GoesRight( const Event& ) const;
+      Bool_t GoesRight( const Event& ) const override;
       // test event if it descends the tree at this node to the left
 
-      virtual Bool_t GoesLeft ( const Event& ) const;
+      Bool_t GoesLeft ( const Event& ) const override;
       // test event if it is equal to the event that "makes the node" (just for the "search tree"
 
       virtual Bool_t EqualsMe ( const Event& ) const;
@@ -93,18 +93,18 @@ namespace TMVA {
 
 
       // printout of the node
-      virtual void Print( std::ostream& os ) const;
+      void Print( std::ostream& os ) const override;
 
       // recursive printout of the node and it daughters
-      virtual void PrintRec( std::ostream& os ) const;
+      void PrintRec( std::ostream& os ) const override;
 
-      virtual void AddAttributesToNode(void* node) const;
-      virtual void AddContentToNode(std::stringstream& s) const;
+      void AddAttributesToNode(void* node) const override;
+      void AddContentToNode(std::stringstream& s) const override;
 
       // Read the data block
-      virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual void ReadContent(std::stringstream& s);
+      Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE ) override;
+      void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE ) override;
+      void ReadContent(std::stringstream& s) override;
 
    private:
       std::vector<Float_t> fEventV;
@@ -115,7 +115,7 @@ namespace TMVA {
 
       Short_t     fSelector;       ///< index of variable used in node selection (decision tree)
 
-      ClassDef(BinarySearchTreeNode,0); ///< Node for the BinarySearchTree
+      ClassDefOverride(BinarySearchTreeNode,0); ///< Node for the BinarySearchTree
    };
 
 } // namespace TMVA

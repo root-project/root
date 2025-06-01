@@ -54,7 +54,7 @@ protected:
    std::vector<std::vector<TMVA::Event *>> fTestEvents;
 
 protected:
-   ClassDef(CvSplit, 0);
+   ClassDefOverride(CvSplit, 0);
 };
 
 /* =============================================================================

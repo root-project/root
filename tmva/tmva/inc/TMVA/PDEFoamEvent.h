@@ -49,10 +49,10 @@ namespace TMVA
       virtual ~PDEFoamEvent() {}       // Default destructor
 
       // function to fill created cell with given value
-      virtual void FillFoamCells(const Event* ev, Float_t wt);
+      void FillFoamCells(const Event* ev, Float_t wt) override;
 
       // ---------- ROOT class definition
-      ClassDef(PDEFoamEvent, 1) // Tree of PDEFoamCells
+      ClassDefOverride(PDEFoamEvent, 1) // Tree of PDEFoamCells
          }; // end of PDEFoamEvent
 
 }  // namespace TMVA
