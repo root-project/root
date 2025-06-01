@@ -63,38 +63,38 @@ namespace TMVA {
 
       virtual ~MethodHMatrix();
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // training method
-      void Train();
+      void Train() override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML( void* wghtnode );
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromXML( void* wghtnode ) override;
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // returns chi2 estimator for given type (signal or background)
       Double_t GetChi2( Types::ESBType );
@@ -109,9 +109,9 @@ namespace TMVA {
       TVectorD* fVecMeanB;    ///< vector of mean values (background)
 
       // default initialisation method called by all constructors
-      void Init();
+      void Init() override;
 
-      ClassDef(MethodHMatrix,0); // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
+      ClassDefOverride(MethodHMatrix,0); // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
    };
 
 } // namespace TMVA

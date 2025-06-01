@@ -56,10 +56,10 @@ protected:
       fPastBiasGradients; ///< The sum of the past bias gradients associated with the deep net.
 
    /*! Update the weights, given the current weight gradients. */
-   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients);
+   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients) override;
 
    /*! Update the biases, given the current bias gradients. */
-   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients);
+   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients) override;
 
 public:
    /*! Constructor. */
@@ -92,14 +92,14 @@ TSGD<Architecture_t, Layer_t, DeepNet_t>::TSGD(Scalar_t learningRate, DeepNet_t 
    fPastBiasGradients.resize(layersNSlices);
 
    for (size_t i = 0; i < layersNSlices; i++) {
-      
-      Architecture_t::CreateWeightTensors( fPastWeightGradients[i], layers[i]->GetWeights()); 
+
+      Architecture_t::CreateWeightTensors( fPastWeightGradients[i], layers[i]->GetWeights());
       size_t weightsNSlices = fPastWeightGradients[i].size();
       for (size_t j = 0; j < weightsNSlices; j++) {
          initialize<Architecture_t>(fPastWeightGradients[i][j], EInitialization::kZero);
       }
 
-      Architecture_t::CreateWeightTensors( fPastBiasGradients[i], layers[i]->GetBiases()); 
+      Architecture_t::CreateWeightTensors( fPastBiasGradients[i], layers[i]->GetBiases());
       size_t biasesNSlices = fPastBiasGradients[i].size();
       for (size_t j = 0; j < biasesNSlices; j++) {
          initialize<Architecture_t>(fPastBiasGradients[i][j], EInitialization::kZero);

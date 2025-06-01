@@ -41,28 +41,28 @@ namespace TMVA {
                   const TString &theWeightFile);
       ~MethodPyGTB(void);
 
-      void Train();
-      void Init();
-      void DeclareOptions();
-      void ProcessOptions();
+      void Train() override;
+      void Init() override;
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
-      const Ranking *CreateRanking();
+      const Ranking *CreateRanking() override;
 
-      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets);
+      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) override;
 
-      virtual void TestClassification();
+      void TestClassification() override;
 
-      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr);
-      std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
-      std::vector<Float_t>& GetMulticlassValues();
+      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr) override;
+      std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false) override;
+      std::vector<Float_t>& GetMulticlassValues() override;
 
-      virtual void ReadModelFromFile();
+      void ReadModelFromFile() override;
 
       using MethodBase::ReadWeightsFromStream;
       // the actual "weights"
-      virtual void AddWeightsXMLTo(void * /* parent */ ) const {} // = 0;
-      virtual void ReadWeightsFromXML(void * /*wghtnode*/) {} // = 0;
-      virtual void ReadWeightsFromStream(std::istream &) {} //= 0; backward compatibility
+      void AddWeightsXMLTo(void * /* parent */ ) const override {} // = 0;
+      void ReadWeightsFromXML(void * /*wghtnode*/) override {} // = 0;
+      void ReadWeightsFromStream(std::istream &) override {} //= 0; backward compatibility
 
    private :
       DataSetManager *fDataSetManager;
@@ -168,9 +168,9 @@ namespace TMVA {
       //new forest.
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
-      ClassDef(MethodPyGTB, 0)
+      ClassDefOverride(MethodPyGTB, 0)
    };
 
 } // namespace TMVA

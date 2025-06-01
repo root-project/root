@@ -68,7 +68,7 @@ namespace TMVA {
       DataSetInfo(const TString& name = "Default");
       virtual ~DataSetInfo();
 
-      virtual const char* GetName() const { return fName.Data(); }
+      const char* GetName() const override { return fName.Data(); }
 
       // the data set
       void        ClearDataSet() const;
@@ -241,7 +241,7 @@ namespace TMVA {
 
    public:
 
-       ClassDef(DataSetInfo,1);
+       ClassDefOverride(DataSetInfo,1);
    };
 }
 

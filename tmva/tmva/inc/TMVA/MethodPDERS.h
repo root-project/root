@@ -72,26 +72,26 @@ namespace TMVA {
 
       virtual ~MethodPDERS( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       // write weights to file
       void WriteWeightsToStream( TFile& rf ) const;
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromStream( TFile& istr );
-      void ReadWeightsFromXML( void* wghtnode );
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromStream( TFile& istr ) override;
+      void ReadWeightsFromXML( void* wghtnode ) override;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // calculate the MVA value
-      const std::vector<Float_t>& GetRegressionValues();
+      const std::vector<Float_t>& GetRegressionValues() override;
    public:
 
       // for root finder
@@ -104,10 +104,10 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
       Volume*      fHelpVolume; // auxiliary variable
       Int_t        fFcnCall;    // number of external function calls (RootFinder)
@@ -127,13 +127,13 @@ namespace TMVA {
       Double_t LanczosFilter( Int_t level, Double_t x );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
    private:
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // calculate the averages of the input variables needed for adaptive training
       void CalcAverages();
@@ -216,9 +216,9 @@ namespace TMVA {
       static MethodPDERS*& GetMethodPDERSThreadLocal() {TTHREAD_TLS(MethodPDERS*) fgThisPDERS(nullptr); return fgThisPDERS;};
       void UpdateThis();
 
-      void Init( void );
+      void Init( void ) override;
 
-      ClassDef(MethodPDERS,0); // Multi-dimensional probability density estimator range search (PDERS) method
+      ClassDefOverride(MethodPDERS,0); // Multi-dimensional probability density estimator range search (PDERS) method
    };
 
 } // namespace TMVA

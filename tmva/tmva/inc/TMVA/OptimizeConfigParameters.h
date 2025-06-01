@@ -65,7 +65,7 @@ namespace TMVA {
       void optimizeScan();
       void optimizeFit();
 
-      Double_t EstimatorFunction( std::vector<Double_t> & );
+      Double_t EstimatorFunction( std::vector<Double_t> & ) override;
 
       Double_t GetFOM();
 
@@ -97,7 +97,7 @@ namespace TMVA {
       mutable MsgLogger*         fLogger;   ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
-      ClassDef(OptimizeConfigParameters,0); // Interface to different separation criteria used in training algorithms
+      ClassDefOverride(OptimizeConfigParameters,0); // Interface to different separation criteria used in training algorithms
    };
 } // namespace TMVA
 
