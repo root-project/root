@@ -925,9 +925,9 @@ namespace TMVA
             {
             }
 
-         void startTrainCycle ();
-         void endTrainCycle (double /*error*/);
-         void testIteration () { if (fMonitoring) fMonitoring->ProcessEvents (); }
+         void startTrainCycle () override;
+         void endTrainCycle (double /*error*/) override;
+         void testIteration () override { if (fMonitoring) fMonitoring->ProcessEvents (); }
 
 
          /* void createHistograms () */
@@ -983,10 +983,10 @@ namespace TMVA
          /*     fMonitoring->ProcessEvents (); */
          /* } */
 
-         void testSample (double error, double output, double target, double weight);
+         void testSample (double error, double output, double target, double weight) override;
 
-         virtual void startTestCycle ();
-         virtual void endTestCycle ();
+         void startTestCycle () override;
+         void endTestCycle () override;
 
 
          void setWeightSums (double sumOfSigWeights, double sumOfBkgWeights);

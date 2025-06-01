@@ -75,42 +75,42 @@ namespace TMVA {
 
       virtual ~MethodCuts( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
-      void AddWeightsXMLTo      ( void* parent ) const;
+      void AddWeightsXMLTo      ( void* parent ) const override;
 
-      void ReadWeightsFromStream( std::istream & i );
-      void ReadWeightsFromXML   ( void* wghtnode );
+      void ReadWeightsFromStream( std::istream & i ) override;
+      void ReadWeightsFromXML   ( void* wghtnode ) override;
 
       // calculate the MVA value (for CUTs this is just a dummy)
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // write method specific histos to target file
-      void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile( void ) const override;
 
       // test the method
-      void TestClassification();
+      void TestClassification() override;
 
       // also overwrite --> not computed for cuts
-      Double_t GetSeparation  ( TH1*, TH1* ) const { return -1; }
-      Double_t GetSeparation  ( PDF* = nullptr, PDF* = nullptr ) const { return -1; }
-      Double_t GetSignificance( void )       const { return -1; }
+      Double_t GetSeparation  ( TH1*, TH1* ) const override { return -1; }
+      Double_t GetSeparation  ( PDF* = nullptr, PDF* = nullptr ) const override { return -1; }
+      Double_t GetSignificance( void )       const override { return -1; }
       Double_t GetmuTransform ( TTree *)           { return -1; }
-      Double_t GetEfficiency  ( const TString&, Types::ETreeType, Double_t& );
-      Double_t GetTrainingEfficiency(const TString& );
+      Double_t GetEfficiency  ( const TString&, Types::ETreeType, Double_t& ) override;
+      Double_t GetTrainingEfficiency(const TString& ) override;
 
       // rarity distributions (signal or background (default) is uniform in [0,1])
-      Double_t GetRarity( Double_t, Types::ESBType ) const { return 0; }
+      Double_t GetRarity( Double_t, Types::ESBType ) const override { return 0; }
 
       // accessors for Minuit
       Double_t ComputeEstimator( std::vector<Double_t> & );
 
-      Double_t EstimatorFunction( std::vector<Double_t> & );
+      Double_t EstimatorFunction( std::vector<Double_t> & ) override;
       Double_t EstimatorFunction( Int_t ievt1, Int_t ievt2 );
 
       void     SetTestSignalEfficiency( Double_t effS ) { fTestSignalEff = effS; }
@@ -121,24 +121,24 @@ namespace TMVA {
       Double_t GetCuts  ( Double_t effS, Double_t* cutMin, Double_t* cutMax ) const;
 
       // ranking of input variables (not available for cuts)
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // maximum |cut| value
       static const Double_t fgMaxAbsCutVal;
 
       // no check of options at this place
-      void CheckSetup() {}
+      void CheckSetup() override {}
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
@@ -233,9 +233,9 @@ namespace TMVA {
                                 Double_t& effS, Double_t& effB );
 
       // default initialisation method called by all constructors
-      void     Init( void );
+      void     Init( void ) override;
 
-      ClassDef(MethodCuts,0);  // Multivariate optimisation of signal efficiency
+      ClassDefOverride(MethodCuts,0);  // Multivariate optimisation of signal efficiency
    };
 
 } // namespace TMVA

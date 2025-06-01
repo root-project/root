@@ -52,20 +52,20 @@ namespace TMVA {
       VariablePCATransform( DataSetInfo& dsi );
       virtual ~VariablePCATransform( void );
 
-      void   Initialize();
-      Bool_t PrepareTransformation (const std::vector<Event*>&);
+      void   Initialize() override;
+      Bool_t PrepareTransformation (const std::vector<Event*>&) override;
 
-      virtual const Event* Transform(const Event* const, Int_t cls ) const;
-      virtual const Event* InverseTransform(const Event* const, Int_t cls ) const;
+      const Event* Transform(const Event* const, Int_t cls ) const override;
+      const Event* InverseTransform(const Event* const, Int_t cls ) const override;
 
-      void WriteTransformationToStream ( std::ostream& ) const;
-      void ReadTransformationFromStream( std::istream&, const TString& );
+      void WriteTransformationToStream ( std::ostream& ) const override;
+      void ReadTransformationFromStream( std::istream&, const TString& ) override;
 
-      virtual void AttachXMLTo(void* parent);
-      virtual void ReadFromXML( void* trfnode );
+      void AttachXMLTo(void* parent) override;
+      void ReadFromXML( void* trfnode ) override;
 
       // writer of function code
-      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
+      void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls ) override;
 
    private:
 
@@ -77,7 +77,7 @@ namespace TMVA {
       std::vector<TVectorD*> fMeanValues;   ///< mean values
       std::vector<TMatrixD*> fEigenVectors; ///< eigenvectors
 
-      ClassDef(VariablePCATransform,0); // Variable transformation: Principal Value Composition
+      ClassDefOverride(VariablePCATransform,0); // Variable transformation: Principal Value Composition
    };
 
 } // namespace TMVA

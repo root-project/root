@@ -50,16 +50,16 @@ namespace TMVA
       virtual ~PDEFoamDiscriminant() {}       // Default destructor
 
       // function to fill created cell with given value
-      virtual void FillFoamCells(const Event* ev, Float_t wt);
+      void FillFoamCells(const Event* ev, Float_t wt) override;
 
       // function to call after foam is grown
-      virtual void Finalize();
+      void Finalize() override;
 
       // 2-dimensional projection
-      virtual TH2D* Project2(Int_t, Int_t, ECellValue, PDEFoamKernelBase*, UInt_t);
+      TH2D* Project2(Int_t, Int_t, ECellValue, PDEFoamKernelBase*, UInt_t) override;
 
       // ---------- ROOT class definition
-      ClassDef(PDEFoamDiscriminant, 1) // Tree of PDEFoamCells
+      ClassDefOverride(PDEFoamDiscriminant, 1) // Tree of PDEFoamCells
          }; // end of PDEFoamDiscriminant
 
 }  // namespace TMVA

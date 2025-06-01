@@ -57,8 +57,8 @@ namespace TMVA {
       virtual ~ExpectedErrorPruneTool( );
 
       // returns the PruningInfo object for a given tree and test sample
-      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = nullptr,
-                                                 Bool_t isAutomatic = kFALSE );
+      PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = nullptr,
+                                                 Bool_t isAutomatic = kFALSE ) override;
 
    public:
       // set the increment dalpha with which to scan for the optimal prune strength

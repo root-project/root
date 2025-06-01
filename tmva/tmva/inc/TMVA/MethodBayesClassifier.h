@@ -55,43 +55,43 @@ namespace TMVA {
 
       virtual ~MethodBayesClassifier( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML   ( void* /*wghtnode*/ ) {}
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromXML   ( void* /*wghtnode*/ ) override {}
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
-      void Init( void );
+      void Init( void ) override;
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
-      ClassDef(MethodBayesClassifier,0);  // Friedman's BayesClassifier method
+      ClassDefOverride(MethodBayesClassifier,0);  // Friedman's BayesClassifier method
    };
 
 } // namespace TMVA

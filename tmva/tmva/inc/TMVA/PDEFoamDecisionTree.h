@@ -44,7 +44,7 @@ namespace TMVA
 
    protected:
 
-      virtual void Explore(PDEFoamCell *Cell);     // Exploration of the cell
+      void Explore(PDEFoamCell *Cell) override;     // Exploration of the cell
 
       PDEFoamDecisionTree(const PDEFoamDecisionTree&); // Copy Constructor  NOT USED
 
@@ -54,7 +54,7 @@ namespace TMVA
       virtual ~PDEFoamDecisionTree();      // Default destructor
 
       // ---------- ROOT class definition
-      ClassDef(PDEFoamDecisionTree, 1) // Decision tree like PDEFoam
+      ClassDefOverride(PDEFoamDecisionTree, 1) // Decision tree like PDEFoam
          }; // end of PDEFoamDecisionTree
 
 }  // namespace TMVA

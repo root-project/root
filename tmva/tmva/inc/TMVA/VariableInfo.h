@@ -111,7 +111,7 @@ namespace TMVA {
       Int_t    fVarCounter;      ///< dummy variable
    public:
 
-       ClassDef(VariableInfo,1);
+       ClassDefOverride(VariableInfo,1);
    };
 
 }

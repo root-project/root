@@ -36,7 +36,7 @@ namespace RDF {
 class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
 
-   void *GetImpl(Long64_t);
+   void *GetImpl(Long64_t) override;
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
@@ -55,7 +55,7 @@ public:
 class R__CLING_PTRCHECK(off) RTreeUntypedValueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedValue> fTreeValue;
 
-   void *GetImpl(Long64_t);
+   void *GetImpl(Long64_t) override;
 
 public:
    RTreeUntypedValueColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName);
@@ -105,7 +105,7 @@ private:
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t entry);
+   void *GetImpl(Long64_t entry) override;
 };
 
 } // namespace RDF

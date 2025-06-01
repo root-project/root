@@ -46,28 +46,28 @@ namespace TMVA {
       ~TActivationIdentity() {}
 
       // evaluate the activation function
-      virtual Double_t Eval(Double_t arg) { return arg; } // f(x) = x
+      Double_t Eval(Double_t arg) override { return arg; } // f(x) = x
 
       // evaluate the derivative of the activation function
-      virtual Double_t EvalDerivative(Double_t) {
+      Double_t EvalDerivative(Double_t) override {
          return 1; // f'(x) = 1
       }
 
       // minimum of the range of the activation function
-      virtual Double_t GetMin() { return 0; } // these should never be called
+      Double_t GetMin() override { return 0; } // these should never be called
 
       // maximum of the range of the activation function
-      virtual Double_t GetMax() { return 1; } // these should never be called
+      Double_t GetMax() override { return 1; } // these should never be called
 
       // expression for activation function
-      virtual TString GetExpression() { return "x\t1"; }
+      TString GetExpression() override { return "x\t1"; }
 
       // writer of function code
-      virtual void MakeFunction(std::ostream& fout, const TString& fncName);
+      void MakeFunction(std::ostream& fout, const TString& fncName) override;
 
    private:
 
-      ClassDef(TActivationIdentity,0); // Identity activation function for TNeuron
+      ClassDefOverride(TActivationIdentity,0); // Identity activation function for TNeuron
    };
 
 } // namespace TMVA

@@ -45,31 +45,31 @@ namespace TMVA {
 
       ~MethodPyAdaBoost();
 
-      void Train();
+      void Train() override;
 
-      void Init();
-      void DeclareOptions();
-      void ProcessOptions();
+      void Init() override;
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // create ranking
-      const Ranking *CreateRanking();
+      const Ranking *CreateRanking() override;
 
-      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets);
+      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) override;
 
       // performs classifier testing
-      virtual void TestClassification();
+      void TestClassification() override;
 
-      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr);
-      std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
-      std::vector<Float_t>& GetMulticlassValues();
+      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr) override;
+      std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false) override;
+      std::vector<Float_t>& GetMulticlassValues() override;
 
-      virtual void ReadModelFromFile();
+      void ReadModelFromFile() override;
 
       using MethodBase::ReadWeightsFromStream;
       // the actual "weights"
-      virtual void AddWeightsXMLTo(void * /*parent */ ) const {} // = 0;
-      virtual void ReadWeightsFromXML(void * /*wghtnode*/ ) {} // = 0;
-      virtual void ReadWeightsFromStream(std::istream &) {} //= 0; backward compatibility
+      void AddWeightsXMLTo(void * /*parent */ ) const override {} // = 0;
+      void ReadWeightsFromXML(void * /*wghtnode*/ ) override {} // = 0;
+      void ReadWeightsFromStream(std::istream &) override {} //= 0; backward compatibility
 
    private :
       DataSetManager *fDataSetManager;
@@ -116,9 +116,9 @@ namespace TMVA {
       //If None, the random number generator is the RandomState instance used by `np.random`.
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
-      ClassDef(MethodPyAdaBoost, 0)
+      ClassDefOverride(MethodPyAdaBoost, 0)
    };
 
 } // namespace TMVA

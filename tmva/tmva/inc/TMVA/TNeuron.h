@@ -118,7 +118,7 @@ namespace TMVA {
       void      PrintPreLinks() const           { PrintLinks(fLinksIn); return;           }
       void      PrintPostLinks() const          { PrintLinks(fLinksOut); return;          }
 
-      virtual void Print(Option_t* = "") const {
+      void Print(Option_t* = "") const override {
          std::cout << fValue << std::endl;
          //PrintPreLinks(); PrintPostLinks();
       }
@@ -154,7 +154,7 @@ namespace TMVA {
 
       MsgLogger& Log() const;
 
-      ClassDef(TNeuron,0); // Neuron class used by MethodANNBase derivative ANNs
+      ClassDefOverride(TNeuron,0); // Neuron class used by MethodANNBase derivative ANNs
    };
 
 } // namespace TMVA

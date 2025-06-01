@@ -91,11 +91,11 @@ namespace TMVA {
       virtual ~DecisionTree( void );
 
       // Retrieves the address of the root node
-      virtual DecisionTreeNode* GetRoot() const { return static_cast<TMVA::DecisionTreeNode*>(fRoot); }
-      virtual DecisionTreeNode * CreateNode(UInt_t) const { return new DecisionTreeNode(); }
-      virtual BinaryTree* CreateTree() const { return new DecisionTree(); }
+      DecisionTreeNode* GetRoot() const override { return static_cast<TMVA::DecisionTreeNode*>(fRoot); }
+      DecisionTreeNode * CreateNode(UInt_t) const override { return new DecisionTreeNode(); }
+      BinaryTree* CreateTree() const override { return new DecisionTree(); }
       static  DecisionTree* CreateFromXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
-      virtual const char* ClassName() const { return "DecisionTree"; }
+      const char* ClassName() const override { return "DecisionTree"; }
 
       // building of a tree by recursively splitting the nodes
 
@@ -240,7 +240,7 @@ namespace TMVA {
 
       DataSetInfo*  fDataSetInfo;
 
-      ClassDef(DecisionTree,0);               // implementation of a Decision Tree
+      ClassDefOverride(DecisionTree,0);               // implementation of a Decision Tree
    };
 
 } // namespace TMVA

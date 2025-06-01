@@ -49,22 +49,22 @@ namespace TMVA {
       VariableIdentityTransform( DataSetInfo& dsi );
       virtual ~VariableIdentityTransform( void ) {}
 
-      void   Initialize();
-      Bool_t PrepareTransformation (const std::vector<Event*>& );
+      void   Initialize() override;
+      Bool_t PrepareTransformation (const std::vector<Event*>& ) override;
 
-      void WriteTransformationToStream ( std::ostream& ) const {}
-      void ReadTransformationFromStream( std::istream&, const TString& ) { SetCreated(); }
+      void WriteTransformationToStream ( std::ostream& ) const override {}
+      void ReadTransformationFromStream( std::istream&, const TString& ) override { SetCreated(); }
 
-      virtual void AttachXMLTo(void* parent);
-      virtual void ReadFromXML( void* trfnode );
+      void AttachXMLTo(void* parent) override;
+      void ReadFromXML( void* trfnode ) override;
 
-      virtual const Event* Transform(const Event* const, Int_t cls ) const;
-      virtual const Event* InverseTransform(const Event* const ev, Int_t cls ) const { return Transform( ev, cls ); }
+      const Event* Transform(const Event* const, Int_t cls ) const override;
+      const Event* InverseTransform(const Event* const ev, Int_t cls ) const override { return Transform( ev, cls ); }
 
       // writer of function code
-      virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
+      void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls ) override;
 
-      ClassDef(VariableIdentityTransform,0); // Variable transformation: identity
+      ClassDefOverride(VariableIdentityTransform,0); // Variable transformation: identity
    };
 
 } // namespace TMVA

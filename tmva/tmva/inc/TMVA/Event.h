@@ -150,7 +150,7 @@ namespace TMVA {
       mutable Bool_t                 fDoNotBoost;          ///< mark event as not to be boosted (used to compensate for events with negative event weights
    public:
 
-       ClassDef(Event,1);
+       ClassDefOverride(Event,1);
 
    };
 }

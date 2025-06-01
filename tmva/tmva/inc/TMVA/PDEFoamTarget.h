@@ -45,7 +45,7 @@ namespace TMVA
 
       // specific function used during evaluation; determines, whether
       // a cell value is undefined
-      Bool_t CellValueIsUndefined(PDEFoamCell* cell);
+      Bool_t CellValueIsUndefined(PDEFoamCell* cell) override;
 
       // calculate the average of the neighbor cell values
       Float_t GetAverageNeighborsValue(std::vector<Float_t>&, ECellValue);
@@ -59,16 +59,16 @@ namespace TMVA
       virtual ~PDEFoamTarget() {}       // Default destructor
 
       // function to fill created cell with given value
-      virtual void FillFoamCells(const Event* ev, Float_t wt);
+      void FillFoamCells(const Event* ev, Float_t wt) override;
 
       // function to call after foam is grown
-      virtual void Finalize();
+      void Finalize() override;
 
-      virtual Float_t GetCellValue(const std::vector<Float_t> &xvec, ECellValue cv, PDEFoamKernelBase*);
+      Float_t GetCellValue(const std::vector<Float_t> &xvec, ECellValue cv, PDEFoamKernelBase*) override;
       using PDEFoam::GetCellValue;
 
       // ---------- ROOT class definition
-      ClassDef(PDEFoamTarget, 1) // Tree of PDEFoamCells
+      ClassDefOverride(PDEFoamTarget, 1) // Tree of PDEFoamCells
          }; // end of PDEFoamTarget
 
 }  // namespace TMVA

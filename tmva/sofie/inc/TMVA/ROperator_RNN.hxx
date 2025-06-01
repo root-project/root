@@ -119,33 +119,33 @@ template <typename T> class ROperator_RNN final : public ROperator {
     *
     * \param input type of the input tensors
     */
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input);
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override;
 
    /*! \brief Infers the shape of the output tensors
     *
     * \param input shape of the input tensors
     */
    std::vector<std::vector<size_t>>
-   ShapeInference(std::vector<std::vector<size_t>> input);
+   ShapeInference(std::vector<std::vector<size_t>> input) override;
 
    /*! \brief Initialize the model
     *
     * \param model Model
     */
-   void Initialize(RModel &);
+   void Initialize(RModel &) override;
 
    /*! \brief Generates the inference code
     *
     * \param OpName name of the operator
     */
-   std::string Generate(std::string OpName);
+   std::string Generate(std::string OpName) override;
 
    // generate code for Session data members (e.g. internal vectors)
-   std::string GenerateSessionMembersCode(std::string opName);
+   std::string GenerateSessionMembersCode(std::string opName) override;
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
-   std::vector<std::string> GetBlasRoutines()  { return { std::string("Gemm"), std::string("Axpy") }; }
+   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE

@@ -90,7 +90,7 @@ namespace TMVA {
       }
 
       // this will have to be overridden by every subclass
-      virtual void Train() = 0;
+      void Train() override = 0;
 
       // print network, for debugging
       virtual void PrintNetwork() const;
@@ -109,28 +109,28 @@ namespace TMVA {
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
-      void ReadWeightsFromXML( void* wghtnode );
+      void AddWeightsXMLTo( void* parent ) const override;
+      void ReadWeightsFromXML( void* wghtnode ) override;
 
       // read weights from file
-      virtual void ReadWeightsFromStream( std::istream& istr );
+      void ReadWeightsFromStream( std::istream& istr ) override;
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
-      virtual const std::vector<Float_t> &GetRegressionValues();
+      const std::vector<Float_t> &GetRegressionValues() override;
 
-      virtual const std::vector<Float_t> &GetMulticlassValues();
+      const std::vector<Float_t> &GetMulticlassValues() override;
 
       // write method specific histos to target file
-      virtual void WriteMonitoringHistosToFile() const;
+      void WriteMonitoringHistosToFile() const override;
 
       // ranking of input variables
-      const Ranking* CreateRanking();
+      const Ranking* CreateRanking() override;
 
       // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       Bool_t Debug() const;
 
@@ -140,7 +140,7 @@ namespace TMVA {
 
    protected:
 
-      virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       std::vector<Int_t>* ParseLayoutString( TString layerSpec );
       virtual void        BuildNetwork( std::vector<Int_t>* layout, std::vector<Double_t>* weights = nullptr,
@@ -223,7 +223,7 @@ namespace TMVA {
       // some static flags
       static const Bool_t fgDEBUG      = kTRUE;  ///< debug flag
 
-      ClassDef(MethodANNBase,0); // Base class for TMVA ANNs
+      ClassDefOverride(MethodANNBase,0); // Base class for TMVA ANNs
    };
 
 

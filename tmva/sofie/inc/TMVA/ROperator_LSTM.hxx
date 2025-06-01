@@ -109,7 +109,7 @@ template <typename T> class ROperator_LSTM final : public ROperator {
          throw std::runtime_error(
              "TMVA SOFIE Encountered unsupported type parsing a LSTM operator");
       }
-      
+
       fInputTensorNames = { fNX, fNW, fNR };
       if (!fNB.empty()){
          fInputTensorNames.emplace_back(fNB);
@@ -143,36 +143,36 @@ template <typename T> class ROperator_LSTM final : public ROperator {
     *
     * \param input type of the input tensors
     */
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input);
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override;
 
    /*! \brief Infers the shape of the output tensors
     *
     * \param input shape of the input tensors
     */
    std::vector<std::vector<size_t>>
-   ShapeInference(std::vector<std::vector<size_t>> input);
+   ShapeInference(std::vector<std::vector<size_t>> input) override;
 
    /*! \brief Initialize the model
     *
     * \param model Model
     */
-   void Initialize(RModel &);
+   void Initialize(RModel &) override;
 
    /*! \brief Generate the inference code
     *
     * \param OpName name of the operator
     */
-   std::string Generate(std::string OpName);
+   std::string Generate(std::string OpName) override;
 
    /*! \brief Generate the code for the Session internal data vectors
     *
     * \param opName name of the operator
     */
-   std::string GenerateSessionMembersCode(std::string opName);
+   std::string GenerateSessionMembersCode(std::string opName) override;
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
-   std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
+   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE

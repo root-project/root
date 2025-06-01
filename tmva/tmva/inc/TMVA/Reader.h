@@ -110,7 +110,7 @@ namespace TMVA {
       Double_t GetRarity( const TString& methodTag, Double_t mvaVal=-9999999 );
 
       // accessors
-      virtual const char* GetName() const { return "Reader"; }
+      const char* GetName() const override { return "Reader"; }
       Bool_t   Verbose( void ) const  { return fVerbose; }
       void     SetVerbose( Bool_t v ) { fVerbose = v; }
 
@@ -161,7 +161,7 @@ namespace TMVA {
       mutable MsgLogger* fLogger;   ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
-      ClassDef(Reader,0); // Interpret the trained MVAs in an analysis context
+      ClassDefOverride(Reader,0); // Interpret the trained MVAs in an analysis context
    };
 
 }

@@ -235,7 +235,7 @@ namespace TMVA {
       MsgLogger*                 fLogger;            ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
-      ClassDef(DataSetFactory, 2);
+      ClassDefOverride(DataSetFactory, 2);
    };
 }
 
