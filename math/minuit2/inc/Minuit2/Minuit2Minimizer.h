@@ -46,8 +46,12 @@ namespace Minuit2 {
    Using a string  (used by the plugin manager) or via an enumeration
    an one can set all the possible minimization algorithms (Migrad, Simplex, Combined, Scan and Fumili).
 
-   Refer to the [guide](https://root.cern/root/htmldoc/guides/minuit2/Minuit2.html) for an introduction how Minuit
+   Refer to the [guide](https://root.cern.ch/doc/master/Minuit2Page.html) for an introduction how Minuit2
    works.
+
+   \note Some gradient calculations, such as `Numerical2PGradientCalculator` support parallelization
+   via OpenMP. To profit from this acceleration, one needs to build ROOT using `minuit2_omp=ON`
+   and later call GradientCalculator::SetParallelOMP()
 
    @ingroup Minuit
 */
