@@ -10,12 +10,12 @@ public:
 
 class ParticleImpl : public Particle
 {
-   ClassDef(ParticleImpl,10);
+   ClassDefOverride(ParticleImpl,10);
 };
 
 class ParticleImplVec : public Particle
 {
-   ClassDef(ParticleImplVec,10);
+   ClassDefOverride(ParticleImplVec,10);
 };
 
 #include <vector>
@@ -37,7 +37,7 @@ class CompositeRefCandidateT : public LeafCandidate {
 
 class GenParticle : public CompositeRefCandidateT {
 
-   ClassDef(GenParticle,10);
+   ClassDefOverride(GenParticle,10);
 };
 
 class Holder {

@@ -18,10 +18,10 @@ class TDetectorVHit : public TVHit {
         TDetectorVHit(const TDetectorVHit &) = default;
         explicit TDetectorVHit(Int_t);
         virtual ~TDetectorVHit(){};
-        void Clear(Option_t* = "");
-        virtual void UpdateReferenceTime(Double_t value){ fTime -= value; };
-        void Print(Option_t* option="") const;
-        Int_t Compare(const TObject *obj) const;
+        void Clear(Option_t* = "") override;
+        virtual void UpdateReferenceTime(Double_t value) override { fTime -= value; };
+        void Print(Option_t* option="") const override;
+        Int_t Compare(const TObject *obj) const override;
 
     public:
 
@@ -39,6 +39,6 @@ class TDetectorVHit : public TVHit {
         Double_t   fEnergy;
         Double_t   fTime;
 
-        ClassDef(TDetectorVHit,1);
+        ClassDefOverride(TDetectorVHit,1);
 };
 #endif

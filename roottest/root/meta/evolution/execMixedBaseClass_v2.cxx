@@ -12,21 +12,21 @@ class Particle : public ParticleState {
 public:
    Particle() : fE(0) {}
    float fE;
-   ClassDef(Particle,12);
+   ClassDefOverride(Particle,12);
 };
 
 class ParticleImpl : public Particle
 {
    // Intentionally not incremented to see if we provoke an
    // warning message.
-   ClassDef(ParticleImpl,10);
+   ClassDefOverride(ParticleImpl,10);
 };
 
 class ParticleImplVec : public Particle
 {
    // Intentionally not incremented to provoke an
    // warning message.
-   ClassDef(ParticleImplVec,10);
+   ClassDefOverride(ParticleImplVec,10);
 };
 
 #include <vector>
@@ -48,7 +48,7 @@ class CompositeRefCandidateT : public LeafCandidate {
 
 class GenParticle : public CompositeRefCandidateT {
 
-   ClassDef(GenParticle,11);
+   ClassDefOverride(GenParticle,11);
 };
 
 class Holder {

@@ -31,7 +31,7 @@ public:
    unsigned long get_bitset() const {return foo.to_ulong();}
    bool correct_bar() const {return (bar.size() == 2) && (bar[0] == 1) && (bar[1] == 2);}
 
-   ClassDef(SillyStlEvent,1)  //Event structure
+   ClassDefOverride(SillyStlEvent,1)  //Event structure
 };
 
 #endif
