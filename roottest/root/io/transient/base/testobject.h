@@ -10,16 +10,16 @@ class Second;
 
 class TestObj : public TObject {
 protected:
-	Double_t lStorage;
+    Double_t lStorage;
 
    std::map<int,First*>  fFirst;
    std::map<int,Second*> fSecond; //!
 public:
-	TestObj();
-	virtual ~TestObj() {};
-	virtual void store(Double_t foo);
-	virtual Double_t retrieve() const;
-	ClassDef(TestObj,0);
+    TestObj();
+    virtual ~TestObj() {};
+    virtual void store(Double_t foo);
+    virtual Double_t retrieve() const;
+    ClassDefOverride(TestObj,0);
 };
 
 #endif

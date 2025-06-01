@@ -6,8 +6,8 @@
 class TH1F_inst : public TH1F {
 public:
    static int fgCount;
-   
-   TH1F_inst() : TH1F() 
+
+   TH1F_inst() : TH1F()
    {
       ++fgCount;
    }
@@ -19,12 +19,12 @@ public:
    {
       --fgCount;
    }
-   ClassDef(TH1F_inst,2);
+   ClassDefOverride(TH1F_inst,2);
 };
 
 int TH1F_inst::fgCount = 0;
 
-void write(const char *filename = "histo.root") 
+void write(const char *filename = "histo.root")
 {
    TFile * f = TFile::Open(filename,"RECREATE");
    TH1F *histo = new TH1F_inst("h1","h1",10,0,10); histo->Fill(3);
@@ -37,7 +37,7 @@ void write(const char *filename = "histo.root")
    delete f;
 }
 
-bool read(const char *filename = "histo.root") 
+bool read(const char *filename = "histo.root")
 {
    TFile * f = TFile::Open(filename,"READ");
    TH1F *histo; f->GetObject("h1",histo);
@@ -52,7 +52,7 @@ bool read(const char *filename = "histo.root")
    return true;
 }
 
-int runownership(const char *filename = "histo.root") 
+int runownership(const char *filename = "histo.root")
 {
    write(filename);
    cout << "So far: " << TH1F_inst::fgCount << '\n';

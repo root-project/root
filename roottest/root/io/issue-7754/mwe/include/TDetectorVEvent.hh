@@ -30,7 +30,7 @@ public:
   virtual TVHit * GetHit(Int_t iHit);
   virtual TVHit * GetLastHit();
   void RemoveHit(Int_t iHit);
-  void Clear(Option_t* = "");
+  void Clear(Option_t* = "") override;
 
   virtual Int_t         GetNHits() { return fNHits; }
   virtual TClonesArray* GetHits()  { return fHits;  }
@@ -39,7 +39,7 @@ private:
 
   Int_t         fNHits;
   TClonesArray* fHits;
-  ClassDef(TDetectorVEvent,1);
+  ClassDefOverride(TDetectorVEvent,1);
 };
 
 #endif
