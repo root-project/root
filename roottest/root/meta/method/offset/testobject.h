@@ -11,7 +11,7 @@ class TestObj : public TObject, public TestInterface {
 public:
    TestObj() {};
    virtual ~TestObj() {};
-   ClassDef(TestObj,0);
+   ClassDefOverride(TestObj,0);
 };
 
 #endif

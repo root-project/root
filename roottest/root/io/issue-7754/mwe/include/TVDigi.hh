@@ -17,7 +17,7 @@ class TVDigi : public TVHit {
         TVDigi(Int_t);
         TVDigi(TVHit*);
         virtual ~TVDigi(){};
-        void Clear(Option_t* = "");
+        void Clear(Option_t* = "") override;
         virtual Double_t GetTime() = 0;
         virtual Int_t GetStationID() = 0;
         virtual Int_t EncodeChannelID() = 0;
@@ -33,6 +33,6 @@ class TVDigi : public TVHit {
 
         TVHit*      fMCHit; //!  Transient data member for MCTruth Association
 
-        ClassDef(TVDigi,1);
+        ClassDefOverride(TVDigi,1);
 };
 #endif
