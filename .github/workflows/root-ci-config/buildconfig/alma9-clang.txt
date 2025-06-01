@@ -1,3 +1,4 @@
-builtin_vdt=On
-tmva-sofie=On
-ccache=On
+builtin_vdt=ON
+ccache=ON
+minuit2_omp=OFF
+tmva-sofie=ON
