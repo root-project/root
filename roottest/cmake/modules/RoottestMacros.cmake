@@ -360,10 +360,13 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   add_dependencies(${targetname_libgen} ${dictname})
 
+  # We use the /fast variant of targetname_libgen, so we won't automatically
+  # build dependencies. Still, the dictname target is a clear dependency (see
+  # line above), so we have to explicilty build it too.
   add_test(NAME ${GENERATE_DICTIONARY_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     ${build_config}
-                                    --target  ${targetname_libgen}${fast}
+                                    --target ${dictname}${fast} ${targetname_libgen}${fast}
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
@@ -469,10 +472,13 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   set(GENERATE_REFLEX_TEST ${targetname_libgen}-build)
 
+  # We use the /fast variant of targetname_libgen, so we won't automatically
+  # build dependencies. Still, the targetname_dictgen is a clear dependency
+  # (see line above), so we have to explicilty build it too.
   add_test(NAME ${GENERATE_REFLEX_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     ${build_config}
-                                    --target ${targetname_libgen}${fast}
+                                    --target ${targetname_dictgen}${fast} ${targetname_libgen}${fast}
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
