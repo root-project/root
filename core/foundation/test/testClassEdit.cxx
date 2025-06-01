@@ -271,6 +271,9 @@ TEST(TClassEdit, ResolveTypedef)
    gInterpreter->Declare("typedef const int cmytype_t;");
    EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("mytype_t").c_str());
    EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("cmytype_t").c_str());
+   // #18833
+   const char* type_18833 = "pair<TAttMarker*,TGraph*(  *  )(const std::string&,const std::string&,TH1F*) >";
+   EXPECT_STREQ(type_18833, TClassEdit::ResolveTypedef(type_18833).c_str());
 }
 
 // ROOT-11000
