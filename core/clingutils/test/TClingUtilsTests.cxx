@@ -16,6 +16,7 @@
 
 #include <TClingUtils.h>
 #include <TClass.h>
+#include <TInterpreter.h>
 
 #include <ROOT/FoundationUtils.hxx>
 
@@ -97,4 +98,15 @@ TEST(TClingUtilsTests, CollectionSizeof)
    EXPECT_EQ(sizeof(std::deque<unsigned int>), TClass::GetClass("std::deque<unsigned int>")->GetClassSize());
    EXPECT_EQ(sizeof(std::deque<long>), TClass::GetClass("std::deque<long>")->GetClassSize());
    EXPECT_EQ(sizeof(std::deque<unsigned long>), TClass::GetClass("std::deque<unsigned long>")->GetClassSize());
+}
+
+TEST(TClingUtilsTests, ReSubstTemplateArg)
+{
+   // #18811
+   gInterpreter->Declare("template <typename T> struct S {};"
+                         "template <typename T1, typename T2> struct Two { using value_type = S<T2>; };"
+                         "template <typename T> struct One { Two<int, int>::value_type *t; };");
+
+   auto c = TClass::GetClass("One<std::string>");
+   c->BuildRealData();
 }
