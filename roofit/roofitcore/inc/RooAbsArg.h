@@ -57,7 +57,8 @@ namespace RooFit {
 namespace Experimental {
 class CodegenContext;
 }
-}
+struct VariableGroups;
+} // namespace RooFit
 
 class RooRefArray : public TObjArray {
  public:
@@ -248,7 +249,7 @@ public:
   bool recursiveCheckObservables(const RooArgSet* nset) const ;
   RooFit::OwningPtr<RooArgSet> getComponents() const ;
 
-
+  virtual void fillVariableGroups(RooFit::VariableGroups &out) const;
 
   void attachArgs(const RooAbsCollection &set);
   void attachDataSet(const RooAbsData &set);

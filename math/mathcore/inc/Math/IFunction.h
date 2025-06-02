@@ -91,6 +91,11 @@ namespace ROOT {
          // if it inherits from ROOT::Math::IGradientFunctionMultiDim.
          virtual bool HasGradient() const { return false; }
 
+         /// Indicate whether a given second order derivative with respect to
+         /// parameters i and j is always zero. This can help to avoid
+         /// expensive function calls in Hessian evaluations.
+         virtual bool VanishingSecondDerivative(int /*i*/, int /*j*/) const { return false; }
+
       private:
 
          /// Implementation of the evaluation function. Must be implemented by derived classes.
