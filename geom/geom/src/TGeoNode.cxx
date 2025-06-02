@@ -79,6 +79,7 @@ painting a node on a pad will take the corresponding volume attributes.
 #include "TGeoShape.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
+#include "TVirtualGeoChecker.h"
 #include "TGeoVoxelFinder.h"
 #include "TGeoNode.h"
 #include "TMath.h"
@@ -212,7 +213,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       Info("CheckOverlaps", "=== NOTE: Extrusions NOT checked with sampling option ! ===");
    }
    timer->Start();
-   geom->GetGeomPainter()->OpProgress(fVolume->GetName(), icheck, ncheck, timer, kFALSE);
+   geom->GetGeomChecker()->OpProgress(fVolume->GetName(), icheck, ncheck, timer, kFALSE);
    fVolume->CheckOverlaps(ovlp, option);
    icheck++;
    TGeoIterator next(fVolume);
@@ -226,7 +227,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       icheck++;
       if (!node->GetVolume()->IsSelected()) {
          msg = TString::Format("found %d overlaps", overlaps->GetEntriesFast());
-         geom->GetGeomPainter()->OpProgress(node->GetVolume()->GetName(), icheck, ncheck, timer, kFALSE, msg);
+         geom->GetGeomChecker()->OpProgress(node->GetVolume()->GetName(), icheck, ncheck, timer, kFALSE, msg);
          node->GetVolume()->SelectVolume(kFALSE);
          node->GetVolume()->CheckOverlaps(ovlp, option);
       }
@@ -240,7 +241,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       obj = (TNamed *)overlaps->At(i);
       obj->SetName(TString::Format("ov%05d", i));
    }
-   geom->GetGeomPainter()->OpProgress("Check overlaps:", icheck, ncheck, timer, kTRUE);
+   geom->GetGeomChecker()->OpProgress("Check overlaps:", icheck, ncheck, timer, kTRUE);
    Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
    delete timer;
 }

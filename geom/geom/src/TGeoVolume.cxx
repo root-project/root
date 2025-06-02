@@ -395,6 +395,7 @@ volumes (or volume assemblies) as content.
 #include "TGeoNode.h"
 #include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
+#include "TVirtualGeoChecker.h"
 #include "TGeoVolume.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoScaledShape.h"
@@ -593,8 +594,8 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
    else
       old_vol = nullptr;
    fGeoManager->GetTopVolume()->Draw();
-   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   painter->CheckGeometry(nrays, startx, starty, startz);
+   auto checker = fGeoManager->GetGeomChecker();
+   checker->CheckGeometry(nrays, startx, starty, startz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -617,14 +618,14 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
    opt.ToLower();
    if (opt.Contains("s"))
       sampling = kTRUE;
-   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
+   auto checker = fGeoManager->GetGeomChecker();
    if (!sampling)
       fGeoManager->SetNsegments(80);
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->ClearOverlaps();
       //      Info("CheckOverlaps", "=== Checking overlaps for volume %s ===\n", GetName());
    }
-   painter->CheckOverlaps(this, ovlp, option);
+   checker->CheckOverlaps(this, ovlp, option);
    //   if (sampling) return;
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->SortOverlaps();
@@ -1247,8 +1248,8 @@ void TGeoVolume::DrawOnly(Option_t *option)
 Bool_t TGeoVolume::OptimizeVoxels()
 {
    printf("Optimizing volume %s ...\n", GetName());
-   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   return painter->TestVoxels(this);
+   auto checker = fGeoManager->GetGeomChecker();
+   return checker->TestVoxels(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1332,13 +1333,13 @@ void TGeoVolume::PrintNodes() const
 TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax, Int_t nphi, Double_t phimin, Double_t phimax,
                            Double_t rmin, Double_t rmax, Option_t *option)
 {
-   TVirtualGeoPainter *p = fGeoManager->GetGeomPainter();
+   auto checker = fGeoManager->GetGeomChecker();
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol != this)
       fGeoManager->SetTopVolume(this);
    else
       old_vol = nullptr;
-   TH2F *hist = p->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);
+   TH2F *hist = checker->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);
    hist->Draw("lego1sph");
    return hist;
 }
