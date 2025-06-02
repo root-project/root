@@ -43,7 +43,6 @@
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
 #@has_found_attribute_noinline@ R__HAS_ATTRIBUTE_NOINLINE /**/
-#@hashardwareinterferencesize@ R__HAS_HARDWARE_INTERFERENCE_SIZE /**/
 #@useimt@ R__USE_IMT   /**/
 #@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
 #@hascefweb@ R__HAS_CEFWEB  /**/
@@ -53,6 +52,7 @@
 #@hasroot7@ R__HAS_ROOT7 /**/
 #@use_less_includes@ R__LESS_INCLUDES /**/
 #@hastbb@ R__HAS_TBB /**/
+#define R__HARDWARE_INTERFERENCE_SIZE @hardwareinterferencesize@ /*Determined at CMake configure to be stable across all TUs*/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC
