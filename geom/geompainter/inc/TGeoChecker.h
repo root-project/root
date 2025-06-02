@@ -12,7 +12,7 @@
 #ifndef ROOT_TGeoChecker
 #define ROOT_TGeoChecker
 
-#include "TObject.h"
+#include "TVirtualGeoChecker.h"
 
 // forward declarations
 class TTree;
@@ -34,7 +34,7 @@ class TStopwatch;
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-class TGeoChecker : public TObject {
+class TGeoChecker : public TVirtualGeoChecker {
 private:
    // data members
    TGeoManager *fGeoManager; // pointer to geometry manager
@@ -63,41 +63,41 @@ public:
    // destructor
    ~TGeoChecker() override;
    // methods
-   virtual void CheckBoundaryErrors(Int_t ntracks = 1000000, Double_t radius = -1.);
-   virtual void CheckBoundaryReference(Int_t icheck = -1);
+   void CheckBoundaryErrors(Int_t ntracks = 1000000, Double_t radius = -1.) override;
+   void CheckBoundaryReference(Int_t icheck = -1) override;
    void CheckGeometryFull(Bool_t checkoverlaps = kTRUE, Bool_t checkcrossings = kTRUE, Int_t nrays = 10000,
-                          const Double_t *vertex = nullptr);
-   void CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
-   void CheckOverlaps(const TGeoVolume *vol, Double_t ovlp = 0.1, Option_t *option = "");
+                          const Double_t *vertex = nullptr) override;
+   void CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const override;
+   void CheckOverlaps(const TGeoVolume *vol, Double_t ovlp = 0.1, Option_t *option = "") override;
    void CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp = 0.1, Int_t npoints = 1000000) const;
-   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.);
-   void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option);
+   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.) override;
+   void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option) override;
    Double_t CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
    TH2F *LegoPlot(Int_t ntheta = 60, Double_t themin = 0., Double_t themax = 180., Int_t nphi = 90,
                   Double_t phimin = 0., Double_t phimax = 360., Double_t rmin = 0., Double_t rmax = 9999999,
-                  Option_t *option = "");
-   void PrintOverlaps() const;
-   void RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
+                  Option_t *option = "") override;
+   void PrintOverlaps() const override;
+   void RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option) override;
    void RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol = nullptr,
-                   Bool_t check_norm = kFALSE);
+                   Bool_t check_norm = kFALSE)  override;
    TGeoOverlap *MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1,
                                  TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp);
    void OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch = nullptr,
-                   Bool_t last = kFALSE, Bool_t refresh = kFALSE, const char *msg = "");
-   TGeoNode *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path);
+                   Bool_t last = kFALSE, Bool_t refresh = kFALSE, const char *msg = "") override;
+   TGeoNode *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path) override;
    void ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *option);
    void ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *option);
    void ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *option);
    Double_t *ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem,
                       Int_t &dim, Double_t *enpoint = nullptr) const;
-   void SetSelectedNode(TGeoNode *node) { fSelectedNode = node; }
-   void SetNmeshPoints(Int_t npoints = 1000);
-   void Test(Int_t npoints, Option_t *option);
-   void TestOverlaps(const char *path);
-   Bool_t TestVoxels(TGeoVolume *vol, Int_t npoints = 1000000);
-   Double_t Weight(Double_t precision = 0.01, Option_t *option = "v");
+   void SetSelectedNode(TGeoNode *node) override { fSelectedNode = node; }
+   void SetNmeshPoints(Int_t npoints = 1000) override;
+   void Test(Int_t npoints, Option_t *option) override;
+   void TestOverlaps(const char *path) override;
+   Bool_t TestVoxels(TGeoVolume *vol, Int_t npoints = 1000000) override;
+   Double_t Weight(Double_t precision = 0.01, Option_t *option = "v") override;
 
-   ClassDefOverride(TGeoChecker, 2) // a simple geometry checker
+   ClassDefOverride(TGeoChecker, 3) // a simple geometry checker
 };
 
 #endif

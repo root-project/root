@@ -94,7 +94,7 @@ ClassImp(TGeoChecker);
 /// Default constructor
 
 TGeoChecker::TGeoChecker()
-   : TObject(),
+   : TVirtualGeoChecker(),
      fGeoManager(nullptr),
      fVsafe(nullptr),
      fBuff1(nullptr),
@@ -114,7 +114,7 @@ TGeoChecker::TGeoChecker()
 /// Constructor for a given geometry
 
 TGeoChecker::TGeoChecker(TGeoManager *geom)
-   : TObject(),
+   : TVirtualGeoChecker(),
      fGeoManager(geom),
      fVsafe(nullptr),
      fBuff1(nullptr),
