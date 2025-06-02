@@ -22,6 +22,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GeomPainter
     Gpad
     Graf3d
     Hist
-    RIO
-    Tree
 )
