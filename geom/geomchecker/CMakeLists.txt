@@ -9,16 +9,15 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(GeomPainter
+ROOT_STANDARD_LIBRARY_PACKAGE(GeomChecker
   HEADERS
-    TGeoPainter.h
-    TGeoTrack.h
+    TGeoOverlap.h
+    TGeoChecker.h
   SOURCES
-    src/TGeoPainter.cxx
-    src/TGeoTrack.cxx
+    src/TGeoOverlap.cxx
+    src/TGeoChecker.cxx
   DEPENDENCIES
     Geom
-    GeomChecker
     Gpad
     Graf3d
     Hist
