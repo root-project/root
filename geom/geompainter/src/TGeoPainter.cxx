@@ -1784,6 +1784,8 @@ void TGeoPainter::Raytrace(Option_t *)
    tosource[1] = -dir[0] * TMath::Sin(phi) - dir[1] * TMath::Cos(phi);
    tosource[2] = -dir[2];
 
+   auto checker = fGeoManager->GetGeomChecker();
+
    Bool_t done;
    //   Int_t istep;
    Int_t base_color, color;
@@ -1799,7 +1801,7 @@ void TGeoPainter::Raytrace(Option_t *)
    for (px = pxmin; px < pxmax; px++) {
       for (py = pymin; py < pymax; py++) {
          if ((nrays % 100) == 0)
-            OpProgress("Raytracing", nrays, ntotal, timer, kFALSE);
+            checker->OpProgress("Raytracing", nrays, ntotal, timer, kFALSE);
          nrays++;
          base_color = 1;
          steptot = 0;
@@ -1930,7 +1932,7 @@ void TGeoPainter::Raytrace(Option_t *)
    }
    delete[] pxy;
    timer->Stop();
-   fChecker->OpProgress("Raytracing", nrays, ntotal, timer, kTRUE);
+   checker->OpProgress("Raytracing", nrays, ntotal, timer, kTRUE);
    delete timer;
 }
 
