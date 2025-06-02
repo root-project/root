@@ -65,6 +65,9 @@ target_link_libraries(CppInterOpTests
   clangCppInterOp
 )
 
+# Save memory. Do not link to LLVM libraries in parallel
+add_dependencies(CppInterOpTests DynamicLibraryManagerTests)
+
 set_output_directory(CppInterOpTests
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
   LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
@@ -115,6 +118,9 @@ set_output_directory(DynamicLibraryManagerTests
 )
 
 add_dependencies(DynamicLibraryManagerTests TestSharedLib)
+
+# Save memory. Do not link to LLVM libraries in parallel
+add_dependencies(DynamicLibraryManagerTests Cling)
 
 #export_executable_symbols_for_plugins(TestSharedLib)
 add_subdirectory(TestSharedLib)

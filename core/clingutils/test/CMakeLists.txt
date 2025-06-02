@@ -31,3 +31,6 @@ if(NOT builtin_clang)
 endif()
 
 ROOT_ADD_UNITTEST_DIR(Core RIO ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)
+
+# Save memory. Do not link to LLVM libraries in parallel
+add_dependencies(coreclingutilstestUnit CppInterOpTests)
