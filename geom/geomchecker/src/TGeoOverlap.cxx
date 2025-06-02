@@ -12,7 +12,6 @@
 #include "TVirtualPad.h"
 #include "TMath.h"
 #include "TNamed.h"
-#include "TBrowser.h"
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
