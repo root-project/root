@@ -276,6 +276,7 @@ in order to enhance rays.
 #include "TGeoBoolNode.h"
 #include "TGeoBuilder.h"
 #include "TVirtualGeoPainter.h"
+#include "TVirtualGeoChecker.h"
 #include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
 #include "TQObject.h"
@@ -358,6 +359,7 @@ TGeoManager::TGeoManager()
       fTopNode = nullptr;
       fMasterVolume = nullptr;
       fPainter = nullptr;
+      fChecker = nullptr;
       fActivity = kFALSE;
       fIsNodeSelectable = kFALSE;
       fVisDensity = 0.;
@@ -469,6 +471,7 @@ void TGeoManager::Init()
    fTopNode = nullptr;
    fMasterVolume = nullptr;
    fPainter = nullptr;
+   fChecker = nullptr;
    fActivity = kFALSE;
    fIsNodeSelectable = kFALSE;
    fVisDensity = 0.;
@@ -599,6 +602,7 @@ TGeoManager::~TGeoManager()
    ClearNavigators();
    CleanGarbage();
    SafeDelete(fPainter);
+   SafeDelete(fChecker);
    SafeDelete(fGLMatrix);
    if (fSizePNEId) {
       delete[] fKeyPNEId;
@@ -2940,6 +2944,29 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
       }
    }
    return fPainter;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make a default checker if none present. Returns pointer to it.
+
+TVirtualGeoChecker *TGeoManager::GetGeomChecker()
+{
+   if (!fChecker) {
+      if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoChecker", "root")) {
+         if (h->LoadPlugin() == -1) {
+            Error("GetGeomChecker", "could not load plugin for geo_checker");
+            return nullptr;
+         }
+         fChecker = (TVirtualGeoChecker *)h->ExecPlugin(1, this);
+         if (!fChecker) {
+            Error("GetGeomChecker", "could not create geo_checker");
+            return nullptr;
+         }
+      } else {
+         Error("GetGeomChecker", "not found plugin for geo_checker");
+      }
+   }
+   return fChecker;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
