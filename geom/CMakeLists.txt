@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -8,7 +8,10 @@ add_subdirectory (geom)        # special CMakeLists.txt
 if(geombuilder)
   add_subdirectory (geombuilder) # special CMakeLists.txt
 endif()
-add_subdirectory (geompainter) # special CMakeLists.txt
+
+add_subdirectory(geomchecker)
+
+add_subdirectory(geompainter)
 
 if(gdml)
   add_subdirectory(gdml)

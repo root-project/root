@@ -77,7 +77,6 @@ volume by material sampling. Accepts as input the desired precision.
 #include "TGeoTessellated.h"
 #include "TGeoManager.h"
 #include "TGeoOverlap.h"
-#include "TGeoPainter.h"
 #include "TGeoChecker.h"
 
 #include "TBuffer3D.h"
