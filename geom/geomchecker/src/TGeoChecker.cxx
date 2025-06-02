@@ -60,7 +60,6 @@ Implementation of TGeoVolume::Weight(). Estimates the total weight of a given
 volume by material sampling. Accepts as input the desired precision.
 */
 
-#include "TVirtualPad.h"
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TFile.h"
