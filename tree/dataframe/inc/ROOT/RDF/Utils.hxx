@@ -215,22 +215,17 @@ bool IsInternalColumn(std::string_view colName);
 /// Get optimal column width for printing a table given the names and the desired minimal space between columns
 unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigned int minColumnSpace = 8u);
 
-// We could just check `#ifdef __cpp_lib_hardware_interference_size`, but at least on Mac 11
-// libc++ defines that macro but is missing the actual feature, so we use an ad-hoc ROOT macro instead.
-// See the relevant entry in cmake/modules/RootConfiguration.cmake for more info.
-#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-   // C++17 feature (so we can use inline variables)
-   inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
-#else
-   // safe bet: assume the typical 64 bytes
-   static constexpr std::size_t kCacheLineSize = 64;
-#endif
-
 /// Stepping through CacheLineStep<T> values in a vector<T> brings you to a new cache line.
 /// Useful to avoid false sharing.
 template <typename T>
 constexpr std::size_t CacheLineStep() {
-   return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
+#ifdef R__HARDWARE_INTERFERENCE_SIZE
+   constexpr std::size_t cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
+#else
+   // RConfigure.h is suppressed during the rootcling invocation
+   constexpr std::size_t cacheLineSize = 64;
+#endif
+   return (cacheLineSize + sizeof(T) - 1) / sizeof(T);
 }
 
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,

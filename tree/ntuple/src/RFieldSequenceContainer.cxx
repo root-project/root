@@ -160,12 +160,7 @@ std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::si
 
    // mimic the logic of RVecInlineStorageSize, but at runtime
    const auto inlineStorageSz = [&] {
-#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-      // hardware_destructive_interference_size is a C++17 feature but many compilers do not implement it yet
-      constexpr unsigned cacheLineSize = std::hardware_destructive_interference_size;
-#else
-      constexpr unsigned cacheLineSize = 64u;
-#endif
+      constexpr unsigned cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
       const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
       constexpr unsigned maxInlineByteSize = 1024;
       const unsigned nElements =
