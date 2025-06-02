@@ -128,21 +128,11 @@ TEST_F(RNTupleChainProcessorTest, WithModel)
    auto model = RNTupleModel::Create();
    auto fldX = model->MakeField<float>("x");
 
-   auto proc =
-      RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}}, std::move(model));
-
-   auto x = proc->GetValuePtr<float>("x");
-
    try {
-      proc->GetValuePtr<std::vector<float>>("y");
-      FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
+      RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}}, std::move(model));
+      FAIL() << "processors should only accept bare models";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
-   }
-
-   for (const auto &idx : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
-      EXPECT_EQ(fldX, x.GetPtr());
+      EXPECT_THAT(err.what(), testing::HasSubstr("only bare RNTupleModels can be used to create an RNTupleProcessor"));
    }
 }
 

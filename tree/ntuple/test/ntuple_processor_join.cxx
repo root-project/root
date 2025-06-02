@@ -221,37 +221,13 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
    auto auxModel = RNTupleModel::Create();
    auto fldY = auxModel->MakeField<std::vector<float>>("y");
 
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"},
-                                            std::move(primaryModel), std::move(auxModel));
-
-   auto i = proc->GetValuePtr<int>("i");
-   auto x = proc->GetValuePtr<float>("x");
-   auto y = proc->GetValuePtr<std::vector<float>>("ntuple2.y");
-
    try {
-      proc->GetValuePtr<float>("ntuple2.z");
-      FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"},
+                                   std::move(primaryModel), std::move(auxModel));
+      FAIL() << "processors should only accept bare models";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("only bare RNTupleModels can be used to create an RNTupleProcessor"));
    }
-
-   std::vector<float> yExpected;
-
-   for (const auto &idx : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), idx);
-
-      EXPECT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
-      EXPECT_EQ(*fldI, *i);
-
-      EXPECT_FLOAT_EQ(*i * 0.5f, *x);
-      EXPECT_FLOAT_EQ(*fldX, *x);
-
-      yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
-      EXPECT_EQ(yExpected, *y);
-      EXPECT_EQ(*fldY, *y);
-   }
-
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleJoinProcessorTest, WithBareModel)
