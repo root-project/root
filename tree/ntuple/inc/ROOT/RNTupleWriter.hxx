@@ -155,12 +155,15 @@ public:
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                                 TDirectory &fileOrDirectory,
                                                 const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
+#ifdef R__HAS_ROOT7
    /// Throws an exception if the model is null.
    /// `ntuplePath` may have the form `"path/to/ntuple"`, in which case the ntuple's name will be `"ntuple"` and it will
    /// be stored under the given `ntuplePath` in the RFile.
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntuplePath,
                                                 ROOT::Experimental::RFile &file,
                                                 const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
+#endif
+
    RNTupleWriter(const RNTupleWriter &) = delete;
    RNTupleWriter &operator=(const RNTupleWriter &) = delete;
    ~RNTupleWriter();

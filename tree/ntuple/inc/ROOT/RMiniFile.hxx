@@ -132,6 +132,7 @@ private:
       operator bool() const { return fDirectory; }
    };
 
+#ifdef R__HAS_ROOT7
    struct RFileRFile {
       /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
       ROOT::Experimental::RFile *fFile = nullptr;
@@ -144,6 +145,7 @@ private:
       std::uint64_t ReserveBlobKey(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
       operator bool() const { return fFile; }
    };
+#endif
 
    struct RFileSimple {
       /// Direct I/O requires that all buffers and write lengths are aligned. It seems 512 byte alignment is the minimum
@@ -198,7 +200,13 @@ private:
 
    /// RFileSimple: for simple use cases, survives without libRIO dependency
    /// RFileProper: for updating existing files and for storing more than just an RNTuple in the file
-   std::variant<RFileSimple, RFileProper, RFileRFile> fFile;
+#ifdef R__HAS_ROOT7
+   using FileType = std::variant<RFileSimple, RFileProper, RFileRFile>;
+#else
+   using FileType = std::variant<RFileSimple, RFileProper>;
+#endif
+   FileType fFile;
+
    /// A simple file can either be written as TFile container or as NTuple bare file
    bool fIsBare = false;
    /// The identifier of the RNTuple; A single writer object can only write a single RNTuple but multiple
