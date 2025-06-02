@@ -7729,6 +7729,8 @@ void TCling::CodeComplete(const std::string& line, size_t& cursor,
 /// Get the interpreter value corresponding to the statement.
 int TCling::Evaluate(const char* code, TInterpreterValue& value)
 {
+   R__LOCKGUARD_CLING(gInterpreterMutex);
+
    auto V = reinterpret_cast<cling::Value*>(value.GetValAddr());
    auto compRes = fInterpreter->evaluate(code, *V);
    return compRes!=cling::Interpreter::kSuccess ? 0 : 1 ;
