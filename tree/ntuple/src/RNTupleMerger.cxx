@@ -656,11 +656,11 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
       const auto structure = field->GetStructure();
 
       if (structure == ROOT::ENTupleStructure::kStreamer) {
-         Fatal(
-            "RNTuple::Merge",
-            "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
-            "Creating a default value for a streamer field is ill-defined, therefore the merging process will abort.",
-            field->GetFieldName().c_str());
+         R__LOG_FATAL(NTupleMergeLog())
+            << "RNTuple::Merge"
+               "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
+               "Creating a default value for a streamer field is ill-defined, therefore the merging process will abort."
+            << field->GetFieldName();
          continue;
       }
 
