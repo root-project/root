@@ -33,6 +33,7 @@ class TGeoMaterial;
 class TGeoMedium;
 class TGeoShape;
 class TVirtualGeoPainter;
+class TVirtualGeoChecker;
 class THashList;
 class TGeoParallelWorld;
 class TGeoRegion;
@@ -89,6 +90,7 @@ private:
    Bool_t fActivity;                //! switch ON/OFF volume activity (default OFF - all volumes active))
    Bool_t fIsNodeSelectable;        //! flag that nodes are the selected objects in pad rather than volumes
    TVirtualGeoPainter *fPainter;    //! current painter
+   TVirtualGeoChecker *fChecker;    //! current checker
 
    TObjArray *fMatrices;        //-> list of local transformations
    TObjArray *fShapes;          //-> list of shapes
@@ -207,6 +209,8 @@ public:
    Int_t GetNsegments() const;
    TVirtualGeoPainter *GetGeomPainter();
    TVirtualGeoPainter *GetPainter() const { return fPainter; }
+   TVirtualGeoChecker *GetGeomChecker();
+   TVirtualGeoChecker *GetChecker() const { return fChecker; }
    Int_t GetBombMode() const { return fExplodedView; }
    void GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
    Int_t GetMaxVisNodes() const { return fMaxVisNodes; }
