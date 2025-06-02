@@ -10,9 +10,6 @@
 */
 TEST(Geometry, NoExtrusionInUnionSpan)
 {
-   // switch web display while TGeoChecker instantiated via plain TGeoPainter
-   gROOT->SetWebDisplay("off");
-
    // import a GDML geometry with a policone inside a union of two polycones and a tube
    auto geom = TGeoManager::Import("no_extrusion.gdml");
    EXPECT_NE(geom, nullptr);
