@@ -19,7 +19,9 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
+#ifdef R__HAS_ROOT7
 #include <ROOT/RFile.hxx>
+#endif
 
 #include <Byteswap.h>
 #include <TBufferFile.h>
@@ -1126,6 +1128,7 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(siz
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef R__HAS_ROOT7
 void ROOT::Internal::RNTupleFileWriter::RFileRFile::Write(const void *buffer, size_t nbytes, std::int64_t offset)
 {
    auto *file = ROOT::Experimental::Internal::GetRFileTFile(*fFile);
@@ -1164,6 +1167,7 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileRFile::ReserveBlobKey(size
 
    return offsetData;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1250,6 +1254,7 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirector
    return writer;
 }
 
+#ifdef R__HAS_ROOT7
 std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
 ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
                                           std::string_view ntupleDir, std::uint64_t maxKeySize)
@@ -1261,6 +1266,7 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Exp
    rfile.fDir = ntupleDir;
    return writer;
 }
+#endif
 
 void ROOT::Internal::RNTupleFileWriter::Seek(std::uint64_t offset)
 {
@@ -1292,6 +1298,7 @@ void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
 
       fileProper->fDirectory->GetFile()->Write();
       return;
+#ifdef R__HAS_ROOT7
    } else if (auto fileRFile = std::get_if<RFileRFile>(&fFile)) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
       fileRFile->fFile->Put(fileRFile->fDir + fNTupleName, fNTupleAnchor);
@@ -1304,6 +1311,7 @@ void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
 
       fileRFile->fFile->Write();
       return;
+#endif
    }
 
    // Writing by C file stream: prepare the container format header and stream the RNTuple anchor object
@@ -1417,8 +1425,13 @@ ROOT::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len, unsign
    } else if (auto *fileProper = std::get_if<RFileProper>(&fFile)) {
       offset = fileProper->ReserveBlobKey(nbytes, len, keyBuffer);
    } else {
+#ifdef R__HAS_ROOT7
       auto &fileRFile = std::get<RFileRFile>(fFile);
       offset = fileRFile.ReserveBlobKey(nbytes, len, keyBuffer);
+#else
+      offset = 0;
+      R__ASSERT(false);
+#endif
    }
    return offset;
 }
@@ -1430,8 +1443,10 @@ void ROOT::Internal::RNTupleFileWriter::WriteIntoReservedBlob(const void *buffer
    } else if (auto *fileProper = std::get_if<RFileProper>(&fFile)) {
       fileProper->Write(buffer, nbytes, offset);
    } else {
+#ifdef R__HAS_ROOT7
       auto &fileRFile = std::get<RFileRFile>(fFile);
       fileRFile.Write(buffer, nbytes, offset);
+#endif
    }
 }
 
