@@ -64,28 +64,26 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    TH1F hPx("h", "This is the px distribution", 100, -4, 4);
    hPx.SetFillColor(48);
 
-   auto model = ROOT::RNTupleModel::Create();
-   auto ptrPx = model->MakeField<std::vector<float>>("vpx");
-
-   // By passing a model to the processor, we can use the pointers to field values created upon model creation during
-   // processing. When no model is provided, a default model is created based on the first ntuple specified.
-   // Access to the entry values in this case can be achieved through RNTupleProcessor::GetEntry() or through its
-   // iterator.
-   auto processor = RNTupleProcessor::CreateChain(ntuples, std::move(model));
+   // The chain-based processor can be created by passing a list of RNTupleOpenSpecs, describing the name and location
+   // of each ntuple in the chain.
+   auto processor = RNTupleProcessor::CreateChain(ntuples);
    int prevProcessorNumber{-1};
 
-   for (const auto &entry : *processor) {
-      // The RNTupleProcessor provides some additional bookkeeping information. The local entry number is reset each
-      // a new ntuple in the chain is opened for processing.
+   // Access to the processor's fields is done by first requesting them through RNTupleProcessor::RequestField(). The
+   // returned value can be used to read the current entry's value for that particular field.
+   auto px = processor->RequestField<std::vector<float>>("vpx");
+
+   // The iterator value is the index of the current entry being processed.
+   for (auto idx : *processor) {
+      // The RNTupleProcessor provides some additional bookkeeping information, such as the current processor number.
       if (static_cast<int>(processor->GetCurrentProcessorNumber()) > prevProcessorNumber) {
          prevProcessorNumber = processor->GetCurrentProcessorNumber();
-         std::cout << "Processing `ntuple" << prevProcessorNumber + 1 << "` (" << processor->GetNEntriesProcessed()
+         std::cout << "Processing `ntuple" << prevProcessorNumber + 1 << "` (" << idx + 1
                    << " total entries processed so far)" << std::endl;
       }
 
-      // We can use the pointer to the field obtained while creating our model to read the field's data for the current
-      // entry.
-      for (auto x : *ptrPx) {
+      // We use the value returned from requesting the field to read its data for the current entry.
+      for (auto x : *px) {
          hPx.Fill(x);
       }
    }
