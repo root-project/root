@@ -4930,10 +4930,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          replacedCtxt = nullptr;
       }
 
-      if ((replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
-          || /* the following is likely just redundant */
-          substType->getReplacedParameter()
-          == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))
+      if (replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
       {
          const auto &TAs = TST->template_arguments();
          if (index >= TAs.size()) {
