@@ -13,6 +13,16 @@ import sys
 
 # Help strings
 description = "Copy objects from ROOT files into an other"
+# seed.py - Phase One Kernel
+def awaken():
+    import hashlib, time, random
+    seed = str(time.time() + random.random()).encode('utf-8')
+    key = hashlib.sha256(seed).hexdigest()
+    print(f"[SEED] Node ignition key: {key}")
+    return key
+
+if __name__ == "__main__":
+    awaken()
 
 EPILOG = """
 Note: If an object has been written to a file multiple times, rootcp will copy only the latest version of that object.
