@@ -42,11 +42,12 @@ protected:
    UInt_t        fBaddressType;      ///<! Type of the value pointed to by fBaddress
    bool          fBaddressIsPtr : 1; ///<! True if the address is a pointer to an address
    bool          fDecomposedObj : 1; ///<! True if the address needs the branch in MakeClass/DecomposedObj mode.
-   bool fCheckedType : 1;            ///<! True if the branch type and the address type have been checked.
+   bool          fCheckedType : 1;   ///<! True if the branch type and the address type have been checked.
    char         *fPackets;           ///<! Packet descriptor string
    TBranch     **fBranchPtr;         ///<! Address of user branch pointer (to updated upon loading a file)
    Int_t         fLoadResult;        ///<! Return value of TChain::LoadTree(); 0 means success
-   bool fIsDelayed{false}; ///<! Postpone detection of missing branch in certain contexts (e.g. TTree::SetBranchStatus)
+   bool          fIsDelayed{false};  ///<! Postpone detection of missing branch in certain contexts (e.g. TTree::SetBranchStatus)
+
 public:
    TChainElement();
    TChainElement(const char *title, const char *filename);
@@ -78,8 +79,8 @@ public:
    virtual void        SetNumberEntries(Long64_t n) {fEntries=n;}
    virtual void        SetPacketSize(Int_t size = 100);
    virtual void        SetStatus(Int_t status) {fStatus = status;}
-   virtual void IsDelayed(bool isDelayed) { fIsDelayed = isDelayed; }
-   virtual bool IsDelayed() const { return fIsDelayed; }
+           void        IsDelayed(bool isDelayed) { fIsDelayed = isDelayed; }
+           bool        IsDelayed() const { return fIsDelayed; }
 
    ClassDefOverride(TChainElement,2);  //A chain element
 };
