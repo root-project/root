@@ -307,7 +307,7 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LINKDEF;SOURCES;DEPENDS;OPTIONS;COMPILE_OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -344,19 +344,27 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(targetname_libgen ${dictname}libgen)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
-  set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
+
+  if(ARG_SOURCES)
+    target_sources(${targetname_libgen} PUBLIC ${ARG_SOURCES})
+  endif()
+
+  if(ARG_COMPILE_OPTIONS)
+    target_compile_options(${targetname_libgen} PRIVATE ${ARG_COMPILE_OPTIONS})
+  endif()
+
+  set_target_properties(${targetname_libgen} PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   if(MSVC)
     set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   endif()
+
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
 
-  set_property(TARGET ${targetname_libgen}
-               PROPERTY OUTPUT_NAME ${dictname})
+  set_target_properties(${targetname_libgen} PROPERTIES OUTPUT_NAME ${dictname})
 
-  set_property(TARGET ${targetname_libgen}
-               APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
+  set_property(TARGET ${targetname_libgen} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
 
   add_dependencies(${targetname_libgen} ${dictname})
 
@@ -391,11 +399,12 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${dictname}_rdict.pcm
-                                        ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}_rdict.pcm)
-    add_custom_command(TARGET ${targetname_libgen} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${dictname}_rdict.pcm
+                                       ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.dll
-                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.dll)
+                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.dll
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.lib
+                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.lib)
   endif()
 
 endmacro(ROOTTEST_GENERATE_DICTIONARY)
@@ -1046,7 +1055,7 @@ function(ROOTTEST_ADD_TEST testname)
   if (ARG_PROPERTIES)
     set(properties ${ARG_PROPERTIES})
   endif()
-  
+
   ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
                         ${infile}
