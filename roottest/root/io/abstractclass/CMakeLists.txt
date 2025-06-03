@@ -1,15 +1,14 @@
+if(NOT MSVC)
+  set(warnopt -Wno-delete-non-virtual-dtor)
+endif()
+
 ROOTTEST_GENERATE_DICTIONARY(libAbstractClasses
                              PureAbstractInterface.h DataBlockBase.h DataBlock1.h DataBlock2.h
+                             SOURCES PureAbstractInterface.cxx DataBlockBase.cxx DataBlock1.cxx DataBlock2.cxx
+                             COMPILE_OPTIONS ${warnopt}
                              LINKDEF LinkDef.h
                              NO_ROOTMAP NO_CXXMODULE
                              FIXTURES_SETUP abstractClasses_fixture)
-
-target_sources(libAbstractClasseslibgen PRIVATE PureAbstractInterface.cxx DataBlockBase.cxx DataBlock1.cxx DataBlock2.cxx)
-
-if(NOT MSVC)
-  target_compile_options(libAbstractClasseslibgen PUBLIC -Wno-delete-non-virtual-dtor)
-endif()
-
 
 ROOTTEST_ADD_TEST(write_test
                   MACRO write_test.C
