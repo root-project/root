@@ -46,9 +46,7 @@ protected:
    char         *fPackets;           ///<! Packet descriptor string
    TBranch     **fBranchPtr;         ///<! Address of user branch pointer (to updated upon loading a file)
    Int_t         fLoadResult;        ///<! Return value of TChain::LoadTree(); 0 means success
-   bool          fIsDelayed{false};  ///<! Whether to postpone detection of missing branch in certain contexts (e.g.
-                                     ///< TTree::SetBranchStatus)
-
+   bool          fIsDelayed{false};  ///<! Postpone detection of missing branch in certain contexts (e.g. TTree::SetBranchStatus)
 public:
    TChainElement();
    TChainElement(const char *title, const char *filename);
