@@ -240,7 +240,8 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
 /// \param dst (owned by caller) is a preallocated char buffer where result is stored
 /// \param dstCap must match the length of dst buffer and be bigger than 0
 /// \param style see TGNumberFormat::EStyle
-/// \param attr see TGNumberFormat::EAttribute 
+/// \param attr see TGNumberFormat::EAttribute
+/// \note If `src` is a nullptr, this function is a no-op and returns silently
 
 static void CopyAndSkipGarbage(char *dst,
                                     std::size_t dstCap,
@@ -248,8 +249,9 @@ static void CopyAndSkipGarbage(char *dst,
                                     TGNumberFormat::EStyle style,
                                     TGNumberFormat::EAttribute attr)
 {
+   if (!src)
+      return;
    assert(dstCap > 0);
-   assert(src);
    assert(dst);
    std::size_t dstIdx = 0;
    while (dstIdx < dstCap - 1 && *src) {
