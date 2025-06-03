@@ -235,8 +235,7 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
 /// \brief Copy the string stored in `src` into `dst`, skipping some chars
 /// depending on the format and style.
 /// The copy is stopped when reaching `dstCap-1` copied chars or when finding a
-/// null terminator char in `src`, or when `src` becomes a nullptr, whatever
-/// happens first.
+/// null terminator char in `src`, whatever happens first.
 /// \param src (owned by caller) is the preallocated char buffer to be copied
 /// \param dst (owned by caller) is a preallocated char buffer where result is stored
 /// \param dstCap must match the length of dst buffer and be bigger than 0
@@ -249,9 +248,11 @@ static void CopyAndSkipGarbage(char *dst,
                                     TGNumberFormat::EStyle style,
                                     TGNumberFormat::EAttribute attr)
 {
-   assert(dstCap > 0); 
+   assert(dstCap > 0);
+   assert(src);
+   assert(dst);
    std::size_t dstIdx = 0;
-   while (dstIdx < dstCap - 1 && src && ((*src) != 0)) {
+   while (dstIdx < dstCap - 1 && *src) {
       if (IsGoodChar(*src, style, attr)) {
          dst[dstIdx++] = *src;
       }
