@@ -233,14 +233,15 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void CopyAndEliminateGarbage(char *dst,
+static void CopyAndSkipGarbage(char *dst,
                                     std::size_t dstCap,
                                     const char *src,
                                     TGNumberFormat::EStyle style,
                                     TGNumberFormat::EAttribute attr)
 {
+   assert(dstCap > 0); 
    std::size_t dstIdx = 0;
-   while (dstIdx < dstCap - 1 && src) {
+   while (dstIdx < dstCap - 1 && src && ((*src) != 0)) {
       if (IsGoodChar(*src, style, attr)) {
          dst[dstIdx++] = *src;
       }
@@ -1260,7 +1261,7 @@ void TGNumberEntryField::SetHexNumber(ULong_t val, Bool_t emit)
 void TGNumberEntryField::SetText(const char *text, Bool_t emit)
 {
    char buf[256];
-   CopyAndEliminateGarbage(buf, sizeof(buf), text, fNumStyle, fNumAttr);
+   CopyAndSkipGarbage(buf, sizeof(buf), text, fNumStyle, fNumAttr);
    TGTextEntry::SetText(buf, emit);
    fNeedsVerification = kFALSE;
 }
