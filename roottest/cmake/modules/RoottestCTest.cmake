@@ -28,14 +28,14 @@ set(CINT_VERSION cling)
 # Set of macros to avoid using features not yet implemented by cling.
 
 add_definitions(
-  -DClingWorkAroundMissingDynamicScope 
+  -DClingWorkAroundMissingDynamicScope
   -DClingWorkAroundUnnamedInclude
   -DClingWorkAroundMissingSmartInclude
   -DClingWorkAroundNoDotInclude
   -DClingWorkAroundMissingAutoLoadingForTemplates
   -DClingWorkAroundAutoParseUsingNamespace
   -DClingWorkAroundTClassUpdateDouble32
-  -DClingWorkAroundAutoParseDeclaration  
+  -DClingWorkAroundAutoParseDeclaration
   -DClingWorkAroundMissingUnloading
   -DClingWorkAroundBrokenUnnamedReturn
   -DClingWorkAroundUnnamedDetection2
@@ -55,6 +55,9 @@ set(ClingWorkAroundMissingUnloading                 TRUE)
 set(ClingWorkAroundBrokenUnnamedReturn              TRUE)
 set(ClingWorkAroundUnnamedDetection2                TRUE)
 
+# used in root/io/alloc test
+# set(ClingReinstateTemplateRootIOCtor                TRUE)
+
 set(PYROOT_EXTRAFLAGS --fixcling)
 
 # set ROOTTEST_OS_ID
@@ -62,7 +65,7 @@ if(APPLE)
   execute_process(COMMAND sw_vers "-productVersion"
                   COMMAND cut -d . -f 1-2
                   OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(ROOTTEST_OS_ID MacOSX)                
+  set(ROOTTEST_OS_ID MacOSX)
   set(ROOTTEST_OS_VERSION ${osvers})
 elseif(WIN32)
   set(ROOTTEST_OS_ID Windows)
@@ -71,24 +74,24 @@ else()
   execute_process(COMMAND lsb_release -rs OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
   if(osid MATCHES Ubuntu)
     string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
-    set(ROOTTEST_OS_ID Ubuntu)                
-    set(ROOTTEST_OS_VERSION ${osvers}) 
+    set(ROOTTEST_OS_ID Ubuntu)
+    set(ROOTTEST_OS_VERSION ${osvers})
   elseif(osid MATCHES Scientific)
     string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
-    set(ROOTTEST_OS_ID Scientific)                
-    set(ROOTTEST_OS_VERSION ${osvers}) 
+    set(ROOTTEST_OS_ID Scientific)
+    set(ROOTTEST_OS_VERSION ${osvers})
   elseif(osid MATCHES Fedora)
     string(REGEX REPLACE "([0-9]+)" "\\1" osvers "${osvers}")
-    set(ROOTTEST_OS_ID Fedora)                
-    set(ROOTTEST_OS_VERSION ${osvers}) 
+    set(ROOTTEST_OS_ID Fedora)
+    set(ROOTTEST_OS_VERSION ${osvers})
   elseif(osid MATCHES CentOS)
     string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
-    set(ROOTTEST_OS_ID CentOS)                
-    set(ROOTTEST_OS_VERSION ${osvers}) 
+    set(ROOTTEST_OS_ID CentOS)
+    set(ROOTTEST_OS_VERSION ${osvers})
   else()
     string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
-    set(ROOTTEST_OS_ID ${osid})                
-    set(ROOTTEST_OS_VERSION ${osvers}) 
+    set(ROOTTEST_OS_ID ${osid})
+    set(ROOTTEST_OS_VERSION ${osvers})
   endif()
 endif()
 
