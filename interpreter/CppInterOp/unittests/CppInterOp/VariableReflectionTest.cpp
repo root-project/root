@@ -552,7 +552,7 @@ TEST(VariableReflectionTest, StaticConstExprDatamember) {
   EXPECT_EQ(datamembers.size(), 1);
 
   intptr_t offset = Cpp::GetVariableOffset(datamembers[0]);
-  EXPECT_EQ(3, *(int*)offset);
+  EXPECT_EQ(3, *(size_t*)offset);
 
   ASTContext& C = Interp->getCI()->getASTContext();
   std::vector<Cpp::TemplateArgInfo> template_args = {
@@ -568,7 +568,7 @@ TEST(VariableReflectionTest, StaticConstExprDatamember) {
   EXPECT_EQ(datamembers.size(), 1);
 
   offset = Cpp::GetVariableOffset(datamembers[0]);
-  EXPECT_EQ(5, *(int*)offset);
+  EXPECT_EQ(5, *(size_t*)offset);
 
   std::vector<Cpp::TemplateArgInfo> ele_template_args = {
       {C.IntTy.getAsOpaquePtr()}, {C.FloatTy.getAsOpaquePtr()}};
@@ -587,7 +587,7 @@ TEST(VariableReflectionTest, StaticConstExprDatamember) {
   EXPECT_EQ(datamembers.size(), 1);
 
   offset = Cpp::GetVariableOffset(datamembers[0]);
-  EXPECT_EQ(2, *(int*)offset);
+  EXPECT_EQ(2, *(size_t*)offset);
 }
 
 TEST(VariableReflectionTest, GetEnumConstantDatamembers) {
