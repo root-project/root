@@ -5,7 +5,7 @@ ROOT_GENERATE_DICTIONARY(G__IoBigEventGeneration
 ROOT_LINKER_LIBRARY(IoBigEventGeneration
   ${CMAKE_CURRENT_SOURCE_DIR}/IoBigEventGeneration.cxx
   G__IoBigEventGeneration.cxx
-  LIBRARIES Core Tree Hist MathCore Physics Graf Matrix)
+  DEPENDENCIES Core Tree Hist MathCore Physics Graf Matrix)
 
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET IoBigEventGeneration POST_BUILD
@@ -18,7 +18,7 @@ endif()
 ROOTTEST_GENERATE_EXECUTABLE(IoBigEventGenerator
   ${CMAKE_CURRENT_SOURCE_DIR}/IoBigEventGenerator.cxx
   LIBRARIES Core RIO Net Tree Hist MathCore IoBigEventGeneration
-  DEPENDS IoBigEventGeneration MathCore
+  DEPENDS IoBigEventGeneration
   FIXTURES_SETUP io-bigevent-generator)
 
 ROOTTEST_ADD_TEST(write
