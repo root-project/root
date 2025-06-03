@@ -199,6 +199,8 @@ Bool_t TDirectory::AddDirectoryStatus()
 void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 {
    if (!obj || !fList) return;
+   if (!IsWritable())
+      return;
 
    if (replace && obj->GetName() && obj->GetName()[0]) {
       TObject *old;
