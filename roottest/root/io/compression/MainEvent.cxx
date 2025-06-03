@@ -372,7 +372,7 @@ int main(int argc, char **argv)
       hfile = new TFile(filename.str().c_str(),"RECREATE","TTree benchmark ROOT file");
 
       // Test get and set functions in TFile
-      int testValue = -2;
+      testValue = -2;
       hfile->SetCompressionSettings(testValue);
       if (hfile->GetCompressionSettings() != -1) exit(1);
       if (hfile->GetCompressionAlgorithm() != -1) exit(2);
@@ -545,7 +545,7 @@ int main(int argc, char **argv)
      }
 
      // Create a ROOT Tree and one superbranch
-      TTree *tree = new TTree("T","An example of a ROOT tree");
+      tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000);  // autosave when 1 Gbyte written
       //bufsize = 256000;
       bufsize = 64000;
