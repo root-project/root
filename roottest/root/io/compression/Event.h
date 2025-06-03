@@ -45,7 +45,7 @@ public:
 
    ClassDef(UShortVector,1)  //Encapsulated STL vector of UShorts
 };
-   
+
 class EventHeader {
 
 private:
@@ -62,12 +62,13 @@ public:
    Int_t  GetEvtNum() const { return fEvtNum; }
    Int_t  GetRun() const { return fRun; }
    Int_t  GetDate() const { return fDate; }
-//friend Bool_t  operator==(const EventHeader& h1, const EventHeader& h2);
-friend Bool_t  operator<=(const EventHeader& h1, const EventHeader& h2);
+   //friend Bool_t  operator==(const EventHeader &, const EventHeader &);
+   friend Bool_t  operator<=(const EventHeader&, const EventHeader&);
 
    ClassDef(EventHeader,1)  //Event Header
 };
-inline Bool_t     operator<=(const EventHeader& s1, const EventHeader& s2)
+
+inline Bool_t operator<=(const EventHeader &, const EventHeader &)
 { return 0; }
 
 template <class T> struct template1 {};
@@ -87,7 +88,7 @@ private:
    Int_t                     fMeasures[kSize]; //an array where dimension is an enum
    UInt_t                    fFlag;            //bit pattern event flag
    Float_t                   fMatrix[4][4];    //a two-dim array
-   Float_t                  *fClosestDistance; //[fNvertex] pointer to an array of floats of length fNvertex 
+   Float_t                  *fClosestDistance; //[fNvertex] pointer to an array of floats of length fNvertex
    Float_t                   fTemperature;     //event temperature
    char                     *fTracksInVertex;  //[fNvertex]
    vector<Long64_t>               fVectorLong64;       //STL vector on ints
@@ -105,7 +106,7 @@ private:
    list<string *>            fListStringp;     //STL list of pointers to strings
    map<TNamed*,int>          fMapTNamedp;      //STL map
 
-   template2< template1< int > > fTemplateMember; 
+   template2< template1< int > > fTemplateMember;
 
    map<TString,TList*>       fMapList;         // STL map
    map<TString,TString*>     fMapTString;      //!STL map
@@ -139,7 +140,7 @@ private:
    TArrayI                  *fArrayI;          //a pointer to an array of integers
    UShortVector              fUshort;          //a TObject with an STL vector as base class
    TRef                      fRefH;            //Reference link to fH
-    
+
    static TClonesArray      *fgTracks;
    static TH1F              *fgHist;
 
@@ -163,7 +164,7 @@ public:
    void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<4&&y<4) fMatrix[x][y]=what;}
    void          SetRandomVertex();
    void          ShowLachaud();
-   
+
    char         *GetType() {return fType;}
    Int_t         GetNtrack() const { return fNtrack; }
    Int_t         GetNseg() const { return fNseg; }
@@ -177,7 +178,7 @@ public:
    Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
 
    UShortVector* GetUshort() { return &fUshort; }
-   
+
    ClassDef(Event,1)  //Event structure
 };
 
@@ -209,7 +210,7 @@ private:
    Short_t     *fPoints;       //[fNpoint] List of points
    char        *fTrackName;    //Track name
    TArrayI      fInts;         //some integers
-   
+
 public:
    Track() {fPoints=0; fTrackName = 0;}
    Track(Float_t random);
@@ -245,15 +246,15 @@ class BigTrack : public Track {
 private:
    Int_t          fSpecial;    //The BigTrack validity flag
    TLorentzVector fKine;       //more kinematics
-   
+
 public:
    BigTrack() {fSpecial = 1234; }
    BigTrack(Float_t random, Int_t special);
    virtual ~BigTrack() { }
-   
-   ClassDef(BigTrack,1)  //A Big track 
+
+   ClassDef(BigTrack,1)  //A Big track
 };
-         
+
 
 class HistogramManager {
 
