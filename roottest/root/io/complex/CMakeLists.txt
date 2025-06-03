@@ -1,5 +1,3 @@
-ROOTTEST_ADD_TESTDIRS()
-
 ROOTTEST_GENERATE_REFLEX_DICTIONARY( classWithComplex classWithComplex.h  SELECTION classWithComplex_selection.xml)
 
 ROOTTEST_ADD_TEST(writeClassWithComplex
