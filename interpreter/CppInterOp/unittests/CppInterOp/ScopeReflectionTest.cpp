@@ -158,7 +158,7 @@ TEST(ScopeReflectionTest, SizeOf) {
   EXPECT_EQ(Cpp::SizeOf(Decls[4]), (size_t)0);
   EXPECT_EQ(Cpp::SizeOf(Decls[5]), (size_t)1);
   EXPECT_EQ(Cpp::SizeOf(Decls[6]), (size_t)4);
-  EXPECT_EQ(Cpp::SizeOf(Decls[7]), (size_t)16);
+  EXPECT_EQ(Cpp::SizeOf(Decls[7]), (size_t) (sizeof(size_t) == 4 ? 12 : 16));
 }
 
 
