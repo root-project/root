@@ -1085,7 +1085,7 @@ void RooAbsPdf::printValue(ostream& os) const
   getVal() ;
 
   if (_norm) {
-    os << getVal() << "/" << _norm->getVal() ;
+    os << getVal() << " / " << _norm->getVal() ;
   } else {
     os << getVal();
   }
