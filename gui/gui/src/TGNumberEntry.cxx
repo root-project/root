@@ -243,11 +243,8 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
 /// \param attr see TGNumberFormat::EAttribute
 /// \note If `src` is a nullptr, this function is a no-op and returns silently
 
-static void CopyAndSkipGarbage(char *dst,
-                                    std::size_t dstCap,
-                                    const char *src,
-                                    TGNumberFormat::EStyle style,
-                                    TGNumberFormat::EAttribute attr)
+static void CopyAndSkipGarbage(char *dst, std::size_t dstCap, const char *src, TGNumberFormat::EStyle style,
+                               TGNumberFormat::EAttribute attr)
 {
    if (!src)
       return;
