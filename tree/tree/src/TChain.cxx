@@ -3186,9 +3186,8 @@ Int_t TChain::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TCl
                                bool isptr, bool delayTChainElement)
 {
    auto ret = SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
-   auto *element = static_cast<TChainElement *>(fStatus->FindObject(bname));
    // The previous call to SetBranchAddress must have created the element
-   assert(element);
+   auto *element = static_cast<TChainElement *>(fStatus->FindObject(bname));
    element->IsDelayed(delayTChainElement);
    return ret;
 }

@@ -15,7 +15,7 @@
 
 #include <iostream>
 // Test regression for https://github.com/root-project/root/issues/16804
-struct RegresssionGH16804 : public ::testing::Test {
+struct RegressionGH16804 : public ::testing::Test {
 
    constexpr static inline std::array<const char *, 2> fFriendFileNames{"gh16804_friend_0.root",
                                                                         "gh16804_friend_1.root"};
@@ -26,20 +26,22 @@ struct RegresssionGH16804 : public ::testing::Test {
    constexpr static inline const char *fMainTreeName{"mainTree"};
    constexpr static inline const char *fFriendTreeName{"friendTree"};
    constexpr static inline const char *fOtherFriendTreeName{"otherFriendTree"};
+   constexpr static inline const char *fFriend20EntriesFileName{"gh16804_friend_20entries.root"};
+   constexpr static inline const char *fFriend20EntriesTreeName{"friendTree20Entries"};
 
-   static void CreateMainTree()
+   static void CreateTree20Entries(const char *treeName, const char *fileName, const char *branchName)
    {
       int begin{};
       int end{20};
 
-      auto file = std::make_unique<TFile>(fMainFileName, "RECREATE");
-      auto tree = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+      auto file = std::make_unique<TFile>(fileName, "RECREATE");
+      auto tree = std::make_unique<TTree>(treeName, treeName);
 
-      int mainBranch{};
-      tree->Branch("mainBranch", &mainBranch);
+      int x{};
+      tree->Branch(branchName, &x);
 
       // Sequential entries in reverse order from 19 (inclusive) to 0 (inclusive)
-      for (mainBranch = end - 1; mainBranch > begin - 1; mainBranch--)
+      for (x = end - 1; x > begin - 1; x--)
          tree->Fill();
 
       file->Write();
@@ -95,7 +97,8 @@ struct RegresssionGH16804 : public ::testing::Test {
 
    static void SetUpTestSuite()
    {
-      CreateMainTree();
+      CreateTree20Entries(fMainTreeName, fMainFileName, "mainBranch");
+      CreateTree20Entries(fFriend20EntriesTreeName, fFriend20EntriesFileName, "friendBranch");
       CreateFriendTrees();
       CreateOtherFriendTrees();
    }
@@ -107,10 +110,19 @@ struct RegresssionGH16804 : public ::testing::Test {
       for (const auto &fn : fOtherFriendFileNames)
          std::remove(fn);
       std::remove(fMainFileName);
+      std::remove(fFriend20EntriesFileName);
    }
 };
 
-TEST_F(RegresssionGH16804, MainTTreeFriendTChain)
+TEST_F(RegressionGH16804, GetBranchWrongName)
+{
+   auto mainFile = std::make_unique<TFile>(fMainFileName);
+   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
+
+   ASSERT_EQ(mainTree->GetBranch("wrong"), nullptr);
+}
+
+TEST_F(RegressionGH16804, MainTTreeFriendTChain)
 {
    TChain friendChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)
@@ -194,7 +206,169 @@ TEST_F(RegresssionGH16804, MainTTreeFriendTChain)
    }
 }
 
-TEST_F(RegresssionGH16804, WrongBranchNameTTreeFriendTChain)
+TEST_F(RegressionGH16804, TChainFriendTTree)
+{
+   TChain mainChain{fFriendTreeName};
+   for (const auto &fn : fFriendFileNames)
+      mainChain.Add(fn);
+
+   auto friendFile = std::make_unique<TFile>(fMainFileName);
+   auto friendTree = friendFile->Get<TTree>(fMainTreeName);
+   mainChain.AddFriend(friendTree);
+
+   int index = -1, value = -1, mainBranch = -1;
+   auto mainBranchRet = mainChain.SetBranchAddress("mainBranch", &mainBranch);
+   auto indexRet = mainChain.SetBranchAddress("index", &index);
+   auto valueRet = mainChain.SetBranchAddress("value", &value);
+   EXPECT_GE(mainBranchRet, 0);
+   EXPECT_GE(indexRet, 0);
+   EXPECT_GE(valueRet, 0);
+
+   std::vector<int> expectedMainBranch(20);
+   std::vector<int> expectedIndex(20);
+   std::vector<int> expectedValue(20);
+
+   std::iota(expectedMainBranch.begin(), expectedMainBranch.end(), 0);
+   std::reverse(expectedMainBranch.begin(), expectedMainBranch.end());
+   std::iota(expectedIndex.begin(), expectedIndex.end(), 0);
+   std::iota(expectedValue.begin(), expectedValue.end(), 100);
+
+   for (Long64_t i = 0; i < mainChain.GetEntriesFast(); ++i) {
+      mainChain.GetEntry(i);
+      EXPECT_EQ(expectedMainBranch[i], mainBranch);
+      EXPECT_EQ(expectedIndex[i], index);
+      EXPECT_EQ(expectedValue[i], value);
+   }
+
+   // Now test with TTree::Scan
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(mainChain.GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"regression_16804_tchain_friend_ttree_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         mainChain.Scan("mainBranch:index:value");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(************************************************
+*    Row   * mainBranc *     index *     value *
+************************************************
+*        0 *        19 *         0 *       100 *
+*        1 *        18 *         1 *       101 *
+*        2 *        17 *         2 *       102 *
+*        3 *        16 *         3 *       103 *
+*        4 *        15 *         4 *       104 *
+*        5 *        14 *         5 *       105 *
+*        6 *        13 *         6 *       106 *
+*        7 *        12 *         7 *       107 *
+*        8 *        11 *         8 *       108 *
+*        9 *        10 *         9 *       109 *
+*       10 *         9 *        10 *       110 *
+*       11 *         8 *        11 *       111 *
+*       12 *         7 *        12 *       112 *
+*       13 *         6 *        13 *       113 *
+*       14 *         5 *        14 *       114 *
+*       15 *         4 *        15 *       115 *
+*       16 *         3 *        16 *       116 *
+*       17 *         2 *        17 *       117 *
+*       18 *         1 *        18 *       118 *
+*       19 *         0 *        19 *       119 *
+************************************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
+   }
+}
+
+TEST_F(RegressionGH16804, TTreeFriendTTree)
+{
+   auto friendFile = std::make_unique<TFile>(fFriend20EntriesFileName);
+   auto friendTree = friendFile->Get<TTree>(fFriend20EntriesTreeName);
+
+   auto mainFile = std::make_unique<TFile>(fMainFileName);
+   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
+   mainTree->AddFriend(friendTree);
+
+   int mainBranch = -1, friendBranch = -1;
+   auto mainBranchRet = mainTree->SetBranchAddress("mainBranch", &mainBranch);
+   auto friendBranchRet = mainTree->SetBranchAddress("friendBranch", &friendBranch);
+   ASSERT_EQ(mainBranchRet, 0);
+   ASSERT_EQ(friendBranchRet, 0);
+
+   std::vector<int> expectedMainBranch(20);
+   std::vector<int> expectedFriendBranch(20);
+
+   std::iota(expectedMainBranch.begin(), expectedMainBranch.end(), 0);
+   std::reverse(expectedMainBranch.begin(), expectedMainBranch.end());
+   std::iota(expectedFriendBranch.begin(), expectedFriendBranch.end(), 0);
+   std::reverse(expectedFriendBranch.begin(), expectedFriendBranch.end());
+
+   auto nEntries = mainTree->GetEntriesFast();
+   for (decltype(nEntries) i = 0; i < nEntries; ++i) {
+      mainTree->GetEntry(i);
+      EXPECT_EQ(expectedMainBranch[i], mainBranch);
+      EXPECT_EQ(expectedFriendBranch[i], friendBranch);
+   }
+
+   // Now test with TTree::Scan
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(mainTree->GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"regression_16804_ttree_friend_ttree_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         mainTree->Scan("mainBranch:friendBranch");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(************************************
+*    Row   * mainBranc * friendBra *
+************************************
+*        0 *        19 *        19 *
+*        1 *        18 *        18 *
+*        2 *        17 *        17 *
+*        3 *        16 *        16 *
+*        4 *        15 *        15 *
+*        5 *        14 *        14 *
+*        6 *        13 *        13 *
+*        7 *        12 *        12 *
+*        8 *        11 *        11 *
+*        9 *        10 *        10 *
+*       10 *         9 *         9 *
+*       11 *         8 *         8 *
+*       12 *         7 *         7 *
+*       13 *         6 *         6 *
+*       14 *         5 *         5 *
+*       15 *         4 *         4 *
+*       16 *         3 *         3 *
+*       17 *         2 *         2 *
+*       18 *         1 *         1 *
+*       19 *         0 *         0 *
+************************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
+   }
+}
+
+TEST_F(RegressionGH16804, WrongBranchNameTTreeFriendTChain)
 {
    TChain friendChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)
@@ -220,7 +394,7 @@ TEST_F(RegresssionGH16804, WrongBranchNameTTreeFriendTChain)
    EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
 }
 
-TEST_F(RegresssionGH16804, WrongBranchNameTTreeFriendTTree)
+TEST_F(RegressionGH16804, WrongBranchNameTTreeFriendTTree)
 {
    auto friendFile = std::make_unique<TFile>(fFriendFileNames[0]);
    auto friendTree = friendFile->Get<TTree>(fFriendTreeName);
@@ -236,7 +410,7 @@ TEST_F(RegresssionGH16804, WrongBranchNameTTreeFriendTTree)
    EXPECT_EQ(wrongBranchRetBeforeLoadTree, -5);
 }
 
-TEST_F(RegresssionGH16804, WrongBranchNameTChainFriendTChain)
+TEST_F(RegressionGH16804, WrongBranchNameTChainFriendTChain)
 {
    TChain friendChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)
@@ -254,6 +428,8 @@ TEST_F(RegresssionGH16804, WrongBranchNameTChainFriendTChain)
    EXPECT_EQ(wrongBranchRetBeforeLoadTree, 5);
 
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   // Branch name is not found in main chain nor in friend chain, SetBranchStatus should print error
+   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> wrong");
    diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
 
    mainChain.LoadTree(0);
@@ -261,7 +437,7 @@ TEST_F(RegresssionGH16804, WrongBranchNameTChainFriendTChain)
    EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
 }
 
-TEST_F(RegresssionGH16804, WrongBranchNameTChainFriendTTree)
+TEST_F(RegressionGH16804, WrongBranchNameTChainFriendTTree)
 {
    auto friendFile = std::make_unique<TFile>(fMainFileName);
    auto friendTree = friendFile->Get<TTree>(fMainTreeName);
@@ -279,6 +455,8 @@ TEST_F(RegresssionGH16804, WrongBranchNameTChainFriendTTree)
    EXPECT_EQ(wrongBranchRetBeforeLoadTree, 5);
 
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   // Branch name is not found in main chain nor in friend chain, SetBranchStatus should print error
+   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> wrong");
    diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
 
    mainChain.LoadTree(0);
@@ -286,7 +464,7 @@ TEST_F(RegresssionGH16804, WrongBranchNameTChainFriendTTree)
    EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
 }
 
-TEST_F(RegresssionGH16804, WrongBranchNameTTreeTwoFriendTChains)
+TEST_F(RegressionGH16804, WrongBranchNameTTreeTwoFriendTChains)
 {
    TChain friendChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)
@@ -316,7 +494,7 @@ TEST_F(RegresssionGH16804, WrongBranchNameTTreeTwoFriendTChains)
    EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
 }
 
-TEST_F(RegresssionGH16804, TChainFriendTChain)
+TEST_F(RegressionGH16804, TChainFriendTChain)
 {
    TChain mainChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)
@@ -409,7 +587,7 @@ TEST_F(RegresssionGH16804, TChainFriendTChain)
    }
 }
 
-TEST_F(RegresssionGH16804, TTreeTwoFriendTChains)
+TEST_F(RegressionGH16804, TTreeTwoFriendTChains)
 {
    TChain friendChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)
@@ -506,7 +684,7 @@ TEST_F(RegresssionGH16804, TTreeTwoFriendTChains)
    }
 }
 
-TEST_F(RegresssionGH16804, TChainTwoFriendTChains)
+TEST_F(RegressionGH16804, TChainTwoFriendTChains)
 {
    TChain friendChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)

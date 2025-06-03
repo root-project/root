@@ -5308,9 +5308,6 @@ TBranch *R__GetBranch(const TObjArray &branches, const char *name)
 /// this tree. Otherwise, returns nullptr.
 TBranch *TTree::GetBranchFromSelf(const char *branchName)
 {
-   if (!branchName)
-      return nullptr;
-
    // Look for an exact match in the list of top level
    // branches.
    if (auto *br = static_cast<TBranch *>(fBranches.FindObject(branchName)))
@@ -5347,9 +5344,6 @@ TBranch *TTree::GetBranchFromSelf(const char *branchName)
 /// the list of friends of this tree. Otherwise, returns nullptr.
 TBranch *TTree::GetBranchFromFriends(const char *branchName)
 {
-   if (!branchName)
-      return nullptr;
-
    if (!fFriends) {
       return nullptr;
    }
