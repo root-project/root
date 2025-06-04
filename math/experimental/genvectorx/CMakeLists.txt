@@ -55,6 +55,15 @@ add_sycl_to_target(
     src/RotationZYX.cxx
     src/VectorUtil.cxx
 )
+
+set(ACPP_EXPORTS acpp-rt acpp-common)
+
+foreach(target IN LISTS ACPP_EXPORTS)
+   install(TARGETS ${target} EXPORT ROOTExports)
+endforeach()
+
+target_link_libraries(GenVectorSYCL PUBLIC m stdc++)
+
 target_link_libraries(GenVectorSYCL INTERFACE AdaptiveCpp::acpp-rt)
 target_compile_options(GenVectorSYCL PUBLIC ${SYCL_COMPILER_FLAGS})
 target_compile_definitions(GenVectorSYCL PUBLIC ROOT_MATH_SYCL)
