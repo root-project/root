@@ -110,7 +110,7 @@ TEST(TH1, Normalize)
    EXPECT_FLOAT_EQ(h1.GetMaximum(), 10.);
    TH1F h2(h1);
    h2.Normalize();
-   EXPECT_FLOAT_EQ(h2.GetEntries(), 16.2);
+   EXPECT_FLOAT_EQ(h2.GetEntries(), 5);
    EXPECT_FLOAT_EQ(h2.GetSumOfWeights(), 10.);
    EXPECT_FLOAT_EQ(h2.Integral(), 10.);
    EXPECT_FLOAT_EQ(h2.Integral("width"), 1.);
@@ -129,8 +129,8 @@ TEST(TH1, Normalize)
    EXPECT_FLOAT_EQ(h4.Integral(), 1);
    EXPECT_FLOAT_EQ(h4.Integral("width"), 0.1);
    EXPECT_FLOAT_EQ(h4.GetMaximum(), 5. / 9);
-   const Float_t xbins[10+1] {0., 0.05, 0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 0.8, 0.95, 1.};
-   TH1F v1("v1","vbw", 10, xbins);
+   const Float_t xbins[10 + 1]{0., 0.05, 0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 0.8, 0.95, 1.};
+   TH1F v1("v1", "vbw", 10, xbins);
    v1.SetBinContent(1, 1.);
    v1.SetBinContent(3, 5.);
    v1.SetBinContent(5, 10.);
@@ -143,9 +143,9 @@ TEST(TH1, Normalize)
    EXPECT_FLOAT_EQ(v1.GetMaximum(), 10.);
    TH1F v2(v1);
    v2.Normalize();
-   EXPECT_FLOAT_EQ(v2.GetEntries(), 16.35135);
-   EXPECT_FLOAT_EQ(v2.GetSumOfWeights(), 15.277776);
-   EXPECT_FLOAT_EQ(v2.Integral(), 15.277776);
+   EXPECT_FLOAT_EQ(v2.GetEntries(), 5);
+   EXPECT_FLOAT_EQ(v2.GetSumOfWeights(), 14.399998);
+   EXPECT_FLOAT_EQ(v2.Integral(), 14.399998);
    EXPECT_FLOAT_EQ(v2.Integral("width"), 1.);
-   EXPECT_FLOAT_EQ(v2.GetMaximum(), 50. / 9);
+   EXPECT_FLOAT_EQ(v2.GetMaximum(), 7.9999990);
 }

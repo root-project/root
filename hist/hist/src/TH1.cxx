@@ -6228,7 +6228,8 @@ void TH1::Normalize(Option_t *option)
       Error("Normalize", "Attempt to normalize histogram with zero integral");
    } else {
       Scale(1.0 / norm, "");
-      // An alternative could have been to call Integral("") and Scale(1/norm, "width").
+      // An alternative could have been to call Integral("") and Scale(1/norm, "width"), but this
+      // will lead to a different value of GetEntries.
       // Instead, doing simultaneously Integral("width") and Scale(1/norm, "width") leads to an error since you are
       // dividing twice by bin width.
    }
