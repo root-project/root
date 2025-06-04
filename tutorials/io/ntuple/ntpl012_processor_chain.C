@@ -64,17 +64,20 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    TH1F hPx("h", "This is the px distribution", 100, -4, 4);
    hPx.SetFillColor(48);
 
-   auto model = ROOT::RNTupleModel::Create();
-   auto ptrPx = model->MakeField<std::vector<float>>("vpx");
+   auto model = ROOT::RNTupleModel::CreateBare();
+   model->MakeField<std::vector<float>>("vpx");
 
-   // By passing a model to the processor, we can use the pointers to field values created upon model creation during
-   // processing. When no model is provided, a default model is created based on the first ntuple specified.
-   // Access to the entry values in this case can be achieved through RNTupleProcessor::GetEntry() or through its
-   // iterator.
+   // By passing a model to the processor, we can instruct the RNTupleProcessor to only read a particular subset of
+   // fields. Because the RNTupleProcessor adds some additional bookkeeping to the standard REntry, only bare models
+   // (i.e., models without a default entry) can be passed. When no model is provided, a default model is created based
+   // on the first ntuple specified.
+   // Access to the entry values in both cases is provided through RNTupleProcessor::GetValuePtr() (see below).
    auto processor = RNTupleProcessor::CreateChain(ntuples, std::move(model));
    int prevProcessorNumber{-1};
 
-   for (const auto &entry : *processor) {
+   auto ptrPx = processor->GetValuePtr<std::vector<float>>("vpx");
+
+   for (const auto &_ : *processor) {
       // The RNTupleProcessor provides some additional bookkeeping information. The local entry number is reset each
       // a new ntuple in the chain is opened for processing.
       if (static_cast<int>(processor->GetCurrentProcessorNumber()) > prevProcessorNumber) {
