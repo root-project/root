@@ -4,10 +4,8 @@
 //------------------------------------------------------------------------------
 
 #ifndef DataModelV1_h
-#ifdef ClingWorkAroundMultipleInclude
 #define DataModelV1_h
-#endif
- 
+
 #include <utility>
 #include <vector>
 
@@ -17,9 +15,9 @@ namespace CMS {
    public:
       struct Transient {
          Transient() : fCached(false) {}
-         bool fCached; //! 
+         bool fCached; //!
       };
-      
+
       ClassAIns(): m_a( 12 ), m_b( 32.23 ) {}
    private:
       int    m_a;
@@ -32,9 +30,9 @@ class ClassAIns
 public:
    struct Transient {
       Transient() : fCached(false) {}
-      bool fCached; //! 
+      bool fCached; //!
    };
-   
+
    ClassAIns(): m_a( 12 ), m_b( 32.23 ) {}
 private:
    int    m_a;
@@ -85,7 +83,7 @@ class ClassC: public ClassABase
 //      std::vector<std::pair<double, int> > m_h;
 };
 
-class ClassD 
+class ClassD
    {
    public:
       ClassD(): m_c( 65.22 ), m_e( 8 ) {}
@@ -94,7 +92,7 @@ class ClassD
       float      m_c;
       ClassAIns  m_d;
       int        m_e;
-   };      
+   };
 
 struct _dummy
 {
@@ -150,11 +148,11 @@ namespace LHCb {
       void SetLeft(long v) { fLeft = v; }
       void SetRight(long v) { fRight = v; }
       Ref() : fLeft(0),fRight(0) {}
-      
+
    };
 
 
-// The interesting part is LHCb::Node:  
+// The interesting part is LHCb::Node:
 class Node  {
 private:
    double                          m_type;             ///< type of node
@@ -174,7 +172,7 @@ public:
    Track() { m_nodes.push_back(new LHCb::Node()); }
    ~Track() { for(unsigned int i=0; i<m_nodes.size(); ++i) { delete m_nodes[i]; }; m_nodes.clear(); }
    void SetRef(long l, long r) { fLeft.Set(l); fRight.Set(r); }
-private:    
+private:
    double                            m_chi2PerDoF;           ///< Chi2 per degree of freedom of the track
    int                               m_nDoF;                 ///< Number of degrees of freedom of the track
    double                            m_likelihood;           ///< Likelihood variable
@@ -184,15 +182,15 @@ private:
    //std::vector<LHCb::State*>       m_states;               ///< Container with pointers to all the states
    //std::vector<LHCb::Measurement*> m_measurements;         ///< Container of Measurements
    //Gaudi::TrackProjectionMatrix    m_projections;      //! ///< the projection matrix
-   Node                              m_nothing;          //! ///< Just for testing 
-   std::vector<LHCb::Node*>          m_nodes;            //! ///< Container of Nodes 
+   Node                              m_nothing;          //! ///< Just for testing
+   std::vector<LHCb::Node*>          m_nodes;            //! ///< Container of Nodes
    Gaudi::TrackProjectionMatrixMis   m_projections_file;     ///< the projection matrix
    //ExtraInfo                       m_extraInfo;            ///< Additional pattern recognition information. Do not access directly, use *Info() methods instead.
    //SmartRefVector<LHCb::Track>     m_ancestors;            ///< Ancestor tracks that created this one
 
    RefLeft  fLeft;
    RefRight fRight;
-   
+
 };
 }
 
