@@ -215,7 +215,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
       if (checkDuplicates) {
          if (fIndexValues[i - 1] == fIndexValues[i] && fIndexValuesMinor[i - 1] == fIndexValuesMinor[i]) {
             Error("TTreeIndex",
-                  "In entry %lld, a duplicate entry was found value at (%s,%s)=(%lld,%lld)",
+                  "In entry %lld, a duplicate key was found value at (%s, %s) = (%lld, %lld)",
                   i, fMajorName.Data(), fMinorName.Data(), fIndexValues[i], fIndexValuesMinor[i]
                  );
             if (gDebug < 1) {
