@@ -358,6 +358,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    };
 
    fOption = option;
+   fOption.ToUpper();
+
    if (strlen(fUrl.GetProtocol()) != 0 && strcmp(fUrl.GetProtocol(), "file") != 0 && !fOption.BeginsWith("NET") &&
        !fOption.BeginsWith("WEB")) {
       Error("TFile",
@@ -401,8 +403,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fUnits        = 4;
    fCacheReadMap = new TMap();
    SetBit(kBinaryFile, kTRUE);
-
-   fOption.ToUpper();
 
    if (fIsRootFile && !fIsPcmFile && fOption != "NEW" && fOption != "CREATE"
        && fOption != "RECREATE") {
@@ -4163,6 +4163,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    // support for asynchronous open, though; the following is completely transparent if
    // such support if not available for the required protocol)
    TString opts(options);
+   opts.ToUpper();
    Int_t ito = opts.Index("TIMEOUT=");
    if (ito != kNPOS) {
       TString sto = opts(ito + std::char_traits<char>::length("TIMEOUT="), opts.Length());
@@ -4897,8 +4898,9 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
             }
             // If option "READ" test existence and access
             TString opt = option;
+            opt.ToUpper();
             Bool_t read = (opt.IsNull() ||
-                          !opt.CompareTo("READ", TString::kIgnoreCase)) ? kTRUE : kFALSE;
+                          opt == "READ") ? kTRUE : kFALSE;
             if (read) {
                TString fn = TUrl(lfname).GetFile();
                if (!gSystem->ExpandPathName(fn)) {
