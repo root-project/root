@@ -371,13 +371,28 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
 
 void ROOT::Experimental::RNTupleImporter::Import()
 {
-   if (fDestFile->FindKey(fNTupleName.c_str()) != nullptr)
+   TDirectory *targetDir = fDestFile.get();
+   // Extract the ntuple name and directory name
+   auto lastSlash = fNTupleName.find_last_of('/');
+   std::string ntupleName = fNTupleName;
+   if (lastSlash != std::string::npos) {
+      // Create the directory in the output file if it does not exist
+      auto dirName = fNTupleName.substr(0, lastSlash);
+      ntupleName = fNTupleName.substr(lastSlash + 1);
+      targetDir = fDestFile->mkdir(dirName.c_str(), "", true);
+      if (!targetDir) {
+         throw RException(R__FAIL("Failed to create directory " + dirName + " in file " + fDestFileName));
+      }
+   }
+
+   if (targetDir->FindKey(ntupleName.c_str()) != nullptr) {
       throw RException(R__FAIL("Key '" + fNTupleName + "' already exists in file " + fDestFileName));
+   }
 
    PrepareSchema();
 
    std::unique_ptr<ROOT::Internal::RPageSink> sink =
-      std::make_unique<ROOT::Internal::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
+      std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleName, *targetDir, fWriteOptions);
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
 

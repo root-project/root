@@ -56,6 +56,7 @@ importer->Import();
 ~~~
 
 The output file is created if it does not exist, otherwise the ntuple is added to the existing file.
+Directories in the output file are created as necessary, allowing ntuples to be stored in a nested structure (e.g. DirName/TreeName).
 Note that input file and output file can be identical if the ntuple is stored under a different name than the tree
 (use `SetNTupleName()`).
 
