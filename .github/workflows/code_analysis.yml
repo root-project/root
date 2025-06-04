@@ -20,12 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TRAVIS_BRANCH: ${{ github.base_ref }} 
+      TRAVIS_PULL_REQUEST_REPO: ${{ github.event.pull_request.head.repo.html_url }}
       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1024
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Fetch base sha
-      run: git fetch --depth=1 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+      run: git fetch --depth=1024 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+    - name: Determine merge base
+      run: echo "MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} HEAD)" >> $GITHUB_ENV
     - name: install clang-format
       run: sudo apt-get install -y clang-format
     - name: run clang-format script
