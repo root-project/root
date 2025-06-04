@@ -1,8 +1,8 @@
 {
    gROOT->ProcessLine(".L header.C+");
    TClass *cl = gROOT->GetClass("Hard2Stream");
-// cl->SetStreamer(new TStreamer(hard2StreamStreamer));
-//setStreamer();
+   // cl->SetStreamer(new TStreamer(hard2StreamStreamer));
+   // setStreamer();
 
    cout << "Hard2Stream version #" << cl->GetClassVersion() << endl;
 #ifdef ClingWorkAroundMissingDynamicScope
@@ -22,11 +22,11 @@ gROOT->ProcessLine(
    myobj.print();
    buf.WriteObjectAny(&myobj,cl);
    buf.SetReadMode();
-   buf.Reset(); 
+   buf.Reset();
    Hard2Stream* readobj = (Hard2Stream*) buf.ReadObjectAny(0);
    readobj->print();
 #endif
 
 }
 
-   
+
