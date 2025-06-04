@@ -20,12 +20,12 @@ Abstract class for geometry checkers
 TVirtualGeoChecker *TVirtualGeoChecker::fgGeoChecker = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Geometry painter default constructor
+/// Geometry checker default constructor
 
 TVirtualGeoChecker::TVirtualGeoChecker() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Geometry painter default destructor
+/// Geometry checker destructor
 
 TVirtualGeoChecker::~TVirtualGeoChecker()
 {
