@@ -10,13 +10,15 @@
 #include <algorithm>
 #include <ctime>
 #include <cstdlib>
-#include <../common/Dumper.h>
-#include <../common/Generator.h>
-#include <DataModelV2.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TROOT.h>
 #include <TSystem.h>
+
+#include "../common/Dumper.h"
+#include "../common/Generator.h"
+
+#include "DataModelV2.h"
 
 
 template <typename A>
@@ -28,30 +30,23 @@ void do_del( A* obj )
 int test3(const char *mode = "")
 {
    using namespace std;
-   srandom( time( 0 ) );
-
-   Dumper out("", "01", "rv1");
 
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV2_dictcint.so";
+   const char* dictname = "libDatModelV2_dictcint";
+   const char *prefix = "";
 
    if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV2_dictrflx.so";
-      gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
-      out.fPrefix = "rflx_";
-   }
-   else {
-      gROOT->ProcessLine("#include <vector>");
+      dictname = "libDatModelV2_dictrflx";
+      prefix = "rflx_";
    }
 
    if( gSystem->Load(dictname) < 0 )
    {
-      cerr << "[!] Unable to load the dictionary: ";
-      cerr << dictname << endl;
-      return 0;
+      cerr << "[!] Unable to load the dictionary: " << dictname << endl;
+      return 1;
    }
 
    // TClass::GetClass( "vector<ClassA>" )->GetStreamerInfo( 10 );
@@ -76,13 +71,14 @@ int test3(const char *mode = "")
    ClassD                     *objDNS = 0;
 
    //---------------------------------------------------------------------------
-   // Store the objects in a ROOT file
+   // Read objects from a ROOT file
    //---------------------------------------------------------------------------
-   TFile *file = new TFile( TString::Format("%stestv1.root",out.fPrefix.Data()), "READ" );
+   auto fname = TString::Format("%stestv1.root", prefix);
+   auto file = TFile::Open( fname , "READ" );
 
-   if( !file->IsOpen() )
+   if( !file )
    {
-      cout << "[i] Unable to open: testv1.root" << endl;
+      cout << "[i] Unable to open: " << fname << endl;
       return 1;
    }
 
@@ -103,18 +99,16 @@ int test3(const char *mode = "")
 //   tree->SetBranchAddress( "TestVectorASS", &vASS   );
 
    tree->GetEntry(0);
-   //tree->Print("debugAddress");
-   tree->Print("debugInfo");
+   // tree->Print("debugAddress");
+   // tree->Print("debugInfo");
    file->Close();
 
    //---------------------------------------------------------------------------
    // Dump what was read
    //---------------------------------------------------------------------------
-   unsigned int var = 1;
-   //dump( objA,   o1  );
-   out.dump( objAI,  ++var, "" );
-   out.dump( objD,   ++var, "S" );
-   out.dump( objDNS, var,   "NS");
+   test_dump( objAI,   prefix, 2, "wv1", "rv3", 2 );
+   test_dump( objD,    prefix, 3, "wv1", "rv3", 2 );
+   test_dump( objDNS,  prefix, 3, "wv1", "rv3ns", 2 );
 //   dump( objANS, o2  );
 //   dump( pr,     o3  );
 //   dump( prNS,   o4  );
