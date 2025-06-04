@@ -4004,8 +4004,15 @@ void TBranchElement::PrintValue(Int_t lenmax) const
          GetInfoImp()->PrintValueSTL(GetName(), ((TBranchElement*) this)->GetCollectionProxy(), prID, fOffset, lenmax);
       }
    } else {
-      if (GetInfoImp()) {
-         GetInfoImp()->PrintValue(GetName(), object, prID, -1, lenmax);
+      if (fSTLtype == ROOT::kNotSTL) {
+         if (GetInfoImp()) {
+            GetInfoImp()->PrintValue(GetName(), object, prID, -1, lenmax);
+         }
+      } else {
+          TVirtualCollectionProxy::TPushPop helper(((TBranchElement*) this)->GetCollectionProxy(), object);
+          if (info) {
+             info->PrintValueSTL(GetName(), ((TBranchElement*) this)->GetCollectionProxy(), 0, fOffset, lenmax);
+          }
       }
    }
 }
