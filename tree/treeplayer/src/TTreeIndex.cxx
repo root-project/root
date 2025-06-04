@@ -219,7 +219,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
                   i, fMajorName.Data(), fMinorName.Data(), fIndexValues[i], fIndexValuesMinor[i]
                  );
             if (gDebug < 1) {
-               Warning("TTreeIndex", "Further potential duplicates won't be checked, use gDebug = 1 to check all.");
+               Warning("TTreeIndex", "Further potential duplicates won't be checked, use gDebug >= 1 to check all.");
             }
             duplicatedKeys = true;
          }
