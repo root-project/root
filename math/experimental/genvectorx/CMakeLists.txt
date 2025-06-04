@@ -58,6 +58,14 @@ message(STATUS "Experimental GenVectorX")
        ROOT_MATH_SYCL
   )
   
+set(ACPP_EXPORTS acpp-rt acpp-common)
+
+foreach(target IN LISTS ACPP_EXPORTS)
+   install(TARGETS ${target} EXPORT ROOTExports)
+endforeach()
+
+target_link_libraries(GenVectorSYCL PUBLIC m stdc++)
+
 target_compile_definitions(GenVectorSYCL PUBLIC ROOT_MATH_SYCL)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
