@@ -318,3 +318,17 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
+
+TEST_F(RNTupleJoinProcessorTest, PrintStructure)
+{
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+
+   std::ostringstream os;
+   proc->PrintStructure(os);
+
+   const std::string exp = "+-----------------------------+ +-----------------------------+\n"
+                           "| ntuple2                     | | ntuple3                     |\n"
+                           "| test_ntuple_join_process... | | test_ntuple_join_process... |\n"
+                           "+-----------------------------+ +-----------------------------+\n";
+   EXPECT_EQ(exp, os.str());
+}
