@@ -461,13 +461,25 @@ Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
       UInt_t   tag  = Get(buf + off + kZIP64_EXTENDED_MAGIC_OFF, kZIP64_EXTENDED_MAGIC_LEN);
       UInt_t   size = Get(buf + off + kZIP64_EXTENDED_SIZE_OFF,  kZIP64_EXTENDED_SIZE_LEN);
       if (tag == kZIP64_EXTENDED_MAGIC) {
-         Long64_t usize = Get64(buf + off + kZIP64_EXTENDED_USIZE_OFF,      kZIP64_EXTENDED_USIZE_LEN);
-         Long64_t csize = Get64(buf + off + kZIP64_EXTENTED_CSIZE_OFF,      kZIP64_EXTENDED_CSIZE_LEN);
-         m->fDsize = usize;
-         m->fCsize = csize;
-         if (size >= 24) {
-            Long64_t offset = Get64(buf + off + kZIP64_EXTENDED_HDR_OFFSET_OFF, kZIP64_EXTENDED_HDR_OFFSET_LEN);
-            m->fPosition = offset;
+         // The Zip64 extended entry field may contain the following values:
+         //   - Original uncompressed size (8 B)
+         //   - Size of compressed data (8 B)
+         //   - Offset of local header record (8 B)
+         // These are all optional and only appear if the respective non-extra field is set to kMAX_SIZE (0xFFFF'FFFF).
+         // However they must appear in the above order.
+         Long64_t relOff = kZIP64_EXTENDED_USIZE_OFF;
+         if (m->fDsize == kMAX_SIZE && size >= kZIP64_EXTENDED_USIZE_LEN) {
+            m->fDsize = Get64(buf + off + relOff, kZIP64_EXTENDED_USIZE_LEN);
+            size -= kZIP64_EXTENDED_USIZE_LEN;
+            relOff += kZIP64_EXTENDED_USIZE_LEN;
+         }
+         if (m->fCsize == kMAX_SIZE && size >= kZIP64_EXTENDED_CSIZE_LEN) {
+            m->fCsize = Get64(buf + off + relOff, kZIP64_EXTENDED_CSIZE_LEN);
+            size -= kZIP64_EXTENDED_CSIZE_LEN;
+            relOff += kZIP64_EXTENDED_CSIZE_LEN;
+         }
+         if (m->fPosition == kMAX_SIZE && size >= kZIP64_EXTENDED_HDR_OFFSET_LEN) {
+            m->fPosition = Get64(buf + off + relOff, kZIP64_EXTENDED_HDR_OFFSET_LEN);
          }
 
          ret = 0;
