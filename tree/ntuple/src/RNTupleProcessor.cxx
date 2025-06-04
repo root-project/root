@@ -18,8 +18,11 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/StringUtils.hxx>
 
 #include <TDirectory.h>
+
+#include <iomanip>
 
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
 {
@@ -229,6 +232,30 @@ void ROOT::Experimental::RNTupleSingleProcessor::AddEntriesToJoinTable(Internal:
    joinTable.Add(*fPageSource, Internal::RNTupleJoinTable::kDefaultPartitionKey, entryOffset);
 }
 
+void ROOT::Experimental::RNTupleSingleProcessor::PrintStructureImpl(std::ostream &output) const
+{
+   static constexpr int width = 32;
+
+   std::string ntupleNameTrunc = fNTupleSpec.fNTupleName.substr(0, width - 4);
+   if (ntupleNameTrunc.size() < fNTupleSpec.fNTupleName.size())
+      ntupleNameTrunc = fNTupleSpec.fNTupleName.substr(0, width - 6) + "..";
+
+   output << "+" << std::setfill('-') << std::setw(width - 1) << "+\n";
+   output << std::setfill(' ') << "| " << ntupleNameTrunc << std::setw(width - 2 - ntupleNameTrunc.size()) << " |\n";
+
+   if (const std::string *storage = std::get_if<std::string>(&fNTupleSpec.fStorage)) {
+      std::string storageTrunc = storage->substr(0, width - 5);
+      if (storageTrunc.size() < storage->size())
+         storageTrunc = storage->substr(0, width - 8) + "...";
+
+      output << std::setfill(' ') << "| " << storageTrunc << std::setw(width - 2 - storageTrunc.size()) << " |\n";
+   } else {
+      output << "| " << std::setw(width - 2) << " |\n";
+   }
+
+   output << "+" << std::setfill('-') << std::setw(width - 1) << "+\n";
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
@@ -331,6 +358,13 @@ void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::
       const auto &innerProc = fInnerProcessors[i];
       innerProc->AddEntriesToJoinTable(joinTable, entryOffset);
       entryOffset += innerProc->GetNEntries();
+   }
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::PrintStructureImpl(std::ostream &output) const
+{
+   for (const auto &innerProc : fInnerProcessors) {
+      innerProc->PrintStructure(output);
    }
 }
 
@@ -540,4 +574,29 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddEntriesToJoinTable(Internal::R
                                                                      ROOT::NTupleSize_t entryOffset)
 {
    fPrimaryProcessor->AddEntriesToJoinTable(joinTable, entryOffset);
+}
+
+void ROOT::Experimental::RNTupleJoinProcessor::PrintStructureImpl(std::ostream &output) const
+{
+   std::ostringstream primaryStructureStr;
+   fPrimaryProcessor->PrintStructure(primaryStructureStr);
+   const auto primaryStructure = ROOT::Split(primaryStructureStr.str(), "\n", /*skipEmpty=*/true);
+   const auto primaryStructureWidth = primaryStructure.front().size();
+
+   std::ostringstream auxStructureStr;
+   fAuxiliaryProcessor->PrintStructure(auxStructureStr);
+   const auto auxStructure = ROOT::Split(auxStructureStr.str(), "\n", /*skipEmpty=*/true);
+
+   const auto maxLength = std::max(primaryStructure.size(), auxStructure.size());
+   for (unsigned i = 0; i < maxLength; i++) {
+      if (i < primaryStructure.size())
+         output << primaryStructure[i];
+      else
+         output << std::setw(primaryStructureWidth) << "";
+
+      if (i < auxStructure.size())
+         output << " " << auxStructure[i];
+
+      output << "\n";
+   }
 }

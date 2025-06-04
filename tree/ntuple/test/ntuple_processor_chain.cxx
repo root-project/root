@@ -278,3 +278,26 @@ TEST_F(RNTupleChainProcessorTest, TMemFile)
    EXPECT_EQ(nEntries, 10);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
+
+TEST_F(RNTupleChainProcessorTest, PrintStructure)
+{
+   auto proc = RNTupleProcessor::CreateChain(
+      {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}, {fNTupleName, fFileNames[2]}});
+
+   std::ostringstream os;
+   proc->PrintStructure(os);
+
+   const std::string exp = "+-----------------------------+\n"
+                           "| ntuple                      |\n"
+                           "| test_ntuple_chain_proces... |\n"
+                           "+-----------------------------+\n"
+                           "+-----------------------------+\n"
+                           "| ntuple                      |\n"
+                           "| test_ntuple_chain_proces... |\n"
+                           "+-----------------------------+\n"
+                           "+-----------------------------+\n"
+                           "| ntuple                      |\n"
+                           "| test_ntuple_chain_proces... |\n"
+                           "+-----------------------------+\n";
+   EXPECT_EQ(exp, os.str());
+}
