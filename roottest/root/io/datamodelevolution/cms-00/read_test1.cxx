@@ -10,13 +10,14 @@
 #include <algorithm>
 #include <ctime>
 #include <cstdlib>
-#include <../common/Dumper.h>
-#include <../common/Generator.h>
-#include <DataModelV1.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TROOT.h>
 #include <TSystem.h>
+
+#include "../common/Dumper.h"
+#include "../common/Generator.h"
+#include "DataModelV1.h"
 
 
 template <typename A>
@@ -29,55 +30,23 @@ int read_test1(const char *mode = "")
 {
    using namespace std;
 
-   Dumper out("", "cms-00", "rv0");
+   const char *prefix = "";
 
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV1_dictcint";
+   const char* dictname = "libDataModelV1_dictcint";
 
    if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV1_dictrflx";
-      gSystem->Load("libCintex");
-      gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
-      out.fPrefix = "reflex_";
-   }
-   else {
-      gROOT->ProcessLine("#include <vector>");
+      dictname = "libDataModelV1_dictrflx";
+      prefix = "reflex_";
    }
 
-   if( gSystem->Load(dictname) < 0 )
-   {
-      cerr << "[!] Unable to load the dictionary: ";
-      cerr << dictname << endl;
-      return 0;
+   if( gSystem->Load(dictname) < 0 ) {
+      cerr << "[!] Unable to load the dictionary: " << dictname << endl;
+      return 1;
    }
-
-   //---------------------------------------------------------------------------
-   // Open the control files
-   //---------------------------------------------------------------------------
-   ofstream o03   ( TString::Format("../logs/cms-00/%stest03_rv0.log",out.fPrefix.Data()) );
-   ofstream o03ns ( TString::Format("../logs/cms-00/%stest03_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o04   ( TString::Format("../logs/cms-00/%stest04_rv0.log",out.fPrefix.Data()) );
-   ofstream o04ns ( TString::Format("../logs/cms-00/%stest04_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o05   ( TString::Format("../logs/cms-00/%stest05_rv0.log",out.fPrefix.Data()) );
-   ofstream o06   ( TString::Format("../logs/cms-00/%stest06_rv0.log",out.fPrefix.Data()) );
-   ofstream o06ns ( TString::Format("../logs/cms-00/%stest06_rv0S.log",out.fPrefix.Data()) );
-   ofstream o07   ( TString::Format("../logs/cms-00/%stest07_rv0S.log",out.fPrefix.Data()) );
-   ofstream o07ns ( TString::Format("../logs/cms-00/%stest07_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o08   ( TString::Format("../logs/cms-00/%stest08_rv0S.log",out.fPrefix.Data()) );
-   ofstream o08ns ( TString::Format("../logs/cms-00/%stest08_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o09   ( TString::Format("../logs/cms-00/%stest09_rv0S.log",out.fPrefix.Data()) );
-   ofstream o09ns ( TString::Format("../logs/cms-00/%stest09_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o10   ( TString::Format("../logs/cms-00/%stest10_rv0S.log",out.fPrefix.Data()) );
-   ofstream o10ns ( TString::Format("../logs/cms-00/%stest10_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o11   ( TString::Format("../logs/cms-00/%stest11_rv0S.log",out.fPrefix.Data()) );
-   ofstream o11ns ( TString::Format("../logs/cms-00/%stest11_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o12   ( TString::Format("../logs/cms-00/%stest12_rv0S.log",out.fPrefix.Data()) );
-   ofstream o12ns ( TString::Format("../logs/cms-00/%stest12_rv0NS.log",out.fPrefix.Data()) );
-   ofstream o13   ( TString::Format("../logs/cms-00/%stest13_rv0S.log",out.fPrefix.Data()) );
-   ofstream o13ns ( TString::Format("../logs/cms-00/%stest13_rv0NS.log",out.fPrefix.Data()) );
 
    //---------------------------------------------------------------------------
    // Generate the objects
@@ -114,11 +83,12 @@ int read_test1(const char *mode = "")
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
    //---------------------------------------------------------------------------
-   TFile *file = new TFile( TString::Format("%stestv1.root",out.fPrefix.Data()), "READ" );
+   auto fname = TString::Format("%stestv1.root", prefix);
+   TFile *file = TFile::Open( fname, "READ" );
 
-   if( !file->IsOpen() )
+   if( !file || !file->IsOpen() )
    {
-      cout << "[i] Unable to open: testv1.root" << endl;
+      cerr << "[i] Unable to open: " << fname << endl;
       return 1;
    }
 
@@ -150,41 +120,40 @@ int read_test1(const char *mode = "")
    tree->SetBranchAddress( "TestVectorDNS", &vDNS   );
    tree->SetBranchAddress( "TestVectorDS",  &vDS    );
    tree->SetBranchAddress( "TestVectorDSS.",&vDSS   );
-   
+
    tree->GetEntry(0);
    file->Close();
 
    //---------------------------------------------------------------------------
    // Dump what was read
    //---------------------------------------------------------------------------
-   int var = 0;
-   out.dump( objA,   ++var, "S" );
-   out.dump( objANS,   var, "NS" );
-   out.dump( objAI,  ++var, "" );
-   dump( objD,   o03 );
-   dump( objDNS, o03ns);
-   dump( pr,     o04  );
-   dump( prNS,   o04ns );
-   dump( vd,     o05  );
-   dump( vP,     o06  );
-   dump( vPNS,   o06ns  );
-   dump( vA,     o07  );
-   dump( vANS,   o07ns );
-   dump( vAS,    o08 );
-   dump( vASS,   o08ns );
-   dump( vB,     o09  );
-   dump( vBNS,   o09ns );
-   dump( vBS,    o10 );
-   dump( vBSS,   o10ns );
-   dump( vC,     o11  );
-   dump( vCNS,   o11ns );
-   dump( vCS,    o12 );
-   dump( vCSS,   o12ns );
-   dump( vD,     o13  );
-   dump( vDNS,   o13ns );
-   out.dump( vDS,   14, "S" );
-   out.dump( vDSS,  14, "NS" );
-   
+   test_dump( objA,   prefix, 1, "wv1", "rv1" );
+   test_dump( objANS, prefix, 1, "wv1", "rv1ns" );
+   test_dump( objAI,  prefix, 2, "wv1", "rv1", 1 );
+   test_dump( objD,   prefix, 3, "wv1", "rv1", 1 );
+   test_dump( objDNS, prefix, 3, "wv1", "rv1ns", 1 );
+   test_dump( pr,     prefix, 4, "wv1", "rv1" );
+   test_dump( prNS,   prefix, 4, "wv1", "rv1ns" );
+   test_dump( vd,     prefix, 5, "wv1", "rv1" );
+   test_dump( vP,     prefix, 6, "wv1", "rv1" );
+   test_dump( vPNS,   prefix, 6, "wv1", "rv1ns" );
+   test_dump( vA,     prefix, 7, "wv1", "rv1", 1 );
+   test_dump( vANS,   prefix, 7, "wv1", "rv1ns", 1 );
+   test_dump( vAS,    prefix, 8, "wv1", "rv1", 1 );
+   test_dump( vASS,   prefix, 8, "wv1", "rv1ns", 1 );
+   test_dump( vB,     prefix, 9, "wv1", "rv1", 1 );
+   test_dump( vBNS,   prefix, 9, "wv1", "rv1ns", 1 );
+   test_dump( vBS,    prefix, 10, "wv1", "rv1", 1 );
+   test_dump( vBSS,   prefix, 10, "wv1", "rv1ns", 1 );
+   test_dump( vC,     prefix, 11, "wv1", "rv1" );
+   test_dump( vCNS,   prefix, 11, "wv1", "rv1ns" );
+   test_dump( vCS,    prefix, 12, "wv1", "rv1" );
+   test_dump( vCSS,   prefix, 12, "wv1", "rv1ns" );
+   test_dump( vD,     prefix, 13, "wv1", "rv1", 1 );
+   test_dump( vDNS,   prefix, 13, "wv1", "rv1ns", 1 );
+   test_dump( vDS,    prefix, 14, "wv1", "rv1", 1 );
+   test_dump( vDSS,   prefix, 14, "wv1", "rv1ns", 1 );
+
    //---------------------------------------------------------------------------
    // Cleanup
    //---------------------------------------------------------------------------
