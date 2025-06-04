@@ -142,6 +142,8 @@ protected:
    /// with respect to the processor's position in the chain.
    virtual void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) = 0;
 
+   virtual void PrintStructureImpl(std::ostream &output) const = 0;
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new base RNTupleProcessor.
    ///
@@ -195,6 +197,8 @@ public:
    ///
    /// \return A reference to the entry used by the processor.
    const ROOT::REntry &GetEntry() const { return *fEntry; }
+
+   void PrintStructure(std::ostream &output = std::cout) { PrintStructureImpl(output); }
 
    // clang-format off
    /**
@@ -382,6 +386,8 @@ private:
    /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
    void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) final;
 
+   void PrintStructureImpl(std::ostream &output) const final;
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Construct a new RNTupleProcessor for processing a single RNTuple.
    ///
@@ -436,6 +442,8 @@ private:
    ///
    /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
    void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) final;
+
+   void PrintStructureImpl(std::ostream &output) const final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Construct a new RNTupleChainProcessor.
@@ -508,6 +516,8 @@ private:
    /// auxiliary model are stored as a anonymous record, and subsequently registered as subfields in the join model.
    /// This way, they can be accessed from the processor's entry as `auxNTupleName.fieldName`.
    void SetModel(std::unique_ptr<ROOT::RNTupleModel> primaryModel, std::unique_ptr<ROOT::RNTupleModel> auxModel);
+
+   void PrintStructureImpl(std::ostream &output) const final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Construct a new RNTupleJoinProcessor.
