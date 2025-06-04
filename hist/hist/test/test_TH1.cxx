@@ -123,7 +123,7 @@ TEST(TH1, Normalize)
    EXPECT_FLOAT_EQ(h3.Integral("width"), 0.18);
    EXPECT_FLOAT_EQ(h3.GetMaximum(), 1.);
    TH1F h4(h1);
-   h4.Normalize("");
+   h4.Normalize("sum");
    EXPECT_FLOAT_EQ(h4.GetEntries(), 5.);
    EXPECT_FLOAT_EQ(h4.GetSumOfWeights(), 1);
    EXPECT_FLOAT_EQ(h4.Integral(), 1);   
