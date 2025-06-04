@@ -9,14 +9,16 @@
 #include <vector>
 #include <algorithm>
 #include <ctime>
-#include <../common/Dumper.h>
-#include <../common/Generator.h>
 #include <cstdlib>
-#include <DataModelV1.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TROOT.h>
 #include <TSystem.h>
+
+#include "../common/Dumper.h"
+#include "../common/Generator.h"
+
+#include "DataModelV1.h"
 
 template <typename A>
 void do_del( A* obj )
@@ -26,48 +28,23 @@ void do_del( A* obj )
 
 int test1(const char *mode = "") {
    using namespace std;
-   srandom( time( 0 ) );
 
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV1_dictcint.so";
-   const char* prefix = ""; 
+   const char* dictname = "libDatModelV1_dictcint";
+   const char* prefix = "";
    if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV1_dictrflx.so";
-      gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
+      dictname = "libDatModelV1_dictrflx";
       prefix = "rflx_";
-   }
-   else {
-      gROOT->ProcessLine("#include <vector>");
    }
 
    if( gSystem->Load(dictname) < 0 )
    {
-      cerr << "[!] Unable to load the dictionary: ";
-      cerr << dictname << endl;
-      return 0;
+      cerr << "[!] Unable to load the dictionary: " << dictname << endl;
+      return 1;
    }
-
-   //---------------------------------------------------------------------------
-   // Open the control files
-   //---------------------------------------------------------------------------
-   ofstream o1( TString::Format("../logs/01/%stest01_wv1.log",prefix) );
-   ofstream o2( TString::Format("../logs/01/%stest02_wv1.log",prefix) );
-   ofstream o3( TString::Format("../logs/01/%stest03_wv1.log",prefix) );
-   ofstream o4( TString::Format("../logs/01/%stest04_wv1.log",prefix) );
-   ofstream o5( TString::Format("../logs/01/%stest05_wv1.log",prefix) );
-   ofstream o6( TString::Format("../logs/01/%stest06_wv1.log",prefix) );
-   ofstream o7( TString::Format("../logs/01/%stest07_wv1.log",prefix) );
-   ofstream o8( TString::Format("../logs/01/%stest08_wv1.log",prefix) );
-   ofstream o9( TString::Format("../logs/01/%stest09_wv1.log",prefix) );
-   ofstream o10( TString::Format("../logs/01/%stest10_wv1.log",prefix) );
-   ofstream o11( TString::Format("../logs/01/%stest11_wv1.log",prefix) );
-   ofstream o12( TString::Format("../logs/01/%stest12_wv1.log",prefix) );
-   ofstream o13( TString::Format("../logs/01/%stest13_wv1.log",prefix) );
-   ofstream o14( TString::Format("../logs/01/%stest14_wv1.log",prefix) );
-   //ofstream o15( TString::Format("../logs/01/%stest11_wv1.log",prefix) );
 
    //---------------------------------------------------------------------------
    // Generate the objects
@@ -75,60 +52,60 @@ int test1(const char *mode = "") {
    cout << "[i] Generating test data model version 1" << endl;
    ClassA *objA =  new ClassA();
    generate( objA );
-   dump( objA, o1 );
+   test_dump( objA, prefix, 1, "wv1" );
 
    ClassAIns *objAI = 0;
    generate( objAI );
-   dump( objAI, o2 );
-   
+   test_dump( objAI, prefix, 2, "wv1" );
+
    ClassD *objD = 0;
    generate( objD );
-   dump( objD, o3 );
-   
+   test_dump( objD, prefix, 3, "wv1" );
+
    pair<int, double> *pr = 0;
    generate( pr );
-   dump( pr, o4 );
+   test_dump( pr, prefix, 4, "wv1" );
 
    vector<double> *vd = 0;
    generate( vd );
-   dump( vd, o5 );
+   test_dump( vd, prefix, 5, "wv1" );
 
    vector<pair<int, double> > *vP = 0;
    generate( vP );
-   dump( vP, o6 );
+   test_dump( vP, prefix, 6, "wv1" );
 
    vector<ClassA> *vA = 0;
    generate( vA );
-   dump( vA, o7 );
- 
+   test_dump( vA, prefix, 7, "wv1" );
+
    vector<ClassA*> *vAS = 0;
    generate( vAS );
-   dump( vAS, o8 );
-   
+   test_dump( vAS, prefix, 8, "wv1" );
+
    vector<ClassB> *vB = 0;
    generate( vB );
-   dump( vB, o9 );
+   test_dump( vB, prefix, 9, "wv1" );
 
    vector<ClassB*> *vBS = 0;
    generate( vBS );
-   dump( vBS, o10 );
-   
+   test_dump( vBS, prefix, 10, "wv1" );
+
    vector<ClassC> *vC = 0;
    generate( vC );
-   dump( vC, o11 );
+   test_dump( vC, prefix, 11, "wv1" );
 
    vector<ClassC*> *vCS = 0;
    generate( vCS );
-   dump( vCS, o12 );
-   
+   test_dump( vCS, prefix, 12, "wv1" );
+
    vector<ClassD> *vD = 0;
    generate( vD );
-   dump( vD, o13 );
-   
+   test_dump( vD, prefix, 13, "wv1" );
+
    vector<ClassD*> *vDS = 0;
    generate( vDS );
-   dump( vDS, o14 );
-   
+   test_dump( vDS, prefix, 14, "wv1" );
+
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
    //---------------------------------------------------------------------------
@@ -165,7 +142,7 @@ int test1(const char *mode = "") {
    tree->Branch( "TestVectorDNS",  &vD, 32000, 0 );
    tree->Branch( "TestVectorDS",   &vDS );
    tree->Branch( "TestVectorDSS",  &vDS, 32000, 200 );
-   
+
    tree->Fill();
    file->Write();
    file->Close();
