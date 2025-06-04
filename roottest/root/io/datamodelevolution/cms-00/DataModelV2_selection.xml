@@ -10,20 +10,20 @@
   <class name="ClassB" ClassVersion="3" />
   <class name="ClassC" ClassVersion="3" />
   <class name="ClassD" ClassVersion="3" />
-  <class name="std::vector<float>" />
-  <class name="std::pair<int,float>" />
-  <class name="std::vector<std::pair<int,float> >" />
-  <class name="std::vector<ClassA*>" />
-  <class name="std::vector<double>" />
-  <class name="std::pair<int,double>" />
-  <class name="std::vector<std::pair<int,double> >" />
-  <class name="std::vector<ClassB>" />
-  <class name="std::vector<ClassB*>" />
-  <class name="std::vector<ClassC>" />
-  <class name="std::vector<ClassC*>" />
-  <class name="std::vector<ClassD>" />
-  <class name="std::vector<ClassD*>" />
-  <class name="std::vector<ClassA>" />
+  <class name="std::vector&lt;float&gt;" />
+  <class name="std::pair&lt;int,float&gt;" />
+  <class name="std::vector&lt;std::pair&lt;int,float&gt; &gt;" />
+  <class name="std::vector&lt;ClassA*&gt;" />
+  <class name="std::vector&lt;double&gt;" />
+  <class name="std::pair&lt;int,double&gt;" />
+  <class name="std::vector&lt;std::pair<int,double&gt; &gt;" />
+  <class name="std::vector&lt;ClassB&gt;" />
+  <class name="std::vector&lt;ClassB*&gt;" />
+  <class name="std::vector&lt;ClassC&gt;" />
+  <class name="std::vector&lt;ClassC*&gt;" />
+  <class name="std::vector&lt;ClassD&gt;" />
+  <class name="std::vector&lt;ClassD*&gt;" />
+  <class name="std::vector&lt;ClassA&gt;" />
   <read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit;" target="m_unit" >
   <![CDATA[ { m_unit = 10*onfile.m_unit; } ]]>
   </read>
@@ -44,7 +44,7 @@
   <![CDATA[ {  m_cache.fCached = true; } ]]>
   </ioread>
 
-  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000" ClassVersion="2"> 
+  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000" ClassVersion="2">
      <field name="m_measurements" transient="true"/>
      <field name="m_projections" transient="true"/>
      <field name="m_nothing" transient="true"/>
