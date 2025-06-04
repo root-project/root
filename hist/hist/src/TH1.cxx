@@ -6205,23 +6205,30 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Normalize a histogram to its integral or to its maximum.
 /// @note Works for TH1, TH2, TH3, ...
-/// @param option`"width"` (default) or `"max"` or `""`
-/// If it contains `max`, this histogram is normalized by 1/GetMaximum()
-/// else it is normalized by `1/(sum*bin_width)`
-/// in the default case ("width") or by `1/(sum)` if option is "".
+/// @param option: normalization strategy ("", "max" or "sum")
+/// - "": Scale to `1/(sum*bin_width)`.
+/// - max: Scale to `1/GetMaximum()`
+/// - sum: Scale to `1/sum`.
 /// In case the norm is zero, it raises an error.
 /// @sa https://root-forum.cern.ch/t/different-ways-of-normalizing-histograms/15582/
 
 void TH1::Normalize(Option_t *option)
 {
-   const Double_t norm = TString(option).Contains("max", TString::kIgnoreCase) ? GetMaximum() : this->Integral();
-
+   TString opt = option; opt.ToLower();
+   if (!opt.IsNull() && (opt != "max") && (opt != "sum")) {
+      Error("Normalize","Unrecognized option %s", option);
+      return;
+   }
+ 
+   const Double_t norm = (opt == "max") ? GetMaximum() :
+                         this->Integral(opt.IsNull() ? "width" : "");
+ 
    if (norm == 0) {
       Error("Normalize", "Attempt to normalize histogram with zero integral");
    } else {
-      Scale(1.0 / norm, option);
-      // An alternative could have been to call Integral(option) and Scale(1/norm, "").
-      // Instead, doing simultaneously Integral(option) and Scale(1/norm, option) leads to an error since you are dividing twice by bin width.
+      Scale(1.0 / norm, "");
+      // An alternative could have been to call Integral("") and Scale(1/norm, "width").
+      // Instead, doing simultaneously Integral("width") and Scale(1/norm, "width") leads to an error since you are dividing twice by bin width.
    }
 }
 
