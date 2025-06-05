@@ -170,7 +170,7 @@ public:
    int CovMatrixStatus() const override;
 
    ///global correlation coefficient for variable i
-   double GlobalCC(unsigned int ) const override;
+   std::vector<double> GlobalCC() const override;
 
    /// minos error for variable i, return false if Minos failed
    bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0) override;

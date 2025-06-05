@@ -293,7 +293,7 @@ std::ostream &operator<<(std::ostream &os, const MnUserParameterState &state)
       os << state.Covariance();
    else
       os << "matrix is not present or not valid";
-   if (state.HasGlobalCC())
+   if (state.GlobalCC().IsValid())
       os << "\n  Global correlation coefficients: " << state.GlobalCC();
 
    os.precision(pr);
