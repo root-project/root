@@ -216,7 +216,7 @@ public:
       is most strongly correlated with i.
       If the variable is fixed or const the return value is zero
     */
-   double GlobalCC(unsigned int i) const override;
+   std::vector<double> GlobalCC() const override;
 
    /**
       get the minos error for parameter i, return false if Minos failed
