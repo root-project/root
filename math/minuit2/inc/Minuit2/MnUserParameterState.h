@@ -61,7 +61,7 @@ public:
    // user external representation
    const MnUserParameters &Parameters() const { return fParameters; }
    const MnUserCovariance &Covariance() const { return fCovariance; }
-   const MnGlobalCorrelationCoeff &GlobalCC() const { return fGlobalCC; }
+   MnGlobalCorrelationCoeff GlobalCC() const;
 
    // hessian (inverse of covariance matrix)
    MnUserCovariance Hessian() const;
@@ -158,7 +158,6 @@ private:
 
    MnUserParameters fParameters;
    MnUserCovariance fCovariance;
-   MnGlobalCorrelationCoeff fGlobalCC;
 
    std::vector<double> fIntParameters;
    MnUserCovariance fIntCovariance;
