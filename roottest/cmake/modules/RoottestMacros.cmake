@@ -432,7 +432,7 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LIBRARIES;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LIBRARIES;OPTIONS;COMPILE_OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -473,6 +473,10 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   else()
     set_property(TARGET ${targetname_libgen}
                  PROPERTY OUTPUT_NAME ${dictionary}_dictrflx)
+  endif()
+
+  if(ARG_COMPILE_OPTIONS)
+    target_compile_options(${targetname_libgen} PRIVATE ${ARG_COMPILE_OPTIONS})
   endif()
 
   add_dependencies(${targetname_libgen}
