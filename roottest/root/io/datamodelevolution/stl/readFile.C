@@ -5,7 +5,7 @@
 #include <list>
 #include <set>
 
-#if 1 
+#if 1
 
 class Values {
 public:
@@ -39,7 +39,7 @@ typedef Track Values;
 
 #ifdef __MAKECINT__
 #pragma read sourceClass="Values" targetClass="Track";
-#pragma link C++ vector<Track>+;
+#pragma link C++ class vector<Track>+;
 #pragma read sourceClass="Holder" targetClass="listHolder";
 #pragma read sourceClass="Holder" targetClass="setHolder";
 #endif
@@ -261,13 +261,13 @@ void readFile(const char * filename = "stlinnerevo.root") {
       Holder *h = 0;
       std::vector<Track> *vecbr = 0;
       vector<float> *vecintbr = 0;
-      
+
       t->SetBranchAddress("vec",&vecbr);
 
       // t->GetBranch("vec")->GetEntry(0);
       // Print(*vecbr);
       // return;
-      
+
       t->SetBranchAddress("vecint",&vecintbr);
       t->SetBranchAddress("vec",&vecbr);
       t->SetBranchAddress("holder",&h);
@@ -326,13 +326,13 @@ void readFileList(const char * filename = "stlinnerevo.root") {
       listHolder *h = 0;
       std::list<Track> *vecbr = 0;
       list<float> *vecintbr = 0;
-      
+
       // t->SetBranchAddress("holder",&h);
 
       // t->GetBranch("holder")->GetEntry(0);
       // h->Print();
       // return;
-      
+
       t->SetBranchAddress("vecint",&vecintbr);
       t->SetBranchAddress("vec",&vecbr);
       t->SetBranchAddress("holder",&h);
@@ -390,13 +390,13 @@ void readFileSet(const char * filename = "stlinnerevo.root") {
       setHolder *h = 0;
       std::set<Track> *vecbr = 0;
       set<float> *vecintbr = 0;
-      
+
       // t->SetBranchAddress("holder",&h);
 
       // t->GetBranch("holder")->GetEntry(0);
       // h->Print();
       // return;
-      
+
       t->SetBranchAddress("vecint",&vecintbr);
       t->SetBranchAddress("vec",&vecbr);
       t->SetBranchAddress("holder",&h);
