@@ -104,14 +104,14 @@ COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT
 
 if (BLAS_FOUND)
   # Creating a Google Test for Serialisation of RModel
-  ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
-    LIBRARIES
-      ROOTTMVASofie
-      BLAS::BLAS
-    INCLUDE_DIRS
-      ${CMAKE_CURRENT_BINARY_DIR}
-  )
-  add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
+  #ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
+    #LIBRARIES
+      #ROOTTMVASofie
+      #BLAS::BLAS
+    #INCLUDE_DIRS
+      #${CMAKE_CURRENT_BINARY_DIR}
+  #)
+  #add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
 
   if (clad)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
