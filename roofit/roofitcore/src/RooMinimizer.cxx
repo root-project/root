@@ -556,11 +556,11 @@ double correlation(std::vector<double> const &covMat, unsigned int i, unsigned i
 void RooMinimizer::fillCorrMatrix(RooFitResult &fitRes)
 {
    const std::size_t nParams = _fcn->getNDim();
-   std::vector<double> globalCC;
    TMatrixDSym corrs(nParams);
    TMatrixDSym covs(nParams);
+   std::vector<double> globalCC = _minimizer->GlobalCC();
+   globalCC.resize(nParams); // pad with zeros
    for (std::size_t ic = 0; ic < nParams; ic++) {
-      globalCC.push_back(_result->fGlobalCC[ic]);
       for (std::size_t ii = 0; ii < nParams; ii++) {
          corrs(ic, ii) = correlation(_result->fCovMatrix, ic, ii);
          covs(ic, ii) = covMatrix(_result->fCovMatrix, ic, ii);
@@ -1087,7 +1087,6 @@ void RooMinimizer::fillResult(bool isValid)
    // if minimizer provides error provides also error matrix
    // clear in case of re-filling an existing result
    _result->fCovMatrix.clear();
-   _result->fGlobalCC.clear();
 
    if (min.Errors() != nullptr) {
       updateErrors();
@@ -1143,10 +1142,6 @@ void RooMinimizer::updateErrors()
       }
    }
    // minos errors are set separately when calling Fitter::CalculateMinosErrors()
-
-   // update global CC
-   _result->fGlobalCC = min.GlobalCC();
-   _result->fGlobalCC.resize(npar); // pad with zeros
 }
 
 double RooMinimizer::FitResult::lowerError(unsigned int i) const
