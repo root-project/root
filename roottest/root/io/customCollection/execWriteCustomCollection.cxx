@@ -10,7 +10,7 @@ public:
    TString fName;
    const char *GetName() const { return fName; }
    void SetName(const char *name) { fName = name; }
-   
+
    ClassDef(Content,3);
 };
 
@@ -58,12 +58,15 @@ public:
    }
 };
 
+typedef DataVectorTmplt<Content> DataVector;
+
+
 #ifdef __MAKECINT__
 #pragma link C++ class DataVectorTmplt<Content>+;
 #pragma link C++ class vector<Content>+;
+#pragma link C++ class DataVector+;
 #endif
 
-typedef DataVectorTmplt<Content> DataVector;
 
 #include "TFile.h"
 #include "TClass.h"
@@ -76,7 +79,7 @@ void MakeCollection(const char *classname, const char *equiv);
 int execWriteCustomCollection();
 #else
 
-void MakeCollection(const char *classname, const char *equiv) 
+void MakeCollection(const char *classname, const char *equiv)
 {
    //   TClass *c = TClass::GetClass("DataVector");
    TClass *c = TClass::GetClass(classname);
@@ -103,7 +106,7 @@ int execWriteCustomCollection() {
 
    MakeCollection("DataVector","vector<Content>");
    MakeCollection("DataVectorConcrete","vector<Content>");
-   
+
    DataVector v;
    v.Fill(3);
    printf("Writing\n");
@@ -158,7 +161,7 @@ int execWriteCustomCollection() {
    }
    tree->Scan();
    delete file;
-   
+
    return 0;
 }
 #endif
