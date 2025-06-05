@@ -1,4 +1,4 @@
-ROOTTEST_GENERATE_DICTIONARY(libEventDict
+ROOTTEST_GENERATE_DICTIONARY(libIoCompressionEvent
   Event.h
   LINKDEF EventLinkDef.h
   SOURCES Event.cxx
@@ -6,11 +6,11 @@ ROOTTEST_GENERATE_DICTIONARY(libEventDict
   NO_CXXMODULE
   FIXTURES_SETUP io-compression-dict)
 
-target_link_libraries(libEventDictlibgen Physics)
+target_link_libraries(libIoCompressionEventlibgen Physics)
 
 ROOTTEST_GENERATE_EXECUTABLE(MainEvent
   MainEvent.cxx
-  LIBRARIES Core RIO libEventDictlibgen
+  LIBRARIES Core RIO libIoCompressionEventlibgen
   FIXTURES_REQUIRED io-compression-dict
   FIXTURES_SETUP io-compression-exec)
 
