@@ -19,7 +19,7 @@ public:
 
 public:
 // Data Members.
-   string      m_token;     //
+   std::string     m_token;     //
    unsigned int m_oid2;      //
 
    DataHeaderElement_p5();
