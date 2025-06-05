@@ -857,4 +857,20 @@ The following items were addressed:
 ### Externals updates
  * The version of builtin veccore has been updated to 0.8.2
 
-## HEAD of the v6-32-00-patches branch
+## Release 6.32.14
+
+Published on June 5, 2025
+
+### Items addressed in this release
+* [[#18301](https://github.com/root-project/root/issues/18301)] - Performance issue seen by CMS for ROOT's use of tbb::task_arena
+* [[#18556](https://github.com/root-project/root/issues/18556)] - Class methods not available to python in cases of transient data members of private nested class type
+* [[#18236](https://github.com/root-project/root/issues/18236)] - Missing lock deep inside TClassEdit::GetNormalizedName
+* [[#18519](https://github.com/root-project/root/issues/18519)] - Concurrency issue with TClassEdit::ResolveTypedef and TClass::GetListOfMethods
+* [[#18520](https://github.com/root-project/root/issues/18520)] - Missing lock deep inside TClassEdit::ResolveTypedef
+* [[#18792](https://github.com/root-project/root/issues/18792)] - Thread problem in TEnum::GetEnum
+* [[#18863](https://github.com/root-project/root/issues/18863)] - ThreadSanitizer reports data race between TTree::Branch and TCling::Evaluate
+* [[#18312](https://github.com/root-project/root/issues/18312)] - Problem with cmake 4.0.0
+* [[#17566](https://github.com/root-project/root/issues/17566)] - Issue with prebuilt binaries for MacOS 15.x
+
+### New platforms
+The support for Alma10 was added.
