@@ -37,7 +37,7 @@ class MnUserParameterState {
 public:
    /// default constructor (invalid state)
    MnUserParameterState()
-      : fValid(false), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0), fEDM(0), fNFcn(0),
+      : fValid(false), fCovarianceValid(false), fCovStatus(-1), fFVal(0), fEDM(0), fNFcn(0),
         fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), fIntParameters(std::vector<double>()),
         fIntCovariance(MnUserCovariance())
    {
@@ -78,7 +78,6 @@ public:
 
    bool IsValid() const { return fValid; }
    bool HasCovariance() const { return fCovarianceValid; }
-   bool HasGlobalCC() const { return fGCCValid; }
 
    double Fval() const { return fFVal; }
    double Edm() const { return fEDM; }
@@ -152,7 +151,6 @@ public:
 private:
    bool fValid;
    bool fCovarianceValid;
-   bool fGCCValid;
    int fCovStatus; // covariance matrix status
    double fFVal;
    double fEDM;
