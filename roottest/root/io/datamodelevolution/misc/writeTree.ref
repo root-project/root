@@ -1,0 +1,8 @@
+
+Processing writeTree.C...
+Number of array elements: 5
+OBJ: TNamed	aaa	AAAAAAAA
+OBJ: SomeClass	bbb	Class with a name.
+gap
+OBJ: TNamed	ccc	CCCCCCCC
+OBJ: SomeClass	ddd	Class with a name.
