@@ -235,6 +235,10 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// READ_WITHOUT_GLOBALREGISTRATION   | Used by TTreeProcessorMT, not a user callable option.
 ///
 /// If option = "" (default), READ is assumed.
+/// \note Even in READ mode, if the file is the current directory `cd()`, and you create e.g. a new histogram in your code,
+/// the histogram will be appended (but not written) to this directory, and automatically deleted when closing the file.
+/// To avoid this behavior, call hist->SetDirectory(nullptr); after creating it.
+///
 /// The file can be specified as a URL of the form:
 ///
 ///     file:///user/rdm/bla.root or file:/user/rdm/bla.root
