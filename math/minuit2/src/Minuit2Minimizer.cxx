@@ -849,21 +849,27 @@ double Minuit2Minimizer::Correlation(unsigned int i, unsigned int j) const
    return 0;
 }
 
-double Minuit2Minimizer::GlobalCC(unsigned int i) const
+std::vector<double> Minuit2Minimizer::GlobalCC() const
 {
    // get global correlation coefficient for the parameter i. This is a number between zero and one which gives
    // the correlation between the i-th parameter  and that linear combination of all other parameters which
    // is most strongly correlated with i.
 
-   if (i >= fDim)
-      return 0;
+   std::vector<double> out;
+   auto const &globalCC = fState.GlobalCC();
    // no info available when minimization has failed or has some problems
-   if (!fState.HasGlobalCC())
-      return 0;
-   if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst())
-      return 0;
-   unsigned int k = fState.IntOfExt(i);
-   return fState.GlobalCC().GlobalCC()[k];
+   if (!globalCC.IsValid())
+      return out;
+   out.resize(fDim);
+   for (unsigned int i = 0; i < fDim; ++i) {
+      if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst())
+         out[i] = 0;
+      else {
+         unsigned int k = fState.IntOfExt(i);
+         out[i] = globalCC.GlobalCC()[k];
+      }
+   }
+   return out;
 }
 
 bool Minuit2Minimizer::GetMinosError(unsigned int i, double &errLow, double &errUp, int runopt)

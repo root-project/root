@@ -1145,15 +1145,8 @@ void RooMinimizer::updateErrors()
    // minos errors are set separately when calling Fitter::CalculateMinosErrors()
 
    // update global CC
-   _result->fGlobalCC.resize(npar);
-   for (unsigned int i = 0; i < npar; ++i) {
-      double globcc = min.GlobalCC(i);
-      if (globcc < 0) {
-         _result->fGlobalCC.clear();
-         break; // it is not supported by that minimizer
-      }
-      _result->fGlobalCC[i] = globcc;
-   }
+   _result->fGlobalCC = min.GlobalCC();
+   _result->fGlobalCC.resize(npar); // pad with zeros
 }
 
 double RooMinimizer::FitResult::lowerError(unsigned int i) const
