@@ -1,8 +1,8 @@
 #include "libcondProjectHeaders.h"
 
-#include "libcondLinkDef.h"
+//#include "libcondLinkDef.h"
 
-#include "libcondProjectDict.cxx"
+//#include "libcondProjectDict.cxx"
 
 struct DeleteObjectFunctor {
    template <typename T>
@@ -37,7 +37,7 @@ DetCondKeyTrans::DetCondKeyTrans(const DetCondKeyTrans & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+   // if (&rhs) {} // avoid warning about unused parameter
    DetCondKeyTrans &modrhs = const_cast<DetCondKeyTrans &>( rhs );
    modrhs.m_keytrans.clear();
 }
@@ -65,7 +65,7 @@ HepGeom::Transform3D::Transform3D(const Transform3D & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+   (void) rhs; // avoid warning about unused parameter
 }
 HepGeom::Transform3D::~Transform3D() {
 }
@@ -81,7 +81,7 @@ DataHeaderForm_p5::DataHeaderForm_p5(const DataHeaderForm_p5 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+   // if (&rhs) {} // avoid warning about unused parameter
    DataHeaderForm_p5 &modrhs = const_cast<DataHeaderForm_p5 &>( rhs );
    modrhs.m_map.clear();
    modrhs.m_uints.clear();
@@ -101,7 +101,7 @@ DataHeader_p5::DataHeader_p5(const DataHeader_p5 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+   // if (&rhs) {} // avoid warning about unused parameter
    DataHeader_p5 &modrhs = const_cast<DataHeader_p5 &>( rhs );
    modrhs.m_dataHeader.clear();
    modrhs.m_dhFormToken.clear();
@@ -121,7 +121,7 @@ DataHeaderElement_p5::DataHeaderElement_p5(const DataHeaderElement_p5 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+   // if (&rhs) {} // avoid warning about unused parameter
    DataHeaderElement_p5 &modrhs = const_cast<DataHeaderElement_p5 &>( rhs );
    modrhs.m_token.clear();
 }
