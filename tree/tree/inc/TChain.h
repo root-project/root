@@ -55,6 +55,9 @@ protected:
    void InvalidateCurrentTree();
    void ReleaseChainProof();
 
+   Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
+                          bool isptr, bool delayTChainElement) override;
+
 public:
    // TChain constants
    enum EStatusBits {
