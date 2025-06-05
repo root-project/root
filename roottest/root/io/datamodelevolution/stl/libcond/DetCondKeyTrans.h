@@ -18,7 +18,7 @@ class Eigen {};
 #pragma link C++ class Eigen+;
 #pragma link C++ class pair<string,Eigen>+;
 #pragma read sourceClass="DetCondKeyTrans" version="[1-]" targetClass="DetCondKeyTrans" source="std::map<std::string,HepGeom::Transform3D> m_keytrans" target="m_keytrans" \
-    code="{ if (&m_keytrans){}; /*nothing*/ }"
+    code="{ if (!m_keytrans.empty()){}; /*nothing*/ }"
 #endif
 
 class DetCondKeyTrans {
