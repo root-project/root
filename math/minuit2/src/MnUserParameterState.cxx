@@ -148,7 +148,6 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
       fIntCovariance =
          MnUserCovariance({st.Error().InvHessian().Data(), st.Error().InvHessian().size()}, st.Error().InvHessian().Nrow());
       fCovariance.Scale(2. * up);
-      fGlobalCC = MnGlobalCorrelationCoeff(st.Error().InvHessian());
 
       assert(fCovariance.Nrow() == VariableParameters());
 
@@ -219,7 +218,6 @@ void MnUserParameterState::Add(const std::string &name, double val, double err)
    if (fParameters.Add(name, val, err)) {
       fIntParameters.push_back(val);
       fCovarianceValid = false;
-      fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
       fValid = true;
    } else {
       // redefine an existing parameter
@@ -244,7 +242,6 @@ void MnUserParameterState::Add(const std::string &name, double val, double err, 
    if (fParameters.Add(name, val, err, low, up)) {
       fCovarianceValid = false;
       fIntParameters.push_back(Ext2int(Index(name), val));
-      fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
       fValid = true;
    } else { // Parameter already exist - just set values
       int i = Index(name);
@@ -317,7 +314,6 @@ void MnUserParameterState::Fix(unsigned int e)
       fIntParameters.erase(fIntParameters.begin() + i, fIntParameters.begin() + i + 1);
    }
    fParameters.Fix(e);
-   fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
 }
 
 void MnUserParameterState::Release(unsigned int e)
@@ -328,7 +324,6 @@ void MnUserParameterState::Release(unsigned int e)
       return;
    fParameters.Release(e);
    fCovarianceValid = false;
-   fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
    unsigned int i = IntOfExt(e);
    if (Parameter(e).HasLimits())
       fIntParameters.insert(fIntParameters.begin() + i, Ext2int(e, Parameter(e).Value()));
@@ -360,7 +355,6 @@ void MnUserParameterState::SetLimits(unsigned int e, double low, double up)
    // set limits for parameter e (external index)
    fParameters.SetLimits(e, low, up);
    fCovarianceValid = false;
-   fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
       unsigned int i = IntOfExt(e);
       if (low < fIntParameters[i] && fIntParameters[i] < up)
@@ -377,7 +371,6 @@ void MnUserParameterState::SetUpperLimit(unsigned int e, double up)
    // set upper limit for parameter e (external index)
    fParameters.SetUpperLimit(e, up);
    fCovarianceValid = false;
-   fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
       unsigned int i = IntOfExt(e);
       if (fIntParameters[i] < up)
@@ -392,7 +385,6 @@ void MnUserParameterState::SetLowerLimit(unsigned int e, double low)
    // set lower limit for parameter e (external index)
    fParameters.SetLowerLimit(e, low);
    fCovarianceValid = false;
-   fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
       unsigned int i = IntOfExt(e);
       if (low < fIntParameters[i])
@@ -407,7 +399,6 @@ void MnUserParameterState::RemoveLimits(unsigned int e)
    // remove limit for parameter e (external index)
    fParameters.RemoveLimits(e);
    fCovarianceValid = false;
-   fGlobalCC = MnGlobalCorrelationCoeff{}; // invalidate
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst())
       fIntParameters[IntOfExt(e)] = Value(e);
 }
@@ -529,6 +520,21 @@ void MnUserParameterState::SetPrecision(double eps)
 {
    // set global parameter precision
    fParameters.SetPrecision(eps);
+}
+
+MnGlobalCorrelationCoeff MnUserParameterState::GlobalCC() const
+{
+   if (!fCovarianceValid) {
+      return MnGlobalCorrelationCoeff{}; // invalidate
+   }
+   int n = fIntCovariance.Nrow();
+   MnAlgebraicSymMatrix invHessian{static_cast<unsigned int>(n)};
+   for (int i = 0; i < n; ++i) {
+      for (int j = 0; j <= i; ++j) {
+         invHessian(i, j) = fIntCovariance(i, j);
+      }
+   }
+   return MnGlobalCorrelationCoeff{invHessian};
 }
 
 } // namespace Minuit2

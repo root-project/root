@@ -856,7 +856,7 @@ std::vector<double> Minuit2Minimizer::GlobalCC() const
    // is most strongly correlated with i.
 
    std::vector<double> out;
-   auto const &globalCC = fState.GlobalCC();
+   MnGlobalCorrelationCoeff globalCC = fState.GlobalCC();
    // no info available when minimization has failed or has some problems
    if (!globalCC.IsValid())
       return out;
