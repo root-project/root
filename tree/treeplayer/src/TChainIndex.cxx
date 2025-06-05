@@ -79,8 +79,9 @@ TChainIndex::TChainIndex(): TVirtualIndex()
 /// If any of those requirements isn't met the object becomes a zombie.
 /// If some subtrees don't have indices the indices are created and stored inside this
 /// TChainIndex.
+/// verbose can be set to false to silence a warning about unsorted indices in the TChain files
 
-TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
+TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname, bool verbose)
            : TVirtualIndex()
 {
    fTree = nullptr;
@@ -145,7 +146,8 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       if( fEntries[i].GetMaxIndexValPair() > fEntries[i+1].GetMinIndexValPair() ) {
          DeleteIndices();
          MakeZombie();
-         Error("TChainIndex", "The indices in files of this chain aren't sorted.");
+         if (verbose)
+            Warning("TChainIndex", "The indices in files of this chain aren't sorted.");
       }
    }
 }

@@ -83,7 +83,7 @@ protected:
 
 public:
    TChainIndex();
-   TChainIndex(const TTree *T, const char *majorname, const char *minorname);
+   TChainIndex(const TTree *T, const char *majorname, const char *minorname, bool verbose = true);
    ~TChainIndex() override;
    void           Append(const TVirtualIndex *, bool delaySort = false) override;
    Long64_t       GetEntryNumberFriend(const TTree *parent) override;

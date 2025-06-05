@@ -146,15 +146,18 @@ TTreePlayer::~TTreePlayer()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Build the index for the tree (see TTree::BuildIndex)
+/// verbose can be set to false to silence a warning about switching from
+/// TChainIndex to TTreeIndex when indices in files are not sorted
 
-TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname)
+TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname, bool verbose)
 {
    TVirtualIndex *index;
    if (dynamic_cast<const TChain*>(T)) {
-      index = new TChainIndex(T, majorname, minorname);
+      index = new TChainIndex(T, majorname, minorname, verbose);
       if (index->IsZombie()) {
          delete index;
-         Error("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
+         if (verbose)
+            Warning("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
       }
       else
          return index;
