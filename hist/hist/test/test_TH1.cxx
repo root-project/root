@@ -92,3 +92,60 @@ TEST(TH1, AddBinContent)
    h3.AddBinContent(1,1,1,1.);
    EXPECT_FLOAT_EQ(h3.GetBinContent(1,1,1),1.);
 }
+
+// https://github.com/root-project/root/pull/17751
+// https://root-forum.cern.ch/t/different-ways-of-normalizing-histograms/15582
+TEST(TH1, Normalize)
+{
+   TH1F h1("h1", "h1", 10, 0, 1);
+   h1.SetBinContent(1, 1.);
+   h1.SetBinContent(3, 5.);
+   h1.SetBinContent(5, 10.);
+   h1.SetBinContent(7, -1.);
+   h1.SetBinContent(10, 3.);
+   EXPECT_FLOAT_EQ(h1.GetEntries(), 5.);
+   EXPECT_FLOAT_EQ(h1.GetSumOfWeights(), 18.);
+   EXPECT_FLOAT_EQ(h1.Integral(), 18.);
+   EXPECT_FLOAT_EQ(h1.Integral("width"), 1.8);
+   EXPECT_FLOAT_EQ(h1.GetMaximum(), 10.);
+   TH1F h2(h1);
+   h2.Normalize();
+   EXPECT_FLOAT_EQ(h2.GetEntries(), 5);
+   EXPECT_FLOAT_EQ(h2.GetSumOfWeights(), 10.);
+   EXPECT_FLOAT_EQ(h2.Integral(), 10.);
+   EXPECT_FLOAT_EQ(h2.Integral("width"), 1.);
+   EXPECT_FLOAT_EQ(h2.GetMaximum(), 50. / 9);
+   TH1F h3(h1);
+   h3.Normalize("max");
+   EXPECT_FLOAT_EQ(h3.GetEntries(), 5.);
+   EXPECT_FLOAT_EQ(h3.GetSumOfWeights(), 1.8);
+   EXPECT_FLOAT_EQ(h3.Integral(), 1.8);
+   EXPECT_FLOAT_EQ(h3.Integral("width"), 0.18);
+   EXPECT_FLOAT_EQ(h3.GetMaximum(), 1.);
+   TH1F h4(h1);
+   h4.Normalize("sum");
+   EXPECT_FLOAT_EQ(h4.GetEntries(), 5.);
+   EXPECT_FLOAT_EQ(h4.GetSumOfWeights(), 1);
+   EXPECT_FLOAT_EQ(h4.Integral(), 1);
+   EXPECT_FLOAT_EQ(h4.Integral("width"), 0.1);
+   EXPECT_FLOAT_EQ(h4.GetMaximum(), 5. / 9);
+   const Float_t xbins[10 + 1]{0., 0.05, 0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 0.8, 0.95, 1.};
+   TH1F v1("v1", "vbw", 10, xbins);
+   v1.SetBinContent(1, 1.);
+   v1.SetBinContent(3, 5.);
+   v1.SetBinContent(5, 10.);
+   v1.SetBinContent(7, -1.);
+   v1.SetBinContent(10, 3.);
+   EXPECT_FLOAT_EQ(v1.GetEntries(), 5.);
+   EXPECT_FLOAT_EQ(v1.GetSumOfWeights(), 18.);
+   EXPECT_FLOAT_EQ(v1.Integral(), 18.);
+   EXPECT_FLOAT_EQ(v1.Integral("width"), 1.25);
+   EXPECT_FLOAT_EQ(v1.GetMaximum(), 10.);
+   TH1F v2(v1);
+   v2.Normalize();
+   EXPECT_FLOAT_EQ(v2.GetEntries(), 5);
+   EXPECT_FLOAT_EQ(v2.GetSumOfWeights(), 14.399998);
+   EXPECT_FLOAT_EQ(v2.Integral(), 14.399998);
+   EXPECT_FLOAT_EQ(v2.Integral("width"), 1.);
+   EXPECT_FLOAT_EQ(v2.GetMaximum(), 7.9999990);
+}
