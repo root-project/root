@@ -100,7 +100,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
    fMinorName          = minorname;
    Int_t i = 0;
 
-   // Go through all the trees and check if they have indeces. If not then build them.
+   // Go through all the trees and check if they have indices. If not then build them.
    for (i = 0; i < chain->GetNtrees(); i++) {
       chain->LoadTree((chain->GetTreeOffset())[i]);
       TVirtualIndex *index = chain->GetTree()->GetTreeIndex();
