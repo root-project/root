@@ -1,12 +1,18 @@
+if(NOT MSVC)
+  set(warnopt -Wno-unused-variable)
+endif()
+
 ROOTTEST_GENERATE_DICTIONARY(libArrayRules_dictcint
                   arrayRules.h
                   LINKDEF arrayRulesLinkDef.h
+                  COMPILE_OPTIONS ${warnopt}
                   NO_ROOTMAP NO_CXXMODULE)
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(libArrayRules_dictrflx
                   arrayRules.h
                   SELECTION arrayRulesSelection.xml
                   LIBNAME libArrayRules_dictrflx
+                  COMPILE_OPTIONS ${warnopt}
                   NO_ROOTMAP)
 
 ROOTTEST_ADD_TEST(Conversions
