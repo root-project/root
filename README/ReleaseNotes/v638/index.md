@@ -62,6 +62,11 @@ The following people have contributed to this new version:
 
 ## Math
 
+### Minimizer interface
+
+* The function `double ROOT::Math::Minimizer::GlobalCC(unsigned int ivar)` was changed to `std::vector<double> ROOT::Math::Minimizer::GlobalCC()`, always returning the full list of global correlations.
+  This change was needed because global correlations are not unconditionally computed and cached in the minimizer anymore. Only computing them when calling `GlobalCC()` avoids unneeded overhead when global correlations are not required.
+
 ### Minuit2
 
 * Behavior change: building ROOT using `minuit2_omp=ON` option no longer enables OpenMP parallelization by default. One has to call now additionally GradientCalculator::SetParallelOMP().

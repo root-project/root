@@ -209,13 +209,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
       // minos errors are set separately when calling Fitter::CalculateMinosErrors()
 
       // globalCC
-      fGlobalCC.reserve(npar);
-      for (unsigned int i = 0; i < npar; ++i) {
-         double globcc = min->GlobalCC(i);
-         if (globcc < 0) break; // it is not supported by that minimizer
-         fGlobalCC.push_back(globcc);
-      }
-
+      fGlobalCC = min->GlobalCC();
    }
 
 }
@@ -280,16 +274,8 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const
       }
 
       // update global CC
-      if (fGlobalCC.size() != npar) fGlobalCC.resize(npar);
-      for (unsigned int i = 0; i < npar; ++i) {
-         double globcc = min->GlobalCC(i);
-         if (globcc < 0) {
-            fGlobalCC.clear();
-            break; // it is not supported by that minimizer
-         }
-         fGlobalCC[i] = globcc;
-      }
-
+      fGlobalCC = min->GlobalCC();
+      fGlobalCC.resize(npar); // pad with zeros
    }
    return true;
 }
