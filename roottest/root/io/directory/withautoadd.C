@@ -24,10 +24,11 @@ class Bottom : public TNamed, public Top {
 public:
    Bottom() : Top("Bottom") {}
 
-   ClassDef(Bottom,1);
+   ClassDefOverride(Bottom, 1);
 };
 
-void check(const char *what) {
+void check(const char *what)
+{
    if (what==0) return;
 
    TClass * cl = TClass::GetClass(what);
@@ -43,7 +44,8 @@ void check(const char *what) {
    }
 }
 
-void withautoadd() {
+void withautoadd()
+{
    check("Top");
    check("Bottom");
 }
