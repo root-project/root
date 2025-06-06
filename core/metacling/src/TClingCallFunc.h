@@ -33,6 +33,7 @@
 #include "TInterpreter.h"
 
 #include "cling/Interpreter/Value.h"
+#include "clang/Interpreter/CppInterOp.h"
 
 #include "clang/AST/ASTContext.h"
 #include "llvm/ADT/SmallVector.h"
@@ -70,6 +71,8 @@ private:
    /// Number of required arguments
    size_t fMinRequiredArguments = -1;
    /// Pointer to compiled wrapper, we do *not* own.
+   /// Turn this into Cpp::JitCall instances
+   std::unique_ptr<Cpp::JitCall> fJitCall;
    std::atomic<tcling_callfunc_Wrapper_t> fWrapper;
    /// Stored function arguments, we own.
    mutable llvm::SmallVector<cling::Value, 8> fArgVals;

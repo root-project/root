@@ -544,3 +544,37 @@ TEST(TClingCallFunc, GH_14425_Templates)
    int valI = gInterpreter->CallFunc_ExecInt(CfI, /*address*/ 0);
    EXPECT_EQ(valI, 7);
 }
+
+// TEST(TClingCallFunc, TypedefsOverAnonymousTagDeclarations) {
+
+//    typedef struct _name {
+//       _name() { p[0] = (void*)0x1; p[1] = (void*)0x2; p[2] = (void*)0x3; }
+//       void* p[3];
+//    } name;
+
+//    gInterpreter->Declare(R"cpp(
+//                            typedef struct _name {
+//                            int fMember;
+//                            _name(int m = 0) : fMember(m) {};
+//                            } name;
+//                            )cpp");
+   
+//    CallFuncRAII CfTypedefStructRAII("", "_name", "int");
+//    CallFunc_t *CfTypedefStruct = CfTypedefStructRAII.GetCF();
+//    name objName;
+//    void* address = (void*)&objName;
+
+//    // std::cout<<"p[1]: "<<objName.p[1]<<"\n";
+//    // std::cout<<"p[2]: "<<objName.p[2]<<"\n";
+
+//    gInterpreter->CallFunc_SetArg(CfTypedefStruct, 4);
+
+//    int *val;
+//    gInterpreter->CallFunc_ExecWithReturn(CfTypedefStruct, /*address*/ 0, &val);
+//    std::cout<<"p[0]: "<<*val<<"\n";
+
+//    // std::cout<<"p[0]: "<<objName.p[0]<<"\n";
+//    // std::cout<<"p[1]: "<<objName.p[1]<<"\n";
+//    // std::cout<<"p[2]: "<<objName.p[2]<<"\n";
+   
+// }
