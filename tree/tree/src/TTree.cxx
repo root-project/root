@@ -3457,7 +3457,7 @@ namespace {
                   break;
                case kBuild:
                   // Build the index then copy it
-                  if (oldtree->GetTree()->BuildIndex(newtree->GetTreeIndex()->GetMajorName(), newtree->GetTreeIndex()->GetMinorName(), false)) {
+                  if (oldtree->GetTree()->BuildIndex(newtree->GetTreeIndex()->GetMajorName(), newtree->GetTreeIndex()->GetMinorName())) {
                      newtree->GetTreeIndex()->Append(oldtree->GetTree()->GetTreeIndex(), true);
                      // Clean up
                      delete oldtree->GetTree()->GetTreeIndex();
@@ -3488,7 +3488,7 @@ namespace {
                   newtree->SetTreeIndex(index);
                } else {
                   // Build the index so far.
-                  if (newtree->BuildIndex(oldtree->GetTree()->GetTreeIndex()->GetMajorName(), oldtree->GetTree()->GetTreeIndex()->GetMinorName(), false)) {
+                  if (newtree->BuildIndex(oldtree->GetTree()->GetTreeIndex()->GetMajorName(), oldtree->GetTree()->GetTreeIndex()->GetMinorName())) {
                      newtree->GetTreeIndex()->Append(oldtree->GetTree()->GetTreeIndex(), true);
                   }
                }
