@@ -5,7 +5,7 @@
 # Author: Martin Føll, University of Oslo (UiO) & CERN 05/2025
 
 ################################################################################
-# Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -21,12 +21,13 @@ if TYPE_CHECKING:
     import numpy as np
     import tensorflow as tf
     import torch
+    import ROOT
 
 
 class BaseGenerator:
     def get_template(
         self,
-        x_rdf: RNode,
+        x_rdf: ROOT.RDF.RNode,
         columns: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
     ) -> Tuple[str, list[int]]:
@@ -81,7 +82,7 @@ class BaseGenerator:
 
     def __init__(
         self,
-        rdataframe: RNode,
+        rdataframe: ROOT.RDF.RNode,
         batch_size: int,
         chunk_size: int,
         block_size: int,            
@@ -130,7 +131,7 @@ class BaseGenerator:
                 Drop the remainder of data that is too small to compose full batch.
                 Defaults to True.
             set_seed (int):
-                For reprodusability: Set the seed for the random number generator used
+                For reproducibility: Set the seed for the random number generator used
                 to split the dataset into training and validation and shuffling of the chunks
                 Defaults to 0 which means that the seed is set to the random device.
         """
@@ -244,7 +245,7 @@ class BaseGenerator:
         atexit.register(self.DeActivate)
 
     @property
-    def is_activel(self):
+    def is_active(self):
         return self.generator.IsActive()
 
     def is_training_active(self):
@@ -578,7 +579,7 @@ class TrainRBatchGenerator:
 class LoadingThreadContextVal:
     def __init__(self, base_generator: BaseGenerator):
         self.base_generator = base_generator
-        self.base_generator.CreateValidationBatches();        
+        self.base_generator.CreateValidationBatches()        
 
     def __enter__(self):
         self.base_generator.ActivateValidationEpoch()
@@ -660,7 +661,7 @@ class ValidationRBatchGenerator:
         return None    
     
 def CreateNumPyGenerators(
-    rdataframe: RNode,
+    rdataframe: ROOT.RDF.RNode,
     batch_size: int,
     chunk_size: int,
     block_size: int,        
@@ -760,7 +761,7 @@ def CreateNumPyGenerators(
 
 
 def CreateTFDatasets(
-    rdataframe: RNode,
+    rdataframe: ROOT.RDF.RNode,
     batch_size: int,
     chunk_size: int,
     block_size: int,        
@@ -909,7 +910,7 @@ def CreateTFDatasets(
 
 
 def CreatePyTorchGenerators(
-    rdataframe: RNode,
+    rdataframe: ROOT.RDF.RNode,
     batch_size: int,
     chunk_size: int,
     block_size: int,        
