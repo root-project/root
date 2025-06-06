@@ -5,9 +5,9 @@ class ConcreteAlternative : public Abstract
 public:
    Float_t fData;
    ConcreteAlternative() : fData(-1) {}
-   virtual ~ConcreteAlternative() { fprintf(stdout,"Running ConcreteAlternative's destructor\n"); }
+   ~ConcreteAlternative() override { fprintf(stdout,"Running ConcreteAlternative's destructor\n"); }
 
-   virtual void Action() { /* should be doing something useful */ }
+   void Action() override { /* should be doing something useful */ }
 };
 
 
@@ -24,4 +24,4 @@ void readAbstract(const char *filename = "abstract.root")
       t->Scan("*");
    }
    delete f;
-}   
+}
