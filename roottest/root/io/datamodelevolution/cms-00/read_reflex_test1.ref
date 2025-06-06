@@ -1,0 +1,30 @@
+
+Processing /home/linev/git/webgui/roottest/root/io/datamodelevolution/cms-00/read_test1.cxx+("r")...
+[i] Reading test data model version 1
+MATCH: reflex_test01_wv1.log - reflex_test01_rv1.log
+MATCH: reflex_test01_wv1.log - reflex_test01_rv1ns.log
+MATCH: reflex_test02_wv1.log - reflex_test02_rv1.log beside transient fCached value
+MATCH: reflex_test03_wv1.log - reflex_test03_rv1.log beside transient fCached value
+MATCH: reflex_test03_wv1.log - reflex_test03_rv1ns.log beside transient fCached value
+MATCH: reflex_test04_wv1.log - reflex_test04_rv1.log
+MATCH: reflex_test04_wv1.log - reflex_test04_rv1ns.log
+MATCH: reflex_test05_wv1.log - reflex_test05_rv1.log
+MATCH: reflex_test06_wv1.log - reflex_test06_rv1.log
+MATCH: reflex_test06_wv1.log - reflex_test06_rv1ns.log
+MATCH: reflex_test07_wv1.log - reflex_test07_rv1.log beside transient fCached value
+MATCH: reflex_test07_wv1.log - reflex_test07_rv1ns.log beside transient fCached value
+MATCH: reflex_test08_wv1.log - reflex_test08_rv1.log beside transient fCached value
+MATCH: reflex_test08_wv1.log - reflex_test08_rv1ns.log beside transient fCached value
+MATCH: reflex_test09_wv1.log - reflex_test09_rv1.log beside transient fCached value
+MATCH: reflex_test09_wv1.log - reflex_test09_rv1ns.log beside transient fCached value
+MATCH: reflex_test10_wv1.log - reflex_test10_rv1.log beside transient fCached value
+MATCH: reflex_test10_wv1.log - reflex_test10_rv1ns.log beside transient fCached value
+MATCH: reflex_test11_wv1.log - reflex_test11_rv1.log
+MATCH: reflex_test11_wv1.log - reflex_test11_rv1ns.log
+MATCH: reflex_test12_wv1.log - reflex_test12_rv1.log
+MATCH: reflex_test12_wv1.log - reflex_test12_rv1ns.log
+MATCH: reflex_test13_wv1.log - reflex_test13_rv1.log beside transient fCached value
+MATCH: reflex_test13_wv1.log - reflex_test13_rv1ns.log beside transient fCached value
+MATCH: reflex_test14_wv1.log - reflex_test14_rv1.log beside transient fCached value
+MATCH: reflex_test14_wv1.log - reflex_test14_rv1ns.log beside transient fCached value
+(int) 0

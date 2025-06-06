@@ -3,6 +3,9 @@
 // author: Lukasz Janyst <ljanyst@cern.ch>
 //------------------------------------------------------------------------------
 
+#ifndef DataModelV2_h
+#define DataModelV2_h
+
 #include <utility>
 #include <vector>
 
@@ -57,7 +60,7 @@ class ClassC: public ClassABase2
 //      std::vector<std::pair<float, int> > m_h;
 };
 
-class ClassD 
+class ClassD
 {
 public:
    ClassD(): m_c( 65.22 ), m_e( 8 ) {}
@@ -66,7 +69,7 @@ private:
    float      m_c;
    ClassAIns2 m_d;
    int        m_e;
-};      
+};
 
 struct _dummy
 {
@@ -77,4 +80,4 @@ struct _dummy
    std::vector<ClassA2*>                a5;
 };
 
-
+#endif

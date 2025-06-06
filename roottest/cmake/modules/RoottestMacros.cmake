@@ -426,7 +426,7 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LIBRARIES;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LIBRARIES;OPTIONS;COMPILE_OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -467,6 +467,10 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   else()
     set_property(TARGET ${targetname_libgen}
                  PROPERTY OUTPUT_NAME ${dictionary}_dictrflx)
+  endif()
+
+  if(ARG_COMPILE_OPTIONS)
+    target_compile_options(${targetname_libgen} PRIVATE ${ARG_COMPILE_OPTIONS})
   endif()
 
   add_dependencies(${targetname_libgen}
@@ -677,7 +681,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
                -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
                -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
-               ${RootExternalIncludes} ${RootExeOptions}
+               ${RootExternalIncludes} ${RootExeOptions} ${ARG_ROOTEXE_OPTS}
                -q -l -b)
 
   set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
@@ -783,7 +787,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT;RESOURCE_LOCK"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;ROOTEXE_OPTS;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
                             ${ARGN})
 
   # Test name
