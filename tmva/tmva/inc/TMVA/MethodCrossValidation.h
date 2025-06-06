@@ -54,44 +54,44 @@ public:
    // fitType="FitGA"); virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
 
    // training method
-   void Train(void);
+   void Train(void) override;
 
    // revoke training
-   void Reset(void);
+   void Reset(void) override;
 
    using MethodBase::ReadWeightsFromStream;
 
    // write weights to file
-   void AddWeightsXMLTo(void *parent) const;
+   void AddWeightsXMLTo(void *parent) const override;
 
    // read weights from file
-   void ReadWeightsFromStream(std::istream &istr);
-   void ReadWeightsFromXML(void *parent);
+   void ReadWeightsFromStream(std::istream &istr) override;
+   void ReadWeightsFromXML(void *parent) override;
 
    // write method specific histos to target file
-   void WriteMonitoringHistosToFile(void) const;
+   void WriteMonitoringHistosToFile(void) const override;
 
    // calculate the MVA value
-   Double_t GetMvaValue(Double_t *err = nullptr, Double_t *errUpper = nullptr);
-   const std::vector<Float_t> &GetMulticlassValues();
-   const std::vector<Float_t> &GetRegressionValues();
+   Double_t GetMvaValue(Double_t *err = nullptr, Double_t *errUpper = nullptr) override;
+   const std::vector<Float_t> &GetMulticlassValues() override;
+   const std::vector<Float_t> &GetRegressionValues() override;
 
    // the option handling methods
-   void DeclareOptions();
-   void ProcessOptions();
+   void DeclareOptions() override;
+   void ProcessOptions() override;
 
    // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-   void MakeClassSpecific(std::ostream &, const TString &) const;
-   void MakeClassSpecificHeader(std::ostream &, const TString &) const;
+   void MakeClassSpecific(std::ostream &, const TString &) const override;
+   void MakeClassSpecificHeader(std::ostream &, const TString &) const override;
 
-   void GetHelpMessage() const;
+   void GetHelpMessage() const override;
 
-   const Ranking *CreateRanking();
-   Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets);
+   const Ranking *CreateRanking() override;
+   Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) override;
 
 protected:
-   void Init(void);
-   void DeclareCompatibilityOptions();
+   void Init(void) override;
+   void DeclareCompatibilityOptions() override;
 
 private:
    TString GetWeightFileNameForFold(UInt_t iFold) const;
@@ -117,7 +117,7 @@ private:
    std::map<const TMVA::Event *, UInt_t> fEventToFoldMapping;
 
    // for backward compatibility
-   ClassDef(MethodCrossValidation, 0);
+   ClassDefOverride(MethodCrossValidation, 0);
 };
 
 } // namespace TMVA

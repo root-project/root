@@ -17,9 +17,9 @@ class TVEvent : public TObject {
         TVEvent();
         TVEvent(TVEvent &);
         virtual ~TVEvent();
-        void Clear(Option_t* = "");
-        Int_t Compare(const TObject *obj) const;
-        Bool_t IsSortable() const { return kTRUE; }
+        void Clear(Option_t* = "") override;
+        Int_t Compare(const TObject *obj) const override;
+        Bool_t IsSortable() const override { return kTRUE; }
 
         ULong64_t        GetStartByte() const                               { return fStartByte;                    }
         void             SetStartByte(ULong64_t value)                      { fStartByte = value;                   }
@@ -49,6 +49,6 @@ class TVEvent : public TObject {
         Float_t fFineTime;     // useless? should be removed if true..
         Float_t fLatency;      // useless? should be removed if true..
 
-        ClassDef(TVEvent,1);
+        ClassDefOverride(TVEvent,1);
 };
 #endif

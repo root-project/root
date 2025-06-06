@@ -12,16 +12,16 @@ public:
     using CPPMethod::CPPMethod;
 
 public:
-    virtual PyObject* GetDocString();
-    virtual PyObject* Reflex(Cppyy::Reflex::RequestId_t,
-                             Cppyy::Reflex::FormatId_t = Cppyy::Reflex::OPTIMAL);
+    PyObject* GetDocString() override;
+    PyObject* Reflex(Cppyy::Reflex::RequestId_t,
+                             Cppyy::Reflex::FormatId_t = Cppyy::Reflex::OPTIMAL) override;
 
-    virtual PyCallable* Clone() { return new CPPConstructor(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPConstructor(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 
 protected:
-    virtual bool InitExecutor_(Executor*&, CallContext* ctxt = nullptr);
+    bool InitExecutor_(Executor*&, CallContext* ctxt = nullptr) override;
 };
 
 
@@ -33,9 +33,9 @@ public:
     CPPMultiConstructor& operator=(const CPPMultiConstructor&);
 
 public:
-    virtual PyCallable* Clone() { return new CPPMultiConstructor(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPMultiConstructor(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 
 private:
     Py_ssize_t fNumBases;
@@ -48,9 +48,9 @@ public:
     using CPPConstructor::CPPConstructor;
 
 public:
-    virtual PyCallable* Clone() { return new CPPAbstractClassConstructor(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPAbstractClassConstructor(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 };
 
 class CPPNamespaceConstructor : public CPPConstructor {
@@ -58,9 +58,9 @@ public:
     using CPPConstructor::CPPConstructor;
 
 public:
-    virtual PyCallable* Clone() { return new CPPNamespaceConstructor(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPNamespaceConstructor(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 };
 
 class CPPIncompleteClassConstructor : public CPPConstructor {
@@ -68,9 +68,9 @@ public:
     using CPPConstructor::CPPConstructor;
 
 public:
-    virtual PyCallable* Clone() { return new CPPIncompleteClassConstructor(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPIncompleteClassConstructor(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 };
 
 class CPPAllPrivateClassConstructor : public CPPConstructor {
@@ -78,9 +78,9 @@ public:
     using CPPConstructor::CPPConstructor;
 
 public:
-    virtual PyCallable* Clone() { return new CPPAllPrivateClassConstructor(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPAllPrivateClassConstructor(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 };
 
 } // namespace CPyCppyy

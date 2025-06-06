@@ -68,10 +68,10 @@ protected:
       fWorkBiasTensor2; ///< working tensor used to keep a temporary copy of bias or bias gradients
 
    /*! Update the weights, given the current weight gradients. */
-   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients);
+   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients) override;
 
    /*! Update the biases, given the current bias gradients. */
-   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients);
+   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients) override;
 
 public:
    /*! Constructor. */
@@ -133,8 +133,8 @@ TRMSProp<Architecture_t, Layer_t, DeepNet_t>::TRMSProp(DeepNet_t &deepNet, Scala
 
       const size_t biasesNSlices = (layers[i]->GetBiases()).size();
 
-      Architecture_t::CreateWeightTensors( fPastSquaredBiasGradients[i], layers[i]->GetBiases()); 
-      Architecture_t::CreateWeightTensors( fBiasUpdates[i], layers[i]->GetBiases()); 
+      Architecture_t::CreateWeightTensors( fPastSquaredBiasGradients[i], layers[i]->GetBiases());
+      Architecture_t::CreateWeightTensors( fBiasUpdates[i], layers[i]->GetBiases());
 
       for (size_t j = 0; j < biasesNSlices; j++) {
          initialize<Architecture_t>(fPastSquaredBiasGradients[i][j], EInitialization::kZero);
@@ -204,7 +204,7 @@ auto TRMSProp<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerInde
       // accumulation matrix used for temporary storing of the current accumulation
       auto &accumulation = fWorkBiasTensor1[layerIndex][k];
       auto &currentSquaredBiasGradients = fWorkBiasTensor2[layerIndex][k];
-      
+
       // Vt = rho * Vt-1 + (1-rho) * currentSquaredBiasGradients
       initialize<Architecture_t>(accumulation, EInitialization::kZero);
       Architecture_t::Copy(currentSquaredBiasGradients, biasGradients[k]);

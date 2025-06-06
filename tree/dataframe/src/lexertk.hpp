@@ -783,7 +783,7 @@ public:
       }
    }
 
-   inline std::size_t process(generator &g)
+   inline std::size_t process(generator &g) override
    {
       if (!g.token_list_.empty()) {
          for (std::size_t i = 0; i < (g.token_list_.size() - stride_ + 1); ++i) {
@@ -843,7 +843,7 @@ private:
 
 class token_modifier : public helper_interface {
 public:
-   inline std::size_t process(generator &g)
+   inline std::size_t process(generator &g) override
    {
       std::size_t changes = 0;
 
@@ -867,7 +867,7 @@ public:
       }
    }
 
-   inline std::size_t process(generator &g)
+   inline std::size_t process(generator &g) override
    {
       if (g.token_list_.empty())
          return 0;
@@ -924,7 +924,7 @@ private:
 
 class token_joiner : public helper_interface {
 public:
-   inline std::size_t process(generator &g)
+   inline std::size_t process(generator &g) override
    {
       if (g.token_list_.empty())
          return 0;
@@ -966,7 +966,7 @@ public:
    inline void ignore_symbol(const std::string &symbol) { ignore_set_.insert(symbol); }
 
    using token_inserter::insert;
-   inline int insert(const lexertk::token &t0, const lexertk::token &t1, lexertk::token &new_token)
+   inline int insert(const lexertk::token &t0, const lexertk::token &t1, lexertk::token &new_token) override
    {
       new_token.type = lexertk::token::e_mul;
       new_token.value = "*";
@@ -1019,7 +1019,7 @@ private:
 
 class operator_joiner : public token_joiner {
 public:
-   inline bool join(const lexertk::token &t0, const lexertk::token &t1, lexertk::token &t)
+   inline bool join(const lexertk::token &t0, const lexertk::token &t1, lexertk::token &t) override
    {
       //': =' --> ':='
       if ((t0.type == lexertk::token::e_colon) && (t1.type == lexertk::token::e_eq)) {
@@ -1077,11 +1077,11 @@ class bracket_checker : public token_scanner {
 public:
    bracket_checker() : token_scanner(1), state_(true) {}
 
-   bool result() { return state_ && stack_.empty(); }
+   bool result() override { return state_ && stack_.empty(); }
 
    lexertk::token error_token() { return error_token_; }
 
-   void reset()
+   void reset() override
    {
       // why? because msvc doesn't support swap properly.
       stack_ = std::stack<char>();
@@ -1090,7 +1090,7 @@ public:
    }
 
    using token_scanner::operator();
-   bool operator()(const lexertk::token &t)
+   bool operator()(const lexertk::token &t) override
    {
       if (!t.value.empty() && (lexertk::token::e_string != t.type) && (lexertk::token::e_symbol != t.type) &&
           details::is_bracket(t.value[0])) {
@@ -1161,7 +1161,7 @@ public:
    void clear() { replace_map_.clear(); }
 
 private:
-   bool modify(lexertk::token &t)
+   bool modify(lexertk::token &t) override
    {
       if (lexertk::token::e_symbol == t.type) {
          if (replace_map_.empty())
@@ -1216,10 +1216,10 @@ public:
       add_invalid_set1(lexertk::token::e_colon);
    }
 
-   bool result() { return error_list_.empty(); }
+   bool result() override { return error_list_.empty(); }
 
    using token_scanner::operator();
-   bool operator()(const lexertk::token &t0, const lexertk::token &t1)
+   bool operator()(const lexertk::token &t0, const lexertk::token &t1) override
    {
       set_t::value_type p = std::make_pair(t0.type, t1.type);
 

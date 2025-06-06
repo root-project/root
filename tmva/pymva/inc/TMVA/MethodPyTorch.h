@@ -44,31 +44,31 @@ namespace TMVA {
             const TString &theWeightFile);
       ~MethodPyTorch();
 
-      void Train();
-      void Init();
-      void DeclareOptions();
-      void ProcessOptions();
+      void Train() override;
+      void Init() override;
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // Check whether the given analysis type (regression, classification, ...)
       // is supported by this method
-      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t);
+      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t) override;
       // Get signal probability of given event
-      Double_t GetMvaValue(Double_t *errLower, Double_t *errUpper);
-      std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress);
+      Double_t GetMvaValue(Double_t *errLower, Double_t *errUpper) override;
+      std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress) override;
       // Get regression values of given event
-      std::vector<Float_t>& GetRegressionValues();
+      std::vector<Float_t>& GetRegressionValues() override;
       // Get class probabilities of given event
-      std::vector<Float_t>& GetMulticlassValues();
+      std::vector<Float_t>& GetMulticlassValues() override;
 
-      const Ranking *CreateRanking() { return nullptr; }
-      virtual void TestClassification();
-      virtual void AddWeightsXMLTo(void*) const{}
-      virtual void ReadWeightsFromXML(void*){}
-      virtual void ReadWeightsFromStream(std::istream&) {} // backward compatibility
-      virtual void ReadWeightsFromStream(TFile&){} // backward compatibility
-      void ReadModelFromFile();
+      const Ranking *CreateRanking() override { return nullptr; }
+      void TestClassification() override;
+      void AddWeightsXMLTo(void*) const override{}
+      void ReadWeightsFromXML(void*) override{}
+      void ReadWeightsFromStream(std::istream&) override {} // backward compatibility
+      void ReadWeightsFromStream(TFile&) override{} // backward compatibility
+      void ReadModelFromFile() override;
 
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
 
     private:
@@ -96,7 +96,7 @@ namespace TMVA {
       void SetupPyTorchModel(Bool_t loadTrainedModel);  // setups the needed variables, loads the model
       UInt_t  GetNumValidationSamples();                // get number of validation events according to given option
 
-      ClassDef(MethodPyTorch, 0);
+      ClassDefOverride(MethodPyTorch, 0);
    };
 
 } // namespace TMVA

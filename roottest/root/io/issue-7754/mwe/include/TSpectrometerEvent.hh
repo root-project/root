@@ -15,10 +15,10 @@ class TSpectrometerEvent : public TDetectorVEvent {
 
         TSpectrometerEvent();
         ~TSpectrometerEvent();
-        void Clear(Option_t* = "");
+        void Clear(Option_t* = "") override;
 
     private:
 
-        ClassDef(TSpectrometerEvent,1);
+        ClassDefOverride(TSpectrometerEvent,1);
 };
 #endif

@@ -13,15 +13,15 @@ public:
     using CPPMethod::CPPMethod;
 
 public:
-    virtual PyObject* GetTypeName();
+    PyObject* GetTypeName() override;
 
 public:
-    virtual PyCallable* Clone() { return new CPPFunction(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPFunction(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 
 protected:
-    virtual bool ProcessArgs(PyCallArgs& args);
+    bool ProcessArgs(PyCallArgs& args) override;
 };
 
 // Wrapper for global binary operators that swap arguments
@@ -29,12 +29,12 @@ class CPPReverseBinary : public CPPFunction {
 public:
     using CPPFunction::CPPFunction;
 
-    virtual PyCallable* Clone() { return new CPPFunction(*this); }
-    virtual PyObject* Call(CPPInstance*& self,
-        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr);
+    PyCallable* Clone() override { return new CPPFunction(*this); }
+    PyObject* Call(CPPInstance*& self,
+        CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt = nullptr) override;
 
 protected:
-    virtual bool ProcessArgs(PyCallArgs& args);
+    bool ProcessArgs(PyCallArgs& args) override;
 };
 
 // Helper to add self to the arguments tuple if rebound

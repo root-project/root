@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$       
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -15,9 +15,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      Heidelberg U., Germany                                                    * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      Heidelberg U., Germany                                                    *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -32,7 +32,7 @@
 // CrossEntropy                                                         //
 //                                                                      //
 // Implementation of the CrossEntropy as separation criterion           //
-//  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)                  // 
+//  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,7 @@ namespace TMVA {
    class CrossEntropy : public SeparationBase {
 
    public:
-    
+
       // default constructor
    CrossEntropy(): SeparationBase()  { fName = "CE"; }
 
@@ -53,12 +53,12 @@ namespace TMVA {
       // destructor
       virtual ~CrossEntropy(){}
 
-      // return the separation Index  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b) 
-      virtual Double_t GetSeparationIndex( const Double_t s, const Double_t b );
-    
+      // return the separation Index  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b)
+      Double_t GetSeparationIndex( const Double_t s, const Double_t b ) override;
+
    protected:
-    
-      ClassDef(CrossEntropy,0); // Implementation of the CrossEntropy as separation criterion
+
+      ClassDefOverride(CrossEntropy,0); // Implementation of the CrossEntropy as separation criterion
    };
 
 } // namespace TMVA

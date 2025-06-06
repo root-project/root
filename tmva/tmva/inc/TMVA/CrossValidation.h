@@ -129,7 +129,7 @@ public:
    ~CrossValidation();
 
    void InitOptions();
-   void ParseOptions();
+   void ParseOptions() override;
 
    void SetNumFolds(UInt_t i);
    void SetSplitExpr(TString splitExpr);
@@ -141,7 +141,7 @@ public:
 
    const std::vector<CrossValidationResult> &GetResults() const;
 
-   void Evaluate();
+   void Evaluate() override;
 
 private:
    CrossValidationFoldResult ProcessFold(UInt_t iFold, const OptionMap & methodInfo);
@@ -172,7 +172,7 @@ private:
    std::unique_ptr<Factory> fFactory;
    std::unique_ptr<CvSplitKFolds> fSplit;
 
-   ClassDef(CrossValidation, 0);
+   ClassDefOverride(CrossValidation, 0);
    };
 
 } // namespace TMVA

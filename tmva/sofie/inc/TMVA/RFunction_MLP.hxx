@@ -27,12 +27,12 @@ public:
     virtual ~RFunction_MLP() {}
     RFunction_MLP(FunctionTarget target, Int_t numLayers, Activation activation_function=Activation::RELU, bool activate_final=false, GraphType gType=GraphType::GNN);
 
-    void Initialize();
+    void Initialize() override;
 
     void AddLayerNormalization(int axis, float epsilon, size_t stashType, const std::string &nameX,
-                               const std::string &nameScale, const std::string &nameB, const std::string &nameY);
+                               const std::string &nameScale, const std::string &nameB, const std::string &nameY) override;
 
-    void AddInitializedTensors(const std::vector<std::vector<std::string>>& initialized_tensors) {
+    void AddInitializedTensors(const std::vector<std::vector<std::string>>& initialized_tensors) override {
         fKernelTensors = initialized_tensors[0];
         fBiasTensors   = initialized_tensors[1];
     }

@@ -135,7 +135,7 @@ namespace TMVA {
 
    public:
 
-      ClassDef(Configurable,1);  // Virtual base class for all TMVA method
+      ClassDefOverride(Configurable,1);  // Virtual base class for all TMVA method
 
    };
 } // namespace TMVA

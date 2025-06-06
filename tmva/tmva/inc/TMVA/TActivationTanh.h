@@ -46,22 +46,22 @@ namespace TMVA {
       ~TActivationTanh() {}
 
       // evaluate the activation function
-      Double_t Eval(Double_t arg);
+      Double_t Eval(Double_t arg) override;
 
       // evaluate the derivative of the activation function
-      Double_t EvalDerivative(Double_t arg);
+      Double_t EvalDerivative(Double_t arg) override;
 
       // minimum of the range of the activation function
-      Double_t GetMin() { return -1; }
+      Double_t GetMin() override { return -1; }
 
       // maximum of the range of the activation function
-      Double_t GetMax() { return 1; }
+      Double_t GetMax() override { return 1; }
 
       // expression for the activation function
-      TString GetExpression();
+      TString GetExpression() override;
 
       // writer of function code
-      virtual void MakeFunction(std::ostream& fout, const TString& fncName);
+      void MakeFunction(std::ostream& fout, const TString& fncName) override;
 
       void SetSlow(){fFAST=kFALSE;} // to ensure old training files will be process with old tanh code
    private:
@@ -69,7 +69,7 @@ namespace TMVA {
       Double_t fast_tanh(Double_t arg);
       Bool_t   fFAST;
 
-      ClassDef(TActivationTanh,0); // Tanh sigmoid activation function for TNeuron
+      ClassDefOverride(TActivationTanh,0); // Tanh sigmoid activation function for TNeuron
    };
 
 } // namespace TMVA

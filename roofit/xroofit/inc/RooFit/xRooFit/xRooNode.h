@@ -493,7 +493,7 @@ public:
    class InteractiveObject : public TQObject {
    public:
       void Interactive_PLLPlot(TVirtualPad *pad, TObject *obj, Int_t x, Int_t y);
-      ClassDef(InteractiveObject, 0)
+      ClassDefOverride(InteractiveObject, 0)
    };
    static InteractiveObject *gIntObj;
 

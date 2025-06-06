@@ -59,11 +59,11 @@ namespace TMVA {
       PDEFoamVect& operator*=( const  Double_t&  );    // *=; mult. by scalar v*=x (FAST)
       PDEFoamVect  operator+ ( const  PDEFoamVect& );  // +;  u=v+s, NEVER USE IT, SLOW!!!
       PDEFoamVect  operator- ( const  PDEFoamVect& );  // -;  u=v-s, NEVER USE IT, SLOW!!!
-      void       Print(Option_t *option) const;    // Prints vector
+      void       Print(Option_t *option) const override; // Prints vector
       Int_t      GetDim() const { return fDim; }   // Returns dimension
       Double_t   GetCoord(Int_t i) const { return fCoords[i]; }   // Returns coordinate
 
-      ClassDef(PDEFoamVect,2) //n-dimensional vector with dynamical allocation
+      ClassDefOverride(PDEFoamVect,2) //n-dimensional vector with dynamical allocation
          }; // end of PDEFoamVect
 }  // namespace TMVA
 
