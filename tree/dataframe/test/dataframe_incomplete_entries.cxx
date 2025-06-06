@@ -1235,7 +1235,7 @@ TEST_P(RDFIndexedFriendsOrder, GlobalJoinSameCardinality)
          ROOT::TestSupport::CheckDiagsRAII diagRAII;
          diagRAII.requiredDiag(kWarning, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
          diagRAII.requiredDiag(kWarning, "TTreePlayer::BuildIndex",
-                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex (less efficient)");
+                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)");
          auxChain.BuildIndex("evt_number");
       } else {
          auxChain.BuildIndex("evt_number");
@@ -1276,7 +1276,7 @@ TEST_P(RDFIndexedFriendsOrder, GlobalJoinDifferentCardinality)
          ROOT::TestSupport::CheckDiagsRAII diagRAII;
          diagRAII.requiredDiag(kWarning, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
          diagRAII.requiredDiag(kWarning, "TTreePlayer::BuildIndex",
-                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex (less efficient)");
+                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)");
          auxChain.BuildIndex("evt_number");
       } else {
          auxChain.BuildIndex("evt_number");

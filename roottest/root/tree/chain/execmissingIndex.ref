@@ -7,7 +7,7 @@ Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't
 Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
 Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
 Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Warning in <TTreePlayer::BuildIndex>: Creating a TChainIndex unsuccessful - switching to TTreeIndex (less efficient)
+Warning in <TTreePlayer::BuildIndex>: Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)
 ************************************
 *    Row   *    evtnum * treefrien *
 ************************************

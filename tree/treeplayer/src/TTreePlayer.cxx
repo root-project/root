@@ -161,7 +161,7 @@ TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, co
       if (index->IsZombie()) {
          delete index;
          if (warnUnsortedIndices)
-            Warning("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex (less efficient)");
+            Warning("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)");
       }
       else
          return index;
