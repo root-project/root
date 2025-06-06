@@ -35,6 +35,28 @@ TEST(RNTupleImporter, Empty)
    EXPECT_THROW(importer->Import(), ROOT::RException);
 }
 
+TEST(RNTupleImporter, CreateInDirectory)
+{
+   FileRaii fileGuard("test_ntuple_importer_create_in_directory.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      TDirectory *dir = file->mkdir("dir1");
+      ASSERT_NE(dir, nullptr);
+      file->cd("dir1");
+      auto tree = std::make_unique<TTree>("tree", "");
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "dir1/tree", fileGuard.GetPath());
+   importer->SetIsQuiet(true);
+   EXPECT_THROW(importer->Import(), ROOT::RException);
+   importer->SetNTupleName("dir2/ntuple");
+   importer->Import();
+   auto reader = RNTupleReader::Open("dir2/ntuple", fileGuard.GetPath());
+   EXPECT_EQ(0U, reader->GetNEntries());
+   EXPECT_THROW(importer->Import(), ROOT::RException);
+}
+
 TEST(RNTupleImporter, CreateFromTree)
 {
    FileRaii fileGuard("test_ntuple_importer_empty.root");
