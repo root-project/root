@@ -146,18 +146,22 @@ TTreePlayer::~TTreePlayer()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Build the index for the tree (see TTree::BuildIndex)
-/// verbose can be set to false to silence a warning about switching from
-/// TChainIndex to TTreeIndex when indices in files are not sorted
+/// warnUnsortedIndices can be set to false to silence a warning about switching from
+/// TChainIndex to TTreeIndex when indices in files are not sorted. Note
+/// that unsorted indices lead to a significant performance degradation, not only when building the index itself,
+/// but also later on when performing the joining with other datasets. Thus, in general, it is not recommended to
+/// silence the warning except for special cases with prior knowledge that sorting the files and/or entries is actually
+/// more expensive, or just not possible.
 
-TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname, bool verbose)
+TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname, bool warnUnsortedIndices)
 {
    TVirtualIndex *index;
    if (dynamic_cast<const TChain*>(T)) {
-      index = new TChainIndex(T, majorname, minorname, verbose);
+      index = new TChainIndex(T, majorname, minorname, warnUnsortedIndices);
       if (index->IsZombie()) {
          delete index;
-         if (verbose)
-            Warning("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
+         if (warnUnsortedIndices)
+            Warning("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex (less efficient)");
       }
       else
          return index;

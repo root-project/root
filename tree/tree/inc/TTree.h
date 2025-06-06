@@ -429,7 +429,7 @@ public:
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
    virtual TBranch        *BranchRef();
            void            Browse(TBrowser*) override;
-   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0", bool verbose = true);
+   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0", bool warnUnsortedIndices = true);
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void *pointer = nullptr, bool canOptimize = true);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
