@@ -4914,6 +4914,8 @@ void TStreamerInfo::ls(Option_t *option) const
       while ((obj = next()))
          obj->ls(option);
    }
+   Bool_t noaddr = option && (strstr(option,"noaddr") != nullptr);
+
    if (strstr(option,"full") != 0) {
       for (Int_t i=0; i < fNfulldata; ++i) {
          TStreamerElement *element = (TStreamerElement*)fCompFull[i]->fElem;
@@ -4925,7 +4927,7 @@ void TStreamerInfo::ls(Option_t *option) const
             sequenceType += "]";
          }
          Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
-                i,element->GetName(),fCompFull[i]->fType,fCompFull[i]->fOffset,fCompFull[i]->fLength,fCompFull[i]->fMethod,
+                i,element->GetName(),fCompFull[i]->fType,fCompFull[i]->fOffset,fCompFull[i]->fLength, (noaddr ? 0 : fCompFull[i]->fMethod),
                 sequenceType.Data());
       }
 
@@ -4950,7 +4952,7 @@ void TStreamerInfo::ls(Option_t *option) const
             sequenceType += "]";
          }
          Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
-                i,element->GetName(),fCompOpt[i]->fType,fCompOpt[i]->fOffset,fCompOpt[i]->fLength,fCompOpt[i]->fMethod,
+                i,element->GetName(),fCompOpt[i]->fType,fCompOpt[i]->fOffset,fCompOpt[i]->fLength, (noaddr ? 0 : fCompOpt[i]->fMethod),
                 sequenceType.Data());
          if (optimized && wantOrig) {
             Bool_t done;
