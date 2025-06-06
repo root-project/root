@@ -32,7 +32,7 @@ void execmanydirs(int n = 200, int mode = 16 | 32 | 64) {
   }
   // systematics.emplace_back("syst_" + std::to_string(10));
 
-  std::unique_ptr<TFile> out(TFile::Open("example.root", "RECREATE"));
+  std::unique_ptr<TFile> out(TFile::Open("example_manydirs.root", "RECREATE"));
   if (mode & 256)
     gROOT->GetListOfFiles()->Remove(out.get());
 
