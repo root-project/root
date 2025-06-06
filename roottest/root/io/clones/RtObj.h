@@ -1,4 +1,4 @@
-#include <TObject.h>
+#include <TNamed.h>
 
 template <class T>
 class RtObj : public T
