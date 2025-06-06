@@ -1,7 +1,5 @@
 #ifndef runtemplate32_h
-#ifdef ClingWorkAroundMultipleInclude
 #define runtemplate32_h
-#endif
 
 class WithDouble {
 public:
