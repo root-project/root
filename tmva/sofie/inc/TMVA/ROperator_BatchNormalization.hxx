@@ -53,6 +53,7 @@ public:
    fNB(UTILITY::Clean_name(nameB)), fNMean(UTILITY::Clean_name(nameMean)),
    fNVar(UTILITY::Clean_name(nameVar)), fNY(UTILITY::Clean_name(nameY)), fActivation(activation)
    {
+               fKind = OperatorKind::BATCHNORM;
       fInputTensorNames = { fNX };
       fOutputTensorNames = { fNY };
 
@@ -230,6 +231,22 @@ public:
    }
 
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Copy"), std::string("Axpy") }; }
+   std::string GetFusableOutputTensorName() override {
+       return fNY;
+   }
+   
+   void UpdateFusableTensorName(std::string fusable_tensor_name){
+            fNX = UTILITY::Clean_name(fusable_tensor_name);
+            fNY = UTILITY::Clean_name(fusable_tensor_name);
+         fInputTensorNames = { fNX, fNScale };
+         if (!fNB.empty()){
+            fInputTensorNames.emplace_back(fNB);
+         }
+
+         fOutputTensorNames = { fNY };
+                           std::cout<<"\ncalled from gemm";
+
+      }
 };
 
 }//SOFIE

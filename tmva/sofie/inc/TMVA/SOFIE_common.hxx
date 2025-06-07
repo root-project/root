@@ -126,7 +126,7 @@ struct TensorMemoryInfo {
 
    TensorMemoryInfo split(const std::string_view new_name, size_t new_size) {
         if (new_size > tensor_size) {
-            throw std::invalid_argument("New size exceeds available tensor size.");
+            throw std::invalid_argument("New size "+ std::to_string(new_size) + " exceeds available tensor size of " + std::to_string(tensor_size)+".");
         }
         tensor_size -= new_size;
         return TensorMemoryInfo{new_name, new_size};

@@ -36,7 +36,7 @@
 
          fInputTensorNames.resize(fInputs.size());
          std::transform(fInputs.begin(), fInputs.end(), fInputTensorNames.begin(),
-                   [](const std::string& s) -> std::string_view { return s; });
+                   [](const std::string& s) -> std::string { return s; });
          fOutputTensorNames = { fOutput };
          }
 
