@@ -73,8 +73,10 @@ public:
    }
    
    void UpdateFusableTensorName(std::string fusable_tensor_name){
-         fNX = UTILITY::Clean_name(fusable_tensor_name);
-         fNY = UTILITY::Clean_name(fusable_tensor_name);
+         fNX = fusable_tensor_name;
+         fNY = fusable_tensor_name;
+        fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
    }
 
 };

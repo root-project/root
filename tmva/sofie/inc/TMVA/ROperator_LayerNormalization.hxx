@@ -136,6 +136,7 @@ public:
          if (isDynamic || lengthB < static_cast<size_t>(std::stoi(fLength))) {
             fNBroadcastedB = "Broadcasted" + fNB;
             model.AddIntermediateTensor(fNBroadcastedB, ConvertStringToType(fType), fShapeX);
+            fOutputTensorNames.emplace_back(fNBroadcastedB);
          }
       }
       model.AddNeededStdLib("cmath");
@@ -345,6 +346,18 @@ public:
    void UpdateFusableTensorName(std::string fusable_tensor_name){
             fNX = UTILITY::Clean_name(fusable_tensor_name);
             fNY = UTILITY::Clean_name(fusable_tensor_name);
+         fInputTensorNames = { fNX, fNScale };
+         if (!fNB.empty()){
+            fInputTensorNames.emplace_back(fNB);
+         }
+
+         fOutputTensorNames = { fNY };
+         if (!fNMean.empty()){
+            fOutputTensorNames.emplace_back(fNMean);
+         }
+         if (!fNInvStdDev.empty()){
+            fOutputTensorNames.emplace_back(fNInvStdDev);
+         }
    }
 };
 

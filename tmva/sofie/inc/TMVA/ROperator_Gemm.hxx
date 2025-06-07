@@ -251,6 +251,7 @@ namespace SOFIE{
                   // In case of session add broadcasting code in Session constructor and in GenerateInitCode
                   // we need to add a new intermediate tensor for broadcasted bias tensor
                   fNC2 = fNC + "bcast";
+                  fOutputTensorNames.emplace_back(fNC2);
                   if (!fIsDynamic) {
                      model.AddIntermediateTensor(fNC2, model.GetTensorType(fNC), shapeY);
                   }
@@ -410,6 +411,8 @@ namespace SOFIE{
          
       void UpdateFusableTensorName(std::string fusable_tensor_name){
          fNY = UTILITY::Clean_name(fusable_tensor_name);
+                  fOutputTensorNames = { fNY };
+                  std::cout<<"\ncalled from gemm";
       }
    };
 

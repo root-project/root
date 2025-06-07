@@ -58,7 +58,8 @@ public:
       fAttrPads(pads), fAttrStrides(strides),
       fNX(UTILITY::Clean_name(nameX)), fNW(UTILITY::Clean_name(nameW)),
       fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY))
-   {
+   {  
+      fKind = OperatorKind::CONV;
       if(std::is_same<T, float>::value) {
          fType = "float";
       } else {
@@ -77,6 +78,7 @@ public:
       fAttrPads(pads), fAttrStrides(strides),
       fNX(UTILITY::Clean_name(nameX)), fNW(UTILITY::Clean_name(nameW)), fNY(UTILITY::Clean_name(nameY))
    {
+      fKind = OperatorKind::CONV;
       if(std::is_same<T, float>::value) {
          fType = "float";
       } else {
@@ -294,6 +296,7 @@ public:
                // we need to add a new intermediate tensor for broadcasted bias tensor
                fNB2 = fNB + "bcast";
                model.AddIntermediateTensor(fNB2, model.GetTensorType(fNB), targetShape);
+               fOutputTensorNames.push_back(fNB2);
             }
          }
       }
@@ -569,6 +572,18 @@ public:
    /*! \brief Returns the blas routines needed to compile the generated code
     */
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
+         std::string GetFusableOutputTensorName() override {
+         return fNY;
+      }
+   void UpdateFusableTensorName(std::string fusable_tensor_name) override {
+      std::cout<<"\ncalled from conv";   
+      fNY = fusable_tensor_name;
+                  fOutputTensorNames = { fNY };
+                        convK = fNX +"_f";
+      imcol = fNX +"_xcol";
+      fOutputTensorNames.emplace_back(convK);
+      fOutputTensorNames.emplace_back(imcol);
+      }
 };
 
 } // namespace SOFIE

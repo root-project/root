@@ -103,7 +103,7 @@ public:
 
       fInputTensorNames.resize(fNInputs.size());
       std::transform(fNInputs.begin(), fNInputs.end(), fInputTensorNames.begin(),
-                  [](const std::string& s) -> std::string_view { return s; });
+                  [](const std::string& s) -> std::string { return s; });
       fOutputTensorNames = { fNY };
    }
 
@@ -137,6 +137,7 @@ public:
             std::string name = "Broadcasted"  + fNInputs[i];
             model.AddIntermediateTensor(name, model.GetTensorType(fNInputs[0]), fShapeY);
             fNBroadcastedInputs.emplace_back("tensor_" + name);
+            fOutputTensorNames.emplace_back(name);
          } else {
             fNBroadcastedInputs.emplace_back("tensor_" + fNInputs[i]);
          }

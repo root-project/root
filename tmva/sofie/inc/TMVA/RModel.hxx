@@ -161,8 +161,8 @@ public:
    std::string GenerateInferSignature(bool isdecl = true);
 
    // calculate total intermediate memory and position intermediate tensor addresses
-   std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
-   void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
+   std::string AllocateIntermediateMemory(std::span<const std::string> op_output_tensors, std::set<std::string>& allocated_tensors);
+   void CheckAndFlushIntermediateMemory(std::span<const std::string> op_output_tensors, const size_t& op_idx);
 
    void SetOptimizationLevel(const OptimizationLevel &optim_level) { fOptimizationLevel = optim_level; }
 
