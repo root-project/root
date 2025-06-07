@@ -1417,7 +1417,6 @@ void RModel::HeadInitializedTensors(std::string name, int n_print) {
 void RModel::OutputGenerated(std::string filename, bool append) {
 
     RModel_Base::OutputGenerated(filename, append);
-
     // write weights in a text file
     if (fUseWeightFile) {
         if (!filename.empty()) {

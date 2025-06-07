@@ -136,7 +136,6 @@ public:
          if (isDynamic || lengthB < static_cast<size_t>(std::stoi(fLength))) {
             fNBroadcastedB = "Broadcasted" + fNB;
             model.AddIntermediateTensor(fNBroadcastedB, ConvertStringToType(fType), fShapeX);
-            fOutputTensorNames.emplace_back(fNBroadcastedB);
          }
       }
       model.AddNeededStdLib("cmath");

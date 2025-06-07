@@ -167,7 +167,6 @@ void ROperator_ConvTranspose<T>::Initialize(RModel& model){
             // we need to add a new intermediate tensor for broadcasted bias tensor
             fNBroadcastedB = "Broadcasted" + fNB;
             model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
-            fOutputTensorNames.emplace_back(fNBroadcastedB);
          }
       }
       else {

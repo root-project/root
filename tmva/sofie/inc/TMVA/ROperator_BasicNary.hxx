@@ -137,7 +137,6 @@ public:
             std::string name = "Broadcasted"  + fNInputs[i];
             model.AddIntermediateTensor(name, model.GetTensorType(fNInputs[0]), fShapeY);
             fNBroadcastedInputs.emplace_back("tensor_" + name);
-            fOutputTensorNames.emplace_back(name);
          } else {
             fNBroadcastedInputs.emplace_back("tensor_" + fNInputs[i]);
          }
