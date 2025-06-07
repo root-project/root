@@ -212,7 +212,11 @@ target_link_libraries(PyROOT INTERFACE cppyy_backend cppyy ROOTPythonizations)
 
 # Define library output directories for build and install trees
 set(pymoduledir_build "${localruntimedir}/ROOT")
-set(pymoduledir_install "${CMAKE_INSTALL_FULL_PYTHONDIR}/ROOT")
+if(MSVC)
+  set(pymoduledir_install "${CMAKE_INSTALL_PYTHONDIR}/ROOT")
+else()
+  set(pymoduledir_install "${CMAKE_INSTALL_FULL_PYTHONDIR}/ROOT")
+endif()
 
 # To make sure that the library also ends up in the right subdirectory in the
 # build directory tree.
