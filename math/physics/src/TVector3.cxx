@@ -313,6 +313,7 @@ void TVector3::Rotate(Double_t angle, const TVector3 & axis){
 /// since the first rotation is restricted to be from 0 to pi, theta<0 is not
 /// taken into account. This is e.g. the case for u2=0 and u1<0.
 /// (Gimbal-lock artefacts are unavoidable when using polar coordinates.)
+/// \see https://proj-clhep.web.cern.ch/proj-clhep/doc/CLHEP_1_7/UserGuide/VectorDefs/node49.html#eq:rotUz
 /// The resulting rotation matrix C is the composition of Az(phi) x By(theta), ie:
 /// \f[ A = \left( \begin{array}{ccc} u1/up & -u2/up & 0 \\ u2/up & u1/up & 0 \\ 0 & 0 & 1 \end{array} \right) \f]
 /// \f[ up = \sqrt{u1*u1 + u2*u2} >= 0 \f]
