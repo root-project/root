@@ -303,7 +303,12 @@ void TVector3::Rotate(Double_t angle, const TVector3 & axis){
 /// Rotates reference frame from Uz to newUz (unit vector) (Geant4).
 /// With respect to the (x,y,z) frame, z' is parallel to direction, x' is in the theta plane and y' in the xy
 /// plane as well as perpendicular to the theta plane.
-/// The full rotation is a composition of two simple rotations:
+/// \note The columns of the applied rotation matrix represent the coordinates of unit vectors of the new axes in the original coordinate system.
+/// The z' i.e. third column is `(u1,u2,u3)`. y' i.e. second column is cross product of the old and new Z axes: `(0,0,1)x(u1,u2,u3) = (-u2,u1,0)`,
+/// which after normalisation becomes `(-u2/up,u1/up,0)`. The x' i.e. first column is `(-u2/up,u1/up,0)x(u1,u2,u3) = (u1*u3/up,u2*u3/up,-up)`. The
+/// special case where z' is collinear to the z is considered separately.
+///
+/// The full rotation can also be interpreted as the composition of two simple rotations:
 /// theta around oy [0, pi], then phi around oz [0, 2pi] (non commutative).
 ///
 /// For the special case of u1=0,u2=0,
