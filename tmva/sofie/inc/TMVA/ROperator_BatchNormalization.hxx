@@ -238,18 +238,15 @@ public:
        return fNY;
    }
    
-   void UpdateFusableTensorName(std::string fusable_tensor_name){
-            fNX = UTILITY::Clean_name(fusable_tensor_name);
-            fNY = UTILITY::Clean_name(fusable_tensor_name);
-         fInputTensorNames = { fNX, fNScale };
-         if (!fNB.empty()){
-            fInputTensorNames.emplace_back(fNB);
-         }
+   void UpdateFusableTensorName(std::string fusable_tensor_name, const std::function<void(const std::string&)>& removal_func){
+      removal_func(fNX);
+      removal_func(fNY);      
+      fNX = fusable_tensor_name;
+      fNY = fusable_tensor_name;
+      fInputTensorNames[0] = fNX;
+      fOutputTensorNames[0] = fNY;
+   }
 
-         fOutputTensorNames = { fNY };
-                           std::cout<<"\ncalled from gemm";
-
-      }
 };
 
 }//SOFIE

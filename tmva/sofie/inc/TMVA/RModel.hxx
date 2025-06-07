@@ -166,6 +166,10 @@ public:
 
    void SetOptimizationLevel(const OptimizationLevel &optim_level) { fOptimizationLevel = optim_level; }
 
+   void RemoveIntermediateTensor(const std::string& tensor_name){
+      fIntermediateTensorInfos.erase(tensor_name);
+   }
+   
 protected:
    // internal functions
    // generate code for the initialized tensors

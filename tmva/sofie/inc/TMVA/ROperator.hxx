@@ -60,7 +60,7 @@ public:
    virtual std::string GenerateSessionMembersCode(std::string /*opName*/) { return ""; }
    virtual std::string Header() { return "";}
    virtual std::string GetFusableOutputTensorName() { return "";}
-   virtual void UpdateFusableTensorName(std::string){ return;};
+   virtual void UpdateFusableTensorName(std::string, const std::function<void(const std::string&)>& removal_func){ return;};
 
 
    //virtual void Forward_reference() = 0;

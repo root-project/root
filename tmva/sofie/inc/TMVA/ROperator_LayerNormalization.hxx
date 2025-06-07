@@ -342,22 +342,15 @@ public:
        return fNY;
    }
    
-   void UpdateFusableTensorName(std::string fusable_tensor_name){
-            fNX = UTILITY::Clean_name(fusable_tensor_name);
-            fNY = UTILITY::Clean_name(fusable_tensor_name);
-         fInputTensorNames = { fNX, fNScale };
-         if (!fNB.empty()){
-            fInputTensorNames.emplace_back(fNB);
-         }
-
-         fOutputTensorNames = { fNY };
-         if (!fNMean.empty()){
-            fOutputTensorNames.emplace_back(fNMean);
-         }
-         if (!fNInvStdDev.empty()){
-            fOutputTensorNames.emplace_back(fNInvStdDev);
-         }
+   void UpdateFusableTensorName(std::string fusable_tensor_name, const std::function<void(const std::string&)>& removal_func){
+      removal_func(fNX);
+      removal_func(fNY);
+      fNX = fusable_tensor_name;
+      fNY = fusable_tensor_name;
+      fInputTensorNames[0] = fNX;
+      fOutputTensorNames[0] = fNY;
    }
+
 };
 
 } // namespace SOFIE

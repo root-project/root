@@ -438,7 +438,6 @@ void RModel::CheckAndFuseOperators() {
    std::vector<size_t> fusable_indices;
    std::string fusable_propagate_tensor_name;
    while (idx < fOperators.size()) {
-      std::cout<<"\nop currently: "<<toString(fOperators[idx]->GetOpKind());
       if (fOperators[idx]->GetOpKind() != OperatorKind::GEMM && fOperators[idx]->GetOpKind() != OperatorKind::CONV) {
           ++idx;
           continue;
@@ -451,13 +450,11 @@ void RModel::CheckAndFuseOperators() {
       size_t j = idx + 1;
       for (; j < fOperators.size()-1; ++j) {
           auto opKind = fOperators[j]->GetOpKind();
-         std::cout<<"\nchecking for fusion: "<<toString(opKind);
           // Only consider operators with fusable kinds
           if (!FusableKinds.count(opKind)) {
             // std::cout<<"\n op not fusable: "<<toString(opKind);  
             break;
           }
-          std::cout<<"\nmight be fusable: "<<toString(opKind);
    
           const auto& tensorName = fOperators[j]->GetFusableOutputTensorName();
           auto freqIt = fIntermediateTensorFrequencyLookup.find(tensorName);
@@ -472,20 +469,20 @@ void RModel::CheckAndFuseOperators() {
               break;
           }
       }
-      // std::cout<<"\nstart fusing: "<<fusable_propagate_tensor_name;
       if (!fusable_propagate_tensor_name.empty()) {
-         //  std::cout << "\nOperators to be fused with: " << fusable_propagate_tensor_name;
+         auto fusable_tensor_type = GetTensorType(fusable_propagate_tensor_name);
+         auto fusable_tensor_shape = GetDynamicTensorShape(fusable_propagate_tensor_name);
           for (auto& index : fusable_indices) {
-            std::cout<<"\nfusing op "<<toString(fOperators[index]->GetOpKind())<<" , with: "<<fusable_propagate_tensor_name;
-            fOperators[index]->UpdateFusableTensorName(fusable_propagate_tensor_name);
+            fOperators[index]->UpdateFusableTensorName(fusable_propagate_tensor_name, [this](const std::string& name) {
+               this->RemoveIntermediateTensor(name);
+           });
           }
+          AddIntermediateTensor(fusable_propagate_tensor_name, fusable_tensor_type, fusable_tensor_shape);
       }
    
       idx = std::max(idx + 1, j);
    }
 }
-
-
 
 void RModel::Initialize(int batchSize, bool verbose) {
    std::map<std::string, size_t> inputParams;

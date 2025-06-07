@@ -574,15 +574,11 @@ public:
          std::string GetFusableOutputTensorName() override {
          return fNY;
       }
-   void UpdateFusableTensorName(std::string fusable_tensor_name) override {
-      std::cout<<"\ncalled from conv";   
+   void UpdateFusableTensorName(std::string fusable_tensor_name, const std::function<void(const std::string&)>& removal_func) override {
+      removal_func(fNY);
       fNY = fusable_tensor_name;
-                  fOutputTensorNames = { fNY };
-                        convK = fNX +"_f";
-      imcol = fNX +"_xcol";
-      fOutputTensorNames.emplace_back(convK);
-      fOutputTensorNames.emplace_back(imcol);
-      }
+      fOutputTensorNames[0] = fNY;
+   }
 };
 
 } // namespace SOFIE

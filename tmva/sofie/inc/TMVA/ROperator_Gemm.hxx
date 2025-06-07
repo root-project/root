@@ -408,11 +408,12 @@ namespace SOFIE{
          return fNY;
       }
          
-      void UpdateFusableTensorName(std::string fusable_tensor_name){
-         fNY = UTILITY::Clean_name(fusable_tensor_name);
-                  fOutputTensorNames = { fNY };
-                  std::cout<<"\ncalled from gemm";
+      void UpdateFusableTensorName(std::string fusable_tensor_name, const std::function<void(const std::string&)>& removal_func){
+         removal_func(fNY);
+         fNY = fusable_tensor_name;
+         fOutputTensorNames[0] = fNY;
       }
+      
    };
 
 
