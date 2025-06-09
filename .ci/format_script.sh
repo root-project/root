@@ -7,13 +7,13 @@ fi
 
 echo "Running clang-format from $TRAVIS_PULL_REQUEST_BRANCH against branch $TRAVIS_BRANCH, with hash $MERGE_BASE"
 clang-format --version
-COMMIT_FILES=$(git diff --name-status $MERGE_BASE | grep -i -v '.mjs$' | grep -i -v LinkDef | grep -v -E '^D +' | sed -E 's,^.[[:space:]]+,,')
+COMMIT_FILES=$(git diff --name-status $MERGE_BASE | grep -i -v '.mjs$' | grep -i -v LinkDef | grep -v -E '^D[[:space:]]+' | sed -E 's,^.[[:space:]]+,,')
 
 RESULT_OUTPUT="no modified files to format"
 if [ ! -z "$COMMIT_FILES" ]; then
   # If COMMIT_FILES is empty, git-clang-format will take all the modified files
   # Therefore, we only actually run git-clang-format if there is anything to check
-  RESULT_OUTPUT="$(git-clang-format --commit $MERGE_BASE --diff --binary `which clang-format` $COMMIT_FILES)"
+  RESULT_OUTPUT="$(git-clang-format --commit $MERGE_BASE --diff --binary `which clang-format` -- $COMMIT_FILES)"
 fi
 
 if [ "$RESULT_OUTPUT" == "no modified files to format" ] \
