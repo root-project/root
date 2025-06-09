@@ -448,9 +448,25 @@ PyObject* VectorIAdd(PyObject* self, PyObject* args, PyObject* /* kwds */)
         if (PyObject_CheckBuffer(fi) && !(CPyCppyy_PyText_Check(fi) || PyBytes_Check(fi))) {
             PyObject* vend = PyObject_CallMethodNoArgs(self, PyStrings::gEnd);
             if (vend) {
-                PyObject* result = PyObject_CallMethodObjArgs(self, PyStrings::gInsert, vend, fi, nullptr);
-                Py_DECREF(vend);
-                return result;
+              // when __iadd__ is overriden, the operation does not end with
+              // calling the __iadd__ method, but also assigns the result to the
+              // lhs of the iadd. For example, performing vec += arr, Python
+              // first calls our override, and then does vec = vec.iadd(arr).
+              PyObject *it = PyObject_CallMethodObjArgs(self, PyStrings::gInsert, vend, fi, nullptr);
+              Py_DECREF(vend);
+
+              if (!it) {
+                PyErr_SetString(PyExc_TypeError, "std::vector::insert failed");
+                return nullptr;
+              }
+
+              Py_DECREF(it);
+
+              // To prevent Python from assigning the return value of our
+              // __iadd__ implementation (which is a std::iterator)
+              // to the std::vector itself, we return self
+              Py_INCREF(self);
+              return self;
             }
         }
     }
