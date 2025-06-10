@@ -341,8 +341,7 @@ foreach(dir_to_copy ${directories_to_copy})
   file(GLOB_RECURSE artifacts_in ${dir_to_copy}/*)
   list(FILTER artifacts_in EXCLUDE REGEX "\.(d|swp|so|dylib|lib|dll|pcm|bak)$")
 
-  set(artifacts_out ${artifacts_in})
-  list(TRANSFORM artifacts_out REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} artifacts_out "${artifacts_in}")
   list(APPEND all_artifacts ${artifacts_out})
 
   add_custom_command(OUTPUT ${artifacts_out}
