@@ -6,11 +6,11 @@ class testClass : public TObject
 {
 public:
   testClass() { }
-  virtual ~testClass() { }
+  ~testClass() override { }
 
   Float16_t fMember[100];
 
-  ClassDef(testClass, 1)
+  ClassDefOverride(testClass, 1)
 };
 
 void runfloat16()
@@ -24,7 +24,7 @@ void runfloat16()
   t->Write();
   gFile->Close();
 
-  t = 0;
+  t = nullptr;
   TFile::Open("file.root");
   gFile->GetObject("testClass", t);
 }
