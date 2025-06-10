@@ -246,20 +246,16 @@ TEST(RNTupleMerger, MergeAsymmetric1)
          opts.fMergingMode = ENTupleMergingMode::kFilter;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_FALSE(res);
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
-         }
+         ASSERT_FALSE(res);
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kStrict;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_FALSE(res);
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
-         }
+         ASSERT_FALSE(res);
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
@@ -317,20 +313,16 @@ TEST(RNTupleMerger, MergeAsymmetric2)
          opts.fMergingMode = ENTupleMergingMode::kFilter;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_FALSE(res);
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
-         }
+         ASSERT_FALSE(res);
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kStrict;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_FALSE(res);
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
-         }
+         ASSERT_FALSE(res);
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("missing the following field"));
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
@@ -388,10 +380,8 @@ TEST(RNTupleMerger, MergeAsymmetric3)
          opts.fMergingMode = ENTupleMergingMode::kStrict;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_FALSE(res);
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("Source RNTuple has extra fields"));
-         }
+         ASSERT_FALSE(res);
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("Source RNTuple has extra fields"));
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
@@ -570,10 +560,8 @@ TEST(RNTupleMerger, MergeInconsistentTypes)
          RNTupleMergeOptions opts;
          opts.fMergingMode = mmode;
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_FALSE(res);
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("type incompatible"));
-         }
+         ASSERT_FALSE(res);
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("type incompatible"));
       }
    }
 }
@@ -1210,10 +1198,8 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
          // TODO(gparolini): we want to support this in the future
-         EXPECT_FALSE(bool(res));
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
-         }
+         ASSERT_FALSE(bool(res));
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
          // EXPECT_TRUE(bool(res));
       }
       {
@@ -1221,10 +1207,8 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs);
          // TODO(gparolini): we want to support this in the future
-         EXPECT_FALSE(bool(res));
-         if (res.GetError()) {
-            EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
-         }
+         ASSERT_FALSE(bool(res));
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("different column type"));
          // EXPECT_TRUE(bool(res));
       }
    }
@@ -3720,10 +3704,12 @@ TEST(RNTupleMerger, MergeAttributes)
 {
    FileRaii fileGuard1("test_ntuple_merge_attr1.root");
    FileRaii fileGuard2("test_ntuple_merge_attr2.root");
+   FileRaii fileGuard3("test_ntuple_merge_attr3.root");
    FileRaii fileGuardOut("test_ntuple_merge_attr_out.root");
 
-   // Write
+   //// Write
    int fileNo = 0;
+   // First two RNTuples have the same Attribute Set
    for (const auto *fileGuard : {&fileGuard1, &fileGuard2}) {
       auto model = RNTupleModel::Create();
       model->MakeField<int>("int");
@@ -3750,31 +3736,77 @@ TEST(RNTupleMerger, MergeAttributes)
       attrSet->EndRange(std::move(attrRange));
       ++fileNo;
    }
+   // Third RNTuple has no Attribute Set
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard3.GetPath().c_str(), "RECREATE"));
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
+      auto &wModel = writer->GetModel();
+
+      for (int i = 0; i < 20; ++i) {
+         auto entry = wModel.CreateEntry();
+         *entry->GetPtr<int>("int") = i;
+         writer->Fill(*entry);
+      }
+      ++fileNo;
+   }
 
    // Merge
    {
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard3.GetPath(), RNTupleReadOptions()));
       std::vector<RPageSource *> sourcePtrs;
       for (const auto &s : sources) {
          sourcePtrs.push_back(s.get());
       }
 
-      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
-      auto wopts = RNTupleWriteOptions();
-      wopts.SetCompression(0);
-      auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
-      RNTupleMerger merger{std::move(destination)};
-      auto opts = RNTupleMergeOptions{};
-      opts.fCompressionSettings = 0;
-      auto res = merger.Merge(sourcePtrs, opts);
-      EXPECT_TRUE(bool(res));
+      {
+         auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
+         auto wopts = RNTupleWriteOptions();
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
+         RNTupleMerger merger{std::move(destination)};
+         auto opts = RNTupleMergeOptions{};
+         opts.fAttributesMergingMode = ENTupleMergingMode::kFilter;
+         auto res = merger.Merge(sourcePtrs, opts);
+         ASSERT_FALSE(bool(res));
+         EXPECT_THAT(res.GetError()->GetReport(),
+                     testing::HasSubstr("present in the first source but missing in one of the following"));
+      }
+      {
+         auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
+         auto wopts = RNTupleWriteOptions();
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
+         RNTupleMerger merger{std::move(destination)};
+         auto opts = RNTupleMergeOptions{};
+         opts.fAttributesMergingMode = ENTupleMergingMode::kStrict;
+         auto res = merger.Merge(sourcePtrs, opts);
+         ASSERT_FALSE(bool(res));
+         EXPECT_THAT(res.GetError()->GetReport(),
+                     testing::HasSubstr("present in the first source but missing in one of the following"));
+      }
+      {
+         auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
+         auto wopts = RNTupleWriteOptions();
+         wopts.SetCompression(0);
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
+         RNTupleMerger merger{std::move(destination)};
+         auto opts = RNTupleMergeOptions{};
+         opts.fCompressionSettings = 0;
+         auto res = merger.Merge(sourcePtrs, opts);
+         EXPECT_TRUE(bool(res));
+      }
    }
 
    // Read
    {
       auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      EXPECT_EQ(reader->GetNEntries(), 45);
+
       auto res = reader->GetAttributeSet("MyAttrSet");
       ASSERT_TRUE(bool(res));
       auto attrSet = res.Unwrap();
@@ -3794,7 +3826,7 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
 {
    // Try to merge 2 RNTuples with the same attribute fields but in different order.
    // At the moment it should fail as we don't support it.
-   
+
    FileRaii fileGuard1("test_ntuple_merge_attr_sym1.root");
    FileRaii fileGuard2("test_ntuple_merge_attr_sym2.root");
    FileRaii fileGuardOut("test_ntuple_merge_attr_sym_out.root");
@@ -3854,7 +3886,7 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
       auto opts = RNTupleMergeOptions{};
       opts.fCompressionSettings = 0;
       auto res = merger.Merge(sourcePtrs, opts);
-      EXPECT_FALSE(bool(res));
+      ASSERT_FALSE(bool(res));
       EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("schema incompatible"));
    }
 }
