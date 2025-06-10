@@ -48,7 +48,7 @@ if(MSVC)
   set_source_files_properties(dataframe_simple.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 
-if(NOT (MSVC OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)) OR win_broken_tests OR M1_BROKEN_TESTS)
+if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame GenVector)
 endif()
 
