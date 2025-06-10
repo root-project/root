@@ -14,12 +14,12 @@ private:
    double fZ;
 public:
    A();
-   virtual ~A();
+   ~A() override;
    double get() { return fX*fY*fZ; }
-   ClassDef(A, 2);
+   ClassDefOverride(A, 2);
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class A+;
 #endif
 
@@ -28,8 +28,8 @@ ClassImp(A);
 A::A()
    : fX(0.0),fY(0.0),fZ(0.0)
 {
-   // We are going to test TTree::Bronch()
-   // to see if it handles this correctly. 
+   // We are going to test TTree::Branch()
+   // to see if it handles this correctly.
    this->Class()->IgnoreTObjectStreamer();
 }
 

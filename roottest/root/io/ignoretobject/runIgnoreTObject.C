@@ -7,10 +7,8 @@
 
 #include "TTree.h"
 #include "TBranchElement.h"
-
-#include <TFile.h>
-#include <TROOT.h>
-#include <TTree.h>
+#include "TFile.h"
+#include "TROOT.h"
 
 #include <iostream>
 
@@ -25,7 +23,7 @@ public:
       example::Class()->IgnoreTObjectStreamer();  // don't store TObject's fBits and fUniqueID
    }
    double number;
-   ClassDef(example, 1)
+   ClassDefOverride(example, 1)
 };
 
 UInt_t test3() {
