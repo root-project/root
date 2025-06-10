@@ -33,3 +33,8 @@ ROOTTEST_GENERATE_DICTIONARY(streamerInfoStdFunctionDict streamerInfoStdFunction
 ROOTTEST_ADD_TEST(streamerInfoStdFunction
                   MACRO streamerInfoStdFunction.C
                   DEPENDS ${GENERATE_DICTIONARY_TEST})
+
+# Issue #18982
+ROOTTEST_ADD_TEST(selectTemplateInvalidArg
+                  COMMAND ${ROOT_rootcling_CMD} -f selectTemplateInvalidArg.Dict.cc ${CMAKE_CURRENT_SOURCE_DIR}/selectTemplateInvalidArg.h ${CMAKE_CURRENT_SOURCE_DIR}/selectTemplateInvalidArg.LinkDef.h
+                  ERRREF selectTemplateInvalidArg.ref)
