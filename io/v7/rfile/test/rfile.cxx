@@ -228,7 +228,8 @@ TEST(RFile, WriteReadInTFileDir)
    {
       auto file = RFile::OpenForReading(fileGuard.GetPath());
       EXPECT_TRUE(file->Get<TH1D>("a/b/hist"));
-      EXPECT_TRUE(file->Get<TH1D>("a/b/c/d"));
+      // We won't find any object with a '/' in its name through RFile.
+      EXPECT_FALSE(file->Get<TH1D>("a/b/c/d"));
    }
 }
 

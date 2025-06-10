@@ -60,7 +60,7 @@ static void ThrowIfExtensionIsNotRoot(std::string_view path)
 
 static ROOT::Experimental::RFileKeyInfo RFileKeyInfoFromTKey(const TKey &tkey)
 {
-   ROOT::Experimental::RFileKeyInfo keyInfo {};
+   ROOT::Experimental::RFileKeyInfo keyInfo{};
    keyInfo.fName = tkey.GetName();
    keyInfo.fClassName = tkey.GetClassName();
    keyInfo.fTitle = tkey.GetTitle();
@@ -202,7 +202,6 @@ std::unique_ptr<RFile> RFile::OpenForUpdate(std::string_view path)
 {
    ThrowIfExtensionIsNotRoot(path);
 
-   // NOTE: "UPDATE_WITHOUT_GLOBALREGISTRATION" is undocumented but works.
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
@@ -212,14 +211,14 @@ std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
 {
    ThrowIfExtensionIsNotRoot(path);
 
-   // NOTE: "RECREATE_WITHOUT_GLOBALREGISTRATION" is undocumented but works.
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION"));
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
 
-TKey *RFile::GetTKey(const char *path) const {
-   const auto GetKeyCheckCycle = [] (TDirectory *dir, const char *keyPath) -> TKey * {
+TKey *RFile::GetTKey(const char *path) const
+{
+   const auto GetKeyCheckCycle = [](TDirectory *dir, const char *keyPath) -> TKey * {
       TKey *key = dir->FindKey(keyPath);
       if (key) {
          // For some reason, FindKey will not return nullptr if we asked for a specific cycle and that cycle
@@ -236,41 +235,35 @@ TKey *RFile::GetTKey(const char *path) const {
       return nullptr;
    };
 
+   // In RFile, differently from TFile, when dealing with a path like "a/b/c", we always consider it to mean
+   // "object 'c' in subdirectory 'b' of directory 'a'". We don't try to get any other of the possible combinations,
+   // including the object called "a/b/c".
+   std::string fullPath = path;
+   char *dirName = fullPath.data();
+   char *restOfPath = strchr(dirName, '/');
+   TDirectory *dir = fFile.get();
+   while (restOfPath) {
+      // Truncate `dirName` to the position of this '/'.
+      *restOfPath = 0;
+      ++restOfPath;
+
+      // This can only happen if `path` ends with '/' (which it shouldn't).
+      if (R__unlikely(!*restOfPath))
+         return nullptr;
+
+      dir = dir->GetDirectory(dirName);
+      if (!dir)
+         return nullptr;
+
+      dirName = restOfPath;
+      restOfPath = strchr(restOfPath, '/');
+   }
+   // NOTE: after this loop `dirName` contains the base name of the object.
+
    // First try getting the object from the top-level directory.
    // Don't use GetObjectChecked or similar because they don't handle slashes in paths correctly
    // (note that an object might have a name containing slashes even if it's not in a directory).
-   TKey *key = GetKeyCheckCycle(fFile.get(), path);
-
-   // If we didn't find the key, try in subdirectories.
-   // If the path is like "a/b/c/d", we will try:
-   // - dir "a"     key "b/c/d"
-   // - dir "a/b"   key "c/d"
-   // - dir "a/b/c" key "d"
-   if (!key) {
-      TDirectory *dir = fFile.get();
-      std::string dirPath = path;
-      char *keyBegin = dirPath.data();
-      char *keyName = strchr(keyBegin, '/');
-      while (keyName) {
-         // replace the next '/' with a zero so keyBegin points to a C string containing the next directory name.
-         *keyName = 0;
-         // make keyName point to the rest of the path string, which is the key name.
-         ++keyName;
-
-         dir = dir->GetDirectory(keyBegin);
-         if (!dir) {
-            return nullptr;
-         }
-         key = GetKeyCheckCycle(dir, keyName);
-         if (key)
-            break;
-
-         // proceed to the next path segment.
-         keyBegin = keyName;
-         keyName = strchr(keyBegin, '/');
-      }
-   }
-
+   TKey *key = GetKeyCheckCycle(dir, dirName);
    return key;
 }
 
@@ -314,7 +307,7 @@ void RFile::PutUntyped(const char *path, const TClass *type, const void *obj, st
    // otherwise we may have a mix of top-level objects called "a/b/c" and actual directory
    // structures.
    // Very sadly, TFile does nothing to prevent this and will happily write "a/b" even if there
-   // is already a directory "a" containing an object "b". We don't want any of that ambiguity here.
+   // is already a directory "a" containing an object "b". We don't want that kind of ambiguity here.
    const auto tokens = ROOT::Split(path, "/");
    TDirectory *dir = fFile.get();
    std::string fullPathSoFar = "";
