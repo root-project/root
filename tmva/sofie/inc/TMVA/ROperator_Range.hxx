@@ -28,7 +28,7 @@ public:
    ROperator_Range(){}
 
    ROperator_Range(std::string start, std::string limit, std::string delta, std::string nameOutput):
-      fNStart(start), fNLimit(limit), fNDelta(delta),
+      fNStart(UTILITY::Clean_name(start)), fNLimit(UTILITY::Clean_name(limit)), fNDelta(UTILITY::Clean_name(delta)),
       fNOutput(UTILITY::Clean_name(nameOutput)) {
       if (std::is_same<T, float>::value) {
           fType = "float";
@@ -37,6 +37,8 @@ public:
       }
       static_assert( (std::is_same_v<T, float> || std::is_same_v<T, int64_t>),
                   "TMVA::SOFIE - Unsupported type by Range operator");
+      fInputTensorNames = {fNStart, fNLimit, fNDelta};
+      fOutputTensorNames = {fNOutput};
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {

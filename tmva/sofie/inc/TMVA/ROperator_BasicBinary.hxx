@@ -122,14 +122,14 @@ public:
             fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
             if (model.IsInitializedTensor(fNB)) {
                auto data = model.GetInitializedTensorData(fNB);
-               std::cout << "data B " << ConvertShapeToString(fShapeB) << " : " <<
-                  ConvertValuesToString(ConvertShapeToLength(fShapeB), static_cast<T*>(data.get())) << std::endl;
+               // std::cout << "data B " << ConvertShapeToString(fShapeB) << " : " <<
+               //    ConvertValuesToString(ConvertShapeToLength(fShapeB), static_cast<T*>(data.get())) << std::endl;
                std::shared_ptr<void> broadcastedData(
                   UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeB, fShapeY),
                   std::default_delete<T[]>());
                // do not update tensor B but add broadcasted one (since it can be input to some other operators)
-               std::cout << "broadcasted data B " << ConvertShapeToString(fShapeY) << " : " <<
-                  ConvertValuesToString(ConvertShapeToLength(fShapeY), static_cast<T*>(broadcastedData.get())) << std::endl;
+               // std::cout << "broadcasted data B " << ConvertShapeToString(fShapeY) << " : " <<
+               //    ConvertValuesToString(ConvertShapeToLength(fShapeY), static_cast<T*>(broadcastedData.get())) << std::endl;
                model.AddConstantTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY, broadcastedData);
                fShapeB = fShapeY;
             } else {
