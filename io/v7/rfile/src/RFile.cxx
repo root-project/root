@@ -218,23 +218,6 @@ std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
 
 TKey *RFile::GetTKey(const char *path) const
 {
-   const auto GetKeyCheckCycle = [](TDirectory *dir, const char *keyPath) -> TKey * {
-      TKey *key = dir->FindKey(keyPath);
-      if (key) {
-         // For some reason, FindKey will not return nullptr if we asked for a specific cycle and that cycle
-         // doesn't exist. It will instead return any key whose cycle is *at most* the requested one.
-         // This is very confusing, so in RFile we actually return null if the requested cycle is not there.
-         short cycle;
-         TDirectory::DecodeNameCycle(keyPath, nullptr, cycle);
-         // NOTE: cycle == 9999 means that `path` didn't contain a valid cycle (including no cycle at all)
-         //       cycle == 10000 means that `path` contained the "any cycle" pattern ("name;*")
-         if (cycle >= 9999 || key->GetCycle() == cycle) {
-            return key;
-         }
-      }
-      return nullptr;
-   };
-
    // In RFile, differently from TFile, when dealing with a path like "a/b/c", we always consider it to mean
    // "object 'c' in subdirectory 'b' of directory 'a'". We don't try to get any other of the possible combinations,
    // including the object called "a/b/c".
@@ -260,10 +243,20 @@ TKey *RFile::GetTKey(const char *path) const
    }
    // NOTE: after this loop `dirName` contains the base name of the object.
 
-   // First try getting the object from the top-level directory.
-   // Don't use GetObjectChecked or similar because they don't handle slashes in paths correctly
-   // (note that an object might have a name containing slashes even if it's not in a directory).
-   TKey *key = GetKeyCheckCycle(dir, dirName);
+   // Get the leaf object from the innermost directory.
+   TKey *key = dir->FindKey(dirName);
+   if (key) {
+      // For some reason, FindKey will not return nullptr if we asked for a specific cycle and that cycle
+      // doesn't exist. It will instead return any key whose cycle is *at most* the requested one.
+      // This is very confusing, so in RFile we actually return null if the requested cycle is not there.
+      short cycle;
+      TDirectory::DecodeNameCycle(dirName, nullptr, cycle);
+      // NOTE: cycle == 9999 means that `path` didn't contain a valid cycle (including no cycle at all)
+      //       cycle == 10000 means that `path` contained the "any cycle" pattern ("name;*")
+      if (cycle < 9999 && key->GetCycle() != cycle) {
+         key = nullptr;
+      }
+   }
    return key;
 }
 
