@@ -39,14 +39,32 @@ class RClusterPool;
 namespace Experimental::Internal {
 
 enum class ENTupleMergingMode {
-   /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
-   /// source); also all subsequent RNTuples must contain at least all the columns that are present in the prototype
-   /// model
+   /// <b>For the main error behavior</b>: the merger will discard all columns that aren't present in the prototype
+   /// model (i.e. the model of the first source); also all subsequent RNTuples must contain at least all the columns
+   /// that are present in the prototype model.
+   ///
+   /// <br/>
+   ///
+   /// <b>For the Attributes error behavior</b>: the merger will only try to merge the Attribute Sets that are present
+   /// in the first RNTuple; also all subsequent RNTuples must contain at least all the Attribute Sets present in the
+   /// first one.
    kFilter,
-   /// The merger will refuse to merge any 2 RNTuples whose schema doesn't match exactly
+   /// <b>For the main error behavior</b>: the merger will refuse to merge any 2 RNTuples whose schema doesn't match
+   /// exactly.
+   ///
+   /// <br/>
+   ///
+   /// <b>For the Attributes error behavior</b>: the merger will refuse to merge any 2 RNTuples that don't
+   /// have the same set of (compatible) Attribute Sets.</br>
    kStrict,
-   /// The merger will update the output model to include all columns from all sources. Entries corresponding to columns
-   /// that are not present in a source will be set to the default value of the type.
+   /// <b>For the main error behavior</b>: the merger will update the output model to include all columns from all
+   /// sources. Entries corresponding to columns that are not present in a source will be set to the default value of
+   /// the type.
+   ///
+   /// <br/>
+   ///
+   /// <b>For the Attributes error behavior</b>: the output RNTuple will contain the union of all
+   /// Attribute Sets present in all sources. All Attribute Sets with the same name must have a compatible schema.
    kUnion
 };
 
@@ -83,8 +101,12 @@ struct RNTupleMergeOptions {
    std::optional<std::uint32_t> fCompressionSettings;
    /// Determines how the merging treats sources with different models (\see ENTupleMergingMode).
    ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
-   /// Determines how the Merge function behaves upon merging errors
+   /// Determines how the Merge function behaves upon merging errors on the main data
    ENTupleMergeErrBehavior fErrBehavior = ENTupleMergeErrBehavior::kAbort;
+   /// Determines how the merging treats sources with different Attribute Sets (\see ENTupleMergingMode).
+   ENTupleMergingMode fAttributesMergingMode = ENTupleMergingMode::kUnion;
+   /// Determines how the Merge function behaves upon merging errors on the Attributes
+   ENTupleMergeErrBehavior fAttributesErrBehavior = ENTupleMergeErrBehavior::kAbort;
    /// If true, the merger will emit further diagnostics and information.
    bool fExtraVerbose = false;
 };

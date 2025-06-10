@@ -402,8 +402,10 @@ public:
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
+   /// Given the Attribute Set's PageSink, adds its information (name + locator) into the main RNTuple's descriptor.
+   /// The Attribute Set must already have been written to storage via `RNTupleAttributeSetWriter::Commit()`.
    // TODO: make this pure virtual
-   virtual void CommitAttributeSet(RPageSink &) {}
+   virtual void CommitAttributeSet(RPageSink &/* attrSink */) {}
    // TODO: make this pure virtual (also probably not public)
    virtual ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor CommitAttributeSetInternal() { return {}; }
 
