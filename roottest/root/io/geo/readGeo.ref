@@ -26,7 +26,7 @@ Info in <TGeoManager::Import>: Reading geometry from file: atlas.root
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is ATLS. Master volume is ATLS
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CountLevels>: max level = 12, max placements = 307
+Info in <TGeoManager::CountLevels>: max level = 12, max placements = 1024
 Info in <TGeoManager::CloseGeometry>: 29046966 nodes/ 7143 volume UID's in atlas.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::Import>: Reading geometry from file: babar.root
@@ -75,14 +75,14 @@ Info in <TGeoManager::Import>: Reading geometry from file: e907.root
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CountLevels>: max level = 7, max placements = 88
+Info in <TGeoManager::CountLevels>: max level = 7, max placements = 128
 Info in <TGeoManager::CloseGeometry>: 16722 nodes/ 360 volume UID's in e907.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::Import>: Reading geometry from file: gem.root
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is GEMH. Master volume is GEMH
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CountLevels>: max level = 8, max placements = 228
+Info in <TGeoManager::CountLevels>: max level = 8, max placements = 241
 Info in <TGeoManager::CloseGeometry>: 145340 nodes/ 339 volume UID's in gem.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::Import>: Reading geometry from file: hades.root
