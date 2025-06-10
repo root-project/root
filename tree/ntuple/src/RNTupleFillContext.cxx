@@ -160,8 +160,6 @@ void ROOT::Experimental::RNTupleFillContext::CloseAttributeSet(RNTupleAttributeS
 
 void ROOT::Experimental::RNTupleFillContext::CommitAttributes()
 {
-   fCommittedAttributeSets.reserve(fCommittedAttributeSets.size() + fAttributeSets.size());
-
    for (auto &[_, attrSet] : fAttributeSets) {
       CloseAttributeSetInternal(attrSet);
    }

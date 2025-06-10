@@ -91,8 +91,6 @@ private:
 
    /// All the Attribute Sets created from this FillContext
    std::unordered_map<std::string, Experimental::RNTupleAttributeSetWriter> fAttributeSets;
-   /// Data about all attribute sets committed so far.
-   std::vector<Internal::RNTupleAttributeSetDescriptor> fCommittedAttributeSets;
 
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
@@ -169,8 +167,7 @@ public:
    void FlushCluster();
    /// Logically append staged clusters to the RNTuple.
    void CommitStagedClusters();
-   /// Finishes writing all Attribute RNTuples to disk and saves a list of offsets to their Anchors into
-   /// `fCommittedAttributeSets`.
+   /// Writes all Attribute RNTuples to storage.
    void CommitAttributes();
 
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }

@@ -333,6 +333,8 @@ struct RNTupleMergeData {
    std::vector<RColumnMergeInfo> fColumns;
    ColumnIdMap_t fColumnIdMap;
 
+   std::vector<std::string> fDstAttributeSetNames;
+
    ROOT::NTupleSize_t fNumDstEntries = 0;
 
    RNTupleMergeData(std::span<RPageSource *> sources, RPageSink &destination, const RNTupleMergeOptions &mergeOpts)
@@ -347,6 +349,15 @@ struct RSealedPageMergeData {
    std::deque<RPageStorage::SealedPageSequence_t> fPagesV;
    std::vector<RPageStorage::RSealedPageGroup> fGroups;
    std::vector<std::unique_ptr<std::uint8_t[]>> fBuffers;
+};
+
+struct RAttributeSetComparison {
+   // Indices inside `MergeData::fDstAttributeSetNames`
+   std::vector<std::size_t> fCommonSets;
+   // Indices inside the `srcDescriptor.GetAttributeSets()`
+   std::vector<std::size_t> fExtraSrcSets;
+   // Indices inside `MergeData::fDstAttributeSetNames`
+   std::vector<std::size_t> fExtraDstSets;
 };
 
 std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
@@ -1085,6 +1096,38 @@ static void PrefillColumnMap(const ROOT::RNTupleDescriptor &desc, const ROOT::RF
    }
 }
 
+static RAttributeSetComparison
+CompareAttributeSets(std::span<const std::string> dstAttrSets, const ROOT::RNTupleDescriptor &src)
+{
+   RAttributeSetComparison result;
+
+   std::vector<std::string> srcAttrSets;
+   srcAttrSets.reserve(src.GetAttributeSets().size());
+   for (const auto &[srcName, _] : src.GetAttributeSets())
+      srcAttrSets.push_back(srcName);
+
+   for (std::size_t srcIdx = 0, srcLen = srcAttrSets.size(); srcIdx < srcLen; ++srcIdx) {
+      bool found = false;
+      for (std::size_t dstIdx = 0, dstLen = dstAttrSets.size(); dstIdx < dstLen; ++dstIdx) {
+         if (dstAttrSets[dstIdx] == srcAttrSets[srcIdx]) {
+            result.fCommonSets.push_back(dstIdx);
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+         result.fExtraSrcSets.push_back(srcIdx);
+   }
+
+   // Note: O(N^2), but we expect both srcAttrSets and dstAttrSets to be very small
+   for (std::size_t dstIdx = 0, dstLen = dstAttrSets.size(); dstIdx < dstLen; ++dstIdx) {
+      if (std::find(srcAttrSets.begin(), srcAttrSets.end(), dstAttrSets[dstIdx]) == srcAttrSets.end())
+         result.fExtraDstSets.emplace_back(dstIdx);
+   }
+
+   return result;
+}
+
 ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &source, RNTupleMergeData &mergeData,
                                                                    ROOT::NTupleSize_t nDstEntriesAtPrevSource)
@@ -1093,16 +1136,59 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
    if (!reader) // No attributes to merge (TODO: maybe the check should be more thorough)
       return RResult<void>::Success();
 
-   for (const auto &[name, setLocator] : mergeData.fSrcDescriptor->GetAttributeSets()) {
-      auto attrAnchorRes = reader->GetNTupleProperAtLocation(setLocator.GetPosition<std::uint64_t>());
+   const auto attrMergingMode = mergeData.fMergeOpts.fAttributesMergingMode;
+
+   // Check if we should even try merging the Sets given our merging mode.
+   const auto attrSetCmp = CompareAttributeSets(mergeData.fDstAttributeSetNames, *mergeData.fSrcDescriptor);
+   if (!attrSetCmp.fExtraDstSets.empty() && attrMergingMode != ENTupleMergingMode::kUnion) {
+      std::stringstream ss;
+      ss << "The following Attribute Sets are present in the first source but missing in one of the following "
+            "sources:\n";
+      ss << std::accumulate(attrSetCmp.fExtraDstSets.begin(), attrSetCmp.fExtraDstSets.end(), std::string{},
+                            [&sets = mergeData.fDstAttributeSetNames](std::string &acc, std::size_t idx) {
+                               return acc + "  * " + sets[idx] + "\n";
+                            });
+      ss << "Note: if you want to merge RNTuples regardless of their Attribute Sets, pass `fAttributesMergingMode = "
+            "ROOT::ENTupleMergingMode::kUnion` in the RNTupleMergeOptions.";
+      return R__FAIL(ss.str());
+   }
+   if (!attrSetCmp.fExtraSrcSets.empty() && attrMergingMode == ENTupleMergingMode::kStrict) {
+      std::stringstream ss;
+      ss << "The following Attribute Sets are not present in the first source but they are present in one of the "
+            "following "
+            "sources:\n";
+      ss << std::accumulate(attrSetCmp.fExtraSrcSets.begin(), attrSetCmp.fExtraSrcSets.end(), std::string{},
+                            [&sets = mergeData.fSrcDescriptor->GetAttributeSets()](std::string &acc, std::size_t idx) {
+                               auto it = sets.begin();
+                               std::advance(it, idx);
+                               return acc + "  * " + it->first + "\n";
+                            });
+      ss << "Refusing to merge, since the AttributesMergingMode is set to kStrict.";
+      return R__FAIL(ss.str());
+   }
+
+   for (const auto &attrSetPair : mergeData.fSrcDescriptor->GetAttributeSets()) {
+      const auto &[attrSetName, attrSetLocator] = attrSetPair;
+
+      // Skip this Set if the mode is Filter and it's not present in the destination.
+      if (attrMergingMode == ENTupleMergingMode::kFilter) {
+         const bool isCommonSet =
+            std::find_if(attrSetCmp.fCommonSets.begin(), attrSetCmp.fCommonSets.end(),
+                         [&name = attrSetPair.first, &sets = mergeData.fDstAttributeSetNames](std::size_t idx) {
+                            return sets[idx] == name;
+                         }) == attrSetCmp.fCommonSets.end();
+         if (!isCommonSet)
+            continue;
+      }
+
+      // Load the AttributeSet RNTuple from the source file.
+      auto attrAnchorRes = reader->GetNTupleProperAtLocation(attrSetLocator.GetPosition<std::uint64_t>());
       if (!attrAnchorRes) {
-         // XXX: here we should probably give some more granularity of control to the user:
-         // maybe they want to skip the entire source if this happen? (but it'd be too late for that at this point...)
-         if (mergeData.fMergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kAbort) {
+         if (mergeData.fMergeOpts.fAttributesErrBehavior == ENTupleMergeErrBehavior::kAbort) {
             return R__FORWARD_ERROR(attrAnchorRes);
          } else {
             R__LOG_ERROR(NTupleMergeLog())
-               << "Failed to read AttributeSet '" << name << "': " << attrAnchorRes.GetError()->GetReport();
+               << "Failed to read AttributeSet '" << attrSetName << "': " << attrAnchorRes.GetError()->GetReport();
             continue;
          }
       }
@@ -1110,18 +1196,20 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
       auto attrSource = static_cast<ROOT::Internal::RPageSourceFile &>(source).OpenWithDifferentAnchor(attrAnchor);
       attrSource->Attach();
 
-      auto &attrMergeData = fAttributesMergeData[name];
-      // If we never found this AttributeSet name yet, create its data
+      auto &attrMergeData = fAttributesMergeData[attrSetName];
+      // If we never found this AttributeSet name yet, create its data.
       if (!attrMergeData.fSink) {
-         auto opts = ROOT::RNTupleWriteOptions{}; // TODO
+         auto opts = ROOT::RNTupleWriteOptions{}; // TODO: maybe we want some specific option here.
          auto dir = fDestination->GetUnderlyingDirectory();
-         assert(dir); // Currently we're only dealing with file-based sinks for merging.
-         attrMergeData.fSink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, *dir, opts);
+         // Currently we're only dealing with file-based sinks for merging, so there should always be an underlying
+         // directory.
+         assert(dir);
+         attrMergeData.fSink = std::make_unique<ROOT::Internal::RPageSinkFile>(attrSetName, *dir, opts);
          attrMergeData.fModel =
             attrMergeData.fSink->InitFromDescriptor(attrSource->GetSharedDescriptorGuard().GetRef(), false);
       }
 
-      // Verify schema compatibility. If two Attribute Sets have the same name they must have
+      // Verify schema compatibility. If two Attribute Sets have the same name we require them to have
       // an exactly identical schema. This may be relaxed in the future.
       auto attrSrcDesc = attrSource->GetSharedDescriptorGuard();
       const auto &attrDstDesc = attrMergeData.fSink->GetDescriptor();
@@ -1136,11 +1224,13 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
             isCompatible = false;
          }
          if (!isCompatible) {
-            return R__FAIL("Source AttributeSet '" + name +
-                           "' has a schema incompatible with the destination AttributeSet with the same name.");
+            return R__FAIL("Source AttributeSet '" + attrSetName +
+                           "' has a schema incompatible with the destination AttributeSet with the same attrSetName.");
          }
       }
 
+      // Collect all the columns we need to merge. This is easier for Attributes than for the main RNTuple because
+      // we always want to merge all the columns.
       RColumnInfoGroup colInfoGroup;
       for (const auto &[srcField, dstField] : descCmp.fCommonFields) {
          AddColumnsFromField(colInfoGroup.fCommonColumns, attrSrcDesc.GetRef(), attrDstDesc, mergeData.fMergeOpts,
@@ -1149,6 +1239,7 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
 
       ROOT::Internal::RClusterPool clusterPool{*attrSource};
 
+      // Go cluster by cluster, load the pages from the source and copy them to the destination.
       ROOT::DescriptorId_t clusterId = attrSrcDesc->FindClusterId(0, 0);
       while (clusterId != ROOT::kInvalidDescriptorId) {
          const auto &clusterDesc = attrSrcDesc->GetClusterDescriptor(clusterId);
@@ -1187,10 +1278,10 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
                // TODO(gparolini): more graceful error handling (skip the page?)
                sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 
-               // Shift __rangeStart column
+               // Shift __rangeStart column so that it refers to the proper entry in the destination.
+               // Note that __rangeStart is always column 0 due to how it's created in the RNTupleAttributeSetWriter.
                if (colId == 0) {
-                  // TEMP
-                  // Unseal the page and shift it
+                  // Unseal the page and shift its elements.
                   const auto &columnDesc = attrSrcDesc->GetColumnDescriptor(colId);
                   const auto srcColElement = RColumnElementBase::Generate(colInfo.fColumnType);
                   auto page = RPageSource::UnsealPage(sealedPage, *srcColElement, *fPageAlloc).Unwrap();
@@ -1214,7 +1305,7 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
                   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
                }
 
-               // TODO: proper resealing if needed
+               // TODO: change compression if needed
 
                ++pageIdx;
             }
@@ -1288,9 +1379,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
    }
 
-#define SKIP_OR_ABORT(errMsg)                                                         \
+#define SKIP_OR_ABORT(behavior, errMsg)                                               \
    do {                                                                               \
-      if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                 \
+      if (mergeOpts.behavior == ENTupleMergeErrBehavior::kSkip) {                     \
          R__LOG_WARNING(NTupleMergeLog()) << "Skipping RNTuple due to: " << (errMsg); \
          continue;                                                                    \
       } else {                                                                        \
@@ -1307,6 +1398,10 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       // Create sink from the input model if not initialized
       if (!fModel) {
          fModel = fDestination->InitFromDescriptor(srcDescriptor.GetRef(), false /* copyClusters */);
+         // XXX: should we just fill in the destination's attribute sets in InitFromDescriptor?
+         // But they would have a bogus locator, so we'd need to patch it up later...
+         for (const auto &[attrSetName, _] : srcDescriptor->GetAttributeSets())
+            mergeData.fDstAttributeSetNames.push_back(attrSetName);
       }
 
       for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
@@ -1314,8 +1409,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
       auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
       if (!descCmpRes) {
-         SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
-                       descCmpRes.GetError()->GetReport());
+         SKIP_OR_ABORT(fErrBehavior, std::string("Source RNTuple has an incompatible schema with the destination:\n") +
+                                        descCmpRes.GetError()->GetReport());
       }
       auto descCmp = descCmpRes.Unwrap();
 
@@ -1326,7 +1421,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          for (const auto *field : descCmp.fExtraDstFields) {
             msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
          }
-         SKIP_OR_ABORT(msg);
+         SKIP_OR_ABORT(fErrBehavior, msg);
       }
 
       // handle extra src fields
@@ -1342,7 +1437,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
             for (const auto *field : descCmp.fExtraSrcFields) {
                msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
             }
-            SKIP_OR_ABORT(msg);
+            SKIP_OR_ABORT(fErrBehavior, msg);
          }
       }
 
@@ -1357,7 +1452,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       // merge Attributes
       res = MergeSourceAttributes(*source, mergeData, nInitialDstEntries);
       if (!res) {
-         SKIP_OR_ABORT(res.GetError()->GetReport());
+         SKIP_OR_ABORT(fAttributesErrBehavior, res.GetError()->GetReport());
       }
    } // end loop over sources
 
