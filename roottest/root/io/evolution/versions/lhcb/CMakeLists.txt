@@ -1,8 +1,12 @@
-#-------------------------------------------------------------------------------
-#
-# Placeholder file to translate the tests to the new CTest system. Meanwhile we
-# define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
-#
-#-------------------------------------------------------------------------------
-ROOTTEST_ADD_OLDTEST(LABELS longtest io)
-ROOTTEST_ADD_TESTDIRS()
+ROOTTEST_ADD_TEST(loadLHCb
+                  MACRO loadLHCb.C
+                  LABELS longtest io
+                  FIXTURES_SETUP root-io-evolution-versions-lhcb-load)
+
+ROOTTEST_ADD_TEST(runLHCb
+                  MACRO runLHCb.C
+                  OUTREF LHCb.ref
+                  COPY_TO_BUILDDIR lhcb.root
+                  LABELS longtest io
+                  FIXTURES_REQUIRED root-io-evolution-versions-lhcb-load
+                  OUTCNVCMD sed -e s,offset=[[:space:]]*[0-9]*,offset=na,g)
