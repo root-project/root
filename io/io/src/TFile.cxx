@@ -1684,22 +1684,27 @@ std::optional<ROOT::Detail::TKeyMapNode> ROOT::Detail::TKeyMapIterable::TIterato
    }
 
    const auto readString = [&buffer, &header](bool skipCheck = false) {
-      char stringLen;
-      char str[256];
+      std::uint8_t stringLenShort;
+      std::uint32_t stringLen;
       if (!skipCheck && ((buffer - header) >= headerSize)) {
          stringLen = 0;
       } else {
-         frombuf(buffer, &stringLen);
-         if (stringLen < 0)
-            stringLen = 0;
-         else if ((buffer - header) + stringLen > headerSize)
+         frombuf(buffer, &stringLenShort);
+         if (stringLenShort == 0xFF)
+            frombuf(buffer, &stringLen);
+         else
+            stringLen = stringLenShort;
+
+         if ((buffer - header) + stringLen > headerSize)
             stringLen = headerSize - (buffer - header);
       }
-      for (int i = 0; i < stringLen; ++i)
-         frombuf(buffer, &str[i]);
-      str[static_cast<int>(stringLen)] = 0;
 
-      return std::string(str, stringLen);
+      std::string str;
+      if (stringLen)
+         str = std::string(buffer, stringLen);
+      buffer += stringLen;
+
+      return str;
    };
 
    node.fClassName = readString(true);
