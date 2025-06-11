@@ -431,7 +431,6 @@ Int_t TAxis::FindFixBin(Double_t x) const
       if (!fXbins.fN) {        //*-* fix bins
          bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
       } else {                  //*-* variable bin sizes
-//         for (bin =1; x >= fXbins.fArray[bin]; bin++);
          bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
       }
    }
