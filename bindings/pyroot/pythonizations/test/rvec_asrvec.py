@@ -123,8 +123,12 @@ class AsRVec(unittest.TestCase):
         """
         Test reference count of returned RVec
 
-        We expect a refcount of 2 for the RVec because the call to sys.getrefcount
-        creates a second reference by itself.
+        In case of Python <=3.14, we expect a refcount of 2 for the RVec
+        because the call to sys.getrefcount creates a second reference by
+        itself. Starting from Python 3.14, we expect a refcount of 1 because
+        there were changes to the interpreter to avoid some unnecessary ref
+        counts. See also:
+        https://docs.python.org/3.14/whatsnew/3.14.html#whatsnew314-refcount
         We attach the adopted pyobject to the RVec and increase the refcount of the
         numpy array. After deletion of the rvec, the refcount of the numpy array
         is decreased.
@@ -132,7 +136,7 @@ class AsRVec(unittest.TestCase):
         np_obj = np.array([1, 2])
         rvec = ROOT.VecOps.AsRVec(np_obj)
         gc.collect()
-        self.assertEqual(sys.getrefcount(rvec), 2)
+        self.assertEqual(sys.getrefcount(rvec), 1 + int(sys.version_info < (3, 14)))
         self.assertEqual(sys.getrefcount(np_obj), 3)
         del rvec
         gc.collect()
