@@ -5829,7 +5829,14 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
                std::string *st = (std::string*)(ladd);
                printf("%s",st->c_str());
             } else {
-               printf("(%s*)0x%zx",aElement->GetClass()->GetName(),(size_t)(ladd));
+               TString cname = aElement->GetClass()->GetName();
+               if (cname.BeginsWith("vector")) {
+                  if (cname.Contains("<int>"))
+                     printf("%d", *((Int_t*)ladd));
+               }
+               else {
+                  printf("(%s*)0x%zx",aElement->GetClass()->GetName(),(size_t)(ladd));
+               }
             }
          } else {
             printf("(unknown_type*)0x%zx",(size_t)(ladd));
