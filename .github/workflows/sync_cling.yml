@@ -1,0 +1,30 @@
+name: Sync Cling repo
+
+on:
+  push:
+    paths:
+      - 'interpreter/cling/**'
+      - 'core/textinput/src/textinput/**'
+  workflow_dispatch:
+
+jobs:
+  sync-cling-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ROOT
+        uses: actions/checkout@v4
+        with:
+          path: root
+          fetch-depth: 524288
+
+      - name: Checkout Cling
+        uses: actions/checkout@v4
+        with:
+          repository: dpiparo/cling
+          token: ${{ secrets.CLING_GIT_TOKEN_TEST }}
+          path: cling
+          fetch-depth: 32768
+
+      - name: Transfer changes between repositories
+        run: |
+         "root/.github/workflows/utilities/sync_cling.py"
