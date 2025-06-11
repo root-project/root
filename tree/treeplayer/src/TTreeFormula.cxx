@@ -597,7 +597,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
    Int_t numberOfVarDim = 0;
 
    // Let see if we can understand the structure of this branch.
-   // Usually we have: leafname[fixed_array], leaftitle[var_array]\type, leaftitle[n]/d[0,10,32]
+   // Usually we have: leafname[fixed_array], leaftitle[var_array]/type, leaftitle[n]/d[0,10,32]
    // (with fixed_array that can be a multi-dimensional array).
    TString sname = leaf->GetTitle();
    auto slash = sname.First("/");
