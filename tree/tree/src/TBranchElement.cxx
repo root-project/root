@@ -3198,19 +3198,18 @@ void TBranchElement::InitializeOffsets()
       if (fID > -1) {
          // -- Branch is *not* a top-level branch.
          // Instead of the streamer info class, we want the class of our
-         // specific element in the streamer info.  We could be a data
+         // specific element in the streamer info. We could be a data
          // member of a base class or a split class, in which case our
          // streamer info will be for our containing sub-object, while
          // we are actually a different type.
-         TVirtualStreamerInfo* si = info;
          // Note: We tested to make sure the streamer info was available previously.
-         if (!si->IsCompiled()) {
+         if (!info->IsCompiled()) {
             Warning("InitializeOffsets", "Streamer info for branch: %s has no elements array!", GetName());
             fInitOffsets = true;
             return;
          }
          // FIXME: Check that fID is in range.
-         branchElem = si->GetElement(fID);
+         branchElem = info->GetElement(fID);
          if (!branchElem) {
             Warning("InitializeOffsets", "Cannot get streamer element for branch: %s!", GetName());
             fInitOffsets = true;
@@ -3218,8 +3217,8 @@ void TBranchElement::InitializeOffsets()
          } else if (branchElem->TestBit(TStreamerElement::kRepeat)) {
             // If we have a repeating streamerElement, use the next
             // one as it actually hold the 'real' data member('s offset)
-            if (si->GetElement(fID+1)) {
-               branchElem = si->GetElement(fID+1);
+            if (info->GetElement(fID+1)) {
+               branchElem = info->GetElement(fID+1);
             }
          }
          localOffset = branchElem->GetOffset();
