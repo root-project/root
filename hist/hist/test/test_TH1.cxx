@@ -149,3 +149,89 @@ TEST(TH1, Normalize)
    EXPECT_FLOAT_EQ(v2.Integral("width"), 1.);
    EXPECT_FLOAT_EQ(v2.GetMaximum(), 7.9999990);
 }
+
+TEST(TAxis, BinComputation_FPAccuracy)
+{
+   // Example from 1703c54
+   EXPECT_EQ(TAxis(1, -1., 0.).FindBin(-1e-17), 1);
+
+   {
+      // https://root-forum.cern.ch/t/floating-point-rounding-error-when-filling-the-histogram/35189
+      TAxis axis(128, -0.352, 0.352);
+      constexpr double x = -0.0220;
+      EXPECT_EQ(axis.FindBin(x), 61);
+      EXPECT_EQ(axis.FindFixBin(x), 61);
+      EXPECT_LE(axis.GetBinLowEdge(61), x);
+      EXPECT_GT(axis.GetBinUpEdge(61), x);
+   }
+
+   {
+      TAxis axis(2000, -1000., 1000.);
+      EXPECT_EQ(axis.FindFixBin(std::nextafter(-1000., -2000.)), 0);
+      EXPECT_EQ(axis.FindFixBin(-1000.), 1);
+      EXPECT_EQ(axis.FindFixBin(std::nextafter(-1000., 0)), 1);
+
+      EXPECT_EQ(axis.FindFixBin(-500.00000000001), 500);
+      EXPECT_EQ(axis.FindFixBin(-500.), 501);
+      EXPECT_EQ(axis.FindFixBin(-499.9), 501);
+
+      EXPECT_EQ(axis.FindFixBin(-1.E-20), 1000);
+      EXPECT_EQ(axis.FindFixBin(std::nextafter(-0., -1)), 1000);
+      EXPECT_EQ(axis.FindFixBin(-0.), 1001);
+      EXPECT_EQ(axis.FindFixBin(0.), 1001);
+
+      EXPECT_EQ(axis.FindFixBin(499.9), 1500);
+      EXPECT_EQ(axis.FindFixBin(500.), 1501);
+
+      EXPECT_EQ(axis.FindFixBin(1000. - 1.E-13), 2000);
+      EXPECT_EQ(axis.FindFixBin(std::nextafter(1000., 0.)), 2000);
+      EXPECT_EQ(axis.FindFixBin(1000.), 2001);
+
+      EXPECT_EQ(axis.FindBin(std::nextafter(-1000., -2000.)), 0);
+      EXPECT_EQ(axis.FindBin(-1000.), 1);
+      EXPECT_EQ(axis.FindBin(std::nextafter(-1000., 0)), 1);
+
+      EXPECT_EQ(axis.FindBin(-500.00000000001), 500);
+      EXPECT_EQ(axis.FindBin(-500.), 501);
+      EXPECT_EQ(axis.FindBin(-499.9), 501);
+
+      EXPECT_EQ(axis.FindBin(-1.E-20), 1000);
+      EXPECT_EQ(axis.FindBin(std::nextafter(-0., -1)), 1000);
+      EXPECT_EQ(axis.FindBin(-0.), 1001);
+      EXPECT_EQ(axis.FindBin(0.), 1001);
+
+      EXPECT_EQ(axis.FindBin(499.9), 1500);
+      EXPECT_EQ(axis.FindBin(500.), 1501);
+
+      EXPECT_EQ(axis.FindBin(1000. - 1.E-13), 2000);
+      EXPECT_EQ(axis.FindBin(std::nextafter(1000., 0.)), 2000);
+      EXPECT_EQ(axis.FindBin(1000.), 2001);
+   }
+
+   for (const auto & [low, high] : std::initializer_list<std::pair<long double, long double>>{{-10654.1l, 32165.l},
+                                                                                            {-1.0656E23l, -20654.l},
+                                                                                            {1.1234E4l, 4.5678E20l},
+                                                                                            {1.E-60l, 1.E-20l},
+                                                                                            {-1.E-20l, -1.E-60l}}) {
+      constexpr int N = 100;
+      const double width = (high - low) / N;
+      std::mt19937 gen;
+      std::uniform_real_distribution dist{low - width, high + width};
+      TAxis axis(N, low, high);
+      for (unsigned int i = 0; i < 100000; ++i) {
+         long double x = dist(gen);
+         if (i == 0) {
+            x = std::nextafter(double(high), double(low));
+         }
+         const auto bin = axis.FindFixBin(x);
+         if (x < double(low))
+            EXPECT_EQ(bin, 0);
+         else
+            EXPECT_EQ(bin, 1 + int((x - low) / width))
+               << x << "[" << low << "," << high << "]"; // Note: Bin computation in long double here
+         EXPECT_LE(axis.GetBinLowEdge(bin), x);
+         EXPECT_LT(x, axis.GetBinUpEdge(bin));
+         EXPECT_EQ(bin, axis.FindBin(x));
+      }
+   }
+}
