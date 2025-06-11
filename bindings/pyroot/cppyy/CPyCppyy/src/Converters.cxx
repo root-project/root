@@ -61,6 +61,9 @@ namespace CPyCppyy {
     static std::regex s_fnptr("\\((\\w*:*)*\\*&*\\)");
 }
 
+// Define our own PyUnstable_Object_IsUniqueReferencedTemporary function if the
+// Python version is lower than 3.14, the version where that function got introduced.
+#if PY_VERSION_HEX < 0x030e0000
 #if PY_VERSION_HEX < 0x03000000
 const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 1;
 #elif PY_VERSION_HEX < 0x03080000
@@ -72,6 +75,10 @@ const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 2;
 #else
 // since py3.8, vector calls behave again as expected
 const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 1;
+#endif
+inline bool PyUnstable_Object_IsUniqueReferencedTemporary(PyObject *pyobject) {
+    return Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF;
+}
 #endif
 
 //- pretend-ctypes helpers ---------------------------------------------------
@@ -2117,7 +2124,7 @@ bool CPyCppyy::STLStringMoveConverter::SetArg(
         if (pyobj->fFlags & CPPInstance::kIsRValue) {
             pyobj->fFlags &= ~CPPInstance::kIsRValue;
             moveit_reason = 2;
-        } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
+        } else if (PyUnstable_Object_IsUniqueReferencedTemporary(pyobject)) {
             moveit_reason = 1;
         } else
             moveit_reason = 0;
@@ -2354,7 +2361,7 @@ bool CPyCppyy::InstanceMoveConverter::SetArg(
     if (pyobj->fFlags & CPPInstance::kIsRValue) {
         pyobj->fFlags &= ~CPPInstance::kIsRValue;
         moveit_reason = 2;
-    } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
+    } else if (PyUnstable_Object_IsUniqueReferencedTemporary(pyobject)) {
         moveit_reason = 1;
     }
 
