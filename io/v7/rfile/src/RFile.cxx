@@ -22,11 +22,18 @@
 #include <TGraph2D.h>
 #include <TH1.h>
 #include <TKey.h>
+#include <TROOT.h>
 
 #include <cstring>
 #include <iostream>
 
 using ROOT::Experimental::RFile;
+
+static ROOT::RLogChannel &RFileLog()
+{
+   static ROOT::RLogChannel sLog("ROOT.RFile");
+   return sLog;
+}
 
 static bool HasPrefix(std::string_view str, std::string_view prefix)
 {
@@ -43,8 +50,6 @@ static bool IsInternalKey(const char *className)
 {
    static constexpr const char *fInternalKeyClassNames[] = {"TFile", "FreeSegments", "StreamerInfo", "KeysList"};
 
-   if (strlen(className) == 0)
-      return true;
    for (const char *k : fInternalKeyClassNames)
       if (strcmp(className, k) == 0)
          return true;
@@ -65,6 +70,80 @@ static ROOT::Experimental::RFileKeyInfo RFileKeyInfoFromTKey(const TKey &tkey)
    keyInfo.fClassName = tkey.GetClassName();
    keyInfo.fTitle = tkey.GetTitle();
    return keyInfo;
+}
+
+namespace {
+enum class ENameCycleError {
+   kNoError,
+   kAnyCycle,
+   kInvalidSyntax,
+   kCycleTooLarge,
+   kNameEmpty,
+   kCOUNT
+};
+
+struct RNameCycleResult {
+   std::string fName;
+   std::optional<std::int16_t> fCycle;
+   ENameCycleError fError;
+};
+} // namespace
+
+static const char *ToString(ENameCycleError err)
+{
+   static const char *const kErrorStr[] = {"", "", "invalid syntax", "cycle is too large", "name is empty"};
+   static_assert(std::size(kErrorStr) == static_cast<std::size_t>(ENameCycleError::kCOUNT));
+   return kErrorStr[static_cast<std::size_t>(err)];
+}
+
+static ENameCycleError DecodeNumericCycle(const char *str, std::optional<std::int16_t> &out)
+{
+   uint32_t res = 0;
+   do {
+      if (!isdigit(*str))
+         return ENameCycleError::kInvalidSyntax;
+      if (res * 10 > std::numeric_limits<std::int16_t>::max())
+         return ENameCycleError::kCycleTooLarge;
+      res *= 10;
+      res += *str - '0';
+   } while (*++str);
+
+   assert(res >= 0 && res < std::numeric_limits<std::int16_t>::max());
+   out = static_cast<std::int16_t>(res);
+
+   return ENameCycleError::kNoError;
+}
+
+static RNameCycleResult DecodeNameCycle(std::string_view nameCycleRaw)
+{
+   RNameCycleResult result{};
+
+   if (nameCycleRaw.empty())
+      return result;
+
+   // Scan the string to find the name length and the semicolon
+   std::size_t semicolonIdx = nameCycleRaw.find_first_of(';');
+
+   if (semicolonIdx == 0) {
+      result.fError = ENameCycleError::kNameEmpty;
+      return result;
+   }
+
+   // Verify that we have at most one ';'
+   if (nameCycleRaw.substr(semicolonIdx + 1).find_first_of(';') != std::string_view::npos) {
+      result.fError = ENameCycleError::kInvalidSyntax;
+      return result;
+   }
+
+   result.fName = nameCycleRaw.substr(0, semicolonIdx);
+   if (semicolonIdx < std::string_view::npos) {
+      if (semicolonIdx == nameCycleRaw.length() - 1 && nameCycleRaw[semicolonIdx] == '*')
+         result.fError = ENameCycleError::kAnyCycle;
+      else
+         result.fError = DecodeNumericCycle(nameCycleRaw.substr(semicolonIdx + 1).data(), result.fCycle);
+   }
+
+   return result;
 }
 
 namespace {
@@ -177,12 +256,27 @@ bool RFile::IsValidPath(std::string_view path)
    if (path.empty())
       return false;
 
-   if (path == "." || path == "..")
+   bool valid = true;
+   for (char ch : path) {
+      // Disallow control characters, tabs, newlines, whitespace and dot.
+      // NOTE: not short-circuiting or early returning to enable loop vectorization.
+      valid &= !(ch < 33 || ch == '.');
+   }
+   if (!valid)
       return false;
 
-   for (char ch : path) {
-      // Disallow control characters, tabs, newlines and whitespace
-      if (ch < 33)
+   // Each fragment of the path must fit into a TKey name, which cannot be larger than 255 characters.
+   // NOTE: this modifies `path`!
+   {
+      auto slashIdx = path.find_first_of('/');
+      while (slashIdx < std::string_view::npos) {
+         if (slashIdx > 255)
+            return false;
+
+         path = path.substr(slashIdx + 1);
+         slashIdx = path.find_first_of('/');
+      }
+      if (path.length() > 255)
          return false;
    }
 
@@ -249,12 +343,14 @@ TKey *RFile::GetTKey(const char *path) const
       // For some reason, FindKey will not return nullptr if we asked for a specific cycle and that cycle
       // doesn't exist. It will instead return any key whose cycle is *at most* the requested one.
       // This is very confusing, so in RFile we actually return null if the requested cycle is not there.
-      short cycle;
-      TDirectory::DecodeNameCycle(dirName, nullptr, cycle);
-      // NOTE: cycle == 9999 means that `path` didn't contain a valid cycle (including no cycle at all)
-      //       cycle == 10000 means that `path` contained the "any cycle" pattern ("name;*")
-      if (cycle < 9999 && key->GetCycle() != cycle) {
-         key = nullptr;
+      RNameCycleResult res = DecodeNameCycle(dirName);
+      if (res.fError != ENameCycleError::kAnyCycle) {
+         if (res.fError != ENameCycleError::kNoError) {
+            R__LOG_ERROR(RFileLog()) << "error decoding namecycle '" << dirName << "': " << ToString(res.fError);
+            key = nullptr;
+         } else if (res.fCycle && *res.fCycle != key->GetCycle()) {
+            key = nullptr;
+         }
       }
    }
    return key;
@@ -280,6 +376,9 @@ void *RFile::GetUntyped(const char *path, const TClass *type) const
          static_cast<TH1 *>(obj)->SetDirectory(nullptr);
       else if (type->InheritsFrom("TGraph2D"))
          static_cast<TGraph2D *>(obj)->SetDirectory(nullptr);
+   } else if (key && !GetROOT()->IsBatch()) { // XXX: do we really want this?
+      R__LOG_WARNING(RFileLog()) << "Tried to get object '" << path << "' of type " << type->GetName()
+                                 << " but that path contains an object of type " << key->GetClassName();
    }
 
    return obj;
@@ -382,6 +481,10 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
          break;
       }
 
+      // skip gaps and error keys
+      if (fIter->fType != ROOT::Detail::TKeyMapNode::kKey)
+         continue;
+
       if (IsInternalKey(fIter->fClassName.c_str()))
          continue;
 
@@ -405,6 +508,7 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
       fCurKey.fName = fullPath;
       fCurKey.fTitle = fIter->fKeyTitle;
       fCurKey.fClassName = fIter->fClassName;
+      fCurKey.fCycle = fIter->fCycle;
       break;
    }
 }
@@ -419,7 +523,8 @@ void RFile::Print(std::ostream &out) const
 
    std::sort(keys.begin(), keys.end(), [](const auto &a, const auto &b) { return a.fName < b.fName; });
    for (const auto &key : keys) {
-      out << key.fClassName << " " << key.fName << ": \"" << key.fTitle << "\"\n";
+      // FIXME: key.fTitle is always empty right now
+      out << key.fClassName << " " << key.fName << ";" << key.fCycle << ": \"" << key.fTitle << "\"\n";
    }
 }
 

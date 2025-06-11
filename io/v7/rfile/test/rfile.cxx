@@ -115,8 +115,8 @@ TEST(RFile, WriteInvalidPaths)
    EXPECT_THROW(file->Put("a\n", a), ROOT::RException);
    EXPECT_THROW(file->Put(".", a), ROOT::RException);
    EXPECT_THROW(file->Put("\0", a), ROOT::RException);
-   EXPECT_NO_THROW(file->Put(".a", a));
-   EXPECT_NO_THROW(file->Put("a..", a));
+   EXPECT_THROW(file->Put(".a", a), ROOT::RException);
+   EXPECT_THROW(file->Put("a..", a), ROOT::RException);
 }
 
 TEST(RFile, OpenForUpdating)
@@ -332,6 +332,7 @@ TEST(RFile, IterateKeysRecursive)
       EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b")), "a/b/d");
       EXPECT_EQ(JoinKeyNames(file->GetKeys("a/b/c")), "");
       EXPECT_EQ(JoinKeyNames(file->GetKeys("e/c")), "e/c/g");
+      EXPECT_EQ(JoinKeyNames(file->GetKeys("e/f")), "e/f");
    }
 }
 
@@ -439,4 +440,74 @@ TEST(RFile, Closing)
       file->Close();
       EXPECT_THROW(file->Get<std::string>("s"), ROOT::RException);
    }
+}
+
+TEST(RFile, GetAfterOverwriteNoBackup)
+{
+   FileRaii fileGuard("test_rfile_getafternobackup.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   std::string s = "foo";
+   file->Put("s", s);
+   file->Overwrite("s", s, false);
+   auto ss = file->Get<std::string>("s");
+   EXPECT_EQ(*ss, s);
+
+   std::vector<ROOT::Experimental::RFileKeyInfo> keys;
+   for (const auto &key : file->GetKeys())
+      keys.push_back(key);
+
+   EXPECT_EQ(keys.size(), 1);
+}
+
+TEST(RFile, InvalidPaths)
+{
+   FileRaii fileGuard("test_rfile_invalidpaths.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+
+   static const char *const kKeyTooLong = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   std::string obj = "obj";
+   EXPECT_THROW(file->Put(kKeyTooLong, obj), ROOT::RException);
+
+   static const char *const kKeyFragmentTooLong =
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   EXPECT_THROW(file->Put(kKeyFragmentTooLong, obj), ROOT::RException);
+
+   static const char *const kKeyFragmentOk =
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   EXPECT_NO_THROW(file->Put(kKeyFragmentOk, obj));
+
+   static const char *const kKeyWhitespaces = "my path with spaces/foo";
+   EXPECT_THROW(file->Put(kKeyWhitespaces, obj), ROOT::RException);
+
+   static const char *const kKeyCtrlChars = "my\tpath\nwith\bcontrolcharacters";
+   EXPECT_THROW(file->Put(kKeyCtrlChars, obj), ROOT::RException);
+
+   static const char *const kKeyDot = "my/./path";
+   EXPECT_THROW(file->Put(kKeyDot, obj), ROOT::RException);
+   static const char *const kKeyDot2 = "my/.path";
+   EXPECT_THROW(file->Put(kKeyDot2, obj), ROOT::RException);
+   static const char *const kKeyDot3 = "../my/path";
+   EXPECT_THROW(file->Put(kKeyDot3, obj), ROOT::RException);
+
+   EXPECT_THROW(file->Put("", obj), ROOT::RException);
+
+   // ';' is banned while writing
+   EXPECT_THROW(file->Put("myobj;2", obj), ROOT::RException);
+
+   static const char *const kKeyBackslash = "this\\actually\\works!";
+   EXPECT_NO_THROW(file->Put(kKeyBackslash, obj));
 }
