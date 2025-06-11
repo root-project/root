@@ -3,7 +3,7 @@
 #ifndef BASE_HH
 #define BASE_HH
 
-#include <stdint.h>
+#include <cstdint>
 
 class Base
 {
@@ -42,7 +42,7 @@ class Derived : public TObject, public Base
 
 #ifdef __ROOTCLING__
 
-#pragma link C++ class Base+; 
+#pragma link C++ class Base+;
 #pragma link C++ class Derived+;
 #pragma link C++ class vector<Derived>+;
 
@@ -50,7 +50,7 @@ class Derived : public TObject, public Base
 
 #include "TFile.h"
 #include "TTree.h"
-#include <stdio.h>
+#include <cstdio>
 #include "TClonesArray.h"
 
 void writeROOT7500()

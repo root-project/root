@@ -1,0 +1,30 @@
+
+Processing runAddVersion.cxx(2, "2")...
+Loading myclass1.root
+Warning in <TClass::Init>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+
+StreamerInfo for class: MyClass, version=2, checksum=0x423a847
+  float          a               offset=na type= 5
+
+Loading library lib2
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, checksum=0x423a847
+  float          a               offset=na type= 5
+   i= 0, a               type=  5, offset=na, len=1, method=0
+
+StreamerInfo for class: MyClass, checksum=0x75bd56
+  int            a               offset=na type= 3
+
+StreamerInfo for class: MyClass, checksum=0x423a847
+  float          a               offset=na type= 5
+(int) 0
