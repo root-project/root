@@ -274,6 +274,7 @@ public:
    std::shared_ptr<ROOT::RWebWindow> GetWebWindow() const { return fWebWindow; }
 
    // void Send(void* buff, unsigned connid);
+   void SendToAllConnections(const std::string &data);
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);
 
