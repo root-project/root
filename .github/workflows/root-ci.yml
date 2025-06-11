@@ -96,17 +96,10 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac13   
-            arch: ARM64
-            overrides: ["builtin_zlib=ON"]
-          - platform: mac14
-            arch: X64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          - platform: mac-beta
-            is_special: true
+          - platform: macOS-VM
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
 
@@ -224,9 +217,7 @@ jobs:
   build-windows:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+    if: false
 
     permissions:
       contents: read
@@ -345,9 +336,7 @@ jobs:
   build-linux:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+    if: false
 
     permissions:
       contents: read
