@@ -300,25 +300,27 @@ void TVector3::Rotate(Double_t angle, const TVector3 & axis){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Rotates reference frame from Uz to newUz (unit vector) (Geant4).
-/// With respect to the (x,y,z) frame, z' is parallel to direction, x' is in the theta plane and y' in the xy
-/// plane as well as perpendicular to the theta plane.
-/// The full rotation is a composition of two simple rotations:
-/// theta around oy [0, pi], then phi around oz [0, 2pi] (non commutative).
+/// \brief Express the coordinates of this vector in a new reference frame S'
+/// whose z' axis will lie in the direction of NewUzVector (expressed in frame S).
 ///
-/// For the special case of u1=0,u2=0,
-/// phi is set to 0 and theta = pi if u3=-1 or 0 if u3=1.
-/// The x' and y' axes are thus not guaranteed to follow the "shortest rotation
-/// path", sometimes they end up being mirrored with respect to the x and y axes,
-/// since the first rotation is restricted to be from 0 to pi, theta<0 is not
-/// taken into account. This is e.g. the case for u2=0 and u1<0.
-/// The resulting rotation matrix C is the composition of Az(phi) x By(theta), ie:
-/// \f[ A = \left( \begin{array}{ccc} u1/up & -u2/up & 0 \\ u2/up & u1/up & 0 \\ 0 & 0 & 1 \end{array} \right) \f]
-/// \f[ up = \sqrt{u1*u1 + u2*u2} >= 0 \f]
-/// \f[ A = Az(\phi = acos(u1/up) = asin(u2/up) \in [0, 2pi])\f]
-/// \f[ B = \left( \begin{array}{ccc} u3 & 0 & up \\ 0 & 1 & 0 \\ -up & 0 & u3 \end{array} \right) \f]
-/// \f[ B = By(\theta = acos(u3) = asin(up) \in [0, pi] ) \f]
 /// \note NewUzVector must be normalized !
+/// 
+/// \f[ R = \left( \begin{array}{ccc} u1*u3/up & -u2/up & u1 \\ u2*u3/up & u1/up & u2 \\ -up & 0 & u3 \end{array} \right) \f]
+/// The columns of the applied rotation matrix represent the coordinates of
+/// unit vectors of the new axes in the original coordinate system.
+/// The z' axis i.e. third column is `NewUzVector=(u1,u2,u3)`.
+/// The y' axis i.e. second column is the cross product of the old and new Z axes: `(0,0,1)x(u1,u2,u3) = (-u2,u1,0)`,
+/// which after normalisation becomes `(-u2/up,u1/up,0)` with `up=sqrt(u1*u1+u2*u2)`.
+/// The x' axis i.e. first column is the cross product of new y' and z' axes: `(-u2/up,u1/up,0)x(u1,u2,u3) = (u1*u3/up,u2*u3/up,-up)`.
+/// In the special case that z' is parallel to z, the vector is left untouched;
+/// if it's antiparallel, the sign of the x and z vector coordinates is inverted.
+///
+/// This function originates from CLHEP / Geant4.
+/// \see https://proj-clhep.web.cern.ch/proj-clhep/doc/CLHEP_1_7/UserGuide/VectorDefs/node49.html#eq:rotUz
+///
+/// \note If you want to transform your frame using the "shortest" rotation path and avoid Gimbal-lock artefacts,
+/// use instead TVector3::Rotate(Double_t angle,const TVector3& axis), where `axis=(u2/up, -u1/up, 0) and `angle=-arccos(u3)`, being `axis`
+/// the normalized cross-product of `(u1,u2,u3)` and `(0,0,1)`.
 
 void TVector3::RotateUz(const TVector3& NewUzVector) {
    Double_t u1 = NewUzVector.fX;
@@ -332,7 +334,7 @@ void TVector3::RotateUz(const TVector3& NewUzVector) {
       fX = (u1*u3*px - u2*py + u1*up*pz)/up;
       fY = (u2*u3*px + u1*py + u2*up*pz)/up;
       fZ = (u3*u3*px -    px + u3*up*pz)/up;
-   } else if (u3 < 0.) { fX = -fX; fZ = -fZ; }      // phi=0  theta=pi
+   } else if (u3 < 0.) { fX = -fX; fZ = -fZ; }
    else {};
 }
 
