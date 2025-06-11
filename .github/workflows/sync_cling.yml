@@ -1,0 +1,28 @@
+name: Sync Cling with the full history
+
+on:
+  push:
+    paths:
+      - 'interpreter/cling/**'
+  workflow_dispatch:
+
+jobs:
+  sync-cling-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout root.git
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Split cling history
+        id: split
+        run: |
+          git subtree split --prefix=interpreter/cling -b cling-sync
+
+      - name: Push to cling.git
+        env:
+          CLING_GIT_TOKEN: ${{ secrets.CLING_GIT_TOKEN }}
+        run: |
+          git remote add cling https://x-access-token:${CLING_GIT_TOKEN}@github.com/root-project/cling.git
+          git push cling cling-sync:master
