@@ -1,3 +1,4 @@
 {
-// Fill out the code of the actual test
+   gSystem->CopyFile("boolUpdate.keeproot", "boolUpdate.root", kTRUE);
+   gROOT->ProcessLine(".x boolUpdate.C+");
 }

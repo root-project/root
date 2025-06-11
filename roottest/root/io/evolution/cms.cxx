@@ -32,8 +32,8 @@ class B : public A{
 public:
   B(){}
   B(Id ia,Id ib) : a(ia), b(ib), s(0), cs(0), w(false){}
-  B(Id ia,Id ib, 
-    unsigned short int is, 
+  B(Id ia,Id ib,
+    unsigned short int is,
     unsigned short int ic) : a(ia), b(ib), s(is), cs(ic), w(false){}
   Id a;
   Id b;
@@ -48,7 +48,7 @@ public:
 };
 
 class CMSColl {
-public: 
+public:
   CMSColl() {}
   virtual ~CMSColl() {}
   std::vector<B> collection;
@@ -59,7 +59,7 @@ void CMSTestWrite()  {
   printf("File version: %d\n\n",f->GetVersion());
   TTree*  t  = new TTree("test", "An example of a ROOT tree");
   CMSColl* obj = new CMSColl;
-  /* TBranch* b = */ t->Branch("Coll_test", "CMSColl", &obj);      
+  /* TBranch* b = */ t->Branch("Coll_test", "CMSColl", &obj);
   for ( size_t i = 0; i < 10; ++i )   {
     obj->collection.push_back(B());
     t->Fill();
@@ -68,8 +68,9 @@ void CMSTestWrite()  {
   t->Write();
 }
 
-void CMSTestRead()  {
-  TFile* f=TFile::Open("CMS.root");
+void CMSTestRead()
+{
+  TFile* f = TFile::Open("CMS.root");
   printf("File version:%d\n\n",f->GetVersion());
   TTree* t=(TTree*)f->Get("test");
   CMSColl* obj = new CMSColl;
