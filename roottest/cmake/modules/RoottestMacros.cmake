@@ -783,7 +783,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT;RESOURCE_LOCK"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES;PYTHON_DEPS"
                             ${ARGN})
 
   # Test name
@@ -889,6 +889,11 @@ function(ROOTTEST_ADD_TEST testname)
   # Mark the test as known to fail.
   if(ARG_WILLFAIL)
     set(willfail WILLFAIL)
+  endif()
+
+  # List of python packages required to run this test.
+  if(ARG_PYTHON_DEPS)
+    set(pythondeps ${ARG_PYTHON_DEPS})
   endif()
 
   # Add ownership and test labels.
@@ -1081,6 +1086,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${failregex}
                         ${passregex}
                         ${copy_to_builddir}
+                        PYTHON_DEPS ${pythondeps}
                         DEPENDS ${deplist}
                         FIXTURES_SETUP ${fixtures_setup}
                         FIXTURES_CLEANUP ${fixtures_cleanup}
