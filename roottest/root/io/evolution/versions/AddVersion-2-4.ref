@@ -1,0 +1,44 @@
+
+Processing runAddVersion.cxx(2, "4")...
+Loading myclass1.root
+Warning in <TClass::Init>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+
+StreamerInfo for class: MyClass, version=2, checksum=0x423a847
+  float          a               offset=na type= 5
+
+Loading library lib4
+Warning in <TClass::PostLoadCheck>:
+   The class MyClass transitioned from not having a specified class version
+   to having a specified class version (the current class version is 2).
+   However too many different non-versioned layouts of the class have
+   already been loaded so far.  To work around this problem you can
+   load fewer 'old' file in the same ROOT session or load the C++ library
+   describing the class MyClass before opening the files or increase the version
+   number of the class for example ClassDef(MyClass,3).
+   Do not try to write objects with the current class definition,
+   the files might not be readable.
+
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the on-file layout version 2 of class 'MyClass' differs from
+the in-memory layout version 2:
+   float a; //
+vs
+   short a; //
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+
+StreamerInfo for class: MyClass, version=2, checksum=0x423a847
+  float          a               offset=na type= 5 newtype= 2
+   i= 0, a               type=205, offset=na, len=1, method=0
+(int) 0
