@@ -333,11 +333,8 @@
 #   endif
 #endif
 
-#if defined(__GLIBCXX__) && !defined(__cpp_sized_deallocation)
-   // Sized global deallocation functions in libstc++ are only enabled if
-   // __cpp_sized_deallocation is defined, which Clang only does if explicitly
-   // passed -fsized-deallocation.
-#else
+#ifdef __cpp_sized_deallocation
+// Sized global deallocation functions are only enabled if __cpp_sized_deallocation is defined.
 #   define R__SIZEDDELETE
 #endif
 
