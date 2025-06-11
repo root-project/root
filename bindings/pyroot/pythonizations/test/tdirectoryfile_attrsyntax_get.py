@@ -54,7 +54,7 @@ class TDirectoryFileReadWrite(unittest.TestCase):
         self.dir0.h
         # check that the value in __dict__ is actually the object
         # inside the directory
-        self.assertEqual(self.dir0.__dict__['h'], self.dir0.h)
+        self.assertTrue(self.dir0.__dict__['h'] is self.dir0.h)
 
 
 if __name__ == '__main__':
