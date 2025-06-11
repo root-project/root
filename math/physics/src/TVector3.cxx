@@ -319,7 +319,7 @@ void TVector3::Rotate(Double_t angle, const TVector3 & axis){
 /// \see https://proj-clhep.web.cern.ch/proj-clhep/doc/CLHEP_1_7/UserGuide/VectorDefs/node49.html#eq:rotUz
 ///
 /// \note If you want to transform your frame using the "shortest" rotation path and avoid Gimbal-lock artefacts,
-/// use instead TVector3::Rotate(angle, axis), where `axis=(u2/up, -u1/up, 0) and `angle=-arccos(u3)`, being `axis`
+/// use instead TVector3::Rotate(Double_t angle,const TVector3& axis), where `axis=(u2/up, -u1/up, 0) and `angle=-arccos(u3)`, being `axis`
 /// the normalized cross-product of `(u1,u2,u3)` and `(0,0,1)`.
 
 void TVector3::RotateUz(const TVector3& NewUzVector) {
