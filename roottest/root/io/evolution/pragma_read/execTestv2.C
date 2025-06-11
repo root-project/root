@@ -2,7 +2,7 @@
 
 int execTestv2()
 {
-   gSystem->Load("libTestv2.so");
+   gSystem->Load("libRoottestIoEvolutionPragmaV2");
    gROOT->ProcessLine(".L v2/Test.C");
    gROOT->ProcessLine("Test(true,true);");
    return 0;
