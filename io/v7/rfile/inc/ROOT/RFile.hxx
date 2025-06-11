@@ -34,7 +34,9 @@ TFile *GetRFileTFile(RFile &file);
 /// Returns an **owning** pointer to the object referenced by `key`. The caller must delete this pointer.
 [[nodiscard]] void *GetRFileObjectFromKey(RFile &file, const RFileKeyInfo &key);
 
-}
+ROOT::RLogChannel &RFileLog();
+
+} // namespace Internal
 
 /// Given a "path-like" string (like foo/bar/baz), returns a pair `{ dirName, baseName }`.
 /// `baseName` will be empty if the string ends with '/'.
@@ -47,10 +49,10 @@ TFile *GetRFileTFile(RFile &file);
 std::pair<std::string_view, std::string_view> DecomposePath(std::string_view path);
 
 struct RFileKeyInfo {
-  std::string fName;
-  std::string fTitle;
-  std::string fClassName; 
-  std::uint16_t fCycle;
+   std::string fName;
+   std::string fTitle;
+   std::string fClassName;
+   std::uint16_t fCycle;
 };
 
 class RFileKeyIterable final {
@@ -123,10 +125,25 @@ class RFile final {
 
    enum PutFlags {
       kPutAllowOverwrite = 0x1,
-      kPutOverwriteKeepCycle = 0x2,   
+      kPutOverwriteKeepCycle = 0x2,
    };
-   
+
    std::unique_ptr<TFile> fFile;
+
+   /// Returns an empty string if `path` is a suitable path to store an object into a RFile,
+   /// otherwise returns a description of why that is not the case.
+   ///
+   /// A valid object path must:
+   ///   - not be empty
+   ///   - not contain the character '.'
+   ///   - not contain ASCII control characters or whitespace characters (including tab or newline).
+   ///   - not contain any sub-path string (i.e. any string separated by slashes) longer than 255 characters.
+   ///
+   /// In addition, when *writing* an object to RFile, the character ';' is also banned.
+   ///
+   /// Passing an invalid path to Put will cause it to throw an exception, and
+   /// passing an invalid path to Get will always return nullptr.
+   static std::string ValidatePath(std::string_view path);
 
    explicit RFile(std::unique_ptr<TFile> file) : fFile(std::move(file)) {}
 
@@ -142,9 +159,15 @@ class RFile final {
    template <typename T>
    void PutInternal(std::string_view path, const T &obj, std::uint32_t flags)
    {
-      if (!IsValidPath(path) || path.find_first_of(';') != std::string_view::npos) {
-         throw RException(R__FAIL(std::string("Invalid object path: ") + std::string(path)));
+      if (auto err = ValidatePath(path); !err.empty()) {
+         throw RException(R__FAIL("Invalid object path '" + std::string(path) + "': " + err));
       }
+      if (path.find_first_of(';') != std::string_view::npos) {
+         throw RException(
+            R__FAIL("Invalid object path '" + std::string(path) +
+                    "': character ';' is used to specify an object cycle, which only makes sense when reading."));
+      }
+
       std::string pathStr(path);
       const TClass *cls = TClass::GetClass(typeid(T));
       if (!cls) {
@@ -174,33 +197,19 @@ public:
    /// Opens the file for updating
    static std::unique_ptr<RFile> OpenForUpdate(std::string_view path);
 
-   ///// Utility methods /////
-
-   /// Returns true if `path` is a suitable path to store an object into a RFile.
-   ///
-   /// A valid object path must:
-   ///   - not be empty
-   ///   - not contain the character '.'
-   ///   - not contain ASCII control characters or whitespace characters (including tab or newline).
-   ///   - not contain any sub-path string (i.e. any string separated by slashes) longer than 255 characters.
-   ///
-   /// In addition, when *writing* an object to RFile, the character ';' is also banned.
-   ///
-   /// Passing an invalid path to Put will cause it to throw an exception, and
-   /// passing an invalid path to Get will always return nullptr.
-   static bool IsValidPath(std::string_view path);
-
    ///// Instance methods /////
 
    /// Retrieves an object from the file.
-   /// `path` should be a string such that `IsValidPath(path) == true`. 
+   /// `path` should be a string such that `IsValidPath(path) == true`.
    /// If the object is not there returns a null pointer.
    template <typename T>
    std::unique_ptr<T> Get(std::string_view path) const
    {
-      if (!IsValidPath(path)) {
+      if (auto err = ValidatePath(path); !err.empty()) {
+         R__LOG_ERROR(Internal::RFileLog()) << "Invalid object path '" << path << "': " << err;
          return nullptr;
       }
+
       std::string pathStr(path);
       const TClass *cls = TClass::GetClass(typeid(T));
       if (!cls) {
@@ -212,7 +221,7 @@ public:
 
    /// Puts an object into the file.
    /// The application retains ownership of the object.
-   /// `path` should be a string such that `IsValidPath(path) == true`. 
+   /// `path` should be a string such that `IsValidPath(path) == true`.
    ///
    /// Throws a RException if a directory already exists at `path`.
    /// Throws a RException if an object already exists at `path`.
