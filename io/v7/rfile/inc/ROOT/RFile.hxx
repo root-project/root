@@ -50,6 +50,7 @@ struct RFileKeyInfo {
   std::string fName;
   std::string fTitle;
   std::string fClassName; 
+  std::uint16_t fCycle;
 };
 
 class RFileKeyIterable final {
@@ -141,7 +142,7 @@ class RFile final {
    template <typename T>
    void PutInternal(std::string_view path, const T &obj, std::uint32_t flags)
    {
-      if (!IsValidPath(path)) {
+      if (!IsValidPath(path) || path.find_first_of(';') != std::string_view::npos) {
          throw RException(R__FAIL(std::string("Invalid object path: ") + std::string(path)));
       }
       std::string pathStr(path);
@@ -176,6 +177,15 @@ public:
    ///// Utility methods /////
 
    /// Returns true if `path` is a suitable path to store an object into a RFile.
+   ///
+   /// A valid object path must:
+   ///   - not be empty
+   ///   - not contain the character '.'
+   ///   - not contain ASCII control characters or whitespace characters (including tab or newline).
+   ///   - not contain any sub-path string (i.e. any string separated by slashes) longer than 255 characters.
+   ///
+   /// In addition, when *writing* an object to RFile, the character ';' is also banned.
+   ///
    /// Passing an invalid path to Put will cause it to throw an exception, and
    /// passing an invalid path to Get will always return nullptr.
    static bool IsValidPath(std::string_view path);
@@ -183,6 +193,7 @@ public:
    ///// Instance methods /////
 
    /// Retrieves an object from the file.
+   /// `path` should be a string such that `IsValidPath(path) == true`. 
    /// If the object is not there returns a null pointer.
    template <typename T>
    std::unique_ptr<T> Get(std::string_view path) const
@@ -201,6 +212,7 @@ public:
 
    /// Puts an object into the file.
    /// The application retains ownership of the object.
+   /// `path` should be a string such that `IsValidPath(path) == true`. 
    ///
    /// Throws a RException if a directory already exists at `path`.
    /// Throws a RException if an object already exists at `path`.
@@ -234,24 +246,26 @@ public:
    /// Closes the RFile, disallowing any further reading or writing.
    void Close();
 
-   /// Returns an iterable over all paths of objects written into this RFile starting at directory "rootDir".
-   /// The returned paths are always "absolute" paths: they are not relative to `rootDir`.
-   /// Keys relative to directories are not returned.
-   /// This recurses on all the subdirectories of `rootDir`. If you only want the immediate children of `rootDir`,
+   /// Returns an iterable over all paths of objects written into this RFile starting at path "rootPath".
+   /// The returned paths are always "absolute" paths: they are not relative to `rootPath`.
+   /// Keys relative to directories are not returned: only those relative to leaf objects are.
+   /// If `rootPath` is the path of a leaf object, only `rootPath` itself will be returned.
+   /// This recurses on all the subdirectories of `rootPath`. If you only want the immediate children of `rootPath`,
    /// use GetKeysNonRecursive().
-   RFileKeyIterable GetKeys(std::string_view rootDir = "") const
+   RFileKeyIterable GetKeys(std::string_view rootPath = "") const
    {
-      return RFileKeyIterable(fFile.get(), rootDir, /* recursive = */ true);
+      return RFileKeyIterable(fFile.get(), rootPath, /* recursive = */ true);
    }
 
-   /// Returns an iterable over all paths of objects written into this RFile contained in the directory "rootDir".
-   /// The returned paths are always "absolute" paths: they are not relative to `rootDir`.
-   /// Keys relative to directories are not returned.
-   /// This only returns the immediate children of `rootDir`. If you want to recurse into the subdirectories of
-   /// `rootDir`, use GetKeys().
-   RFileKeyIterable GetKeysNonRecursive(std::string_view rootDir = "") const
+   /// Returns an iterable over all paths of objects written into this RFile contained in the directory "rootPath".
+   /// The returned paths are always "absolute" paths: they are not relative to `rootPath`.
+   /// Keys relative to directories are not returned: only those relative to leaf objects are.
+   /// If `rootPath` is the path of a leaf object, only `rootPath` itself will be returned.
+   /// This only returns the immediate children of `rootPath`. If you want to recurse into the subdirectories of
+   /// `rootPath`, use GetKeys().
+   RFileKeyIterable GetKeysNonRecursive(std::string_view rootPath = "") const
    {
-      return RFileKeyIterable(fFile.get(), rootDir, /* recursive = */ false);
+      return RFileKeyIterable(fFile.get(), rootPath, /* recursive = */ false);
    }
 
    /// Retrieves information about the key `path`.
