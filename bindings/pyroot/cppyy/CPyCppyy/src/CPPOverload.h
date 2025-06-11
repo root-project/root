@@ -25,7 +25,11 @@ inline uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
     // improved overloads for implicit conversions
         PyObject* pyobj = CPyCppyy_PyArgs_GET_ITEM(args, i);
         hash += (uint64_t)Py_TYPE(pyobj);
+#if PY_VERSION_HEX >= 0x030e0000
+        hash += (uint64_t)(PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1 : 0);
+#else
         hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
+#endif
         hash += (hash << 10); hash ^= (hash >> 6);
     }
 
