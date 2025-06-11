@@ -61,7 +61,7 @@ class TFileOpenReadWrite(unittest.TestCase):
         f.h
         # check that the value in __dict__ is actually the object
         # inside the directory
-        self.assertEqual(f.__dict__['h'], f.h)
+        self.assertTrue(f.__dict__['h'] is f.h)
 
     def test_oserror(self):
         # check that an OSError is raised when an inexistent file is opened
