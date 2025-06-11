@@ -27,13 +27,14 @@
 #include <cstring>
 #include <iostream>
 
-using ROOT::Experimental::RFile;
-
-static ROOT::RLogChannel &RFileLog()
+ROOT::RLogChannel &ROOT::Experimental::Internal::RFileLog()
 {
    static ROOT::RLogChannel sLog("ROOT.RFile");
    return sLog;
 }
+
+using ROOT::Experimental::RFile;
+using ROOT::Experimental::Internal::RFileLog;
 
 static bool HasPrefix(std::string_view str, std::string_view prefix)
 {
@@ -251,10 +252,10 @@ std::pair<std::string_view, std::string_view> ROOT::Experimental::DecomposePath(
    return {dirName, pathName};
 }
 
-bool RFile::IsValidPath(std::string_view path)
+std::string RFile::ValidatePath(std::string_view path)
 {
    if (path.empty())
-      return false;
+      return "path cannot be empty";
 
    bool valid = true;
    for (char ch : path) {
@@ -263,7 +264,7 @@ bool RFile::IsValidPath(std::string_view path)
       valid &= !(ch < 33 || ch == '.');
    }
    if (!valid)
-      return false;
+      return "path cannot contain control characters, whitespaces or dots";
 
    // Each fragment of the path must fit into a TKey name, which cannot be larger than 255 characters.
    // NOTE: this modifies `path`!
@@ -271,16 +272,16 @@ bool RFile::IsValidPath(std::string_view path)
       auto slashIdx = path.find_first_of('/');
       while (slashIdx < std::string_view::npos) {
          if (slashIdx > 255)
-            return false;
+            return "path fragments must be shorter than 256 characters";
 
          path = path.substr(slashIdx + 1);
          slashIdx = path.find_first_of('/');
       }
       if (path.length() > 255)
-         return false;
+         return "path fragments must be shorter than 256 characters";
    }
 
-   return true;
+   return "";
 }
 
 std::unique_ptr<RFile> RFile::OpenForReading(std::string_view path)
