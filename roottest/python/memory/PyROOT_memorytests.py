@@ -68,7 +68,7 @@ class Memory1TestCase( MyTestCase ):
       a = TH1F( 'memtest_th1f', 'title', 100, -1., 1. )
 
     # locate it
-      self.assertEqual( a, gROOT.FindObject( 'memtest_th1f' ) )
+      self.assertTrue( a is gROOT.FindObject( 'memtest_th1f' ) )
 
     # destroy it
       del a
