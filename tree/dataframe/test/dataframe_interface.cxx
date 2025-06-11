@@ -93,6 +93,14 @@ TEST(RDataFrameInterface, CreateFromNonExistingTree)
    EXPECT_ANY_THROW(RDataFrame("theTreeWhichDoesNotExist", gDirectory));
 }
 
+TEST(RDataFrameInterface, CreateFromGlob)
+{
+   EXPECT_THROW(RDataFrame("t", "f[0-9].root"), std::invalid_argument);
+   TreeInFileRAII f1("globTest_1.root");
+   TreeInFileRAII f2("globTest_2.root");
+   RDataFrame("t", "globTest_[1-9].root");
+}
+
 TEST(RDataFrameInterface, CreateFromTree)
 {
    TMemFile f("dataframe_interfaceAndUtils_0.root", "RECREATE");
