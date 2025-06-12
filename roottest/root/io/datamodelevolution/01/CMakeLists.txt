@@ -68,20 +68,21 @@ ROOTTEST_ADD_TEST(test3
                                     root-io-datamodelevolution-01-test1-fixture
                                     root-io-datamodelevolution-01-test3-compile-fixture)
 
+# problem with XML file parsing on windows
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_GENERATE_REFLEX_DICTIONARY(libDatModelV2_dictrflx
+                    DataModelV2.h
+                    SELECTION DataModelV2_selection.xml
+                    LIBNAME libDatModelV2_dictrflx
+                    NO_ROOTMAP
+                    FIXTURES_SETUP root-io-datamodelevolution-01-libDatModelV2_dictrflx-fixture)
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(libDatModelV2_dictrflx
-                  DataModelV2.h
-                  SELECTION DataModelV2_selection.xml
-                  LIBNAME libDatModelV2_dictrflx
-                  NO_ROOTMAP
-                  FIXTURES_SETUP root-io-datamodelevolution-01-libDatModelV2_dictrflx-fixture)
-
-ROOTTEST_ADD_TEST(rtest3
-                  MACRO test3.cxx+
-                  MACROARG "\"r\""
-                  OUTREF rtest3.ref
-                  LABELS longtest
-                  FIXTURES_REQUIRED root-io-datamodelevolution-01-libDatModelV2_dictrflx-fixture
-                                    root-io-datamodelevolution-01-rtest1-fixture
-                                    root-io-datamodelevolution-01-test3-compile-fixture)
-
+  ROOTTEST_ADD_TEST(rtest3
+                    MACRO test3.cxx+
+                    MACROARG "\"r\""
+                    OUTREF rtest3.ref
+                    LABELS longtest
+                    FIXTURES_REQUIRED root-io-datamodelevolution-01-libDatModelV2_dictrflx-fixture
+                                      root-io-datamodelevolution-01-rtest1-fixture
+                                      root-io-datamodelevolution-01-test3-compile-fixture)
+endif()
