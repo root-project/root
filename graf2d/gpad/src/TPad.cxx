@@ -1357,16 +1357,16 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 /// Top and left margins can be defined.
 
 void TPad::DivideRatios(Int_t nx, Int_t ny,
-                        const std::vector<double>& width_ratios,
-                        const std::vector<double>& height_ratios,
-                        const double canvas_top_margin,
-                        const double canvas_left_margin
+                        const std::vector<double>& widthRatios,
+                        const std::vector<double>& heightRatios,
+                        const double canvasTopMargin,
+                        const double canvasLeftMargin
                         )
 {
    cd();
 
-   int wrs = width_ratios.size();
-   int hrs = height_ratios.size();
+   int wrs = widthRatios.size();
+   int hrs = heightRatios.size();
    int nxl = TMath::Min(nx,wrs), nyl = TMath::Min(ny,hrs);
 
    if (wrs==0) nxl = nx;
@@ -1380,56 +1380,56 @@ void TPad::DivideRatios(Int_t nx, Int_t ny,
    double x1, y1, x2, y2;
 
    // Check the validity of the margins
-   if (canvas_top_margin <0 || canvas_top_margin >1 ) {
+   if (canvasTopMargin <0 || canvasTopMargin >1 ) {
       Error("DivideRatios", "The canvas top margin must be >= 0 and <= 1");
       return;
    } else {
-      y = 1.- canvas_top_margin;
+      y = 1.- canvasTopMargin;
    }
-   if (canvas_left_margin <0 || canvas_left_margin >1 ) {
+   if (canvasLeftMargin <0 || canvasLeftMargin >1 ) {
       Error("DivideRatios", "The canvas left margin must be >= 0 and <= 1");
       return;
    }
 
    // Check the validity of the ratios
-   double sum_of_height_ratios = canvas_top_margin;
+   double sumOfHeightRatios = canvasTopMargin;
    if (hrs) {
       for (int i=0; i<nyl; i++) {
-         yr = height_ratios[i];
-         sum_of_height_ratios = sum_of_height_ratios + yr;
+         yr = heightRatios[i];
+         sumOfHeightRatios = sumOfHeightRatios + yr;
          if (yr <0 || yr >1 ) {
             Error("DivideRatios", "Y ratios plus the top margin must be >= 0 and <= 1");
             return;
          }
       }
    }
-   if (sum_of_height_ratios > 1.) {
-      Error("DivideRatios", "The sum of Y ratios plus the top margin must be <= 1 %g",sum_of_height_ratios);
+   if (sumOfHeightRatios > 1.) {
+      Error("DivideRatios", "The sum of Y ratios plus the top margin must be <= 1 %g",sumOfHeightRatios);
       return;
    }
-   double sum_of_width_ratios = canvas_left_margin;
+   double sumOfWidthRatios = canvasLeftMargin;
    if (wrs) {
       for (int j=0; j<nxl; j++) {
-         xr = width_ratios[j];
-         sum_of_width_ratios = sum_of_width_ratios +xr;
+         xr = widthRatios[j];
+         sumOfWidthRatios = sumOfWidthRatios +xr;
          if (xr <0 || xr >1 ) {
             Error("DivideRatios", "X ratios must be >= 0 and <= 1");
             return;
          }
       }
    }
-   if (sum_of_width_ratios > 1.) {
-      Error("DivideRatios", "The sum of X ratios must be <= 1 %g ",sum_of_width_ratios);
+   if (sumOfWidthRatios > 1.) {
+      Error("DivideRatios", "The sum of X ratios must be <= 1 %g ",sumOfWidthRatios);
       return;
    }
 
    // Create the pads according to the ratios
    for (int i=0; i<nyl; i++) {
-      x = canvas_left_margin;
-      if (hrs) yr = height_ratios[i];
+      x = canvasLeftMargin;
+      if (hrs) yr = heightRatios[i];
       else     yr = 1./nyl;
       for (int j=0; j<nxl; j++) {
-         if (wrs) xr = width_ratios[j];
+         if (wrs) xr = widthRatios[j];
          else     xr = 1./nxl;
          x1 = TMath::Max(0., x);
          y1 = TMath::Max(0., y - yr);
@@ -1445,7 +1445,6 @@ void TPad::DivideRatios(Int_t nx, Int_t ny,
       }
       y = y - yr;
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
