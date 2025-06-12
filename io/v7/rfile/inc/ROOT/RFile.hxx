@@ -138,6 +138,7 @@ class RFile final {
    ///   - not contain the character '.'
    ///   - not contain ASCII control characters or whitespace characters (including tab or newline).
    ///   - not contain any sub-path string (i.e. any string separated by slashes) longer than 255 characters.
+   ///   - not contain more than RFile::kMaxPathNesting path fragments (i.e. more than RFile::kMaxPathNesting - 1 '/')
    ///
    /// In addition, when *writing* an object to RFile, the character ';' is also banned.
    ///
@@ -186,6 +187,9 @@ class RFile final {
    TKey *GetTKey(const char *path) const;
 
 public:
+   // This is arbitrary, but it's useful to avoid pathological cases
+   static constexpr int kMaxPathNesting = 1000;
+   
    ///// Factory methods /////
 
    /// Opens the file for reading

@@ -458,6 +458,15 @@ ROOT::RResult<std::pair<std::string, int>> ROOT::Experimental::RFileKeyIterable:
       dirNames.push_back(key.fObjName);
       seekPdir = key.SeekPdir();
       ++nesting;
+
+      // safety net vs infinite loops
+      if (nesting > RFile::kMaxPathNesting) {
+         return R__FAIL("max nesting depth exceeded when reconstructing full key path. This might be due "
+                        "to an extremely nested object (> " +
+                        std::to_string(RFile::kMaxPathNesting) +
+                        " levels) or, more likely, to a corrupted file. This object, '" + key.fObjName +
+                        "', will be skipped.");
+      }
    }
 
    std::string fullName;
@@ -494,8 +503,12 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
          continue;
 
       // Reconstruct the full path of the key
-      // TODO: better error handling
-      const auto [fullPath, nesting] = ReconstructFullKeyPath(fIter).Unwrap();
+      auto res = ReconstructFullKeyPath(fIter);
+      if (!res) {
+         R__LOG_ERROR(RFileLog()) << res.GetError()->GetReport();
+         continue;
+      }
+      const auto &[fullPath, nesting] = res.Unwrap();
 
       // skip key if it's not a child of root dir
       if (!HasPrefix(fullPath, fRootDir))
