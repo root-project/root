@@ -557,12 +557,13 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
             << "` has a different number of children than previously-seen field with the same name (old: "
             << dstLinks.size() << ", new: " << srcLinks.size() << ")";
          errors.push_back(ss.str());
-      } else
+      } else {
          for (std::size_t linkIdx = 0, linkNum = srcLinks.size(); linkIdx < linkNum; ++linkIdx) {
             const auto &srcSubfield = src.GetFieldDescriptor(srcLinks[linkIdx]);
             const auto &dstSubfield = dst.GetFieldDescriptor(dstLinks[linkIdx]);
             fieldsToCheck.push_back(RCommonField{srcSubfield, dstSubfield});
          }
+      }
    }
 
    std::string errMsg;
