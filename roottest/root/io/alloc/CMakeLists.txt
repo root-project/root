@@ -6,6 +6,7 @@ ROOTTEST_GENERATE_DICTIONARY(customConstructor
 
 if(ClingReinstateTemplateRootIOCtor)
   set(testref customConstructor.ref)
+  set(conversion sed -e "s,P13OTHER_ROOT_IO,class OTHER_ROOT_IO *,g")
 else()
   set(testref customConstructor.ref-notemplateCtor)
 endif()
@@ -13,6 +14,7 @@ endif()
 ROOTTEST_ADD_TEST(customConstructorLib
                   MACRO runcustomConstructor.C
                   OUTREF ${testref}
+                  OUTCNVCMD ${conversion}
                   FIXTURES_REQUIRED root-io-alloc-customConstructor-fixture)
 
 ROOTTEST_COMPILE_MACRO(customLoader.C
