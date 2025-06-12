@@ -82,28 +82,10 @@ public:
       }
       // fK cannot be larger that axis dimension
       fK = std::min(fK, fShapeX[fAttrAxis]);
-      // if(fK>fShapeX[fAttrAxis]){
-      //    throw
-      //       std::runtime_error("TMVA::SOFIE ONNX TopK op k = "+ std::to_string(fK) +" value exeeds value of tensor " +fNX+" of size "+fShapeX.size()+" at axis= "+std::to_string(fAttrAxis)+".");
-      // }
-      // fShapeX = model.GetTensorShape(fNX); //  [ m x n x o x p ... ]
-      // if(k[0]>=fShapeX.size()){
-      //    throw
-      //       std::runtime_error("TMVA::SOFIE ONNX TopK op k = "+ std::to_string(k[0]) +"value exeeds size of tensor " +fNX+" of size "+fShapeX.size()+" .");
-      // }
-      // fShapeY.push_back(2);
-      // for (auto i : fShapeX)
-      //    fShapeY.push_back(i); //  [ 2 x m x n x o x p ... ]
-      // size_t axis = fAttrAxis < 0 ? fShapeX.size() + fAttrAxis : fAttrAxis;
-      // fShapeY[axis] = k[0]; //  [ 2 x m x n x K x p ... ]
-      fShapeY=ShapeInference({fShapeX,fShapeK})[0];
 
-      // for(int i=0;i<fShapeX.size();i++)
-      // std::cout<<fShapeX[i]<<" ";
-      // std::cout<<"\ny size -> "<<fShapeY.size()<<std::endl;
-
-
+      fShapeY = ShapeInference({fShapeX, fShapeK})[0];
       model.AddIntermediateTensor(fNVal, model.GetTensorType(fNX), fShapeY);
+
       // output indices should be an int64 tensor
       model.AddIntermediateTensor(fNInd, ETensorType::INT64, fShapeY);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
@@ -121,7 +103,7 @@ public:
 
       size_t length=ConvertShapeToLength(fShapeX);
       auto strideX = UTILITY::ComputeStrideFromShape(fShapeX);
-      auto strideY = UTILITY::ComputeStrideFromShape(fShapeX);
+      auto strideY = UTILITY::ComputeStrideFromShape(fShapeY);
       // we perform loop on dimension before sorted axis and after sorted axis
       size_t n_before = (axis>0) ? length/strideX[axis-1] : 1;
       size_t n_after = strideX[axis];
@@ -174,8 +156,8 @@ public:
    }
 };
 
-} // nameSPace SOFIE
-} // nameSPace Experimental
-} // nameSPace TMVA
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 
 #endif // TMVA_SOFIE_ROPERATOR_TOPK
