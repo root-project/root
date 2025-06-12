@@ -71,14 +71,17 @@ foreach(indx RANGE 1 2)
   list(APPEND fixtures_veclong64 root-io-evolution-versions-veclong64-${indx}-file)
 endforeach()
 
-foreach(indx RANGE 1 2)
-  ROOTTEST_ADD_TEST(veclong64-${indx}-run
-                    MACRO runVecLong.cxx
-                    MACROARG "1, \"${indx}\""
-                    LABELS longtest io
-                    FIXTURES_REQUIRED ${fixtures_veclong64}
-                    OUTREF VecLong-${indx}.ref)
-endforeach()
+# test uses long which defined different on Windows, therefore it fails
+if(NOT MSVC OR win_broken_tests)
+  foreach(indx RANGE 1 2)
+    ROOTTEST_ADD_TEST(veclong64-${indx}-run
+                      MACRO runVecLong.cxx
+                      MACROARG "1, \"${indx}\""
+                      LABELS longtest io
+                      FIXTURES_REQUIRED ${fixtures_veclong64}
+                      OUTREF VecLong-${indx}.ref)
+  endforeach()
+endif()
 
 ROOTTEST_ADD_TEST(ROOT7500
                   MACRO execROOT7500.cxx+
