@@ -10,12 +10,9 @@ class Long64_t_Container {
    Long64_t i;
    ULong64_t ui;
    long double ld;
-  
+
    Long64_t geti() { return i; }
    Long64_t_Container() {}
    virtual ~Long64_t_Container() {}
 };
 
-#ifdef __CINT__
-#pragma link C++ class Long64_t_Container+;
-#endif
