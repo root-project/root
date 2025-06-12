@@ -173,7 +173,8 @@ ROOTTEST_ADD_TEST(ClonesArrayEvo
                   COPY_TO_BUILDDIR Event_2.root
                   FIXTURES_REQUIRED root-io-evolution-Event_3-fixture)
 
-
+# there is problem parsing XML file on Windows, therefore reflex dictionary generation fails
+if (NOT MSVC OR win_broken_tests)
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(libioReadRuleEquivalentCode
                                     ioReadRuleEquivalentCode.h
                                     SELECTION ioReadRuleEquivalentCode_selection.xml
@@ -184,7 +185,7 @@ ROOTTEST_ADD_TEST(ioReadRuleEquivalentCode
                   OUTREF execioReadRuleEquivalentCode.ref
                   COPY_TO_BUILDDIR ioReadRuleEquivalentCode.root
                   FIXTURES_REQUIRED root-io-evolution-libioReadRuleEquivalentCode-fixture)
-
+endif()
 
 ROOTTEST_ADD_TEST(Skipbaseclass
                   MACRO execSkipbaseclass.cxx+
