@@ -82,7 +82,7 @@ public:
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }
       bool isDynamic = model.IsDynamicTensor(fNX);
-      fShapeX = model.GetDynamicTensorShape(fNX);
+      fShapeX = model.GetDimTensorShape(fNX);
       fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       // Type of the output
@@ -94,13 +94,13 @@ public:
       // Shape of fShapeX[0, ..., fAxis)
       fAxesShape = std::vector<Dim>(fShapeX.begin(), fShapeX.begin() + fAxis);
       // Length of the axes
-      fAxesLength = ConvertDynamicShapeToLength(fAxesShape);
+      fAxesLength = ConvertDimShapeToLength(fAxesShape);
       // Shape of fShapeX[fAxis, ..., fSize)
       fNormalizedShape = std::vector<Dim>(fShapeX.begin() + fAxis, fShapeX.end());
       // Length of the normalized axis
-      fNormalizedLength = ConvertDynamicShapeToLength(fNormalizedShape);
+      fNormalizedLength = ConvertDimShapeToLength(fNormalizedShape);
       // length of the input
-      fLength = ConvertDynamicShapeToLength(fShapeX);
+      fLength = ConvertDimShapeToLength(fShapeX);
       // Type of mean and std
       ETensorType type = (fAttrStashType == 1) ? ETensorType::FLOAT : model.GetTensorType(fNX);
       // Mean
@@ -147,7 +147,7 @@ public:
          out << SP << "// Broadcasting the bias of LayerNormalization op\n";
          out << SP << "{\n";
          out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_";
-         out << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertDynamicShapeToString(fShapeX) << ");\n";
+         out << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeX) << ");\n";
          out << SP << "std::copy(data, data + " << fLength << ", tensor_" << fNBroadcastedB << ");\n";
          out << SP << "delete[] data;\n";
          out << SP << "}\n";
