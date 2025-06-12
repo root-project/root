@@ -15,9 +15,10 @@
 
 #include "ROOT/RFile.hxx"
 
-#include <ROOT/RError.hxx>
 #include <ROOT/StringUtils.hxx>
+#include <ROOT/RError.hxx>
 #include <Byteswap.h>
+#include <TError.h>
 #include <TTree.h>
 #include <TGraph2D.h>
 #include <TH1.h>
@@ -45,6 +46,17 @@ static bool HasPrefix(std::string_view str, std::string_view prefix)
       return false;
 
    return str.compare(0, prefix.size(), prefix) == 0;
+}
+
+static bool PathMatches(std::string_view str, const std::variant<std::string, std::regex> &pattern)
+{
+   if (auto *patternStr = std::get_if<std::string>(&pattern)) {
+      return HasPrefix(str, *patternStr);
+   } else if (auto *patternRegex = std::get_if<std::regex>(&pattern)) {
+      return std::regex_match(str.begin(), str.end(), *patternRegex);
+   }
+   R__ASSERT(false);
+   return false;
 }
 
 static bool IsInternalKey(const char *className)
@@ -266,19 +278,18 @@ std::string RFile::ValidatePath(std::string_view path)
    if (!valid)
       return "path cannot contain control characters, whitespaces or dots";
 
-   // Each fragment of the path must fit into a TKey name, which cannot be larger than 255 characters.
    // NOTE: this modifies `path`!
    {
       auto slashIdx = path.find_first_of('/');
+      int nesting = 0;
       while (slashIdx < std::string_view::npos) {
-         if (slashIdx > 255)
-            return "path fragments must be shorter than 256 characters";
+         ++nesting;
+         if (nesting > RFile::kMaxPathNesting)
+            return "path contains too many levels of nesting";
 
          path = path.substr(slashIdx + 1);
          slashIdx = path.find_first_of('/');
       }
-      if (path.length() > 255)
-         return "path fragments must be shorter than 256 characters";
    }
 
    return "";
@@ -402,10 +413,11 @@ void RFile::PutUntyped(const char *path, const TClass *type, const void *obj, st
    // Very sadly, TFile does nothing to prevent this and will happily write "a/b" even if there
    // is already a directory "a" containing an object "b". We don't want that kind of ambiguity here.
    const auto tokens = ROOT::Split(path, "/");
+   const auto FullPathUntil = [&tokens](auto idx) {
+      return ROOT::Join("/", std::span<const std::string>{tokens.data(), idx + 1});
+   };
    TDirectory *dir = fFile.get();
-   std::string fullPathSoFar = "";
    for (auto tokIdx = 0u; tokIdx < tokens.size() - 1; ++tokIdx) {
-      fullPathSoFar += tokens[tokIdx];
       // Alas, not only does mkdir not fail if the file already contains an object "a/b" and you try
       // to create dir "a", but even when it does fail it doesn't tell you why.
       // We obviously don't want to allow the coexistence of regular object named "a/b" and the directory
@@ -413,12 +425,13 @@ void RFile::PutUntyped(const char *path, const TClass *type, const void *obj, st
       const TKey *existing = dir->GetKey(tokens[tokIdx].c_str());
       if (existing && strcmp(existing->GetClassName(), "TDirectory") != 0 &&
           strcmp(existing->GetClassName(), "TDirectoryFile") != 0) {
-         throw ROOT::RException(R__FAIL(std::string("failed to create directory ") + fullPathSoFar +
-                                        ": name already taken by an object of type " + existing->GetClassName()));
+         throw ROOT::RException(R__FAIL(
+            "error adding object '" + std::string(path) + "': failed to create directory '" + FullPathUntil(tokIdx) +
+            "': name already taken by an object of type '" + existing->GetClassName() + "'"));
       }
       dir = dir->mkdir(tokens[tokIdx].c_str(), "", true);
       if (!dir) {
-         throw ROOT::RException(R__FAIL(std::string("failed to create directory ") + fullPathSoFar));
+         throw ROOT::RException(R__FAIL(std::string("failed to create directory ") + FullPathUntil(tokIdx)));
       }
    }
 
@@ -481,6 +494,8 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
 {
    fCurKey = {};
 
+   const bool recursive = fFlags & kRecursive;
+
    // We only want to return keys that refer to user objects, not internal ones, therefore we skip
    // all keys that have internal class names.
    while (1) {
@@ -511,11 +526,11 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
       const auto &[fullPath, nesting] = res.Unwrap();
 
       // skip key if it's not a child of root dir
-      if (!HasPrefix(fullPath, fRootDir))
+      if (!PathMatches(fullPath, fPattern))
          continue;
 
       // check that we are in the same directory as "rootDir".
-      if (!fRecursive && nesting != fRootDirNesting)
+      if (!recursive && nesting != fRootDirNesting)
          continue;
 
       // All checks passed: return this key.

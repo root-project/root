@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <TFile.h>
 #include <TH1D.h>
@@ -42,6 +43,15 @@ public:
 };
 
 } // anonymous namespace
+
+static std::string JoinKeyNames(const ROOT::Experimental::RFileKeyIterable &iterable)
+{
+   auto beg = iterable.begin();
+   if (beg == iterable.end())
+      return std::string("");
+   return std::accumulate(std::next(beg), iterable.end(), beg->fName,
+                          [](const auto &a, const auto &b) { return a + ", " + b.fName; });
+};
 
 TEST(RFile, DecomposePath)
 {
@@ -304,6 +314,21 @@ TEST(RFile, SaneHierarchy)
    }
 }
 
+TEST(RFile, RefuseToCreateDirOverLeaf)
+{
+   FileRaii fileGuard("test_rfile_dir_over_leaf.root");
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   std::string s;
+   file->Put("a/b", s);
+   try {
+      file->Put("a/b/c", s);
+      FAIL() << "creating a directory over a leaf path should fail.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("'a/b'"));
+      EXPECT_THAT(ex.what(), testing::HasSubstr("name already taken"));
+   }
+}
+
 TEST(RFile, IterateKeysRecursive)
 {
    FileRaii fileGuard("test_rfile_iteratekeys_recursive.root");
@@ -316,14 +341,6 @@ TEST(RFile, IterateKeysRecursive)
       file->Put("e/f", s);
       file->Put("e/c/g", s);
    }
-
-   const auto JoinKeyNames = [](const auto &iterable) {
-      auto beg = iterable.begin();
-      if (beg == iterable.end())
-         return std::string("");
-      return std::accumulate(std::next(beg), iterable.end(), beg->fName,
-                             [](const auto &a, const auto &b) { return a + ", " + b.fName; });
-   };
 
    {
       auto file = RFile::OpenForReading(fileGuard.GetPath());
@@ -350,14 +367,6 @@ TEST(RFile, IterateKeysNonRecursive)
       file->Put("e/c/g", s);
    }
 
-   const auto JoinKeyNames = [](const auto &iterable) {
-      auto beg = iterable.begin();
-      if (beg == iterable.end())
-         return std::string("");
-      return std::accumulate(std::next(beg), iterable.end(), beg->fName,
-                             [](const auto &a, const auto &b) { return a + ", " + b.fName; });
-   };
-
    {
       auto file = RFile::OpenForReading(fileGuard.GetPath());
       EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive()), "h");
@@ -365,6 +374,37 @@ TEST(RFile, IterateKeysNonRecursive)
       EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a/b")), "a/b/d");
       EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("a/b/c")), "");
       EXPECT_EQ(JoinKeyNames(file->GetKeysNonRecursive("e")), "e/f");
+   }
+}
+
+TEST(RFile, IterateKeysRegex)
+{
+   FileRaii fileGuard("test_rfile_iteratekeys_regex.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s;
+      file->Put("a/c", s);
+      file->Put("a/b/j/j/j/j", s);
+      file->Put("a/b/d", s);
+      file->Put("e/f", s);
+      file->Put("e/c/g", s);
+      file->Put("e/a/b/d", s);
+   }
+
+   {
+      auto file = RFile::OpenForReading(fileGuard.GetPath());
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("")), "");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex(".*")), "a/c, a/b/j/j/j/j, a/b/d, e/f, e/c/g, e/a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("a")), "");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("a.*")), "a/c, a/b/j/j/j/j, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex(".*a/.*")), "a/c, a/b/j/j/j/j, a/b/d, e/a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex(".*/a/.*")), "e/a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("a/b/.*")), "a/b/j/j/j/j, a/b/d");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("a/b/c")), "");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("e/c/.")), "e/c/g");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("e/f")), "e/f");
+      EXPECT_EQ(JoinKeyNames(file->GetKeysRegex("./?a/b/.")), "e/a/b/d");
    }
 }
 
@@ -389,7 +429,6 @@ TEST(RFile, ComplexExample)
    model->MakeField<float>("x");
    model->MakeField<std::vector<float>>("v");
 
-   using namespace std::chrono; // TEMP
    const std::string topLevelDirs[] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
    for (const auto &dir : topLevelDirs) {
       const auto kNRuns = 5;
@@ -406,7 +445,6 @@ TEST(RFile, ComplexExample)
          }
 
          // TODO: add RFile impl in RNTupleFileWriter
-         auto start = high_resolution_clock::now();
          const auto kNDatasets = 10;
          for (int i = 0; i < kNDatasets; ++i) {
             const auto datasetName = std::string("data_") + (i + 1);
@@ -415,8 +453,6 @@ TEST(RFile, ComplexExample)
             for (int j = 0; j < 100; ++j)
                dataset->Fill();
          }
-         std::cout << "dataset took " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count()
-                   << " ms\n";
       }
    }
 }
@@ -466,21 +502,21 @@ TEST(RFile, InvalidPaths)
 
    auto file = RFile::Recreate(fileGuard.GetPath());
 
-   static const char *const kKeyTooLong = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                                          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                                          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                                          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   static const char *const kKeyLong = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
    std::string obj = "obj";
-   EXPECT_THROW(file->Put(kKeyTooLong, obj), ROOT::RException);
+   EXPECT_NO_THROW(file->Put(kKeyLong, obj));
 
-   static const char *const kKeyFragmentTooLong =
+   static const char *const kKeyFragmentLong =
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/"
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-   EXPECT_THROW(file->Put(kKeyFragmentTooLong, obj), ROOT::RException);
+   EXPECT_NO_THROW(file->Put(kKeyFragmentLong, obj));
 
    static const char *const kKeyFragmentOk =
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
@@ -510,4 +546,23 @@ TEST(RFile, InvalidPaths)
 
    static const char *const kKeyBackslash = "this\\actually\\works!";
    EXPECT_NO_THROW(file->Put(kKeyBackslash, obj));
+}
+
+TEST(RFile, LongKeyName)
+{
+   FileRaii fileGuard("test_rfile_longkey.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+
+   static const char kKeyLong[] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   static_assert(std::size(kKeyLong) > 256);
+   std::string obj = "obj";
+   file->Put(kKeyLong, obj);
+
+   auto keys = file->GetKeys();
+   auto it = keys.begin();
+   EXPECT_EQ(it->fName, kKeyLong);
 }
