@@ -21,6 +21,8 @@
 #include <string_view>
 #include <memory>
 #include <iostream>
+#include <regex>
+#include <variant>
 
 namespace ROOT {
 namespace Experimental {
@@ -57,8 +59,8 @@ struct RFileKeyInfo {
 
 class RFileKeyIterable final {
    TFile *fFile;
-   std::string fRootDir;
-   bool fRecursive;
+   std::variant<std::string, std::regex> fPattern;
+   bool fRecursive = true;
 
 public:
    class RIterator {
@@ -66,24 +68,25 @@ public:
 
       TFile *fFile;
       ROOT::Detail::TKeyMapIterable::TIterator fIter;
-      std::string_view fRootDir;
+      std::variant<std::string, std::regex> fPattern;
       RFileKeyInfo fCurKey;
-      int fRootDirNesting = 0;
-      bool fRecursive;
+      std::uint16_t fRootDirNesting = 0;
+      bool fRecursive = true;
 
       ROOT::RResult<std::pair<std::string, int>>
       ReconstructFullKeyPath(ROOT::Detail::TKeyMapIterable::TIterator &iter) const;
 
       void Advance();
 
-      RIterator(TFile *file, ROOT::Detail::TKeyMapIterable::TIterator iter, std::string_view rootDir, bool recursive)
-         : fFile(file), fIter(iter), fRootDir(rootDir), fRecursive(recursive)
+      RIterator(TFile *file, ROOT::Detail::TKeyMapIterable::TIterator iter, std::variant<std::string, std::regex> pattern,
+                bool recursive)
+         : fFile(file), fIter(iter), fPattern(pattern), fRecursive(recursive)
       {
-         if (!rootDir.empty()) {
-            fRootDirNesting = std::count(rootDir.begin(), rootDir.end(), '/');
-            // `rootDir` may or may not end with '/', but we consider it a directory regardless.
+         if (auto *patternStr = std::get_if<std::string>(&pattern); patternStr && !patternStr->empty()) {
+            fRootDirNesting = std::count(patternStr->begin(), patternStr->end(), '/');
+            // `patternStr` may or may not end with '/', but we consider it a directory regardless.
             // In other words, like in virtually all filesystem operations, "dir" and "dir/" are equivalent.
-            fRootDirNesting += rootDir[rootDir.size() - 1] != '/';
+            fRootDirNesting += (*patternStr)[patternStr->size() - 1] != '/';
          }
 
          // Advance the iterator to skip the first key, which is always the TFile key.
@@ -111,12 +114,17 @@ public:
    };
 
    explicit RFileKeyIterable(TFile *file, std::string_view rootDir, bool recursive)
-      : fFile(file), fRootDir(rootDir), fRecursive(recursive)
+      : fFile(file), fPattern(std::string(rootDir)), fRecursive(recursive)
    {
    }
 
-   RIterator begin() const { return {fFile, fFile->WalkTKeys().begin(), fRootDir, fRecursive}; }
-   RIterator end() const { return {fFile, fFile->WalkTKeys().end(), fRootDir, fRecursive}; }
+   explicit RFileKeyIterable(TFile *file, const std::regex &regex)
+      : fFile(file), fPattern(regex)
+   {
+   }
+
+   RIterator begin() const { return {fFile, fFile->WalkTKeys().begin(), fPattern, fRecursive}; }
+   RIterator end() const { return {fFile, fFile->WalkTKeys().end(), fPattern, fRecursive}; }
 };
 
 class RFile final {
@@ -137,7 +145,6 @@ class RFile final {
    ///   - not be empty
    ///   - not contain the character '.'
    ///   - not contain ASCII control characters or whitespace characters (including tab or newline).
-   ///   - not contain any sub-path string (i.e. any string separated by slashes) longer than 255 characters.
    ///   - not contain more than RFile::kMaxPathNesting path fragments (i.e. more than RFile::kMaxPathNesting - 1 '/')
    ///
    /// In addition, when *writing* an object to RFile, the character ';' is also banned.
@@ -189,7 +196,7 @@ class RFile final {
 public:
    // This is arbitrary, but it's useful to avoid pathological cases
    static constexpr int kMaxPathNesting = 1000;
-   
+
    ///// Factory methods /////
 
    /// Opens the file for reading
@@ -276,9 +283,28 @@ public:
    /// If `rootPath` is the path of a leaf object, only `rootPath` itself will be returned.
    /// This only returns the immediate children of `rootPath`. If you want to recurse into the subdirectories of
    /// `rootPath`, use GetKeys().
-   RFileKeyIterable GetKeysNonRecursive(std::string_view rootPath = "") const
+   RFileKeyIterable
+   GetKeysNonRecursive(std::string_view rootPath = "") const
    {
       return RFileKeyIterable(fFile.get(), rootPath, /* recursive = */ false);
+   }
+
+   /// Returns an iterable over all paths of objects written into this RFile that match the given regular expression.
+   /// The regular expression must match the entire path, so path "a/b/c/d" will be matched by "a.*" or ".*c.*" but
+   /// NOT by "a" or "b/c".
+   /// Keys relative to directories are not returned: only those relative to leaf objects are.
+   RFileKeyIterable GetKeysRegex(const std::regex &pattern) const
+   {
+      return RFileKeyIterable(fFile.get(), pattern);
+   }
+
+   /// \see GetKeysRegex(const std::regex &)
+   /// \note This will use the ECMAScript regex grammar. If you want to use a different one, create your own regex
+   /// and pass it directly to the other overload of GetKeysRegex().
+   RFileKeyIterable GetKeysRegex(std::string_view pattern) const
+   {
+      std::regex regex { std::string(pattern) };
+      return GetKeysRegex(regex);
    }
 
    /// Retrieves information about the key `path`.
