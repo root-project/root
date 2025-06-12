@@ -286,7 +286,13 @@ macro(ROOTTEST_COMPILE_MACRO filename)
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.dll
                                         ${CMAKE_CURRENT_BINARY_DIR}/
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}_ACLiC_dict_rdict.pcm
-                                        ${CMAKE_CURRENT_BINARY_DIR}/)
+                                        ${CMAKE_CURRENT_BINARY_DIR}/
+       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.d
+       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.def
+       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.dll
+       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.exp
+       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.lib
+       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}_ACLiC_dict_rdict.pcm)
   endif()
 
 endmacro(ROOTTEST_COMPILE_MACRO)
