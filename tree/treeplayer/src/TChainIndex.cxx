@@ -79,13 +79,13 @@ TChainIndex::TChainIndex(): TVirtualIndex()
 /// If any of those requirements isn't met the object becomes a zombie.
 /// If some subtrees don't have indices the indices are created and stored inside this
 /// TChainIndex.
-/// warnUnsortedIndices can be set to false to silence a warning about unsorted indices in the TChain files. Note
+/// In some cases, a warning is printed about unsorted indices in the TChain files. Note
 /// that unsorted indices lead to a significant performance degradation, not only when building the index itself,
 /// but also later on when performing the joining with other datasets. Thus, in general, it is not recommended to
-/// silence the warning except for special cases with prior knowledge that sorting the files and/or entries is actually
+/// ignore this warning except for special cases with prior knowledge that sorting the files and/or entries is actually
 /// more expensive, or just not possible.
 
-TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname, bool warnUnsortedIndices)
+TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
            : TVirtualIndex()
 {
    fTree = nullptr;
@@ -150,8 +150,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       if( fEntries[i].GetMaxIndexValPair() > fEntries[i+1].GetMinIndexValPair() ) {
          DeleteIndices();
          MakeZombie();
-         if (warnUnsortedIndices)
-            Warning("TChainIndex", "The indices in files of this chain aren't sorted.");
+         Warning("TChainIndex", "The indices in files of this chain aren't sorted.");
       }
    }
 }
