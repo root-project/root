@@ -57,6 +57,7 @@ set(ClingWorkAroundUnnamedDetection2                TRUE)
 
 # used in root/io/alloc test
 # set(ClingReinstateTemplateRootIOCtor                TRUE)
+# See https://github.com/root-project/root/issues/19013
 
 set(PYROOT_EXTRAFLAGS --fixcling)
 
