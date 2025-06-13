@@ -128,10 +128,19 @@ if (runtime_cxxmodules)
   if (APPLE)
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0.0.15000309)
       set(custom_modulemaps ${custom_modulemaps} std_darwin.MacOSX14.2.sdk.modulemap)
-    elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0.0.17000013)
-      set(custom_modulemaps ${custom_modulemaps} std_darwin.MacOSX15.2.sdk.modulemap)
     else()
-      set(custom_modulemaps ${custom_modulemaps} std_darwin.modulemap)
+      set(GENERATED_MODULEMAP ${CMAKE_CURRENT_BINARY_DIR}/std_darwin.modulemap)
+
+      add_custom_command(
+        OUTPUT ${GENERATED_MODULEMAP}
+        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py ${GENERATED_MODULEMAP}
+        DEPENDS ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py
+        COMMENT "Generating wrapped std modulemap for macOS SDK"
+      )
+      add_custom_target(generate_std_modulemap DEPENDS ${GENERATED_MODULEMAP})
+      list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${GENERATED_MODULEMAP} ${CMAKE_BINARY_DIR}/etc/cling/std_darwin.modulemap)
+      list(APPEND files_to_copy ${GENERATED_MODULEMAP})
+      install(FILES ${CMAKE_BINARY_DIR}/etc/cling/std_darwin.modulemap DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling)
     endif()
   endif()
 
@@ -205,6 +214,9 @@ else()
         COMMENT "Copying LLVM resource and header files")
 endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
+if(GENERATED_MODULEMAP)
+  add_dependencies(LLVMRES generate_std_modulemap)
+endif()
 # CLING is a shorthand for CLING_LIBRARIES and some other clang-specific
 # dependencies which ensure the correct order of building. Then the cling header
 # files (such as RuntimeUniverse.h) are moved to a semi-private place in ROOT
