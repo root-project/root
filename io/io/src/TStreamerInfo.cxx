@@ -4083,6 +4083,9 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    }
 
    TClass *cl = gROOT->GetClass(GetName());
+   // This `IsTObject` is a (easier to calculate) subset of 'base class has a virtual declaration' for
+   // all the `ClassDef` virtual functions.  Usually this means that the base class has one
+   // of the ClassDef (without the NV suffix).
    const TString overrd = (cl && cl->IsTObject()) ? "Override" : "";
    if (fClassVersion > 1 || (cl && cl->IsTObject()) ) {
       // add 1 to class version in case we didn't manage reproduce the class layout to 100%.
