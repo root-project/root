@@ -67,7 +67,6 @@ TEST(TEntryList, addSubList) {
    gSystem->Unlink(filename2);
 }
 
-
 TEST(TEntryList, copySubList)
 {
    auto filename1{"entrylist_copysublist_tree1.root"};
@@ -98,7 +97,7 @@ TEST(TEntryList, copySubList)
       for (auto filename : {filename1, filename2})
          c.Add(filename);
       c.SetEntryList(&l);
-   
+
       int treenum;
       auto value = l.GetEntryAndTree(0, treenum);
       EXPECT_EQ(value, 0);
@@ -109,7 +108,7 @@ TEST(TEntryList, copySubList)
       value = l.GetEntryAndTree(2, treenum);
       EXPECT_EQ(value, 1);
       EXPECT_EQ(treenum, 1);
-      
+
       TEntryList lcopy(l);
       value = lcopy.GetEntryAndTree(0, treenum);
       EXPECT_EQ(value, 0);
