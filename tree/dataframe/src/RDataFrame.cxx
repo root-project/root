@@ -410,10 +410,10 @@ Previously, when showing the different ways an RDataFrame can be created, we sho
 number of entries as a parameter. In the following example we show how to combine such an "empty" RDataFrame with Define()
 transformations to create a dataset on the fly. We then save the generated data on disk using the Snapshot() action.
 ~~~{.cpp}
-RDataFrame d(100); // an RDF that will generate 100 entries (currently empty)
+ROOT::RDataFrame d(100); // an RDF that will generate 100 entries (currently empty)
 int x = -1;
-auto d_with_columns = d.Define("x", [&x] { return ++x; })
-                       .Define("xx", [&x] { return x*x; });
+auto d_with_columns = d.Define("x", []()->int { return ++x; })
+                       .Define("xx", []()->int { return x*x; });
 d_with_columns.Snapshot("myNewTree", "newfile.root");
 ~~~
 This example is slightly more advanced than what we have seen so far. First, it makes use of lambda captures (a
