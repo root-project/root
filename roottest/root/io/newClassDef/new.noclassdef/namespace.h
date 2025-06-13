@@ -24,11 +24,7 @@ namespace MySpace {
     int a;
     MyClass() {};
     MyClass(int a_) : a(a_) {};
-#ifdef NESTING_PROBLEM_SOLVED
     std::vector<A> member;
-#else
-    std::vector<MySpace::A> member;
-#endif
     ClassDef(MyClass,1)
   };
 
