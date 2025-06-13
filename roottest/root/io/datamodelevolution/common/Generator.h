@@ -14,12 +14,13 @@
 #include <TVirtualCollectionProxy.h>
 #include <typeinfo>
 #include <iostream>
-#include <../common/Demangler.h>
 #include <cstdlib>
 #include <TROOT.h>
 #include <TClassTable.h>
 #include <TRandom.h>
 #include "TError.h"
+
+#include "Demangler.h"
 
 //------------------------------------------------------------------------------
 // Random number generators
@@ -37,17 +38,17 @@ float genFloat()
 
 bool genBool( )
 {
-   return gRandom->Integer(2) >= 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0))); 
+   return gRandom->Integer(2) >= 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0)));
 }
 
 int genInt( int max = 30 )
 {
-   return gRandom->Integer(max) + 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0))); 
+   return gRandom->Integer(max) + 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0)));
 }
 
 unsigned int genUInt( int max = 30 )
 {
-   return gRandom->Integer(max) + 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0))); 
+   return gRandom->Integer(max) + 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0)));
 }
 
 short genShort()
@@ -102,7 +103,7 @@ void generate( Type*& obj )
    //---------------------------------------------------------------------------
    // Create an object
    //---------------------------------------------------------------------------
-   obj = (Type*)cl->New(); 
+   obj = (Type*)cl->New();
    generate( obj, cl );
 }
 
@@ -161,7 +162,7 @@ void generate( void* obj, TClass* cl )
                *((void**)proxy->At(i)) = newObj + rcl->GetBaseClassOffset( vcl );
                generate( newObj, rcl );
             }
-            
+
          }
          //---------------------------------------------------------------------
          // Collection of non-pointer
@@ -198,7 +199,7 @@ void generate( void* obj, TClass* cl )
                for( UInt_t i = 0; i < proxy->Size(); ++i )
                   *((float*)proxy->At(i)) = genFloat();
                break;
-           default: 
+           default:
                std::cout << "Case not handled in test generate():" << proxy->GetType() << std::endl;
          }
       }
