@@ -8,15 +8,11 @@ namespace MySpace {
   template <class T> class MyTemplate : public TObject {
   public:
     T variable;
-#ifdef R__GLOBALSTL
-    vector<int> vars;
-#else
     std::vector<int> vars;
-#endif
 
     MyTemplate(T a) { variable = a; };
     MyTemplate() {};
-  
+
     ClassDef(MyTemplate,1)
   };
 
@@ -24,16 +20,12 @@ namespace MySpace {
   public:
     double variable;
     double variable2;
-#ifdef R__GLOBALSTL
-    vector<int> vars;
-#else
     std::vector<int> vars;
-#endif
-  
-    MyTemplate(const double* a) { 
+
+    MyTemplate(const double* a) {
       variable = *a; variable2 = 2* *a; };
     MyTemplate() {};
-  
+
     ClassDef(MyTemplate<const double*>,1)
   };
 
