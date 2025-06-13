@@ -329,6 +329,8 @@ int main(int argc, char **argv)
 
    if (!hfile) {
       printf("Error: can't open output file: %s \n",file_out);
+      if (argc <= 2)
+         delete[] file_out;
       return 1;
    }
 
@@ -339,7 +341,9 @@ int main(int argc, char **argv)
    hfile->ls();
    hfile->Close();
    delete hfile;
-   return(0);
+   if (argc <= 2)
+         delete[] file_out;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
