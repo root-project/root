@@ -9,10 +9,10 @@ namespace MySpace {
   public:
     T variable;
     std::vector<int> vars;
-  
-    MyTemplate(T a) { variable = a; };
-    MyTemplate() {};
-  
+
+    MyTemplate(T a) { variable = a; }
+    MyTemplate() {}
+
     ClassDef(MyTemplate,1)
   };
 
@@ -21,11 +21,10 @@ namespace MySpace {
     double variable;
     double variable2;
     std::vector<int> vars;
-  
-    MyTemplate<const double*>(const double* a) { 
-      variable = *a; variable2 = 2* *a; };
-    MyTemplate<const double*>() {};
-  
+
+    MyTemplate(const double* a) { variable = *a; variable2 = 2* *a; }
+    MyTemplate() {}
+
     ClassDef(MyTemplate<const double*>,1)
   };
 

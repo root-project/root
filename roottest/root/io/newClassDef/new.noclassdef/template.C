@@ -1,5 +1,7 @@
 #include "template.h"
 
+#include "TBufferFile.h"
+
 const double dvalue = 33.3;
 
 ClassImp( MyTemplate<const double*> )
@@ -33,12 +35,12 @@ void func1() {
 
 void func2() {
   fprintf(stderr,"the class name of MyTemplate<int> is %s\n",
-          dummy.IsA()->GetName());  
+          dummy.IsA()->GetName());
 }
 
-TBuffer* t_writetest() 
+TBuffer* t_writetest()
 {
-  TBuffer *b = new TBuffer(TBuffer::kWrite);
+  TBuffer *b = new TBufferFile(TBuffer::kWrite);
   *b << &dummy;
   *b << &dummy2;
   *b << &dummy3;
@@ -46,26 +48,26 @@ TBuffer* t_writetest()
   return b;
 }
 
-void t_readtest(TBuffer & b) 
+void t_readtest(TBuffer & b)
 {
   // TBuffer b(TBuffer::kRead);
   b >> pdummy;
   if (pdummy->variable!=dummy.variable) {
      fprintf(stderr,"Error: MyTemplate<int> not read properly!");
-     fprintf(stderr,"Expected %d and got %d\n", 
+     fprintf(stderr,"Expected %d and got %d\n",
              dummy.variable,
              pdummy->variable);
   }
   b >> pdummy2;
   if (pdummy2->var1!=dummy2.var1) {
      fprintf(stderr,"Error: MyPairTemplate<int,int> not read properly!");
-     fprintf(stderr,"Expected %d and got %d\n", 
+     fprintf(stderr,"Expected %d and got %d\n",
              dummy2.var1,
              pdummy2->var1);
   }
   if (pdummy2->var2!=dummy2.var2) {
      fprintf(stderr,"Error: MyPairTemplate<int,int> not read properly!");
-     fprintf(stderr,"Expected %d and got %d\n", 
+     fprintf(stderr,"Expected %d and got %d\n",
              dummy2.var2,
              pdummy2->var2);
   }
@@ -74,13 +76,13 @@ void t_readtest(TBuffer & b)
   b >> pdummy3;
   if (pdummy3->var1!=dummy3.var1) {
      fprintf(stderr,"Error: MyPairTemplate<int,int> not read properly!");
-     fprintf(stderr,"Expected %f and got %f\n", 
+     fprintf(stderr,"Expected %f and got %f\n",
              dummy3.var1,
              pdummy3->var1);
   }
   if (pdummy3->var2!=dummy3.var2) {
      fprintf(stderr,"Error: MyPairTemplate<int,int> not read properly!");
-     fprintf(stderr,"Expected %f and got %f\n", 
+     fprintf(stderr,"Expected %f and got %f\n",
              dummy3.var2,
              pdummy3->var2);
   }
@@ -88,7 +90,7 @@ void t_readtest(TBuffer & b)
   b >> pdummy4;
   if (pdummy4->variable!=dummy4.variable) {
      fprintf(stderr,"Error: MyTemplate<const double*> not read properly!");
-     fprintf(stderr,"Expected %f and got %f\n", 
+     fprintf(stderr,"Expected %f and got %f\n",
              dummy4.variable,
              pdummy4->variable);
   }

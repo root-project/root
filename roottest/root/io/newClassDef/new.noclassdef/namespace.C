@@ -1,5 +1,7 @@
 #include "namespace.h"
 
+#include "TBufferFile.h"
+
 #ifndef __CINT__
 namespace MySpace {
   ClassImp(MySpace::A)
@@ -19,19 +21,19 @@ void testNamespaceWrite() {
   file->Write();
   //  file->Close();
 }
-  
-TBuffer* n_writetest() 
+
+TBuffer* n_writetest()
 {
-  TBuffer *b = new TBuffer(TBuffer::kWrite);
+  TBuffer *b = new TBufferFile(TBuffer::kWrite);
   *b << &nested0;
   return b;
 }
-void n_readtest(TBuffer & b) 
+void n_readtest(TBuffer & b)
 {
   b>>pnested0;
   if (pnested0->a!=nested0.a) {
      fprintf(stderr,"Error: MySpace::MyClass  not read properly!");
-     fprintf(stderr,"Expected %d and got %d\n", 
+     fprintf(stderr,"Expected %d and got %d\n",
              nested0.a,
              pnested0->a);
   }
