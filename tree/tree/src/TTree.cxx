@@ -100,9 +100,9 @@ It is strongly recommended to persistify those as objects rather than lists of l
    - `I` : a 32 bit signed integer (`Int_t`)
    - `i` : a 32 bit unsigned integer (`UInt_t`)
    - `F` : a 32 bit floating point (`Float_t`)
-   - `f` : a 21 bit floating point with truncated mantissa (`Float16_t`): 1 for the sign, 8 for the exponent and 12 for the mantissa.
+   - `f` : a 21 bit floating point with truncated mantissa (`Float16_t`): 1 for the sign, 8 for the exponent and 12 for the mantissa. Can be customized with suffix `[min,max(,nbits)]`.
    - `D` : a 64 bit floating point (`Double_t`)
-   - `d` : a 32 bit truncated floating point (`Double32_t`): 1 for the sign, 8 for the exponent and 23 for the mantissa.
+   - `d` : a 32 bit truncated floating point (`Double32_t`): 1 for the sign, 8 for the exponent and 23 for the mantissa. Can be customized with suffix `[min,max(,nbits)]`.
    - `L` : a 64 bit signed integer (`Long64_t`)
    - `l` : a 64 bit unsigned integer (`ULong64_t`)
    - `G` : a long signed integer, stored as 64 bit (`Long_t`)
@@ -133,7 +133,41 @@ It is strongly recommended to persistify those as objects rather than lists of l
   in an `Int_t` (/I) branch called `myArrSize`, the syntax for the `leaflist` string would
   be: `myArr[myArrSize]/d[0,twopi]`. Of course the number of bits could be specified,
   the standard rules of opaque typedefs annotation are valid. For example, if only
-  18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
+  18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`.
+  See TStreamerElement::GetRange for further details.
+
+  Examples of writing/reading plain C arrays with fixed or variable length into/from TTrees:
+
+~~~ {.cpp}
+   TTree *t = new TTree("t", "t");
+   int n;
+   Double32_t arr[64];
+   // Double32_t* arr = new Double32_t[64]; // equivalent, later just remember delete[]
+   t->Branch("n", &n);
+   t->Branch("arr", arr, "arr[n]/d[0,1,32]");
+   t->Branch("arr_def", arr, "arr_def[n]/d");
+   t->Branch("arr_fix", arr, "arr_fix[64]/d[0,1,32]");
+   t->Branch("arr_fix_def", arr, "arr_fix_def[64]/d");
+   t->Branch("single", arr, "single/d[0,1,32]");
+   t->Branch("single_def", arr, "single_def/d");
+   for (int j = 0; j < 64; ++j) {
+      arr[j] = 0.01 * j;
+   }
+   n = 3;
+   t->Fill();
+   // Reading now:
+   const auto nEntries = t->GetEntries();
+   t->Scan();
+   for (auto name : {"arr", "arr_def", "arr_fix", "arr_fix_def", "single", "single_def"}) {
+      t->ResetBranchAddresses();
+      t->SetBranchAddress("n", &n);
+      t->SetBranchAddress(name, arr);
+      for (Long64_t i = 0; i < nEntries; ++i) {
+         t->GetEntry(i);
+         // Work with arr
+      }
+   }
+~~~
 
 \anchor addingacolumnofstl
 ## Adding a column holding STL collection instances (e.g. std::vector or std::list)
