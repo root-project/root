@@ -4,6 +4,7 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TChain.h"
 
 #include "gtest/gtest.h"
 
