@@ -1,9 +1,9 @@
 void Run() {
 
-   gSystem->Load("./namespace");
-   gSystem->Load("./template");
-   gSystem->Load("./nstemplate");
-   gSystem->Load("./InheritMulti");
+   gSystem->Load("libIoNewClassNewInheritMulti");
+   gSystem->Load("libIoNewClassNewnamespace");
+   gSystem->Load("libIoNewClassNewtemplate");
+   gSystem->Load("libIoNewClassNewnstemplate");
 
 #ifdef ClingWorkAroundMissingDynamicScope
 #ifdef ClingWorkAroundFunctionForwardDeclarations
@@ -23,7 +23,7 @@ void Run() {
    namespace_driver();
    template_driver();
    nstemplate_driver();
-   
+
    if (! InheritMulti_driver() ) exit(1);
-#endif   
+#endif
 }
