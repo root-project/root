@@ -14,6 +14,7 @@
 
 #include "TROOT.h"
 #include "TSeqCollection.h" // needed in gROOT->GetListOfFiles()->FindObject
+#include "TEnv.h"
 
 #include <iostream>
 
@@ -71,7 +72,13 @@ RWebBrowserImp::~RWebBrowserImp()
 void RWebBrowserImp::ShowWarning()
 {
    static bool show_warn = true;
-   if (!show_warn) return;
+   if (!show_warn)
+      return;
+
+   TString value = gEnv->GetValue("WebGui.Warning", "yes");
+   if ((value != "yes") && (value != "1"))
+      return;
+
    show_warn = false;
 
    std::cout << "\n"
