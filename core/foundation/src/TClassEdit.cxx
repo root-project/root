@@ -1204,10 +1204,10 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       //we have 'something<'
       output.push_back(string(full,0,c - full.c_str()));
 
-      const char *cursor;
+      const char *cursor = c + 1;
       int level = 0;
       int parenthesis = 0;
-      for(cursor = c + 1; *cursor != '\0' && !(level==0 && *cursor == '>'); ++cursor) {
+      for ( ; *cursor != '\0' && !(level == 0 && parenthesis == 0 && *cursor == '>'); ++cursor) {
          if (*cursor == '(') {
             ++parenthesis;
             continue;
@@ -1284,7 +1284,8 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
    string result;
    result.reserve(strlen(typeDesc)*2);
-   int lev=0,kbl=1;
+   int kbl=1;
+   std::vector<char> parensStack;
    const char* c;
 
    for(c=typeDesc;*c;c++) {
@@ -1292,7 +1293,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
          if (kbl)       continue;
          if (!isalnum(c[ 1]) && c[ 1] !='_')    continue;
       }
-      if (kbl && (mode>=2 || lev==0)) { //remove "const' etc...
+      if (kbl && (mode>=2 || parensStack.empty())) { //remove "const' etc...
          int done = 0;
          size_t n = (mode) ? std::size(remove) : 1;
 
@@ -1315,8 +1316,10 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
       // '@' is special character used only the artifical class name used by ROOT to implement the
       // I/O customization rules that requires caching of the input data.
 
-      if (*c == '<' || *c == '(')   lev++;
-      if (lev==0 && !isalnum(*c)) {
+      if (*c == '<' || *c == '(')
+         parensStack.push_back(*c);
+      
+      if (parensStack.empty() && !isalnum(*c)) {
          if (!strchr("*&:._$ []-@",*c)) break;
          // '.' is used as a module/namespace separator by PyROOT, see
          // TPyClassGenerator::GetClass.
@@ -1325,7 +1328,10 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
       result += c[0];
 
-      if (*c == '>' || *c == ')')    lev--;
+      if (*c == '>' && !parensStack.empty() && parensStack.back() == '<')
+         parensStack.pop_back();
+      else if (*c == ')' && !parensStack.empty() && parensStack.back() == '(')
+         parensStack.pop_back();
    }
    if(tail) *tail=c;
    return result;
