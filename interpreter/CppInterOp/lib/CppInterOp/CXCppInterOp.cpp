@@ -1,4 +1,6 @@
 #include "clang-c/CXCppInterOp.h"
+#include "CppInterOp/CppInterOp.h"
+
 #include "Compatibility.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
@@ -7,7 +9,6 @@
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Interpreter/CppInterOp.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/STLExtras.h"
@@ -199,9 +200,7 @@ CXTypeKind cxtype_GetTypeKind(QualType T) {
     TKCASE(Elaborated);
     TKCASE(Pipe);
     TKCASE(Attributed);
-#if CLANG_VERSION_MAJOR >= 16
     TKCASE(BTFTagAttributed);
-#endif
     TKCASE(Atomic);
   default:
     return CXType_Unexposed;
@@ -572,7 +571,8 @@ bool clang_existsFunctionTemplate(const char* name, CXScope parent) {
 namespace Cpp {
 TCppScope_t InstantiateTemplate(compat::Interpreter& I, TCppScope_t tmpl,
                                 const TemplateArgInfo* template_args,
-                                size_t template_args_size);
+                                size_t template_args_size,
+                                bool instantiate_body = false);
 } // namespace Cpp
 
 CXScope clang_instantiateTemplate(CXScope tmpl,
@@ -598,12 +598,12 @@ void clang_deallocate(CXObject address) { ::operator delete(address); }
 
 namespace Cpp {
 void* Construct(compat::Interpreter& interp, TCppScope_t scope,
-                void* arena /*=nullptr*/);
+                void* arena /*=nullptr*/, TCppIndex_t count);
 } // namespace Cpp
 
-CXObject clang_construct(CXScope scope, void* arena) {
+CXObject clang_construct(CXScope scope, void* arena, size_t count) {
   return Cpp::Construct(*getInterpreter(scope),
-                        static_cast<void*>(getDecl(scope)), arena);
+                        static_cast<void*>(getDecl(scope)), arena, count);
 }
 
 void clang_invoke(CXScope func, void* result, void** args, size_t n,
@@ -614,9 +614,9 @@ void clang_invoke(CXScope func, void* result, void** args, size_t n,
 
 namespace Cpp {
 void Destruct(compat::Interpreter& interp, TCppObject_t This,
-              clang::Decl* Class, bool withFree);
+              clang::Decl* Class, bool withFree, size_t nary);
 } // namespace Cpp
 
-void clang_destruct(CXObject This, CXScope S, bool withFree) {
-  Cpp::Destruct(*getInterpreter(S), This, getDecl(S), withFree);
+void clang_destruct(CXObject This, CXScope S, bool withFree, size_t nary) {
+  Cpp::Destruct(*getInterpreter(S), This, getDecl(S), withFree, nary);
 }

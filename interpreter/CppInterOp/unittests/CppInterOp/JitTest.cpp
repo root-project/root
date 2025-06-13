@@ -1,6 +1,6 @@
 #include "Utils.h"
 
-#include "clang/Interpreter/CppInterOp.h"
+#include "CppInterOp/CppInterOp.h"
 
 #include "gtest/gtest.h"
 

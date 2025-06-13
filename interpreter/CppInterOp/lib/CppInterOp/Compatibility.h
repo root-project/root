@@ -99,48 +99,23 @@ namespace compat {
 
 using Interpreter = cling::Interpreter;
 
+class SynthesizingCodeRAII : public Interpreter::PushTransactionRAII {
+public:
+  SynthesizingCodeRAII(Interpreter* i) : Interpreter::PushTransactionRAII(i) {}
+};
+
 inline void maybeMangleDeclName(const clang::GlobalDecl& GD,
                                 std::string& mangledName) {
   cling::utils::Analyze::maybeMangleDeclName(GD, mangledName);
 }
 
-/// For Cling <= LLVM 16, this is a horrible hack obtaining the private
-/// llvm::orc::LLJIT by computing the object offsets in the cling::Interpreter
-/// instance(IncrementalExecutor): sizeof (m_Opts) + sizeof(m_LLVMContext). The
-/// IncrementalJIT and JIT itself have an offset of 0 as the first datamember.
-///
-/// The getExecutionEngine() interface has been added for Cling based on LLVM
-/// >=18 and should be used in future releases.
+/// The getExecutionEngine() interface was been added for Cling based on LLVM
+/// >=18. For previous versions, the LLJIT was obtained by computing the object
+/// offsets in the cling::Interpreter instance(IncrementalExecutor):
+/// sizeof (m_Opts) + sizeof(m_LLVMContext). The IncrementalJIT and JIT itself
+/// have an offset of 0 as the first datamember.
 inline llvm::orc::LLJIT* getExecutionEngine(cling::Interpreter& I) {
-#if CLANG_VERSION_MAJOR >= 18
   return I.getExecutionEngine();
-#endif
-
-  unsigned m_ExecutorOffset = 0;
-
-#if CLANG_VERSION_MAJOR == 13
-#ifdef __APPLE__
-  m_ExecutorOffset = 62;
-#else
-  m_ExecutorOffset = 72;
-#endif // __APPLE__
-#endif
-
-// Note: The offsets changed in Cling based on LLVM 16 with the introduction of
-// a thread safe context - llvm::orc::ThreadSafeContext
-#if CLANG_VERSION_MAJOR == 16
-#ifdef __APPLE__
-  m_ExecutorOffset = 68;
-#else
-  m_ExecutorOffset = 78;
-#endif // __APPLE__
-#endif
-
-  int* IncrementalExecutor =
-      ((int*)(const_cast<cling::Interpreter*>(&I))) + m_ExecutorOffset;
-  int* IncrementalJit = *(int**)IncrementalExecutor + 0;
-  int* LLJIT = *(int**)IncrementalJit + 0;
-  return *(llvm::orc::LLJIT**)LLJIT;
 }
 
 inline llvm::Expected<llvm::JITTargetAddress>
@@ -152,12 +127,8 @@ getSymbolAddress(cling::Interpreter& I, llvm::StringRef IRName) {
   llvm::orc::SymbolNameVector Names;
   llvm::orc::ExecutionSession& ES = Jit.getExecutionSession();
   Names.push_back(ES.intern(IRName));
-#if CLANG_VERSION_MAJOR < 16
-  return llvm::make_error<llvm::orc::SymbolsNotFound>(Names);
-#else
   return llvm::make_error<llvm::orc::SymbolsNotFound>(ES.getSymbolStringPool(),
                                                       std::move(Names));
-#endif // CLANG_VERSION_MAJOR
 }
 
 inline void codeComplete(std::vector<std::string>& Results,
@@ -238,9 +209,6 @@ namespace compat {
 
 inline std::unique_ptr<clang::Interpreter>
 createClangInterpreter(std::vector<const char*>& args) {
-#if CLANG_VERSION_MAJOR < 16
-  auto ciOrErr = clang::IncrementalCompilerBuilder::create(args);
-#else
   auto has_arg = [](const char* x, llvm::StringRef match = "cuda") {
     llvm::StringRef Arg = x;
     Arg = Arg.trim().ltrim('-');
@@ -270,15 +238,11 @@ createClangInterpreter(std::vector<const char*>& args) {
     DeviceCI = std::move(*devOrErr);
   }
   auto ciOrErr = CudaEnabled ? CB.CreateCudaHost() : CB.CreateCpp();
-#endif // CLANG_VERSION_MAJOR < 16
   if (!ciOrErr) {
     llvm::logAllUnhandledErrors(ciOrErr.takeError(), llvm::errs(),
                                 "Failed to build Incremental compiler:");
     return nullptr;
   }
-#if CLANG_VERSION_MAJOR < 16
-  auto innerOrErr = clang::Interpreter::create(std::move(*ciOrErr));
-#else
   (*ciOrErr)->LoadRequestedPlugins();
   if (CudaEnabled)
     DeviceCI->LoadRequestedPlugins();
@@ -286,7 +250,6 @@ createClangInterpreter(std::vector<const char*>& args) {
       CudaEnabled ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
                                                        std::move(DeviceCI))
                   : clang::Interpreter::create(std::move(*ciOrErr));
-#endif // CLANG_VERSION_MAJOR < 16
 
   if (!innerOrErr) {
     llvm::logAllUnhandledErrors(innerOrErr.takeError(), llvm::errs(),
@@ -333,29 +296,15 @@ inline void maybeMangleDeclName(const clang::GlobalDecl& GD,
   RawStr.flush();
 }
 
-// Clang 13 - Initial implementation of Interpreter and clang-repl
-// Clang 14 - Add new Interpreter methods: getExecutionEngine,
-//            getSymbolAddress, getSymbolAddressFromLinkerName
-// Clang 15 - Add new Interpreter methods: Undo
 // Clang 18 - Add new Interpreter methods: CodeComplete
 
 inline llvm::orc::LLJIT* getExecutionEngine(clang::Interpreter& I) {
-#if CLANG_VERSION_MAJOR >= 14
   auto* engine = &llvm::cantFail(I.getExecutionEngine());
   return const_cast<llvm::orc::LLJIT*>(engine);
-#else
-  assert(0 && "Not implemented in Clang <14!");
-  return nullptr;
-#endif
 }
 
 inline llvm::Expected<llvm::JITTargetAddress>
 getSymbolAddress(clang::Interpreter& I, llvm::StringRef IRName) {
-#if CLANG_VERSION_MAJOR < 14
-  assert(0 && "Not implemented in Clang <14!");
-  return llvm::createStringError(llvm::inconvertibleErrorCode(),
-                                 "Not implemented in Clang <14!");
-#endif // CLANG_VERSION_MAJOR < 14
 
   auto AddrOrErr = I.getSymbolAddress(IRName);
   if (llvm::Error Err = AddrOrErr.takeError())
@@ -373,7 +322,6 @@ getSymbolAddress(clang::Interpreter& I, clang::GlobalDecl GD) {
 inline llvm::Expected<llvm::JITTargetAddress>
 getSymbolAddressFromLinkerName(clang::Interpreter& I,
                                llvm::StringRef LinkerName) {
-#if CLANG_VERSION_MAJOR >= 14
   const auto& DL = getExecutionEngine(I)->getDataLayout();
   char GlobalPrefix = DL.getGlobalPrefix();
   std::string LinkerNameTmp(LinkerName);
@@ -384,21 +332,10 @@ getSymbolAddressFromLinkerName(clang::Interpreter& I,
   if (llvm::Error Err = AddrOrErr.takeError())
     return std::move(Err);
   return AddrOrErr->getValue();
-#else
-  assert(0 && "Not implemented in Clang <14!");
-  return llvm::createStringError(llvm::inconvertibleErrorCode(),
-                                 "Not implemented in Clang <14!");
-#endif
 }
 
 inline llvm::Error Undo(clang::Interpreter& I, unsigned N = 1) {
-#if CLANG_VERSION_MAJOR >= 15
   return I.Undo(N);
-#else
-  assert(0 && "Not implemented in Clang <15!");
-  return llvm::createStringError(llvm::inconvertibleErrorCode(),
-                                 "Not implemented in Clang <15!");
-#endif
 }
 
 inline void codeComplete(std::vector<std::string>& Results,
@@ -444,6 +381,20 @@ namespace Cpp_utils = Cpp::utils;
 
 namespace compat {
 using Interpreter = Cpp::Interpreter;
+
+class SynthesizingCodeRAII {
+private:
+  Interpreter* m_Interpreter;
+
+public:
+  SynthesizingCodeRAII(Interpreter* i) : m_Interpreter(i) {}
+  ~SynthesizingCodeRAII() {
+    auto GeneratedPTU = m_Interpreter->Parse("");
+    if (!GeneratedPTU)
+      llvm::logAllUnhandledErrors(GeneratedPTU.takeError(), llvm::errs(),
+                                  "Failed to generate PTU:");
+  }
+};
 }
 
 #endif // CPPINTEROP_USE_REPL
@@ -451,35 +402,14 @@ using Interpreter = Cpp::Interpreter;
 namespace compat {
 
 // Clang >= 14 change type name to string (spaces formatting problem)
-#if CLANG_VERSION_MAJOR >= 14
 inline std::string FixTypeName(const std::string type_name) {
   return type_name;
 }
-#else
-inline std::string FixTypeName(const std::string type_name) {
-  std::string result = type_name;
-  size_t pos = 0;
-  while ((pos = result.find(" [", pos)) != std::string::npos) {
-    result.erase(pos, 1);
-    pos++;
-  }
-  return result;
-}
-#endif
 
-// Clang >= 16 change CLANG_LIBDIR_SUFFIX to CLANG_INSTALL_LIBDIR_BASENAME
-#if CLANG_VERSION_MAJOR < 16
-#define CLANG_INSTALL_LIBDIR_BASENAME (llvm::Twine("lib") + CLANG_LIBDIR_SUFFIX)
-#endif
 inline std::string MakeResourceDir(llvm::StringRef Dir) {
   llvm::SmallString<128> P(Dir);
   llvm::sys::path::append(P, CLANG_INSTALL_LIBDIR_BASENAME, "clang",
-#if CLANG_VERSION_MAJOR < 16
-                          CLANG_VERSION_STRING
-#else
-                          CLANG_VERSION_MAJOR_STRING
-#endif
-  );
+                          CLANG_VERSION_MAJOR_STRING);
   return std::string(P.str());
 }
 
