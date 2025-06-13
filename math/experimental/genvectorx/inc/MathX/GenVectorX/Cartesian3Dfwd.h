@@ -8,12 +8,8 @@
 
 namespace ROOT_MATH_ARCH {
 
-namespace Math {
-
 template <class T>
 class Cartesian3D;
-
-} // end namespace Math
 
 } // namespace ROOT_MATH_ARCH
 

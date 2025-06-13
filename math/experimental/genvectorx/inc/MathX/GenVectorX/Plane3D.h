@@ -24,7 +24,7 @@
 
 namespace ROOT {
 
-namespace Math {
+namespace ROOT_MATH_ARCH {
 
 namespace Impl {
 
@@ -304,7 +304,7 @@ std::ostream &operator<<(std::ostream &os, const Plane3D<T> &p)
 typedef Impl::Plane3D<double> Plane3D;
 typedef Impl::Plane3D<float> Plane3DF;
 
-} // end namespace Math
+} // end namespace ROOT_MATH_ARCH
 
 } // end namespace ROOT
 
