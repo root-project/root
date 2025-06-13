@@ -1,0 +1,111 @@
+From 700fee6e7b6c732745912e58876f4ebe317c146b Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Wed, 11 Jun 2025 21:34:39 +0200
+Subject: [PATCH] [CPyCppyy] Correct check for temporaries in Python 3.14
+
+According to the Python release notes, the correct way to check for
+temporaries is to use the new
+[PyUnstable_Object_IsUniqueReferencedTemporary()](https://docs.python.org/3.14/c-api/object.html#c.PyUnstable_Object_IsUniqueReferencedTemporary).
+
+See in particular the "Porting to Python 3.14" section in the release
+notes:
+https://docs.python.org/3.14/whatsnew/3.14.html#id12
+
+This fixes several failures in the `cppyy/test/test_cpp11features.py`
+test with Python 3.14.
+
+Tested locally with a Python 3.14 build.
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/CPPOverload.h  |  4 ++++
+ bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx | 11 +++++++++--
+ bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx  |  9 +++++++--
+ 3 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/CPPOverload.h b/bindings/pyroot/cppyy/CPyCppyy/src/CPPOverload.h
+index e2548173f2a..8bd3b2de234 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/CPPOverload.h
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/CPPOverload.h
+@@ -25,7 +25,11 @@ inline uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
+     // improved overloads for implicit conversions
+         PyObject* pyobj = CPyCppyy_PyArgs_GET_ITEM(args, i);
+         hash += (uint64_t)Py_TYPE(pyobj);
++#if PY_VERSION_HEX >= 0x030e0000
++        hash += (uint64_t)(PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1 : 0);
++#else
+         hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
++#endif
+         hash += (hash << 10); hash ^= (hash >> 6);
+     }
+ 
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+index 84a3d8b8e68..d0013b6d384 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+@@ -61,6 +61,9 @@ namespace CPyCppyy {
+     static std::regex s_fnptr("\\((\\w*:*)*\\*&*\\)");
+ }
+ 
++// Define our own PyUnstable_Object_IsUniqueReferencedTemporary function if the
++// Python version is lower than 3.14, the version where that function got introduced.
++#if PY_VERSION_HEX < 0x030e0000
+ #if PY_VERSION_HEX < 0x03000000
+ const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 1;
+ #elif PY_VERSION_HEX < 0x03080000
+@@ -73,6 +76,10 @@ const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 2;
+ // since py3.8, vector calls behave again as expected
+ const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 1;
+ #endif
++inline bool PyUnstable_Object_IsUniqueReferencedTemporary(PyObject *pyobject) {
++    return Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF;
++}
++#endif
+ 
+ //- pretend-ctypes helpers ---------------------------------------------------
+ struct CPyCppyy_tagCDataObject {       // non-public (but stable)
+@@ -2117,7 +2124,7 @@ bool CPyCppyy::STLStringMoveConverter::SetArg(
+         if (pyobj->fFlags & CPPInstance::kIsRValue) {
+             pyobj->fFlags &= ~CPPInstance::kIsRValue;
+             moveit_reason = 2;
+-        } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
++        } else if (PyUnstable_Object_IsUniqueReferencedTemporary(pyobject)) {
+             moveit_reason = 1;
+         } else
+             moveit_reason = 0;
+@@ -2354,7 +2361,7 @@ bool CPyCppyy::InstanceMoveConverter::SetArg(
+     if (pyobj->fFlags & CPPInstance::kIsRValue) {
+         pyobj->fFlags &= ~CPPInstance::kIsRValue;
+         moveit_reason = 2;
+-    } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
++    } else if (PyUnstable_Object_IsUniqueReferencedTemporary(pyobject)) {
+         moveit_reason = 1;
+     }
+ 
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+index b2193890933..2dcfc52b29d 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Pythonize.cxx
+@@ -551,14 +551,19 @@ static PyObject* vector_iter(PyObject* v) {
+     vectoriterobject* vi = PyObject_GC_New(vectoriterobject, &VectorIter_Type);
+     if (!vi) return nullptr;
+ 
+-    Py_INCREF(v);
+     vi->ii_container = v;
+ 
+ // tell the iterator code to set a life line if this container is a temporary
+     vi->vi_flags = vectoriterobject::kDefault;
+-    if (Py_REFCNT(v) <= 2 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
++#if PY_VERSION_HEX >= 0x030e0000
++    if (PyUnstable_Object_IsUniqueReferencedTemporary(v) || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
++#else
++    if (Py_REFCNT(v) <= 1 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
++#endif
+         vi->vi_flags = vectoriterobject::kNeedLifeLine;
+ 
++    Py_INCREF(v);
++
+     PyObject* pyvalue_type = PyObject_GetAttr((PyObject*)Py_TYPE(v), PyStrings::gValueType);
+     if (pyvalue_type) {
+         PyObject* pyvalue_size = GetAttrDirect((PyObject*)Py_TYPE(v), PyStrings::gValueSize);
+-- 
+2.49.0
+

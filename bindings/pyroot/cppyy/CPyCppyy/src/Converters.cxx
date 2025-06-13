@@ -130,15 +130,17 @@ struct CPyCppyy_tagPyCArgObject {      // not public (but stable; note that olde
 #define ct_c_fcomplex   21
 #define ct_c_complex    22
 #define ct_c_pointer    23
-#define ct_c_int16      24
-#define ct_c_int32      25
-#define NTYPES          26
+#define ct_c_funcptr    24
+#define ct_c_int16      25
+#define ct_c_int32      26
+#define NTYPES          27
 
 static std::array<const char*, NTYPES> gCTypesNames = {
     "c_bool", "c_char", "c_wchar", "c_byte", "c_ubyte", "c_short", "c_ushort", "c_uint16",
     "c_int", "c_uint", "c_uint32", "c_long", "c_ulong", "c_longlong", "c_ulonglong",
     "c_float", "c_double", "c_longdouble",
-    "c_char_p", "c_wchar_p", "c_void_p", "c_fcomplex", "c_complex", "_Pointer" };
+    "c_char_p", "c_wchar_p", "c_void_p", "c_fcomplex", "c_complex",
+    "_Pointer", "_CFuncPtr" };
 static std::array<PyTypeObject*, NTYPES> gCTypesTypes;
 static std::array<PyTypeObject*, NTYPES> gCTypesPtrTypes;
 
@@ -2698,6 +2700,12 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
             if (fptr) return fptr;
         }
         // fall-through, with calling through Python
+    }
+
+    if (PyObject_IsInstance(pyobject, (PyObject*)GetCTypesType(ct_c_funcptr))) {
+    // ctypes function pointer
+        void* fptr = *(void**)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;
+        return fptr;
     }
 
     if (PyCallable_Check(pyobject)) {
