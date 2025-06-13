@@ -345,6 +345,9 @@ file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} etc/*)
 # Exclude the *.in files, just like in the install tree
 list(FILTER artifact_files EXCLUDE REGEX "\.(in)$")
 
+# Exclude etc/notebook/JsMVA
+list(FILTER artifact_files EXCLUDE REGEX "^etc/notebook/JsMVA/")
+
 foreach(artifact_file ${artifact_files})
   add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
@@ -625,6 +628,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
                          ${DIR_PERMISSIONS}
+                         PATTERN "notebook/JsMVA" EXCLUDE
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE

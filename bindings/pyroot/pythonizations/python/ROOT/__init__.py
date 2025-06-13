@@ -180,7 +180,7 @@ if _is_ipython:
     ip = get_ipython()
     if hasattr(ip, "kernel"):
         import JupyROOT
-        from . import JsMVA
+        # from . import JsMVA
 
 # Register cleanup
 import atexit
