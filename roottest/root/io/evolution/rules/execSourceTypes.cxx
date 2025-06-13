@@ -432,7 +432,7 @@ void CopyTo(const TList &input, std::list<std::string> &output)
 
 // Objects
 #pragma read sourceClass="Old" targetClass="New" source="A fValueB" target="fValueB" version="[1-]" \
-   code="{ examine(onfile.fValueB); examine(*(B*)&(onfile.fValueB)); fValueB.f = onfile.fValueB.f; }"
+   code="{ examine(onfile.fValueB); /* examine(*(B*)&(onfile.fValueB)); */ fValueB.f = onfile.fValueB.f; }"
 #pragma read sourceClass="Old" targetClass="New" source="B fValueC" target="fValueC" version="[1-]" \
    code="{ examine(onfile.fValueC); examine(*(B*)&(onfile.fValueC)); fValueC.f = onfile.fValueC.f; }"
 // We need a test checking in the case of 2 rules that applies to the same version and has the same input but different type, one or both the rules are rejected.

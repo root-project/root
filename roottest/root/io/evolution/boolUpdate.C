@@ -4,9 +4,12 @@ struct MyClass {
 
 #include "TFile.h"
 
-void boolUpdate() {
-   TFile *file = new TFile("boolUpdate.root","UPDATE");
+void boolUpdate()
+{
+   TFile *file = TFile::Open("boolUpdate.root","UPDATE");
    MyClass *m = new MyClass;
-   file->WriteObject(m,"myobject");
+   file->WriteObject(m, "myobject");
    file->Write();
+   file->ls();
+   delete file;
 }

@@ -1,10 +1,10 @@
 void
 Test(bool useTree=true, bool useObj = true)
 {
-  gSystem->Load("libTestv1");
+  gSystem->Load("libRoottestIoEvolutionPragmaV1");
 
   TFile* file = TFile::Open("test.root", "RECREATE");
-  if (!file) { 
+  if (!file) {
     Error("Test", "Failed to open file");
     return;
   }
