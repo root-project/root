@@ -314,7 +314,7 @@ add_custom_command(OUTPUT ${stamp_file}
 
 
 #---Copy files to the build area at build time---------------------------------
-set(directories_to_copy etc test icons fonts macros tutorials)
+set(directories_to_copy test icons fonts macros tutorials)
 if(http)
   list(APPEND directories_to_copy js)
 endif()
@@ -336,6 +336,25 @@ foreach(dir_to_copy ${directories_to_copy})
       COMMENT "Copy ${dir_to_copy}"
       DEPENDS ${artifacts_in})
 endforeach()
+
+#---Copy etc/* files individually to the build area at build time---------------------------------
+# The reason why we don't copy these files with copy_directory as above is that
+# we want to exclude a subset of the files.
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} etc/*)
+
+# Exclude the *.in files, just like in the install tree
+list(FILTER artifact_files EXCLUDE REGEX "\.(in)$")
+
+foreach(artifact_file ${artifact_files})
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+    DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+  list(APPEND all_artifacts ${CMAKE_BINARY_DIR}/${artifact_file})
+endforeach()
+
+unset(artifact_files)
+
 
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
 
