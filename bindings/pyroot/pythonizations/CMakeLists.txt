@@ -71,12 +71,12 @@ list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
 set(py_sources
-  ROOT/JsMVA/DataLoader.py
-  ROOT/JsMVA/Factory.py
-  ROOT/JsMVA/JPyInterface.py
-  ROOT/JsMVA/JsMVAMagic.py
-  ROOT/JsMVA/OutputTransformer.py
-  ROOT/JsMVA/__init__.py
+  #ROOT/JsMVA/DataLoader.py
+  #ROOT/JsMVA/Factory.py
+  #ROOT/JsMVA/JPyInterface.py
+  #ROOT/JsMVA/JsMVAMagic.py
+  #ROOT/JsMVA/OutputTransformer.py
+  #ROOT/JsMVA/__init__.py
   ROOT/_application.py
   ROOT/_asan.py
   ROOT/_facade.py
