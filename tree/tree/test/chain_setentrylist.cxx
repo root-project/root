@@ -158,3 +158,30 @@ TEST(TChain, SetEntryListSyncWrongNumberOfSubLists) {
    gSystem->Unlink(filename1);
    gSystem->Unlink(filename2);
 }
+
+TEST(TTree, SetEntryListPreUsed)
+{
+   // https://github.com/root-project/root/issues/13338
+   // Define and fill an entry list 
+   TEntryList entryList;
+   const std::vector<long long int> entries {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+   for (long long int entry : entries)
+      entryList.Enter(entry);
+   // Read tree
+   TTree tree("t", "t");
+   unsigned int x1;
+   tree.Branch("x1", &x1);
+   unsigned int NEntries = 100;
+   for (unsigned int iEntry = 0; iEntry < NEntries; iEntry++) {
+      x1 = iEntry;
+      tree.Fill();
+   }
+   // On purpose get entry 15 before setting entry list for tree 
+   entryList.GetEntry(15);
+   tree.SetEntryList(&entryList);
+   // Check results
+   for (long long int entry : entries) {
+      EXPECT_EQ(tree.GetEntryNumber(entry), entry);
+      EXPECT_EQ(tree.GetEntryNumber(entry), entry);
+   }
+}
