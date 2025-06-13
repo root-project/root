@@ -162,9 +162,9 @@ TEST(TChain, SetEntryListSyncWrongNumberOfSubLists) {
 TEST(TTree, SetEntryListPreUsed)
 {
    // https://github.com/root-project/root/issues/13338
-   // Define and fill an entry list 
+   // Define and fill an entry list
    TEntryList entryList;
-   const std::vector<long long int> entries {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+   const std::vector<long long int> entries{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
    for (long long int entry : entries)
       entryList.Enter(entry);
    // Read tree
@@ -176,7 +176,7 @@ TEST(TTree, SetEntryListPreUsed)
       x1 = iEntry;
       tree.Fill();
    }
-   // On purpose get entry 15 before setting entry list for tree 
+   // On purpose get entry 15 before setting entry list for tree
    entryList.GetEntry(15);
    tree.SetEntryList(&entryList);
    // Check results
