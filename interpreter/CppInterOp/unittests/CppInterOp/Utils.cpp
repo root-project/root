@@ -1,14 +1,11 @@
 #include "Utils.h"
 
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/FileSystem.h"
-#include "llvm/Support/Path.h"
+#include "CppInterOp/CppInterOp.h"
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Interpreter/CppInterOp.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 

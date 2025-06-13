@@ -291,7 +291,8 @@ emmake make -j $(nproc --all) install
 ## Xeus-cpp-lite Wasm Build Instructions
 
 A project which makes use of the wasm build of CppInterOp is xeus-cpp. xeus-cpp is a C++ Jupyter kernel. Assuming you are in  
-the CppInterOp build folder, you can build the wasm version of xeus-cpp by executing  
+the CppInterOp build folder, you can build the wasm version of xeus-cpp by executing (replace $LLVM_VERSION with the version
+of llvm you are building against)
 
 ```bash
 cd ../..
@@ -305,6 +306,7 @@ emcmake cmake \
           -DCMAKE_INSTALL_PREFIX=$PREFIX                                 \
           -DXEUS_CPP_EMSCRIPTEN_WASM_BUILD=ON                            \
           -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON                         \
+          -DXEUS_CPP_RESOURCE_DIR=$LLVM_BUILD_DIR/lib/clang/$LLVM_VERSION \
           -DSYSROOT_PATH=$SYSROOT_PATH                                   \
           ..
  emmake make -j $(nproc --all) install
@@ -314,10 +316,15 @@ To build Jupyter Lite website with this kernel locally that you can use for test
 
 ```bash
 cd ../..
-micromamba create -n xeus-lite-host jupyterlite-core -c conda-forge
+micromamba create -n xeus-lite-host jupyterlite-core=0.6 jupyterlite-xeus jupyter_server jupyterlab notebook python-libarchive-c -c conda-forge
 micromamba activate xeus-lite-host
-python -m pip install jupyterlite-xeus jupyter_server
-jupyter lite build --XeusAddon.prefix=$PREFIX --contents xeus-cpp/notebooks/xeus-cpp-lite-demo.ipynb
+jupyter lite build --XeusAddon.prefix=$PREFIX \
+                   --contents xeus-cpp/notebooks/xeus-cpp-lite-demo.ipynb \
+                   --contents xeus-cpp/notebooks/smallpt.ipynb \
+                   --contents xeus-cpp/notebooks/images/marie.png \
+                   --contents xeus-cpp/notebooks/audio/audio.wav \
+                   --XeusAddon.mounts="$PREFIX/share/xeus-cpp/tagfiles:/share/xeus-cpp/tagfiles" \
+                   --XeusAddon.mounts="$PREFIX/etc/xeus-cpp/tags.d:/etc/xeus-cpp/tags.d"
 ```
 
 Once the Jupyter Lite site has built you can test the website locally by executing

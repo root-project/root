@@ -1,10 +1,11 @@
-#include "gtest/gtest.h"
+#include "CppInterOp/CppInterOp.h"
 
 #include "clang/Basic/Version.h"
-#include "clang/Interpreter/CppInterOp.h"
 
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
+
+#include "gtest/gtest.h"
 
 // This function isn't referenced outside its translation unit, but it
 // can't use the "static" keyword because its address is used for

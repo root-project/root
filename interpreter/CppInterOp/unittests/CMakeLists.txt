@@ -11,7 +11,6 @@ if(EMSCRIPTEN)
   set(gtest_libs gtest gmock)
 else()
   set(gtest_libs gtest gtest_main)
-  # Clang prior than clang13 (I think) merges both gmock into gtest.
   if (TARGET gmock)
     list(APPEND gtest_libs gmock gmock_main)
   endif()
