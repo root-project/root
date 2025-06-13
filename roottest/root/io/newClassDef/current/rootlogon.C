@@ -1,3 +1,0 @@
-{
-   gSystem->Load("libRIO");
-}
