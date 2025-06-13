@@ -33,7 +33,7 @@ message(STATUS "Experimental GenVectorX")
       MathCore
   )
  
-  add_sycl_library_to_root_target(
+  add_sycl_to_root_target(
     TARGET 
       GenVectorSYCL 
     SOURCES 
