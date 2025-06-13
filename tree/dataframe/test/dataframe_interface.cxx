@@ -95,7 +95,7 @@ TEST(RDataFrameInterface, CreateFromNonExistingTree)
 
 TEST(RDataFrameInterface, CreateFromGlob)
 {
-   EXPECT_THROW(RDataFrame("t", "f[0-9].root"), std::invalid_argument);
+   EXPECT_THROW(RDataFrame("t", "globTest_invalid_[0-9].root"), std::invalid_argument);
    TreeInFileRAII f1("globTest_1.root");
    TreeInFileRAII f2("globTest_2.root");
    RDataFrame("t", "globTest_[1-9].root");
