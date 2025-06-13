@@ -138,7 +138,7 @@ static inline void sync_templates(
     PyObject* pyclass, const std::string& mtCppName, const std::string& mtName)
 {
     PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
-    PyObject* pyname = CPyCppyy_PyText_InternFromString(const_cast<char*>(mtName.c_str()));
+    PyObject* pyname = CPyCppyy_PyText_FromString(const_cast<char*>(mtName.c_str()));
     PyObject* attr = PyObject_GetItem(dct, pyname);
     if (!attr) PyErr_Clear();
     Py_DECREF(dct);

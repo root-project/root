@@ -205,6 +205,8 @@ namespace Cppyy {
     RPY_EXPORTED
     bool        ExistsMethodTemplate(TCppScope_t scope, const std::string& name);
     RPY_EXPORTED
+    bool        IsStaticTemplate(TCppScope_t scope, const std::string& name);
+    RPY_EXPORTED
     bool        IsMethodTemplate(TCppScope_t scope, TCppIndex_t imeth);
     RPY_EXPORTED
     TCppMethod_t GetMethodTemplate(
