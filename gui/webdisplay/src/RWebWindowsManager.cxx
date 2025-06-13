@@ -129,13 +129,18 @@ void RWebWindowsManager::AssignMainThrd()
 void RWebWindowsManager::SetLoopbackMode(bool on)
 {
    gWebWinLoopbackMode = on;
+   bool print_warning = RWebWindowWSHandler::GetBoolEnv("WebGui.Warning", 1) == 1;
    if (!on) {
-      printf("\nWARNING!\n");
-      printf("Disabling loopback mode may leads to security problem.\n");
-      printf("See https://root.cern/about/security/ for more information.\n\n");
+      if (print_warning) {
+         printf("\nWARNING!\n");
+         printf("Disabling loopback mode may leads to security problem.\n");
+         printf("See https://root.cern/about/security/ for more information.\n\n");
+      }
       if (!gWebWinUseSessionKey) {
-         printf("Enforce session key to safely work on public network.\n");
-         printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
+         if (print_warning) {
+            printf("Enforce session key to safely work on public network.\n");
+            printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
+         }
          gWebWinUseSessionKey = true;
       }
    }
