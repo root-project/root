@@ -24,6 +24,7 @@ add_cppinterop_unittest(CppInterOpTests
 )
 
 if(EMSCRIPTEN)
+  string(REPLACE "@" "@@" ESCAPED_SYSROOT_PATH "${SYSROOT_PATH}")
   # Explanation of Emscripten-specific link flags for CppInterOpTests:
   #
   # MAIN_MODULE=1:
@@ -55,7 +56,7 @@ if(EMSCRIPTEN)
     PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
     PUBLIC "SHELL: -s STACK_SIZE=32mb"
     PUBLIC "SHELL: -s INITIAL_MEMORY=128mb"
-    PUBLIC "SHELL: --preload-file ${SYSROOT_PATH}/include@/include"
+    PUBLIC "SHELL: --preload-file ${ESCAPED_SYSROOT_PATH}/include@/include"
     PUBLIC "SHELL: --emrun"
   )
 endif()
@@ -96,6 +97,8 @@ target_link_libraries(DynamicLibraryManagerTests
 )
 
 if(EMSCRIPTEN)
+  set(TEST_SHARED_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/TestSharedLib/unittests/bin/Release/")
+  string(REPLACE "@" "@@" ESCAPED_TEST_SHARED_LIBRARY_PATH "${TEST_SHARED_LIBRARY_PATH}")
   # Check explanation of Emscripten-specific link flags for CppInterOpTests above for DynamicLibraryManagerTests as well.
   target_link_options(DynamicLibraryManagerTests
     PUBLIC "SHELL: -s MAIN_MODULE=1"
@@ -103,9 +106,9 @@ if(EMSCRIPTEN)
     PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
     PUBLIC "SHELL: -s STACK_SIZE=32mb"
     PUBLIC "SHELL: -s INITIAL_MEMORY=128mb"
-    PUBLIC "SHELL: --preload-file ${SYSROOT_PATH}/include@/include"
+    PUBLIC "SHELL: --preload-file ${ESCAPED_SYSROOT_PATH}/include@/include"
     PUBLIC "SHELL: --emrun"
-    PUBLIC "SHELL: --preload-file ${CMAKE_CURRENT_BINARY_DIR}/TestSharedLib/unittests/bin/Release/libTestSharedLib.so@/libTestSharedLib.so"
+    PUBLIC "SHELL: --preload-file ${ESCAPED_TEST_SHARED_LIBRARY_PATH}/libTestSharedLib.so@/libTestSharedLib.so"
   )
 endif()
 
