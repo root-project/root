@@ -91,7 +91,9 @@ void Rotation3D::Rectify()
    // Step 5 -- The new matrix is A * N
 
    double mA[9];
-   std::copy(fM, &fM[9], mA);
+   for (size_t i = 0; i < 9; i++) {
+      mA[i] = fM[i];
+   }
 
    fM[kXX] = mA[kXX] * n11 + mA[kXY] * n12 + mA[kXZ] * n13;
    fM[kXY] = mA[kXX] * n12 + mA[kXY] * n22 + mA[kXZ] * n23;
