@@ -1,14 +1,16 @@
 #ifndef CPPINTEROP_UNITTESTS_LIBCPPINTEROP_UTILS_H
 #define CPPINTEROP_UNITTESTS_LIBCPPINTEROP_UTILS_H
 
-#include "../../lib/Interpreter/Compatibility.h"
+#include "../../lib/CppInterOp/Compatibility.h"
+
+#include "clang-c/CXCppInterOp.h"
+#include "clang-c/CXString.h"
 
 #include "llvm/Support/Valgrind.h"
+
 #include <memory>
 #include <string>
 #include <vector>
-#include "clang-c/CXCppInterOp.h"
-#include "clang-c/CXString.h"
 
 using namespace clang;
 using namespace llvm;

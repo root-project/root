@@ -1,6 +1,6 @@
 #include "Utils.h"
 
-#include "clang/Interpreter/CppInterOp.h"
+#include "CppInterOp/CppInterOp.h"
 #include "clang-c/CXCppInterOp.h"
 
 #include "clang/AST/ASTContext.h"
@@ -789,7 +789,10 @@ TEST(ScopeReflectionTest, GetAllCppNames) {
     }
   )";
 
-  GetAllTopLevelDecls(code, Decls);
+  std::vector<const char*> interpreter_args = {"-Wno-inaccessible-base"};
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      interpreter_args);
 
   auto test_get_all_cpp_names =
       [](Decl* D, const std::vector<std::string>& truth_names) {
@@ -859,14 +862,10 @@ template<class T> constexpr T pi = T(3.1415926535897932385L);
   auto* VD = cast<VarTemplateSpecializationDecl>((Decl*)Instance1);
   VarTemplateDecl* VDTD1 = VD->getSpecializedTemplate();
   EXPECT_TRUE(VDTD1->isThisDeclarationADefinition());
-#if CLANG_VERSION_MAJOR > 13
 #if CLANG_VERSION_MAJOR <= 18
   TemplateArgument TA1 = (*VD->getTemplateArgsInfo())[0].getArgument();
 #else
   TemplateArgument TA1 = (*VD->getTemplateArgsAsWritten())[0].getArgument();
-#endif // CLANG_VERSION_MAJOR
-#else
-  TemplateArgument TA1 = VD->getTemplateArgsInfo()[0].getArgument();
 #endif // CLANG_VERSION_MAJOR
   EXPECT_TRUE(TA1.getAsType()->isIntegerType());
 }
