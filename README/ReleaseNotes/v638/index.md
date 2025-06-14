@@ -50,6 +50,11 @@ RooAbsData *dataForChan = found != splits.end() ? found->get() : nullptr;
 // ... do something with channelData ...
 ```
 
+### RooCrystalBall alternative
+
+- A [simpler alternative](http://arxiv.org/abs/1603.08591v1) to RooCrystalBall using a Gaussian with exponential tails has been implemented: `class RooGaussExpTails`.
+
+
 ## RDataFrame
 - Memory savings in RDataFrame: When many Histo3D are filled in RDataFrame, the memory consumption in multi-threaded runs can be prohibitively large, because
   RDF uses one copy of each histogram per thread. Now, RDataFrame can reduce the number of clones using `ROOT::RDF::Experimental::ThreadsPerTH3()`. Setting this
