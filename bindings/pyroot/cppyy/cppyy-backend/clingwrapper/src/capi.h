@@ -99,6 +99,8 @@ extern "C" {
     RPY_EXPORTED
     int cppyy_is_namespace(cppyy_scope_t scope);
     RPY_EXPORTED
+    int cppyy_is_static_template(cppyy_scope_t scope, const char* name);
+    RPY_EXPORTED
     int cppyy_is_template(const char* template_name);
     RPY_EXPORTED
     int cppyy_is_abstract(cppyy_type_t type);

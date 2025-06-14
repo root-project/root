@@ -1,8 +1,8 @@
-From 5ad12352dd0f73a082dc0c6eafbb9537c4ecf3e2 Mon Sep 17 00:00:00 2001
+From a096283d170ce4352ef854730cd501a0e094bf59 Mon Sep 17 00:00:00 2001
 From: Aaron Jomy <aaronjomyjoseph@gmail.com>
 Date: Thu, 24 Apr 2025 13:53:03 +0200
-Subject: [PATCH 1/1] Add converters and low-level views for fixed width
- integers
+Subject: [PATCH] [cppyy] Add converters and low-level views for fixed width
+ types
 
 ---
  .../pyroot/cppyy/CPyCppyy/src/CallContext.h   |  4 ++
@@ -13,7 +13,7 @@ Subject: [PATCH 1/1] Add converters and low-level views for fixed width
  5 files changed, 108 insertions(+), 1 deletion(-)
 
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/CallContext.h b/bindings/pyroot/cppyy/CPyCppyy/src/CallContext.h
-index fc6a43b159..c9a19d823c 100644
+index fc6a43b159b..c9a19d823c1 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/CallContext.h
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/CallContext.h
 @@ -22,7 +22,11 @@ struct Parameter {
@@ -29,21 +29,21 @@ index fc6a43b159..c9a19d823c 100644
          unsigned short       fUShort;
          int                  fInt;
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-index 4cef37e74e..84a3d8b8e6 100644
+index cb534ae4c60..e38b34085c7 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-@@ -123,7 +123,9 @@ struct CPyCppyy_tagPyCArgObject {      // not public (but stable; note that olde
- #define ct_c_fcomplex   21
+@@ -131,7 +131,9 @@ struct CPyCppyy_tagPyCArgObject {      // not public (but stable; note that olde
  #define ct_c_complex    22
  #define ct_c_pointer    23
--#define NTYPES          24
-+#define ct_c_int16      24
-+#define ct_c_int32      25
-+#define NTYPES          26
+ #define ct_c_funcptr    24
+-#define NTYPES          25
++#define ct_c_int16      25
++#define ct_c_int32      26
++#define NTYPES          27
  
  static std::array<const char*, NTYPES> gCTypesNames = {
      "c_bool", "c_char", "c_wchar", "c_byte", "c_ubyte", "c_short", "c_ushort", "c_uint16",
-@@ -387,6 +389,10 @@ static inline type CPyCppyy_PyLong_As##name(PyObject* pyobject)              \
+@@ -396,6 +398,10 @@ static inline type CPyCppyy_PyLong_As##name(PyObject* pyobject)              \
  
  CPPYY_PYLONG_AS_TYPE(UInt8,     uint8_t,        0,         UCHAR_MAX)
  CPPYY_PYLONG_AS_TYPE(Int8,      int8_t,         SCHAR_MIN, SCHAR_MAX)
@@ -54,7 +54,7 @@ index 4cef37e74e..84a3d8b8e6 100644
  CPPYY_PYLONG_AS_TYPE(UShort,    unsigned short, 0,         USHRT_MAX)
  CPPYY_PYLONG_AS_TYPE(Short,     short,          SHRT_MIN,  SHRT_MAX)
  CPPYY_PYLONG_AS_TYPE(StrictInt, int,            INT_MIN,   INT_MAX)
-@@ -782,6 +788,10 @@ CPPYY_IMPL_BASIC_CONST_CHAR_REFCONVERTER(UChar, unsigned char, c_uchar,        0
+@@ -791,6 +797,10 @@ CPPYY_IMPL_BASIC_CONST_CHAR_REFCONVERTER(UChar, unsigned char, c_uchar,        0
  CPPYY_IMPL_BASIC_CONST_REFCONVERTER(Bool,   bool,           c_bool,      CPyCppyy_PyLong_AsBool)
  CPPYY_IMPL_BASIC_CONST_REFCONVERTER(Int8,   int8_t,         c_int8,      CPyCppyy_PyLong_AsInt8)
  CPPYY_IMPL_BASIC_CONST_REFCONVERTER(UInt8,  uint8_t,        c_uint8,     CPyCppyy_PyLong_AsUInt8)
@@ -65,7 +65,7 @@ index 4cef37e74e..84a3d8b8e6 100644
  CPPYY_IMPL_BASIC_CONST_REFCONVERTER(Short,  short,          c_short,     CPyCppyy_PyLong_AsShort)
  CPPYY_IMPL_BASIC_CONST_REFCONVERTER(UShort, unsigned short, c_ushort,    CPyCppyy_PyLong_AsUShort)
  CPPYY_IMPL_BASIC_CONST_REFCONVERTER(Int,    int,            c_int,       CPyCppyy_PyLong_AsStrictInt)
-@@ -857,6 +867,10 @@ CPPYY_IMPL_REFCONVERTER(SChar,   c_byte,       signed char,        'b');
+@@ -866,6 +876,10 @@ CPPYY_IMPL_REFCONVERTER(SChar,   c_byte,       signed char,        'b');
  CPPYY_IMPL_REFCONVERTER(UChar,   c_ubyte,      unsigned char,      'B');
  CPPYY_IMPL_REFCONVERTER(Int8,    c_int8,       int8_t,             'b');
  CPPYY_IMPL_REFCONVERTER(UInt8,   c_uint8,      uint8_t,            'B');
@@ -76,7 +76,7 @@ index 4cef37e74e..84a3d8b8e6 100644
  CPPYY_IMPL_REFCONVERTER(Short,   c_short,      short,              'h');
  CPPYY_IMPL_REFCONVERTER(UShort,  c_ushort,     unsigned short,     'H');
  CPPYY_IMPL_REFCONVERTER_FROM_MEMORY(Int, c_int);
-@@ -1015,6 +1029,14 @@ CPPYY_IMPL_BASIC_CONVERTER_IB(
+@@ -1024,6 +1038,14 @@ CPPYY_IMPL_BASIC_CONVERTER_IB(
      Int8,  int8_t,  long, c_int8, PyInt_FromLong, CPyCppyy_PyLong_AsInt8,  'l')
  CPPYY_IMPL_BASIC_CONVERTER_IB(
      UInt8, uint8_t, long, c_uint8, PyInt_FromLong, CPyCppyy_PyLong_AsUInt8, 'l')
@@ -91,7 +91,7 @@ index 4cef37e74e..84a3d8b8e6 100644
  CPPYY_IMPL_BASIC_CONVERTER_IB(
      Short, short, long, c_short, PyInt_FromLong, CPyCppyy_PyLong_AsShort, 'l')
  CPPYY_IMPL_BASIC_CONVERTER_IB(
-@@ -1750,7 +1772,11 @@ CPPYY_IMPL_ARRAY_CONVERTER(UChar,    c_ubyte,      unsigned char,        'B', )
+@@ -1759,7 +1781,11 @@ CPPYY_IMPL_ARRAY_CONVERTER(UChar,    c_ubyte,      unsigned char,        'B', )
  CPPYY_IMPL_ARRAY_CONVERTER(Byte,     c_ubyte,      std::byte,            'B', )
  #endif
  CPPYY_IMPL_ARRAY_CONVERTER(Int8,     c_byte,       int8_t,               'b', _i8)
@@ -103,7 +103,7 @@ index 4cef37e74e..84a3d8b8e6 100644
  CPPYY_IMPL_ARRAY_CONVERTER(Short,    c_short,      short,                'h', )
  CPPYY_IMPL_ARRAY_CONVERTER(UShort,   c_ushort,     unsigned short,       'H', )
  CPPYY_IMPL_ARRAY_CONVERTER(Int,      c_int,        int,                  'i', )
-@@ -3466,9 +3492,21 @@ public:
+@@ -3481,9 +3507,21 @@ public:
          gf["int8_t"] =                      (cf_t)+[](cdims_t) { static Int8Converter c{};           return &c; };
          gf["const int8_t&"] =               (cf_t)+[](cdims_t) { static ConstInt8RefConverter c{};   return &c; };
          gf["int8_t&"] =                     (cf_t)+[](cdims_t) { static Int8RefConverter c{};        return &c; };
@@ -125,7 +125,7 @@ index 4cef37e74e..84a3d8b8e6 100644
          gf["short"] =                       (cf_t)+[](cdims_t) { static ShortConverter c{};          return &c; };
          gf["const short&"] =                (cf_t)+[](cdims_t) { static ConstShortRefConverter c{};  return &c; };
          gf["short&"] =                      (cf_t)+[](cdims_t) { static ShortRefConverter c{};       return &c; };
-@@ -3521,7 +3559,11 @@ public:
+@@ -3536,7 +3574,11 @@ public:
          gf["std::byte ptr"] =               (cf_t)+[](cdims_t d) { return new ByteArrayConverter{d}; };
  #endif
          gf["int8_t ptr"] =                  (cf_t)+[](cdims_t d) { return new Int8ArrayConverter{d}; };
@@ -138,7 +138,7 @@ index 4cef37e74e..84a3d8b8e6 100644
          gf["unsigned short ptr"] =          (cf_t)+[](cdims_t d) { return new UShortArrayConverter{d}; };
          gf["int ptr"] =                     (cf_t)+[](cdims_t d) { return new IntArrayConverter{d}; };
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
-index b3a4246045..71011ce6b5 100644
+index b3a4246045a..71011ce6b5f 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 @@ -87,7 +87,11 @@ CPPYY_DECLARE_BASIC_CONVERTER(WChar);
@@ -178,7 +178,7 @@ index b3a4246045..71011ce6b5 100644
  CPPYY_DECLARE_ARRAY_CONVERTER(UShort);
  CPPYY_DECLARE_ARRAY_CONVERTER(Int);
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx
-index c3f8aaf51f..3b0d48e9f1 100644
+index c3f8aaf51f8..3b0d48e9f1c 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx
 @@ -1200,3 +1200,43 @@ PyObject* CPyCppyy::CreateLowLevelView_i8(uint8_t** address, cdims_t shape) {
@@ -226,7 +226,7 @@ index c3f8aaf51f..3b0d48e9f1 100644
 +    CPPYY_RET_W_CREATOR(uint32_t**, CreateLowLevelView_i32);
 +}
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.h b/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.h
-index 4186ea0931..811af69e27 100644
+index 4186ea09317..811af69e278 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.h
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.h
 @@ -56,6 +56,15 @@ PyObject* CreateLowLevelView_i8(int8_t*,  cdims_t shape);
@@ -246,5 +246,5 @@ index 4186ea0931..811af69e27 100644
  CPPYY_DECL_VIEW_CREATOR(unsigned short);
  CPPYY_DECL_VIEW_CREATOR(int);
 -- 
-2.43.0
+2.49.0
 

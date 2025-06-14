@@ -1883,6 +1883,22 @@ bool Cppyy::ExistsMethodTemplate(TCppScope_t scope, const std::string& name)
     return false;
 }
 
+bool Cppyy::IsStaticTemplate(TCppScope_t scope, const std::string& name)
+{
+    TFunctionTemplate* tf = nullptr;
+    if (scope == (TCppScope_t)GLOBAL_HANDLE)
+        tf = gROOT->GetFunctionTemplate(name.c_str());
+    else {
+        TClassRef& cr = type_from_handle(scope);
+        if (cr.GetClass())
+            tf = cr->GetFunctionTemplate(name.c_str());
+    }
+
+    if (!tf) return false;
+
+    return (bool)(tf->Property() & kIsStatic);
+}
+
 bool Cppyy::IsMethodTemplate(TCppScope_t scope, TCppIndex_t idx)
 {
     TClassRef& cr = type_from_handle(scope);
@@ -2769,6 +2785,10 @@ int cppyy_is_templated_constructor(cppyy_scope_t scope, cppyy_index_t imeth) {
 
 int cppyy_exists_method_template(cppyy_scope_t scope, const char* name) {
     return (int)Cppyy::ExistsMethodTemplate(scope, name);
+}
+
+int cppyy_is_static_template(cppyy_scope_t scope, const char* name) {
+    return (int)Cppyy::IsStaticTemplate((Cppyy::TCppScope_t)scope, name);
 }
 
 int cppyy_method_is_template(cppyy_scope_t scope, cppyy_index_t idx) {
