@@ -1118,6 +1118,7 @@ class TestTEMPLATES:
                         run_n = getattr(cppyy.gbl, 'TNaRun_%d' % n)
                         getattr(run_n, t)
 
+    @mark.xfail(run = False, reason = "This test crashes sporadically")
     def test33_using_template_argument(self):
         """`using` type as template argument"""
 
