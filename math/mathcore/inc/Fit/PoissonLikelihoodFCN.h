@@ -124,7 +124,7 @@ public:
    }
 
    /// evaluate gradient
-   void Gradient(const double *x, double *g) const
+   virtual void Gradient(const double *x, double *g) const
    {
       // evaluate the Poisson gradient
       FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
@@ -192,7 +192,7 @@ private:
    }
 
    // for derivatives
-   double DoDerivative(const double * x, unsigned int icoord) const {
+   virtual double DoDerivative(const double * x, unsigned int icoord) const {
       Gradient(x, &fGrad[0]);
       return fGrad[icoord];
    }
