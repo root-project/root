@@ -94,16 +94,16 @@ Double_t RooGaussExpTails::analyticalIntegral(Int_t code, const char* rangeName)
    R__ASSERT(code == 1);
    double result = 0;
 
-   double sig = std::abs((Double_t)sigma_);
+   double sig = std::abs((Double_t)_sigma);
    double tmin = (_x.min(rangeName) - _x0) / sig;
    double tmax = (_x.max(rangeName) - _x0) / sig;
 
    if (tmin <= -_kL)
       result += tailIntegral(tmin, std::min(tmax, -_kL), _kL);
    if (tmin <= _kH && tmax > -_kL)
-      result += gaussianIntegral(std::max(tmin, -_kL), std::min(tmax, _kH));
+      result += gaussianIntegral(std::max(tmin, -_kL), std::min(tmax, +_kH));
    if (tmax > _kH)
-      result += tailIntegral(std::max(tmin, _kH), tmax, -_kH);
+      result += tailIntegral(std::max(tmin, +_kH), tmax, -_kH);
 
    return sig * result;
 }
