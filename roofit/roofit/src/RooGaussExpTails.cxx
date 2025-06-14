@@ -23,24 +23,24 @@ RooGaussExpTails::RooGaussExpTails(const char *name, const char *title,
                             RooAbsReal::Ref sigma,
                             RooAbsReal::Ref kL,
                             RooAbsReal::Ref kH) :
-     RooAbsPdf(name,title),
-     x_("x","x",this,_x),
-     x0_("x0","x0",this,_x0),
-     sigma_("sigma","sigma",this,_sigma),
-     kL_("kL","kL",this,_kL),
-     kH_("kH","kH",this,_kH)
+     RooAbsPdf(name, title),
+     _x("x", "x", this, x),
+     _x0("x0", "x0", this, x0),
+     _sigma("sigma", "sigma", this, sigma),
+     _kL("kL", "kL", this, kL),
+     _kH("kH", "kH", this, kH)
 {
 }
 
 
 //_____________________________________________________________________________
 RooGaussExpTails::RooGaussExpTails(const RooGaussExpTails& other, const char* name) :
-     RooAbsPdf(other,name),
-     x_("x",this,other.x_),
-     x0_("x0",this,other.x0_),
-     sigma_("sigma",this,other.sigma_),
-     kL_("kL",this,other.kL_),
-     kH_("kH",this,other.kH_)
+     RooAbsPdf(other, name),
+     _x("x",this,other._x),
+     _x0("x0", this, other._x0),
+     _sigma("sigma", this, other._sigma),
+     _kL("kL", this, other._kL),
+     _kH("kH", this, other._kH)
 {
 }
 
@@ -50,14 +50,14 @@ namespace {
 
 inline double gaussianIntegral(double tmin, double tmax)
 {
-   constexpr double m_sqrt_2_pi = 2.50662827463;//std::sqrt(TMath::TwoPi())
+   constexpr double m_sqrt_2_pi = 2.50662827463; // std::sqrt(TMath::TwoPi())
    return m_sqrt_2_pi*(ROOT::Math::gaussian_cdf(tmax) - ROOT::Math::gaussian_cdf(tmin));
 }
 
 inline double tailIntegral(double tmin, double tmax, double k)
 {
-   double a = std::exp(0.5*k*k)/k;
-   return (a*(std::exp(k*tmax)-std::exp(k*tmin)));
+   double a = std::exp(0.5 * k * k) / k;
+   return a * (std::exp(k * tmax) - std::exp(k * tmin));
 }
 
 } // namespace
@@ -67,21 +67,21 @@ inline double tailIntegral(double tmin, double tmax, double k)
 //_____________________________________________________________________________
 Double_t RooGaussExpTails::evaluate() const
 {
-   Double_t t=(x_-x0_)/sigma_;
+   Double_t t = (_x - _x0) / _sigma;
 
-   if (t<=-kL_)
-      return exp(0.5*kL_*kL_+kL_*t);
-   else if (t>kH_)
-      return exp(0.5*kH_*kH_-kH_*t);
+   if (t <= -_kL)
+      return std::exp(0.5 * _kL * _kL + _kL * t);
+   else if (t > _kH)
+      return std::exp(0.5 * _kH * _kH - _kH * t);
    else
-      return exp(-0.5*t*t);
+      return std::exp(-0.5 * t * t);
 }
 
 
 //_____________________________________________________________________________
 Int_t RooGaussExpTails::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
-   if( matchArgs(allVars,analVars,x_) )
+   if(matchArgs(allVars, analVars, _x))
       return 1;
 
    return 0;
@@ -95,15 +95,15 @@ Double_t RooGaussExpTails::analyticalIntegral(Int_t code, const char* rangeName)
    double result = 0;
 
    double sig = std::abs((Double_t)sigma_);
-   double tmin = (x_.min(rangeName)-x0_)/sig;
-   double tmax = (x_.max(rangeName)-x0_)/sig;
+   double tmin = (_x.min(rangeName) - _x0) / sig;
+   double tmax = (_x.max(rangeName) - _x0) / sig;
 
-   if (tmin <= -kL_)
-      result += tailIntegral(tmin, std::min(tmax, -kL_), kL_);
-   if (tmin <= kH_ && tmax > -kL_)
-      result += gaussianIntegral(std::max(tmin, -kL_), std::min(tmax, kH_));
-   if (tmax > kH_)
-      result += tailIntegral(std::max(tmin, kH_), tmax, -kH_);
+   if (tmin <= -_kL)
+      result += tailIntegral(tmin, std::min(tmax, -_kL), _kL);
+   if (tmin <= _kH && tmax > -_kL)
+      result += gaussianIntegral(std::max(tmin, -_kL), std::min(tmax, _kH));
+   if (tmax > _kH)
+      result += tailIntegral(std::max(tmin, _kH), tmax, -_kH);
 
-   return sig*result;
+   return sig * result;
 }
