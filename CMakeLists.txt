@@ -555,6 +555,8 @@ if(runtime_cxxmodules)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
+
+  install(FILES ${library_output_dir}/modules.idx DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
