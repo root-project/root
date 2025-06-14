@@ -18,11 +18,11 @@ Giovanni Marchiori (30/3/2016) Implemented analytic integral
 
 //_____________________________________________________________________________
 RooGaussExpTails::RooGaussExpTails(const char *name, const char *title,
-                            RooAbsReal::Ref _x,
-                            RooAbsReal::Ref _x0,
-                            RooAbsReal::Ref _sigma,
-                            RooAbsReal::Ref _kL,
-                            RooAbsReal::Ref _kH) :
+                            RooAbsReal::Ref x,
+                            RooAbsReal::Ref x0,
+                            RooAbsReal::Ref sigma,
+                            RooAbsReal::Ref kL,
+                            RooAbsReal::Ref kH) :
      RooAbsPdf(name,title),
      x_("x","x",this,_x),
      x0_("x0","x0",this,_x0),

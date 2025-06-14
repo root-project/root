@@ -10,11 +10,11 @@ class RooGaussExpTails : public RooAbsPdf {
 public:
   RooGaussExpTails() { }
   RooGaussExpTails(const char *name, const char *title,
-                         RooAbsReal::Ref _x,
-                         RooAbsReal::Ref _x0,
-                         RooAbsReal::Ref _sigma,
-                         RooAbsReal::Ref _kL,
-                         RooAbsReal::Ref _kH
+                         RooAbsReal::Ref x,
+                         RooAbsReal::Ref x0,
+                         RooAbsReal::Ref sigma,
+                         RooAbsReal::Ref kL,
+                         RooAbsReal::Ref kH
                          );
   RooGaussExpTails(const RooGaussExpTails& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override {
@@ -24,21 +24,21 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
-  RooAbsReal const &x() const { return *x_; }
-  RooAbsReal const &x0() const { return *x0_; }
-  RooAbsReal const &sigma() const { return *sigma_; }
-  RooAbsReal const &kL() const { return *kL_; }
-  RooAbsReal const &kH() const { return *kH_; }
+  RooAbsReal const &x() const { return *_x; }
+  RooAbsReal const &x0() const { return *_x0; }
+  RooAbsReal const &sigma() const { return *_sigma; }
+  RooAbsReal const &kL() const { return *_kL; }
+  RooAbsReal const &kH() const { return *_kH; }
 
 protected:
   double evaluate() const override;
 
 private:
-  RooRealProxy x_;
-  RooRealProxy x0_;
-  RooRealProxy sigma_;
-  RooRealProxy kL_;
-  RooRealProxy kH_;
+  RooRealProxy _x;
+  RooRealProxy _x0;
+  RooRealProxy _sigma;
+  RooRealProxy _kL;
+  RooRealProxy _kH;
 
 private:
 
