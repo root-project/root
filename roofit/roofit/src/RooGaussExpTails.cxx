@@ -14,7 +14,6 @@ Giovanni Marchiori (30/3/2016) Implemented analytic integral
 #include <cmath>
 #include "Math/ProbFuncMathCore.h"
 
-ClassImp(RooGaussExpTails)
 
 
 //_____________________________________________________________________________
@@ -51,7 +50,7 @@ namespace {
 
 inline double gaussianIntegral(double tmin, double tmax)
 {
-   double m_sqrt_2_pi = 2.50662827463;//std::sqrt(TMath::TwoPi())
+   constexpr double m_sqrt_2_pi = 2.50662827463;//std::sqrt(TMath::TwoPi())
    return m_sqrt_2_pi*(ROOT::Math::gaussian_cdf(tmax) - ROOT::Math::gaussian_cdf(tmin));
 }
 
@@ -100,11 +99,11 @@ Double_t RooGaussExpTails::analyticalIntegral(Int_t code, const char* rangeName)
    double tmax = (x_.max(rangeName)-x0_)/sig;
 
    if (tmin <= -kL_)
-      result += tailIntegral(tmin, TMath::Min(tmax, -kL_), kL_);
+      result += tailIntegral(tmin, std::min(tmax, -kL_), kL_);
    if (tmin <= kH_ && tmax > -kL_)
-      result += gaussianIntegral(TMath::Max(tmin, -kL_), TMath::Min(tmax, kH_));
+      result += gaussianIntegral(std::max(tmin, -kL_), std::min(tmax, kH_));
    if (tmax > kH_)
-      result += tailIntegral(TMath::Max(tmin, kH_), tmax, -kH_);
+      result += tailIntegral(std::max(tmin, kH_), tmax, -kH_);
 
    return sig*result;
 }

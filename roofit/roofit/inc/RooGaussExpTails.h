@@ -8,7 +8,7 @@ class RooAbsReal;
 
 class RooGaussExpTails : public RooAbsPdf {
 public:
-  RooGaussExpTails() { };
+  RooGaussExpTails() { }
   RooGaussExpTails(const char *name, const char *title,
                          RooAbsReal::Ref _x,
                          RooAbsReal::Ref _x0,
@@ -24,11 +24,11 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
-  RooAbsReal::Ref x() const { return *x_; }
-  RooAbsReal::Ref x0() const { return *x0_; }
-  RooAbsReal::Ref sigma() const { return *sigma_; }
-  RooAbsReal::Ref kL() const { return *kL_; }
-  RooAbsReal::Ref kH() const { return *kH_; }
+  RooAbsReal const &x() const { return *x_; }
+  RooAbsReal const &x0() const { return *x0_; }
+  RooAbsReal const &sigma() const { return *sigma_; }
+  RooAbsReal const &kL() const { return *kL_; }
+  RooAbsReal const &kH() const { return *kH_; }
 
 protected:
   double evaluate() const override;
