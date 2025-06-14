@@ -14,16 +14,10 @@ Giovanni Marchiori (30/3/2016) Implemented analytic integral
 #include <cmath>
 #include "Math/ProbFuncMathCore.h"
 
-
-
 //_____________________________________________________________________________
-RooGaussExpTails::RooGaussExpTails(const char *name, const char *title,
-                            RooAbsReal::Ref x,
-                            RooAbsReal::Ref x0,
-                            RooAbsReal::Ref sigma,
-                            RooAbsReal::Ref kL,
-                            RooAbsReal::Ref kH) :
-     RooAbsPdf(name, title),
+RooGaussExpTails::RooGaussExpTails(const char *name, const char *title, RooAbsReal::Ref x, RooAbsReal::Ref x0,
+                                   RooAbsReal::Ref sigma, RooAbsReal::Ref kL, RooAbsReal::Ref kH)
+   : RooAbsPdf(name, title),
      _x("x", "x", this, x),
      _x0("x0", "x0", this, x0),
      _sigma("sigma", "sigma", this, sigma),
@@ -31,7 +25,6 @@ RooGaussExpTails::RooGaussExpTails(const char *name, const char *title,
      _kH("kH", "kH", this, kH)
 {
 }
-
 
 //_____________________________________________________________________________
 RooGaussExpTails::RooGaussExpTails(const RooGaussExpTails& other, const char* name)
