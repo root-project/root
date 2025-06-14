@@ -34,9 +34,9 @@ RooGaussExpTails::RooGaussExpTails(const char *name, const char *title,
 
 
 //_____________________________________________________________________________
-RooGaussExpTails::RooGaussExpTails(const RooGaussExpTails& other, const char* name) :
-     RooAbsPdf(other, name),
-     _x("x",this,other._x),
+RooGaussExpTails::RooGaussExpTails(const RooGaussExpTails& other, const char* name)
+   : RooAbsPdf(other, name),
+     _x("x", this, other._x),
      _x0("x0", this, other._x0),
      _sigma("sigma", this, other._sigma),
      _kL("kL", this, other._kL),
@@ -51,7 +51,7 @@ namespace {
 inline double gaussianIntegral(double tmin, double tmax)
 {
    constexpr double m_sqrt_2_pi = 2.50662827463; // std::sqrt(TMath::TwoPi())
-   return m_sqrt_2_pi*(ROOT::Math::gaussian_cdf(tmax) - ROOT::Math::gaussian_cdf(tmin));
+   return m_sqrt_2_pi * (ROOT::Math::gaussian_cdf(tmax) - ROOT::Math::gaussian_cdf(tmin));
 }
 
 inline double tailIntegral(double tmin, double tmax, double k)
@@ -61,8 +61,6 @@ inline double tailIntegral(double tmin, double tmax, double k)
 }
 
 } // namespace
-
-
 
 //_____________________________________________________________________________
 Double_t RooGaussExpTails::evaluate() const
@@ -77,19 +75,17 @@ Double_t RooGaussExpTails::evaluate() const
       return std::exp(-0.5 * t * t);
 }
 
-
 //_____________________________________________________________________________
 Int_t RooGaussExpTails::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
-   if(matchArgs(allVars, analVars, _x))
+   if (matchArgs(allVars, analVars, _x))
       return 1;
 
    return 0;
 }
 
-
 //_____________________________________________________________________________
-Double_t RooGaussExpTails::analyticalIntegral(Int_t code, const char* rangeName) const
+Double_t RooGaussExpTails::analyticalIntegral(Int_t code, const char *rangeName) const
 {
    R__ASSERT(code == 1);
    double result = 0;
