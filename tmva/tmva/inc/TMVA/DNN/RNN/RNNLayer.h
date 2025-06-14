@@ -122,7 +122,7 @@ public:
 
    /*! Initialize the weights according to the given initialization
     **  method. */
-   virtual void Initialize();
+   void Initialize() override;
 
    /*! Initialize the state
     **  method. */
@@ -130,7 +130,7 @@ public:
 
    /*! Compute and return the next state with given input
    *  matrix */
-   void Forward(Tensor_t &input, bool isTraining = true);
+   void Forward(Tensor_t &input, bool isTraining = true) override;
 
    /*! Forward for a single cell (time unit) */
    void CellForward(const Matrix_t &input, Matrix_t & dF);
@@ -138,7 +138,7 @@ public:
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
    void Backward(Tensor_t &gradients_backward,
-                 const Tensor_t &activations_backward);
+                 const Tensor_t &activations_backward) override;
 
    /* Updates weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -150,13 +150,13 @@ public:
                               const Matrix_t & input, Matrix_t & input_gradient, Matrix_t &dF);
 
    /** Prints the info about the layer */
-   void Print() const;
+   void Print() const override;
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   virtual void AddWeightsXMLTo(void *parent);
+   void AddWeightsXMLTo(void *parent) override;
 
    /*! Read the information and the weights about the layer from XML node. */
-   virtual void ReadWeightsFromXML(void *parent);
+   void ReadWeightsFromXML(void *parent) override;
 
    void InitTensors();
    // void InitializeDescriptors();
@@ -485,7 +485,7 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
 
       auto & rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
       auto & rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
-      
+
       Architecture_t::RNNBackward(x, hx, cx, y, dy, dhy, dcy, weights, dx, dhx, dcx, weightGradients, rnnDesc, rnnWork);
 
       if (gradients_backward.GetSize() != 0)

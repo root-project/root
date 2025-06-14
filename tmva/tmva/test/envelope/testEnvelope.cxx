@@ -33,7 +33,7 @@ public:
 
    Int_t GetJobs() { return fJobs; }
 
-   virtual void Evaluate(){};
+   void Evaluate() override{};
 
    std::vector<OptionMap> &GetMethods() { return fMethods; }
 

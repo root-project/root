@@ -27,7 +27,7 @@ BEGIN_XROOFIT_NAMESPACE
 class xRooHypoSpace : public xRooNLLVar::xRooHypoSpace {
 public:
    using xRooNLLVar::xRooHypoSpace::xRooHypoSpace;
-   ClassDef(xRooHypoSpace, 0)
+   ClassDefOverride(xRooHypoSpace, 0)
 };
 
 END_XROOFIT_NAMESPACE

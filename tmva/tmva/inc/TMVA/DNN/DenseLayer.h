@@ -95,26 +95,26 @@ public:
     * different events in the batch. Computes activations as well as
     * the first partial derivative of the activation function at those
     * activations. */
-   void Forward(Tensor_t &input, bool applyDropout = false);
+   void Forward(Tensor_t &input, bool applyDropout = false) override;
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
-   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward );
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward ) override;
    ///              std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
 
    /*! Printing the layer info. */
-   void Print() const;
+   void Print() const override;
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   virtual void AddWeightsXMLTo(void *parent);
+   virtual void AddWeightsXMLTo(void *parent) override;
 
    /*! Read the information and the weights about the layer from XML node. */
-   virtual void ReadWeightsFromXML(void *parent);
+   virtual void ReadWeightsFromXML(void *parent) override;
 
    /*! Set dropout probabilities */
-   virtual void SetDropoutProbability(Scalar_t dropoutProbability) { fDropoutProbability = dropoutProbability; }
+   void SetDropoutProbability(Scalar_t dropoutProbability) override { fDropoutProbability = dropoutProbability; }
 
    /*! Getters */
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }

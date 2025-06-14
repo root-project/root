@@ -149,14 +149,14 @@ public:
 
    /*! Initialize the weights according to the given initialization
     **  method. */
-   virtual void Initialize();
+   void Initialize() override;
 
    /*! Initialize the hidden state and cell state method. */
    void InitState(DNN::EInitialization m = DNN::EInitialization::kZero);
 
    /*! Computes the next hidden state
     *  and next cell state with given input matrix. */
-   void Forward(Tensor_t &input, bool isTraining = true);
+   void Forward(Tensor_t &input, bool isTraining = true) override;
 
    /*! Forward for a single cell (time unit) */
    void CellForward(Matrix_t &updateGateValues, Matrix_t &candidateValues);
@@ -164,7 +164,7 @@ public:
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
    void Backward(Tensor_t &gradients_backward,
-                 const Tensor_t &activations_backward);
+                 const Tensor_t &activations_backward) override;
 
    /* Updates weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -188,13 +188,13 @@ public:
    void CandidateValue(const Matrix_t &input, Matrix_t &dc);
 
    /*! Prints the info about the layer */
-   void Print() const;
+   void Print() const override;
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   void AddWeightsXMLTo(void *parent);
+   void AddWeightsXMLTo(void *parent) override;
 
    /*! Read the information and the weights about the layer from XML node. */
-   void ReadWeightsFromXML(void *parent);
+   void ReadWeightsFromXML(void *parent) override;
 
    /*! Getters */
    size_t GetInputSize()               const { return this->GetInputWidth(); }
@@ -848,7 +848,7 @@ template <typename Architecture_t>
 auto inline TBasicGRULayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 -> void
 {
-	// Read weights and biases
+    // Read weights and biases
    this->ReadMatrixXML(parent, "ResetWeights", this->GetWeightsAt(0));
    this->ReadMatrixXML(parent, "ResetStateWeights", this->GetWeightsAt(1));
    this->ReadMatrixXML(parent, "ResetBiases", this->GetBiasesAt(0));

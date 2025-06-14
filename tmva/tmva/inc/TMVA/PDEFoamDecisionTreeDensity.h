@@ -56,12 +56,12 @@ namespace TMVA
       virtual ~PDEFoamDecisionTreeDensity() {}
 
       // returns always 0
-      virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density);
+      Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density) override;
 
       // fill histograms with events found in volume
       virtual void FillHistograms(TMVA::Volume&, std::vector<TH1D*>&, std::vector<TH1D*>&, std::vector<TH1D*>&, std::vector<TH1D*>&);
 
-      ClassDef(PDEFoamDecisionTreeDensity, 1) // Class for decision tree like PDEFoam density
+      ClassDefOverride(PDEFoamDecisionTreeDensity, 1) // Class for decision tree like PDEFoam density
          };  //end of PDEFoamDecisionTreeDensity
 
 }  // namespace TMVA

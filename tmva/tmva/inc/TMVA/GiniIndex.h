@@ -74,11 +74,11 @@ namespace TMVA {
       virtual ~GiniIndex(){}
 
       // Return the separation index (a measure for "purity" of the sample")
-      virtual Double_t GetSeparationIndex( const Double_t s, const Double_t b );
+      Double_t GetSeparationIndex( const Double_t s, const Double_t b ) override;
 
    protected:
 
-      ClassDef(GiniIndex,0); // Implementation of the GiniIndex as separation criterion
+      ClassDefOverride(GiniIndex,0); // Implementation of the GiniIndex as separation criterion
    };
 
 } // namespace TMVA

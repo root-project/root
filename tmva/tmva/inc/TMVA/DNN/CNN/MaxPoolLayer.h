@@ -122,23 +122,23 @@ public:
     *  must be in 3D tensor form with the different matrices corresponding to
     *  different events in the batch. It spatially downsamples the input
     *  matrices. */
-   void Forward(Tensor_t &input, bool applyDropout = true);
+   void Forward(Tensor_t &input, bool applyDropout = true) override;
 
    /*! Depending on the winning units determined during the Forward pass,
     *  it only forwards the derivatives to the right units in the previous
     *  layer. Must only be called directly at the corresponding call
     *  to Forward(...). */
-   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward) override;
    //             Tensor_t &inp1, Tensor_t &inp2);
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   virtual void AddWeightsXMLTo(void *parent);
+   void AddWeightsXMLTo(void *parent) override;
 
    /*! Read the information and the weights about the layer from XML node. */
-   virtual void ReadWeightsFromXML(void *parent);
+   void ReadWeightsFromXML(void *parent) override;
 
    /*! Prints the info about the layer. */
-   void Print() const;
+   void Print() const override;
 
    /*! Getters */
    size_t GetFilterDepth() const { return fFilterDepth; }

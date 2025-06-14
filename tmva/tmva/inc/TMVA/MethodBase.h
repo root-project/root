@@ -155,7 +155,7 @@ namespace TMVA {
       virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
       virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
 
-      virtual void     Train() = 0;
+      void             Train() override = 0;
 
       // store and retrieve time used for training
       void             SetTrainTime( Double_t trainTime ) { fTrainTime = trainTime; }
@@ -181,9 +181,9 @@ namespace TMVA {
                                        Types::ETreeType type );
 
       // options treatment
-      virtual void     Init()           = 0;
-      virtual void     DeclareOptions() = 0;
-      virtual void     ProcessOptions() = 0;
+      void     Init()           override = 0;
+      void     DeclareOptions() override = 0;
+      void     ProcessOptions() override = 0;
       virtual void     DeclareCompatibilityOptions(); // declaration of past options
 
       // reset the Method --> As if it was not yet trained, just instantiated
@@ -195,7 +195,7 @@ namespace TMVA {
       // classifier response:
       // some methods may return a per-event error estimate
       // error calculation is skipped if err==0
-      virtual Double_t GetMvaValue( Double_t* errLower = nullptr, Double_t* errUpper = nullptr) = 0;
+      Double_t GetMvaValue( Double_t* errLower = nullptr, Double_t* errUpper = nullptr) override = 0;
 
       // signal/background classification response
       Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = nullptr, Double_t* errUpper = nullptr );
@@ -243,13 +243,13 @@ namespace TMVA {
       virtual Double_t GetRarity( Double_t mvaVal, Types::ESBType reftype = Types::kBackground ) const;
 
       // create ranking
-      virtual const Ranking* CreateRanking() = 0;
+      const Ranking* CreateRanking() override = 0;
 
       // make ROOT-independent C++ class
-      virtual void     MakeClass( const TString& classFileName = TString("") ) const;
+      void     MakeClass( const TString& classFileName = TString("") ) const override;
 
       // print help message
-      void             PrintHelpMessage() const;
+      void             PrintHelpMessage() const override;
 
       //
       // streamer methods for training information (creates "weight" files) --------
@@ -262,7 +262,7 @@ namespace TMVA {
       // the actual "weights"
       virtual void AddWeightsXMLTo      ( void* parent ) const = 0;
       virtual void ReadWeightsFromXML   ( void* wghtnode ) = 0;
-      virtual void ReadWeightsFromStream( std::istream& ) = 0;       // backward compatibility
+      void ReadWeightsFromStream( std::istream& ) override = 0;       // backward compatibility
       virtual void ReadWeightsFromStream( TFile& ) {}                // backward compatibility
 
    private:
@@ -298,7 +298,7 @@ namespace TMVA {
       virtual void     WriteEvaluationHistosToFile(Types::ETreeType treetype);
 
       // write classifier-specific monitoring information to target file
-      virtual void     WriteMonitoringHistosToFile() const;
+      void     WriteMonitoringHistosToFile() const override;
 
       // ---------- public evaluation methods --------------------------------------
 
@@ -331,7 +331,7 @@ namespace TMVA {
       const TString&   GetMethodName    () const { return fMethodName; }
       TString          GetMethodTypeName() const { return Types::Instance().GetMethodName(fMethodType); }
       Types::EMVA      GetMethodType    () const { return fMethodType; }
-      const char*      GetName          () const { return fMethodName.Data(); }
+      const char*      GetName          () const override { return fMethodName.Data(); }
       const TString&   GetTestvarName   () const { return fTestvar; }
       const TString    GetProbaName     () const { return fTestvar + "_Proba"; }
       TString          GetWeightFileName() const;
@@ -517,7 +517,7 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      virtual void     MakeClassSpecific( std::ostream&, const TString& = "" ) const {}
+      void     MakeClassSpecific( std::ostream&, const TString& = "" ) const override {}
 
       // header and auxiliary classes
       virtual void     MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const {}
@@ -728,7 +728,7 @@ namespace TMVA {
 
    protected:
       Results *fResults;
-      ClassDef(MethodBase,0);  // Virtual base class for all TMVA method
+      ClassDefOverride(MethodBase,0);  // Virtual base class for all TMVA method
 
    };
 } // namespace TMVA

@@ -69,7 +69,7 @@ namespace TMVA {
           virtual void BookMethod( Types::EMVA method,  TString methodtitle, TString options = "");
 
           // parse the internal option string
-          virtual void ParseOptions();
+          void ParseOptions() override;
 
           Bool_t  IsSilentFile();
           TFile* GetFile();
@@ -120,7 +120,7 @@ namespace TMVA {
 
           void WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA::Types::EAnalysisType fAnalysisType);
 
-          ClassDef(Envelope, 0);
+          ClassDefOverride(Envelope, 0);
       };
 }
 

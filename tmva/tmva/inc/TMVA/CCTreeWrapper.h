@@ -53,7 +53,7 @@ namespace TMVA {
          CCTreeNode( DecisionTreeNode* n = nullptr );
          virtual ~CCTreeNode( );
 
-         virtual Node* CreateNode() const { return new CCTreeNode(); }
+         Node* CreateNode() const override { return new CCTreeNode(); }
 
          // set |~T_t|, the number of terminal descendants of node t
          inline void SetNLeafDaughters( Int_t N ) { fNLeafDaughters = (N > 0 ? N : 0); }
@@ -99,26 +99,26 @@ namespace TMVA {
          inline CCTreeNode* GetMother( ) { return dynamic_cast<CCTreeNode*>(GetParent()); }
 
          // printout of the node (can be read in with ReadDataRecord)
-         virtual void Print( std::ostream& os ) const;
+         void Print( std::ostream& os ) const override;
 
          // recursive printout of the node and its daughters
-         virtual void PrintRec ( std::ostream& os ) const;
+         void PrintRec ( std::ostream& os ) const override;
 
-         virtual void AddAttributesToNode(void* node) const;
-         virtual void AddContentToNode(std::stringstream& s) const;
+         void AddAttributesToNode(void* node) const override;
+         void AddContentToNode(std::stringstream& s) const override;
 
 
          // test event if it descends the tree at this node to the right
-         inline virtual Bool_t GoesRight( const Event& e ) const { return GetDTNode() ?
+         inline Bool_t GoesRight( const Event& e ) const override { return GetDTNode() ?
                                                                            GetDTNode()->GoesRight(e) : false; }
 
          // test event if it descends the tree at this node to the left
-         inline virtual Bool_t GoesLeft ( const Event& e ) const { return GetDTNode() ?
+         inline Bool_t GoesLeft ( const Event& e ) const override { return GetDTNode() ?
                                                                            GetDTNode()->GoesLeft(e) : false; }
          // initialize a node from a data record
-         virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
-         virtual void ReadContent(std::stringstream& s);
-         virtual Bool_t ReadDataRecord( std::istream& in, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+         void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE) override;
+         void ReadContent(std::stringstream& s) override;
+         Bool_t ReadDataRecord( std::istream& in, UInt_t tmva_Version_Code = TMVA_VERSION_CODE ) override;
 
       private:
 
