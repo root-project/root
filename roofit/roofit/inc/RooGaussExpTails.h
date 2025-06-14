@@ -8,13 +8,11 @@ class RooAbsReal;
 
 class RooGaussExpTails : public RooAbsPdf {
 public:
-   RooGaussExpTails() { }
-   RooGaussExpTails(const char *name, const char *title, RooAbsReal::Ref x, RooAbsReal::Ref x0,
-                    RooAbsReal::Ref sigma, RooAbsReal::Ref kL, RooAbsReal::Ref kH);
+   RooGaussExpTails() {}
+   RooGaussExpTails(const char *name, const char *title, RooAbsReal::Ref x, RooAbsReal::Ref x0, RooAbsReal::Ref sigma,
+                    RooAbsReal::Ref kL, RooAbsReal::Ref kH);
    RooGaussExpTails(const RooGaussExpTails &other, const char *name = nullptr);
-   TObject *clone(const char *newname) const override {
-      return new RooGaussExpTails(*this, newname);
-   }
+   TObject *clone(const char *newname) const override { return new RooGaussExpTails(*this, newname); }
 
    Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
    double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override;
