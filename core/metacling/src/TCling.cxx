@@ -8951,6 +8951,10 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
    }
 
    const clang::FunctionDecl *fd = ft->getTemplatedDecl();
+
+   if (fd && fd->getStorageClass() == clang::SC_Static)
+      property |= kIsStatic;
+
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
       if (md->getMethodQualifiers().hasConst()) {
