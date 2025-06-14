@@ -158,7 +158,7 @@ ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search 
 ROOT_BUILD_OPTION(runtime_cxxmodules ON "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
-ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames (recommended)")
+ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames for shared libraries. Not recommended, as the pcm and rootmap files do not (yet) support versioning and always point to the non-versioned shared libraries.")
 ROOT_BUILD_OPTION(spectrum ON "Enable support for TSpectrum")
 ROOT_BUILD_OPTION(sqlite ON "Enable support for SQLite")
 ROOT_BUILD_OPTION(ssl ON "Enable support for SSL encryption via OpenSSL")
