@@ -16,7 +16,7 @@ public:
    Holder() {};
    ~Holder() {};   
 
-   ClassDef(Holder,1);
+   ClassDefOverride(Holder,1);
 };
 
 void constTest() {
