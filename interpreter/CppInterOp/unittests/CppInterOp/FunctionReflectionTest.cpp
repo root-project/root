@@ -1,9 +1,10 @@
 #include "Utils.h"
 
+#include "CppInterOp/CppInterOp.h"
+
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Interpreter/CppInterOp.h"
 #include "clang/Sema/Sema.h"
 
 #include <llvm/ADT/ArrayRef.h>
@@ -384,6 +385,11 @@ TEST(FunctionReflectionTest, GetFunctionReturnType) {
     template<class ...T> auto rttest_make_tlist(T ... args) {
       return RTTest_TemplatedList<T...>{};
     }
+
+    template<typename T>
+    struct Klass {
+      auto func(T t) { return t; }
+    };
     )";
 
   GetAllTopLevelDecls(code, Decls, true);
@@ -429,6 +435,11 @@ TEST(FunctionReflectionTest, GetFunctionReturnType) {
       Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(
           Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args))),
       "RTTest_TemplatedList<int, double>");
+
+  std::vector<Cpp::TemplateArgInfo> args2 = {C.DoubleTy.getAsOpaquePtr()};
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(Cpp::GetNamed(
+                "func", Cpp::InstantiateTemplate(Decls[15], args2.data(), 1)))),
+            "double");
 }
 
 TEST(FunctionReflectionTest, GetFunctionNumArgs) {
@@ -1440,6 +1451,10 @@ TEST(FunctionReflectionTest, JitCallAdvanced) {
 #endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
+
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(nullptr);
+  EXPECT_TRUE(JC.getKind() == Cpp::JitCall::kUnknown);
+
   std::vector<Decl*> Decls;
   std::string code = R"(
       typedef struct _name {
@@ -1728,6 +1743,87 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
       Cpp::BestOverloadFunctionMatch(operators, {}, {K1, K2});
   auto chrono_op_fn_callable = Cpp::MakeFunctionCallable(kop);
   EXPECT_EQ(chrono_op_fn_callable.getKind(), Cpp::JitCall::kGenericCall);
+
+  Interp->process(R"(
+    namespace my_std {
+    template <typename T1, typename T2>
+    struct pair {
+        T1 first;
+        T2 second;
+        pair(T1 fst, T2 snd) : first(fst), second(snd) {}
+    };
+
+    template <typename T1, typename T2>
+    pair<T1, T2> make_pair(T1 x, T2 y) {
+        return pair<T1, T2>(x, y);
+    }
+
+    template <int _Int>
+    struct __pair_get;
+
+    template <>
+    struct __pair_get<0> {
+        template <typename T1, typename T2>
+        static constexpr T1 __get(pair<T1, T2> __pair) noexcept {
+            return __pair.first;
+        }
+    };
+
+    template <>
+    struct __pair_get<1> {
+        template <typename T1, typename T2>
+        constexpr T2 __get(pair<T1, T2> __pair) noexcept {
+            return __pair.second;
+        }
+    };
+
+    template <int N, typename T1, typename T2>
+    static constexpr auto get(pair<T1, T2> __t) noexcept {
+        return __pair_get<N>::__get(__t);
+    }
+    }  // namespace my_std
+
+    namespace libchemist {
+    namespace type {
+    template <typename T>
+    class tensor {};
+    }  // namespace type
+
+    template <typename element_type = double,
+              typename tensor_type = type::tensor<element_type>>
+    class CanonicalMO {};
+
+    template class CanonicalMO<double, type::tensor<double>>;
+
+    auto produce() { return my_std::make_pair(10., type::tensor<double>{}); }
+
+    }  // namespace libchemist
+
+    namespace property_types {
+    namespace type {
+    template <typename T>
+    using canonical_mos = libchemist::CanonicalMO<T>;
+    }
+
+    auto produce() { return my_std::make_pair(5., type::canonical_mos<double>{}); }
+    }  // namespace property_types
+
+    auto tmp = property_types::produce();
+    auto &p = tmp;
+  )");
+
+  std::vector<Cpp::TCppFunction_t> unresolved_candidate_methods;
+  Cpp::GetClassTemplatedMethods("get", Cpp::GetScope("my_std"),
+                                unresolved_candidate_methods);
+  Cpp::TCppType_t p = Cpp::GetTypeFromScope(Cpp::GetNamed("p"));
+  EXPECT_TRUE(p);
+
+  Cpp::TCppScope_t fn = Cpp::BestOverloadFunctionMatch(
+      unresolved_candidate_methods, {{Cpp::GetType("int"), "0"}}, {p});
+  EXPECT_TRUE(fn);
+
+  auto fn_callable = Cpp::MakeFunctionCallable(fn);
+  EXPECT_EQ(fn_callable.getKind(), Cpp::JitCall::kGenericCall);
 }
 
 TEST(FunctionReflectionTest, IsConstMethod) {
