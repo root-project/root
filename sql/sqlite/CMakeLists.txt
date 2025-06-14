@@ -25,5 +25,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
     RIO
 )
 
-target_include_directories(RSQLite SYSTEM PUBLIC ${SQLITE_INCLUDE_DIR})
-target_link_libraries(RSQLite PUBLIC ${SQLITE_LIBRARIES})
+if(APPLE)
+  target_link_libraries(RSQLite PUBLIC -Wl,-undefined -Wl,dynamic_lookup)
+else()
+  target_link_libraries(RSQLite PUBLIC -Wl,--unresolved-symbols=ignore-all)
+endif()

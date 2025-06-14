@@ -23,7 +23,7 @@
 #include "TDatime.h"
 #include "TTimeStamp.h"
 
-#include <sqlite3.h>
+#include "sqlite3_interface.h"
 
 #include <stdlib.h>
 

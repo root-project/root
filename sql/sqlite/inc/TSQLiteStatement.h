@@ -14,8 +14,8 @@
 
 #include "TSQLStatement.h"
 
-class sqlite3;
-class sqlite3_stmt;
+typedef struct sqlite3 sqlite3;
+typedef struct sqlite3_stmt sqlite3_stmt;
 
 struct SQLite3_Stmt_t {
    sqlite3      *fConn;
