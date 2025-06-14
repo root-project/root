@@ -45,6 +45,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooFunctor1DBinding.h
     RooFunctorBinding.h
     RooGamma.h
+    RooGaussExpTails.h
     RooGaussian.h
     RooGaussModel.h
     RooGExpModel.h
@@ -106,10 +107,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooDstD0BG.cxx
     src/RooExponential.cxx
     src/RooLegacyExpPoly.cxx
-        src/RooPowerSum.cxx
+    src/RooPowerSum.cxx
     src/RooFunctor1DBinding.cxx
     src/RooFunctorBinding.cxx
     src/RooGamma.cxx
+    src/RooGaussExpTails.cxx
     src/RooGaussian.cxx
     src/RooGaussModel.cxx
     src/RooGExpModel.cxx
