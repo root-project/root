@@ -27,7 +27,7 @@ RooGaussExpTails::RooGaussExpTails(const char *name, const char *title, RooAbsRe
 }
 
 //_____________________________________________________________________________
-RooGaussExpTails::RooGaussExpTails(const RooGaussExpTails& other, const char* name)
+RooGaussExpTails::RooGaussExpTails(const RooGaussExpTails &other, const char* name)
    : RooAbsPdf(other, name),
      _x("x", this, other._x),
      _x0("x0", this, other._x0),
@@ -69,7 +69,7 @@ Double_t RooGaussExpTails::evaluate() const
 }
 
 //_____________________________________________________________________________
-Int_t RooGaussExpTails::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+Int_t RooGaussExpTails::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
    if (matchArgs(allVars, analVars, _x))
       return 1;
