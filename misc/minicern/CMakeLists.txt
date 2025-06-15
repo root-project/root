@@ -16,3 +16,5 @@ target_link_libraries(minicern ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
 # Disable warnings, since what has worked for 40 years...
 # (see https://sft.its.cern.ch/jira/browse/ROOT-9179 for the warnings)
 set_target_properties(minicern PROPERTIES COMPILE_FLAGS "-O0 -w")
+# set_target_properties(minicern PROPERTIES COMPILE_FLAGS "-fsanitize=undefined -fsanitize=address")
+# target_link_options(minicern BEFORE PUBLIC -fsanitize=undefined PUBLIC -fsanitize=address)

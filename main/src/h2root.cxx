@@ -312,7 +312,8 @@ int main(int argc, char **argv)
 
    int lun = 10;
 #ifndef WIN32
-   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier,7,strlen(file_in),2);
+   auto opt = PASSCHAR("px ");
+   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),opt,record_size,ier,7,strlen(file_in),2);
 #else
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier);
 #endif
@@ -329,6 +330,8 @@ int main(int argc, char **argv)
 
    if (!hfile) {
       printf("Error: can't open output file: %s \n",file_out);
+      if (argc <= 2)
+         delete[] file_out;
       return 1;
    }
 
@@ -339,7 +342,9 @@ int main(int argc, char **argv)
    hfile->ls();
    hfile->Close();
    delete hfile;
-   return(0);
+   if (argc <= 2)
+         delete[] file_out;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
