@@ -52,9 +52,16 @@ configure_file(typelist_win32.v6.cxx17.txt . COPYONLY)
 ROOTTEST_ADD_AUTOMACROS(DEPENDS ANSTmpltInt.C TmpltInt0.C TmpltInt1.C TmpltFloat.C
                                 TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST}
                                 EXCLUDE runMemberComments runautoload)
-ROOTTEST_ADD_TEST(runMemberComments
-                  MACRO runMemberComments.C
-                  OUTREF MemberComments${ref_suffix})
+if(APPLE)
+  # Ref file with no new operator delete(void *, size_t)
+  ROOTTEST_ADD_TEST(runMemberComments
+                    MACRO runMemberComments.C
+                    OUTREF MemberComments_macos.ref)
+else()
+  ROOTTEST_ADD_TEST(runMemberComments
+                    MACRO runMemberComments.C
+                    OUTREF MemberComments${ref_suffix})
+endif()
 
 if(NOT MSVC OR win_broken_tests)
     ROOTTEST_ADD_TEST(drawing
