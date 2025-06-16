@@ -21,4 +21,4 @@ ROOTTEST_ADD_TEST(write
 
 ROOTTEST_ADD_TEST(read
   COMMAND ./IoBigEventGenerator 10 1 1 20
-  FIXTURES_REQUIRED io-bigevent-generator-fixture root-io-bigevent-write-fixture)
+  FIXTURES_REQUIRED root-io-bigevent-generator-fixture root-io-bigevent-write-fixture)
