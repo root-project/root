@@ -30,6 +30,10 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/TargetParser/Host.h>
 #include <llvm/TargetParser/Triple.h>
+#ifdef __e2k__
+#include <llvm/CodeGen/Lccrt.h>
+#include <llvm/CodeGen/LccrtIpaPass.h>
+#endif
 
 #include <optional>
 

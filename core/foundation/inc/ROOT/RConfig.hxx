@@ -246,6 +246,14 @@
 #   define NEED_SIGJMP
 #endif
 
+#if defined(linux) && defined(__e2k__)
+#   define R__LINUX
+#   define R__UNIX
+#   define R__BYTESWAP
+#   define R__B64
+#   define NEED_SIGJMP
+#endif
+
 #if defined(__MACH__) && defined(__i386__) && !defined(__APPLE__)
 #   define R__HURD
 #   define f2cFortran   /* cfortran.h does not know HURD - sigh */

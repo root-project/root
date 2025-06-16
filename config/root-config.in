@@ -270,6 +270,10 @@ linuxloong64)
    # loong64 Linux
    auxlibs="-lm -ldl -rdynamic"
    ;;
+linuxe2k)
+   # e2k Linux
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 freebsd*)
    # FreeBSD
    auxcflags="${cxxversionflag}"

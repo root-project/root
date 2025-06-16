@@ -166,6 +166,10 @@ clang/LLVM technology.
 #include <dlfcn.h>
 #endif
 
+#ifdef __e2k__
+#include <dlfcn.h>
+#endif
+
 #if defined(R__LINUX) || defined(R__FBSD)
 # ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
