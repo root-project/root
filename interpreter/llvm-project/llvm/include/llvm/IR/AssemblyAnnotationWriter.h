@@ -51,6 +51,11 @@ public:
   virtual void emitInstructionAnnot(const Instruction *,
                                     formatted_raw_ostream &) {}
 
+  /// emitInstructionAnnot - This may be implemented to emit a string right
+  /// after the instruction.
+  virtual void emitInstructionEndAnnot(const Instruction *,
+                                       formatted_raw_ostream &) {}
+
   /// printInfoComment - This may be implemented to emit a comment to the
   /// right of an instruction or global value.
   virtual void printInfoComment(const Value &, formatted_raw_ostream &) {}

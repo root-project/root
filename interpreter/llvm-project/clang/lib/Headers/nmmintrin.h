@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_nmmintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_nmmintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_nmmintrin_h__ */
+
 #ifndef __NMMINTRIN_H
 #define __NMMINTRIN_H
 
@@ -18,3 +24,5 @@
    just include it now then.  */
 #include <smmintrin.h>
 #endif /* __NMMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_nmmintrin_h__ */

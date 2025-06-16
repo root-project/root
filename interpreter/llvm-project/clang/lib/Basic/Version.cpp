@@ -14,6 +14,9 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Config/config.h"
 #include "llvm/Support/raw_ostream.h"
+#ifdef LLVM_WITH_LCCRT
+//#include "llvm/CodeGen/Lccrt.h"
+#endif
 #include <cstdlib>
 #include <cstring>
 
@@ -57,6 +60,15 @@ std::string getLLVMRevision() {
 #endif
 }
 
+std::string getLccrtRevision() {
+#ifndef LLVM_WITH_LCCRT
+  return "";
+#else
+  return "";
+  //return llvm::Lccrt::getToolchain();
+#endif
+}
+
 std::string getClangVendor() {
 #ifdef CLANG_VENDOR
   return CLANG_VENDOR;
@@ -89,6 +101,11 @@ std::string getClangFullRepositoryVersion() {
     if (!LLVMRepo.empty())
       OS << LLVMRepo << ' ';
     OS << LLVMRev << ')';
+  }
+  // Support lccrt in a separate repository.
+  std::string LccrtRev = getLccrtRevision();
+  if (!LccrtRev.empty()) {
+    OS << " (" << LccrtRev << ')';
   }
   return buf;
 }

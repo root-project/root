@@ -968,6 +968,8 @@ PRAGMA_ANNOTATION(pragma_loop_hint)
 
 PRAGMA_ANNOTATION(pragma_fp)
 
+PRAGMA_ANNOTATION(pragma_asm_inline)
+
 // Annotation for the attribute pragma directives - #pragma clang attribute ...
 PRAGMA_ANNOTATION(pragma_attribute)
 

@@ -134,6 +134,7 @@ static Attr *handleLoopHintAttr(Sema &S, Stmt *St, const ParsedAttr &A,
                  .Case("interleave_count", LoopHintAttr::InterleaveCount)
                  .Case("unroll", LoopHintAttr::Unroll)
                  .Case("unroll_count", LoopHintAttr::UnrollCount)
+                 .Case("loop_count", LoopHintAttr::LoopCount)
                  .Case("pipeline", LoopHintAttr::PipelineDisabled)
                  .Case("pipeline_initiation_interval",
                        LoopHintAttr::PipelineInitiationInterval)
@@ -150,6 +151,7 @@ static Attr *handleLoopHintAttr(Sema &S, Stmt *St, const ParsedAttr &A,
         State = LoopHintAttr::FixedWidth;
     } else if (Option == LoopHintAttr::InterleaveCount ||
                Option == LoopHintAttr::UnrollCount ||
+               Option == LoopHintAttr::LoopCount ||
                Option == LoopHintAttr::PipelineInitiationInterval) {
       assert(ValueExpr && "Attribute must have a valid value expression.");
       if (S.CheckLoopHintExpr(ValueExpr, St->getBeginLoc()))

@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_rdseedintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_rdseedintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_rdseedintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <rdseedintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -103,3 +109,5 @@ _rdseed64_step(unsigned long long *__p)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __RDSEEDINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_rdseedintrin_h__ */

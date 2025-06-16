@@ -8,6 +8,8 @@
 
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/PassManagerImpl.h"
+#include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/Support/FileSystem.h"
 #include <optional>
 
 using namespace llvm;
@@ -88,6 +90,162 @@ bool FunctionAnalysisManagerModuleProxy::Result::invalidate(
   // Return false to indicate that this result is still a valid proxy.
   return false;
 }
+
+static thread_local int DumpModuleIdent = 0;
+static thread_local std::vector<int> DumpModuleIdents;
+
+static void __attribute__((noinline))
+dumpPassTrap() {
+    printf( "  %s\n", __FUNCTION__);
+    return;
+}
+
+static bool
+isDumpPassTrap( const char *str0) {
+    bool r = false;
+    char *str = strdup( str0);
+    char *p = str;
+    char *q = 0;
+    std::vector<int> idents;
+
+    while ( p ) {
+        int ident = strtol( p, &q, 10);
+        if ( p < q ) {
+            p = q;
+            idents.push_back( ident);
+        } else {
+            p = 0;
+        }
+    }
+
+    free( str);
+    if ( idents.size() == DumpModuleIdents.size() + 1 ) {
+        if ( idents[0] == DumpModuleIdent ) {
+            r = true;
+            for ( int i = 1; i < (int)idents.size(); ++i ) {
+                if ( idents[i] != DumpModuleIdents[i - 1] ) {
+                    r = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    return (r);
+}
+
+static std::string
+dumpPassName( const StringRef &PN, const char *irtype, bool isbefore) {
+    std::string r;
+    static bool need_init = true;
+    static bool need_dump = false;
+
+    if ( need_init ) {
+        const char *envval = getenv( "LLVM_PASS_DUMP");
+
+        need_dump = envval && atoi( envval);
+    }
+
+    if ( need_dump ) {
+        char buff[1024];
+        char name[128];
+        int bn = 0;
+        const char *pass_trap = getenv( "LLVM_PASS_TRAP");
+
+        snprintf( name, 1024, "%s", PN.str().c_str());
+        for ( int k = 0; name[k]; ++k ) {
+            if ( isalnum( name[k]) || (name[k] == '_') ) {
+            } else {
+                name[k] = 0;
+                break;
+            }
+        }
+
+        if ( pass_trap && isDumpPassTrap( pass_trap) ) {
+            dumpPassTrap();
+        }
+
+        bn += snprintf( buff + bn, 1024 - bn, "pass.%03d.", DumpModuleIdent);
+        for ( int k = 0; k < (int)DumpModuleIdents.size() - !isbefore; ++k ) {
+            bn += snprintf( buff + bn, 1024 - bn, "pass.%03d.",
+                            DumpModuleIdents[k]);
+        }
+        bn += snprintf( buff + bn, 1024 - bn, "%s.%s.%s.txt",
+                        isbefore ? "abeg" : "xend", irtype, name);
+
+        r = buff;
+
+        if ( isbefore ) {
+            DumpModuleIdents.push_back( 0);
+        } else {
+            if ( !DumpModuleIdents.empty() ) {
+                DumpModuleIdents.resize( DumpModuleIdents.size() - 1);
+            }
+
+            if ( DumpModuleIdents.empty() ) {
+                DumpModuleIdent++;
+            } else {
+                DumpModuleIdents.back()++;
+            }
+        }
+    }
+
+    return (r);
+}
+
+void detail::PassDumper<Module>::dumpPass( const StringRef &PN, Module &IR, bool isbefore) {
+    std::string fname = dumpPassName( PN, "module", isbefore);
+
+    if ( !fname.empty() ) {
+        std::error_code ec;
+        FILE *f = 0;
+
+        f = fopen( fname.c_str(), "w");
+        fclose( f);
+
+        raw_fd_ostream *fs = new raw_fd_ostream( fname, ec, sys::fs::OpenFlags::OF_None);
+        IR.print( *fs, 0);
+        delete fs;
+        dbgs() << "dump module pass : " << fname << "\n";
+    }
+}
+
+void detail::PassDumper<Function>::dumpPass( const StringRef &PN, Function &IR, bool isbefore) {
+    std::string fname = dumpPassName( PN, "function", isbefore);
+
+    if ( !fname.empty() ) {
+        std::error_code ec;
+        FILE *f = 0;
+
+        f = fopen( fname.c_str(), "w");
+        fclose( f);
+
+        raw_fd_ostream *fs = new raw_fd_ostream( fname, ec, sys::fs::OpenFlags::OF_None);
+        IR.print( *fs, 0);
+        delete fs;
+        dbgs() << "dump function pass : " << fname << "\n";
+    }
+}
+
+void detail::PassDumper<MachineFunction>::dumpPass( const StringRef &PN, MachineFunction &IR, bool isbefore) {
+    std::string fname = dumpPassName( PN, "machinefunction", isbefore);
+
+    if ( !fname.empty() ) {
+        std::error_code ec;
+        FILE *f = 0;
+
+        f = fopen( fname.c_str(), "w");
+        fclose( f);
+
+        raw_fd_ostream *fs = new raw_fd_ostream( fname, ec, sys::fs::OpenFlags::OF_None);
+#ifdef NDEBUG
+        IR.print( *fs, 0);
+#endif /* NDEBUG */
+        delete fs;
+        dbgs() << "dump function pass : " << fname << "\n";
+    }
+}
+
 } // namespace llvm
 
 void ModuleToFunctionPassAdaptor::printPipeline(
@@ -120,7 +278,12 @@ PreservedAnalyses ModuleToFunctionPassAdaptor::run(Module &M,
     if (!PI.runBeforePass<Function>(*Pass, F))
       continue;
 
-    PreservedAnalyses PassPA = Pass->run(F, FAM);
+    PreservedAnalyses PassPA;
+    {
+      detail::PassDumper<Module>::dumpPass( Pass->name(), M, true);
+      PassPA = Pass->run(F, FAM);
+      detail::PassDumper<Module>::dumpPass( Pass->name(), M, false);
+    }
 
     // We know that the function pass couldn't have invalidated any other
     // function's analyses (that's the contract of a function pass), so

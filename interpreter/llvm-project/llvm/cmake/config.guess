@@ -1027,6 +1027,9 @@ EOF
 
 	echo ${UNAME_MACHINE}-unknown-linux-${LIBC}
 	exit ;;
+    e2k:Linux:*:*)
+       echo e2k-unknown-linux-gnu
+       exit ;;
     s390:Linux:*:* | s390x:Linux:*:*)
 	echo ${UNAME_MACHINE}-ibm-linux
 	exit ;;

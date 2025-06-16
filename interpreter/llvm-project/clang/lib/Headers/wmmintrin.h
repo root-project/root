@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_wmmintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_wmmintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_wmmintrin_h__ */
+
 #ifndef __WMMINTRIN_H
 #define __WMMINTRIN_H
 
@@ -21,3 +27,5 @@
 #include <__wmmintrin_pclmul.h>
 
 #endif /* __WMMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_adxintrin_h__ */

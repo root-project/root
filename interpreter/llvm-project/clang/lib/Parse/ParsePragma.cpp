@@ -28,6 +28,16 @@ using namespace clang;
 
 namespace {
 
+struct PragmaAsmInlineHandler : public PragmaHandler {
+  explicit PragmaAsmInlineHandler(Sema &S)
+             : PragmaHandler("asm_inline"), Actions(S) {}
+  void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
+                    Token &FirstToken) override;
+
+private:
+  Sema &Actions;
+};
+
 struct PragmaAlignHandler : public PragmaHandler {
   explicit PragmaAlignHandler() : PragmaHandler("align") {}
   void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
@@ -415,6 +425,9 @@ void markAsReinjectedForRelexing(llvm::MutableArrayRef<clang::Token> Toks) {
 }  // end namespace
 
 void Parser::initializePragmaHandlers() {
+  AsmInlineHandler = std::make_unique<PragmaAsmInlineHandler>(Actions);
+  PP.AddPragmaHandler(AsmInlineHandler.get());
+
   AlignHandler = std::make_unique<PragmaAlignHandler>();
   PP.AddPragmaHandler(AlignHandler.get());
 
@@ -569,6 +582,8 @@ void Parser::initializePragmaHandlers() {
 
 void Parser::resetPragmaHandlers() {
   // Remove the pragma handlers we installed.
+  PP.RemovePragmaHandler(AsmInlineHandler.get());
+  AsmInlineHandler.reset();
   PP.RemovePragmaHandler(AlignHandler.get());
   AlignHandler.reset();
   PP.RemovePragmaHandler("GCC", GCCVisibilityHandler.get());
@@ -827,6 +842,31 @@ void Parser::HandlePragmaRedefineExtname() {
   ConsumeToken();
   Actions.ActOnPragmaRedefineExtname(RedefName, AliasName, RedefLoc,
                                      RedefNameLoc, AliasNameLoc);
+}
+
+StmtResult Parser::HandlePragmaAsmInline() {
+  StmtResult r;
+
+  assert(Tok.is(tok::annot_pragma_asm_inline));
+  ConsumeAnnotationToken();
+  if ( !Tok.is(tok::kw_asm) ) {
+      Diag(Tok, diag::err_pragma_asm_call_position) << "asm_inline";
+      r = StmtError();
+  } else {
+      if ( 0 ) {
+          bool msAsm = false;
+
+          r = ParseAsmStatement( msAsm);
+          r = Actions.ActOnFinishFullStmt( r.get());
+          if ( !msAsm ) {
+              r = StmtError();
+          }
+      } else {
+          r = StmtEmpty();
+      }
+  }
+
+  return r;
 }
 
 void Parser::HandlePragmaFPContract() {
@@ -2322,6 +2362,28 @@ void PragmaClangSectionHandler::HandlePragma(Preprocessor &PP,
   }
 }
 
+void PragmaAsmInlineHandler::HandlePragma(Preprocessor &PP,
+                                          PragmaIntroducer Introducer,
+                                          Token &AsmInlineTok) {
+  Token Tok;
+
+  PP.Lex(Tok);
+  if (Tok.isNot(tok::eod)) {
+    PP.Diag(AsmInlineTok.getLocation(), diag::warn_pragma_extra_tokens_at_eol) << "asm_inline";
+    return;
+  }
+
+  //Actions.ActOnPragmaAsmInline(AsmInlineTok, AsmInlineTok.getLocation());
+
+  // Generate the hint token.
+  auto TokenArray = std::make_unique<Token[]>(1);
+  TokenArray[0].startToken();
+  TokenArray[0].setKind(tok::annot_pragma_asm_inline);
+  TokenArray[0].setLocation(Introducer.Loc);
+  PP.EnterTokenStream(std::move(TokenArray), 1,
+                      /*DisableMacroExpansion=*/false, /*IsReinject=*/false);
+}
+
 // #pragma 'align' '=' {'native','natural','mac68k','power','reset'}
 // #pragma 'options 'align' '=' {'native','natural','mac68k','power','reset'}
 // #pragma 'align' '(' {'native','natural','mac68k','power','reset'} ')'
@@ -3616,6 +3678,7 @@ void PragmaLoopHintHandler::HandlePragma(Preprocessor &PP,
                            .Case("vectorize_width", true)
                            .Case("interleave_count", true)
                            .Case("unroll_count", true)
+                           .Case("loop_count", true)
                            .Case("pipeline", true)
                            .Case("pipeline_initiation_interval", true)
                            .Default(false);

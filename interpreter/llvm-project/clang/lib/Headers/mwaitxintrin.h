@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_mwaitxintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_mwaitxintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_mwaitxintrin_h__ */
+
 #ifndef __X86INTRIN_H
 #error "Never use <mwaitxintrin.h> directly; include <x86intrin.h> instead."
 #endif
@@ -60,3 +66,5 @@ _mm_mwaitx(unsigned __extensions, unsigned __hints, unsigned __clock)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __MWAITXINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_mwaitxintrin_h__ */

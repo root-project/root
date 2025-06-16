@@ -37,6 +37,8 @@
 
 using namespace llvm;
 
+static thread_local bool PrintStackFlag = true;
+
 static const char *BugReportMsg =
     "PLEASE submit a bug report to " BUG_REPORT_URL
     " and include the crash backtrace.\n";
@@ -94,6 +96,14 @@ static void PrintStack(raw_ostream &OS) {
   llvm::ReverseStackTrace(ReversedStack);
 }
 
+bool llvm::GetPrintStack() {
+    return (PrintStackFlag);
+}
+
+void llvm::SetPrintStack( bool value) {
+    PrintStackFlag = value;
+}
+
 /// Print the current stack trace to the specified stream.
 ///
 /// Marked NOINLINE so it can be called from debuggers.
@@ -101,6 +111,7 @@ LLVM_ATTRIBUTE_NOINLINE
 static void PrintCurStackTrace(raw_ostream &OS) {
   // Don't print an empty trace.
   if (!PrettyStackTraceHead) return;
+  if (!GetPrintStack()) return;
 
   // If there are pretty stack frames registered, walk and emit them.
   OS << "Stack dump:\n";
@@ -152,6 +163,7 @@ static CrashHandlerStringStorage crashHandlerStringStorage;
 /// This callback is run if a fatal signal is delivered to the process, it
 /// prints the pretty stack trace.
 static void CrashHandler(void *) {
+  if (!GetPrintStack()) return;
   errs() << BugReportMsg ;
 
 #ifndef __APPLE__
@@ -267,6 +279,10 @@ void PrettyStackTraceProgram::print(raw_ostream &OS) const {
       OS << '"';
   }
   OS << '\n';
+#ifdef LLVM_WITH_LCCRT
+  abort();
+  exit( 1);
+#endif /* LLVM_WITH_LCCRT */
 }
 
 #if ENABLE_BACKTRACES

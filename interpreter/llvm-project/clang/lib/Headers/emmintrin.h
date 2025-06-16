@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_emmintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_emmintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_emmintrin_h__ */
+
 #ifndef __EMMINTRIN_H
 #define __EMMINTRIN_H
 
@@ -4773,3 +4779,5 @@ void _mm_pause(void);
   (_mm_setcsr((_mm_getcsr() & ~_MM_DENORMALS_ZERO_MASK) | (x)))
 
 #endif /* __EMMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_emmintrin_h__ */

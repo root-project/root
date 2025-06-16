@@ -1738,21 +1738,36 @@ Constant *GetConstantFoldFPValue(double V, Type *Ty) {
   llvm_unreachable("Can only constant fold half/float/double");
 }
 
+typedef struct
+{
+#if defined(HAVE_FENV_H)
+  std::fexcept_t flags;
+#endif /* HAVE_FENV_H */
+} llvm_fenv_flags_t;
+
 /// Clear the floating-point exception state.
-inline void llvm_fenv_clearexcept() {
-#if defined(HAVE_FENV_H) && HAVE_DECL_FE_ALL_EXCEPT
+inline void llvm_fenv_clearexcept( llvm_fenv_flags_t *feflags) {
+#if defined(HAVE_FENV_H)
+  fegetexceptflag(&feflags->flags, FE_ALL_EXCEPT);
+#if HAVE_DECL_FE_ALL_EXCEPT
   feclearexcept(FE_ALL_EXCEPT);
+#endif /* HAVE_DECL_FE_ALL_EXCEPT */
 #endif
   errno = 0;
 }
 
 /// Test if a floating-point exception was raised.
-inline bool llvm_fenv_testexcept() {
+inline bool llvm_fenv_testexcept( llvm_fenv_flags_t *feflags) {
   int errno_val = errno;
   if (errno_val == ERANGE || errno_val == EDOM)
     return true;
-#if defined(HAVE_FENV_H) && HAVE_DECL_FE_ALL_EXCEPT && HAVE_DECL_FE_INEXACT
-  if (fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT))
+#if defined(HAVE_FENV_H)
+  bool feval = false;
+#if HAVE_DECL_FE_ALL_EXCEPT && HAVE_DECL_FE_INEXACT
+  feval = fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
+#endif /* HAVE_DECL_FE_ALL_EXCEPT && HAVE_DECL_FE_INEXACT */
+  fesetexceptflag(&feflags->flags, FE_ALL_EXCEPT);
+  if (feval)
     return true;
 #endif
   return false;
@@ -1760,6 +1775,8 @@ inline bool llvm_fenv_testexcept() {
 
 Constant *ConstantFoldFP(double (*NativeFP)(double), const APFloat &V,
                          Type *Ty) {
+  return nullptr;
+#if 0
   llvm_fenv_clearexcept();
   double Result = NativeFP(V.convertToDouble());
   if (llvm_fenv_testexcept()) {
@@ -1768,10 +1785,13 @@ Constant *ConstantFoldFP(double (*NativeFP)(double), const APFloat &V,
   }
 
   return GetConstantFoldFPValue(Result, Ty);
+#endif
 }
 
 Constant *ConstantFoldBinaryFP(double (*NativeFP)(double, double),
                                const APFloat &V, const APFloat &W, Type *Ty) {
+  return nullptr;
+#if 0
   llvm_fenv_clearexcept();
   double Result = NativeFP(V.convertToDouble(), W.convertToDouble());
   if (llvm_fenv_testexcept()) {
@@ -1780,6 +1800,7 @@ Constant *ConstantFoldBinaryFP(double (*NativeFP)(double, double),
   }
 
   return GetConstantFoldFPValue(Result, Ty);
+#endif
 }
 
 Constant *constantFoldVectorReduce(Intrinsic::ID IID, Constant *Op) {

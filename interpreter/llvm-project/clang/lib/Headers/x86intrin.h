@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_x86intrin_h__
+
+#include __LLVM_LCCRT_INTRIN_x86intrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_x86intrin_h__ */
+
 #ifndef __X86INTRIN_H
 #define __X86INTRIN_H
 
@@ -65,3 +71,5 @@
 #endif
 
 #endif /* __X86INTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_x86intrin_h__ */

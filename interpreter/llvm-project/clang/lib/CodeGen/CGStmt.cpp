@@ -2455,6 +2455,10 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
 
   // Assemble the final asm string.
   std::string AsmString = S.generateAsmString(getContext());
+  llvm::Triple tpl = getTarget().getTriple();
+  bool is_e2k = tpl.isArchElbrus();
+
+  is_e2k = false;
 
   // Get all the output and input constraints together.
   SmallVector<TargetInfo::ConstraintInfo, 4> OutputConstraintInfos;
@@ -2554,7 +2558,7 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
     QualType QTy = OutExpr->getType();
     const bool IsScalarOrAggregate = hasScalarEvaluationKind(QTy) ||
                                      hasAggregateEvaluationKind(QTy);
-    if (!Info.allowsMemory() && IsScalarOrAggregate) {
+    if (!is_e2k && !Info.allowsMemory() && IsScalarOrAggregate) {
 
       Constraints += "=" + OutputConstraint;
       ResultRegQualTys.push_back(QTy);
@@ -2630,7 +2634,7 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
       ReadOnly = ReadNone = false;
     }
 
-    if (Info.isReadWrite()) {
+    if (!is_e2k && Info.isReadWrite()) {
       InOutConstraints += ',';
 
       const Expr *InputExpr = S.getOutputExpr(i);
@@ -2772,6 +2776,17 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
       Fallthrough = createBasicBlock("asm.fallthrough");
     }
   }
+
+#if 0
+  // Append the "input" part of inout constraints last.
+  if ( !is_e2k ) {
+    for (unsigned i = 0, e = InOutArgs.size(); i != e; i++) {
+      ArgTypes.push_back(InOutArgTypes[i]);
+      Args.push_back(InOutArgs[i]);
+    }
+    Constraints += InOutConstraints;
+  }
+#endif
 
   bool HasUnwindClobber = false;
 

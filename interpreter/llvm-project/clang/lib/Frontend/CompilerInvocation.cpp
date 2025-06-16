@@ -1519,6 +1519,11 @@ void CompilerInvocationBase::GenerateCodeGenArgs(const CodeGenOptions &Opts,
   if (Opts.NewStructPathTBAA)
     GenerateArg(Consumer, OPT_new_struct_path_tbaa);
 
+  if (Opts.CodegenLccrt)
+    GenerateArg(Consumer, OPT_codegen_lccrt);
+  if (!Opts.LccrtBackendOptions.empty())
+    GenerateArg(Consumer, OPT_lccrt_backend_options, Opts.LccrtBackendOptions);
+
   if (Opts.OptimizeSize == 1)
     GenerateArg(Consumer, OPT_O, "s");
   else if (Opts.OptimizeSize == 2)
@@ -1832,6 +1837,11 @@ bool CompilerInvocation::ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args,
             ? llvm::codegenoptions::DebugTemplateNamesKind::Simple
             : llvm::codegenoptions::DebugTemplateNamesKind::Mangled);
   }
+
+  Opts.CodegenLccrt = Args.hasArg(OPT_codegen_lccrt);
+  Opts.LccrtIpa = Args.hasArg(OPT_lccrt_ipa);
+  Opts.LccrtBackendDebug = Args.hasArg(OPT_lccrt_backend_debug);
+  Opts.LccrtBackendOptions = std::string( Args.getLastArgValue(OPT_lccrt_backend_options));
 
   if (const Arg *A = Args.getLastArg(OPT_ftime_report, OPT_ftime_report_EQ)) {
     Opts.TimePasses = true;

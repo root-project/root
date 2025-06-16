@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_shaintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_shaintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_shaintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <shaintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -187,3 +193,5 @@ _mm_sha256msg2_epu32(__m128i __X, __m128i __Y)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __SHAINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_shaintrin_h__ */

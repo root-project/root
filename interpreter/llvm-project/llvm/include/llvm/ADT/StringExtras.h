@@ -475,7 +475,7 @@ template <typename... Args> inline size_t join_items_size(Args &&...Items) {
 template <typename IteratorT>
 inline std::string join(IteratorT Begin, IteratorT End, StringRef Separator) {
   using tag = typename std::iterator_traits<IteratorT>::iterator_category;
-  return detail::join_impl(Begin, End, Separator, tag());
+  return llvm::detail::join_impl(Begin, End, Separator, tag());
 }
 
 /// Joins the strings in the range [R.begin(), R.end()), adding Separator

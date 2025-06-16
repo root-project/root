@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_x86gprintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_x86gprintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_x86gprintrin_h__ */
+
 #ifndef __X86GPRINTRIN_H
 #define __X86GPRINTRIN_H
 
@@ -68,3 +74,5 @@
                        :  __TMPGPR );
 
 #endif /* __X86GPRINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_x86gprintrin_h__ */

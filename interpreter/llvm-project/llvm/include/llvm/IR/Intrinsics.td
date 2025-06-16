@@ -2586,6 +2586,7 @@ def int_experimental_convergence_loop
 //===----------------------------------------------------------------------===//
 
 include "llvm/IR/IntrinsicsPowerPC.td"
+include "llvm/IR/IntrinsicsElbrus.td"
 include "llvm/IR/IntrinsicsX86.td"
 include "llvm/IR/IntrinsicsARM.td"
 include "llvm/IR/IntrinsicsAArch64.td"

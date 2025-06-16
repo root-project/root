@@ -171,6 +171,7 @@ class Parser : public CodeCompletionHandler {
   // used as type traits.
   llvm::SmallDenseMap<IdentifierInfo *, tok::TokenKind> RevertibleTypeTraits;
 
+  std::unique_ptr<PragmaHandler> AsmInlineHandler;
   std::unique_ptr<PragmaHandler> AlignHandler;
   std::unique_ptr<PragmaHandler> GCCVisibilityHandler;
   std::unique_ptr<PragmaHandler> OptionsHandler;
@@ -810,6 +811,10 @@ private:
   /// Handle the annotation token produced for
   /// #pragma redefine_extname...
   void HandlePragmaRedefineExtname();
+
+  /// Handle the annotation token produced for
+  /// #pragma asm_inline...
+  StmtResult HandlePragmaAsmInline();
 
   /// Handle the annotation token produced for
   /// #pragma STDC FP_CONTRACT...

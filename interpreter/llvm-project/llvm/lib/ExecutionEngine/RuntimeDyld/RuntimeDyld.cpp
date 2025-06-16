@@ -21,6 +21,11 @@
 #include "llvm/Support/MSVCErrorWorkarounds.h"
 #include "llvm/Support/MathExtras.h"
 #include <mutex>
+#ifdef __e2k__
+#include <dlfcn.h>
+#include "llvm/Support/DynamicLibrary.h"
+#include "llvm/CodeGen/Lccrt.h"
+#endif /* __e2k__ */
 
 #include <future>
 
@@ -34,6 +39,49 @@ namespace {
 enum RuntimeDyldErrorCode {
   GenericRTDyldError = 1
 };
+
+#ifdef __e2k__
+class LccrtResolver
+{
+  public:
+    LccrtResolver()
+    {
+        llvm::Triple tpl = llvm::Triple( "e2k-unknown-linux-gnu");
+        std::string lname = llvm::Lccrt::getLibPath( tpl, "lccrt_s") + "/liblccrt_s.so";
+
+        //lib_ = dlopen( lname.c_str(), RTLD_LAZY);
+        lib_ = 0;
+        llvm::sys::DynamicLibrary::LoadLibraryPermanently( lname.c_str(), 0);
+    }
+    ~LccrtResolver()
+    {
+        if ( lib_ )
+        {
+            dlclose( lib_);
+        }
+    }
+  private:
+    void *lib_;
+  public:
+    static LccrtResolver *get()
+    {
+        static LccrtResolver lr;
+
+        return (&lr);
+    }
+    static bool isName( const char *fname)
+    {
+        return (strncmp( fname, "__lccrt_", strlen( "__lccrt_")) == 0);
+    }
+    static void *find( const char *fname)
+    {
+        LccrtResolver *lr = LccrtResolver::get();
+        void *r = (lr && lr->lib_ && isName( fname)) ? dlsym( lr->lib_, fname) : 0;
+
+        return (r);
+    }
+};
+#endif /* __e2k__ */
 
 // FIXME: This class is only here to support the transition to llvm::Error. It
 // will be removed once this transition is complete. Clients should prefer to
@@ -131,6 +179,8 @@ void RuntimeDyldImpl::resolveRelocations() {
   if (auto Err = resolveExternalSymbols()) {
     HasError = true;
     ErrorStr = toString(std::move(Err));
+    fprintf( stderr, "internal error: resolveExternalSymbols: %s (optecomp@mcst.ru)\n", ErrorStr.c_str());
+    fflush( stderr);
   }
 
   resolveLocalRelocations();
@@ -186,6 +236,10 @@ RuntimeDyldImpl::loadObjectImpl(const object::ObjectFile &Obj) {
   Arch = (Triple::ArchType)Obj.getArch();
   IsTargetLittleEndian = Obj.isLittleEndian();
   setMipsABI(Obj);
+
+#ifdef __e2k__
+  LccrtResolver::get();
+#endif /* __e2k__ */
 
   // Compute the memory size required to load all sections to be loaded
   // and pass this information to the memory manager
@@ -969,8 +1023,17 @@ void RuntimeDyldImpl::addRelocationForSymbol(const RelocationEntry &RE,
 
 uint8_t *RuntimeDyldImpl::createStubFunction(uint8_t *Addr,
                                              unsigned AbiVariant) {
-  if (Arch == Triple::aarch64 || Arch == Triple::aarch64_be ||
-      Arch == Triple::aarch64_32) {
+  if ( (Arch == Triple::e2k32) || (Arch == Triple::e2k64) ) {
+      writeBytesUnaligned( 0x0400110400008111, Addr + 0*8, 8);
+      writeBytesUnaligned( 0x0000013000000000, Addr + 1*8, 8);
+      writeBytesUnaligned( 0x61c0dcd104000011, Addr + 2*8, 8);
+      writeBytesUnaligned( 0x0000000000000000, Addr + 3*8, 8);
+      writeBytesUnaligned( 0xc000042000001001, Addr + 4*8, 8);
+
+      return (Addr);
+
+  } else if (Arch == Triple::aarch64 || Arch == Triple::aarch64_be ||
+             Arch == Triple::aarch64_32) {
     // This stub has to be able to access the full address space,
     // since symbol lookup won't necessarily find a handy, in-range,
     // PLT stub for functions which could be anywhere.

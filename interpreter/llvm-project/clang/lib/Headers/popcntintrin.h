@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_popcntintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_popcntintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_popcntintrin_h__ */
+
 #ifndef __POPCNTINTRIN_H
 #define __POPCNTINTRIN_H
 
@@ -57,3 +63,5 @@ _mm_popcnt_u64(unsigned long long __A)
 #undef __DEFAULT_FN_ATTRS_CONSTEXPR
 
 #endif /* __POPCNTINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_popcntintrin_h__ */

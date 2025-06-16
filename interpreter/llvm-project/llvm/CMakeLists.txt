@@ -453,6 +453,7 @@ set(LLVM_ALL_TARGETS
   ARM
   AVR
   BPF
+  Elbrus
   Hexagon
   Lanai
   LoongArch
@@ -479,7 +480,7 @@ set(LLVM_ALL_EXPERIMENTAL_TARGETS
 )
 
 # List of targets with JIT support:
-set(LLVM_TARGETS_WITH_JIT X86 PowerPC AArch64 ARM Mips SystemZ)
+set(LLVM_TARGETS_WITH_JIT X86 PowerPC AArch64 ARM Elbrus Mips SystemZ)
 
 set(LLVM_TARGETS_TO_BUILD "all"
     CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
@@ -857,6 +858,10 @@ if (LLVM_BUILD_STATIC)
       list(REMOVE_AT CMAKE_FIND_LIBRARY_SUFFIXES ${shared_lib_suffix_idx})
     endif()
   endforeach()
+endif()
+
+if (LLVM_WITH_LCCRT)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath-link=${LLVM_WITH_LCCRT}/lib")
 endif()
 
 # Use libtool instead of ar if you are both on an Apple host, and targeting Apple.

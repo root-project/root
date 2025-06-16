@@ -21,6 +21,13 @@
  *
  *===-----------------------------------------------------------------------===
  */
+
+#ifdef __LLVM_LCCRT_INTRIN_avxvnniintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_avxvnniintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_avxvnniintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <avxvnniintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -223,3 +230,5 @@ _mm_dpwssds_avx_epi32(__m128i __S, __m128i __A, __m128i __B)
 #undef __DEFAULT_FN_ATTRS256
 
 #endif // __AVXVNNIINTRIN_H
+
+#endif /* __LLVM_LCCRT_INTRIN_avxvnniintrin_h__ */

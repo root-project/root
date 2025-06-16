@@ -17,6 +17,7 @@ add_llvm_component_library(LLVMTarget
   Core
   MC
   Support
+  Lccrt
   TargetParser
   )
 

@@ -3906,6 +3906,18 @@ def InitSeg : Attr {
   }];
 }
 
+def AsmInline : Attr {
+  let Spellings = [Pragma<"", "asm_inline">];
+  let Args = [];
+  let SemaHandler = 0;
+  let Documentation = [Undocumented];
+  let AdditionalMembers = [{
+  void printPrettyPragma(raw_ostream &OS, const PrintingPolicy &Policy) const {
+    OS << "";
+  }
+  }];
+}
+
 def LoopHint : Attr {
   /// #pragma clang loop <option> directive
   /// vectorize: vectorizes loop operations if State == Enable.
@@ -3916,6 +3928,7 @@ def LoopHint : Attr {
   /// unroll_count: unrolls loop 'Value' times.
   /// unroll_and_jam: attempt to unroll and jam loop if State == Enable.
   /// unroll_and_jam_count: unroll and jams loop 'Value' times.
+  /// loop_count: hint about loop iteration number.
   /// distribute: attempt to distribute loop if State == Enable.
   /// pipeline: disable pipelining loop if State == Disable.
   /// pipeline_initiation_interval: create loop schedule with initiation interval equal to 'Value'.
@@ -3933,10 +3946,12 @@ def LoopHint : Attr {
   let Args = [EnumArgument<"Option", "OptionType",
                           ["vectorize", "vectorize_width", "interleave", "interleave_count",
                            "unroll", "unroll_count", "unroll_and_jam", "unroll_and_jam_count",
+                           "loop_count",
                            "pipeline", "pipeline_initiation_interval", "distribute",
                            "vectorize_predicate"],
                           ["Vectorize", "VectorizeWidth", "Interleave", "InterleaveCount",
                            "Unroll", "UnrollCount", "UnrollAndJam", "UnrollAndJamCount",
+                           "LoopCount",
                            "PipelineDisabled", "PipelineInitiationInterval", "Distribute",
                            "VectorizePredicate"]>,
               EnumArgument<"State", "LoopHintState",
@@ -3957,6 +3972,7 @@ def LoopHint : Attr {
     case UnrollCount: return "unroll_count";
     case UnrollAndJam: return "unroll_and_jam";
     case UnrollAndJamCount: return "unroll_and_jam_count";
+    case LoopCount: return "loop_count";
     case PipelineDisabled: return "pipeline";
     case PipelineInitiationInterval: return "pipeline_initiation_interval";
     case Distribute: return "distribute";

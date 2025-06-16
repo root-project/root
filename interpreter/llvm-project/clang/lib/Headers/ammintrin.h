@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_ammintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_ammintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_ammintrin_h__ */
+
 #ifndef __AMMINTRIN_H
 #define __AMMINTRIN_H
 
@@ -181,3 +187,5 @@ _mm_stream_ss(void *__p, __m128 __a)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __AMMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_ammintrin_h__ */

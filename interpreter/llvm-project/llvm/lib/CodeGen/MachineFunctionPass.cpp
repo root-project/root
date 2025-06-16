@@ -90,7 +90,9 @@ bool MachineFunctionPass::runOnFunction(Function &F) {
 
   MFProps.reset(ClearedProperties);
 
+  detail::PassDumper<MachineFunction>::dumpPass( this->getPassName(), MF, true);
   bool RV = runOnMachineFunction(MF);
+  detail::PassDumper<MachineFunction>::dumpPass( this->getPassName(), MF, false);
 
   if (ShouldEmitSizeRemarks) {
     // We wanted size remarks. Check if there was a change to the number of

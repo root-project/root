@@ -1582,8 +1582,10 @@ Instruction *InstCombinerImpl::visitAdd(BinaryOperator &I) {
 
   // A+B --> A|B iff A and B have no bits set in common.
   WithCache<const Value *> LHSCache(LHS), RHSCache(RHS);
+#ifndef LLVM_WITH_LCCRT
   if (haveNoCommonBitsSet(LHSCache, RHSCache, SQ.getWithInstruction(&I)))
     return BinaryOperator::CreateDisjointOr(LHS, RHS);
+#endif /* !LLVM_WITH_LCCRT */
 
   if (Instruction *Ext = narrowMathIfNoOverflow(I))
     return Ext;

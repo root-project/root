@@ -493,6 +493,11 @@ public:
     return getTypeSizeInBits(Ty) == getTypeStoreSizeInBits(Ty);
   }
 
+#ifdef LLVM_WITH_LCCRT
+  /// Special version of getTypeAllocSize for FixedVectors.
+  TypeSize getFixedVectorAllocSize(Type *Ty) const;
+#endif /* LLVM_WITH_LCCRT */
+
   /// Returns the offset in bytes between successive objects of the
   /// specified type, including alignment padding.
   ///
@@ -502,8 +507,17 @@ public:
   /// This is the amount that alloca reserves for this type. For example,
   /// returns 12 or 16 for x86_fp80, depending on alignment.
   TypeSize getTypeAllocSize(Type *Ty) const {
+#ifndef LLVM_WITH_LCCRT
     // Round up to the next alignment boundary.
     return alignTo(getTypeStoreSize(Ty), getABITypeAlign(Ty).value());
+#else /* !LLVM_WITH_LCCRT */
+    if ( isa<FixedVectorType>( Ty) ) {
+      return getFixedVectorAllocSize(Ty);
+    } else {
+      // Round up to the next alignment boundary.
+      return alignTo(getTypeStoreSize(Ty), getABITypeAlign(Ty).value());
+    }
+#endif /* LLVM_WITH_LCCRT */
   }
 
   /// Returns the offset in bits between successive objects of the

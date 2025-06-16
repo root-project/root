@@ -314,6 +314,9 @@ protected:
   /// \name ToolChain Implementation Helper Functions
   /// @{
 
+  /// Check whether the target triple's architecture is 128-bits.
+  bool isTarget128Bit() const { return getTriple().isArch128Bit(); }
+
   /// Check whether the target triple's architecture is 64-bits.
   bool isTarget64Bit() const { return getTriple().isArch64Bit(); }
 

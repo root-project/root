@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_avxintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_avxintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_avxintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <avxintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -5110,3 +5116,5 @@ _mm256_storeu2_m128i(__m128i_u *__addr_hi, __m128i_u *__addr_lo, __m256i __a)
 #undef __DEFAULT_FN_ATTRS128
 
 #endif /* __AVXINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_avxintrin_h__ */

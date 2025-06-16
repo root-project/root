@@ -605,6 +605,11 @@ enum {
   ODK_PAGESIZE = 11   // Page size information
 };
 
+// ELF Relocation types for Elbrus
+enum {
+#include "ELFRelocs/Elbrus.def"
+};
+
 // Hexagon-specific e_flags
 enum {
   // Object processor version flags, bits[11:0]

@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_f16cintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_f16cintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_f16cintrin_h__ */
+
 #if !defined __IMMINTRIN_H
 #error "Never use <f16cintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -160,3 +166,5 @@ _mm256_cvtph_ps(__m128i __a)
 #undef __DEFAULT_FN_ATTRS256
 
 #endif /* __F16CINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_f16cintrin_h__ */

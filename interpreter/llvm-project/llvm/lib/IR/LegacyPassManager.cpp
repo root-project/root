@@ -18,6 +18,7 @@
 #include "llvm/IR/LegacyPassManagers.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassTimingInfo.h"
+#include "llvm/IR/PassManagerInternal.h"
 #include "llvm/IR/PrintPasses.h"
 #include "llvm/Support/Chrono.h"
 #include "llvm/Support/CommandLine.h"
@@ -1440,7 +1441,9 @@ bool FPPassManager::runOnFunction(Function &F) {
 #ifdef EXPENSIVE_CHECKS
       uint64_t RefHash = FP->structuralHash(F);
 #endif
+      detail::PassDumper<Function>::dumpPass( FP->getPassName(), F, true);
       LocalChanged |= FP->runOnFunction(F);
+      detail::PassDumper<Function>::dumpPass( FP->getPassName(), F, false);
 
 #if defined(EXPENSIVE_CHECKS) && !defined(NDEBUG)
       if (!LocalChanged && (RefHash != FP->structuralHash(F))) {

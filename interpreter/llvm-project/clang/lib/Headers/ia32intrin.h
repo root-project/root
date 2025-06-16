@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_ia32intrin_h__
+
+#include __LLVM_LCCRT_INTRIN_ia32intrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_ia32intrin_h__ */
+
 #ifndef __X86INTRIN_H
 #error "Never use <ia32intrin.h> directly; include <x86intrin.h> instead."
 #endif
@@ -861,3 +867,5 @@ __rorq(unsigned long long __X, int __C) {
 #undef __DEFAULT_FN_ATTRS_CONSTEXPR
 
 #endif /* __IA32INTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_ia32intrin_h__ */

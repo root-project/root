@@ -477,6 +477,9 @@ createNVPTXTargetCodeGenInfo(CodeGenModule &CGM);
 std::unique_ptr<TargetCodeGenInfo>
 createPNaClTargetCodeGenInfo(CodeGenModule &CGM);
 
+std::unique_ptr<TargetCodeGenInfo>
+createElbrusTargetCodeGenInfo(CodeGenModule &CGM);
+
 enum class PPC64_SVR4_ABIKind {
   ELFv1 = 0,
   ELFv2,

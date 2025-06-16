@@ -64,6 +64,13 @@ CGOPT_EXP(uint64_t, LargeDataThreshold)
 CGOPT(ExceptionHandling, ExceptionModel)
 CGOPT_EXP(CodeGenFileType, FileType)
 CGOPT(FramePointerKind, FramePointerUsage)
+CGOPT(bool, EnableCodegenLccrt)
+CGOPT(std::string, LccrtBackendOptions)
+CGOPT(bool, EnableLccrtIpa)
+CGOPT(bool, EnableLccrtAsmtest)
+CGOPT(bool, EnableLccrtJit)
+CGOPT(bool, EnableLccrtBackendDebug)
+CGOPT(bool, EnableAligned)
 CGOPT(bool, EnableUnsafeFPMath)
 CGOPT(bool, EnableNoInfsFPMath)
 CGOPT(bool, EnableNoNaNsFPMath)
@@ -200,6 +207,48 @@ codegen::RegisterCodeGenFlags::RegisterCodeGenFlags() {
                  clEnumValN(CodeGenFileType::Null, "null",
                             "Emit nothing, for performance testing")));
   CGBINDOPT(FileType);
+
+  static cl::opt<bool> EnableCodegenLccrt(
+      "codegen-lccrt",
+      cl::desc("Use lccrt-backend for code's generating"),
+      cl::init(false));
+  CGBINDOPT(EnableCodegenLccrt);
+
+  static cl::opt<std::string> LccrtBackendOptions(
+      "lccrt-backend-options",
+      cl::desc("Set lccrt-backend option's list string"),
+      cl::init(""));
+  CGBINDOPT(LccrtBackendOptions);
+
+  static cl::opt<bool> EnableLccrtIpa(
+      "lccrt-ipa",
+      cl::desc("Use ipa-results in lccrt-backend"),
+      cl::init(false));
+  CGBINDOPT(EnableLccrtIpa);
+
+  static cl::opt<bool> EnableLccrtAsmtest(
+      "lccrt-asmtest",
+      cl::desc("Use asmtest asm-plugin in lccrt-backend for code's generating"),
+      cl::init(false));
+  CGBINDOPT(EnableLccrtAsmtest);
+
+  static cl::opt<bool> EnableLccrtJit(
+      "lccrt-jit",
+      cl::desc("Use jit-mode in lccrt-backend for code's generating"),
+      cl::init(false));
+  CGBINDOPT(EnableLccrtJit);
+
+  static cl::opt<bool> EnableLccrtBackendDebug(
+      "lccrt-backend-debug",
+      cl::desc("Use lccrt-backend debug version"),
+      cl::init(false));
+  CGBINDOPT(EnableLccrtBackendDebug);
+
+  static cl::opt<bool> EnableAligned(
+      "enable-aligned",
+      cl::desc("Enable optimizations that assume aligned memory access"),
+      cl::init(false));
+  CGBINDOPT(EnableAligned);
 
   static cl::opt<FramePointerKind> FramePointerUsage(
       "frame-pointer",
@@ -539,6 +588,13 @@ codegen::getBBSectionsMode(llvm::TargetOptions &Options) {
 TargetOptions
 codegen::InitTargetOptionsFromCodeGenFlags(const Triple &TheTriple) {
   TargetOptions Options;
+  Options.CodegenLccrt = getEnableCodegenLccrt();
+  Options.LccrtIpa = getEnableLccrtIpa();
+  Options.LccrtAsmtest = getEnableLccrtAsmtest();
+  Options.LccrtJit = getEnableLccrtJit();
+  Options.LccrtBackendDebug = getEnableLccrtBackendDebug();
+  Options.LccrtBackendOptions = getLccrtBackendOptions();
+  Options.Aligned = getEnableAligned();
   Options.AllowFPOpFusion = getFuseFPOps();
   Options.UnsafeFPMath = getEnableUnsafeFPMath();
   Options.NoInfsFPMath = getEnableNoInfsFPMath();
@@ -695,6 +751,8 @@ void codegen::setFunctionAttributes(StringRef CPU, StringRef Features,
                           toStringRef(getDisableTailCalls()));
   if (getStackRealign())
     NewAttrs.addAttribute("stackrealign");
+
+  HANDLE_BOOL_ATTR(EnableAlignedView, "aligned");
 
   HANDLE_BOOL_ATTR(EnableUnsafeFPMathView, "unsafe-fp-math");
   HANDLE_BOOL_ATTR(EnableNoInfsFPMathView, "no-infs-fp-math");

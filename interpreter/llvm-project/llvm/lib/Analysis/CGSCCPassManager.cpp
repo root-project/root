@@ -272,7 +272,12 @@ ModuleToPostOrderCGSCCPassAdaptor::run(Module &M, ModuleAnalysisManager &AM) {
           if (!PI.runBeforePass<LazyCallGraph::SCC>(*Pass, *C))
             continue;
 
-          PreservedAnalyses PassPA = Pass->run(*C, CGAM, CG, UR);
+          PreservedAnalyses PassPA;
+          {
+            detail::PassDumper<Module>::dumpPass( Pass->name(), M, true);
+            PassPA = Pass->run(*C, CGAM, CG, UR);
+            detail::PassDumper<Module>::dumpPass( Pass->name(), M, false);
+          }
 
           // Update the SCC and RefSCC if necessary.
           C = UR.UpdatedC ? UR.UpdatedC : C;

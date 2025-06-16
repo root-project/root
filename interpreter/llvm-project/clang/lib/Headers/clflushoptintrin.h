@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_clflushoptintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_clflushoptintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_clflushoptintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <clflushoptintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -34,3 +40,5 @@ _mm_clflushopt(void const * __m) {
 #undef __DEFAULT_FN_ATTRS
 
 #endif
+
+#endif /* __LLVM_LCCRT_INTRIN_clflushoptintrin_h__ */

@@ -69,6 +69,9 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/ADT/StringSwitch.h"
+#ifdef LLVM_WITH_LCCRT
+#include "llvm/CodeGen/Lccrt.h"
+#endif
 #include "llvm/Config/llvm-config.h"
 #include "llvm/MC/TargetRegistry.h"
 #include "llvm/Option/Arg.h"
@@ -555,6 +558,9 @@ static llvm::Triple computeTargetTriple(const Driver &D,
   if (Target.getArch() == llvm::Triple::tce)
     return Target;
 
+  if (Target.getArch() == llvm::Triple::e2k32)
+    Target.setArch( llvm::Triple::e2k64);
+
   // On AIX, the env OBJECT_MODE may affect the resulting arch variant.
   if (Target.isOSAIX()) {
     if (std::optional<std::string> ObjectModeValue =
@@ -582,13 +588,20 @@ static llvm::Triple computeTargetTriple(const Driver &D,
         << A->getAsString(Args) << Target.str();
 
   // Handle pseudo-target flags '-m64', '-mx32', '-m32' and '-m16'.
-  Arg *A = Args.getLastArg(options::OPT_m64, options::OPT_mx32,
+  Arg *A = Args.getLastArg(options::OPT_m128,
+                           options::OPT_m64, options::OPT_mx32,
                            options::OPT_m32, options::OPT_m16,
                            options::OPT_maix32, options::OPT_maix64);
   if (A) {
     llvm::Triple::ArchType AT = llvm::Triple::UnknownArch;
 
-    if (A->getOption().matches(options::OPT_m64) ||
+    if (A->getOption().matches(options::OPT_m64) && Target.getArch() == llvm::Triple::e2k32) {
+      AT = llvm::Triple::e2k64;
+    } else if (A->getOption().matches(options::OPT_m32) && Target.getArch() == llvm::Triple::e2k64) {
+      AT = llvm::Triple::e2k32;
+    } else if (A->getOption().matches(options::OPT_m128)) {
+      AT = Target.get128BitArchVariant().getArch();
+    } else if (A->getOption().matches(options::OPT_m64) ||
         A->getOption().matches(options::OPT_maix64)) {
       AT = Target.get64BitArchVariant().getArch();
       if (Target.getEnvironment() == llvm::Triple::GNUX32)
@@ -1986,6 +1999,10 @@ void Driver::PrintVersion(const Compilation &C, raw_ostream &OS) const {
   }
   const ToolChain &TC = C.getDefaultToolChain();
   OS << "Target: " << TC.getTripleString() << '\n';
+
+#ifdef LLVM_WITH_LCCRT
+  OS << "Lccrt: " << llvm::Lccrt::getVersion( TC.getTriple()) << '\n';
+#endif
 
   // Print the threading model.
   if (Arg *A = C.getArgs().getLastArg(options::OPT_mthread_model)) {

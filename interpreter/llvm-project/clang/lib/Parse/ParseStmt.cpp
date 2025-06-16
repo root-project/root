@@ -413,6 +413,11 @@ Retry:
     HandlePragmaRedefineExtname();
     return StmtEmpty();
 
+  case tok::annot_pragma_asm_inline:
+    ProhibitAttributes(CXX11Attrs);
+    ProhibitAttributes(GNUAttrs);
+    return HandlePragmaAsmInline();
+
   case tok::annot_pragma_fp_contract:
     ProhibitAttributes(CXX11Attrs);
     ProhibitAttributes(GNUAttrs);

@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_tbmintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_tbmintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_tbmintrin_h__ */
+
 #ifndef __X86INTRIN_H
 #error "Never use <tbmintrin.h> directly; include <x86intrin.h> instead."
 #endif
@@ -138,3 +144,5 @@ __tzmsk_u64(unsigned long long __a)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __TBMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_tbmintrin_h__ */

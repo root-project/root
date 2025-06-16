@@ -1,0 +1,39 @@
+if (LLVM_WITH_LCCRT)
+
+add_llvm_library(LLVMLccrt
+  Lccrt.cpp
+  LccrtDbg.cpp
+  LccrtEmitter.cpp
+  LccrtIpa.cpp
+  LccrtIpaPass.cpp
+  LccrtMCEmitter.cpp
+  LccrtTracer.cpp
+
+  LINK_LIBS ${LLVM_LCCRT_LIB}
+)
+
+include_directories(${LLVM_LCCRT_IDIR})
+
+target_link_libraries(LLVMLccrt PUBLIC
+  ${LLVM_LCCRT_LDIR}/liblccrt.so
+)
+
+else()
+
+add_llvm_library(LLVMLccrt
+  Lccrt.cpp
+  LccrtDbg.cpp
+  LccrtEmitter.cpp
+  LccrtIpa.cpp
+  LccrtIpaPass.cpp
+  LccrtMCEmitter.cpp
+  LccrtTracer.cpp
+
+)
+
+target_link_libraries(LLVMLccrt PUBLIC
+)
+
+endif()
+
+add_dependencies(LLVMLccrt intrinsics_gen)

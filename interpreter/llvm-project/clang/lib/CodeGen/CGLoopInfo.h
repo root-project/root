@@ -70,6 +70,9 @@ struct LoopAttributes {
   /// llvm.unroll.
   unsigned UnrollAndJamCount;
 
+  /// llvm.loop.
+  unsigned LoopCount;
+
   /// Value for llvm.loop.distribute.enable metadata.
   LVEnableState DistributeEnable;
 
@@ -276,6 +279,9 @@ public:
 
   /// \brief Set the unroll count for the next loop pushed.
   void setUnrollAndJamCount(unsigned C) { StagedAttrs.UnrollAndJamCount = C; }
+
+  /// Set the loop count for the next loop pushed.
+  void setLoopCount(unsigned C) { StagedAttrs.LoopCount = C; }
 
   /// Set the pipeline disabled state.
   void setPipelineDisabled(bool S) { StagedAttrs.PipelineDisabled = S; }

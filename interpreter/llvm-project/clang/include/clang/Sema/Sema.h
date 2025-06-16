@@ -11164,6 +11164,9 @@ public:
   /// FreeVisContext - Deallocate and null out VisContext.
   void FreeVisContext();
 
+  /// ActOnPragmaAsmInline - Called on well-formed '\#pragma asm_inline'.
+  void ActOnPragmaAsmInline(const Token &Identifier, SourceLocation PragmaLoc);
+
   /// AddCFAuditedAttribute - Check whether we're currently within
   /// '\#pragma clang arc_cf_code_audited' and, if so, consider adding
   /// the appropriate attribute.

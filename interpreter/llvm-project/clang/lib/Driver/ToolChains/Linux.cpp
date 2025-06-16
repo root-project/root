@@ -23,6 +23,7 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/ScopedPrinter.h"
 #include "llvm/Support/VirtualFileSystem.h"
+#include "llvm/CodeGen/Lccrt.h"
 #include <system_error>
 
 using namespace clang::driver;
@@ -221,6 +222,17 @@ Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
   llvm::Triple::ArchType Arch = Triple.getArch();
   std::string SysRoot = computeSysRoot();
   ToolChain::path_list &PPaths = getProgramPaths();
+  if ( Triple.isArchElbrus() ) {
+      ToolChain::path_list lpp;
+
+      lpp.push_back( llvm::Lccrt::getToolchainPath( Triple, "ld"));
+
+      for ( unsigned k = 0; k < PPaths.size(); ++k ) {
+          lpp.push_back( PPaths[k]);
+      }
+
+      PPaths = lpp;
+  }
 
   Generic_GCC::PushPPaths(PPaths);
 
@@ -303,6 +315,16 @@ Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
     addPathIfExists(D, concat(SysRoot, "/libo32"), Paths);
     addPathIfExists(D, concat(SysRoot, "/usr/libo32"), Paths);
   }
+
+  if ( Triple.isArchElbrus() ) {
+      addPathIfExists( D, llvm::Lccrt::getLibPath( Triple, "mvec"), Paths);
+      addPathIfExists( D, llvm::Lccrt::getLibPath( Triple, "c"), Paths);
+      addPathIfExists( D, llvm::Lccrt::getLibPath( Triple, "lccrt_s"), Paths);
+
+  } else if ( Args.hasArg( options::OPT_fcodegen_lccrt) ) {
+      addPathIfExists( D, llvm::Lccrt::getLibPath( Triple, "lccrt_s"), Paths);
+  }
+
   Generic_GCC::AddMultilibPaths(D, SysRoot, OSLibDir, MultiarchTriple, Paths);
 
   addPathIfExists(D, concat(SysRoot, "/lib", MultiarchTriple), Paths);
@@ -382,6 +404,9 @@ std::string Linux::computeSysRoot() const {
     if (getVFS().exists(AndroidSysRootPath))
       return AndroidSysRootPath;
   }
+
+  if ( getTriple().isArchElbrus() )
+    return llvm::Lccrt::getToolchainPath( getTriple(), "fs");
 
   if (getTriple().isCSKY()) {
     // CSKY toolchains use different names for sysroot folder.
@@ -542,6 +567,18 @@ std::string Linux::getDynamicLinker(const ArgList &Args) const {
 
     break;
   }
+  case llvm::Triple::e2k32:
+    LibDir = "lib32";
+    Loader = "ld-linux.so.2";
+    break;
+  case llvm::Triple::e2k64:
+    LibDir = "lib64";
+    Loader = "ld-linux.so.2";
+    break;
+  case llvm::Triple::e2k128:
+    LibDir = "lib128";
+    Loader = "ld-linux.so.2";
+    break;
   case llvm::Triple::ppc:
     LibDir = "lib";
     Loader = "ld.so.1";
@@ -616,9 +653,18 @@ void Linux::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
                                       ArgStringList &CC1Args) const {
   const Driver &D = getDriver();
   std::string SysRoot = computeSysRoot();
+  const llvm::Triple &Triple = getTriple();
 
   if (DriverArgs.hasArg(clang::driver::options::OPT_nostdinc))
     return;
+
+  if (Triple.isArchElbrus()) {
+    //addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "c++-stl"));
+    //addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "c++-stl") + "/tdep.ptr64");
+    //addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "c++-stl") + "/backward");
+    addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "system"));
+    //addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "c"));
+  }
 
   // Add 'include' in the resource directory, which is similar to
   // GCC_INCLUDE_DIR (private headers) in GCC. Note: the include directory
@@ -749,7 +795,7 @@ void Linux::AddIAMCUIncludeArgs(const ArgList &DriverArgs,
 }
 
 bool Linux::isPIEDefault(const llvm::opt::ArgList &Args) const {
-  return CLANG_DEFAULT_PIE_ON_LINUX || getTriple().isAndroid() ||
+  return (CLANG_DEFAULT_PIE_ON_LINUX && !getTriple().isElbrus()) || getTriple().isAndroid() ||
          getTriple().isMusl() || getSanitizerArgs(Args).requiresPIE();
 }
 

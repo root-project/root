@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_float_h__
+
+#include __LLVM_LCCRT_INTRIN_float_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_float_h__ */
+
 #ifndef __CLANG_FLOAT_H
 #define __CLANG_FLOAT_H
 
@@ -166,3 +172,5 @@
 #endif /* __STDC_WANT_IEC_60559_TYPES_EXT__ */
 
 #endif /* __CLANG_FLOAT_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_float_h__ */

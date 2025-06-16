@@ -311,6 +311,9 @@ void CGRecordLowering::lower(bool NVBaseType) {
 void CGRecordLowering::lowerUnion(bool isNoUniqueAddress) {
   CharUnits LayoutSize =
       isNoUniqueAddress ? Layout.getDataSize() : Layout.getSize();
+#ifdef LLVM_WITH_LCCRT
+  CharUnits Alignment = CharUnits::fromQuantity( 1);
+#endif /* LLVM_WITH_LCCRT */
   llvm::Type *StorageType = nullptr;
   bool SeenNamedMember = false;
   // Iterate through the fields setting bitFieldInfo and the Fields array. Also
@@ -350,12 +353,39 @@ void CGRecordLowering::lowerUnion(bool isNoUniqueAddress) {
     if (!IsZeroInitializable)
       continue;
     // Conditionally update our storage type if we've got a new "better" one.
+#ifdef LLVM_WITH_LCCRT
+    Alignment = std::max( Alignment, getAlignment( FieldType));
+#endif /* LLVM_WITH_LCCRT */
     if (!StorageType ||
         getAlignment(FieldType) >  getAlignment(StorageType) ||
         (getAlignment(FieldType) == getAlignment(StorageType) &&
         getSize(FieldType) > getSize(StorageType)))
       StorageType = FieldType;
   }
+
+#ifdef LLVM_WITH_LCCRT
+  if ( LayoutSize.getQuantity() > 0 ) {
+      int64_t align = Alignment.getQuantity();
+      int64_t lsize = LayoutSize.getQuantity();
+
+      if ( (align == 0)
+           || (lsize % align != 0)
+           || (align % 2 != 0) ) {
+          FieldTypes.push_back( getByteArrayType( LayoutSize));
+      } else if ( align % 8 == 0 ) {
+          FieldTypes.push_back( llvm::ArrayType::get( getIntNType( 64), lsize/8));
+      } else if ( align % 4 == 0 ) {
+          FieldTypes.push_back( llvm::ArrayType::get( getIntNType( 32), lsize/4));
+      } else if ( align % 2 == 0 ) {
+          FieldTypes.push_back( llvm::ArrayType::get( getIntNType( 16), lsize/2));
+      } else {
+          assert( 0);
+      }
+
+      return;
+  }
+#endif /* LLVM_WITH_LCCRT */
+
   // If we have no storage type just pad to the appropriate size and return.
   if (!StorageType)
     return appendPaddingBytes(LayoutSize);

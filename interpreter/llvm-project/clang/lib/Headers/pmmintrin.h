@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_pmmintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_pmmintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_pmmintrin_h__ */
+
 #ifndef __PMMINTRIN_H
 #define __PMMINTRIN_H
 
@@ -299,3 +305,5 @@ _mm_mwait(unsigned __extensions, unsigned __hints)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __PMMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_pmmintrin_h__ */

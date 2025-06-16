@@ -9,6 +9,7 @@
 #include "Gnu.h"
 #include "Arch/ARM.h"
 #include "Arch/CSKY.h"
+#include "Arch/Elbrus.h"
 #include "Arch/LoongArch.h"
 #include "Arch/Mips.h"
 #include "Arch/PPC.h"
@@ -33,6 +34,7 @@
 #include "llvm/Support/RISCVISAInfo.h"
 #include "llvm/Support/VirtualFileSystem.h"
 #include "llvm/TargetParser/TargetParser.h"
+#include "llvm/CodeGen/Lccrt.h"
 #include <system_error>
 
 using namespace clang::driver;
@@ -227,6 +229,12 @@ static const char *getLDMOption(const llvm::Triple &T, const ArgList &Args) {
     if (T.isOSIAMCU())
       return "elf_iamcu";
     return "elf_i386";
+  case llvm::Triple::e2k32:
+    return "elf32_e2k";
+  case llvm::Triple::e2k64:
+    return "elf64_e2k";
+  case llvm::Triple::e2k128:
+    return "elf64_e2k_pm";
   case llvm::Triple::aarch64:
     return "aarch64linux";
   case llvm::Triple::aarch64_be:
@@ -426,6 +434,14 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   if (Triple.isRISCV())
     CmdArgs.push_back("-X");
 
+  if (!IsStatic) {
+    if ( Triple.isArchElbrus() )
+      CmdArgs.push_back( "-dy");
+  } else {
+    if ( Triple.isArchElbrus() )
+      CmdArgs.push_back( "-dn");
+  }
+
   const bool IsShared = Args.hasArg(options::OPT_shared);
   if (IsShared)
     CmdArgs.push_back("-shared");
@@ -559,6 +575,51 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
         CmdArgs.push_back("-Bdynamic");
     }
     CmdArgs.push_back("-lm");
+
+    if ( Triple.isArchElbrus() ) {
+        CmdArgs.push_back( "-lmvec");
+        CmdArgs.push_back( "-Bstatic");
+        CmdArgs.push_back( "-llccrt_s");
+        if ( !IsStatic )
+        {
+            CmdArgs.push_back( "-Bdynamic");
+        }
+        CmdArgs.push_back( "-lm");
+
+        const std::string LibCXXIncludePathCandidates[] = {
+            llvm::Lccrt::getToolchainPath( Triple, "fs") + "/lib64",
+            llvm::Lccrt::getToolchainPath( Triple, "fs") + "/usr/lib64",
+            llvm::Lccrt::getToolchainPath( Triple, "fs") + "/usr/local/lib64",
+            llvm::Lccrt::getLibPath( Triple, "mvec") };
+
+        for (const auto &LinkPath : LibCXXIncludePathCandidates) {
+            if (ToolChain.getVFS().exists(LinkPath)) {
+                CmdArgs.push_back("-rpath");
+                CmdArgs.push_back(Args.MakeArgString(LinkPath.c_str()));
+                CmdArgs.push_back("-rpath-link");
+                CmdArgs.push_back(Args.MakeArgString(LinkPath.c_str()));
+            }
+        }
+    } else if ( Args.hasArg(options::OPT_fcodegen_lccrt) ) {
+        CmdArgs.push_back( "-llccrt_s");
+        CmdArgs.push_back( "-lm");
+    }
+  } else if (D.CCCIsCC() &&
+             !Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
+    if ( Triple.isArchElbrus() ) {
+      CmdArgs.push_back( "-lmvec");
+      CmdArgs.push_back( "-Bstatic");
+      CmdArgs.push_back( "-llccrt_s");
+      if ( !IsStatic )
+      {
+          CmdArgs.push_back( "-Bdynamic");
+      }
+      CmdArgs.push_back( "-lm");
+
+    } else if ( Args.hasArg(options::OPT_fcodegen_lccrt) ) {
+        CmdArgs.push_back( "-llccrt_s");
+        CmdArgs.push_back( "-lm");
+    }
   }
 
   // Silence warnings when linking C code with a C++ '-stdlib' argument.
@@ -576,7 +637,7 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
 
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_r)) {
     if (!Args.hasArg(options::OPT_nodefaultlibs)) {
-      if (IsStatic || IsStaticPIE)
+      if (IsStatic || IsStaticPIE || Triple.isArchElbrus())
         CmdArgs.push_back("--start-group");
 
       if (NeedsSanitizerDeps)
@@ -628,7 +689,7 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
       if (IsIAMCU)
         CmdArgs.push_back("-lgloss");
 
-      if (IsStatic || IsStaticPIE)
+      if (IsStatic || IsStaticPIE || Triple.isArchElbrus())
         CmdArgs.push_back("--end-group");
       else
         AddRunTimeLibs(ToolChain, D, CmdArgs, Args);
@@ -687,6 +748,13 @@ void tools::gnutools::Assembler::ConstructJob(Compilation &C,
   claimNoWarnArgs(Args);
 
   ArgStringList CmdArgs;
+  std::string elbrus_as = "";
+  llvm::Triple triple = getToolChain().getTriple();
+  llvm::Triple::ArchType arch = triple.getArch();
+
+  if ( triple.isArchElbrus() ) {
+    elbrus_as = llvm::Lccrt::getToolchain( getToolChain().getTriple(), "as");
+  }
 
   llvm::Reloc::Model RelocationModel;
   unsigned PICLevel;
@@ -714,11 +782,24 @@ void tools::gnutools::Assembler::ConstructJob(Compilation &C,
     }
   }
 
-  switch (getToolChain().getArch()) {
+  switch (arch) {
   default:
     break;
   // Add --32/--64 to make sure we get the format we want.
   // This is incomplete
+  case llvm::Triple::e2k32:
+  case llvm::Triple::e2k64:
+  case llvm::Triple::e2k128:
+	{
+        const char *ptrarg = 0;
+        std::string CPUName = elbrus::getElbrusTargetCPU(Args);
+		CmdArgs.push_back( Args.MakeArgString("-mcpu=" + CPUName));
+        if (arch == llvm::Triple::e2k32)  ptrarg = "-mptr32";
+        if (arch == llvm::Triple::e2k64)  ptrarg = "-mptr64";
+        if (arch == llvm::Triple::e2k128) ptrarg = "-mptr128";
+        if (ptrarg) CmdArgs.push_back( ptrarg);
+		break;
+	}
   case llvm::Triple::x86:
     CmdArgs.push_back("--32");
     break;
@@ -973,8 +1054,8 @@ void tools::gnutools::Assembler::ConstructJob(Compilation &C,
       CmdArgs.push_back(Args.MakeArgString("-gdwarf-" + Twine(DwarfVersion)));
     }
 
-  const char *Exec =
-      Args.MakeArgString(getToolChain().GetProgramPath(DefaultAssembler));
+  const char *gnu_as = getToolChain().GetProgramPath( DefaultAssembler).c_str();
+  const char *Exec = Args.MakeArgString( elbrus_as.empty() ? gnu_as : elbrus_as);
   C.addCommand(std::make_unique<Command>(JA, *this,
                                          ResponseFileSupport::AtFileCurCP(),
                                          Exec, CmdArgs, Inputs, Output));
@@ -2493,6 +2574,13 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
       "i586-suse-linux",     "i686-montavista-linux",
   };
 
+  static const char *const E2KLibDirs[] =   { "/lib/ptr32", "/ptr32", "/lib" };
+  static const char *const E2KTriples[] =   { "e2k-2c+-linux", "e2k-4c-linux", "e2k-8c-linux" };
+  static const char *const E2K64LibDirs[] = { "/lib/ptr64", "/ptr64", "/lib" };
+  static const char *const E2K64Triples[] = { "e2k-2c+-linux", "e2k-4c-linux", "e2k-8c-linux" };
+  static const char *const E2K128LibDirs[] = { "/lib/ptr128", "/ptr128", "/lib" };
+  static const char *const E2K128Triples[] = { "e2k-2c+-linux", "e2k-4c-linux", "e2k-8c-linux" };
+
   static const char *const LoongArch64LibDirs[] = {"/lib64", "/lib"};
   static const char *const LoongArch64Triples[] = {
       "loongarch64-linux-gnu", "loongarch64-unknown-linux-gnu"};
@@ -2675,6 +2763,18 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
   }
 
   switch (TargetTriple.getArch()) {
+  case llvm::Triple::e2k32:
+    LibDirs.append(begin(E2KLibDirs), end(E2KLibDirs));
+    TripleAliases.append(begin(E2KTriples), end(E2KTriples));
+    break;
+  case llvm::Triple::e2k64:
+    LibDirs.append(begin(E2K64LibDirs), end(E2K64LibDirs));
+    TripleAliases.append(begin(E2K64Triples), end(E2K64Triples));
+    break;
+  case llvm::Triple::e2k128:
+    LibDirs.append(begin(E2K128LibDirs), end(E2K128LibDirs));
+    TripleAliases.append(begin(E2K128Triples), end(E2K128Triples));
+    break;
   case llvm::Triple::aarch64:
     LibDirs.append(begin(AArch64LibDirs), end(AArch64LibDirs));
     TripleAliases.append(begin(AArch64Triples), end(AArch64Triples));
@@ -3126,6 +3226,10 @@ bool Generic_GCC::isPICDefaultForced() const {
 
 bool Generic_GCC::IsIntegratedAssemblerDefault() const {
   switch (getTriple().getArch()) {
+  case llvm::Triple::e2k32:
+  case llvm::Triple::e2k64:
+  case llvm::Triple::e2k128:
+    return false;
   case llvm::Triple::nvptx:
   case llvm::Triple::nvptx64:
   case llvm::Triple::xcore:
@@ -3252,6 +3356,14 @@ void Generic_GCC::AddMultilibIncludeArgs(const ArgList &DriverArgs,
 
 void Generic_GCC::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
                                                ArgStringList &CC1Args) const {
+  const llvm::Triple &Triple = getTriple();
+
+  if (Triple.isArchElbrus()) {
+    addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "c++-stl"));
+    addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "c++-stl") + "/tdep.ptr64");
+    addSystemInclude(DriverArgs, CC1Args, llvm::Lccrt::getIncludePath( Triple, "c++-stl") + "/backward");
+  }
+
   if (DriverArgs.hasArg(options::OPT_nostdinc, options::OPT_nostdincxx,
                         options::OPT_nostdlibinc))
     return;

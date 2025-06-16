@@ -393,6 +393,10 @@ public:
   /// registers.
   std::string PreferVectorWidth;
 
+  /// Options for lccrt-backend.
+  bool CodegenLccrt;
+  std::string LccrtBackendOptions;
+
   /// Set of XRay instrumentation kinds to emit.
   XRayInstrSet XRayInstrumentationBundle;
 

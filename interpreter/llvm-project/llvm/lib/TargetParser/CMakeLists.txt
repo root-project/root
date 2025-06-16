@@ -24,6 +24,7 @@ add_llvm_component_library(LLVMTargetParser
   SubtargetFeature.cpp
   TargetParser.cpp
   Triple.cpp
+  ElbrusTargetParser.cpp
   X86TargetParser.cpp
 
   ADDITIONAL_HEADER_DIRS

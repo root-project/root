@@ -178,6 +178,8 @@ def m_amdgpu_Features_Group : OptionGroup<"<amdgpu features group>">,
                               Group<m_Group>, DocName<"AMDGPU">;
 def m_arm_Features_Group : OptionGroup<"<arm features group>">,
                            Group<m_Group>, DocName<"ARM">;
+def m_e2k_Features_Group : OptionGroup<"<e2k features group>">,
+                           Group<m_Group>, DocName<"Elbrus">;
 def m_hexagon_Features_Group : OptionGroup<"<hexagon features group>">,
                                Group<m_Group>, DocName<"Hexagon">;
 def m_sparc_Features_Group : OptionGroup<"<sparc features group>">,
@@ -3772,6 +3774,25 @@ def Wlarge_by_value_copy_EQ : Joined<["-"], "Wlarge-by-value-copy=">,
   Visibility<[ClangOption, CC1Option]>,
   MarshallingInfoInt<LangOpts<"NumLargeByValueCopy">>;
 
+def fcodegen_lccrt : Flag<["-"], "fcodegen-lccrt">, Group<f_Group>,
+  HelpText<"Enable the lccrt backend">;
+def fno_codegen_lccrt : Flag<["-"], "fno-codegen-lccrt">, Group<f_Group>;
+def flccrt_ipa : Flag<["-"], "flccrt-ipa">, Group<f_Group>,
+  HelpText<"Use ipa-results in lccrt backend">;
+def fno_lccrt_ipa : Flag<["-"], "fno-lccrt-ipa">, Group<f_Group>;
+def flccrt_trace : Flag<["-"], "flccrt-trace">, Group<f_Group>,
+  HelpText<"Enable the lccrt-tracer pass">;
+def fno_lccrt_trace : Flag<["-"], "fno-lccrt-trace">, Group<f_Group>;
+def flccrt_backend_debug : Flag<["-"], "flccrt-backend-debug">, Group<f_Group>,
+  HelpText<"Use lccrt-backend debug version">;
+def fno_lccrt_backend_debug : Flag<["-"], "fno-lccrt-backend-debug">, Group<f_Group>;
+def flccrt_backend_options : Joined<["-"], "flccrt-backend-options=">, Group<f_Group>, Flags<[NoXarchOption]>;
+
+defm aligned : BoolFOption<"aligned",
+  LangOpts<"Aligned">, DefaultFalse,
+  PosFlag<SetTrue, [], [ClangOption, CC1Option], "Guarantees only aligned memory access">,
+  NegFlag<SetFalse>>;
+
 // These "special" warning flags are effectively processed as f_Group flags by the driver:
 // Just silence warnings about -Wlarger-than for now.
 def Wlarger_than_EQ : Joined<["-"], "Wlarger-than=">, Group<clang_ignored_f_Group>;
@@ -4345,6 +4366,7 @@ def mqdsp6_compat : Flag<["-"], "mqdsp6-compat">, Group<m_Group>,
   MarshallingInfoFlag<LangOpts<"HexagonQdsp6Compat">>;
 def m64 : Flag<["-"], "m64">, Group<m_Group>, Flags<[NoXarchOption]>,
   Visibility<[ClangOption, CLOption, DXCOption]>;
+def m128 : Flag<["-"], "m128">, Group<m_Group>, Flags<[NoXarchOption]>;
 def maix64 : Flag<["-"], "maix64">, Group<m_Group>, Flags<[NoXarchOption]>;
 def mx32 : Flag<["-"], "mx32">, Group<m_Group>, Flags<[NoXarchOption]>,
   Visibility<[ClangOption, CLOption, DXCOption]>;
@@ -5848,6 +5870,10 @@ foreach i = {0-7} in
     HelpText<"Reserve the d"#i#" register (M68k only)">;
 } // let Flags = [TargetSpecific]
 
+// Elbrus feature flags
+def mxvec_emul : Flag<["-"], "mxvec-emul">, Group<m_e2k_Features_Group>;
+def mon_xvec_emul : Flag<["-"], "mno-xvec-emul">, Group<m_e2k_Features_Group>;
+
 // X86 feature flags
 let Flags = [TargetSpecific] in {
 def mx87 : Flag<["-"], "mx87">, Group<m_x86_Features_Group>;
@@ -6885,6 +6911,14 @@ def no_struct_path_tbaa : Flag<["-"], "no-struct-path-tbaa">,
   MarshallingInfoNegativeFlag<CodeGenOpts<"StructPathTBAA">>;
 def new_struct_path_tbaa : Flag<["-"], "new-struct-path-tbaa">,
   HelpText<"Enable enhanced struct-path aware Type Based Alias Analysis">;
+def codegen_lccrt : Flag<["-"], "codegen-lccrt">,
+  HelpText<"Run lccrt backend">;
+def lccrt_backend_options : Joined<["-"], "lccrt-backend-options=">,
+  HelpText<"Set lccrt-backend option's list string">;
+def lccrt_ipa : Flag<["-"], "lccrt-ipa">,
+  HelpText<"Use ipa-results in lccrt backend">;
+def lccrt_backend_debug : Flag<["-"], "lccrt-backend-debug">,
+  HelpText<"Use lccrt-backend debug version">;
 def mdebug_pass : Separate<["-"], "mdebug-pass">,
   HelpText<"Enable additional debug output">,
   MarshallingInfoString<CodeGenOpts<"DebugPass">>;

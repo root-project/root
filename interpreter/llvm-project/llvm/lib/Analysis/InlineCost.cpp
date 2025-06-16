@@ -3051,6 +3051,25 @@ InlineCost llvm::getInlineCost(
     function_ref<BlockFrequencyInfo &(Function &)> GetBFI,
     ProfileSummaryInfo *PSI, OptimizationRemarkEmitter *ORE) {
 
+  static int dbgCnt = 0;
+  static int dbgBnd = -2;
+
+  if ( dbgBnd == -2 ) {
+      if ( getenv( "LLVM_INLINE_BOUND") ) {
+          dbgBnd = atoi( getenv( "LLVM_INLINE_BOUND"));
+      } else {
+          dbgBnd = -1;
+      }
+  }
+
+  if ( dbgBnd >= 0 ) {
+     if ( (dbgCnt < dbgBnd) ) {
+         dbgCnt++;
+     } else {
+         return InlineCost::getNever( "LLVM_INLINE_BOUND");
+     }
+  }
+
   auto UserDecision =
       llvm::getAttributeBasedInliningDecision(Call, Callee, CalleeTTI, GetTLI);
 

@@ -55,6 +55,9 @@ JITTargetMachineBuilder::createTargetMachine() {
   if (!TM)
     return make_error<StringError>("Could not allocate target machine",
                                    inconvertibleErrorCode());
+  if ( TT.isElbrus() ) {
+      TM->Options.LccrtCallLong = true;
+  }
 
   return std::unique_ptr<TargetMachine>(TM);
 }

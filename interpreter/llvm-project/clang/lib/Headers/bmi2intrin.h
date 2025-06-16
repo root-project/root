@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_bmi2intrin_h__
+
+#include __LLVM_LCCRT_INTRIN_bmi2intrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_bmi2intrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <bmi2intrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -253,3 +259,5 @@ _mulx_u64 (unsigned long long __X, unsigned long long __Y,
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __BMI2INTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_bmi2intrin_h__ */

@@ -57,6 +57,14 @@ CodeGenFileType getFileType();
 
 FramePointerKind getFramePointerUsage();
 
+bool getEnableCodegenLccrt();
+std::string getLccrtBackendOptions();
+bool getEnableLccrtIpa();
+bool getEnableLccrtAsmtest();
+bool getEnableLccrtJit();
+bool getEnableLccrtBackendDebug();
+bool getEnableAligned();
+
 bool getEnableUnsafeFPMath();
 
 bool getEnableNoInfsFPMath();

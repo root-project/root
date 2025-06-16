@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_avx2intrin_h__
+
+#include __LLVM_LCCRT_INTRIN_avx2intrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_avx2intrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <avx2intrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -5282,3 +5288,5 @@ _mm_srlv_epi64(__m128i __X, __m128i __Y)
 #undef __DEFAULT_FN_ATTRS128
 
 #endif /* __AVX2INTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_avx2intrin_h__ */

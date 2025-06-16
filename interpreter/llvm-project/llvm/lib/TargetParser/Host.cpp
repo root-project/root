@@ -495,6 +495,56 @@ StringRef sys::detail::getHostCPUNameForBPF() {
 #endif
 }
 
+StringRef sys::detail::getHostCPUNameForElbrus(StringRef ProcCpuinfoContent) {
+  // The "processor 0:" line comes after a fair amount of other information,
+  // including a cache breakdown, but this should be plenty.
+
+  unsigned CPUId = ~0;
+  const char *r = "generic";
+
+  // Find processor identifier for model-string.
+  std::string cpuinfo = ProcCpuinfoContent.str();
+  int klen = cpuinfo.size();
+  for ( int k0 = 0, k1 = 0; (k0 < klen); k0 = k1 ) {
+    for ( k0 = k0; (k0 < klen) && (cpuinfo[k0] == '\n'); ++k0 ) ;
+    for ( k1 = k0; (k1 < klen) && (cpuinfo[k1] != '\n'); ++k1 ) ;
+
+    std::vector<std::string> words;
+    for ( int i0 = k0, i1 = k0; (i0 < k1); i0 = i1 ) {
+      for ( i0 = i0; (i0 < k1) &&  isspace( cpuinfo[i0]); ++i0 ) ;
+      for ( i1 = i0; (i1 < k1) && !isspace( cpuinfo[i1]); ++i1 ) ;
+      if ( (i0 < i1) ) {
+        words.push_back( cpuinfo.substr( i0, i1 - i0));
+      }
+    }
+
+    if ( (words.size() == 3)
+         && (words[0] == "model")
+         && (words[1] == ":") ) {
+      CPUId = atoi( words[2].c_str());
+      break;
+    }
+  }
+
+  switch ( CPUId ) {
+    case 0x02: r = "elbrus-v2"; break;
+    case 0x03: r = "elbrus-4c"; break;
+    case 0x04: r = "elbrus-2c+"; break;
+    case 0x06: r = "elbrus-v2"; break;
+    case 0x07: r = "elbrus-8c"; break;
+    case 0x08: r = "elbrus-1c+"; break;
+    case 0x09: r = "elbrus-8c2"; break;
+    case 0x0a: r = "elbrus-12c"; break;
+    case 0x0b: r = "elbrus-16c"; break;
+    case 0x0c: r = "elbrus-2c3"; break;
+    case 0x0d: r = "elbrus-48c"; break;
+    case 0x0e: r = "elbrus-8v7"; break;
+    default:   r = "generic"; break;
+  }
+
+  return (r);
+}
+
 #if defined(__i386__) || defined(_M_IX86) || \
     defined(__x86_64__) || defined(_M_X64)
 
@@ -1434,6 +1484,12 @@ StringRef sys::getHostCPUName() {
   StringRef Content = P ? P->getBuffer() : "";
   return detail::getHostCPUNameForS390x(Content);
 }
+#elif defined(__linux__) && defined(__e2k__)
+StringRef sys::getHostCPUName() {
+  std::unique_ptr<llvm::MemoryBuffer> P = getProcCpuinfoContent();
+  StringRef Content = P ? P->getBuffer() : "";
+  return detail::getHostCPUNameForElbrus(Content);
+}
 #elif defined(__MVS__)
 StringRef sys::getHostCPUName() {
   // Get pointer to Communications Vector Table (CVT).
@@ -2017,8 +2073,18 @@ std::string sys::getProcessTriple() {
   PT = withHostArch(PT);
 #endif
 
+  if (sizeof(void *) == 16 && PT.isArch32Bit())
+    PT = PT.get128BitArchVariant();
+  if (sizeof(void *) == 16 && PT.isArch64Bit())
+    PT = PT.get128BitArchVariant();
+
+  if (sizeof(void *) == 8 && PT.isArch128Bit())
+    PT = PT.get64BitArchVariant();
   if (sizeof(void *) == 8 && PT.isArch32Bit())
     PT = PT.get64BitArchVariant();
+
+  if (sizeof(void *) == 4 && PT.isArch128Bit())
+    PT = PT.get32BitArchVariant();
   if (sizeof(void *) == 4 && PT.isArch64Bit())
     PT = PT.get32BitArchVariant();
 

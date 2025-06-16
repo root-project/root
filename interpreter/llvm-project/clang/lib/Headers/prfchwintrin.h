@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_prfchwintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_prfchwintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_prfchwintrin_h__ */
+
 #if !defined(__X86INTRIN_H) && !defined(_MM3DNOW_H_INCLUDED)
 #error "Never use <prfchwintrin.h> directly; include <x86intrin.h> or <mm3dnow.h> instead."
 #endif
@@ -56,3 +62,5 @@ _m_prefetchw(volatile const void *__P)
 }
 
 #endif /* __PRFCHWINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_prfchwintrin_h__ */

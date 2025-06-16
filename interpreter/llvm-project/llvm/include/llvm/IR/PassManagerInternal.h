@@ -25,6 +25,8 @@
 
 namespace llvm {
 
+class MachineFunction;
+
 template <typename IRUnitT> class AllAnalysesOn;
 template <typename IRUnitT, typename... ExtraArgTs> class AnalysisManager;
 class PreservedAnalyses;
@@ -60,6 +62,27 @@ struct PassConcept {
   virtual bool isRequired() const = 0;
 };
 
+template <typename IRUnitT>
+struct PassDumper {
+public:
+    static void dumpPass( const StringRef &PN, IRUnitT &IR, bool isbefore) {}
+};
+
+template <>
+struct PassDumper<Module> {
+    static void dumpPass( const StringRef &PN, Module &IR, bool isbefore);
+};
+
+template <>
+struct PassDumper<Function> {
+    static void dumpPass( const StringRef &PN, Function &IR, bool isbefore);
+};
+
+template <>
+struct PassDumper<MachineFunction> {
+    static void dumpPass( const StringRef &PN, MachineFunction &IR, bool isbefore);
+};
+
 /// A template wrapper used to implement the polymorphic API.
 ///
 /// Can be instantiated for any object which provides a \c run method accepting
@@ -86,6 +109,11 @@ struct PassModel : PassConcept<IRUnitT, AnalysisManagerT, ExtraArgTs...> {
 
   PreservedAnalysesT run(IRUnitT &IR, AnalysisManagerT &AM,
                          ExtraArgTs... ExtraArgs) override {
+    PreservedAnalysesT r;
+    PassDumper<IRUnitT>::dumpPass( Pass.name(), IR, true);
+    r = Pass.run(IR, AM, ExtraArgs...);
+    PassDumper<IRUnitT>::dumpPass( Pass.name(), IR, false);
+    return (r);
     return Pass.run(IR, AM, ExtraArgs...);
   }
 

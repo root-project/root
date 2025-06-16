@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_mm3dnow_h__
+
+#include __LLVM_LCCRT_INTRIN_mm3dnow_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_mm3dnow_h__ */
+
 #ifndef _MM3DNOW_H_INCLUDED
 #define _MM3DNOW_H_INCLUDED
 
@@ -155,3 +161,5 @@ _m_pswapdsi(__m64 __m) {
 #undef __DEFAULT_FN_ATTRS
 
 #endif
+
+#endif /* __LLVM_LCCRT_INTRIN_mm3dnow_h__ */

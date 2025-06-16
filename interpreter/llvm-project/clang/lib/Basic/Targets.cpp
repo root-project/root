@@ -21,6 +21,7 @@
 #include "Targets/BPF.h"
 #include "Targets/CSKY.h"
 #include "Targets/DirectX.h"
+#include "Targets/Elbrus.h"
 #include "Targets/Hexagon.h"
 #include "Targets/Lanai.h"
 #include "Targets/Le64.h"
@@ -116,6 +117,13 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
   switch (Triple.getArch()) {
   default:
     return nullptr;
+
+  case llvm::Triple::e2k32:
+    return std::make_unique<LinuxTargetInfo<Elbrus32TargetInfo>>( Triple, Opts);
+  case llvm::Triple::e2k64:
+    return std::make_unique<LinuxTargetInfo<Elbrus64TargetInfo>>( Triple, Opts);
+  case llvm::Triple::e2k128:
+    return std::make_unique<LinuxTargetInfo<Elbrus128TargetInfo>>( Triple, Opts);
 
   case llvm::Triple::arc:
     return std::make_unique<ARCTargetInfo>(Triple, Opts);

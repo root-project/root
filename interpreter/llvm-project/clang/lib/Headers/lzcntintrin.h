@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_lzcntintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_lzcntintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_lzcntintrin_h__ */
+
 #if !defined __X86INTRIN_H && !defined __IMMINTRIN_H
 #error "Never use <lzcntintrin.h> directly; include <x86intrin.h> instead."
 #endif
@@ -102,3 +108,5 @@ _lzcnt_u64(unsigned long long __X)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __LZCNTINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_lzcntintrin_h__ */

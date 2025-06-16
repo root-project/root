@@ -10,6 +10,7 @@
 #include "AMDGPU.h"
 #include "Arch/AArch64.h"
 #include "Arch/ARM.h"
+#include "Arch/Elbrus.h"
 #include "Arch/CSKY.h"
 #include "Arch/LoongArch.h"
 #include "Arch/M68k.h"
@@ -7190,6 +7191,23 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   Args.addOptOutFlag(CmdArgs, options::OPT_fgnu_inline_asm,
                      options::OPT_fno_gnu_inline_asm);
+
+  if (Args.hasFlag(options::OPT_fcodegen_lccrt, options::OPT_fno_codegen_lccrt, 0))
+    CmdArgs.push_back("-codegen-lccrt");
+  if (Args.hasFlag(options::OPT_flccrt_ipa, options::OPT_fno_lccrt_ipa, 0))
+    CmdArgs.push_back("-lccrt-ipa");
+  if (Args.hasFlag(options::OPT_flccrt_backend_debug, options::OPT_fno_lccrt_backend_debug, 0))
+    CmdArgs.push_back("-lccrt-backend-debug");
+  if (Arg *A = Args.getLastArg(options::OPT_flccrt_backend_options)) {
+    //std::string str = "-lccrt-backend-options=\"";
+    std::string str = "-lccrt-backend-options=";
+    str += A->getValue();
+    //str += "\"";
+    CmdArgs.push_back(Args.MakeArgString(str));
+  }
+
+  if (Args.hasFlag(options::OPT_faligned, options::OPT_fno_aligned, 0))
+    CmdArgs.push_back("-faligned");
 
   // Enable vectorization per default according to the optimization level
   // selected. For optimization levels that want vectorization we use the alias

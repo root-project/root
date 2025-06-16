@@ -283,6 +283,19 @@ public:
     return Options.EnableAIXExtendedAltivecABI;
   }
 
+#ifdef LLVM_WITH_LCCRT
+  virtual bool isCodeGenLccrt() const { return Options.CodegenLccrt; };
+#else /* !LLVM_WITH_LCCRT */
+  virtual bool isCodeGenLccrt() const { return false; };
+#endif /* LLVM_WITH_LCCRT */
+  virtual bool isLccrtIpa() const { return Options.LccrtIpa; };
+  virtual bool isLccrtAsmtest() const { return Options.LccrtAsmtest; };
+  virtual bool isLccrtJit() const { return Options.LccrtJit; };
+  virtual bool isLccrtCallLong() const { return Options.LccrtCallLong; };
+  virtual bool isLccrtBackendDebug() const { return Options.LccrtBackendDebug; };
+  virtual std::string& getLccrtBackendOptions() const { return Options.LccrtBackendOptions; }
+  virtual bool isLccrtLlvmIREmbedStaticOnly() const { return Options.LccrtLlvmIREmbedStaticOnly; };
+
   bool getUniqueSectionNames() const { return Options.UniqueSectionNames; }
 
   /// Return true if unique basic block section names must be generated.

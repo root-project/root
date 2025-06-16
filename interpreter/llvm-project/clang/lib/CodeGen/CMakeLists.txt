@@ -120,6 +120,7 @@ add_clang_library(clangCodeGen
   Targets/AVR.cpp
   Targets/BPF.cpp
   Targets/CSKY.cpp
+  Targets/Elbrus.cpp
   Targets/Hexagon.cpp
   Targets/Lanai.cpp
   Targets/LoongArch.cpp
@@ -151,4 +152,6 @@ add_clang_library(clangCodeGen
   clangFrontend
   clangLex
   clangSerialization
+  LLVMFrontendDriver
+  LLVMFrontendHLSL
   )

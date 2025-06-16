@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_clwbintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_clwbintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_clwbintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <clwbintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -36,3 +42,5 @@ _mm_clwb(void const *__p) {
 #undef __DEFAULT_FN_ATTRS
 
 #endif
+
+#endif /* __LLVM_LCCRT_INTRIN_clwbintrin_h__ */

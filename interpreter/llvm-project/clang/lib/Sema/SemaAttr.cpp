@@ -820,6 +820,34 @@ void Sema::ActOnPragmaMSAllocText(
   }
 }
 
+void Sema::ActOnPragmaAsmInline(const Token &IdTok, SourceLocation PragmaLoc) {
+
+  Scope *curScope = 0;
+  IdentifierInfo *Name = IdTok.getIdentifierInfo();
+  LookupResult Lookup(*this, Name, IdTok.getLocation(), LookupOrdinaryName);
+  LookupName(Lookup, curScope, true);
+
+  if (Lookup.empty()) {
+    Diag(PragmaLoc, diag::warn_pragma_unused_undeclared_var)
+      << Name << SourceRange(IdTok.getLocation());
+    return;
+  }
+
+  VarDecl *VD = Lookup.getAsSingle<VarDecl>();
+  if (!VD) {
+    Diag(PragmaLoc, diag::warn_pragma_unused_expected_var_arg)
+      << Name << SourceRange(IdTok.getLocation());
+    return;
+  }
+
+  // Warn if this was used before being marked unused.
+  if (VD->isUsed())
+    Diag(PragmaLoc, diag::warn_used_but_marked_unused) << Name;
+
+  VD->addAttr(UnusedAttr::CreateImplicit(Context, IdTok.getLocation(),
+                                         UnusedAttr::GNU_unused));
+}
+
 void Sema::ActOnPragmaUnused(const Token &IdTok, Scope *curScope,
                              SourceLocation PragmaLoc) {
 

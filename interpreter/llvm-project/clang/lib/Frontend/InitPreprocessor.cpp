@@ -372,6 +372,13 @@ static void InitializeStandardPredefinedMacros(const TargetInfo &TI,
                                                const LangOptions &LangOpts,
                                                const FrontendOptions &FEOpts,
                                                MacroBuilder &Builder) {
+  if ( (TI.getTriple().getArch() == llvm::Triple::e2k32) )
+    Builder.defineMacro( "__ptr32__");
+  else if ( (TI.getTriple().getArch() == llvm::Triple::e2k64) )
+    Builder.defineMacro( "__ptr64__");
+  else if ( (TI.getTriple().getArch() == llvm::Triple::e2k128) )
+    Builder.defineMacro( "__ptr128__");
+
   if (LangOpts.HLSL) {
     Builder.defineMacro("__hlsl_clang");
     // HLSL Version

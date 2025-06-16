@@ -1303,6 +1303,8 @@ template <class ELFT> Triple::ArchType ELFObjectFile<ELFT>::getArch() const {
     return Triple::hexagon;
   case ELF::EM_LANAI:
     return Triple::lanai;
+  case ELF::EM_MCST_ELBRUS:
+    return ELFT::Is64Bits ? Triple::e2k64 : Triple::e2k32;
   case ELF::EM_MIPS:
     switch (EF.getHeader().e_ident[ELF::EI_CLASS]) {
     case ELF::ELFCLASS32:

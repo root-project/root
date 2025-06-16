@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_immintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_immintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_immintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #define __IMMINTRIN_H
 
@@ -819,3 +825,5 @@ _InterlockedCompareExchange64_HLERelease(__int64 volatile *_Destination,
 #endif /* defined(_MSC_VER) && __has_extension(gnu_asm) */
 
 #endif /* __IMMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_immintrin_h__ */

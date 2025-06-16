@@ -39,6 +39,9 @@ StringRef Triple::getArchTypeName(ArchType Kind) {
   case bpfel:          return "bpfel";
   case csky:           return "csky";
   case dxil:           return "dxil";
+  case e2k32:          return "e2k32";
+  case e2k64:          return "e2k64";
+  case e2k128:         return "e2k128";
   case hexagon:        return "hexagon";
   case hsail64:        return "hsail64";
   case hsail:          return "hsail";
@@ -143,6 +146,10 @@ StringRef Triple::getArchTypePrefix(ArchType Kind) {
   case ppc64le:
   case ppc:
   case ppcle:       return "ppc";
+
+  case e2k32:      
+  case e2k64:
+  case e2k128:      return "e2k";
 
   case m68k:        return "m68k";
 
@@ -372,6 +379,9 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
     .Case("armeb", armeb)
     .Case("avr", avr)
     .StartsWith("bpf", BPFArch)
+    .Case("e2k32", e2k32)
+    .Case("e2k64", e2k64)
+    .Case("e2k128", e2k128)
     .Case("m68k", m68k)
     .Case("mips", mips)
     .Case("mipsel", mipsel)
@@ -518,6 +528,15 @@ static Triple::ArchType parseArch(StringRef ArchName) {
     .Case("arm64ec", Triple::aarch64)
     .Case("arm", Triple::arm)
     .Case("armeb", Triple::armeb)
+    .Case("e2k32", Triple::e2k32)
+    .Case("e2k128", Triple::e2k128)
+    .Cases("e2k", "e2k64", Triple::e2k64)
+    .Cases("e2kv2", "e2k64v2", Triple::e2k64)
+    .Cases("e2kv3", "e2k64v3", Triple::e2k64)
+    .Cases("e2kv4", "e2k64v4", Triple::e2k64)
+    .Cases("e2kv5", "e2k64v5", Triple::e2k64)
+    .Cases("e2kv6", "e2k64v6", Triple::e2k64)
+    .Cases("e2kv7", "e2k64v7", Triple::e2k64)
     .Case("thumb", Triple::thumb)
     .Case("thumbeb", Triple::thumbeb)
     .Case("avr", Triple::avr)
@@ -715,6 +734,22 @@ static Triple::SubArchType parseSubArch(StringRef SubArchName) {
       (SubArchName.ends_with("r6el") || SubArchName.ends_with("r6")))
     return Triple::MipsSubArch_r6;
 
+  if ( SubArchName.starts_with( "e2k") ) {
+      if ( SubArchName.ends_with( "v2") ) {
+          return Triple::E2KSubArch_v2;
+      } else if ( SubArchName.ends_with( "v3") ) {
+          return Triple::E2KSubArch_v3;
+      } else if ( SubArchName.ends_with( "v4") ) {
+          return Triple::E2KSubArch_v4;
+      } else if ( SubArchName.ends_with( "v5") ) {
+          return Triple::E2KSubArch_v5;
+      } else if ( SubArchName.ends_with( "v6") ) {
+          return Triple::E2KSubArch_v6;
+      } else if ( SubArchName.ends_with( "v7") ) {
+          return Triple::E2KSubArch_v7;
+      }
+  }
+
   if (SubArchName == "powerpcspe")
     return Triple::PPCSubArch_spe;
 
@@ -852,6 +887,9 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
   case Triple::bpfeb:
   case Triple::bpfel:
   case Triple::csky:
+  case Triple::e2k32:
+  case Triple::e2k64:
+  case Triple::e2k128:
   case Triple::hexagon:
   case Triple::hsail64:
   case Triple::hsail:
@@ -1455,6 +1493,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::armeb:
   case llvm::Triple::csky:
   case llvm::Triple::dxil:
+  case llvm::Triple::e2k32:
   case llvm::Triple::hexagon:
   case llvm::Triple::hsail:
   case llvm::Triple::kalimba:
@@ -1491,6 +1530,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::amdil64:
   case llvm::Triple::bpfeb:
   case llvm::Triple::bpfel:
+  case llvm::Triple::e2k64:
   case llvm::Triple::hsail64:
   case llvm::Triple::le64:
   case llvm::Triple::loongarch64:
@@ -1510,8 +1550,15 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::wasm64:
   case llvm::Triple::x86_64:
     return 64;
+
+  case llvm::Triple::e2k128:
+    return 128;
   }
   llvm_unreachable("Invalid architecture value");
+}
+
+bool Triple::isArch128Bit() const {
+  return getArchPointerBitWidth(getArch()) == 128;
 }
 
 bool Triple::isArch64Bit() const {
@@ -1524,6 +1571,18 @@ bool Triple::isArch32Bit() const {
 
 bool Triple::isArch16Bit() const {
   return getArchPointerBitWidth(getArch()) == 16;
+}
+
+bool Triple::isArchElbrus() const {
+  switch (getArch()) {
+    case Triple::e2k32:
+    case Triple::e2k64:
+    case Triple::e2k128:
+      return (true);
+    default:
+      break;
+  }
+  return (false);
 }
 
 Triple Triple::get32BitArchVariant() const {
@@ -1547,6 +1606,7 @@ Triple Triple::get32BitArchVariant() const {
   case Triple::armeb:
   case Triple::csky:
   case Triple::dxil:
+  case Triple::e2k32:
   case Triple::hexagon:
   case Triple::hsail:
   case Triple::kalimba:
@@ -1581,6 +1641,8 @@ Triple Triple::get32BitArchVariant() const {
   case Triple::aarch64:        T.setArch(Triple::arm);     break;
   case Triple::aarch64_be:     T.setArch(Triple::armeb);   break;
   case Triple::amdil64:        T.setArch(Triple::amdil);   break;
+  case Triple::e2k64:          T.setArch(Triple::e2k32);   break;
+  case Triple::e2k128:         T.setArch(Triple::e2k32);   break;
   case Triple::hsail64:        T.setArch(Triple::hsail);   break;
   case Triple::le64:           T.setArch(Triple::le32);    break;
   case Triple::loongarch64:    T.setArch(Triple::loongarch32); break;
@@ -1636,6 +1698,7 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::amdil64:
   case Triple::bpfeb:
   case Triple::bpfel:
+  case Triple::e2k64:
   case Triple::hsail64:
   case Triple::le64:
   case Triple::loongarch64:
@@ -1660,6 +1723,8 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::amdil:           T.setArch(Triple::amdil64);    break;
   case Triple::arm:             T.setArch(Triple::aarch64);    break;
   case Triple::armeb:           T.setArch(Triple::aarch64_be); break;
+  case Triple::e2k32:           T.setArch(Triple::e2k64);      break;
+  case Triple::e2k128:          T.setArch(Triple::e2k64);      break;
   case Triple::hsail:           T.setArch(Triple::hsail64);    break;
   case Triple::le32:            T.setArch(Triple::le64);       break;
   case Triple::loongarch32:     T.setArch(Triple::loongarch64);    break;
@@ -1684,6 +1749,77 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::thumbeb:         T.setArch(Triple::aarch64_be); break;
   case Triple::wasm32:          T.setArch(Triple::wasm64);     break;
   case Triple::x86:             T.setArch(Triple::x86_64);     break;
+  }
+  return T;
+}
+
+Triple Triple::get128BitArchVariant() const {
+  Triple T(*this);
+  switch (getArch()) {
+  case Triple::UnknownArch:
+  case Triple::arc:
+  case Triple::avr:
+  case Triple::csky:
+  case Triple::hexagon:
+  case Triple::kalimba:
+  case Triple::lanai:
+  case Triple::m68k:
+  case Triple::msp430:
+  case Triple::r600:
+  case Triple::shave:
+  case Triple::sparcel:
+  case Triple::tce:
+  case Triple::tcele:
+  case Triple::xcore:
+  case Triple::aarch64_32:
+  case Triple::amdil:
+  case Triple::arm:
+  case Triple::armeb:
+  case Triple::hsail:
+  case Triple::le32:
+  case Triple::mips:
+  case Triple::mipsel:
+  case Triple::nvptx:
+  case Triple::ppc:
+  case Triple::ppcle:
+  case Triple::renderscript32:
+  case Triple::riscv32:
+  case Triple::sparc:
+  case Triple::spir:
+  case Triple::thumb:
+  case Triple::thumbeb:
+  case Triple::wasm32:
+  case Triple::x86:
+  case Triple::aarch64:
+  case Triple::aarch64_be:
+  case Triple::amdgcn:
+  case Triple::amdil64:
+  case Triple::bpfeb:
+  case Triple::bpfel:
+  case Triple::hsail64:
+  case Triple::le64:
+  case Triple::mips64:
+  case Triple::mips64el:
+  case Triple::nvptx64:
+  case Triple::ppc64:
+  case Triple::ppc64le:
+  case Triple::renderscript64:
+  case Triple::riscv64:
+  case Triple::sparcv9:
+  case Triple::spir64:
+  case Triple::systemz:
+  case Triple::ve:
+  case Triple::wasm64:
+  case Triple::x86_64:
+    T.setArch(UnknownArch);
+    break;
+
+  case Triple::e2k32:           T.setArch(Triple::e2k128);     break;
+  case Triple::e2k64:           T.setArch(Triple::e2k128);     break;
+
+  case Triple::e2k128:
+    // Already 128-bit.
+    break;
   }
   return T;
 }
@@ -1805,6 +1941,9 @@ bool Triple::isLittleEndian() const {
   case Triple::bpfel:
   case Triple::csky:
   case Triple::dxil:
+  case Triple::e2k32:
+  case Triple::e2k64:
+  case Triple::e2k128:
   case Triple::hexagon:
   case Triple::hsail64:
   case Triple::hsail:

@@ -529,9 +529,16 @@ ArgType PrintfSpecifier::getScalarArgType(ASTContext &Ctx,
       case LengthModifier::AsSizeT:
         return ArgType::makeSizeT(ArgType(Ctx.getSignedSizeType(), "ssize_t"));
       case LengthModifier::AsInt3264:
-        return Ctx.getTargetInfo().getTriple().isArch64Bit()
+        /*return Ctx.getTargetInfo().getTriple().isArch64Bit()
                    ? ArgType(Ctx.LongLongTy, "__int64")
-                   : ArgType(Ctx.IntTy, "__int32");
+                   : ArgType(Ctx.IntTy, "__int32");*/
+        if ( Ctx.getTargetInfo().getTriple().isArch128Bit() ) {
+            return ArgType(Ctx.LongLongTy, "__int64");
+        } else if ( Ctx.getTargetInfo().getTriple().isArch64Bit() ) {
+            return ArgType(Ctx.LongLongTy, "__int64");
+        } else {
+            return ArgType(Ctx.IntTy, "__int32");
+        }
       case LengthModifier::AsPtrDiff:
         return ArgType::makePtrdiffT(
             ArgType(Ctx.getPointerDiffType(), "ptrdiff_t"));
@@ -564,9 +571,16 @@ ArgType PrintfSpecifier::getScalarArgType(ASTContext &Ctx,
       case LengthModifier::AsSizeT:
         return ArgType::makeSizeT(ArgType(Ctx.getSizeType(), "size_t"));
       case LengthModifier::AsInt3264:
-        return Ctx.getTargetInfo().getTriple().isArch64Bit()
+        /*return Ctx.getTargetInfo().getTriple().isArch64Bit()
                    ? ArgType(Ctx.UnsignedLongLongTy, "unsigned __int64")
-                   : ArgType(Ctx.UnsignedIntTy, "unsigned __int32");
+                   : ArgType(Ctx.UnsignedIntTy, "unsigned __int32");*/
+        if ( Ctx.getTargetInfo().getTriple().isArch128Bit() ) {
+            return ArgType(Ctx.UnsignedLongLongTy, "unsigned __int64");
+        } else if ( Ctx.getTargetInfo().getTriple().isArch64Bit() ) {
+            return ArgType(Ctx.UnsignedLongLongTy, "unsigned __int64");
+        } else {
+            return ArgType(Ctx.UnsignedIntTy, "unsigned __int32");
+        }
       case LengthModifier::AsPtrDiff:
         return ArgType::makePtrdiffT(
             ArgType(Ctx.getUnsignedPointerDiffType(), "unsigned ptrdiff_t"));

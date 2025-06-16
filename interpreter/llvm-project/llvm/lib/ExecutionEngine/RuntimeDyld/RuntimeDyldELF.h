@@ -29,6 +29,9 @@ class RuntimeDyldELF : public RuntimeDyldImpl {
                          uint64_t Value, uint32_t Type, int64_t Addend,
                          uint64_t SymOffset = 0, SID SectionID = 0);
 
+  void resolveElbrusRelocation( unsigned SectionID, const RelocationValueRef &Value,
+                                relocation_iterator RelI, StubMap &Stubs);
+
   void resolveX86_64Relocation(const SectionEntry &Section, uint64_t Offset,
                                uint64_t Value, uint32_t Type, int64_t Addend,
                                uint64_t SymOffset);
@@ -44,6 +47,9 @@ class RuntimeDyldELF : public RuntimeDyldImpl {
 
   void resolveAArch64Branch(unsigned SectionID, const RelocationValueRef &Value,
                             relocation_iterator RelI, StubMap &Stubs);
+
+  void resolveElbrusRelocation(const SectionEntry &Section, uint64_t Offset,
+                               uint64_t Value, uint32_t Type, int64_t Addend);
 
   void resolveARMRelocation(const SectionEntry &Section, uint64_t Offset,
                             uint32_t Value, uint32_t Type, int32_t Addend);
@@ -75,12 +81,16 @@ class RuntimeDyldELF : public RuntimeDyldImpl {
       return 6; // 2-byte jmp instruction + 32-bit relative address
     else if (Arch == Triple::systemz)
       return 16;
+    else if ( (Arch == Triple::e2k32) || (Arch == Triple::e2k64) )
+      return 40;
     else
       return 0;
   }
 
   Align getStubAlignment() override {
     if (Arch == Triple::systemz)
+      return Align(8);
+    else if ( (Arch == Triple::e2k32) || (Arch == Triple::e2k64) )
       return Align(8);
     else
       return Align(1);

@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_smmintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_smmintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_smmintrin_h__ */
+
 #ifndef __SMMINTRIN_H
 #define __SMMINTRIN_H
 
@@ -2326,3 +2332,5 @@ static __inline__ __m128i __DEFAULT_FN_ATTRS _mm_cmpgt_epi64(__m128i __V1,
 #include <crc32intrin.h>
 
 #endif /* __SMMINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_smmintrin_h__ */

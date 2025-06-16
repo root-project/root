@@ -589,6 +589,113 @@ void RuntimeDyldELF::resolveAArch64Relocation(const SectionEntry &Section,
   }
 }
 
+void
+RuntimeDyldELF::resolveElbrusRelocation( const SectionEntry &Section,
+                                         uint64_t Offset, uint64_t Value,
+                                         uint32_t Type, int64_t Addend)
+{
+    const char *s = 0;
+    const char *s1 = 0;
+    uint64_t a, b, c;
+    uint32_t *TargetPtr = reinterpret_cast<uint32_t *>( Section.getAddressWithOffset( Offset));
+    uint64_t FinalAddress = Section.getLoadAddressWithOffset(Offset);
+
+    LLVM_DEBUG( dbgs() << "resolveElbrusRelocation, LocalAddress: 0x"
+                << format("%llx", Section.getAddressWithOffset(Offset))
+                << " FinalAddress: 0x" << format("%llx", FinalAddress)
+                << " Value: 0x" << format("%llx", Value) << " Type: 0x"
+                << format("%x", Type) << " Addend: 0x"
+                << format("%llx", Addend) << "\n");
+
+    switch (Type) {
+      default:
+        llvm_unreachable("Relocation type not implemented yet!");
+        break;
+      case ELF::R_E2K_32_ABS: s = "R_E2K_32_ABS"; break;
+      case ELF::R_E2K_32_PC:
+        a = Value + Addend;
+        TargetPtr[0] = a >> 32U;
+        TargetPtr[1] = a;
+        break;
+      case ELF::R_E2K_AP_GOT: s = "R_E2K_AP_GOT"; break;
+      case ELF::R_E2K_PL_GOT: s = "R_E2K_PL_GOT"; break;
+      case ELF::R_E2K_32_JMP_SLOT: s = "R_E2K_32_JMP_SLOT"; break;
+      case ELF::R_E2K_32_COPY: s = "R_E2K_32_COPY"; break;
+      case ELF::R_E2K_32_RELATIVE: s = "R_E2K_32_RELATIVE"; break;
+      case ELF::R_E2K_32_IRELATIVE: s = "R_E2K_32_IRELATIVE"; break;
+      case ELF::R_E2K_32_SIZE: s = "R_E2K_32_SIZE"; break;
+      case ELF::R_E2K_32_DYNOPT: s = "R_E2K_32_DYNOPT"; break;
+      case ELF::R_E2K_64_ABS:
+        a = Value + Addend;
+        TargetPtr[0] = a;
+        TargetPtr[1] = a >> 32U;
+        break;
+      case ELF::R_E2K_64_ABS_LIT:
+        a = Value + Addend;
+        TargetPtr[0] = a >> 32U;
+        TargetPtr[1] = a;
+        break;
+      case ELF::R_E2K_64_PC_LIT: s = "R_E2K_64_PC_LIT"; break;
+      case ELF::R_E2K_64_JMP_SLOT: s = "R_E2K_64_JMP_SLOT"; break;
+      case ELF::R_E2K_64_COPY: s = "R_E2K_64_COPY"; break;
+      case ELF::R_E2K_64_RELATIVE: s = "R_E2K_64_RELATIVE"; break;
+      case ELF::R_E2K_64_RELATIVE_LIT: s = "R_E2K_64_RELATIVE_LIT"; break;
+      case ELF::R_E2K_64_IRELATIVE: s = "R_E2K_64_IRELATIVE"; break;
+      case ELF::R_E2K_64_SIZE: s = "R_E2K_64_SIZE"; break;
+      case ELF::R_E2K_64_GOTOFF: s = "R_E2K_64_GOTOFF"; break;
+      case ELF::R_E2K_64_GOTOFF_LIT: s = "R_E2K_64_GOTOFF_LIT"; break;
+      case ELF::R_E2K_64_DYNOPT: s = "R_E2K_64_DYNOPT"; break;
+      case ELF::R_E2K_TLS_GDMOD: s = "R_E2K_TLS_GDMOD"; break;
+      case ELF::R_E2K_TLS_GDREL: s = "R_E2K_TLS_GDREL"; break;
+      case ELF::R_E2K_TLS_IE: s = "R_E2K_TLS_IE"; break;
+      case ELF::R_E2K_32_TLS_LE: s = "R_E2K_32_TLS_LE"; break;
+      case ELF::R_E2K_64_TLS_LE: s = "R_E2K_64_TLS_LE"; break;
+      case ELF::R_E2K_TLS_32_DTPMOD: s = "R_E2K_TLS_32_DTPMOD"; break;
+      case ELF::R_E2K_TLS_32_DTPREL: s = "R_E2K_TLS_32_DTPREL"; break;
+      case ELF::R_E2K_TLS_64_DTPMOD: s = "R_E2K_TLS_64_DTPMOD"; break;
+      case ELF::R_E2K_TLS_64_DTPREL: s = "R_E2K_TLS_64_DTPREL"; break;
+      case ELF::R_E2K_TLS_TPOFF32: s = "R_E2K_TLS_TPOFF32"; break;
+      case ELF::R_E2K_TLS_TPOFF64: s = "R_E2K_TLS_TPOFF64"; break;
+      case ELF::R_E2K_AP: s = "R_E2K_AP"; break;
+      case ELF::R_E2K_PL: s = "R_E2K_PL"; break;
+      case ELF::R_E2K_GOT: s = "R_E2K_GOT"; break;
+      case ELF::R_E2K_GOTOFF: s = "R_E2K_GOTOFF"; break;
+      case ELF::R_E2K_DISP:
+        c = (((int64_t)(Value + Addend) - (int64_t)(uintptr_t)TargetPtr) >> 3);
+        a = c & (~0U >> 4U);
+        b = TargetPtr[0] & (~0U << 28U);
+        TargetPtr[0] = a | b;
+        if ( !((c <= 0x0000000007ffffffULL)
+               || (c >= 0xfffffffff8000000ULL)) )
+        {
+            s1 = "internal error: disp-relocation got overheaded shift (optecomp@mcst.ru)";
+        }
+        break;
+      case ELF::R_E2K_PREF: s = "R_E2K_PREF"; break;
+      case ELF::R_E2K_NONE: s = "R_E2K_NONE"; break;
+      case ELF::R_E2K_GOTPLT: s = "R_E2K_GOTPLT"; break;
+      case ELF::R_E2K_ISLOCAL: s = "R_E2K_ISLOCAL"; break;
+      case ELF::R_E2K_ISLOCAL32: s = "R_E2K_ISLOCAL32"; break;
+    }
+
+    if ( s )
+    {
+        fprintf( stderr, "internal error: relocation %s (%d) doesn't supported yet (optecomp@mcst.ru)\n",
+                 s, Type);
+        fflush( stderr);
+        exit( 1);
+    }
+
+    if ( s1 )
+    {
+        fprintf( stderr, "%s\n", s1);
+        fflush( stderr);
+        exit( 1);
+    }
+
+    return;
+} /* RuntimeDyldELF::resolveElbrusRelocation */
+
 void RuntimeDyldELF::resolveARMRelocation(const SectionEntry &Section,
                                           uint64_t Offset, uint32_t Value,
                                           uint32_t Type, int32_t Addend) {
@@ -1055,6 +1162,10 @@ void RuntimeDyldELF::resolveRelocation(const SectionEntry &Section,
   case Triple::aarch64_be:
     resolveAArch64Relocation(Section, Offset, Value, Type, Addend);
     break;
+  case Triple::e2k32:
+  case Triple::e2k64:
+    resolveElbrusRelocation(Section, Offset, Value, Type, Addend);
+    break;
   case Triple::arm: // Fall through.
   case Triple::armeb:
   case Triple::thumb:
@@ -1115,6 +1226,83 @@ uint32_t RuntimeDyldELF::getMatchingLoRelocation(uint32_t RelType,
     break;
   }
   return ELF::R_MIPS_NONE;
+}
+
+void
+RuntimeDyldELF::resolveElbrusRelocation( unsigned SectionID,
+                                         const RelocationValueRef &Value,
+                                         relocation_iterator RelI,
+                                         StubMap &Stubs)
+{
+    LLVM_DEBUG( dbgs() << "\t\tThis is an Elbrus call relocation.");
+    SectionEntry &Section = Sections[SectionID];
+
+    uint64_t Offset = RelI->getOffset();
+    unsigned RelType = RelI->getType();
+    // Look for an existing stub.
+    StubMap::const_iterator i = Stubs.find(Value);
+
+    if ( (i != Stubs.end()) )
+    {
+        LLVM_DEBUG( dbgs() << " Stub function found\n");
+        resolveRelocation( Section, Offset, (uint64_t)Section.getAddressWithOffset( i->second),
+                           RelType, 0);
+    } else
+    {
+        uint64_t Address = 0;
+        uint64_t SourceAddress = Sections[SectionID].getLoadAddressWithOffset( Offset);
+
+        if ( Value.SymbolName )
+        {
+            auto Loc = GlobalSymbolTable.find( Value.SymbolName);
+
+            // Don't create direct branch for external symbols.
+            if ( (Loc != GlobalSymbolTable.end()) )
+            {
+                const auto &SymInfo = Loc->second;
+                const auto SymOffset = SymInfo.getOffset();
+                Address = uint64_t(Sections[SymInfo.getSectionID()].getLoadAddressWithOffset( SymOffset));
+            }
+        } else
+        {
+            Address = uint64_t(Sections[Value.SectionID].getLoadAddress());
+        }
+
+        if ( (Address != 0)
+             && isInt<28>( Address + Value.Addend - SourceAddress) )
+        {
+            processSimpleRelocation( SectionID, Offset, RelType, Value);
+        } else
+        {
+            // Create a new stub function.
+            LLVM_DEBUG( dbgs() << " Create a new stub function\n");
+            auto StubOffset = Section.getStubOffset();
+            Stubs[Value] = StubOffset;
+            uint8_t *StubTargetAddr = createStubFunction( Section.getAddressWithOffset( StubOffset));
+            auto StubTargetOffset = StubTargetAddr - Section.getAddress() + 16 + 8;
+            //RelocationEntry REmovt( SectionID, StubTargetOffset, ELF::R_E2K_64_ABS_LIT, Value.Addend);
+
+            fprintf( stderr,
+                     "internal error: stub-function for disp-relocation isn't "
+                     "supported yet (optecomp@mcst.ru)\n");
+            fflush( stderr);
+            exit( 1);
+
+            if ( Value.SymbolName )
+            {
+                RelocationEntry REmovt( SectionID, StubTargetOffset, ELF::R_E2K_64_ABS_LIT, 0);
+                addRelocationForSymbol( REmovt, Value.SymbolName);
+            } else
+            {
+                RelocationEntry REmovt( SectionID, StubTargetOffset, ELF::R_E2K_64_ABS_LIT, Value.Addend);
+                addRelocationForSection( REmovt, Value.SectionID);
+            }
+
+            resolveRelocation( Section, Offset, uint64_t( Section.getAddressWithOffset( StubOffset)),
+                               RelType, 0);
+            Section.advanceStubOffset( getMaxStubSize());
+        }
+    }
 }
 
 // Sometimes we don't need to create thunk for a branch.
@@ -1310,7 +1498,13 @@ RuntimeDyldELF::processRelocationRef(
 
   LLVM_DEBUG(dbgs() << "\t\tSectionID: " << SectionID << " Offset: " << Offset
                     << "\n");
-  if ((Arch == Triple::aarch64 || Arch == Triple::aarch64_be)) {
+  if ( (Arch == Triple::e2k32) || (Arch == Triple::e2k64) ) {
+      if ( (RelType == ELF::R_E2K_DISP) ) {
+          resolveElbrusRelocation( SectionID, Value, RelI, Stubs);
+      } else {
+          processSimpleRelocation( SectionID, Offset, RelType, Value);
+      }
+  } else if ((Arch == Triple::aarch64 || Arch == Triple::aarch64_be)) {
     if ((RelType == ELF::R_AARCH64_CALL26 ||
          RelType == ELF::R_AARCH64_JUMP26) &&
         MemMgr.allowStubAllocation()) {

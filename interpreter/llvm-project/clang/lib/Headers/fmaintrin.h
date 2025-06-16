@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_fmaintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_fmaintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_fmaintrin_h__ */
+
 #ifndef __IMMINTRIN_H
 #error "Never use <fmaintrin.h> directly; include <immintrin.h> instead."
 #endif
@@ -778,3 +784,5 @@ _mm256_fmsubadd_pd(__m256d __A, __m256d __B, __m256d __C)
 #undef __DEFAULT_FN_ATTRS256
 
 #endif /* __FMAINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_fmaintrin_h__ */

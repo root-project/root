@@ -6,6 +6,13 @@
  *
  *===-----------------------------------------------------------------------===
  */
+
+#ifdef __LLVM_LCCRT_INTRIN_clzerointrin_h__
+
+#include __LLVM_LCCRT_INTRIN_clzerointrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_clzerointrin_h__ */
+
 #ifndef __X86INTRIN_H
 #error "Never use <clzerointrin.h> directly; include <x86intrin.h> instead."
 #endif
@@ -36,3 +43,5 @@ _mm_clzero (void * __line)
 #undef __DEFAULT_FN_ATTRS
 
 #endif /* __CLZEROINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_clzerointrin_h__ */

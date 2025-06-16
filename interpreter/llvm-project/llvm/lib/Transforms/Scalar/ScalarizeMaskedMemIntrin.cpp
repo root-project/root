@@ -171,6 +171,7 @@ static void scalarizeMaskedLoad(const DataLayout &DL, CallInst *CI,
   const Align AdjustedAlignVal =
       commonAlignment(AlignVal, EltTy->getPrimitiveSizeInBits() / 8);
   unsigned VectorWidth = cast<FixedVectorType>(VecType)->getNumElements();
+  bool PredicateBitcast = false && (VectorWidth != 1);
 
   // The result vector
   Value *VResult = Src0;
@@ -191,7 +192,7 @@ static void scalarizeMaskedLoad(const DataLayout &DL, CallInst *CI,
   // If the mask is not v1i1, use scalar bit test operations. This generates
   // better results on X86 at least.
   Value *SclrMask;
-  if (VectorWidth != 1) {
+  if (PredicateBitcast) {
     Type *SclrMaskTy = Builder.getIntNTy(VectorWidth);
     SclrMask = Builder.CreateBitCast(Mask, SclrMaskTy, "scalar_mask");
   }
@@ -205,7 +206,7 @@ static void scalarizeMaskedLoad(const DataLayout &DL, CallInst *CI,
     //  br i1 %mask_1, label %cond.load, label %else
     //
     Value *Predicate;
-    if (VectorWidth != 1) {
+    if (PredicateBitcast) {
       Value *Mask = Builder.getInt(APInt::getOneBitSet(
           VectorWidth, adjustForEndian(DL, VectorWidth, Idx)));
       Predicate = Builder.CreateICmpNE(Builder.CreateAnd(SclrMask, Mask),
@@ -306,6 +307,7 @@ static void scalarizeMaskedStore(const DataLayout &DL, CallInst *CI,
   const Align AdjustedAlignVal =
       commonAlignment(AlignVal, EltTy->getPrimitiveSizeInBits() / 8);
   unsigned VectorWidth = cast<FixedVectorType>(VecType)->getNumElements();
+  bool PredicateBitcast = false && (VectorWidth != 1);
 
   if (isConstantIntVector(Mask)) {
     for (unsigned Idx = 0; Idx < VectorWidth; ++Idx) {
@@ -322,7 +324,7 @@ static void scalarizeMaskedStore(const DataLayout &DL, CallInst *CI,
   // If the mask is not v1i1, use scalar bit test operations. This generates
   // better results on X86 at least.
   Value *SclrMask;
-  if (VectorWidth != 1) {
+  if (PredicateBitcast) {
     Type *SclrMaskTy = Builder.getIntNTy(VectorWidth);
     SclrMask = Builder.CreateBitCast(Mask, SclrMaskTy, "scalar_mask");
   }
@@ -335,7 +337,7 @@ static void scalarizeMaskedStore(const DataLayout &DL, CallInst *CI,
     //  br i1 %mask_1, label %cond.store, label %else
     //
     Value *Predicate;
-    if (VectorWidth != 1) {
+    if (PredicateBitcast) {
       Value *Mask = Builder.getInt(APInt::getOneBitSet(
           VectorWidth, adjustForEndian(DL, VectorWidth, Idx)));
       Predicate = Builder.CreateICmpNE(Builder.CreateAnd(SclrMask, Mask),
@@ -423,6 +425,7 @@ static void scalarizeMaskedGather(const DataLayout &DL, CallInst *CI,
   // The result vector
   Value *VResult = Src0;
   unsigned VectorWidth = VecType->getNumElements();
+  bool PredicateBitcast = false && (VectorWidth != 1);
 
   // Shorten the way if the mask is a vector of constants.
   if (isConstantIntVector(Mask)) {
@@ -443,7 +446,7 @@ static void scalarizeMaskedGather(const DataLayout &DL, CallInst *CI,
   // If the mask is not v1i1, use scalar bit test operations. This generates
   // better results on X86 at least.
   Value *SclrMask;
-  if (VectorWidth != 1) {
+  if (PredicateBitcast) {
     Type *SclrMaskTy = Builder.getIntNTy(VectorWidth);
     SclrMask = Builder.CreateBitCast(Mask, SclrMaskTy, "scalar_mask");
   }
@@ -457,7 +460,7 @@ static void scalarizeMaskedGather(const DataLayout &DL, CallInst *CI,
     //
 
     Value *Predicate;
-    if (VectorWidth != 1) {
+    if (PredicateBitcast) {
       Value *Mask = Builder.getInt(APInt::getOneBitSet(
           VectorWidth, adjustForEndian(DL, VectorWidth, Idx)));
       Predicate = Builder.CreateICmpNE(Builder.CreateAnd(SclrMask, Mask),
@@ -553,6 +556,7 @@ static void scalarizeMaskedScatter(const DataLayout &DL, CallInst *CI,
 
   MaybeAlign AlignVal = cast<ConstantInt>(Alignment)->getMaybeAlignValue();
   unsigned VectorWidth = SrcFVTy->getNumElements();
+  bool PredicateBitcast = false && (VectorWidth != 1);
 
   // Shorten the way if the mask is a vector of constants.
   if (isConstantIntVector(Mask)) {
@@ -571,7 +575,7 @@ static void scalarizeMaskedScatter(const DataLayout &DL, CallInst *CI,
   // If the mask is not v1i1, use scalar bit test operations. This generates
   // better results on X86 at least.
   Value *SclrMask;
-  if (VectorWidth != 1) {
+  if (PredicateBitcast) {
     Type *SclrMaskTy = Builder.getIntNTy(VectorWidth);
     SclrMask = Builder.CreateBitCast(Mask, SclrMaskTy, "scalar_mask");
   }
@@ -584,7 +588,7 @@ static void scalarizeMaskedScatter(const DataLayout &DL, CallInst *CI,
     //  br i1 %Mask1, label %cond.store, label %else
     //
     Value *Predicate;
-    if (VectorWidth != 1) {
+    if (PredicateBitcast) {
       Value *Mask = Builder.getInt(APInt::getOneBitSet(
           VectorWidth, adjustForEndian(DL, VectorWidth, Idx)));
       Predicate = Builder.CreateICmpNE(Builder.CreateAnd(SclrMask, Mask),
@@ -640,6 +644,7 @@ static void scalarizeMaskedExpandLoad(const DataLayout &DL, CallInst *CI,
   Builder.SetCurrentDebugLocation(CI->getDebugLoc());
 
   unsigned VectorWidth = VecType->getNumElements();
+  bool PredicateBitcast = false && (VectorWidth != 1);
 
   // The result vector
   Value *VResult = PassThru;
@@ -676,7 +681,7 @@ static void scalarizeMaskedExpandLoad(const DataLayout &DL, CallInst *CI,
   // If the mask is not v1i1, use scalar bit test operations. This generates
   // better results on X86 at least.
   Value *SclrMask;
-  if (VectorWidth != 1) {
+  if (PredicateBitcast) {
     Type *SclrMaskTy = Builder.getIntNTy(VectorWidth);
     SclrMask = Builder.CreateBitCast(Mask, SclrMaskTy, "scalar_mask");
   }
@@ -690,7 +695,7 @@ static void scalarizeMaskedExpandLoad(const DataLayout &DL, CallInst *CI,
     //
 
     Value *Predicate;
-    if (VectorWidth != 1) {
+    if (PredicateBitcast) {
       Value *Mask = Builder.getInt(APInt::getOneBitSet(
           VectorWidth, adjustForEndian(DL, VectorWidth, Idx)));
       Predicate = Builder.CreateICmpNE(Builder.CreateAnd(SclrMask, Mask),
@@ -768,6 +773,7 @@ static void scalarizeMaskedCompressStore(const DataLayout &DL, CallInst *CI,
   Type *EltTy = VecType->getElementType();
 
   unsigned VectorWidth = VecType->getNumElements();
+  bool PredicateBitcast = false && (VectorWidth != 1);
 
   // Shorten the way if the mask is a vector of constants.
   if (isConstantIntVector(Mask)) {
@@ -788,7 +794,7 @@ static void scalarizeMaskedCompressStore(const DataLayout &DL, CallInst *CI,
   // If the mask is not v1i1, use scalar bit test operations. This generates
   // better results on X86 at least.
   Value *SclrMask;
-  if (VectorWidth != 1) {
+  if (PredicateBitcast) {
     Type *SclrMaskTy = Builder.getIntNTy(VectorWidth);
     SclrMask = Builder.CreateBitCast(Mask, SclrMaskTy, "scalar_mask");
   }
@@ -800,7 +806,7 @@ static void scalarizeMaskedCompressStore(const DataLayout &DL, CallInst *CI,
     //  br i1 %mask_1, label %cond.store, label %else
     //
     Value *Predicate;
-    if (VectorWidth != 1) {
+    if (PredicateBitcast) {
       Value *Mask = Builder.getInt(APInt::getOneBitSet(
           VectorWidth, adjustForEndian(DL, VectorWidth, Idx)));
       Predicate = Builder.CreateICmpNE(Builder.CreateAnd(SclrMask, Mask),

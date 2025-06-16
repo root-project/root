@@ -292,4 +292,5 @@ add_llvm_component_library(LLVMCodeGen
 add_subdirectory(SelectionDAG)
 add_subdirectory(AsmPrinter)
 add_subdirectory(MIRParser)
+add_subdirectory(Lccrt)
 add_subdirectory(GlobalISel)

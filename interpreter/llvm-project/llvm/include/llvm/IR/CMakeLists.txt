@@ -14,6 +14,7 @@ tablegen(LLVM IntrinsicsLoongArch.h -gen-intrinsic-enums -intrinsic-prefix=loong
 tablegen(LLVM IntrinsicsMips.h -gen-intrinsic-enums -intrinsic-prefix=mips)
 tablegen(LLVM IntrinsicsNVPTX.h -gen-intrinsic-enums -intrinsic-prefix=nvvm)
 tablegen(LLVM IntrinsicsPowerPC.h -gen-intrinsic-enums -intrinsic-prefix=ppc)
+tablegen(LLVM IntrinsicsElbrus.h -gen-intrinsic-enums -intrinsic-prefix=e2k)
 tablegen(LLVM IntrinsicsR600.h -gen-intrinsic-enums -intrinsic-prefix=r600)
 tablegen(LLVM IntrinsicsRISCV.h -gen-intrinsic-enums -intrinsic-prefix=riscv)
 tablegen(LLVM IntrinsicsSPIRV.h -gen-intrinsic-enums -intrinsic-prefix=spv)

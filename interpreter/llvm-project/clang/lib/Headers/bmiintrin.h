@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_bmiintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_bmiintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_bmiintrin_h__ */
+
 #if !defined __X86INTRIN_H && !defined __IMMINTRIN_H
 #error "Never use <bmiintrin.h> directly; include <x86intrin.h> instead."
 #endif
@@ -614,3 +620,5 @@ __blsr_u64(unsigned long long __X)
           || defined(__BMI__) */
 
 #endif /* __BMIINTRIN_H */
+
+#endif /* __LLVM_LCCRT_INTRIN_bmiintrin_h__ */

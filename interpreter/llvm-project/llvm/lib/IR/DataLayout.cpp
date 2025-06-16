@@ -778,6 +778,16 @@ unsigned DataLayout::getIndexTypeSizeInBits(Type *Ty) const {
   return getIndexSizeInBits(cast<PointerType>(Ty)->getAddressSpace());
 }
 
+#ifdef LLVM_WITH_LCCRT
+TypeSize DataLayout::getFixedVectorAllocSize(Type *Ty) const {
+  FixedVectorType *TV = dyn_cast<FixedVectorType>( Ty);
+  int elem_alloc = getTypeAllocSize( TV->getElementType());
+  TypeSize r = {elem_alloc*TV->getNumElements(), false};
+
+  return (r);
+}
+#endif /* LLVM_WITH_LCCRT */
+
 /*!
   \param abi_or_pref Flag that determines which alignment is returned. true
   returns the ABI alignment, false returns the preferred alignment.
@@ -824,6 +834,13 @@ Align DataLayout::getAlignment(Type *Ty, bool abi_or_pref) const {
   case Type::X86_FP80TyID: {
     unsigned BitWidth = getTypeSizeInBits(Ty).getFixedValue();
     auto I = findAlignmentLowerBound(FloatAlignments, BitWidth);
+
+#ifdef LLVM_WITH_LCCRT
+    if ( isa<FixedVectorType>(Ty) ) {
+        return getAlignment(dyn_cast<FixedVectorType>(Ty)->getElementType(), true);
+    }
+#endif /* LLVM_WITH_LCCRT */
+
     if (I != FloatAlignments.end() && I->TypeBitWidth == BitWidth)
       return abi_or_pref ? I->ABIAlign : I->PrefAlign;
 

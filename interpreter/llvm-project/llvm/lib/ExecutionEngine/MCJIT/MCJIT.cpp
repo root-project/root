@@ -83,6 +83,8 @@ MCJIT::MCJIT(std::unique_ptr<Module> M, std::unique_ptr<TargetMachine> TM,
   std::unique_ptr<Module> First = std::move(Modules[0]);
   Modules.clear();
 
+  getTargetMachine()->Options.LccrtCallLong = true;
+
   if (First->getDataLayout().isDefault())
     First->setDataLayout(getDataLayout());
 

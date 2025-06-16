@@ -7,6 +7,12 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifdef __LLVM_LCCRT_INTRIN_mmintrin_h__
+
+#include __LLVM_LCCRT_INTRIN_mmintrin_h__
+
+#else /* !__LLVM_LCCRT_INTRIN_mmintrin_h__ */
+
 #ifndef __MMINTRIN_H
 #define __MMINTRIN_H
 
@@ -1562,3 +1568,4 @@ _mm_setr_pi8(char __b0, char __b1, char __b2, char __b3, char __b4, char __b5,
 
 #endif /* __MMINTRIN_H */
 
+#endif /* __LLVM_LCCRT_INTRIN_mmintrin_h__ */
