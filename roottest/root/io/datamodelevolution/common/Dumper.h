@@ -267,7 +267,7 @@ void dump( Type* obj, std::ostream& out )
 
    if( !cl )
    {
-      std :: cout << "[!] Could not get dictionry for class: ";
+      std :: cout << "[!] Could not get dictionary for class: ";
       std :: cout << getName( ti ) << std :: endl;
       return;
    }
@@ -297,7 +297,7 @@ void test_dump( Type* obj, const char *prefix, int testid, const char *suffix0, 
 
    if( !cl )
    {
-      std :: cout << "[!] Could not get dictionry for class: ";
+      std :: cout << "[!] Could not get dictionary for class: ";
       std :: cout << getName( ti ) << std :: endl;
       return;
    }
