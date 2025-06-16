@@ -423,6 +423,9 @@ void viewer3DMaster()
    printf("\n\nviewer3DMaster: This frame demonstates master frame use of 3D viewer architecture.\n");
    printf("Creates two boxes and a square based pyramid, described in master frame.\n\n");
 
+   // macro uses GL features not supported in web graphics
+   gROOT->SetWebDisplay("off");
+
    MyGeom *myGeom = new MyGeom;
    myGeom->Draw("ogl");
 }

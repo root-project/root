@@ -532,6 +532,9 @@ void viewer3DLocal()
    printf("We do not implement raw tesselation of sphere - hence will not appear in viewers\n");
    printf("which do not support in natively (non-GL viewer).\n\n");
 
+   // macro uses GL features not supported in web graphics
+   gROOT->SetWebDisplay("off");
+
    MyGeom *myGeom = new MyGeom;
    myGeom->Draw("ogl");
 }
