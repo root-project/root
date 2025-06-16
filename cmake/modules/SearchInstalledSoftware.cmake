@@ -968,6 +968,17 @@ if(xrootd AND NOT builtin_xrootd)
       endif()
     endif()
   endif()
+
+  if(XRootD_VERSION VERSION_LESS 5.8.4)
+    # Remove -D from XRootD's exported compile definitions. https://github.com/xrootd/xrootd/issues/2543
+    foreach(XRDTarget XRootD::XrdCl XRootD::XrdUtils)
+      if(TARGET ${XRDTarget})
+        get_target_property(PROP ${XRDTarget} INTERFACE_COMPILE_DEFINITIONS)
+        list(TRANSFORM PROP REPLACE "^-D" "")
+        set_property(TARGET ${XRDTarget} PROPERTY INTERFACE_COMPILE_DEFINITIONS ${PROP})
+      endif()
+    endforeach()
+  endif()
 endif()
 
 if(builtin_xrootd)
