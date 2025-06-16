@@ -123,5 +123,5 @@ TEST(TEntryList, copySubList)
    }
 
    for (auto filename : {filename1, filename2})
-      gSystem->Unlink(filename1);
+      gSystem->Unlink(filename);
 }
