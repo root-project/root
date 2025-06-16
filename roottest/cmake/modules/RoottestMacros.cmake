@@ -218,6 +218,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
         -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
         -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
         -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
+        -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
         ${RootMacroDirDefines})
 
   set(root_compile_macro ${ROOT_root_CMD} ${RootMacroBuildDefines} -q -l -b)
@@ -278,21 +279,6 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   if (ARG_FIXTURES_REQUIRED)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
-  endif()
-
-  if(MSVC)
-    string(REPLACE "." "_" dll_name ${filename})
-    add_custom_command(TARGET ${compile_target} POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.dll
-                                        ${CMAKE_CURRENT_BINARY_DIR}/
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}_ACLiC_dict_rdict.pcm
-                                        ${CMAKE_CURRENT_BINARY_DIR}/
-       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.d
-       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.def
-       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.dll
-       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.exp
-       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.lib
-       COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}_ACLiC_dict_rdict.pcm)
   endif()
 
 endmacro(ROOTTEST_COMPILE_MACRO)
