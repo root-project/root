@@ -1201,7 +1201,6 @@ void TObject::operator delete[](void *ptr)
       fgDtorOnly = 0;
 }
 
-#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator delete for sized deallocation.
 
@@ -1223,7 +1222,6 @@ void TObject::operator delete[](void *ptr, size_t size)
    else
       fgDtorOnly = 0;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print value overload

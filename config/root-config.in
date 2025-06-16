@@ -167,7 +167,7 @@ aix5)
    ;;
 aixgcc)
    # IBM AIX with g++
-   auxcflags="${cxxversionflag} -fsigned-char"
+   auxcflags="${cxxversionflag} -fsigned-char -fsized-deallocation"
    auxlibs=
    #forcelibs=$rootulibs
    #forceglibs=$rootuglibs
@@ -197,30 +197,30 @@ solaris64CC5)
    ;;
 linux)
    # Linux with gcc >= 3.x
-   auxcflags="${cxxversionflag} -m32 -msse -mfpmath=sse "
+   auxcflags="${cxxversionflag} -m32 -msse -mfpmath=sse -fsized-deallocation"
    auxldflags="-m32 -msse -mfpmath=sse "
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxicc)
    # Linux with the Intel icc compiler
-   auxcflags="${cxxversionflag}"
+   auxcflags="${cxxversionflag} -fsized-deallocation"
    auxlibs="-limf -lm -ldl"
    ;;
 linuxppcgcc)
    # PPC Linux with gcc
-   auxcflags="${cxxversionflag} -m32 -fsigned-char"
+   auxcflags="${cxxversionflag} -m32 -fsigned-char -fsized-deallocation"
    auxldflags="-m32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxppc64gcc)
    # PPC64/PPC64LE (64 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -m64 -fsigned-char"
+   auxcflags="${cxxversionflag} -m64 -fsigned-char -fsized-deallocation"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
-   auxcflags="${cxxversionflag} -m64"
+   auxcflags="${cxxversionflag} -m64 -fsized-deallocation"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
@@ -236,29 +236,29 @@ linuxx8664k1omicc)
    ;;
 linuxx32gcc)
    # x32 ABI (64 bit mode with 32 bit pointers) Linux with gcc > 4.7
-   auxcflags="${cxxversionflag} -mx32"
+   auxcflags="${cxxversionflag} -mx32 -fsized-deallocation"
    auxldflags="-mx32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxarm)
    # ARM Linux with gcc
-   auxcflags="${cxxversionflag} -fsigned-char"
+   auxcflags="${cxxversionflag} -fsigned-char -fsized-deallocation"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxarm64)
    # ARMv8-A (AArch64) Linux with gcc
-   auxcflags="${cxxversionflag} -fsigned-char"
+   auxcflags="${cxxversionflag} -fsigned-char -fsized-deallocation"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxs390gcc)
    # s390 (31 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -m31 -fsigned-char"
+   auxcflags="${cxxversionflag} -m31 -fsigned-char -fsized-deallocation"
    auxldflags="-m31"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxs390xgcc)
    # s390x (64 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -m64 -fsigned-char"
+   auxcflags="${cxxversionflag} -m64 -fsigned-char -fsized-deallocation"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;

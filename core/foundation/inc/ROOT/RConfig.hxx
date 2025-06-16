@@ -341,11 +341,6 @@
 #   endif
 #endif
 
-#ifdef __cpp_sized_deallocation
-// Sized global deallocation functions are only enabled if __cpp_sized_deallocation is defined.
-#   define R__SIZEDDELETE
-#endif
-
 /* allows symbols to be hidden from the shared library export symbol table */
 /* use typically on file statics and private methods */
 #if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
