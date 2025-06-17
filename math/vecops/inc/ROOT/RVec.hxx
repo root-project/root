@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <iterator> // for std::make_move_iterator
 #include <limits> // for numeric_limits
 #include <memory> // uninitialized_value_construct
 #include <new>
