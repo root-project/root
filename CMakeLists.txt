@@ -217,7 +217,7 @@ if(ccache)
 
   if(EXISTS ${CCACHE_COMMAND})
     message(STATUS "Found ccache: ${CCACHE_COMMAND}")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_COMMAND})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_COMMAND} CACHE STRING "Path to ccache" FORCE)
     execute_process(COMMAND ${CCACHE_COMMAND} "-V" OUTPUT_VARIABLE CCACHE_VERSION)
     string(REGEX REPLACE "ccache version ([0-9\\.]+).*" "\\1" CCACHE_VERSION ${CCACHE_VERSION})
   else()
