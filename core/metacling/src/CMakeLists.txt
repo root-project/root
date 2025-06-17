@@ -130,7 +130,7 @@ if(MSVC)
       __std_terminate
       cling_runtime_internal_throwIfInvalidPointer
   )
-  if(MSVC_VERSION GREATER_EQUAL 1933)
+  if(MSVC_VERSION GREATER_EQUAL 1933 AND MSVC_VERSION LESS 1943)
     set(cling_exports ${cling_exports}
         __std_find_trivial_1
         __std_find_trivial_2
