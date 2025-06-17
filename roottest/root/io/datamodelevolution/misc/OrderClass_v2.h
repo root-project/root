@@ -7,20 +7,18 @@ class MyClass : public TObject
 {
 public:
 
-   //MyClass() : TObject() {ver = 2; fArray[0] = fArray[1] = -1; }
-   MyClass() : TObject() , transientMember(0) {ver = 2; }
+   MyClass() : TObject(), transientMember(false) { ver = 2; }
 
-   void addSomeData() {
+   void addSomeData() { }
 
-   }
-   virtual void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
 
 private:
    int ver;
    int fArray[2];
    bool transientMember; //!
 
-   ClassDef(MyClass, 2)
+   ClassDefOverride(MyClass, 2)
 };
 
 #ifdef __MAKECINT__
