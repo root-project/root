@@ -6,7 +6,7 @@ ROOTTEST_ADD_TEST(execNormalizationInf
                   MACRO execNormalizationInf.C
                   OUTREF execNormalizationInf.ref)
 
-if(ROOT_pyroot_FOUND)
+if(pyroot)
     ROOTTEST_ADD_TEST(execNormalizationInfPy
                   MACRO execNormalizationInf.py
                   OUTREF execNormalizationInf.py.ref
@@ -14,19 +14,18 @@ if(ROOT_pyroot_FOUND)
                   CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 endif()
 
-ROOTTEST_ADD_TEST(execROOT_6038
+ROOTTEST_ADD_TEST(6038
                   MACRO execROOT_6038.C
                   OUTREF execROOT_6038.ref)
 
-ROOTTEST_ADD_TEST(execROOT_6019
+ROOTTEST_ADD_TEST(6019
                   MACRO execROOT_6019.C
                   OUTREF execROOT_6019.ref)
 
-if(MSVC)
-    # needed on Windows to prevent having to run the test twice
-    # the first time being always failing and successful the second time
-    ROOTTEST_COMPILE_MACRO(execROOT_6277.cxx)
-endif()
-ROOTTEST_ADD_TEST(execROOT_6277
+ROOTTEST_COMPILE_MACRO(execROOT_6277.cxx
+                       FIXTURES_SETUP root-meta-tclass-regression-6277-fixture)
+
+ROOTTEST_ADD_TEST(6277
                   MACRO execROOT_6277.cxx+
-                  OUTREF execROOT_6277.ref)
+                  OUTREF execROOT_6277.ref
+                  FIXTURES_REQUIRED root-meta-tclass-regression-6277-fixture)
