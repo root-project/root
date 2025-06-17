@@ -997,6 +997,24 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if the class name is present in TClassTable.
+///
+/// \param[in] tname class name to check.
+/// \param[out] result If a class name has an alternative name registered in
+///                    TClassTable, it will be copied into this string.
+bool TClingLookupHelper__CheckInClassTable(const std::string &tname, std::string &result)
+{
+   result.clear();
+
+   if (gROOT->GetListOfClasses()->FindObject(tname.c_str()) || TClassTable::Check(tname.c_str(), result)) {
+      // This is a known class.
+      return true;
+   }
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 TCling::TUniqueString::TUniqueString(Long64_t size)
 {
@@ -1571,10 +1589,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt,
-                                                            TClingLookupHelper__ExistingTypeCheck,
-                                                            TClingLookupHelper__AutoParse,
-                                                            &fIsShuttingDown);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(
+      *fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__CheckInClassTable,
+      TClingLookupHelper__AutoParse, &fIsShuttingDown);
    TClassEdit::Init(fLookupHelper);
 
    // Disallow auto-parsing in rootcling
