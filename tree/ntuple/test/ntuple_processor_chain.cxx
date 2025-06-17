@@ -32,7 +32,7 @@ protected:
          auto fldY = model->MakeField<std::vector<float>>("y");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fFileNames[1]);
 
-         for (unsigned i = 5; i < 8; i++) {
+         for (unsigned i = 5; i < 10; i++) {
             *fldX = static_cast<float>(i);
             *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
             ntuple->Fill();
@@ -44,7 +44,7 @@ protected:
          // missing field y
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fFileNames[2]);
 
-         for (unsigned i = 8; i < 15; i++) {
+         for (unsigned i = 10; i < 15; i++) {
             *fldX = static_cast<float>(i);
             ntuple->Fill();
          }
@@ -120,7 +120,7 @@ TEST_F(RNTupleChainProcessorTest, Basic)
       std::vector<float> yExp = {static_cast<float>(idx), static_cast<float>((idx) * 2)};
       EXPECT_EQ(yExp, *y);
    }
-   EXPECT_EQ(8, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleChainProcessorTest, WithModel)
@@ -212,7 +212,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
    for (auto idx : *proc) {
       EXPECT_EQ(static_cast<float>(idx), *x);
    }
-   EXPECT_EQ(8, proc->GetNEntriesProcessed());
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 namespace ROOT::Experimental::Internal {
@@ -235,8 +235,8 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
    EXPECT_EQ(3.f, *x);
    EXPECT_EQ(0, proc->GetCurrentProcessorNumber());
 
-   RNTupleProcessorEntryLoader::LoadEntry(*proc, 7);
-   EXPECT_EQ(7.f, *x);
+   RNTupleProcessorEntryLoader::LoadEntry(*proc, 9);
+   EXPECT_EQ(9.f, *x);
    EXPECT_EQ(1, proc->GetCurrentProcessorNumber());
 
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 6);
@@ -247,7 +247,7 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
    EXPECT_EQ(2.f, *x);
    EXPECT_EQ(0, proc->GetCurrentProcessorNumber());
 
-   EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 8));
+   EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 10));
 }
 
 TEST_F(RNTupleChainProcessorTest, TMemFile)
