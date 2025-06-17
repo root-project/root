@@ -30,6 +30,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Minuit
     -writeEmptyRootPCM
 )
 
+if(NOT MSVC)
+  target_compile_options(Minuit PRIVATE -Wno-error)
+endif()
+
 if (CMAKE_BUILD_TYPE STREQUAL Optimized)
   target_compile_options(Minuit PRIVATE "-fno-fast-math")
 endif()

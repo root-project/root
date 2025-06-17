@@ -203,6 +203,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     ${MATHCORE_BUILTINS}
 )
 
+if(NOT MSVC)
+  target_compile_options(MathCore PRIVATE -Wno-error)
+endif()
+
 target_include_directories(MathCore PRIVATE ${Vc_INCLUDE_DIR})
 target_include_directories(MathCore PRIVATE ${VecCore_INCLUDE_DIRS})
 
