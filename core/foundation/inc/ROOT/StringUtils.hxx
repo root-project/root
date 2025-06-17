@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include <iterator>
 
 namespace ROOT {
 
