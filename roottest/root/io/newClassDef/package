@@ -1,1 +1,0 @@
-tar zcf /home/Owner/Transfer/iotest.tar.gz newClassDef/Makefile newClassDef/current newClassDef/featuretest newClassDef/new newClassDef/noclassdef
