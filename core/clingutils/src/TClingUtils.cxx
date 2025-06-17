@@ -522,17 +522,16 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
-                                       TNormalizedCtxt &normCtxt,
-                                       ExistingTypeCheck_t existingTypeCheck,
-                                       AutoParse_t autoParse,
-                                       bool *shuttingDownPtr,
-                                       const int* pgDebug /*= 0*/):
-   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
-   fExistingTypeCheck(existingTypeCheck),
-   fAutoParse(autoParse),
-   fInterpreterIsShuttingDownPtr(shuttingDownPtr),
-   fPDebug(pgDebug)
+TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
+                                       ExistingTypeCheck_t existingTypeCheck, CheckInClassTable_t CheckInClassTable,
+                                       AutoParse_t autoParse, bool *shuttingDownPtr, const int *pgDebug /*= 0*/)
+   : fInterpreter(&interpreter),
+     fNormalizedCtxt(&normCtxt),
+     fExistingTypeCheck(existingTypeCheck),
+     fCheckInClassTable(CheckInClassTable),
+     fAutoParse(autoParse),
+     fInterpreterIsShuttingDownPtr(shuttingDownPtr),
+     fPDebug(pgDebug)
 {
 }
 
@@ -547,6 +546,17 @@ bool TClingLookupHelper::ExistingTypeCheck(const std::string &tname,
 
    if (fExistingTypeCheck) return fExistingTypeCheck(tname,result);
    else return false;
+}
+
+bool TClingLookupHelper::CheckInClassTable(const std::string &tname, std::string &result)
+{
+   if (tname.empty())
+      return false;
+
+   if (fCheckInClassTable)
+      return fCheckInClassTable(tname, result);
+   else
+      return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4490,7 +4490,7 @@ int RootClingMain(int argc,
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, nullptr, nullptr, nullptr);
+   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, nullptr, nullptr, nullptr, nullptr);
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:
