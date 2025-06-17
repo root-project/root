@@ -13,6 +13,7 @@
 #ifndef ROOT_Math_StdEngine
 #define ROOT_Math_StdEngine
 
+#include <cstdint>
 #include <random>
 
 namespace ROOT {
