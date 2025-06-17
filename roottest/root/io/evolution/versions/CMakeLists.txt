@@ -86,10 +86,12 @@ endif()
 ROOTTEST_ADD_TEST(ROOT7500
                   MACRO execROOT7500.cxx+
                   COPY_TO_BUILDDIR file7500.root
-                  OUTREF execROOT7500.ref)
+                  OUTREF execROOT7500.ref
+                  LABELS longtest io)
 
 ROOTTEST_ADD_TEST(attmarker
                   COMMAND ${ROOT_hadd_CMD} -f result.root hsimple14.root hsimple20.root
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   COPY_TO_BUILDDIR hsimple14.root hsimple20.root
-                  OUTREF attmarker.ref)
+                  OUTREF attmarker.ref
+                  LABELS longtest io)
