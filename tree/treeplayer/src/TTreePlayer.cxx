@@ -146,6 +146,12 @@ TTreePlayer::~TTreePlayer()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Build the index for the tree (see TTree::BuildIndex)
+/// In some cases, a warning is printed about switching from
+/// TChainIndex to TTreeIndex when indices in files are not sorted. Note
+/// that unsorted indices lead to a significant performance degradation, not only when building the index itself,
+/// but also later on when performing the joining with other datasets. Thus, in general, it is not recommended to
+/// ignore the warning except for special cases with prior knowledge that sorting the files and/or entries is actually
+/// more expensive, or just not possible.
 
 TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname)
 {
@@ -154,7 +160,7 @@ TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, co
       index = new TChainIndex(T, majorname, minorname);
       if (index->IsZombie()) {
          delete index;
-         Error("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
+         Warning("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)");
       }
       else
          return index;

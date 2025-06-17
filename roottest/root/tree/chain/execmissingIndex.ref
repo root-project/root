@@ -1,13 +1,13 @@
 
 Processing execmissingIndex.C...
 Scanning using the original friend
-Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Error in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
-Error in <TTreePlayer::BuildIndex>: Creating a TChainIndex unsuccessful - switching to TTreeIndex
+Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
+Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
+Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
+Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
+Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
+Warning in <TChainIndex::TChainIndex>: The indices in files of this chain aren't sorted.
+Warning in <TTreePlayer::BuildIndex>: Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)
 ************************************
 *    Row   *    evtnum * treefrien *
 ************************************

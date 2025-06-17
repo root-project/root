@@ -1233,9 +1233,9 @@ TEST_P(RDFIndexedFriendsOrder, GlobalJoinSameCardinality)
          // The error messages should only be printed here, the first time the
          // index is built by the user
          ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.requiredDiag(kError, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
-         diagRAII.requiredDiag(kError, "TTreePlayer::BuildIndex",
-                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
+         diagRAII.requiredDiag(kWarning, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
+         diagRAII.requiredDiag(kWarning, "TTreePlayer::BuildIndex",
+                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)");
          auxChain.BuildIndex("evt_number");
       } else {
          auxChain.BuildIndex("evt_number");
@@ -1274,9 +1274,9 @@ TEST_P(RDFIndexedFriendsOrder, GlobalJoinDifferentCardinality)
          // The error messages should only be printed here, the first time the
          // index is built by the user
          ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.requiredDiag(kError, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
-         diagRAII.requiredDiag(kError, "TTreePlayer::BuildIndex",
-                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
+         diagRAII.requiredDiag(kWarning, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
+         diagRAII.requiredDiag(kWarning, "TTreePlayer::BuildIndex",
+                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)");
          auxChain.BuildIndex("evt_number");
       } else {
          auxChain.BuildIndex("evt_number");
