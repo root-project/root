@@ -37,7 +37,7 @@ but the type metadata comes from the Clang C++ compiler, not CINT.
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Frontend/CompilerInstance.h"
 
-#include "clang/Interpreter/CppInterOp.h"
+#include <CppInterOp/CppInterOp.h>
 
 #include <cstdio>
 #include <string>

@@ -43,7 +43,7 @@ from the Clang C++ compiler, not CINT.
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 
-#include "clang/Interpreter/CppInterOp.h"
+#include <CppInterOp/CppInterOp.h>
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
