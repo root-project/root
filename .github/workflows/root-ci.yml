@@ -364,6 +364,9 @@ jobs:
           - image: fedora41
           - image: fedora42
             overrides: ["CMAKE_CXX_STANDARD=23"]
+          - image: fedora43
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+            is_special: true
           - image: alma8
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
