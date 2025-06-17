@@ -14,6 +14,7 @@
 
 #include <ROOT/RSpan.hxx>
 
+#include <algorithm>
 #include <vector>
 #include <utility>
 
