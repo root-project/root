@@ -60,7 +60,7 @@ private:
       return a * std::exp(-0.5 * y * y);
    }
 
-   double DoDerivative(const double *x, unsigned int icoord) const
+   double DoDerivative(const double *x, unsigned int icoord) const override
    {
       (void)icoord;
       assert(icoord == 0);
