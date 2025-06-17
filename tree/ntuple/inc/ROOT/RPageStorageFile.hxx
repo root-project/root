@@ -98,6 +98,8 @@ public:
    RPageSinkFile(RPageSinkFile &&) = default;
    RPageSinkFile &operator=(RPageSinkFile &&) = default;
    ~RPageSinkFile() override;
+
+   TDirectory *GetUnderlyingDirectory() const final { return ROOT::Internal::GetUnderlyingDirectory(*fWriter); }
 }; // class RPageSinkFile
 
 // clang-format off

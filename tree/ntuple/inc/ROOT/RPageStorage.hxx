@@ -313,6 +313,8 @@ public:
 
    virtual ROOT::NTupleSize_t GetNEntries() const = 0;
 
+   virtual TDirectory *GetUnderlyingDirectory() const { return nullptr; }
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
    void Init(RNTupleModel &model)

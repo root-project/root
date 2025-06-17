@@ -1548,3 +1548,11 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileSkeleton(int defaultCompressio
       fileSimple.Write(&padding, sizeof(padding));
    fileSimple.fKeyOffset = fileSimple.fFilePos;
 }
+
+TDirectory *ROOT::Internal::GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer)
+{
+   if (auto *proper = std::get_if<ROOT::Internal::RNTupleFileWriter::RFileProper>(&writer.fFile)) {
+      return proper->fDirectory;
+   }
+   return nullptr;
+}
