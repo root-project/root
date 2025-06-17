@@ -66,12 +66,12 @@ class _RFile_Put:
     def __init__(self, rfile):
         self._rfile = rfile
 
-    def __call__(self, namecycle, obj):
+    def __call__(self, name, obj):
         """
         Non-templated Put()
         """
         className = type(obj).__cpp_name__
-        self._rfile.Put[className](namecycle, obj)
+        self._rfile.Put[className](name, obj)
 
     def __getitem__(self, template_arg):
         """
