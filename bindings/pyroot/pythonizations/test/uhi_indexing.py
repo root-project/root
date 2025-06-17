@@ -315,6 +315,36 @@ class TestTH1Indexing:
         assert hist_setup.GetStdDev() == pytest.approx(sliced_hist.GetStdDev(), rel=10e-5)
         assert hist_setup.GetMean() == pytest.approx(sliced_hist.GetMean(), rel=10e-5)
 
+    def test_equality_operator(self, hist_setup):
+        if _special_setting(hist_setup) or isinstance(hist_setup, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C)):
+            pytest.skip("This feature cannot be tested here")
+
+        assert hist_setup == hist_setup[...]
+
+        cloned_histograms = {
+            "content": hist_setup.Clone(),
+            "error": hist_setup.Clone(),
+            "weight": hist_setup.Clone(),
+            "axis": hist_setup.Clone(),
+        }
+        assert all(hist_setup == other for other in cloned_histograms.values())
+
+        # Change the content of a bin
+        cloned_histograms["content"].SetBinContent(1, 100)
+        assert hist_setup != cloned_histograms["content"]
+
+        # Change the error of a bin
+        cloned_histograms["error"].SetBinError(1, 10)
+        assert hist_setup != cloned_histograms["error"]
+
+        # Change the weight of a bin
+        cloned_histograms["weight"].AddBinContent(1, 100)
+        assert hist_setup != cloned_histograms["weight"]
+
+        # Change the x axis
+        cloned_histograms["axis"].GetXaxis().Set(10, 1, 5)
+        assert hist_setup != cloned_histograms["axis"]
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
