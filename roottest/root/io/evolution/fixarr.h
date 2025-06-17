@@ -34,11 +34,13 @@ void read(const char *filename = "arr.root")
    One *a = nullptr;
    auto f = TFile::Open(filename);
    f->GetObject("myone", a);
-   if (a) a->Print();
+   if (a) {
+      a->Print();
+      delete a;
+   }
+   delete f;
 };
 
-#ifdef __MAKECINT__
-#pragma link C++ function write;
-#pragma link C++ function read;
+#ifdef __ROOTCLING__
 #pragma link C++ class One+;
 #endif
