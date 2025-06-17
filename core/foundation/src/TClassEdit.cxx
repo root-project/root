@@ -904,6 +904,21 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
    }
 
    AtomicTypeNameHandlerRAII nameHandler(norm_name);
+   if (gInterpreterHelper) {
+      // Early check whether there is an existing type corresponding to `norm_name`
+      // It is *crucial* to run this block here, before `norm_name` gets split
+      // and reconstructed in the following lines. The reason is that we need
+      // to make string comparisons in `ExistingTypeCheck` and they will give
+      // different results if `norm_name` loses whitespaces. A notable example
+      // is when looking for registered alternate names of a custom user class
+      // present in the class dictionary.
+      std::string typeresult;
+      if (gInterpreterHelper->CheckInClassTable(norm_name, typeresult)) {
+         if (!typeresult.empty()) {
+            norm_name = typeresult;
+         }
+      }
+   }
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
