@@ -33,9 +33,9 @@ class Derived : public TObject, public Base
 {
   public:
     Derived() {}
-    virtual ~Derived() {}
+    ~Derived() override {}
 
-  ClassDef(Derived,1)
+  ClassDefOverride(Derived,1)
 };
 
 #endif

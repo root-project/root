@@ -11,7 +11,7 @@ public:
   MyDerived();
   MyDerived(const MyDerived& obj);
   MyDerived & operator=(const MyDerived& obj);
-  virtual ~MyDerived();
+  ~MyDerived() override;
 
   // Access methods
   Int_t GetX() const;
@@ -21,7 +21,7 @@ private:
 
   Int_t fX; //
 
-  ClassDef(MyDerived,2)
+  ClassDefOverride(MyDerived,2)
 
 };
 
