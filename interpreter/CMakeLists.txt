@@ -557,6 +557,6 @@ else()
 endif()
 
 add_subdirectory(CppInterOp)
-if(testing)
+if(TARGET CppInterOpUnitTests)
   set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
 endif()
