@@ -11,6 +11,10 @@
 #define ROOT_Minuit2_MnPlot
 
 #include "Minuit2/MnConfig.h"
+
+#include <ROOT/RSpan.hxx>
+
+#include <algorithm>
 #include <vector>
 #include <utility>
 
