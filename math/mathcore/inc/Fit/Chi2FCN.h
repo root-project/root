@@ -120,7 +120,7 @@ public:
    }
 
    // need to be virtual to be instantiated
-   virtual void Gradient(const double *x, double *g) const {
+   void Gradient(const double *x, double *g) const override {
       // evaluate the chi2 gradient
       FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
                                              fExecutionPolicy);
@@ -150,7 +150,7 @@ private:
    }
 
    // for derivatives
-   virtual double DoDerivative(const double * x, unsigned int icoord) const {
+   double DoDerivative(const double * x, unsigned int icoord) const override {
       Gradient(x, fGrad.data());
       return fGrad[icoord];
    }
