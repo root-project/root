@@ -22,17 +22,17 @@ private:
   int arr[SIZE];
 public:
   FixedArray();
-  virtual ~FixedArray();
+  ~FixedArray() override;
   void check();
   void set();
 #if (VERSION==1)
-ClassDef(FixedArray, 1);
+  ClassDefOverride(FixedArray, 1);
 #else
-ClassDef(FixedArray, 2);
+  ClassDefOverride(FixedArray, 2);
 #endif
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class FixedArray+;
 #endif
 
@@ -70,10 +70,10 @@ private:
 public:
    Level2();
    virtual ~Level2();
-ClassDef(Level2, 2);
+   ClassDef(Level2, 2);
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class Level2+;
 #endif
 
@@ -90,11 +90,11 @@ private:
    //Level2 fLevel2;
 public:
    FixedArrayContainer();
-   virtual ~FixedArrayContainer();
-ClassDef(FixedArrayContainer, 2);
+   ~FixedArrayContainer() override;
+   ClassDefOverride(FixedArrayContainer, 2);
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class FixedArrayContainer+;
 #endif
 
