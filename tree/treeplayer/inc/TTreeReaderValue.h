@@ -46,6 +46,9 @@ class TTreeReaderValueBase {
 public:
    /// Status flags, 0 is good
    enum ESetupStatus {
+      kSetupMatchButEntryBeyondEnd =
+         -10, ///< This branch has been setup, branch data type and reader template type match, but nothing can be read
+              ///< because we have already reached the end of the tree.
       kSetupMakeClassModeMismatch = -9, ///< readers disagree on whether TTree::SetMakeBranch() should be on
       kSetupTreeDestructed = -8,        ///< The TTreeReader has been destructed / not set.
       kSetupNotSetup = -7,              ///< No initialization has happened yet.
