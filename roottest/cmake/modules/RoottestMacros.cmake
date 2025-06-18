@@ -660,7 +660,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
                -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
                -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
-               ${RootExternalIncludes} ${RootExeOptions} ${ARG_ROOTEXE_OPTS}
+               ${RootExternalIncludes} ${ARG_ROOTEXE_OPTS}
                -q -l -b)
 
   set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
