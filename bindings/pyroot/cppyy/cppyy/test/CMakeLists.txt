@@ -30,6 +30,10 @@ foreach(DICT ${CPPYY_TEST_DICTS})
     target_include_directories(${DICT}Dict PUBLIC ${Python3_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include)
     target_link_libraries(${DICT}Dict PUBLIC Python3::Python ROOT::Core)
     target_compile_options(${DICT}Dict PRIVATE "-w")
+    if(MSVC)
+        set_target_properties(${DICT}Dict PROPERTIES PREFIX "lib")
+        set_target_properties(${DICT}Dict PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    endif()
 endforeach()
 
 # Tests list
@@ -70,5 +74,9 @@ endif()
 
 # Configure the tests
 foreach(TEST ${CPPYY_TESTS})
-    ROOT_ADD_PYUNITTEST(${TEST} ${TEST}.py GENERIC ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR} PYTHON_DEPS pytest)
+    if(MSVC)
+        ROOT_ADD_PYUNITTEST(${TEST} ${TEST}.py GENERIC ENVIRONMENT PATH=${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG> PYTHON_DEPS pytest)
+    else()
+        ROOT_ADD_PYUNITTEST(${TEST} ${TEST}.py GENERIC ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR} PYTHON_DEPS pytest)
+    endif()
 endforeach()
