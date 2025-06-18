@@ -198,10 +198,26 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
+set(FULL_BASE_HEADERS ${BASE_HEADERS})
+list(TRANSFORM FULL_BASE_HEADERS PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/inc/)
+
 # only here complete list of headers can be propogated to parent cmake file
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
 
 target_sources(Core PRIVATE ${BASE_SOURCES})
+
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0") # https://discourse.cmake.org/t/file-set-xyz-is-listed-in-interface-file-sets-of-w-but-has-not-been-exported/9131/3
+  target_sources(
+      Core
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ src/
+      FILES
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/TListOfTypes.h
+          ${FULL_BASE_HEADERS}
+  )
+endif()
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
