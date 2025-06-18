@@ -61,6 +61,11 @@ RooAbsData *dataForChan = found != splits.end() ? found->get() : nullptr;
   to numbers such as 8 would share one 3-d histogram among 8 threads, greatly reducing the memory consumption. This might slow down execution if the histograms
   are filled at very high rates. Use lower number in this case.
 
+
+## JavaScript ROOT
+- A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).
+
+
 ## Versions of built-in packages
 
 * The version of openssl has been updated to 3.5.0
