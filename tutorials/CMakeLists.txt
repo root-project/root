@@ -894,8 +894,10 @@ if(ROOT_pyroot_FOUND)
   # To add a new requirement, add a glob expression that's named requires_<packageName>,
   # and add it to the list "fixtureLists" below.
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      analysis/dataframe/df017_vecOpsHEP.py
       analysis/dataframe/df026_AsNumpyArrays.py
       analysis/dataframe/df032_RDFFromNumpy.py
+      hist/hist010_TH1_two_scales.py
       math/fit/NumericalMinimization.py
       math/fit/combinedFit.py
       math/fit/fitConvolution.py
