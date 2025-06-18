@@ -126,7 +126,15 @@ def RCanvasAvailable():
        return False
    return True
 
-_enableJSVis = True
+def initializeJSVis():
+    global _enableJSVis
+    jupyter_jsroot = ROOT.gEnv.GetValue("Jupyter.JSRoot", "on").lower()
+    if jupyter_jsroot not in {"on", "off"}:
+        print(f"Invalid Jupyter.JSRoot value '{jupyter_jsroot}' in .rootrc. Using default 'on'.")
+        jupyter_jsroot = "on"
+    _enableJSVis = jupyter_jsroot == "on"
+
+initializeJSVis()
 _enableJSVisDebug = False
 def enableJSVis():
     if not TBufferJSONAvailable():
