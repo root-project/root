@@ -643,7 +643,9 @@ if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
     # FIXME: one need to find better way to extract path with GSL include files
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
     set(GSL_FOUND ON)
-    set(mathmore ON CACHE BOOL "Enabled because builtin_gsl requested (${mathmore_description})" FORCE)
+    if(NOT mathmore)
+      message(FATAL_ERROR "builtin_gsl requires mathmore=ON")
+    endif()
   endif()
 endif()
 
@@ -870,36 +872,43 @@ if(fftw3)
     message(STATUS "Looking for FFTW3")
     find_package(FFTW)
     if(NOT FFTW_FOUND)
-      if(fail-on-missing)
-        message(SEND_ERROR "FFTW3 libraries not found and they are required (fftw3 option enabled)")
-      else()
-        message(STATUS "FFTW3 not found. Set [environment] variable FFTW_DIR to point to your FFTW3 installation")
-        message(STATUS "                 Alternatively, you can also enable the option 'builtin_fftw3' to build FFTW3 internally'")
-        message(STATUS "                 For the time being switching OFF 'fftw3' option")
-        set(fftw3 OFF CACHE BOOL "Disabled because FFTW3 not found and builtin_fftw3 disabled (${fftw3_description})" FORCE)
+      set(builtin_fftw3 ON CACHE BOOL "Enabled because FFTW3 not found (${fftw3_description})" FORCE)
+      ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_fftw3")
+      if(NOT builtin_fftw3)
+        if(fail-on-missing)
+          message(SEND_ERROR "FFTW3 libraries not found and they are required (fftw3 option enabled)")
+        else()
+          message(STATUS "FFTW3 not found. Set [environment] variable FFTW_DIR to point to your FFTW3 installation")
+          message(STATUS "                 Alternatively, you can also enable your Internet connection so that the autoset option 'builtin_fftw3' can build FFTW3 internally'")
+          message(STATUS "                 For the time being switching OFF 'fftw3' option")
+          set(fftw3 OFF CACHE BOOL "Disabled because FFTW3 not found and builtin_fftw3 unavailable (${fftw3_description})" FORCE)
+        endif()
       endif()
     endif()
   endif()
 endif()
 if(builtin_fftw3)
-  set(FFTW_VERSION 3.3.8)
-  message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
-  set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
-  ExternalProject_Add(
-    FFTW3
-    URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
-    URL_HASH SHA256=6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
-    BUILD_COMMAND make CFLAGS=-fPIC
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
-    TIMEOUT 600
-  )
-  set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(FFTW3_TARGET FFTW3)
-  set(fftw3 ON CACHE BOOL "Enabled because builtin_fftw3 requested (${fftw3_description})" FORCE)
+  if(NOT fftw3)
+    message(FATAL_ERROR "fftw3 is OFF, conflict with the activated setting 'builtin_fftw3'")
+  else()
+    set(FFTW_VERSION 3.3.8)
+    message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
+    set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
+    ExternalProject_Add(
+      FFTW3
+      URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
+      URL_HASH SHA256=6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
+      BUILD_COMMAND make CFLAGS=-fPIC
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+      BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${FFTW_LIBRARIES}
+      TIMEOUT 600
+    )
+    set(FFTW_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    set(FFTW3_TARGET FFTW3)
+  endif()
 endif()
 
 #---Check for fitsio-------------------------------------------------------------------
@@ -908,9 +917,12 @@ if(fitsio OR builtin_cfitsio)
     ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_cfitsio")
   endif()
   if(builtin_cfitsio)
-    add_library(CFITSIO::CFITSIO STATIC IMPORTED GLOBAL)
-    add_subdirectory(builtins/cfitsio)
-    set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
+    if(NOT fitsio)
+       message(FATAL_ERROR "fitsio is OFF, conflict with the activated setting 'builtin_cfitsio'")
+    else()
+      add_library(CFITSIO::CFITSIO STATIC IMPORTED GLOBAL)
+      add_subdirectory(builtins/cfitsio)
+    endif()
   else()
     message(STATUS "Looking for CFITSIO")
     if(fail-on-missing)
@@ -942,7 +954,7 @@ foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(XROOTD_${suffix} CACHE)
 endforeach()
 
-if(xrootd OR builtin_xrootd)
+if(xrootd)
   # This is the target that ROOT will use, irrespective of whether XRootD is a builtin or in the system.
   # All targets should only link to ROOT::XRootD. Refrain from using XRootD variables.
   add_library(XRootD INTERFACE IMPORTED GLOBAL)
@@ -982,19 +994,22 @@ if(xrootd AND NOT builtin_xrootd)
 endif()
 
 if(builtin_xrootd)
-  ROOT_CHECK_CONNECTION("builtin_xrootd=OFF")
-  if(NO_CONNECTION)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
-      " option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  if(NOT xrootd)
+    message(FATAL_ERROR "xrootd is OFF, conflict with the activated setting 'builtin_xrootd'")
+  else()
+    ROOT_CHECK_CONNECTION("builtin_xrootd=OFF")
+    if(NO_CONNECTION)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
+        " option or the 'fail-on-missing' to automatically disable options requiring internet access")
+    endif()
+    list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
+    # The builtin XRootD requires OpenSSL.
+    # We have to find it here, such that OpenSSL is available in this scope to
+    # finalize the XRootD target configuration.
+    # See also: https://github.com/root-project/root/issues/16374
+    find_package(OpenSSL REQUIRED)
+    add_subdirectory(builtins/xrootd)
   endif()
-  list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
-  # The builtin XRootD requires OpenSSL.
-  # We have to find it here, such that OpenSSL is available in this scope to
-  # finalize the XRootD target configuration.
-  # See also: https://github.com/root-project/root/issues/16374
-  find_package(OpenSSL REQUIRED)
-  add_subdirectory(builtins/xrootd)
-  set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
 
 # Finalise the XRootD target configuration
@@ -1143,15 +1158,18 @@ if(davix AND NOT builtin_davix)
 endif()
 
 if(builtin_davix)
-  ROOT_CHECK_CONNECTION("builtin_davix=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling the 'davix' and 'builtin_davix' options")
-    set(builtin_davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    set(davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  if(NOT davix)
+    message(FATAL_ERROR "davix is OFF, conflict with the activated setting 'builtin_davix'")
   else()
-    list(APPEND ROOT_BUILTINS Davix)
-    add_subdirectory(builtins/davix)
-    set(davix ON CACHE BOOL "Enabled because builtin_davix is enabled)" FORCE)
+    ROOT_CHECK_CONNECTION("builtin_davix=OFF")
+    if(NO_CONNECTION)
+      message(STATUS "No internet connection, disabling the 'davix' and 'builtin_davix' options")
+      set(builtin_davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      set(davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    else()
+      list(APPEND ROOT_BUILTINS Davix)
+      add_subdirectory(builtins/davix)
+    endif()
   endif()
 endif()
 
@@ -1245,15 +1263,19 @@ int main() { return 0; }" tbb_exception_result)
 endif()
 
 if(builtin_tbb)
-  ROOT_CHECK_CONNECTION("builtin_tbb=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling 'builtin_tbb' and 'imt' options")
-    set(builtin_tbb OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    set(imt OFF CACHE BOOL "Disabled because 'builtin_tbb' was set but there is no internet connection" FORCE)
+  if(NOT imt)
+    message(FATAL_ERROR "imt is OFF, conflict with the activated setting 'builtin_tbb'")
+  else()
+    ROOT_CHECK_CONNECTION("builtin_tbb=OFF")
+    if(NO_CONNECTION)
+      message(STATUS "No internet connection, disabling 'builtin_tbb' and 'imt' options")
+      set(builtin_tbb OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      set(imt OFF CACHE BOOL "Disabled because 'builtin_tbb' was set but there is no internet connection" FORCE)
+    endif()
   endif()
 endif()
 
-if(builtin_tbb)
+if(builtin_tbb AND imt)
   set(tbb_url ${lcgpackages}/oneTBB-2021.9.0.tar.gz)
   set(tbb_sha256 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
 
@@ -1326,9 +1348,12 @@ endif()
 
 #---Check for Vc---------------------------------------------------------------------
 if(builtin_vc)
-  unset(Vc_FOUND)
-  unset(Vc_FOUND CACHE)
-  set(vc ON CACHE BOOL "Enabled because builtin_vc requested (${vc_description})" FORCE)
+  if(NOT vc)
+    message(FATAL_ERROR "vc is OFF, conflict with the activated setting 'builtin_vc'")
+  else()
+    unset(Vc_FOUND)
+    unset(Vc_FOUND CACHE)
+  endif()
 elseif(vc)
   if(fail-on-missing)
     find_package(Vc 1.4.4 CONFIG QUIET REQUIRED)
@@ -1418,7 +1443,6 @@ endif()
 if(builtin_veccore)
   unset(VecCore_FOUND)
   unset(VecCore_FOUND CACHE)
-  set(veccore ON CACHE BOOL "Enabled because builtin_veccore requested (${veccore_description})" FORCE)
 elseif(veccore)
   if(vc)
     set(VecCore_COMPONENTS Vc)
@@ -1443,72 +1467,76 @@ elseif(veccore)
   endif()
 endif()
 
-if(builtin_veccore)
+if(builtin_veccore AND veccore)
   ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_veccore")
 endif()
 
 if(builtin_veccore)
-  set(VecCore_VERSION "0.8.2")
-  set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
-  set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
-  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
-  set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
+  if(NOT veccore)
+    message(FATAL_ERROR "veccore is OFF, conflict with the activated setting 'builtin_veccore'")
+  else()
+    set(VecCore_VERSION "0.8.2")
+    set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
+    set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
+    set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
+    set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
 
-  ExternalProject_Add(VECCORE
-    URL     ${VecCore_SRC_URI}
-    URL_HASH SHA256=1268bca92acf00acd9775f1e79a2da7b1d902733d17e283e0dd5e02c41ac9666
-    BUILD_IN_SOURCE 0
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DBUILD_TESTING=OFF
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
-    TIMEOUT 600
-  )
+    ExternalProject_Add(VECCORE
+      URL     ${VecCore_SRC_URI}
+      URL_HASH SHA256=1268bca92acf00acd9775f1e79a2da7b1d902733d17e283e0dd5e02c41ac9666
+      BUILD_IN_SOURCE 0
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+      CMAKE_ARGS -G ${CMAKE_GENERATOR}
+                 -DBUILD_TESTING=OFF
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                 -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
+                 -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+      TIMEOUT 600
+    )
 
-  set(VECCORE_TARGET VecCore)
-  set(VecCore_LIBRARIES VecCore)
-  list(APPEND VecCore_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
+    set(VECCORE_TARGET VecCore)
+    set(VecCore_LIBRARIES VecCore)
+    list(APPEND VecCore_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
 
-  add_library(VecCore INTERFACE)
-  target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
-  add_dependencies(VecCore VECCORE)
+    add_library(VecCore INTERFACE)
+    target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
+    add_dependencies(VecCore VECCORE)
 
-  if (Vc_FOUND)
-    set(VecCore_Vc_FOUND True)
-    set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
-    set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
-    set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
+    if (Vc_FOUND)
+      set(VecCore_Vc_FOUND True)
+      set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
+      set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
+      set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
 
-    set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
-    list(APPEND VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR})
-    set(VecCore_LIBRARIES ${VecCore_LIBRARIES} ${Vc_LIBRARIES})
-    target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
-  endif()
-
-  find_package_handle_standard_args(VecCore
-    FOUND_VAR VecCore_FOUND
-    REQUIRED_VARS VecCore_INCLUDE_DIRS VecCore_LIBRARIES
-    VERSION_VAR VecCore_VERSION)
-
-  # FIXME: This is a workaround to let ROOT find the headers at runtime if
-  # they are in the build directory. This is necessary until we decide how to
-  # treat externals with headers used by ROOT
-  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/VecCore)
-    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+      set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
+      list(APPEND VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR})
+      set(VecCore_LIBRARIES ${VecCore_LIBRARIES} ${Vc_LIBRARIES})
+      target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
     endif()
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
-  endif()
-  # end of workaround
 
-  install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
+    find_package_handle_standard_args(VecCore
+      FOUND_VAR VecCore_FOUND
+      REQUIRED_VARS VecCore_INCLUDE_DIRS VecCore_LIBRARIES
+      VERSION_VAR VecCore_VERSION)
+
+    # FIXME: This is a workaround to let ROOT find the headers at runtime if
+    # they are in the build directory. This is necessary until we decide how to
+    # treat externals with headers used by ROOT
+    if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/VecCore)
+      if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+      endif()
+      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
+    endif()
+    # end of workaround
+
+    install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
+  endif()
 endif()
 
 if(builtin_vdt)
@@ -1536,46 +1564,49 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.6)
-    set(VDT_FOUND True)
-    set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      VDT
-      URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=1820feae446780763ec8bbb60a0dbcf3ae1ee548bdd01415b1fb905fd4f90c54
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-        -DSSE=OFF # breaks on ARM without this
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-        -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_BYPRODUCTS ${VDT_LIBRARIES}
-      TIMEOUT 600
-    )
-    ExternalProject_Add_Step(
-       VDT copy2externals
-       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
-       DEPENDEES install
-    )
-    set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
-    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
-            DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
-    set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
-    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
-    add_library(VDT::VDT STATIC IMPORTED GLOBAL)
-    set_target_properties(VDT::VDT
-      PROPERTIES
-        IMPORTED_LOCATION "${VDT_LIBRARIES}"
-        INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}"
-    )
+    if(NOT vdt)
+      message(FATAL_ERROR "vdt is OFF, conflict with the activated setting 'builtin_vdt'")
+    else()
+      set(vdt_version 0.4.6)
+      set(VDT_FOUND True)
+      set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
+      ExternalProject_Add(
+        VDT
+        URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
+        URL_HASH SHA256=1820feae446780763ec8bbb60a0dbcf3ae1ee548bdd01415b1fb905fd4f90c54
+        INSTALL_DIR ${CMAKE_BINARY_DIR}
+        CMAKE_ARGS
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          -DSSE=OFF # breaks on ARM without this
+          -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+          -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+          -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+          -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+          -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
+          -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+        BUILD_BYPRODUCTS ${VDT_LIBRARIES}
+        TIMEOUT 600
+      )
+      ExternalProject_Add_Step(
+         VDT copy2externals
+         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
+         DEPENDEES install
+      )
+      set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
+      set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
+      install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
+              DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+      install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
+              DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
+      set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
+      add_library(VDT::VDT STATIC IMPORTED GLOBAL)
+      set_target_properties(VDT::VDT
+        PROPERTIES
+          IMPORTED_LOCATION "${VDT_LIBRARIES}"
+          INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}"
+      )
+    endif()
   endif()
 endif()
 
