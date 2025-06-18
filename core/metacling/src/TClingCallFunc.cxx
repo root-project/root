@@ -1609,21 +1609,38 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
       ::Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return nullptr;
    }
-   if (tcling_callfunc_ctor_Wrapper_t wrapper = make_ctor_wrapper(info, kind, type_name)) {
-      //if (!info->HasDefaultConstructor()) {
-      //   // FIXME: We might have a ROOT ioctor, we might
-      //   //        have to check for that here.
-      //   ::Error("TClingCallFunc::ExecDefaultConstructor",
-      //         "Class has no default constructor: %s",
-      //         info->Name());
-      //   return 0;
-      //}
-      void *obj = nullptr;
-      (*wrapper)(&obj, address, nary);
-      return obj;
+   clang::Decl *D = const_cast<clang::Decl *>(info->GetDecl());
+   // ensure D is a constructor
+   if (!Cpp::IsConstructor(D)) {
+      // we could have the scope decl instead
+      if (Cpp::IsClass(D)) {
+         D = static_cast<clang::Decl *>(Cpp::GetDefaultConstructor(D));
+      } else {
+         ::Error("TClingCallFunc::ExecDefaultConstructor",
+                 "Could not find a default constructor for the given ClassInfo");
+         return nullptr;
+      }
    }
-   ::Error("TClingCallFunc::ExecDefaultConstructor", "Called with no wrapper, not implemented!");
-   return nullptr;
+
+   // generate wrapper with jitcall
+   Cpp::JitCall JC = Cpp::MakeFunctionCallable(D);
+   if (JC.getKind() != Cpp::JitCall::kConstructorCall) {
+      ::Error("TClingCallFunc::ExecDefaultConstructor", "Could not generate/compile wrapper for given constructor");
+      return nullptr;
+   }
+
+   // this function's clients assume nary = 0 for operator new and nary > 0 for array new. JitCall expects
+   // the number of objects you want to construct; nary = 1 constructs a single object
+   // This handles this difference in semantics
+   if (nary == 0)
+      nary = 1;
+
+   // invoke the constructor (placement/heap) in one shot
+   // flag is non-null for placement new, null for normal new
+   void *flag = address ? reinterpret_cast<void *>(1) : nullptr;
+   void *result = address;
+   JC.InvokeConstructor(&result, nary, {}, flag);
+   return result;
 }
 
 void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /*=0*/,
