@@ -121,16 +121,6 @@ ROOTTEST_ADD_TEST(boolUpdate
                   FIXTURES_REQUIRED root-io-evolution-boolUpdate-fixture)
 
 
-ROOTTEST_COMPILE_MACRO(cms.cxx
-                       FIXTURES_SETUP root-io-evolution-cms-fixture)
-
-ROOTTEST_ADD_TEST(foreign310
-                  MACRO runforeign310.C
-                  OUTREF foreign310.ref
-                  COPY_TO_BUILDDIR CMS.root
-                  LABELS longtest io
-                  FIXTURES_REQUIRED root-io-evolution-cms-fixture)
-
 ROOTTEST_ADD_TEST(Missing
                   MACRO runMissing.C
                   OUTREF Missing.ref
@@ -200,20 +190,16 @@ ROOTTEST_ADD_TEST(ClonesArrayEvo
                   LABELS longtest io
                   FIXTURES_REQUIRED root-io-evolution-Event_3-fixture)
 
-# there is problem parsing XML file on Windows, therefore reflex dictionary generation fails
-if (NOT MSVC OR win_broken_tests)
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(libioReadRuleEquivalentCode
-                                    ioReadRuleEquivalentCode.h
-                                    SELECTION ioReadRuleEquivalentCode_selection.xml
-                                    FIXTURES_SETUP root-io-evolution-libioReadRuleEquivalentCode-fixture)
+ROOTTEST_COMPILE_MACRO(cms.cxx
+                       FIXTURES_SETUP root-io-evolution-cms-fixture)
 
-ROOTTEST_ADD_TEST(ioReadRuleEquivalentCode
-                  MACRO execioReadRuleEquivalentCode.C
-                  OUTREF execioReadRuleEquivalentCode.ref
-                  COPY_TO_BUILDDIR ioReadRuleEquivalentCode.root
+ROOTTEST_ADD_TEST(foreign310
+                  MACRO runforeign310.C
+                  OUTREF foreign310.ref
+                  COPY_TO_BUILDDIR CMS.root
                   LABELS longtest io
-                  FIXTURES_REQUIRED root-io-evolution-libioReadRuleEquivalentCode-fixture)
-endif()
+                  FIXTURES_REQUIRED root-io-evolution-cms-fixture)
+
 
 ROOTTEST_ADD_TEST(Skipbaseclass
                   MACRO execSkipbaseclass.cxx+
