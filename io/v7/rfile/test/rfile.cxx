@@ -7,6 +7,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <numeric>
 
 using ROOT::Experimental::RFile;
@@ -41,6 +42,25 @@ public:
 };
 
 } // anonymous namespace
+
+TEST(RFile, DecomposePath)
+{
+   using ROOT::Experimental::DecomposePath;
+
+   auto Pair = [](std::string_view a, std::string_view b) { return std::make_pair(a, b); };
+
+   EXPECT_EQ(DecomposePath("/foo/bar/baz"), Pair("/foo/bar/", "baz"));
+   EXPECT_EQ(DecomposePath("/foo/bar/baz/"), Pair("/foo/bar/baz/", ""));
+   EXPECT_EQ(DecomposePath("foo/bar/baz"), Pair("foo/bar/", "baz"));
+   EXPECT_EQ(DecomposePath("foo"), Pair("", "foo"));
+   EXPECT_EQ(DecomposePath("/"), Pair("/", ""));
+   EXPECT_EQ(DecomposePath("////"), Pair("////", ""));
+   EXPECT_EQ(DecomposePath(""), Pair("", ""));
+   EXPECT_EQ(DecomposePath("asd/"), Pair("asd/", ""));
+   EXPECT_EQ(DecomposePath("  "), Pair("", "  "));
+   EXPECT_EQ(DecomposePath("/  "), Pair("/", "  "));
+   EXPECT_EQ(DecomposePath("  /"), Pair("  /", ""));
+}
 
 TEST(RFile, OpenForReading)
 {
@@ -202,11 +222,13 @@ TEST(RFile, WriteReadInTFileDir)
       TFile file(fileGuard.GetPath().c_str(), "RECREATE");
       auto *d = file.mkdir("a/b");
       d->WriteObject(hist.get(), "hist");
+      d->WriteObject(hist.get(), "c/d");
    }
 
    {
       auto file = RFile::OpenForReading(fileGuard.GetPath());
       EXPECT_TRUE(file->Get<TH1D>("a/b/hist"));
+      EXPECT_TRUE(file->Get<TH1D>("a/b/c/d"));
    }
 }
 
@@ -361,6 +383,11 @@ TEST(RFile, ComplexExample)
 
    auto file = RFile::Recreate(fileGuard.GetPath());
 
+   auto model = ROOT::RNTupleModel::Create();
+   model->MakeField<float>("x");
+   model->MakeField<std::vector<float>>("v");
+
+   using namespace std::chrono; // TEMP
    const std::string topLevelDirs[] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
    for (const auto &dir : topLevelDirs) {
       const auto kNRuns = 5;
@@ -377,12 +404,38 @@ TEST(RFile, ComplexExample)
          }
 
          // TODO: add RFile impl in RNTupleFileWriter
-         // const auto kNDatasets = 10;
-         // for (int i = 0; i < kNDatasets; ++i) {
-         //    const auto datasetName = std::string("data_") + (i + 1) + ".root";
-         //    const auto datasetPath = runDir + "/data/" + datasetName;
-         //    const auto 
-         // }
+         auto start = high_resolution_clock::now();
+         const auto kNDatasets = 10;
+         for (int i = 0; i < kNDatasets; ++i) {
+            const auto datasetName = std::string("data_") + (i + 1);
+            const auto datasetPath = runDir + "/data/" + datasetName;
+            const auto dataset = ROOT::RNTupleWriter::Append(model->Clone(), datasetPath, *file);
+            for (int j = 0; j < 100; ++j)
+               dataset->Fill();
+         }
+         std::cout << "dataset took " << duration_cast<milliseconds>(high_resolution_clock::now() - start).count()
+                   << " ms\n";
       }
+   }
+}
+
+TEST(RFile, Closing)
+{
+   FileRaii fileGuard("test_rfile_closing.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s;
+      file->Put("s", s);
+      // Explicitly close the file
+      file->Close();
+      EXPECT_THROW(file->Put("ss", s), ROOT::RException);
+   }
+
+   {
+      auto file = RFile::OpenForReading(fileGuard.GetPath());
+      EXPECT_NE(file->Get<std::string>("s"), nullptr);
+      file->Close();
+      EXPECT_THROW(file->Get<std::string>("s"), ROOT::RException);
    }
 }

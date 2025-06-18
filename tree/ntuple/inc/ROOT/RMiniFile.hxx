@@ -38,6 +38,12 @@ class RRawFile;
 
 class RNTupleWriteOptions;
 
+namespace Experimental {
+
+class RFile;
+
+}
+
 namespace Internal {
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
@@ -126,6 +132,19 @@ private:
       operator bool() const { return fDirectory; }
    };
 
+   struct RFileRFile {
+      /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
+      ROOT::Experimental::RFile *fFile = nullptr;
+      std::string fDir;
+      /// Low-level writing using a TFile
+      void Write(const void *buffer, size_t nbytes, std::int64_t offset);
+      /// Reserves an RBlob opaque key as data record and returns the offset of the record. If keyBuffer is specified,
+      /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
+      /// argument is actually just a pointer.)
+      std::uint64_t ReserveBlobKey(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
+      operator bool() const { return fFile; }
+   };
+
    struct RFileSimple {
       /// Direct I/O requires that all buffers and write lengths are aligned. It seems 512 byte alignment is the minimum
       /// for Direct I/O to work, but further testing showed that it results in worse performance than 4kB.
@@ -179,7 +198,7 @@ private:
 
    /// RFileSimple: for simple use cases, survives without libRIO dependency
    /// RFileProper: for updating existing files and for storing more than just an RNTuple in the file
-   std::variant<RFileSimple, RFileProper> fFile;
+   std::variant<RFileSimple, RFileProper, RFileRFile> fFile;
    /// A simple file can either be written as TFile container or as NTuple bare file
    bool fIsBare = false;
    /// The identifier of the RNTuple; A single writer object can only write a single RNTuple but multiple
@@ -224,6 +243,9 @@ public:
    /// The directory parameter can also be a TFile object (TFile inherits from TDirectory).
    static std::unique_ptr<RNTupleFileWriter>
    Append(std::string_view ntupleName, TDirectory &fileOrDirectory, std::uint64_t maxKeySize);
+
+   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
+                                                    std::string_view dirPath, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;

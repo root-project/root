@@ -23,6 +23,7 @@
 #include <TH1.h>
 #include <TKey.h>
 
+#include <cstring>
 #include <iostream>
 
 using ROOT::Experimental::RFile;
@@ -55,6 +56,15 @@ static void ThrowIfExtensionIsNotRoot(std::string_view path)
    if (path.size() < 5 || path.compare(path.size() - 5, 5, ".root") != 0) {
       throw ROOT::RException(R__FAIL(std::string("Only .root files are supported.")));
    }
+}
+
+static ROOT::Experimental::RFileKeyInfo RFileKeyInfoFromTKey(const TKey &tkey)
+{
+   ROOT::Experimental::RFileKeyInfo keyInfo {};
+   keyInfo.fName = tkey.GetName();
+   keyInfo.fClassName = tkey.GetClassName();
+   keyInfo.fTitle = tkey.GetTitle();
+   return keyInfo;
 }
 
 namespace {
@@ -151,6 +161,17 @@ static ROOT::RResult<RTFileKey> ReadKeyFromFile(TFile *file, std::uint64_t keyAd
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+std::pair<std::string_view, std::string_view> ROOT::Experimental::DecomposePath(std::string_view path)
+{
+   auto lastSlashIdx = path.rfind('/');
+   if (lastSlashIdx == std::string_view::npos)
+      return {{}, path};
+
+   auto dirName = path.substr(0, lastSlashIdx + 1);
+   auto pathName = path.substr(lastSlashIdx + 1);
+   return {dirName, pathName};
+}
+
 bool RFile::IsValidPath(std::string_view path)
 {
    if (path.empty())
@@ -197,49 +218,72 @@ std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
    return rfile;
 }
 
+TKey *RFile::GetTKey(const char *path) const {
+   const auto GetKeyCheckCycle = [] (TDirectory *dir, const char *keyPath) -> TKey * {
+      TKey *key = dir->FindKey(keyPath);
+      if (key) {
+         // For some reason, FindKey will not return nullptr if we asked for a specific cycle and that cycle
+         // doesn't exist. It will instead return any key whose cycle is *at most* the requested one.
+         // This is very confusing, so in RFile we actually return null if the requested cycle is not there.
+         short cycle;
+         TDirectory::DecodeNameCycle(keyPath, nullptr, cycle);
+         // NOTE: cycle == 9999 means that `path` didn't contain a valid cycle (including no cycle at all)
+         //       cycle == 10000 means that `path` contained the "any cycle" pattern ("name;*")
+         if (cycle >= 9999 || key->GetCycle() == cycle) {
+            return key;
+         }
+      }
+      return nullptr;
+   };
+
+   // First try getting the object from the top-level directory.
+   // Don't use GetObjectChecked or similar because they don't handle slashes in paths correctly
+   // (note that an object might have a name containing slashes even if it's not in a directory).
+   TKey *key = GetKeyCheckCycle(fFile.get(), path);
+
+   // If we didn't find the key, try in subdirectories.
+   // If the path is like "a/b/c/d", we will try:
+   // - dir "a"     key "b/c/d"
+   // - dir "a/b"   key "c/d"
+   // - dir "a/b/c" key "d"
+   if (!key) {
+      TDirectory *dir = fFile.get();
+      std::string dirPath = path;
+      char *keyBegin = dirPath.data();
+      char *keyName = strchr(keyBegin, '/');
+      while (keyName) {
+         // replace the next '/' with a zero so keyBegin points to a C string containing the next directory name.
+         *keyName = 0;
+         // make keyName point to the rest of the path string, which is the key name.
+         ++keyName;
+
+         dir = dir->GetDirectory(keyBegin);
+         if (!dir) {
+            return nullptr;
+         }
+         key = GetKeyCheckCycle(dir, keyName);
+         if (key)
+            break;
+
+         // proceed to the next path segment.
+         keyBegin = keyName;
+         keyName = strchr(keyBegin, '/');
+      }
+   }
+
+   return key;
+}
+
 void *RFile::GetUntyped(const char *path, const TClass *type) const
 {
    assert(path);
    assert(type);
 
-   // First try getting the object from the top-level directory.
-   // Don't use GetObjectChecked or similar because they don't handle slashes in paths correctly
-   // (note that an object might have a name containing slashes even if it's not in a directory).
-   TKey *key = fFile->FindKey(path);
-   void *obj = nullptr;
-   if (key) {
-      // For some reason, FindKey will not return nullptr if we asked for a specific cycle and that cycle
-      // doesn't exist. It will instead return any key whose cycle is *at most* the requested one.
-      // This is very confusing, so in RFile we actually return null if the requested cycle is not there.
-      short cycle;
-      TDirectory::DecodeNameCycle(path, nullptr, cycle);
-      // NOTE: cycle == 9999 means that `path` didn't contain a valid cycle (including no cycle at all)
-      //       cycle == 10000 means that `path` contained the "any cycle" pattern ("name;*")
-      if (cycle >= 9999 || key->GetCycle() == cycle) {
-         obj = key->ReadObjectAny(type);
-      }
-   }
+   if (!fFile)
+      throw ROOT::RException(R__FAIL("File has been closed"));
 
-   // If we didn't find the object, try in subdirectories.
-   if (!obj) {
-      const auto tokens = ROOT::Split(path, "/");
-      if (tokens.size() > 1) {
-         TDirectory *dir = fFile.get();
-         for (auto tokenIdx = 0u; tokenIdx < tokens.size() - 1; ++tokenIdx) {
-            dir = dir->GetDirectory(tokens[tokenIdx].c_str());
-            if (!dir) {
-               return nullptr;
-            }
-         }
-
-         const auto &keyName = tokens[tokens.size() - 1];
-         TKey *key = dir->FindKey(keyName.c_str());
-         if (!key) {
-            return key;
-         }
-         obj = key->ReadObjectAny(type);
-      }
-   }
+   TKey *key = GetTKey(path);
+   void *obj = key ? key->ReadObjectAny(type) : nullptr;
 
    if (obj) {
       // Disavow any ownership on `obj`
@@ -260,9 +304,11 @@ void RFile::PutUntyped(const char *path, const TClass *type, const void *obj, st
    assert(path);
    assert(type);
 
-   if (!fFile->IsWritable()) {
+   if (!fFile)
+      throw ROOT::RException(R__FAIL("File has been closed"));
+
+   if (!fFile->IsWritable())
       throw ROOT::RException(R__FAIL("File is not writable"));
-   }
 
    // If `path` refers to a subdirectory, make sure we always write in an actual TDirectory,
    // otherwise we may have a mix of top-level objects called "a/b/c" and actual directory
@@ -377,7 +423,7 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
    }
 }
 
-void ROOT::Experimental::RFile::Print(std::ostream &out) const
+void RFile::Print(std::ostream &out) const
 {
    std::vector<RFileKeyInfo> keys;
    auto keysIter = GetKeys();
@@ -385,8 +431,40 @@ void ROOT::Experimental::RFile::Print(std::ostream &out) const
       keys.emplace_back(key);
    }
 
-   std::sort(keys.begin(), keys.end(), [] (const auto &a, const auto &b) { return a.fName < b.fName; });
+   std::sort(keys.begin(), keys.end(), [](const auto &a, const auto &b) { return a.fName < b.fName; });
    for (const auto &key : keys) {
       out << key.fClassName << " " << key.fName << ": \"" << key.fTitle << "\"\n";
    }
+}
+
+TFile *ROOT::Experimental::Internal::GetRFileTFile(ROOT::Experimental::RFile &file)
+{
+   return file.fFile.get();
+}
+
+size_t RFile::Write()
+{
+   return fFile->Write();
+}
+
+void RFile::Close()
+{
+   fFile.reset();
+}
+
+std::optional<ROOT::Experimental::RFileKeyInfo> RFile::GetKeyInfo(std::string_view path) const
+{
+   TKey *key = GetTKey(std::string(path).c_str());
+   if (key)
+      return RFileKeyInfoFromTKey(*key);
+   return {};
+}
+
+void *ROOT::Experimental::Internal::GetRFileObjectFromKey(RFile &file, const RFileKeyInfo &key)
+{
+   const auto *cls = TClass::GetClass(key.fClassName.c_str());
+   void *obj = nullptr;
+   if (cls)
+      obj = file.GetUntyped(key.fName.c_str(), cls);
+   return obj;
 }
