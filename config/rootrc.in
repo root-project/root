@@ -242,6 +242,9 @@ GeomPainter.Name:            @root_geompainter_type@
 # THttpServer specific settings
 # location of JavaScript ROOT sources
 #HttpServ.JSRootPath:        @jsrootdir@
+# Default setting for enabling or disabling JSROOT. 
+# This can be toggled in the notebook using the `%jsroot on/off` command.
+Jupyter.JSRoot:               on
 
 # WebGui specific settings (defaults are shown)
 # fixed http port number for server, 0 - not fixed, -1 - disabled completely
