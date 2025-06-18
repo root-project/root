@@ -1,9 +1,9 @@
 if(NOT MSVC OR win_broken_tests)
   if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64.*|x86.*|amd64.*|AMD64.*|i686.*|i386.*")
     # All platforms except of ARM/AARCH64
-    set(RootExeOptions "--ptrcheck")
     ROOTTEST_ADD_TEST(nullderef-macro
                       MACRO nullderef.C
+                      ROOTEXE_OPTS --ptrcheck
                       PASSRC 1
                       LABELS roottest regression cling)
   endif()
