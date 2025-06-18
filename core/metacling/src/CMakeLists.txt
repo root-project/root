@@ -138,15 +138,6 @@ if(MSVC)
       __std_terminate
       cling_runtime_internal_throwIfInvalidPointer
   )
-  if(MSVC_VERSION GREATER_EQUAL 1933)
-    set(cling_exports ${cling_exports}
-        __std_find_trivial_1
-        __std_find_trivial_2
-        __std_find_trivial_4
-        __std_find_trivial_8
-    )
-  endif()
-
   set(cling_exports ${cling_exports}
     _Smtx_lock_shared
     _Smtx_unlock_shared
