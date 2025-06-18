@@ -83,14 +83,15 @@ class DataFrameFromNumpy(unittest.TestCase):
         counts. See also:
         https://docs.python.org/3.14/whatsnew/3.14.html#whatsnew314-refcount
         """
+        extra_ref_count = int(sys.version_info < (3, 14))
         data = {"x": np.array([1, 2, 3], dtype="float32")}
         gc.collect()
-        self.assertEqual(sys.getrefcount(data), 1 + int(sys.version_info < (3, 14)))
+        self.assertEqual(sys.getrefcount(data), 1 + extra_ref_count)
         self.assertEqual(sys.getrefcount(data["x"]), 2)
 
         df = ROOT.RDF.FromNumpy(data)
         gc.collect()
-        self.assertEqual(sys.getrefcount(df), 2)
+        self.assertEqual(sys.getrefcount(df), 1 + extra_ref_count)
 
         self.assertEqual(sys.getrefcount(data["x"]), 3)
 
