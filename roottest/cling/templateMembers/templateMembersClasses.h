@@ -93,7 +93,7 @@ class my_shared_ptr {
       my_shared_ptr<T>& operator=(const my_shared_ptr<U>&) { SHOW; return *this; }
 
   template <class U>
-    my_shared_ptr<T>(const my_shared_ptr<U>&) { SHOW; } //rootcint can't find this
+    my_shared_ptr(const my_shared_ptr<U>&) { SHOW; } //rootcint can't find this
 
 /*   template <class U> */
 /*     my_shared_ptr<T>() { SHOW; } //rootcint can't find this */
