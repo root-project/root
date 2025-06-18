@@ -8,17 +8,17 @@
   <class name="ClassB" ClassVersion="2" />
   <class name="ClassC" ClassVersion="2" />
   <class name="ClassD" ClassVersion="2" />
-  <class name="std::vector&lt;double&gt;" />
-  <class name="std::pair&lt;int,double&gt;" />
-  <class name="std::vector&lt;std::pair&lt;int,double&gt; &gt;" />
-  <class name="std::vector&lt;ClassA&gt;" />
-  <class name="std::vector&lt;ClassA*&gt;" />
-  <class name="std::vector&lt;ClassB&gt;" />
-  <class name="std::vector&lt;ClassB*&gt;" />
-  <class name="std::vector&lt;ClassC&gt;" />
-  <class name="std::vector&lt;ClassC*&gt;" />
-  <class name="std::vector&lt;ClassD&gt;" />
-  <class name="std::vector&lt;ClassD*&gt;" />
+  <class name="std::vector<double>" />
+  <class name="std::pair<int,double>" />
+  <class name="std::vector<std::pair<int,double> >" />
+  <class name="std::vector<ClassA>" />
+  <class name="std::vector<ClassA*>" />
+  <class name="std::vector<ClassB>" />
+  <class name="std::vector<ClassB*>" />
+  <class name="std::vector<ClassC>" />
+  <class name="std::vector<ClassC*>" />
+  <class name="std::vector<ClassD>" />
+  <class name="std::vector<ClassD*>" />
 
   <class name="ClassAIns::Transient" ClassVersion="2" />
   <read sourceClass="ClassAIns::Transient" version="[2]" targetClass="ClassAIns::Transient" source="" target="fCached" >
