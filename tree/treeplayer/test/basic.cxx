@@ -534,3 +534,39 @@ TEST(TTreeReaderBasic, ZeroEntriesTree)
    EXPECT_TRUE(b++ == e);
    EXPECT_TRUE(++b_copy == e);
 }
+
+TEST(TTreeReaderBasic, ZeroEntriesTreeCheckValueStatus)
+{
+   // Regression test for https://github.com/root-project/root/issues/18955
+   struct Dataset {
+      Dataset()
+      {
+         auto f = std::make_unique<TFile>("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root", "recreate");
+         auto t = std::make_unique<TTree>("t", "t");
+         std::vector<int> b1;
+         t->Branch("b1", &b1);
+         f->Write();
+      }
+      ~Dataset() { std::remove("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root"); }
+   } dataset;
+
+   // Test with TTree
+   {
+      auto f = std::make_unique<TFile>("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root");
+      auto t = f->Get<TTree>("t");
+      TTreeReader tr{t};
+      TTreeReaderValue<std::vector<int>> v1{tr, "b1"};
+      tr.Next();
+      EXPECT_EQ(v1.GetSetupStatus(), ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMatchButEntryBeyondEnd);
+   }
+
+   // Test with TChain
+   {
+      TChain c{"t"};
+      c.Add("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root");
+      TTreeReader tr{&c};
+      TTreeReaderValue<std::vector<int>> v1{tr, "b1"};
+      tr.Next();
+      EXPECT_EQ(v1.GetSetupStatus(), ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMatchButEntryBeyondEnd);
+   }
+}
