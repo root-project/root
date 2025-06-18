@@ -687,7 +687,13 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy()
 
    fProxy = namedProxy->GetProxy();
    if (fProxy) {
-      fSetupStatus = kSetupMatch;
+      // If we have already reached the end of the tree, expose this information
+      // also through the value, in case the user is not checking via the
+      // TTreeReader but via the value instead.
+      if (fTreeReader->GetEntryStatus() == TTreeReader::EEntryStatus::kEntryBeyondEnd)
+         fSetupStatus = kSetupMatchButEntryBeyondEnd;
+      else
+         fSetupStatus = kSetupMatch;
    } else {
       fSetupStatus = kSetupMismatch;
    }
