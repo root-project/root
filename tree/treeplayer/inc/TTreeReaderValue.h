@@ -46,9 +46,9 @@ class TTreeReaderValueBase {
 public:
    /// Status flags, 0 is good
    enum ESetupStatus {
-      kSetupNotSetup = -7,              ///< No initialization has happened yet.
-      kSetupTreeDestructed = -8,        ///< The TTreeReader has been destructed / not set.
       kSetupMakeClassModeMismatch = -9, ///< readers disagree on whether TTree::SetMakeBranch() should be on
+      kSetupTreeDestructed = -8,        ///< The TTreeReader has been destructed / not set.
+      kSetupNotSetup = -7,              ///< No initialization has happened yet.
       kSetupMissingCounterBranch = -6,  ///< The array cannot find its counter branch: Array[CounterBranch]
       kSetupMissingBranch = -5,         ///< The specified branch cannot be found.
       kSetupInternalError = -4,         ///< Some other error - hopefully the error message helps.
@@ -57,8 +57,6 @@ public:
       kSetupNotACollection = -1,        ///< The branch class type is not a collection.
       kSetupMatch =
          0, ///< This branch has been set up, branch data type and reader template type match, reading should succeed.
-      kSetupMatchBranch =
-         7, ///< This branch has been set up, branch data type and reader template type match, reading should succeed.
       // kSetupMatchConversion = 1, /// This branch has been set up, the branch data type can be converted to the reader
       // template type, reading should succeed. kSetupMatchConversionCollection = 2, /// This branch has been set up,
       // the data type of the branch's collection elements can be converted to the reader template type, reading should
@@ -66,7 +64,9 @@ public:
       // succeed.
       //  kSetupVoidPtr = 4,
       kSetupNoCheck = 5,
-      kSetupMatchLeaf = 6 ///< This branch (or TLeaf, really) has been set up, reading should succeed.
+      kSetupMatchLeaf = 6, ///< This branch (or TLeaf, really) has been set up, reading should succeed.
+      kSetupMatchBranch =
+         7, ///< This branch has been set up, branch data type and reader template type match, reading should succeed.
    };
    enum EReadStatus {
       kReadSuccess = 0, ///< Data read okay
