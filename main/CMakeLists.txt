@@ -21,6 +21,11 @@ if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
       /STACK:4000000 setargv.obj")
+  if(MSVC_VERSION GREATER_EQUAL 1933)
+    set(root_exports "${root_exports} /EXPORT:__std_find_trivial_1 \
+        /EXPORT:__std_find_trivial_2 /EXPORT:__std_find_trivial_4 \
+        /EXPORT:__std_find_trivial_8")
+  endif()
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
   add_custom_command(TARGET root.exe POST_BUILD
                      COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
