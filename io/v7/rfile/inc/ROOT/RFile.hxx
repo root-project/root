@@ -25,6 +25,27 @@
 namespace ROOT {
 namespace Experimental {
 
+class RFile;
+struct RFileKeyInfo;
+
+namespace Internal {
+
+TFile *GetRFileTFile(RFile &file);
+/// Returns an **owning** pointer to the object referenced by `key`. The caller must delete this pointer.
+[[nodiscard]] void *GetRFileObjectFromKey(RFile &file, const RFileKeyInfo &key);
+
+}
+
+/// Given a "path-like" string (like foo/bar/baz), returns a pair `{ dirName, baseName }`.
+/// `baseName` will be empty if the string ends with '/'.
+/// `dirName` will be empty if the string contains no '/'.
+/// `dirName`, if not empty, always ends with a '/'.
+/// NOTE: this function does no semantic checking or path expansion, nor does it interact with the
+/// filesystem in any way (so it won't follow symlink or anything like that).
+/// Moreover it doesn't trim the path in any way, so any leading or trailing whitespaces will be preserved.
+/// This function does not perform any copy: the returned string_views have the same lifetime as `path`.
+std::pair<std::string_view, std::string_view> DecomposePath(std::string_view path);
+
 struct RFileKeyInfo {
   std::string fName;
   std::string fTitle;
@@ -96,6 +117,9 @@ public:
 };
 
 class RFile final {
+   friend TFile *Internal::GetRFileTFile(RFile &file);
+   friend void *Internal::GetRFileObjectFromKey(RFile &file, const RFileKeyInfo &key);
+
    enum PutFlags {
       kPutAllowOverwrite = 0x1,
       kPutOverwriteKeepCycle = 0x2,   
@@ -105,7 +129,7 @@ class RFile final {
 
    explicit RFile(std::unique_ptr<TFile> file) : fFile(std::move(file)) {}
 
-   // NOTE: these strings are const char * because they need to be passed to TFile
+   // NOTE: these strings are const char * because they need to be passed to TFile.
    /// Gets object `path` from the file and returns an **owning** pointer to it.
    /// The caller should immediately wrap it into a unique_ptr of the type described by `type`.
    [[nodiscard]] void *GetUntyped(const char *path, const TClass *type) const;
@@ -127,6 +151,15 @@ class RFile final {
       }
       PutUntyped(pathStr.c_str(), cls, &obj, flags);
    }
+
+   /// Retrieves the TKey with path (and cycle) `path`. It will first look at a top-level key with name
+   /// equal to `path`, then, if it's not found, it will recurse the subdirectories to look for it.
+   /// e.g. path "a/b/c" will first be looked up as the name "a/b/c" in the top-level dir, then as "b/c" in dir "a"
+   /// and then as name "c" in dir "a/b".
+   /// Even though the RFile always stores the object in a subdirectory in such a way that the object name never
+   /// contains a slash, TFile doesn't offer that guarantee, so we need to do this elaborate search to be compatible
+   /// with it. This may change in the future if we stop relying on TFile.
+   TKey *GetTKey(const char *path) const;
 
 public:
    ///// Factory methods /////
@@ -194,6 +227,13 @@ public:
       PutInternal(path, obj, flags);
    }
 
+   /// Writes all objects to disk with the file structure.
+   /// Returns the number of bytes written.
+   size_t Write();
+
+   /// Closes the RFile, disallowing any further reading or writing.
+   void Close();
+
    /// Returns an iterable over all paths of objects written into this RFile starting at directory "rootDir".
    /// The returned paths are always "absolute" paths: they are not relative to `rootDir`.
    /// Keys relative to directories are not returned.
@@ -214,6 +254,10 @@ public:
       return RFileKeyIterable(fFile.get(), rootDir, /* recursive = */ false);
    }
 
+   /// Retrieves information about the key `path`.
+   std::optional<RFileKeyInfo> GetKeyInfo(std::string_view path) const;
+
+   /// Prints the internal structure of this RFile to the given stream.
    void Print(std::ostream &out = std::cout) const;
 };
 

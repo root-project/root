@@ -35,6 +35,10 @@ namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
 
+namespace Experimental {
+class RFile;
+}
+
 namespace Internal {
 class RClusterPool;
 class RRawFile;
@@ -93,6 +97,8 @@ protected:
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, ROOT::Experimental::RFile &file, std::string_view ntupleDir,
+                 const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile &) = delete;
    RPageSinkFile &operator=(const RPageSinkFile &) = delete;
    RPageSinkFile(RPageSinkFile &&) = default;
