@@ -1,6 +1,5 @@
 
-(int) 0
-Processing /home/oksana/CERN_sources/root/roottest/root/tree/cloning/exectrim.C...
+Processing exectrim.C...
 Warning in <TClass::Init>: no dictionary for class Belle2::ARICHAeroHit is available
 Warning in <TClass::Init>: no dictionary for class Belle2::RelationsInterface<TObject> is available
 Warning in <TClass::Init>: no dictionary for class Belle2::ARICHSimHit is available

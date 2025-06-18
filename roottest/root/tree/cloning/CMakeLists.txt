@@ -12,13 +12,21 @@ else()
    set(test_bin_dir "${CMAKE_BINARY_DIR}/test")
 endif()
 
-set(RootExeOptions -e "gSystem->Load(\"${test_bin_dir}/libEvent\")")
+ROOTTEST_ADD_TEST(treeCloneTest-generate
+                  COMMAND ${test_bin_dir}/eventexe${CMAKE_EXECUTABLE_SUFFIX} 6 0 0 1 30 0 1 event1.root event2.root
+                  FIXTURES_SETUP root-tree-cloning-generate-fixture)
+
+ROOTTEST_ADD_TEST(treeCloneTest-prepare
+                  MACRO run.C
+                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"${test_bin_dir}/libEvent\")"
+                  FIXTURES_REQUIRED root-tree-cloning-generate-fixture
+                  FIXTURES_SETUP root-tree-cloning-prepare-fixture)
 
 ROOTTEST_ADD_TEST(treeCloneTest
-            PRECMD ${test_bin_dir}/eventexe${CMAKE_EXECUTABLE_SUFFIX} 6 0 0 1 30 0 1 event1.root event2.root
-            COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/run.C ${RootExeOptions}
-            POSTCMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/runEvent.C ${RootExeOptions}
-            OUTREF references/treeCloneTest.ref)
+                  MACRO runEvent.C
+                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"${test_bin_dir}/libEvent\")"
+                  OUTREF references/treeCloneTest.ref
+                  FIXTURES_REQUIRED root-tree-cloning-prepare-fixture)
 
 if(NOT TARGET hsimple)
       add_custom_target(hsimple-file ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root)
@@ -95,7 +103,7 @@ elseif(${compression_default} STREQUAL "zlib")
                   COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
                   OUTREF references/exectrimZLIB_i686${ref_suffix})
       endif()
-  endif()      
+  endif()
 endif()
 
 ROOTTEST_ADD_TEST(deepClass
