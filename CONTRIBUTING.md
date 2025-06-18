@@ -16,7 +16,7 @@ The primary branch for development is `master`.
 
 > [!IMPORTANT]
 > We require PRs to cleanly apply to master without a merge commit, i.e. through "fast-forward".
-> Please follow the [coding conventions](https://root.cern.ch/coding-conventions), as this is a simple item for
+> Please follow the [coding conventions](https://root.cern/contribute/coding_conventions/), as this is a simple item for
 > reviewers to otherwise get stuck on.
 > To make your (and our own) life easier, we provide a
 > [`clang-format` configuration file](https://github.com/root-project/root/blob/master/.clang-format) as well
@@ -118,7 +118,7 @@ ROOT has automated CI tests :cop: that are used for pull requests:
     The results are posted to the pull request.
     Compared to ROOT's nightly builds, PRs are tested with less tests, on less platforms.
 - *Linting check*: `ruff` automatically checks that a PR adheres to the project's
-    [style guide](https://github.com/root-project/root/blob/master/.ruff.toml).
+    [style guide](https://github.com/root-project/root/blob/master/ruff.toml).
     If any linting violations are found, it provides you with a detailed report that you should address in your PR.
 - *Formatting check*: 
     - `clang-format`: automatically checks that a PR
