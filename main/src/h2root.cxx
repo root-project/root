@@ -312,6 +312,7 @@ int main(int argc, char **argv)
 
    int lun = 10;
 #ifndef WIN32
+   // "px" is a string being changed to "pxc" in the fortran side; since it's a temporary on C's side, we need a buffer of at least 3 chars on Cs side, too. Predefine it as a extra variable "px " since that way the space will be replace by c instead of appending a new char.
    auto opt = PASSCHAR("px ");
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),opt,record_size,ier,7,strlen(file_in),2);
 #else
