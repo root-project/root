@@ -83,26 +83,6 @@ public :
    explicit constexpr PtEtaPhiM4D(const CoordSystem & c) :
       fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fM(c.M())  { RestrictPhi(); }
 
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // so we decided to re-implement them ( there is no no need to have them with g++4)
-
-   /**
-      copy constructor
-    */
-   PtEtaPhiM4D(const PtEtaPhiM4D & v) :
-      fPt(v.fPt), fEta(v.fEta), fPhi(v.fPhi), fM(v.fM) { }
-
-   /**
-      assignment operator
-    */
-   PtEtaPhiM4D & operator = (const PtEtaPhiM4D & v) {
-      fPt  = v.fPt;
-      fEta = v.fEta;
-      fPhi = v.fPhi;
-      fM   = v.fM;
-      return *this;
-   }
-
 
    /**
       Set internal data based on an array of 4 Scalar numbers
