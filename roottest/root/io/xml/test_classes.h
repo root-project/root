@@ -204,7 +204,7 @@ class TXmlEx4 : public TXmlEx1 {
          delete[] fStr3;
       }
 
-      void Print()
+      void Print() override
       {
           TXmlEx1::Print();
           std::cout << "   fStr1 = " << fStr1 << std::endl;

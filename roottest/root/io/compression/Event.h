@@ -148,7 +148,7 @@ public:
                  Event();
                  Event(Int_t i);
    virtual      ~Event();
-   void          Clear(Option_t *option ="");
+   void          Clear(Option_t *option ="") override;
    TDatime      &GetDatime() {return fDatime;}
    static void   Reset(Option_t *option ="");
    void          ResetHistogramPointer() {fH=0;}
@@ -179,7 +179,7 @@ public:
 
    UShortVector* GetUshort() { return &fUshort; }
 
-   ClassDef(Event,1)  //Event structure
+   ClassDefOverride(Event,1)  //Event structure
 };
 
 
@@ -238,7 +238,7 @@ public:
    Short_t       GetValid()  const { return fValid; }
    virtual void  SetValid(Int_t valid=1) { fValid = valid; }
 
-   ClassDef(Track,1)  //A track segment
+   ClassDefOverride(Track,1)  //A track segment
 };
 
 class BigTrack : public Track {
@@ -252,7 +252,7 @@ public:
    BigTrack(Float_t random, Int_t special);
    virtual ~BigTrack() { }
 
-   ClassDef(BigTrack,1)  //A Big track
+   ClassDefOverride(BigTrack,1)  //A Big track
 };
 
 
