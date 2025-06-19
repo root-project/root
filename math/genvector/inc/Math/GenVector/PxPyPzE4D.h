@@ -37,7 +37,7 @@ namespace Math {
 
     @ingroup GenVector
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVector
 */
 
 template <class ScalarType = double>

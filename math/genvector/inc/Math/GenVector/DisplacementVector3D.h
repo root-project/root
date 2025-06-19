@@ -51,7 +51,7 @@ namespace ROOT {
 
      @ingroup GenVector
 
-     @sa Overview of the @ref GenVector "physics vector library"
+     @see GenVector
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >

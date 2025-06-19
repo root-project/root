@@ -62,7 +62,7 @@ namespace Math {
 
      @ingroup GenVector
 
-     @sa Overview of the @ref GenVector "physics vector library"
+     @see GenVector
   */
 
 class Rotation3D {

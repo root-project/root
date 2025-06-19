@@ -54,7 +54,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
 - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
 
-@sa Overview of the @ref GenVector "physics vector library"
+@see GenVector
 */
 
     template< class CoordSystem >
