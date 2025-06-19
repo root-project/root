@@ -33,7 +33,7 @@ namespace ROOT {
 
       @ingroup GenVector
 
-      @sa Overview of the @ref GenVector "physics vector library"
+      @see GenVector
    */
 
 class BoostZ {
