@@ -22,7 +22,7 @@ public:
 
   void  SetFoo(Int_t foo=0) { fFoo = foo; }
   Int_t GetFoo() const { return fFoo; }
-  void  Print(Option_t * = "") const;
+  void  Print(Option_t * = "") const override;
 
   ClassDefOverride(Foo,1) // DOCUMENT ME
 };
