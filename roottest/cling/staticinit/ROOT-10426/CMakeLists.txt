@@ -4,14 +4,22 @@
 #
 # For modules we load based on the missing symbol, i.e. after the parent
 # transaction has been committed.
-if(NOT ROOT_runtime_cxxmodules_FOUND)
+if(NOT runtime_cxxmodules)
   return()
 endif()
 
-add_library(ROOT10426 SHARED
-   ROOT10426.cxx)
+add_library(ROOT10426 SHARED ROOT10426.cxx)
 target_link_libraries(ROOT10426 PUBLIC ROOT::Core)
 
-ROOTTEST_ADD_TEST(ROOT-10426
-   MACRO  execROOT10426.C
-   OUTREF execROOT10426.ref)
+add_test(NAME roottest-cling-staticinit-ROOT-10426-lib
+         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                                   ${build_config}
+                                   --target ROOT10426${fast}
+                                   -- ${always-make})
+
+set_property(TEST roottest-cling-staticinit-ROOT-10426-lib PROPERTY FIXTURES_SETUP cling-staticinit-ROOT-10426-fixture)
+
+ROOTTEST_ADD_TEST(run
+                  MACRO  execROOT10426.C
+                  OUTREF execROOT10426.ref
+                  FIXTURES_REQUIRED cling-staticinit-ROOT-10426-fixture)

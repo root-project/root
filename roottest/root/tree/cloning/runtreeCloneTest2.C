@@ -42,14 +42,13 @@ void MergeRootfile( TDirectory *target, TList *sourcelist );
 
 
 void runtreeCloneTest2(const char* outFile = "pion_merged.root", //here's where the output histograms will go
-	     const char* theInputDir = "./root/", //scan this directory for "mergable" files
-	     const char* inputFileSubstring = ".root") //only files ending with this in the name will be opened for merging
+	     const char* theInputDir = "./", //scan this directory for "mergable" files
+	     const char* inputFileBeginsWith = "BAC85D5487F19A3B6755584FBC29B3AF_") //only files starts with this in the name will be opened for merging
 {
    FileList = new TList();
 
    Target = TFile::Open(outFile, "RECREATE" );
 
-   TString fileString(inputFileSubstring);
    TString inputDir(theInputDir);
 
    //---- Loop over directory entries, select files ----//
@@ -60,7 +59,7 @@ void runtreeCloneTest2(const char* outFile = "pion_merged.root", //here's where 
    while( (cFileName = (char*) gSystem->GetDirEntry(pDir)) ) {
 
       TString fileName(cFileName);
-      if(fileName.EndsWith( fileString.Data() )) {
+      if(fileName.EndsWith(".root") && fileName.BeginsWith(inputFileBeginsWith)) {
          auto fullName = gSystem->ConcatFileName(inputDir,fileName);
          FileList->Add( TFile::Open(fullName));
          cout << "  Adding " << fullName << endl;
