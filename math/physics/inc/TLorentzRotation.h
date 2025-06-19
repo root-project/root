@@ -38,7 +38,7 @@ private:
    TLorentzRotation(const TRotation &);
    // Constructor for 3d rotations.
 
-   TLorentzRotation(const TLorentzRotation &);
+   TLorentzRotation(const TLorentzRotation &) noexcept;
    // Copy constructor.
 
    TLorentzRotation(Double_t, Double_t, Double_t);
