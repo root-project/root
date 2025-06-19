@@ -13,7 +13,7 @@ class DataBlockBase : public TObject {
   inline const Int_t*  GetData() const { return fRawBlock; }
   inline Int_t         GetSize() const { return fSize; }
 
-  virtual void         Print(Option_t *option="") const;
+  void         Print(Option_t *option="") const override;
 
  protected:   // allow derived classes direct access to the data
 
@@ -22,7 +22,7 @@ class DataBlockBase : public TObject {
 
  private:
 
-  ClassDef(DataBlockBase,1)
+  ClassDefOverride(DataBlockBase,1)
 };
 
 #endif
