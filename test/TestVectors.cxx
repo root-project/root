@@ -78,6 +78,9 @@ int TestVectors()
 int TestVector3() {
 
 // test constructors:
+  static_assert(std::is_nothrow_copy_constructible_v<TVector3>);
+  static_assert(std::is_nothrow_copy_constructible_v<TVector2>);
+  static_assert(std::is_nothrow_copy_constructible_v<TLorentzRotation>);
 
   TVector3 d0; assert( test(d0, 0.0, 0.0, 0.0, DEPS) );
   TVector3 f0; assert( test(f0, 0.0, 0.0, 0.0, FEPS) );
@@ -310,7 +313,7 @@ int TestVector3() {
 
 
 int TestLorentzVector() {
-
+  static_assert(std::is_nothrow_copy_constructible_v<TLorentzVector>);
   TVector3 f3x(1.0), f3y(0.0, 1.0), f3z(0.0, 0.0, 1.0);
   TVector3 d30, d3x(1.0), d3y(0.0, 1.0), d3z(0.0, 0.0, 1.0);
 
@@ -491,7 +494,7 @@ int TestLorentzVector() {
 //typedef TVector3  Vector;
 
 int TestRotation() {
-
+  static_assert(std::is_nothrow_copy_constructible_v<TRotation>);
   int i,k;
   double angA=TMath::Pi()/3, angB=TMath::Pi()/4, angC=TMath::Pi()/6;
   double cosA=TMath::Cos(angA), sinA=TMath::Sin(angA);
