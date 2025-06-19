@@ -22,7 +22,6 @@ std_streams
 templates
 stltypes)
 
-set(CMAKE_ROOTTEST_NOROOTMAP ON)
 foreach(DICT ${CPPYY_TEST_DICTS})
     # Generate dictionary for the tests
     ROOT_GENERATE_DICTIONARY(G__${DICT}Dict ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.h LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.xml)
@@ -32,7 +31,6 @@ foreach(DICT ${CPPYY_TEST_DICTS})
     target_link_libraries(${DICT}Dict PUBLIC Python3::Python ROOT::Core)
     target_compile_options(${DICT}Dict PRIVATE "-w")
 endforeach()
-unset(CMAKE_ROOTTEST_NOROOTMAP)
 
 # Tests list
 set(CPPYY_TESTS
