@@ -1010,6 +1010,39 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    return false;
 }
 
+bool TClingLookupHelper__TClassTableCheck(const std::string &tname, std::string &result)
+{
+   result.clear();
+
+   unsigned long offset = 0;
+   if (strncmp(tname.c_str(), "const ", 6) == 0) {
+      offset = 6;
+   }
+   unsigned long end = tname.length();
+   while (end && (tname[end - 1] == '&' || tname[end - 1] == '*' || tname[end - 1] == ']')) {
+      if (tname[end - 1] == ']') {
+         --end;
+         while (end && tname[end - 1] != '[')
+            --end;
+      }
+      --end;
+   }
+   std::string innerbuf;
+   const char *inner;
+   if (end != tname.length()) {
+      innerbuf = tname.substr(offset, end - offset);
+      inner = innerbuf.c_str();
+   } else {
+      inner = tname.c_str() + offset;
+   }
+
+   if (gROOT->GetListOfClasses()->FindObject(inner) || TClassTable::Check(inner, result)) {
+      // This is a known class.
+      return true;
+   }
+
+   return false;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 TCling::TUniqueString::TUniqueString(Long64_t size)
@@ -1586,10 +1619,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt,
-                                                            TClingLookupHelper__ExistingTypeCheck,
-                                                            TClingLookupHelper__AutoParse,
-                                                            &fIsShuttingDown);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(
+      *fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__TClassTableCheck,
+      TClingLookupHelper__AutoParse, &fIsShuttingDown);
    TClassEdit::Init(fLookupHelper);
 
    // Disallow auto-parsing in rootcling

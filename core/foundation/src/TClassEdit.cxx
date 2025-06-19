@@ -913,7 +913,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
       // is when looking for registered alternate names of a custom user class
       // present in the class dictionary.
       std::string typeresult;
-      if (gInterpreterHelper->ExistingTypeCheck(norm_name, typeresult)) {
+      if (gInterpreterHelper->TClassTableCheck(norm_name, typeresult)) {
          if (!typeresult.empty()) {
             norm_name = typeresult;
          }
