@@ -76,27 +76,6 @@ def _TDirectory_getitem(self, key):
     return result
 
 
-def _TDirectory_getattr(self, attr):
-    """For temporary backwards compatibility."""
-    import warnings
-
-    result = self.Get(attr)
-    if not result:
-        raise AttributeError(f"{repr(self)} object has no attribute '{attr}'")
-
-    cl_name = type(self).__cpp_name__
-    warnings.warn(
-        f'The attribute syntax for {cl_name} is deprecated and will be removed in ROOT 6.34. Please use {cl_name}["{attr}"] instead of {cl_name}.{attr}',
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    # Caching behavior seems to be more clear to the user; can always override said
-    # behavior (i.e. re-read from file) with an explicit Get() call
-    setattr(self, attr, result)
-    return result
-
-
 def _TDirectory_WriteObject(self, obj, *args):
     """
     Implements the WriteObject method of TDirectory
@@ -126,7 +105,6 @@ def _ipython_key_completions_(self):
 def pythonize_tdirectory():
     klass = cppyy.gbl.TDirectory
     klass.__getitem__ = _TDirectory_getitem
-    klass.__getattr__ = _TDirectory_getattr
     klass._WriteObject = klass.WriteObject
     klass.WriteObject = _TDirectory_WriteObject
     klass._ipython_key_completions_ = _ipython_key_completions_

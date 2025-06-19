@@ -11,7 +11,7 @@
 
 ### Minuit2
 
-* Behavior change: building ROOT using `minuit2_omp=ON` option no longer enables OpenMP parallelization by default. One has to call now additionaly GradientCalculator::SetParallelOMP().
+* Behavior change: building ROOT using `minuit2_omp=ON` option no longer enables OpenMP parallelization by default. One has to call now additionally GradientCalculator::SetParallelOMP().
 
 ## RooFit
 
@@ -61,6 +61,19 @@ RooAbsData *dataForChan = found != splits.end() ? found->get() : nullptr;
   to numbers such as 8 would share one 3-d histogram among 8 threads, greatly reducing the memory consumption. This might slow down execution if the histograms
   are filled at very high rates. Use lower number in this case.
 
+## PyROOT
+
+### Deprecate the attribute pythonization of `TDirectory` in favor of item-getting syntax
+
+Since ROOT 6.32, the recommended way to get objects from a `TFile` or any `TDirectory` in general is via `__getitem__`:
+
+```python
+tree = my_file["my_tree"] # instead of my_file.my_tree, which gave you a deprecation warning since ROOT 6.32
+```
+
+The deprecated pythonization with the `__getattr__` syntax is now removed.
+It was originally schedeuled for removal in 6.34 according to the 6.32 release notes, but since it was still used quite a bit,
+the deprecation period was extended.
 
 ## JavaScript ROOT
 - A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).
