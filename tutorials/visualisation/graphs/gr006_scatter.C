@@ -36,5 +36,8 @@ void gr006_scatter()
    scatter->GetXaxis()->SetRangeUser(20.,90.);
    scatter->GetYaxis()->SetRangeUser(55.,90.);
    scatter->GetZaxis()->SetRangeUser(10.,200.);
+   // an alternative way to zoom the Z-axis:
+   // scatter->GetHistogram()->SetMinimum(10);
+   // scatter->GetHistogram()->SetMaximum(200);
    scatter->Draw("A");
 }
