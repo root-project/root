@@ -139,6 +139,7 @@ clang/LLVM technology.
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <typeinfo>
 #include <unordered_map>
@@ -903,6 +904,36 @@ namespace{
       bool fOldDiagValue;
    };
 
+   std::string StripModifiersAndArrayBrackets(const std::string &tname)
+   {
+      std::string_view view{tname};
+
+      // Remove leading "const "
+      if (view.substr(0, 6) == "const ") {
+         view.remove_prefix(6);
+      }
+
+      // Remove trailing *, &, and array brackets
+      while (!view.empty()) {
+         char last = view.back();
+         if (last == '*' || last == '&') {
+            view.remove_suffix(1);
+         } else if (last == ']') {
+            // Remove until matching '['
+            view.remove_suffix(1); // remove ']'
+            while (!view.empty() && view.back() != '[') {
+               view.remove_suffix(1);
+            }
+            if (!view.empty() && view.back() == '[') {
+               view.remove_suffix(1); // remove '['
+            }
+         } else {
+            break;
+         }
+      }
+
+      return std::string{view};
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -921,26 +952,8 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
 {
    result.clear();
 
-   unsigned long offset = 0;
-   if (strncmp(tname.c_str(), "const ", 6) == 0) {
-      offset = 6;
-   }
-   unsigned long end = tname.length();
-   while( end && (tname[end-1]=='&' || tname[end-1]=='*' || tname[end-1]==']') ) {
-      if ( tname[end-1]==']' ) {
-         --end;
-         while ( end && tname[end-1]!='[' ) --end;
-      }
-      --end;
-   }
-   std::string innerbuf;
-   const char *inner;
-   if (end != tname.length()) {
-      innerbuf = tname.substr(offset,end-offset);
-      inner = innerbuf.c_str();
-   } else {
-      inner = tname.c_str()+offset;
-   }
+   const auto innerBuf = StripModifiersAndArrayBrackets(tname);
+   const auto &inner = innerBuf.c_str();
 
    //if (strchr(tname.c_str(),'[')!=0) fprintf(stderr,"DEBUG: checking on %s vs %s %lu %lu\n",tname.c_str(),inner,offset,end);
    if (gROOT->GetListOfClasses()->FindObject(inner)
@@ -953,20 +966,22 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    TDataType *type = (TDataType *)typeTable->THashTable::FindObject( inner );
    if (type) {
       // This is a raw type and an already loaded typedef.
-      const char *newname = type->GetFullTypeName();
-      if (type->GetType() == kLong64_t) {
-         newname = "Long64_t";
-      } else if (type->GetType() == kULong64_t) {
-         newname = "ULong64_t";
-      }
+      const char *newname = [type] {
+         if (type->GetType() == kLong64_t)
+            return "Long64_t";
+         else if (type->GetType() == kULong64_t)
+            return "ULong64_t";
+         else
+            return type->GetFullTypeName();
+      }();
+
       if (strcmp(inner,newname) == 0) {
          return true;
       }
-      if (offset) result = "const ";
-      result += newname;
-      if ( end != tname.length() ) {
-         result += tname.substr(end,tname.length()-end);
-      }
+
+      // replace the core part of the original type name with newname
+      result = tname;
+      result.replace(result.find(innerBuf), innerBuf.length(), newname);
       if (result == tname) result.clear();
       return true;
    }
@@ -1014,27 +1029,8 @@ bool TClingLookupHelper__TClassTableCheck(const std::string &tname, std::string 
 {
    result.clear();
 
-   unsigned long offset = 0;
-   if (strncmp(tname.c_str(), "const ", 6) == 0) {
-      offset = 6;
-   }
-   unsigned long end = tname.length();
-   while (end && (tname[end - 1] == '&' || tname[end - 1] == '*' || tname[end - 1] == ']')) {
-      if (tname[end - 1] == ']') {
-         --end;
-         while (end && tname[end - 1] != '[')
-            --end;
-      }
-      --end;
-   }
-   std::string innerbuf;
-   const char *inner;
-   if (end != tname.length()) {
-      innerbuf = tname.substr(offset, end - offset);
-      inner = innerbuf.c_str();
-   } else {
-      inner = tname.c_str() + offset;
-   }
+   const auto innerBuf = StripModifiersAndArrayBrackets(tname);
+   const auto &inner = innerBuf.c_str();
 
    if (gROOT->GetListOfClasses()->FindObject(inner) || TClassTable::Check(inner, result)) {
       // This is a known class.
