@@ -15,7 +15,7 @@ public:
 };
 
 #ifdef __MAKECINT__
-#pragma link C++ pair<int,std::vector<int> >+;
+#pragma link C++ class pair<int,std::vector<int> >+;
 #endif
 
 using namespace std;
