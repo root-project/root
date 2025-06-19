@@ -24,7 +24,7 @@ public:
   Int_t GetFoo() const { return fFoo; }
   void  Print(Option_t * = "") const;
 
-  ClassDef(Foo,1) // DOCUMENT ME
+  ClassDefOverride(Foo,1) // DOCUMENT ME
 };
 
 #endif
