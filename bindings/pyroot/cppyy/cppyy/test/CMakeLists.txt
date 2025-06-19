@@ -23,6 +23,11 @@ templates
 stltypes)
 
 foreach(DICT ${CPPYY_TEST_DICTS})
+    set(CMAKE_ROOTTEST_NOROOTMAP OFF)
+    # only disable rootmap for all but example01 and stltypes which require them
+    if(NOT DICT STREQUAL "example01" AND NOT DICT STREQUAL "stltypes")
+        set(CMAKE_ROOTTEST_NOROOTMAP ON)
+    endif()
     # Generate dictionary for the tests
     ROOT_GENERATE_DICTIONARY(G__${DICT}Dict ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.h LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/${DICT}.xml)
     # Create necessary shared libraries for the tests
@@ -31,6 +36,7 @@ foreach(DICT ${CPPYY_TEST_DICTS})
     target_link_libraries(${DICT}Dict PUBLIC Python3::Python ROOT::Core)
     target_compile_options(${DICT}Dict PRIVATE "-w")
 endforeach()
+unset(CMAKE_ROOTTEST_NOROOTMAP)
 
 # Tests list
 set(CPPYY_TESTS
@@ -44,7 +50,7 @@ test_datatypes
 test_doc_features
 test_eigen
 test_fragile
-# The leakcheck test is disabled due to it's sporadic nature, especially fragile on VMs
+# The leakcheck test is disabled due to its sporadic nature, especially fragile on VMs
 # test_leakcheck
 test_lowlevel
 test_numba
