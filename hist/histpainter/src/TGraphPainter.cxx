@@ -4458,7 +4458,7 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 
    TH2F *h = theScatter->GetHistogram();
    if (optionAxis) h->Paint(" ");
-   if (h->GetMinimum() <= h->GetMaximum()) {
+   if (h->GetMinimum() < h->GetMaximum()) {
       if (minc<h->GetMinimum()) minc = h->GetMinimum();
       if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
    } else {
