@@ -5,7 +5,6 @@
 #include "ROOT/RNTupleModel.hxx"
 #include "ROOT/RNTupleWriter.hxx"
 #include "ROOT/RNTupleReader.hxx"
-#include "ROOT/RNTupleInspector.hxx" // For testing compression settings
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -17,7 +16,6 @@
 using ROOT::RNTupleModel;
 using ROOT::RNTupleReader;
 using ROOT::RNTupleWriter;
-using ROOT::Experimental::RNTupleInspector;
 
 using namespace ROOT::RDF;
 
@@ -116,8 +114,9 @@ TEST(RDFSnapshotRNTuple, Compression)
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(404, inspector->GetCompressionSettings());
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
+   EXPECT_EQ(404, compSettings);
 }
 
 class RDFSnapshotRNTupleTest : public ::testing::Test {
