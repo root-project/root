@@ -1182,7 +1182,7 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
       }
 
       // Load the AttributeSet RNTuple from the source file.
-      auto attrAnchorRes = reader->GetNTupleProperAtLocation(attrSetLocator.GetPosition<std::uint64_t>());
+      auto attrAnchorRes = reader->GetNTupleProperAtOffset(attrSetLocator.GetPosition<std::uint64_t>());
       if (!attrAnchorRes) {
          if (mergeData.fMergeOpts.fAttributesErrBehavior == ENTupleMergeErrBehavior::kAbort) {
             return R__FORWARD_ERROR(attrAnchorRes);

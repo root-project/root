@@ -434,6 +434,8 @@ TEST(RNTupleAttributes, ReadRanges)
       EXPECT_EQ(attrSetRuns.GetAttributes(4).size(), 1);
       EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 5).size(), 1);
       EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 4).size(), 1);
+      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(0, 10).size(), 1);
+      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(0, 11).size(), 0);
       EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(0, 100).size(), 0);
       EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 5).size(), 0);
       EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 4).size(), 0);
@@ -450,5 +452,45 @@ TEST(RNTupleAttributes, ReadRanges)
 
       auto attrSetEpochs = reader->GetAttributeSet("Attr_Epochs").Unwrap();
       EXPECT_EQ(attrSetEpochs.GetAttributes().size(), 2);
+   }
+}
+
+TEST(RNTupleAttributes, EmptyAttrRange)
+{
+   FileRaii fileGuard("test_ntuple_attrs_empty.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+      auto attrModel = RNTupleModel::Create();
+      auto pAttr = attrModel->MakeField<std::string>("myAttr");
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+      auto attrRange = attrSet->BeginRange();
+
+      auto pMyAttr = attrRange.GetPtr<std::string>("myAttr");
+      *pMyAttr = "This is range is empty.";
+      // No values written to the main RNTuple...
+      attrSet->EndRange(std::move(attrRange));
+   }
+
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+      // Read back the list of available attribute sets
+      const auto attrSets = reader->GetDescriptor().GetAttributeSets();
+      EXPECT_EQ(attrSets.size(), 1);
+      for (const auto &[name, _] : attrSets) {
+         EXPECT_EQ(name, "MyAttrSet");
+      }
+
+      // Fetch a specific attribute set
+      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
+      EXPECT_EQ(attrSet.GetAttributes().size(), 1);
+      EXPECT_EQ(attrSet.GetAttributes(0).size(), 0);
+      EXPECT_EQ(attrSet.GetAttributesInRange(0, reader->GetNEntries()).size(), 0);
+      EXPECT_EQ(attrSet.GetAttributesContainingRange(0, reader->GetNEntries()).size(), 0);
    }
 }
