@@ -2707,7 +2707,7 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
   //
   {
     std::ostringstream buf;
-    buf << "__cf";
+    buf << "__jc";
     // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
     // std::string mn;
     // fInterp->maybeMangleDeclName(ND, mn);
