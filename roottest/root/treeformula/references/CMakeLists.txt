@@ -2,18 +2,10 @@ ROOT_GENERATE_DICTIONARY(G__TreeFormulaReferencesGeneration
   ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
   LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/EventLinkDef.h)
 
-ROOT_LINKER_LIBRARY(TreeFormulaReferencesGeneration
+ROOTTEST_LINKER_LIBRARY(TreeFormulaReferencesGeneration
   ${CMAKE_CURRENT_SOURCE_DIR}/TreeFormulaReferencesGeneration.cxx
   G__TreeFormulaReferencesGeneration.cxx
-  LIBRARIES Core Tree Hist MathCore)
-
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET TreeFormulaReferencesGeneration POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTreeFormulaReferencesGeneration.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libTreeFormulaReferencesGeneration.dll
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTreeFormulaReferencesGeneration.lib
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libTreeFormulaReferencesGeneration.lib)
-endif()
+  LIBRARIES ROOT::Core ROOT::Tree ROOT::Hist ROOT::MathCore)
 
 ROOTTEST_GENERATE_EXECUTABLE(TreeFormulaReferencesGenerator
   ${CMAKE_CURRENT_SOURCE_DIR}/TreeFormulaReferencesGenerator.cxx
