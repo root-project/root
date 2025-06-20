@@ -258,7 +258,6 @@ RooAbsPdf& getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod
     }
     return *constraint;
   } else {
-    std::cout << "creating new constraint for " << param << std::endl;
     std::string constraint_type = "Gauss";
     if (auto constrType = mod.find("constraint_type")) {
       constraint_type = constrType->val();
@@ -327,7 +326,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
 	      constraints.add(getOrCreateConstraint(tool,mod,constrParam,sampleName));
 	    }
          } else if (modtype == "normsys") {
-            auto *parameter = mod.find("parameter");
+            auto parameter = mod.find("parameter");
             std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
             createNominal(ws, parname, 0.0, -10, 10);
 	    auto& par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
@@ -350,7 +349,6 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
 	    overall_low.push_back(low);
 	    overall_high.push_back(high);
 	    overall_interp.push_back(interp);	    
-
 	    constraints.add(getOrCreateConstraint(tool,mod,par,sampleName));	    
          } else if (modtype == "histosys") {
             auto *parameter = mod.find("parameter");
@@ -770,28 +768,28 @@ NormSys parseOverallModifierFormula(const std::string& s, RooFormulaVar* formula
         if (constr2 && !p3) {
             sys.name = p2->GetName();
             sys.param = p2;
-            sys.high = sign * std::stod(token3);
-            sys.low = -sign * std::stod(token3);
+            sys.high = 1. + sign * std::stod(token3);
+            sys.low  = 1. - sign * std::stod(token3);
         } else if (!p2 && constr3) {
             sys.name = p3->GetName();
             sys.param = p3;
-            sys.high = sign * std::stod(token2);
-            sys.low = -sign * std::stod(token2);
+            sys.high = 1. + sign * std::stod(token2);
+            sys.low  = 1. - sign * std::stod(token2);
         } else if (constr2 && p3 && !constr3) {
             sys.name = v2->GetName();
             sys.param = v2;
-            sys.high = sign * p3->getVal();
-            sys.low = -sign * p3->getVal();
+            sys.high = 1. + sign * p3->getVal();
+            sys.low  = 1. - sign * p3->getVal();
         } else if (p2 && !constr2 && constr3) {	    
             sys.name = v3->GetName();
             sys.param = v3;
-            sys.high = sign * p2->getVal();
-            sys.low = -sign * p2->getVal();
+            sys.high = 1. + sign * p2->getVal();
+            sys.low  = 1. - sign * p2->getVal();
         }
 
 	// interpolation code 1 means linear, which is what we have here
 	sys.interpolationCode = 1;
-	
+
 	erasePrefix(sys.name, "alpha_");
     }
     return sys;
