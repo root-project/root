@@ -2105,6 +2105,24 @@ if(NOT ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
 endif()
 
 #------------------------------------------------------------------------------------
+# Check if we need to link -lstdc++fs to use <filesystem> (libstdc++ 8 and older).
+set(_filesystem_source "
+#include <filesystem>
+int main(void) {
+   std::filesystem::path p = \"path\";
+   return 0;
+}
+")
+check_cxx_source_compiles("${_filesystem_source}" ROOT_HAVE_NATIVE_CXX_FILESYSTEM)
+if(NOT ROOT_HAVE_NATIVE_CXX_FILESYSTEM)
+  set(CMAKE_REQUIRED_LIBRARIES stdc++fs)
+  check_cxx_source_compiles("${_filesystem_source}" ROOT_NEED_STDCXXFS)
+  if(NOT ROOT_NEED_STDCXXFS)
+    message(FATAL_ERROR "Could not determine how to use C++17 <filesystem>")
+  endif()
+endif()
+
+#------------------------------------------------------------------------------------
 # Check if the pyspark package is installed on the system.
 # Needed to run tests of the distributed RDataFrame module that use pyspark.
 # The functionality has been tested with pyspark 2.4 and above.
