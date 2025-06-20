@@ -24,10 +24,13 @@ add_dependencies(AtlasLikeDataVector AtlasLikeDataVectorDict)
 # argument should kick in when writing the class to disk.
 ROOTTEST_GENERATE_EXECUTABLE(
     write
-    write.cxx
     LIBRARIES Core RIO ROOTNTuple
     FIXTURES_REQUIRED atlas_datavector_dict_setup
     FIXTURES_SETUP atlas_datavector_write_setup)
+target_sources(
+    write
+    PRIVATE write.cxx AtlasLikeDataVectorDict.cxx
+)
 
 # Generate an executable to read back the RNTuple with a field of type
 # AtlasLikeDataVector<CustomStruct>. Note that we don't link explicitly
