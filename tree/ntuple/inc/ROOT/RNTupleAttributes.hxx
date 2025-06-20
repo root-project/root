@@ -149,9 +149,9 @@ public:
 
    const std::string &GetName() const;
 
-   /// Returns all the attributes whose range fully contains `[startEntry, endEntry]`
+   /// Returns all the attributes whose range fully contains `[startEntry, endEntry)`
    std::vector<RNTupleAttributeEntry> GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
-   /// Returns all the attributes whose range is fully contained in `[startEntry, endEntry]`
+   /// Returns all the attributes whose range is fully contained in `[startEntry, endEntry)`
    std::vector<RNTupleAttributeEntry> GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
    /// Returns all the attributes whose range contains index `entryIndex`.
    std::vector<RNTupleAttributeEntry> GetAttributes(NTupleSize_t entryIndex);
