@@ -173,6 +173,7 @@ $env:CMAKE_SYSTEM_PREFIX_PATH=$env:PREFIX
 ```
 
 on Windows. Now to build and test your Emscripten build of CppInterOp using node on Linux and osx execute the following
+(BUILD_SHARED_LIBS=ON is only needed if building xeus-cpp, as CppInterOp can be built as an Emscripten static library)
 
 ```bash
 mkdir build
@@ -190,6 +191,7 @@ emmake make -j $(nproc --all) check-cppinterop
 ```
 
 To build and test your Emscripten build of CppInterOp on using node Windows execute the following
+(BUILD_SHARED_LIBS=ON is only needed if building xeus-cpp, as CppInterOp can be built as an Emscripten static library)
 
 ```powershell
 emcmake cmake -DCMAKE_BUILD_TYPE=Release    `

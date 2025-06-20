@@ -1969,6 +1969,46 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   EXPECT_TRUE(err_msg.find("instantiation with no body") != std::string::npos);
   EXPECT_EQ(instantiation_in_host_callable.getKind(),
             Cpp::JitCall::kUnknown); // expect to fail
+
+  Interp->process(R"(
+    template<typename ...T>
+    struct tuple {};
+
+    template<typename ...Ts, typename ...TTs>
+    void tuple_tuple(tuple<Ts...> one, tuple<TTs...> two) { return; }
+
+    tuple<int, double> tuple_one;
+    tuple<char, char> tuple_two;
+  )");
+
+  unresolved_candidate_methods.clear();
+  Cpp::GetClassTemplatedMethods("tuple_tuple", Cpp::GetGlobalScope(),
+                                unresolved_candidate_methods);
+  EXPECT_EQ(unresolved_candidate_methods.size(), 1);
+
+  Cpp::TCppScope_t tuple_tuple = Cpp::BestOverloadFunctionMatch(
+      unresolved_candidate_methods, {},
+      {Cpp::GetVariableType(Cpp::GetNamed("tuple_one")),
+       Cpp::GetVariableType(Cpp::GetNamed("tuple_two"))});
+  EXPECT_TRUE(tuple_tuple);
+
+  auto tuple_tuple_callable = Cpp::MakeFunctionCallable(tuple_tuple);
+  EXPECT_EQ(tuple_tuple_callable.getKind(), Cpp::JitCall::kGenericCall);
+
+  Interp->process(R"(
+    namespace EnumFunctionSameName {
+    enum foo { FOO = 42 };
+    void foo() {}
+    unsigned int bar(enum foo f) { return (unsigned int)f; }
+    }
+  )");
+
+  Cpp::TCppScope_t bar =
+      Cpp::GetNamed("bar", Cpp::GetScope("EnumFunctionSameName"));
+  EXPECT_TRUE(bar);
+
+  auto bar_callable = Cpp::MakeFunctionCallable(bar);
+  EXPECT_EQ(bar_callable.getKind(), Cpp::JitCall::kGenericCall);
 }
 
 TEST(FunctionReflectionTest, IsConstMethod) {
@@ -2082,20 +2122,24 @@ TEST(FunctionReflectionTest, Construct) {
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
   std::vector<const char*> interpreter_args = {"-include", "new"};
-  Cpp::CreateInterpreter(interpreter_args);
+  std::vector<Decl*> Decls, SubDecls;
 
-  Interp->declare(R"(
+  std::string code = R"(
     #include <new>
     extern "C" int printf(const char*,...);
     class C {
+    public:
       int x;
       C() {
         x = 12345;
         printf("Constructor Executed");
       }
     };
-    )");
+    void construct() { return; }
+    )";
 
+  GetAllTopLevelDecls(code, Decls, false, interpreter_args);
+  GetAllSubDecls(Decls[1], SubDecls);
   testing::internal::CaptureStdout();
   Cpp::TCppScope_t scope = Cpp::GetNamed("C");
   Cpp::TCppObject_t object = Cpp::Construct(scope);
@@ -2115,6 +2159,20 @@ TEST(FunctionReflectionTest, Construct) {
   EXPECT_EQ(output, "Constructor Executed");
   output.clear();
 
+  // Pass a constructor
+  testing::internal::CaptureStdout();
+  where = Cpp::Allocate(scope);
+  EXPECT_TRUE(where == Cpp::Construct(SubDecls[3], where));
+  EXPECT_TRUE(*(int*)where == 12345);
+  Cpp::Deallocate(scope, where);
+  output = testing::internal::GetCapturedStdout();
+  EXPECT_EQ(output, "Constructor Executed");
+  output.clear();
+
+  // Pass a non-class decl, this should fail
+  where = Cpp::Allocate(scope);
+  where = Cpp::Construct(Decls[2], where);
+  EXPECT_TRUE(where == nullptr);
   // C API
   testing::internal::CaptureStdout();
   auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
@@ -2460,8 +2518,8 @@ TEST(FunctionReflectionTest, FailingTest1) {
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
-#ifdef EMSCRIPTEN
-  GTEST_SKIP() << "Test fails for Emscipten builds";
+#ifdef EMSCRIPTEN_SHARED_LIBRARY
+  GTEST_SKIP() << "Test fails for Emscipten shared library builds";
 #endif
   Cpp::CreateInterpreter();
   EXPECT_FALSE(Cpp::Declare(R"(
