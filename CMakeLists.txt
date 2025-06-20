@@ -12,6 +12,19 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
 endif()
+if(APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
+  # The SYSROOT *must* be set before the project() call
+  execute_process(COMMAND xcrun --sdk macosx --show-sdk-path
+    OUTPUT_VARIABLE SDK_PATH
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  if(NOT EXISTS "${SDK_PATH}")
+    message(FATAL_ERROR "Could not detect macOS SDK path")
+  endif()
+
+  set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
+endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
   message(FATAL_ERROR
@@ -217,7 +230,7 @@ if(ccache)
 
   if(EXISTS ${CCACHE_COMMAND})
     message(STATUS "Found ccache: ${CCACHE_COMMAND}")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_COMMAND})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_COMMAND} CACHE STRING "Path to ccache" FORCE)
     execute_process(COMMAND ${CCACHE_COMMAND} "-V" OUTPUT_VARIABLE CCACHE_VERSION)
     string(REGEX REPLACE "ccache version ([0-9\\.]+).*" "\\1" CCACHE_VERSION ${CCACHE_VERSION})
   else()

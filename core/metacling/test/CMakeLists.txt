@@ -26,6 +26,7 @@ ROOT_ADD_GTEST(
 
   LIBRARIES
   Core
+  GTest::gmock
 )
 
 add_dependencies(TClingTest Cling RIO)

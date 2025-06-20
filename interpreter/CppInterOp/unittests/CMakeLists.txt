@@ -3,16 +3,16 @@ set(CTEST_BUILD_NAME
 enable_testing()
 
 # LLVM builds (not installed llvm) provides gtest.
-if (NOT TARGET gtest)
+if (NOT TARGET GTest::gtest)
   include(GoogleTest)
 endif()
 
 if(EMSCRIPTEN)
-  set(gtest_libs gtest gmock)
+  set(gtest_libs GTest::gtest GTest::gmock)
 else()
-  set(gtest_libs gtest gtest_main)
-  if (TARGET gmock)
-    list(APPEND gtest_libs gmock gmock_main)
+  set(gtest_libs GTest::gtest GTest::gtest_main)
+  if (TARGET GTest::gmock)
+    list(APPEND gtest_libs GTest::gmock GTest::gmock_main)
   endif()
   set(link_pthreads_lib pthread)
 endif()

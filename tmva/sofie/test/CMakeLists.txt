@@ -117,6 +117,7 @@ if (BLAS_FOUND)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
     ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx
       LIBRARIES
+        Core
         BLAS::BLAS
       INCLUDE_DIRS
         ${CMAKE_CURRENT_BINARY_DIR}
