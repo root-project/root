@@ -137,10 +137,10 @@ class AsRVec(unittest.TestCase):
         rvec = ROOT.VecOps.AsRVec(np_obj)
         gc.collect()
         self.assertEqual(sys.getrefcount(rvec), 1 + int(sys.version_info < (3, 14)))
-        self.assertEqual(sys.getrefcount(np_obj), 3)
+        self.assertEqual(sys.getrefcount(np_obj), 2 + int(sys.version_info < (3, 14)))
         del rvec
         gc.collect()
-        self.assertEqual(sys.getrefcount(np_obj), 2)
+        self.assertEqual(sys.getrefcount(np_obj), 1 + int(sys.version_info < (3, 14)))
 
 
 if __name__ == "__main__":

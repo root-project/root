@@ -90,7 +90,7 @@ class DataFrameFromNumpy(unittest.TestCase):
 
         df = ROOT.RDF.FromNumpy(data)
         gc.collect()
-        self.assertEqual(sys.getrefcount(df), 2)
+        self.assertEqual(sys.getrefcount(df), 1 + int(sys.version_info < (3, 14)))
 
         self.assertEqual(sys.getrefcount(data["x"]), 3)
 
