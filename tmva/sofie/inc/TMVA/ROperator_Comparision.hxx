@@ -62,6 +62,8 @@ private:
    std::string fNY;
    std::vector<size_t> fShapeX1;
    std::vector<size_t> fShapeX2;
+   std::vector<Dim> fDimShapeX1;
+   std::vector<Dim> fDimShapeX2;
    std::vector<size_t> fShapeY;
    std::string fNBroadcastedX1;
    std::string fNBroadcastedX2;
@@ -75,7 +77,7 @@ public:
    ROperator_Comparision(const std::string & nameX1, const std::string & nameX2, const std::string & nameY):
       fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){
          fInputTensorNames = { fNX1, fNX2 };
-         
+
          // output will be a boolean vector so should not be considered for memory optimized pool
          fOutputTensorNames = { fNY };
       }
@@ -99,8 +101,18 @@ public:
       if (!model.CheckIfTensorAlreadyExist(fNX2)) {
          throw std::runtime_error(std::string("TMVA SOFIE Comparision Op Input Tensor ") + fNX2 + "is not found in model");
       }
-      fShapeX1 = model.GetTensorShape(fNX1);
-      fShapeX2 = model.GetTensorShape(fNX2);
+      if (model.IsDynamicTensor(fNX1))
+         fDimShapeX1 = model.GetDynamicTensorShape(fNX1);
+      else {
+         fShapeX1 = model.GetTensorShape(fNX1);
+         fDimShapeX1 = ConvertShapeToDim(fShapeX1);
+      }
+      if (model.IsDynamicTensor(fNX2))
+         fDimShapeX2 = model.GetDynamicTensorShape(fNX2);
+      else {
+         fShapeX2 = model.GetTensorShape(fNX2);
+         fDimShapeX2 = ConvertShapeToDim(fShapeX2);
+      }
       fTensorType1 = model.GetTensorType(fNX1);
       fTensorType2 = model.GetTensorType(fNX2);
       bool broadcast = !UTILITY::AreSameShape(fShapeX1, fShapeX2);
@@ -145,22 +157,95 @@ public:
          fShapeY = fShapeX1;
       }
       // case of constant tensors
-      if (model.IsInitializedTensor(fNX1) && model.IsInitializedTensor(fNX2) ) {
+      T * data1 = nullptr;
+      T * data2 = nullptr;
+      std::vector<Dim> shapeData1;
+      std::vector<Dim> shapeData2;
+      size_t length = ConvertShapeToLength(fShapeY);
+      bool *  outData = new bool[length];
+      if (model.IsInitializedTensor(fNX1)) {
+         data1 = static_cast<T *>(model.GetInitializedTensorData(fNX1).get());
+      } else if (model.IsShapeTensor(fNX1)) {
+         shapeData1 = model.GetShapeTensorValues(fNX1);
+      }
+      if (model.IsInitializedTensor(fNX2)) {
+         data2 = static_cast<T *>(model.GetInitializedTensorData(fNX2).get());
+      } else if (model.IsShapeTensor(fNX2)) {
+         shapeData2 = model.GetShapeTensorValues(fNX2);
+      }
+      if (data1 && data2) {
          fIsOutputConstant = true;
-         auto data1 = static_cast<T *>(model.GetInitializedTensorData(fNX1).get());
-         auto data2 = static_cast<T *>(model.GetInitializedTensorData(fNX2).get());
-         size_t length = ConvertShapeToLength(fShapeY);
-         bool * outData = new bool[length];
          for (size_t i = 0; i < length; i++)
             outData[i] = ComparisionTrait<T,Op>::Result(data1[i], data2[i]);
          model.AddConstantTensor(fNY, fShapeY, outData);
          if (model.Verbose())
             std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
                << ConvertValuesToString(length,outData) << std::endl;
-         delete [] outData;
-      } else {
-         model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
+      } else if ((data1 || !shapeData1.empty()) && (data2 || !shapeData2.empty())) {
+         fIsOutputConstant = true;
+         if (data1 && !data2) {
+            // data 1 is constant and data2 is shape
+            for (size_t i = 0; i < length; i++) {
+               if (shapeData2[i].isParam) {
+                  if (shapeData2[i].dim == size_t(-1) || data1[i] > 0) {
+                     fIsOutputConstant = false;
+                     break;
+                  } else {
+                     // assume a comparison is done with .dim = 0
+                     shapeData2[i].dim = 0;
+                  }
+               }
+               outData[i] = ComparisionTrait<T,Op>::Result(data1[i], static_cast<T>(shapeData2[i].dim));
+            }
+         } else if (!data1 && data2) {
+            // data 1 is shape and dat2 is constant
+            for (size_t i = 0; i < length; i++) {
+               if (shapeData1[i].isParam) {
+                  if (shapeData1[i].dim == size_t(-1) || data2[i] > 0) {
+                     fIsOutputConstant = false;
+                     break;
+                  } else {
+                     // assume a comparison is done with .dim = 0
+                     shapeData1[i].dim = 0;
+                  }
+               }
+               outData[i] = ComparisionTrait<T,Op>::Result(static_cast<T>(shapeData1[i].dim), data2[i]);
+            }
+         } else if (!shapeData1.empty() && !shapeData2.empty() ) {
+            // both data1 and data2 are shape tensors
+            for (size_t i = 0; i < length; i++) {
+               if (!shapeData1[i].isParam && !shapeData2[i].isParam) {
+                  outData[i] = ComparisionTrait<T,Op>::Result(shapeData1[i].dim, shapeData2[i].dim);
+               }
+               else if (shapeData1[i].isParam && shapeData2[i].isParam) {
+                  if (shapeData1[i].param == shapeData2[i].param)
+                     outData[i] = ComparisionTrait<int,Op>::Result(1,1); // comparison of two equal value
+                  else {
+                     fIsOutputConstant = false;
+                     break;
+                  }
+               }
+               else {
+                  fIsOutputConstant = false;
+                  break;
+               }
+            }
+         }
+         if (fIsOutputConstant) {
+            model.AddConstantTensor(fNY, fShapeY, outData);
+            if (model.Verbose())
+               std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
+                  << ConvertValuesToString(length,outData) << " (constant) " << std::endl;
+
+         }
       }
+      delete [] outData;
+      if (!fIsOutputConstant) {
+         model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
+         if (model.Verbose())
+               std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << std::endl;
+      }
+
       // check if this is not output operators to add a specific line for definining the tensor_xxx variable
       const auto & outputTensorNames = model.GetOutputTensorNames();
       fIsModelOutput = false;
@@ -168,15 +253,16 @@ public:
          fIsModelOutput = true;
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
       if (fIsOutputConstant) return "";
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
 
      if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Comparision Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ " << ComparisionTrait<T,Op>::Name() << "\n";
+      out << SP << "\n//------ " << ComparisionTrait<T,Op>::Name() << "  " << opName
+                                 << " --> " << ConvertShapeToString(fShapeY) << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
       // Broadcast A if it's uninitialized
       if (!fNBroadcastedX1.empty()) {
