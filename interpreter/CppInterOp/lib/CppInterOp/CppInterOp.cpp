@@ -616,8 +616,6 @@ static Decl* GetScopeFromType(QualType QT) {
     Type = Type->getUnqualifiedDesugaredType();
     if (auto* ET = llvm::dyn_cast<EnumType>(Type))
       return ET->getDecl();
-    if (auto* FnType = llvm::dyn_cast<FunctionProtoType>(Type))
-      Type = const_cast<clang::Type*>(FnType->getReturnType().getTypePtr());
     return Type->getAsCXXRecordDecl();
   }
   return 0;
@@ -1327,6 +1325,8 @@ void GetDatamembers(TCppScope_t scope, std::vector<TCppScope_t>& datamembers) {
 
   if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
     getSema().ForceDeclarationOfImplicitMembers(CXXRD);
+    if (CXXRD->hasDefinition())
+      CXXRD = CXXRD->getDefinition();
 
     llvm::SmallVector<RecordDecl::decl_iterator, 2> stack_begin;
     llvm::SmallVector<RecordDecl::decl_iterator, 2> stack_end;
@@ -1447,7 +1447,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
       }
       offset += C.toCharUnitsFromBits(C.getFieldOffset(FD)).getQuantity();
     }
-    if (BaseCXXRD && BaseCXXRD != FieldParentRecordDecl) {
+    if (BaseCXXRD && BaseCXXRD != FieldParentRecordDecl->getCanonicalDecl()) {
       // FieldDecl FD belongs to some class C, but the base class BaseCXXRD is
       // not C. That means BaseCXXRD derives from C. Offset needs to be
       // calculated for Derived class
@@ -1476,7 +1476,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
       }
       if (auto* RD = llvm::dyn_cast<CXXRecordDecl>(FieldParentRecordDecl)) {
         // add in the offsets for the (multi level) base classes
-        while (BaseCXXRD != RD) {
+        while (BaseCXXRD != RD->getCanonicalDecl()) {
           CXXRecordDecl* Parent = direction.at(RD);
           offset +=
               C.getASTRecordLayout(Parent).getBaseClassOffset(RD).getQuantity();
@@ -1689,6 +1689,10 @@ std::string GetTypeAsString(TCppType_t var) {
   PrintingPolicy Policy((LangOptions()));
   Policy.Bool = true;               // Print bool instead of _Bool.
   Policy.SuppressTagKeyword = true; // Do not print `class std::string`.
+#if CLANG_VERSION_MAJOR > 16
+  Policy.SuppressElaboration = true;
+#endif
+  Policy.FullyQualifiedName = true;
   return compat::FixTypeName(QT.getAsString(Policy));
 }
 
@@ -1833,6 +1837,7 @@ void get_type_as_string(QualType QT, std::string& type_name, ASTContext& C,
 #if CLANG_VERSION_MAJOR > 16
   Policy.SuppressElaboration = true;
 #endif
+  Policy.SuppressTagKeyword = !QT->isEnumeralType();
   Policy.FullyQualifiedName = true;
   QT.getAsStringInternal(type_name, Policy);
 }
@@ -2103,6 +2108,30 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
       std::string template_args = complete_name.substr(idx);
       name = name_without_template_args +
              (template_args.empty() ? "" : " " + template_args);
+
+      // If a template has consecutive parameter packs, then it is impossible to
+      // use the explicit name in the wrapper, since the type deduction is what
+      // determines the split of the packs. Instead, we'll revert to the
+      // non-templated function name and hope that the type casts in the wrapper
+      // will suffice.
+      if (FD->isTemplateInstantiation() && FD->getPrimaryTemplate()) {
+        const FunctionTemplateDecl* FTDecl =
+            llvm::dyn_cast<FunctionTemplateDecl>(FD->getPrimaryTemplate());
+        if (FTDecl) {
+          auto* templateParms = FTDecl->getTemplateParameters();
+          int numPacks = 0;
+          for (size_t iParam = 0, nParams = templateParms->size();
+               iParam < nParams; ++iParam) {
+            if (templateParms->getParam(iParam)->isTemplateParameterPack())
+              numPacks += 1;
+            else
+              numPacks = 0;
+          }
+          if (numPacks > 1) {
+            name = name_without_template_args;
+          }
+        }
+      }
     }
     if (op_flag || N <= 1)
       callbuf << name;
@@ -2707,7 +2736,7 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
   //
   {
     std::ostringstream buf;
-    buf << "__cf";
+    buf << "__jc";
     // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
     // std::string mn;
     // fInterp->maybeMangleDeclName(ND, mn);
@@ -3422,6 +3451,8 @@ static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
   // This will instantiate tape<T> type and return it.
   SourceLocation noLoc;
   QualType TT = S.CheckTemplateIdType(TemplateName(TemplateD), noLoc, TLI);
+  if (TT.isNull())
+    return nullptr;
 
   // Perhaps we can extract this into a new interface.
   S.RequireCompleteType(fakeLoc, TT, diag::err_tentative_def_incomplete_type);
@@ -3753,22 +3784,25 @@ void Deallocate(TCppScope_t scope, TCppObject_t address, TCppIndex_t count) {
 // FIXME: Add optional arguments to the operator new.
 TCppObject_t Construct(compat::Interpreter& interp, TCppScope_t scope,
                        void* arena /*=nullptr*/, TCppIndex_t count /*=1UL*/) {
-  auto* Class = (Decl*)scope;
-  // FIXME: Diagnose.
-  if (!HasDefaultConstructor(Class))
+
+  if (!Cpp::IsConstructor(scope) && !Cpp::IsClass(scope))
+    return nullptr;
+  if (Cpp::IsClass(scope) && !HasDefaultConstructor(scope))
     return nullptr;
 
-  auto* const Ctor = GetDefaultConstructor(interp, Class);
-  if (JitCall JC = MakeFunctionCallable(&interp, Ctor)) {
-    if (arena) {
-      JC.InvokeConstructor(&arena, count, {},
-                           (void*)~0); // Tell Invoke to use placement new.
-      return arena;
-    }
+  TCppFunction_t ctor = nullptr;
+  if (Cpp::IsClass(scope))
+    ctor = Cpp::GetDefaultConstructor(scope);
+  else // a ctor
+    ctor = scope;
 
-    void* obj = nullptr;
-    JC.InvokeConstructor(&obj, count, {}, nullptr);
-    return obj;
+  if (JitCall JC = MakeFunctionCallable(&interp, ctor)) {
+    // invoke the constructor (placement/heap) in one shot
+    // flag is non-null for placement new, null for normal new
+    void* is_arena = arena ? reinterpret_cast<void*>(1) : nullptr;
+    void* result = arena;
+    JC.InvokeConstructor(&result, count, /*args=*/{}, is_arena);
+    return result;
   }
   return nullptr;
 }
