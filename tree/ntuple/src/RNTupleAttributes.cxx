@@ -203,11 +203,15 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTuple
    // TODO: consider using binary search, since fEntryRanges is sorted
    // (maybe it should be done only if the size of the list is bigger than a threshold).
    for (const auto &[range, index] : fEntryRanges) {
-      const auto &[start, end] = range.GetStartEnd();
-      if (start > endEntry)
+      const auto &firstLast = range.GetFirstLast();
+      if (!firstLast)
+         continue;
+
+      const auto &[first, last] = *firstLast;
+      if (first >= endEntry)
          break; // We can break here because fEntryRanges is sorted.
 
-      if (FullyContained(startEntry, endEntry, start, end)) {
+      if (FullyContained(startEntry, endEntry, first, last + 1)) {
          auto scopedEntry = RNTupleAttributeEntry::CreateScopedEntry(model);
          auto attrEntry = RNTupleAttributeEntry(nullptr, std::move(scopedEntry), range);
          fReader->LoadEntry(index, *attrEntry.fScopedEntry);
@@ -234,7 +238,7 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesInRange(NTupleSize_t
 std::vector<ROOT::Experimental::RNTupleAttributeEntry>
 ROOT::Experimental::RNTupleAttributeSetReader::GetAttributes(NTupleSize_t entryIndex)
 {
-   return GetAttributesContainingRange(entryIndex, entryIndex);
+   return GetAttributesContainingRange(entryIndex, entryIndex + 1);
 }
 
 std::vector<ROOT::Experimental::RNTupleAttributeEntry> ROOT::Experimental::RNTupleAttributeSetReader::GetAttributes()
