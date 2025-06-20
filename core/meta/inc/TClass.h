@@ -233,6 +233,7 @@ private:
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
    mutable std::atomic<TMethodCall*> fIsAMethod;       //!saved info to call a IsA member function
 
+   ROOT::BrowseFunc_t  fBrowse;         //pointer to a function implementing the TBrowser Browse() call.
    ROOT::MergeFunc_t   fMerge;          //pointer to a function implementing Merging objects of this class.
    ROOT::ResetAfterMergeFunc_t fResetAfterMerge; //pointer to a function implementing Merging objects of this class.
    ROOT::NewFunc_t     fNew;            //pointer to a function newing one object.
@@ -480,6 +481,7 @@ public:
    TMethod           *GetMethodAny(const char *method);
    TMethod           *GetMethodAllAny(const char *method);
    Int_t              GetNdata();
+   ROOT::BrowseFunc_t GetBrowse() const;
    ROOT::MergeFunc_t  GetMerge() const;
    ROOT::ResetAfterMergeFunc_t  GetResetAfterMerge() const;
    ROOT::NewFunc_t    GetNew() const;
@@ -567,6 +569,7 @@ public:
    void               SetDirectoryAutoAdd(ROOT::DirAutoAdd_t dirAutoAddFunc);
    void               SetDestructor(ROOT::DesFunc_t destructorFunc);
    void               SetImplFileName(const char *implFileName) { fImplFileName = implFileName; }
+   void               SetBrowse(ROOT::BrowseFunc_t browseFunc);
    void               SetMerge(ROOT::MergeFunc_t mergeFunc);
    void               SetResetAfterMerge(ROOT::ResetAfterMergeFunc_t resetFunc);
    void               SetNew(ROOT::NewFunc_t newFunc);
