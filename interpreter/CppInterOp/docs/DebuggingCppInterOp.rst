@@ -48,7 +48,7 @@ Here's a comprehensive example that demonstrates common CppInterOp usage pattern
 
 .. code-block:: cpp
 
-  #include "clang/Interpreter/CppInterOp.h"
+  #include <CppInterOp/CppInterOp.h>
   #include <iostream>
 
   void run_code(std::string code) {

@@ -112,6 +112,16 @@ if(EMSCRIPTEN)
   )
 endif()
 
+if (EMSCRIPTEN)
+  if (BUILD_SHARED_LIBS)
+    target_compile_definitions(CppInterOpTests PRIVATE "EMSCRIPTEN_SHARED_LIBRARY")
+    target_compile_definitions(DynamicLibraryManagerTests PRIVATE "EMSCRIPTEN_SHARED_LIBRARY")
+  else()
+    target_compile_definitions(CppInterOpTests PRIVATE "EMSCRIPTEN_STATIC_LIBRARY")
+    target_compile_definitions(DynamicLibraryManagerTests PRIVATE "EMSCRIPTEN_STATIC_LIBRARY")
+  endif()
+endif()
+
 set_output_directory(DynamicLibraryManagerTests
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
   LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}

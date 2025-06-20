@@ -224,6 +224,8 @@ public:
   ///\param[in] nary - Use array new if we have to construct an array of
   ///           objects (nary > 1).
   ///\param[in] args - a pointer to a argument list and argument size.
+  ///\param[in] is_arena - a pointer that indicates if placement new is to be
+  /// used
   // FIXME: Change the type of withFree from int to bool in the wrapper code.
   void InvokeConstructor(void* result, unsigned long nary = 1,
                          ArgList args = {}, void* is_arena = nullptr) const {
@@ -849,7 +851,7 @@ CPPINTEROP_API void Deallocate(TCppScope_t scope, TCppObject_t address,
 
 /// Creates one or more objects of class \c scope by calling its default
 /// constructor.
-/// \param[in] scope Class to construct
+/// \param[in] scope Class to construct, or handle to Constructor
 /// \param[in] arena If set, this API uses placement new to construct at this
 /// address.
 /// \param[in] is used to indicate the number of objects to construct.

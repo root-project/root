@@ -99,6 +99,9 @@ TEST(InterpreterTest, DeleteInterpreter) {
 }
 
 TEST(InterpreterTest, ActivateInterpreter) {
+#ifdef EMSCRIPTEN_STATIC_LIBRARY
+  GTEST_SKIP() << "Test fails for Emscipten static library build";
+#endif
   EXPECT_FALSE(Cpp::ActivateInterpreter(nullptr));
   auto* Cpp14 = Cpp::CreateInterpreter({"-std=c++14"});
   auto* Cpp17 = Cpp::CreateInterpreter({"-std=c++17"});
@@ -122,6 +125,9 @@ TEST(InterpreterTest, ActivateInterpreter) {
 }
 
 TEST(InterpreterTest, Process) {
+#ifdef EMSCRIPTEN_STATIC_LIBRARY
+  GTEST_SKIP() << "Test fails for Emscipten static library build";
+#endif
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif

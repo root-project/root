@@ -299,6 +299,25 @@ TEST(VariableReflectionTest, GetVariableOffset) {
 
   auto* VD_C_s_a = Cpp::GetNamed("s_a", Decls[4]); // C::s_a
   EXPECT_TRUE((bool) Cpp::GetVariableOffset(VD_C_s_a));
+
+  struct K {
+    int x;
+    int y;
+    int z;
+  };
+  Cpp::Declare("struct K;");
+  Cpp::TCppScope_t k = Cpp::GetNamed("K");
+  EXPECT_TRUE(k);
+
+  Cpp::Declare("struct K { int x; int y; int z; };");
+
+  datamembers.clear();
+  Cpp::GetDatamembers(k, datamembers);
+  EXPECT_EQ(datamembers.size(), 3);
+
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[0]), offsetof(K, x));
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[1]), offsetof(K, y));
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[2]), offsetof(K, z));
 }
 
 #define CODE                                                                   \
