@@ -7,7 +7,6 @@
 #include <ROOT/RDF/RSample.hxx>
 #include <ROOT/RDF/RDatasetSpec.hxx>
 #include <ROOT/RDF/RMetaData.hxx>
-#include <nlohmann/json.hpp>
 #include <TSystem.h>
 
 #include <thread> // std::thread::hardware_concurrency
