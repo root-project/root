@@ -78,7 +78,8 @@ TEST(TypeReflectionTest, GetSizeOfType) {
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[1])), 1);
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[2])), 4);
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[3])), 8);
-  EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[4])), 16);
+  struct B {int a; double b;};
+  EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[4])), sizeof(B));
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetTypeFromScope(Decls[5])), 0);
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[6])),
             sizeof(intptr_t));
