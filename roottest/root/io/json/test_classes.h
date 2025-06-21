@@ -305,7 +305,7 @@ class TJsonEx4 : public TJsonEx1 {
          strcpy((char*)fStr4, "--- normal string value ---");
       }
 
-      void Print()
+      void Print() override
       {
           TJsonEx1::Print();
           std::cout << "   fStr1 = " << fStr1 << std::endl;

@@ -11,12 +11,12 @@ class DataBlock1 : public DataBlockBase, public PureAbstractInterface {
   DataBlock1();
   virtual ~DataBlock1();
  
-  virtual Short_t      GetXyzzy() const;
-  virtual Short_t      GetAbc()   const;
+  Short_t      GetXyzzy() const override;
+  Short_t      GetAbc()   const override;
 
  private:
 
-  ClassDef(DataBlock1,1)
+  ClassDefOverride(DataBlock1,1)
 };
 
 inline Short_t DataBlock1::GetXyzzy() const { return fRawBlock[0]; }
