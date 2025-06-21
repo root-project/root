@@ -124,6 +124,7 @@ namespace TClassEdit {
       TInterpreterLookupHelper() { }
       virtual ~TInterpreterLookupHelper();
 
+      virtual bool TClassTableCheck(const std::string &, std::string &) = 0;
       virtual bool ExistingTypeCheck(const std::string & /*tname*/,
                                      std::string & /*result*/) = 0;
       virtual void GetPartiallyDesugaredName(std::string & /*nameLong*/) = 0;

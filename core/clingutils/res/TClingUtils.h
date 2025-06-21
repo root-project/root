@@ -160,25 +160,26 @@ public:
 class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
 public:
    typedef bool (*ExistingTypeCheck_t)(const std::string &tname, std::string &result);
+   typedef bool (*TClassTableCheck_t)(const std::string &tname, std::string &result);
    typedef bool (*AutoParse_t)(const char *name);
 
 private:
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
    ExistingTypeCheck_t fExistingTypeCheck;
+   TClassTableCheck_t fTClassTableCheck;
    AutoParse_t         fAutoParse;
    bool               *fInterpreterIsShuttingDownPtr;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 
 public:
-   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
-                      ExistingTypeCheck_t existingTypeCheck,
-                      AutoParse_t autoParse,
-                      bool *shuttingDownPtr,
+   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt, ExistingTypeCheck_t existingTypeCheck,
+                      TClassTableCheck_t TClassTableCheck, AutoParse_t autoParse, bool *shuttingDownPtr,
                       const int *pgDebug = nullptr);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
+   bool TClassTableCheck(const std::string &tname, std::string &result) override;
    bool ExistingTypeCheck(const std::string &tname, std::string &result) override;
    void GetPartiallyDesugaredName(std::string &nameLong) override;
    bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong) override;
