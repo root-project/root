@@ -59,7 +59,19 @@ test_concurrent)
 
 if(NOT CMAKE_CXX_STANDARD EQUAL 23)
     # test_cpp11features crashes when run with C++23
-    list(APPEND CPPYY_TESTS test_cpp11features)
+    if(APPLE)
+        execute_process(
+            COMMAND sw_vers -productVersion
+            OUTPUT_VARIABLE MACOS_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if(MACOS_VERSION VERSION_LESS "26.0")
+            # Parts of this test suite fail with std::make_unique 
+            list(APPEND CPPYY_TEST_DICTS test_cpp11features)
+        endif()
+    else()
+        list(APPEND CPPYY_TESTS test_cpp11features)
+    endif()
 endif()
 
 if(NOT APPLE)
