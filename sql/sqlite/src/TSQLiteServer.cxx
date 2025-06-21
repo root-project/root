@@ -17,7 +17,7 @@
 #include "TSQLTableInfo.h"
 #include "TSQLRow.h"
 
-#include <sqlite3.h>
+#include "sqlite3_interface.h"
 
 ClassImp(TSQLiteServer);
 
