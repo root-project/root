@@ -281,7 +281,6 @@ private:
 
       // Update the statistics
       ResetStats();
-      fEntries = std::accumulate(dataArray, dataArray + newSize, 0.0);
    }
 
    template <typename T>
@@ -359,7 +358,6 @@ private:
 
       // Update the statistics
       ResetStats();
-      fEntries += std::accumulate(values.begin(), values.end(), 0.0);
    }
 
    template <typename T>
