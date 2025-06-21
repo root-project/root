@@ -424,6 +424,9 @@ bool HasDirectoryAutoAdd(clang::CXXRecordDecl const*, const cling::Interpreter&)
 bool HasIOConstructor(clang::CXXRecordDecl const*, std::string&, const RConstructorTypes&, const cling::Interpreter&);
 
 //______________________________________________________________________________
+bool HasBrowse(clang::CXXRecordDecl const*, const cling::Interpreter&);
+
+//______________________________________________________________________________
 bool HasNewMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
@@ -446,7 +449,8 @@ bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
 
 //______________________________________________________________________________
 bool CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*,
-                              const cling::Interpreter&, bool diagnose);
+                              const cling::Interpreter&, bool diagnose,
+                              bool objectIsConst = false);
 
 //______________________________________________________________________________
 long GetLineNumber(clang::Decl const*);
