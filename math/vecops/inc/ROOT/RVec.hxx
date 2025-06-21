@@ -512,12 +512,9 @@ struct alignas(T) SmallVectorStorage<T, 0> {
 template <typename T>
 struct RVecInlineStorageSize {
 private:
-#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-   static constexpr std::size_t cacheLineSize = std::hardware_destructive_interference_size;
-#else
-   // safe bet: assume the typical 64 bytes
+   // Cannot use R__HARDWARE_INTERFERENCE_SIZE, because RConfigure.h is suppressed when rootcling runs.
+   // We risk breaking the ABI, because rootcling and compiled ROOT might see different values.
    static constexpr std::size_t cacheLineSize = 64;
-#endif
    static constexpr unsigned elementsPerCacheLine = (cacheLineSize - sizeof(SmallVectorBase)) / sizeof(T);
    static constexpr unsigned maxInlineByteSize = 1024;
 

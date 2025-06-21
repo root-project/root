@@ -501,20 +501,26 @@ else()
    set(has_found_attribute_noinline undef)
 endif()
 
-# We could just check `#ifdef __cpp_lib_hardware_interference_size`, but on at least Mac 11
-# libc++ defines that macro but is missing the actual feature
-# (see https://github.com/llvm/llvm-project/commit/174322c2737d699e199db4762aaf4217305ec465).
-# So we need to "manually" check instead.
-# `#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE` could be substituted by `#ifdef __cpp_lib_hardware_interference_size`
-# when Mac 11's life has ended (assuming the libc++ fix makes it in the next MacOS version).
-CHECK_CXX_SOURCE_COMPILES("
+# The hardware interference size must be stable across all TUs in a ROOT build, so we need to save it in RConfigure.hxx
+# Since it can vary for different compilers or tune settings, we cannot base the ABI on a value that might change,
+# even be different between compiler and interpreter, or when ROOT is compiled on a different machine.
+if(CMAKE_VERSION VERSION_GREATER 3.24) # For older CMake, we simply fall back to 64
+set(test_interference_size "
 #include <new>
-using Check_t = char[std::hardware_destructive_interference_size];
-" found_hardware_interference_size)
-if(found_hardware_interference_size)
-   set(hashardwareinterferencesize define)
-else()
-   set(hashardwareinterferencesize undef)
+#include <iostream>
+int main() {
+  std::cout << std::hardware_destructive_interference_size << std::endl;
+  return 0;
+}
+")
+try_run(HARDWARE_INTERF_RUN HARDWARE_INTERF_COMPILE
+  SOURCE_FROM_VAR test_interference_size.cxx test_interference_size
+  LOG_DESCRIPTION "Testing hardware interference size"
+  RUN_OUTPUT_VARIABLE hardwareinterferencesize)
+endif()
+if(NOT HARDWARE_INTERF_COMPILE OR NOT HARDWARE_INTERF_RUN EQUAL 0)
+  message(STATUS "Could not detect hardware_interference_size in C++. Falling back to 64.")
+  set(hardwareinterferencesize 64)
 endif()
 
 if(webgui)
