@@ -115,8 +115,8 @@ protected:
 public:
 
    TObject();
-   TObject(const TObject &object);
-   TObject &operator=(const TObject &rhs);
+   TObject(const TObject &object) noexcept;
+   TObject &operator=(const TObject &rhs) noexcept;
    virtual ~TObject();
 
    virtual void        AppendPad(Option_t *option="");
@@ -272,7 +272,7 @@ inline TObject::TObject() : fBits(kNotDeleted) // Need to leave fUniqueID unset
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject copy ctor.
 
-inline TObject::TObject(const TObject &obj)
+inline TObject::TObject(const TObject &obj) noexcept
 {
    fBits = obj.fBits;
 
@@ -296,7 +296,7 @@ inline TObject::TObject(const TObject &obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject assignment operator.
 
-inline TObject &TObject::operator=(const TObject &rhs)
+inline TObject &TObject::operator=(const TObject &rhs) noexcept
 {
    if (R__likely(this != &rhs)) {
       fUniqueID = rhs.fUniqueID; // when really unique don't copy
