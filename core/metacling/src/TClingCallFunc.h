@@ -33,6 +33,7 @@
 #include "TInterpreter.h"
 
 #include "cling/Interpreter/Value.h"
+#include <CppInterOp/CppInterOp.h>
 
 #include "clang/AST/ASTContext.h"
 #include "llvm/ADT/SmallVector.h"
