@@ -34,7 +34,7 @@ using namespace TMVA::Experimental;
 void TMVA_SOFIE_RDataFrame(int nthreads = 2){
 
    std::string inputFileName = "Higgs_data.root";
-   std::string inputFile = gROOT->GetTutorialDir() + "/machine_learning/data/" + inputFileName;
+   std::string inputFile = std::string{gROOT->GetTutorialDir()} + "/machine_learning/data/" + inputFileName;
 
    ROOT::EnableImplicitMT(nthreads);
 
