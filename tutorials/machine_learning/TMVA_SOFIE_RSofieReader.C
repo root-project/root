@@ -39,7 +39,7 @@ void TMVA_SOFIE_RSofieReader(){
    // predict model now on a input file using RDataFrame
 
    std::string inputFileName = "Higgs_data.root";
-   std::string inputFile = gROOT->GetTutorialDir() + "/machine_learning/data/" + inputFileName;
+   std::string inputFile = std::string{gROOT->GetTutorialDir()} + "/machine_learning/data/" + inputFileName;
 
 
    ROOT::RDataFrame df1("sig_tree", inputFile);
