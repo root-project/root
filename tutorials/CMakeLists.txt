@@ -334,14 +334,12 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
-    list(APPEND tmva_veto machine_learning/RBatchGenerator_TensorFlow.py)
   endif()
   if (NOT ROOT_SKLEARN_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py roofit/roofit/rf617_simulation_based_inference_multidimensional.py)
   endif()
   if (NOT ROOT_TORCH_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.C)
-    list(APPEND tmva_veto machine_learning/RBatchGenerator_PyTorch.py)
   endif()
   #veto this tutorial since it is added directly
   list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)
@@ -933,10 +931,25 @@ if(ROOT_pyroot_FOUND)
       analysis/dataframe/df035_RDFFromPandas.py
       roofit/roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
-  file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/pytorch/*.py)
+  file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      machine_learning/pytorch/*.py
+      machine_learning/RBatchGenerator_PyTorch.py
+  )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py)
   file(GLOB requires_sklearn RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} roofit/roofit/rf617*.py)
-  set(fixtureLists requires_numpy requires_numba requires_pandas requires_keras requires_xgboost requires_torch requires_sklearn)
+  file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      machine_learning/RBatchGenerator_TensorFlow.py
+  )
+  set(fixtureLists
+      requires_keras
+      requires_numba
+      requires_numpy
+      requires_pandas
+      requires_sklearn
+      requires_tensorflow
+      requires_torch
+      requires_xgboost
+  )
 
   # Now set up all the tests
   foreach(t ${pytutorials})
