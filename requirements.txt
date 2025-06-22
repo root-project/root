@@ -10,7 +10,7 @@ sonnet # used for GNNs
 
 # TMVA: PyMVA interfaces
 scikit-learn
-tensorflow<2.16
+tensorflow ; python_version < "3.13" # TensorFlow doesn't support Python 3.13 yet
 torch
 xgboost
 
