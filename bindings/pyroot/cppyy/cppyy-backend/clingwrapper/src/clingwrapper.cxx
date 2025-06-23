@@ -125,7 +125,8 @@ static inline CallWrapper* new_CallWrapper(TFunction* f)
     return wrap;
 }
 
-static inline CallWrapper* new_CallWrapper(CallWrapper::DeclId_t fid, const std::string& n)
+static inline
+CallWrapper* new_CallWrapper(CallWrapper::DeclId_t fid, const std::string& n)
 {
     CallWrapper* wrap = new CallWrapper(fid, n);
     gWrapperHolder.push_back(wrap);
@@ -133,7 +134,10 @@ static inline CallWrapper* new_CallWrapper(CallWrapper::DeclId_t fid, const std:
 }
 
 typedef std::vector<TGlobal*> GlobalVars_t;
+typedef std::map<TGlobal*, GlobalVars_t::size_type> GlobalVarsIndices_t;
+
 static GlobalVars_t g_globalvars;
+static GlobalVarsIndices_t g_globalidx;
 
 static std::set<std::string> gSTLNames;
 
@@ -2107,27 +2111,28 @@ Cppyy::TCppIndex_t Cppyy::GetNumDatamembers(TCppScope_t scope, bool accept_names
     return (TCppIndex_t)0;         // unknown class?
 }
 
-static TDataMember *GetDataMemberByIndex(TClassRef cr, int idata)
-{
-    if (!cr.GetClass() || !cr->GetListOfDataMembers())
-        return nullptr;
-
-    int numDMs = cr->GetListOfDataMembers()->GetSize();
-    if ((int)idata < numDMs)
-        return (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
-    return (TDataMember*)cr->GetListOfUsingDataMembers()->At((int)idata - numDMs);
-}
-
 std::string Cppyy::GetDatamemberName(TCppScope_t scope, TCppIndex_t idata)
 {
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
-        TDataMember *m = GetDataMemberByIndex(cr, (int)idata);
+        TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
         return m->GetName();
     }
     assert(scope == GLOBAL_HANDLE);
     TGlobal* gbl = g_globalvars[idata];
     return gbl->GetName();
+}
+
+static inline
+int count_scopes(const std::string& tpname)
+{
+    int count = 0;
+    std::string::size_type pos = tpname.find("::", 0);
+    while (pos != std::string::npos) {
+        count++;
+        pos = tpname.find("::", pos+1);
+    }
+    return count;
 }
 
 std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
@@ -2147,16 +2152,24 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
 
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass())  {
-        TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
-    // TODO: fix this upstream. Usually, we want m->GetFullTypeName(), because it does
-    // not resolve typedefs, but it looses scopes for inner classes/structs, so in that
-    // case m->GetTrueTypeName() should be used (this also cleans up the cases where
-    // the "full type" retains spurious "struct" or "union" in the name).
-        std::string fullType = m->GetFullTypeName();
-        if (fullType != m->GetTrueTypeName()) {
-            const std::string& trueName = m->GetTrueTypeName();
-            if (fullType.find("::") == std::string::npos && trueName.find("::") != std::string::npos)
+        TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
+    // TODO: fix this upstream ... Usually, we want m->GetFullTypeName(), because it
+    // does not resolve typedefs, but it looses scopes for inner classes/structs, it
+    // doesn't resolve constexpr (leaving unresolved names), leaves spurious "struct"
+    // or "union" in the name, and can not handle anonymous unions. In that case
+    // m->GetTrueTypeName() should be used. W/o clear criteria to determine all these
+    // cases, the general rules are to prefer the true name if the full type does not
+    // exist as a type for classes, and the most scoped name otherwise.
+        const char* ft = m->GetFullTypeName(); std::string fullType = ft ? ft : "";
+        const char* tn = m->GetTrueTypeName(); std::string trueName = tn ? tn : "";
+        if (!trueName.empty() && fullType != trueName && !IsBuiltin(trueName)) {
+            if ( (!TClass::GetClass(fullType.c_str()) && TClass::GetClass(trueName.c_str())) || \
+                 (count_scopes(trueName) > count_scopes(fullType)) ) {
+                bool is_enum_tag = fullType.rfind("enum ", 0) != std::string::npos;
                 fullType = trueName;
+                if (is_enum_tag)
+                   fullType.insert(fullType.rfind("const ", 0) == std::string::npos ? 0 : 6, "enum ");
+            }
         }
 
         if ((int)m->GetArrayDim()) {
@@ -2187,7 +2200,7 @@ intptr_t Cppyy::GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata)
 
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
-        TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
+        TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
     // CLING WORKAROUND: the following causes templates to be instantiated first within the proper
     // scope, making the lookup succeed and preventing spurious duplicate instantiations later. Also,
     // if the variable is not yet loaded, pull it in through gInterpreter.
@@ -2202,6 +2215,21 @@ intptr_t Cppyy::GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata)
     }
 
     return (intptr_t)-1;
+}
+
+static inline
+Cppyy::TCppIndex_t gb2idx(TGlobal* gb)
+{
+    if (!gb) return (Cppyy::TCppIndex_t)-1;
+
+    auto pidx = g_globalidx.find(gb);
+    if (pidx == g_globalidx.end()) {
+        auto idx = g_globalvars.size();
+        g_globalvars.push_back(gb);
+        g_globalidx[gb] = idx;
+        return (Cppyy::TCppIndex_t)idx;
+    }
+    return (Cppyy::TCppIndex_t)pidx->second;
 }
 
 Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::string& name)
@@ -2235,11 +2263,7 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::strin
             if (wrap && wrap->GetAddress()) gb = wrap;
         }
 
-        if (gb) {
-        // TODO: do we ever need a reverse lookup?
-            g_globalvars.push_back(gb);
-            return TCppIndex_t(g_globalvars.size() - 1);
-        }
+        return gb2idx(gb);
 
     } else {
         TClassRef& cr = type_from_handle(scope);
@@ -2258,6 +2282,16 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::strin
     return (TCppIndex_t)-1;
 }
 
+Cppyy::TCppIndex_t Cppyy::GetDatamemberIndexEnumerated(TCppScope_t scope, TCppIndex_t idata)
+{
+    if (scope == GLOBAL_HANDLE) {
+        TGlobal* gb = (TGlobal*)((THashList*)gROOT->GetListOfGlobals(false /* load */))->At((int)idata);
+        return gb2idx(gb);
+    }
+
+    return idata;
+}
+
 
 // data member properties ----------------------------------------------------
 bool Cppyy::IsPublicData(TCppScope_t scope, TCppIndex_t idata)
@@ -2267,7 +2301,7 @@ bool Cppyy::IsPublicData(TCppScope_t scope, TCppIndex_t idata)
     TClassRef& cr = type_from_handle(scope);
     if (cr->Property() & kIsNamespace)
         return true;
-    TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
+    TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
     return m->Property() & kIsPublic;
 }
 
@@ -2278,7 +2312,7 @@ bool Cppyy::IsProtectedData(TCppScope_t scope, TCppIndex_t idata)
     TClassRef& cr = type_from_handle(scope);
     if (cr->Property() & kIsNamespace)
         return true;
-    TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
+    TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
     return m->Property() & kIsProtected;
 }
 
@@ -2289,7 +2323,7 @@ bool Cppyy::IsStaticData(TCppScope_t scope, TCppIndex_t idata)
     TClassRef& cr = type_from_handle(scope);
     if (cr->Property() & kIsNamespace)
         return true;
-    TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
+    TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
     return m->Property() & kIsStatic;
 }
 
@@ -2301,7 +2335,7 @@ bool Cppyy::IsConstData(TCppScope_t scope, TCppIndex_t idata)
     }
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
-        TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
+        TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
         return m->Property() & kIsConstant;
     }
     return false;
@@ -2324,11 +2358,11 @@ bool Cppyy::IsEnumData(TCppScope_t scope, TCppIndex_t idata)
 
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
-        TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
+        TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
         std::string ti = m->GetTypeName();
 
     // can't check anonymous enums by type name, so just accept them as enums
-        if (ti.rfind("(unnamed)") != std::string::npos)
+        if (ti.rfind("(anonymous)") != std::string::npos || ti.rfind("(unnamed)") != std::string::npos)
             return m->Property() & kIsEnum;
 
     // since there seems to be no distinction between data of enum type and enum values,
@@ -2355,7 +2389,7 @@ int Cppyy::GetDimensionSize(TCppScope_t scope, TCppIndex_t idata, int dimension)
     }
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
-        TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
+        TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
         return m->GetMaxIndex(dimension);
     }
     return -1;
@@ -2398,6 +2432,14 @@ extern "C" {
 /* direct interpreter access ---------------------------------------------- */
 int cppyy_compile(const char* code) {
     return Cppyy::Compile(code);
+}
+
+int cppyy_compile_silent(const char* code) {
+    return Cppyy::Compile(code, true /* silent */);
+}
+
+char* cppyy_to_string(cppyy_type_t klass, cppyy_object_t obj) {
+    return cppstring_to_cstring(Cppyy::ToString(klass, obj));
 }
 
 

@@ -239,6 +239,8 @@ namespace Cppyy {
     intptr_t    GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata);
     RPY_EXPORTED
     TCppIndex_t GetDatamemberIndex(TCppScope_t scope, const std::string& name);
+    RPY_EXPORTED
+    TCppIndex_t GetDatamemberIndexEnumerated(TCppScope_t scope, TCppIndex_t idata);
 
 // data member properties ----------------------------------------------------
     RPY_EXPORTED
