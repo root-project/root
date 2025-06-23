@@ -1190,7 +1190,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     endif()
   else()
     if(TARGET ROOT::ROOTStaticSanitizerConfig)
-      target_link_libraries(${binary} ROOT::ROOTStaticSanitizerConfig)
+      target_link_libraries(${binary} PRIVATE ROOT::ROOTStaticSanitizerConfig)
     endif()
   endif()
 
