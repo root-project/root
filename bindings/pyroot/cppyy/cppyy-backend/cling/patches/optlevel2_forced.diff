@@ -1,0 +1,44 @@
+diff --git a/src/interpreter/cling/lib/Interpreter/CIFactory.cpp b/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
+index f97c86032f..69321c5579 100644
+--- a/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
++++ b/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
+@@ -1685,8 +1685,9 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
+ 
+     // Set CodeGen options.
+     CodeGenOptions& CGOpts = CI->getCodeGenOpts();
++    CGOpts.OptimizationLevel = 2;
++    CGOpts.RelaxedAliasing = 1;
+ #ifdef _MSC_VER
+-    CGOpts.RelaxedAliasing = 1;
+     CGOpts.EmitCodeView = 1;
+     CGOpts.CXXCtorDtorAliases = 1;
+ #endif
+diff --git a/src/interpreter/cling/lib/Interpreter/IncrementalParser.cpp b/src/interpreter/cling/lib/Interpreter/IncrementalParser.cpp
+index 4b971bb02e..cbea6870db 100644
+--- a/src/interpreter/cling/lib/Interpreter/IncrementalParser.cpp
++++ b/src/interpreter/cling/lib/Interpreter/IncrementalParser.cpp
+@@ -18,7 +18,6 @@
+ #include "DefinitionShadower.h"
+ #include "DeviceKernelInliner.h"
+ #include "DynamicLookup.h"
+-#include "NullDerefProtectionTransformer.h"
+ #include "TransactionPool.h"
+ #include "ValueExtractionSynthesizer.h"
+ #include "ValuePrinterSynthesizer.h"
+@@ -1006,15 +1005,8 @@ namespace cling {
+     ASTTransformers.emplace_back(new AutoSynthesizer(TheSema));
+     ASTTransformers.emplace_back(new EvaluateTSynthesizer(TheSema));
+     if (hasCodeGenerator() && !m_Interpreter->getOptions().NoRuntime) {
+-      // Don't protect against crashes if we cannot run anything.
+-      // cling might also be in a PCH-generation mode; don't inject our Sema
+-      // pointer into the PCH.
+-      if (!isCUDADevice && m_Interpreter->getOptions().PtrCheck)
+-        ASTTransformers.emplace_back(
+-            new NullDerefProtectionTransformer(m_Interpreter));
+       if (isCUDADevice)
+-        ASTTransformers.emplace_back(
+-            new DeviceKernelInliner(TheSema));
++        ASTTransformers.emplace_back(new DeviceKernelInliner(TheSema));
+     }
+     ASTTransformers.emplace_back(new DefinitionShadower(*TheSema, *m_Interpreter));
+ 
