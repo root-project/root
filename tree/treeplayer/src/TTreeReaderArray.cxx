@@ -43,7 +43,13 @@ using namespace ROOT::Internal;
 // Reader interface for clones arrays
 class TClonesReader : public TVirtualCollectionReader {
 public:
-   ~TClonesReader() override {}
+   TClonesReader() = default;
+   ~TClonesReader() override = default;
+   TClonesReader(const TClonesReader &) = delete;
+   TClonesReader &operator=(const TClonesReader &) = delete;
+   TClonesReader(TClonesReader &&) = delete;
+   TClonesReader &operator=(TClonesReader &&) = delete;
+
    TClonesArray *GetCA(ROOT::Detail::TBranchProxy *proxy)
    {
       if (!proxy->Read()) {
@@ -443,6 +449,12 @@ private:
 
 public:
    TBasicTypeClonesReader(Int_t offsetArg) : fOffset(offsetArg) {}
+
+   ~TBasicTypeClonesReader() final = default;
+   TBasicTypeClonesReader(const TBasicTypeClonesReader &) = delete;
+   TBasicTypeClonesReader &operator=(const TBasicTypeClonesReader &) = delete;
+   TBasicTypeClonesReader(TBasicTypeClonesReader &&) = delete;
+   TBasicTypeClonesReader &operator=(TBasicTypeClonesReader &&) = delete;
 
    void *At(ROOT::Detail::TBranchProxy *proxy, size_t idx) override
    {

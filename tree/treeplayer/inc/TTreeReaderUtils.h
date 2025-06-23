@@ -86,6 +86,11 @@ namespace Internal {
       TVirtualCollectionReader() : fReadStatus(TTreeReaderValueBase::kReadNothingYet) {}
 
       virtual ~TVirtualCollectionReader();
+      TVirtualCollectionReader(const TVirtualCollectionReader &) = delete;
+      TVirtualCollectionReader &operator=(const TVirtualCollectionReader &) = delete;
+      TVirtualCollectionReader(TVirtualCollectionReader &&) = delete;
+      TVirtualCollectionReader &operator=(TVirtualCollectionReader &&) = delete;
+
       virtual size_t GetSize(Detail::TBranchProxy*) = 0;
       virtual void* At(Detail::TBranchProxy*, size_t /*idx*/) = 0;
       virtual bool IsContiguous(Detail::TBranchProxy *) = 0;
