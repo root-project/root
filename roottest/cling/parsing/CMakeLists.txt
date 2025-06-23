@@ -1,3 +1,5 @@
+ROOTTEST_ADD_TESTDIRS()
+
 ROOTTEST_ADD_TEST(runlessThan
                   MACRO runlessThan.C
                   OUTREF lessThan.ref
