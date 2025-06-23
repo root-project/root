@@ -1797,7 +1797,8 @@ typedef struct SSL_CTX SSL_CTX;
 #include <openssl/conf.h>
 #include <openssl/crypto.h>
 #include <openssl/dh.h>
-#include <openssl/engine.h>
+// remove to avoid problems with future Fedora, see https://github.com/root-project/root/commit/d75eeb8
+// #include <openssl/engine.h>
 #include <openssl/err.h>
 #include <openssl/opensslv.h>
 #include <openssl/pem.h>
