@@ -23,6 +23,10 @@ extern "C" {
     /* direct interpreter access ---------------------------------------------- */
     RPY_EXPORTED
     int cppyy_compile(const char* code);
+    RPY_EXPORTED
+    int cppyy_compile_silent(const char* code);
+    RPY_EXPORTED
+    char* cppyy_to_string(cppyy_type_t klass, cppyy_object_t obj);
 
     /* name to opaque C++ scope representation -------------------------------- */
     RPY_EXPORTED
@@ -37,6 +41,11 @@ extern "C" {
     size_t cppyy_size_of_klass(cppyy_type_t klass);
     RPY_EXPORTED
     size_t cppyy_size_of_type(const char* type_name);
+
+    RPY_EXPORTED
+    int cppyy_is_builtin(const char* type_name);
+    RPY_EXPORTED
+    int cppyy_is_complete(const char* type_name);
 
     /* memory management ------------------------------------------------------ */
     RPY_EXPORTED
@@ -100,8 +109,6 @@ extern "C" {
     RPY_EXPORTED
     int cppyy_is_namespace(cppyy_scope_t scope);
     RPY_EXPORTED
-    int cppyy_is_static_template(cppyy_scope_t scope, const char* name);
-    RPY_EXPORTED
     int cppyy_is_template(const char* template_name);
     RPY_EXPORTED
     int cppyy_is_abstract(cppyy_type_t type);
@@ -109,6 +116,8 @@ extern "C" {
     int cppyy_is_enum(const char* type_name);
     RPY_EXPORTED
     int cppyy_is_aggregate(cppyy_type_t type);
+    RPY_EXPORTED
+    int cppyy_is_default_constructable(cppyy_type_t type);
 
     RPY_EXPORTED
     const char** cppyy_get_all_cpp_names(cppyy_scope_t scope, size_t* count);
@@ -141,6 +150,9 @@ extern "C" {
     RPY_EXPORTED
     void cppyy_add_smartptr_type(const char* type_name);
 
+    RPY_EXPORTED
+    void cppyy_add_type_reducer(const char* reducable, const char* reduced);
+
     /* calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0 */
     RPY_EXPORTED
     ptrdiff_t cppyy_base_offset(cppyy_type_t derived, cppyy_type_t base, cppyy_object_t address, int direction);
@@ -148,6 +160,8 @@ extern "C" {
     /* method/function reflection information --------------------------------- */
     RPY_EXPORTED
     int cppyy_num_methods(cppyy_scope_t scope);
+    RPY_EXPORTED
+    int cppyy_num_methods_ns(cppyy_scope_t scope);
     RPY_EXPORTED
     cppyy_index_t* cppyy_method_indices_from_name(cppyy_scope_t scope, const char* name);
 
@@ -167,7 +181,7 @@ extern "C" {
     RPY_EXPORTED
     int cppyy_method_req_args(cppyy_method_t);
     RPY_EXPORTED
-    char* cppyy_method_arg_name(cppyy_method_t,int arg_index);
+    char* cppyy_method_arg_name(cppyy_method_t, int arg_index);
     RPY_EXPORTED
     char* cppyy_method_arg_type(cppyy_method_t, int arg_index);
     RPY_EXPORTED
@@ -184,9 +198,15 @@ extern "C" {
     RPY_EXPORTED
     int cppyy_get_num_templated_methods(cppyy_scope_t scope);
     RPY_EXPORTED
+    int cppyy_get_num_templated_methods_ns(cppyy_scope_t scope);
+    RPY_EXPORTED
     char* cppyy_get_templated_method_name(cppyy_scope_t scope, cppyy_index_t imeth);
     RPY_EXPORTED
+    int cppyy_is_templated_constructor(cppyy_scope_t scope, cppyy_index_t imeth);
+    RPY_EXPORTED
     int cppyy_exists_method_template(cppyy_scope_t scope, const char* name);
+    RPY_EXPORTED
+    int cppyy_is_static_template(cppyy_scope_t scope, const char* name);
     RPY_EXPORTED
     int cppyy_method_is_template(cppyy_scope_t scope, cppyy_index_t idx);
     RPY_EXPORTED
@@ -200,6 +220,8 @@ extern "C" {
     RPY_EXPORTED
     int cppyy_is_publicmethod(cppyy_method_t);
     RPY_EXPORTED
+    int cppyy_is_protectedmethod(cppyy_method_t);
+    RPY_EXPORTED
     int cppyy_is_constructor(cppyy_method_t);
     RPY_EXPORTED
     int cppyy_is_destructor(cppyy_method_t);
@@ -210,6 +232,8 @@ extern "C" {
     RPY_EXPORTED
     int cppyy_num_datamembers(cppyy_scope_t scope);
     RPY_EXPORTED
+    int cppyy_num_datamembers_ns(cppyy_scope_t scope);
+    RPY_EXPORTED
     char* cppyy_datamember_name(cppyy_scope_t scope, int datamember_index);
     RPY_EXPORTED
     char* cppyy_datamember_type(cppyy_scope_t scope, int datamember_index);
@@ -217,10 +241,14 @@ extern "C" {
     intptr_t cppyy_datamember_offset(cppyy_scope_t scope, int datamember_index);
     RPY_EXPORTED
     int cppyy_datamember_index(cppyy_scope_t scope, const char* name);
+    RPY_EXPORTED
+    int cppyy_datamember_index_enumerated(cppyy_scope_t scope, int datamember_index);
 
     /* data member properties ------------------------------------------------- */
     RPY_EXPORTED
     int cppyy_is_publicdata(cppyy_type_t type, cppyy_index_t datamember_index);
+    RPY_EXPORTED
+    int cppyy_is_protecteddata(cppyy_type_t type, cppyy_index_t datamember_index);
     RPY_EXPORTED
     int cppyy_is_staticdata(cppyy_type_t type, cppyy_index_t datamember_index);
     RPY_EXPORTED
