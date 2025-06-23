@@ -347,11 +347,11 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
   endif()
-  if (NOT machine_learning-sofie)
+  if (NOT tmva-sofie)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.C)
   else()
     #copy ONNX file needed for the tutorial
-    configure_file(${CMAKE_SOURCE_DIR}/machine_learning/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/machine_learning/Linear_16.onnx COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/machine_learning/Linear_16.onnx COPYONLY)
   endif()
 
 endif()
