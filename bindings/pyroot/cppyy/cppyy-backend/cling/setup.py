@@ -1,4 +1,4 @@
-import codecs, multiprocessing, os, sys, subprocess, stat
+import codecs, multiprocessing, os, sys, subprocess, stat, re
 from setuptools import setup, find_packages
 from distutils import log
 
@@ -22,6 +22,19 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+# https://packaging.python.org/guides/single-sourcing-package-version/
+def read(*parts):
+    with codecs.open(os.path.join(here, *parts), 'r') as fp:
+        return fp.read()
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
 
 #
 # platform-dependent helpers
@@ -33,7 +46,10 @@ def is_manylinux():
         _is_manylinux = False
         try:
             for line in open('/etc/redhat-release').readlines():
-                if 'CentOS release 6.10 (Final)' in line:
+              # mark manylinux1, manylinux2010, or manylinux2014
+                if 'CentOS release 5.11 (Final)' in line or \
+                   'CentOS release 6.10 (Final)' in line or \
+                   'CentOS Linux release 7.9.2009 (Core)' in line:
                     _is_manylinux = True
                     break
         except (OSError, IOError):
@@ -86,10 +102,10 @@ class my_cmake_build(_build):
         builddir = get_builddir()
         prefix   = get_prefix()
         srcdir   = get_srcdir()
-        if not os.path.exists(srcdir):
-            log.info('No src directory ... creating with "python create_src_directory.py"')
+        if not os.path.exists(os.path.join(srcdir, 'interpreter')):
+            log.info('No Cling source found ... downloading with "python create_src_directory.py"')
             if subprocess.call([sys.executable, 'create_src_directory.py']) != 0:
-                log.error('ERROR: the source directory "%s" does not exist' % srcdir)
+                log.error('ERROR: the Cling source directory "%s" does not exist' % os.path.join(srcdir, 'interpreter'))
                 log.error('Please run "python create_src_directory.py" first.')
                 sys.exit(1)
 
@@ -102,14 +118,12 @@ class my_cmake_build(_build):
             stdcxx = os.environ['STDCXX']
         except KeyError:
             if is_manylinux():
-                stdcxx = '11'
-            elif 'win32' in sys.platform:
-                stdcxx = '14'     # current cmake claims MSVC'17 does not support C++17 yet
-            else:
                 stdcxx = '17'
+            else:
+                stdcxx = '20'
 
-        if not stdcxx in ['11', '14', '17']:
-            log.fatal('FATAL: envar STDCXX should be one of 11, 14, or 17')
+        if not stdcxx in ['14', '17', '20']:
+            log.fatal('FATAL: envar STDCXX should be one of 14, 17, or 20')
             sys.exit(1)
 
         stdcxx='-DCMAKE_CXX_STANDARD='+stdcxx
@@ -133,24 +147,23 @@ class my_cmake_build(_build):
             if has_avx: extra_args += ' -mavx'
             os.putenv('EXTRA_CLING_ARGS', extra_args)
 
-        CMAKE_COMMAND = ['cmake', srcdir,
-                stdcxx, '-DLLVM_ENABLE_TERMINFO=0',
-                '-Dminimal=ON', '-Dasimage=OFF', '-Droot7=OFF', '-Dhttp=OFF',
-                '-Dbuiltin_pcre=ON', '-Dbuiltin_freetype=ON', '-Dbuiltin_zlib=ON', '-Dbuiltin_xxhash=ON']
+        CMAKE_COMMAND = ['cmake', srcdir, '-Wno-dev',
+                stdcxx, '-DLLVM_ENABLE_TERMINFO=0', '-DLLVM_ENABLE_ASSERTIONS=0',
+                '-Dminimal=ON', '-Dbuiltin_cling=ON', '-Druntime_cxxmodules=OFF', '-Dbuiltin_zlib=ON']
         if 'darwin' in sys.platform:
             CMAKE_COMMAND.append('-Dlibcxx=ON')
         CMAKE_COMMAND.append('-DCMAKE_BUILD_TYPE='+get_build_type())
         if 'win32' in sys.platform:
             import platform
-            if '64' in platform.architecture()[0]:
-                CMAKE_COMMAND += ['-Thost=x64', '-DCMAKE_GENERATOR_PLATFORM=x64', '-Dall=OFF',
-                        '-Dmathmore=OFF', '-Dbuiltin_ftgl=OFF', '-Droofit=OFF', '-Dgfal=OFF', '-Dfftw3=OFF']
-                FFTW_INC = os.environ.get("FFTW_INC", None)
-                FFTW_LIB = os.environ.get("FFTW_LIB", None)
-                if FFTW_INC and FFTW_LIB:
-                    CMAKE_COMMAND += ["-DFFTW_INCLUDE_DIR={}".format(FFTW_INC), "-DFFTW_LIBRARY={}".format(FFTW_LIB)]
-        else:
-            CMAKE_COMMAND += ['-Dbuiltin_freetype=OFF']
+            bits = platform.architecture()[0]
+            if '64' in bits:
+                CMAKE_COMMAND += ['-A x64', '-Thost=x64', '-DCMAKE_GENERATOR_PLATFORM=x64']
+            elif '32' in bits:
+                CMAKE_COMMAND += ['-Thost=x86', '-DCMAKE_GENERATOR_PLATFORM=win32']
+        elif 'darwin' in sys.platform:
+            import platform
+            if 'arm64' in platform.machine():
+                CMAKE_COMMAND += ['-DLLVM_TARGETS_TO_BUILD=ARM;AArch64;NVPTX']
         CMAKE_COMMAND.append('-DCMAKE_INSTALL_PREFIX='+prefix)
 
         log.info('Running cmake for cppyy-cling: %s', ' '.join(CMAKE_COMMAND))
@@ -241,42 +254,53 @@ class my_install(_install):
      # remove allDict.cxx.pch as it's not portable (rebuild on first run, see cppyy)
         log.info('removing allDict.cxx.pch')
         os.remove(os.path.join(get_prefix(), 'etc', 'allDict.cxx.pch'))
-     # for manylinux, reset the default cxxversion to 17 if no user override
-        if not 'STDCXX' in os.environ and is_manylinux():
-            log.info('updating root-config to C++17 for manylinux')
+     # fix-up the standard reported by cling-config (which calls root-config): if C++14
+     # was requested, LLVM16 (and thus ROOT) will up it 17; and for manylinux,# which
+     # was build with 17, reset the default cxxversion to 20 if no user override
+        update_cxxversion = os.environ.get('STDCXX', None)
+        if update_cxxversion is None and is_manylinux():
+            update_cxxversion = '2a'
+
+        if update_cxxversion is not None:
+          # for manylinux, reset the default cxxversion to 20 if no user override
+            log.info('updating cling-config to C++%s' % update_cxxversion)
             inp = os.path.join(get_prefix(), 'bin', 'root-config')
             outp = inp+'.new'
             outfile = open(outp, 'w')
             for line in open(inp).readlines():
                 if line.find('cxxversionflag=', 0, 15) == 0:
-                    line = 'cxxversionflag="-std=c++1z "\n'
+                    line = 'cxxversionflag="-std=c++%s "\n' % update_cxxversion
                 elif line.find('features=', 0, 9) == 0:
-                    line = line.replace('cxx11', 'cxx17')
+                    pcxx = line.find('cxx')
+                    if 0 < pcxx:
+                        line = line[:pcxx+3] + update_cxxversion + line[pcxx+5:]
                 outfile.write(line)
             outfile.close()
-            os.rename(outp, inp)
+            os.replace(outp, inp)
             os.chmod(inp, stat.S_IMODE(os.lstat(inp).st_mode) | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-            log.info('updating allCppflags.txt to C++17 for manylinux')
+            log.info('updating allCppflags.txt to C++%s' % update_cxxversion)
             inp = os.path.join(get_prefix(), 'etc', 'dictpch', 'allCppflags.txt')
             outp = inp+'.new'
             outfile = open(outp, 'w')
             for line in open(inp).readlines():
                 if '-std=' == line[:5]:
-                    line = '-std=c++1z\n'
+                    line = '-std=c++%s\n' % update_cxxversion
                 outfile.write(line)
             outfile.close()
-            os.rename(outp, inp)
+            os.replace(outp, inp)
 
-            log.info('updating compiledata.h to C++17 for manylinux')
+            log.info('updating compiledata.h to C++{update_cxxversion}')
             inp = os.path.join(get_prefix(), 'include', 'compiledata.h')
             outp = inp+'.new'
             outfile = open(outp, 'w')
             for line in open(inp).readlines():
-                line = line.replace('-std=c++11', '-std=c++1z')
+                pstd = line.find('-std=c++')
+                if 0 < pstd:
+                     line = line[pstd+8] + update_cxxversion + line[pstd+10:]
                 outfile.write(line)
             outfile.close()
-            os.rename(outp, inp)
+            os.replace(outp, inp)
 
         install_path = self._get_install_path()
         log.info('Copying installation to: %s ...', install_path)
@@ -287,7 +311,9 @@ class my_install(_install):
     def get_outputs(self):
         outputs = _install.get_outputs(self)
         outputs.append(os.path.join(self._get_install_path(), 'cppyy_backend'))
-        outputs.append(os.path.join(self._get_install_path(), 'cppyy_backend', 'etc', 'allDict.cxx.pch'))
+        version = find_version('python', 'cppyy_backend', '_version.py')
+        outputs.append(os.path.join(
+            self._get_install_path(), 'cppyy_backend', 'etc', 'allDict.cxx.pch.'+str(version)))
         return outputs
 
 
@@ -341,11 +367,10 @@ setup(
     long_description=long_description,
     url='https://root.cern.ch/cling',
 
-    # Author details
-    author='ROOT Developers',
-    author_email='rootdev@cern.ch',
+    maintainer='Wim Lavrijsen',
+    maintainer_email='WLavrijsen@lbl.gov',
 
-    version='6.18.2.7',
+    version=find_version('python', 'cppyy_backend', '_version.py'),
 
     license='LLVM: UoI-NCSA; ROOT: LGPL 2.1',
 
@@ -365,8 +390,13 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
 
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Programming Language :: C',
         'Programming Language :: C++',
 
@@ -377,8 +407,7 @@ setup(
 
     setup_requires=['wheel'],
 
-    include_package_data=True,
-    package_data={'': ['cmake/*.cmake', 'pkg_templates/*.in', 'pkg_templates/*.py']},
+    package_data={'cppyy_backend': ['cmake/*.cmake', 'pkg_templates/*.in', 'pkg_templates/*.py']},
 
     package_dir={'': 'python'},
     packages=find_packages('python', include=['cppyy_backend']),
