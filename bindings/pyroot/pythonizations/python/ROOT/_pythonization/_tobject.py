@@ -13,6 +13,7 @@ import cppyy
 
 # Searching
 
+
 def _contains(self, o):
     # Relies on TObject::FindObject
     # Parameters:
@@ -22,7 +23,25 @@ def _contains(self, o):
     # - True if self contains o
     return bool(self.FindObject(o))
 
+
 # Comparison operators
+
+
+def _eq(self, o):
+    import warnings
+
+    warnings.warn(
+        "\nTObject.__eq__ is deprecated and will be removed in ROOT 6.40."
+        "\n\nIt forwards to TObject::Equals(), which uses pointer comparison if"
+        " not overridden in derived classes."
+        "\nThis may be confusing, because people expect value comparisons."
+        "\nUse Pythons `is` for pointer comparison, or request/implement"
+        " `operator==` on the C++ side if you need value-based equality checks.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return self._cpp_eq(o)
+
 
 def _lt(self, o):
     if isinstance(o, cppyy.gbl.TObject):
@@ -30,17 +49,20 @@ def _lt(self, o):
     else:
         return NotImplemented
 
+
 def _le(self, o):
     if isinstance(o, cppyy.gbl.TObject):
         return self.Compare(o) <= 0
     else:
         return NotImplemented
 
+
 def _gt(self, o):
     if isinstance(o, cppyy.gbl.TObject):
         return self.Compare(o) == 1
     else:
         return NotImplemented
+
 
 def _ge(self, o):
     if isinstance(o, cppyy.gbl.TObject):
@@ -57,10 +79,13 @@ def pythonize_tobject():
 
     # Inject comparison operators
     AddTObjectEqNePyz(klass)
+    klass._cpp_eq = klass.__eq__
+    klass.__eq__ = _eq
     klass.__lt__ = _lt
     klass.__le__ = _le
     klass.__gt__ = _gt
     klass.__ge__ = _ge
+
 
 # Instant pythonization (executed at `import ROOT` time), no need of a
 # decorator. This is a core class that is instantiated before cppyy's

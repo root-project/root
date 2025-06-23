@@ -90,7 +90,7 @@ def _TFileOpen(klass, *args):
     # klass: TFile class
     # *args: arguments passed to the constructor
     f = klass._OriginalOpen(*args)
-    if f == ROOT.bind_object(0, klass):
+    if not f:
         # args[0] can be either a string or a TFileOpenHandle
         raise OSError('Failed to open file {}'.format(str(args[0])))
     return f

@@ -195,11 +195,9 @@ def isDirectoryKey(key):
     """
     Return True if the object, corresponding to the key, inherits from TDirectory
     """
-    import cppyy
-
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
-    if cl == cppyy.nullptr:
+    if not cl:
         logging.warning("Unknown class to ROOT: " + classname)
         return False
     return cl.InheritsFrom(ROOT.TDirectory.Class())
@@ -209,11 +207,9 @@ def isTreeKey(key):
     """
     Return True if the object, corresponding to the key, inherits from TTree
     """
-    import cppyy
-
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
-    if cl == cppyy.nullptr:
+    if not cl:
         logging.warning("Unknown class to ROOT: " + classname)
         return False
     return cl.InheritsFrom(ROOT.TTree.Class())
@@ -223,11 +219,9 @@ def isTHnSparseKey(key):
     """
     Return True if the object, corresponding to the key, inherits from THnSparse
     """
-    import cppyy
-
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
-    if cl == cppyy.nullptr:
+    if not cl:
         logging.warning("Unknown class to ROOT: " + classname)
         return False
     return cl.InheritsFrom(ROOT.THnSparse.Class())

@@ -144,6 +144,14 @@ If you want to keep using `TList*` return values, you can write a small adapter 
 
 ROOT dropped support for Python 3.8, meaning ROOT now requires at least Python 3.9.
 
+### Deprecation of the `TObject` equality pythonization
+
+`TObject.__eq__` is deprecated and will be removed in ROOT 6.40.
+
+It forwards to `TObject::Equals()`, which uses pointer comparison if not overridden in derived classes.
+This may be confusing, because people expect value comparisons.
+Use Pythons `is` for pointer comparison, or request an implementation of `operator==` on the C++ side if you need value-based equality checks for a given class.
+
 ### Deprecate the attribute pythonization of `TDirectory` in favor of item-getting syntax
 
 Since ROOT 6.32, the recommended way to get objects from a `TFile` or any `TDirectory` in general is via `__getitem__`:
