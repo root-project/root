@@ -1693,6 +1693,7 @@ public:
     Preprocessor &PP;
     CachedTokensTy SavedCachedTokens;
     CachedTokensTy::size_type SavedCachedLexPos;
+    std::vector<CachedTokensTy::size_type> SavedBacktrackPositions;
     std::vector<IncludeStackInfo> SavedStack;
     Lexer *SavedCurLexer;
     PreprocessorLexer *SavedCurPPLexer;
@@ -1705,6 +1706,7 @@ public:
     CleanupAndRestoreCacheRAII(Preprocessor &PP)
         : PP(PP), SavedCachedTokens(std::move(PP.CachedTokens)),
           SavedCachedLexPos(PP.CachedLexPos),
+          SavedBacktrackPositions(std::move(PP.BacktrackPositions)),
           SavedStack(std::move(PP.IncludeMacroStack)),
           SavedCurLexer(PP.CurLexer.release()), SavedCurPPLexer(PP.CurPPLexer),
           SavedCurTokenLexer(PP.CurTokenLexer.release()),
@@ -1713,6 +1715,7 @@ public:
           SavedLexLevel(PP.LexLevel) {
       PP.CachedTokens.clear();
       PP.CachedLexPos = 0;
+      PP.BacktrackPositions.clear();
       PP.IncludeMacroStack.clear();
       PP.CurLexer.reset(0);
       PP.CurPPLexer = 0;
@@ -1729,6 +1732,7 @@ public:
       // ExitCachingLexMode();
       PP.CachedTokens = std::move(SavedCachedTokens);
       PP.CachedLexPos = SavedCachedLexPos;
+      PP.BacktrackPositions = std::move(SavedBacktrackPositions);
       PP.IncludeMacroStack = std::move(SavedStack);
       PP.CurLexer.reset(SavedCurLexer);
       PP.CurPPLexer = SavedCurPPLexer;
@@ -1739,6 +1743,7 @@ public:
 
       SavedCachedTokens.clear();
       SavedCachedLexPos = 0;
+      SavedBacktrackPositions.clear();
       SavedStack.clear();
       SavedCurLexer = 0;
       SavedCurPPLexer = 0;
