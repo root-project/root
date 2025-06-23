@@ -1,0 +1,141 @@
+diff --git a/src/interpreter/cling/lib/Interpreter/CIFactory.cpp b/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
+index 1213179cba..774e31c24d 100644
+--- a/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
++++ b/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
+@@ -93,11 +95,13 @@ namespace {
+   }
+ 
+   class AdditionalArgList {
+-    typedef std::vector< std::pair<const char*,std::string> > container_t;
++    typedef std::deque< std::pair<const char*,std::string> > container_t;
+     container_t m_Saved;
+ 
+   public:
+-    
++    void preArgument(const char* arg, std::string value = std::string()) {
++      m_Saved.push_front(std::make_pair(arg,std::move(value)));
++    }
+     void addArgument(const char* arg, std::string value = std::string()) {
+       m_Saved.push_back(std::make_pair(arg,std::move(value)));
+     }
+@@ -111,16 +115,23 @@ namespace {
+   static void ReadCompilerIncludePaths(const char* Compiler,
+                                        llvm::SmallVectorImpl<char>& Buf,
+                                        AdditionalArgList& Args,
++                                       const std::string& resourcePath,
+                                        bool Verbose) {
+     std::string CppInclQuery("LC_ALL=C ");
+     CppInclQuery.append(Compiler);
+ 
+     CppInclQuery.append(" -xc++ -E -v /dev/null 2>&1 |"
+-                        " sed -n -e '/^.*include/,${' -e '/^ \\/.*++/p' -e '}'");
++                        " sed -n -e '/^.*include/,${' -e '/^ \\/.*include/p' -e '}'");
+ 
+     if (Verbose)
+       cling::log() << "Looking for C++ headers with:\n  " << CppInclQuery << "\n";
+ 
++    std::string resourceIncDir;
++    llvm::SmallString<512> recInc(resourcePath);
++    llvm::sys::path::append(recInc, "include");
++    if (llvm::sys::fs::exists(recInc.str()))
++      resourceIncDir = recInc.str().str();
++
+     if (FILE *PF = ::popen(CppInclQuery.c_str(), "r")) {
+       Buf.resize(Buf.capacity_in_bytes());
+       while (fgets(&Buf[0], Buf.capacity_in_bytes(), PF) && Buf[0]) {
+@@ -132,8 +143,15 @@ namespace {
+             if (Verbose)
+               cling::utils::LogNonExistantDirectory(Path);
+           }
+-          else
++          else {
++            if (!resourceIncDir.empty()) {
++              llvm::SmallString<512> tmp(Path);
++              llvm::sys::path::append(tmp, "xmmintrin.h");
++              if (llvm::sys::fs::exists(tmp.str()))
++                Args.addArgument("-cxx-isystem", resourceIncDir);
++            }
+             Args.addArgument("-cxx-isystem", Path.str());
++          }
+         }
+       }
+       ::pclose(PF);
+@@ -211,6 +229,21 @@ namespace {
+     static AdditionalArgList sArguments;
+     if (sArguments.empty()) {
+       const bool Verbose = opts.Verbose;
++      std::string resourcePath;
++
++      if (!opts.ResourceDir && !opts.NoBuiltinInc) {
++        resourcePath = getResourceDir(llvmdir);
++
++        // FIXME: Handle cases, where the cling is part of a library/framework.
++        // There we can't rely on the find executable logic.
++        if (!llvm::sys::fs::is_directory(resourcePath)) {
++          cling::errs()
++            << "ERROR in cling::CIFactory::createCI():\n  resource directory "
++            << resourcePath << " not found!\n";
++          resourcePath = "";
++        }
++      }
++
+ #ifdef _MSC_VER
+       // When built with access to the proper Windows APIs, try to actually find
+       // the correct include paths first. Init for UnivSDK.empty check below.
+@@ -301,14 +334,14 @@ namespace {
+             clang.append(" -stdlib=libstdc++");
+   #endif
+           }
+-          ReadCompilerIncludePaths(clang.c_str(), buffer, sArguments, Verbose);
++          ReadCompilerIncludePaths(clang.c_str(), buffer, sArguments, resourcePath, Verbose);
+         }
+   #endif // _LIBCPP_VERSION
+ 
+   // First try the relative path 'g++'
+   #ifdef CLING_CXX_RLTV
+         if (sArguments.empty())
+-          ReadCompilerIncludePaths(CLING_CXX_RLTV, buffer, sArguments, Verbose);
++          ReadCompilerIncludePaths(CLING_CXX_RLTV, buffer, sArguments, resourcePath, Verbose);
+   #endif
+   // Then try the include directory cling was built with
+   #ifdef CLING_CXX_INCL
+@@ -318,7 +351,7 @@ namespace {
+   // Finally try the absolute path i.e.: '/usr/bin/g++'
+   #ifdef CLING_CXX_PATH
+         if (sArguments.empty())
+-          ReadCompilerIncludePaths(CLING_CXX_PATH, buffer, sArguments, Verbose);
++          ReadCompilerIncludePaths(CLING_CXX_PATH, buffer, sArguments, resourcePath, Verbose);
+   #endif
+ 
+         if (sArguments.empty()) {
+@@ -404,28 +435,16 @@ namespace {
+             cling::errs() << "Warning: sysroot \"" << sysroot << "\" not found (ignoring for now).";
+         }
+       }
+   #endif
+ 
+ #endif // _MSC_VER
+ 
+-      if (!opts.ResourceDir && !opts.NoBuiltinInc) {
+-        std::string resourcePath = getResourceDir(llvmdir);
+-
+-        // FIXME: Handle cases, where the cling is part of a library/framework.
+-        // There we can't rely on the find executable logic.
+-        if (!llvm::sys::fs::is_directory(resourcePath)) {
+-          cling::errs()
+-            << "ERROR in cling::CIFactory::createCI():\n  resource directory "
+-            << resourcePath << " not found!\n";
+-          resourcePath = "";
+-        } else {
+-          sArguments.addArgument("-resource-dir", std::move(resourcePath));
+-        }
+-      }
++      if (!resourcePath.empty())
++        sArguments.addArgument("-resource-dir", std::move(resourcePath));
+     }
+ 
+     for (auto& arg : sArguments) {
+       args.push_back(arg.first);
+       args.push_back(arg.second.c_str());
+     }
+   }

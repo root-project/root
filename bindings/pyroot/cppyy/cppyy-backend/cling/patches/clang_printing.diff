@@ -1,0 +1,16 @@
+diff --git a/src/interpreter/llvm-project/clang/lib/AST/Decl.cpp b/src/interpreter/llvm-project/clang/lib/AST/Decl.cpp
+index 573a98efe9..41995a9a24 100644
+--- a/src/interpreter/llvm-project/clang/lib/AST/Decl.cpp
++++ b/src/interpreter/llvm-project/clang/lib/AST/Decl.cpp
+@@ -3006,6 +3006,11 @@ unsigned ParmVarDecl::getParameterIndexLarge() const {
+ void FunctionDecl::getNameForDiagnostic(
+     raw_ostream &OS, const PrintingPolicy &Policy, bool Qualified) const {
+   NamedDecl::getNameForDiagnostic(OS, Policy, Qualified);
++  const DeclarationName& N = getDeclName();
++  if (N.getNameKind() == DeclarationName::CXXOperatorName) {
++    const std::string& opname = N.getAsString();
++    if (opname.back() == '<') OS << ' ';
++  }
+   const TemplateArgumentList *TemplateArgs = getTemplateSpecializationArgs();
+   if (TemplateArgs)
+     printTemplateArgumentList(OS, TemplateArgs->asArray(), Policy);

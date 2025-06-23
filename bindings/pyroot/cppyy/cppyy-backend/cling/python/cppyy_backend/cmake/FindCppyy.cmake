@@ -253,7 +253,7 @@ endfunction(cppyy_generate_init)
 #
 # cppyy_add_bindings(
 #    "${PROJECT_NAME}" "${PROJECT_VERSION}" "user" "user@gmail.com"
-#    LANGUAGE_STANDARD "14"
+#    LANGUAGE_STANDARD "17"
 #    GENERATE_OPTIONS "-D__PIC__;-Wno-macro-redefined"
 #    INCLUDE_DIRS     ${PCL_INCLUDE_DIRS}
 #    LINKDEFS         LinkDef.h
@@ -318,7 +318,7 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     # Language standard.
     #
     if("${ARG_LANGUAGE_STANDARD}" STREQUAL "")
-        set(ARG_LANGUAGE_STANDARD "14")
+        set(ARG_LANGUAGE_STANDARD "17")
     endif()
 
     ################################################################
@@ -424,13 +424,14 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     list(APPEND cling_args "-f" ${cpp_file})
     list(APPEND cling_args "-s" ${pkg_simplename})
     list(APPEND cling_args "-rmf" ${rootmap_file} "-rml" ${lib_file})
+    list(APPEND cling_args "--interpreteronly")
     foreach(in_pcm IN LISTS ARG_IMPORTS)
         #
         # Create -m options for any imported .pcm files.
         #
         list(APPEND cling_args "-m" "${in_pcm}")
     endforeach(in_pcm)
-    list(APPEND cling_args "${ARG_GENERATE_OPTIONS}")
+    list(APPEND cling_args "-cxxflags='${ARG_GENERATE_OPTIONS}'")
 
     # run rootcling
     add_custom_command(OUTPUT ${cpp_file} ${pcm_file} ${rootmap_file}
@@ -439,8 +440,7 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
 
     ############### cppyy-generator #######################
     find_package(LibClang REQUIRED)
-    get_filename_component(Cppyygen_EXECUTABLE ${Cppyy_EXECUTABLE} DIRECTORY)
-    set(Cppyygen_EXECUTABLE ${Cppyygen_EXECUTABLE}/cppyy-generator)
+    find_program(Cppyygen_EXECUTABLE NAMES cppyy-generator)
 
     #
     # Set up arguments for cppyy-generator.
@@ -461,7 +461,7 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     endforeach()
 
     add_custom_command(OUTPUT ${extra_map_file}
-                       COMMAND ${LibClang_Python3_EXECUTABLE} ${Cppyygen_EXECUTABLE}
+                       COMMAND ${LibClang_PYTHON_EXECUTABLE} ${Cppyygen_EXECUTABLE}
                        --libclang ${LibClang_LIBRARY} --flags "\"${generator_args}\""
                                ${extra_map_file} ${ARG_H_FILES} WORKING_DIRECTORY ${pkg_dir}
                        DEPENDS ${ARG_H_FILES}
@@ -516,7 +516,10 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     # Copy initializor
     #
     set(initializor ${CMAKE_CURRENT_BINARY_DIR}/initializor.py)
-    file(COPY ${BACKEND_PREFIX}/pkg_templates/initializor.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${pkg} USE_SOURCE_PERMISSIONS)
+    message(STATUS ${BACKEND_PREFIX}/pkg_templates/initializor.py)
+    if (EXISTS ${BACKEND_PREFIX}/pkg_templates/initializor.py)
+       file(COPY ${BACKEND_PREFIX}/pkg_templates/initializor.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${pkg} USE_SOURCE_PERMISSIONS)
+    endif()
 
     #
     # Copy README and LICENSE
@@ -565,9 +568,9 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     string(TOLOWER ${CMAKE_SYSTEM_NAME} SYSTEM_STR)
     set(pkg_whl "${CMAKE_BINARY_DIR}/dist/${pkg}-${pkg_version}-py3-none-${SYSTEM_STR}_${CMAKE_SYSTEM_PROCESSOR}.whl")
     add_custom_command(OUTPUT  ${pkg_whl}
-                       COMMAND ${LibClang_Python3_EXECUTABLE} setup.py bdist_wheel
+                       COMMAND ${LibClang_PYTHON_EXECUTABLE} setup.py bdist_wheel
                        DEPENDS ${SETUP_PY_FILE} ${lib_name} ${setup_cfg}
-                       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     add_custom_target(wheel ALL
                       DEPENDS ${pkg_whl}

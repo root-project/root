@@ -1,0 +1,25 @@
+[build-system]
+requires = ["cmake", "setuptools", "wheel"]
+
+[tool.cibuildwheel]
+archs = ["auto"]
+build-frontend = "pip"
+dependency-versions = "pinned"
+build-verbosity = "1"
+build = "cp39-manylinux_{x86_64,i686,aarch64} cp310-macosx_{x86_64,arm64} cp310-{win_amd64,win32,win_arm64}"
+
+
+before-all = "cd cling && python create_src_directory.py"
+
+
+test-requires = []
+test-command = 'python -c "import cppyy_backend"'
+
+[tool.cibuildwheel.linux]
+repair-wheel-command = ""
+# repair-wheel-command = "LD_LIBRARY_PATH=$PWD/lib auditwheel repair -w {dest_dir} {wheel}"
+
+# mac-arm target is 10.15
+[[tool.cibuildwheel.overrides]]
+select = "*macos*"
+environment = { MACOSX_DEPLOYMENT_TARGET = "10.15" }

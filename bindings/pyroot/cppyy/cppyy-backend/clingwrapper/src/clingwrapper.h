@@ -8,6 +8,7 @@ extern "C" {
 #endif // ifdef __cplusplus
 
     /* misc helpers */
+    RPY_EXPORTED
     void* cppyy_load_dictionary(const char* lib_name);
 
 #ifdef __cplusplus
