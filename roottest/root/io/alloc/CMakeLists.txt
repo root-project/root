@@ -4,17 +4,9 @@ ROOTTEST_GENERATE_DICTIONARY(customConstructor
                              NO_ROOTMAP NO_CXXMODULE
                              FIXTURES_SETUP root-io-alloc-customConstructor-fixture)
 
-if(ClingReinstateTemplateRootIOCtor)
-  set(testref customConstructor.ref)
-  set(conversion sed -e "s,P13OTHER_ROOT_IO,class OTHER_ROOT_IO *,g")
-else()
-  set(testref customConstructor.ref-notemplateCtor)
-endif()
-
 ROOTTEST_ADD_TEST(customConstructorLib
                   MACRO runcustomConstructor.C
-                  OUTREF ${testref}
-                  OUTCNVCMD ${conversion}
+                  OUTREF customConstructor.ref-notemplateCtor
                   FIXTURES_REQUIRED root-io-alloc-customConstructor-fixture)
 
 ROOTTEST_COMPILE_MACRO(customLoader.C
