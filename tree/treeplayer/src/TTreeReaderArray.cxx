@@ -82,8 +82,14 @@ public:
 
    std::size_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
    {
-      auto *ca = GetCA(proxy);
-      return ca ? ca->GetClass()->Size() : 0;
+      if (!proxy->Read()) {
+         fReadStatus = TTreeReaderValueBase::kReadError;
+         if (!proxy->GetSuppressErrorsForMissingBranch())
+            Error("TClonesReader::GetValueSize()", "Read error in TBranchProxy.");
+         return 0;
+      }
+      fReadStatus = TTreeReaderValueBase::kReadSuccess;
+      return proxy->GetValueSize();
    }
 };
 
