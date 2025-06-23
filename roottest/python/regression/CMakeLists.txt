@@ -25,4 +25,7 @@ endif()
                     ENVIRONMENT CLING_STANDARD_PCH=none
                     CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 
+  ROOTTEST_ADD_TEST(gh_16406
+                    MACRO gh_16406.py
+                    OUTREF gh_16406.ref)
 endif()
