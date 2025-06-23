@@ -11,6 +11,7 @@ extern "C" {
 
     typedef size_t        cppyy_scope_t;
     typedef cppyy_scope_t cppyy_type_t;
+    typedef void*         cppyy_enum_t;
     typedef void*         cppyy_object_t;
     typedef intptr_t      cppyy_method_t;
 
@@ -228,6 +229,16 @@ extern "C" {
     int cppyy_is_enum_data(cppyy_scope_t scope, cppyy_index_t idata);
     RPY_EXPORTED
     int cppyy_get_dimension_size(cppyy_scope_t scope, cppyy_index_t idata, int dimension);
+
+    /* enum properties -------------------------------------------------------- */
+    RPY_EXPORTED
+    cppyy_enum_t  cppyy_get_enum(cppyy_scope_t scope, const char* enum_name);
+    RPY_EXPORTED
+    cppyy_index_t cppyy_get_num_enum_data(cppyy_enum_t);
+    RPY_EXPORTED
+    const char*   cppyy_get_enum_data_name(cppyy_enum_t, cppyy_index_t idata);
+    RPY_EXPORTED
+    long long     cppyy_get_enum_data_value(cppyy_enum_t, cppyy_index_t idata);
 
     /* misc helpers ----------------------------------------------------------- */
     RPY_EXPORTED

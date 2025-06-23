@@ -1,3 +1,10 @@
+#ifndef WIN32
+#ifndef _CRT_SECURE_NO_WARNINGS
+// silence warnings about getenv, strncpy, etc.
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#endif
+
 // Bindings
 #include "capi.h"
 #include "cpp_cppyy.h"
@@ -29,6 +36,7 @@
 #include "TMethodArg.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TThread.h"
 
 // Standard
 #include <assert.h>
@@ -1920,6 +1928,20 @@ bool Cppyy::IsMethodTemplate(TCppScope_t scope, TCppIndex_t idx)
 // helpers for Cppyy::GetMethodTemplate()
 static std::map<TDictionary::DeclId_t, CallWrapper*> gMethodTemplates;
 
+static inline
+void remove_space(std::string& n) {
+   std::string::iterator pos = std::remove_if(n.begin(), n.end(), isspace);
+   n.erase(pos, n.end());
+}
+
+static inline
+bool template_compare(std::string n1, std::string n2) {
+    if (n1.back() == '>') n1 = n1.substr(0, n1.size()-1);
+    remove_space(n1);
+    remove_space(n2);
+    return n2.compare(0, n1.size(), n1) == 0;
+}
+
 Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
     TCppScope_t scope, const std::string& name, const std::string& proto)
 {
@@ -1937,8 +1959,12 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
     TFunction* func = nullptr; ClassInfo_t* cl = nullptr;
     if (scope == (cppyy_scope_t)GLOBAL_HANDLE) {
         func = gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
-        if (func && name.back() == '>' && name != func->GetName())
-            func = nullptr;  // happens if implicit conversion matches the overload
+        if (func && name.back() == '>') {
+        // make sure that all template parameters match (more are okay, e.g. defaults or
+        // ones derived from the arguments or variadic templates)
+            if (!template_compare(name, func->GetName()))
+                func = nullptr;  // happens if implicit conversion matches the overload
+        }
     } else {
         TClassRef& cr = type_from_handle(scope);
         if (cr.GetClass()) {
@@ -1990,8 +2016,7 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
             // allow if requested template names match up to the result
                 const std::string& alt = GetMethodFullName(cppmeth);
                 if (name.size() < alt.size() && alt.find('<') == pos) {
-                    const std::string& partial = name.substr(pos, name.size()-1-pos);
-                    if (strncmp(partial.c_str(), alt.substr(pos, alt.size()-1-pos).c_str(), partial.size()) == 0)
+                    if (template_compare(name, alt))
                         return cppmeth;
                 }
             }
@@ -2005,16 +2030,19 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
 static inline
 std::string type_remap(const std::string& n1, const std::string& n2)
 {
-// Operator lookups of (C++ string, Python str) should succeeded, for the combos of
+// Operator lookups of (C++ string, Python str) should succeed for the combos of
 // string/str, wstring/str, string/unicode and wstring/unicode; since C++ does not have a
 // operator+(std::string, std::wstring), we'll have to look up the same type and rely on
 // the converters in CPyCppyy/_cppyy.
-    if (n1 == "str") {
+    if (n1 == "str" || n1 == "unicode") {
         if (n2 == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >")
             return n2;                      // match like for like
         return "std::string";               // probably best bet
-    } else if (n1 == "float")
+    } else if (n1 == "float") {
         return "double";                    // debatable, but probably intended
+    } else if (n1 == "complex") {
+        return "std::complex<double>";
+    }
     return n1;
 }
 
@@ -2914,6 +2942,24 @@ int cppyy_is_enum_data(cppyy_scope_t scope, cppyy_index_t idata) {
 
 int cppyy_get_dimension_size(cppyy_scope_t scope, cppyy_index_t idata, int dimension) {
     return Cppyy::GetDimensionSize(scope, idata, dimension);
+}
+
+
+/* enum properties -------------------------------------------------------- */
+cppyy_enum_t cppyy_get_enum(cppyy_scope_t scope, const char* enum_name) {
+    return Cppyy::GetEnum(scope, enum_name);
+}
+
+cppyy_index_t cppyy_get_num_enum_data(cppyy_enum_t e) {
+    return Cppyy::GetNumEnumData(e);
+}
+
+const char* cppyy_get_enum_data_name(cppyy_enum_t e, cppyy_index_t idata) {
+    return cppstring_to_cstring(Cppyy::GetEnumDataName(e, idata));
+}
+
+long long cppyy_get_enum_data_value(cppyy_enum_t e, cppyy_index_t idata) {
+    return Cppyy::GetEnumDataValue(e, idata);
 }
 
 
