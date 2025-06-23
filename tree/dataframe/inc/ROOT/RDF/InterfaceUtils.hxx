@@ -345,7 +345,7 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    const auto &treename = snapHelperArgs->fTreeName;
    const auto &outputColNames = snapHelperArgs->fOutputColNames;
    const auto &options = snapHelperArgs->fOptions;
-   const auto &lmPtr = snapHelperArgs->fOutputLoopManager;
+   const auto &outputLM = snapHelperArgs->fOutputLoopManager;
    const auto &inputLM = snapHelperArgs->fInputLoopManager;
 
    auto sz = colNames.size();
@@ -354,21 +354,36 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       isDefine[i] = colRegister.IsDefineOrAlias(colNames[i]);
 
    std::unique_ptr<RActionBase> actionPtr;
+   if (snapHelperArgs->fToNTuple) {
+      if (!ROOT::IsImplicitMTEnabled()) {
+         // single-thread snapshot
+         using Helper_t = UntypedSnapshotRNTupleHelper;
+         using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
 
-   if (!ROOT::IsImplicitMTEnabled()) {
-      // single-thread snapshot
-      using Helper_t = UntypedSnapshotTTreeHelper;
-      using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
-      actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
-                                            std::move(isDefine), lmPtr, inputLM, colTypeIDs),
-                                   colNames, colTypeIDs, prevNode, colRegister));
+         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, inputLM,
+                                               outputLM, std::move(isDefine), colTypeIDs),
+                                      colNames, colTypeIDs, prevNode, colRegister));
+      } else {
+         // multi-thread snapshot to RNTuple is not yet supported
+         // TODO(fdegeus) Add MT snapshotting
+         throw std::runtime_error("Snapshot: Snapshotting to RNTuple with IMT enabled is not supported yet.");
+      }
    } else {
-      // multi-thread snapshot
-      using Helper_t = UntypedSnapshotTTreeHelperMT;
-      using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
-      actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options,
-                                            std::move(isDefine), lmPtr, inputLM, colTypeIDs),
-                                   colNames, colTypeIDs, prevNode, colRegister));
+      if (!ROOT::IsImplicitMTEnabled()) {
+         // single-thread snapshot
+         using Helper_t = UntypedSnapshotTTreeHelper;
+         using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
+                                               std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                      colNames, colTypeIDs, prevNode, colRegister));
+      } else {
+         // multi-thread snapshot
+         using Helper_t = UntypedSnapshotTTreeHelperMT;
+         using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+         actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options,
+                                               std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                      colNames, colTypeIDs, prevNode, colRegister));
+      }
    }
 
    return actionPtr;

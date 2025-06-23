@@ -1344,10 +1344,14 @@ public:
 
       RResultPtr<RInterface<RLoopManager>> resPtr;
 
-      auto retrieveTypeID = [](const std::string &colName, const std::string &colTypeName) -> const std::type_info * {
+      auto retrieveTypeID = [](const std::string &colName, const std::string &colTypeName,
+                               bool isRNTuple = false) -> const std::type_info * {
          try {
             return &ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
          } catch (const std::runtime_error &err) {
+            if (isRNTuple)
+               return &typeid(ROOT::Internal::RDF::UseNativeDataType);
+
             if (std::string(err.what()).find("Cannot extract type_info of type") != std::string::npos) {
                // We could not find RTTI for this column, thus we cannot write it out at the moment.
                std::string trueTypeName{colTypeName};
@@ -1380,12 +1384,26 @@ public:
             std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
             options, newRDF->GetLoopManager(), GetLoopManager(), true /* fToNTuple */});
 
-         // The Snapshot helper will use colListNoAliasesWithSizeBranches (with aliases resolved) as input columns, and
-         // colListWithAliasesAndSizeBranches (still with aliases in it, passed through snapHelperArgs) as output column
-         // names.
-         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-            colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
-            colListNoAliasesWithSizeBranches.size());
+         auto &&nColumns = colListNoAliasesWithSizeBranches.size();
+         const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
+
+         const auto nSlots = fLoopManager->GetNSlots();
+         std::vector<const std::type_info *> colTypeIDs;
+         colTypeIDs.reserve(nColumns);
+         for (decltype(nColumns) i{}; i < nColumns; i++) {
+            const auto &colName = validColumnNames[i];
+            const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
+               colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), options.fVector2RVec);
+            const std::type_info *colTypeID = retrieveTypeID(colName, colTypeName, /*isRNTuple*/ true);
+            colTypeIDs.push_back(colTypeID);
+         }
+         // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
+         // source
+         CheckAndFillDSColumns(validColumnNames, colTypeIDs);
+
+         auto action =
+            RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
+         resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
       } else {
          if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
              options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
