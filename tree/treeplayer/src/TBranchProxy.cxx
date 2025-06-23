@@ -433,6 +433,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
             if (!fIsMember) fIsClone = true;
             fIsaPointer = false;
             fWhere = be->GetObject();
+            fValueSize = static_cast<TClonesArray *>(fWhere)->GetClass()->Size();
 
          } else if (be->GetType()==4) {
             // top level TClonesArray
