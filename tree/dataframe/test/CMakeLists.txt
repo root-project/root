@@ -69,7 +69,7 @@ endif()
 
 ROOT_ADD_GTEST(dataframe_display dataframe_display.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_ranges dataframe_ranges.cxx LIBRARIES ROOTDataFrame)
-ROOT_ADD_GTEST(dataframe_leaves dataframe_leaves.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_leaves dataframe_leaves.cxx LIBRARIES ROOTDataFrame Physics)
 ROOT_ADD_GTEST(dataframe_resptr dataframe_resptr.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_take dataframe_take.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_entrylist dataframe_entrylist.cxx LIBRARIES ROOTDataFrame)
