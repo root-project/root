@@ -2986,6 +2986,21 @@ TCanvas *TWebCanvas::CreateWebCanvas(const char *name, const char *title, UInt_t
    canvas->SetBatch(kTRUE); // mark canvas as batch
    canvas->SetEditable(kTRUE); // ensure fPrimitives are created
 
+   // copy gStyle attributes
+   canvas->SetFillColor(gStyle->GetCanvasColor());
+   canvas->SetFillStyle(1001);
+   canvas->SetGrid(gStyle->GetPadGridX(),gStyle->GetPadGridY());
+   canvas->SetTicks(gStyle->GetPadTickX(),gStyle->GetPadTickY());
+   canvas->SetLogx(gStyle->GetOptLogx());
+   canvas->SetLogy(gStyle->GetOptLogy());
+   canvas->SetLogz(gStyle->GetOptLogz());
+   canvas->SetBottomMargin(gStyle->GetPadBottomMargin());
+   canvas->SetTopMargin(gStyle->GetPadTopMargin());
+   canvas->SetLeftMargin(gStyle->GetPadLeftMargin());
+   canvas->SetRightMargin(gStyle->GetPadRightMargin());
+   canvas->SetBorderSize(gStyle->GetCanvasBorderSize());
+   canvas->SetBorderMode(gStyle->GetCanvasBorderMode());
+
    auto imp = static_cast<TWebCanvas *> (NewCanvas(canvas, name, 0, 0, width, height));
 
    canvas->SetCanvasImp(imp);
