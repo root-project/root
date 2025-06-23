@@ -57,10 +57,6 @@ set(ClingWorkAroundBrokenUnnamedReturn              TRUE)      # See https://sft
 set(ClingWorkAroundNoPrivateClassIO                 TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-4865
 set(ClingWorkAroundUnnamedDetection2                TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-8025
 
-# used in root/io/alloc test
-# set(ClingReinstateTemplateRootIOCtor                TRUE)
-# See https://github.com/root-project/root/issues/19013
-
 set(PYROOT_EXTRAFLAGS --fixcling)
 
 # set ROOTTEST_OS_ID
