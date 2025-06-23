@@ -4371,12 +4371,13 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 {
 
-   Int_t optionAxis;
+   Int_t optionAxis, optionClipCol;
 
    TString opt = chopt;
    opt.ToUpper();
 
-   if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
+   if (opt.Contains("A"))       optionAxis     = 1;  else optionAxis     = 0;
+   if (opt.Contains("CLIPCOL")) optionClipCol  = 1;  else optionClipCol  = 0;
 
    double *theX         = theScatter->GetGraph()->GetX();
    double *theY         = theScatter->GetGraph()->GetY();
@@ -4531,8 +4532,14 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          } else {
             c = theColor[i];
          }
-         if (c<minc) continue;
-         if (c>maxc) continue;
+         if (c<minc) {
+            if (optionClipCol) continue;
+            c = minc;
+         }
+         if (c>maxc) {
+            if (optionClipCol) continue;
+            c = maxc;
+         }
          nc = TMath::Nint(((c-minc)/(maxc-minc))*(nbcol-1));
          if (nc > nbcol-1) nc = nbcol-1;
          theScatter->SetMarkerColor(gStyle->GetColorPalette(nc));
