@@ -48,7 +48,7 @@ TScatter can be drawn with the following options:
 | Option    | Description                                                       |
 |-----------|-------------------------------------------------------------------|
 | "A"       | Produce a new plot with Axis around the graph |
-| "CLIPCOL" | Do not draw the points outside the color range. By default, such points' color is set to the minimum or maximum color, depending on whether the color is smaller or bigger than the color range |
+| "SKIPCOL" | Do not draw the points outside the color range. By default, such points' color is clipped to the minimum or maximum color, depending on whether the color is smaller or bigger than the color range |
 
 */
 
