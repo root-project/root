@@ -1,0 +1,38 @@
+diff --git a/src/interpreter/llvm-project/clang/lib/CodeGen/MicrosoftCXXABI.cpp b/src/interpreter/llvm-project/clang/lib/CodeGen/MicrosoftCXXABI.cpp
+index 1bd2937e47..108b5d6e66 100644
+--- a/src/interpreter/llvm-project/clang/lib/CodeGen/MicrosoftCXXABI.cpp
++++ b/src/interpreter/llvm-project/clang/lib/CodeGen/MicrosoftCXXABI.cpp
+@@ -543,10 +543,11 @@ public:
+         getImageRelativeType(CGM.Int8PtrTy),
+         getImageRelativeType(getClassHierarchyDescriptorType()->getPointerTo()),
+         getImageRelativeType(CompleteObjectLocatorType),
++	CGM.VoidPtrTy,
+     };
+     llvm::ArrayRef<llvm::Type *> FieldTypesRef(FieldTypes);
+     if (!isImageRelative())
+-      FieldTypesRef = FieldTypesRef.drop_back();
++      FieldTypesRef = FieldTypesRef.drop_back(2);
+     CompleteObjectLocatorType->setBody(FieldTypesRef);
+     return CompleteObjectLocatorType;
+   }
+@@ -3907,17 +3808,18 @@ MSRTTIBuilder::getCompleteObjectLocator(const VPtrInfo &Info) {
+ 
+   // Initialize the CompleteObjectLocator.
+   llvm::Constant *Fields[] = {
+-      llvm::ConstantInt::get(CGM.IntTy, ABI.isImageRelative()),
++      llvm::ConstantInt::get(CGM.IntTy, ABI.isImageRelative() ? 2 : 0),
+       llvm::ConstantInt::get(CGM.IntTy, OffsetToTop),
+       llvm::ConstantInt::get(CGM.IntTy, VFPtrOffset),
+       ABI.getImageRelativeConstant(
+           CGM.GetAddrOfRTTIDescriptor(Context.getTypeDeclType(RD))),
+       ABI.getImageRelativeConstant(getClassHierarchyDescriptor()),
+       ABI.getImageRelativeConstant(COL),
++      CGM.GetAddrOfRTTIDescriptor(Context.getTypeDeclType(RD)),
+   };
+   llvm::ArrayRef<llvm::Constant *> FieldsRef(Fields);
+   if (!ABI.isImageRelative())
+-    FieldsRef = FieldsRef.drop_back();
++    FieldsRef = FieldsRef.drop_back(2);
+   COL->setInitializer(llvm::ConstantStruct::get(Type, FieldsRef));
+   if (COL->isWeakForLinker())
+     COL->setComdat(CGM.getModule().getOrInsertComdat(COL->getName()));

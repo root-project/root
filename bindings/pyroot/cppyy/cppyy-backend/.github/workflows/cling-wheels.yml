@@ -1,0 +1,157 @@
+name: Build and upload to PyPI
+
+on: [workflow_dispatch]
+
+jobs:
+  #build-aarch64-wheels:
+  #  runs-on: ubuntu-latest
+  #  outputs:
+  #    job_number: ${{ steps.aarch64-job-number.outputs.job_number }}
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #
+  #    - name: Setup python
+  #      uses: actions/setup-python@v4
+  #      with:
+  #        python-version: "3.10"
+  #    - name: Trigger circleci build for ARM
+  #      id: aarch64-job-number
+  #      run: |
+  #        export JOB_NUMBER=$(python3 circleci.py job --token ${{ secrets.CIRCLE_API_TOKEN }})
+  #        echo "job_number=$JOB_NUMBER" >> "$GITHUB_OUTPUT"
+
+  build_wheels:
+    name: Build wheels on ${{ matrix.platform_id }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+      CIBW_ARCHS: "${{ matrix.cibw.arch || 'auto' }}"
+      CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+      CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          #- os: macos-14
+          #  name: mac-cpython
+          #  python: 310
+          #  platform_id: macosx_x86_64
+
+          # cross-compilation platform, disabled because tools build
+          # during the build process won't run
+          #- os: macos-latest
+          #  name: mac-cpython-arm
+          #  python: 310
+          #  platform_id: macosx_arm64
+          #  cibw:
+          #    arch: arm64
+
+          - os: ubuntu-latest
+            name: manylinux2014-x86_64
+            python: 310
+            platform_id: manylinux_x86_64
+            manylinux_image: manylinux2014
+
+          #- os: ubuntu-latest
+          #  name: manylinux2014-i686
+          #  python: 310
+          #  platform_id: manylinux_i686
+          #  manylinux_image: manylinux2014
+
+          - os: windows-latest
+            name: win32
+            python: 310
+            platform_id: win32
+
+          - os: windows-latest
+            name: win_amd64
+            python: 310
+            platform_id: win_amd64
+
+          # cross-compilation platform (requires cross-compilation setup
+          # for cmake configuration), disabled because tools build during
+          # the build process won't run
+          #- os: windows-latest
+          #  name: win32-arm64
+          #  python: 310
+          #  platform_id: win_arm64
+          #  cibw:
+          #    arch: ARM64
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          architecture: ${{ matrix.architecture }}
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      #- name: customize mac-arm-64
+      #  if: contains(matrix.os, 'macos') && matrix.platform_id == 'macosx_arm64'
+      #  run: |
+      #    echo 'MACOSX_DEPLOYMENT_TARGET=10.15' >> "$GITHUB_ENV"
+
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel==2.12.0
+
+      - name: list target wheels
+        run: |
+          python -m cibuildwheel cling --print-build-identifiers
+
+      - name: Build wheels
+        timeout-minutes: 600
+        run: |
+          python -m cibuildwheel cling --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v4
+        with:
+          # add unique name as artifact@v4 workaround, after cibuildwheel
+          name: cppyy-cling-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+  #build_sdist:
+  #  name: Build source distribution
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #
+  #    - name: Build sdist
+  #      run: cd cling && pipx run build --sdist
+  #
+  #    - uses: actions/upload-artifact@v3
+  #      with:
+  #        path: ./cling/dist/*.tar.gz
+
+  #upload_aarch64_wheel:
+  #  needs: [build_wheels, build-aarch64-wheels]  # Just wait until this workflow is done - then aarch64 should be done
+  #  runs-on: ubuntu-latest
+  #
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v3
+  #
+  #    - name: Setup python
+  #      uses: actions/setup-python@v4
+  #      with:
+  #        python-version: "3.10"
+  #
+  #    - name: Get wheel from CircleCI artifact
+  #      env:
+  #        JOB_NUMBER: ${{ needs.build-aarch64-wheels.outputs.job_number }}
+  #      run: |
+  #        export WHEEL_PATH=$(python circleci.py artifact --job-number $JOB_NUMBER --token ${{ secrets.CIRCLE_API_TOKEN }})
+  #        echo "wheel_path=$WHEEL_PATH" >> "$GITHUB_ENV"
+  #
+  #    - uses: actions/upload-artifact@v3
+  #      with:
+  #        path: ${{ env.wheel_path }}

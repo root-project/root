@@ -8,11 +8,27 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// some more types; assumes Cppyy.h follows Python.h
+#ifndef PY_LONG_LONG
+#ifdef _WIN32
+typedef __int64 PY_LONG_LONG;
+#else
+typedef long long PY_LONG_LONG;
+#endif
+#endif
 
-// ROOT types
-typedef long long            Long64_t;
-typedef unsigned long long   ULong64_t;
-typedef long double          LongDouble_t;
+#ifndef PY_ULONG_LONG
+#ifdef _WIN32
+typedef unsigned __int64   PY_ULONG_LONG;
+#else
+typedef unsigned long long PY_ULONG_LONG;
+#endif
+#endif
+
+#ifndef PY_LONG_DOUBLE
+typedef long double PY_LONG_DOUBLE;
+#endif
+
 
 namespace Cppyy {
     typedef size_t      TCppScope_t;
@@ -76,13 +92,14 @@ namespace Cppyy {
     RPY_EXPORTED
     long          CallL(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     RPY_EXPORTED
-    Long64_t      CallLL(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
+    PY_LONG_LONG  CallLL(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     RPY_EXPORTED
     float         CallF(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     RPY_EXPORTED
     double        CallD(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     RPY_EXPORTED
-    LongDouble_t  CallLD(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
+    PY_LONG_DOUBLE CallLD(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
+
     RPY_EXPORTED
     void*         CallR(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args);
     RPY_EXPORTED
@@ -241,6 +258,8 @@ namespace Cppyy {
     intptr_t    GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata);
     RPY_EXPORTED
     TCppIndex_t GetDatamemberIndex(TCppScope_t scope, const std::string& name);
+    RPY_EXPORTED
+    TCppIndex_t GetDatamemberIndexEnumerated(TCppScope_t scope, TCppIndex_t idata);
 
 // data member properties ----------------------------------------------------
     RPY_EXPORTED

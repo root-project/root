@@ -63,7 +63,7 @@ def add_pythonizations(py_files, noisy=False):
                 continue
             tokens = name.split('_')
             if len(tokens) > 1:
-                namespace = tokens[1]
+                namespace = "::".join(tokens[1:])
                 if noisy:
                     print('added pythonization', func, namespace)
                 if namespace == 'gbl':
@@ -218,3 +218,4 @@ def initialise(pkg, lib_file, map_file, noisy=False):
                 continue
             simplenames = child["name"].split('::')
             add_to_pkg(file["name"], child["kind"], simplenames, child)
+

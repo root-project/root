@@ -1,6 +1,6 @@
 releases/
 root-*/
-cling/src/
+cling/src/interpreter
 builddir/
 
 # Byte-compiled / optimized / DLL files
@@ -14,7 +14,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
-build/
 develop-eggs/
 dist/
 downloads/
