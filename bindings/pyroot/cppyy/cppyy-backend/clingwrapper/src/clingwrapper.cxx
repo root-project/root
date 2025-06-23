@@ -2496,6 +2496,14 @@ size_t cppyy_size_of_type(const char* type_name) {
     return Cppyy::SizeOf(type_name);
 }
 
+int cppyy_is_builtin(const char* type_name) {
+    return (int)Cppyy::IsBuiltin(type_name);
+}
+
+int cppyy_is_complete(const char* type_name) {
+    return (int)Cppyy::IsComplete(type_name);
+}
+
 
 /* memory management ------------------------------------------------------ */
 cppyy_object_t cppyy_allocate(cppyy_type_t type) {
@@ -2759,6 +2767,10 @@ void cppyy_add_smartptr_type(const char* type_name) {
     Cppyy::AddSmartPtrType(type_name);
 }
 
+void cppyy_add_type_reducer(const char* reducable, const char* reduced) {
+    Cppyy::AddTypeReducer(reducable, reduced);
+}
+
 
 /* calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0 */
 ptrdiff_t cppyy_base_offset(cppyy_type_t derived, cppyy_type_t base, cppyy_object_t address, int direction) {
@@ -2769,6 +2781,10 @@ ptrdiff_t cppyy_base_offset(cppyy_type_t derived, cppyy_type_t base, cppyy_objec
 /* method/function reflection information --------------------------------- */
 int cppyy_num_methods(cppyy_scope_t scope) {
     return (int)Cppyy::GetNumMethods(scope);
+}
+
+int cppyy_num_methods_ns(cppyy_scope_t scope) {
+    return (int)Cppyy::GetNumMethods(scope, true);
 }
 
 cppyy_index_t* cppyy_method_indices_from_name(cppyy_scope_t scope, const char* name)
@@ -2838,15 +2854,19 @@ char* cppyy_method_prototype(cppyy_scope_t scope, cppyy_method_t method, int sho
 }
 
 int cppyy_is_const_method(cppyy_method_t method) {
-    return (int)Cppyy::IsConstMethod(method);
+    return (int)Cppyy::IsConstMethod((Cppyy::TCppMethod_t)method);
 }
 
 int cppyy_get_num_templated_methods(cppyy_scope_t scope) {
-    return (int)Cppyy::GetNumTemplatedMethods(scope);
+    return (int)Cppyy::GetNumTemplatedMethods((Cppyy::TCppScope_t)scope);
+}
+
+int cppyy_get_num_templated_methods_ns(cppyy_scope_t scope) {
+    return (int)Cppyy::GetNumTemplatedMethods((Cppyy::TCppScope_t)scope, true);
 }
 
 char* cppyy_get_templated_method_name(cppyy_scope_t scope, cppyy_index_t imeth) {
-    return cppstring_to_cstring(Cppyy::GetTemplatedMethodName(scope, imeth));
+    return cppstring_to_cstring(Cppyy::GetTemplatedMethodName((Cppyy::TCppScope_t)scope, (Cppyy::TCppIndex_t)imeth));
 }
 
 int cppyy_is_templated_constructor(cppyy_scope_t scope, cppyy_index_t imeth) {
@@ -2854,7 +2874,7 @@ int cppyy_is_templated_constructor(cppyy_scope_t scope, cppyy_index_t imeth) {
 }
 
 int cppyy_exists_method_template(cppyy_scope_t scope, const char* name) {
-    return (int)Cppyy::ExistsMethodTemplate(scope, name);
+    return (int)Cppyy::ExistsMethodTemplate((Cppyy::TCppScope_t)scope, name);
 }
 
 int cppyy_is_static_template(cppyy_scope_t scope, const char* name) {
@@ -2862,11 +2882,11 @@ int cppyy_is_static_template(cppyy_scope_t scope, const char* name) {
 }
 
 int cppyy_method_is_template(cppyy_scope_t scope, cppyy_index_t idx) {
-    return (int)Cppyy::IsMethodTemplate(scope, idx);
+    return (int)Cppyy::IsMethodTemplate((Cppyy::TCppScope_t)scope, idx);
 }
 
 cppyy_method_t cppyy_get_method_template(cppyy_scope_t scope, const char* name, const char* proto) {
-    return cppyy_method_t(Cppyy::GetMethodTemplate(scope, name, proto));
+    return cppyy_method_t(Cppyy::GetMethodTemplate((Cppyy::TCppScope_t)scope, name, proto));
 }
 
 cppyy_index_t cppyy_get_global_operator(cppyy_scope_t scope, cppyy_scope_t lc, cppyy_scope_t rc, const char* op) {
@@ -2901,6 +2921,10 @@ int cppyy_num_datamembers(cppyy_scope_t scope) {
     return (int)Cppyy::GetNumDatamembers(scope);
 }
 
+int cppyy_num_datamembers_ns(cppyy_scope_t scope) {
+    return (int)Cppyy::GetNumDatamembers(scope, true);
+}
+
 char* cppyy_datamember_name(cppyy_scope_t scope, int datamember_index) {
     return cppstring_to_cstring(Cppyy::GetDatamemberName(scope, datamember_index));
 }
@@ -2917,6 +2941,9 @@ int cppyy_datamember_index(cppyy_scope_t scope, const char* name) {
     return (int)Cppyy::GetDatamemberIndex(scope, name);
 }
 
+int cppyy_datamember_index_enumerated(cppyy_scope_t scope, int datamember_index) {
+    return (int)Cppyy::GetDatamemberIndexEnumerated(scope, datamember_index);
+}
 
 
 /* data member properties ------------------------------------------------- */
