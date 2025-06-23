@@ -430,39 +430,58 @@ ROOT::RDF::RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const st
    return {};
 }
 
-std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-ROOT::RDF::RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info &tid)
+ROOT::RFieldBase *ROOT::RDF::RNTupleDS::GetFieldWithTypeChecks(std::string_view fieldName, const std::type_info &tid)
 {
    // At this point we can assume that `name` will be found in fColumnNames
-   const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
+   const auto index =
+      std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), fieldName));
+
+   // A reader was requested but we don't have RTTI for it, this is encoded with the tag UseNativeDataType. We can just
+   // return the available protofield
+   if (tid == typeid(ROOT::Internal::RDF::UseNativeDataType)) {
+      return fProtoFields[index].get();
+   }
+
+   // The user explicitly requested a type
    const auto requestedType = ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
 
-   ROOT::RFieldBase *field;
    // If the field corresponding to the provided name is not a cardinality column and the requested type is different
    // from the proto field that was created when the data source was constructed, we first have to create an
    // alternative proto field for the column reader. Otherwise, we can directly use the existing proto field.
-   if (name.substr(0, 13) != "R_rdf_sizeof_" && requestedType != fColumnTypes[index]) {
+   if (fieldName.substr(0, 13) != "R_rdf_sizeof_" && requestedType != fColumnTypes[index]) {
       auto &altProtoFields = fAlternativeProtoFields[index];
-      auto altProtoField = std::find_if(altProtoFields.begin(), altProtoFields.end(),
-                                        [&requestedType](const std::unique_ptr<ROOT::RFieldBase> &fld) {
-                                           return fld->GetTypeName() == requestedType;
-                                        });
-      if (altProtoField != altProtoFields.end()) {
-         field = altProtoField->get();
-      } else {
-         auto newAltProtoFieldOrException = ROOT::RFieldBase::Create(std::string(name), requestedType);
-         if (!newAltProtoFieldOrException) {
-            throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
-                                     "\" for column \"" + std::string(name));
-         }
-         auto newAltProtoField = newAltProtoFieldOrException.Unwrap();
-         newAltProtoField->SetOnDiskId(fProtoFields[index]->GetOnDiskId());
-         field = newAltProtoField.get();
-         altProtoFields.emplace_back(std::move(newAltProtoField));
+
+      // If we can find the requested type in the registered alternative protofields, return the corresponding field
+      if (auto altProtoField = std::find_if(altProtoFields.begin(), altProtoFields.end(),
+                                            [&requestedType](const std::unique_ptr<ROOT::RFieldBase> &fld) {
+                                               return fld->GetTypeName() == requestedType;
+                                            });
+          altProtoField != altProtoFields.end()) {
+         return altProtoField->get();
       }
-   } else {
-      field = fProtoFields[index].get();
+
+      // Otherwise, create a new protofield and register it in the alternatives before returning
+      auto newAltProtoFieldOrException = ROOT::RFieldBase::Create(std::string(fieldName), requestedType);
+      if (!newAltProtoFieldOrException) {
+         throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
+                                  "\" for column \"" + std::string(fieldName));
+      }
+      auto newAltProtoField = newAltProtoFieldOrException.Unwrap();
+      newAltProtoField->SetOnDiskId(fProtoFields[index]->GetOnDiskId());
+      auto *newField = newAltProtoField.get();
+      altProtoFields.emplace_back(std::move(newAltProtoField));
+      return newField;
    }
+
+   // General case: there was a correspondence between the user-requested type and the corresponding column type
+   return fProtoFields[index].get();
+}
+
+std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+ROOT::RDF::RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info &tid)
+{
+   ROOT::RFieldBase *field = GetFieldWithTypeChecks(name, tid);
+   assert(field != nullptr);
 
    // Map the field's and subfields' IDs to qualified names so that we can later connect the fields to
    // other page sources from the chain

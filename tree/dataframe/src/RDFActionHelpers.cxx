@@ -892,3 +892,101 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::MakeNew(void *newName, std::s
                                                             fInputLoopManager,
                                                             fInputColumnTypeIDs};
 }
+
+ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
+   std::string_view filename, std::string_view dirname, std::string_view ntuplename, const ColumnNames_t &vfnames,
+   const ColumnNames_t &fnames, const RSnapshotOptions &options, ROOT::Detail::RDF::RLoopManager *inputLM,
+   ROOT::Detail::RDF::RLoopManager *outputLM, std::vector<bool> &&isDefine,
+   const std::vector<const std::type_info *> &colTypeIDs)
+   : fFileName(filename),
+     fDirName(dirname),
+     fNTupleName(ntuplename),
+     fOptions(options),
+     fInputLoopManager(inputLM),
+     fOutputLoopManager(outputLM),
+     fInputFieldNames(vfnames),
+     fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
+     fIsDefine(std::move(isDefine)),
+     fInputColumnTypeIDs(colTypeIDs)
+{
+   EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
+}
+
+ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::~UntypedSnapshotRNTupleHelper()
+{
+   if (!fNTupleName.empty() && !fOutputLoopManager->GetDataSource() && fOptions.fLazy)
+      Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int /* slot */, const std::vector<void *> &values)
+{
+   assert(values.size() == fOutputFieldNames.size());
+   for (decltype(values.size()) i = 0; i < values.size(); i++) {
+      fOutputEntry->BindRawPtr(fOutputFieldNames[i], values[i]);
+   }
+   fWriter->Fill();
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
+{
+   auto model = ROOT::RNTupleModel::Create();
+   auto nFields = fOutputFieldNames.size();
+   for (decltype(nFields) i = 0; i < nFields; i++) {
+      // Need to retrieve the type of every field to create as a string
+      // If the input type for a field does not have RTTI, internally we store it as the tag UseNativeDataType. When
+      // that is detected, we need to ask the data source which is the type name based on the on-disk information.
+      const auto typeName = *fInputColumnTypeIDs[i] == typeid(ROOT::Internal::RDF::UseNativeDataType)
+                               ? ROOT::Internal::RDF::GetTypeNameWithOpts(*fInputLoopManager->GetDataSource(),
+                                                                          fInputFieldNames[i], fOptions.fVector2RVec)
+                               : ROOT::Internal::RDF::TypeID2TypeName(*fInputColumnTypeIDs[i]);
+      model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
+   }
+   fOutputEntry = &model->GetDefaultEntry();
+
+   ROOT::RNTupleWriteOptions writeOptions;
+   writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+
+   fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
+   if (!fOutputFile)
+      throw std::runtime_error("Snapshot: could not create output file " + fFileName);
+
+   TDirectory *outputDir = fOutputFile.get();
+   if (!fDirName.empty()) {
+      TString checkupdate = fOptions.fMode;
+      checkupdate.ToLower();
+      if (checkupdate == "update")
+         outputDir = fOutputFile->mkdir(fDirName.c_str(), "", true); // do not overwrite existing directory
+      else
+         outputDir = fOutputFile->mkdir(fDirName.c_str());
+   }
+
+   fWriter = ROOT::RNTupleWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Finalize()
+{
+   fWriter.reset();
+   // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
+   fOutputLoopManager->SetDataSource(std::make_unique<ROOT::RDF::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
+}
+
+/**
+ * Create a new UntypedSnapshotRNTupleHelper with a different output file name.
+ *
+ * \param[in] newName A type-erased string with the output file name
+ * \return UntypedSnapshotRNTupleHelper
+ *
+ * This MakeNew implementation is tied to the cloning feature of actions
+ * of the computation graph. In particular, cloning a Snapshot node usually
+ * also involves changing the name of the output file, otherwise the cloned
+ * Snapshot would overwrite the same file.
+ */
+ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper
+ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::MakeNew(void *newName)
+{
+   const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+   return UntypedSnapshotRNTupleHelper{finalName,          fDirName,           fNTupleName,
+                                       fInputFieldNames,   fOutputFieldNames,  fOptions,
+                                       fInputLoopManager,  fOutputLoopManager, std::vector<bool>(fIsDefine),
+                                       fInputColumnTypeIDs};
+}

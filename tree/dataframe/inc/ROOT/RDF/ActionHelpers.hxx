@@ -2247,6 +2247,57 @@ public:
    }
 };
 
+class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RActionImpl<UntypedSnapshotRNTupleHelper> {
+   std::string fFileName;
+   std::string fDirName;
+   std::string fNTupleName;
+
+   std::unique_ptr<TFile> fOutputFile{nullptr};
+
+   RSnapshotOptions fOptions;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
+   ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
+   ColumnNames_t fInputFieldNames; // This contains the resolved aliases
+   ColumnNames_t fOutputFieldNames;
+   std::unique_ptr<ROOT::RNTupleWriter> fWriter{nullptr};
+
+   ROOT::REntry *fOutputEntry;
+
+   std::vector<bool> fIsDefine;
+
+   std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
+
+public:
+   UntypedSnapshotRNTupleHelper(std::string_view filename, std::string_view dirname, std::string_view ntuplename,
+                                const ColumnNames_t &vfnames, const ColumnNames_t &fnames,
+                                const RSnapshotOptions &options, ROOT::Detail::RDF::RLoopManager *inputLM,
+                                ROOT::Detail::RDF::RLoopManager *outputLM, std::vector<bool> &&isDefine,
+                                const std::vector<const std::type_info *> &colTypeIDs);
+
+   UntypedSnapshotRNTupleHelper(const UntypedSnapshotRNTupleHelper &) = delete;
+   UntypedSnapshotRNTupleHelper &operator=(const UntypedSnapshotRNTupleHelper &) = delete;
+   UntypedSnapshotRNTupleHelper(UntypedSnapshotRNTupleHelper &&) = default;
+   UntypedSnapshotRNTupleHelper &operator=(UntypedSnapshotRNTupleHelper &&) = default;
+   ~UntypedSnapshotRNTupleHelper() final;
+
+   void InitTask(TTreeReader *, unsigned int /* slot */) {}
+
+   void Exec(unsigned int /* slot */, const std::vector<void *> &values);
+
+   void Initialize();
+
+   void Finalize();
+
+   std::string GetActionName() { return "Snapshot"; }
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
+   {
+      return [](unsigned int, const RSampleInfo &) mutable {};
+   }
+
+   UntypedSnapshotRNTupleHelper MakeNew(void *newName);
+};
+
 class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelper final : public RActionImpl<UntypedSnapshotTTreeHelper> {
    std::string fFileName;
    std::string fDirName;
