@@ -170,6 +170,8 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    explicit RNTupleDS(std::unique_ptr<ROOT::Internal::RPageSource> pageSource);
 
+   ROOT::RFieldBase *GetFieldWithTypeChecks(std::string_view fieldName, const std::type_info &tid);
+
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
