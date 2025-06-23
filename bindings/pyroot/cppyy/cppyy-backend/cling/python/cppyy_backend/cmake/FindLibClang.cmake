@@ -10,14 +10,44 @@
 #
 #   LibClang_FOUND             - True if libclang is found.
 #   LibClang_LIBRARY           - Clang library to link against.
-#   LibClang_VERSION           - Version number as a string (e.g. "3.9").
+#   LibClang_VERSION           - Version number as a string (e.g. "9.0").
 #   LibClang_PYTHON_EXECUTABLE - Compatible python version.
 
 #
-# Python support for clang might not be available for Python3. We need to
-# find what we have.
+# Find libclang.so/.dll to be used by the clang Python bindings
 #
-find_library(LibClang_LIBRARY libclang.so PATH_SUFFIXES $ENV{CONDA_PREFIX}/lib x86_64-linux-gnu llvm llvm/6/lib64 llvm-6.0/lib)
+if (NOT LibClang_LIBRARY)
+    set(LibClang_LIBRARY $ENV{LibClang_LIBRARY})
+    if (NOT LibClang_LIBRARY)
+        find_library(LibClang_LIBRARY libclang${CMAKE_SHARED_LIBRARY_SUFFIX})
+        if (NOT LibClang_LIBRARY)
+            find_program(LibClang_LLVM_CONFIG "llvm-config")
+            if (NOT LibClang_LLVM_CONFIG)
+                set(llvm_config_versioned llvm-config)
+                foreach(version RANGE 13 6)
+                    list(APPEND llvm_config_versioned "llvm-config-${version}")
+                endforeach ()
+                find_program(LibClang_LLVM_CONFIG NAMES ${llvm_config_versioned})
+            endif ()
+
+            set(LibClang_PREFIX "")
+            if (LibClang_LLVM_CONFIG)
+                execute_process(COMMAND ${LibClang_LLVM_CONFIG} --prefix OUTPUT_VARIABLE LibClang_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+            endif()
+
+            set(LibClang_SUFFIX_versioned llvm)
+            foreach(version RANGE 13 6)
+                list(APPEND LibClang_SUFFIX_versioned "llvm-${version}/lib" "llvm/${version}/lib")
+            endforeach ()
+
+            find_library(LibClang_LIBRARY libclang${CMAKE_SHARED_LIBRARY_SUFFIX}
+                HINTS ${LibClang_PREFIX} $ENV{CONDA_PREFIX}
+                PATH_SUFFIXES lib lib64 x86_64-linux-gnu ${LibClang_SUFFIX_versioned}
+            )
+       endif()
+    endif()
+endif()
+
 function(_find_libclang_python python_executable)
     #
     # Prefer python3 explicitly or implicitly over python2.
@@ -48,7 +78,7 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibClang REQUIRED_VARS  LibClang_LIBRARY LibCl
                                            VERSION_VAR    LibClang_VERSION)
 
 find_program(CLANG_EXE clang++)
-EXECUTE_PROCESS( COMMAND ${CLANG_EXE} --version OUTPUT_VARIABLE clang_full_version_string )
+execute_process(COMMAND ${CLANG_EXE} --version OUTPUT_VARIABLE clang_full_version_string OUTPUT_STRIP_TRAILING_WHITESPACE)
 string (REGEX REPLACE ".*clang version ([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" CLANG_VERSION_STRING "${clang_full_version_string}")
 
 set(CLANG_VERSION_STRING ${CLANG_VERSION_STRING} PARENT_SCOPE)

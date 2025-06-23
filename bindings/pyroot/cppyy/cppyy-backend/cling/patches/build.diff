@@ -1,0 +1,47 @@
+diff --git a/src/interpreter/CMakeLists.txt b/src/interpreter/CMakeLists.txt
+index 373461bd2f..909b2df071 100644
+--- a/src/interpreter/CMakeLists.txt
++++ b/src/interpreter/CMakeLists.txt
+@@ -473,7 +473,8 @@ endif()
+ set(CMAKE_CXX_FLAGS ${cxx_flags_prev})
+ unset(cxx_flags_prev)
+ 
+-add_custom_target(CLING)
++# Custuom target "CLING" is already defined in src/cmake/modules/SearchInstalledSoftware.cmake
++# add_custom_target(CLING)
+ set(CLING_LIBRARIES clingInterpreter;clingMetaProcessor;clingUtils CACHE STRING "")
+ if (builtin_cling)
+ 
+
+diff --git a/src/interpreter/CMakeLists.txt b/src/interpreter/CMakeLists.txt
+index 7002e43f36..dfdf718685 100644
+--- a/src/interpreter/CMakeLists.txt
++++ b/src/interpreter/CMakeLists.txt
+@@ -496,7 +496,10 @@ if (builtin_cling)
+     set(CLING_CXXFLAGS " ${LLVM_DEFS} -DNOMINMAX -D_XKEYCHECK_H")
+   else()
+     # FIXME: Work hard to remove -Wno-shadow and -Wno-unused-parameter
+-    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
++    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fvisibility=hidden -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
++    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
++      string(APPEND CLING_CXXFLAGS " -Wl,-Bsymbolic")
++    endif()
+   endif()
+
+   # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.
+diff --git a/src/interpreter/cling/lib/Interpreter/CIFactory.cpp b/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
+index 1ab35553fa..b7c99ba281 100644
+--- a/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
++++ b/src/interpreter/cling/lib/Interpreter/CIFactory.cpp
+@@ -459,7 +459,10 @@ namespace {
+       Opts.CXXExceptions = 1;
+     }
+ 
+-    //Opts.Modules = 1;
++// TODO: temporary hack, switching off modules for C++20, which is enabled
++// by default otherwise (yet not currently supported in cppyy-cling)
++    if (Opts.CPlusPlus20)
++        Opts.Modules = 0;
+ 
+     // See test/CodeUnloading/PCH/VTables.cpp which implicitly compares clang
+     // to cling lang options. They should be the same, we should not have to

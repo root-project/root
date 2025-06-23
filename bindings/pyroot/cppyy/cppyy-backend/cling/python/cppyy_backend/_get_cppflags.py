@@ -20,3 +20,28 @@ def get_cppflags():
         pass
 
     return extra_flags
+
+def get_cppversion():
+  # requested C++ version based on flags or environment variables
+    try:
+        return os.environ['STDCXX']
+    except KeyError:
+        pass
+
+    pstd = -1
+    try:
+        flags = os.environ['EXTRA_CLING_ARGS']
+        pstd = flags.find("std")
+    except KeyError:
+        pass
+
+    if pstd < 0:
+        flags = get_cppflags()
+        pstd = flags.find("std")
+
+    if 0 < pstd:
+      # syntax is "-std=c++XY" on Linux/Mac and "/std:c++NM" on Windows
+        return flags[pstd+7:pstd+9]
+
+    return "20"    # default but should never happen anyway
+
