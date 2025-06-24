@@ -395,8 +395,9 @@ jobs:
             architecture: ARM64
           - image: alma9-clang
             is_special: true
-            property: clang
+            property: "clang Ninja"
             overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            cmake_generator: Ninja
           # Disable GPU builds until the DNS problem is solved  
           # - image: ubuntu2404-cuda
           #   is_special: true
@@ -499,6 +500,7 @@ jobs:
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
