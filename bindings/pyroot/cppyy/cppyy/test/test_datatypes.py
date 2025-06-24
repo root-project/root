@@ -2375,6 +2375,41 @@ class TestDATATYPES:
         assert [ns.test[i]  for i in range(6)] == [-0x12, -0x34, -0x56, -0x78, 0x0, 0x0]
         assert [ns.utest[i] for i in range(6)] == [ 0x12,  0x34,  0x56,  0x78, 0x0, 0x0]
 
+    def test51_polymorphic_types_in_maps(self):
+        """Auto down-cast polymorphic types in maps"""
+        import cppyy
+        from cppyy import gbl
+
+        cppyy.cppdef(
+            """
+        namespace PolymorphicMaps {
+        struct Base {
+            int x;
+            Base(int x) : x(x) {}
+            virtual ~Base() {}
+        } b(1);
+
+        struct Derived : public Base {
+            int y;
+            Derived(int i) : Base(i), y(i) {}
+        } d(1);
+
+        std::map<int, Base*> getBaseMap() {
+            std::map<int, Base*> m;
+            m[1] = &b;
+            m[2] = &d;
+            return m;
+        }
+        }  // namespace PolymorphicMaps
+        """
+        )
+
+        for k, v in gbl.PolymorphicMaps.getBaseMap():
+            if k == 1:
+                assert type(v) == gbl.PolymorphicMaps.Base
+            else:
+                assert type(v) == gbl.PolymorphicMaps.Derived
+
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
