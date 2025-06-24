@@ -20,6 +20,7 @@
 #include <RooBernstein.h>
 #include <RooBifurGauss.h>
 #include <RooCBShape.h>
+#include <RooCategory.h>
 #include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooConstraintSum.h>
@@ -37,6 +38,7 @@
 #include <RooHistPdf.h>
 #include <RooLandau.h>
 #include <RooLognormal.h>
+#include <RooMultiPdf.h>
 #include <RooMultiVarGaussian.h>
 #include <RooParamHistFunc.h>
 #include <RooPoisson.h>
@@ -239,6 +241,55 @@ void codegenImpl(RooMultiVarGaussian &arg, CodegenContext &ctx)
    std::span<const double> covISpan{covI.GetMatrixArray(), static_cast<size_t>(covI.GetNoElements())};
    ctx.addResult(&arg,
                  ctx.buildCall(mathFunc("multiVarGaussian"), arg.xVec().size(), arg.xVec(), arg.muVec(), covISpan));
+}
+
+void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx)
+{
+   int numPdfs = arg.getNumPdfs();
+
+   // MathFunc call
+
+   if (numPdfs > 2) { // the value of this number should be discussed.Beyound a certain number of indices MathFunc call
+                      // becomes more efficient.
+      ctx.addResult(&arg, ctx.buildCall(mathFunc("multipdf"), arg.indexCategory(), arg.getPdfList()));
+
+      std::cout << "MathFunc call used\n";
+
+   } else {
+
+      // Ternary nested expression
+      std::string indexExpr = ctx.getResult(arg.indexCategory());
+
+      // int numPdfs = arg.getNumPdfs();
+      std::string expr;
+
+      for (int i = 0; i < numPdfs; ++i) {
+         RooAbsPdf *pdf = arg.getPdf(i);
+         std::string pdfExpr = ctx.getResult(*pdf);
+
+         expr += "(" + indexExpr + " == " + std::to_string(i) + " ? (" + pdfExpr + ") : ";
+      }
+
+      expr += "0.0";
+      expr += std::string(numPdfs, ')'); // Close all ternary operators
+
+      ctx.addResult(&arg, expr);
+      std::cout << "Ternary expression call used \n";
+   }
+}
+
+// RooCategory index added.
+void codegenImpl(RooCategory &arg, CodegenContext &ctx)
+{
+   int idx = ctx.observableIndexOf(arg);
+   if (idx < 0) {
+
+      idx = 1;
+      ctx.addVecObs(arg.GetName(), idx);
+   }
+
+   std::string result = std::to_string(arg.getCurrentIndex());
+   ctx.addResult(&arg, result);
 }
 
 void codegenImpl(RooAddition &arg, CodegenContext &ctx)
