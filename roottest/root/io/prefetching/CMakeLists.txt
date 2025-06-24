@@ -1,9 +1,13 @@
-#-------------------------------------------------------------------------------
-#
-# Placeholder file to translate the tests to the new CTest system. Meanwhile we
-# define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
-#
-#-------------------------------------------------------------------------------
 if(xrootd)
-  ROOTTEST_ADD_OLDTEST(LABELS longtest)
+  ROOTTEST_GENERATE_DICTIONARY(libRoottestIoPrefetching
+                               atlasFlushed/atlasFlushedProjectHeaders.h
+                               LINKDEF atlasFlushed/atlasFlushedLinkDef.h
+                               SOURCES atlasFlushed/atlasFlushedProjectSource.cxx
+                               NO_CXXMODULE NO_ROOTMAP
+                               FIXTURES_SETUP root-io-prefetching-dict-fixture)
+  ROOTTEST_ADD_TEST(run
+                    MACRO runPrefetchReading.C+
+                    OUTREF PrefetchReading.ref
+                    LABELS longtest
+                    FIXTURES_REQUIRED root-io-prefetching-dict-fixture)
 endif()
