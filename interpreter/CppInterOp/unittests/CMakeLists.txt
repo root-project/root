@@ -3,16 +3,23 @@ set(CTEST_BUILD_NAME
 enable_testing()
 
 # LLVM builds (not installed llvm) provides gtest.
-if (NOT TARGET gtest)
+if (NOT TARGET GTest::gtest AND NOT TARGET gtest)
   include(GoogleTest)
 endif()
 
 if(EMSCRIPTEN)
-  set(gtest_libs gtest gmock)
+  if (TARGET GTest::gtest)
+    # Target names in CMake >= v3.23
+    set(gtest_libs GTest::gtest GTest::gmock)
+  else()
+    set(gtest_libs gtest gmock)
+  endif()
 else()
-  set(gtest_libs gtest gtest_main)
-  if (TARGET gmock)
-    list(APPEND gtest_libs gmock gmock_main)
+  if (TARGET GTest::gtest)
+    # Target names in CMake >= v3.23
+    set(gtest_libs GTest::gtest GTest::gmock GTest::gtest_main)
+  else()
+    set(gtest_libs gtest gtest_main gmock)
   endif()
   set(link_pthreads_lib pthread)
 endif()
