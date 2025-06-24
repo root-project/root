@@ -77,7 +77,7 @@ ROOTTEST_ADD_TEST(read_reflex_test1
                   MACROARG "\"r\""
                   OUTREF read_reflex_test1.ref
                   LABELS longtest
-                  FIXTURES_REQUIRED root-io-datamodelevolution-cms-00-reflex-test1-fixtrue
+                  FIXTURES_REQUIRED root-io-datamodelevolution-cms-00-reflex-test1-fixture
                                     root-io-datamodelevolution-cms-00-read_test1-compile-fixture)
 
 if(NOT ClingWorkAroundNoPrivateClassIO)
