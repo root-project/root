@@ -1,15 +1,13 @@
+#ifndef A_C
+#define A_C
+
 #include "TRef.h"
 
-#ifndef A_C
-#ifdef ClingWorkAroundMultipleInclude
-#define A_C
-#endif
-
-class A : public TObject { 
-public: 
+class A : public TObject {
+public:
 A(A* other = 0) { _o = other; }
 
-TRef _o; 
+TRef _o;
 
 ClassDef(A, 1)
 };
