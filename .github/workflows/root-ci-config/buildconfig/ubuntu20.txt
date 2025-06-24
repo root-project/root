@@ -1,5 +1,0 @@
-builtin_nlohmannjson=ON
-builtin_vdt=ON
-builtin_xrootd=ON
-builtin_xxhash=ON
-tmva-sofie=On
