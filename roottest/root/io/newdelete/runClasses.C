@@ -1,5 +1,5 @@
 {
-   gSystem->Load("./Classes");
+   gSystem->Load("libRoottestIoNewdelete");
    // This is necessary with delayed header parsing until functions are fwd declared
 #ifdef ClingWorkAroundMissingDynamicScope
 #ifdef ClingWorkAroundFunctionForwardDeclarations
