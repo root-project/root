@@ -925,7 +925,7 @@ sap.ui.define([
          let c = pstate.ctrl;
          let idx = c.extractIndex(pstate.instance);
 
-         c.elementHighlighted(idx, null);
+         c.elementHighlighted(idx, null, pstate.object)
 
          if (this.highlighted_top_object !== pstate.top_object)
          {
@@ -1062,7 +1062,7 @@ sap.ui.define([
 
          if (pstate) {
             let c = pstate.ctrl;
-            c.elementSelected(c.extractIndex(pstate.instance), event);
+            c.elementSelected(c.extractIndex(pstate.instance), event, pstate.object);
             // WHY ??? this.highlighted_scene = pstate.top_object.scene;
          } else {
             // XXXX HACK - handlersMIR senders should really be in the mgr
