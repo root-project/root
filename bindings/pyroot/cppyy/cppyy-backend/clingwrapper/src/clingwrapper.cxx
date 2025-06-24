@@ -1680,9 +1680,12 @@ std::string Cppyy::GetMethodResultType(TCppMethod_t method)
         if (f->ExtraProperty() & kIsConstructor)
             return "constructor";
         std::string restype = f->GetReturnTypeName();
-        // TODO: this is ugly, but we can't use GetReturnTypeName() for ostreams
-        // and maybe others, whereas GetReturnTypeNormalizedName() has proven to
-        // be save in all cases (Note: 'int8_t' covers 'int8_t' and 'uint8_t')
+        // TODO: this is ugly; GetReturnTypeName() keeps typedefs, but may miss scopes
+        // for some reason; GetReturnTypeNormalizedName() has been modified to return
+        // the canonical type to guarantee correct namespaces. Sometimes typedefs look
+        // better, sometimes not, sometimes it's debatable (e.g. vector<int>::size_type).
+        // So, for correctness sake, GetReturnTypeNormalizedName() is used, except for a
+        // special case of uint8_t/int8_t that must propagate as their typedefs.
         if (restype.find("int8_t") != std::string::npos)
             return restype;
         restype = f->GetReturnTypeNormalizedName();
@@ -1951,11 +1954,6 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
 // to do an explicit lookup that ignores the prototype (i.e. the full name should be
 // enough), and finally to ignore the template arguments part of the name as this fails
 // in cling if there are default parameters.
-// It would be possible to get the prototype from the created functions and use that to
-// do a new lookup, after which ROOT/meta will manage the function. However, neither
-// TFunction::GetPrototype() nor TFunction::GetSignature() is of the proper form, so
-// we'll/ manage the new TFunctions instead and will assume that they are cached on the
-// calling side to prevent multiple creations.
     TFunction* func = nullptr; ClassInfo_t* cl = nullptr;
     if (scope == (cppyy_scope_t)GLOBAL_HANDLE) {
         func = gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
@@ -2300,10 +2298,6 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::strin
                 (TDataMember*)cr->GetListOfDataMembers()->FindObject(name.c_str());
             // TODO: turning this into an index is silly ...
             if (dm) return (TCppIndex_t)cr->GetListOfDataMembers()->IndexOf(dm);
-            dm = (TDataMember*)cr->GetListOfUsingDataMembers()->FindObject(name.c_str());
-            if (dm)
-                return (TCppIndex_t)cr->GetListOfDataMembers()->IndexOf(dm)
-                    + cr->GetListOfDataMembers()->GetSize();
         }
     }
 
@@ -2357,16 +2351,20 @@ bool Cppyy::IsStaticData(TCppScope_t scope, TCppIndex_t idata)
 
 bool Cppyy::IsConstData(TCppScope_t scope, TCppIndex_t idata)
 {
+    Long_t property = 0;
     if (scope == GLOBAL_HANDLE) {
         TGlobal* gbl = g_globalvars[idata];
-        return gbl->Property() & kIsConstant;
+        property = gbl->Property();
     }
     TClassRef& cr = type_from_handle(scope);
     if (cr.GetClass()) {
         TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
-        return m->Property() & kIsConstant;
+        property = m->Property();
     }
-    return false;
+
+// if the data type is const, but the data member is a pointer/array, the data member
+// itself is not const; alternatively it is a pointer that is constant
+    return ((property & kIsConstant) && !(property & (kIsPointer | kIsArray))) || (property & kIsConstPointer);
 }
 
 bool Cppyy::IsEnumData(TCppScope_t scope, TCppIndex_t idata)
@@ -2444,12 +2442,12 @@ Cppyy::TCppIndex_t Cppyy::GetNumEnumData(TCppEnum_t etype)
 
 std::string Cppyy::GetEnumDataName(TCppEnum_t etype, TCppIndex_t idata)
 {
-    return ((TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata))->GetName();
+    return ((TEnumConstant*)((TEnum*)etype)->GetConstants()->At((int)idata))->GetName();
 }
 
 long long Cppyy::GetEnumDataValue(TCppEnum_t etype, TCppIndex_t idata)
 {
-     TEnumConstant* ecst = (TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata);
+     TEnumConstant* ecst = (TEnumConstant*)((TEnum*)etype)->GetConstants()->At((int)idata);
      return (long long)ecst->GetValue();
 }
 
@@ -2694,6 +2692,10 @@ int cppyy_is_aggregate(cppyy_type_t type) {
     return (int)Cppyy::IsAggregate(type);
 }
 
+int cppyy_is_default_constructable(cppyy_type_t type) {
+    return (int)Cppyy::IsDefaultConstructable(type);
+}
+
 const char** cppyy_get_all_cpp_names(cppyy_scope_t scope, size_t* count) {
     std::set<std::string> cppnames;
     Cppyy::GetAllCppNames(scope, cppnames);
@@ -2741,10 +2743,6 @@ int cppyy_has_complex_hierarchy(cppyy_type_t type) {
 
 int cppyy_num_bases(cppyy_type_t type) {
     return (int)Cppyy::GetNumBases(type);
-}
-
-int cppyy_num_bases_longest_branch(cppyy_type_t type) {
-    return (int)Cppyy::GetNumBasesLongestBranch(type);
 }
 
 char* cppyy_base_name(cppyy_type_t type, int base_index) {
