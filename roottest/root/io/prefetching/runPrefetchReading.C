@@ -17,12 +17,12 @@
 Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
 {
    //const char *options = 0;
-   Int_t freq = 1000; 
+   Int_t freq = 1000;
    Int_t cachesize = -1;
    Float_t percententries = 1.00;
    Float_t percentbranches = 1.00;
    TStopwatch sw;
-   
+
    //set the reading mode to async prefetching
    if (prefetch) gEnv->SetValue("TFile.AsyncPrefetching", 1);
 
@@ -31,7 +31,7 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
    // or using xrootd on port 2000
    // TString cachedir="root://localhost:2000//tmp/xrdcache1/";
    if (caching) gEnv->SetValue("Cache.Directory", cachedir.Data());
-   
+
    // open the local if any
    TString filename("atlasFlushed.root");
    if (gSystem->AccessPathName(filename,kReadPermission) && filename.Index(":") == kNPOS) {
@@ -45,10 +45,9 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
    } else {
       fprintf(stderr,"Using local file\n");
    }
-   
-   TString library("atlasFlushed/atlasFlushed");
+
    fprintf(stderr,"Starting to load the library\n");
-   gSystem->Load(library);
+   gSystem->Load("libRoottestIoPrefetching");
 
    fprintf(stderr,"Starting to open the file\n");
    TFile *file = TFile::Open( filename, "TIMEOUT=30" );
@@ -107,12 +106,12 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
      if (i % freq == 0){
        // for (Long64_t i=elast-1;i>=efirst;i--) {
        if (i%freq == 0 || i==(elast-1)) fprintf(stderr,"i = %lld\n",i);
-       if (r.Rndm() > percententries) continue; 
+       if (r.Rndm() > percententries) continue;
        T->LoadTree(i);
        if (percentbranches < 1.00) {
          int nb = T->GetListOfBranches()->GetEntries();
          int incr = nb * percentbranches;
-         for(int b=0;b<nb; b += incr) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);   
+         for(int b=0;b<nb; b += incr) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);
          int count = 0;
          int maxcount = 1000 + 100 ;
          for(int x = 0; x < maxcount; ++x ) { /* waste cpu */ count = sin(cos((double)count)); }
@@ -135,7 +134,7 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
    fprintf(stderr,"Opening the file for the 2nd pass\n");
    file = TFile::Open( filename, "TIMEOUT=30" );
    if (!file || file->IsZombie()) return 1;
- 
+
    fprintf(stderr,"The file has been opened, setting up the TTree\n");
    // Try the known names :)
    for (unsigned int i = 0; i < sizeof(names)/sizeof(names[0]); ++i) {
@@ -170,7 +169,7 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
       }
       T->StopCacheLearningPhase();
    }
-      
+
    fprintf(stderr,"Setup done, starting the 2nd reading.\n");
    for (Long64_t i = efirst; i < elast; i++) {
      if (i % freq == 0){
@@ -181,17 +180,17 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
        if (percentbranches < 1.00) {
          int nb = T->GetListOfBranches()->GetEntries();
          int incr = nb * percentbranches;
-         
+
          for(int b=0;b<nb; b += incr) {
            ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);
          }
-         
+
          int count = 0;
          int maxcount = 1000 + 100 ;
          for(int x = 0; x < maxcount; ++x ) {
            /* waste cpu */
            count = sin(cos((double)count));
-         }         
+         }
        } else {
          T->GetEntry(i);
        }
@@ -203,7 +202,7 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
 
    fprintf(stderr, "Delete tmp directory: /tmp/xcache\n" );
    if (caching) system( "rm -r /tmp/xcache" );
-   
+
    file->Close();
    delete file;
    return 0;
