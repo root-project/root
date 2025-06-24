@@ -70,6 +70,7 @@ public:
 
    void addToGlobalScope(std::string const &str);
    void addVecObs(const char *key, int idx);
+   int observableIndexOf(const RooAbsArg &arg) const;
 
    void addToCodeBody(RooAbsArg const *klass, std::string const &in);
 
