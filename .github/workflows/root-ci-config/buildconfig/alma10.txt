@@ -3,5 +3,4 @@ builtin_vdt=ON
 builtin_zlib=ON
 builtin_zstd=ON
 ccache=ON
-mysql=OFF
 tmva-cpu=OFF
