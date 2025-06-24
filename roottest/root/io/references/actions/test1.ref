@@ -1,0 +1,9 @@
+
+Processing test1.C...
+******************************************
+fBits settings A: 0x3010000
+Readback for testA->GetRef()
+Calling GetRef() from class: A
+Test class called on demand
+0
+******************************************
