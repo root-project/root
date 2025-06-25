@@ -7,7 +7,6 @@ tmva-cpu=ON
 tmva-gpu=ON
 tmva-cudnn=ON
 tmva-pymva=OFF
-fortran=OFF
 gdml=OFF
 spectrum=OFF
 sqlite=OFF
