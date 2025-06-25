@@ -2103,6 +2103,37 @@ function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
   set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "${new_rpath}")
 endfunction()
 
+#----------------------------------------------------------------------------
+# If path is a system path, set the return variable is_system_path to true.
+# The 1st argument is the path that should be checked
+# The 2nd argument is the return value
+#----------------------------------------------------------------------------
+function (IS_SYSTEM_PATH path is_system_path)
+  foreach (dir ${CMAKE_SYSTEM_PATH})
+    if ("${path}" STREQUALS "$dir")
+      set(${is_system_path} true PARENT_SCOPE)
+    endif()
+  endforeach()
+  set(${is_system_path} false PARENT_SCOPE)
+endfunction()
+
+#----------------------------------------------------------------------------
+# If path is not a system path, append it to the given variable using 
+# CMAKE_PATH_SEPARATOR
+# The 1st argument is the path to be checked
+# The 2nd argument is the variable that the path gets appended to if it is 
+# not a system path.
+#----------------------------------------------------------------------------
+function (IF_NOT_SYSTEM_PATH_APPEND path variable)
+  IS_SYSTEM_PATH("${path}" is_system_path)
+  if (NOT is_system_path)
+    if (${${variable}} STRING_EMPTY)
+      set(${variable} "${path}" PARENT_SCOPE)
+    else()
+      set(${variable} "${${variable}}${CMAKE_PATH_SEPARATOR}${path}" PARENT_SCOPE)
+    endif()
+  endif()
+endfunction()
 
 #-------------------------------------------------------------------------------
 #
